@@ -112,6 +112,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/assistant": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/schema": "workspace:*",

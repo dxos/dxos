@@ -28,6 +28,8 @@ export type MakeOptions = {
   path?: string;
   /** Where agents work when a chat's project names no folder; defaults to the checkout this dev server runs in. */
   folder?: string;
+  /** Command that runs an agent's entry script; defaults to bun, which the bundled agents are built for. */
+  runtime?: string;
 };
 
 type Endpoint = { port: number; token: string };
@@ -35,9 +37,12 @@ type Endpoint = { port: number; token: string };
 /** How long the agent server may take to report its port. */
 const START_TIMEOUT_MS = 15_000;
 
+/** How long the agent server may take to stop once its input ends. */
+const CLOSE_TIMEOUT_MS = 5_000;
+
 /**
  * Runs plugin-claude's agent server (`AgentSidecar.runAgentHelper`, the desktop app's sidecar) in a Node process of its
- * own, launching agents with bun, the runtime they are bundled for.
+ * own, launching each agent's entry with `DX_AGENT_RUNTIME`.
  */
 const SERVER_PROGRAM = `
 const { AgentSidecar } = await import(process.env.DX_AGENT_HOST_MODULE);
@@ -45,7 +50,7 @@ await AgentSidecar.runAgentHelper({
   input: process.stdin,
   output: process.stdout,
   env: process.env,
-  launch: (entry) => ({ command: 'bun', args: [entry] }),
+  launch: (entry) => ({ command: process.env.DX_AGENT_RUNTIME, args: [entry] }),
 });
 `;
 
@@ -66,6 +71,7 @@ export const make = ({
   worktrees = join(tmpdir(), 'dx-agent-worktrees'),
   path = Shell.AGENT_HOST_PATH,
   folder = checkoutOf(process.cwd()),
+  runtime = 'bun',
 }: MakeOptions = {}) => {
   let child: ChildProcessWithoutNullStreams | undefined;
   let running: Promise<Endpoint> | undefined;
@@ -81,6 +87,7 @@ export const make = ({
             DX_AGENT_HOST_MODULE: import.meta.resolve('@dxos/plugin-claude/vite-plugin'),
             DX_AGENT_DIR: agents,
             DX_AGENT_WORKTREES: worktrees,
+            DX_AGENT_RUNTIME: runtime,
             PATH: searchPath(process.env.PATH, homedir()).join(':'),
           },
           stdio: ['pipe', 'pipe', 'pipe'],
@@ -153,10 +160,20 @@ export const make = ({
     }
   };
 
+  /** Stops the server: it closes once its input ends, so this resolves when the process has exited. */
   const close = async (): Promise<void> => {
+    const server = child;
     running = undefined;
-    child?.stdin.end();
     child = undefined;
+    if (!server || server.exitCode !== null || server.signalCode !== null) {
+      return;
+    }
+    const exited = new Promise<void>((resolve) => server.once('exit', () => resolve()));
+    server.stdin.end();
+    // Open connections hold the server's close; past the grace period it is stopped outright.
+    const timer = setTimeout(() => server.kill(), CLOSE_TIMEOUT_MS);
+    await exited;
+    clearTimeout(timer);
   };
 
   return { prepare, middleware, close };

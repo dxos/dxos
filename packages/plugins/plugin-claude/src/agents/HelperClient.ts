@@ -62,8 +62,13 @@ export const make = (start: () => Promise<Endpoint>): HelperClient => {
                 authorization: `Bearer ${token}`,
                 ...(init.body !== undefined && { 'content-type': 'application/json' }),
               },
+            }).catch((error: unknown) => {
+              // Nothing listens there any more (the server exited, or its host restarted it elsewhere): ask the host again next time.
+              current = undefined;
+              throw error;
             });
-            const body: unknown = await response.json();
+            // A refusal that is not JSON (a proxy's page, a crash) still reports its status.
+            const body: unknown = await response.json().catch(() => undefined);
             if (!response.ok) {
               const refusal = Schema.decodeUnknownOption(HelperRefusal)(body);
               throw new Error(

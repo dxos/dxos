@@ -11098,6 +11098,9 @@ importers:
         specifier: 4.0.4
         version: 4.0.4
     devDependencies:
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../core/compute/assistant
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
