@@ -158,9 +158,6 @@ export const findSpecPlugin = (spec: string, plugins: readonly SpecSource[]): st
 /** Foreign-key source of a spec imported into a space, whose key id is its repo path. */
 export const SPEC_KEY_SOURCE = 'github.com/dxos/dxos';
 
-/** Type of an imported spec; named by URI because plugin-code owns the schema and projects must not depend on it. */
-export const SPEC_TYPE = DXN.make('org.dxos.type.spec');
-
 //
 // Relations
 //
