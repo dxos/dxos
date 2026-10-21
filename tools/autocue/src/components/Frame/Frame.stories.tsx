@@ -214,6 +214,8 @@ const IdentStory = ({ openCard = 'dxos', size = '16:10', logoColor, ...props }: 
  * 5. Ident: the DXOS open card, the floating take, then the close card, all at the same 16:10 size, looped; in the light
  *    theme the cards are drawn off-black on off-white; Logo colour recolours the logo and the close card's rule.
  * 6. Footer: the band stays up between steps; only its text fades.
+ * 7. Caption: no title; black-on-white floating captions, fading between steps. Position, background and colours
+ *    follow their controls as the script plays.
  */
 const meta: Meta<typeof TakeStory> = {
   title: 'tools/autocue/Frame',
@@ -260,6 +262,18 @@ export const Floating: Story = {
     captionBackground: 0.6,
     colors: 'white-on-black',
     interval: 4_000,
+  },
+};
+
+/** The step captions alone, with no title: a floating panel whose position, background and colours are controls. */
+export const Caption: Story = {
+  args: {
+    size: '16:10',
+    captionStyle: 'panel',
+    captionPosition: 'bottom',
+    captionBackground: 0.85,
+    colors: 'black-on-white',
+    interval: 3_000,
   },
 };
 
