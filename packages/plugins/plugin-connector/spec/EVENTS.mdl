@@ -14,7 +14,8 @@ to run; with it, part 1's poll becomes a slow backstop for missed deliveries. No
 GitHub-specific except `github.ts`.
 
 It spans two repositories: `@dxos/compute` (the trigger kind) and plugin-connector live in
-`dxos/dxos`; the Provider registry, kms-service and compute-service live in `dxos/edge`.
+`dxos/dxos`; kms-service (which owns the Provider extension point and the webhook ingress) and
+compute-service (which routes) live in `dxos/edge`.
 
 ## Extensions
 
@@ -34,20 +35,18 @@ Each extension is defined in the Appendix or resolved via its URI.
 A plugin-illustrator render, grouped by package and service. The `diagram` block is the source;
 regenerate the image with `moon run plugin-illustrator:render-diagrams -- <abs path>/spec/diagrams/p3-dispatch.dx`.
 
-![Provider modules implement the Provider interface, which the webhook ingress (compute-service) and kms-service use; a signed webhook enters the ingress, the EventRouter pokes the space's TriggersDispatcher, which runs plugin-github's sync; the space's event trigger requests a grant from kms and registers with the router.](diagrams/p3-dispatch.dx.svg)
+![Inside kms-service, provider modules implement the Provider interface that its webhook ingress and grant issuer use; a signed webhook enters kms-service's ingress, which hands the resource to compute-service's EventRouter; the router pokes the space's TriggersDispatcher, which runs plugin-github's sync; the space's event trigger requests a grant from kms-service and registers with the router.](diagrams/p3-dispatch.dx.svg)
 
 ```diagram
 diagram flow=right
-group provider "edge-provider" {
+group kms "kms-service" {
   node Iface "Provider"
   node GitHubP "github.ts"
   node LinearP "linear.ts"
-}
-group kms "kms-service" {
-  node Kms "token + grant"
+  node Ingress "webhook ingress"
+  node Grants "token + grant"
 }
 group compute "compute-service" {
-  node Ingress "webhook ingress"
   node Router "EventRouter"
   node Dispatch "TriggersDispatcher"
 }
@@ -59,24 +58,26 @@ node App "GitHub App"
 edge GitHubP implements Iface
 edge LinearP implements Iface
 edge Ingress depends-on Iface "verify, route"
-edge Kms depends-on Iface "checkAccess"
+edge Grants depends-on Iface "checkAccess"
 edge App -> Ingress "signed webhook"
 edge Ingress -> Router "github.com/o/r"
 edge Router -> Dispatch "poke"
 edge Dispatch -> Sync "run"
-edge Trigger -> Kms "request grant" stroke=dashed
+edge Trigger -> Grants "request grant" stroke=dashed
 edge Trigger -> Router "register + UCAN" stroke=dashed
 ```
 
 ## Extension point
 
-### `Provider` (edge: new private package `@dxos/edge-provider`)
+### `Provider` (kms-service)
 
-One module per external service. kms-service and compute-service import the same registry, so
-adding a provider is one module and its secrets, with no `switch` to extend.
+An extension point of kms-service, not a separate package or worker. One module per external
+service, registered in kms-service, so adding a provider is one module and its secrets, with no
+`switch` to extend. Everything provider-specific (OAuth, tokens, access checks, webhook signatures)
+stays in kms-service; compute-service only routes resource URIs and never sees a provider module.
 
 ```ts
-// edge: packages/sdk/edge-provider/src/Provider.ts
+// edge: packages/services/kms-service/src/providers/Provider.ts
 import type * as Effect from 'effect/Effect';
 
 import { type OAuthProvider } from '@dxos/protocols';
@@ -139,7 +140,7 @@ export const Providers: Readonly<Partial<Record<OAuthProvider, Provider>>>;
 
 ```mdl
 service Provider
-  desc: One external service. Implemented once per provider (github.ts, linear.ts, …) and used by kms-service and compute-service.
+  desc: kms-service's extension point for one external service. Implemented once per provider (github.ts, linear.ts, …); used by kms-service's OAuth flow, grant issuer and webhook ingress.
   ops:
     account(token: ProviderToken) → ProviderAccount
     checkAccess(token: ProviderToken, resource: ResourceUri) → AccessVerdict
@@ -155,7 +156,7 @@ service Provider
 GitHub's module, in outline:
 
 ```ts
-// edge: packages/sdk/edge-provider/src/providers/github.ts
+// edge: packages/services/kms-service/src/providers/github.ts
 export const GitHubProvider: Provider = {
   id: OAuthProvider.GITHUB,
   oauth: { /* today's getGitHubAuthProviderSpec() */ },
@@ -307,6 +308,7 @@ service EventRouter
     unregister(spaceId: SpaceId, triggerId: ObjectId) → void
     match(resources: ResourceUri[], event: ProviderEvent) → Route[]
     revoke(revocation: Revocation) → number
+    dispatch(resources: ResourceUri[], event: ProviderEvent, deliveryId: string) → number   # called by kms-service's ingress; returns spaces poked
   errors:
     GrantInvalid: the grant's signature, audience, resource or expiry does not check out
 ```
@@ -326,7 +328,7 @@ service EventGrants
 ```mdl
 feat F-1: Provider registry
 
-  req F-1.1: Every provider is one module implementing Provider; kms-service and compute-service look providers up in Providers and contain no per-provider branch.
+  req F-1.1: Every provider is one module implementing Provider, registered in kms-service; kms-service looks providers up in Providers and contains no per-provider branch, and compute-service contains no provider code at all.
 
   req F-1.2: kms-service's OAuth flow reads `Providers[id].oauth`; today's AuthProviderData moves without change.
 
@@ -354,7 +356,7 @@ feat F-2: Event trigger and grant
 ```mdl
 feat F-3: Ingress
 
-  req F-3.1: One endpoint per provider, `POST /events/<provider id>`, served by compute-service.
+  req F-3.1: One endpoint per provider, `POST /events/<provider id>`, served by kms-service, which holds the webhook secrets; after verify, dedupe, parse and route it calls EventRouter.dispatch over its service binding to compute-service.
 
   req F-3.2:
     when: a delivery arrives
@@ -515,4 +517,24 @@ decision D-8: Routes live in a global D1 table in compute-service, ingress is `P
   for: user:dmaretskyi
   affects: [EventRouter, F-3, F-4]
   why: Each space's TriggersDispatcher sees only its own space, so the reverse index from resource to spaces must be global.
+```
+
+```mdl
+decision D-9: The Provider interface is not a new edge service or package; it is an extensibility point in kms-service.
+  date: 2026-10-21
+  by: user:dmaretskyi
+  affects: [Provider, F-1]
+  supersedes: D-6
+  source: https://claude.ai/code/session_01BvVEssur2xxCiXewKjKQ3Z
+```
+
+```mdl
+decision D-10: kms-service also serves the webhook ingress and calls compute-service's EventRouter.dispatch with the routed resources; compute-service has no provider code. Fills in [D-9].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.1, EventRouter, F-1.1]
+  why: Verifying a webhook needs the provider module and its secret, both of which now live only in kms-service; routing by resource URI stays generic.
+  rejected:
+    - Ingress in compute-service calling kms-service per delivery to verify: one extra service-binding hop per event and webhook secrets readable outside kms.
 ```
