@@ -1,0 +1,59 @@
+/-
+  A tour of the language: the first recipe in docs/GETTING_STARTED.md.
+
+    deus add examples/tour.deus && deus test Tour && deus run Tour.main 12 -3 tea
+-/
+
+namespace Tour
+
+/-- An algebraic data type: a shape is a circle or a rectangle. -/
+inductive Shape where
+  | circle (radius : Int)
+  | rect (width : Int) (height : Int)
+
+/-- Pattern matching must cover every constructor. -/
+def area (shape : Shape) : Int :=
+  match shape with
+  | Shape.circle r => 3 * r * r
+  | Shape.rect w h => w * h
+
+/-- A record. Field names are global, so they are specific. -/
+structure Line where
+  item : Text
+  quantity : Int
+
+/-- An ability: the program asks for a price; a handler decides where prices come from. -/
+ability Prices where
+  priceOf : Text -> Int
+
+/-- The total of an order. Its type says it needs `Prices`, and nothing else. -/
+def total (lines : List Line) : {Prices} Int :=
+  List.foldl (fun sum line => sum + Prices.priceOf line.item * line.quantity) 0 lines
+
+/-- A handler: prices from a table. Under it, `total` is pure. -/
+def fromTable (table : Map Text Int) (body : Unit -> {Prices | r} a) : {r} a :=
+  handle body () with
+  | Prices.priceOf item -> resume => resume (Option.getOr (Map.lookup item table) 0)
+
+/-- A checked error: callers see `Throw Text` in the type until something handles it. -/
+def parseQuantity (t : Text) : {Throw Text} Int :=
+  match Int.fromText t with
+  | some n => if n >= 0 then n else throw ("negative quantity " ++ t)
+  | none => throw ("not a number: " ++ t)
+
+test areas := List.map area [Shape.circle 2, Shape.rect 3 4] == [12, 12]
+
+test totals :=
+  let order := [Line.mk "tea" 2, Line.mk "cake" 1]
+  fromTable (Map.fromList [("tea", 3), ("cake", 5)]) (fun _ => total order) == 11
+
+test errors := try (fun _ => parseQuantity "-1") == Result.err "negative quantity -1"
+
+/-- `deus run Tour.main 12 -3 tea`: `try` turns each thrown error into a value. -/
+def main (u : Unit) : {IO} Unit :=
+  List.forEach (IO.args ()) (fun arg =>
+    match try (fun _ => parseQuantity arg) with
+    | Result.ok n => println (arg ++ " cups of tea cost " ++ Int.toText (fromTable (Map.fromList [("tea", 3)]) (fun _ => total [Line.mk "tea" n])))
+    | Result.err message => println ("error: " ++ message))
+
+end Tour

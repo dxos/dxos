@@ -52,6 +52,7 @@
       "@dxos/datalog",
       "@dxos/debug",
       "@dxos/deus",
+      "@dxos/deus-lang",
       "@dxos/devtools",
       "@dxos/devtools-extension",
       "@dxos/diagram",

@@ -1,0 +1,71 @@
+/-
+  Images: the closure of a definition as `(def "hash" core)` forms sorted by hash, then a
+  `(type "hash" "iri")` or `(ability "hash" "iri")` line for each user type and ability they use,
+  then `(main "hash")`, so the same code always yields the same bytes. The kernel loads images.
+-/
+
+namespace Image
+
+/-- Hashes referenced by `(ref …)` in a form. -/
+def refs (form : Sexp) (acc : List Text) : List Text :=
+  match form with
+  | Sexp.list [Sexp.sym "ref", Sexp.str h] => h :: acc
+  | Sexp.list items => List.foldl (fun a x => refs x a) acc items
+  | _ => acc
+
+/-- The runnable Core of an object: a term's or test's body, a theorem's proposition. -/
+def coreOf (obj : Sexp) : Option Sexp :=
+  match obj with
+  | Sexp.list [Sexp.sym "term", core] => some core
+  | Sexp.list [Sexp.sym "test", core] => some core
+  | Sexp.list (Sexp.sym "theorem" :: _ :: core :: _) => some core
+  | _ => none
+
+/-- Every definition reachable from `roots`, as (hash, core) sorted by hash. -/
+def closure (fetch : Text -> {Throw Text | r} Option Sexp) (roots : List Text) : {Throw Text | r} List (Text, Sexp) :=
+  let rec go work seen acc :=
+    match work with
+    | [] => acc
+    | h :: rest =>
+      if Set.contains h seen then go rest seen acc
+      else
+        match Option.bind (fetch h) coreOf with
+        | some core => go (refs core rest) (Set.insert h seen) ((h, core) :: acc)
+        | none => throw ("missing definition #" ++ h)
+  List.sortBy (fun a b => compare (fst a) (fst b)) (go roots Set.empty [])
+
+/-- Hashes of the user types and abilities a form constructs, matches or performs. -/
+def nominal (form : Sexp) (acc : List Text) : List Text :=
+  match form with
+  | Sexp.list (Sexp.sym head :: Sexp.str h :: rest) =>
+    let inner := List.foldl (fun a x => nominal x a) acc rest
+    if (head == "op" || head == "con" || head == "pcon") && not (Text.startsWith "#" h) then h :: inner else inner
+  | Sexp.list items => List.foldl (fun a x => nominal x a) acc items
+  | _ => acc
+
+/-- `(type "hash" "iri")` and `(ability "hash" "iri")` for each user type and ability the
+  definitions use: an embedder (a Worker) speaks in stable IRIs, while Core names a type by the
+  hash of its shape. -/
+def nominalForms (fetch : Text -> {Throw Text | r} Option Sexp) (defs : List (Text, Sexp)) : {Throw Text | r} List Text :=
+  let hashes := dedup (sort (foldl (fun acc pair => nominal (snd pair) acc) [] defs))
+  filterMap (fun h =>
+    match fetch h with
+    | Option.some (Sexp.list (Sexp.sym kind :: Sexp.str iri :: _)) => if kind == "type" || kind == "ability" then Option.some (Sexp.print (Sexp.node kind [Sexp.str h, Sexp.str iri])) else Option.none
+    | _ => Option.none) hashes
+
+def defForm (pair : (Text, Sexp)) : Text :=
+  let (h, core) := pair
+  Sexp.print (Sexp.node "def" [Sexp.str h, core])
+
+/-- The image text for an entry point. -/
+def build (fetch : Text -> {Throw Text | r} Option Sexp) (main : Text) : {Throw Text | r} Text :=
+  let defs := closure fetch [main]
+  join "\n" (List.map defForm defs ++ nominalForms fetch defs ++
+    [Sexp.print (Sexp.node "main" [Sexp.str main])]) ++ "\n"
+
+/-- Loads definitions into the running machine (for `run` and the test runner). -/
+def load (fetch : Text -> {Throw Text | r} Option Sexp) (roots : List Text) : {Throw Text | r} Unit :=
+  let pending := List.filter (fun pair => not (Code.has (fst pair))) (closure fetch roots)
+  if List.isEmpty pending then () else Code.load (join "\n" (List.map defForm pending))
+
+end Image

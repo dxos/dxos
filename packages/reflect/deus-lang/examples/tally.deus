@@ -1,0 +1,41 @@
+/-
+  Durable Objects that talk to each other (P7): every object counts its own `/add`s and tells
+  the object named `total`, which counts them all. `/remind` sets an alarm; when it fires the
+  object records that it was reminded.
+-/
+
+namespace Tally
+
+def bump (key : Text) : {Storage} Int :=
+  let next := 1 + Option.getOr (Option.bind (Storage.get key) Int.fromText) 0
+  Storage.put key (Int.toText next)
+  next
+
+def serve (request : Request) : {Storage, Actors, Alarm} Response :=
+  if request.url == "/add" then
+    let mine := bump "count"
+    let total := Actors.call "total" (Request.mk "POST" "/add-total" "")
+    Web.ok ("count " ++ Int.toText mine ++ ", " ++ total.content)
+  else if request.url == "/add-total" then Web.ok ("total " ++ Int.toText (bump "count"))
+  else if request.url == "/remind" then
+    Alarm.set (Duration.seconds 1)
+    Web.ok "reminder set"
+  else if request.url == "/reminded" then Web.ok (Option.getOr (Storage.get "reminded") "no")
+  else if request.verb == "ALARM" then
+    Storage.put "reminded" "yes"
+    Web.ok "reminded"
+  else Web.notFound request.url
+
+test objectsCallEachOther :=
+  let add := Request.mk "POST" "/add" ""
+  match Web.simulateMany serve [("a", add), ("b", add), ("a", add)] with
+  | (responses, stores, _) =>
+    List.map (fun r => r.content) responses == ["count 1, total 1", "count 1, total 2", "count 2, total 3"] &&
+      Option.bind (Map.lookup "total" stores) (fun m => Map.lookup "count" m) == some "3"
+
+test alarmsFireInOrder :=
+  match Web.simulateMany serve [("b", Request.mk "POST" "/remind" ""), ("a", Request.mk "POST" "/remind" "")] with
+  | (_, stores, fired) =>
+    fired == [("a", 1000), ("b", 1000)] && Option.bind (Map.lookup "a" stores) (fun m => Map.lookup "reminded" m) == some "yes"
+
+end Tally

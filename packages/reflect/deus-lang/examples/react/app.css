@@ -1,0 +1,115 @@
+body {
+  font:
+    16px/1.5 system-ui,
+    sans-serif;
+  background: #f6f5f2;
+  color: #222;
+  margin: 0;
+}
+main {
+  max-width: 32rem;
+  margin: 3rem auto;
+  padding: 0 1rem;
+}
+h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.75rem;
+}
+.lede {
+  color: #666;
+  margin-top: 0;
+}
+.counter {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+}
+.counter button {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 1.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid #ccc;
+  background: white;
+  cursor: pointer;
+}
+.counter .value {
+  min-width: 2rem;
+  text-align: center;
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+}
+.todos form {
+  display: flex;
+  gap: 0.5rem;
+}
+.todos input[placeholder] {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 0.5rem;
+  font: inherit;
+}
+.todos form button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: 0;
+  background: #3b5bdb;
+  color: white;
+  font: inherit;
+  cursor: pointer;
+}
+.todos ul {
+  list-style: none;
+  padding: 0;
+}
+.todo {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.5rem;
+  background: white;
+  margin: 0.25rem 0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+.todo.done {
+  color: #999;
+  text-decoration: line-through;
+}
+.left {
+  color: #666;
+}
+
+.inside ul {
+  padding-left: 1.2em;
+}
+
+.inside .badge {
+  padding: 0 0.4em;
+  border-radius: 4px;
+  background: #eef;
+}
+.inside .rerender {
+  margin-top: 0.75rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 0.5rem;
+  border: 1px solid #ccc;
+  background: white;
+  font: inherit;
+  cursor: pointer;
+}
+.inside .rerender:hover {
+  border-color: #888;
+}
+.demo-nav {
+  max-width: 32rem;
+  margin: 1rem auto 0;
+  padding: 0 1rem;
+  font-size: 0.875rem;
+  color: #666;
+}
+.demo-nav a {
+  color: inherit;
+}

@@ -1,0 +1,2227 @@
+/-
+  A C back end (D80): compiles a definition and the definitions it calls to C, which a C compiler
+  (clang, so LLVM) turns into native code.
+
+  It accepts the same first-order subset as the wasm back end (D51) and reuses that back end's
+  gathering and type tracking, so a program compiles to both or to neither. Each definition is a
+  C function of `V`s, a machine word. `Int` and `Bool` are themselves, sign-extended from 32 bits,
+  and arithmetic wraps at 32 bits as in the interpreter. Any other constructed value points at a
+  block `[tag, field…]` with a header word before it; a nullary constructor is a static block.
+
+  Blocks are reference counted (D86), as in Perceus (Koka, Lean 4). The header holds the count
+  and the block's kind. The code owns each local it binds and consumes it exactly once, so a block
+  is freed the moment its last reference goes, and a `match` that takes apart a unique block it
+  does not use again builds the case's new block in the old one's memory. Parameters that a
+  function only reads through are borrowed, so passing them costs nothing. Every block lives in
+  one reserved region, which tells blocks apart from integers without types. Cycles, which only
+  `Ref` can make, are never freed.
+
+  A call to itself in tail position is a jump back to the top of the function; a tail call of a
+  function of the same arity is `musttail` where the C compiler has it (clang; gcc from 15), so
+  mutual recursion in tail position runs in constant stack too.
+
+  `Int.div` and `Int.mod` by zero trap, as in wasm.
+
+  `Text` is a block of UTF-16 units with a C runtime ported from the Rust kernel (D115); a unique
+  text that is appended to grows in place.
+-/
+
+namespace CGen
+
+/-- The C every unit starts with; `nullary` static blocks serve the nullary constructors' tags. -/
+def prelude (nullary : Int) : Text :=
+  Text.join "\n" [
+    "#include <stdint.h>",
+    "#if defined(__has_attribute) && __has_attribute(musttail)",
+    "#define MUSTTAIL __attribute__((musttail))",
+    "#else",
+    "#define MUSTTAIL",
+    "#endif",
+    "#ifdef __wasm__",
+    "/* wasm32: a value is 64 bits; a block is its address with bit 32 set, so integers need no tag (D86). */",
+    "typedef int64_t V;",
+    "#define BOX(p) ((V)(uintptr_t)(p) | ((V)1 << 32))",
+    "#define UNBOX(v) ((V *)(uintptr_t)(uint32_t)(v))",
+    "#define IS_PTR(v) ((uint64_t)(v) >> 32 == 1)",
+    "#define EXPORT(name) __attribute__((export_name(name)))",
+    "extern unsigned char __heap_base;",
+    "/* With -nostdlib, clang still lowers fill and copy loops to these calls. */",
+    "void *memset(void *d, int c, unsigned long n) { unsigned char *p = d; while (n--) *p++ = (unsigned char)c; return d; }",
+    "void *memcpy(void *d, const void *s, unsigned long n) { unsigned char *p = d; const unsigned char *q = s; while (n--) *p++ = *q++; return d; }",
+    "static V *deus_base, *deus_hp, *deus_hl;",
+    "static void deus_init(void) { deus_base = deus_hp = (V *)(((uintptr_t)&__heap_base + 7) & ~(uintptr_t)7); deus_hl = (V *)(__builtin_wasm_memory_size(0) * 65536); }",
+    "static V *deus_raw(V words) { V *p = deus_hp; deus_hp += words; while (deus_hp > deus_hl) { uintptr_t pages = __builtin_wasm_memory_size(0); if (__builtin_wasm_memory_grow(0, pages) == (uintptr_t)-1) __builtin_trap(); deus_hl = (V *)((pages * 2) * 65536); } return p; }",
+    "#else",
+    "#include <stdlib.h>",
+    "#include <sys/mman.h>",
+    "/* The heap is one reserved region, so a word is a block exactly when it points into it (D86). */",
+    "typedef intptr_t V;",
+    "#define BOX(p) ((V)(p))",
+    "#define UNBOX(v) ((V *)(v))",
+    "#define DEUS_HEAP ((V)1 << 36)",
+    "#define EXPORT(name)",
+    "static V *deus_base, *deus_hp, *deus_hl;",
+    "#define IS_PTR(v) ((uintptr_t)(v) - (uintptr_t)deus_base < (uintptr_t)DEUS_HEAP)",
+    "static void deus_init(void) { void *m = mmap(0, DEUS_HEAP, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0); if (m == MAP_FAILED) __builtin_trap(); deus_base = deus_hp = m; deus_hl = deus_base + DEUS_HEAP / (V)sizeof(V); }",
+    "static V *deus_raw(V words) { V *p = deus_hp; deus_hp += words; if (deus_hp > deus_hl) __builtin_trap(); return p; }",
+    "#endif",
+    "/* Nullary constructors and () are static blocks, never counted. */",
+    "#define STATIC(p) ((V)(uintptr_t)(p))",
+    "#define W(x) ((V)(int32_t)(uint32_t)(x))",
+    "#define ADD(a, b) W((uint32_t)(a) + (uint32_t)(b))",
+    "#define SUB(a, b) W((uint32_t)(a) - (uint32_t)(b))",
+    "#define MUL(a, b) W((uint32_t)(a) * (uint32_t)(b))",
+    "#define SHL(a, b) W((uint32_t)(a) << ((b) & 31))",
+    "#define SHR(a, b) ((V)((int32_t)(a) >> ((b) & 31)))",
+    "#define USHR(a, b) W((uint32_t)(a) >> ((b) & 31))",
+    "static inline V DIV(V a, V b) { if (b == 0) __builtin_trap(); return b == -1 ? SUB(0, a) : (V)((int32_t)a / (int32_t)b); }",
+    "static inline V MOD(V a, V b) { if (b == 0) __builtin_trap(); return b == -1 ? 0 : (V)((int32_t)a % (int32_t)b); }",
+    "static V deus_live, deus_peak;",
+    "static V *deus_free_lists[257];",
+    "/* Freed blocks over 256 words, as [next, words, …]: reused by an exact fit among the first 16. */",
+    "static V *deus_big;",
+    "static V *deus_big_take(V words) { V **link = &deus_big; for (int i = 0; *link && i < 16; i++, link = (V **)(uintptr_t)*link) { V *h = *link; if (h[1] == words) { *link = (V *)(uintptr_t)h[0]; return h; } } return 0; }",
+    "/* A block's header, the word before it: its count times 256, plus its kind. */",
+    "#define PHDR(p) ((p)[-1])",
+    "#define HDR(v) PHDR(UNBOX(v))",
+    "#define K_TABLE 252",
+    "#define K_TEXT 253",
+    "#define K_REF 254",
+    "#define K_ARRAY 255",
+    "#define UNIQUE(v) (HDR(v) < 512)",
+    "static inline V *deus_block(V kind, V body) { V words = body + 1; V *h; deus_live += words; if (deus_live > deus_peak) deus_peak = deus_live; if (words <= 256 && (h = deus_free_lists[words])) deus_free_lists[words] = (V *)(uintptr_t)h[0]; else if (words <= 256 || !(h = deus_big_take(words))) h = deus_raw(words); h[0] = 256 | kind; return h + 1; }",
+    "static inline V deus_body(V *p) { V k = PHDR(p) & 255; return k == K_ARRAY ? p[0] + 1 : k == K_REF ? 1 : k == K_TEXT ? 2 + (p[1] + 3) / 4 : k == K_TABLE ? 4 : k + 1; }",
+    "static inline void deus_release(V *p) { V words = deus_body(p) + 1; deus_live -= words; if (words <= 256) { p[-1] = (V)(uintptr_t)deus_free_lists[words]; deus_free_lists[words] = p - 1; } else { p[-1] = (V)(uintptr_t)deus_big; p[0] = words; deus_big = p - 1; } }",
+    "static V *deus_stack, deus_sp, deus_cap;",
+    "static void deus_push(V v) { if (deus_sp == deus_cap) { V cap = deus_cap ? 2 * deus_cap : 1024; V *bigger = deus_raw(cap); for (V i = 0; i < deus_sp; i++) bigger[i] = deus_stack[i]; deus_stack = bigger; deus_cap = cap; } deus_stack[deus_sp++] = v; }",
+    "/* A native program with the interpreter frees what its closures hold; `deus_icodes` names their code. */",
+    "static void (*deus_ifree)(V *p);",
+    "static V deus_icodes[3];",
+    "static void deus_free(V *p) {",
+    "  for (;;) {",
+    "    V k = PHDR(p) & 255; V *from = k == K_REF ? p : k == K_TABLE ? p + 2 : p + 1; V n = k == K_ARRAY ? p[0] : k == K_REF ? 1 : k == K_TEXT ? 0 : k == K_TABLE ? 2 : k;",
+    "    for (V i = 0; i < n; i++) { V c = from[i]; if (IS_PTR(c)) { if (!UNIQUE(c)) HDR(c) -= 256; else deus_push(c); } }",
+    "    if (deus_ifree && k >= 2 && k < K_TABLE && (p[0] == deus_icodes[0] || p[0] == deus_icodes[1] || p[0] == deus_icodes[2])) deus_ifree(p); deus_release(p);",
+    "    if (deus_sp == 0) return;",
+    "    p = UNBOX(deus_stack[--deus_sp]);",
+    "  }",
+    "}",
+    "static inline V deus_dup(V v) { if (IS_PTR(v)) HDR(v) += 256; return v; }",
+    "static inline void deus_drop(V v) { if (IS_PTR(v)) { if (!UNIQUE(v)) HDR(v) -= 256; else deus_free(UNBOX(v)); } }",
+    "/* A constructor block, in the memory of a dead block of the same size when there is one. */",
+    "static inline V *deus_con(V *token, V fields) { if (token) { token[-1] = 256 | fields; return token; } return deus_block(fields, fields + 1); }",
+    "/* A closure is a block [code, captured…]; the code borrows it and owns its argument. */",
+    "typedef V (*deus_code)(V, V);",
+    "static inline V deus_apply(V c, V x) { return ((deus_code)(uintptr_t)UNBOX(c)[0])(c, x); }",
+    "static inline V deus_apply_drop(V c, V x) { V r = deus_apply(c, x); deus_drop(c); return r; }",
+    "static inline void deus_unused(V *token) { if (token) deus_release(token); }",
+    "static V deus_array(V n, V x) { if (n < 0) __builtin_trap(); V *p = deus_block(K_ARRAY, n + 1); p[0] = n; if (n == 0) deus_drop(x); else if (IS_PTR(x)) HDR(x) += 256 * (n - 1); for (V i = 1; i <= n; i++) p[i] = x; return BOX(p); }",
+    "/* A pure `Array.set` (D96) writes into a unique array and copies a shared one, counting each item again. */",
+    "static V deus_array_copy(V a) { V *q = UNBOX(a); V n = q[0]; V *p = deus_block(K_ARRAY, n + 1); p[0] = n; for (V i = 1; i <= n; i++) p[i] = deus_dup(q[i]); return BOX(p); }",
+    "static inline V deus_array_unique(V a) { if (UNIQUE(a)) return a; V r = deus_array_copy(a); HDR(a) -= 256; return r; }",
+    "#define AT(a, i) ({ V *a_ = UNBOX(a); V i_ = (i); if ((uint32_t)i_ >= (uint32_t)a_[0]) __builtin_trap(); &a_[i_ + 1]; })",
+    "static V deus_nullary[" ++ Int.toText (larger nullary 1) ++ "] = {"
+      ++ Text.join ", " (List.map Int.toText (List.range 0 (larger nullary 1))) ++ "};",
+    "/* Text is a block [length, capacity, UTF-16 units…] (D115). These borrow their arguments. */",
+    "#define TLEN(v) (UNBOX(v)[0])",
+    "#define TCAP(v) (UNBOX(v)[1])",
+    "#define TU(v) ((uint16_t *)(UNBOX(v) + 2))",
+    "static V deus_text_cap(V n, V cap) { cap = (cap + 3) & ~(V)3; V *p = deus_block(K_TEXT, 2 + cap / 4); p[0] = n; p[1] = cap; return BOX(p); }",
+    "static V deus_text(V n) { return deus_text_cap(n, n); }",
+    "static void deus_units(uint16_t *d, const uint16_t *s, V n) { for (V i = 0; i < n; i++) d[i] = s[i]; }",
+    "static V deus_text_of(const uint16_t *s, V n) { V r = deus_text(n); deus_units(TU(r), s, n); return r; }",
+    "static V deus_text_append(V a, V b) { V m = TLEN(a), n = TLEN(b); if (n == 0) return deus_dup(a); if (m == 0) return deus_dup(b); V r = deus_text(m + n); deus_units(TU(r), TU(a), m); deus_units(TU(r) + m, TU(b), n); return r; }",
+    "/* `a ++ b` that consumes `a`: a unique `a` grows in place, doubling its capacity when it is full, so a loop that appends to its text is linear. */",
+    "static V deus_text_extend(V a, V b) { V m = TLEN(a), n = TLEN(b); if (n == 0) return a; if (IS_PTR(a) && UNIQUE(a)) { if (m + n <= TCAP(a)) { deus_units(TU(a) + m, TU(b), n); TLEN(a) = m + n; return a; } V r = deus_text_cap(m + n, 2 * (m + n)); deus_units(TU(r), TU(a), m); deus_units(TU(r) + m, TU(b), n); deus_release(UNBOX(a)); return r; } V r = deus_text_append(a, b); deus_drop(a); return r; }",
+    "static V deus_text_cmp(V a, V b) { V m = TLEN(a), n = TLEN(b); uint16_t *x = TU(a), *y = TU(b); for (V i = 0; i < m && i < n; i++) if (x[i] != y[i]) return x[i] < y[i] ? -1 : 1; return m < n ? -1 : m > n ? 1 : 0; }",
+    "static V deus_text_eq(V a, V b) { if (a == b) return 1; V n = TLEN(a); if (n != TLEN(b)) return 0; uint16_t *x = TU(a), *y = TU(b); for (V i = 0; i < n; i++) if (x[i] != y[i]) return 0; return 1; }",
+    "static V deus_text_code(V t, V i) { return (uint32_t)i < (uint32_t)TLEN(t) ? (V)TU(t)[i] : -1; }",
+    "static V deus_clamp(V i, V n) { return i < 0 ? (n + i < 0 ? 0 : n + i) : i > n ? n : i; }",
+    "static V deus_text_slice(V t, V s, V e) { V n = TLEN(t), from = deus_clamp(s, n), to = deus_clamp(e, n); if (from == 0 && to == n) return deus_dup(t); return deus_text_of(TU(t) + from, from < to ? to - from : 0); }",
+    "static V deus_text_from_code(V c) { uint16_t u = (uint16_t)c; return deus_text_of(&u, 1); }",
+    "static V deus_text_index(V t, V needle, V from) { V n = TLEN(t), m = TLEN(needle), i = from < 0 ? 0 : from > n ? n : from; uint16_t *x = TU(t), *y = TU(needle); for (; i + m <= n; i++) { V j = 0; while (j < m && x[i + j] == y[j]) j++; if (j == m) return i; } return -1; }",
+    "static int deus_space(uint16_t u) { return (u >= 9 && u <= 13) || u == 32 || u == 0xa0 || u == 0x1680 || (u >= 0x2000 && u <= 0x200a) || u == 0x2028 || u == 0x2029 || u == 0x202f || u == 0x205f || u == 0x3000 || u == 0xfeff; }",
+    "static V deus_text_trim(V t) { V n = TLEN(t), s = 0, e = n; uint16_t *x = TU(t); while (s < n && deus_space(x[s])) s++; while (e > s && deus_space(x[e - 1])) e--; return deus_text_slice(t, s, e); }",
+    "/* A list is nil, the static block [0], or a block [1, head, tail]. */",
+    "static V deus_text_join(V sep, V xs) { V n = 0, k = 0; for (V c = xs; UNBOX(c)[0]; c = UNBOX(c)[2], k++) n += TLEN(UNBOX(c)[1]); if (k == 1) return deus_dup(UNBOX(xs)[1]); if (k > 1) n += (k - 1) * TLEN(sep); V r = deus_text(n); uint16_t *d = TU(r); for (V c = xs; UNBOX(c)[0]; c = UNBOX(c)[2]) { if (c != xs) { deus_units(d, TU(sep), TLEN(sep)); d += TLEN(sep); } V h = UNBOX(c)[1]; deus_units(d, TU(h), TLEN(h)); d += TLEN(h); } return r; }",
+    "static V deus_cons(V h, V t) { V *p = deus_block(2, 3); p[0] = 1; p[1] = h; p[2] = t; return BOX(p); }",
+    "static V deus_text_split(V t, V sep) { V n = TLEN(t), m = TLEN(sep), r, *slot = &r; uint16_t *x = TU(t), *y = TU(sep); if (m == 0) { for (V i = 0; i < n; i++) { V c = deus_cons(deus_text_of(x + i, 1), 0); *slot = c; slot = &UNBOX(c)[2]; } } else { V start = 0, i = 0; while (i + m <= n) { V j = 0; while (j < m && x[i + j] == y[j]) j++; if (j == m) { V c = deus_cons(deus_text_of(x + start, i - start), 0); *slot = c; slot = &UNBOX(c)[2]; i += m; start = i; } else i++; } V c = deus_cons(deus_text_of(x + start, n - start), 0); *slot = c; slot = &UNBOX(c)[2]; } *slot = STATIC(&deus_nullary[0]); return r; }",
+    "static V deus_int_text(V v) { uint16_t u[12]; int k = 12; uint32_t m = (int32_t)v < 0 ? 0u - (uint32_t)v : (uint32_t)v; do { u[--k] = (uint16_t)('0' + m % 10); m /= 10; } while (m); if ((int32_t)v < 0) u[--k] = '-'; return deus_text_of(u + k, 12 - k); }",
+    "/* `/^-?[0-9]+$/`, then wrapped to 32 bits as `Number(t) | 0` is (exactly, below 2^53). */",
+    "static V deus_text_int(V t) { V n = TLEN(t), i = 0; uint16_t *x = TU(t); int neg = n > 0 && x[0] == '-'; if (neg) i = 1; if (i == n) return STATIC(&deus_nullary[0]); uint32_t m = 0; for (; i < n; i++) { if (x[i] < '0' || x[i] > '9') return STATIC(&deus_nullary[0]); m = m * 10 + (x[i] - '0'); } V *p = deus_block(1, 2); p[0] = 1; p[1] = W(neg ? 0u - m : m); return BOX(p); }",
+    "/* A literal is made once, on first use, with a count no program brings to one, and is not counted as live. */",
+    "static V deus_literal(const uint16_t *u, V n) { V r = deus_text_of(u, n); HDR(r) = ((V)1 << 48) | K_TEXT; deus_live -= deus_body(UNBOX(r)) + 1; return r; }",
+    "/* A constant's value (D125) keeps a count no program brings to one, like a literal's. */",
+    "static void deus_immortal(V v) { if (IS_PTR(v)) HDR(v) = ((V)1 << 48) | (HDR(v) & 255); }",
+    "/* Values whose type the compiler does not know (D137): a text is a heap block of kind K_TEXT, an Int is not a block,",
+    "   a nullary constructor is its static block and any other is [tag, fields…] of kind its field count. */",
+    "#define IS_TEXT(v) (IS_PTR(v) && (HDR(v) & 255) == K_TEXT)",
+    "static V deus_tag_any(V v) { if (IS_PTR(v)) { if ((HDR(v) & 255) >= K_TABLE) __builtin_trap(); return UNBOX(v)[0]; } return (V)((V *)(uintptr_t)v - deus_nullary); }",
+    "static V deus_cmp_any(V a, V b) { if (a == b) return 0; if (IS_TEXT(a) && IS_TEXT(b)) return deus_text_cmp(a, b); if (!IS_PTR(a) && !IS_PTR(b)) return (a > b) - (a < b); V x = deus_tag_any(a), y = deus_tag_any(b); if (x != y || !IS_PTR(a) || !IS_PTR(b)) return (x > y) - (x < y); for (V i = 1, k = HDR(a) & 255; i <= k; i++) { V c = deus_cmp_any(UNBOX(a)[i], UNBOX(b)[i]); if (c) return c; } return 0; }",
+    "static V deus_eq_any(V a, V b) { if (a == b) return 1; if (IS_TEXT(a) && IS_TEXT(b)) return deus_text_eq(a, b); if (!IS_PTR(a) && !IS_PTR(b)) return 0; if (deus_tag_any(a) != deus_tag_any(b) || !IS_PTR(a) || !IS_PTR(b)) return 0; for (V i = 1, k = HDR(a) & 255; i <= k; i++) if (!deus_eq_any(UNBOX(a)[i], UNBOX(b)[i])) return 0; return 1; }",
+    "static V deus_text_concat(V xs) { static struct { V h, n, cap; } empty = {0, 0, 0}; return deus_text_join(STATIC(&empty.n), xs); }",
+    "static inline V deus_int_cmp(V x, V y) { return (x > y) - (x < y); }",
+    "/* `++` on lists: the unique prefix of the first list is relinked in place, the rest copied (D115). Consumes both. */",
+    "static V deus_list_append(V a, V b) { V r, *slot = &r, c = a; int mine = 1; while (UNBOX(c)[0]) { V *p = UNBOX(c); if (mine && UNIQUE(c)) { *slot = c; slot = &p[2]; } else { if (mine) HDR(c) -= 256; mine = 0; V n = deus_cons(deus_dup(p[1]), 0); *slot = n; slot = &UNBOX(n)[2]; } c = p[2]; } *slot = b; return r; }",
+    "static V deus_append_any(V a, V b) { if (IS_TEXT(a)) { V r = deus_text_extend(a, b); deus_drop(b); return r; } return deus_list_append(a, b); }",
+    "/* Dict and MutMap (D119): a block [size, used, entries, index] of kind K_TABLE. `entries` is an array of",
+    "   key-value pairs in insertion order, a deleted key being DEUS_NOKEY; `index` an open-addressed array of",
+    "   entry numbers, -1 where empty, at most half full. Keys are Int or Text, as in the kernels. All borrow. */",
+    "#define DEUS_NOKEY ((V)1 << 62)",
+    "static uint32_t deus_hash(V k) { if (IS_TEXT(k)) { uint32_t h = 2166136261u; V n = TLEN(k); uint16_t *x = TU(k); for (V i = 0; i < n; i++) h = (h ^ x[i]) * 16777619u; return h; } if (IS_PTR(k)) __builtin_trap(); uint32_t h = (uint32_t)k * 2654435761u; return h ^ (h >> 16); }",
+    "static inline V deus_key_eq(V a, V b) { return a == b || (IS_TEXT(a) && IS_TEXT(b) && deus_text_eq(a, b)); }",
+    "static V deus_table_new(V unit) { (void)unit; V *t = deus_block(K_TABLE, 4); t[0] = 0; t[1] = 0; t[2] = deus_array(16, DEUS_NOKEY); t[3] = deus_array(16, -1); return BOX(t); }",
+    "static V deus_table_find(V *t, V k) { V *ix = UNBOX(t[3]) + 1, *es = UNBOX(t[2]) + 1; V mask = UNBOX(t[3])[0] - 1; for (V i = deus_hash(k) & mask;; i = (i + 1) & mask) { V e = ix[i]; if (e < 0) return -1; if (deus_key_eq(es[2 * e], k)) return e; } }",
+    "static void deus_table_index(V *t, V k, V e) { V *ix = UNBOX(t[3]) + 1; V mask = UNBOX(t[3])[0] - 1; V i = deus_hash(k) & mask; while (ix[i] >= 0) i = (i + 1) & mask; ix[i] = e; }",
+    "/* Room for twice the live entries: the live ones move, in order, to new arrays, and the index is rebuilt. */",
+    "static void deus_table_grow(V *t) { V cap = 2 * t[0] + 8, icap = 16; while (icap < 2 * cap) icap *= 2; V *old = UNBOX(t[2]) + 1, used = t[1]; V es = deus_array(2 * cap, DEUS_NOKEY); V *to = UNBOX(es) + 1; V n = 0; for (V e = 0; e < used; e++) if (old[2 * e] != DEUS_NOKEY) { to[2 * n] = old[2 * e]; to[2 * n + 1] = old[2 * e + 1]; old[2 * e] = DEUS_NOKEY; old[2 * e + 1] = 0; n++; } deus_drop(t[2]); deus_drop(t[3]); t[2] = es; t[3] = deus_array(icap, -1); t[1] = n; for (V e = 0; e < n; e++) deus_table_index(t, to[2 * e], e); }",
+    "static V deus_table_set(V m, V k, V v) { V *t = UNBOX(m); V e = deus_table_find(t, k); if (e >= 0) { V *s = UNBOX(t[2]) + 2 + 2 * e; V old = *s; *s = deus_dup(v); deus_drop(old); } else { if (2 * (t[1] + 1) > UNBOX(t[2])[0]) deus_table_grow(t); e = t[1]++; t[0]++; V *s = UNBOX(t[2]) + 1 + 2 * e; s[0] = deus_dup(k); s[1] = deus_dup(v); deus_table_index(t, k, e); } return STATIC(&deus_nullary[0]); }",
+    "static V deus_table_get(V m, V k) { V *t = UNBOX(m); V e = deus_table_find(t, k); if (e < 0) return STATIC(&deus_nullary[0]); V *p = deus_block(1, 2); p[0] = 1; p[1] = deus_dup(UNBOX(t[2])[2 + 2 * e]); return BOX(p); }",
+    "static V deus_table_has(V m, V k) { return deus_table_find(UNBOX(m), k) >= 0; }",
+    "static V deus_table_delete(V m, V k) { V *t = UNBOX(m); V e = deus_table_find(t, k); if (e >= 0) { V *s = UNBOX(t[2]) + 1 + 2 * e; deus_drop(s[0]); deus_drop(s[1]); s[0] = DEUS_NOKEY; s[1] = 0; t[0]--; } return STATIC(&deus_nullary[0]); }",
+    "static V deus_table_size(V m) { return UNBOX(m)[0]; }",
+    "static V deus_table_keys(V m) { V *t = UNBOX(m), *es = UNBOX(t[2]) + 1, r, *slot = &r; for (V e = 0; e < t[1]; e++) if (es[2 * e] != DEUS_NOKEY) { V c = deus_cons(deus_dup(es[2 * e]), 0); *slot = c; slot = &UNBOX(c)[2]; } *slot = STATIC(&deus_nullary[0]); return r; }",
+    "/* A list of pairs [0, key, value]; a later key replaces an earlier one's value, as in the kernels. */",
+    "static V deus_dict_from_list(V xs) { V d = deus_table_new(0); for (V c = xs; UNBOX(c)[0]; c = UNBOX(c)[2]) { V *pair = UNBOX(UNBOX(c)[1]); deus_table_set(d, pair[1], pair[2]); } return d; }",
+    "static V deus_dict_lookup(V k, V d) { return deus_table_get(d, k); }",
+    "static V deus_dict_contains(V k, V d) { return deus_table_has(d, k); }",
+    "/* Handlers (D124). The abort marker is no value a program makes: not an Int, not a block. */",
+    "#ifdef __wasm__",
+    "#define DEUS_ABORT ((V)1 << 40)",
+    "#else",
+    "#define DEUS_ABORT ((V)(uintptr_t)deus_base - 8)",
+    "#endif",
+    "/* An installed clause is a record [parent, frame, ability, op, clause]; a handler's first record is its frame, with no clause.",
+    "   `deus_hctx` is the innermost visible record. A running clause hides its handler and the ones inside it. */",
+    "static V *deus_hrec, deus_hn, deus_hcap, deus_hctx = -1, *deus_cst, deus_cn, deus_ccap, deus_abort_frame = -1, deus_abort_value;",
+    "static V *deus_grow(V *p, V used, V *cap, V need) { if (used + need <= *cap) return p; V c = *cap ? 2 * *cap : 64; while (used + need > c) c *= 2; V *q = deus_raw(c); for (V i = 0; i < used; i++) q[i] = p[i]; *cap = c; return q; }",
+    "#define HREC(r, f) deus_hrec[5 * (r) + (f)]",
+    "static V deus_hpush(V parent, V frame, V a, V i, V c) { deus_hrec = deus_grow(deus_hrec, 5 * deus_hn, &deus_hcap, 5); V r = deus_hn++; HREC(r, 0) = parent; HREC(r, 1) = frame; HREC(r, 2) = a; HREC(r, 3) = i; HREC(r, 4) = c; return r; }",
+    "static V deus_handle_enter(V unused) { (void)unused; V f = deus_hpush(deus_hctx, deus_hn, -1, -1, 0); deus_hctx = f; return f; }",
+    "static V deus_handle_add(V f, V a, V i, V c) { deus_hctx = deus_hpush(deus_hctx, f, a, i, deus_dup(c)); return STATIC(&deus_nullary[0]); }",
+    "static V deus_handle_exit(V f) { deus_hctx = HREC(f, 0); for (V r = f; r < deus_hn; r++) deus_drop(HREC(r, 4)); deus_hn = f; return STATIC(&deus_nullary[0]); }",
+    "/* The clause for operation `i` of ability `a`, run with its handler hidden until `deus_clause_done`; none is a defect. */",
+    "static V deus_clause(V a, V i) { for (V r = deus_hctx; r >= 0; r = HREC(r, 0)) if (HREC(r, 2) == a && HREC(r, 3) == i) { V f = HREC(r, 1); deus_cst = deus_grow(deus_cst, 2 * deus_cn, &deus_ccap, 2); deus_cst[2 * deus_cn] = deus_hctx; deus_cst[2 * deus_cn + 1] = f; deus_cn++; deus_hctx = HREC(f, 0); return deus_dup(HREC(r, 4)); } __builtin_trap(); }",
+    "/* Whether a visible handler has a clause for operation `i` of ability `a`; `IO` falls back to the host (D129). */",
+    "static V deus_handled(V a, V i) { for (V r = deus_hctx; r >= 0; r = HREC(r, 0)) if (HREC(r, 2) == a && HREC(r, 3) == i) return 1; return 0; }",
+    "static V deus_clause_done(V v) { deus_cn--; deus_hctx = deus_cst[2 * deus_cn]; return deus_dup(v); }",
+    "static V deus_abort_to(V v) { if (v == DEUS_ABORT) return v; deus_abort_frame = deus_cst[2 * deus_cn - 1]; deus_abort_value = deus_dup(v); return DEUS_ABORT; }",
+    "static V deus_caught(V f, V r) { return r == DEUS_ABORT && deus_abort_frame == f; }",
+    "static V deus_caught_value(V unused) { (void)unused; deus_abort_frame = -1; return deus_abort_value; }",
+    "static V deus_aborted(V r) { return r == DEUS_ABORT; }",
+    "static V deus_abort_marker(V unused) { (void)unused; return DEUS_ABORT; }",
+    "/* UTF-8, as the kernels encode a text: a lone surrogate becomes U+FFFD. `o` needs 3 bytes a unit. */",
+    "static V deus_utf8(const uint16_t *x, V n, uint8_t *o) { V k = 0; for (V i = 0; i < n; i++) { uint32_t c = x[i]; if (c >= 0xd800 && c < 0xdc00 && i + 1 < n && x[i + 1] >= 0xdc00 && x[i + 1] < 0xe000) c = 0x10000 + ((c - 0xd800) << 10) + (x[++i] - 0xdc00); else if (c >= 0xd800 && c < 0xe000) c = 0xfffd; if (c < 0x80) o[k++] = (uint8_t)c; else if (c < 0x800) { o[k++] = (uint8_t)(0xc0 | c >> 6); o[k++] = (uint8_t)(0x80 | (c & 63)); } else if (c < 0x10000) { o[k++] = (uint8_t)(0xe0 | c >> 12); o[k++] = (uint8_t)(0x80 | (c >> 6 & 63)); o[k++] = (uint8_t)(0x80 | (c & 63)); } else { o[k++] = (uint8_t)(0xf0 | c >> 18); o[k++] = (uint8_t)(0x80 | (c >> 12 & 63)); o[k++] = (uint8_t)(0x80 | (c >> 6 & 63)); o[k++] = (uint8_t)(0x80 | (c & 63)); } } return k; }",
+    "/* A scratch buffer of `bytes` bytes is a text block, so it comes from and returns to the heap. */",
+    "static V deus_scratch(V bytes) { return deus_text(bytes / 2 + 1); }",
+    "static V deus_text_utf8(V t) { V b = deus_scratch(3 * TLEN(t)); uint8_t *o = (uint8_t *)TU(b); V k = deus_utf8(TU(t), TLEN(t), o), r, *slot = &r; for (V i = 0; i < k; i++) { V c = deus_cons(o[i], 0); *slot = c; slot = &UNBOX(c)[2]; } *slot = STATIC(&deus_nullary[0]); deus_drop(b); return r; }",
+    "/* Code points to units, a code above U+FFFF as its surrogate pair (D76); a code out of range is a defect. */",
+    "static V deus_text_from_codes(V xs) { V n = 0; for (V c = xs; UNBOX(c)[0]; c = UNBOX(c)[2]) { V v = UNBOX(c)[1]; if (v < 0 || v > 0x10ffff) __builtin_trap(); n += v > 0xffff ? 2 : 1; } V r = deus_text(n); uint16_t *o = TU(r); V k = 0; for (V c = xs; UNBOX(c)[0]; c = UNBOX(c)[2]) { V v = UNBOX(c)[1]; if (v > 0xffff) { o[k++] = (uint16_t)(0xd800 + ((v - 0x10000) >> 10)); o[k++] = (uint16_t)(0xdc00 + ((v - 0x10000) & 0x3ff)); } else o[k++] = (uint16_t)v; } return r; }",
+    "static const uint32_t deus_k256[64] = { 0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2 };",
+    "#define ROR(x, n) ((x) >> (n) | (x) << (32 - (n)))",
+    "static void deus_sha_block(uint32_t *h, const uint8_t *p) { uint32_t w[64], v[8]; for (int i = 0; i < 16; i++) w[i] = (uint32_t)p[4 * i] << 24 | (uint32_t)p[4 * i + 1] << 16 | (uint32_t)p[4 * i + 2] << 8 | p[4 * i + 3]; for (int i = 16; i < 64; i++) w[i] = w[i - 16] + (ROR(w[i - 15], 7) ^ ROR(w[i - 15], 18) ^ w[i - 15] >> 3) + w[i - 7] + (ROR(w[i - 2], 17) ^ ROR(w[i - 2], 19) ^ w[i - 2] >> 10); for (int i = 0; i < 8; i++) v[i] = h[i]; for (int i = 0; i < 64; i++) { uint32_t t1 = v[7] + (ROR(v[4], 6) ^ ROR(v[4], 11) ^ ROR(v[4], 25)) + ((v[4] & v[5]) ^ (~v[4] & v[6])) + deus_k256[i] + w[i]; uint32_t t2 = (ROR(v[0], 2) ^ ROR(v[0], 13) ^ ROR(v[0], 22)) + ((v[0] & v[1]) ^ (v[0] & v[2]) ^ (v[1] & v[2])); for (int j = 7; j > 0; j--) v[j] = v[j - 1]; v[4] += t1; v[0] = t1 + t2; } for (int i = 0; i < 8; i++) h[i] += v[i]; }",
+    "/* SHA-256 of the UTF-8 of a text, as 64 lower-case hex digits. */",
+    "static V deus_text_sha256(V t) { static const char hex[] = \"0123456789abcdef\"; uint32_t h[8] = { 0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19 }; V b = deus_scratch(3 * TLEN(t)); uint8_t *o = (uint8_t *)TU(b); V n = deus_utf8(TU(t), TLEN(t), o), i = 0; for (; i + 64 <= n; i += 64) deus_sha_block(h, o + i); uint8_t last[128] = {0}; V m = n - i; for (V j = 0; j < m; j++) last[j] = o[i + j]; last[m] = 0x80; V end = m < 56 ? 64 : 128; uint64_t bits = (uint64_t)n * 8; for (int j = 0; j < 8; j++) last[end - 1 - j] = (uint8_t)(bits >> (8 * j)); deus_sha_block(h, last); if (end == 128) deus_sha_block(h, last + 64); deus_drop(b); V r = deus_text(64); for (int j = 0; j < 32; j++) { uint8_t x = (uint8_t)(h[j / 4] >> (24 - 8 * (j % 4))); TU(r)[2 * j] = (uint16_t)hex[x >> 4]; TU(r)[2 * j + 1] = (uint16_t)hex[x & 15]; } return r; }",
+    "/* `show` (D120) appends to a unique text, as the kernels render values: JSON for texts. */",
+    "static V deus_put(V s, const char *c) { V n = 0; while (c[n]) n++; V t = deus_text(n); for (V i = 0; i < n; i++) TU(t)[i] = (uint16_t)(unsigned char)c[i]; V r = deus_text_extend(s, t); deus_drop(t); return r; }",
+    "static V deus_show_int(V s, V x) { V t = deus_int_text(x); V r = deus_text_extend(s, t); deus_drop(t); return r; }",
+    "static V deus_show_text(V s, V t) { static const char hex[] = \"0123456789abcdef\"; V n = TLEN(t), k = 0; V j = deus_text(6 * n + 2); uint16_t *x = TU(t), *o = TU(j); o[k++] = 34; for (V i = 0; i < n; i++) { uint32_t u = x[i], e = u == 34 || u == 92 ? u : u == 10 ? 110 : u == 13 ? 114 : u == 9 ? 116 : u == 8 ? 98 : u == 12 ? 102 : 0; int pair = u >= 0xd800 && u < 0xdc00 && i + 1 < n && x[i + 1] >= 0xdc00 && x[i + 1] < 0xe000; if (e) { o[k++] = 92; o[k++] = (uint16_t)e; } else if (pair) { o[k++] = (uint16_t)u; o[k++] = x[++i]; } else if (u < 32 || (u >= 0xd800 && u < 0xe000)) { o[k++] = 92; o[k++] = 117; o[k++] = hex[u >> 12]; o[k++] = hex[u >> 8 & 15]; o[k++] = hex[u >> 4 & 15]; o[k++] = hex[u & 15]; } else o[k++] = (uint16_t)u; } o[k++] = 34; TLEN(j) = k; V r = deus_text_extend(s, j); deus_drop(j); return r; }",
+    ""]
+
+/--
+  The Core interpreter (D146), for `Code.load`, `Code.has` and `Code.run` in a native program: the
+  kernels' machine over the compiled code's values and handlers. It needs the host side of `IO`.
+-/
+def codeRuntime : Text :=
+  -- In pieces of 40 lines: a long list literal nests deeply enough that the JIT overflows its stack and replays.
+  Text.join "\n" (List.concat [
+    ["#ifndef __wasm__",
+     "/* The Core interpreter (D146): `Code.load` reads `(def \"hash\" core)` forms, `Code.run` evaluates one, as the",
+     "   kernels' machine does. Its values are the compiled code's, so a closure it returns is called like any other",
+     "   and its operations reach the compiled handlers. It counts references as compiled code does (D213): evaluation",
+     "   returns an owned value, a cell owns its value, and a primitive drops what it only reads. Cached globals stay. */",
+     "#include <sys/resource.h>",
+     "static void deus_ipanic(const char *m) { fflush(stdout); fprintf(stderr, \"deus: panic: %s\\n\", m); exit(1); }",
+     "static void *deus_iarena(size_t n) { static char *p, *end; n = (n + 15) & ~(size_t)15; if ((size_t)(end - p) < n) { size_t c = n > ((size_t)1 << 20) ? n : (size_t)1 << 20; p = malloc(c); if (!p) __builtin_trap(); end = p + c; } void *r = p; p += n; return r; }",
+     "static V deus_keep(V v) { deus_immortal(v); return v; }",
+     "/* An S-expression: an Int, a string or a symbol (`u`, `n` units), or a list of `n` items. */",
+     "enum { DS_INT, DS_STR, DS_SYM, DS_LIST };",
+     "typedef struct DS { int k; V n; V i; uint16_t *u; struct DS **xs; } DS;",
+     "static int deus_ds_is(const DS *s, const char *w) { if (s->k != DS_SYM) return 0; V i = 0; for (; i < s->n; i++) if (!w[i] || s->u[i] != (uint16_t)w[i]) return 0; return !w[i]; }",
+     "static int deus_ws(uint16_t c) { return c == 32 || c == 10 || c == 9 || c == 13; }",
+     "static DS *deus_ds_read(const uint16_t *x, V n, V *pos) {",
+     "  V p = *pos;",
+     "  for (;;) { while (p < n && deus_ws(x[p])) p++; if (p < n && x[p] == ';') { while (p < n && x[p] != 10) p++; continue; } break; }",
+     "  if (p >= n) { *pos = p; return 0; }",
+     "  DS *s = deus_iarena(sizeof(DS));",
+     "  if (x[p] == '(') {",
+     "    p++; V cap = 8, k = 0; DS **xs = malloc(cap * sizeof(DS *));",
+     "    for (;;) {",
+     "      while (p < n && deus_ws(x[p])) p++;",
+     "      if (p < n && x[p] == ';') { while (p < n && x[p] != 10) p++; continue; }",
+     "      if (p >= n) deus_ipanic(\"Code.load: sexp: unbalanced (\");",
+     "      if (x[p] == ')') { p++; break; }",
+     "      if (k == cap) { cap *= 2; xs = realloc(xs, cap * sizeof(DS *)); }",
+     "      xs[k++] = deus_ds_read(x, n, &p);",
+     "    }",
+     "    s->k = DS_LIST; s->n = k; s->xs = deus_iarena((size_t)(k ? k : 1) * sizeof(DS *)); for (V i = 0; i < k; i++) s->xs[i] = xs[i]; free(xs);",
+     "  } else if (x[p] == ')') { deus_ipanic(\"Code.load: sexp: unbalanced ')'\");",
+     "  } else if (x[p] == '\"') {",
+     "    p++; V k = 0, q = p;",
+     "    while (q < n && x[q] != '\"') q += x[q] == '\\\\' ? (q + 1 < n && x[q + 1] == 'u' ? 6 : 2) : 1;",
+     "    if (q >= n) deus_ipanic(\"Code.load: sexp: unterminated string\");",
+     "    s->u = deus_iarena((size_t)(q - p + 1) * 2);",
+     "    while (x[p] != '\"') {",
+     "      if (x[p] != '\\\\') { s->u[k++] = x[p++]; continue; }",
+     "      uint16_t e = x[p + 1]; p += 2;",
+     "      if (e == 'n') s->u[k++] = 10; else if (e == 't') s->u[k++] = 9; else if (e == 'r') s->u[k++] = 13;"],
+    ["      else if (e == 'u') { uint16_t c = 0; for (int j = 0; j < 4; j++) { uint16_t d = x[p + j]; c = (uint16_t)(c * 16 + (d >= 'a' ? d - 'a' + 10 : d >= 'A' ? d - 'A' + 10 : d - '0')); } s->u[k++] = c; p += 4; }",
+     "      else s->u[k++] = e;",
+     "    }",
+     "    p++; s->k = DS_STR; s->n = k;",
+     "  } else {",
+     "    V q = p; while (q < n && !deus_ws(x[q]) && x[q] != '(' && x[q] != ')') q++;",
+     "    V i = p + (x[p] == '-'), digits = i < q; for (V j = i; j < q; j++) if (x[j] < '0' || x[j] > '9') digits = 0;",
+     "    if (digits) { uint32_t m = 0; for (V j = i; j < q; j++) m = m * 10 + (x[j] - '0'); s->k = DS_INT; s->i = W(x[p] == '-' ? 0u - m : m); }",
+     "    else { s->k = DS_SYM; s->u = (uint16_t *)(x + p); s->n = q - p; }",
+     "    p = q;",
+     "  }",
+     "  *pos = p; return s;",
+     "}",
+     "static int deus_ds_eq(const DS *a, const DS *b) { if (a->n != b->n) return 0; for (V i = 0; i < a->n; i++) if (a->u[i] != b->u[i]) return 0; return 1; }",
+     "static uint32_t deus_ds_hash(const uint16_t *u, V n) { uint32_t h = 2166136261u; for (V i = 0; i < n; i++) h = (h ^ u[i]) * 16777619u; return h; }",
+     "static char *deus_ds_cstr(const DS *s) { char *c = deus_iarena((size_t)s->n + 1); for (V i = 0; i < s->n; i++) c[i] = (char)s->u[i]; c[s->n] = 0; return c; }",
+     "",
+     "/* Terms. */",
+     "enum { DT_VAR, DT_CONST, DT_REF, DT_LAM, DT_APP, DT_LET, DT_SEQ, DT_LETREC, DT_IF, DT_MATCH, DT_HANDLE, DT_PRIM, DT_CON, DT_OP, DT_CLAUSE };",
+     "enum { DP_ANY, DP_VAR, DP_AS, DP_INT, DP_TEXT, DP_CON, DP_BOOL };",
+     "typedef struct DP { int k; V v; V tag; V n; struct DP **ps; struct DP *inner; } DP;",
+     "struct DT;",
+     "typedef struct DG { DS *hash; DS *form; struct DT *term; V value; int state; struct DG *next; } DG;",
+     "typedef struct { DP *p; struct DT *guard; struct DT *body; } DCase;",
+     "typedef struct { DS *abil; V i, a; struct DT *fn; } DClause;",
+     "typedef struct DT { int t; V i, v, arity, tag, n, ncl; struct DT *a, *b, *c, **xs, *ret; DCase *cases; DClause *cls; DG *g; DS *name; char *cname; } DT;",
+     "/* An environment cell, counted (`rc`): the cell in front of it, a closure and a partial application each hold it once. */",
+     "typedef struct DE { V v; struct DE *next; uint32_t rc; } DE;",
+     "",
+     "#define DEUS_GBITS 16",
+     "static DG *deus_gtab[1 << DEUS_GBITS];",
+     "static DG *deus_global(const uint16_t *u, V n) { for (DG *g = deus_gtab[deus_ds_hash(u, n) & ((1 << DEUS_GBITS) - 1)]; g; g = g->next) if (g->hash->n == n) { V i = 0; while (i < n && g->hash->u[i] == u[i]) i++; if (i == n) return g; } return 0; }",
+     "",
+     "/* Primitives by name, with their arities, as `prims.ts` defines them. */",
+     "static const char *const deus_iprim_names[] = { \"Int.add\", \"Int.sub\", \"Int.mul\", \"Int.div\", \"Int.mod\", \"Int.neg\", \"Int.and\", \"Int.or\", \"Int.xor\", \"Int.shl\", \"Int.shr\", \"Int.ushr\", \"Int.toText\", \"Int.fromText\",",
+     "  \"eq\", \"neq\", \"compare\", \"lt\", \"le\", \"gt\", \"ge\", \"append\", \"implies\",",
+     "  \"Text.length\", \"Text.code\", \"Text.slice\", \"Text.fromCode\", \"Text.concat\", \"Text.join\", \"Text.split\", \"Text.indexOf\", \"Text.trim\", \"Text.sha256\", \"Text.fromCodes\", \"Text.utf8\",",
+     "  \"Ref.new\", \"Ref.get\", \"Ref.set\", \"Array.make\", \"Array.length\", \"Array.get\", \"Array.set\",",
+     "  \"Dict.fromList\", \"Dict.lookup\", \"Dict.contains\", \"Dict.size\", \"Dict.keys\", \"MutMap.new\", \"MutMap.get\", \"MutMap.has\", \"MutMap.set\", \"MutMap.delete\", \"MutMap.size\", \"MutMap.keys\",",
+     "  \"show\", \"trace\", \"defect\", \"Code.load\", \"Code.quote\", \"Code.has\", \"Code.steps\", \"Code.defectTrace\", \"Code.cost\", \"Code.run\", \"Code.tag\", \"Code.field\", \"Code.cast\", 0 };"],
+    ["static const signed char deus_iprim_arity[] = { 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1, 1,",
+     "  2, 2, 2, 2, 2, 2, 2, 2, 2,",
+     "  1, 2, 3, 1, 1, 2, 2, 3, 1, 1, 1, 1,",
+     "  1, 1, 2, 2, 1, 2, 3,",
+     "  1, 2, 2, 1, 1, 1, 2, 2, 3, 2, 1, 1,",
+     "  1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1 };",
+     "enum { P_ADD, P_SUB, P_MUL, P_DIV, P_MOD, P_NEG, P_AND, P_OR, P_XOR, P_SHL, P_SHR, P_USHR, P_ITEXT, P_IFROM,",
+     "  P_EQ, P_NEQ, P_CMP, P_LT, P_LE, P_GT, P_GE, P_APPEND, P_IMPLIES,",
+     "  P_TLEN, P_TCODE, P_TSLICE, P_TFROMCODE, P_TCONCAT, P_TJOIN, P_TSPLIT, P_TINDEX, P_TTRIM, P_TSHA, P_TFROMCODES, P_TUTF8,",
+     "  P_RNEW, P_RGET, P_RSET, P_AMAKE, P_ALEN, P_AGET, P_ASET,",
+     "  P_DFROM, P_DLOOKUP, P_DHAS, P_DSIZE, P_DKEYS, P_MNEW, P_MGET, P_MHAS, P_MSET, P_MDEL, P_MSIZE, P_MKEYS,",
+     "  P_SHOW, P_TRACE, P_DEFECT, P_LOAD, P_QUOTE, P_HAS, P_STEPS, P_DTRACE, P_COST, P_RUN, P_TAG, P_FIELD, P_CAST };",
+     "",
+     "static DP *deus_ipat(DS *f) {",
+     "  if (f->k != DS_LIST || f->n == 0) deus_ipanic(\"core: unknown pattern\");",
+     "  DP *p = deus_iarena(sizeof(DP)); DS *h = f->xs[0];",
+     "  if (deus_ds_is(h, \"pany\")) p->k = DP_ANY;",
+     "  else if (deus_ds_is(h, \"pvar\")) p->k = DP_VAR;",
+     "  else if (deus_ds_is(h, \"pas\")) { p->k = DP_AS; p->inner = deus_ipat(f->xs[1]); }",
+     "  else if (deus_ds_is(h, \"pint\")) { p->k = DP_INT; p->v = f->xs[1]->i; }",
+     "  else if (deus_ds_is(h, \"ptext\")) { p->k = DP_TEXT; p->v = deus_literal(f->xs[1]->u, f->xs[1]->n); }",
+     "  else if (deus_ds_is(h, \"pcon\")) {",
+     "    static const uint16_t boolName[] = { '#', 'B', 'o', 'o', 'l' };",
+     "    DS *t = f->xs[1]; p->tag = f->xs[2]->i; p->n = f->n - 3;",
+     "    int isBool = t->n == 5; for (V i = 0; isBool && i < 5; i++) if (t->u[i] != boolName[i]) isBool = 0;",
+     "    p->k = isBool ? DP_BOOL : DP_CON; p->ps = deus_iarena((size_t)(p->n ? p->n : 1) * sizeof(DP *));",
+     "    for (V i = 0; i < p->n; i++) p->ps[i] = deus_ipat(f->xs[3 + i]);",
+     "  } else deus_ipanic(\"core: unknown pattern\");",
+     "  return p;",
+     "}",
+     "static V deus_inullary(V tag) { if (tag >= 0 && tag < (V)(sizeof deus_nullary / sizeof deus_nullary[0])) return STATIC(&deus_nullary[tag]); V *p = deus_block(0, 1); p[0] = tag; return deus_keep(BOX(p)); }",
+     "static DT *deus_iterm(DS *f) {",
+     "  if (f->k != DS_LIST || f->n == 0) deus_ipanic(\"core: expected list\");",
+     "  DT *t = deus_iarena(sizeof(DT)); memset(t, 0, sizeof(DT)); DS *h = f->xs[0];",
+     "  if (deus_ds_is(h, \"var\")) { t->t = DT_VAR; t->i = f->xs[1]->i; }",
+     "  else if (deus_ds_is(h, \"ref\")) { t->t = DT_REF; t->name = f->xs[1]; }",
+     "  else if (deus_ds_is(h, \"int\")) { t->t = DT_CONST; t->v = f->xs[1]->i; }",
+     "  else if (deus_ds_is(h, \"text\")) { t->t = DT_CONST; t->v = deus_literal(f->xs[1]->u, f->xs[1]->n); }",
+     "  else if (deus_ds_is(h, \"lam\")) { t->t = DT_LAM; t->a = deus_iterm(f->xs[1]); }",
+     "  else if (deus_ds_is(h, \"app\")) { t->t = DT_APP; t->a = deus_iterm(f->xs[1]); t->n = f->n - 2; t->xs = deus_iarena((size_t)(t->n ? t->n : 1) * sizeof(DT *)); for (V i = 0; i < t->n; i++) t->xs[i] = deus_iterm(f->xs[2 + i]); }"],
+    ["  else if (deus_ds_is(h, \"let\") || deus_ds_is(h, \"seq\")) { t->t = deus_ds_is(h, \"let\") ? DT_LET : DT_SEQ; t->a = deus_iterm(f->xs[1]); t->b = deus_iterm(f->xs[2]); }",
+     "  else if (deus_ds_is(h, \"letrec\")) {",
+     "    DS *fs = f->xs[1]; t->t = DT_LETREC; t->n = fs->n; t->xs = deus_iarena((size_t)(t->n ? t->n : 1) * sizeof(DT *));",
+     "    for (V i = 0; i < t->n; i++) { t->xs[i] = deus_iterm(fs->xs[i]); if (t->xs[i]->t != DT_LAM) deus_ipanic(\"core: letrec binds lambdas only\"); }",
+     "    t->b = deus_iterm(f->xs[2]);",
+     "  }",
+     "  else if (deus_ds_is(h, \"if\")) { t->t = DT_IF; t->a = deus_iterm(f->xs[1]); t->b = deus_iterm(f->xs[2]); t->c = deus_iterm(f->xs[3]); }",
+     "  else if (deus_ds_is(h, \"con\")) {",
+     "    static const uint16_t boolName[] = { '#', 'B', 'o', 'o', 'l' };",
+     "    DS *ty = f->xs[1]; V tag = f->xs[2]->i, arity = f->xs[3]->i;",
+     "    int isBool = ty->n == 5; for (V i = 0; isBool && i < 5; i++) if (ty->u[i] != boolName[i]) isBool = 0;",
+     "    if (arity > 0) { t->t = DT_CON; t->name = ty; t->tag = tag; t->arity = arity; }",
+     "    else { t->t = DT_CONST; t->v = isBool ? tag : deus_inullary(tag); }",
+     "  }",
+     "  else if (deus_ds_is(h, \"op\")) { t->t = DT_OP; t->name = f->xs[1]; t->cname = deus_ds_cstr(f->xs[1]); t->i = f->xs[2]->i; t->arity = f->xs[3]->i; t->tag = -2; }",
+     "  else if (deus_ds_is(h, \"prim\")) {",
+     "    DS *p = f->xs[1]; V k = 0;",
+     "    for (; deus_iprim_names[k]; k++) { const char *w = deus_iprim_names[k]; V i = 0; while (i < p->n && w[i] && p->u[i] == (uint16_t)w[i]) i++; if (i == p->n && !w[i]) break; }",
+     "    if (!deus_iprim_names[k]) { fflush(stdout); fprintf(stderr, \"deus: panic: core: unknown primitive %s\\n\", deus_ds_cstr(p)); exit(1); }",
+     "    t->t = DT_PRIM; t->i = k; t->arity = deus_iprim_arity[k];",
+     "  }",
+     "  else if (deus_ds_is(h, \"match\")) {",
+     "    t->t = DT_MATCH; t->a = deus_iterm(f->xs[1]); t->n = f->n - 2; t->cases = deus_iarena((size_t)(t->n ? t->n : 1) * sizeof(DCase));",
+     "    for (V i = 0; i < t->n; i++) { DS *c = f->xs[2 + i]; int guarded = deus_ds_is(c->xs[0], \"gcase\"); t->cases[i].p = deus_ipat(c->xs[1]); t->cases[i].guard = guarded ? deus_iterm(c->xs[2]) : 0; t->cases[i].body = deus_iterm(c->xs[guarded ? 3 : 2]); }",
+     "  }",
+     "  else if (deus_ds_is(h, \"handle\")) {",
+     "    t->t = DT_HANDLE; t->a = deus_iterm(f->xs[1]); t->cls = deus_iarena((size_t)f->n * sizeof(DClause));",
+     "    for (V i = 2; i < f->n; i++) {",
+     "      DS *c = f->xs[i];",
+     "      if (deus_ds_is(c->xs[0], \"ret\")) t->ret = deus_iterm(c->xs[1]);",
+     "      else { DClause *cl = &t->cls[t->ncl++]; cl->abil = c->xs[1]; cl->i = c->xs[2]->i; cl->a = -2; DT *fn = deus_iarena(sizeof(DT)); memset(fn, 0, sizeof(DT)); fn->t = DT_CLAUSE; fn->arity = c->xs[3]->i; fn->a = deus_iterm(c->xs[4]); cl->fn = fn; }",
+     "    }",
+     "  }",
+     "  else { fflush(stdout); fprintf(stderr, \"deus: panic: core: unknown term %s\\n\", deus_ds_cstr(h)); exit(1); }",
+     "  return t;",
+     "}",
+     "",
+     "/* Abilities by the index the compiled handlers use; one the compiled code never names gets the next free index. */",
+     "static DS **deus_iabil_extra; static V deus_iabil_n, deus_iabil_cap;",
+     "static V deus_iability(DS *name) {"],
+    ["  for (V k = 0; k < deus_nabilities; k++) { const char *w = deus_abilities[k]; V i = 0; while (i < name->n && w[i] && name->u[i] == (uint16_t)w[i]) i++; if (i == name->n && !w[i]) return k; }",
+     "  for (V k = 0; k < deus_iabil_n; k++) if (deus_ds_eq(deus_iabil_extra[k], name)) return deus_nabilities + k;",
+     "  if (deus_iabil_n == deus_iabil_cap) { deus_iabil_cap = deus_iabil_cap ? 2 * deus_iabil_cap : 8; deus_iabil_extra = realloc(deus_iabil_extra, (size_t)deus_iabil_cap * sizeof(DS *)); }",
+     "  deus_iabil_extra[deus_iabil_n++] = name; return deus_nabilities + deus_iabil_n - 1;",
+     "}",
+     "",
+     "/* Values the interpreter adds: a closure [deus_ilam, term, env], a partial application [deus_ipap, callee, env, args…]",
+     "   of a primitive, constructor, operation or handler clause, and the marker a clause's continuation is bound to. */",
+     "static V deus_ilam(V c, V x);",
+     "static V deus_ipap(V c, V x);",
+     "static V deus_ilamrec(V c, V x);",
+     "static V deus_kmark;",
+     "/* Steps of the interpreter, its cost model: one per term it enters, so a cost grows as the kernels' does. */",
+     "static uint32_t deus_isteps;",
+     "#define DEUS_K STATIC(&deus_kmark)",
+     "static DE *deus_efree;",
+     "/* A cell binding `v` in front of `e`, taking over the caller's reference to `e`. */",
+     "static DE *deus_ipush(DE *e, V v) { DE *c = deus_efree; if (c) deus_efree = c->next; else c = deus_iarena(sizeof(DE)); c->v = v; c->next = e; c->rc = 1; return c; }",
+     "static DE *deus_eref(DE *e) { if (e) e->rc++; return e; }",
+     "static void deus_erelease(DE *e) { while (e && --e->rc == 0) { DE *n = e->next; deus_drop(e->v); e->next = deus_efree; deus_efree = e; e = n; } }",
+     "static void deus_ifree_code(V *p) { deus_erelease((DE *)(uintptr_t)p[2]); }",
+     "static V deus_iclosure(DT *lam, DE *e) { V *p = deus_block(2, 3); p[0] = (V)(uintptr_t)deus_ilam; p[1] = (V)(uintptr_t)lam; p[2] = (V)(uintptr_t)deus_eref(e); return BOX(p); }",
+     "static V deus_ipap_of(DT *callee, DE *e, const V *args, V n) { V *p = deus_block(3 + n, 4 + n); p[0] = (V)(uintptr_t)deus_ipap; p[1] = (V)(uintptr_t)callee; p[2] = (V)(uintptr_t)deus_eref(e); p[3] = n; for (V i = 0; i < n; i++) p[4 + i] = args[i]; return BOX(p); }",
+     "static int deus_icode(V f, deus_code code) { return IS_PTR(f) && (HDR(f) & 255) < K_TABLE && UNBOX(f)[0] == (V)(uintptr_t)code; }",
+     "",
+     "static V deus_ieval(DT *t, DE *e);",
+     "static V deus_itail(DT *t, DE *e);",
+     "static V deus_iapply(V f, V x);",
+     "static V deus_icall(DT *callee, DE *e, V *args);",
+     "static V deus_ishow(V s, V v);",
+     "",
+     "/* Operation `i` of ability index `a`: the innermost handler's clause, else the host for `IO` and `Defect`. */",
+     "static V deus_ihost(V i, V *a);",
+     "#define EV(dst, term, env) do { dst = deus_ieval(term, env); if (dst == DEUS_ABORT) return DEUS_ABORT; } while (0)",
+     "static V deus_iperform_at(V a, const char *name, V i, V *args, V k) {",
+     "  if (deus_handled(a, i)) { V r = deus_clause(a, i); for (V j = 0; j < k && r != DEUS_ABORT; j++) { V g = deus_iapply(r, args[j]); deus_drop(r); r = g; } V d = deus_clause_done(r); deus_drop(r); return d; }",
+     "  if (!strcmp(name, \"#IO\")) { V r = deus_ihost(i, args); for (V j = 0; j < k; j++) deus_drop(args[j]); return r; }",
+     "  if (!strcmp(name, \"#Defect\") && i == 0) return deus_defect(args[0]);",
+     "  char m[160]; snprintf(m, sizeof m, \"unhandled operation %d of %.100s\", (int)i, name);",
+     "  V message = deus_keep(deus_text_cs(m)); return deus_defect(message);"],
+    ["}",
+     "static V deus_iperform(DT *op, V *args) { if (op->tag == -2) op->tag = deus_iability(op->name); return deus_iperform_at(op->tag, op->cname, op->i, args, op->arity); }",
+     "/* A defect, raised as `Defect.raise` so a handler may take it, as the kernels raise one. */",
+     "static V deus_idefect(V message) { deus_keep(message);",
+     "  static DT op; if (!op.cname) { static uint16_t u[] = { '#', 'D', 'e', 'f', 'e', 'c', 't' }; static DS name; name.k = DS_SYM; name.u = u; name.n = 7; op.t = DT_OP; op.name = &name; op.cname = \"#Defect\"; op.arity = 1; op.tag = -2; }",
+     "  return deus_iperform(&op, &message);",
+     "}",
+     "static V deus_idefect_c(const char *m) { return deus_idefect(deus_keep(deus_text_cs(m))); }",
+     "static V deus_idefect_show(const char *m, V v) { V s = deus_put(deus_text_cap(0, 16), m); return deus_idefect(deus_keep(deus_ishow(s, v))); }",
+     "static V deus_ihost(V i, V *a) {",
+     "  switch (i) {",
+     "    case 0: return deus_io_print(a[0]); case 1: return deus_io_eprint(a[0]); case 2: return deus_keep(deus_io_readFile(a[0])); case 3: return deus_io_writeFile(a[0], a[1]);",
+     "    case 4: return deus_io_exists(a[0]); case 5: return deus_keep(deus_io_listDir(a[0])); case 6: return deus_io_mkdirp(a[0]); case 7: return deus_io_remove(a[0]);",
+     "    case 8: return deus_keep(deus_io_args(a[0])); case 9: return deus_io_exit(a[0]); case 10: return deus_io_time(a[0]); case 11: return deus_keep(deus_io_readStdin(a[0]));",
+     "    case 12: return deus_io_writeBytes(a[0], a[1]); case 13: return deus_keep(deus_io_getEnv(a[0])); case 14: return deus_io_isDir(a[0]); case 15: return deus_keep(deus_io_wallClock(a[0]));",
+     "    case 16: return deus_io_appendFile(a[0], a[1]); case 17: return deus_keep(deus_io_exec(a[0], a[1]));",
+     "    default: return deus_idefect_c(\"unknown IO operation\");",
+     "  }",
+     "}",
+     "",
+     "/* `show` as the kernels render a value. A Bool is 0 or 1 here, and the nullary constructors of",
+     "   Unit, List and Option are one value, so those render as an Int, and as `()` or `[]` by where they are. */",
+     "static int deus_ilist(V v) { while (IS_PTR(v) && (HDR(v) & 255) == 2 && UNBOX(v)[0] == 1) v = UNBOX(v)[2]; return v == STATIC(&deus_nullary[0]); }",
+     "static V deus_ishow(V s, V v) {",
+     "  if (!IS_PTR(v)) {",
+     "    if ((uintptr_t)v - (uintptr_t)deus_nullary < sizeof deus_nullary) { V tag = (V)((V *)(uintptr_t)v - deus_nullary); if (tag == 0) return deus_put(s, \"()\"); char b[24]; snprintf(b, sizeof b, \"#%d\", (int)tag); return deus_put(s, b); }",
+     "    if (v == DEUS_K) return deus_put(s, \"<function>\");",
+     "    return deus_show_int(s, v);",
+     "  }",
+     "  V k = HDR(v) & 255;",
+     "  if (k == K_TEXT) return deus_show_text(s, v);",
+     "  if (k == K_ARRAY) { s = deus_put(s, \"#[\"); for (V i = 1; i <= UNBOX(v)[0]; i++) { if (i > 1) s = deus_put(s, \", \"); s = deus_ishow(s, UNBOX(v)[i]); } return deus_put(s, \"]\"); }",
+     "  if (k >= K_TABLE || UNBOX(v)[0] > 4096) return deus_put(s, \"<function>\");",
+     "  if (k == 2 && UNBOX(v)[0] == 1 && deus_ilist(v)) { s = deus_put(s, \"[\"); for (V c = v; c != STATIC(&deus_nullary[0]); c = UNBOX(c)[2]) { if (c != v) s = deus_put(s, \", \"); s = deus_ishow(s, UNBOX(c)[1]); } return deus_put(s, \"]\"); }",
+     "  if (k == 2 && UNBOX(v)[0] == 0) { s = deus_put(s, \"(\"); s = deus_ishow(s, UNBOX(v)[1]); s = deus_put(s, \", \"); s = deus_ishow(s, UNBOX(v)[2]); return deus_put(s, \")\"); }",
+     "  if (k == 1 && UNBOX(v)[0] == 1) { s = deus_put(s, \"(some \"); s = deus_ishow(s, UNBOX(v)[1]); return deus_put(s, \")\"); }",
+     "  char b[24]; snprintf(b, sizeof b, \"(#%d\", (int)UNBOX(v)[0]); s = deus_put(s, b);",
+     "  for (V i = 1; i <= k; i++) { s = deus_put(s, \" \"); s = deus_ishow(s, UNBOX(v)[i]); }",
+     "  return deus_put(s, \")\");",
+     "}"],
+    ["/* A text as a Core string literal, escaped as the printer does. */",
+     "static V deus_iquote_text(V s, V t) {",
+     "  static const char hex[] = \"0123456789abcdef\"; V n = TLEN(t), k = 0; V j = deus_text(6 * n + 2); uint16_t *x = TU(t), *o = TU(j); o[k++] = '\"';",
+     "  for (V i = 0; i < n; i++) { uint16_t u = x[i]; if (u == '\"' || u == '\\\\') { o[k++] = '\\\\'; o[k++] = u; } else if (u == 10) { o[k++] = '\\\\'; o[k++] = 'n'; } else if (u == 9) { o[k++] = '\\\\'; o[k++] = 't'; } else if (u == 13) { o[k++] = '\\\\'; o[k++] = 'r'; } else if (u < 32 || u == 127) { o[k++] = '\\\\'; o[k++] = 'u'; o[k++] = '0'; o[k++] = '0'; o[k++] = hex[u >> 4]; o[k++] = hex[u & 15]; } else o[k++] = u; }",
+     "  o[k++] = '\"'; TLEN(j) = k; V r = deus_text_extend(s, j); deus_drop(j); return r;",
+     "}",
+     "/* `Code.quote` without types: the constructors' type names are not in a value here, so they quote as `?`. */",
+     "static V deus_iquote(V s, V v) {",
+     "  if (!IS_PTR(v)) {",
+     "    if ((uintptr_t)v - (uintptr_t)deus_nullary < sizeof deus_nullary) { char b[40]; snprintf(b, sizeof b, \"(con \\\"?\\\" %d 0)\", (int)((V *)(uintptr_t)v - deus_nullary)); return deus_put(s, b); }",
+     "    s = deus_put(s, \"(int \"); s = deus_show_int(s, v); return deus_put(s, \")\");",
+     "  }",
+     "  V k = HDR(v) & 255;",
+     "  if (k == K_TEXT) { s = deus_put(s, \"(text \"); s = deus_iquote_text(s, v); return deus_put(s, \")\"); }",
+     "  if (k >= K_TABLE || UNBOX(v)[0] > 4096) return deus_put(s, \"(prim \\\"<function>\\\")\");",
+     "  char b[48]; snprintf(b, sizeof b, \"(app (con \\\"?\\\" %d %d)\", (int)UNBOX(v)[0], (int)k); s = deus_put(s, b);",
+     "  for (V i = 1; i <= k; i++) { s = deus_put(s, \" \"); s = deus_iquote(s, UNBOX(v)[i]); }",
+     "  return deus_put(s, \")\");",
+     "}",
+     "",
+     "/* Structural order and equality, as the kernels define them; functions are not compared. */",
+     "static V deus_icmp(V a, V b, int *bad) {",
+     "  for (;;) {",
+     "    if (a == b) return 0;",
+     "    int pa = IS_PTR(a), pb = IS_PTR(b);",
+     "    if (pa && pb && (HDR(a) & 255) == K_TEXT && (HDR(b) & 255) == K_TEXT) return deus_text_cmp(a, b);",
+     "    if (!pa && !pb) { int na = (uintptr_t)a - (uintptr_t)deus_nullary < sizeof deus_nullary, nb = (uintptr_t)b - (uintptr_t)deus_nullary < sizeof deus_nullary; if (!na && !nb) return (a > b) - (a < b); }",
+     "    V ka = pa ? HDR(a) & 255 : 0, kb = pb ? HDR(b) & 255 : 0;",
+     "    if (ka == K_ARRAY && kb == K_ARRAY) { V m = UNBOX(a)[0], n = UNBOX(b)[0]; for (V i = 1; i <= m && i <= n; i++) { V c = deus_icmp(UNBOX(a)[i], UNBOX(b)[i], bad); if (c) return c; } return (m > n) - (m < n); }",
+     "    if (ka >= K_TABLE || kb >= K_TABLE || (pa && UNBOX(a)[0] > 4096) || (pb && UNBOX(b)[0] > 4096) || a == DEUS_K || b == DEUS_K) { *bad = 1; return 0; }",
+     "    V ta = deus_tag_any(a), tb = deus_tag_any(b);",
+     "    if (ta != tb) return ta < tb ? -1 : 1;",
+     "    V n = ka < kb ? ka : kb;",
+     "    if (n == 0) return (ka > kb) - (ka < kb);",
+     "    for (V i = 1; i < n; i++) { V c = deus_icmp(UNBOX(a)[i], UNBOX(b)[i], bad); if (c || *bad) return c; }",
+     "    a = UNBOX(a)[n]; b = UNBOX(b)[n];",
+     "  }",
+     "}",
+     "",
+     "static int deus_ikey(V k) { return !IS_PTR(k) || (HDR(k) & 255) == K_TEXT; }"],
+    ["static V deus_iload(V source);",
+     "static V deus_irun(V hash);",
+     "/* The tag of a data value: a Bool's is itself, a nullary constructor's is its static block's index. */",
+     "static V deus_code_tag(V v) { if (IS_PTR(v)) return UNBOX(v)[0]; if ((uintptr_t)v - (uintptr_t)deus_nullary < sizeof deus_nullary) return (V)((V *)(uintptr_t)v - deus_nullary); return v; }",
+     "",
+     "static V deus_iprim(V id, V *a) {",
+     "  switch (id) {",
+     "    case P_ADD: return ADD(a[0], a[1]); case P_SUB: return SUB(a[0], a[1]); case P_MUL: return MUL(a[0], a[1]);",
+     "    case P_DIV: if (a[1] == 0) return deus_idefect_c(\"division by zero\"); return DIV(a[0], a[1]);",
+     "    case P_MOD: if (a[1] == 0) return deus_idefect_c(\"division by zero\"); return MOD(a[0], a[1]);",
+     "    case P_NEG: return SUB(0, a[0]); case P_AND: return a[0] & a[1]; case P_OR: return a[0] | a[1]; case P_XOR: return a[0] ^ a[1];",
+     "    case P_SHL: return SHL(a[0], a[1]); case P_SHR: return SHR(a[0], a[1]); case P_USHR: return USHR(a[0], a[1]);",
+     "    case P_ITEXT: return deus_int_text(a[0]); case P_IFROM: { V r = deus_text_int(a[0]); deus_drop(a[0]); return r; }",
+     "    case P_EQ: case P_NEQ: case P_CMP: case P_LT: case P_LE: case P_GT: case P_GE: {",
+     "      int bad = 0; V c = deus_icmp(a[0], a[1], &bad);",
+     "      if (bad) { if ((id == P_EQ || id == P_NEQ) && a[0] == a[1]) c = 0; else return deus_idefect_c(\"cannot compare functions\"); }",
+     "      deus_drop(a[0]); deus_drop(a[1]); switch (id) { case P_EQ: return c == 0; case P_NEQ: return c != 0; case P_CMP: return c; case P_LT: return c < 0; case P_LE: return c <= 0; case P_GT: return c > 0; default: return c >= 0; }",
+     "    }",
+     "    case P_APPEND: return deus_append_any(a[0], a[1]);",
+     "    case P_IMPLIES: return !a[0] || a[1];",
+     "    case P_TLEN: { V r = TLEN(a[0]); deus_drop(a[0]); return r; } case P_TCODE: { V r = deus_text_code(a[0], a[1]); deus_drop(a[0]); return r; } case P_TSLICE: { V r = deus_text_slice(a[0], a[1], a[2]); deus_drop(a[0]); return r; }",
+     "    case P_TFROMCODE: return deus_text_from_code(a[0]); case P_TCONCAT: { V r = deus_text_concat(a[0]); deus_drop(a[0]); return r; } case P_TJOIN: { V r = deus_text_join(a[0], a[1]); deus_drop(a[0]); deus_drop(a[1]); return r; }",
+     "    case P_TSPLIT: { V r = deus_text_split(a[0], a[1]); deus_drop(a[0]); deus_drop(a[1]); return r; } case P_TINDEX: { V r = deus_text_index(a[0], a[1], a[2]); deus_drop(a[0]); deus_drop(a[1]); return r; } case P_TTRIM: { V r = deus_text_trim(a[0]); deus_drop(a[0]); return r; }",
+     "    case P_TSHA: { V r = deus_text_sha256(a[0]); deus_drop(a[0]); return r; }",
+     "    case P_TFROMCODES: { for (V c = a[0]; UNBOX(c)[0]; c = UNBOX(c)[2]) { V v = UNBOX(c)[1]; if (v < 0 || v > 0x10ffff) { char m[64]; snprintf(m, sizeof m, \"Text.fromCodes: %d is not a code point\", (int)v); return deus_idefect_c(m); } } V r = deus_text_from_codes(a[0]); deus_drop(a[0]); return r; }",
+     "    case P_TUTF8: { V r = deus_text_utf8(a[0]); deus_drop(a[0]); return r; }",
+     "    case P_RNEW: { V *r = deus_block(K_REF, 1); r[0] = a[0]; return BOX(r); }",
+     "    case P_RGET: { V r = deus_dup(UNBOX(a[0])[0]); deus_drop(a[0]); return r; } case P_RSET: { V old = UNBOX(a[0])[0]; UNBOX(a[0])[0] = a[1]; deus_drop(old); deus_drop(a[0]); return UNIT; }",
+     "    case P_AMAKE: if (a[0] < 0) { char m[64]; snprintf(m, sizeof m, \"Array.make: negative length %d\", (int)a[0]); return deus_idefect_c(m); } return deus_array(a[0], a[1]);",
+     "    case P_ALEN: { V r = UNBOX(a[0])[0]; deus_drop(a[0]); return r; }",
+     "    case P_AGET: case P_ASET: {",
+     "      V n = UNBOX(a[0])[0];",
+     "      if (a[1] < 0 || a[1] >= n) { char m[96]; snprintf(m, sizeof m, \"%s: index %d out of bounds 0 .. %d\", id == P_AGET ? \"Array.get\" : \"Array.set\", (int)a[1], (int)n); return deus_idefect_c(m); }",
+     "      if (id == P_AGET) { V r = deus_dup(UNBOX(a[0])[a[1] + 1]); deus_drop(a[0]); return r; }",
+     "      V r = deus_array_unique(a[0]); V old = UNBOX(r)[a[1] + 1]; UNBOX(r)[a[1] + 1] = a[2]; deus_drop(old); return r;",
+     "    }",
+     "    case P_DFROM: for (V c = a[0]; UNBOX(c)[0]; c = UNBOX(c)[2]) if (!deus_ikey(UNBOX(UNBOX(c)[1])[1])) return deus_idefect_show(\"hash map keys are Text or Int, got \", UNBOX(UNBOX(c)[1])[1]); { V r = deus_dict_from_list(a[0]); deus_drop(a[0]); return r; }"],
+    ["    case P_DLOOKUP: if (!deus_ikey(a[0])) return deus_idefect_show(\"hash map keys are Text or Int, got \", a[0]); { V r = deus_dict_lookup(a[0], a[1]); deus_drop(a[0]); deus_drop(a[1]); return r; }",
+     "    case P_DHAS: if (!deus_ikey(a[0])) return deus_idefect_show(\"hash map keys are Text or Int, got \", a[0]); { V r = deus_dict_contains(a[0], a[1]); deus_drop(a[0]); deus_drop(a[1]); return r; }",
+     "    case P_DSIZE: case P_MSIZE: { V r = deus_table_size(a[0]); deus_drop(a[0]); return r; }",
+     "    case P_DKEYS: case P_MKEYS: { V r = deus_table_keys(a[0]); deus_drop(a[0]); return r; }",
+     "    case P_MNEW: return deus_table_new(0);",
+     "    case P_MGET: if (!deus_ikey(a[1])) return deus_idefect_show(\"hash map keys are Text or Int, got \", a[1]); { V r = deus_table_get(a[0], a[1]); deus_drop(a[0]); deus_drop(a[1]); return r; }",
+     "    case P_MHAS: if (!deus_ikey(a[1])) return deus_idefect_show(\"hash map keys are Text or Int, got \", a[1]); { V r = deus_table_has(a[0], a[1]); deus_drop(a[0]); deus_drop(a[1]); return r; }",
+     "    case P_MSET: if (!deus_ikey(a[1])) return deus_idefect_show(\"hash map keys are Text or Int, got \", a[1]); { V r = deus_table_set(a[0], a[1], a[2]); deus_drop(a[0]); deus_drop(a[1]); deus_drop(a[2]); return r; }",
+     "    case P_MDEL: if (!deus_ikey(a[1])) return deus_idefect_show(\"hash map keys are Text or Int, got \", a[1]); { V r = deus_table_delete(a[0], a[1]); deus_drop(a[0]); deus_drop(a[1]); return r; }",
+     "    case P_SHOW: { V r = deus_ishow(deus_text_cap(0, 16), a[0]); deus_drop(a[0]); return r; }",
+     "    case P_TRACE: { V s = deus_put(deus_text_cap(0, 16), \"trace \"); s = deus_text_extend(s, a[0]); s = deus_put(s, \": \"); s = deus_ishow(s, a[1]); s = deus_put(s, \"\\n\"); deus_io_eprint(s); deus_drop(s); deus_drop(a[0]); return a[1]; }",
+     "    case P_DEFECT: return deus_idefect(a[0]);",
+     "    case P_LOAD: { V r = deus_iload(a[0]); deus_drop(a[0]); return r; }",
+     "    case P_QUOTE: { V r = deus_iquote(deus_text_cap(0, 16), a[0]); deus_drop(a[0]); return r; }",
+     "    case P_HAS: { V r = deus_global(TU(a[0]), TLEN(a[0])) != 0; deus_drop(a[0]); return r; }",
+     "    case P_DTRACE: return UNIT;",
+     "    case P_STEPS: return W(deus_isteps);",
+     "    case P_COST: { uint32_t before = deus_isteps; V r = deus_iapply(a[0], UNIT); if (r == DEUS_ABORT) return r; deus_drop(r); deus_drop(a[0]); return W(deus_isteps - before); }",
+     "    case P_RUN: { V r = deus_irun(a[0]); deus_drop(a[0]); return r; }",
+     "    case P_TAG: { V r = deus_code_tag(a[0]); deus_drop(a[0]); return r; }",
+     "    case P_FIELD: { V r = deus_dup(UNBOX(a[0])[a[1] + 1]); deus_drop(a[0]); return r; }",
+     "    case P_CAST: return a[0];",
+     "  }",
+     "  return deus_idefect_c(\"unknown primitive\");",
+     "}",
+     "",
+     "/* A saturated call of a primitive, constructor, operation or clause; `args` holds exactly its arity. */",
+     "static V deus_icall(DT *callee, DE *e, V *args) {",
+     "  switch (callee->t) {",
+     "    case DT_PRIM: return deus_iprim(callee->i, args);",
+     "    case DT_CON: { V n = callee->arity, *p = deus_block(n, n + 1); p[0] = callee->tag; for (V i = 0; i < n; i++) p[1 + i] = args[i]; return BOX(p); }",
+     "    case DT_OP: return deus_iperform(callee, args);",
+     "    default: { DE *c = deus_eref(e); for (V i = 0; i < callee->arity; i++) c = deus_ipush(c, args[i]); c = deus_ipush(c, DEUS_K); V r = deus_itail(callee->a, c); deus_erelease(c); return r; }",
+     "  }",
+     "}",
+     "/* Function `i` of a `letrec` group, [deus_ilamrec, group, env, i]: it holds the environment around the group, and a call",
+     "   makes the group's cells anew, so no cell holds a closure that holds that cell. */",
+     "static V deus_irec(DT *group, V i, DE *e) { V *p = deus_block(3, 4); p[0] = (V)(uintptr_t)deus_ilamrec; p[1] = (V)(uintptr_t)group; p[2] = (V)(uintptr_t)deus_eref(e); p[3] = i; return BOX(p); }",
+     "static DE *deus_irecenv(V c) { V *p = UNBOX(c); DT *group = (DT *)(uintptr_t)p[1]; DE *e = (DE *)(uintptr_t)p[2], *r = deus_eref(e); for (V j = 0; j < group->n; j++) r = deus_ipush(r, j == p[3] ? deus_dup(c) : deus_irec(group, j, e)); return r; }",
+     "static V deus_ilamrec(V c, V x) { DT *lam = ((DT *)(uintptr_t)UNBOX(c)[1])->xs[UNBOX(c)[3]]; DE *e = deus_ipush(deus_irecenv(c), x); V r = deus_ieval(lam->a, e); deus_erelease(e); return r; }",
+     "static V deus_ilam(V c, V x) { DE *e = deus_ipush(deus_eref((DE *)(uintptr_t)UNBOX(c)[2]), x); V r = deus_ieval(((DT *)(uintptr_t)UNBOX(c)[1])->a, e); deus_erelease(e); return r; }",
+     "static V deus_ipap(V c, V x) {",
+     "  V *p = UNBOX(c); DT *callee = (DT *)(uintptr_t)p[1]; V n = p[3];",
+     "  if (n + 1 < callee->arity) { V *q = deus_block(4 + n, 5 + n); for (V i = 0; i < 3; i++) q[i] = p[i]; deus_eref((DE *)(uintptr_t)p[2]); q[3] = n + 1; for (V i = 0; i < n; i++) q[4 + i] = deus_dup(p[4 + i]); q[4 + n] = x; return BOX(q); }",
+     "  V args[n + 1]; for (V i = 0; i < n; i++) args[i] = deus_dup(p[4 + i]); args[n] = x;"],
+    ["  return deus_icall(callee, (DE *)(uintptr_t)p[2], args);",
+     "}",
+     "static V deus_iapply(V f, V x) {",
+     "  if (f == DEUS_K) return deus_idefect_c(\"a handler clause resumes its continuation outside its tail, which the native interpreter does not do\");",
+     "  if (!IS_PTR(f) || (HDR(f) & 255) >= K_TABLE) return deus_idefect_show(\"cannot apply \", f);",
+     "  if (UNBOX(f)[0] == (V)(uintptr_t)deus_ilam) return deus_ilam(f, x);",
+     "  if (UNBOX(f)[0] == (V)(uintptr_t)deus_ipap) return deus_ipap(f, x);",
+     "  if (UNBOX(f)[0] == (V)(uintptr_t)deus_ilamrec) return deus_ilamrec(f, x);",
+     "  return deus_apply(f, x);",
+     "}",
+     "",
+     "/* A value for a callee term that takes `arity` arguments, applied to none yet. */",
+     "static V deus_icallee(DT *t) { return t->arity == 0 ? deus_icall(t, 0, 0) : deus_ipap_of(t, 0, 0, 0); }",
+     "/* Binds `p`'s variables in front of `e`, taking over the caller's reference to `e`. */",
+     "static DE *deus_ibind(DP *p, V v, DE *e, int *ok) {",
+     "  switch (p->k) {",
+     "    case DP_ANY: return e;",
+     "    case DP_VAR: return deus_ipush(e, deus_dup(v));",
+     "    case DP_AS: return deus_ibind(p->inner, v, deus_ipush(e, deus_dup(v)), ok);",
+     "    case DP_INT: if (v != p->v) *ok = 0; return e;",
+     "    case DP_TEXT: if (!IS_TEXT(v) || !deus_text_eq(v, p->v)) *ok = 0; return e;",
+     "    case DP_BOOL: if (v != p->tag) *ok = 0; return e;",
+     "    default:",
+     "      if (deus_code_tag(v) != p->tag) { *ok = 0; return e; }",
+     "      for (V i = 0; i < p->n && *ok; i++) e = deus_ibind(p->ps[i], UNBOX(v)[i + 1], e, ok);",
+     "      return e;",
+     "  }",
+     "}",
+     "static DG *deus_iglobal(DT *t) {",
+     "  if (t->g) return t->g;",
+     "  DG *g = deus_global(t->name->u, t->name->n);",
+     "  if (!g) { fflush(stdout); fprintf(stderr, \"deus: panic: unknown definition %s\\n\", deus_ds_cstr(t->name)); exit(1); }",
+     "  return t->g = g;",
+     "}",
+     "static V deus_ivalue(DG *g) {",
+     "  if (g->state == 2) return g->value;",
+     "  if (!g->term) g->term = deus_iterm(g->form);",
+     "  if (g->term->t == DT_LAM) { g->value = deus_keep(deus_iclosure(g->term, 0)); g->state = 2; return g->value; }",
+     "  if (g->state == 1) { V s = deus_put(deus_text_cap(0, 16), \"definition \"); s = deus_text_extend(s, deus_keep(deus_text_of(g->hash->u, g->hash->n))); s = deus_put(s, \" depends on its own value\"); return deus_idefect(deus_keep(s)); }",
+     "  g->state = 1; V v = deus_ieval(g->term, 0);",
+     "  if (v == DEUS_ABORT) { g->state = 0; return v; }"],
+    ["  g->value = deus_keep(v); g->state = 2; return v;",
+     "}",
+     "",
+     "/* Evaluates `t` in `e`, which it borrows; a tail call, a tail `let`, `match` or `if` loops rather than recursing.",
+     "   `own` is the environment the loop has bound itself, released on every way out. */",
+     "#define IRET(x) do { V r_ = (x); deus_erelease(own); return r_; } while (0)",
+     "#define IEV(dst, term, env) do { dst = deus_ieval(term, env); if (dst == DEUS_ABORT) IRET(DEUS_ABORT); } while (0)",
+     "#define IBIND(chain) do { DE *n_ = (chain); deus_erelease(own); own = e = n_; } while (0)",
+     "#define IMATCH(EVAL) do { \\",
+     "    V s; EVAL(s, t->a, e); DE *bound = 0; V i = 0; \\",
+     "    for (; i < t->n; i++) { \\",
+     "      int ok = 1; bound = deus_ibind(t->cases[i].p, s, deus_eref(e), &ok); \\",
+     "      if (!ok) { deus_erelease(bound); continue; } \\",
+     "      if (t->cases[i].guard) { V g = deus_ieval(t->cases[i].guard, bound); if (g == DEUS_ABORT) { deus_erelease(bound); IRET(g); } if (!g) { deus_erelease(bound); continue; } } \\",
+     "      break; \\",
+     "    } \\",
+     "    if (i == t->n) IRET(deus_idefect_show(\"no match for \", s)); \\",
+     "    deus_drop(s); IBIND(bound); t = t->cases[i].body; \\",
+     "  } while (0)",
+     "#define ILETREC() do { \\",
+     "    DE *cells = deus_eref(e); for (V i = 0; i < t->n; i++) cells = deus_ipush(cells, deus_irec(t, i, e)); \\",
+     "    IBIND(cells); t = t->b; \\",
+     "  } while (0)",
+     "static V deus_ieval(DT *t, DE *e) {",
+     "  DE *own = 0;",
+     "  for (;;) {",
+     "    deus_isteps++;",
+     "    switch (t->t) {",
+     "      case DT_VAR: { DE *c = e; for (V i = t->i; i-- > 0;) c = c->next; IRET(deus_dup(c->v)); }",
+     "      case DT_CONST: IRET(t->v);",
+     "      case DT_REF: IRET(deus_ivalue(deus_iglobal(t)));",
+     "      case DT_LAM: IRET(deus_iclosure(t, e));",
+     "      case DT_PRIM: case DT_CON: case DT_OP: IRET(deus_icallee(t));",
+     "      case DT_APP: {",
+     "        DT *h = t->a; V n = t->n, buf[8], *args = n <= 8 ? buf : deus_iarena((size_t)n * sizeof(V)), f;",
+     "        int direct = (h->t == DT_PRIM || h->t == DT_CON || h->t == DT_OP) && n >= h->arity && h->arity > 0;",
+     "        if (!direct) IEV(f, h, e);",
+     "        if (n == 0) IRET(f);",
+     "        for (V i = 0; i < n; i++) IEV(args[i], t->xs[i], e);"],
+    ["        V from = 0;",
+     "        if (direct) { f = deus_icall(h, 0, args); if (f == DEUS_ABORT) IRET(f); from = h->arity; if (from == n) IRET(f); }",
+     "        /* A curried lambda takes its arguments one by one without making a closure per argument. */",
+     "        DT *lam = 0; DE *env = 0;",
+     "        for (;; from++) {",
+     "          if (!lam && deus_icode(f, deus_ilam)) { lam = (DT *)(uintptr_t)UNBOX(f)[1]; env = deus_eref((DE *)(uintptr_t)UNBOX(f)[2]); deus_drop(f); }",
+     "          else if (!lam && deus_icode(f, deus_ilamrec)) { lam = ((DT *)(uintptr_t)UNBOX(f)[1])->xs[UNBOX(f)[3]]; env = deus_irecenv(f); deus_drop(f); }",
+     "          if (!lam) { V g = deus_iapply(f, args[from]); deus_drop(f); f = g; if (from == n - 1 || f == DEUS_ABORT) IRET(f); continue; }",
+     "          env = deus_ipush(env, args[from]);",
+     "          if (from == n - 1) break;",
+     "          if (lam->a->t == DT_LAM) { lam = lam->a; continue; }",
+     "          f = deus_ieval(lam->a, env); deus_erelease(env); env = 0; if (f == DEUS_ABORT) IRET(f); lam = 0;",
+     "        }",
+     "        IBIND(env); t = lam->a; continue;",
+     "      }",
+     "      case DT_LET: { V v; IEV(v, t->a, e); IBIND(deus_ipush(deus_eref(e), v)); t = t->b; continue; }",
+     "      case DT_SEQ: { V v; IEV(v, t->a, e); deus_drop(v); t = t->b; continue; }",
+     "      case DT_LETREC: ILETREC(); continue;",
+     "      case DT_IF: { V v; IEV(v, t->a, e); t = v ? t->b : t->c; continue; }",
+     "      case DT_MATCH: IMATCH(IEV); continue;",
+     "      case DT_HANDLE: {",
+     "        V f = deus_handle_enter(0);",
+     "        for (V i = 0; i < t->ncl; i++) { DClause *cl = &t->cls[i]; if (cl->a == -2) cl->a = deus_iability(cl->abil); V c = deus_ipap_of(cl->fn, e, 0, 0); deus_handle_add(f, cl->a, cl->i, c); deus_drop(c); }",
+     "        V r = deus_ieval(t->a, e);",
+     "        deus_handle_exit(f);",
+     "        if (deus_caught(f, r)) IRET(deus_caught_value(0));",
+     "        if (r == DEUS_ABORT || !t->ret) IRET(r);",
+     "        IBIND(deus_ipush(deus_eref(e), r)); t = t->ret; continue;",
+     "      }",
+     "      default: IRET(deus_idefect_c(\"unknown term\"));",
+     "    }",
+     "  }",
+     "}",
+     "/* A clause body: its tails resume (`k v` returns `v` to the operation) or abort to the handler, as compiled clauses do (D124). */",
+     "static V deus_itail(DT *t, DE *e) {",
+     "  DE *own = 0;",
+     "  for (;;) {",
+     "    deus_isteps++;",
+     "    switch (t->t) {",
+     "      case DT_LET: { V v; IEV(v, t->a, e); IBIND(deus_ipush(deus_eref(e), v)); t = t->b; continue; }",
+     "      case DT_SEQ: { V v; IEV(v, t->a, e); deus_drop(v); t = t->b; continue; }"],
+    ["      case DT_IF: { V v; IEV(v, t->a, e); t = v ? t->b : t->c; continue; }",
+     "      case DT_LETREC: ILETREC(); continue;",
+     "      case DT_MATCH: IMATCH(IEV); continue;",
+     "      case DT_APP:",
+     "        if (t->n == 1 && t->a->t == DT_VAR) { DE *c = e; for (V i = t->a->i; i-- > 0;) c = c->next; if (c->v == DEUS_K) { V v; IEV(v, t->xs[0], e); IRET(v); } }",
+     "        /* fall through */",
+     "      default: { V v = deus_ieval(t, e); if (v == DEUS_ABORT) IRET(v); V r = deus_abort_to(v); deus_drop(v); IRET(r); }",
+     "    }",
+     "  }",
+     "}",
+     "",
+     "/* `Code.load`: registers each `(def \"hash\" core)` form the text holds; a hash already loaded keeps its definition. */",
+     "/* Deep recursion in the program is deep recursion here: the stack may grow to the hard limit. */",
+     "static void deus_istack(void) { static int done; if (done) return; done = 1; struct rlimit r; if (getrlimit(RLIMIT_STACK, &r) == 0 && r.rlim_cur != RLIM_INFINITY) { r.rlim_cur = r.rlim_max == RLIM_INFINITY || r.rlim_max > ((rlim_t)1 << 32) ? (rlim_t)1 << 32 : r.rlim_max; setrlimit(RLIMIT_STACK, &r); } }",
+     "static V deus_iload(V source) {",
+     "  deus_istack(); deus_ifree = deus_ifree_code; deus_icodes[0] = (V)(uintptr_t)deus_ilam; deus_icodes[1] = (V)(uintptr_t)deus_ipap; deus_icodes[2] = (V)(uintptr_t)deus_ilamrec;",
+     "  V n = TLEN(source), pos = 0; uint16_t *x = deus_iarena((size_t)(n ? n : 1) * 2); memcpy(x, TU(source), (size_t)n * 2);",
+     "  for (DS *f; (f = deus_ds_read(x, n, &pos));) {",
+     "    if (f->k != DS_LIST || f->n != 3 || !deus_ds_is(f->xs[0], \"def\") || f->xs[1]->k != DS_STR) continue;",
+     "    DS *h = f->xs[1]; if (deus_global(h->u, h->n)) continue;",
+     "    DG *g = deus_iarena(sizeof(DG)); memset(g, 0, sizeof(DG)); g->hash = h; g->form = f->xs[2];",
+     "    DG **b = &deus_gtab[deus_ds_hash(h->u, h->n) & ((1 << DEUS_GBITS) - 1)]; g->next = *b; *b = g;",
+     "  }",
+     "  return UNIT;",
+     "}",
+     "/* `Code.run`: the value of a loaded definition, its effects reaching the caller's handlers. */",
+     "static V deus_irun(V hash) {",
+     "  DG *g = deus_global(TU(hash), TLEN(hash));",
+     "  if (!g) { char *c = deus_cstr(hash); fflush(stdout); fprintf(stderr, \"deus: panic: unknown definition %s\\n\", c); exit(1); }",
+     "  return deus_ivalue(g);",
+     "}",
+     "/* The entry points compiled code calls: they borrow their arguments and return what the caller owns. */",
+     "static V deus_code_load(V source) { return deus_iload(source); }",
+     "static V deus_code_has(V hash) { return deus_global(TU(hash), TLEN(hash)) != 0; }",
+     "static V deus_code_run(V hash) { return deus_irun(hash); }",
+     "static V deus_code_quote(V v) { return deus_iquote(deus_text_cap(0, 16), v); }",
+     "static V deus_code_field(V v, V i) { return deus_dup(UNBOX(v)[i + 1]); }",
+     "static V deus_code_cast(V v) { return deus_dup(v); }",
+     "static V deus_code_steps(V unused) { (void)unused; return W(deus_isteps); }",
+     "static V deus_code_cost(V thunk) { uint32_t before = deus_isteps; V r = deus_iapply(thunk, UNIT); if (r == DEUS_ABORT) return r; deus_drop(r); return W(deus_isteps - before); }"],
+    ["static V deus_code_defectTrace(V unused) { (void)unused; return UNIT; }",
+     "#else",
+     "static V deus_code_trap(void) { __builtin_trap(); }",
+     "#define deus_code_load(...) deus_code_trap()",
+     "#define deus_code_has(...) deus_code_trap()",
+     "#define deus_code_run(...) deus_code_trap()",
+     "#define deus_code_quote(...) deus_code_trap()",
+     "#define deus_code_tag(...) deus_code_trap()",
+     "#define deus_code_field(...) deus_code_trap()",
+     "#define deus_code_cast(...) deus_code_trap()",
+     "#define deus_code_defectTrace(...) deus_code_trap()",
+     "#define deus_code_steps(...) deus_code_trap()",
+     "#define deus_code_cost(...) deus_code_trap()",
+     "#endif"]])
+
+/--
+  The host side of `IO` (D129), as the TS kernel's host implements it on node: files, the
+  process's arguments, environment, clocks and `exec`. In wasm every operation traps.
+-/
+def ioRuntime : Text :=
+  Text.join "\n" ([
+    "#ifndef __wasm__",
+    "#include <dirent.h>",
+    "#include <errno.h>",
+    "#include <fcntl.h>",
+    "#include <poll.h>",
+    "#include <spawn.h>",
+    "#include <stdio.h>",
+    "#include <string.h>",
+    "#include <sys/stat.h>",
+    "#include <sys/wait.h>",
+    "#include <time.h>",
+    "#include <unistd.h>",
+    "/* The host side of `IO` (D129), as the TS kernel's host implements it on node. */",
+    "static int deus_argc;",
+    "static char **deus_argv;",
+    "static struct timespec deus_start;",
+    "#define UNIT STATIC(&deus_nullary[0])",
+    "static V deus_some(V x) { V *p = deus_block(1, 2); p[0] = 1; p[1] = x; return BOX(p); }",
+    "static V deus_pair(V a, V b) { V *p = deus_block(2, 3); p[0] = 0; p[1] = a; p[2] = b; return BOX(p); }",
+    "/* A text as NUL-terminated UTF-8 in memory the caller frees. */",
+    "static char *deus_cstr(V t) { char *s = malloc(3 * TLEN(t) + 1); if (!s) __builtin_trap(); s[deus_utf8(TU(t), TLEN(t), (uint8_t *)s)] = 0; return s; }",
+    "/* UTF-8 as a text, as node decodes it: each byte of a malformed sequence becomes U+FFFD. */",
+    "static V deus_text_utf8_of(const uint8_t *s, size_t n) {",
+    "  V r = deus_text((V)n); uint16_t *o = TU(r); V k = 0; size_t i = 0;",
+    "  while (i < n) {",
+    "    uint32_t c = s[i], m = c < 0x80 ? 0 : c >= 0xc2 && c < 0xe0 ? 1 : c >= 0xe0 && c < 0xf0 ? 2 : c >= 0xf0 && c < 0xf5 ? 3 : 4;",
+    "    if (m == 0) { o[k++] = (uint16_t)c; i++; continue; }",
+    "    if (m == 4) { o[k++] = 0xfffd; i++; continue; }",
+    "    uint32_t v = c & (0x3f >> m); size_t j = 1;",
+    "    for (; j <= m; j++) { if (i + j >= n) break; uint32_t b = s[i + j]; if ((b & 0xc0) != 0x80) break; if (j == 1 && ((m == 2 && c == 0xe0 && b < 0xa0) || (m == 2 && c == 0xed && b >= 0xa0) || (m == 3 && c == 0xf0 && b < 0x90) || (m == 3 && c == 0xf4 && b >= 0x90))) break; v = v << 6 | (b & 0x3f); }",
+    "    if (j <= m) { o[k++] = 0xfffd; i += j; continue; }",
+    "    if (v > 0xffff) { o[k++] = (uint16_t)(0xd800 + ((v - 0x10000) >> 10)); o[k++] = (uint16_t)(0xdc00 + ((v - 0x10000) & 0x3ff)); } else o[k++] = (uint16_t)v;",
+    "    i += m + 1;",
+    "  }",
+    "  TLEN(r) = k; return r;",
+    "}",
+    "static V deus_text_cs(const char *s) { return deus_text_utf8_of((const uint8_t *)s, strlen(s)); }",
+    "/* All of a file's bytes, or 0 when it cannot be read; `*n` is the length. */",
+    "static uint8_t *deus_slurp(int fd, size_t *n) {",
+    "  size_t cap = 4096, len = 0; uint8_t *b = malloc(cap); if (!b) __builtin_trap();",
+    "  for (;;) { if (len == cap) { cap *= 2; b = realloc(b, cap); if (!b) __builtin_trap(); } ssize_t got = read(fd, b + len, cap - len); if (got < 0) { if (errno == EINTR) continue; free(b); return 0; } if (got == 0) break; len += (size_t)got; }",
+    "  *n = len; return b;",
+    "}",
+    "static void deus_mkdirs(char *path) { for (char *p = path + 1; *p; p++) if (*p == '/') { *p = 0; mkdir(path, 0777); *p = '/'; } mkdir(path, 0777); }",
+    "static void deus_mkparent(const char *path) { const char *slash = strrchr(path, '/'); if (!slash || slash == path) return; size_t n = (size_t)(slash - path); char *d = malloc(n + 1); memcpy(d, path, n); d[n] = 0; deus_mkdirs(d); free(d); }",
+    "static void deus_rm(const char *path) {",
+    "  struct stat st; if (lstat(path, &st) != 0) return;",
+    "  if (S_ISDIR(st.st_mode)) { DIR *d = opendir(path); if (d) { struct dirent *e; while ((e = readdir(d))) { if (!strcmp(e->d_name, \".\") || !strcmp(e->d_name, \"..\")) continue; size_t n = strlen(path) + strlen(e->d_name) + 2; char *c = malloc(n); snprintf(c, n, \"%s/%s\", path, e->d_name); deus_rm(c); free(c); } closedir(d); } rmdir(path); }",
+    "  else unlink(path);",
+    "}",
+    "static V deus_io_put(FILE *f, V t) { V b = deus_scratch(3 * TLEN(t)); V k = deus_utf8(TU(t), TLEN(t), (uint8_t *)TU(b)); fwrite(TU(b), 1, (size_t)k, f); deus_drop(b); return UNIT; }",
+    "static V deus_io_print(V t) { return deus_io_put(stdout, t); }",
+    "static V deus_io_eprint(V t) { fflush(stdout); return deus_io_put(stderr, t); }",
+    "static V deus_io_readFile(V path) { char *p = deus_cstr(path); int fd = open(p, O_RDONLY); free(p); if (fd < 0) return UNIT; size_t n; uint8_t *b = deus_slurp(fd, &n); close(fd); if (!b) return UNIT; V r = deus_text_utf8_of(b, n); free(b); return deus_some(r); }",
+    "static V deus_io_save(V path, V t, const char *mode) { char *p = deus_cstr(path); deus_mkparent(p); FILE *f = fopen(p, mode); free(p); if (!f) __builtin_trap(); deus_io_put(f, t); fclose(f); return UNIT; }",
+    "static V deus_io_writeFile(V path, V t) { return deus_io_save(path, t, \"wb\"); }",
+    "static V deus_io_appendFile(V path, V t) { return deus_io_save(path, t, \"ab\"); }",
+    "static V deus_io_exists(V path) { char *p = deus_cstr(path); struct stat st; V r = stat(p, &st) == 0; free(p); return r; }",
+    "static V deus_io_isDir(V path) { char *p = deus_cstr(path); struct stat st; V r = stat(p, &st) == 0 && S_ISDIR(st.st_mode); free(p); return r; }",
+    "static int deus_name_order(const void *a, const void *b) { return (int)deus_text_cmp(*(const V *)a, *(const V *)b); }",
+    "/* A list of `n` values, consuming them. */",
+    "static V deus_list_of(V *xs, V n) { V r = UNIT; for (V i = n; i-- > 0;) r = deus_cons(xs[i], r); return r; }",
+    "static V deus_io_listDir(V path) {",
+    "  char *p = deus_cstr(path); DIR *d = opendir(p); free(p); if (!d) return UNIT;",
+    "  V n = 0, cap = 16, *xs = malloc(cap * sizeof(V)); struct dirent *e;",
+    "  while ((e = readdir(d))) { if (!strcmp(e->d_name, \".\") || !strcmp(e->d_name, \"..\")) continue; if (n == cap) { cap *= 2; xs = realloc(xs, cap * sizeof(V)); } xs[n++] = deus_text_cs(e->d_name); }",
+    "  closedir(d); qsort(xs, (size_t)n, sizeof(V), deus_name_order); V r = deus_list_of(xs, n); free(xs); return r;",
+    "}",
+    "static V deus_io_mkdirp(V path) { char *p = deus_cstr(path); deus_mkdirs(p); free(p); return UNIT; }",
+    "static V deus_io_remove(V path) { char *p = deus_cstr(path); deus_rm(p); free(p); return UNIT; }",
+    "static V deus_io_args(V unused) { (void)unused; V r = UNIT; for (int i = deus_argc; i-- > 1;) r = deus_cons(deus_text_cs(deus_argv[i]), r); return r; }",
+    "static V deus_io_exit(V code) { fflush(stdout); exit((int)code); }",
+    "/* A defect no handler takes ends the run as `deus run` does, with status 70. */",
+    "static V deus_defect(V message) { fflush(stdout); fputs(\"defect: \", stderr); deus_io_put(stderr, message); fputs(\"\\n\", stderr); exit(70); }",
+    "static V deus_io_time(V unused) { (void)unused; struct timespec t; clock_gettime(CLOCK_MONOTONIC, &t); int64_t ms = (int64_t)(t.tv_sec - deus_start.tv_sec) * 1000 + (t.tv_nsec - deus_start.tv_nsec) / 1000000; return W((uint32_t)ms); }",
+    "static V deus_io_readStdin(V unused) { (void)unused; size_t n; uint8_t *b = deus_slurp(0, &n); if (!b) return deus_text(0); V r = deus_text_utf8_of(b, n); free(b); return r; }",
+    "static V deus_io_writeBytes(V path, V bytes) { char *p = deus_cstr(path); deus_mkparent(p); FILE *f = fopen(p, \"wb\"); free(p); if (!f) __builtin_trap(); for (V c = bytes; UNBOX(c)[0]; c = UNBOX(c)[2]) { V b = UNBOX(c)[1]; fputc(IS_PTR(b) ? 0 : (int)(b & 255), f); } fclose(f); return UNIT; }",
+    "static V deus_io_getEnv(V name) { char *p = deus_cstr(name); const char *v = getenv(p); free(p); return v ? deus_some(deus_text_cs(v)) : UNIT; }",
+    "static V deus_io_wallClock(V unused) { (void)unused; struct timespec t; clock_gettime(CLOCK_REALTIME, &t); char s[32]; snprintf(s, sizeof s, \"%lld%09ld\", (long long)t.tv_sec, (long)t.tv_nsec); return deus_text_cs(s); }",
+    "/* Runs `prog` with `args`, its stdin empty: (exit code, stdout, stderr), 127 when it cannot start. posix_spawnp",
+    "   starts it without copying this process's page tables, which fork did for every call: a pull that ran a few",
+    "   hundred tools spent most of its time there (D293). */",
+    "extern char **environ;",
+    "static V deus_io_exec(V prog, V args) {",
+    "  V n = 0; for (V c = args; UNBOX(c)[0]; c = UNBOX(c)[2]) n++;",
+    "  char **argv = malloc((size_t)(n + 2) * sizeof(char *)); argv[0] = deus_cstr(prog); V i = 1;",
+    "  for (V c = args; UNBOX(c)[0]; c = UNBOX(c)[2]) argv[i++] = deus_cstr(UNBOX(c)[1]);",
+    "  argv[i] = 0;",
+    "  int out[2], err[2]; if (pipe(out) || pipe(err)) __builtin_trap();",
+    "  fflush(stdout); fflush(stderr);",
+    "  posix_spawn_file_actions_t actions; posix_spawn_file_actions_init(&actions);",
+    "  posix_spawn_file_actions_addopen(&actions, 0, \"/dev/null\", O_RDONLY, 0);",
+    "  posix_spawn_file_actions_adddup2(&actions, out[1], 1); posix_spawn_file_actions_adddup2(&actions, err[1], 2);",
+    "  posix_spawn_file_actions_addclose(&actions, out[0]); posix_spawn_file_actions_addclose(&actions, err[0]);",
+    "  /* A pipe end that is already 1 or 2 (this process's own was closed) is the child's stream after dup2. */",
+    "  if (out[1] > 2) posix_spawn_file_actions_addclose(&actions, out[1]); if (err[1] > 2) posix_spawn_file_actions_addclose(&actions, err[1]);",
+    "  pid_t pid; int failed = posix_spawnp(&pid, argv[0], &actions, 0, argv, environ);",
+    "  posix_spawn_file_actions_destroy(&actions);",
+    "  close(out[1]); close(err[1]);",
+    "  if (failed) {",
+    "    close(out[0]); close(err[0]); char m[512]; snprintf(m, sizeof m, \"spawnSync %s %s\", argv[0], failed == ENOENT ? \"ENOENT\" : strerror(failed));",
+    "    for (V j = 0; j < i; j++) free(argv[j]); free(argv);",
+    "    return deus_pair(127, deus_pair(deus_text(0), deus_text_cs(m)));",
+    "  }",
+    "  size_t len[2] = {0, 0}, cap[2] = {4096, 4096}; uint8_t *buf[2] = { malloc(4096), malloc(4096) }; struct pollfd fds[2] = { { out[0], POLLIN, 0 }, { err[0], POLLIN, 0 } }; int open_ = 2;",
+    "  while (open_ > 0) {",
+    "    if (poll(fds, 2, -1) < 0) { if (errno == EINTR) continue; break; }",
+    "    for (int k = 0; k < 2; k++) if (fds[k].fd >= 0 && fds[k].revents) { if (len[k] == cap[k]) { cap[k] *= 2; buf[k] = realloc(buf[k], cap[k]); } ssize_t got = read(fds[k].fd, buf[k] + len[k], cap[k] - len[k]); if (got > 0) len[k] += (size_t)got; else if (got == 0 || errno != EINTR) { close(fds[k].fd); fds[k].fd = -1; open_--; } }",
+    "  }",
+    "  int status = 0; while (waitpid(pid, &status, 0) < 0 && errno == EINTR) {}",
+    "  for (V j = 0; j < i; j++) free(argv[j]); free(argv);",
+    "  V code = WIFEXITED(status) ? WEXITSTATUS(status) : 1;",
+    "  V so = deus_text_utf8_of(buf[0], len[0]), se = deus_text_utf8_of(buf[1], len[1]); free(buf[0]); free(buf[1]);",
+    "  return deus_pair(code, deus_pair(so, se));",
+    "}",
+    "#else",
+    "static V deus_io_trap(void) { __builtin_trap(); }",
+    "#define deus_defect(...) deus_io_trap()"] ++ List.map (fun name => "#define deus_io_" ++ name ++ "(...) deus_io_trap()") ioOperations ++ ["#endif"])
+
+/-- A C integer literal; the most negative `Int` has no literal of its own. -/
+def lit (n : Int) : Text := if n == -2147483648 then "(-2147483647 - 1)" else "(V)" ++ Int.toText n
+
+def macro (p : Text) : Option Text :=
+  if p == "Int.add" then some "ADD"
+  else if p == "Int.sub" then some "SUB"
+  else if p == "Int.mul" then some "MUL"
+  else if p == "Int.div" then some "DIV"
+  else if p == "Int.mod" then some "MOD"
+  else if p == "Int.shl" then some "SHL"
+  else if p == "Int.shr" then some "SHR"
+  else if p == "Int.ushr" then some "USHR"
+  else none
+
+def infix (p : Text) : Option Text :=
+  if p == "Int.and" then some "&"
+  else if p == "Int.or" then some "|"
+  else if p == "Int.xor" then some "^"
+  else if p == "eq" then some "=="
+  else if p == "neq" then some "!="
+  else if p == "lt" then some "<"
+  else if p == "gt" then some ">"
+  else if p == "le" then some "<="
+  else if p == "ge" then some ">="
+  else none
+
+def larger (a : Int) (b : Int) : Int := if a > b then a else b
+
+/-- One more than the largest tag of a nullary constructor (other than `Bool`'s) in `form`. -/
+def nullaryCount (form : Sexp) : Int :=
+  match form with
+  | Sexp.list [Sexp.sym "con", Sexp.str t, Sexp.int tag, Sexp.int 0] => if t == "#Bool" then 0 else tag + 1
+  | Sexp.list items => List.foldl (fun acc x => larger acc (nullaryCount x)) 0 items
+  | _ => 0
+
+def local (l : Int) : Text := "l" ++ Int.toText l
+
+def fnName (i : Int) : Text := "f" ++ Int.toText i
+
+def args (xs : List Text) : Text := "(" ++ Text.join ", " xs ++ ")"
+
+/-- What the compiler knows while compiling one function: its index, its arity and its label counter. -/
+structure FnCtx @"urn:deus:cgen:FnCtx" where
+  cScope : Wasm.Scope
+  cSelf : Int
+  cArity : Int
+  cNext : Ref Int
+  cBorrow : Dict Int (List Bool)
+  cLifted : Ref (List Text)
+
+/-- Which parameters of function `index` are borrowed: the caller keeps ownership (D86). -/
+def borrowsOf (ctx : FnCtx) (index : Int) : List Bool := Option.getOr (Dict.lookup index ctx.cBorrow) []
+
+def borrowsAt (flags : List Bool) (k : Int) : Bool := Option.getOr (List.get? flags k) false
+
+def fresh (ctx : FnCtx) : Int := Wasm.fresh ctx.cNext
+
+/-- The index and definition of the function `h`. -/
+def arityOf (ctx : FnCtx) (h : Text) : {Throw Text} Int :=
+  let found := Wasm.findFn ctx.cScope h
+  if Option.isNone found then throw ("unknown function #" ++ Text.take 10 h)
+  else Option.getOr (Option.map (fun f => f.fnArity) found) 0
+
+def callee (ctx : FnCtx) (h : Text) (argc : Int) : {Throw Text} (Int, Wasm.Fn) :=
+  match Dict.lookup h ctx.cScope.byHash with
+  | some (index, f) =>
+    if f.fnArity != argc then throw ("#" ++ Text.take 10 h ++ " takes " ++ Int.toText f.fnArity ++ " arguments but is applied to " ++ Int.toText argc ++ "; partial application is outside the C subset")
+    else (index, f)
+  | none => throw ("unknown function #" ++ Text.take 10 h)
+
+--
+-- Reference counting (D86). Every local the code owns is consumed exactly once: its last use
+-- moves it, earlier uses `deus_dup` it, and a path that never uses it drops it first.
+--
+
+/-- How many variables a pattern binds. -/
+def binders (pat : Sexp) : Int :=
+  match pat with
+  | Sexp.list [Sexp.sym "pvar"] => 1
+  | Sexp.list [Sexp.sym "pas", p] => 1 + binders p
+  | Sexp.list (Sexp.sym "pcon" :: _ :: _ :: subs) => List.sum (List.map binders subs)
+  | _ => 0
+
+/-- The locals `e` reads, with `env` mapping its de Bruijn indices to locals (-1 for none). -/
+def freeLocals (env : List Int) (e : Sexp) : List Int :=
+  match e with
+  | Sexp.list [Sexp.sym "var", Sexp.int i] =>
+    match List.get? env i with
+    | some l => if l >= 0 then [l] else []
+    | none => []
+  | Sexp.list [Sexp.sym "let", v, b] => freeLocals env v ++ freeLocals (-1 :: env) b
+  | Sexp.list [Sexp.sym "lam", b] => freeLocals (-1 :: env) b
+  | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
+    freeLocals env scrutinee ++ List.concatMap (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "case", pat, b] => freeLocals (List.replicate (binders pat) (-1) ++ env) b
+      | _ => []) cases
+  | Sexp.list items => List.concatMap (freeLocals env) items
+  | _ => []
+
+def isIn (xs : List Int) (x : Int) : Bool := List.contains x xs
+
+/-- Which of `locals` occur free in `e` under `env`, in their order: `freeLocals` kept to `locals`, without listing every
+  use, and stopping once all are found. The back end asks this of the rest of a body at each binding (D322). -/
+def usedOf (env : List Int) (locals : List Int) (e : Sexp) : List Int :=
+  let slots := List.map (fun l => if l < 0 then [] else CGen.positions l env 0 []) locals
+  let left := CGen.unseen 0 e (List.concat slots)
+  List.map fst (List.filter (fun pair => List.any (fun i => not (isIn left i)) (snd pair)) (List.zip locals slots))
+
+/-- The indices at which `l` is in `env`, from `at`, onto `found`; no pairs are built, as `usedOf` asks this often. -/
+def positions (l : Int) (env : List Int) (at : Int) (found : List Int) : List Int :=
+  match env with
+  | [] => found
+  | x :: rest => CGen.positions l rest (at + 1) (if x == l then at :: found else found)
+
+/-- `slots`, the indices of `env` that `usedOf` looks for, less those `e` reads below `depth` binders. -/
+def unseen (depth : Int) (e : Sexp) (slots : List Int) : List Int :=
+  if List.isEmpty slots then slots else
+    match e with
+    | Sexp.list [Sexp.sym "var", Sexp.int i] => if i >= depth then List.filter (fun j => j != i - depth) slots else slots
+    | Sexp.list [Sexp.sym "let", v, b] => CGen.unseen (depth + 1) b (CGen.unseen depth v slots)
+    | Sexp.list [Sexp.sym "lam", b] => CGen.unseen (depth + 1) b slots
+    | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
+      List.foldl (fun left c =>
+        match c with
+        | Sexp.list [Sexp.sym "case", pat, b] => CGen.unseen (depth + binders pat) b left
+        | _ => left) (CGen.unseen depth scrutinee slots) cases
+    | Sexp.list items => List.foldl (fun left x => CGen.unseen depth x left) slots items
+    | _ => slots
+
+test usedOfIsFreeLocalsKeptToTheLocals :=
+  let var := fun (i : Int) => Sexp.list [Sexp.sym "var", Sexp.int i]
+  let e := Sexp.list [Sexp.sym "let", var 2, Sexp.list [Sexp.sym "app", var 0, var 3, Sexp.list [Sexp.sym "lam", var 4]]]
+  let env := [7, -1, 5, 9, 8]
+  List.all (fun locals => usedOf env locals e == List.filter (isIn (freeLocals env e)) locals) [[], [7], [5, 9, 8], [8, 5], [7, 9]]
+
+/-- Whether `e` builds a block of `n` fields, which a dead block of that size can become. -/
+def wants (n : Int) (e : Sexp) : Bool :=
+  match e with
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "con", Sexp.str t, Sexp.int _, Sexp.int k] :: rest) =>
+    (k == n && t != "#Bool") || List.any (wants n) rest
+  | Sexp.list [Sexp.sym "lam", _] => false
+  | Sexp.list items => List.any (wants n) items
+  | _ => false
+
+/-- Whether values of type `t` are never counted: `Int` and `Bool` are not blocks, and `()` is static. -/
+def uncounted (t : Sexp) : Bool := Wasm.isScalar t || t == Wasm.tref "#Unit"
+
+def scalarLocal (ctx : FnCtx) (l : Int) : Bool := uncounted (Wasm.typeOfLocal ctx.cScope l)
+
+def dropLocal (ctx : FnCtx) (l : Int) : Text := if scalarLocal ctx l then "" else "deus_drop(" ++ local l ++ "); "
+
+def dupLocal (ctx : FnCtx) (l : Int) : Text := if scalarLocal ctx l then "" else "deus_dup(" ++ local l ++ "); "
+
+/-- Whether `e` maps de Bruijn index `i` of `env` to local `l`. -/
+def isLocal (env : List Int) (l : Int) (e : Sexp) : Bool :=
+  match e with
+  | Sexp.list [Sexp.sym "var", Sexp.int i] => List.get? env i == some l
+  | _ => false
+
+/--
+  Whether `e` consumes local `l` of function `self`, given which parameters are borrowed so far:
+  any use but as the container of an `Array` or `Ref` access, or as an argument a callee borrows
+  (a call to `self` only in the same position, so a jump to the top keeps it borrowed).
+-/
+def consumes (borrow : Dict Int (List Bool)) (table : Dict Text (Int, Wasm.Fn)) (self : Int) (param : Int) (env : List Int) (l : Int) (e : Sexp) : Bool :=
+  let again := fun (x : Sexp) => consumes borrow table self param env l x
+  match e with
+  | Sexp.list [Sexp.sym "var", Sexp.int i] => List.get? env i == some l
+  | Sexp.list [Sexp.sym "let", v, b] => again v || consumes borrow table self param (-1 :: env) l b
+  | Sexp.list [Sexp.sym "lam", b] => not (List.isEmpty (usedOf (-1 :: env) [l] b))
+  | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
+    again scrutinee || List.any (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "case", pat, b] => consumes borrow table self param (List.replicate (binders pat) (-1) ++ env) l b
+      | _ => false) cases
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: x :: rest) =>
+    let container := (Text.startsWith "Array." p || Text.startsWith "Ref." p) && p != "Array.make" && p != "Array.set" && p != "Ref.new" && isLocal env l x
+    (not container && again x) || List.any again rest
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: xs) =>
+    let index := Option.getOr (Option.map fst (Dict.lookup h table)) (-1)
+    let flags := Option.getOr (Dict.lookup index borrow) []
+    List.any (fun pair =>
+      match pair with
+      | (k, x) => if isLocal env l x then not (borrowsAt flags k && (index != self || k == param)) else again x) (List.mapIndexed (fun k x => (k, x)) xs)
+  | Sexp.list items => List.any again items
+  | _ => false
+
+/-- The borrowed parameters of every function: the largest set no body consumes. -/
+def inferBorrow (fns : List Wasm.Fn) (table : Dict Text (Int, Wasm.Fn)) : Dict Int (List Bool) :=
+  let initial := List.map (fun f => List.map (fun t => not (Wasm.isScalar t)) (fst (Wasm.peel f.fnArity f.fnType))) fns
+  let rec step flagsList :=
+    let borrow := Dict.fromList (List.mapIndexed (fun i flags => (i, flags)) flagsList)
+    let next := List.map (fun pair =>
+      match pair with
+      | (i, (f, flags)) =>
+        let env := List.reverse (List.range 0 f.fnArity)
+        List.mapIndexed (fun k b => b && not (consumes borrow table i k env k f.fnBody)) flags) (List.mapIndexed (fun i x => (i, x)) (List.zip fns flagsList))
+    if next == flagsList then borrow else step next
+  step initial
+
+/-- A reuse token: the C local holding a dead block's memory, and its field count. -/
+structure Token @"urn:deus:cgen:Token" where
+  tokLocal : Int
+  tokFields : Int
+
+def tokenName (t : Token) : Text := "t" ++ Int.toText t.tokLocal
+
+/-- For expressions evaluated in order, the owned locals each one consumes: its last uses. -/
+def split (owned : List Int) (frees : List (List Int)) : List (List Int) :=
+  match frees with
+  | [] => []
+  | here :: later => List.filter (fun l => isIn here l && not (List.any (fun f => isIn f l) later)) owned :: split owned later
+
+/-- The token for each of `xs`: the first that builds a block of the token's size gets it. -/
+def hand (token : Option Token) (xs : List Sexp) : List (Option Token) :=
+  match (token, xs) with
+  | (_, []) => []
+  | (none, _ :: rest) => none :: hand none rest
+  | (some t, x :: rest) => if wants t.tokFields x then token :: hand none rest else none :: hand token rest
+
+/-- A pattern test against the value in local `v`: statements that `break` out of the enclosing
+  `do … while (0)` when it does not match, the environment with what it binds, and each local it
+  loads as (local, the local it was loaded from, field index). -/
+def pattern (ctx : FnCtx) (v : Int) (env : List Int) (pat : Sexp) : {Throw Text} (Text, (List Int, List (Int, (Int, Int)))) :=
+  match pat with
+  | Sexp.list (Sexp.sym "pany" :: []) => ("", env, [])
+  | Sexp.list (Sexp.sym "pvar" :: []) => ("", v :: env, [])
+  | Sexp.list (Sexp.sym "pas" :: p :: []) => CGen.pattern ctx v (v :: env) p
+  | Sexp.list (Sexp.sym "pint" :: Sexp.int n :: []) => ("if (" ++ CGen.local v ++ " != " ++ CGen.lit n ++ ") break; ", env, [])
+  | Sexp.list (Sexp.sym "ptext" :: Sexp.str t :: []) => ("if (!deus_text_eq(" ++ CGen.local v ++ ", " ++ textLiteral t ++ ")) break; ", env, [])
+  | Sexp.list (Sexp.sym "pcon" :: Sexp.str "#Bool" :: Sexp.int tag :: []) => ("if (" ++ CGen.local v ++ " != " ++ Int.toText tag ++ ") break; ", env, [])
+  | Sexp.list (Sexp.sym "pcon" :: Sexp.str t :: Sexp.int tag :: subs) =>
+      let tagTest := "if (UNBOX(" ++ CGen.local v ++ ")[0] != " ++ Int.toText tag ++ ") break; "
+      foldl (fun acc pair =>
+        match (acc, pair) with
+        | ((code, bound, loads), i, Sexp.list (Sexp.sym "pany" :: [])) => (code, bound, loads)
+        | ((code, bound, loads), i, sub) =>
+            let f := CGen.fresh ctx
+            setType ctx.cScope f (fieldType ctx.cScope t tag i (typeOfLocal ctx.cScope v))
+            let (subCode, bound2, subLoads) := CGen.pattern ctx f bound sub
+            (code ++ "V " ++ CGen.local f ++ " = UNBOX(" ++ CGen.local v ++ ")[" ++
+              Int.toText (i + 1) ++ "]; " ++ subCode, bound2, loads ++ (f, v, i) :: subLoads)) (tagTest, env, []) (mapIndexed (fun i x => (i, x)) subs)
+  | other => Throw.throw ("the pattern " ++ Sexp.print other ++ " is outside the C subset")
+
+/-- The field count of a pattern that takes apart a heap block, or 0. -/
+def blockFields (pat : Sexp) : Int :=
+  match pat with
+  | Sexp.list (Sexp.sym "pcon" :: Sexp.str t :: Sexp.int _ :: subs) => if t == "#Bool" then 0 else List.length subs
+  | _ => 0
+
+/-- `pre` (statements) runs before `body`: in tail position both are statements. -/
+def before (tail : Bool) (pre : Text) (body : Text) : Text :=
+  if pre == "" then body else if tail then pre ++ body else "({ " ++ pre ++ body ++ "; })"
+
+/-- `e` compiled to C, consuming each local in `owned` exactly once and the reuse token, if any.
+  In tail position the result is statements that return `e` (a call to itself becomes a jump);
+  otherwise it is an expression, using GNU statement expressions. -/
+def expr (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token : Option CGen.Token) (e : Sexp) : {Throw Text} Text :=
+  let live := usedOf env owned e
+  let dead := Text.concat (List.map (dropLocal ctx) (List.filter (fun l => not (isIn live l)) owned))
+  match token with
+  | Option.some t => if wants t.tokFields e then before tail dead (form ctx env tail live token e) else before
+      tail
+      (dead ++ "deus_unused(" ++ tokenName t ++ "); ")
+      (form ctx env tail live Option.none e)
+  | Option.none => before tail dead (form ctx env tail live Option.none e)
+
+/--
+  The argument that passes `l` itself and after which no argument consumes it: moving `l` there
+  keeps it alive until the call, so later arguments read it without counting.
+-/
+def mover (ctx : FnCtx) (env : List Int) (xs : List Sexp) (l : Int) : Option Int :=
+  List.foldl (fun acc pair =>
+    match pair with
+    | (k, x) =>
+      if isLocal env l x && not (List.any (consumes ctx.cBorrow ctx.cScope.byHash ctx.cSelf (-1) env l) (List.drop (k + 1) xs)) then some k else acc) none (List.mapIndexed (fun k x => (k, x)) xs)
+
+/-- Each of `xs`, evaluated in order into a fresh local: the declarations, the C for each value,
+  and the drops to run after the values are used. An argument in a position `borrows` marks is
+  not counted: a local is passed as it is, and anything else is dropped afterwards. -/
+def sequence (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option CGen.Token) (borrows : List Bool) (xs : List Sexp) : {Throw Text} (Text, (List Text, Text)) :=
+  let last := CGen.split owned (List.map (usedOf env owned) xs)
+  let movers := List.map (fun l => (l, mover ctx env xs l)) owned
+  let shares := mapIndexed (fun k here => List.filter (fun l =>
+    match Option.bind (List.lookup l movers) (fun m => m) with
+    | Option.some m => m == k
+    | Option.none => isIn here l) owned) last
+  let tokens := hand token xs
+  let parts := mapIndexed (fun k triple =>
+    let ((x, mine), tok) := triple
+    -- A borrowed local is passed as it is, unless a later argument consumes it first.
+    let consumedLater := List.concat (List.drop (k + 1) shares)
+    let direct :=
+      match x with
+      | Sexp.list (Sexp.sym "var" :: Sexp.int i :: []) => if borrowsAt borrows k then Option.bind
+          (get? env i)
+          (fun l => if isIn consumedLater l then Option.none else Option.some l) else Option.none
+      | _ => Option.none
+    match direct with
+    | Option.some l => ("", CGen.local l, if isIn mine l then dropLocal ctx l else "")
+    | Option.none =>
+        let l := CGen.fresh ctx
+        setType ctx.cScope l (Wasm.typeOf ctx.cScope env x)
+        ("V " ++ CGen.local l ++ " = " ++ CGen.expr ctx env false mine tok x ++ "; ", CGen.local l, if borrowsAt borrows k then dropLocal ctx l else "")) (zip (zip xs shares) tokens)
+  (Text.concat (List.map (fun t =>
+    let (d, _, _) := t
+    d) parts), List.map (fun t =>
+    let (_, v, _) := t
+    v) parts, Text.concat (List.map (fun t =>
+    let (_, _, a) := t
+    a) parts))
+
+/-- `e` with its variables from index `cut` up moved `amount` further out, as under `amount` more binders. -/
+def shift (amount : Int) (cut : Int) (e : Sexp) : Sexp :=
+  match e with
+  | Sexp.list [Sexp.sym "var", Sexp.int i] => if i >= cut then Sexp.list [Sexp.sym "var", Sexp.int (i + amount)] else e
+  | Sexp.list [Sexp.sym "lam", b] => Sexp.list [Sexp.sym "lam", shift amount (cut + 1) b]
+  | Sexp.list [Sexp.sym "let", v, b] => Sexp.list [Sexp.sym "let", shift amount cut v, shift amount (cut + 1) b]
+  | Sexp.list [Sexp.sym "letrec", Sexp.list fs, b] =>
+    let n := List.length fs
+    Sexp.list [Sexp.sym "letrec", Sexp.list (List.map (shift amount (cut + n)) fs), shift amount (cut + n) b]
+  | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
+    Sexp.list (Sexp.sym "match" :: shift amount cut scrutinee :: List.map (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "case", pat, b] => Sexp.list [Sexp.sym "case", pat, shift amount (cut + binders pat) b]
+      | other => other) cases)
+  | Sexp.list [Sexp.sym "ret", b] => Sexp.list [Sexp.sym "ret", shift amount (cut + 1) b]
+  | Sexp.list [Sexp.sym "on", a, i, Sexp.int k, b] => Sexp.list [Sexp.sym "on", a, i, Sexp.int k, shift amount (cut + k + 1) b]
+  | Sexp.list items => Sexp.list (List.map (shift amount cut) items)
+  | _ => e
+
+/--
+  `h`, of arity `arity`, applied to fewer arguments: the arguments bound in order, then a lambda
+  for each missing parameter around the saturated call.
+-/
+def partial (h : Text) (arity : Int) (xs : List Sexp) : Sexp :=
+  let given := List.length xs
+  let call := Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: List.map (fun i => Sexp.list [Sexp.sym "var", Sexp.int (arity - 1 - i)]) (List.range 0 arity))
+  let lams := List.foldl (fun body _ => Sexp.list [Sexp.sym "lam", body]) call (List.range given arity)
+  List.foldr (fun pair body =>
+    match pair with
+    | (i, x) => Sexp.list [Sexp.sym "let", shift i 0 x, body]) lams (List.mapIndexed (fun i x => (i, x)) xs)
+
+/-- A lambda as a closure: its code is lifted to `static V c<k>(V self, V arg)`, which reads the
+  captured locals from `self` without counting them, and the block holds the code and captures. -/
+def lambdaClosure (ctx : FnCtx) (env : List Int) (owned : List Int) (b : Sexp) : {Throw Text} Text :=
+  let free := List.distinct (freeLocals (-1 :: env) b)
+  if List.length free > 253 then Throw.throw "a lambda that captures more than 253 locals is outside the C subset" else
+    let k := List.length (Ref.get ctx.cLifted)
+    let captures := mapIndexed (fun i l => (l, i + 2)) free
+    let typed := List.map (fun pair => (snd pair, typeOfLocal ctx.cScope (fst pair))) captures
+    let scope := Wasm.Scope.mk
+      (ctx.cScope).fns
+      (ctx.cScope).byHash
+      (ctx.cScope).datatypes
+      (ctx.cScope).typeTable
+      (Ref.new typed)
+      (ctx.cScope).eqs
+    let inner := FnCtx.mk scope (-1) 2 (Ref.new (2 + List.length free)) ctx.cBorrow ctx.cLifted
+    -- Reserve the slot first, so closures nested in `b` take the next numbers.
+    Ref.set ctx.cLifted (Ref.get ctx.cLifted ++ [""])
+    let innerEnv := 1 :: List.map (fun l => getOr (List.lookup l captures) (-1)) env
+    let loads := Text.concat (List.map
+      (fun pair => "V " ++ CGen.local (snd pair) ++ " = UNBOX(l0)[" ++ Int.toText (snd pair - 1) ++ "]; ")
+      captures)
+    let code := "static V c" ++ Int.toText k ++ "(V l0, V l1) {\n  " ++ loads ++
+      CGen.expr inner innerEnv true [1] Option.none b ++ "\n}"
+    Ref.set ctx.cLifted (mapIndexed (fun i t => if i == k then code else t) (Ref.get ctx.cLifted))
+    let vars := List.map (fun l => Sexp.list [Sexp.sym "var", Sexp.int (findIndex (fun x => x == l) env)]) free
+    let (decls, values, _) := CGen.sequence ctx env owned Option.none [] vars
+    let p := CGen.fresh ctx
+    let stores := mapIndexed (fun i v => CGen.local p ++ "[" ++ Int.toText (i + 1) ++ "] = " ++ v ++ "; ") values
+    "({ " ++ decls ++ "V *" ++ CGen.local p ++ " = deus_con(0, " ++ Int.toText (List.length free) ++
+      "); " ++ CGen.local p ++ "[0] = (V)(uintptr_t)&c" ++ Int.toText k ++ "; " ++ Text.concat stores ++ "BOX(" ++ CGen.local p ++ "); })"
+
+/-- `e` once `expr` has dropped what it does not use: `owned` are exactly the locals it consumes. -/
+def form (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token : Option CGen.Token) (e : Sexp) : {Throw Text} Text :=
+  let ret := fun x => if tail then "return " ++ x ++ ";" else x
+  match e with
+  | Sexp.list (Sexp.sym "int" :: Sexp.int n :: []) => ret (CGen.lit n)
+  | Sexp.list (Sexp.sym "text" :: Sexp.str t :: []) => ret (textLiteral t)
+  | Sexp.list (Sexp.sym "prim" :: Sexp.str p :: []) =>
+      -- A primitive used as a value is its eta-expansion: one lambda per parameter.
+      let arity := primArity p
+      if arity <= 0 then Throw.throw ("the primitive " ++ p ++ " as a value is outside the C subset") else CGen.form ctx env tail owned token (foldl (fun body _ => Sexp.node "lam" [body]) (Sexp.node
+        "app"
+        (Sexp.node "prim" [Sexp.str p] :: List.map (fun i => Sexp.node "var" [Sexp.int i]) (reverse (range 0 arity)))) (range 0 arity))
+  | Sexp.list (Sexp.sym "con" :: Sexp.str "#Bool" :: Sexp.int tag :: Sexp.int 0 :: []) => ret ("(V)" ++ Int.toText tag)
+  | Sexp.list (Sexp.sym "con" :: Sexp.str _ :: Sexp.int tag :: Sexp.int 0 :: []) => ret ("STATIC(&deus_nullary[" ++ Int.toText tag ++ "])")
+  | Sexp.list (Sexp.sym "con" :: Sexp.str _ :: Sexp.int _ :: Sexp.int n :: []) =>
+      -- A constructor used as a value is a closure of its fields.
+      CGen.form ctx env tail owned token (eLams
+        n
+        (Sexp.list (Sexp.sym "app" :: e :: List.map (fun j => CGen.var (n - 1 - j)) (range 0 n))))
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "con" :: Sexp.str t :: Sexp.int tag :: Sexp.int n :: []) :: xs) => if n != List.length xs || t == "#Bool" then Throw.throw ("partial application of a constructor of " ++ t ++ " is outside the C subset") else
+      let mine :=
+        match token with
+        | Option.some tok => tok.tokFields == n
+        | Option.none => false
+      let (decls, values, _) := CGen.sequence ctx env owned (if mine then Option.none else token) [] xs
+      let p := CGen.fresh ctx
+      let memory :=
+        match token with
+        | Option.some tok => if mine then tokenName tok else "0"
+        | Option.none => "0"
+      let stores := mapIndexed
+        (fun i v => CGen.local p ++ "[" ++ Int.toText (i + 1) ++ "] = " ++ v ++ "; ")
+        values
+      ret ("({ " ++ decls ++ "V *" ++ CGen.local p ++ " = deus_con(" ++ memory ++ ", " ++ Int.toText n ++
+        "); " ++ CGen.local p ++ "[0] = " ++ Int.toText tag ++ "; " ++ Text.concat stores ++ "BOX(" ++ CGen.local p ++ "); })")
+  | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) => matchForm ctx env tail owned token scrutinee cases
+  | Sexp.list (Sexp.sym "var" :: Sexp.int i :: []) =>
+      match get? env i with
+      | Option.some l => if isIn owned l || scalarLocal ctx l then ret (CGen.local l) else ret ("deus_dup(" ++ CGen.local l ++ ")")
+      | Option.none => Throw.throw ("unbound variable " ++ Int.toText i)
+  | Sexp.list (Sexp.sym "if" :: c :: t :: f :: []) =>
+      let branches := usedOf env owned t ++ usedOf env owned f
+      let mine := List.filter (fun l => not (isIn branches l)) owned
+      let rest := List.filter (isIn branches) owned
+      let cond := CGen.expr ctx env false mine Option.none c
+      if tail then "if (" ++ cond ++ ") { " ++ CGen.expr ctx env true rest token t ++ " } else { " ++
+        CGen.expr ctx env true rest token f ++ " }" else "(" ++ cond ++ " ? " ++ CGen.expr ctx env false rest token t ++ " : " ++
+        CGen.expr ctx env false rest token f ++ ")"
+  | Sexp.list (Sexp.sym "seq" :: a :: b :: []) =>
+      let later := usedOf env owned b
+      let mine := List.filter (fun l => not (isIn later l)) owned
+      let rest := List.filter (isIn later) owned
+      let first := if wants (getOr (Option.map (fun t => t.tokFields) token) 0) a then token else Option.none
+      let second :=
+        match first with
+        | Option.some _ => Option.none
+        | Option.none => token
+      let value := CGen.expr ctx env false mine first a
+      let consumed := if uncounted (Wasm.typeOf ctx.cScope env a) then "(void)" ++ value ++ "; " else "deus_drop(" ++ value ++ "); "
+      before tail consumed (CGen.expr ctx env tail rest second b)
+  | Sexp.list (Sexp.sym "let" :: v :: b :: []) =>
+      let later := usedOf (-1 :: env) owned b
+      let mine := List.filter (fun l => not (isIn later l)) owned
+      let rest := List.filter (isIn later) owned
+      let first := if wants (getOr (Option.map (fun t => t.tokFields) token) 0) v then token else Option.none
+      let second :=
+        match first with
+        | Option.some _ => Option.none
+        | Option.none => token
+      let l := CGen.fresh ctx
+      setType ctx.cScope l (Wasm.typeOf ctx.cScope env v)
+      before
+        tail
+        ("V " ++ CGen.local l ++ " = " ++ CGen.expr ctx env false mine first v ++ "; ")
+        (CGen.expr ctx (l :: env) tail (l :: rest) second b)
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str "Int.neg" :: []) :: a :: []) => ret ("SUB(0, " ++ CGen.expr ctx env false owned Option.none a ++ ")")
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str p :: []) :: xs) =>
+      match runtime ctx env owned token p xs with
+      | Option.some code => ret code
+      | Option.none => ret (CGen.primitive ctx env owned token e p xs)
+  | Sexp.list (Sexp.sym "lam" :: b :: []) => ret (lambdaClosure ctx env owned b)
+  | Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) => CGen.form ctx env tail owned token (partial h (arityOf ctx h) [])
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) :: xs) =>
+      let arity := arityOf ctx h
+      if List.length xs < arity then CGen.form ctx env tail owned token (partial h arity xs) else if List.length xs > arity then CGen.form
+        ctx
+        env
+        tail
+        owned
+        token
+        (Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: List.take arity xs) :: List.drop arity xs)) else
+        let (index, f) := callee ctx h (List.length xs)
+        let (decls, values, after) := CGen.sequence ctx env owned token (borrowsOf ctx index) xs
+        if tail && index == ctx.cSelf && after == "" then "{ " ++ decls ++
+          Text.concat (mapIndexed (fun i v => CGen.local i ++ " = " ++ v ++ "; ") values) ++ "goto top; }" else
+          let call := fnName index ++ CGen.args values
+          if after != "" then ret ("({ " ++ decls ++ "V r = " ++ call ++ "; " ++ after ++ "r; })") else if tail && f.fnArity == ctx.cArity then "{ " ++ decls ++ "MUSTTAIL return " ++ call ++ "; }" else ret (if decls == "" then call else "({ " ++ decls ++ call ++ "; })")
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) :: ys) :: xs) =>
+      -- A call that already has all its arguments returns a function, which the rest apply (D137).
+      if List.length ys < arityOf ctx h then CGen.form
+        ctx
+        env
+        tail
+        owned
+        token
+        (Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: ys ++ xs)) else ret (applyUnknown
+        ctx
+        env
+        owned
+        token
+        (Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: ys))
+        xs)
+  | Sexp.list (Sexp.sym "app" :: f :: xs) => ret (applyUnknown ctx env owned token f xs)
+  | other => Throw.throw ("outside the C subset: " ++ Text.take 120 (Sexp.print other))
+
+/-- An unknown function `f` applied to `xs`: the closure is borrowed by the first call; each later one consumes the closure before it. -/
+def applyUnknown (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option CGen.Token) (f : Sexp) (xs : List Sexp) : {Throw Text} Text :=
+  let (decls, values, after) := CGen.sequence ctx env owned token [true] (f :: xs)
+  match values with
+  | fv :: xv :: more =>
+      let call := foldl
+        (fun c v => "deus_apply_drop(" ++ c ++ ", " ++ v ++ ")")
+        ("deus_apply(" ++ fv ++ ", " ++ xv ++ ")")
+        more
+      "({ " ++ decls ++ "V r = " ++ call ++ "; " ++ after ++ "r; })"
+  | _ => Throw.throw "an application without arguments"
+
+/-- A Text literal (D115): made on first use and kept, so it is a heap block like any other text. -/
+def textLiteral (t : Text) : Text :=
+  let n := Text.length t
+  let units := if n == 0 then "0" else Text.join ", " (List.map (fun i => Int.toText (Text.code t i)) (List.range 0 n))
+  "({ static V s_; static const uint16_t u_[" ++ Int.toText (larger n 1) ++ "] = {" ++ units ++ "}; s_ ? s_ : (s_ = deus_literal(u_, " ++ Int.toText n ++ ")); })"
+
+/-- A call of a runtime function that borrows the arguments `borrows` marks: each is passed as it is, and dropped after if owned. -/
+def lending (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option CGen.Token) (borrows : List Bool) (call : List Text -> Text) (xs : List Sexp) : {Throw Text} Text :=
+  let (decls, values, after) := CGen.sequence ctx env owned token borrows xs
+  "({ " ++ decls ++ "V r = " ++ call values ++ "; " ++ after ++ "r; })"
+
+/-- The runtime function of a primitive on `Text` (D115). -/
+def textFunction (p : Text) : Option Text :=
+  if Text.startsWith "deus.io." p then some ("deus_io_" ++ Text.drop 8 p)
+  else if p == "deus.defect" then some "deus_defect"
+  else if List.any (fun x => x == p) codeFunctions then some ("deus_code_" ++ Text.drop 5 p)
+  else List.lookup p [
+    ("Text.length", "TLEN"), ("Text.code", "deus_text_code"), ("Text.slice", "deus_text_slice"),
+    ("Text.fromCode", "deus_text_from_code"), ("Text.concat", "deus_text_concat"), ("Text.join", "deus_text_join"),
+    ("Text.split", "deus_text_split"), ("Text.indexOf", "deus_text_index"), ("Text.trim", "deus_text_trim"),
+    ("Int.toText", "deus_int_text"), ("Int.fromText", "deus_text_int"),
+    ("Dict.fromList", "deus_dict_from_list"), ("Dict.lookup", "deus_dict_lookup"), ("Dict.contains", "deus_dict_contains"),
+    ("Dict.size", "deus_table_size"), ("Dict.keys", "deus_table_keys"), ("MutMap.new", "deus_table_new"),
+    ("MutMap.get", "deus_table_get"), ("MutMap.has", "deus_table_has"), ("MutMap.set", "deus_table_set"),
+    ("MutMap.delete", "deus_table_delete"), ("MutMap.size", "deus_table_size"), ("MutMap.keys", "deus_table_keys"),
+    ("Text.utf8", "deus_text_utf8"), ("Text.fromCodes", "deus_text_from_codes"), ("Text.sha256", "deus_text_sha256"),
+    ("deus.abortValue", "deus_abort_marker"), ("deus.aborted", "deus_aborted"), ("deus.abortTo", "deus_abort_to"),
+    ("deus.caught", "deus_caught"), ("deus.caughtValue", "deus_caught_value"), ("deus.handleEnter", "deus_handle_enter"),
+    ("deus.handleAdd", "deus_handle_add"), ("deus.handleExit", "deus_handle_exit"), ("deus.clause", "deus_clause"),
+    ("deus.clauseDone", "deus_clause_done"), ("deus.handled", "deus_handled")]
+
+/-- The index of the equality and order functions of data type `t`, registering them on first use. -/
+def structIndex (scope : Wasm.Scope) (t : Sexp) : Int :=
+  let known := Ref.get scope.eqs
+  let i := List.findIndex (fun x => x == t) known
+  if i >= 0 then i else registerStruct scope t
+
+def registerStruct (scope : Wasm.Scope) (t : Sexp) : Int :=
+  let known := Ref.get scope.eqs
+  let _ := Ref.set scope.eqs (known ++ [t])
+  List.length known
+
+/-- `x` and `y`, of type `field`, compared for equality (a C truth value) or, with `order`, as -1, 0 or 1. -/
+def fieldTest (scope : Wasm.Scope) (order : Bool) (field : Sexp) (x : Text) (y : Text) : {Throw Text} Text :=
+  let both := "(" ++ x ++ ", " ++ y ++ ")"
+  if isScalar field then if order then "deus_int_cmp" ++ both else "(" ++ x ++ " == " ++ y ++ ")" else if field == tref "#Text" then (if order then "deus_text_cmp" else "deus_text_eq") ++ both else if isData scope field then (if order then "deus_cmp" else "deus_eq") ++ Int.toText (structIndex scope field) ++ both else if field == unknown || head field == "tvar" then (if order then "deus_cmp_any" else "deus_eq_any") ++ both else Throw.throw ("comparing values of type " ++ Sexp.print field ++ " is outside the C subset")
+
+/-- The structural equality (or, with `order`, the order) of data type `t`, as both kernels define
+  it: the tags first, then the fields in order. The last field, when it is `t` again (a list's
+  tail), is a loop rather than a call, so a long list takes no stack. -/
+def structFunction (scope : Wasm.Scope) (order : Bool) (k : Int) (t : Sexp) : {Throw Text} Text :=
+  let form := getOr (Option.bind (headName t) (typeObject scope)) unknown
+  let typeArgs := Wasm.typeArgs t
+  let same := if order then "0" else "1"
+  let cases := mapIndexed (fun tag fields =>
+    let typed := List.map (Wasm.instantiate typeArgs) fields
+    let n := List.length typed
+    let field := fun i f =>
+      let x := "UNBOX(a)[" ++ Int.toText (i + 1) ++ "]"
+      let y := "UNBOX(b)[" ++ Int.toText (i + 1) ++ "]"
+      if i == n - 1 && f == t then "a = " ++ x ++ "; b = " ++ y ++ "; continue; " else if i == n - 1 then "return " ++ fieldTest scope order f x y ++ "; " else if order then "{ V c = " ++ fieldTest scope order f x y ++ "; if (c) return c; } " else "if (!" ++ fieldTest scope order f x y ++ ") return 0; "
+    if n == 0 then "" else "case " ++ Int.toText tag ++ ": " ++ Text.concat (mapIndexed field typed)) (Wasm.ctorFields form)
+  let differ := if order then "ta < tb ? -1 : 1" else "0"
+  "static V " ++ (if order then "deus_cmp" else "deus_eq") ++ Int.toText k ++
+    "(V a, V b) { for (;;) { if (a == b) return " ++ same ++ "; V ta = UNBOX(a)[0], tb = UNBOX(b)[0]; if (ta != tb) return " ++ differ ++ "; switch (ta) { " ++ Text.concat cases ++ "default: return " ++ same ++ "; } } }"
+
+/-- The index of the `show` function of type `t`, kept beside the comparisons as `(show t)`. -/
+def showIndex (scope : Wasm.Scope) (t : Sexp) : Int := structIndex scope (Sexp.list [Sexp.sym "show", t])
+
+/-- C that appends the rendering of `x`, of type `t`, to the text `s`, as the kernels' `show` renders it. -/
+def showCall (scope : Wasm.Scope) (t : Sexp) (s : Text) (x : Text) : {Throw Text} Text :=
+  let both := "(" ++ s ++ ", " ++ x ++ ")"
+  let put := fun literal => "deus_put(" ++ s ++ ", \"" ++ literal ++ "\")"
+  let head := headName t
+  if t == tref "#Int" then "deus_show_int" ++ both else if t == tref "#Bool" then "deus_put(" ++ s ++ ", " ++ x ++ " ? \"true\" : \"false\")" else if t == tref "#Text" then "deus_show_text" ++ both else if t == tref "#Unit" then put "()" else if Sexp.head t == "tfun" || any (fun n => head == Option.some n) ["#Ref", "#Dict", "#MutMap"] then put "<function>" else if showable t && (head == Option.some "#Array" || isSome (Option.bind head (typeObject scope))) then "deus_show" ++ Int.toText (showIndex scope t) ++ both else Throw.throw ("show on a value of type " ++ Sexp.print t ++ " is outside the C subset")
+
+/-- Whether `t` is known to the last part, but for function types, which show as `<function>` whatever they take. -/
+def showable (t : Sexp) : Bool :=
+  match t with
+  | Sexp.list [] => false
+  | Sexp.list (Sexp.sym "tvar" :: _) => false
+  | Sexp.list (Sexp.sym "tfun" :: _) => true
+  | Sexp.list items => List.all showable items
+  | _ => true
+
+/-- The name the kernels show for constructor `tag` of the data type `n`: its type's first 8 characters and the tag. -/
+def shownName (scope : Wasm.Scope) (n : Text) (tag : Int) : Text :=
+  let key := if Option.isSome (List.lookup n scope.datatypes) then n
+    else
+      let form := Wasm.typeObject scope n
+      match List.find (fun entry => form == some (snd entry)) scope.datatypes with
+      | some entry => fst entry
+      | none => n
+  Text.take 8 key ++ "#" ++ Int.toText tag
+
+/-- The `show` of type `t`: lists, pairs, options and arrays as the kernels write them, other data as `(name field…)`. -/
+def showFunction (scope : Wasm.Scope) (k : Int) (t : Sexp) : {Throw Text} Text :=
+  let typeArgs := Wasm.typeArgs t
+  let arg := fun i => getOr (get? typeArgs i) unknown
+  let field := fun i => "UNBOX(x)[" ++ Int.toText i ++ "]"
+  let put := fun literal => "s = deus_put(s, \"" ++ literal ++ "\"); "
+  let body :=
+    match headName t with
+    | Option.some "#List" => put "[" ++ "for (V c = x; UNBOX(c)[0]; c = UNBOX(c)[2]) { if (c != x) " ++ put ", " ++ "s = " ++
+        showCall scope (arg 0) "s" "UNBOX(c)[1]" ++
+        "; } " ++
+        put "]" ++
+        "return s;"
+    | Option.some "#Array" => put "#[" ++ "for (V i = 1; i <= UNBOX(x)[0]; i++) { if (i > 1) " ++ put ", " ++ "s = " ++
+        showCall scope (arg 0) "s" "UNBOX(x)[i]" ++ "; } " ++ put "]" ++ "return s;"
+    | Option.some "#Pair" => put "(" ++ "s = " ++ showCall scope (arg 0) "s" (field 1) ++ "; " ++ put ", " ++ "s = " ++
+        showCall scope (arg 1) "s" (field 2) ++ "; " ++ put ")" ++ "return s;"
+    | Option.some "#Option" => "if (UNBOX(x)[0] == 0) return deus_put(s, \"none\"); " ++ put "(some " ++ "s = " ++
+        showCall scope (arg 0) "s" (field 1) ++ "; " ++ put ")" ++ "return s;"
+    | Option.some n =>
+        let form := getOr (typeObject scope n) unknown
+        let cases := mapIndexed (fun tag fields =>
+          let typed := List.map (Wasm.instantiate typeArgs) fields
+          let name := shownName scope n tag
+          if List.isEmpty typed then "case " ++ Int.toText tag ++ ": return deus_put(s, \"" ++ name ++ "\"); " else "case " ++ Int.toText tag ++ ": " ++ put ("(" ++ name) ++ Text.concat (mapIndexed
+            (fun i f => put " " ++ "s = " ++ showCall scope f "s" (field (i + 1)) ++ "; ")
+            typed) ++ "return deus_put(s, \")\"); ") (Wasm.ctorFields form)
+        "switch (UNBOX(x)[0]) { " ++ Text.concat cases ++ "} return s;"
+    | Option.none => Throw.throw ("show on a value of type " ++ Sexp.print t ++ " is outside the C subset")
+  "static V deus_show" ++ Int.toText k ++ "(V s, V x) { " ++ body ++ " }"
+
+/-- The comparison and `show` functions of every type registered from index `k`, registering what they use in turn. -/
+def structFunctions (scope : Wasm.Scope) (k : Int) (acc : List Text) : {Throw Text} List Text :=
+  match get? (Ref.get scope.eqs) k with
+  | Option.some (Sexp.list (Sexp.sym "show" :: t :: [])) => CGen.structFunctions scope (k + 1) (acc ++ [showFunction scope k t])
+  | Option.some t => CGen.structFunctions
+      scope
+      (k + 1)
+      (acc ++ [structFunction scope false k t, structFunction scope true k t])
+  | Option.none => acc
+
+/-- How many arguments a primitive the C back end compiles takes, or 0. -/
+def primArity (p : Text) : Int :=
+  if List.any (fun x => x == p) ["Text.length", "Text.fromCode", "Text.concat", "Text.trim", "Int.toText", "Int.fromText", "Dict.fromList", "Dict.size", "Dict.keys", "MutMap.new", "MutMap.size", "MutMap.keys", "show", "Text.utf8", "Text.fromCodes", "Text.sha256"] then 1
+  else if List.any (fun x => x == p) ["Text.slice", "Text.indexOf", "MutMap.set"] then 3
+  else if Option.isSome (macro p) || Option.isSome (infix p) || List.any (fun x => x == p) ["Text.code", "Text.join", "Text.split", "append", "compare", "Dict.lookup", "Dict.contains", "MutMap.get", "MutMap.has", "MutMap.delete"] then 2
+  else 0
+
+/-- A primitive the C runtime implements (D115): those on `Text`, `++` on texts and on lists, and
+  comparisons of texts by their UTF-16 units, as JavaScript orders strings. None for the others. -/
+def runtime (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option CGen.Token) (p : Text) (xs : List Sexp) : {Throw Text} Option Text :=
+  let types := List.map (Wasm.typeOf ctx.cScope env) xs
+  let isText := any (fun t => t == tref "#Text") types
+  let isList := any (fun t => headName t == Option.some "#List") types
+  -- Unknown (a lifted function's parameter) or a type variable (a hash whose names differ in type, D116).
+  let isDynamic := not (List.isEmpty types) && List.all (fun t => t == unknown || head t == "tvar") types
+  let data := List.find (fun t => isData ctx.cScope t) types
+  let lend := fun call => Option.some (lending ctx env owned token (List.map (fun _ => true) xs) call xs)
+  match textFunction p with
+  | Option.some f => lend (fun vs => f ++ CGen.args vs)
+  | Option.none => if p == "show" then
+      let t := getOr (head? types) unknown
+      lend (fun vs => showCall ctx.cScope t "deus_text_cap(0, 16)" (getOr (head? vs) "0"))
+    else if p == "append" && isText then Option.some (lending ctx env owned token [false, true] (fun vs => "deus_text_extend" ++ CGen.args vs) xs) else if p == "append" && isList then
+      let (decls, values, _) := CGen.sequence ctx env owned token [] xs
+      Option.some ("({ " ++ decls ++ "deus_list_append" ++ CGen.args values ++ "; })")
+    else if p == "append" && isDynamic then
+      let (decls, values, _) := CGen.sequence ctx env owned token [] xs
+      Option.some ("({ " ++ decls ++ "deus_append_any" ++ CGen.args values ++ "; })")
+    else if p == "append" then Throw.throw "++ on values not known to be Text or a List is outside the C subset" else if p == "compare" && isText then lend (fun vs => "deus_text_cmp" ++ CGen.args vs) else if p == "compare" && List.all isScalar types then lend (fun vs => "deus_int_cmp" ++ CGen.args vs) else if p == "eq" && isText then lend (fun vs => "deus_text_eq" ++ CGen.args vs) else if p == "neq" && isText then lend (fun vs => "!deus_text_eq" ++ CGen.args vs) else if isSome data && (isComparison p || p == "compare") then
+      let k := Int.toText (structIndex ctx.cScope (getOr data unknown))
+      if p == "eq" then lend (fun vs => "deus_eq" ++ k ++ CGen.args vs) else if p == "neq" then lend (fun vs => "!deus_eq" ++ k ++ CGen.args vs) else if p == "compare" then lend (fun vs => "deus_cmp" ++ k ++ CGen.args vs) else
+        match infix p with
+        | Option.some op => lend (fun vs => "(V)(deus_cmp" ++ k ++ CGen.args vs ++ " " ++ op ++ " 0)")
+        | Option.none => Option.none
+    else if p == "compare" && isDynamic then lend (fun vs => "deus_cmp_any" ++ CGen.args vs) else if p == "eq" && isDynamic then lend (fun vs => "deus_eq_any" ++ CGen.args vs) else if p == "neq" && isDynamic then lend (fun vs => "!deus_eq_any" ++ CGen.args vs) else if isDynamic && isComparison p then
+      match infix p with
+      | Option.some op => lend (fun vs => "(V)(deus_cmp_any" ++ CGen.args vs ++ " " ++ op ++ " 0)")
+      | Option.none => Option.none
+    else if isText && isComparison p then
+      match infix p with
+      | Option.some op => lend (fun vs => "(V)(deus_text_cmp" ++ CGen.args vs ++ " " ++ op ++ " 0)")
+      | Option.none => Option.none
+    else if (isComparison p || p == "compare") && not (List.isEmpty types) && not (any isScalar types) && not (any comparesOpaque types) then
+      -- Data whose type is only partly known, as `Option b` from a polymorphic call, compares at run time (D137).
+      if p == "compare" then lend (fun vs => "deus_cmp_any" ++ CGen.args vs) else if p == "eq" then lend (fun vs => "deus_eq_any" ++ CGen.args vs) else if p == "neq" then lend (fun vs => "!deus_eq_any" ++ CGen.args vs) else
+        match infix p with
+        | Option.some op => lend (fun vs => "(V)(deus_cmp_any" ++ CGen.args vs ++ " " ++ op ++ " 0)")
+        | Option.none => Option.none
+    else Option.none
+
+/-- Whether values of type `t` are arrays, cells or functions, which no comparison takes apart. -/
+def comparesOpaque (t : Sexp) : Bool :=
+  Wasm.headName t == some "#Array" || Wasm.headName t == some "#Ref" || Sexp.head t == "tfun"
+
+/-- A primitive. `Array` is a block `[length, item…]` and `Ref` a block `[value]` (D83). Their
+  first argument is borrowed when it is a local used again later, so a read does not touch its
+  count; otherwise it is dropped after the access. Reads `deus_dup` what they return; the writes
+  drop what they overwrite. `Ref.set` returns `()`; `Array.set` is pure (D96) and returns the
+  array, written in place when the code holds its only reference, else a copy. -/
+def primitive (ctx : FnCtx) (env : List Int) (owned : List Int) (token : Option CGen.Token) (e : Sexp) (p : Text) (xs : List Sexp) : {Throw Text} Text :=
+  -- The container is a local the code still needs afterwards: borrow it rather than count it.
+  let borrowed := if startsWith "Array." p || startsWith "Ref." p then
+    match head? xs with
+    | Option.some (Sexp.list (Sexp.sym "var" :: Sexp.int i :: [])) =>
+        match get? env i with
+        | Option.some l => if isIn owned l then -1 else l
+        | Option.none => -1
+    | _ => -1
+  else -1
+  let evaluated := if borrowed >= 0 && p != "Ref.new" && p != "Array.make" then
+    let (decls, values, _) := CGen.sequence ctx env owned token [] (List.drop 1 xs)
+    (decls, CGen.local borrowed :: values, true)
+  else
+    let (decls, values, _) := CGen.sequence ctx env owned token [] xs
+    (decls, values, false)
+  -- What a read returns is counted again, unless it is an `Int` or a `Bool`.
+  let share := if uncounted (Wasm.typeOf ctx.cScope env e) then "" else "deus_dup"
+  let item :=
+    match xs with
+    | a :: _ => Wasm.typeArgs (Wasm.typeOf ctx.cScope env a)
+    | [] => []
+  let dropOld := if List.all uncounted item && not (List.isEmpty item) then "" else "deus_drop(old); "
+  let (decls, vs, isBorrowed) := evaluated
+  let release :=
+    match head? vs with
+    | Option.some c => if isBorrowed then "" else "deus_drop(" ++ c ++ "); "
+    | Option.none => ""
+  let unit := "STATIC(&deus_nullary[0])"
+  let block := fun code => "({ " ++ decls ++ code ++ "; })"
+  match (p, vs, xs) with
+  | ("Array.make", n :: x :: [], _) => block ("deus_array(" ++ n ++ ", " ++ x ++ ")")
+  | ("Array.length", a :: [], _) => block ("V r = UNBOX(" ++ a ++ ")[0]; " ++ release ++ "r")
+  | ("Array.get", a :: i :: [], _) => block ("V r = " ++ share ++ "(*AT(" ++ a ++ ", " ++ i ++ ")); " ++ release ++ "r")
+  | ("Array.set", a :: i :: x :: [], _) =>
+      -- An array the code owns passes its reference to the result; a borrowed one is copied.
+      let target := if isBorrowed then "deus_array_copy(" ++ a ++ ")" else "deus_array_unique(" ++ a ++ ")"
+      block ("V r = " ++ target ++ "; V *s = AT(r, " ++ i ++ "); V old = *s; *s = " ++ x ++ "; " ++ dropOld ++
+        "r")
+  | ("Ref.new", x :: [], _) => block ("V *r = deus_block(K_REF, 1); r[0] = " ++ x ++ "; BOX(r)")
+  | ("Ref.get", r :: [], _) => block ("V v = " ++ share ++ "(UNBOX(" ++ r ++ ")[0]); " ++ release ++ "v")
+  | ("Ref.set", r :: x :: [], _) => block ("V old = UNBOX(" ++ r ++ ")[0]; UNBOX(" ++ r ++ ")[0] = " ++ x ++ "; " ++ dropOld ++ release ++
+      unit)
+  | (_, ca :: cb :: [], a :: b :: []) =>
+      let ta := Wasm.typeOf ctx.cScope env a
+      let tb := Wasm.typeOf ctx.cScope env b
+      if isComparison p && not (isScalar ta || isScalar tb) then Throw.throw (p ++
+        " on values that are not known to be Int or Bool is outside the C subset, since it would compare addresses: " ++ Text.take 120 (Sexp.print e)) else
+        match (macro p, infix p) with
+        | (Option.some m, _) => block (m ++ "(" ++ ca ++ ", " ++ cb ++ ")")
+        | (_, Option.some op) => block ("(V)(" ++ ca ++ " " ++ op ++ " " ++ cb ++ ")")
+        | _ => Throw.throw ("the primitive " ++ p ++ " is outside the C subset")
+  | _ => Throw.throw ("the primitive " ++ p ++ " is outside the C subset")
+
+/-- A `match`. Each case that takes apart a block the code owns and does not use again reads its
+  fields, then: if the block is unique, its fields' references pass to the case and its memory
+  becomes the case's reuse token; if it is shared, the case `deus_dup`s the fields it uses and
+  decrements the block. -/
+def matchForm (ctx : FnCtx) (env : List Int) (tail : Bool) (owned : List Int) (token : Option CGen.Token) (scrutinee : Sexp) (cases : List Sexp) : {Throw Text} Text :=
+  let inCases := usedOf env owned (Sexp.list (Sexp.sym "match" :: Sexp.list [Sexp.sym "int", Sexp.int 0] :: cases))
+  -- A local is matched where it is: the cases own it if the code does, else they borrow it.
+  let named :=
+    match scrutinee with
+    | Sexp.list (Sexp.sym "var" :: Sexp.int i :: []) => get? env i
+    | _ => Option.none
+  let mine := List.filter (fun l => not (isIn inCases l) && Option.some l != named) owned
+  let rest := List.filter (fun l => isIn inCases l || Option.some l == named) owned
+  let v := getOr named (CGen.fresh ctx)
+  let vOwned :=
+    match named with
+    | Option.some l => isIn owned l
+    | Option.none => true
+  match named with
+  | Option.some _ => ()
+  | Option.none => setType ctx.cScope v (Wasm.typeOf ctx.cScope env scrutinee)
+  let r := CGen.fresh ctx
+  let done := "m" ++ Int.toText r
+  let arms := List.map (fun c =>
+    match c with
+    | Sexp.list (Sexp.sym "case" :: pat :: body :: []) =>
+        let (guard, bound, loads) := CGen.pattern ctx v env pat
+        let loaded := List.map (fun triple =>
+          let (l, _, _) := triple
+          l) loads
+        let usedInBody := usedOf bound (v :: loaded) body
+        let vUsed := isIn usedInBody v
+        let usedLoads := List.filter (isIn usedInBody) loaded
+        let n := blockFields pat
+        let ownedInBody := List.filter (fun l => l != v) rest ++ usedLoads ++ (if vUsed && vOwned then [v] else [])
+        let shareFields := Text.concat (List.map (dupLocal ctx) usedLoads)
+        let ownership := if n > 0 && not vUsed && vOwned then
+          let direct := List.filter (fun triple =>
+            let (_, parent, _) := triple
+            parent == v) loads
+          let nested := List.filter (fun triple =>
+            let (_, parent, _) := triple
+            parent != v) loads
+          let directAt := fun i => List.find (fun triple =>
+            let (_, _, k) := triple
+            k == i) direct
+          -- Unique: the fields' references pass to the case; drop those it does not use.
+          let keepNested := Text.concat (List.map (fun triple =>
+            let (l, _, _) := triple
+            if isIn usedInBody l then dupLocal ctx l else "") nested)
+          let dropUnused := Text.concat (List.map (fun i =>
+            match directAt i with
+            | Option.some (l, _, _) => if isIn usedInBody l then "" else dropLocal ctx l
+            | Option.none => "deus_drop(UNBOX(" ++ CGen.local v ++ ")[" ++ Int.toText (i + 1) ++ "]); ") (range 0 n))
+          match token with
+          | Option.none => if wants n body then
+              let t := CGen.Token.mk (CGen.fresh ctx) n
+              ("V *" ++ tokenName t ++ "; if (UNIQUE(" ++ CGen.local v ++ ")) { " ++ keepNested ++
+                dropUnused ++ tokenName t ++ " = UNBOX(" ++ CGen.local v ++ "); } else { " ++ shareFields ++ "HDR(" ++ CGen.local v ++ ") -= 256; " ++ tokenName t ++ " = 0; } ", Option.some t)
+            else ("if (UNIQUE(" ++ CGen.local v ++ ")) { " ++ keepNested ++ dropUnused ++
+              "deus_release(UNBOX(" ++ CGen.local v ++ ")); } else { " ++ shareFields ++ "HDR(" ++ CGen.local v ++ ") -= 256; } ", Option.none)
+          | Option.some _ => ("if (UNIQUE(" ++ CGen.local v ++ ")) { " ++ keepNested ++ dropUnused ++
+              "deus_release(UNBOX(" ++ CGen.local v ++ ")); } else { " ++ shareFields ++ "HDR(" ++ CGen.local v ++ ") -= 256; } ", token)
+        else (shareFields ++ (if vUsed || not vOwned then "" else dropLocal ctx v), token)
+        let (rc, caseToken) := ownership
+        if tail then "do { " ++ guard ++ rc ++ CGen.expr ctx bound true ownedInBody caseToken body ++
+          " } while (0); " else "do { " ++ guard ++ rc ++ CGen.local r ++ " = " ++
+          CGen.expr ctx bound false ownedInBody caseToken body ++ "; goto " ++ done ++ "; } while (0); "
+    | other => Throw.throw ("outside the C subset: " ++ Sexp.print other)) cases
+  let head :=
+    match named with
+    | Option.some _ => Text.concat (List.map (dropLocal ctx) mine)
+    | Option.none => "V " ++ CGen.local v ++ " = " ++ CGen.expr ctx env false mine Option.none scrutinee ++ "; "
+  if tail then "{ " ++ head ++ Text.concat arms ++ "__builtin_trap(); }" else "({ " ++ head ++ "V " ++ CGen.local r ++ "; " ++ Text.concat arms ++ "__builtin_trap(); " ++ done ++
+    ": " ++
+    CGen.local r ++
+    "; })"
+
+def params (n : Int) : Text := args (List.map (fun i => "V " ++ local i) (List.range 0 n))
+
+/-- The C translation unit: every function, and `export` as an `int32_t` entry point. -/
+def unit (fns : List Fn) (datatypes : List (Text, Sexp)) (abilities : List Text) (export : Text) : {Throw Text} Text :=
+  let table := fnTable fns
+  let types := Wasm.typeTable datatypes
+  let borrow := inferBorrow fns table
+  let lifted := Ref.new []
+  let structs := Ref.new []
+  let decls := mapIndexed (fun i f => "static V " ++ fnName i ++ CGen.params f.fnArity ++ ";") fns
+  let bodies := mapIndexed (fun i f =>
+    let scope := Wasm.Scope.mk
+      fns
+      table
+      datatypes
+      types
+      (Ref.new (mapIndexed (fun j t => (j, t)) (fst (peel f.fnArity f.fnType))))
+      structs
+    let ctx := FnCtx.mk scope i f.fnArity (Ref.new f.fnArity) borrow lifted
+    let env := reverse (range 0 f.fnArity)
+    let header := "/* #" ++ Text.take 10 f.fnHash ++ " */\nstatic V " ++ fnName i ++ CGen.params f.fnArity ++
+      " {\n"
+    -- A constant is evaluated once, on first use, as Core says; what it keeps is immortal and not counted live.
+    if f.fnArity == 0 && i > 0 then header ++
+      "  static V cached; static int state;\n  if (state == 2) return deus_dup(cached);\n  if (state == 1) __builtin_trap();\n  state = 1; V before = deus_live;\n  V r = " ++ CGen.expr ctx env false [] Option.none f.fnBody ++ ";\n  if (r == DEUS_ABORT) { state = 0; return r; }\n  deus_immortal(r); deus_live = before; cached = r; state = 2; return deus_dup(r);\n}" else header ++ "top:;\n  " ++ CGen.expr
+      ctx
+      env
+      true
+      (List.filter (fun k => not (borrowsAt (borrowsOf ctx i) k)) (range 0 f.fnArity))
+      Option.none
+      f.fnBody ++ "\n}") fns
+  let arity := getOr (Option.map (fun f => f.fnArity) (head? fns)) 0
+  let peeled :=
+    match head? fns with
+    | Option.some f => peel f.fnArity f.fnType
+    | Option.none => ([], unknown)
+  let result := snd peeled
+  -- A program of `Unit` is a command (D129): it reads its arguments through `IO.args`, not as integers.
+  let command := fst peeled == [tref "#Unit"]
+  let interpreted := any (fun f => usesCode f.fnBody) fns
+  let hosted := interpreted || any (fun f => usesHost f.fnBody) fns
+  let inputs := if command then [] else range 0 arity
+  let call := fun vs => if command then "f0(STATIC(&deus_nullary[0]))" else "f0" ++ CGen.args (List.map (fun v => "(V)" ++ v) vs)
+  let entry := "EXPORT(\"" ++ export ++ "\") int32_t deus_entry" ++
+    CGen.args (List.map (fun i => "int32_t a" ++ Int.toText i) inputs) ++ " { if (!deus_base) deus_init(); return (int32_t)" ++ call (List.map (fun i => "a" ++ Int.toText i) inputs) ++ "; }"
+  let argv := List.map (fun i => "(int32_t)atol(argv[" ++ Int.toText (i + 1) ++ "])") inputs
+  let setup := if hosted then "  deus_argc = argc; deus_argv = argv; clock_gettime(CLOCK_MONOTONIC, &deus_start);\n" else ""
+  -- A Text result prints as the interpreter shows it: JSON, in UTF-8; a command's other results print nothing.
+  let run := if result == tref "#Text" then setup ++ "  deus_init(); V r = " ++ call argv ++ "; deus_print_text(r); deus_drop(r);" else if command && result != tref "#Int" then setup ++ "  deus_init(); V r = " ++ call argv ++ "; deus_drop(r);" else setup ++ "  printf(\"%d\\n\", deus_entry" ++ CGen.args argv ++ ");"
+  let main := join
+    "\n"
+    ["#ifdef __wasm__", "EXPORT(\"deus_live\") int32_t deus_live_words(void) { return (int32_t)deus_live; }", "#elif defined(DEUS_MAIN)", "#include <stdio.h>", "static void deus_print_text(V t) { V n = TLEN(t); uint16_t *x = TU(t); putchar('\"'); for (V i = 0; i < n; i++) { uint32_t u = x[i]; if (u == '\"' || u == '\\\\') { putchar('\\\\'); putchar(u); } else if (u == '\\n') fputs(\"\\\\n\", stdout); else if (u == '\\r') fputs(\"\\\\r\", stdout); else if (u == '\\t') fputs(\"\\\\t\", stdout); else if (u == 8) fputs(\"\\\\b\", stdout); else if (u == 12) fputs(\"\\\\f\", stdout); else if (u < 32) printf(\"\\\\u%04x\", u); else if (u >= 0xd800 && u < 0xdc00 && i + 1 < n && x[i + 1] >= 0xdc00 && x[i + 1] < 0xe000) { uint32_t c = 0x10000 + ((u - 0xd800) << 10) + (x[++i] - 0xdc00); putchar(0xf0 | c >> 18); putchar(0x80 | (c >> 12 & 63)); putchar(0x80 | (c >> 6 & 63)); putchar(0x80 | (c & 63)); } else if (u >= 0xd800 && u < 0xe000) printf(\"\\\\u%04x\", u); else if (u < 0x80) putchar(u); else if (u < 0x800) { putchar(0xc0 | u >> 6); putchar(0x80 | (u & 63)); } else { putchar(0xe0 | u >> 12); putchar(0x80 | (u >> 6 & 63)); putchar(0x80 | (u & 63)); } } puts(\"\\\"\"); }", "int main(int argc, char **argv) {", if command then "  (void)argc; (void)argv;" else "  if (argc != " ++ Int.toText (arity + 1) ++ ") { fprintf(stderr, \"usage: %s" ++
+      Text.concat (List.map (fun _ => " <int>") inputs) ++ "\\n\", argv[0]); return 2; }", run, "  if (getenv(\"DEUS_HEAP_STATS\")) fprintf(stderr, \"heap: %ld words bumped, %ld live, %ld peak\\n\", (long)(deus_hp - deus_base), (long)deus_live, (long)deus_peak);", "  return 0;", "}", "#endif"]
+  -- Interpreted code has nullary constructors of any tag, and its operations name abilities as the compiled handlers do.
+  let nullary := foldl (fun acc f => larger acc (nullaryCount f.fnBody)) (if interpreted then 256 else 0) fns
+  let abilityTable := "static const char *const deus_abilities[] = { " ++
+    Text.concat (List.map (fun a => JsGen.quote a ++ ", ") abilities) ++ "0 };\nstatic const V deus_nabilities = " ++ Int.toText (List.length abilities) ++ ";"
+  let codes := Ref.get lifted
+  let codeDecls := mapIndexed (fun k _ => "static V c" ++ Int.toText k ++ "(V, V);") codes
+  let comparisons := structFunctions (Wasm.Scope.mk fns table datatypes types (Ref.new []) structs) 0 []
+  let comparisonDecls := mapIndexed
+    (fun k t => if head t == "show" then "static V deus_show" ++ Int.toText k ++ "(V, V);" else "static V deus_eq" ++ Int.toText k ++ "(V, V); static V deus_cmp" ++ Int.toText k ++ "(V, V);")
+    (Ref.get structs)
+  join "\n" ([CGen.prelude nullary] ++ (if hosted then [ioRuntime] else []) ++
+    (if interpreted then [abilityTable, codeRuntime] else []) ++ decls ++ codeDecls ++ comparisonDecls ++ [""] ++ bodies ++ codes ++ comparisons ++ ["", entry, main, ""])
+
+--
+-- Lambda lifting. A `letrec` function becomes a top-level function that takes the locals it
+-- captures as extra leading parameters, so recursion is a direct call and never a closure
+-- that holds itself (a cycle reference counting could not free).
+--
+
+/-- The variables of `e` bound outside it, below `depth` binders, as indices outside them. -/
+def freeVars (depth : Int) (e : Sexp) : List Int :=
+  match e with
+  | Sexp.list [Sexp.sym "var", Sexp.int i] => if i >= depth then [i - depth] else []
+  | Sexp.list [Sexp.sym "lam", b] => freeVars (depth + 1) b
+  | Sexp.list [Sexp.sym "let", v, b] => freeVars depth v ++ freeVars (depth + 1) b
+  | Sexp.list [Sexp.sym "letrec", Sexp.list fs, b] =>
+    let n := List.length fs
+    List.concatMap (freeVars (depth + n)) fs ++ freeVars (depth + n) b
+  | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
+    freeVars depth scrutinee ++ List.concatMap (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "case", pat, b] => freeVars (depth + binders pat) b
+      | _ => []) cases
+  | Sexp.list items => List.concatMap (freeVars depth) items
+  | _ => []
+
+/-- `e` with each variable `i` bound outside it replaced by `sub i`, a term outside `e`'s binders. -/
+def subst (depth : Int) (sub : Int -> Sexp) (e : Sexp) : Sexp :=
+  let again := fun (d : Int) (x : Sexp) => subst d sub x
+  match e with
+  | Sexp.list [Sexp.sym "var", Sexp.int i] => if i < depth then e else shift depth 0 (sub (i - depth))
+  | Sexp.list [Sexp.sym "lam", b] => Sexp.list [Sexp.sym "lam", again (depth + 1) b]
+  | Sexp.list [Sexp.sym "let", v, b] => Sexp.list [Sexp.sym "let", again depth v, again (depth + 1) b]
+  | Sexp.list [Sexp.sym "letrec", Sexp.list fs, b] =>
+    let n := List.length fs
+    Sexp.list [Sexp.sym "letrec", Sexp.list (List.map (again (depth + n)) fs), again (depth + n) b]
+  | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
+    Sexp.list (Sexp.sym "match" :: again depth scrutinee :: List.map (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "case", pat, b] => Sexp.list [Sexp.sym "case", pat, again (depth + binders pat) b]
+      | other => other) cases)
+  | Sexp.list items => Sexp.list (List.map (again depth) items)
+  | _ => e
+
+def var (i : Int) : Sexp := Sexp.list [Sexp.sym "var", Sexp.int i]
+
+/-- `h` applied to the captures, where capture `t` is the term `at t`. -/
+def lifted (h : Text) (count : Int) (at : Int -> Sexp) : Sexp :=
+  if count == 0 then Sexp.list [Sexp.sym "ref", Sexp.str h]
+  else Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: List.map at (List.range 0 count))
+
+/-- `e` with every `letrec` lifted out; the lifted functions are added to `out`. -/
+def liftExpr (parent : Text) (next : Ref Int) (out : Ref (List Wasm.Fn)) (e : Sexp) : {Throw Text} Sexp :=
+  let again := fun (x : Sexp) => liftExpr parent next out x
+  match e with
+  | Sexp.list [Sexp.sym "letrec", Sexp.list fs, b] =>
+    let n := List.length fs
+    let caps := List.distinct (List.concatMap (freeVars n) fs)
+    let count := List.length caps
+    let names := List.map (fun _ =>
+      let k := Ref.get next
+      let _ := Ref.set next (k + 1)
+      parent ++ "/rec" ++ Int.toText k) fs
+    let capAt := fun (o : Int) => count - 1 - List.findIndex (fun c => c == o) caps
+    -- Inside a lifted function, outside its own parameters, capture t is (var count-1-t).
+    let inside := fun (o : Int) =>
+      if o < n then lifted (Option.getOr (List.get? names (n - 1 - o)) "") count (fun t => var (count - 1 - t))
+      else var (capAt (o - n))
+    let _ := List.map (fun pair =>
+      match pair with
+      | (name, f) =>
+        match Wasm.unlam f with
+        | (0, _) => throw "a letrec binding that is not a lambda is outside the C subset"
+        | (arity, body) =>
+          let lifted := liftExpr parent next out (subst arity inside body)
+          Ref.set out (Ref.get out ++ [Wasm.Fn.mk name (count + arity) lifted Wasm.unknown])) (List.zip names fs)
+    let outside := fun (o : Int) =>
+      if o < n then lifted (Option.getOr (List.get? names (n - 1 - o)) "") count (fun t => var (Option.getOr (List.get? caps t) 0))
+      else var (o - n)
+    again (subst 0 outside b)
+  | Sexp.list items => Sexp.list (List.map again items)
+  | _ => e
+
+/-- Every function with its `letrec`s lifted into new functions after the originals. -/
+def liftAll (fns : List Wasm.Fn) : {Throw Text} List Wasm.Fn :=
+  let out := Ref.new []
+  let next := Ref.new 0
+  let done := List.map (fun f => Wasm.Fn.mk f.fnHash f.fnArity (liftExpr f.fnHash next out f.fnBody) f.fnType) fns
+  done ++ Ref.get out
+
+--
+-- Effects (D124). A clause that resumes only in tail position needs no captured continuation:
+-- performing calls it, and its tail `k x` returns `x` to the performer. A clause tail that does
+-- not resume aborts: it stores its value and returns the abort marker, which every caller that
+-- may see it checks and passes on, dropping what it owns, up to the handler. Both are rewritten
+-- into Core over the `deus.*` runtime functions before lambda lifting, so reference counting
+-- covers the new paths as it covers any other code.
+--
+
+def eVar (i : Int) : Sexp := Sexp.list [Sexp.sym "var", Sexp.int i]
+
+def eInt (n : Int) : Sexp := Sexp.list [Sexp.sym "int", Sexp.int n]
+
+def eLet (v : Sexp) (b : Sexp) : Sexp := Sexp.list [Sexp.sym "let", v, b]
+
+def eIf (c : Sexp) (t : Sexp) (f : Sexp) : Sexp := Sexp.list [Sexp.sym "if", c, t, f]
+
+def eSeq (a : Sexp) (b : Sexp) : Sexp := Sexp.list [Sexp.sym "seq", a, b]
+
+/-- `b` under `n` lambdas. -/
+def eLams (n : Int) (b : Sexp) : Sexp := if n == 0 then b else Sexp.list [Sexp.sym "lam", eLams (n - 1) b]
+
+/-- The abort marker, as a value. -/
+def effAbort : Sexp := Unique.applyPrim "deus.abortValue" [eInt 0]
+
+/-- Whether variable `d` occurs free in `e`. -/
+def effOccurs (d : Int) (e : Sexp) : Bool :=
+  match e with
+  | Sexp.list [Sexp.sym "var", Sexp.int i] => i == d
+  | Sexp.list [Sexp.sym "lam", b] => effOccurs (d + 1) b
+  | Sexp.list [Sexp.sym "let", v, b] => effOccurs d v || effOccurs (d + 1) b
+  | Sexp.list [Sexp.sym "letrec", Sexp.list fs, b] =>
+    let n := List.length fs
+    List.any (effOccurs (d + n)) fs || effOccurs (d + n) b
+  | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
+    effOccurs d scrutinee || List.any (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "case", pat, b] => effOccurs (d + binders pat) b
+      | _ => false) cases
+  | Sexp.list [Sexp.sym "ret", b] => effOccurs (d + 1) b
+  | Sexp.list [Sexp.sym "on", _, _, Sexp.int k, b] => effOccurs (d + k + 1) b
+  | Sexp.list items => List.any (effOccurs d) items
+  | _ => false
+
+def effResumeError : Text := "a handler that resumes other than in tail position is outside the C subset"
+
+/--
+  A clause body whose continuation is variable `d`: a tail `k x` becomes `x`, and any other tail
+  aborts to the handler with its value. `k` anywhere else is refused.
+-/
+def effClauseTails (d : Int) (e : Sexp) : {Throw Text} Sexp :=
+  let plain := fun (x : Sexp) => if effOccurs d x then throw effResumeError else x
+  match e with
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "var", Sexp.int i], x] => if i == d then plain x else Unique.applyPrim "deus.abortTo" [plain e]
+  | Sexp.list [Sexp.sym "let", v, b] => eLet (plain v) (effClauseTails (d + 1) b)
+  | Sexp.list [Sexp.sym "seq", a, b] => eSeq (plain a) (effClauseTails d b)
+  | Sexp.list [Sexp.sym "if", c, t, f] => eIf (plain c) (effClauseTails d t) (effClauseTails d f)
+  | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
+    Sexp.list (Sexp.sym "match" :: plain scrutinee :: List.map (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "case", pat, b] => Sexp.list [Sexp.sym "case", pat, effClauseTails (d + binders pat) b]
+      | other => plain other) cases)
+  | Sexp.list [Sexp.sym "letrec", Sexp.list fs, b] =>
+    let n := List.length fs
+    if List.any (effOccurs (d + n)) fs then throw effResumeError
+    else Sexp.list [Sexp.sym "letrec", Sexp.list fs, effClauseTails (d + n) b]
+  | _ => if e == effAbort then e else Unique.applyPrim "deus.abortTo" [plain e]
+
+/-- Whether `e` has a handler clause with a tail that does not resume. -/
+def effAborting (e : Sexp) : {Throw Text} Bool :=
+  match e with
+  | Sexp.list (Sexp.sym "on" :: _ :: _ :: _ :: b :: []) => indexOf (Sexp.print (effClauseTails 0 b)) "deus.abortTo" 0 >= 0 || CGen.effAborting b
+  | Sexp.list items => any CGen.effAborting items
+  | _ => false
+
+/-- Whether calling `h` may return the abort marker: a primitive or constructor never does, a definition only when `aborts` has it. -/
+def effCallAborts (aborts : Map Text Bool) (h : Sexp) : Bool :=
+  match h with
+  | Sexp.list [Sexp.sym "prim", Sexp.str p] => raisesDefect p
+  | Sexp.list (Sexp.sym "con" :: _) => false
+  | Sexp.list [Sexp.sym "ref", Sexp.str r] => Map.contains r aborts
+  | _ => true
+
+/-- The definitions `e` calls outside closures, and whether it performs, handles or calls an unknown function there. -/
+def effCalls (e : Sexp) : (Bool, List Text) :=
+  let all := fun (xs : List Sexp) => List.foldl (fun acc x =>
+    match (acc, effCalls x) with
+    | ((d, cs), (d2, cs2)) => (d || d2, cs2 ++ cs)) (false, []) xs
+  match e with
+  | Sexp.list [Sexp.sym "lam", _] => (false, [])
+  | Sexp.list (Sexp.sym "handle" :: rest) => (true, snd (all rest))
+  | Sexp.list [Sexp.sym "letrec", _, b] => effCalls b
+  | Sexp.list (Sexp.sym "app" :: h :: xs) =>
+    match all (h :: xs) with
+    | (d, cs) =>
+      match h with
+      | Sexp.list [Sexp.sym "prim", Sexp.str p] => (d || raisesDefect p, cs)
+      | Sexp.list (Sexp.sym "con" :: _) => (d, cs)
+      | Sexp.list [Sexp.sym "ref", Sexp.str r] => (d, r :: cs)
+      | _ => (true, cs)
+  | Sexp.list items => all items
+  | _ => (false, [])
+
+/-- The definitions that may return the abort marker: those that perform, handle or call an unknown function, and their callers. -/
+def effAbortingFns (fns : List Wasm.Fn) : Map Text Bool :=
+  let calls := List.map (fun f => (f.fnHash, effCalls f.fnBody)) fns
+  let rec grow known :=
+    let more := List.filter (fun entry =>
+      match entry with
+      | (h, (direct, callees)) => not (Map.contains h known) && (direct || List.any (fun c => Map.contains c known) callees)) calls
+    if List.isEmpty more then known else grow (List.foldl (fun m entry => Map.insert (fst entry) true m) known more)
+  grow Map.empty
+
+/-- Whether evaluating `e` can neither abort nor observe the order it runs in. -/
+def effAtomic (e : Sexp) : Bool :=
+  match e with
+  | Sexp.list (Sexp.sym "var" :: _) => true
+  | Sexp.list (Sexp.sym "ref" :: _) => true
+  | Sexp.list (Sexp.sym "int" :: _) => true
+  | Sexp.list (Sexp.sym "text" :: _) => true
+  | Sexp.list (Sexp.sym "con" :: _) => true
+  | Sexp.list (Sexp.sym "prim" :: _) => true
+  | Sexp.list (Sexp.sym "op" :: _) => true
+  | Sexp.list (Sexp.sym "lam" :: _) => true
+  | _ => false
+
+/-- `v` bound, then the abort marker if it is one, else `b`, which sees `v` as variable 0. -/
+def effChecked (v : Sexp) (b : Sexp) : Sexp := eLet v (eIf (Unique.applyPrim "deus.aborted" [eVar 0]) effAbort b)
+
+/--
+  `build` of the normalized operands `xs`, evaluated in order, each with whether it may abort. An
+  operand that may abort is bound and checked first, and so is every operand before it that is not
+  atomic, so the order of evaluation stays.
+-/
+def effHoist (xs : List (Sexp, Bool)) (done : List Sexp) (build : List Sexp -> Sexp) : Sexp :=
+  match xs with
+  | [] => build done
+  | (x, aborts) :: rest =>
+    let next := fun (u : Unit) => effHoist (List.map (fun p => (shift 1 0 (fst p), snd p)) rest) (List.map (shift 1 0) done ++ [eVar 0]) build
+    if aborts then effChecked x (next ())
+    else if not (effAtomic x) && List.any snd rest then eLet x (next ())
+    else effHoist rest (done ++ [x]) build
+
+/--
+  `e` with every value that may be the abort marker checked before it is used, and whether `e`
+  itself may return it; in tail position the marker is returned as it is.
+-/
+def effNorm (aborts : Map Text Bool) (e : Sexp) : (Sexp, Bool) :=
+  -- A form's first part bound and checked, the rest (the form, with a placeholder first part) shifted under it.
+  let first := fun (x : Sexp) (form : Sexp) =>
+    match shift 1 0 form with
+    | Sexp.list (h :: _ :: rest) => effChecked x (Sexp.list (h :: eVar 0 :: rest))
+    | other => other
+  match e with
+  | Sexp.list [Sexp.sym "lam", b] => (Sexp.list [Sexp.sym "lam", fst (effNorm aborts b)], false)
+  | Sexp.list (Sexp.sym "app" :: h :: xs) =>
+    let parts := List.map (effNorm aborts) (h :: xs)
+    (effHoist parts [] (fun ps => Sexp.list (Sexp.sym "app" :: ps)), effCallAborts aborts h || List.any snd parts)
+  | Sexp.list [Sexp.sym "let", v, b] =>
+    match (effNorm aborts v, effNorm aborts b) with
+    | ((nv, av), (nb, ab)) => (if av then effChecked nv nb else eLet nv nb, av || ab)
+  | Sexp.list [Sexp.sym "seq", a, b] =>
+    match (effNorm aborts a, effNorm aborts b) with
+    | ((na, aa), (nb, ab)) => (if aa then effChecked na (shift 1 0 nb) else eSeq na nb, aa || ab)
+  | Sexp.list [Sexp.sym "if", c, t, f] =>
+    match (effNorm aborts c, effNorm aborts t, effNorm aborts f) with
+    | ((nc, ac), (nt, at), (nf, af)) => (if ac then first nc (eIf (eInt 0) nt nf) else eIf nc nt nf, ac || at || af)
+  | Sexp.list (Sexp.sym "match" :: scrutinee :: cases) =>
+    let normed := List.map (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "case", pat, b] =>
+        match effNorm aborts b with
+        | (nb, ab) => (Sexp.list [Sexp.sym "case", pat, nb], ab)
+      | other => (other, false)) cases
+    let rest := List.map fst normed
+    match effNorm aborts scrutinee with
+    | (ns, as) => (if as then first ns (Sexp.list (Sexp.sym "match" :: eInt 0 :: rest)) else Sexp.list (Sexp.sym "match" :: ns :: rest), as || List.any snd normed)
+  | Sexp.list [Sexp.sym "letrec", Sexp.list fs, b] =>
+    match effNorm aborts b with
+    | (nb, ab) => (Sexp.list [Sexp.sym "letrec", Sexp.list (List.map (fun f => fst (effNorm aborts f)) fs), nb], ab)
+  | Sexp.list (Sexp.sym "handle" :: b :: clauses) =>
+    let body := fun (x : Sexp) => fst (effNorm aborts x)
+    (Sexp.list (Sexp.sym "handle" :: body b :: List.map (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "ret", rb] => Sexp.list [Sexp.sym "ret", body rb]
+      | Sexp.list [Sexp.sym "on", a, i, k, cb] => Sexp.list [Sexp.sym "on", a, i, k, body cb]
+      | other => other) clauses), true)
+  | _ => (e, false)
+
+/-- `xs` bound in order around `body`, which sees the last of them as variable 0. -/
+def effBind (xs : List Sexp) (body : Sexp) : Sexp :=
+  match xs with
+  | [] => body
+  | x :: rest => eLet x (effBind (List.map (shift 1 0) rest) body)
+
+/--
+  Performing operation `i` of ability `a` with `k` arguments: the arguments, then the clause,
+  called with the handler hidden. With no handler for it, a `host` primitive performs it instead.
+-/
+def effPerform (a : Int) (i : Int) (host : Option Text) (args : List Sexp) : Sexp :=
+  let k := List.length args
+  let call := Sexp.list (Sexp.sym "app" :: eVar 0 :: List.map (fun j => eVar (k - j)) (List.range 0 k))
+  let handled := eLet (Unique.applyPrim "deus.clause" [eInt a, eInt i]) (eLet call (Unique.applyPrim "deus.clauseDone" [eVar 0]))
+  effBind args (match host with
+    | some p => eIf (Unique.applyPrim "deus.handled" [eInt a, eInt i]) handled (Unique.applyPrim p (List.map (fun j => eVar (k - 1 - j)) (List.range 0 k)))
+    | none => handled)
+
+/-- The operations of `IO`, in order, which the C runtime performs when no handler does (D129). -/
+def ioOperations : List Text := ["print", "eprint", "readFile", "writeFile", "exists", "listDir", "mkdirp", "remove", "args", "exit", "time", "readStdin", "writeBytes", "getEnv", "isDir", "wallClock", "appendFile", "exec"]
+
+/-- The host primitive for operation `i` of ability `a`, if the C runtime has one. -/
+def effHost (a : Text) (i : Int) : Option Text :=
+  if a == "#IO" then Option.map (fun name => "deus.io." ++ name) (List.get? ioOperations i)
+  else if a == "#Defect" && i == 0 then some "deus.defect"
+  else none
+
+/--
+  A handler: its clauses installed as closures, the body run, the handler removed, then the value
+  an aborting clause left for it, the abort marker passed on, or the `ret` clause.
+-/
+def effHandler (abilities : List Text) (b : Sexp) (clauses : List Sexp) : {Throw Text} Sexp :=
+  let added := List.filterMap (fun c =>
+    match c with
+    | Sexp.list [Sexp.sym "on", Sexp.str a, Sexp.int i, Sexp.int k, body] =>
+      let clause := eLams k (shift (-1) 1 (effLower abilities (effClauseTails 0 body)))
+      some (Unique.applyPrim "deus.handleAdd" [eVar 0, eInt (List.findIndex (fun x => x == a) abilities), eInt i, shift 1 0 clause])
+    | _ => none) clauses
+  let returned := match List.find (fun c => Sexp.head c == "ret") clauses with
+    | some (Sexp.list [Sexp.sym "ret", rb]) => shift 1 1 (effLower abilities rb)
+    | _ => eVar 0
+  let after := eSeq (Unique.applyPrim "deus.handleExit" [eVar 1]) (eIf (Unique.applyPrim "deus.caught" [eVar 1, eVar 0]) (Unique.applyPrim "deus.caughtValue" [eInt 0]) (eIf (Unique.applyPrim "deus.aborted" [eVar 0]) effAbort returned))
+  eLet (Unique.applyPrim "deus.handleEnter" [eInt 0]) (List.foldr (fun x acc => eSeq x acc) (eLet (shift 1 0 b) after) added)
+
+/-- `e` with its operations performed and its handlers installed through the runtime. -/
+def effLower (abilities : List Text) (e : Sexp) : {Throw Text} Sexp :=
+  match e with
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "op", Sexp.str a, Sexp.int i, Sexp.int k] :: xs) =>
+    let n := List.length xs
+    if n < k then throw "an operation applied to fewer arguments than it takes is outside the C subset"
+    else
+      let performed := effPerform (List.findIndex (fun x => x == a) abilities) i (effHost a i) (List.map (effLower abilities) (List.take k xs))
+      if n == k then performed else Sexp.list (Sexp.sym "app" :: performed :: List.map (effLower abilities) (List.drop k xs))
+  -- `defect` raises `Defect.raise`, which a handler may take, as the kernels do (D137).
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "prim", Sexp.str "defect"], x] =>
+    effPerform (List.findIndex (fun a => a == "#Defect") abilities) 0 (effHost "#Defect" 0) [effLower abilities x]
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: rest) =>
+    Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: List.map (effLower abilities) rest)
+  | Sexp.list [Sexp.sym "op", _, _, Sexp.int k] => effLower abilities (eLams k (Sexp.list (Sexp.sym "app" :: e :: List.map (fun j => eVar (k - 1 - j)) (List.range 0 k))))
+  | Sexp.list (Sexp.sym "handle" :: b :: clauses) => effHandler abilities (effLower abilities b) clauses
+  | Sexp.list items => Sexp.list (List.map (effLower abilities) items)
+  | _ => e
+
+/-- The abilities `fns` perform or handle, in the order the runtime numbers them. -/
+def abilityNames (fns : List Wasm.Fn) : List Text :=
+  List.distinct (List.concatMap (fun f => JsGen.abilitiesOf f.fnBody ++ (if usesDefect f.fnBody then ["#Defect"] else [])) fns)
+
+/-- `fns` with handlers and operations rewritten into Core over the runtime (D124); unchanged when none performs or handles. -/
+def effects (fns : List Fn) : {Throw Text} List Fn :=
+  let abilities := abilityNames fns
+  if List.isEmpty abilities then fns else
+    let rebuild := fun f body => Fn.mk f.fnHash f.fnArity body f.fnType
+    let normed := if any (fun f => effAborting f.fnBody) fns then
+      let aborts := effAbortingFns fns
+      List.map (fun f => rebuild f (fst (effNorm aborts f.fnBody))) fns
+    else fns
+    List.map (fun f => rebuild f (effLower abilities f.fnBody)) normed
+
+/-- Whether primitive `p` may raise a defect or return the abort marker in native code: `defect`, and `Code.run` and `Code.cost`, which run code (D146). -/
+def raisesDefect (p : Text) : Bool := p == "defect" || p == "Code.run" || p == "Code.cost"
+
+/-- The `Code` primitives the interpreter answers (D146), each as `deus_code_<name>`. -/
+def codeFunctions : List Text := ["Code.load", "Code.has", "Code.run", "Code.quote", "Code.tag", "Code.field", "Code.cast", "Code.defectTrace", "Code.steps", "Code.cost"]
+
+/-- Whether `e` calls the interpreter. -/
+def usesCode (e : Sexp) : Bool :=
+  match e with
+  | Sexp.list [Sexp.sym "prim", Sexp.str p] => List.any (fun x => x == p) codeFunctions
+  | Sexp.list items => List.any usesCode items
+  | _ => false
+
+/-- Whether `e` raises a defect with the `defect` primitive. -/
+def usesDefect (e : Sexp) : Bool :=
+  match e with
+  | Sexp.list [Sexp.sym "prim", Sexp.str p] => raisesDefect p
+  | Sexp.list items => List.any usesDefect items
+  | _ => false
+
+/-- Whether `e` calls a host primitive of `IO` (D129) or reports a defect no handler takes (D137). -/
+def usesHost (e : Sexp) : Bool :=
+  match e with
+  | Sexp.list [Sexp.sym "prim", Sexp.str p] => Text.startsWith "deus.io." p || p == "deus.defect"
+  | Sexp.list items => List.any usesHost items
+  | _ => false
+
+/-- The data types whose constructors `form` applies. -/
+def builtTypes (form : Sexp) : List Text :=
+  match form with
+  | Sexp.list (Sexp.sym "con" :: Sexp.str t :: _) => if t == "#Bool" then [] else [t]
+  | Sexp.list items => List.concatMap builtTypes items
+  | _ => []
+
+/-- `names` (type hashes) with the data types their constructors' fields hold, transitively: comparing or showing a
+  value walks its fields' types too, and a field names its type by IRI (D6), which `typeHash` resolves. -/
+def withFieldTypes (fetch : Text -> {Throw Text | r} Option Sexp) (typeHash : Text -> Option Text) (names : List Text) : {Throw Text | r} List Text :=
+  let rec go todo seen :=
+    match todo with
+    | [] => List.reverse seen
+    | t :: rest =>
+        if List.contains t seen then go rest seen
+        else
+          let fields :=
+            match fetch t with
+            | Option.some form => List.concat (Wasm.ctorFields form)
+            | Option.none => []
+          let more := List.filterMap
+            (fun n => if Text.startsWith "#" n then Option.some n else Option.orElse (typeHash n) (fun _ => Option.some n))
+            (List.concatMap typeNames fields)
+          go (more ++ rest) (t :: seen)
+  go names []
+
+/-- Every type name `t` mentions, its arguments' included. -/
+def typeNames (t : Sexp) : List Text :=
+  match t with
+  | Sexp.list [Sexp.sym "tref", Sexp.str n] => [n]
+  | Sexp.list items => List.concatMap typeNames items
+  | _ => []
+
+/-- Compiles `main` and what it calls to C exporting it as `export`; `typeHash` gives the hash of the type an IRI
+  names, for the types reached only through signatures or other types' fields. -/
+def compile (fetch : Text -> {Throw Text | r} Option Sexp) (meta : Text -> {Throw Text | r} Option Sexp) (typeHash : Text -> Option Text) (main : Text) (export : Text) : {Throw Text | r} Text :=
+  let gathered := gatherWith true fetch meta main
+  let fns := liftAll (CGen.effects gathered)
+  -- The types the code builds as well as the ones it matches, so comparisons know their constructors.
+  -- A function may compare or show a value it only receives, so the types its signature names count too.
+  let signed := filterMap (fun n => if Text.startsWith "#" n then Option.some n else typeHash n) (concatMap (fun f => typeNames f.fnType) fns)
+  let names := withFieldTypes fetch typeHash (List.distinct (concatMap (fun f => patternTypes f.fnBody ++ builtTypes f.fnBody) fns ++ signed))
+  -- A definition that is only a primitive or a constant is inlined at its uses and gathers to nothing.
+  if List.isEmpty fns then Throw.throw (export ++ " is a constant or a primitive, which its uses inline; build a function that uses it") else CGen.unit
+    fns
+    (filterMap (fun t => Option.map (fun form => (t, form)) (fetch t)) names)
+    (abilityNames gathered)
+    export
+
+end CGen

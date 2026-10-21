@@ -1,0 +1,36 @@
+layer: library
+language: typescript
+tags:
+  - ts-vite-build
+  - ts-test
+tasks:
+  # The CLI tests build native web servers (D57) from the Rust kernel.
+  test:
+    deps:
+      - deus-kernel:cargo-build
+  # Regenerates seed/deus.image with the current seed. Run it twice after changing deus/: the
+  # second run must leave the seed unchanged (the self-hosting fixpoint, checked by src/seed.test.ts).
+  self-build:
+    command: node
+    args:
+      - bin/deus.mjs
+      - compile
+      - deus
+      - --main
+      - Cli.main
+      - -o
+      - seed/deus.image
+    options:
+      cache: false
+  # Serves examples/counter.deus on local workerd; it starts a server, so it is not in the CI sweep.
+  worker-test:
+    command: bash scripts/worker-test.sh
+    options:
+      cache: false
+      runInCI: false
+  # Pushes, pulls and publishes the explorer through the DEUS Worker on local workerd (D164).
+  remote-test:
+    command: bash scripts/remote-http-test.sh
+    options:
+      cache: false
+      runInCI: false

@@ -1,0 +1,23 @@
+/-
+  The types a stored notation is built from (Syntax.Spec R-1). `deus init` adds them with the prelude, so every
+  codebase can declare notations; the parser and printer that read them are the toolchain's.
+-/
+
+namespace Syntax
+
+/-- Something a notation reads (Syntax.Spec): literal text, a hole of a category (`repeat` is `""`,
+  `"*"` or `",*"`), or a hole read again, which must read the same text. -/
+inductive Part @"urn:deus:syntax:Part" where
+  | lit (text : Text)
+  | hole (index : Int) (category : Text) (prec : Int) (repeat : Text)
+  | again (index : Int)
+
+/-- A notation as stored: a term definition, so its hash covers the grammar and the expansion's
+  dependencies (Syntax.Spec R-1). Holes are the expansion's parameters, numbered in `parts`. -/
+structure Notation a @"urn:deus:syntax:Notation" where
+  category : Text
+  precedence : Int
+  parts : List Part
+  expansion : a
+
+end Syntax

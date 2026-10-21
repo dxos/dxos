@@ -1,0 +1,67 @@
+/-
+  Benchmark programs for comparing back ends (D80): each is first-order code over `Int` and
+  algebraic data, so the interpreter, the JIT, the wasm compiler and the C compiler all run it.
+  `docs/spec/NATIVE.md` has the numbers.
+-/
+
+namespace Bench
+
+/-- Doubly recursive calls on integers. -/
+def fib (n : Int) : Int := if n < 2 then n else fib (n - 1) + fib (n - 2)
+
+def collatzLen (n : Int) (steps : Int) : Int :=
+  if n == 1 then steps
+  else if n % 2 == 0 then collatzLen (n / 2) (steps + 1)
+  else collatzLen (3 * n + 1) (steps + 1)
+
+def collatzFrom (i : Int) (n : Int) (acc : Int) : Int :=
+  if i > n then acc else collatzFrom (i + 1) n (acc + collatzLen i 0)
+
+/-- Total Collatz steps of 1 … n: tail-recursive loops over integer arithmetic. -/
+def collatz (n : Int) : Int := collatzFrom 1 n 0
+
+inductive Tree where
+  | leaf
+  | node (left : Tree) (right : Tree)
+
+def make (depth : Int) : Tree := if depth == 0 then Tree.leaf else Tree.node (make (depth - 1)) (make (depth - 1))
+
+def count (t : Tree) : Int :=
+  match t with
+  | Tree.leaf => 1
+  | Tree.node l r => count l + count r + 1
+
+def treesFrom (i : Int) (depth : Int) (acc : Int) : Int :=
+  if i == 0 then acc else treesFrom (i - 1) depth (acc + count (make depth))
+
+/-- Builds and walks `n` complete trees of depth 16: allocation and matching. -/
+def trees (n : Int) : Int := treesFrom n 16 0
+
+inductive Cells where
+  | nil
+  | cons (head : Int) (tail : Cells)
+
+/-- Whether a queen in column `col` is safe from the queens in `placed` (nearest row first). -/
+def safe (col : Int) (dist : Int) (placed : Cells) : Bool :=
+  match placed with
+  | Cells.nil => true
+  | Cells.cons q rest => q != col && q != col + dist && q != col - dist && safe col (dist + 1) rest
+
+def place (n : Int) (row : Int) (placed : Cells) : Int :=
+  if row == n then 1 else tryCol n row 0 placed 0
+
+def tryCol (n : Int) (row : Int) (col : Int) (placed : Cells) (acc : Int) : Int :=
+  if col == n then acc
+  else
+    let found := if safe col 1 placed then place n (row + 1) (Cells.cons col placed) else 0
+    tryCol n row (col + 1) placed (acc + found)
+
+/-- Solutions of the n-queens puzzle: search over cons lists. -/
+def queens (n : Int) : Int := place n 0 Cells.nil
+
+test fibSmall := fib 10 == 55
+test collatzSmall := collatz 10 == 67
+test treesSmall := treesFrom 2 3 0 == 30
+test queensSmall := queens 6 == 4
+
+end Bench

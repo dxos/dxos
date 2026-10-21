@@ -1,0 +1,953 @@
+/-
+  Printer: Core back to DEUS source, as Unison's `view` does. Dependencies print under their
+  current names (so a rename shows up everywhere at once); locals print under the author's
+  names, kept as metadata in binder order (see `Resolve.strip`). `rules` are the notations the
+  definition was written with, by hash (Syntax.Spec R-5).
+-/
+structure Printer where
+  display : Map Text Text
+  fullNames : Map Text Text
+  typeNames : Map Text Text
+  fieldNames : Map Text Text
+  declared : Map Text Text
+  namesByHash : Map Text (List Text)
+  supply : Ref (List Text)
+  fresh : Ref Int
+  hints : Map Text (List Text)
+  rules : Map Text Loaded
+  -- (namespace, key, full name): a library name the namespace's own name of that spelling would capture in a definition under it (D206).
+  shadows : List (Text, Text, Text)
+
+namespace Print
+
+/-- Shortest suffix of `fqn`, of at least `least` segments, that names nothing else in the namespace. -/
+def suffixifyAtLeast (least : Int) (all : Dict Text (List Text)) (fqn : Text) : Text :=
+  let segments := Text.split fqn "."
+  let count := List.length segments
+  let mounted := startsWith "lib." fqn
+  -- A library's root name reads back by the resolver's root rule; any other suffix must be unique, so the source also compiles where the library is not mounted, as in deus/ (D206).
+  let resolves := fun candidate clashes => List.length clashes <= 1 || mounted && List.filter (fun other => atLibraryRoot other candidate) clashes == [fqn]
+  -- `base.snd` for `lib.base.snd` would name the mount, which deus/ and the library's other users do not have.
+  let rec go k := if k >= count || mounted && k == count - 1 then fqn else
+    let candidate := join "." (List.drop (count - k) segments)
+    let clashes := List.filter
+      (fun other => other == candidate || endsWith ("." ++ candidate) other)
+      (getOr (Dict.lookup (lastSegment fqn) all) [])
+    if resolves candidate clashes then candidate else go (k + 1)
+  go least
+
+def suffixify (all : Dict Text (List Text)) (fqn : Text) : Text := suffixifyAtLeast 1 all fqn
+
+/-- A printer for a namespace: hash (or `type#tag`, `ability!index`) to display name. -/
+def printer (ns : Map Text Entry) (locals : List Text) : Printer :=
+  let names := Names.build ns
+  let bySegment := names.bySegment
+  let index := nameIndex ns
+  -- Constructors and operations keep their owner (`Result.ok`, `Prices.priceOf`): a bare `ok` reads as a variable in a pattern.
+  let display := Map.fromList (List.map (fun pair =>
+    let (key, fqn) := pair
+    (key, suffixifyAtLeast (if Text.contains "#" key || Text.contains "!" key then 2 else 1) bySegment fqn)) (Map.toList index))
+  let typeNames := foldl (fun m pair =>
+    match pair with
+    | (name, Entry.type _ iri _) => Map.insert iri (suffixify bySegment name) m
+    | (name, Entry.ability _ iri) => Map.insert iri (suffixify bySegment name) m
+    | _ => m) Map.empty (Map.toList ns)
+  -- Accessors print as `e.field` when the field name is unique among structures.
+  let fieldNames := foldl (fun m pair =>
+    match pair with
+    | (owner, Entry.type _ _ fields) => foldl (fun m2 f =>
+        match (Map.lookup (owner ++ "." ++ f) ns, Dict.lookup f names.fieldOwners) with
+        | (Option.some (Entry.term h), Option.some (_ :: [])) => Map.insert h f m2
+        | _ => m2) m fields
+    | _ => m) Map.empty (Map.toList ns)
+  let shadows := List.concatMap (fun pair =>
+    let (key, fqn) := pair
+    let shown := getOr (Map.lookup key display) fqn
+    if not (startsWith "lib." fqn) || startsWith "lib." shown then [] else
+      List.filterMap
+        (fun other => if not (startsWith "lib." other) && endsWith ("." ++ shown) other then Option.some (Text.take (Text.length other - Text.length shown - 1) other, key, fqn) else Option.none)
+        (getOr (Dict.lookup (Names.lastSegment fqn) bySegment) [])) (Map.toList index)
+  -- Headers name types by their last segment and list a constructor's names; built here once, not per view.
+  Printer.mk
+    display
+    index
+    typeNames
+    fieldNames
+    (declaredNames ns)
+    (Codebase.namesByHash ns)
+    (Ref.new locals)
+    (Ref.new 0)
+    Map.empty
+    Map.empty
+    shadows
+
+/-- A printer in which `h` prints as `name`: a definition's references to itself keep the name it is viewed under, not an alias with the same hash. -/
+def withSelf (base : Printer) (h : Text) (name : Text) : Printer := Printer.mk
+  (foldl (fun m shadow =>
+    let (space, key, full) := shadow
+    -- The definition's namespace is searched before the libraries', so there the library name prints in full.
+    if startsWith (space ++ ".") name then Map.insert key full m else m) (Map.insert h name base.display) base.shadows)
+  base.fullNames
+  base.typeNames
+  base.fieldNames
+  base.declared
+  base.namesByHash
+  base.supply
+  base.fresh
+  base.hints
+  base.rules
+  base.shadows
+
+/-- A printer sharing `base`'s name tables (built once per namespace) with its own locals. -/
+def withLocals (base : Printer) (locals : List Text) : Printer := Printer.mk
+  base.display
+  base.fullNames
+  base.typeNames
+  base.fieldNames
+  base.declared
+  base.namesByHash
+  (Ref.new locals)
+  (Ref.new 0)
+  base.hints
+  base.rules
+  base.shadows
+
+/-- A printer that shows parameter names before call arguments (D174); `hints` maps a callee (a hash, or `type#tag` for a constructor) to its parameter names. -/
+def withHints (base : Printer) (hints : Map Text (List Text)) : Printer := Printer.mk
+  base.display
+  base.fullNames
+  base.typeNames
+  base.fieldNames
+  base.declared
+  base.namesByHash
+  base.supply
+  base.fresh
+  hints
+  base.rules
+  base.shadows
+
+/-- Brackets an inlay hint in printed text; only `Highlight` reads it, so text meant to parse never carries one. -/
+def hintOpen : Text := Text.fromCode 1
+
+def hintClose : Text := Text.fromCode 2
+
+/-- Whether an argument is a literal, whose meaning the call site does not show. -/
+def isLiteral (t : Sexp) : Bool :=
+  match t with
+  | Sexp.list [Sexp.sym "int", _] => true
+  | Sexp.list [Sexp.sym "text", _] => true
+  | Sexp.list [Sexp.sym "con", _, _, Sexp.int 0] => true
+  | _ => false
+
+/-- The parameter names a call shows: for a callee with known names, taking three or more arguments or a literal. -/
+def hintNames (p : Printer) (f : Sexp) (args : List Sexp) : List Text :=
+  let key :=
+    match f with
+    | Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) => h
+    | Sexp.list (Sexp.sym "con" :: Sexp.str ty :: Sexp.int tag :: _ :: []) => ty ++ "#" ++ Int.toText tag
+    | _ => ""
+  match Map.lookup key p.hints with
+  | Option.some names => if List.length args >= 3 || any isLiteral args then names else []
+  | Option.none => []
+
+/-- An argument's text behind parameter `i`'s hint, unless it already reads as that name. -/
+def hinted (names : List Text) (i : Int) (text : Text) : Text :=
+  match List.get? names i with
+  | some name => if Text.length name < 2 || isGenerated name || name == text then text else hintOpen ++ name ++ hintClose ++ text
+  | none => text
+
+/-- Text without its inlay hints: what a reader counts when a line is measured. -/
+def unhinted (text : Text) : Text :=
+  let start := Text.indexOf text hintOpen 0
+  if start < 0 then text
+  else
+    let stop := Text.indexOf text hintClose start
+    if stop < 0 then text else unhinted (Text.slice text 0 start ++ Text.drop (stop + 1) text)
+
+def nameFor (p : Printer) (key : Text) : Text :=
+  match Map.lookup key p.display with
+  | Option.some name => name
+  | Option.none => "#" ++ Text.take 10 key
+
+/-- Whether a name is one `bind` made up (`x` and digits). -/
+def isGenerated (name : Text) : Bool :=
+  Text.startsWith "x" name && Text.length name > 1 && Option.isSome (Int.fromText (Text.drop 1 name))
+
+/-- Whether `name` occurs in `text` as a whole word. -/
+def mentions (name : Text) (text : Text) : Bool :=
+  let n := Text.length name
+  let isWord := fun (c : Int) => Text.isAlpha c || Text.isDigit c || c == '_' || c == '.' || c == 39
+  let rec scan i :=
+    let found := Text.indexOf text name i
+    if found < 0 then false
+    else if (found == 0 || not (isWord (Text.code text (found - 1)))) && not (isWord (Text.code text (found + n))) then true
+    else scan (found + 1)
+  scan 0
+
+/-- A reference's name where `env` is in scope: its display name, or its full name when a local shadows that. -/
+def refName (p : Printer) (key : Text) (env : List Text) : Text :=
+  let name := nameFor p key
+  if List.contains name env then getOr (Map.lookup key p.fullNames) name else name
+
+/-- The next binder name: the author's, made unique against the names in scope. -/
+def bind (p : Printer) (env : List Text) : Text :=
+  let given :=
+    match Ref.get p.supply with
+    | x :: rest =>
+        Ref.set p.supply rest
+        x
+    | [] => ""
+  let base := if given == "" then
+    let k := Ref.get p.fresh
+    Ref.set p.fresh (k + 1)
+    "x" ++ Int.toText k
+  else given
+  let rec unique candidate k := if List.contains candidate env then unique (base ++ Int.toText k) (k + 1) else candidate
+  unique base 1
+
+def spaces (n : Int) : Text := Text.repeat n " "
+
+def quoteText (t : Text) : Text :=
+  let n := Text.length t
+  let rec go i acc :=
+    if i >= n then Text.concat (List.reverse acc)
+    else
+      let c := Text.code t i
+      let piece := if c == '"' then "\\\""
+        else if c == '\\' then "\\\\"
+        else if c == 10 then "\\n"
+        else if c == 9 then "\\t"
+        else if c == 13 then "\\r"
+        -- The lexer reads `\u{…}` as hex, so the printer must write hex.
+        else if c < 32 || c == 127 then "\\u{" ++ Sexp.hexDigit (c / 16) ++ Sexp.hexDigit (Int.mod c 16) ++ "}"
+        else Text.fromCode c
+      go (i + 1) (piece :: acc)
+  "\"" ++ go 0 [] ++ "\""
+
+def infixOf (name : Text) : Option (Text, Int) :=
+  if name == "Int.add" then some ("+", 65)
+  else if name == "Int.sub" then some ("-", 65)
+  else if name == "Int.mul" then some ("*", 70)
+  else if name == "Int.div" then some ("/", 70)
+  else if name == "Int.mod" then some ("%", 70)
+  else if name == "eq" then some ("==", 50)
+  else if name == "neq" then some ("!=", 50)
+  else if name == "lt" then some ("<", 50)
+  else if name == "le" then some ("<=", 50)
+  else if name == "gt" then some (">", 50)
+  else if name == "ge" then some (">=", 50)
+  else if name == "append" then some ("++", 65)
+  else none
+
+/-- Parenthesizes text of precedence `level` printed in a context that binds tighter (`ctx`). -/
+def paren (level : Int) (ctx : Int) (t : Text) : Text := if level < ctx then "(" ++ t ++ ")" else t
+
+/-- Elements of a list built from cons cells ending in nil, if it is one. -/
+def listItems (t : Sexp) : Option (List Sexp) :=
+  match t with
+  | Sexp.list [Sexp.sym "con", Sexp.str "#List", Sexp.int 0, Sexp.int 0] => some []
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "con", Sexp.str "#List", Sexp.int 1, Sexp.int 2], h, rest] =>
+    Option.map (fun items => h :: items) (listItems rest)
+  | _ => none
+
+def tupleItems (t : Sexp) : List Sexp :=
+  match t with
+  | Sexp.list [Sexp.sym "app", Sexp.list [Sexp.sym "con", Sexp.str "#Pair", Sexp.int 0, Sexp.int 2], a, rest] => a :: tupleItems rest
+  | _ => [t]
+
+def conName (p : Printer) (t : Text) (tag : Int) : Text := if t == "#Bool" then if tag == 1 then "true" else "false" else if t == "#Unit" then "()" else if t == "#List" then if tag == 0 then "[]" else "List.cons" else nameFor p (t ++ "#" ++ Int.toText tag)
+
+/-- Whether a term prints as several lines (so it needs a block). -/
+def isBlock (t : Sexp) : Bool :=
+  let h := Sexp.head t
+  h == "let" || h == "seq" || h == "letrec" || h == "match" || h == "handle" || h == "note"
+
+/-- Core with its comments put back as `(note "text" e)`, and number spellings as `(spelled "text" e)`,
+  at the pre-order indices `Resolve.unnote` recorded (D66, D88). -/
+def restore (notes : List (Int, Text)) (spellings : List (Int, Text)) (core : Sexp) : Sexp := restoreAll notes spellings [] core
+
+/-- Indexed metadata: `(<field> (n i "text") …)`, as notes (D66) and spellings (D88) are stored. -/
+def indexedOf (meta : Option Sexp) (field : Text) : List (Int, Text) :=
+  List.filterMap (fun x =>
+    match x with
+    | Sexp.list [Sexp.sym "n", Sexp.int i, Sexp.str text] => some (i, text)
+    | _ => none) (Codebase.metaList meta field)
+
+def notesOf (meta : Option Sexp) : List (Int, Text) := indexedOf meta "notes"
+
+def spellingsOf (meta : Option Sexp) : List (Int, Text) := indexedOf meta "spellings"
+
+/-- A comment's lines at indentation `ind`, each followed by a new line at `ind`. -/
+def commentLines (text : Text) (ind : Int) : Text :=
+  Text.concat (List.map (fun l => (if Text.isEmpty l then "" else l) ++ "\n" ++ spaces ind) (Text.lines text))
+
+/-- A body after `:=`, `=>`, `then` or `else`: inline, or a block on the next lines. -/
+def body (p : Printer) (t : Sexp) (env : List Text) (ind : Int) : Text := if isBlock t then "\n" ++ spaces (ind + 2) ++ Print.stmts p t env (ind + 2) else
+  let supply := Ref.get p.supply
+  let fresh := Ref.get p.fresh
+  let inline := Print.expr p t env ind 0
+  -- A notation laid out over lines (a JSX tree) starts on its own line, so its closing literal lines up with its start.
+  if head t == "notation" && Text.contains "\n" inline then
+    Ref.set p.supply supply
+    Ref.set p.fresh fresh
+    "\n" ++ spaces (ind + 2) ++ Print.expr p t env (ind + 2) 0
+  else " " ++ inline
+
+/-- `body` after text that already takes `used` columns of its line: an expression that would run past the width
+  there, and is shorter on a line of its own, starts the next line instead, as a block does (D326). A definition's
+  whole body ran on after its signature to 208 columns, and a match arm's after its pattern. -/
+def bodyAt (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (used : Int) : Text :=
+  let supply := Ref.get p.supply
+  let fresh := Ref.get p.fresh
+  let shown := Print.body p t env ind
+  let first := Option.getOr (List.head? (Text.lines shown)) shown
+  if Text.startsWith "\n" shown || used + Text.length (unhinted first) <= width then shown else
+    Ref.set p.supply supply
+    Ref.set p.fresh fresh
+    let below := Print.expr p t env (ind + 2) 0
+    let belowFirst := Option.getOr (List.head? (Text.lines below)) below
+    if ind + 2 + Text.length (unhinted belowFirst) < used + Text.length (unhinted first) then "\n" ++ spaces (ind + 2) ++ below else
+      Ref.set p.supply supply
+      Ref.set p.fresh fresh
+      Print.body p t env ind
+
+/-- Statements: `let` lines and expressions at one indentation. -/
+def stmts (p : Printer) (t : Sexp) (env : List Text) (ind : Int) : Text :=
+  let nl := "\n" ++ spaces ind
+  match t with
+  | Sexp.list (Sexp.sym "note" :: Sexp.str text :: inner :: []) => commentLines text ind ++ Print.stmts p inner env ind
+  | Sexp.list (Sexp.sym "let" :: v :: b :: []) =>
+      let name := Print.bind p env
+      let value := Print.body p v env ind
+      "let " ++ name ++ " :=" ++ value ++ nl ++ Print.stmts p b (name :: env) ind
+  | Sexp.list (Sexp.sym "seq" :: a :: b :: []) => Print.expr p a env ind 0 ++ nl ++ Print.stmts p b env ind
+  | Sexp.list (Sexp.sym "letrec" :: Sexp.list fns :: b :: []) =>
+      let names := List.map (fun _ => Print.bind p env) fns
+      let inner := reverse names ++ env
+      let defs := List.map (fun pair =>
+        let (name, fn) := pair
+        "let rec " ++ name ++ lambdaHead p fn inner ind) (zip names fns)
+      join nl defs ++ nl ++ Print.stmts p b inner ind
+  | Sexp.list (Sexp.sym "match" :: scrut :: Sexp.list (Sexp.sym "case" :: pat :: b :: []) :: []) => if destructures pat then
+      -- Binder names come in pre-order, so the value is printed before the pattern.
+      let value := Print.body p scrut env ind
+      let (text, env2) := Print.pattern p pat env
+      "let " ++ text ++ " :=" ++ value ++ nl ++ Print.stmts p b env2 ind
+    else Print.expr p t env ind 0
+  | _ => Print.expr p t env ind 0
+
+/--
+  Whether a one-arm match on `pat` reads as `let pat := value` (D176): a tuple of names, `_` and
+  tuples, which always matches. `let` of a plain name compiles to `let`, not `match`, so it is not one.
+-/
+def destructures (pat : Sexp) : Bool :=
+  match pat with
+  | Sexp.list (Sexp.sym "pcon" :: Sexp.str "#Pair" :: _ :: subs) => List.all alwaysMatches subs
+  | _ => false
+
+def alwaysMatches (pat : Sexp) : Bool :=
+  match pat with
+  | Sexp.list [Sexp.sym "pany"] => true
+  | Sexp.list [Sexp.sym "pvar"] => true
+  | Sexp.list [Sexp.sym "pas", inner] => alwaysMatches inner
+  | _ => destructures pat
+
+/-- ` x y :=` plus the body, for a lambda printed as a local function. -/
+def lambdaHead (p : Printer) (fn : Sexp) (env : List Text) (ind : Int) : Text :=
+  let rec params t env2 acc :=
+    match t with
+    | Sexp.list (Sexp.sym "lam" :: b :: []) =>
+        let name := Print.bind p env2
+        params b (name :: env2) (name :: acc)
+    | _ => (reverse acc, t, env2)
+  let (names, b, env2) := params fn env []
+  Text.concat (List.map (fun x => " " ++ x) names) ++ " :=" ++ Print.body p b env2 ind
+
+def expr (p : Printer) (t : Sexp) (env : List Text) (ind : Int) (prec : Int) : Text :=
+  match t with
+  | Sexp.list (Sexp.sym "note" :: _ :: inner :: []) =>
+      -- Only statements and arms carry comments, and those print through `stmts`.
+      Print.expr p inner env ind prec
+  | Sexp.list (Sexp.sym "spelled" :: Sexp.str text :: _ :: []) => text
+  | Sexp.list (Sexp.sym "notation" :: Sexp.str key :: inner :: []) =>
+      match throughNotation p key inner env ind with
+      | Option.some (text, level) => paren level prec text
+      | Option.none => Print.expr p inner env ind prec
+  | Sexp.list (Sexp.sym "var" :: Sexp.int i :: []) => getOr (get? env i) ("$" ++ Int.toText i)
+  | Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) => refName p h env
+  | Sexp.list (Sexp.sym "int" :: Sexp.int v :: []) => if v < 0 then paren 99 prec (Int.toText v) else Int.toText v
+  | Sexp.list (Sexp.sym "text" :: Sexp.str v :: []) => quoteText v
+  | Sexp.list (Sexp.sym "prim" :: Sexp.str name :: []) => paren 90 prec ("prim " ++ quoteText name)
+  | Sexp.list (Sexp.sym "con" :: Sexp.str ty :: Sexp.int tag :: _ :: []) => Print.conName p ty tag
+  | Sexp.list (Sexp.sym "op" :: Sexp.str a :: Sexp.int index :: _ :: []) => nameFor p (a ++ "!" ++ Int.toText index)
+  | Sexp.list (Sexp.sym "if" :: a :: b :: Sexp.list (Sexp.sym "con" :: Sexp.str "#Bool" :: Sexp.int 0 :: _ :: []) :: []) =>
+      -- `&&` and `||` only when both sides are expressions; a block side keeps `if … then … else`.
+      if isBlock a || isBlock b then ifThenElse p a b (Sexp.node "con" [Sexp.str "#Bool", Sexp.int 0, Sexp.int 0]) env ind prec else paren 35 prec (Print.chain p "&&" (Print.operands true t) env ind 36)
+  | Sexp.list (Sexp.sym "if" :: a :: Sexp.list (Sexp.sym "con" :: Sexp.str "#Bool" :: Sexp.int 1 :: _ :: []) :: b :: []) => if isBlock a || isBlock b then ifThenElse p a (Sexp.node "con" [Sexp.str "#Bool", Sexp.int 1, Sexp.int 0]) b env ind prec else paren 30 prec (Print.chain p "||" (Print.operands false t) env ind 31)
+  | Sexp.list (Sexp.sym "if" :: c :: yes :: no :: []) => ifThenElse p c yes no env ind prec
+  | Sexp.list (Sexp.sym "lam" :: _) =>
+      let rec params x env2 acc :=
+        match x with
+        | Sexp.list (Sexp.sym "lam" :: b :: []) =>
+            let name := Print.bind p env2
+            params b (name :: env2) (name :: acc)
+        | _ => (reverse acc, x, env2)
+      let (names, b, env2) := params t env []
+      let rendered := Print.body p b env2 ind
+      -- A generated name (`x0`) the body never mentions was `_` in the source.
+      let shown := List.map (fun x => if isGenerated x && not (Print.mentions x rendered) then "_" else x) names
+      paren 1 prec ("fun " ++ join " " shown ++ " =>" ++ rendered)
+  | Sexp.list (Sexp.sym "match" :: scrut :: cases) =>
+      -- Binder names come in pre-order (`Resolve.strip`), so the scrutinee is printed before the arms.
+      let scrutText := Print.expr p scrut env ind 0
+      let arms := List.map (fun c =>
+        match c with
+        | Sexp.list (Sexp.sym "case" :: pat :: b :: []) =>
+            let (text, env2) := Print.pattern p pat env
+            "\n" ++ spaces ind ++ "| " ++ text ++ " =>" ++ Print.bodyAt p b env2 (ind + 2) (ind + 5 + Text.length text)
+        | _ => "") cases
+      paren 1 prec ("match " ++ scrutText ++ " with" ++ Text.concat arms)
+  | Sexp.list (Sexp.sym "handle" :: b :: clauses) =>
+      let bodyText := Print.body p b env ind
+      let rendered := List.map (fun c =>
+        match c with
+        | Sexp.list (Sexp.sym "ret" :: rb :: []) =>
+            let name := Print.bind p env
+            "\n" ++ spaces ind ++ "| return " ++ name ++ " =>" ++
+              Print.body p rb (name :: env) (ind + 2)
+        | Sexp.list (Sexp.sym "on" :: Sexp.str a :: Sexp.int index :: Sexp.int arity :: hb :: []) =>
+            let rec args k env2 acc := if k == 0 then (reverse acc, env2) else
+              let name := Print.bind p env2
+              args (k - 1) (name :: env2) (name :: acc)
+            let (names, env2) := args arity env []
+            let k := Print.bind p env2
+            "\n" ++ spaces ind ++ "| " ++ nameFor p (a ++ "!" ++ Int.toText index) ++
+              Text.concat (List.map (fun x => " " ++ x) names) ++ " -> " ++ k ++ " =>" ++ Print.body p hb (k :: env2) (ind + 2)
+        | _ => "") clauses
+      paren
+        1
+        prec
+        ("handle" ++ bodyText ++ (if isBlock b then "\n" ++ spaces ind else " ") ++ "with" ++
+          Text.concat rendered)
+  | Sexp.list (Sexp.sym "app" :: f :: args) =>
+      match (f, args) with
+      | (Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []), a :: []) =>
+          match Map.lookup h p.fieldNames with
+          | Option.some field =>
+              match a with
+              | Sexp.list (Sexp.sym "var" :: _ :: []) => Print.expr p a env ind 100 ++ "." ++ field
+              | _ => "(" ++ Print.expr p a env ind 0 ++ ")." ++ field
+          | Option.none => Print.application p f args env ind prec
+      | (Sexp.list (Sexp.sym "prim" :: Sexp.str name :: []), a :: b :: []) =>
+          match Print.infixOf name with
+          | Option.some (op, level) =>
+              -- The parser nests a chain of one operator to the left, so the first operand binds at `level`.
+              let items := Print.leftOperands name t
+              paren level prec (Print.fillChain p op items env ind level (level + 1))
+          | Option.none => Print.application p f args env ind prec
+      | (Sexp.list (Sexp.sym "prim" :: Sexp.str "Int.neg" :: []), a :: []) => paren 95 prec ("-" ++ Print.expr p a env ind 100)
+      | (Sexp.list (Sexp.sym "con" :: Sexp.str "#Pair" :: Sexp.int 0 :: Sexp.int 2 :: []), _ :: _ :: []) => "(" ++ join ", " (List.map (fun x => Print.expr p x env ind 0) (Print.tupleItems t)) ++ ")"
+      | (Sexp.list (Sexp.sym "con" :: Sexp.str "#List" :: Sexp.int 1 :: Sexp.int 2 :: []), h :: rest :: []) =>
+          match listItems t with
+          | Option.some items => Print.listLiteral p items env ind
+          | Option.none => paren 67 prec (Print.expr p h env ind 68 ++ " :: " ++ Print.expr p rest env ind 67)
+      | _ => Print.application p f args env ind prec
+  | _ => paren 100 prec (Sexp.print t)
+
+/-- `[a, b, c]` on one line when it fits, else one item per line after the first, indented: a list of C source lines
+  or of usage text would otherwise run to thousands of columns. Binder names are drawn as text is made, so the
+  one-line attempt is undone before the second. -/
+def listLiteral (p : Printer) (items : List Sexp) (env : List Text) (ind : Int) : Text :=
+  let supply := Ref.get p.supply
+  let fresh := Ref.get p.fresh
+  let flat := "[" ++ join ", " (List.map (fun x => Print.expr p x env ind 0) items) ++ "]"
+  if fits ind flat || List.length items < 2 then flat else
+    Ref.set p.supply supply
+    Ref.set p.fresh fresh
+    "[" ++ join (",\n" ++ spaces (ind + 2)) (List.map (fun x => Print.expr p x env (ind + 2) 0) items) ++ "]"
+
+/-- The operands of a chain of `&&` (`conj`) or `||`, as Core nests them to the right; a block operand ends it, as
+  `expr` prints that one with `if`. -/
+def operands (conj : Bool) (t : Sexp) : List Sexp :=
+  match t with
+  | Sexp.list (Sexp.sym "if" :: a :: b :: Sexp.list (Sexp.sym "con" :: Sexp.str "#Bool" :: Sexp.int 0 :: _ :: []) :: []) =>
+      if conj && not (isBlock a) && not (isBlock b) then a :: Print.operands conj b else [t]
+  | Sexp.list (Sexp.sym "if" :: a :: Sexp.list (Sexp.sym "con" :: Sexp.str "#Bool" :: Sexp.int 1 :: _ :: []) :: b :: []) =>
+      if not conj && not (isBlock a) && not (isBlock b) then a :: Print.operands conj b else [t]
+  | _ => [t]
+
+/-- `a op b op c` on one line when it fits, else one operand per line after the first, each led by `op` and indented
+  to continue the expression: a test's `&&` chain ran to 640 columns (D324). Operands bind tighter than `op` (`prec`),
+  the last one level looser, as it nests to the right. Binder names are drawn as text is made, so the one-line attempt
+  is undone before the second. -/
+def chain (p : Printer) (op : Text) (items : List Sexp) (env : List Text) (ind : Int) (prec : Int) : Text :=
+  Print.chainAt p op items env ind prec (prec - 1)
+
+/-- The operands of `name` applied as a chain nested to the left (`(a ++ b) ++ c`), as the parser reads one. -/
+def leftOperands (name : Text) (t : Sexp) : List Sexp :=
+  match t with
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "prim" :: Sexp.str n :: []) :: a :: b :: []) =>
+      if n == name then Print.leftOperands name a ++ [b] else [t]
+  | _ => [t]
+
+/-- `chain` with the first operands at precedence `prec` and the last at `lastPrec`, for a chain of either nesting. -/
+def chainAt (p : Printer) (op : Text) (items : List Sexp) (env : List Text) (ind : Int) (prec : Int) (lastPrec : Int) : Text :=
+  let supply := Ref.get p.supply
+  let fresh := Ref.get p.fresh
+  let last := List.length items - 1
+  let at := fun (i : Int) => if i == last then lastPrec else prec
+  let flat := join (" " ++ op ++ " ") (mapIndexed (fun i x => Print.expr p x env ind (at i)) items)
+  if fits ind flat then flat else
+    Ref.set p.supply supply
+    Ref.set p.fresh fresh
+    let inner := ind + 3 + Text.length op
+    join ("\n" ++ spaces (ind + 2) ++ op ++ " ") (mapIndexed (fun i x => Print.expr p x env (if i == 0 then ind else inner) (at i)) items)
+
+/-- `a op b op c` on one line when it fits, else as many operands to a line as fit, each later line led by `op`: a
+  text built with `++` would take a line per piece one operand to a line (D325). The first operand binds at `prec`,
+  the rest at `rest`. -/
+def fillChain (p : Printer) (op : Text) (items : List Sexp) (env : List Text) (ind : Int) (prec : Int) (rest : Int) : Text :=
+  let supply := Ref.get p.supply
+  let fresh := Ref.get p.fresh
+  -- Nested to the left, every operand after the first is a right operand: `a - (b + c) - 1` keeps its parentheses.
+  let at := fun (i : Int) => if i == 0 then prec else rest
+  let flat := join (" " ++ op ++ " ") (mapIndexed (fun i x => Print.expr p x env ind (at i)) items)
+  if fits ind flat then flat else
+    Ref.set p.supply supply
+    Ref.set p.fresh fresh
+    let inner := ind + 3 + Text.length op
+    let lead := "\n" ++ spaces (ind + 2) ++ op ++ " "
+    let texts := mapIndexed (fun i x => Print.expr p x env (if i == 0 then ind else inner) (at i)) items
+    -- `column` is where the line being filled ends; a piece of several lines ends that line.
+    let step := fun (acc : (Text, Int)) (piece : Text) =>
+      let (out, column) := acc
+      let first := Option.getOr (List.head? (Text.lines piece)) piece
+      let lastLine := Option.getOr (List.last? (Text.lines piece)) piece
+      let multi := Text.contains "\n" piece
+      if not multi && column + Text.length op + 2 + Text.length piece <= width then (out ++ " " ++ op ++ " " ++ piece, column + Text.length op + 2 + Text.length piece)
+      else (out ++ lead ++ piece, if multi then Text.length lastLine else inner + Text.length first)
+    match texts with
+    | [] => ""
+    | head :: rest =>
+        let headLast := Option.getOr (List.last? (Text.lines head)) head
+        fst (List.foldl step (head, (if Text.contains "\n" head then Text.length headLast else ind + Text.length head)) rest)
+
+/-- Columns a printed line may take before an application breaks its arguments onto lines of their own. -/
+def width : Int := 100
+
+/-- Whether text starting at indentation `ind` keeps its first line within `width`; later lines made their own choice. -/
+def fits (ind : Int) (text : Text) : Bool :=
+  let first := Option.getOr (List.head? (Text.lines text)) text
+  ind + Text.length (unhinted first) <= width
+
+/-- `f a b` on one line when it fits, else `f` then one argument per line, indented. Binder names
+  are drawn as text is made, so the one-line attempt is undone before the second. -/
+def ifThenElse (p : Printer) (c : Sexp) (yes : Sexp) (no : Sexp) (env : List Text) (ind : Int) (prec : Int) : Text :=
+  -- Each part is printed once: printing the whole twice would double the work at every link of an `else if` chain.
+  let head := "if " ++ Print.expr p c env ind 0 ++ " then" ++ Print.body p yes env ind
+  let rest := "else" ++ Print.body p no env ind
+  let flat := head ++ (if isBlock yes then "\n" ++ spaces ind else " ") ++ rest
+  -- Past the width, each `else` starts a line, indented so it continues the expression rather than ending a `let`.
+  -- Only after a one-line `then` and before an inline `else`: after lines of their own it would join an inner `if`.
+  let breakable := not (isBlock yes) && not (isBlock no) && not (Text.contains "\n" head)
+  paren 1 prec (if not breakable || fits ind flat then flat else head ++ "\n" ++ spaces (ind + 2) ++ rest)
+
+def application (p : Printer) (f : Sexp) (args : List Sexp) (env : List Text) (ind : Int) (prec : Int) : Text :=
+  let supply := Ref.get p.supply
+  let fresh := Ref.get p.fresh
+  let names := hintNames p f args
+  let flat := Print.expr p f env ind 90 ++
+    Text.concat (mapIndexed (fun i a => " " ++ hinted names i (Print.expr p a env ind 100)) args)
+  if fits ind flat || List.length args < 2 then paren 90 prec flat else
+    Ref.set p.supply supply
+    Ref.set p.fresh fresh
+    let head := Print.expr p f env ind 90
+    paren 90 prec (head ++ Text.concat (mapIndexed
+      (fun i a => "\n" ++ spaces (ind + 2) ++ hinted names i (Print.expr p a env (ind + 2) 100))
+      args))
+
+/-- A pattern and the environment it extends (binders in order). -/
+def pattern (p : Printer) (pat : Sexp) (env : List Text) : (Text, List Text) := patternAt p pat env 0
+
+def patternAt (p : Printer) (pat : Sexp) (env : List Text) (prec : Int) : (Text, List Text) :=
+  match pat with
+  | Sexp.list (Sexp.sym "pany" :: []) => ("_", env)
+  | Sexp.list (Sexp.sym "pvar" :: []) =>
+      let name := Print.bind p env
+      (name, name :: env)
+  | Sexp.list (Sexp.sym "pas" :: inner :: []) =>
+      let name := Print.bind p env
+      let (text, env2) := Print.patternAt p inner (name :: env) 100
+      (name ++ "@" ++ text, env2)
+  | Sexp.list (Sexp.sym "pint" :: Sexp.int v :: []) => (Int.toText v, env)
+  | Sexp.list (Sexp.sym "spelled" :: Sexp.str text :: _ :: []) => (text, env)
+  | Sexp.list (Sexp.sym "ptext" :: Sexp.str v :: []) => (quoteText v, env)
+  | Sexp.list (Sexp.sym "pcon" :: Sexp.str ty :: Sexp.int tag :: subs) => if ty == "#List" && tag == 1 then
+      match subs with
+      | h :: t :: [] =>
+          let (ht, env2) := Print.patternAt p h env 68
+          let (tt, env3) := Print.patternAt p t env2 67
+          (paren 67 prec (ht ++ " :: " ++ tt), env3)
+      | _ => ("?", env)
+    else if ty == "#Pair" then
+      match subs with
+      | a :: b :: [] =>
+          let (at, env2) := Print.patternAt p a env 0
+          let (bt, env3) := Print.patternAt p b env2 0
+          let inner := if startsWith "(" bt && endsWith ")" bt && head b == "pcon" then Text.slice bt 1 (Text.length bt - 1) else bt
+          ("(" ++ at ++ ", " ++ inner ++ ")", env3)
+      | _ => ("?", env)
+    else
+      let rec go rest env2 acc :=
+        match rest with
+        | [] => (reverse acc, env2)
+        | x :: more =>
+            let (text, env3) := Print.patternAt p x env2 100
+            go more env3 (text :: acc)
+      let (texts, env2) := go subs env []
+      let name := Print.conName p ty tag
+      if List.isEmpty texts then (name, env2) else (paren 90 prec (name ++ " " ++ join " " texts), env2)
+  | _ => (Sexp.print pat, env)
+
+--
+-- Types.
+--
+def ty (p : Printer) (t : Sexp) (prec : Int) : Text :=
+  match t with
+  | Sexp.list (Sexp.sym "tref" :: Sexp.str iri :: []) => if startsWith "#" iri then Text.drop 1 iri else getOr (Map.lookup iri p.typeNames) iri
+  | Sexp.list (Sexp.sym "tvar" :: Sexp.str name :: []) => if name == "?" then "_" else name
+  | Sexp.list (Sexp.sym "tvar" :: Sexp.int i :: []) => fromCode ('a' + i)
+  | Sexp.list (Sexp.sym "tapp" :: Sexp.list (Sexp.sym "tref" :: Sexp.str "#Pair" :: []) :: args) => "(" ++ join ", " (List.map (fun x => Print.ty p x 0) args) ++ ")"
+  | Sexp.list (Sexp.sym "tapp" :: f :: args) => paren
+      90
+      prec
+      (Print.ty p f 90 ++ Text.concat (List.map (fun x => " " ++ Print.ty p x 100) args))
+  | Sexp.list (Sexp.sym "tfun" :: a :: b :: []) => paren 10 prec (Print.ty p a 11 ++ " -> " ++ Print.ty p b 10)
+  | Sexp.list (Sexp.sym "tfun" :: a :: b :: Sexp.list (Sexp.sym "eff" :: effs) :: []) => paren 10 prec (Print.ty p a 11 ++ " -> " ++ effRow p effs ++ " " ++ Print.ty p b 10)
+  | Sexp.list (Sexp.sym "trow" :: effs) => effRow p effs
+  | Sexp.list (Sexp.sym "teff" :: Sexp.list (Sexp.sym "eff" :: effs) :: b :: []) => paren 10 prec (effRow p effs ++ " " ++ Print.ty p b 10)
+  | _ => Sexp.print t
+
+/-- An effect row as written: abilities, then a row variable after `|` (`{Prices | r}`). -/
+def effRow (p : Printer) (effs : List Sexp) : Text :=
+  let tails := List.filter (fun x => head x == "tvar") effs
+  let named := List.filter (fun x => head x != "tvar") effs
+  let shown := join ", " (List.map (fun x => Print.ty p x 0) named)
+  let tail := join ", " (List.map (fun x => Print.ty p x 0) tails)
+  "{" ++
+    (if Text.isEmpty tail then shown else if Text.isEmpty shown then tail else shown ++ " | " ++ tail) ++ "}"
+
+/-- Splits a signature into its first `n` argument types and the rest; the last arrow's row stays on the rest (`{E} B`). -/
+def splitSig (sig : Sexp) (n : Int) : (List Sexp, Option Sexp) :=
+  if n == 0 then ([], some sig)
+  else
+    match sig with
+    | Sexp.list [Sexp.sym "tfun", a, b, row] => if n == 1 then ([a], some (Sexp.node "teff" [row, b])) else splitSig (Sexp.node "tfun" [a, b]) n
+    | Sexp.list (Sexp.sym "tfun" :: a :: b :: _) =>
+      match splitSig b (n - 1) with
+      | (args, rest) => (a :: args, rest)
+      | _ => ([], none)
+    | _ => ([], none)
+
+/-- A whole definition: `def name (x : A) : B := body`. -/
+def definition (p : Printer) (name : Text) (core : Sexp) (sig : Option Sexp) (doc : Option Text) : Text :=
+  let docText :=
+    match doc with
+    | Option.some d => "/-- " ++ d ++ " -/\n"
+    | Option.none => ""
+  let rec params t env acc :=
+    match t with
+    | Sexp.list (Sexp.sym "lam" :: b :: []) =>
+        let x := Print.bind p env
+        params b (x :: env) (x :: acc)
+    | _ => (reverse acc, t, env)
+  let rec lamCount t := if head t == "lam" then 1 + lamCount (getOr (head? (Sexp.args t)) t) else 0
+  let unnamed := List.all (fun x => x == "") (List.take (lamCount core) (Ref.get p.supply))
+  match params core [] [] with
+  | (names, Sexp.list (Sexp.sym "match" :: scrut :: cases), env) =>
+      let count := List.length names
+      if unnamed && count > 0 && equationScrutinee scrut count then
+        let sigText :=
+          match sig with
+          | Option.some t => " : " ++ Print.ty p t 0
+          | Option.none => ""
+        let arms := List.map (fun c =>
+          match c with
+          | Sexp.list (Sexp.sym "case" :: pat :: b2 :: []) =>
+              let (text, env2) := patternColumns p pat env count
+              "\n| " ++ text ++ " =>" ++ Print.body p b2 env2 0
+          | _ => "") cases
+        docText ++ "def " ++ name ++ sigText ++ Text.concat arms
+      else plainDefinition p name docText names (Sexp.list (Sexp.sym "match" :: scrut :: cases)) env sig
+  | (names, b, env) => plainDefinition p name docText names b env sig
+
+/-- Whether a match scrutinizes the equation parameters: `(var 0)`, or their tuple in order. -/
+def equationScrutinee (scrut : Sexp) (count : Int) : Bool :=
+  if count == 1 then scrut == Sexp.node "var" [Sexp.int 0]
+  else scrut == Resolve.tuple (List.map (fun i => Sexp.node "var" [Sexp.int (count - 1 - i)]) (List.range 0 count))
+
+/-- The patterns of an equation arm: a right-nested pair pattern split into `count` columns. -/
+def patternColumns (p : Printer) (pat : Sexp) (env : List Text) (count : Int) : (Text, List Text) := if count <= 1 then patternAt p pat env 0 else
+  match pat with
+  | Sexp.list (Sexp.sym "pcon" :: Sexp.str "#Pair" :: Sexp.int 0 :: a :: rest :: []) =>
+      let (at, env2) := patternAt p a env 0
+      let (more, env3) := Print.patternColumns p rest env2 (count - 1)
+      (at ++ ", " ++ more, env3)
+  | _ => patternAt p pat env 0
+
+def plainDefinition (p : Printer) (name : Text) (docText : Text) (names : List Text) (b : Sexp) (env : List Text) (sig : Option Sexp) : Text :=
+  let count := List.length names
+  let parts :=
+    match Option.map (fun s => splitSig s count) sig with
+    | Option.some (types, Option.some result) => if List.length types == count then List.map (fun pair =>
+        let (x, t) := pair
+        if head t == "tvar" && Sexp.args t == [Sexp.str "?"] then x else "(" ++ x ++ " : " ++ Print.ty p t 0 ++ ")") (zip names types) ++ (if Sexp.args result == [Sexp.str "?"] then [] else [": " ++ Print.ty p result 0]) else names
+    | _ => names
+  let flat := Text.concat (List.map (fun part => " " ++ part) parts)
+  -- Past the width, each parameter and the result type take a line of their own, so the signature is never cut off.
+  let header := if fits 0 ("def " ++ name ++ flat ++ " :=") || List.length parts < 2 then flat else Text.concat (List.map (fun part => "\n    " ++ part) parts)
+  -- A declaration prints without a body only when it compiles back to this hash (D93).
+  let declared :=
+    match (stubOf b, sig) with
+    | (Option.some (stubName, sigText), Option.some s) => stubName == name && sigText == Sexp.print s
+    | _ => false
+  let opening := "def " ++ name ++ header ++ " :="
+  let lastLine := Option.getOr (List.last? (Text.lines opening)) opening
+  docText ++ "def " ++ name ++ header ++ (if declared then "" else " :=" ++ Print.bodyAt p b env 0 (Text.length lastLine))
+
+def notationsOf (meta : Option Sexp) : List (Int, Text) := indexedOf meta "notations"
+
+/-- A printer that writes nodes with the notations in `rules`, by key (Syntax.Spec R-5). -/
+def withRules (base : Printer) (rules : Map Text Loaded) : Printer := Printer.mk
+  base.display
+  base.fullNames
+  base.typeNames
+  base.fieldNames
+  base.declared
+  base.namesByHash
+  base.supply
+  base.fresh
+  base.hints
+  rules
+  base.shadows
+
+/-- A notation definition as the `notation` declaration it came from (Syntax.Spec R-9): a hole
+  prints its category, and its precedence only when the parser would not settle on the same one. -/
+def notationDecl (p : Printer) (name : Text) (rule : Loaded) : Option Text :=
+  match rule.ruleTemplate with
+  | Option.none => Option.none
+  | Option.some template =>
+      let count := holeCount rule.ruleParts
+      let rec binders t k env := if k == 0 then Option.some (t, env) else
+        match t with
+        | Sexp.list (Sexp.sym "lam" :: b :: []) => binders b (k - 1) (Print.bind p env :: env)
+        | _ => Option.none
+      match binders template count [] with
+      | Option.none => Option.none
+      | Option.some (body, env) =>
+          let holeNames := reverse env
+          let nameOf := fun i => getOr (get? holeNames i) "_"
+          let parts := rule.ruleParts
+          let partText := fun k part =>
+            match part with
+            | Part.lit text => quoteText text
+            | Part.again i => nameOf i
+            | Part.hole i c n repeat =>
+                let kind := if c != "term" then ":" ++ c else if n == defaultPrec rule.ruleCategory rule.rulePrec parts k then "" else ":" ++ Int.toText n
+                nameOf i ++ kind ++ repeat
+          let head := if rule.ruleCategory == "term" && rule.rulePrec == 65 then "" else " : " ++ rule.ruleCategory ++
+            (if rule.rulePrec == 65 then "" else " " ++ Int.toText rule.rulePrec)
+          Option.some ("notation " ++ name ++ head ++ " := " ++ join " " (mapIndexed partText parts) ++ " =>" ++
+            Print.body p body env 0)
+
+/-- `restore`, also putting back the notations each node was written with as `(notation "key" e)`,
+  outermost first (Syntax.Spec R-5). -/
+def restoreAll (notes : List (Int, Text)) (spellings : List (Int, Text)) (notations : List (Int, Text)) (core : Sexp) : Sexp := if List.isEmpty notes && List.isEmpty spellings && List.isEmpty notations then core else
+  let byIndex := Map.fromList notes
+  let spelledAt := Map.fromList spellings
+  let notationsAt := foldl
+    (fun m pair => Map.insert (fst pair) (getOr (Map.lookup (fst pair) m) [] ++ [snd pair]) m)
+    Map.empty
+    notations
+  let rec go x count :=
+    match x with
+    | Sexp.list items =>
+        let rec each rest out c :=
+          match rest with
+          | [] => (reverse out, c)
+          | y :: more =>
+              let (y2, c2) := go y c
+              each more (y2 :: out) c2
+        let (children, next) := each items [] (count + 1)
+        let spelled :=
+          match Map.lookup count spelledAt with
+          | Option.some text => Sexp.node "spelled" [Sexp.str text, Sexp.list children]
+          | Option.none => Sexp.list children
+        let rebuilt := List.foldr
+          (fun key e => Sexp.node "notation" [Sexp.str key, e])
+          spelled
+          (getOr (Map.lookup count notationsAt) [])
+        match Map.lookup count byIndex with
+        | Option.some text => (Sexp.node "note" [Sexp.str text, rebuilt], next)
+        | Option.none => (rebuilt, next)
+    | _ => (x, count)
+  fst (go core 0)
+
+/-- A node as notation `key` writes it, with the precedence of the text (Syntax.Spec R-5); none when
+  the printer does not know the notation or the notation cannot write this node (R-6). -/
+def throughNotation (p : Printer) (key : Text) (term : Sexp) (env : List Text) (ind : Int) : Option (Text, Int) :=
+  match Map.lookup key p.rules with
+  | Option.none => Option.none
+  | Option.some rule =>
+      match rule.ruleTemplate with
+      | Option.none => Option.none
+      | Option.some template =>
+          let count := holeCount rule.ruleParts
+          match holesOf template count term with
+          | Option.none => Option.none
+          | Option.some holes =>
+              -- Binder names are handed out in pre-order, so each hole takes the names its own binders had.
+              let supply := Ref.get p.supply
+              let (slices, total) := holeSlices template count term
+              let named := List.map (fun i =>
+                match Map.lookup i slices with
+                | Option.some (from, length) => List.take length (List.drop from supply)
+                | Option.none => []) (range 0 count)
+              let text := notationText p rule holes named env ind
+              Ref.set p.supply (List.drop total supply)
+              Option.map (fun t => (t, notationLevel rule)) text
+
+/-- The parts of a notation with its holes written in, on one line when it fits, else with its last
+  repetition one item per line. -/
+def notationText (p : Printer) (rule : Loaded) (holes : List Sexp) (named : List (List Text)) (env : List Text) (ind : Int) : Option Text :=
+  let render := fun at => pieces p rule holes named env at
+  match render ind with
+  | Option.none => Option.none
+  | Option.some pieces =>
+      let flat := spaced (List.map (fun piece => flatPiece piece) pieces)
+      let lastRepeat := last? (filterMap (fun pair =>
+        match snd pair with
+        | Part.hole _ _ _ repeat => if repeat != "" then Option.some (fst pair) else Option.none
+        | _ => Option.none) (mapIndexed (fun k part => (k, part)) rule.ruleParts))
+      let breakable :=
+        match lastRepeat with
+        | Option.some k =>
+            match get? pieces k with
+            | Option.some items => List.length items > 0
+            | Option.none => false
+        | Option.none => false
+      if fits ind flat || not breakable then Option.some flat else
+        match (lastRepeat, render (ind + 2)) with
+        | (Option.some k, Option.some deeper) =>
+            let before := spaced (List.map flatPiece (List.take k pieces))
+            let after := spaced (List.map flatPiece (List.drop (k + 1) pieces))
+            let items := getOr (get? deeper k) []
+            Option.some (before ++ Text.concat (List.map (fun item => "\n" ++ spaces (ind + 2) ++ item) items) ++
+              "\n" ++ spaces ind ++ after)
+        | _ => Option.some flat
+
+/-- The precedence of a notation's text: a trailing rule's own; a leading one that ends with a literal
+  reads as an atom, but one that ends in a hole is its rule's. Either needs parentheses as an argument. -/
+def notationLevel (rule : Loaded) : Int := if isTrailing rule.ruleCategory rule.ruleParts then rule.rulePrec else
+  match last? rule.ruleParts with
+  | Option.some (Part.lit _) => 99
+  | _ => min rule.rulePrec 99
+
+/-- Each part's text: a literal or one hole's text is a list of one, a repetition the list of its
+  items' texts. A repetition joined by commas carries them on all but its last item. -/
+def pieces (p : Printer) (rule : Loaded) (holes : List Sexp) (named : List (List Text)) (env : List Text) (ind : Int) : Option (List (List Text)) :=
+  let parts := rule.ruleParts
+  let firstText := Ref.new Map.empty
+  let rendered := List.map (fun part =>
+    match part with
+    | Part.lit text => Option.some [text]
+    | Part.again i => Option.map (fun t => [t]) (Map.lookup i (Ref.get firstText))
+    | Part.hole i c prec repeat =>
+        match get? holes i with
+        | Option.none => Option.none
+        | Option.some core =>
+            let names := getOr (get? named i) []
+            if repeat == "" then
+              let text := holeText p c prec core names env ind
+              match text with
+              | Option.some t => Ref.set firstText (Map.insert i t (Ref.get firstText))
+              | Option.none => ()
+              Option.map (fun t => [t]) text
+            else
+              match listItems core with
+              | Option.none => Option.none
+              | Option.some items =>
+                  -- Each item takes the binder names of its own part of the list, in order.
+                  let rec each rest from acc :=
+                    match rest with
+                    | [] => Option.some (reverse acc)
+                    | item :: more =>
+                        let width := binderTotal item
+                        match holeText p c 0 item (List.take width (List.drop from names)) env ind with
+                        | Option.some t => each more (from + width) (t :: acc)
+                        | Option.none => Option.none
+                  match each items 0 [] with
+                  | Option.some texts => if repeat == ",*" then Option.some (mapIndexed (fun k t => if k < List.length texts - 1 then t ++ "," else t) texts) else Option.some texts
+                  | Option.none => Option.none) parts
+  if List.all isSome rendered then Option.some (filterMap (fun x => x) rendered) else Option.none
+
+/-- Pieces joined with a space wherever the two would otherwise read as one token or start a comment. -/
+def spaced (pieces : List Text) : Text := foldl
+  (fun acc piece => if Text.isEmpty acc || Text.isEmpty piece then acc ++ piece else if needsSpace (code acc (Text.length acc - 1)) (code piece 0) then acc ++ " " ++ piece else acc ++ piece)
+  ""
+  pieces
+
+/-- A part as written: one piece, or a repetition's items joined by a space (`*`) or a comma (`,*`). -/
+def flatPiece (piece : List Text) : Text := join " " piece
+
+/-- Whether markup text `v` reads back as itself through a `raw` hole: lexed tokens, none ending the text or
+  quoted, single spaces between them. -/
+def rawReadsBack (v : Text) : Bool :=
+  match try (fun _ => Lexer.lex v) with
+  | Result.ok tokens =>
+      let words := List.filter (fun t => t.kind != Kind.eof) tokens
+      not (List.isEmpty words) && List.all (fun t => not (Parser.endsRaw t) && t.kind != Kind.text && t.kind != Kind.comment && t.kind != Kind.doc) words &&
+        trim v == v && not (Text.contains "  " v) && not (Text.contains "\n" v) && not (Text.contains "\t" v)
+  | Result.err _ => false
+
+/-- A hole's text, from its term, with `names` for the binders inside it. -/
+def holeText (p : Printer) (c : Text) (prec : Int) (core : Sexp) (names : List Text) (env : List Text) (ind : Int) : Option Text :=
+  let saved := Ref.get p.supply
+  Ref.set p.supply names
+  let text := if c == "term" then Option.some (Print.expr p core env ind prec) else if c == "name" then
+    match core with
+    | Sexp.list (Sexp.sym "text" :: Sexp.str v :: []) => if isWord v then Option.some v else Option.none
+    | _ => Option.none
+  else if c == "str" then
+    match core with
+    | Sexp.list (Sexp.sym "text" :: Sexp.str v :: []) => Option.some (quoteText v)
+    | _ => Option.none
+  else if c == "raw" then
+    match core with
+    | Sexp.list (Sexp.sym "text" :: Sexp.str v :: []) => if rawReadsBack v then Option.some v else Option.none
+    | _ => Option.none
+  else if c == "num" then
+    match core with
+    | Sexp.list (Sexp.sym "int" :: Sexp.int v :: []) => if v >= 0 then Option.some (Int.toText v) else Option.none
+    | _ => Option.none
+  else if c == "ident" then
+    match core with
+    | Sexp.list (Sexp.sym "var" :: Sexp.int k :: []) => get? env k
+    | Sexp.list (Sexp.sym "ref" :: Sexp.str h :: []) => Option.some (refName p h env)
+    | _ => Option.none
+  else
+    match core with
+    | Sexp.list (Sexp.sym "notation" :: Sexp.str key :: inner :: []) =>
+        match Map.lookup key p.rules with
+        | Option.some rule => if rule.ruleCategory == c then Option.map fst (throughNotation p key inner env ind) else Option.none
+        | Option.none => Option.none
+    | _ => Option.none
+  Ref.set p.supply saved
+  text
+
+def needsSpace (a : Int) (b : Int) : Bool :=
+  let wordish := fun c => isAlpha c || isDigit c || c == '_' || c == '\'' || c == '"' || c == '?' || c == '!' || c == '.'
+  let pair := fromCode a ++ fromCode b
+  wordish a && wordish b || Dict.contains pair twoCharSymbols || pair == "--" || pair == "/-" || pair == "-/"
+
+end Print

@@ -1,0 +1,62 @@
+{
+  "name": "deus-vscode",
+  "displayName": "DEUS",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Syntax highlighting for DEUS (.deus) and ```deus fences in Markdown and .mdl documents.",
+  "license": "FSL-1.1-Apache-2.0",
+  "publisher": "dxos",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "deus",
+        "aliases": [
+          "DEUS",
+          "deus"
+        ],
+        "extensions": [
+          ".deus"
+        ],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "mdl",
+        "aliases": [
+          "MDL"
+        ],
+        "extensions": [
+          ".mdl"
+        ]
+      }
+    ],
+    "grammars": [
+      {
+        "language": "deus",
+        "scopeName": "source.deus",
+        "path": "./syntaxes/deus.tmLanguage.json"
+      },
+      {
+        "language": "mdl",
+        "scopeName": "text.html.markdown.mdl",
+        "path": "./syntaxes/mdl.tmLanguage.json"
+      },
+      {
+        "scopeName": "markdown.deus.codeblock",
+        "path": "./syntaxes/deus-markdown.tmLanguage.json",
+        "injectTo": [
+          "text.html.markdown",
+          "text.html.markdown.mdl"
+        ],
+        "embeddedLanguages": {
+          "meta.embedded.block.deus": "deus"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+/-
+  `show`, `Text.utf8`, `Text.fromCodes` and `Text.sha256` in the C back end (D120). `show` is
+  type-directed: the compiler writes one rendering function per type, as the kernels render values.
+  The same definitions run on the interpreter and compile to C and to wasm.
+
+    deus add examples/rendered.deus && deus build Rendered.digestLine -o digestLine --c
+-/
+
+namespace Rendered
+
+inductive Glyph where
+  | pause
+  | rune (code : Int) (upper : Bool)
+  | cluster (text : Text) (parts : List Glyph)
+  | trigger (run : Int -> Int)
+
+def glyphs (n : Int) (acc : List Glyph) : List Glyph :=
+  if n == 0 then acc
+  else
+    let glyph := if n % 3 == 0 then Glyph.pause else if n % 3 == 1 then Glyph.rune (96 + n % 26) (n % 2 == 0) else Glyph.cluster (Text.fromCodes [104, 105, 0x1F600, n % 10 + 48]) [Glyph.rune n true]
+    glyphs (n - 1) (glyph :: acc)
+
+def byteSum (xs : List Int) (acc : Int) : Int :=
+  match xs with
+  | [] => acc
+  | x :: rest => byteSum rest (acc + x)
+
+/-- The rendering of `n` glyphs and other values, its UTF-8 size and byte sum, and its digest. -/
+def digestLine (n : Int) : Text :=
+  let shown := show (glyphs n [], (Option.some "tab\there \"q\"", Array.make 2 n), Glyph.trigger (fun x => x + n), ())
+  let bytes := Text.utf8 shown
+  Text.join " " [Int.toText (List.length bytes), Int.toText (byteSum bytes 0), Text.sha256 shown, Text.take 160 shown]
+
+/-- `digestLine` as a number, for the wasm entry, which returns an `Int`. -/
+def digestBytes (n : Int) : Int := byteSum (Text.utf8 (digestLine n)) 0
+
+test renderedSmall := Text.startsWith "222 14579 39b7c25d" (digestLine 5)

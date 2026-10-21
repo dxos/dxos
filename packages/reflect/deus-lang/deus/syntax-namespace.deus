@@ -1,0 +1,313 @@
+namespace Syntax
+/-- A notation loaded for the parser and the printer: its key (a hash, or `@Name` while its batch is
+  compiled) and its expansion as Core, which a notation of the same batch does not have yet. -/
+structure Loaded @"urn:deus:syntax:Loaded" where
+  ruleKey : Text
+  ruleName : Text
+  ruleCategory : Text
+  rulePrec : Int
+  ruleParts : List Part
+  ruleTemplate : Option Sexp
+
+/-- The namespaces a source file opens or declares, whose notations the parser may need (R-3). -/
+def namespacesNamed (source : Text) : List Text :=
+  let lines := List.map trim (Text.lines source)
+  let words := fun prefix => concatMap (fun l => if startsWith prefix l then List.filter
+    (fun w => w != "in" && not (Text.isEmpty w))
+    (Text.split (Text.drop (Text.length prefix) l) " ") else []) lines
+  let declared := words "namespace "
+  let enclosing := concatMap (fun n =>
+    let segments := Text.split n "."
+    List.map (fun k => join "." (List.take k segments)) (range 1 (List.length segments + 1))) declared
+  let opened := words "open "
+  List.distinct (enclosing ++ opened ++ concatMap (fun n => List.map (fun o => n ++ "." ++ o) opened) enclosing)
+
+/-- Reads a stored notation: `Syntax.Notation.mk category precedence parts expansion` with literal
+  arguments, where `notationType` and `partType` are the two types' hashes. -/
+def decodeRule (notationType : Text) (partType : Text) (key : Text) (fqn : Text) (core : Sexp) : Option Loaded :=
+  let text := fun s =>
+    match s with
+    | Sexp.list (Sexp.sym "text" :: Sexp.str v :: []) => Option.some v
+    | _ => Option.none
+  let number := fun s =>
+    match s with
+    | Sexp.list (Sexp.sym "int" :: Sexp.int v :: []) => Option.some v
+    | _ => Option.none
+  let part := fun s =>
+    match s with
+    | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "con" :: Sexp.str t :: Sexp.int tag :: _) :: args) => if t != partType then Option.none else if tag == 0 then Option.map Part.lit (Option.bind (head? args) text) else if tag == 2 then Option.map Part.again (Option.bind (head? args) number) else
+        match args with
+        | i :: c :: p :: r :: [] =>
+            match (number i, text c, number p, text r) with
+            | (Option.some index, Option.some category, Option.some prec, Option.some repeat) => Option.some (Part.hole index category prec repeat)
+            | _ => Option.none
+        | _ => Option.none
+    | _ => Option.none
+  match core with
+  | Sexp.list (Sexp.sym "app" :: Sexp.list (Sexp.sym "con" :: Sexp.str t :: Sexp.int 0 :: _) :: category :: prec :: parts :: template :: []) => if t != notationType then Option.none else
+      match (text category, number prec, listItems parts) with
+      | (Option.some c, Option.some n, Option.some items) =>
+          let decoded := List.map part items
+          if List.all isSome decoded then Option.some (Loaded.mk key fqn c n (filterMap (fun x => x) decoded) (Option.some template)) else Option.none
+      | _ => Option.none
+  | _ => Option.none
+
+/-- Why the stored scheme of an elaborator with `holes` holes is not `Notation (Sexp -> … -> Sexp)` with no
+  effect but `Throw Text`, if it is not: it runs inside the compiler, so it may not perform IO (Syntax.Spec R-10). -/
+def elaboratorProblem (scheme : Sexp) (holes : Int) : Option Text :=
+  let sexp := Sexp.list [Sexp.sym "tref", Sexp.str "urn:deus:Sexp"]
+  let throws := Sexp.list [Sexp.sym "tapp", Sexp.list [Sexp.sym "tref", Sexp.str "urn:deus:Throw"], Sexp.list [Sexp.sym "tref", Sexp.str "#Text"]]
+  let allowed := fun e =>
+    match e with
+    | Sexp.list [Sexp.sym "tvar", _] => true
+    | _ => e == throws
+  let rec walk t n :=
+    match t with
+    -- A hole the elaborator ignores has a type of its own (a type variable).
+    | Sexp.list (Sexp.sym "tfun" :: a :: r :: rest) => if a != sexp && Sexp.head a != "tvar" then Option.some "takes a hole that is not a Sexp" else
+        match rest with
+        | [Sexp.list (Sexp.sym "eff" :: effs)] => if List.all allowed effs then walk r (n + 1) else Option.some "performs an effect other than Throw Text"
+        | _ => walk r (n + 1)
+    | _ => if t != sexp then Option.some "does not return a Sexp" else if n != holes then Option.some ("takes " ++ Int.toText n ++ " holes, not " ++ Int.toText holes) else Option.none
+  match scheme with
+  | Sexp.list [Sexp.sym "tapp", _, expansion] => walk expansion 0
+  | _ => Option.some "has no Notation type"
+
+/-- The holes the expansion never uses, which no printed use could read back (R-7). -/
+def unusedHoles (template : Sexp) (count : Int) : List Int :=
+  let body := templateBody template count
+  List.filter (fun i => not (usesVars 1 (count - 1 - i) body)) (range 0 count)
+
+/-- Whether a notation of `category` reading `parts` follows an expression: a term rule that starts
+  with a term hole. -/
+def isTrailing (category : Text) (parts : List Part) : Bool :=
+  match parts with
+  | Part.hole _ c _ _ :: _ => category == "term" && c == "term"
+  | _ => false
+
+/-- The tokens literal text reads as; none when it does not lex. -/
+def tokensOf (text : Text) : List Token :=
+  match try (fun _ => lex text) with
+  | Result.ok tokens => List.filter (fun t => t.kind != Kind.eof) tokens
+  | Result.err _ => []
+
+/-- `parts` with each term hole's precedence settled (an unwritten one is -1) and other holes at 0, so
+  the stored notation says exactly how it reads. -/
+def withPrecedences (category : Text) (prec : Int) (parts : List Part) : List Part := mapIndexed (fun k part =>
+  match part with
+  | Part.hole i c n repeat => if c != "term" then Part.hole i c 0 repeat else if n >= 0 then part else Part.hole i c (defaultPrec category prec parts k) repeat
+  | _ => part) parts
+
+/-- What makes a notation unusable (Syntax.Spec R-7), if anything. -/
+def problemOf (category : Text) (parts : List Part) : Option Text :=
+  let builtin := fun c => c == "term" || c == "name" || c == "ident" || c == "str" || c == "num" || c == "raw"
+  let againOk := List.all (fun part =>
+    match part with
+    | Part.again i => List.contains (holeCategory parts i) ["name", "ident", "str", "num"]
+    | _ => true) parts
+  if List.isEmpty parts then Option.some "it reads nothing" else if not againOk then Option.some "only a name, ident, str or num hole can be read again" else if category != "term" then Option.none else
+    match parts with
+    | Part.lit _ :: _ => Option.none
+    | Part.hole _ "term" _ _ :: Part.lit text :: _ =>
+        match head? (tokensOf text) with
+        | Option.some t => if t.kind == Kind.sym then Option.none else Option.some "a trailing notation's literal must start with a symbol"
+        | Option.none => Option.some "a trailing notation needs a literal after its first hole"
+    | Part.hole _ c _ _ :: _ => if builtin c then Option.some "a term notation starts with a literal, with a term hole and a literal, or with a hole of a category of its own" else Option.none
+    | _ => Option.some "a term notation starts with a literal"
+
+/-- The literal after a trailing notation's left operand. -/
+def trailingLiteral (parts : List Part) : Text :=
+  match parts with
+  | _ :: Part.lit text :: _ => text
+  | _ => ""
+
+/-- The order notations are tried in: the longest literal prefix first, then by name. -/
+def ordered (rules : List Loaded) : List Loaded := sortBy (fun a b =>
+  let lead := compare (literalLead b.ruleParts) (literalLead a.ruleParts)
+  if lead != 0 then lead else compare a.ruleName b.ruleName) rules
+
+def sameToken (a : Token) (b : Token) : Bool := a.kind == b.kind && a.value == b.value
+
+/-- The number of holes a notation's parts name. -/
+def holeCount (parts : List Part) : Int := foldl (fun n part =>
+  match part with
+  | Part.hole i _ _ _ => max n (i + 1)
+  | _ => n) 0 parts
+
+/-- The category of hole `index`. -/
+def holeCategory (parts : List Part) (index : Int) : Text :=
+  match List.find (fun part =>
+    match part with
+    | Part.hole i _ _ _ => i == index
+    | _ => false) parts with
+  | Option.some (Part.hole _ c _ _) => c
+  | _ => "term"
+
+/-- The text a name, text or number hole read, to compare a hole read again with the first reading. -/
+def wordsOf (e : Expr) : Text :=
+  match e with
+  | Expr.text v => v
+  | Expr.var name _ => name
+  | Expr.int v => Int.toText v
+  | Expr.spelled _ inner => Syntax.wordsOf inner
+  | _ => ""
+
+/-- The precedence the term hole at `k` reads at unless the notation gives one: 0 before a literal,
+  which delimits it; a trailing rule's own precedence on its left and one more on its right, so it
+  groups to the left; and the rule's precedence last in a leading rule. -/
+def defaultPrec (category : Text) (prec : Int) (parts : List Part) (k : Int) : Int :=
+  let trailing := isTrailing category parts
+  let delimited :=
+    match get? parts (k + 1) with
+    | Option.some (Part.lit _) => true
+    | _ => false
+  if delimited then 0 else if k == 0 && trailing then prec else if k == List.length parts - 1 then if trailing then prec + 1 else prec else 0
+
+/-- The holes that make the expansion `template` equal `term`, the inverse of `expandWith`: none when
+  the term is not an instance, a hole would use a variable the expansion binds, or a hole used twice
+  differs (Syntax.Spec R-6). -/
+def holesOf (template : Sexp) (count : Int) (term : Sexp) : Option (List Sexp) :=
+  let found := Ref.new Map.empty
+  let fits := Ref.new true
+  let rec walk t e depth := if not (Ref.get fits) then () else
+    match t with
+    | Sexp.list (Sexp.sym "var" :: Sexp.int k :: []) => if k < depth then if e == t then () else Ref.set fits false else if usesVars depth 0 e then Ref.set fits false else
+        let index := count - 1 - (k - depth)
+        let lowered := liftVars (0 - depth) depth e
+        match Map.lookup index (Ref.get found) with
+        | Option.some earlier => if earlier == lowered then () else Ref.set fits false
+        | Option.none => Ref.set found (Map.insert index lowered (Ref.get found))
+    | Sexp.list items =>
+        match e with
+        | Sexp.list others => if List.length items != List.length others then Ref.set fits false else forEach (zip (zip items others) (binderCounts items)) (fun triple =>
+            let ((a, b), extra) := triple
+            walk a b (depth + extra))
+        | _ => Ref.set fits false
+    | _ => if e == t then () else Ref.set fits false
+  walk (templateBody template count) term 0
+  if not (Ref.get fits) then Option.none else
+    let holes := List.map (fun i => Map.lookup i (Ref.get found)) (range 0 count)
+    if List.all isSome holes then Option.some (filterMap (fun x => x) holes) else Option.none
+
+/-- Where in the binder names a term hands out each hole's start, and how many it takes, with the
+  number the whole term takes: the expansion's own binders take names too, which no hole gets. -/
+def holeSlices (template : Sexp) (count : Int) (term : Sexp) : (Map Int (Int, Int), Int) :=
+  let slices := Ref.new Map.empty
+  let used := Ref.new 0
+  let rec walk t e depth :=
+    match t with
+    | Sexp.list (Sexp.sym "var" :: Sexp.int k :: []) => if k < depth then () else
+        let index := count - 1 - (k - depth)
+        let width := binderTotal e
+        if Map.contains index (Ref.get slices) then () else Ref.set slices (Map.insert index (Ref.get used, width) (Ref.get slices))
+        Ref.set used (Ref.get used + width)
+    | Sexp.list items =>
+        Ref.set used (Ref.get used + ownBinders items)
+        match e with
+        | Sexp.list others => forEach (zip (zip items others) (binderCounts items)) (fun triple =>
+            let ((a, b), extra) := triple
+            walk a b (depth + extra))
+        | _ => ()
+    | _ => ()
+  walk (templateBody template count) term 0
+  (Ref.get slices, Ref.get used)
+
+/-- How many binder names a term hands out, in all. -/
+def binderTotal (t : Sexp) : Int :=
+  match t with
+  | Sexp.list items => ownBinders items + sum (List.map Syntax.binderTotal items)
+  | _ => 0
+
+/-- Whether text is one identifier, as a `name` hole prints. -/
+def isWord (v : Text) : Bool :=
+  match tokensOf v with
+  | t :: [] => t.kind == Kind.ident && t.value == v
+  | _ => false
+
+/-- The expansion with each hole replaced by its term: the Core a use of the notation stores (R-2).
+  Holes are terms where the notation is used; under the expansion's own binders they move up, so they
+  never see its variables (hygiene). -/
+def expandWith (template : Sexp) (holes : List Sexp) : Sexp :=
+  let count := List.length holes
+  let rec put t depth :=
+    match t with
+    | Sexp.list (Sexp.sym "var" :: Sexp.int k :: []) => if k < depth then t else
+        match get? holes (count - 1 - (k - depth)) with
+        | Option.some hole => liftVars depth 0 hole
+        | Option.none => t
+    | Sexp.list items => Sexp.list (List.map (fun pair => put (fst pair) (depth + snd pair)) (zip items (binderCounts items)))
+    | _ => t
+  put (templateBody template count) 0
+
+/-- The body of an expansion under its `count` hole parameters. -/
+def templateBody (template : Sexp) (count : Int) : Sexp := if count == 0 then template else
+  match template with
+  | Sexp.list (Sexp.sym "lam" :: body :: []) => Syntax.templateBody body (count - 1)
+  | Sexp.list (Sexp.sym "lam" :: Sexp.str _ :: body :: []) => Syntax.templateBody body (count - 1)
+  | _ => template
+
+/-- Whether `t` uses a variable from `cut` to `cut + width - 1`. -/
+def usesVars (width : Int) (cut : Int) (t : Sexp) : Bool :=
+  match t with
+  | Sexp.list (Sexp.sym "var" :: Sexp.int k :: []) => k >= cut && k < cut + width
+  | Sexp.list items => any
+      (fun pair => Syntax.usesVars width (cut + snd pair) (fst pair))
+      (zip items (binderCounts items))
+  | _ => false
+
+/-- How many literal tokens a notation starts with: rules with more go first. -/
+def literalLead (parts : List Part) : Int :=
+  match parts with
+  | Part.lit text :: rest => List.length (tokensOf text) + Syntax.literalLead rest
+  | _ => 0
+
+/-- `t` with its variables from `cut` up moved by `amount`, as when it goes under (or out of) binders. -/
+def liftVars (amount : Int) (cut : Int) (t : Sexp) : Sexp :=
+  match t with
+  | Sexp.list (Sexp.sym "var" :: Sexp.int k :: []) => if k >= cut then Sexp.node "var" [Sexp.int (k + amount)] else t
+  | Sexp.list items => Sexp.list (List.map
+      (fun pair => Syntax.liftVars amount (cut + snd pair) (fst pair))
+      (zip items (binderCounts items)))
+  | _ => t
+
+/-- How many variables each element of a Core node binds around itself: the body of `lam`, `let`,
+  `letrec`, a match arm, a `return` clause or an operation clause; Core before or after names are stripped. -/
+def binderCounts (items : List Sexp) : List Int :=
+  let last := List.length items - 1
+  let onLast := fun k => List.map (fun i => if i == last then k else 0) (range 0 (last + 1))
+  match items with
+  | Sexp.sym "lam" :: _ => onLast 1
+  | Sexp.sym "let" :: _ => onLast 1
+  | Sexp.sym "ret" :: _ => onLast 1
+  | Sexp.sym "letrec" :: _ =>
+      let fns := getOr (get? items (last - 1)) (Sexp.list [])
+      let k := List.length (Sexp.asList fns)
+      List.map (fun i => if i == 0 then 0 else k) (range 0 (last + 1))
+  | Sexp.sym "case" :: pat :: _ => onLast (patternBinders pat)
+  | Sexp.sym "on" :: _ :: _ :: _ :: Sexp.list names :: _ :: [] => onLast (List.length names)
+  | Sexp.sym "on" :: _ :: _ :: Sexp.int arity :: _ :: [] => onLast (arity + 1)
+  | _ => List.map (fun _ => 0) items
+
+/-- How many binder names a Core node hands out itself, before its children (`Resolve.strip`'s order):
+  one for a lambda, let, pattern variable or return clause, one per function of a letrec, and an
+  operation clause's arguments and continuation. -/
+def ownBinders (items : List Sexp) : Int :=
+  match items with
+  | Sexp.sym "lam" :: _ => 1
+  | Sexp.sym "let" :: _ => 1
+  | Sexp.sym "ret" :: _ => 1
+  | Sexp.sym "pvar" :: _ => 1
+  | Sexp.sym "pas" :: _ => 1
+  | Sexp.sym "letrec" :: fns :: _ :: [] => List.length (Sexp.asList fns)
+  | Sexp.sym "on" :: _ :: _ :: Sexp.int arity :: _ :: [] => arity + 1
+  | _ => 0
+
+/-- The variables a pattern binds. -/
+def patternBinders (pat : Sexp) : Int :=
+  match pat with
+  | Sexp.list (Sexp.sym "pvar" :: _) => 1
+  | Sexp.list (Sexp.sym "pas" :: rest) => 1 + sum (List.map Syntax.patternBinders rest)
+  | Sexp.list items => sum (List.map Syntax.patternBinders items)
+  | _ => 0
+
+end Syntax

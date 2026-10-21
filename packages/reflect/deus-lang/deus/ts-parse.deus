@@ -1,0 +1,541 @@
+/-
+  Reads the TypeScript-like dialect (D70, docs/spec/DIALECT-TS.md) back into DEUS's syntax tree, so
+  `deus add --dialect ts` compiles what `deus view --dialect ts` prints to the same hashes (task
+  be4c4645). It reuses the DEUS lexer and parser state; the dialect differs only in its grammar.
+-/
+
+namespace TsParse
+
+/-- The source as the DEUS lexer reads it: `//` lines dropped, `/** … */` as a doc comment, `#[` as `@[`; text
+  inside a string literal is left as it is. -/
+def prepare (source : Text) : Text :=
+  let lines := List.filter (fun l => not (startsWith "//" (Text.trim l))) (Text.lines source)
+  let text := Text.join "\n" lines
+  let n := Text.length text
+  let rec go i inString acc :=
+    if i >= n then Text.concat (reverse acc) else
+      let c := Text.code text i
+      if inString then
+        if c == '\\' && i + 1 < n then go (i + 2) true (Text.slice text i (i + 2) :: acc)
+        else go (i + 1) (c != '"') (Text.slice text i (i + 1) :: acc)
+      else if c == '"' then go (i + 1) true ("\"" :: acc)
+      else if Text.slice text i (i + 3) == "/**" then go (i + 3) false ("/--" :: acc)
+      else if Text.slice text i (i + 2) == "*/" then go (i + 2) false ("-/" :: acc)
+      else if Text.slice text i (i + 2) == "#[" then go (i + 2) false ("@[" :: acc)
+      else go (i + 1) false (Text.slice text i (i + 1) :: acc)
+  go 0 false []
+
+/-- Whether the next token is the word or symbol `w`, whatever kind the lexer gave it. -/
+def at (p : Parser) (w : Text) : Bool :=
+  let t := peek p
+  t.value == w && (t.kind == Kind.ident || t.kind == Kind.kw || t.kind == Kind.sym)
+
+def word (p : Parser) (w : Text) : {Throw Text} Unit := if at p w then skip p else Parser.error p ("expected '" ++ w ++ "'")
+
+/-- Items separated by commas until `close`, which is consumed. -/
+def commaList (p : Parser) (close : Text) (item : Unit -> {Throw Text} a) : {Throw Text} List a :=
+  let rec go acc := if at p close then
+    skip p
+    reverse acc
+  else
+    let x := item ()
+    if at p "," then skip p else ()
+    go (x :: acc)
+  go []
+
+/-- Whether the next tokens are three dots, a spread. -/
+def atSpread (p : Parser) : Bool := isTok (peek p) "." && isTok (peekAt p 1) "."
+
+/-- The name after a spread's dots: `...t` lexes as `.`, `.`, then `.t`. -/
+def spreadName (p : Parser) : {Throw Text} Text :=
+  skip p
+  skip p
+  let t := Parser.next p
+  if t.kind == Kind.dot then t.value else errorAt t "expected a name after ..."
+
+--
+-- Types.
+--
+
+def ty (p : Parser) : {Throw Text} Ty :=
+  let base := TsParse.tyAtom p
+  if at p "uses" then
+    skip p
+    Ty.effects (TsParse.row p) base
+  else base
+
+/-- `IO, Throw<Text>, ...r`: abilities, then a row variable last, as DEUS's `{IO, Throw Text | r}`. -/
+def row (p : Parser) : {Throw Text} List Ty :=
+  let rec go acc :=
+    let item := if atSpread p then Ty.named (spreadName p) [] else TsParse.tyAtom p
+    if at p "," then
+      skip p
+      go (item :: acc)
+    else reverse (item :: acc)
+  go []
+
+def tyAtom (p : Parser) : {Throw Text} Ty := if at p "@[" then
+  skip p
+  Ty.tuple (commaList p "]" (fun _ => TsParse.ty p))
+else if at p "(" then
+  skip p
+  let params := commaList p ")" (fun _ => TsParse.ty p)
+  if at p "=>" then
+    skip p
+    let result := TsParse.tyAtom p
+    let (to, effects) := if at p "uses" then
+      skip p
+      (result, Option.some (TsParse.row p))
+    else (result, Option.none)
+    -- `() => a` is `Unit -> a`; arrows chain to the right, and only the last carries the row.
+    let froms := if List.isEmpty params then [Ty.named "Unit" []] else params
+    let rec build xs :=
+      match xs with
+      | [] => to
+      | x :: [] => Ty.arrow x to effects
+      | x :: more => Ty.arrow x (build more) Option.none
+    build froms
+  else
+    match params with
+    | [t] => t
+    | _ => Parser.error p "expected '=>' after a parenthesized type list"
+else
+  let name := Parser.ident p
+  if at p "<" then
+    skip p
+    Ty.named name (commaList p ">" (fun _ => TsParse.ty p))
+  else Ty.named name []
+
+--
+-- Patterns.
+--
+
+def pat (p : Parser) : {Throw Text} Pat :=
+  let t := peek p
+  if t.kind == Kind.ident && isTok (peekAt p 1) "@" then
+    skip p
+    skip p
+    Pat.as t.value (TsParse.pat p)
+  else TsParse.patAtom p
+
+def patAtom (p : Parser) : {Throw Text} Pat :=
+  let t := peek p
+  if at p "_" then
+    skip p
+    Pat.wild
+  else if t.kind == Kind.int then
+    skip p
+    Pat.int (intOf t)
+  else if at p "-" && (peekAt p 1).kind == Kind.int then
+    skip p
+    Pat.int (0 - intOf (Parser.next p))
+  else if t.kind == Kind.text then
+    skip p
+    Pat.text t.value
+  else if at p "true" || at p "false" then
+    skip p
+    Pat.bool (t.value == "true")
+  else if at p "undefined" then
+    skip p
+    Pat.unit
+  else if at p "@[" then
+    skip p
+    Pat.tuple (commaList p "]" (fun _ => TsParse.pat p))
+  else if at p "[" then
+    skip p
+    -- `[a, b, ...t]` is `a :: b :: t`; without a spread it is a list of exactly those items.
+    let rec go acc := if at p "]" then
+      skip p
+      Pat.list (reverse acc)
+    else if atSpread p then
+      let tail := TsParse.patAtomAfterSpread p
+      if at p "]" then skip p else Parser.error p "expected ']' after a spread"
+      foldl (fun rest x => Pat.cons x rest) tail acc
+    else
+      let x := TsParse.pat p
+      if at p "," then skip p else ()
+      go (x :: acc)
+    go []
+  else if t.kind == Kind.ident then
+    skip p
+    let args := if at p "(" then
+      skip p
+      commaList p ")" (fun _ => TsParse.pat p)
+    else []
+    Pat.id t.value args (posOf t)
+  else Parser.error p "expected a pattern"
+
+/-- The pattern after `...`: a name, `_`, or a bracketed pattern. -/
+def patAtomAfterSpread (p : Parser) : {Throw Text} Pat :=
+  skip p
+  skip p
+  let t := peek p
+  if t.kind == Kind.dot then
+    skip p
+    if t.value == "_" then Pat.wild else Pat.id t.value [] (posOf t)
+  else
+    -- `...[x, ...t]` or `..._`: the third dot stood alone.
+    if isTok t "." then skip p else ()
+    TsParse.patAtom p
+
+--
+-- Statements.
+--
+
+/-- Statements up to `}`, `case` or `default` (not consumed): the last is the value, written with or without `return`. -/
+def stmts (p : Parser) : {Throw Text} Expr :=
+  let ends := fun _ => at p "}" || at p "case" || at p "default" || (peek p).kind == Kind.eof
+  let rest := fun (first : Expr) => if ends () then first else Expr.seq first (TsParse.stmts p)
+  if at p "const" then
+    skip p
+    let target := TsParse.pat p
+    word p "="
+    let value := TsParse.expr p
+    word p ";"
+    Expr.letPat target value (TsParse.stmts p)
+  else if at p "function" then
+    skip p
+    let name := Parser.ident p
+    word p "("
+    let params := commaList p ")" (fun _ => TsParse.pat p)
+    let body := TsParse.block p
+    Expr.letFun name params body (TsParse.stmts p) true
+  else if at p "return" then
+    skip p
+    let value := TsParse.expr p
+    word p ";"
+    value
+  else if at p "switch" then rest (TsParse.switchStmt p)
+  else if at p "if" then rest (TsParse.ifStmt p)
+  else if at p "try" then rest (TsParse.tryStmt p)
+  else
+    let value := TsParse.expr p
+    word p ";"
+    rest value
+
+def block (p : Parser) : {Throw Text} Expr :=
+  word p "{"
+  let body := TsParse.stmts p
+  word p "}"
+  body
+
+def switchStmt (p : Parser) : {Throw Text} Expr :=
+  word p "switch"
+  word p "("
+  let scrut := TsParse.expr p
+  word p ")"
+  word p "{"
+  let rec arms acc := if at p "}" then
+    skip p
+    reverse acc
+  else
+    let pattern := if at p "default" then
+      skip p
+      Pat.wild
+    else
+      word p "case"
+      TsParse.pat p
+    word p ":"
+    arms (Arm.mk [pattern] (TsParse.stmts p) :: acc)
+  Expr.matchOn [scrut] (arms [])
+
+def ifStmt (p : Parser) : {Throw Text} Expr :=
+  word p "if"
+  word p "("
+  let cond := TsParse.expr p
+  word p ")"
+  let yes := TsParse.block p
+  word p "else"
+  let no := if at p "if" then TsParse.ifStmt p else TsParse.block p
+  Expr.ite cond yes no
+
+/-- `try { … } handle { return(x) { … } Op.name(a, k) { … } }`. -/
+def tryStmt (p : Parser) : {Throw Text} Expr :=
+  word p "try"
+  let body := TsParse.block p
+  word p "handle"
+  word p "{"
+  let rec clauses ret ops := if at p "}" then
+    skip p
+    Expr.handleWith body ret (reverse ops)
+  else if at p "return" then
+    skip p
+    word p "("
+    let x := TsParse.pat p
+    word p ")"
+    clauses (Option.some (x, TsParse.block p)) ops
+  else
+    let t := peek p
+    let name := Parser.ident p
+    word p "("
+    let names := commaList p ")" (fun _ => TsParse.pat p)
+    -- The last parameter is the continuation.
+    let args := List.take (List.length names - 1) names
+    let k :=
+      match last? names with
+      | Option.some (Pat.id n [] _) => Option.some n
+      | _ => Option.none
+    clauses ret (OpArm.mk name args k (TsParse.block p) (posOf t) :: ops)
+  clauses Option.none []
+
+--
+-- Expressions.
+--
+
+def expr (p : Parser) : {Throw Text} Expr :=
+  let cond := TsParse.binary p 30
+  if at p "?" then
+    skip p
+    let yes := TsParse.expr p
+    word p ":"
+    Expr.ite cond yes (TsParse.expr p)
+  else cond
+
+/-- The binary operators of the dialect and their precedence; `+` is `Int.add` and `++` appends, as in DEUS. -/
+def level (op : Text) : Int :=
+  if op == "||" then 30 else if op == "&&" then 35 else if op == "==" || op == "!=" || op == "<" || op == "<=" || op == ">" || op == ">=" then 50 else if op == "+" || op == "-" || op == "++" then 65 else if op == "*" || op == "/" || op == "%" then 70 else -1
+
+/-- Left-associative operators at `min` or above. -/
+def binary (p : Parser) (min : Int) : {Throw Text} Expr :=
+  let rec go left :=
+    let t := peek p
+    let l := if t.kind == Kind.sym then level t.value else -1
+    if l >= min && l > 0 then
+      skip p
+      go (Expr.binop t.value left (TsParse.binary p (l + 1)) (posOf t))
+    else left
+  go (TsParse.unary p)
+
+def unary (p : Parser) : {Throw Text} Expr := if at p "-" then
+  skip p
+  let t := peek p
+  if t.kind == Kind.int then
+    skip p
+    TsParse.postfix p (Expr.int (0 - intOf t))
+  else Expr.neg (TsParse.unary p)
+else TsParse.postfix p (TsParse.primary p)
+
+/-- Calls `f(a, b)` and projections `(e).field` after a primary expression. -/
+def postfix (p : Parser) (e : Expr) : {Throw Text} Expr := if at p "(" && not (peek p).bol then
+  skip p
+  let args := commaList p ")" (fun _ => TsParse.expr p)
+  -- `f()` passes unit.
+  TsParse.postfix p (Expr.app e (if List.isEmpty args then [Expr.unit] else args))
+else if (peek p).kind == Kind.proj then
+  let t := Parser.next p
+  TsParse.postfix p (Expr.proj e t.value (posOf t))
+else e
+
+def primary (p : Parser) : {Throw Text} Expr :=
+  let t := peek p
+  if t.kind == Kind.int then
+    skip p
+    intExpr t
+  else if t.kind == Kind.text then
+    skip p
+    Expr.text t.value
+  else if at p "true" || at p "false" then
+    skip p
+    Expr.bool (t.value == "true")
+  else if at p "undefined" then
+    skip p
+    Expr.unit
+  else if at p "prim" && isTok (peekAt p 1) "(" then
+    skip p
+    skip p
+    let name := (Parser.next p).value
+    word p ")"
+    Expr.prim name
+  else if at p "do" then
+    skip p
+    TsParse.block p
+  else if at p "@[" then
+    skip p
+    Expr.tuple (commaList p "]" (fun _ => TsParse.expr p))
+  else if at p "[" then
+    skip p
+    let rec go acc := if at p "]" then
+      skip p
+      Expr.list (reverse acc)
+    else if atSpread p then
+      skip p
+      skip p
+      -- `...t` lexes its last dot with the name; `...[x]` or `...(e)` leaves it alone.
+      let tail := if (peek p).kind == Kind.dot then
+        let d := Parser.next p
+        TsParse.postfix p (Expr.var d.value (posOf d))
+      else
+        if isTok (peek p) "." then skip p else ()
+        TsParse.unary p
+      word p "]"
+      foldl (fun rest x => Expr.binop "::" x rest (posOf t)) tail acc
+    else
+      let x := TsParse.expr p
+      if at p "," then skip p else ()
+      go (x :: acc)
+    go []
+  else if at p "(" then
+    match TsParse.arrowFn p with
+    | Option.some e => e
+    | Option.none =>
+        skip p
+        let inner := TsParse.expr p
+        word p ")"
+        inner
+  else if t.kind == Kind.ident then
+    skip p
+    Expr.var t.value (posOf t)
+  else Parser.error p "expected an expression"
+
+/-- `(x, y) => body` or `() => body`, if the parenthesis starts one; `()` takes unit, which nothing reads. -/
+def arrowFn (p : Parser) : {Throw Text} Option Expr :=
+  let start := mark p
+  match try (fun _ =>
+    word p "("
+    let params := commaList p ")" (fun _ => TsParse.pat p)
+    word p "=>"
+    params) with
+  | Result.ok params =>
+      let body := if at p "{" then TsParse.block p else TsParse.expr p
+      Option.some (Expr.lam (if List.isEmpty params then [Pat.wild] else params) body)
+  | Result.err _ =>
+      reset p start
+      Option.none
+
+--
+-- Declarations.
+--
+
+/-- `<a, b>` after a declared name, if any. -/
+def typeParams (p : Parser) : {Throw Text} List Text := if at p "<" then
+  skip p
+  commaList p ">" (fun _ => Parser.ident p)
+else []
+
+/-- `f: T` or `T` in a constructor's parentheses; an unnamed field is `""`, as DEUS's parser gives it. -/
+def field (p : Parser) : {Throw Text} (Text, Ty) := if (peek p).kind == Kind.ident && isTok (peekAt p 1) ":" then
+  let name := Parser.ident p
+  skip p
+  (name, TsParse.ty p)
+else ("", TsParse.ty p)
+
+def decl (p : Parser) : {Throw Text} Decl :=
+  let doc := if (peek p).kind == Kind.doc then Option.some (Text.trim (Parser.next p).value) else Option.none
+  -- `@iri("…")` on the line before names an IRI other than the default.
+  let iri := if at p "@" && (peekAt p 1).value == "iri" then
+    skip p
+    skip p
+    word p "("
+    let value := (Parser.next p).value
+    word p ")"
+    Option.some value
+  else Option.none
+  let t := peek p
+  let pos := posOf t
+  if at p "type" then
+    skip p
+    let name := Parser.ident p
+    let params := typeParams p
+    word p "="
+    let rec ctors acc := if at p "|" then
+      skip p
+      let ctor := (Parser.next p).value
+      let fields := if at p "(" then
+        skip p
+        commaList p ")" (fun _ => TsParse.field p)
+      else []
+      ctors ((ctor, fields) :: acc)
+    else
+      if at p "never" then skip p else ()
+      word p ";"
+      reverse acc
+    Decl.data name params iri (ctors []) doc [] pos
+  else if at p "interface" || at p "ability" then
+    let isRecord := at p "interface"
+    skip p
+    let name := Parser.ident p
+    let params := typeParams p
+    word p "{"
+    let rec members acc := if at p "}" then
+      skip p
+      reverse acc
+    else
+      let member := (Parser.next p).value
+      -- An operation `op(A, B): R` is `A -> B -> R`; a field or an argument-less operation is `name: T`.
+      let type := if not isRecord && at p "(" then
+        skip p
+        let args := commaList p ")" (fun _ => TsParse.ty p)
+        word p ":"
+        -- A row after the result belongs to the last arrow, as `op : A -> {E} B` stores it.
+        let result := TsParse.tyAtom p
+        let effects := if at p "uses" then
+          skip p
+          Option.some (TsParse.row p)
+        else Option.none
+        let rec build xs :=
+          match xs with
+          | [] => result
+          | x :: [] => Ty.arrow x result effects
+          | x :: more => Ty.arrow x (build more) Option.none
+        build args
+      else
+        word p ":"
+        TsParse.ty p
+      word p ";"
+      members ((member, type) :: acc)
+    let ms := members []
+    if isRecord then Decl.record name params iri ms doc [] pos else Decl.effect name params iri ms doc [] pos
+  else if at p "function" then
+    skip p
+    let name := Parser.ident p
+    -- Type parameters are implicit in DEUS.
+    if at p "<" then
+      skip p
+      commaList p ">" (fun _ => Parser.ident p)
+      ()
+    else ()
+    word p "("
+    let binders := commaList p ")" (fun _ =>
+      let n := Parser.ident p
+      let annot := if at p ":" then
+        skip p
+        Option.some (TsParse.ty p)
+      else Option.none
+      Binder.mk n annot)
+    let result := if at p ":" then
+      skip p
+      Option.some (TsParse.ty p)
+    else Option.none
+    Decl.defn name binders result (Option.some (TsParse.block p)) Option.none doc [] pos
+  else if at p "const" then
+    skip p
+    let name := Parser.ident p
+    let type := if at p ":" then
+      skip p
+      Option.some (TsParse.ty p)
+    else Option.none
+    word p "="
+    let value := TsParse.expr p
+    word p ";"
+    Decl.defn name [] type (Option.some value) Option.none doc [] pos
+  else if at p "test" then
+    skip p
+    word p "("
+    let name := (Parser.next p).value
+    word p ","
+    word p "("
+    word p ")"
+    word p "=>"
+    let body := if at p "{" then TsParse.block p else TsParse.expr p
+    word p ")"
+    word p ";"
+    Decl.check name body doc [] pos
+  else Parser.error p "expected function, const, test, type, interface or ability"
+
+/-- Every declaration of a file in the dialect. -/
+def file (source : Text) : {Throw Text} List Decl :=
+  let p := over Map.empty (lex (prepare source))
+  let rec go acc := if (peek p).kind == Kind.eof then reverse acc else go (TsParse.decl p :: acc)
+  withStop p (-1) (fun _ => go [])
+
+end TsParse

@@ -1,0 +1,162 @@
+/-
+  Observability as abilities (D31): code logs, opens spans and records metrics through effects
+  in its row, and a handler chooses where they go.
+
+  - `Observe.collect` keeps events in a list, stamped by a logical clock, so tests can assert on
+    them deterministically.
+  - `Observe.ndjson` prints one JSON object per event to stderr.
+  - `Observe.otlp` appends OpenTelemetry JSON to `traces.jsonl`, `logs.jsonl` and
+    `metrics.jsonl`, one export request per line (the collector's `otlpjsonfile` format). Each
+    event is written when it happens, so telemetry before a defect survives.
+-/
+
+/-- Structured logging: a level, a message and key–value fields. -/
+ability Log where
+  emit : Text -> Text -> List (Text, Text) -> Unit
+
+/-- Tracing: `start` opens a span and returns its id; `finish` closes it. -/
+ability Trace where
+  start : Text -> List (Text, Text) -> Int
+  finish : Int -> Unit
+
+/-- Metrics: a counter adds to its total; a gauge records a current value. -/
+ability Metrics where
+  counter : Text -> Int -> Unit
+  gauge : Text -> Int -> Unit
+
+/-- What a handler sees. Times come from the handler's clock. -/
+inductive Event where
+  | log (level : Text) (message : Text) (fields : List (Text, Text)) (within : Int) (time : Text)
+  | span (id : Int) (parent : Int) (name : Text) (attrs : List (Text, Text)) (begin : Text) (finished : Text)
+  | metric (kind : Text) (name : Text) (value : Int) (time : Text)
+
+namespace Log
+
+def debug (message : Text) (fields : List (Text, Text)) : {Log} Unit := Log.emit "debug" message fields
+
+def info (message : Text) (fields : List (Text, Text)) : {Log} Unit := Log.emit "info" message fields
+
+def warn (message : Text) (fields : List (Text, Text)) : {Log} Unit := Log.emit "warn" message fields
+
+def error (message : Text) (fields : List (Text, Text)) : {Log} Unit := Log.emit "error" message fields
+
+end Log
+
+namespace Trace
+
+/-- Runs `body` inside a span; nested spans become its children. -/
+def span (name : Text) (attrs : List (Text, Text)) (body : Unit -> {Trace | r} a) : {Trace | r} a :=
+  let id := Trace.start name attrs
+  let result := body ()
+  Trace.finish id
+  result
+
+end Trace
+
+namespace Observe
+
+def bump (cell : Ref Int) : Int :=
+  Ref.set cell (Ref.get cell + 1)
+  Ref.get cell
+
+/-- An open span: id, parent, name, attributes, start time. -/
+def openId (entry : (Int, Int, Text, List (Text, Text), Text)) : Int :=
+  match entry with
+  | (id, _, _, _, _) => id
+
+/--
+  Handles `Log`, `Trace` and `Metrics` for `body`: `clock` stamps each event and `sink` receives
+  it. Logs carry the innermost open span, and a span reaches the sink when it finishes.
+-/
+def handleWith (clock : Unit -> {r} Text) (sink : Event -> {r} Unit) (body : Unit -> {Log, Trace, Metrics | r} a) : {r} a :=
+  let ids := Ref.new 0
+  let active := Ref.new []
+  let current := fun (u : Unit) => Option.getOr (Option.map openId (List.head? (Ref.get active))) 0
+  handle body () with
+  | Log.emit level message fields -> k =>
+    sink (Event.log level message fields (current ()) (clock ()))
+    k ()
+  | Trace.start name attrs -> k =>
+    let id := bump ids
+    Ref.set active ((id, current (), name, attrs, clock ()) :: Ref.get active)
+    k id
+  | Trace.finish id -> k =>
+    let entries := Ref.get active
+    Ref.set active (List.filter (fun e => openId e != id) entries)
+    match List.find (fun e => openId e == id) entries with
+    | some (_, parent, name, attrs, begin) =>
+      sink (Event.span id parent name attrs begin (clock ()))
+      k ()
+    | none => k ()
+  | Metrics.counter name value -> k =>
+    sink (Event.metric "counter" name value (clock ()))
+    k ()
+  | Metrics.gauge name value -> k =>
+    sink (Event.metric "gauge" name value (clock ()))
+    k ()
+
+/-- Runs `body` and returns its result with every event, stamped by a logical clock. -/
+def collect (body : Unit -> {Log, Trace, Metrics | r} a) : {r} (a, List Event) :=
+  let tick := Ref.new 0
+  let events := Ref.new []
+  let result := handleWith (fun _ => Int.toText (bump tick)) (fun e => Ref.set events (e :: Ref.get events)) body
+  (result, List.reverse (Ref.get events))
+
+def fieldsJson (fields : List (Text, Text)) : Json := Json.obj (List.map (fun pair => (fst pair, Json.str (snd pair))) fields)
+
+/-- An event as one flat JSON object. -/
+def toJson (e : Event) : Json :=
+  match e with
+  | Event.log level message fields within time =>
+    Json.obj [("type", Json.str "log"), ("time", Json.str time), ("level", Json.str level), ("message", Json.str message), ("span", Json.num within), ("fields", fieldsJson fields)]
+  | Event.span id parent name attrs begin finished =>
+    Json.obj [("type", Json.str "span"), ("id", Json.num id), ("parent", Json.num parent), ("name", Json.str name), ("start", Json.str begin), ("end", Json.str finished), ("attrs", fieldsJson attrs)]
+  | Event.metric kind name value time =>
+    Json.obj [("type", Json.str kind), ("time", Json.str time), ("name", Json.str name), ("value", Json.num value)]
+
+/-- Prints each event as a JSON line on stderr, stamped with wall-clock nanoseconds. -/
+def ndjson (body : Unit -> {Log, Trace, Metrics, IO | r} a) : {IO | r} a :=
+  handleWith (fun _ => IO.wallClock ()) (fun e => IO.eprint (Json.render (toJson e) ++ "\n")) body
+
+--
+-- OpenTelemetry (OTLP/JSON).
+--
+
+def otlpAttributes (attrs : List (Text, Text)) : Json :=
+  Json.arr (List.map (fun pair => Json.obj [("key", Json.str (fst pair)), ("value", Json.obj [("stringValue", Json.str (snd pair))])]) attrs)
+
+def resource (service : Text) : Json := Json.obj [("attributes", otlpAttributes [("service.name", service)])]
+
+def scope : Json := Json.obj [("name", Json.str "deus")]
+
+def spanId (traceId : Text) (id : Int) : Text := Text.take 16 (Text.sha256 (traceId ++ ":" ++ Int.toText id))
+
+def severity (level : Text) : Int :=
+  if level == "debug" then 5 else if level == "warn" then 13 else if level == "error" then 17 else 9
+
+/-- One OTLP export request for an event: the file it belongs in and the JSON line. -/
+def otlpLine (service : Text) (traceId : Text) (e : Event) : (Text, Json) :=
+  match e with
+  | Event.span id parent name attrs begin finished =>
+    let spanJson := Json.obj ([("traceId", Json.str traceId), ("spanId", Json.str (spanId traceId id)), ("name", Json.str name), ("kind", Json.num 1), ("startTimeUnixNano", Json.str begin), ("endTimeUnixNano", Json.str finished), ("attributes", otlpAttributes attrs)] ++
+      (if parent == 0 then [] else [("parentSpanId", Json.str (spanId traceId parent))]))
+    ("traces.jsonl", Json.obj [("resourceSpans", Json.arr [Json.obj [("resource", resource service), ("scopeSpans", Json.arr [Json.obj [("scope", scope), ("spans", Json.arr [spanJson])]])]])])
+  | Event.log level message fields within time =>
+    let record := Json.obj ([("timeUnixNano", Json.str time), ("severityNumber", Json.num (severity level)), ("severityText", Json.str level), ("body", Json.obj [("stringValue", Json.str message)]), ("attributes", otlpAttributes fields)] ++
+      (if within == 0 then [] else [("traceId", Json.str traceId), ("spanId", Json.str (spanId traceId within))]))
+    ("logs.jsonl", Json.obj [("resourceLogs", Json.arr [Json.obj [("resource", resource service), ("scopeLogs", Json.arr [Json.obj [("scope", scope), ("logRecords", Json.arr [record])]])]])])
+  | Event.metric kind name value time =>
+    let point := Json.obj [("timeUnixNano", Json.str time), ("asInt", Json.str (Int.toText value))]
+    let data := if kind == "counter" then ("sum", Json.obj [("dataPoints", Json.arr [point]), ("aggregationTemporality", Json.num 1), ("isMonotonic", Json.bool true)])
+      else ("gauge", Json.obj [("dataPoints", Json.arr [point])])
+    ("metrics.jsonl", Json.obj [("resourceMetrics", Json.arr [Json.obj [("resource", resource service), ("scopeMetrics", Json.arr [Json.obj [("scope", scope), ("metrics", Json.arr [Json.obj [("name", Json.str name), data]])]])]])])
+
+/-- Appends each event to `dir` as OTLP/JSON, all under one trace for this run. -/
+def otlp (dir : Text) (service : Text) (body : Unit -> {Log, Trace, Metrics, IO | r} a) : {IO | r} a :=
+  let traceId := Text.take 32 (Text.sha256 (service ++ ":" ++ IO.wallClock ()))
+  let write := fun (e : Event) =>
+    match otlpLine service traceId e with
+    | (file, json) => IO.appendFile (dir ++ "/" ++ file) (Json.render json ++ "\n")
+  handleWith (fun _ => IO.wallClock ()) write body
+
+end Observe

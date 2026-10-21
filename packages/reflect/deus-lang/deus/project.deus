@@ -1,0 +1,147 @@
+/-
+  Projects (P1, D49): a codebase is one project, named globally by an IRI whose authority and
+  leading path say who owns it (`https://dxos.org/deus/std`). Its dependencies are pinned
+  releases of other projects (a causal hash), mounted under `lib.<name>` as in UCM, with their
+  objects copied into this store (identical hashes deduplicate).
+
+  A project's subgraph is inferred, not tagged: the definitions its own names reach, minus those
+  its libraries reach. A hash two projects share therefore belongs to the library that provides
+  it. A type whose IRI lies under a library's IRI may be minted only by that library.
+
+    project   (project (iri "<iri>") (lib "<name>" "<iri>" "<causal>")…)
+-/
+
+structure Lib @"urn:deus:project:Lib" where
+  libName : Text
+  libIri : Text
+  release : Text
+
+structure Project @"urn:deus:project:Project" where
+  projectIri : Text
+  libs : List Lib
+
+namespace Project
+
+def file (dir : Text) : Text := dir ++ "/project"
+
+def toSexp (p : Project) : Sexp :=
+  Sexp.node "project" (Sexp.node "iri" [Sexp.str p.projectIri] :: List.map (fun l => Sexp.node "lib" [Sexp.str l.libName, Sexp.str l.libIri, Sexp.str l.release]) p.libs)
+
+def fromSexp (form : Sexp) : Project :=
+  let items := Sexp.args form
+  let iri := getOr (Option.map asText (metaField (Option.some form) "iri")) ""
+  let libs := filterMap (fun item =>
+    match item with
+    | Sexp.list (Sexp.sym "lib" :: Sexp.str name :: Sexp.str libIri :: Sexp.str causal :: []) => Option.some (Lib.mk name libIri causal)
+    | _ => Option.none) items
+  Project.mk iri libs
+
+def read (dir : Text) : {IO} Option Project := Option.map (fun text => Project.fromSexp (Sexp.read text)) (IO.readFile (Project.file dir))
+
+def write (dir : Text) (p : Project) : {IO} Unit := IO.writeFile (Project.file dir) (Sexp.print (Project.toSexp p) ++ "\n")
+
+/-- `https://dxos.org/deus/std` → `dxos.org`; an IRI without `//` is its own authority. -/
+def authority (iri : Text) : Text :=
+  let start := Text.indexOf iri "//" 0
+  if start < 0 then iri
+  else
+    let rest := Text.drop (start + 2) iri
+    let slash := Text.indexOf rest "/" 0
+    if slash < 0 then rest else Text.take slash rest
+
+/-- Whether `iri` lies under a project's IRI (equal to it, or below it by path or fragment). -/
+def owns (projectIri : Text) (iri : Text) : Bool :=
+  not (Text.isEmpty projectIri) && (iri == projectIri || Text.startsWith (projectIri ++ "/") iri || Text.startsWith (projectIri ++ "#") iri)
+
+/-- Every hash reachable from `roots` through object dependencies. -/
+def reachable (dir : Text) (roots : List Text) : {IO} Map Text Unit :=
+  let rec go pending seen :=
+    match pending with
+    | [] => seen
+    | h :: rest =>
+      if Map.contains h seen then go rest seen
+      else
+        let deps := match Codebase.readObject dir h with
+          | some form => Codebase.dependencies form
+          | none => []
+        go (deps ++ rest) (Map.insert h () seen)
+  go roots Map.empty
+
+def isLibName (name : Text) : Bool := Text.startsWith "lib." name
+
+/-- Hashes of named definitions (constructors and operations name their type's or ability's). -/
+def rootsOf (entries : List (Text, Entry)) : List Text :=
+  List.filter (fun h => not (Text.startsWith "#" h)) (List.map (fun pair => Entry.hash (snd pair)) entries)
+
+/-- (owned, provided by libraries): the project's subgraph and the libraries' part of what it reaches. -/
+def subgraph (dir : Text) (ns : Map Text Entry) : {IO} (List Text, List Text) :=
+  let entries := Map.toList ns
+  let fromLibs := reachable dir (rootsOf (List.filter (fun pair => isLibName (fst pair)) entries))
+  let fromOwn := reachable dir (rootsOf (List.filter (fun pair => not (isLibName (fst pair))) entries))
+  (List.filter (fun h => not (Map.contains h fromLibs)) (Map.keys fromOwn), Map.keys fromLibs)
+
+/-- Copies an object and its metadata from another store unless already present. -/
+def copy (from : Text) (dir : Text) (h : Text) : {IO} Unit :=
+  match readObject from h with
+  | Option.none => ()
+  | Option.some form =>
+      writeObject dir h form
+      match readMeta from h with
+      | Option.some meta => if IO.exists (dir ++ "/meta/" ++ h) then () else writeMeta dir h meta
+      | Option.none => ()
+
+/-- Mounts a release of the project at `from` (its branch's head) under `lib.<name>`: copies what
+  its names reach, and returns the library record and the namespace with the mount replaced. -/
+def install (dir : Text) (ns : Map Text Entry) (name : Text) (from : Text) (branch : Text) : {IO, Throw Text} (Lib, Map Text Entry) :=
+  let release := headOf from branch
+  let theirs := readNamespace from (readCausal from release).snapshot
+  let iri :=
+    match Project.read from with
+    | Option.some p => p.projectIri
+    | Option.none => Throw.throw (from ++ " is not a project; run `deus project init <iri>` there")
+  let own := List.filter (fun pair => not (isLibName (fst pair))) (Map.toList theirs)
+  forEach (Map.keys (reachable from (rootsOf own))) (fun h => Project.copy from dir h)
+  -- Builtin types (`#Pair`, `#List`) are named by IRI, not reached by hash, yet printing a value needs them.
+  let builtins := if IO.isDir (from ++ "/objects") then List.filter (fun d => startsWith "#" d) (IO.listDir (from ++ "/objects")) else []
+  forEach builtins (fun d => forEach (IO.listDir (from ++ "/objects/" ++ d)) (fun h => Project.copy from dir h))
+  let mount := "lib." ++ name ++ "."
+  let kept := Map.fromList (List.filter (fun pair => not (startsWith mount (fst pair))) (Map.toList ns))
+  (Lib.mk name iri release, foldl (fun m pair => Map.insert (mount ++ fst pair) (snd pair) m) kept own)
+
+/-- Type and ability IRIs in `entries` that lie under a library's IRI: only that library may mint them. -/
+def trespasses (p : Project) (entries : List (Text, Entry)) : List Text :=
+  List.filterMap (fun pair =>
+    let iri := match snd pair with
+      | Entry.type _ i _ => i
+      | Entry.ability _ i => i
+      | _ => ""
+    match List.find (fun l => owns l.libIri iri) p.libs with
+    | some l => if isLibName (fst pair) then none else some (fst pair ++ " has IRI " ++ iri ++ ", which belongs to lib." ++ l.libName ++ " (" ++ l.libIri ++ ")")
+    | none => none) entries
+
+/-- Whether `name` with entry `e` is a mounted library's own definition: the same hash under `lib.<library>.`. -/
+def mountedCopy (libs : List Lib) (ns : Map Text Entry) (name : Text) (e : Entry) : Bool :=
+  -- A name the project binds to something else is an edit of the project's, never skipped.
+  let ownOther :=
+    match Map.lookup name ns with
+    | Option.some own => Entry.hash own != Entry.hash e
+    | Option.none => false
+  not ownOther && List.any (fun l =>
+    match Map.lookup ("lib." ++ l.libName ++ "." ++ name) ns with
+    | Option.some m => Entry.hash m == Entry.hash e
+    | Option.none => false) libs
+
+/-- The mounted library a new definition named `name` would shadow: one whose release defines `name` while the project
+  does not (D284). Such a definition is usually a library edit made in the wrong codebase. -/
+def shadowedLibrary (libs : List Lib) (ns : Map Text Entry) (name : Text) : Option Lib :=
+  if Map.contains name ns then Option.none
+  else List.find (fun l => Map.contains ("lib." ++ l.libName ++ "." ++ name) ns) libs
+
+test shadowingIsFound :=
+  let base := Lib.mk "base" "https://dxos.org/deus/base" "r"
+  let ns := Map.fromList [("lib.base.Sim.run", Entry.term "a"), ("Task.id", Entry.term "b"), ("lib.base.Task.id", Entry.term "c")]
+  Option.map (fun l => l.libName) (shadowedLibrary [base] ns "Sim.run") == Option.some "base"
+    && Option.isNone (shadowedLibrary [base] ns "Task.id") && Option.isNone (shadowedLibrary [base] ns "Cli.main")
+    && Option.isNone (shadowedLibrary [] ns "Sim.run")
+
+end Project

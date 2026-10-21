@@ -1,0 +1,68 @@
+/-
+  Insertion sort, specified, implemented and proved.
+
+    deus add examples/sort.deus && deus check Sort
+
+  The specification is two properties: the output is sorted, and it is a permutation of the
+  input (every value occurs as often as before). Both are proved by induction with tactics,
+  from lemmas about `insert`; nothing below is merely tested except the last theorem, which
+  compares against the prelude's merge sort.
+-/
+
+namespace Sort
+
+/-- Specification: each element is at most the next. -/
+def sorted : List Int -> Bool
+  | [] => true
+  | a :: rest =>
+    match rest with
+    | [] => true
+    | b :: _ => a <= b && sorted rest
+
+/-- Specification: how often `x` occurs. Equal counts for every `x` mean a permutation. -/
+def count (x : Int) : List Int -> Int
+  | [] => 0
+  | y :: rest => (if x == y then 1 else 0) + count x rest
+
+def len : List Int -> Int
+  | [] => 0
+  | _ :: rest => 1 + len rest
+
+/-- Implementation: insert into a sorted list. -/
+def insert (x : Int) : List Int -> List Int
+  | [] => [x]
+  | y :: rest => if x <= y then x :: y :: rest else y :: insert x rest
+
+/-- Implementation: insertion sort. -/
+def isort : List Int -> List Int
+  | [] => []
+  | x :: rest => insert x (isort rest)
+
+theorem insertSorted (x : Int) (xs : List Int) : sorted xs = true -> sorted (insert x xs) = true := by
+  induction xs; auto
+
+theorem isortSorted (xs : List Int) : sorted (isort xs) = true := by
+  induction xs; simp [insertSorted]
+
+theorem insertCount (y : Int) (x : Int) (xs : List Int) : count y (insert x xs) = (if y == x then 1 else 0) + count y xs := by
+  induction xs; auto
+
+theorem isortCount (y : Int) (xs : List Int) : count y (isort xs) = count y xs := by
+  induction xs; simp [insertCount]
+
+theorem insertLength (x : Int) (xs : List Int) : len (insert x xs) = 1 + len xs := by
+  induction xs; auto
+
+theorem isortLength (xs : List Int) : len (isort xs) = len xs := by
+  induction xs; simp [insertLength]
+
+/-- Agreement with the prelude's merge sort, which is not structurally recursive, so only tested. -/
+theorem agreesWithMergeSort (xs : List Int) : isort xs = List.sort xs := by test 200
+
+/-- A wrong claim, to show what failure looks like: the prover leaves a goal open, and `@[expectFail]` makes that
+  the expected outcome, so the check passes only while the prover refuses it. -/
+@[expectFail]
+theorem wrongClaim (x : Int) (xs : List Int) : insert x xs = x :: xs := by
+  induction xs; auto
+
+end Sort

@@ -1,0 +1,154 @@
+/-
+  Data safety (DataSafety.Spec, task 751f82ba): the checks that keep a merge, a push or a stale
+  toolchain from losing names without anyone deciding to.
+
+  - A name leaves a branch only by a recorded deletion: a history node with one parent whose
+    snapshot lacks a name its parent has (`deus rm`, `deus mv`). A merge node never deletes on its
+    own; it only carries over a deletion one side made since the merge base.
+  - `lostInMerge` is what a merge result lacks against that rule; `deus merge` refuses a result
+    where it is not empty.
+  - `unrecordedDrops` is what a push would remove from the remote's head without a recorded
+    deletion in the pushed history; `deus push` refuses it unless `--allow-drop`.
+  - `epoch` is the toolchain's data-safety epoch. A codebase holding a newer `Safety.epoch` than the
+    running CLI's needs a newer CLI before it merges or pushes, and the Worker refuses a push from
+    an older one.
+-/
+
+namespace Safety
+
+/-- The toolchain's data-safety epoch: raise it when a change to merge or push must reach every
+  session before that session writes again. -/
+def epoch : Int := 1
+
+/-- The names a merge result lacks although `ours` or `theirs` has them and neither side deleted
+  them since `base`: what a correct merge leaves empty, sorted. -/
+def lostInMerge (base : Map Text Entry) (ours : Map Text Entry) (theirs : Map Text Entry) (merged : Map Text Entry) : List Text :=
+  let deleted := fun n => Map.contains n base && (not (Map.contains n ours) || not (Map.contains n theirs))
+  List.filter
+    (fun n => not (Map.contains n merged) && not (deleted n))
+    (dedup (sort (Map.keys ours ++ Map.keys theirs)))
+
+/-- The names under namespace node `a` that node `b` lacks, prefixed: a walk of the two trees that
+  skips every subtree whose hash they share, so it reads only what changed. -/
+def droppedBetween (dir : Text) (a : Text) (b : Text) (prefix : Text) : {IO, Throw Text} List Text := if a == b then [] else
+  let theirs := Codebase.nodeItems dir b
+  let leaves := Set.fromList (List.filterMap (fun item =>
+    match item with
+    | Sexp.list (Sexp.sym "n" :: name :: _ :: []) => Option.some (Sexp.asText name)
+    | _ => Option.none) theirs)
+  let subs := Map.fromList (List.filterMap (fun item =>
+    match item with
+    | Sexp.list (Sexp.sym "sub" :: Sexp.str seg :: Sexp.str child :: []) => Option.some (seg, child)
+    | _ => Option.none) theirs)
+  List.concatMap (fun item =>
+    match item with
+    | Sexp.list (Sexp.sym "n" :: name :: _ :: []) =>
+        let n := Sexp.asText name
+        if Set.contains n leaves then [] else [prefix ++ n]
+    | Sexp.list (Sexp.sym "sub" :: Sexp.str seg :: Sexp.str child :: []) =>
+        match Map.lookup seg subs with
+        | Option.some other => droppedBetween dir child other (prefix ++ seg ++ ".")
+        | Option.none => List.map (fun n => prefix ++ seg ++ "." ++ n) (Map.keys (Codebase.readNamespace dir child))
+    | _ => []) (Codebase.nodeItems dir a)
+
+/-- Up to 20 names for a message, and how many more there are. -/
+def listed (names : List Text) : Text :=
+  join ", " (List.take 20 names) ++ (if List.length names > 20 then " and " ++ Int.toText (List.length names - 20) ++ " more" else "")
+
+/-- Whether history node `h` deletes `name` by itself: it has one parent, whose snapshot has the name and its own does not. -/
+def deletes (dir : Text) (h : Text) (name : Text) : {IO, Throw Text} Bool :=
+  match Codebase.parentsOf dir h with
+  | p :: [] =>
+      Option.isNone (Codebase.lookupName dir (Codebase.readCausal dir h).snapshot name) &&
+        Option.isSome (Codebase.lookupName dir (Codebase.readCausal dir p).snapshot name)
+  | _ => false
+
+/-- The history nodes `head` reaches that none of `bases` does: what a push of `head` sends. -/
+def newNodes (dir : Text) (bases : List Text) (head : Text) : {IO, Throw Text} List Text :=
+  let known := List.foldl (fun m b => if IO.exists (Codebase.objectPath dir b) then List.foldl (fun acc k => Map.insert k () acc) m (Map.keys (Codebase.ancestors dir b)) else m) Map.empty bases
+  List.filter (fun c => not (Map.contains c known)) (Map.keys (Codebase.ancestors dir head))
+
+/-- The names some head in `bases` has that `head` lacks and that no node between them deleted by
+  itself: what pushing `head` over `bases` would lose without anyone deciding to, sorted. -/
+def unrecordedDrops (dir : Text) (bases : List Text) (head : Text) : {IO, Throw Text} List Text :=
+  let ours := (Codebase.readCausal dir head).snapshot
+  let dropped := dedup (sort (List.concatMap
+    (fun b => if IO.exists (Codebase.objectPath dir b) then droppedBetween dir (Codebase.readCausal dir b).snapshot ours "" else [])
+    bases))
+  if List.isEmpty dropped then [] else
+    let between := newNodes dir bases head
+    List.filter (fun n => not (List.any (fun c => deletes dir c n) between)) dropped
+
+/-- Whether this store's verdict on check `h` is a pass (`some true`), a fail (`some false`), or missing. -/
+def verdictOf (dir : Text) (h : Text) : {IO} Option Bool :=
+  Option.map (fun text => Text.startsWith "(pass" (Text.trim text)) (IO.readFile (dir ++ "/results/" ++ h))
+
+/-- The project's own tests and theorems in namespace node `snapshot`, by name. -/
+def checksOf (dir : Text) (snapshot : Text) : {IO, Throw Text} List (Text, Entry) :=
+  List.filter
+    (fun pair => (Entry.kind (snd pair) == "test" || Entry.kind (snd pair) == "theorem") && not (Text.startsWith "lib." (fst pair)))
+    (Map.toList (Codebase.readNamespace dir snapshot))
+
+/-- The checks a push of `head` over `bases` would turn from passing to failing, by this store's verdicts
+  (task a5c2b178), sorted: a check whose definition changed, passed at a base and fails at `head`. A check
+  without a verdict on either side, or one that failed before, is not counted. -/
+def regressions (dir : Text) (bases : List Text) (head : Text) : {IO, Throw Text} List Text :=
+  let ours := Codebase.readNamespace dir (Codebase.readCausal dir head).snapshot
+  dedup (sort (List.concatMap (fun b => if not (IO.exists (Codebase.objectPath dir b)) then [] else
+    List.filterMap (fun pair =>
+      match Map.lookup (fst pair) ours with
+      | Option.some e => if Entry.hash e != Entry.hash (snd pair) && verdictOf dir (Entry.hash (snd pair)) == Option.some true &&
+          verdictOf dir (Entry.hash e) == Option.some false then Option.some (fst pair) else Option.none
+      | Option.none => Option.none) (checksOf dir (Codebase.readCausal dir b).snapshot)) bases))
+
+/-- The data-safety epoch the namespace node `snapshot` asks for: its `Safety.epoch`, or 0 without one. -/
+def epochOf (dir : Text) (snapshot : Text) : {IO, Throw Text} Int :=
+  match Codebase.lookupName dir snapshot "Safety.epoch" with
+  | Option.some e =>
+      match Codebase.readObject dir (Entry.hash e) with
+      | Option.some (Sexp.list (Sexp.sym "term" :: Sexp.list (Sexp.sym "int" :: Sexp.int n :: []) :: [])) => n
+      | _ => 0
+  | Option.none => 0
+
+/-- Refuses to `act` on history node `h` when its codebase asks for a newer data-safety epoch than this CLI's. -/
+def requireEpoch (dir : Text) (h : Text) (act : Text) : {IO, Throw Text} Unit :=
+  let wanted := epochOf dir (Codebase.readCausal dir h).snapshot
+  if wanted <= Safety.epoch then () else Throw.throw ("this deus has data-safety epoch " ++ Int.toText Safety.epoch ++
+    ", and the codebase it would " ++ act ++ " asks for " ++ Int.toText wanted ++
+    " (Safety.epoch): its merge or push may lose data. Update deus (merge #13952's head, or rebuild the seed with scripts/sync-deus.py) and try again")
+
+/-- One merge node's audit: the names it lost against its two parents and their merge base. -/
+def auditMerge (dir : Text) (h : Text) : {IO, Throw Text} List Text :=
+  match Codebase.parentsOf dir h with
+  | a :: b :: [] =>
+      let nsOf := fun c => Codebase.readNamespace dir (Codebase.readCausal dir c).snapshot
+      let base :=
+        match Codebase.mergeBase dir a b with
+        | Option.some m => nsOf m
+        | Option.none => Map.empty
+      lostInMerge base (nsOf a) (nsOf b) (nsOf h)
+  | _ => []
+
+/-- `deus audit`'s findings for the history `head` reaches and `since` does not: (merge node, names
+  it lost) for each merge that dropped names neither side deleted, and (node, names) for each
+  recorded deletion, newest first. -/
+def audit (dir : Text) (since : List Text) (head : Text) : {IO, Throw Text} (List (Text, List Text), List (Text, List Text)) :=
+  let nodes := List.sortBy
+    (fun x y => compare (Codebase.readCausal dir y).at (Codebase.readCausal dir x).at)
+    (newNodes dir since head)
+  let lost := List.filter (fun pair => not (List.isEmpty (snd pair))) (List.map (fun c => (c, auditMerge dir c)) nodes)
+  let deleted := List.filterMap (fun c =>
+    match Codebase.parentsOf dir c with
+    | p :: [] =>
+        let gone := droppedBetween dir (Codebase.readCausal dir p).snapshot (Codebase.readCausal dir c).snapshot ""
+        if List.isEmpty gone then Option.none else Option.some (c, gone)
+    | _ => Option.none) nodes
+  (lost, deleted)
+
+/-- The names of namespace node `old` that node `now` lacks, with their entries: what `deus restore` brings back. -/
+def missingSince (dir : Text) (old : Text) (now : Text) : {IO, Throw Text} List (Text, Entry) :=
+  List.filterMap
+    (fun n => Option.map (fun e => (n, e)) (Codebase.lookupName dir old n))
+    (droppedBetween dir old now "")
+
+end Safety

@@ -1,0 +1,168 @@
+/-
+  Addresses (Address.Spec, D184): every definition has a place `@owner/project/Namespace.term`,
+  as on Unison Share. The owner is a GitHub account (user or organization), so the host can check
+  who may push with the GitHub sign-in it already has; the project is one codebase (D49); the
+  rest is the namespace path inside it. A source file names its place on its first line, the
+  context header, `-- context: @dxos/toolchain/Cli` (`<!-- context: … -->` in `.mdl`).
+-/
+
+structure Address @"urn:deus:address:Address" where
+  owner : Text
+  project : Text
+  path : Text
+
+namespace Address
+
+/-- `[a-z0-9]`, then up to `max - 1` of `[a-z0-9-]`, not ending in `-`: a GitHub login lowercased, or a project slug. -/
+def isSlug (max : Int) (t : Text) : Bool :=
+  let n := Text.length t
+  let ok := fun i =>
+    let c := Text.code t i
+    c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '-' && i > 0 && i < n - 1
+  n > 0 && n <= max && List.all ok (List.range 0 n)
+
+/-- An owner: a GitHub login, at most 39 characters. -/
+def isOwner (t : Text) : Bool := isSlug 39 t
+
+/-- A project: the Worker's project folder rule, at most 63 characters. -/
+def isProject (t : Text) : Bool := isSlug 63 t
+
+/-- Empty, or dot-separated non-empty segments without `/`, spaces or `#`. -/
+def isPath (t : Text) : Bool :=
+  let segmentOk := fun s => not (Text.isEmpty s) && not (Text.contains "/" s) && not (Text.contains " " s) && not (Text.contains "#" s)
+  Text.isEmpty t || List.all segmentOk (Text.split t ".")
+
+/-- `@owner/project`, `@owner/project/Path`, or either after `https://<host>/`. -/
+def parse (t : Text) : Option Address :=
+  let at := Text.indexOf t "@" 0
+  if at < 0 then Option.none
+  else
+    let prefix := Text.take at t
+    let prefixOk := Text.isEmpty prefix || Text.startsWith "https://" prefix && Text.endsWith "/" prefix
+    match Text.split (Text.drop (at + 1) t) "/" with
+    | owner :: project :: rest =>
+        let path := Text.join "/" rest
+        if prefixOk && isOwner owner && isProject project && isPath path then Option.some (Address.mk owner project path) else Option.none
+    | _ => Option.none
+
+/-- The project's own address, without a path. -/
+def projectOf (a : Address) : Address := Address.mk a.owner a.project ""
+
+def print (a : Address) : Text := "@" ++ a.owner ++ "/" ++ a.project ++ (if Text.isEmpty a.path then "" else "/" ++ a.path)
+
+/-- The address of `name` inside `a`'s project. -/
+def child (a : Address) (name : Text) : Address := Address.mk a.owner a.project name
+
+/-- Whether `name` lies at or under `a`'s path (every name does when the path is empty). -/
+def within (a : Address) (name : Text) : Bool :=
+  Text.isEmpty a.path || name == a.path || Text.startsWith (a.path ++ ".") name
+
+/-- Projects whose bucket folder predates addresses; every other project lives at `<owner>/<project>`. -/
+def legacyFolders : List (Text, Text) := [("@dxos/toolchain", "toolchain")]
+
+/-- The project's folder in the codebases bucket (D164). -/
+def folder (a : Address) : Text :=
+  let key := print (projectOf a)
+  getOr (List.lookup key legacyFolders) (a.owner ++ "/" ++ a.project)
+
+/-- The explorer page of `a` on `host`: a path, so it can be linked and crawled like a Share page. -/
+def url (host : Text) (a : Address) : Text := "https://" ++ host ++ "/" ++ print a
+
+/-- A D49 project IRI `https://<owner>.<tld>/<…>/<project>` read as `@<owner>/<project>`, for projects made before addresses. -/
+def ofIri (iri : Text) : Option Address :=
+  let authority := Project.authority iri
+  let labels := Text.split authority "."
+  let owner := Text.toLower (getOr (List.head? labels) "")
+  let project := Text.toLower (getOr (List.last? (Text.split iri "/")) "")
+  if List.length labels >= 2 && Text.startsWith "https://" iri && isOwner owner && isProject project then Option.some (Address.mk owner project "") else Option.none
+
+/-- The context header in the first line of a `.deus` (`-- context: <address>`) or `.mdl` (`<!-- context: <address> -->`) file. -/
+def header (source : Text) : Option Address :=
+  let line := Text.trim (getOr (List.head? (Text.lines source)) "")
+  if Text.startsWith "-- context:" line then parse (Text.trim (Text.drop 11 line))
+  else if Text.startsWith "<!-- context:" line && Text.endsWith "-->" line then parse (Text.trim (Text.slice line 13 (Text.length line - 3)))
+  else Option.none
+
+/-- The header line for a file at `a`; `mdl` picks the Markdown comment. -/
+def headerLine (mdl : Bool) (a : Address) : Text :=
+  if mdl then "<!-- context: " ++ print a ++ " -->" else "-- context: " ++ print a
+
+/-- Problems with a file whose header is `a`, loaded into the project `home`: another project, or names outside the header's path. -/
+def violations (home : Address) (a : Address) (names : List Text) : List Text :=
+  let project := if print (projectOf a) == print (projectOf home) then [] else ["the file belongs to " ++ print (projectOf a) ++ ", not " ++ print (projectOf home)]
+  project ++ List.map (fun name => name ++ " lies outside the file's context " ++ print a) (List.filter (fun name => not (within a name)) names)
+
+/-- A project's address: its IRI when that is an address (`deus project init @owner/project`), else read from a D49 IRI. -/
+def home (iri : Text) : Option Address := Option.orElse (parse iri) (fun _ => ofIri iri)
+
+/-- The source without its context header, so the header never becomes a definition's comment: a
+  `.deus` file keeps the line empty, so error lines stay right; an `.mdl` file drops it, so its
+  front matter comes first. -/
+def withoutHeader (mdl : Bool) (source : Text) : Text :=
+  match header source with
+  | Option.none => source
+  | Option.some _ =>
+      let newline := Text.indexOf source "\n" 0
+      if newline < 0 then "" else Text.drop (if mdl then newline + 1 else newline) source
+
+--
+-- The Worker's use of addresses (task 41714c0d): platform/worker/address.mjs calls these, compiled to JavaScript
+-- by `node scripts/build-worker.mjs --live`, so the Worker and the CLI read addresses by one definition.
+--
+
+/-- A folder from before addresses, still answered at `/v1/<folder>`: `[a-z0-9]`, then up to 62 of `[a-z0-9-]`. -/
+def isLegacy (t : Text) : Bool :=
+  let n := Text.length t
+  let ok := fun i =>
+    let c := Text.code t i
+    c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '-' && i > 0
+  n > 0 && n <= 63 && List.all ok (List.range 0 n)
+
+/-- The address of a legacy folder, if a project kept it. -/
+def legacyAddress (folder : Text) : Option Text :=
+  Option.map fst (List.find (fun pair => snd pair == folder) legacyFolders)
+
+/-- The project a request path names, and how many of its segments did: `address` is none for a legacy folder no
+  project claims. -/
+structure Located @"urn:deus:address:Located" where
+  address : Option Text
+  folder : Text
+  used : Int
+
+/-- The project a path names from its leading segments (`@owner`, `project`, or a legacy folder), if any. -/
+def projectAt (segments : List Text) : Option Located :=
+  let first := getOr (head? segments) ""
+  let second := getOr (head? (List.drop 1 segments)) ""
+  if startsWith "@" first then
+    let owner := Text.drop 1 first
+    if not (isOwner owner && isProject second) then Option.none else
+      let address := "@" ++ owner ++ "/" ++ second
+      Option.some (Located.mk (Option.some address) (getOr (List.lookup address legacyFolders) (owner ++ "/" ++ second)) 2)
+  else if isLegacy first then Option.some (Located.mk (legacyAddress first) first 1) else Option.none
+
+/-- The project whose folder is `folder`, so a key granted either name may write to it. -/
+def addressOfFolder (folder : Text) : Option Text :=
+  Option.orElse (legacyAddress folder) (fun _ => if Text.contains "/" folder then Option.some ("@" ++ folder) else Option.none)
+
+/-- Whether `segments` name a project by address: `@owner` and `project`. -/
+def namesAddress (segments : List Text) : Bool :=
+  match projectAt segments with
+  | Option.some here => here.used == 2
+  | Option.none => false
+
+/-- A project a key may be granted: an address, every project of an owner (`@owner/*`), or a legacy folder name. -/
+def isGrantable (project : Text) : Bool :=
+  let segments := Text.split project "/"
+  match segments with
+  | [owner, "*"] => namesAddress [owner, "x"]
+  | _ => isLegacy project || startsWith "@" project && List.length segments == 2 && namesAddress segments
+
+/-- Whether a key granted `projects` (each an address, `@owner/*` or a folder) may write to the project in `folder`. -/
+def grants (projects : List Text) (folder : Text) : Bool :=
+  let address := addressOfFolder folder
+  any (fun granted => granted == folder || Option.some granted == address || endsWith "/*" granted &&
+    (match address with
+    | Option.some a => startsWith (Text.take (Text.length granted - 1) granted) a
+    | Option.none => false)) projects
+
+end Address

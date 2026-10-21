@@ -1,0 +1,4 @@
+namespace Spec
+def prop0 (facts : List (Text, Text)) (key : Text) : Text := getOr (List.lookup key facts) ""
+
+end Spec

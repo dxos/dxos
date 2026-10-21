@@ -1,0 +1,116 @@
+/-
+  A React web app written in DEUS (D97): a counter and a todo list. Components are DEUS functions
+  that perform `Hooks`; `React.component` runs them under React. Build and serve it with
+  `examples/react/build.sh`, which compiles `TodoApp.main` with `deus build --js` and bundles
+  React with esbuild.
+-/
+
+namespace TodoApp
+
+open React
+
+structure Todo where
+  id : Int
+  title : Text
+  done : Bool
+
+/-- A button that counts its clicks, starting at `start`. -/
+def counter (start : Int) : {Hooks} Element :=
+  let (n, setN) := Hooks.useState start
+  h "div" [className "counter"] [
+    h "button" [className "dec", onClick (fun _ => setN (n - 1))] [text "−"],
+    h "span" [className "value"] [text (Int.toText n)],
+    h "button" [className "inc", onClick (fun _ => setN (n + 1))] [text "+"]]
+
+def Counter : Component Int := component "Counter" counter
+
+def toggle (id : Int) (todos : List Todo) : List Todo :=
+  List.map (fun t => if t.id == id then { t with done := not t.done } else t) todos
+
+def remaining (todos : List Todo) : Int := List.length (List.filter (fun t => not t.done) todos)
+
+def item (props : (Todo, Int -> Unit)) : {Hooks} Element :=
+  match props with
+  | (todo, onToggle) =>
+    h "li" [className (if todo.done then "todo done" else "todo"), onClick (fun _ => onToggle todo.id)] [
+      h "input" [("type", Js.text "checkbox"), ("checked", Js.bool todo.done), ("readOnly", Js.bool true)] [],
+      text todo.title]
+
+def Item : Component (Todo, Int -> Unit) := component "Item" item
+
+/-- The todo list: a field to add one, the items, and how many are left. -/
+def todoList (initial : List Text) : {Hooks} Element :=
+  let (todos, setTodos) := Hooks.useState (List.mapIndexed (fun i t => Todo.mk i t false) initial)
+  let (draft, setDraft) := Hooks.useState ""
+  let add := fun (u : Unit) =>
+    if Text.isEmpty (Text.trim draft) then ()
+    else
+      setTodos (todos ++ [Todo.mk (List.length todos) (Text.trim draft) false])
+      setDraft ""
+  h "section" [className "todos"] [
+    h "form" [("onSubmit", Js.fn1 (fun e =>
+      let _ := Js.method e "preventDefault" []
+      add ()))] [
+      h "input" [attr "placeholder" "What needs doing?", ("value", Js.text draft), onInput setDraft] [],
+      h "button" [attr "type" "submit"] [text "Add"]],
+    h "ul" [] (List.map (fun t => keyed (Int.toText t.id) Item (t, fun id => setTodos (toggle id todos))) todos),
+    h "p" [className "left"] [text (Int.toText (remaining todos) ++ " of " ++ Int.toText (List.length todos) ++ " left")]]
+
+def TodoList : Component (List Text) := component "TodoList" todoList
+
+/-- React's `createContext`, for the theme `inside` reads. -/
+def createContext : Js -> Js := Js.import "react" "createContext"
+
+def Theme : Js := createContext (Js.text "light")
+
+/-- One fact the panel shows, keyed so the browser test can read it. -/
+def fact (name : Text) (value : Text) : Element :=
+  h "li" [attr "data-fact" name] [h "b" [] [text (name ++ ": ")], text value]
+
+/-- A component JavaScript renders with JavaScript props. -/
+def Badge : Js := jsComponent "Badge" (fun props => h "span" [className "badge"] [text (Js.toText (Js.get props "label"))])
+
+/-- What the page runs on: each hook React answers, a JavaScript component, a fragment and the value codecs. -/
+def inside (u : Unit) : {Hooks} Element :=
+  let (renders, setRenders) := Hooks.useState 0
+  let (effect, setEffect) := Hooks.useState "pending"
+  Hooks.useEffect (fun _ => setEffect "ran after the first render") []
+  let squares := Hooks.useMemo (fun _ => List.foldl (fun acc k => acc + k * k) 0 (List.range 1 5)) []
+  let seen := Hooks.useRef 0
+  Ref.set seen (Ref.get seen + 1)
+  let id := Hooks.useId ()
+  let theme := Js.toText (Hooks.useContext Theme)
+  let parsed := Js.toList (Js.parse "[1, 2, 3]")
+  let sum := Js.call (Js.fn2 (fun a b => Js.int (Js.toInt a + Js.toInt b))) [Js.int 2, Js.int 3]
+  h "section" [className "inside"] [
+    h "h2" [] [text "Under the hood"],
+    h "ul" [] [
+      fact "useState" (Int.toText renders ++ " clicks"),
+      fact "useEffect" effect,
+      fact "useMemo" ("1² + 2² + 3² + 4² = " ++ Int.toText squares),
+      fact "useRef" ("rendered " ++ Int.toText (Ref.get seen) ++ " times"),
+      fact "useId" (if Text.isEmpty id then "none" else "an id"),
+      fact "useContext" (theme ++ ", from the provider around this panel (the default is light)"),
+      fact "codecs" (Int.toText (List.foldl (fun acc x => acc + Js.toInt x) 0 parsed) ++ ", " ++ Int.toText (Js.toInt sum) ++ ", " ++
+        (match Js.toOption (Js.get (Js.obj []) "missing") with
+        | Option.some _ => "some"
+        | Option.none => "none") ++ ", " ++ (if Js.toBool (Js.bool true) then "true" else "false")),
+      h "li" [attr "data-fact" "jsComponent"] [jsEl Badge [("label", Js.text "JavaScript props")] []],
+      h "li" [attr "data-fact" "fragment"] [fragment [text "one, ", text "two"]]],
+    h "button" [className "rerender", onClick (fun _ => setRenders (renders + 1))] [text "Render again"]]
+
+def Inside : Component Unit := component "Inside" inside
+
+def app (u : Unit) : {Hooks} Element :=
+  h "main" [] [
+    h "h1" [] [text "DEUS × React"],
+    h "p" [className "lede"] [text "Every component on this page is a DEUS function compiled to JavaScript."],
+    el Counter 3,
+    el TodoList ["Compile DEUS to JavaScript", "Bind React's hooks as an ability", "Load a plugin into Composer"],
+    jsEl (Js.get Theme "Provider") [("value", Js.text "dark")] [el Inside ()]]
+
+def App : Component Unit := component "App" app
+
+def main (u : Unit) : Unit := mount "root" (el App ())
+
+end TodoApp

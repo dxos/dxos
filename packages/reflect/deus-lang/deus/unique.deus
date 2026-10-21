@@ -1,0 +1,378 @@
+/-
+  Uniqueness for the compiled back ends (D96, the codebase's `Array.Spec`).
+
+  `Array.set` returns a new array and leaves the old one as it was. Compiled code has one block of
+  memory per array, so a `set` may write into the block only when nothing will read the old array
+  again. This pass decides that statically, over the Core of the functions `Wasm.gather` collects,
+  and rewrites each `Array.set` to one of:
+
+    Array.setInPlace a i v   a is unique here: write into its block and return it
+    Array.set a i v          it may not be: copy the block, then write
+
+  It also inserts `Array.copy e` where an array would otherwise get a second owner.
+
+  The rules, in Lean 4's and Koka's terms:
+
+  - A local of type `Array` is *owned* when the code holding it is its only owner: a parameter
+    that is not borrowed, a `let` whose value is fresh, or a field of a fresh structure.
+  - A parameter is *borrowed* when the function only reads it (`Array.get`, `Array.length`, or
+    passing it to another borrowed parameter). A caller keeps ownership across the call.
+    Inferred by fixpoint, starting from every array parameter borrowed.
+  - An owned local is *moved* by its last use: not used later (`live`) and not already pending
+    in an earlier argument of the same call (`before`). A moved array is fresh.
+  - Owned parameters and array results must be fresh. A function whose result is an `Array`
+    returns a fresh one, so its call is fresh. A function whose every result is a constructor
+    of one monomorphic structure ("fresh structure", inferred by fixpoint) gives fresh arrays in
+    its array fields, so `match lomuto … with | (a, i) => …` owns `a`.
+  - An owned local stored anywhere (a constructor, a `let`, a `Ref`, an array item, a generic
+    parameter) while it is still live is copied first, so no second owner exists.
+
+  Reading an argument after a call has started does not happen: arguments are evaluated before
+  the call, so reads in later arguments (`Array.get a j` next to `a`) do not prevent a move.
+-/
+
+namespace Unique
+
+/-- What the pass knows of a function: declared parameter and result types, and the inferences. -/
+structure Info @"urn:deus:unique:Info" where
+  infoHash : Text
+  params : List Sexp
+  resultType : Sexp
+  borrowed : List Bool
+  freshStruct : Bool
+
+/-- What rewriting one function sees. -/
+structure Cx @"urn:deus:unique:Cx" where
+  cxInfos : List Info
+  cxScope : Wasm.Scope
+  cxResult : Sexp
+  cxNext : Ref Int
+
+-- How an argument is used: read (`kindBorrow`), stored (`kindProtect`), consumed (`kindRequire`), or the
+-- `Array.set` target (`kindTarget`); `kindFields` is the result of a fresh structure.
+def kindBorrow : Int := 0
+def kindProtect : Int := 1
+def kindRequire : Int := 2
+def kindTarget : Int := 3
+def kindFields : Int := 4
+
+def isArray (t : Sexp) : Bool :=
+  match t with
+  | Sexp.list [Sexp.sym "tapp", Sexp.list [Sexp.sym "tref", Sexp.str "#Array"], _] => true
+  | _ => false
+
+def hasVar (t : Sexp) : Bool :=
+  match t with
+  | Sexp.list [Sexp.sym "tvar", _] => true
+  | Sexp.list items => List.any hasVar items
+  | _ => false
+
+/-- A type whose values are blocks built by constructors: a fresh structure's candidate result. -/
+def isStruct (t : Sexp) : Bool :=
+  if t == Wasm.unknown || isArray t || Wasm.isScalar t || hasVar t then false
+  else
+    match t with
+    | Sexp.list [Sexp.sym "tref", Sexp.str _] => true
+    | Sexp.list (Sexp.sym "tapp" :: Sexp.list [Sexp.sym "tref", Sexp.str _] :: _) => true
+    | _ => false
+
+def applyPrim (p : Text) (args : List Sexp) : Sexp := Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "prim", Sexp.str p] :: args)
+
+def copy (e : Sexp) : Sexp := applyPrim "Array.copy" [e]
+
+def isVar (e : Sexp) : Bool :=
+  match e with
+  | Sexp.list [Sexp.sym "var", Sexp.int _] => true
+  | _ => false
+
+def info (infos : List Info) (h : Text) : Option Info := List.find (fun f => f.infoHash == h) infos
+
+/-- The local a variable names; binders that this pass does not track are -1. -/
+def localOf (env : List Int) (e : Sexp) : Int :=
+  match e with
+  | Sexp.list [Sexp.sym "var", Sexp.int i] => Option.getOr (List.get? env i) (-1)
+  | _ => -1
+
+/-- How many locals a pattern binds. -/
+def bindCount (pat : Sexp) : Int :=
+  match pat with
+  | Sexp.list [Sexp.sym "pvar"] => 1
+  | Sexp.list [Sexp.sym "pas", p] => 1 + bindCount p
+  | Sexp.list (Sexp.sym "pcon" :: _ :: _ :: subs) => List.foldl (fun n p => n + bindCount p) 0 subs
+  | _ => 0
+
+def untracked (pat : Sexp) (env : List Int) : List Int := List.replicate (bindCount pat) (-1) ++ env
+
+def known (ls : List Int) : List Int := List.filter (fun l => l >= 0) ls
+
+/-- The locals `e` mentions. -/
+def occ (env : List Int) (e : Sexp) : List Int :=
+  match e with
+  | Sexp.list [Sexp.sym "var", Sexp.int _] => known [localOf env e]
+  | Sexp.list [Sexp.sym "let", v, b] => occ env v ++ occ (-1 :: env) b
+  | Sexp.list (Sexp.sym "match" :: s :: cases) => occ env s ++ List.concatMap (fun c => occCase env c) cases
+  | Sexp.list items => List.concatMap (fun x => occ env x) items
+  | _ => []
+
+def occCase (env : List Int) (c : Sexp) : List Int :=
+  match c with
+  | Sexp.list [Sexp.sym "case", pat, body] => occ (untracked pat env) body
+  | _ => []
+
+/-- The locals `e`'s value may be, when it is not a new value. -/
+def tailVars (env : List Int) (e : Sexp) : List Int :=
+  match e with
+  | Sexp.list [Sexp.sym "var", Sexp.int _] => known [localOf env e]
+  | Sexp.list [Sexp.sym "if", _, t, f] => tailVars env t ++ tailVars env f
+  | Sexp.list [Sexp.sym "seq", _, b] => tailVars env b
+  | Sexp.list [Sexp.sym "let", _, b] => tailVars (-1 :: env) b
+  | Sexp.list (Sexp.sym "match" :: s :: cases) =>
+    tailVars env s ++ List.concatMap (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "case", pat, body] => tailVars (untracked pat env) body
+      | _ => []) cases
+  | _ => []
+
+/-- How a primitive uses each of its `n` arguments. -/
+def primKinds (p : Text) (n : Int) : List Int :=
+  if p == "Array.get" then [kindBorrow, kindBorrow]
+  else if p == "Array.length" || p == "Ref.get" then [kindBorrow]
+  else if p == "Array.make" then [kindBorrow, kindProtect]
+  else if p == "Array.set" then [kindTarget, kindBorrow, kindProtect]
+  else if p == "Ref.set" then [kindBorrow, kindProtect]
+  else if p == "Int.neg" || Option.isSome (Wasm.binary p) then List.replicate n kindBorrow
+  else List.replicate n kindProtect
+
+/-- How a call uses each argument: a borrowed parameter reads it, an owned array consumes it. -/
+def callKinds (f : Info) (n : Int) : List Int :=
+  List.map (fun i =>
+    if Option.getOr (List.get? f.borrowed i) false then kindBorrow
+    else if isArray (Option.getOr (List.get? f.params i) Wasm.unknown) then kindRequire
+    else kindProtect) (List.range 0 n)
+
+def kindsOf (infos : List Info) (head : Sexp) (n : Int) : List Int :=
+  match head with
+  | Sexp.list [Sexp.sym "prim", Sexp.str p] => primKinds p n
+  | Sexp.list [Sexp.sym "ref", Sexp.str h] =>
+    match info infos h with
+    | some f => callKinds f n
+    | none => List.replicate n kindProtect
+  | _ => List.replicate n kindProtect
+
+/-- The locals `e` uses in a way that keeps or changes them (every use but a read). -/
+def esc (infos : List Info) (env : List Int) (e : Sexp) : List Int :=
+  let read := fun (a : Sexp) => if isVar a then [] else esc infos env a
+  match e with
+  | Sexp.list [Sexp.sym "var", Sexp.int _] => known [localOf env e]
+  | Sexp.list [Sexp.sym "let", v, b] => esc infos env v ++ esc infos (-1 :: env) b
+  | Sexp.list [Sexp.sym "seq", a, b] => read a ++ esc infos env b
+  | Sexp.list [Sexp.sym "if", c, t, f] => read c ++ esc infos env t ++ esc infos env f
+  | Sexp.list (Sexp.sym "match" :: s :: cases) =>
+    esc infos env s ++ List.concatMap (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "case", pat, body] => esc infos (untracked pat env) body
+      | _ => []) cases
+  | Sexp.list (Sexp.sym "app" :: head :: args) =>
+    List.concat (List.map (fun pair => if fst pair == kindBorrow then read (snd pair) else esc infos env (snd pair)) (List.zip (kindsOf infos head (List.length args)) args))
+  | _ => []
+
+/-- `e`'s results: what an `if`, `let`, `seq` or `match` evaluates to last. -/
+def tails (e : Sexp) : List Sexp :=
+  match e with
+  | Sexp.list [Sexp.sym "if", _, t, f] => tails t ++ tails f
+  | Sexp.list [Sexp.sym "seq", _, b] => tails b
+  | Sexp.list [Sexp.sym "let", _, b] => tails b
+  | Sexp.list (Sexp.sym "match" :: _ :: cases) =>
+    List.concatMap (fun c =>
+      match c with
+      | Sexp.list [Sexp.sym "case", _, body] => tails body
+      | _ => [c]) cases
+  | _ => [e]
+
+def freshTail (infos : List Info) (e : Sexp) : Bool :=
+  match e with
+  | Sexp.list [Sexp.sym "con", _, _, _] => true
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "con", _, _, _] :: _) => true
+  | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: _) =>
+    match info infos h with
+    | some f => f.freshStruct
+    | none => false
+  | _ => false
+
+/-- One round of both inferences; a fixpoint once nothing changes. -/
+def infer (fns : List Wasm.Fn) (infos : List Info) : List Info :=
+  let next := List.map (fun pair =>
+    match pair with
+    | (f, i) =>
+      let escaping := esc infos (List.reverse (List.range 0 f.fnArity)) f.fnBody
+      let borrowed := List.mapIndexed (fun k b => b && not (List.contains k escaping)) i.borrowed
+      Info.mk i.infoHash i.params i.resultType borrowed (i.freshStruct && List.all (fun t => freshTail infos t) (tails f.fnBody))) (List.zip fns infos)
+  if List.all (fun pair => (fst pair).borrowed == (snd pair).borrowed && (fst pair).freshStruct == (snd pair).freshStruct) (List.zip next infos) then next
+  else infer fns next
+
+def fresh (cx : Cx) : Int :=
+  let l := Ref.get cx.cxNext
+  Ref.set cx.cxNext (l + 1)
+  l
+
+/--
+  A variable used as `need` says: copied when it must be fresh and is not moved, or when it is an
+  owned array stored while still live. Returns the expression and whether its value is fresh.
+-/
+def leaf (owned : List Int) (live : List Int) (before : List Int) (need : Int) (l : Int) (e : Sexp) : (Sexp, Bool) :=
+  let isOwned := List.contains l owned
+  let moved := isOwned && not (List.contains l live) && not (List.contains l before)
+  if need == kindRequire && not moved then (copy e, true)
+  else if (need == kindProtect || need == kindFields) && isOwned && not moved then (copy e, true)
+  else (e, moved)
+
+/-- `e` used as `need` asks, once its value is known to be fresh or not. -/
+def demand (need : Int) (pair : (Sexp, Bool)) : (Sexp, Bool) :=
+  match pair with
+  | (e, isFresh) => if need == kindRequire && not isFresh then (copy e, true) else pair
+
+/--
+  `e` rewritten. `live`: locals used after it; `before`: locals pending in earlier arguments;
+  `owned`: the locals this code owns. Returns the expression and whether its value is fresh.
+-/
+def rewrite (cx : Cx) (env : List Int) (owned : List Int) (live : List Int) (before : List Int) (need : Int) (e : Sexp) : (Sexp, Bool) :=
+  match e with
+  | Sexp.list [Sexp.sym "var", Sexp.int _] =>
+    let l := localOf env e
+    if l < 0 then demand need (e, false) else leaf owned live before need l e
+  | Sexp.list [Sexp.sym "let", v, b] =>
+    let l := fresh cx
+    match rewrite cx env owned (live ++ occ (-1 :: env) b) before kindProtect v with
+    | (v2, isFresh) =>
+      match rewrite cx (l :: env) (if isFresh then l :: owned else owned) live before need b with
+      | (b2, bodyFresh) => (Sexp.list [Sexp.sym "let", v2, b2], bodyFresh)
+  | Sexp.list [Sexp.sym "seq", a, b] =>
+    match rewrite cx env owned (live ++ occ env b) before kindBorrow a with
+    | (a2, _) =>
+      match rewrite cx env owned live before need b with
+      | (b2, bodyFresh) => (Sexp.list [Sexp.sym "seq", a2, b2], bodyFresh)
+  | Sexp.list [Sexp.sym "if", c, t, f] =>
+    match rewrite cx env owned (live ++ occ env t ++ occ env f) before kindBorrow c with
+    | (c2, _) =>
+      match (rewrite cx env owned live before need t, rewrite cx env owned live before need f) with
+      | ((t2, tf), (f2, ff)) => (Sexp.list [Sexp.sym "if", c2, t2, f2], tf && ff)
+  | Sexp.list (Sexp.sym "match" :: s :: cases) =>
+    match rewrite cx env owned (live ++ List.concatMap (fun c => occCase env c) cases) before kindBorrow s with
+    | (s2, _) =>
+      let arms := List.map (fun c => rewriteCase cx env owned live before need s c) cases
+      (Sexp.list (Sexp.sym "match" :: s2 :: List.map fst arms), List.all snd arms)
+  | Sexp.list (Sexp.sym "app" :: head :: args) =>
+    let shape := match head with
+      | Sexp.list [Sexp.sym "con", Sexp.str t, Sexp.int tag, _] => if need == kindFields then some (t, tag) else none
+      | _ => none
+    let kinds := match shape with
+      | some (t, tag) => List.mapIndexed (fun i _ => if isArray (Wasm.fieldType cx.cxScope t tag i cx.cxResult) then kindRequire else kindProtect) args
+      | none => kindsOf cx.cxInfos head (List.length args)
+    match rewriteArgs cx env owned live before kinds args with
+    | (args2, inPlace) =>
+      match head with
+      | Sexp.list [Sexp.sym "prim", Sexp.str "Array.set"] =>
+        (applyPrim (if inPlace then "Array.setInPlace" else "Array.set") args2, true)
+      | Sexp.list [Sexp.sym "prim", Sexp.str "Array.make"] => (Sexp.list (Sexp.sym "app" :: head :: args2), true)
+      | Sexp.list [Sexp.sym "ref", Sexp.str h] =>
+        let isFresh := match info cx.cxInfos h with
+          | some f => isArray f.resultType
+          | none => false
+        demand need (Sexp.list (Sexp.sym "app" :: head :: args2), isFresh)
+      | _ => demand need (Sexp.list (Sexp.sym "app" :: head :: args2), false)
+  | _ => demand need (e, false)
+
+/-- One arm of a match on `s`: fields of a fresh structure that are arrays are owned. -/
+def rewriteCase (cx : Cx) (env : List Int) (owned : List Int) (live : List Int) (before : List Int) (need : Int) (s : Sexp) (c : Sexp) : (Sexp, Bool) :=
+  match c with
+  | Sexp.list [Sexp.sym "case", pat, body] =>
+    let resultOf := match s with
+      | Sexp.list (Sexp.sym "app" :: Sexp.list [Sexp.sym "ref", Sexp.str h] :: _) =>
+        match info cx.cxInfos h with
+        | some f => if f.freshStruct then some f.resultType else none
+        | none => none
+      | _ => none
+    -- A pattern that binds the scrutinee itself aliases it, so the scrutinee stays live in the arm.
+    let aliased := match pat with
+      | Sexp.list [Sexp.sym "pvar"] => known [localOf env s]
+      | Sexp.list [Sexp.sym "pas", _] => known [localOf env s]
+      | _ => []
+    match bind cx env pat resultOf with
+    | (env2, ownedFields) =>
+      match rewrite cx env2 (ownedFields ++ owned) (live ++ aliased) before need body with
+      | (body2, isFresh) => (Sexp.list [Sexp.sym "case", pat, body2], isFresh)
+  | other => (other, false)
+
+/--
+  The environment a pattern extends `env` to, binding in `Wasm.pattern`'s order, and the locals it
+  owns: the array fields of a top-level constructor pattern on a fresh structure.
+-/
+def bind (cx : Cx) (env : List Int) (pat : Sexp) (resultOf : Option Sexp) : (List Int, List Int) :=
+  match (pat, resultOf) with
+  | (Sexp.list (Sexp.sym "pcon" :: Sexp.str t :: Sexp.int tag :: subs), some result) =>
+    List.foldl (fun acc pair =>
+      match (acc, pair) with
+      | ((bound, ownedFields), (i, Sexp.list [Sexp.sym "pvar"])) =>
+        let l := fresh cx
+        (l :: bound, if isArray (Wasm.fieldType cx.cxScope t tag i result) then l :: ownedFields else ownedFields)
+      | ((bound, ownedFields), (_, sub)) => (bindAll cx bound sub, ownedFields)) (env, []) (List.mapIndexed (fun i x => (i, x)) subs)
+  | _ => (bindAll cx env pat, [])
+
+def bindAll (cx : Cx) (env : List Int) (pat : Sexp) : List Int :=
+  match pat with
+  | Sexp.list [Sexp.sym "pvar"] => fresh cx :: env
+  | Sexp.list [Sexp.sym "pas", p] => bindAll cx (fresh cx :: env) p
+  | Sexp.list (Sexp.sym "pcon" :: _ :: _ :: subs) => List.foldl (fun bound sub => bindAll cx bound sub) env subs
+  | _ => env
+
+/--
+  The arguments of one call, left to right, and whether its `target` argument is unique there. A
+  variable argument is moved unless a later argument keeps or changes it (a later read happens
+  before the call); any other argument runs before the later ones, so every later use counts.
+-/
+def rewriteArgs (cx : Cx) (env : List Int) (owned : List Int) (live : List Int) (before : List Int) (kinds : List Int) (args : List Sexp) : (List Sexp, Bool) :=
+  let indexed := List.mapIndexed (fun k a => (k, a)) args
+  let results := List.map (fun pair =>
+    match pair with
+    | (k, a) =>
+      let later := List.drop (k + 1) args
+      let pending := before ++ List.concatMap (fun x => tailVars env x) (List.take k args)
+      let kind := Option.getOr (List.get? kinds k) kindProtect
+      let need := if kind == kindTarget then kindBorrow else kind
+      if isVar a && localOf env a >= 0 then
+        match leaf owned (live ++ List.concatMap (fun x => esc cx.cxInfos env x) later) pending need (localOf env a) a with
+        | (a2, moved) => (a2, kind == kindTarget && moved)
+      else
+        match rewrite cx env owned (live ++ List.concatMap (fun x => occ env x) later) pending need a with
+        | (a2, isFresh) => (a2, kind == kindTarget && isFresh)) indexed
+  (List.map fst results, List.any snd results)
+
+/-- Every function of a module with its `Array.set`s decided and its copies inserted. -/
+def rewriteAll (fns : List Wasm.Fn) (datatypes : List (Text, Sexp)) : List Wasm.Fn :=
+  let start := List.map (fun f =>
+    match Wasm.peel f.fnArity f.fnType with
+    | (params, result) => Info.mk f.fnHash params result (List.map isArray params) (isStruct result)) fns
+  let infos := infer fns start
+  let table := Wasm.fnTable fns
+  let types := Wasm.typeTable datatypes
+  List.map (fun pair =>
+    match pair with
+    | (f, i) =>
+      let scope := Wasm.Scope.mk fns table datatypes types (Ref.new []) (Ref.new [])
+      let cx := Cx.mk infos scope i.resultType (Ref.new f.fnArity)
+      let owned := List.filterMap (fun k => if isArray (Option.getOr (List.get? i.params k) Wasm.unknown) && not (Option.getOr (List.get? i.borrowed k) false) then some k else none) (List.range 0 f.fnArity)
+      let need := if isArray i.resultType then kindRequire else if i.freshStruct then kindFields else kindProtect
+      Wasm.Fn.mk f.fnHash f.fnArity (fst (rewrite cx (List.reverse (List.range 0 f.fnArity)) owned [] [] need f.fnBody)) f.fnType) (List.zip fns infos)
+
+/-- The data types `fns` construct or take apart, by hash, as `(type …)` objects. -/
+def datatypesOf (fetch : Text -> {Throw Text | r} Option Sexp) (fns : List Wasm.Fn) : {Throw Text | r} List (Text, Sexp) :=
+  let names := List.dedup (List.concatMap (fun f => Wasm.patternTypes f.fnBody ++ constructed f.fnBody) fns)
+  List.filterMap (fun t => Option.map (fun form => (t, form)) (fetch t)) names
+
+def constructed (form : Sexp) : List Text :=
+  match form with
+  | Sexp.list [Sexp.sym "con", Sexp.str t, _, _] => [t]
+  | Sexp.list items => List.concatMap constructed items
+  | _ => []
+
+end Unique

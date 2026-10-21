@@ -1,0 +1,88 @@
+-- context: @dxos/worker/Worker
+/-
+  What the Worker serves for a site path (task 41714c0d, D166, D192, D200): the todo demo, the hub, the app's own
+  files, the explorer page, or a file of the project's `site/` folder, with that file's bucket key and cache header.
+  platform/worker/worker.mjs does the reads these name.
+-/
+
+namespace Worker.Site
+
+/-- What answers a site path: `kind` is `demo`, `redirect`, `hub`, `app`, `page`, `current` (a top-level file at the
+  head `site/HEAD` names), `file` or `missing`, and `name` is the file (or the location, for `redirect`) it names. -/
+structure Step @"urn:deus:worker:SiteStep" where
+  kind : Text
+  name : Text
+
+/-- A path of the todo demo, built from examples/react: `/demo/todo` redirects so the page's relative links resolve. -/
+def demo (path : Text) : Step :=
+  if path == "/demo/todo" then Step.mk "redirect" "/demo/todo/"
+  else
+    let name := if path == "/demo/todo/" then "index.html" else Text.drop 11 path
+    if List.contains name ["index.html", "app.css", "bundle.js"] then Step.mk "demo" name else Step.mk "missing" ""
+
+/-- A file of the folder itself rather than of one inside it: no `/` after the first. -/
+def isTopLevel (path : Text) : Bool := startsWith "/" path && Text.indexOf path "/" 1 < 0
+
+/-- The explorer app's own files, which ship with the Worker. -/
+def appFiles : List Text := ["app.js", "app.css"]
+
+/-- What answers `pathname` on a project (`scoped`: one at `/@owner/project`) at a pinned version (`pinned`). -/
+def plan (pathname : Text) (scoped : Bool) (pinned : Bool) : Step :=
+  let path := if pathname == "/" then "/index.html" else pathname
+  let topLevel := isTopLevel path
+  if not scoped && not pinned && startsWith "/demo/todo" path then demo path
+  else if Text.contains ".." path then Step.mk "missing" ""
+  else if topLevel && not pinned then
+    -- The host's front page lists every project (D200); a project's explorer is at its own path.
+    if not scoped && pathname == "/" then Step.mk "hub" "hub.html"
+    else if not scoped && path == "/hub.js" then Step.mk "hub" "hub.js"
+    else if List.contains (Text.drop 1 path) appFiles then Step.mk "app" (Text.drop 1 path)
+    else if path == "/index.html" then Step.mk "page" path
+    else Step.mk "current" path
+  else Step.mk "file" path
+
+/-- The bucket key of a site file: a top-level file of a pinned `version` is under `site/v/<version>`. -/
+def key (prefix : Text) (version : Text) (path : Text) : Text :=
+  if not (Text.isEmpty version) && isTopLevel path then prefix ++ "/site/v/" ++ version ++ path
+  else prefix ++ "/site" ++ path
+
+/-- The cache header of a site file: a versioned one never changes once HEAD names it, so it is kept for good. -/
+def cacheControl (version : Text) (path : Text) : Text :=
+  if not (Text.isEmpty version) && isTopLevel path then "public, max-age=31536000, immutable"
+  else "public, max-age=60"
+
+/-- The suffixes of a site file, which a definition's name never ends in. -/
+def fileSuffixes : List Text := ["html", "js", "mjs", "css", "json", "wasm", "png", "svg", "ico", "txt", "map", "image", "deus", "mdl"]
+
+/-- A site file rather than a definition's name. -/
+def isFile (path : Text) : Bool :=
+  match List.reverse (Text.split path ".") with
+  | suffix :: _ :: _ => List.contains suffix fileSuffixes
+  | _ => false
+
+/-- Whether a top-level path missing from the bucket gets the explorer page: `/@owner/project/Name` is the page, opened
+  at that definition (Address.Spec R-8), and as a name can end like a file (`List.map`, `Json.render.js`), a browser
+  navigation always gets it. -/
+def pageOnMiss (path : Text) (navigation : Bool) : Bool :=
+  isTopLevel path && (navigation || not (isFile path))
+
+test plansPaths :=
+  plan "/" false false == Step.mk "hub" "hub.html" && plan "/" true false == Step.mk "page" "/index.html"
+    && plan "/hub.js" true false == Step.mk "current" "/hub.js" && plan "/app.js" true false == Step.mk "app" "app.js"
+    && plan "/app.js" false true == Step.mk "file" "/app.js" && plan "/demo/todo" false false == Step.mk "redirect" "/demo/todo/"
+    && plan "/demo/todo/" false false == Step.mk "demo" "index.html" && plan "/demo/todo/x.js" false false == Step.mk "missing" ""
+    && plan "/demo/todo/" true false == Step.mk "file" "/demo/todo/" && plan "/a/../b" false false == Step.mk "missing" ""
+    && plan "/names.json" false false == Step.mk "current" "/names.json"
+    && plan "/def/a.json" false false == Step.mk "file" "/def/a.json"
+
+test keysAndCaching :=
+  key "deus" "0123456789abcdef" "/names.json" == "deus/site/v/0123456789abcdef/names.json"
+    && key "deus" "0123456789abcdef" "/def/a.json" == "deus/site/def/a.json" && key "deus" "" "/x" == "deus/site/x"
+    && cacheControl "0123456789abcdef" "/x" == "public, max-age=31536000, immutable" && cacheControl "" "/x" == "public, max-age=60"
+
+test pagesOnMiss :=
+  not (pageOnMiss "/List.map" false) && pageOnMiss "/List.map" true && pageOnMiss "/Text.split" false
+    && not (pageOnMiss "/names.json" false) && pageOnMiss "/Json.render.js" true
+    && not (pageOnMiss "/def/List.map" true) && isFile "/a.mdl" && not (isFile "/README")
+
+end Worker.Site
