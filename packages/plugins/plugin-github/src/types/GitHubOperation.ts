@@ -97,7 +97,7 @@ export const SyncGitHubRepositories = Operation.make({
       comments: Schema.Number,
     }),
   }),
-  services: [Credential.CredentialsService],
+  services: [Trace.TraceService, Credential.CredentialsService],
 }).pipe(Operation.visible);
 
 /**

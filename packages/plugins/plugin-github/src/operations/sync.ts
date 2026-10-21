@@ -9,6 +9,7 @@ import * as Semaphore from 'effect/Semaphore';
 
 import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
@@ -600,7 +601,7 @@ export const pushRepoUpdates: <E, R>(
  * Per-binding sync body run by the account-level fan-out: reconcile the one repo the
  * binding targets, stamping success/failure onto the binding and toasting either way.
  */
-const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: Cursor.ExternalCursor) {
+export const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: Cursor.ExternalCursor) {
   const project = yield* Database.load(binding.spec.target);
   const db = Obj.getDatabase(binding) ?? Obj.getDatabase(project);
   if (!db) {
@@ -613,144 +614,150 @@ const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: Cursor.
     binding.spec.externalId ?? Obj.getMeta(project).keys.find((key) => key.source === GITHUB_SOURCE)?.id;
 
   const outcome = yield* Effect.result(
-    Effect.gen(function* () {
-      if (externalId === undefined) {
-        return yield* Effect.fail(new GitHubRepoUnresolvedError());
-      }
+    Progress.withReporter(
+      { key: Progress.createSyncKey(project), label: `Syncing ${Obj.getLabel(project) ?? 'repository'}` },
+      (reporter) =>
+        Effect.gen(function* () {
+          if (externalId === undefined) {
+            return yield* Effect.fail(new GitHubRepoUnresolvedError());
+          }
 
-      // Fetch all repos visible to the token once so the binding can
-      // resolve its remote `GitHubRepo`. The binding stores the numeric
-      // repo id as `externalId` (a stringified integer).
-      // TODO(wittjosiah): Switch to `fetchRepo(owner, name)` once the
-      //   binding carries `owner`/`name`. `fetchReachableRepos()` walks every
-      //   repo the token can see and dominates large-account syncs.
-      const allRepos = yield* GitHubApi.fetchReachableRepos();
-      const remoteRepo = allRepos.find((repo) => String(repo.id) === externalId);
-      if (!remoteRepo) {
-        return yield* Effect.fail(new GitHubRepoInaccessibleError());
-      }
+          // Fetch all repos visible to the token once so the binding can
+          // resolve its remote `GitHubRepo`. The binding stores the numeric
+          // repo id as `externalId` (a stringified integer).
+          // TODO(wittjosiah): Switch to `fetchRepo(owner, name)` once the
+          //   binding carries `owner`/`name`. `fetchReachableRepos()` walks every
+          //   repo the token can see and dominates large-account syncs.
+          const allRepos = yield* GitHubApi.fetchReachableRepos();
+          const remoteRepo = allRepos.find((repo) => String(repo.id) === externalId);
+          if (!remoteRepo) {
+            return yield* Effect.fail(new GitHubRepoInaccessibleError());
+          }
 
-      const options = (binding.spec.options ?? undefined) as GitHubOperation.SyncOptions | undefined;
+          const options = (binding.spec.options ?? undefined) as GitHubOperation.SyncOptions | undefined;
 
-      // Upsert the local Project for this repo (three-way merge).
-      yield* upsertProject(binding, remoteRepo);
+          // Upsert the local Project for this repo (three-way merge).
+          yield* upsertProject(binding, remoteRepo);
 
-      // Cross-issue dedup for Person upserts: parallel per-issue work can
-      // race two upserts for the same login (same assignee on multiple
-      // issues, or org members). Without serialization both fibers find no
-      // foreign-key match, both insert, leaving duplicate Person rows. The
-      // semaphore + cache pair gives us a single in-flight upsert per login;
-      // subsequent callers read from `personByLogin`.
-      const personByLogin = new Map<string, Person.Person>();
-      const personSemaphore = yield* Semaphore.make(1);
-      const ensurePerson = (user: GitHubApi.GitHubUser, organization: Organization.Organization | undefined) =>
-        personSemaphore.withPermits(1)(
-          Effect.gen(function* () {
-            const cached = personByLogin.get(user.login);
-            if (cached) {
-              return cached;
+          // Cross-issue dedup for Person upserts: parallel per-issue work can
+          // race two upserts for the same login (same assignee on multiple
+          // issues, or org members). Without serialization both fibers find no
+          // foreign-key match, both insert, leaving duplicate Person rows. The
+          // semaphore + cache pair gives us a single in-flight upsert per login;
+          // subsequent callers read from `personByLogin`.
+          const personByLogin = new Map<string, Person.Person>();
+          const personSemaphore = yield* Semaphore.make(1);
+          const ensurePerson = (user: GitHubApi.GitHubUser, organization: Organization.Organization | undefined) =>
+            personSemaphore.withPermits(1)(
+              Effect.gen(function* () {
+                const cached = personByLogin.get(user.login);
+                if (cached) {
+                  return cached;
+                }
+                const person = yield* upsertPerson(user, organization);
+                personByLogin.set(user.login, person);
+                return person;
+              }),
+            );
+
+          // Auto-pull the owning org + members for this repo's owner.
+          // `/orgs/{owner}` returns 404 for user-owned repos (personal
+          // accounts are not orgs). Treat that as "no org to sync" and
+          // continue — the Project just won't have a parent organization.
+          let pulledOrganizations = 0;
+          const owner = remoteRepo.owner.login;
+          const orgResult = yield* Effect.result(GitHubApi.fetchOrg(owner));
+          if (orgResult._tag === 'Success') {
+            const organization = yield* upsertOrganization(orgResult.success);
+            pulledOrganizations++;
+            const members = yield* GitHubApi.fetchOrgMembers(owner);
+            for (const member of members) {
+              yield* ensurePerson(member, organization);
             }
-            const person = yield* upsertPerson(user, organization);
-            personByLogin.set(user.login, person);
-            return person;
-          }),
-        );
+          } else {
+            log.info('github sync: owner is not an org, skipping org/member pull', { owner });
+          }
 
-      // Auto-pull the owning org + members for this repo's owner.
-      // `/orgs/{owner}` returns 404 for user-owned repos (personal
-      // accounts are not orgs). Treat that as "no org to sync" and
-      // continue — the Project just won't have a parent organization.
-      let pulledOrganizations = 0;
-      const owner = remoteRepo.owner.login;
-      const orgResult = yield* Effect.result(GitHubApi.fetchOrg(owner));
-      if (orgResult._tag === 'Success') {
-        const organization = yield* upsertOrganization(orgResult.success);
-        pulledOrganizations++;
-        const members = yield* GitHubApi.fetchOrgMembers(owner);
-        for (const member of members) {
-          yield* ensurePerson(member, organization);
-        }
-      } else {
-        log.info('github sync: owner is not an org, skipping org/member pull', { owner });
-      }
+          // Re-resolve the local Project after upsert so issue upserts and
+          // pushes operate on the persisted record.
+          const localProject = yield* findByForeignId<TaskSet.TaskSet>(TaskSet.TaskSet, remoteRepo.id);
+          if (!localProject) {
+            return yield* Effect.fail(new GitHubProjectMissingError());
+          }
 
-      // Re-resolve the local Project after upsert so issue upserts and
-      // pushes operate on the persisted record.
-      const localProject = yield* findByForeignId<TaskSet.TaskSet>(TaskSet.TaskSet, remoteRepo.id);
-      if (!localProject) {
-        return yield* Effect.fail(new GitHubProjectMissingError());
-      }
+          // Milestones before issues: an issue's `milestone` has to resolve to a local mirror, and the
+          // repo endpoint also surfaces milestones no open issue points at yet.
+          const milestoneByRemoteId = new Map<number, Milestone.Milestone>();
+          const remoteMilestones = yield* GitHubApi.fetchRepoMilestones(remoteRepo.owner.login, remoteRepo.name);
+          for (const remoteMilestone of remoteMilestones) {
+            milestoneByRemoteId.set(remoteMilestone.id, yield* upsertMilestone(localProject, remoteMilestone));
+          }
 
-      // Milestones before issues: an issue's `milestone` has to resolve to a local mirror, and the
-      // repo endpoint also surfaces milestones no open issue points at yet.
-      const milestoneByRemoteId = new Map<number, Milestone.Milestone>();
-      const remoteMilestones = yield* GitHubApi.fetchRepoMilestones(remoteRepo.owner.login, remoteRepo.name);
-      for (const remoteMilestone of remoteMilestones) {
-        milestoneByRemoteId.set(remoteMilestone.id, yield* upsertMilestone(localProject, remoteMilestone));
-      }
+          let pulledTasks = 0;
+          const since = sinceFromOptions(options);
+          const issues = yield* GitHubApi.fetchRepoIssues(remoteRepo.owner.login, remoteRepo.name, { since });
+          reporter.total(issues.length);
+          const remoteIssuesById = new Map<string, GitHubApi.GitHubIssue>();
+          const pulled = yield* Effect.forEach(
+            issues,
+            (issue) =>
+              Effect.gen(function* () {
+                // Resolve assignee — first assignee only for v1. External
+                // (non-org) assignees are upserted lazily; the semaphored
+                // `ensurePerson` dedups across fibers.
+                const assigneeUser = issue.assignees?.[0];
+                const assignedPerson = assigneeUser ? yield* ensurePerson(assigneeUser, undefined) : undefined;
+                const milestone = issue.milestone ? milestoneByRemoteId.get(issue.milestone.id) : undefined;
 
-      let pulledTasks = 0;
-      const since = sinceFromOptions(options);
-      const issues = yield* GitHubApi.fetchRepoIssues(remoteRepo.owner.login, remoteRepo.name, { since });
-      const remoteIssuesById = new Map<string, GitHubApi.GitHubIssue>();
-      const pulled = yield* Effect.forEach(
-        issues,
-        (issue) =>
-          Effect.gen(function* () {
-            // Resolve assignee — first assignee only for v1. External
-            // (non-org) assignees are upserted lazily; the semaphored
-            // `ensurePerson` dedups across fibers.
-            const assigneeUser = issue.assignees?.[0];
-            const assignedPerson = assigneeUser ? yield* ensurePerson(assigneeUser, undefined) : undefined;
-            const milestone = issue.milestone ? milestoneByRemoteId.get(issue.milestone.id) : undefined;
+                const { task, created } = yield* upsertTask(binding, issue, assignedPerson, milestone);
+                remoteIssuesById.set(String(issue.id), issue);
+                if (created) {
+                  pulledTasks++;
+                }
+                reporter.advance();
 
-            const { task, created } = yield* upsertTask(binding, issue, assignedPerson, milestone);
-            remoteIssuesById.set(String(issue.id), issue);
-            if (created) {
-              pulledTasks++;
-            }
+                // TODO(wittjosiah): Comments sync disabled — re-enable once
+                // chunked/yielded to avoid automerge_wasm crash when upserting
+                // many comments in one tick.
+                return task;
+              }),
+            { concurrency: ISSUE_CONCURRENCY },
+          );
 
-            // TODO(wittjosiah): Comments sync disabled — re-enable once
-            // chunked/yielded to avoid automerge_wasm crash when upserting
-            // many comments in one tick.
-            return task;
-          }),
-        { concurrency: ISSUE_CONCURRENCY },
-      );
+          // Sequential: `TaskSet.tasks` is one shared array, so concurrent appends would drop entries.
+          // `Effect.forEach` preserves input order, so the set's order mirrors GitHub's.
+          for (const task of pulled) {
+            yield* setTaskContainer(task, localProject);
+          }
 
-      // Sequential: `TaskSet.tasks` is one shared array, so concurrent appends would drop entries.
-      // `Effect.forEach` preserves input order, so the set's order mirrors GitHub's.
-      for (const task of pulled) {
-        yield* setTaskContainer(task, localProject);
-      }
+          // Push: snapshot-diff the local Project + Tasks for this repo and
+          // PATCH only the diverged fields.
+          //
+          // TODO(wittjosiah): `remoteIssuesById` is built from
+          //   `fetchRepoIssues(..., { since })`, so when `maxDaysBack` is set
+          //   this push pass cannot see locally-edited tasks whose remote issue
+          //   is older than the window. Switch the candidate set to the local
+          //   mirror (every Task with a GITHUB_SOURCE fk under this repo) once
+          //   we store `number` per task so we don't need the remote payload to PATCH.
+          const pushResult = yield* pushRepoUpdates(binding, remoteRepo, remoteIssuesById, {
+            updateIssue: (owner, repoName, issueNumber, input) =>
+              GitHubApi.updateIssue(owner, repoName, issueNumber, input).pipe(Effect.map(() => undefined)),
+            updateRepo: (owner, repoName, input) =>
+              GitHubApi.updateRepo(owner, repoName, input).pipe(Effect.map(() => undefined)),
+          });
 
-      // Push: snapshot-diff the local Project + Tasks for this repo and
-      // PATCH only the diverged fields.
-      //
-      // TODO(wittjosiah): `remoteIssuesById` is built from
-      //   `fetchRepoIssues(..., { since })`, so when `maxDaysBack` is set
-      //   this push pass cannot see locally-edited tasks whose remote issue
-      //   is older than the window. Switch the candidate set to the local
-      //   mirror (every Task with a GITHUB_SOURCE fk under this repo) once
-      //   we store `number` per task so we don't need the remote payload to PATCH.
-      const pushResult = yield* pushRepoUpdates(binding, remoteRepo, remoteIssuesById, {
-        updateIssue: (owner, repoName, issueNumber, input) =>
-          GitHubApi.updateIssue(owner, repoName, issueNumber, input).pipe(Effect.map(() => undefined)),
-        updateRepo: (owner, repoName, input) =>
-          GitHubApi.updateRepo(owner, repoName, input).pipe(Effect.map(() => undefined)),
-      });
-
-      return {
-        pulled: {
-          organizations: pulledOrganizations,
-          people: personByLogin.size,
-          projects: 1,
-          tasks: pulledTasks,
-          comments: 0,
-        },
-        pushed: pushResult,
-      };
-    }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), GitHubApi.fromAccessToken(binding.spec.source)))),
+          return {
+            pulled: {
+              organizations: pulledOrganizations,
+              people: personByLogin.size,
+              projects: 1,
+              tasks: pulledTasks,
+              comments: 0,
+            },
+            pushed: pushResult,
+          };
+        }).pipe(Effect.provide(Layer.provideMerge(Database.layer(db), GitHubApi.fromAccessToken(binding.spec.source)))),
+    ),
   );
 
   // Write sync state onto the binding.
