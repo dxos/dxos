@@ -25,11 +25,11 @@ const MAX_DEPTH = 4;
 /** Objects of a printed array rendered as full cards before the rest are summarized one per line. */
 const MAX_CARDS = 20;
 
-/** Rows one exploration query reads; past this the count is reported as a lower bound. */
-const MAX_EXPLORED = 200;
+/** Neighbours the exploration query reads; past this the counts are reported as lower bounds. */
+const MAX_EXPLORED = 25;
 
 /** Objects one evaluation explores; a loop printing more gets plain cards for the rest. */
-const MAX_EXPLORED_OBJECTS = 10;
+const MAX_EXPLORED_OBJECTS = 5;
 
 /** Groups listed per kind of exploration hint (relation types, child types, referrer fields). */
 const MAX_GROUPS = 6;
@@ -108,7 +108,7 @@ export const describe = (value: unknown, context: DescribeContext): Effect.Effec
 
 /**
  * {@link describe} for one evaluation: past {@link MAX_EXPLORED_OBJECTS} objects it stops querying,
- * since each costs four queries and a model printing in a loop wants the fields, not the counts.
+ * since each costs a query and a model printing in a loop wants the fields, not the counts.
  */
 export const makeDescriber = (context: DescribeContext) => {
   let explored = 0;
@@ -123,23 +123,27 @@ export const makeDescriber = (context: DescribeContext) => {
   };
 };
 
-/** The neighbours of one object, counted by type; each query is bounded by {@link MAX_EXPLORED}. */
+/** The neighbours of one object, counted by type, from one query bounded by {@link MAX_EXPLORED}. */
 export const explore = (object: Entity): Effect.Effect<Neighbourhood, unknown, Database.Service> =>
   Effect.gen(function* () {
     const anchor = Query.select(Filter.id(object.id));
-    let truncated = false;
-    const run = (query: Query.Any) =>
-      Database.query(query.limit(MAX_EXPLORED + 1)).run.pipe(
-        Effect.map((rows) => {
-          truncated ||= rows.length > MAX_EXPLORED;
-          return rows.slice(0, MAX_EXPLORED);
-        }),
-      );
-
-    const [outgoing, incoming, children, referrers] = yield* Effect.all(
-      [run(anchor.sourceOf()), run(anchor.targetOf()), run(anchor.children()), run(anchor.referencedBy())],
-      { concurrency: 'unbounded' },
+    // One union, bounded: the hints only have to tell the model there is something to explore, and
+    // each row says which arm it came from, so nothing is gained by asking the arms separately.
+    const rows = yield* Database.query(
+      Query.all(anchor.sourceOf(), anchor.targetOf(), anchor.children(), anchor.referencedBy()).limit(MAX_EXPLORED + 1),
+    ).run;
+    const seen = rows.slice(0, MAX_EXPLORED);
+    const isRelation = (row: Entity) => Relation.isRelation(row);
+    const outgoing = seen.filter(
+      (row) => isRelation(row) && endpointId(() => Relation.getSourceURI(row)) === object.id,
     );
+    const incoming = seen.filter(
+      (row) => isRelation(row) && !outgoing.includes(row) && endpointId(() => Relation.getTargetURI(row)) === object.id,
+    );
+    const children = seen.filter(
+      (row) => !isRelation(row) && Obj.isObject(row) && safe(() => Obj.getParent(row))?.id === object.id,
+    );
+    const referrers = seen.filter((row) => !isRelation(row) && !children.includes(row));
     return {
       outgoing: groupBy(outgoing, (relation) => [[typeKey(relation)]]),
       incoming: groupBy(incoming, (relation) => [[typeKey(relation)]]),
@@ -149,9 +153,15 @@ export const explore = (object: Entity): Effect.Effect<Neighbourhood, unknown, D
         const fields = referringFields(referrer, object.id);
         return fields.length > 0 ? fields.map((field) => [typeKey(referrer), field] as const) : [[typeKey(referrer)]];
       }),
-      truncated,
+      truncated: rows.length > MAX_EXPLORED,
     };
   });
+
+/** The object id a relation endpoint's URI names, or undefined when it cannot be read. */
+const endpointId = (uri: () => unknown): string | undefined => {
+  const text = safe(() => String(uri()));
+  return text?.slice(text.lastIndexOf('/') + 1);
+};
 
 /** The hint lines appended to a card: counts first, then the code that fetches each group. */
 const renderHints = (

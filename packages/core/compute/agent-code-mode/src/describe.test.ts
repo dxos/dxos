@@ -215,7 +215,7 @@ describe('describe', () => {
   );
 
   it.effect(
-    'stops exploring past ten objects in one call',
+    'stops exploring past five objects in one call',
     Effect.fnUntraced(
       function* (_) {
         yield* seed();
@@ -223,8 +223,30 @@ describe('describe', () => {
           `for (const task of yield* Database.query(Filter.type(yield* Database.resolve('dxn:com.example.type.task:0.1.0'))).run) { yield* print(task); }`,
           EffectDialect,
         );
-        expect(output.match(/^ {2}relations: /gm)).toHaveLength(10);
-        expect(output.match(/relations not counted past 10 objects/g)).toHaveLength(3);
+        expect(output.match(/^ {2}relations: /gm)).toHaveLength(5);
+        expect(output.match(/relations not counted past 5 objects/g)).toHaveLength(8);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'marks counts as lower bounds once the exploration query hits its cap',
+    Effect.fnUntraced(
+      function* (_) {
+        const { ada } = yield* seed();
+        for (let index = 0; index < 20; index++) {
+          yield* Database.add(Obj.make(Task, { title: `Extra ${index}`, owner: Ref.make(ada) }));
+        }
+        yield* Database.flush();
+        const output = yield* run(
+          `yield* print((yield* Database.query(Filter.id('${ada.id}')).run)[0]);`,
+          EffectDialect,
+        );
+        // 34 referrers in all; the hint only has to say there are many, and how to fetch them.
+        expect(output).toMatch(/ {2}referenced by: task\.owner ×\d+\+/);
+        expect(output).toContain(`referencedBy('dxn:com.example.type.task:0.1.0', 'owner')).run  // `);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

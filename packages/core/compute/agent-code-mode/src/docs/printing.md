@@ -31,7 +31,8 @@ com.example.type.task 01J… "Write"
 - A string longer than 200 characters ends in `…[+N chars]`; a list longer than 10 items ends in
   `… N more`. Print the field itself (`yield* print(task.notes)`) to read all of it.
 - `relations`, `children` and `referenced by` count what points at the object or away from it, by
-  type. These are not fields: printing the object is the only way to learn they exist.
+  type. These are not fields: printing the object is the only way to learn they exist. Only the
+  first 25 are counted; a count ending in `+` means there are more — run its `fetch` line.
 - `fetch` gives the exact code that returns each group. Paste it; append `.target()` or `.source()`
   inside the query to move from the relations to the objects at their other end.
 - `skills for this type` names the skills that work with objects of this type. One marked
