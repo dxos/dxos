@@ -67,7 +67,7 @@ export const QueryMcpConnections = Operation.make({
     key: DXN.make('org.dxos.operation.assistantToolkit.queryMcpConnections'),
     name: 'Query MCP connections',
     description:
-      "Lists the space's connections and whether this conversation connects each one's MCP server. Connections are on unless the conversation turned them off.",
+      "Lists the space's connections and whether this conversation connects each one's MCP server. Connections are on unless the conversation turned them off. A connection is not a skill: a skill whose tools come from a connection (such as Browser) needs both.",
     icon: 'ph--plugs-connected--regular',
   },
   input: Schema.Struct({}),
@@ -80,7 +80,7 @@ export const SetMcpConnection = Operation.make({
     key: DXN.make('org.dxos.operation.assistantToolkit.setMcpConnection'),
     name: 'Set MCP connection',
     description:
-      "Turns a connection's MCP server on or off for this conversation. Its tools appear or disappear on the next turn.",
+      "Turns a connection's MCP server on or off for this conversation; enabling a skill does not do this. Its tools appear or disappear from your next step, so keep going in this response.",
     icon: 'ph--plugs-connected--regular',
   },
   input: Schema.Struct({
@@ -96,7 +96,7 @@ export const AddMcpConnection = Operation.make({
     key: DXN.make('org.dxos.operation.assistantToolkit.addMcpConnection'),
     name: 'Add MCP connection',
     description:
-      "Adds an MCP server to the space as a connection, with no credential or with an API key. It is on in this conversation, so its tools appear on the next turn. A server that needs sign-in can't be added this way: ask the user to connect it.",
+      "Adds an MCP server to the space as a connection, with no credential or with an API key. It is on in this conversation, so its tools are available from your next step. A server that needs sign-in can't be added this way: ask the user to connect it.",
     icon: 'ph--plugs-connected--regular',
   },
   input: Schema.Struct({

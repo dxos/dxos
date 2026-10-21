@@ -47,8 +47,9 @@ export const make = () =>
 
         Connections to services can also give you their MCP servers' tools. They are on unless this
         conversation turned them off: use [query-mcp-connections] to see which are off, and
-        [set-mcp-connection] to turn one on when you need its tools. To use an MCP server the space
-        has no connection for, add it with [add-mcp-connection].
+        [set-mcp-connection] to turn one on when you need its tools; they are available from your
+        next step. A connection is not a skill, and enabling a skill does not turn its connection on.
+        To use an MCP server the space has no connection for, add it with [add-mcp-connection].
       `,
       inputs: [
         {
