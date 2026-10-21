@@ -21,6 +21,7 @@ import {
   type FeatureModel,
   type FeatureStatus,
   type FeatureTarget,
+  cardOpenHandlers,
   getFeatureRelation,
   makeFeatureLookup,
 } from '../FeatureCard/index.ts';
@@ -63,22 +64,39 @@ const FeatureTile = ({ data: feature }: { data: FeatureModel }) => {
   const selected = selectedId ? lookup(selectedId) : undefined;
   const relation = getFeatureRelation(feature, selected);
   const faded = selected && feature.id !== selected.id && !relation;
+  // Controlled only for a host that tracks it; otherwise the edit button's toggle would be overridden.
+  const editing = onEditingChange ? feature.id === editingId : undefined;
   return (
-    <div className={faded ? 'opacity-40 transition-opacity' : 'transition-opacity'}>
-      <FeatureCard
+    // Masonry's tile is the arrow-key item and holds the selection; the card is its content, and only opens.
+    <div
+      className={faded ? 'opacity-40 transition-opacity' : 'transition-opacity'}
+      {...cardOpenHandlers(onOpen && (() => onOpen({ type: 'object', id: feature.id })), { disabled: editing })}
+    >
+      {/* Not `selected`: a selected card would show more and grow, and the masonry reflow on every arrow key. */}
+      <FeatureCard.Root
         feature={feature}
         lookup={lookup}
-        // Not `selected`: a selected card would show its details and grow, and the masonry reflow on every arrow key.
-        // The tile marks the selection; the other cards' relation tags and fading show what it needs.
-        inItem
         relation={relation}
         onOpen={onOpen}
-        onRemove={onRemove ? (feature) => onRemove(feature.id) : undefined}
         onChange={onChange ? (feature, changes) => onChange(feature.id, changes) : undefined}
-        // Controlled only for a host that tracks it; otherwise the edit button's toggle would be overridden.
-        editing={onEditingChange ? feature.id === editingId : undefined}
+        editing={editing}
         onEditingChange={(editing) => onEditingChange?.(editing ? feature.id : undefined)}
-      />
+      >
+        <FeatureCard.Header>
+          <FeatureCard.Status />
+          <FeatureCard.Title />
+          <FeatureCard.EditToggle />
+          <FeatureCard.Menu onRemove={onRemove ? (feature) => onRemove(feature.id) : undefined} />
+        </FeatureCard.Header>
+        <FeatureCard.Body>
+          <FeatureCard.Description />
+          <FeatureCard.Tags />
+          <FeatureCard.SubfeatureCount />
+          <FeatureCard.TaskCount />
+          <FeatureCard.ShowcaseLead />
+          <FeatureCard.DependencyCount />
+        </FeatureCard.Body>
+      </FeatureCard.Root>
     </div>
   );
 };

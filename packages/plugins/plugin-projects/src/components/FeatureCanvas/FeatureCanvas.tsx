@@ -70,16 +70,29 @@ const FeatureNodeView = ({ node }: NodeViewProps) => {
       {...wheelOverlay}
     >
       {feature && (
-        <FeatureCard
+        <FeatureCard.Root
           feature={feature}
           lookup={lookup}
-          showDependencies={false}
           scroll
           onChange={onChange ? (feature, changes) => onChange(feature.id, changes) : undefined}
           // Controlled only for a host that tracks it; otherwise the edit button's toggle would be overridden.
           editing={onEditingChange ? feature.id === editingId : undefined}
           onEditingChange={(editing) => onEditingChange?.(editing ? feature.id : undefined)}
-        />
+        >
+          <FeatureCard.Header>
+            <FeatureCard.Status />
+            <FeatureCard.Title />
+            <FeatureCard.EditToggle />
+          </FeatureCard.Header>
+          {/* Dependencies are the canvas's arrows, so the card leaves them out. */}
+          <FeatureCard.Body>
+            <FeatureCard.Description />
+            <FeatureCard.Tags />
+            <FeatureCard.SubfeatureCount />
+            <FeatureCard.TaskCount />
+            <FeatureCard.ShowcaseLead />
+          </FeatureCard.Body>
+        </FeatureCard.Root>
       )}
     </Layout.Grid>
   );

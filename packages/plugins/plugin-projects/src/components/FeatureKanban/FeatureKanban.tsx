@@ -9,6 +9,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from '
 
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Board, type BoardModel, Mosaic, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
+import * as Focus from '@dxos/react-ui/Focus';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Util from '@dxos/react-ui/Util';
 
@@ -21,6 +22,7 @@ import {
   type FeatureModel,
   type FeatureStatus,
   type FeatureTarget,
+  cardOpenHandlers,
   makeFeatureLookup,
 } from '../FeatureCard/index.ts';
 
@@ -63,17 +65,34 @@ const FeatureKanbanCard = ({ data: feature, location, draggable }: MosaicTilePro
       draggable={draggable && !editing}
       data-testid='feature-kanban.card'
     >
-      <FeatureCard
-        feature={feature}
-        lookup={lookup}
-        showDependencies={false}
-        focusItem
-        onOpen={onOpen}
-        onRemove={onRemove ? (feature) => onRemove(feature.id) : undefined}
-        onChange={onChange ? (feature, changes) => onChange(feature.id, changes) : undefined}
-        editing={editing}
-        onEditingChange={(editing) => onEditingChange?.(editing ? feature.id : undefined)}
-      />
+      {/* The tile is the board's arrow-key item; the card is its content. */}
+      <Focus.Item asChild data-focus-click>
+        <FeatureCard.Root
+          // Safari does not focus a clicked element that is not a control, and the ring marks where arrows continue.
+          onClick={(event) => event.currentTarget.focus()}
+          {...cardOpenHandlers(onOpen && (() => onOpen({ type: 'object', id: feature.id })), { disabled: editing })}
+          feature={feature}
+          lookup={lookup}
+          onOpen={onOpen}
+          onChange={onChange ? (feature, changes) => onChange(feature.id, changes) : undefined}
+          editing={editing}
+          onEditingChange={(editing) => onEditingChange?.(editing ? feature.id : undefined)}
+        >
+          <FeatureCard.Header>
+            <FeatureCard.Status />
+            <FeatureCard.Title />
+            <FeatureCard.EditToggle />
+            <FeatureCard.Menu onRemove={onRemove ? (feature) => onRemove(feature.id) : undefined} />
+          </FeatureCard.Header>
+          <FeatureCard.Body>
+            <FeatureCard.Description />
+            <FeatureCard.Tags />
+            <FeatureCard.SubfeatureCount />
+            <FeatureCard.TaskCount />
+            <FeatureCard.ShowcaseLead />
+          </FeatureCard.Body>
+        </FeatureCard.Root>
+      </Focus.Item>
     </Mosaic.Tile>
   );
 };

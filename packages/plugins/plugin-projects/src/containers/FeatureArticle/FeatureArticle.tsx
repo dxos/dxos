@@ -21,7 +21,7 @@ import { Task } from '@dxos/types';
 import { meta } from '#meta';
 import { Feature } from '#types';
 
-import { FeatureCardBody, SubfeatureEditor, getDependents } from '../../components/FeatureCard/index.ts';
+import { FeatureCard, SubfeatureEditor, getDependents } from '../../components/FeatureCard/index.ts';
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
 import { useFeatureEditing, useFeatureGraph, useOpenFeatureTarget } from '../../hooks/index.ts';
 
@@ -117,18 +117,20 @@ export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticlePr
               <Form.Fields />
               {feature && (
                 <Form.FieldSet label={t('feature-article.relations.label')}>
-                  <Card.Root grid border={false} data-testid='feature-article.relations'>
-                    <FeatureCardBody
-                      feature={feature}
-                      lookup={graph.lookup}
-                      expanded
-                      showFields={false}
-                      showSubfeatures={false}
-                      dependents={dependents}
-                      onRemoveDependency={(id) => editing.removeDependency(subject.id, id)}
-                      onOpen={handleOpen}
-                    />
-                  </Card.Root>
+                  {/* The form edits the description, specs and subfeatures, so the card shows only relations. */}
+                  <FeatureCard.Provider feature={feature} lookup={graph.lookup} onOpen={handleOpen}>
+                    <Card.Root grid border={false} data-testid='feature-article.relations'>
+                      <FeatureCard.Body>
+                        <FeatureCard.Tags all />
+                        <FeatureCard.TaskCount />
+                        <FeatureCard.Dependencies onRemove={(id) => editing.removeDependency(subject.id, id)} />
+                        <FeatureCard.Dependents dependents={dependents} />
+                        <FeatureCard.Tasks />
+                        <FeatureCard.Showcases />
+                        <FeatureCard.Specs />
+                      </FeatureCard.Body>
+                    </Card.Root>
+                  </FeatureCard.Provider>
                   {canFileTask && (
                     <Input.Root
                       placeholder={t('feature-article.file-task.placeholder')}
