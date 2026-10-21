@@ -34,7 +34,10 @@ export const filterContacts = (contacts: Contact[], filter: string): Contact[] =
     return contacts;
   }
   return contacts.filter(
-    (contact) => contactDisplayName(contact).toLowerCase().includes(query) || contactKeyHex(contact).includes(query),
+    (contact) =>
+      contactDisplayName(contact).toLowerCase().includes(query) ||
+      contactKeyHex(contact).includes(query) ||
+      (contact.did?.toLowerCase().includes(query) ?? false),
   );
 };
 

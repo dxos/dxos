@@ -388,6 +388,11 @@ export const steps = [
     subtitle: 'QA-5 step 4: the agents she administers, read from her own spaces',
     run: async ({ peers: { alice } }) => {
       await openAgentsPanel(alice);
+      // QA-5 expects a chip for the agent's own space and one for Alice's.
+      const chips = agentRow(alice.page).getByTestId('contact-list.space');
+      for (const space of [AGENT, HOME]) {
+        await chips.getByText(space, { exact: true }).waitFor({ timeout: TIMEOUT });
+      }
     },
   },
   {

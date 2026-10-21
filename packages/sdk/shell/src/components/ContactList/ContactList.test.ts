@@ -30,6 +30,12 @@ describe('filterContacts', () => {
     expect(filterContacts([makeContact('Alice'), bob], hex)).toEqual([bob]);
   });
 
+  test('matches the DID a row shows', () => {
+    const kai = makeContact('Kai');
+    kai.did = 'did:halo:Kai3xYz';
+    expect(filterContacts([makeContact('Alice'), kai], 'kai3x')).toEqual([kai]);
+  });
+
   test('empty filter returns all', () => {
     const contacts = [makeContact('A'), makeContact('B')];
     expect(filterContacts(contacts, '')).toEqual(contacts);
