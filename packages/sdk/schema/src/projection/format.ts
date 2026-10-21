@@ -161,9 +161,13 @@ export const formatToSchema: Record<Format.TypeFormat, Schema.Codec<FormatSchema
   // TODO(wittjosiah): Doesn't align with getSimpleType where Tuples are treated as objects.
   [Format.TypeFormat.GeoPoint]: extend(Format.TypeFormat.GeoPoint, TypeEnum.Array, {
     // TODO(wittjosiah): If this is an array or tuple then it shows up in the form.
-    items: Schema.Any,
-    minItems: Schema.Literal(2),
-    additionalItems: Schema.Literal(false),
+    // A tuple's positions are `prefixItems` in the JSON Schema the type emits, and `items` in the older
+    // draft `formatToAdditionalPropertyAttributes` writes; either may be present.
+    items: Schema.optional(Schema.Any),
+    prefixItems: Schema.optional(Schema.Any),
+    minItems: Schema.optional(Schema.Number),
+    maxItems: Schema.optional(Schema.Number),
+    additionalItems: Schema.optional(Schema.Literal(false)),
   }),
 };
 

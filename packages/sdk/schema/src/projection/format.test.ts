@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Format } from '@dxos/echo';
+import { Format, JsonSchema } from '@dxos/echo';
 import { TypeEnum } from '@dxos/echo/Format';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
@@ -90,6 +90,12 @@ describe('format', () => {
       prop.referenceSchema = 'dxn:com.example.type.test';
       expect(validate(prop)).to.deep.eq(prop);
     }
+  });
+
+  test('geo point format decodes the tuple JSON schema emits', ({ expect }) => {
+    const { type, format, ...rest } = JsonSchema.toJsonSchema(Format.GeoPoint);
+    const prop = { ...rest, property: 'location' as SchemaEx.JsonProp, type, format };
+    expect(Schema.decodeUnknownSync(PropertySchema)(prop)).to.include({ format: Format.TypeFormat.GeoPoint });
   });
 
   test('get properties', ({ expect }) => {
