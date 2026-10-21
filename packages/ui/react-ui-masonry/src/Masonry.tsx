@@ -314,10 +314,9 @@ const MasonryViewportInner = Util.composable<HTMLDivElement, MasonryViewportProp
                   className={[
                     '*:min-w-0!',
                     selectable && 'cursor-pointer',
-                    // On an overlay above the tile, since an opaque tile (a card) would paint over a ring on the wrapper;
-                    // hidden while the tile holds focus, whose own ring then marks it.
+                    // On an overlay above the tile, since an opaque tile (a card) would paint over a ring on the wrapper.
                     selected &&
-                      'after:absolute after:inset-0 after:rounded-md after:ring-2 after:ring-inset after:ring-primary-500 after:pointer-events-none has-[:focus]:after:hidden',
+                      'after:absolute after:inset-0 after:rounded-md after:ring-2 after:ring-inset after:ring-primary-500 after:pointer-events-none',
                   ]
                     .filter(Boolean)
                     .join(' ')}
