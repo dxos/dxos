@@ -4,4 +4,6 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export const ProjectFolder: ComponentType<any> = lazy(() => import('./ProjectFolder/index.ts'));
+import { type ProjectFolderProps } from './ProjectFolder/ProjectFolder.tsx';
+
+export const ProjectFolder: ComponentType<ProjectFolderProps> = lazy(() => import('./ProjectFolder/index.ts'));

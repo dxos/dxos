@@ -166,20 +166,18 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
             />
           </div>
         ) : mode === 'kanban' ? (
-          <div className='grid min-h-0' data-testid='feature-map.kanban'>
-            <FeatureKanban
-              features={features}
-              onSetStatus={editing.setStatus}
-              onOpen={handleOpen}
-              onOpenObject={handleOpen}
-              openSpec={openSpec}
-              onRemove={editing.removeFromProject}
-              onRename={editing.rename}
-              onDescribe={editing.describe}
-              editingId={editingId}
-              onEditingChange={setEditingId}
-            />
-          </div>
+          <FeatureKanban
+            features={features}
+            onSetStatus={editing.setStatus}
+            onOpen={handleOpen}
+            onOpenObject={handleOpen}
+            openSpec={openSpec}
+            onRemove={editing.removeFromProject}
+            onRename={editing.rename}
+            onDescribe={editing.describe}
+            editingId={editingId}
+            onEditingChange={setEditingId}
+          />
         ) : (
           <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport>

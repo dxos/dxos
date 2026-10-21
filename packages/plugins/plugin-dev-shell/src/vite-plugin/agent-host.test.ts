@@ -23,38 +23,8 @@ import { Shell } from '#shell';
 import { requestEndpoint } from '../capabilities/agent-host.ts';
 import { type AgentHost, startAgentHost } from './testing.ts';
 
-/**
- * A real agent process speaking ACP (newline-delimited JSON-RPC on stdio), with no dependencies so it runs from a
- * temporary directory: it opens one session and answers every prompt with a streamed echo, as Claude Code would.
- */
-const FAKE_AGENT = `
-import { createInterface } from 'node:readline';
-const send = (message) => process.stdout.write(JSON.stringify({ jsonrpc: '2.0', ...message }) + '\\n');
-createInterface({ input: process.stdin }).on('line', (line) => {
-  const { id, method, params } = JSON.parse(line);
-  switch (method) {
-    case 'initialize':
-      return send({ id, result: { protocolVersion: params.protocolVersion, agentCapabilities: {} } });
-    case 'session/new':
-      return send({ id, result: { sessionId: 'dev-shell-1' } });
-    case 'session/prompt': {
-      const text = params.prompt.filter((block) => block.type === 'text').map((block) => block.text).join('');
-      for (const chunk of ['echo: ', text]) {
-        send({
-          method: 'session/update',
-          params: {
-            sessionId: params.sessionId,
-            update: { sessionUpdate: 'agent_message_chunk', content: { type: 'text', text: chunk } },
-          },
-        });
-      }
-      return send({ id, result: { stopReason: 'end_turn' } });
-    }
-    default:
-      return id === undefined ? undefined : send({ id, error: { code: -32601, message: 'method not found: ' + method } });
-  }
-});
-`;
+/** The fake agent's script, copied into a temporary agents directory as that agent's entry. */
+const FAKE_AGENT = new URL('./fake-acp-agent.mjs', import.meta.url);
 
 const TestLayer = Layer.mergeAll(
   TestDatabaseLayer({ types: [Feed.Feed, Message.Message, Chat.Chat] }),
@@ -73,7 +43,7 @@ describe('dev shell agent host', () => {
     fs.mkdirSync(agentDir, { recursive: true });
     // No `executable`: the fake agent needs no local tool, so the server reports it available.
     fs.writeFileSync(path.join(agentDir, 'agent.json'), JSON.stringify({ id: 'claude-code', entry: 'agent.mjs' }));
-    fs.writeFileSync(path.join(agentDir, 'agent.mjs'), FAKE_AGENT);
+    fs.copyFileSync(FAKE_AGENT, path.join(agentDir, 'agent.mjs'));
     fs.mkdirSync(path.join(root, 'work'));
     host = await startAgentHost({
       agents: path.join(root, 'agents'),

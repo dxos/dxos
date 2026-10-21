@@ -10,6 +10,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from '
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Board, type BoardModel, Mosaic, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
@@ -138,45 +139,79 @@ const FeatureKanbanColumn = ({ data: status, location }: MosaicTileProps<Feature
  * The Kanban view of a project's features: a column per status, each feature's card in its status column.
  * Dragging a card to another column sets the feature's status.
  */
-export const FeatureKanban = ({ features, ...props }: FeatureKanbanProps) => {
-  const registry = useContext(RegistryContext);
-  // Stable atoms fed from props, so a status change moves one card rather than rebuilding the board.
-  const [featuresAtom] = useState(() => Atom.make<readonly FeatureModel[]>(features));
-  useEffect(() => registry.set(featuresAtom, features), [registry, featuresAtom, features]);
+// Composable, so a host's slot (the Features tab's `Panel.Body asChild`) styles the board itself.
+export const FeatureKanban = Util.composable<HTMLDivElement, FeatureKanbanProps>(
+  (
+    {
+      features,
+      onSetStatus,
+      onOpen,
+      onOpenObject,
+      openSpec,
+      onRemove,
+      onRename,
+      onDescribe,
+      editingId,
+      onEditingChange,
+      ...props
+    },
+    forwardedRef,
+  ) => {
+    const registry = useContext(RegistryContext);
+    // Stable atoms fed from props, so a status change moves one card rather than rebuilding the board.
+    const [featuresAtom] = useState(() => Atom.make<readonly FeatureModel[]>(features));
+    useEffect(() => registry.set(featuresAtom, features), [registry, featuresAtom, features]);
 
-  const model = useMemo<BoardModel<FeatureStatus, FeatureModel>>(() => {
-    const columns = Atom.make<readonly FeatureStatus[]>(FEATURE_KANBAN_STATUSES);
-    const items = Atom.family((status: FeatureStatus) =>
-      Atom.make((get) => get(featuresAtom).filter((feature) => feature.status === status)),
+    const model = useMemo<BoardModel<FeatureStatus, FeatureModel>>(() => {
+      const columns = Atom.make<readonly FeatureStatus[]>(FEATURE_KANBAN_STATUSES);
+      const items = Atom.family((status: FeatureStatus) =>
+        Atom.make((get) => get(featuresAtom).filter((feature) => feature.status === status)),
+      );
+      return {
+        getColumnId: (status) => status,
+        getItemId: (feature) => feature.id,
+        isColumn: (value): value is FeatureStatus => FEATURE_KANBAN_STATUSES.some((status) => status === value),
+        isItem: isFeatureModel,
+        columns,
+        items,
+        getColumns: () => [...registry.get(columns)],
+        getItems: (status) => registry.get(items(status)),
+      };
+    }, [registry, featuresAtom]);
+
+    const lookup = useMemo(() => makeFeatureLookup(features), [features]);
+    const columnHandler = useMemo<DndContainerHandler<FeatureStatus>>(
+      () => ({ id: 'feature-kanban-columns', canDrop: () => false }),
+      [],
     );
-    return {
-      getColumnId: (status) => status,
-      getItemId: (feature) => feature.id,
-      isColumn: (value): value is FeatureStatus => FEATURE_KANBAN_STATUSES.some((status) => status === value),
-      isItem: isFeatureModel,
-      columns,
-      items,
-      getColumns: () => [...registry.get(columns)],
-      getItems: (status) => registry.get(items(status)),
-    };
-  }, [registry, featuresAtom]);
 
-  const lookup = useMemo(() => makeFeatureLookup(features), [features]);
-  const columnHandler = useMemo<DndContainerHandler<FeatureStatus>>(
-    () => ({ id: 'feature-kanban-columns', canDrop: () => false }),
-    [],
-  );
+    return (
+      <FeatureKanbanContext.Provider
+        value={{
+          lookup,
+          onSetStatus,
+          onOpen,
+          onOpenObject,
+          openSpec,
+          onRemove,
+          onRename,
+          onDescribe,
+          editingId,
+          onEditingChange,
+        }}
+      >
+        <Board.Root model={model}>
+          <Board.Content
+            {...Util.composableProps(props, { classNames: 'px-2' })}
+            eventHandler={columnHandler}
+            Tile={FeatureKanbanColumn}
+            data-testid='feature-kanban'
+            ref={forwardedRef}
+          />
+        </Board.Root>
+      </FeatureKanbanContext.Provider>
+    );
+  },
+);
 
-  return (
-    <FeatureKanbanContext.Provider value={{ ...props, lookup }}>
-      <Board.Root model={model}>
-        <Board.Content
-          classNames='px-2'
-          eventHandler={columnHandler}
-          Tile={FeatureKanbanColumn}
-          data-testid='feature-kanban'
-        />
-      </Board.Root>
-    </FeatureKanbanContext.Provider>
-  );
-};
+FeatureKanban.displayName = 'FeatureKanban';
