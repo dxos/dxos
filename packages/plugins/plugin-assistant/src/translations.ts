@@ -180,7 +180,7 @@ export const translations: Theme.Resource[] = [
         'add-object.title': 'Add an object',
         'commands-and-skills.label': 'Commands and skills',
         'connectors.label': 'Connectors',
-        'connectors-manage.label': 'Manage connectors…',
+        'connections-manage.label': 'Manage connections…',
         'connectors-empty.label': 'No connectors with MCP servers',
         'agent-picker.label': 'Agent',
         'model-picker.models.label': 'Models',
@@ -194,7 +194,6 @@ export const translations: Theme.Resource[] = [
         'details.skills.label': 'Skills',
         'remove-skill.label': 'Remove skill',
 
-        'connectors.title': 'Connectors',
         'agent-locked.message': 'The agent is chosen before the first message. Start a new chat to use another.',
         'remove-object.label': 'Remove object',
 

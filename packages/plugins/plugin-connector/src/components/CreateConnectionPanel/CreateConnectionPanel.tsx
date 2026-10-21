@@ -7,9 +7,11 @@ import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import { Database, Obj } from '@dxos/echo';
+import { Database, Filter, Obj } from '@dxos/echo';
+import { useQuery } from '@dxos/echo-react';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { useMembers } from '@dxos/halo-react';
+import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { Form } from '@dxos/react-ui-form';
@@ -52,7 +54,17 @@ export const CreateConnectionPanel = ({
 }: CreateConnectionPanelProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const capabilityConnectors = Hooks.useCapabilities(Connector).flat();
-  const connectors = connectorsProp ?? capabilityConnectors;
+  const db = Database.isDatabase(target) ? target : Obj.getDatabase(target);
+  const connections = useQuery(db, Filter.type(Connection.Connection));
+  // A connector that takes no credential is offered until the space has one: a second connection
+  // would only duplicate the first.
+  const connectors = useMemo(
+    () =>
+      (connectorsProp ?? capabilityConnectors).filter(
+        (connector) => !connector.noCredential || !connections.some(({ connectorId }) => connectorId === connector.id),
+      ),
+    [connectorsProp, capabilityConnectors, connections],
+  );
   const [connectorId, setConnectorId] = useState<string>();
   const [error, setError] = useState<string>();
   // The OAuth start Continue fires belongs to no form, so its saving guard cannot hold Connect back.
@@ -90,7 +102,7 @@ export const CreateConnectionPanel = ({
   // Every member of a space can use its connections, so a user-kind one lends the connecting
   // person's account to all of them. Read from the highlighted row too: an OAuth connector starts
   // its flow on Continue, so the warning has to show before it.
-  const spaceId = Database.isDatabase(target) ? target.spaceId : Obj.getDatabase(target)?.spaceId;
+  const spaceId = db?.spaceId;
   const members = useMembers(spaceId);
   // A space's member list always includes the current identity, so an empty one is still loading;
   // a user connection waits for it, or it could start before the warning has a chance to show.

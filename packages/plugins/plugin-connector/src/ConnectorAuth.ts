@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Database, type Key, Obj, type Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
@@ -17,6 +18,7 @@ import { meta } from '#meta';
 import { ConnectorCoordination, ConnectorSpec } from '#types';
 
 import * as Binding from './Binding.ts';
+import { connectionsDeckSubject } from './constants.ts';
 
 /**
  * The "Connect" control for an object that can be bound to a remote account: one dropdown group whose
@@ -24,6 +26,10 @@ import * as Binding from './Binding.ts';
  * with an auth flow. Shared by the standalone `ConnectorAuthMenu` (plugin-assistant) and the object
  * toolbars contributed from `app-graph-builder`, so both render the same thing.
  */
+
+/** Deck subject of a space's Connections settings, where its connections are listed and added. */
+export const connectionsSubject = (spaceId: Key.SpaceId): string =>
+  connectionsDeckSubject(GraphPath.getSpacePath(spaceId));
 
 /** Icon shown on "Connect X" entries and on the menu's trigger button. */
 const CONNECT_ICON = 'ph--plugs--regular';

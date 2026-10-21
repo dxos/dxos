@@ -12,9 +12,8 @@ import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Menu from '@dxos/react-ui/Menu';
 
+import { useConnectionStates, useMcpConnections } from '#hooks';
 import { meta } from '#meta';
-
-import { useConnectionStates, useMcpConnections } from '../Connectors/index.ts';
 
 export type ChatAddMenuProps = {
   db: Database.Database;
@@ -24,7 +23,7 @@ export type ChatAddMenuProps = {
   onAddFiles?: () => void;
   onAddObject: () => void;
   onCommands: () => void;
-  onManageConnectors: () => void;
+  onManageConnections: () => void;
 };
 
 export const ChatAddMenu = ({
@@ -34,7 +33,7 @@ export const ChatAddMenu = ({
   onAddFiles,
   onAddObject,
   onCommands,
-  onManageConnectors,
+  onManageConnections,
 }: ChatAddMenuProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const mcpConnections = useMcpConnections(db);
@@ -55,12 +54,12 @@ export const ChatAddMenu = ({
         case 'commands':
           pending.current = onCommands;
           break;
-        case 'manage-connectors':
-          pending.current = onManageConnectors;
+        case 'manage-connections':
+          pending.current = onManageConnections;
           break;
       }
     },
-    [onAddFiles, onAddObject, onCommands, onManageConnectors],
+    [onAddFiles, onAddObject, onCommands, onManageConnections],
   );
   const handleExitComplete = useCallback(() => {
     const action = pending.current;
@@ -117,8 +116,8 @@ export const ChatAddMenu = ({
             ))}
             <Menu.Separator />
             <Menu.Item
-              item={{ value: 'manage-connectors', label: t('connectors-manage.label'), icon: 'ph--gear--regular' }}
-              data-testid='assistant.add-menu.manage-connectors'
+              item={{ value: 'manage-connections', label: t('connections-manage.label'), icon: 'ph--gear--regular' }}
+              data-testid='assistant.add-menu.manage-connections'
             />
           </Menu.Content>
         </Menu.Sub>
