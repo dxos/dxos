@@ -5,6 +5,7 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
 
@@ -30,6 +31,12 @@ export const TldrawConverter = Capability.lazyModule(
     environments: ['browser', 'tauri'],
   },
   () => import('./tldraw-converter.ts'),
+);
+// Migration providers stay eager: a migration missing when a space opens is a data hazard.
+export const Migrations = Capability.lazyModule(
+  'CanvasMigrations',
+  { provides: [ClientCapabilities.Migration] },
+  () => import('./migrations.ts'),
 );
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
 export const Schema = AppCapability.schema(() => import('./schema.ts'));

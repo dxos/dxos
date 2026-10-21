@@ -25,6 +25,7 @@ import {
 } from '../../model/index.ts';
 import { toolForKey } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
+import { type EditMode } from './useEditMode.ts';
 import { type PointerMachine } from './usePointerMachine.ts';
 import { type SceneSnap } from './useSceneSnap.ts';
 
@@ -55,7 +56,6 @@ export type UseSceneKeysOptions = {
   select: (ids: Iterable<ElementId>) => void;
   toggleSnap: () => void;
   toggleGuides: () => void;
-  toggleLattice: () => void;
   toggleDebug: () => void;
   onUndo: () => void;
   onRedo: () => void;
@@ -65,8 +65,9 @@ export type UseSceneKeysOptions = {
 } & Pick<SceneSnap, 'major'> &
   Pick<EditingCommands, 'copy' | 'cut' | 'paste'> &
   Pick<SelectionCommands, 'delete' | 'group' | 'ungroup'> &
-  Pick<PointerMachine, 'cancelDrag' | 'removePoint'> &
-  Pick<ToolsCommands, 'setTool'>;
+  Pick<PointerMachine, 'cancelDrag' | 'removePoint' | 'finishVertices' | 'removeVertex' | 'deleteVertex'> &
+  Pick<ToolsCommands, 'setTool'> &
+  EditMode;
 
 /**
  * What a chord does in the state the view is in. Every chord itself comes from `KEY_BINDINGS`, so this
@@ -86,7 +87,6 @@ export const useSceneKeys = ({
   select,
   toggleSnap,
   toggleGuides,
-  toggleLattice,
   toggleDebug,
   onUndo,
   onRedo,
@@ -100,8 +100,13 @@ export const useSceneKeys = ({
   ungroup,
   cancelDrag,
   removePoint,
+  finishVertices,
+  removeVertex,
+  deleteVertex,
   setTool,
   timeline,
+  editNode,
+  exitEdit,
 }: UseSceneKeysOptions): ((event: KeyboardEvent) => void) => {
   return useCallback(
     (event: KeyboardEvent) => {
@@ -109,6 +114,45 @@ export const useSceneKeys = ({
       const selectedNodes = selected.filter((id) => scene.nodes[id] !== undefined);
       const point = registry.get(atoms.point);
       const action = keyAction(event);
+      // A line drawn vertex by vertex: Enter ends it open, Delete takes back its last vertex, Escape drops it.
+      if (registry.get(atoms.drag)?.kind === 'vertices') {
+        if (action === 'open') {
+          finishVertices(false);
+          event.preventDefault();
+          return;
+        }
+        if (action === 'delete') {
+          removeVertex();
+          event.preventDefault();
+          return;
+        }
+      }
+      // A node in vertex edit mode: Enter or Escape leaves it, each drag having landed already, and Delete removes the
+      // vertex last pressed rather than the node.
+      const editing = registry.get(atoms.editing);
+      // An undo, Select All or the inspector can take the node away or select others; then the mode is stale.
+      const editable =
+        editing?.kind === 'vertices' &&
+        scene.nodes[editing.id] !== undefined &&
+        selected.length === 1 &&
+        selected[0] === editing.id;
+      if (editing?.kind === 'vertices' && !editable) {
+        exitEdit();
+      }
+      if (editing?.kind === 'vertices' && editable && !registry.get(atoms.drag)) {
+        if (action === 'open' || action === 'cancel') {
+          exitEdit();
+          event.preventDefault();
+          return;
+        }
+        if (action === 'delete') {
+          if (editing.vertex !== undefined) {
+            deleteVertex(editing.id, editing.vertex);
+          }
+          event.preventDefault();
+          return;
+        }
+      }
       // The timeline's keys act only while the scene has one; otherwise `K` is still a tool's.
       if (timeline?.active) {
         switch (action) {
@@ -161,6 +205,9 @@ export const useSceneKeys = ({
           const node = selected.length === 1 ? scene.nodes[selected[0]] : undefined;
           if (node && nodeDef(nodeRegistry, node)?.openable) {
             navigation.drillIn(node);
+          } else if (node && editNode(node)) {
+            // The Enter that entered edit mode must not reach the editor it opens.
+            event.preventDefault();
           }
           break;
         }
@@ -235,9 +282,6 @@ export const useSceneKeys = ({
         case 'guides':
           toggleGuides();
           break;
-        case 'lattice':
-          toggleLattice();
-          break;
         case 'debug':
           toggleDebug();
           break;
@@ -262,8 +306,14 @@ export const useSceneKeys = ({
       atoms.selection,
       atoms.drag,
       atoms.point,
+      atoms.editing,
       removePoint,
       cancelDrag,
+      finishVertices,
+      removeVertex,
+      deleteVertex,
+      editNode,
+      exitEdit,
       select,
       navigation,
       capabilities,
@@ -276,7 +326,6 @@ export const useSceneKeys = ({
       setTool,
       toggleSnap,
       toggleGuides,
-      toggleLattice,
       toggleDebug,
       onUndo,
       onRedo,

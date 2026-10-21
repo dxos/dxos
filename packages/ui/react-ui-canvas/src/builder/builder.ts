@@ -250,6 +250,7 @@ const BUILTIN_TYPES: readonly string[] = [
   'ellipse',
   'cloud',
   'polygon',
+  'polyline',
   'note',
   'view',
 ] satisfies BuiltinNodeType[];
@@ -277,6 +278,7 @@ export const ViewBuilder = {
   ellipse: (id: string, box: Box) => node('ellipse', id, box),
   cloud: (id: string, box: Box) => node('cloud', id, box),
   polygon: (id: string, box: Box) => node('polygon', id, box),
+  polyline: (id: string, box: Box) => node('polyline', id, box),
   note: (id: string, box: Box) => node('note', id, box),
   link,
 };

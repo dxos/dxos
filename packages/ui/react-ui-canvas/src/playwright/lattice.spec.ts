@@ -33,8 +33,8 @@ test.describe('Canvas lattice', () => {
     close = undefined;
   });
 
-  test('draws the lattice cells, and no grid, since the cells are what a shape lands on', async () => {
-    await page.getByTestId('theme-grid-lines').click();
+  test('draws the lattice cells, and no grid or grid choice, since the cells are what a shape lands on', async () => {
+    await expect(page.getByTestId('theme-grid-lines')).toHaveCount(0);
     await expect(page.getByTestId('lattice-grid')).toHaveCount(1);
     await expect(page.getByTestId('dx-canvas-grid')).toHaveCount(0);
   });
@@ -86,28 +86,6 @@ test.describe('Canvas lattice', () => {
     expect(moved.x - a.x).toBeGreaterThan(column * 0.2);
     expect(moved.x - a.x).toBeLessThan(column * 0.8);
   });
-
-  test('with the lattice off, snap lands on the basic grid and the cells are hidden', async () => {
-    // Only a lines background draws the snap grid; the default theme draws dots.
-    await page.getByTestId('theme-grid-lines').click();
-    await page.getByTestId('toolbar-lattice').click();
-    await expect(page.getByTestId('lattice-grid')).toHaveCount(0);
-    await expect(page.getByTestId('dx-canvas-grid')).toHaveCount(1);
-    const a = await scene.box(scene.node('a'));
-    const column = (384 * (await scene.zoom())) / 100;
-    await scene.drag(
-      { x: a.x + a.width / 2, y: a.y + a.height / 2 },
-      { x: a.x + a.width / 2 + column * 0.4, y: a.y + a.height / 2 },
-    );
-    const moved = await scene.box(scene.node('a'));
-    expect(moved.x - a.x).toBeGreaterThan(column * 0.2);
-    expect(moved.x - a.x).toBeLessThan(column * 0.8);
-    // On, the lattice is back.
-    await scene.focus();
-    await page.keyboard.press('Shift+G');
-    await expect(page.getByTestId('lattice-grid')).toHaveCount(1);
-  });
-
   test('dragging a face steps it one cell and leaves the opposite face where it was', async () => {
     // Fit frames the shapes tightly, so step out to leave room below E for the drag.
     await scene.zoomOut();
