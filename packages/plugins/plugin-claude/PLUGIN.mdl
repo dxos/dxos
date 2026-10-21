@@ -600,12 +600,19 @@ decision D-3: The local coding-agent runtime lives in this plugin, not plugin-co
 ```
 
 ```mdl
-decision D-4: QA-4 and QA-5 describe the agent picker that replaced the chat's options and the "Assign to Claude Code (EDGE)" task action, and are unverified until their flows run again.
+decision D-4: A chat's agent, where it runs and its model are chosen in one picker in the prompt, which replaces the chat's options popover; Claude Code and Claude Code (cloud) are one agent that runs on this device or on EDGE.
+  date: 2026-10-21
+  by: user:wittjosiah
+  affects: [F-9.1]
+```
+
+```mdl
+decision D-5: QA-4 and QA-5 describe the agent picker and the "Assign to Claude Code (EDGE)" task action, and are unverified until their flows run again. Fills in [D-4].
   date: 2026-10-21
   by: agent:claude-code
   for: user:wittjosiah
   affects: [F-9.1, QA-4, QA-5]
-  why: The chat prompt's redesign removed the options popover these steps used and renamed the EDGE task action.
+  why: The steps used the removed options popover and the old "(cloud)" label of the task action.
 ```
 
 ---

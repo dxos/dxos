@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type ComponentProps } from 'react';
+import React, { type ComponentProps, useEffect } from 'react';
 
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { type Space, useSpace } from '@dxos/react-client/echo';
@@ -20,6 +20,12 @@ export const SearchDialogSurface = ({ props: { spaceId, ...props } = {} }: Searc
   const activeSpace = Hooks.useActiveSpace();
   const namedSpace = useSpace(spaceId);
   const space = spaceId ? namedSpace : activeSpace;
+  // With no space the dialog never mounts to settle a picker's handle, so the caller would wait forever.
+  useEffect(() => {
+    if (!space) {
+      props.handle?.dismiss();
+    }
+  }, [space, props.handle]);
   if (!space) {
     return null;
   }
