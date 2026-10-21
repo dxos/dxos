@@ -47,3 +47,39 @@ export const EnableSkills = Operation.make({
   }),
   services: [Registry.Service, Database.Service, Harness.HarnessService],
 });
+
+const McpConnection = Schema.Struct({
+  id: Schema.String,
+  name: Schema.optional(Schema.String),
+  connectorId: Schema.optional(Schema.String),
+  enabled: Schema.Boolean.annotate({ description: 'Whether this conversation connects its MCP server.' }),
+});
+
+export const QueryMcpConnections = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.assistantToolkit.queryMcpConnections'),
+    name: 'Query MCP connections',
+    description:
+      "Lists the space's connections and whether this conversation connects each one's MCP server. Connections are on unless the conversation turned them off.",
+    icon: 'ph--plugs-connected--regular',
+  },
+  input: Schema.Struct({}),
+  output: Schema.Array(McpConnection),
+  services: [Database.Service, Harness.HarnessService],
+});
+
+export const SetMcpConnection = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.assistantToolkit.setMcpConnection'),
+    name: 'Set MCP connection',
+    description:
+      "Turns a connection's MCP server on or off for this conversation. Its tools appear or disappear on the next turn.",
+    icon: 'ph--plugs-connected--regular',
+  },
+  input: Schema.Struct({
+    id: Schema.String.annotate({ description: 'The connection id, as listed by the query.' }),
+    enabled: Schema.Boolean,
+  }),
+  output: McpConnection,
+  services: [Database.Service, Harness.HarnessService],
+});

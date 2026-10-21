@@ -84,7 +84,7 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
     );
     const created = db.add(
       Cursor.makeExternal({
-        source: connection.accessToken,
+        source: Connection.getAccessToken(connection),
         target: Ref.make(project),
         externalId: String(repo().id),
         snapshots,

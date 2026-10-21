@@ -25,7 +25,7 @@ describe('deepseek connector', () => {
         // Trimmed, so a pasted key with surrounding whitespace still authenticates.
         expect(result.accessToken.token).toBe('sk-abc');
         expect(result.connection.connectorId).toBe(DEEPSEEK_CONNECTOR_ID);
-        expect(result.connection.accessToken.target?.token).toBe('sk-abc');
+        expect(result.connection.accessToken?.target?.token).toBe('sk-abc');
       }),
     ));
 

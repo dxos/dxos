@@ -26,7 +26,7 @@ describe('typesafe connector', () => {
         // Trimmed, so a pasted key with surrounding whitespace still authenticates.
         expect(result.accessToken.token).toBe('ts-abc');
         expect(result.connection.connectorId).toBe(TYPESAFE_CONNECTOR_ID);
-        expect(result.connection.accessToken.target?.token).toBe('ts-abc');
+        expect(result.connection.accessToken?.target?.token).toBe('ts-abc');
       }),
     ));
 

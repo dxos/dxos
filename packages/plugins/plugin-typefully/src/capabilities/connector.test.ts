@@ -24,7 +24,7 @@ describe('Typefully connector', () => {
         expect(result.accessToken.source).toBe(TYPEFULLY_SOURCE);
         // Connection links back to the connector; source lives on the AccessToken, not the Connection.
         expect(result.connection.connectorId).toBe(TYPEFULLY_CONNECTOR_ID);
-        expect(result.connection.accessToken.target?.id).toBe(result.accessToken.id);
+        expect(result.connection.accessToken?.target?.id).toBe(result.accessToken.id);
       }),
     ));
 

@@ -8,6 +8,7 @@ import * as ConnectorSync from '@dxos/app-toolkit/ConnectorSync';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
+import { Connection } from '@dxos/link';
 
 import { SlackOperation } from '#types';
 
@@ -36,11 +37,11 @@ const handler: Operation.WithHandler<typeof SlackOperation.MaterializeSlackTarge
 
         return yield* Effect.gen(function* () {
           // The connection's token becomes the channel's, so the Slack backend posts as the connected bot.
-          const { accessToken } = yield* Database.load(connection);
+          const loaded = yield* Database.load(connection);
           const channel = yield* findOrCreateChannelForTarget({
             externalId: remoteTarget.id,
             name: remoteTarget.name,
-            accessToken,
+            accessToken: Connection.getAccessToken(loaded),
           });
           return { target: Ref.make(channel) };
         }).pipe(Effect.provide(Database.layer(db)));

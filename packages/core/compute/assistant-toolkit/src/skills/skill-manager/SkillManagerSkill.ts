@@ -9,7 +9,7 @@ import * as Template from '@dxos/compute/Template';
 import { DXN } from '@dxos/keys';
 import { trim } from '@dxos/util';
 
-import { EnableSkills, QuerySkills } from './operations/definitions.ts';
+import { EnableSkills, QueryMcpConnections, QuerySkills, SetMcpConnection } from './operations/definitions.ts';
 
 export const key = 'org.dxos.skill.skillManager';
 
@@ -17,7 +17,7 @@ export const make = () =>
   Skill.make({
     key,
     name: 'Skill Manager',
-    description: 'Query and enable skills in the current conversation.',
+    description: 'Query and enable skills and MCP servers in the current conversation.',
     instructions: Template.make({
       source: trim`
         The list below is the current set of available skills — it is rendered fresh into this prompt,
@@ -34,6 +34,10 @@ export const make = () =>
         NOTE: A skill's tools only appear once it is enabled. Skills already enabled in this
         conversation expose their tools to you directly — do not re-enable a skill whose tools you
         can already see.
+
+        Connections to services can also give you their MCP servers' tools. They are on unless this
+        conversation turned them off: use [query-mcp-connections] to see which are off, and
+        [set-mcp-connection] to turn one on when you need its tools.
       `,
       inputs: [
         {
@@ -43,7 +47,7 @@ export const make = () =>
         },
       ],
     }),
-    tools: Skill.toolDefinitions({ operations: [QuerySkills, EnableSkills] }),
+    tools: Skill.toolDefinitions({ operations: [QuerySkills, EnableSkills, QueryMcpConnections, SetMcpConnection] }),
   });
 
 export { SkillManagerHandlers as Handlers } from './operations/index.ts';

@@ -4,19 +4,23 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import { expect } from 'vitest';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
+import { AiContext } from '@dxos/assistant';
+import * as Credential from '@dxos/compute/Credential';
 import * as McpServer from '@dxos/compute/McpServer';
-import { Database, Feed, Filter, Obj } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
+import { AccessToken, Connection } from '@dxos/link';
 import { startTestServer } from '@dxos/mcp-client/testing';
 import { ContentBlock, Message } from '@dxos/types';
 
 import { AssistantTestLayer } from '../testing/index.ts';
 import * as AgentService from './AgentService.ts';
-import { loadSpaceMcpServers } from './mcp-servers.ts';
+import { loadMcpServers } from './mcp-servers.ts';
 
 const { text, toolCall, scriptedAiService } = ScriptedLanguageModel;
 
@@ -38,12 +42,65 @@ const toolResults = (feed: Feed.Feed) =>
       .map((block) => JSON.stringify(block.result));
   });
 
-describe('space MCP servers', () => {
+describe('MCP servers', () => {
   it.effect(
-    'only enabled servers are connected, with the credentials stored on them',
+    'connects each connection with an endpoint the conversation has not turned off',
     Effect.fnUntraced(
       function* (_) {
         const server = yield* withTestServer;
+        const feed = yield* Database.add(Feed.make());
+        const token = yield* Database.add(AccessToken.make({ source: 'mcp.test', token: server.apiKey }));
+        yield* Database.add(
+          Connection.make({
+            connectorId: 'mcp',
+            mcp: { url: server.urls.key, protocol: 'http' },
+            accessToken: Ref.make(token),
+          }),
+        );
+        const off = yield* Database.add(
+          Connection.make({ connectorId: 'mcp', mcp: { url: server.urls.oauth, protocol: 'http' } }),
+        );
+        yield* Database.add(Connection.make({ connectorId: 'native' }));
+        yield* Feed.append(feed, [
+          Obj.make(AiContext.Binding, {
+            skills: { added: [], removed: [] },
+            objects: { added: [], removed: [] },
+            connections: { added: [], removed: [Ref.make(off)] },
+          }),
+        ]);
+
+        const credentials = Layer.succeed(Credential.CredentialsService, {
+          queryCredentials: async () => [],
+          getCredential: async ({ accessTokenId }) => ({
+            service: 'mcp.test',
+            apiKey: accessTokenId === token.id ? server.apiKey : undefined,
+          }),
+        });
+        const stored = yield* loadMcpServers({ feed }).pipe(Effect.provide(credentials));
+        expect(stored).toEqual([{ url: server.urls.key, protocol: 'http', apiKey: server.apiKey }]);
+
+        // A host that knows the connector registry also resolves a connector's declared endpoint.
+        const resolved = yield* loadMcpServers({
+          feed,
+          endpointOf: (connection) =>
+            connection.connectorId === 'native' ? { url: server.urls.open, protocol: 'http' } : connection.mcp,
+        }).pipe(Effect.provide(credentials));
+        expect(resolved.map(({ url }) => url).sort()).toEqual([server.urls.key, server.urls.open].sort());
+      },
+      Effect.provide(
+        AssistantTestLayer({ types: [AccessToken.AccessToken, AiContext.Binding, Connection.Connection] }),
+      ),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'connects enabled space servers at URLs no connection covers, with the credentials stored on them',
+    Effect.fnUntraced(
+      function* (_) {
+        const server = yield* withTestServer;
+        const feed = yield* Database.add(Feed.make());
+        yield* Database.add(Connection.make({ connectorId: 'mcp', mcp: { url: server.urls.open, protocol: 'http' } }));
         yield* Database.add(Obj.make(McpServer.McpServer, { name: 'open', url: server.urls.open, protocol: 'http' }));
         yield* Database.add(
           Obj.make(McpServer.McpServer, { name: 'off', url: server.urls.key, protocol: 'http', enabled: false }),
@@ -57,12 +114,14 @@ describe('space MCP servers', () => {
           }),
         );
 
-        const options = yield* loadSpaceMcpServers();
+        const options = yield* loadMcpServers({ feed });
         expect(options.map(({ url }) => url)).toEqual([server.urls.open, server.urls.oauth]);
         expect(options[0].authProvider).toBeUndefined();
         expect(options[1].authProvider).toBeDefined();
       },
-      Effect.provide(AssistantTestLayer({ types: [McpServer.McpServer] })),
+      Effect.provide(
+        AssistantTestLayer({ types: [AccessToken.AccessToken, Connection.Connection, McpServer.McpServer] }),
+      ),
       TestHelpers.provideTestContext,
     ),
   );

@@ -15,9 +15,10 @@ import { Database, Feed, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId, type URI } from '@dxos/keys';
+import { Connection } from '@dxos/link';
 
 import { AutomationSkill, ChatContextSkill, MemorySkill } from '../index.ts';
-import { EnableSkills, QuerySkills } from './operations/definitions.ts';
+import { EnableSkills, QueryMcpConnections, QuerySkills, SetMcpConnection } from './operations/definitions.ts';
 import { SkillManagerHandlers } from './operations/index.ts';
 
 EntityId.dangerouslyDisableRandomness();
@@ -25,7 +26,7 @@ EntityId.dangerouslyDisableRandomness();
 const TestLayer = AssistantTestLayer({
   aiServicePreset: 'edge-remote',
   operationHandlers: SkillManagerHandlers,
-  types: [Skill.Skill],
+  types: [Connection.Connection, Skill.Skill],
   skills: [ChatContextSkill.make(), MemorySkill.make(), AutomationSkill.make()],
   tracing: 'pretty',
 });
@@ -62,6 +63,26 @@ const getBoundSkills = Effect.gen(function* () {
 });
 
 describe('Skill Manager', () => {
+  it.effect(
+    'set-mcp-connection: turns a connection off for this conversation only',
+    Effect.fnUntraced(
+      function* (_) {
+        const conversation = yield* getConversationDXN;
+        const connection = yield* Database.add(Connection.make({ name: 'GitHub', connectorId: 'github-app' }));
+
+        const before = yield* Operation.invoke(QueryMcpConnections, {}, { conversation });
+        yield* Operation.invoke(SetMcpConnection, { id: connection.id, enabled: false }, { conversation });
+        const after = yield* Operation.invoke(QueryMcpConnections, {}, { conversation });
+
+        expect(before.map(({ enabled }) => enabled)).toEqual([true]);
+        expect(after.map(({ enabled }) => enabled)).toEqual([false]);
+      },
+      provideTestLayers,
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
   it.effect(
     'query-skills: returns all registered skills',
     Effect.fnUntraced(

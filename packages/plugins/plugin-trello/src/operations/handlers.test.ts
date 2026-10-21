@@ -187,7 +187,7 @@ describe('Trello operation handlers (e2e with stubbed API)', () => {
       const kanban = yield* Database.load(target);
       const binding = yield* Database.add(
         Cursor.makeExternal({
-          source: connection.accessToken,
+          source: Connection.getAccessToken(connection),
           target: Ref.make(kanban),
           externalId: remoteTarget.id,
           label: remoteTarget.name,

@@ -13,3 +13,6 @@ export const DEEPSEEK_PROVIDER_ID = 'deepseek';
 
 /** Source string used in `AccessToken.source` for a user-supplied DeepSeek key. */
 export const DEEPSEEK_SOURCE = 'deepseek.com';
+
+/** Stable id of the Custom MCP Server connector; stored as `Connection.connectorId`. */
+export const MCP_PROVIDER_ID = 'mcp';

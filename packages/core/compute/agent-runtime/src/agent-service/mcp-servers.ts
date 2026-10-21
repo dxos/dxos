@@ -5,31 +5,68 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
+import { AiContext } from '@dxos/assistant';
 import * as Credential from '@dxos/compute/Credential';
 import * as McpServer from '@dxos/compute/McpServer';
-import { Database, Filter, type Ref } from '@dxos/echo';
-import { type AccessToken } from '@dxos/link';
+import { Database, type Feed, Filter, type Ref } from '@dxos/echo';
+import { type AccessToken, Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import { McpOAuth, type McpToolkit } from '@dxos/mcp-client';
 
 /**
- * The space's enabled MCP servers as connection options, read at the start of every turn so a server
- * added, toggled or signed in to from the chat's options applies from the next turn on.
+ * The MCP server a connection exposes. A host that knows the connector registry resolves a
+ * connector's declared endpoint; without one only a custom MCP connection, which stores its own
+ * endpoint, resolves.
  */
-export const loadSpaceMcpServers = (): Effect.Effect<
-  McpToolkit.Options[],
-  never,
-  Database.Service | Credential.CredentialsService
-> =>
+export type McpEndpointOf = (connection: Connection.Connection) => Connection.McpEndpoint | undefined;
+
+export const storedMcpEndpoint: McpEndpointOf = (connection) => connection.mcp;
+
+/**
+ * The MCP servers a conversation connects, read at the start of every turn so a server added, toggled
+ * or signed in to applies from the next turn on: every connection with an endpoint the conversation
+ * has not turned off, then every enabled space `McpServer` at a URL no connection already covers.
+ */
+export const loadMcpServers = ({
+  feed,
+  endpointOf = storedMcpEndpoint,
+}: {
+  feed: Feed.Feed;
+  endpointOf?: McpEndpointOf;
+}): Effect.Effect<McpToolkit.Options[], never, Database.Service | Credential.CredentialsService> =>
   Effect.gen(function* () {
+    const states = yield* AiContext.boundConnections(feed);
+    const connections = yield* Database.query(Filter.type(Connection.Connection)).run;
+    const fromConnections = yield* Effect.forEach(
+      connections.filter((connection) => AiContext.isConnectionOn(states, connection)),
+      (connection) => {
+        const endpoint = endpointOf(connection);
+        return endpoint ? connectionOptions(connection, endpoint).pipe(Effect.map(Option.some)) : Effect.succeedNone;
+      },
+    ).pipe(Effect.map((options) => options.flatMap(Option.toArray)));
+
+    const covered = new Set(fromConnections.map(({ url }) => url));
     const servers = yield* Database.query(Filter.type(McpServer.McpServer)).run;
-    return yield* Effect.forEach(
-      servers.filter((server) => server.enabled !== false),
-      toOptions,
+    const fromServers = yield* Effect.forEach(
+      servers.filter((server) => server.enabled !== false && !covered.has(server.url)),
+      serverOptions,
     );
+    return [...fromConnections, ...fromServers];
   });
 
-const toOptions = (
+const connectionOptions = (
+  connection: Connection.Connection,
+  { url, protocol }: Connection.McpEndpoint,
+): Effect.Effect<McpToolkit.Options, never, Database.Service | Credential.CredentialsService> =>
+  Effect.gen(function* () {
+    if (!connection.accessToken) {
+      return { url, protocol };
+    }
+    const apiKey = yield* resolveAccessToken(connection.accessToken);
+    return Option.isSome(apiKey) ? { url, protocol, apiKey: apiKey.value } : { url, protocol };
+  });
+
+const serverOptions = (
   server: McpServer.McpServer,
 ): Effect.Effect<McpToolkit.Options, never, Database.Service | Credential.CredentialsService> =>
   Effect.gen(function* () {

@@ -40,13 +40,13 @@ import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-import { AccessToken } from '@dxos/link';
+import { AccessToken, Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Actor, ContentBlock, Message } from '@dxos/types';
 import { markWork, trim } from '@dxos/util';
 
 import { type DelegationStrategy } from './delegation-strategy.ts';
-import { loadSpaceMcpServers } from './mcp-servers.ts';
+import { type McpEndpointOf, loadMcpServers } from './mcp-servers.ts';
 import { type MakeTurnProducer, makeAiSessionTurnProducer } from './turn-producer.ts';
 
 export interface AgentProcessOptions {
@@ -92,6 +92,12 @@ export interface AgentProcessOptions {
    * (the default) the process behaves as a plain conversational agent.
    */
   delegationStrategy?: DelegationStrategy;
+
+  /**
+   * The MCP server a connection exposes. Defaults to the endpoint the connection stores itself, which
+   * only a custom MCP connection has; a host that knows the connector registry resolves the rest.
+   */
+  mcpEndpoint?: McpEndpointOf;
 }
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
@@ -188,7 +194,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
     // registers exactly these with the process's database, and a typed query for a type it does
     // not know matches nothing. Without them a hosted agent reads its own skill bindings back
     // empty and runs every turn with an EMPTY TOOLKIT — the model can only answer in prose.
-    // `McpServer` and `AccessToken` are read each turn to connect the space's MCP servers.
+    // `Connection`, `McpServer` and `AccessToken` are read each turn to connect the MCP servers.
     types: [
       Chat.Chat,
       Feed.Feed,
@@ -196,6 +202,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
       Alarm.Alarm,
       AiContext.Binding,
       Skill.Skill,
+      Connection.Connection,
       McpServer.McpServer,
       AccessToken.AccessToken,
     ],
@@ -618,7 +625,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               // other, and each is a round trip to the database that the turn would otherwise wait on in series.
               const [mcpServers] = yield* Effect.all(
                 [
-                  loadSpaceMcpServers(),
+                  loadMcpServers({ feed, endpointOf: options.mcpEndpoint }),
                   Effect.gen(function* () {
                     // The turn appends its own user message built from `prompt`, so the queue entry that
                     // supplied it must leave the queue view now or the same content shows in both places
