@@ -20,6 +20,12 @@ export type FrameMode = 'overlay' | 'layout';
  */
 export type BandStyle = 'band' | 'panel';
 
+/**
+ * The title's and captions' colours, whatever the page's theme: white type on black, or black type on white. Unset,
+ * captions are white on black and floating panels invert the page's theme.
+ */
+export type FrameColors = 'white-on-black' | 'black-on-white';
+
 /** Where the caption sits: against the top or bottom edge, or centred vertically. */
 export type CaptionPosition = 'top' | 'middle' | 'bottom';
 
@@ -41,7 +47,9 @@ export type FrameOptions = {
   captionStyle?: BandStyle;
   /** Where the caption sits; defaults to `bottom`. */
   captionPosition?: CaptionPosition;
-  /** The opacity (0–1) of the caption panel's black background; unset keeps `--autocue-caption-alpha`. */
+  /** The title's and captions' colours; see `FrameColors`. */
+  colors?: FrameColors;
+  /** The opacity (0–1) of the caption panel's background; unset keeps `--autocue-caption-alpha`. */
   captionBackground?: number;
   /** On, the header's text also shows as a translucent band over the top; defaults to off (no panels). */
   headerBand?: boolean;
@@ -61,6 +69,7 @@ export type FrameHandle = {
   setCaptionStyle: (style: BandStyle) => void;
   setCaptionPosition: (position: CaptionPosition) => void;
   setCaptionBackground: (alpha?: number) => void;
+  setColors: (colors?: FrameColors) => void;
   setHeaderBand: (show: boolean) => void;
   /**
    * Shows the header's text alone, as a panel centred in the frame, for `ms`; then fades it out as the header and
@@ -83,6 +92,15 @@ export const FRAME_STYLES = `
   /* The recording always fills the frame; nothing below takes space from it. */
   .frame.layout .content { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; }
   .header.off { display: none; }
+  /* Declared on the frame, so they win over the host's tokens and the page-theme inversion alike. */
+  .frame.white-on-black { --autocue-caption-rgb: 0, 0, 0; --autocue-caption-fg: #fff;
+    --autocue-caption-muted: rgba(255, 255, 255, 0.75); --autocue-band-surface: rgba(0, 0, 0, 0.72);
+    --autocue-band-fg: #fff; --autocue-band-muted: rgba(255, 255, 255, 0.7); --autocue-panel-surface: rgba(0, 0, 0, 0.92);
+    --autocue-panel-fg: #fff; --autocue-panel-muted: rgba(255, 255, 255, 0.7); }
+  .frame.black-on-white { --autocue-caption-rgb: 255, 255, 255; --autocue-caption-fg: #000;
+    --autocue-caption-muted: rgba(0, 0, 0, 0.65); --autocue-band-surface: rgba(255, 255, 255, 0.72);
+    --autocue-band-fg: #000; --autocue-band-muted: rgba(0, 0, 0, 0.65); --autocue-panel-surface: rgba(255, 255, 255, 0.95);
+    --autocue-panel-fg: #000; --autocue-panel-muted: rgba(0, 0, 0, 0.65); }
   /* Only the bands ignore the pointer: inherited through the slot, it would disable the content too. */
   .band { box-sizing: border-box; text-align: center; pointer-events: none; backdrop-filter: blur(6px);
     background: var(--autocue-band-surface); color: var(--autocue-band-fg); }
@@ -108,7 +126,7 @@ export const FRAME_STYLES = `
   /* Final Cut Pro's caption: a black box fitted to the text, low in the frame, with no shadow or blur. */
   .caption.panel { bottom: var(--autocue-caption-inset); height: auto; padding: 14px 30px 16px;
     border-radius: var(--autocue-caption-radius); box-shadow: none; backdrop-filter: blur(var(--autocue-caption-blur));
-    --autocue-band-surface: rgba(0, 0, 0, var(--autocue-caption-alpha)); --autocue-band-fg: var(--autocue-caption-fg);
+    --autocue-band-surface: rgba(var(--autocue-caption-rgb), var(--autocue-caption-alpha)); --autocue-band-fg: var(--autocue-caption-fg);
     --autocue-band-muted: var(--autocue-caption-muted); }
   .caption.panel.top { top: var(--autocue-caption-inset); bottom: auto; }
   .caption.panel.middle { top: 50%; bottom: auto; transform: translate(-50%, -50%); }
@@ -164,6 +182,7 @@ export const createFrame = (
     captionStyle = 'panel',
     captionPosition = 'bottom',
     captionBackground,
+    colors,
     headerBand: showHeaderBand = false,
     open,
   }: FrameOptions = {},
@@ -285,6 +304,12 @@ export const createFrame = (
   };
   setCaptionBackground(captionBackground);
 
+  const setColors = (next?: FrameColors) => {
+    frame.classList.toggle('white-on-black', next === 'white-on-black');
+    frame.classList.toggle('black-on-white', next === 'black-on-white');
+  };
+  setColors(colors);
+
   const setHeaderBand = (show: boolean) => {
     headerBand.classList.toggle('off', !show);
   };
@@ -346,6 +371,7 @@ export const createFrame = (
     setCaptionStyle,
     setCaptionPosition,
     setCaptionBackground,
+    setColors,
     setHeaderBand,
     playOpen,
     dispose: () => {

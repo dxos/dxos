@@ -33,7 +33,8 @@
  * The ops, the overlay and flow scripts are the same; `page` is `tauri/page.mjs`'s Playwright-shaped adapter.
  *
  * `--caption-position top|middle|bottom` (bottom) places step captions, and `--caption-background <0–1>` (0.6) sets
- * the opacity of their black panel, which is blurred behind so the type stays legible.
+ * the opacity of their panel, which is blurred behind so the type stays legible. `--caption-colors white-on-black` or
+ * `black-on-white` fixes the title's and captions' colours whatever the page's theme.
  *
  * `--theme` sets the emulated color scheme (`dark` by default, `light`). `--action-timeout` (5000 ms)
  * bounds how long a gesture, or a flow script's raw locator, waits for its target. `--cadence` (600 ms)
@@ -82,6 +83,8 @@ const parseArgs = () => {
     // Where captions sit (`top`, `middle` or `bottom`), and their background's opacity (0–1, translucent by default).
     'caption-position': 'bottom',
     'caption-background': 0.6,
+    // `white-on-black` or `black-on-white` for the title and captions; unset, floating panels invert the page's theme.
+    'caption-colors': undefined,
     'mode': 'record',
     // Manual mode only: the app's identity, spaces and dismissed first-run UI survive between sessions,
     // so the user's recording starts in a prepared app instead of onboarding.
@@ -318,6 +321,7 @@ const updateFrame = async (update) => {
           mode: 'overlay',
           captionPosition: caption.position,
           captionBackground: caption.background,
+          colors: caption.colors,
         });
       }
       const frame = host.__frame;
@@ -337,7 +341,11 @@ const updateFrame = async (update) => {
     {
       id: CAPTION_ID,
       update,
-      caption: { position: options['caption-position'], background: options['caption-background'] },
+      caption: {
+        position: options['caption-position'],
+        background: options['caption-background'],
+        colors: options['caption-colors'],
+      },
     },
   );
 };

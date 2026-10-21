@@ -501,7 +501,7 @@ shadow root, so neither Playwright's actionability checks nor the app's hit test
 `caption` pins a banner to the bottom of the page, so the video explains itself with no editing. The banner is the
 caption band of `tools/autocue`'s `Frame` (story `tools/autocue/Frame`), injected in overlay mode, so change its look
 there. `--caption-position top` (or `middle`) moves it off a subject that lives at the bottom of the plank, and
-`--caption-background 0.85` makes its translucent black panel (0.6 by default, blurred behind) more opaque:
+`--caption-background 0.85` makes its translucent black panel (0.6 by default, blurred behind) more opaque. `--caption-colors black-on-white` (or `white-on-black`) fixes the title's and captions' colours:
 
 ```bash
 C '{"op":"caption","value":"Step 2 — Play 1. e4: drag the e2 pawn to e4","subtitle":"from plugin-chess/PLUGIN.mdl"}'

@@ -70,7 +70,10 @@ const SIZES = {
 
 type Size = keyof typeof SIZES;
 
-type StoryProps = Pick<FrameProps, 'captionStyle' | 'captionPosition' | 'captionBackground' | 'headerBand' | 'open'> & {
+type StoryProps = Pick<
+  FrameProps,
+  'captionStyle' | 'captionPosition' | 'captionBackground' | 'colors' | 'headerBand' | 'open'
+> & {
   /** The recording's aspect ratio, which every view keeps, letterboxed. */
   size?: Size;
   /** Off, the script still steps the app but shows no captions. */
@@ -87,6 +90,7 @@ const TakeStory = ({
   captionStyle,
   captionPosition,
   captionBackground,
+  colors,
   headerBand,
   open,
   captions = true,
@@ -124,6 +128,7 @@ const TakeStory = ({
         captionStyle={captionStyle}
         captionPosition={captionPosition}
         captionBackground={captionBackground}
+        colors={colors}
         headerBand={headerBand}
         open={open}
       >
@@ -218,6 +223,7 @@ const meta: Meta<typeof TakeStory> = {
     captionStyle: { control: 'inline-radio', options: ['band', 'panel'] },
     captionPosition: { control: 'inline-radio', options: ['top', 'middle', 'bottom'] },
     captionBackground: { control: { type: 'range', min: 0, max: 1, step: 0.05 } },
+    colors: { control: 'inline-radio', options: ['white-on-black', 'black-on-white'] },
   },
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
@@ -252,6 +258,7 @@ export const Floating: Story = {
     captionStyle: 'panel',
     captionPosition: 'bottom',
     captionBackground: 0.6,
+    colors: 'white-on-black',
     interval: 4_000,
   },
 };

@@ -29,6 +29,7 @@ export const TOKENS = `
     --autocue-panel-surface: rgba(17, 17, 17, 0.92);
     /* Final Cut Pro's caption: white bold type on translucent black, the same in both themes; the blur behind it keeps
        the type legible over any frame. The alpha is the frame's \`captionBackground\`. */
+    --autocue-caption-rgb: 0, 0, 0;
     --autocue-caption-alpha: 0.6;
     --autocue-caption-blur: 8px;
     --autocue-caption-fg: #fff;
