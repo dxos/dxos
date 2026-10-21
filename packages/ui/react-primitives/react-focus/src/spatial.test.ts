@@ -55,11 +55,11 @@ describe('findNearest', () => {
       left1: rect(0, 0, 100, 100),
       left2: rect(0, 110, 100, 100),
       right1: rect(110, 0, 100, 40),
-      right2: rect(110, 50, 100, 200),
+      right2: rect(110, 104, 100, 200),
     };
     const from = 'left1';
     const others = layout(masonry).filter(({ value }) => value !== from);
-    // `right2` starts at 50, nearer than `left2` at 110, but only `left2` shares the column.
+    // `right2` starts at 104, nearer than `left2` at 110, but only `left2` shares the column.
     expect(findNearest(masonry[from], others, 'down')).toBe('left2');
   });
 });

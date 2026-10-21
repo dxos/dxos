@@ -8,6 +8,8 @@
   :root {
     --dx-focus-ring-color: var(--color-focus, oklch(70.5% 0.213 47.604));
     --dx-focus-ring-width: 2px;
+    /* The selected item's edge in a collection (a card, a tile): one colour, so every container marks selection alike. */
+    --dx-selected-color: var(--color-accent-bg);
     /* One timing for every open/close: content arriving decelerates, content leaving accelerates away. */
     --dx-disclosure-duration: var(--duration-tree-disclosure, 200ms);
     --dx-disclosure-ease-open: ease-out;

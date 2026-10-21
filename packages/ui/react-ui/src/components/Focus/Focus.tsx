@@ -110,8 +110,10 @@ FocusGroup.displayName = 'Focus.Group';
 //
 
 type FocusItemProps = {
-  /** Controlled `aria-current`; otherwise the item is current while it has focus. */
+  /** `aria-current`: the item is where the user is ("you are here"), set by the caller; focus alone does not set it. */
   current?: boolean;
+  /** `aria-selected`: the item is selected in its collection, drawn by the shared selected edge (`focus.css`). */
+  selected?: boolean;
   /** A separator-coloured border while unfocused. */
   border?: boolean;
   /** Called on click and on `Enter`. */
@@ -123,14 +125,16 @@ type FocusItemProps = {
  * rather than moving into it, and `Escape` returns focus to it.
  */
 const FocusItem = slottable<HTMLDivElement, FocusItemProps>(
-  ({ children, asChild, current, border, onCurrentChange, onClick, onFocus, onBlur, ...props }, forwardedRef) => {
+  (
+    { children, asChild, current, selected, border, onCurrentChange, onClick, onFocus, onBlur, ...props },
+    forwardedRef,
+  ) => {
     const {
       ref: focusGroupRef,
       onKeyDown: onFocusGroupKeyDown,
       onFocus: _onFocusGroupFocus,
       ...focusGroupAttrs
     } = useFocusGroup({ tabBehavior: 'unlimited', ignoreKeys: ['Enter'] });
-    const [focused, setFocused] = useState(false);
 
     const handleClick = useCallback(
       (event: MouseEvent<HTMLDivElement>) => {
@@ -150,25 +154,6 @@ const FocusItem = slottable<HTMLDivElement, FocusItemProps>(
       [onFocusGroupKeyDown, onCurrentChange],
     );
 
-    const handleFocus = useCallback(
-      (event: FocusEvent<HTMLDivElement>) => {
-        setFocused(true);
-        onFocus?.(event);
-      },
-      [onFocus],
-    );
-
-    const handleBlur = useCallback(
-      (event: FocusEvent<HTMLDivElement>) => {
-        setFocused(false);
-        onBlur?.(event);
-      },
-      [onBlur],
-    );
-
-    // A controlled `current` wins, so a virtualized item scrolled back into view keeps its state.
-    const isCurrent = current ?? focused;
-
     const { className, ...rest } = composableProps(props, { classNames: recipes.focusItem() });
     return (
       <ark.div
@@ -179,12 +164,14 @@ const FocusItem = slottable<HTMLDivElement, FocusItemProps>(
         data-scope='focus'
         data-part='item'
         data-border={border ? '' : undefined}
-        aria-current={isCurrent || undefined}
+        // Focus is drawn by the focus ring; `current` and `selected` are the caller's states, never inferred from it.
+        aria-current={current || undefined}
+        aria-selected={selected}
         className={className}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
+        onFocus={onFocus}
+        onBlur={onBlur}
         ref={useComposedRefs<HTMLDivElement>(forwardedRef, focusGroupRef)}
       >
         {children}

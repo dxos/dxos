@@ -46,9 +46,20 @@ export const Default: Story = {
     await expect(card(canvasElement, 'delegate').dataset.relation).toBe('dependent');
     await expect(card(canvasElement, 'feature-map').dataset.relation).toBeUndefined();
 
-    // Clicking the selected card again clears the selection.
-    await userEvent.click(title());
-    await waitFor(async () => expect(card(canvasElement, 'tokens').dataset.relation).toBeUndefined());
+    // Selection follows the arrow keys, as in any single-select list; from the first card, there is always one below.
+    const tile = (id: string) => card(canvasElement, id).closest('[role="option"]');
+    await expect(tile('sync')).toHaveAttribute('aria-selected', 'true');
+    await userEvent.click(within(card(canvasElement, 'accounts')).getByRole('heading', { name: 'Accounts' }));
+    await waitFor(async () => expect(tile('accounts')).toHaveAttribute('aria-selected', 'true'));
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(async () => expect(tile('accounts')).toHaveAttribute('aria-selected', 'false'));
+    await expect(canvasElement.querySelectorAll('[role="option"][aria-selected="true"]')).toHaveLength(1);
+
+    // Escape clears it.
+    await userEvent.keyboard('{Escape}');
+    await waitFor(async () =>
+      expect(canvasElement.querySelectorAll('[role="option"][aria-selected="true"]')).toHaveLength(0),
+    );
   },
 };
 
@@ -56,7 +67,7 @@ export const Default: Story = {
 export const Selected: Story = {
   args: { defaultSelectedId: 'triage' },
   play: async ({ canvasElement }) => {
-    const tile = (id: string) => card(canvasElement, id).closest('[role="listitem"]');
+    const tile = (id: string) => card(canvasElement, id).closest('[role="option"]');
     await waitFor(async () => expect(tile('triage')).toHaveAttribute('aria-selected', 'true'));
     // Masonry reveals the tiles once measured; until then they are hidden from the accessibility tree.
     const title = await within(card(canvasElement, 'sync')).findByRole('heading', { name: 'Provider sync' });

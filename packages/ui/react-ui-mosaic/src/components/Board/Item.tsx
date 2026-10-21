@@ -82,7 +82,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
         <Focus.Item asChild>
           <Card.Root
             // A board card sits on a column panel of the same tone, so it needs an edge where a lone card relies on its shadow.
-            classNames={mx('not-data-selected:border-separator-subtle', classNames)}
+            classNames={mx('border-separator-subtle', classNames)}
             data-testid='board-item'
             ref={composedRef}
             onClick={(event) => event.currentTarget.focus()}

@@ -140,7 +140,8 @@ const MosaicStackInner = Util.composable<HTMLDivElement, MosaicStackProps>(
     return (
       <div
         {...Util.composableProps(props, {
-          role: 'list',
+          // A stack with a selection is a listbox of options, the roles that carry `aria-selected`.
+          role: selectedIds ? 'listbox' : 'list',
           classNames: [
             'flex',
             orientation === 'horizontal' && 'h-full [&>*]:shrink-0',
@@ -311,7 +312,8 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
     return (
       <div
         {...Util.composableProps(props, {
-          role: 'list',
+          // A stack with a selection is a listbox of options, the roles that carry `aria-selected`.
+          role: selectedIds ? 'listbox' : 'list',
           classNames: [
             // shrink-0 is required: this div sets an explicit height via inline style (getTotalSize).
             // Without it, a parent flex container (e.g. ScrollArea.Viewport) would shrink this div

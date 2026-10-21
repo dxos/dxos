@@ -203,7 +203,7 @@ export const FeatureKanban = Util.composable<HTMLDivElement, FeatureKanbanProps>
       >
         <Board.Root model={model} navigation='grid'>
           <Board.Content
-            {...Util.composableProps(props, { classNames: 'px-2' })}
+            {...Util.composableProps(props)}
             eventHandler={columnHandler}
             Tile={FeatureKanbanColumn}
             data-testid='feature-kanban'

@@ -4,6 +4,7 @@
 
 import React, { createContext, useContext, useMemo, useState } from 'react';
 
+import { useListSelection } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -55,7 +56,10 @@ type FeatureTileContextValue = Omit<FeatureBoardProps, 'features' | 'selectedId'
 };
 
 /** Masonry tiles get only their item, so the board's selection and edits reach them through context. */
-const FeatureTileContext = createContext<FeatureTileContextValue>({ lookup: () => undefined, onSelect: () => {} });
+const FeatureTileContext = createContext<FeatureTileContextValue>({
+  lookup: () => undefined,
+  onSelect: () => {},
+});
 
 const FeatureTile = ({ data: feature }: { data: FeatureModel }) => {
   const {
@@ -80,9 +84,9 @@ const FeatureTile = ({ data: feature }: { data: FeatureModel }) => {
       <FeatureCard
         feature={feature}
         lookup={lookup}
-        selected={feature.id === selectedId}
-        markSelected={false}
-        focusItem
+        // Not `selected`: a selected card would show its details and grow, and the masonry reflow on every arrow key.
+        // The tile marks the selection; the other cards' relation tags and fading show what it needs.
+        inItem
         relation={relation}
         onSelectDependency={onSelect}
         onOpen={onOpen ? (feature) => onOpen(feature.id) : undefined}
@@ -126,11 +130,11 @@ export const FeatureBoard = ({
   const lookup = useMemo(() => makeFeatureLookup(features), [features]);
 
   const handleSelect = (id: string | undefined) => {
-    const next = id === selectedId ? undefined : id;
-    setSelectedIdState(next);
-    onSelect?.(next);
+    setSelectedIdState(id);
+    onSelect?.(id);
   };
-  const selectedIds = useMemo(() => new Set(selectedId ? [selectedId] : []), [selectedId]);
+  // Single-select: the selected card follows the arrow keys, as in any list; Escape clears it.
+  const { bind, clear } = useListSelection({ mode: 'single', value: selectedId, onValueChange: handleSelect });
   const tileContext: FeatureTileContextValue = {
     lookup,
     selectedId,
@@ -162,17 +166,19 @@ export const FeatureBoard = ({
         })}
       </Layout.Flex>
       {/* The host scrolls the counts and the cards together, so the grid takes no scroll container of its own. */}
-      <FeatureTileContext.Provider value={tileContext}>
-        <Masonry.Root Tile={FeatureTile} minColumnWidth={17}>
-          <Masonry.Viewport
-            items={features}
-            getId={(feature) => feature.id}
-            selectedIds={selectedIds}
-            onSelect={handleSelect}
-            scroll={false}
-          />
-        </Masonry.Root>
-      </FeatureTileContext.Provider>
+      {/* Escape clears the selection, from whichever tile holds focus. */}
+      <div onKeyDown={(event) => event.key === 'Escape' && clear()}>
+        <FeatureTileContext.Provider value={tileContext}>
+          <Masonry.Root Tile={FeatureTile} minColumnWidth={17}>
+            <Masonry.Viewport
+              items={features}
+              getId={(feature) => feature.id}
+              itemProps={(id) => bind(id).rowProps}
+              scroll={false}
+            />
+          </Masonry.Root>
+        </FeatureTileContext.Provider>
+      </div>
     </Layout.Flex>
   );
 };

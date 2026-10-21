@@ -6,6 +6,7 @@ import React, {
   type ComponentProps,
   type ComponentType,
   type CSSProperties,
+  type FocusEvent,
   type JSX,
   type MouseEvent,
   type PropsWithChildren,
@@ -21,6 +22,7 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { useFocusGroup } from '@dxos/react-focus';
 import { createContext } from '@dxos/react-hooks';
+import * as Focus from '@dxos/react-ui/Focus';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
@@ -174,6 +176,13 @@ const MasonryContent = MasonryContentInner as (
 // this layer separately from Content to control the tile grid.
 //
 
+/** A tile's selection props (see `MasonryViewportProps.itemProps`). */
+export type MasonryItemProps = {
+  'aria-selected'?: boolean;
+  'onClick'?: (event: MouseEvent) => void;
+  'onFocus'?: (event: FocusEvent) => void;
+};
+
 type MasonryViewportProps<Item> = Util.ThemedClassName<{
   /** Items to render in the masonry grid. */
   items: readonly Item[];
@@ -187,13 +196,18 @@ type MasonryViewportProps<Item> = Util.ThemedClassName<{
   cacheKey?: string;
   /**
    * Ids of the currently-selected tiles. When `onSelect` is also provided the grid becomes
-   * selectable: selected tiles render an outline + `aria-selected`, and clicking a tile emits
-   * {@link onSelect}. Selection STATE (single/multi semantics) is owned by the consumer — pair this
-   * with `useListSelection` from `@dxos/react-ui-list`.
+   * selectable: selected tiles carry `aria-selected`, drawn by the shared selected edge every
+   * collection uses, and clicking a tile emits {@link onSelect}. Selection STATE (single/multi
+   * semantics) is owned by the consumer — or pass {@link itemProps} instead.
    */
   selectedIds?: ReadonlySet<string>;
   /** Emitted when a tile is clicked while selectable. The consumer toggles its own selection state. */
   onSelect?: (id: string, event: MouseEvent) => void;
+  /**
+   * Each tile's selection props, as `useListSelection`'s `bind(id).rowProps` gives them (`aria-selected`, click, and
+   * focus for a single-select grid whose selection follows the arrow keys). Takes the place of `selectedIds`/`onSelect`.
+   */
+  itemProps?: (id: string) => MasonryItemProps;
   /**
    * Whether this layer owns scrolling. Set `false` when an ancestor already scrolls (e.g. a form's
    * viewport) to render the grid in a plain full-width block instead of a nested scroll container —
@@ -206,7 +220,7 @@ type MasonryViewportProps<Item> = Util.ThemedClassName<{
 }>;
 
 const MasonryViewportInner = Util.composable<HTMLDivElement, MasonryViewportProps<any>>(
-  ({ items, getId, cacheKey, selectedIds, onSelect, scroll = true, ...props }, forwardedRef) => {
+  ({ items, getId, cacheKey, selectedIds, onSelect, itemProps, scroll = true, ...props }, forwardedRef) => {
     const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gap, animate, centered } =
       useMasonryContext('Masonry.Viewport');
     const remInPx = Hooks.usePx(1);
@@ -291,14 +305,16 @@ const MasonryViewportInner = Util.composable<HTMLDivElement, MasonryViewportProp
               },
             })}
             {...focusGroupProps}
-            role='list'
+            // A selectable grid is a listbox of options, the roles that carry `aria-selected`.
+            role={onSelect || itemProps ? 'listbox' : 'list'}
             ref={gridRef}
           >
             {items.map((item, index) => {
               const id = ids[index];
               const rect = rects[index];
-              const selectable = !!onSelect;
-              const selected = selectedIds?.has(id) ?? false;
+              const bound = itemProps?.(id);
+              const selectable = !!onSelect || !!bound;
+              const selected = bound?.['aria-selected'] ?? selectedIds?.has(id) ?? false;
               // A tile with no height at all — never measured, nothing remembered — is positioned by
               // a guess. Painting that guess is what flashed a tile hundreds of pixels out of place
               // when the item set was swapped wholesale. A remembered height from another width is
@@ -306,35 +322,33 @@ const MasonryViewportInner = Util.composable<HTMLDivElement, MasonryViewportProp
               // `visibility` rather than `display`, so the ResizeObserver can still measure it.
               const estimated = !knownIds.has(id);
               return (
-                <div
-                  key={id}
-                  // Let the tile clamp its card: a card's own min-width must not exceed
-                  // the column, or a narrow (single-column, mobile) container overflows
-                  // and shows a horizontal scrollbar.
-                  className={[
-                    '*:min-w-0!',
-                    selectable && 'cursor-pointer',
-                    // On an overlay above the tile, since an opaque tile (a card) would paint over a ring on the wrapper.
-                    selected &&
-                      'after:absolute after:inset-0 after:rounded-md after:ring-2 after:ring-inset after:ring-primary-500 after:pointer-events-none',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                  ref={getTileRef(id)}
-                  role='listitem'
-                  aria-selected={selectable ? selected : undefined}
-                  onClick={onSelect ? (event) => onSelect(id, event) : undefined}
-                  style={{
-                    position: 'absolute',
-                    insetBlockStart: 0,
-                    insetInlineStart: 0,
-                    width: `${columnWidth}px`,
-                    transform: rect ? `translate(${rect.x}px, ${rect.y}px)` : undefined,
-                    visibility: estimated ? 'hidden' : undefined,
-                  }}
-                >
-                  <Tile index={index} data={item} selected={selected} />
-                </div>
+                // The tile is the collection's item: the shared focus ring marks it when current (by click or arrows),
+                // and the shared selected edge when selected — drawn on an overlay above an opaque tile (a card).
+                <Focus.Item key={id} asChild selected={selectable ? selected : undefined} data-focus-click>
+                  <div
+                    // Let the tile clamp its card: a card's own min-width must not exceed
+                    // the column, or a narrow (single-column, mobile) container overflows
+                    // and shows a horizontal scrollbar.
+                    className={['*:min-w-0! rounded-md', selectable && 'cursor-pointer'].filter(Boolean).join(' ')}
+                    ref={getTileRef(id)}
+                    role={selectable ? 'option' : 'listitem'}
+                    onClick={(event) => {
+                      bound?.onClick?.(event);
+                      onSelect?.(id, event);
+                    }}
+                    onFocus={bound?.onFocus}
+                    style={{
+                      position: 'absolute',
+                      insetBlockStart: 0,
+                      insetInlineStart: 0,
+                      width: `${columnWidth}px`,
+                      transform: rect ? `translate(${rect.x}px, ${rect.y}px)` : undefined,
+                      visibility: estimated ? 'hidden' : undefined,
+                    }}
+                  >
+                    <Tile index={index} data={item} selected={selected} />
+                  </div>
+                </Focus.Item>
               );
             })}
           </div>

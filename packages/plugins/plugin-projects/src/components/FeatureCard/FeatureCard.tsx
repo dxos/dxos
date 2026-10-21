@@ -101,13 +101,16 @@ export type FeatureCardProps = FeatureCardBodyProps & {
   onEditingChange?: (editing: boolean) => void;
   /** For a host of fixed height (a canvas box): the card fills it and the body scrolls under the header. */
   scroll?: boolean;
-  /** False where the host marks the selected card itself, as a masonry grid's ring does. */
-  markSelected?: boolean;
   /**
    * In a host's arrow-key grid (a kanban, a masonry): the card is a `Focus.Item`, so it is the grid's member and shows
    * the focus ring when clicked, since that is where the arrow keys continue from.
    */
   focusItem?: boolean;
+  /**
+   * The card is the content of a host's collection item (a masonry tile), which takes focus, the arrow keys and selection:
+   * the card is not a button of its own, so a click reaches the item, and only ⌘-click and double-click (open) are the card's.
+   */
+  inItem?: boolean;
 };
 
 type EditFieldProps = {
@@ -353,8 +356,8 @@ export const FeatureCard = ({
   editing: editingProp,
   onEditingChange,
   scroll,
-  markSelected = true,
   focusItem,
+  inItem,
   ...props
 }: FeatureCardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
@@ -370,21 +373,36 @@ export const FeatureCard = ({
       grid
       // A group, so the header's edit button is muted until the pointer is over the card.
       classNames={['group/card', scroll && 'h-full grid-rows-[min-content_minmax(0,1fr)]']}
-      selected={markSelected && selected}
+      selected={selected}
       // TODO(richburdon): Make click-to-open a pattern.
-      onClick={(event) => {
-        if (focusItem) {
-          // Safari does not focus a clicked element that is not a control, and the ring marks where arrows continue.
-          event.currentTarget.focus();
-        }
-        if (onOpen && (event.metaKey || event.ctrlKey)) {
-          // Opening is the whole gesture: the host must not also treat it as selecting the card.
-          event.stopPropagation();
-          onOpen(feature);
-          return;
-        }
-        onSelect?.(feature);
-      }}
+      onClick={
+        inItem
+          ? undefined
+          : (event) => {
+              if (focusItem) {
+                // Safari does not focus a clicked element that is not a control, and the ring marks where arrows continue.
+                event.currentTarget.focus();
+              }
+              if (onOpen && (event.metaKey || event.ctrlKey)) {
+                // Opening is the whole gesture: the host must not also treat it as selecting the card.
+                event.stopPropagation();
+                onOpen(feature);
+                return;
+              }
+              onSelect?.(feature);
+            }
+      }
+      // In a host's item, opening is caught before the item's own click selects.
+      onClickCapture={
+        inItem && onOpen
+          ? (event) => {
+              if (event.metaKey || event.ctrlKey) {
+                event.stopPropagation();
+                onOpen(feature);
+              }
+            }
+          : undefined
+      }
       onDoubleClick={(event) => {
         if (onOpen && !editing && !isControl(event.target)) {
           onOpen(feature);

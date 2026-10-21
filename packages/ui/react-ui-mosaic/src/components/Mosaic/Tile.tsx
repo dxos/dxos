@@ -287,13 +287,11 @@ const MosaicTile = Util.slottable<HTMLDivElement, MosaicTileProps>(
             'data-object-id': id,
             [`data-${MOSAIC_TILE_STATE_ATTR}`]: state.type,
           }}
-          role='listitem'
-          // Pair `current` / `selected` props with `aria-current` / `aria-selected`
-          // so the `dx-current` / `dx-selected` / `dx-hover` utilities (which key
-          // off those attributes) actually fire. Without this the props are purely
-          // advisory and the corresponding styling silently no-ops.
+          // A tile in a selection is an option, the role that carries `aria-selected`; the `current` / `selected` props
+          // pair with `aria-current` / `aria-selected` so the `dx-current` / `dx-selected` / `dx-hover` utilities fire.
+          role={selected === undefined ? 'listitem' : 'option'}
           aria-current={current ? 'true' : undefined}
-          aria-selected={selected ? 'true' : undefined}
+          aria-selected={selected}
           className={className}
           ref={composedRef}
         >
