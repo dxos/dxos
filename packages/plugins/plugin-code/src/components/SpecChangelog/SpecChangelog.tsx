@@ -5,6 +5,7 @@
 import React, { useMemo, useState } from 'react';
 
 import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
+import { diagramBlockDescription, diagramPreview } from '@dxos/diagram/extension';
 import { Editor } from '@dxos/react-ui-editor';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -39,10 +40,11 @@ export const SpecChangelog = ({ content }: SpecChangelogProps) => {
   const extensions = useMemo(
     () => [
       createBasicExtensions({ lineNumbers: true, readOnly: true }),
-      createMarkdownExtensions({ codeLanguages: [mdlBlockDescription] }),
+      createMarkdownExtensions({ codeLanguages: [mdlBlockDescription, diagramBlockDescription] }),
       createThemeExtensions({ themeMode, slots: documentSlots }),
       decorateMarkdown(),
       mdl(),
+      diagramPreview(),
       decisionGutter(decisions, setSelected),
     ],
     [themeMode, decisions],
