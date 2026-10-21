@@ -10,19 +10,17 @@
 
 import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
-import * as Schema from 'effect/Schema';
 
 import {
   type Capabilities,
   type Intent,
   type Link,
   type Node,
-  OpenView,
+  type VersionedSource,
   type View,
   type ViewId,
   type ViewStore,
   endpointNode,
-  putView,
   removeTargets,
   updateView,
 } from '../model/index.ts';
@@ -35,11 +33,12 @@ export type Projection = {
   apply: (intent: Intent) => void;
   readonly capabilities: Capabilities;
   /**
-   * The model as an opaque immutable value, identical (`===`) when nothing changed, so the view can
-   * keep an undo log without knowing what the model is (`undo.ts`).
+   * The projection's own model, when it keeps one beside the store (constraints, a graph), versioned so undo patches
+   * it as it patches the store (VIEWS.md §8); absent, the store is the whole model.
    */
-  snapshot: () => unknown;
-  restore: (snapshot: unknown) => void;
+  model?: VersionedSource;
+  /** Called after undo or redo patched the store, so a projection mirroring it elsewhere (a compute graph) catches up. */
+  restored?: () => void;
   /**
    * What `apply` would make of `intent`, without applying it: the rewritten intent, or undefined when it
    * would be refused. Absent means intents apply as given. Previews of a gesture in flight read it, so a
@@ -204,11 +203,4 @@ export const createFreehandProjection = ({ registry, store, sceneId }: FreehandP
   scene: Atom.keepAlive(Atom.make((get) => get(store.view(sceneId)) ?? EMPTY)),
   apply: (intent) => updateView(registry, store, sceneId, (scene) => reduceIntent(scene, intent)),
   capabilities: freehandCapabilities,
-  snapshot: () => registry.get(store.view(sceneId)),
-  restore: (snapshot) => {
-    // A host's nodes are `NodeBase` to the engine, so a snapshot is checked against the open schema.
-    if (Schema.is(OpenView)(snapshot)) {
-      putView(registry, store, snapshot);
-    }
-  },
 });

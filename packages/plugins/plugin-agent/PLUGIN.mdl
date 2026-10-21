@@ -690,8 +690,8 @@ feat F-8: An agent in several spaces
     then: that agent is returned and nothing is created
   req F-8.3: A presence carries its home's name, DID and instructions, keyed to the home agent's URI; inviting a presence keys the new one to the same home. An admin who cannot reach the home invites from the agent's own space instead (F-7.8), and the presence starts from the base instructions for its name.
   req F-8.4:
-    when: a member opens an agent invited from another space
-    then: its article is the member's one private chat with the agent, the same as at home, and its companions show the home agent's knowledge and activity, when the member can reach the home space; otherwise the presence's own
+    when: a member opens an agent in a space it was invited to
+    then: its article is the member's private chat with the agent in that space, a conversation of its own that the agent's other spaces do not show, and its companions show that space's goals, watches and channels; what the agent knows comes from its one brain (F-6.1), whichever space the member talks to it in
   req F-8.5: Inviting writes no conversation: nothing is quoted from any chat into the space.
   req F-8.6: Only an agent's admins can add it to another space. The picker offers only the agents the member administers, and op:inviteAgent registers the space with EDGE, which EDGE refuses anyone else, before it makes the presence; EDGE's brain serves only its home and the spaces registered so, so a presence made any other way reads and writes nothing of the brain, and EDGE runs no turn of its chats.
 ```
@@ -852,15 +852,12 @@ Design items from `docs/DESIGN.md` and `docs/FACTS.md` that this package does no
 - The EDGE gateway Durable Object and the agent turn on EDGE live outside this package (EDGE repo).
   Until edge step 4 the gateway still reads a `DiscordBinding` and calls `ensureThreadChat`, neither of
   which exists any more, so Discord conversations do not reach the agent.
-- The intended shape: an agent is a member of the spaces it is invited to, people talk to it there as a
-  bot in their chats, and each person has one conversation with it at the top level (L0), not one per space.
-  As built, an agent with an identity is a member of each shared space it is in (F-7.2), but people talk to it
-  through a presence (an `Agent` keyed to its home); the member's one conversation is their private chat in
-  the agent's home space, which the presence's article opens; its messages carry no identity (`sender` is
-  `{ role: 'assistant' }`); and chats in a space do not wake the agent.
+- The intended shape: an agent is a member of the spaces it is invited to, and people talk to it there as a
+  bot in their chats. As built, an agent with an identity is a member of each shared space it is in (F-7.2), but
+  people talk to it through a presence (an `Agent` keyed to its home), in a private chat of their own in each
+  space (F-8.4); its messages carry no identity (`sender` is `{ role: 'assistant' }`); and chats in a space do
+  not wake the agent.
 - Removing an agent from a space's members leaves its presence there and the space registered with its brain.
-- A member who cannot reach the agent's home space talks to the presence in a chat of its own, which reads
-  the home's brain but not the home conversation.
 - Goals are objects in the space they were recorded in; only facts are shared through the brain.
 - Runtime-assembled knowledge context at the start of each turn; consolidation (dedupe, promotion of
   inferred facts); editing or retracting single facts in the UI (Reset wipes the brain).
@@ -1170,7 +1167,26 @@ decision D-1: A member has one private chat with an agent in a space. An open th
 ```
 
 ```mdl
-decision D-2: An agent's admins are credentials in the agent's own HALO, one admin per credential, added one at a time. No credential lists the admins, and none supersedes another.
+decision D-2: A member who sees the same conversation with an agent in each space the agent is in has hit a bug, which is to be reproduced and fixed.
+  date: 2026-10-19
+  by: user:mykola-vrmchk
+  affects: [F-8.4]
+```
+
+```mdl
+decision D-3: Opening an agent in a space opens the member's private chat with it in that space, a conversation the agent's other spaces do not show, and what the agent knows stays shared through its one brain. Fills in [D-2].
+  date: 2026-10-19
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-8.4]
+  why: The article opened the private chat of the agent's home whichever space it was opened from. A chat per space removes the shared conversation, and the brain every presence names keeps the agent's knowledge whole across spaces (F-6.1).
+  rejected:
+    - One conversation per member, shown in every space the agent is in: the behaviour reported as the bug.
+  source: https://github.com/dxos/dxos/pull/14074
+```
+
+```mdl
+decision D-4: An agent's admins are credentials in the agent's own HALO, one admin per credential, added one at a time. No credential lists the admins, and none supersedes another.
   date: 2026-10-20
   by: user:mykola-vrmchk
   affects: [ensureIdentity, F-7.1, F-7.9]
@@ -1179,7 +1195,7 @@ decision D-2: An agent's admins are credentials in the agent's own HALO, one adm
 ```
 
 ```mdl
-decision D-3: No credential revokes an agent's admin for now.
+decision D-5: No credential revokes an agent's admin for now.
   date: 2026-10-20
   by: user:mykola-vrmchk
   affects: [F-7.1, F-7.9]
@@ -1188,7 +1204,7 @@ decision D-3: No credential revokes an agent's admin for now.
 ```
 
 ```mdl
-decision D-4: The credential is `dxos.halo.credentials.IdentityAdmin { identity_key, admin_key }`: the agent's identity issues it, and the admin is its subject. Fills in [D-2].
+decision D-6: The credential is `dxos.halo.credentials.IdentityAdmin { identity_key, admin_key }`: the agent's identity issues it, and the admin is its subject. Fills in [D-4].
   date: 2026-10-20
   by: agent:claude-code
   for: user:mykola-vrmchk
@@ -1200,7 +1216,7 @@ decision D-4: The credential is `dxos.halo.credentials.IdentityAdmin { identity_
 ```
 
 ```mdl
-decision D-5: An admin's client only asks EDGE to add admins, never to take one off, so a member made a reader or removed stays the agent's admin. It sends each add once a session and again after a failure, since EDGE appends no second credential for an admin. Fills in [D-3].
+decision D-7: An admin's client only asks EDGE to add admins, never to take one off, so a member made a reader or removed stays the agent's admin. It sends each add once a session and again after a failure, since EDGE appends no second credential for an admin. Fills in [D-5].
   date: 2026-10-20
   by: agent:claude-code
   for: user:mykola-vrmchk

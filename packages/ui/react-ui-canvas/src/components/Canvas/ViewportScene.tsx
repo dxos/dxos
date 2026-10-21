@@ -52,13 +52,14 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
     onPointPointerDown,
     onMidpointPointerDown,
     onPointContextMenu,
+    onVertexPointerDown,
+    onVertexMidpointPointerDown,
   } = useCanvasGesture('Canvas.Viewport');
   const tools = useCanvasTools('Canvas.Viewport');
   const selectionAspect = useCanvasSelection('Canvas.Viewport');
   const editingAspect = useCanvasEditing('Canvas.Viewport');
   const timeAspect = useCanvasTime('Canvas.Viewport');
   const guides = useAtomValue(tools.atoms.guides);
-  const latticeOn = useAtomValue(tools.atoms.lattice);
   const debug = useAtomValue(tools.atoms.debug);
   const selection = useAtomValue(selectionAspect.atoms.selection);
   const hover = useAtomValue(selectionAspect.atoms.hover);
@@ -83,7 +84,7 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
       data-frame-time={frameTimeAttribute(time)}
     >
       {/* A lattice scene shows its cells: the places a shape may land, separated by the gutters. */}
-      {guides && !readonly && latticeOn && projection.lattice && (
+      {guides && !readonly && projection.lattice && (
         <LatticeGrid spec={projection.lattice} bounds={latticeBounds} unit={frameUnit} />
       )}
       <div className='pointer-events-auto'>
@@ -100,13 +101,14 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
           hoveredLink={linkHover}
           opening={opening}
           focus={focus}
-          editing={editing}
+          editing={editing?.kind === 'label' ? editing : undefined}
+          dimmed={editing?.kind === 'vertices' ? editing.id : undefined}
           active={active}
           ghost={drag?.kind === 'create' ? PREVIEW_NODE_ID : undefined}
           debug={debug}
           handlers={handlers}
           // Routes follow the gutters in lattice mode, whether or not snap is on.
-          lattice={latticeOn ? projection.lattice : undefined}
+          lattice={projection.lattice}
           cell={grid * MAJOR_GRID_RATIO}
           generated={generated}
         />
@@ -127,13 +129,16 @@ export const ViewportScene = ({ camera, latticeBounds, focus, liveDepth, overlay
           createFrame={createFrame}
           landing={landing}
           blocked={blocked}
-          lattice={latticeOn ? projection.lattice : undefined}
+          lattice={projection.lattice}
           onHandlePointerDown={onHandlePointerDown}
           onPortPointerDown={onPortPointerDown}
           onEndPointerDown={onEndPointerDown}
           onPointPointerDown={onPointPointerDown}
           onMidpointPointerDown={onMidpointPointerDown}
           onPointContextMenu={onPointContextMenu}
+          vertexEditing={editing?.kind === 'vertices' ? editing : undefined}
+          onVertexPointerDown={onVertexPointerDown}
+          onVertexMidpointPointerDown={onVertexMidpointPointerDown}
         />
       )}
       {overlay}

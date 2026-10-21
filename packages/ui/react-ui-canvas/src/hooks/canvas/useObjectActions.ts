@@ -4,7 +4,7 @@
 
 import { useMemo, useRef } from 'react';
 
-import { type CanvasAtoms, type NavigationCommands, type Projection } from '../../engine/index.ts';
+import { type CanvasAtoms, type CanvasHistory, type NavigationCommands, type Projection } from '../../engine/index.ts';
 import {
   type ElementId,
   type InstanceNode,
@@ -24,8 +24,6 @@ import {
   instancePorts,
   isAnonymous,
   promoted,
-  recordStoreStep,
-  recordViews,
   removeComposite,
   renamePortLinks,
   retargetInstance,
@@ -48,8 +46,8 @@ export type UseObjectActionsOptions = {
   atoms: CanvasAtoms;
   store: ViewStore;
   baseProjection: Projection;
-  /** The scene the view opened on, where a step is recorded when the path is empty. */
-  root: ViewId;
+  /** Runs each action as one undo step. */
+  commit: CanvasHistory['commit'];
   select: (ids: Iterable<ElementId>) => void;
   navigation: NavigationCommands;
   viewport: Size;
@@ -61,7 +59,7 @@ export const useObjectActions = ({
   atoms,
   store,
   baseProjection,
-  root,
+  commit: commitStep,
   select,
   navigation,
   viewport,
@@ -70,22 +68,14 @@ export const useObjectActions = ({
   const viewportRef = useRef(viewport);
   viewportRef.current = viewport;
   return useMemo<ObjectActions>(() => {
-    const sceneId = () => registry.get(atoms.path).at(-1) ?? root;
-    /** Writes `scenes` into the store, applies `intents`, and records both as one undo step. */
-    const commit = (scenes: Record<ViewId, View>, intents: Intent[]) => {
-      const before = registry.get(store.views);
-      const model = baseProjection.snapshot();
-      registry.set(store.views, { ...before, ...scenes });
-      if (intents.length > 0) {
-        baseProjection.apply({ kind: 'batch', intents });
-      }
-      // A refused (or empty) batch recorded no step to attach the scenes to, so the change is a step of its own.
-      if (baseProjection.snapshot() === model) {
-        recordStoreStep(registry, atoms.undo, sceneId(), model, before);
-      } else {
-        recordViews(registry, atoms.undo, sceneId(), before);
-      }
-    };
+    /** Writes `scenes` into the store and applies `intents`, as one undo step. */
+    const commit = (scenes: Record<ViewId, View>, intents: Intent[]) =>
+      commitStep(() => {
+        registry.set(store.views, { ...registry.get(store.views), ...scenes });
+        if (intents.length > 0) {
+          baseProjection.apply({ kind: 'batch', intents });
+        }
+      });
     return {
       /** Points an instance at a copy of its composite, so editing one no longer edits the other. */
       makeUnique: (id: NodeId) => {
@@ -170,10 +160,8 @@ export const useObjectActions = ({
         if (registry.get(atoms.isolation)?.composite === composite) {
           navigation.exitIsolation();
         }
-        const model = baseProjection.snapshot();
-        registry.set(store.views, next);
-        recordStoreStep(registry, atoms.undo, sceneId(), model, before);
+        commitStep(() => registry.set(store.views, next));
       },
     };
-  }, [registry, atoms, store.views, baseProjection, root, select, navigation]);
+  }, [registry, atoms, store, baseProjection, commitStep, select, navigation]);
 };

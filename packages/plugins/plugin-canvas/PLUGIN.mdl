@@ -13,6 +13,7 @@ per scene, node and link; a frame holds a child scene that opens in place and ca
 | Term   | URI                        |
 |--------|----------------------------|
 | `test` | `org.dxos.mdl.test@1.0`    |
+| `decision` | `org.dxos.mdl.decision@1.0` |
 
 ## QA
 
@@ -117,8 +118,9 @@ test QA-4: Showcase clip
 
 test QA-5: Copy a tldraw drawing as a canvas
   desc: |
-    The "Copy as canvas" action plugin-canvas contributes to every tldraw drawing runs `ImportTldraw`: a new canvas
-    drawing beside the tldraw one, opened once it is filed.
+    The illustrator's "Copy as Canvas" action converts a tldraw drawing through the converter plugin-canvas registers:
+    a drawing the scene DSL manages converts as every variant does, a hand-drawn one shape by shape. The copy is filed
+    beside the tldraw drawing and opened.
   actors: human
   covers: []
   status: unverified
@@ -128,7 +130,7 @@ test QA-5: Copy a tldraw drawing as a canvas
     - space: a tldraw drawing holding a labelled rectangle, an ellipse, an arrow bound between them and a frame
   steps:
     - name: Copy it
-      do: Open the tldraw drawing's object menu and choose "Copy as canvas".
+      do: Open the tldraw drawing's object menu and choose "Copy as Canvas".
       expect: a canvas drawing of the same name opens, filed beside the tldraw one, which is unchanged
     - name: Read the copy
       do: Move the rectangle, then select a shape inside the frame.
@@ -165,3 +167,22 @@ test QA-3: DXOS Architecture tour
       expect: the EDGE drawing is embedded, with a sequence diagram of a device connecting below it
 ```
 
+## Changelog
+
+```mdl
+decision D-1: Converting a tldraw drawing to a canvas always makes a copy. When the diagram language manages the drawing, the conversion uses the generic scene converter; otherwise it falls back to the hand-drawn importer, shape by shape.
+  date: 2026-10-20
+  by: user:richburdon
+  affects: [QA-5]
+```
+
+```mdl
+decision D-2: plugin-canvas registers the hybrid conversion as an illustrator `Converter` for tldraw to canvas, which replaces the `ImportTldraw` operation; the copy is filed beside the source drawing and opened. Fills in [D-1].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [QA-5]
+  why: The illustrator's Convert operation already resolves variants and files the result, so a per-pair converter reuses it rather than duplicating it.
+  rejected:
+    - A separate plugin-canvas import operation, which would offer a second, conflicting menu action.
+```

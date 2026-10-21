@@ -93,26 +93,31 @@ LobbyPreview.displayName = 'LobbyPreview';
 type LobbyToolbarProps = Util.ThemedClassName<
   {
     roomId: string;
-  } & Pick<ToolbarProps, 'onJoin' | 'joinDisabled'>
+  } & Pick<ToolbarProps, 'onJoin' | 'joinDisabled' | 'participants'>
 >;
 
-const LobbyToolbar = ({ roomId, ...props }: LobbyToolbarProps) => {
+const LobbyToolbar = ({ roomId, participants, ...props }: LobbyToolbarProps) => {
   const call = Hooks.useCapability(CallsCapabilities.Manager);
   const [count, setCount] = useState<number>(0);
 
   // TODO(wittjosiah): Leaving the room doesn't remove you from the swarm.
   useEffect(() => {
+    // A known count (a simulated call has no swarm to ask) needs no polling.
+    if (participants !== undefined) {
+      return;
+    }
+
     void call.peek(roomId).then((count) => setCount(count));
     const interval = setInterval(() => {
       void call.peek(roomId).then((count) => setCount(count));
     }, SWARM_PEEK_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [call, roomId]);
+  }, [call, roomId, participants]);
 
   return (
     <Layout.Flex justify='center' classNames='absolute bottom-0 left-0 right-0'>
-      <Toolbar participants={count} isInRoom={false} {...props} />
+      <Toolbar participants={participants ?? count} isInRoom={false} {...props} />
     </Layout.Flex>
   );
 };

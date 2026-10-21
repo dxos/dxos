@@ -22,7 +22,6 @@ export default defineConfig({
     'testing': 'src/testing/index.ts',
     'translations': 'src/translations.ts',
     'Feature': 'src/types/Feature.ts',
-    'FeatureMap': 'src/types/FeatureMap.ts',
     'FeatureMapView': 'src/types/FeatureMapView.ts',
     'FeatureOperation': 'src/types/FeatureOperation.ts',
     'ProjectCapabilities': 'src/types/ProjectCapabilities.ts',

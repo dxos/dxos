@@ -4,13 +4,12 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Filter, Query, Ref, Relation } from '@dxos/echo';
+import { Filter, Query, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 import { File, PullRequest, Task } from '@dxos/types';
 
 import * as Feature from './Feature.ts';
-import * as FeatureMap from './FeatureMap.ts';
 import * as Showcase from './Showcase.ts';
 
 describe('Feature', () => {
@@ -30,7 +29,6 @@ describe('Feature', () => {
         Feature.Feature,
         Feature.DependsOn,
         Feature.Implements,
-        FeatureMap.FeatureMap,
         Showcase.Showcase,
         Showcase.Demonstrates,
         Task.Task,
@@ -62,6 +60,25 @@ describe('Feature', () => {
     expect(Feature.getSpecUrl('https://example.com/spec.md')).toBe('https://example.com/spec.md');
   });
 
+  test('a plugin spec path names the plugin that bundles it', ({ expect }) => {
+    const plugins: Feature.SpecSource[] = [
+      {
+        key: 'org.dxos.plugin.inbox',
+        source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-inbox',
+        spec: 'PLUGIN.mdl',
+      },
+      { key: 'org.dxos.plugin.noSpec', source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-x' },
+    ];
+    expect(Feature.findSpecPlugin('packages/plugins/plugin-inbox/PLUGIN.mdl#F-3', plugins)).toBe(
+      'org.dxos.plugin.inbox',
+    );
+    expect(Feature.findSpecPlugin('/packages/plugins/plugin-inbox/PLUGIN.mdl', plugins)).toBe('org.dxos.plugin.inbox');
+    // Only the bundled file: another spec in the same directory still opens on GitHub.
+    expect(Feature.findSpecPlugin('packages/plugins/plugin-inbox/docs/SYNC.mdl', plugins)).toBeUndefined();
+    expect(Feature.findSpecPlugin('packages/plugins/plugin-x/PLUGIN.mdl', plugins)).toBeUndefined();
+    expect(Feature.findSpecPlugin('https://example.com/PLUGIN.mdl', plugins)).toBeUndefined();
+  });
+
   test('dependencies, implementing tasks and showcases are relations', async ({ expect }) => {
     const { db } = await open();
     const compose = db.add(Feature.make({ name: 'Compose & send', status: 'prototype' }));
@@ -72,7 +89,6 @@ describe('Feature', () => {
     const showcase = db.add(Showcase.make({ name: 'Sending a reply', content: 'Reply from the inbox.' }));
     db.add(Showcase.makeDemonstrates({ [Relation.Source]: showcase, [Relation.Target]: compose }));
     db.add(Showcase.makeDemonstrates({ [Relation.Source]: showcase, [Relation.Target]: task }));
-    db.add(FeatureMap.make({ name: 'Inbox', features: [Ref.make(compose), Ref.make(tokens)] }));
     await db.flush();
 
     const dependencies = await db.query(Query.select(Filter.id(compose.id)).sourceOf(Feature.DependsOn).target()).run();
