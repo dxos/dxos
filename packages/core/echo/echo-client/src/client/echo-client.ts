@@ -181,7 +181,7 @@ export class EchoClient extends Resource {
     this._dbUpdateSubscriptions.clear();
     for (const db of this._databases.values()) {
       this._graph._unregisterDatabase(db.spaceId);
-      await db.close();
+      await db.close(ctx);
     }
     this._databases.clear();
   }
