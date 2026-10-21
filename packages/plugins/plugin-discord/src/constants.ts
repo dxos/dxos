@@ -14,7 +14,7 @@ export const DISCORD_USER_PROVIDER_ID = 'discord-user';
 export const DISCORD_BOT_LABEL = 'Discord Bot';
 
 /** Display label for the Discord User (OAuth) integration. */
-export const DISCORD_USER_LABEL = 'Discord User';
+export const DISCORD_USER_LABEL = 'Discord';
 
 /** Source string used in `AccessToken.source` and `Obj.Meta.keys[i].source` for Discord. */
 export const DISCORD_SOURCE = 'discord.com';
