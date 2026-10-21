@@ -198,8 +198,8 @@ do not generate SVG with a script, and do not use a ` ```mermaid ` fence or `<pr
 a drawing made any other way cannot be checked against the code (`ref=`) or opened in Composer.
 
 1. Write one `.dx` per figure in the scratchpad, ≲ 14 nodes each (steps 1–2). Carry meaning in
-   labels and `stroke=dashed` (e.g. dashed for a proposal), not in edge colour: an edge's `color=`
-   is parsed but not drawn, and a group's colour comes from the engine's palette.
+   labels and `stroke=dashed` (e.g. dashed for a proposal), not in colour: a node's or edge's `color=`
+   is parsed but not drawn (nodes too), and a group's colour comes from the engine's palette.
 2. Render them all in one run (`render-diagrams -- a.dx b.dx …`) and `Read` every PNG (step 4).
 3. Publish each `.dx.svg` beside the page through the Artifact tool's `files` map (e.g.
    `"diagrams/x.dx.svg": "dx/x.dx.svg"`) and show it with `<img src="diagrams/x.dx.svg" alt="…">`
