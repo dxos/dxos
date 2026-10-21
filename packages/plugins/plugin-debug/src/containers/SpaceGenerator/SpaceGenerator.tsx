@@ -77,7 +77,14 @@ export const SpaceGenerator = Util.composable<HTMLDivElement, SpaceGeneratorProp
         allTemplates.map((template) => [
           template.id,
           async (space) => {
-            await template.apply({ client, space });
+            const { error } = await invokePromise(
+              SpaceOperation.ApplyTemplate,
+              { template: template.id, space },
+              { spaceId: space.id },
+            );
+            if (error) {
+              throw error;
+            }
             return [];
           },
         ]),

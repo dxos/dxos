@@ -93,6 +93,30 @@ describe('DataServiceImpl', () => {
     );
     expect(requested).toEqual([['written']]);
   });
+
+  test('a document created from bytes is created empty, then takes the bytes as its first change', async ({
+    expect,
+  }) => {
+    const spaceId = SpaceId.random();
+    const initialDocument = new Uint8Array([1, 2, 3]);
+    const calls: unknown[] = [];
+    const impl = new DataServiceImpl({} as EdgeFunctionEnv.TraceContext, {
+      ...emptyDataService(),
+      createDocument: async (_ctx, _spaceId, initialValue) => {
+        calls.push({ create: initialValue });
+        return { documentId: 'created', [Symbol.dispose]: () => {} };
+      },
+      changeDocument: async (_ctx, _spaceId, documentId, changes) => {
+        calls.push({ change: documentId, changes });
+      },
+    });
+
+    const response = await EffectEx.runPromise(impl['DataService.createDocument']({ spaceId, initialDocument }));
+
+    expect(response).toEqual({ documentId: 'created' });
+    // EDGE's create takes only JSON, which cannot carry Automerge values.
+    expect(calls).toEqual([{ create: undefined }, { change: 'created', changes: initialDocument }]);
+  });
 });
 
 /** A host that holds no documents, as the EDGE data plane does for a space that never replicated. */

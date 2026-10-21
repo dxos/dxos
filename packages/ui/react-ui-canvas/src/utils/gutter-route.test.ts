@@ -4,11 +4,11 @@
 
 import { describe, test } from 'vitest';
 
-import { defaultNodeRegistry } from '../components/SceneLayer/index.ts';
-import { type Link, type Node, type Scene } from '../model/index.ts';
+import { defaultNodeRegistry } from '../components/index.ts';
+import { type Link, type Node, type View } from '../model/index.ts';
 import { gutterRoute } from './gutter-route.ts';
 import { DEFAULT_LATTICE, cellBounds } from './lattice.ts';
-import { sceneLinkGeometry } from './route.ts';
+import { viewLinkGeometry } from './route.ts';
 import { createLink, createNode } from './shapes.ts';
 
 const spec = DEFAULT_LATTICE;
@@ -166,7 +166,7 @@ describe('gutter route', () => {
   });
 
   test('links sharing a gutter are nudged into separate lanes', ({ expect }) => {
-    const scene: Scene = { id: 's', nodes: Object.fromEntries(nodes.map((node) => [node.id, node])), links: {} };
+    const scene: View = { id: 's', nodes: Object.fromEntries(nodes.map((node) => [node.id, node])), links: {} };
     const link = (id: string, source: string, sourcePort: string, target: string, targetPort: string): Link =>
       createLink({
         type: 'smart',
@@ -177,7 +177,7 @@ describe('gutter route', () => {
       });
     // Both run down the column gutter at x = -192 and along the row gutter at y = 96 into E's north side.
     const links = [link('ae', 'a', 's2', 'e', 'n2'), link('be', 'b', 'e2', 'e', 'n2')];
-    const [first, second] = sceneLinkGeometry(scene, defaultNodeRegistry, links, spec).map(({ path }) => path);
+    const [first, second] = viewLinkGeometry(scene, defaultNodeRegistry, links, spec).map(({ path }) => path);
     // The vertical runs near the column gutter: each link has its own, a lane apart.
     const verticalX = (path: string) =>
       [...path.matchAll(/L (-?[\d.]+) (-?[\d.]+)/g)]

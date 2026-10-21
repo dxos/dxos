@@ -5,19 +5,19 @@
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { SceneBuilder } from '../builder/index.ts';
-import { type Intent, type Scene, createClock, createMemoryStore, createTimeline, setKey } from '../model/index.ts';
+import { ViewBuilder } from '../builder/index.ts';
+import { type Intent, type View, createClock, createMemoryStore, createTimeline, setKey } from '../model/index.ts';
 import { animate, rewriteIntent } from './animate.ts';
 import { createFreehandProjection, reduceIntent } from './projection.ts';
 
 const {
-  scenes: [base],
-} = SceneBuilder.scene('s', [
-  SceneBuilder.rect('a', { x: 0, y: 0, width: 100, height: 50 }),
-  SceneBuilder.rect('b', { x: 200, y: 0, width: 100, height: 50 }),
+  views: [base],
+} = ViewBuilder.view('s', [
+  ViewBuilder.rect('a', { x: 0, y: 0, width: 100, height: 50 }),
+  ViewBuilder.rect('b', { x: 200, y: 0, width: 100, height: 50 }),
 ]).build();
 
-const apply = (scene: Scene, intent: Intent, t: number, autoKey = true): Scene =>
+const apply = (scene: View, intent: Intent, t: number, autoKey = true): View =>
   reduceIntent(scene, rewriteIntent(scene, intent, t, { autoKey: () => autoKey }));
 
 describe('rewriteIntent', () => {
@@ -90,6 +90,6 @@ describe('animate', () => {
     registry.set(clock.time, 0);
     // One key: before it the track holds it, so the node is drawn there at t = 0 too.
     expect(registry.get(projection.scene).nodes.a.center).toEqual({ x: 150, y: 25 });
-    expect(registry.get(store.scenes).s.nodes.a.center).toEqual({ x: 50, y: 25 });
+    expect(registry.get(store.views).s.nodes.a.center).toEqual({ x: 50, y: 25 });
   });
 });

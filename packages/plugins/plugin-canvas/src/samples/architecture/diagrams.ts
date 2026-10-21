@@ -116,7 +116,7 @@ export const loadDiagramDrawings = async (
         canvas.content[`scene:${box}`] = { kind: 'scene', id: box };
         canvas.content[nodeKey(nodeId)] = {
           ...record,
-          node: { ...record.node, type: 'frame', scene: box, link: { object: Ref.make(child) } },
+          node: { ...record.node, type: 'view', scene: box, link: { object: Ref.make(child) } },
         };
       }
     });

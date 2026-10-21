@@ -301,7 +301,6 @@ export const optimizeDepsInclude: string[] = [
   '@dxos/react-ui > date-fns/locale/en-US',
   '@dxos/react-ui > dompurify',
   '@dxos/react-ui > error-stack-parser',
-  '@dxos/react-ui > react-aria-components',
   '@dxos/react-ui > react-i18next',
   '@dxos/util > @hazae41/symbol-dispose-polyfill',
   '@effect/ai-anthropic',

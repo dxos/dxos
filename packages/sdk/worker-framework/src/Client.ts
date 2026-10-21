@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { AsyncTask, Event, Trigger, asyncTimeout, sleepWithContext } from '@dxos/async';
+import { AsyncTask, Event, Trigger, asyncTimeout, sleepWithContext, timeoutUnlessProgress } from '@dxos/async';
 import { type Context, ContextDisposedError, Resource } from '@dxos/context';
 import { withContext } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
@@ -153,6 +153,12 @@ const DEFAULT_WORKER_PROBE_TIMEOUT = 1_000;
  * Service-specific wiring is injected via {@link Options.onConnect}.
  */
 export class Connection extends Resource {
+  /**
+   * Each `status` the worker reports while this tab leads; see {@link WorkerProtocol.DedicatedWorkerStatusMessage}.
+   * A follower tab receives none.
+   */
+  readonly workerStatus = new Event<unknown>();
+
   readonly #createWorker: () => WorkerProtocol.WorkerOrPort;
   readonly #createCoordinator: () => MaybePromise<WorkerProtocol.WorkerCoordinator>;
   readonly #leaderLockKey: string;
@@ -217,7 +223,11 @@ export class Connection extends Resource {
   readonly #reconnectCallbacks: Array<() => Promise<void>> = [];
 
   readonly closed = new Event<Error | undefined>();
-  readonly reconnected = new Event<void>();
+  /**
+   * Fires when a connection after the first is established; `isOwner` is true when this tab just became
+   * leader and spawned the worker it reconnected to.
+   */
+  readonly reconnected = new Event<{ isOwner: boolean }>();
 
   constructor(options: Options) {
     super();
@@ -281,20 +291,22 @@ export class Connection extends Resource {
     // `portTimeout` so a caller that widens the port wait widens the boot budget with it.
     const openTimeout = this.#leaderPortTimeout + LOCK_OR_RPC_WAIT_TIMEOUT;
     const timeoutError = lockOrRpcTimeoutError('establishing initial worker connection', openTimeout);
-    await asyncTimeout(this.#initialConnection.wait(), openTimeout, timeoutError).catch(async (error) => {
-      // Snapshotted before the teardown below, which is what they describe.
-      const diagnostics = this.#diagnostics;
-      // `Resource.close()` is a no-op on a resource that never opened, so an expired boot releases
-      // its lock, worker and timers itself.
-      if (error === timeoutError) {
-        await this.#teardown();
-      }
-      // Only an expired budget reports the failure it outlasted; a rejected connection carries its own cause.
-      throw withContext(
-        error === timeoutError ? (this.#lastConnectError ?? this.#lastLeaderError ?? error) : error,
-        diagnostics,
-      );
-    });
+    await timeoutUnlessProgress(this.#initialConnection.wait(), openTimeout, this.workerStatus, timeoutError).catch(
+      async (error) => {
+        // Snapshotted before the teardown below, which is what they describe.
+        const diagnostics = this.#diagnostics;
+        // `Resource.close()` is a no-op on a resource that never opened, so an expired boot releases
+        // its lock, worker and timers itself.
+        if (error === timeoutError) {
+          await this.#teardown();
+        }
+        // Only an expired budget reports the failure it outlasted; a rejected connection carries its own cause.
+        throw withContext(
+          error === timeoutError ? (this.#lastConnectError ?? this.#lastLeaderError ?? error) : error,
+          diagnostics,
+        );
+      },
+    );
     log('worker-connection: initial connection established');
   }
 
@@ -395,6 +407,7 @@ export class Connection extends Resource {
             const heartbeat = setInterval(sendHeartbeat, this.#leaderHeartbeatInterval);
 
             this.#leaderSession = session;
+            const unsubscribeStatus = session.onStatus.on((status) => this.workerStatus.emit(status));
             const done = new Trigger();
             this.#leaderDone = done;
             // Removed in the `finally` below: election re-enters on every steal/failure, so a
@@ -426,6 +439,7 @@ export class Connection extends Resource {
               await done.wait();
             } finally {
               removeDoneDisposer();
+              unsubscribeStatus();
               clearInterval(heartbeat);
               if (this.#leaderDone === done) {
                 this.#leaderDone = undefined;
@@ -721,7 +735,7 @@ export class Connection extends Resource {
         log('worker-connection: reconnecting, calling callbacks', { count: this.#reconnectCallbacks.length });
         // Isolated: a caller's failing callback must not fail the reconnection it is reacting to.
         await Promise.all(this.#reconnectCallbacks.map((cb) => cb().catch((err) => log.catch(err))));
-        this.reconnected.emit();
+        this.reconnected.emit({ isOwner });
       }
     } catch (caught: any) {
       if (ctx.disposed && !sessionFailure) {
@@ -886,6 +900,8 @@ class LeaderSession extends Resource {
 
   readonly onClose = new Event<Error | undefined>();
 
+  readonly onStatus = new Event<unknown>();
+
   /** The error the worker reported when its runtime failed to start. */
   get startFailure(): Error | undefined {
     return this.#startFailure;
@@ -907,6 +923,9 @@ class LeaderSession extends Resource {
           break;
         case 'pong':
           this.#probeReplies.emit(event.data.nonce);
+          break;
+        case 'status':
+          this.onStatus.emit(event.data.status);
           break;
         case 'init-failed':
           this.#startFailure = WorkerProtocol.decodeError(event.data.error);
@@ -958,7 +977,12 @@ class LeaderSession extends Resource {
     };
     // Nothing else closes a session whose open failed, and its worker would keep the storage lock that the
     // next leader's worker waits on.
-    const readyMessage = await waitWithLockOrRpcTimeout(handshake(), 'opening worker leader session').catch((error) => {
+    const readyMessage = await timeoutUnlessProgress(
+      handshake(),
+      LOCK_OR_RPC_WAIT_TIMEOUT,
+      this.onStatus,
+      lockOrRpcTimeoutError('opening worker leader session'),
+    ).catch((error) => {
       this.#closeWorker();
       throw error;
     });

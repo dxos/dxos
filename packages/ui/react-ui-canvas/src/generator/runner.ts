@@ -9,8 +9,8 @@
 // worker runs it, and so does a headless check.
 //
 
-import { type Bounds, type NodeId, type Scene, isGeneratorNode, sampleScene } from '../model/index.ts';
-import { flattenPath, nodeBounds, sceneLinkGeometry } from '../utils/index.ts';
+import { type Bounds, type NodeId, type View, isGeneratorNode, sampleView } from '../model/index.ts';
+import { flattenPath, nodeBounds, viewLinkGeometry } from '../utils/index.ts';
 import { hashSeed, seeded } from './motion.ts';
 import {
   type BoundLink,
@@ -46,7 +46,7 @@ export type RunnerOptions = {
 
 /** What a frame is computed from: the scene as stored (it is sampled per step), and the generator's node in it. */
 export type RunnerInput = {
-  scene: Scene;
+  scene: View;
   node: NodeId;
   /** The parameter schema, whose `x-binding` properties name nodes or links to resolve. */
   schema?: Record<string, unknown>;
@@ -75,7 +75,7 @@ export const bindingsOf = (schema: Record<string, unknown> | undefined): Record<
 
 /** The bindings among `params`, resolved against `scene`: ids that name nothing there are left out. */
 export const resolveBindings = (
-  scene: Scene,
+  scene: View,
   params: Record<string, unknown>,
   bindings: Record<string, 'node' | 'link'>,
 ): Record<string, ReadonlyArray<BoundNode | BoundLink>> => {
@@ -91,7 +91,7 @@ export const resolveBindings = (
     } else {
       const links = ids.flatMap((id) => scene.links[id] ?? []);
       // Routed without a registry: each node's own ports, else the default ports.
-      result[name] = sceneLinkGeometry(scene, {}, links).map(({ link, path }) => ({
+      result[name] = viewLinkGeometry(scene, {}, links).map(({ link, path }) => ({
         id: link.id,
         path,
         points: flattenPath(path).flat(),
@@ -236,7 +236,7 @@ export class GeneratorRunner {
   }
 
   #context(t: number, dt: number, input: RunnerInput, random: () => number): GeneratorContext {
-    const scene = sampleScene(input.scene, t);
+    const scene = sampleView(input.scene, t);
     const node = scene.nodes[input.node];
     const params = (node && isGeneratorNode(node) ? node.params : undefined) ?? {};
     return {

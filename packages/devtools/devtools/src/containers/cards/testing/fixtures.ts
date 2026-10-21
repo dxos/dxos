@@ -194,6 +194,51 @@ export const queries: QueryMetrics[] = [
   }),
 ];
 
+const TYPENAMES = [
+  'org.dxos.type.document',
+  'org.dxos.type.task',
+  'org.dxos.type.person',
+  'org.dxos.type.organization',
+  'org.dxos.type.message',
+  'org.dxos.type.event',
+  'org.dxos.type.collection',
+  'org.dxos.type.canvas',
+];
+
+const SPACES = ['BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA', 'C7KQ2XWNR5ZJ6M3VHT4LBYDPEFA2SGUOI'];
+
+/** Object ids for the id-filtered queries; ULID-shaped so the compact label shortens them. */
+const objectId = (index: number) => `01M3V2H2ZJ0FC014B9RA96${String(1000 + index).padStart(4, '0')}`;
+
+/** A long, deterministic list of distinct queries of every shape: by type, by id, scoped to a space, live and one-shot. */
+export const manyQueries: QueryMetrics[] = Array.from({ length: 40 }, (_, index) => {
+  const typename = TYPENAMES[index % TYPENAMES.length];
+  const space = SPACES[index % SPACES.length];
+  const query = [
+    `Query.select(Filter.type(${typename})).limit(${index + 1})`,
+    `Query.select(Filter.type(id: [${objectId(index)}])).from([{ space: "${space}", includeAllFeeds: true }])`,
+    `Query.select(Filter.type(${typename})).from([{ space: "${space}" }]).limit(${index + 1})`,
+    `Query.select(Filter.id(${objectId(index)})).children().options({ deleted: "include" })`,
+  ][index % 4];
+  const live = index % 3 !== 0;
+  const executions = (index % 7) + 1;
+  const maxTime = ((index * 37) % 400) + 1;
+  return queryMetric(query, {
+    created: executions,
+    runs: live ? 0 : executions,
+    subscriptions: live ? executions : 0,
+    active: live ? 1 : 0,
+    updates: live ? (index * 5) % 60 : 0,
+    executions,
+    totalTime: maxTime * executions * 0.6,
+    maxTime,
+    lastTime: maxTime * 0.5,
+    maxUpdateTime: live ? (index % 9) * 1.5 : 0,
+    lastCount: (index * 13) % 200,
+    maxCount: ((index * 13) % 200) + (index % 4),
+  });
+});
+
 export const surfaceProfilerStats: SurfaceProfilerStats[] = [
   {
     id: 'surface/deck/org.dxos.role.article',

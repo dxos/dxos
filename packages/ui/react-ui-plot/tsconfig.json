@@ -8,7 +8,13 @@
   ],
   "references": [
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-geo"
     },
     {
       "path": "../ui-theme"

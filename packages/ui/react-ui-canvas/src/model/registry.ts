@@ -6,7 +6,7 @@
 // Node and link type definitions (decision 12): what a type's schema is, what it renders, where its
 // ports are, how it may be manipulated, and how the palette presents it. Per type, not per instance, so
 // the data stays small and ports come for free; a node may still carry its own `ports`. A host composes
-// its own registry (and with `createSceneSchema` its scene schema) from the built-ins and its types.
+// its own registry (and with `createViewSchema` its scene schema) from the built-ins and its types.
 //
 // A type may be built on a prototype (`extends`): it inherits every definition field it leaves unset, so
 // shapes that look and behave alike share one definition and differ only where they say so. Prototypes
@@ -19,7 +19,7 @@ import { type ComponentType } from 'react';
 import { type FormFieldMap } from '@dxos/react-ui-form';
 
 import { type PartEditing, type PartField } from '../utils/index.ts';
-import { type SceneStore } from './store.ts';
+import { type ViewStore } from './store.ts';
 import {
   type LinkType,
   type Node,
@@ -27,14 +27,14 @@ import {
   type NodeType,
   type Point,
   type Port,
-  type Scene,
   type Size,
+  type View,
 } from './types.ts';
 
 export type NodeViewProps = {
   node: Node;
-  scene: Scene;
-  store: SceneStore;
+  scene: View;
+  store: ViewStore;
   registry: NodeRegistry;
   /** Effective screen zoom of the layer (camera zoom × portal scales), for level-of-detail choices. */
   zoom: number;
@@ -55,6 +55,9 @@ export type NodeViewProps = {
 
 export type CreateProps = { id: string; z: string; center: Point; size: Size };
 
+/** What a node's edit mode edits (`NodeDef.editor`). */
+export type NodeEditor = 'label' | 'vertices';
+
 export type NodeDef = {
   type: NodeType;
   name: string;
@@ -63,7 +66,7 @@ export type NodeDef = {
   key?: string;
   /** Tools panel group; types without one share the default group. */
   group?: string;
-  /** The type's schema; the host's scene schema is the union of its registry's (`createSceneSchema`). */
+  /** The type's schema; the host's scene schema is the union of its registry's (`createViewSchema`). */
   schema: Schema.Codec<NodeBase, unknown>;
   component: ComponentType<NodeViewProps>;
   /** A new node of the type with its default content, for the palette tool and drop-on-canvas. */
@@ -82,6 +85,27 @@ export type NodeDef = {
   /** The frame is the ellipse inscribed in the node's bounds, as the engine's own ellipse is (a circle when square). */
   ellipse?: boolean;
   /**
+   * The frame's fill and border take this outline (SVG path data in the frame's px, kept `inset` px inside it) rather
+   * than the box: a cloud is a box drawn as a cloud. `radius` is the look's corner radius in px, for an outline with
+   * corners of its own to round.
+   */
+  silhouette?: (node: Node, inset: number, radius: number) => string;
+  /** Whether the silhouette's fill is drawn; unset, it is. An open outline (a line of segments) is its border alone. */
+  filled?: (node: Node) => boolean;
+  /**
+   * Makes the type drawn vertex by vertex: its palette tool places points click by click, and this makes the node from
+   * them, `points` in the unit space of the frame `props` gives (0..1, origin top-left).
+   */
+  createFromPoints?: (props: CreateProps, points: readonly Point[], closed: boolean) => Node;
+  /**
+   * What the node's edit mode (a double-click on it, or Enter with it selected alone) edits: `'label'`, the default, its
+   * text part in place; `'vertices'`, the unit-space `points` of a type drawn vertex by vertex, each shown as a point to
+   * drag, with its move and resize handles hidden. Enter, Escape or a press outside the node leaves either.
+   */
+  editor?: NodeEditor;
+  /** The outline drawn while the node is moved or drawn: its frame unless the shape fits a `circle` inside it. */
+  bounds?: (node: Node) => 'frame' | 'circle';
+  /**
    * The host's own way to open this node, when it has one (a frame showing an object rather than a scene):
    * opening calls it instead of drilling in, and auto-drill passes the node by.
    */
@@ -99,6 +123,8 @@ export type NodeDef = {
   palette?: boolean;
   /** The frame draws no fill or border unless the node's style asks for them: the type draws all it shows. */
   bare?: boolean;
+  /** The type draws past its frame (a stroke centred on the frame's edge), so the frame does not clip it. */
+  unclipped?: boolean;
 };
 
 /**

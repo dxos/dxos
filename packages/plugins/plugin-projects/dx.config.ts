@@ -18,6 +18,7 @@ export default Config2.make({
     icon: { key: 'ph--stack--regular', hue: 'amber' },
     screenshots: [{ dark: 'https://assets.composer.space/demos/2026-10-09-plugin-projects.mp4?v=30bb87a3' }],
     tags: ['alpha', 'assistant'],
+    spec: 'PLUGIN.mdl',
     // Assistant is a hard dependency: the article's chat actions and task delegation invoke its
     // operations, so a host that runs Projects must run Assistant beside it.
     dependsOn: ['org.dxos.plugin.assistant', 'org.dxos.plugin.tasks'],

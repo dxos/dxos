@@ -36,7 +36,7 @@ const setup = Effect.gen(function* () {
         data: EchoFeedCodec.encode({ id: EntityId.random() }),
       })),
     );
-  return { source, append };
+  return { source, append, spaceId };
 });
 
 /** Hides the blocks table, so any read of it fails the test rather than going unnoticed. */
@@ -74,6 +74,30 @@ describe('FeedDataSource', () => {
       expect(next.objects.map((object) => object.queueNamespace)).toEqual(['trace']);
       const dataCursor = (cursors: DataSourceCursor[]) => cursors.find((cursor) => cursor.resourceId === 'data');
       expect(dataCursor(next.cursors)).toEqual(dataCursor(first.cursors));
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('reads every block from an empty cursor when position order differs from insertion order', () =>
+    Effect.gen(function* () {
+      const { source, append } = yield* setup;
+      const trace = FeedProtocol.WellKnownNamespaces.trace;
+      yield* append(trace, 60);
+      const sql = yield* SqlClient.SqlClient;
+      yield* sql`UPDATE blocks SET position = CASE WHEN insertionId <= 10 THEN insertionId + 1000 ELSE insertionId END`;
+
+      const seen = new Set<string>();
+      let cursors: DataSourceCursor[] = [];
+      for (let pass = 0; pass < 10; pass++) {
+        const result = yield* source.getChangedObjects(Context.default(), cursors, { limit: 25 });
+        for (const object of result.objects) {
+          seen.add(object.data.id);
+        }
+        cursors = result.cursors;
+        if (result.objects.length === 0) {
+          break;
+        }
+      }
+      expect(seen.size).toBe(60);
     }).pipe(Effect.provide(TestLayer)),
   );
 

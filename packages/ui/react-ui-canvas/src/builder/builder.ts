@@ -3,21 +3,20 @@
 //
 
 //
-// Declarative scene fixtures for stories and tests: a scene is a tree of element values, each made by a
+// Declarative View fixtures for stories and tests: a View is a tree of element values, each made by a
 // factory and refined with `properties()`, so a fixture reads like the diagram it describes. A nested
-// `scene` is a scene shape and its child scene in one; `build()` flattens the tree into the scenes a
+// `view` is a view node and its child View in one; `build()` flattens the tree into the Views a
 // store holds. Boxes are top-left; refs like `a#e2` name a port and `@x,y` a free end.
 //
 
 import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
 
-import { defaultNodeRegistry } from '../components/SceneLayer/index.ts';
+import { defaultNodeRegistry } from '../components/index.ts';
 import {
   type BuiltinNode,
   type BuiltinNodeType,
   type Endpoint,
-  type FrameNode,
   type Link,
   type LinkType,
   type Node,
@@ -25,8 +24,9 @@ import {
   type NodeRegistry,
   type NodeStyle,
   type Point,
-  type Scene,
-  type SceneId,
+  type View,
+  type ViewId,
+  type ViewNode,
 } from '../model/index.ts';
 import { DEFAULT_LAYER, createNode, initialKeys } from '../utils/index.ts';
 
@@ -96,62 +96,62 @@ export class LinkElement<L extends Link> {
   }
 }
 
-export type BuilderElement = NodeElement<NodeBase> | LinkElement<Link> | SceneElement;
+export type BuilderElement = NodeElement<NodeBase> | LinkElement<Link> | ViewElement;
 
 /**
- * A scene and its elements in paint order. At the top it is the root scene; nested, it is also a scene
- * shape placed with `at()`, whose child scene shares its id.
+ * A View and its elements in paint order. At the top it is the root View; nested, it is also a view
+ * node placed with `at()`, whose child View shares its id.
  */
-export class SceneElement {
-  readonly kind = 'scene';
+export class ViewElement {
+  readonly kind = 'view';
 
   constructor(
-    readonly id: SceneId,
+    readonly id: ViewId,
     readonly elements: readonly BuilderElement[],
     readonly frame?: Box,
-    readonly sceneName?: string,
-    readonly portal: NodeProperties<FrameNode> = {},
+    readonly viewName?: string,
+    readonly portal: NodeProperties<ViewNode> = {},
   ) {}
 
-  /** The scene's name (breadcrumbs, previews). */
-  name(name: string): SceneElement {
-    return new SceneElement(this.id, this.elements, this.frame, name, this.portal);
+  /** The View's name (breadcrumbs, previews). */
+  name(name: string): ViewElement {
+    return new ViewElement(this.id, this.elements, this.frame, name, this.portal);
   }
 
-  /** Where the scene shape sits in its parent scene; required for a nested scene. */
-  at(box: Box): SceneElement {
-    return new SceneElement(this.id, this.elements, box, this.sceneName, this.portal);
+  /** Where the view node sits in its parent View; required for a nested View. */
+  at(box: Box): ViewElement {
+    return new ViewElement(this.id, this.elements, box, this.viewName, this.portal);
   }
 
-  /** The scene shape's own properties (label, link, style). */
-  properties(values: NodeProperties<FrameNode>): SceneElement {
-    return new SceneElement(this.id, this.elements, this.frame, this.sceneName, {
+  /** The view node's own properties (label, link, style). */
+  properties(values: NodeProperties<ViewNode>): ViewElement {
+    return new ViewElement(this.id, this.elements, this.frame, this.viewName, {
       ...this.portal,
       ...values,
       ...mergeStyle(this.portal, values),
     });
   }
 
-  /** Every scene of the tree, the root first, checked against `registry`'s node schemas. */
-  build(registry: NodeRegistry = defaultNodeRegistry): SceneTree {
-    const scenes: Scene[] = [];
-    buildScene(this, registry, scenes);
-    return { root: this.id, scenes };
+  /** Every View of the tree, the root first, checked against `registry`'s node schemas. */
+  build(registry: NodeRegistry = defaultNodeRegistry): ViewTree {
+    const views: View[] = [];
+    buildView(this, registry, views);
+    return { root: this.id, views };
   }
 }
 
-export type SceneTree = { root: SceneId; scenes: Scene[] };
+export type ViewTree = { root: ViewId; views: View[] };
 
-const buildScene = (element: SceneElement, registry: NodeRegistry, scenes: Scene[]): void => {
+const buildView = (element: ViewElement, registry: NodeRegistry, views: View[]): void => {
   // Maps, so any id (`constructor`, `__proto__`) is an ordinary key; `fromEntries` keeps them own properties.
   const nodes = new Map<string, Node>();
   const links = new Map<string, Link>();
   const keys = initialKeys(element.elements.length);
-  // Every element names its layer, so a fixture reads as a scene the editor wrote.
+  // Every element names its layer, so a fixture reads as a View the editor wrote.
   const index =
-    scenes.push({
+    views.push({
       id: element.id,
-      name: element.sceneName,
+      name: element.viewName,
       nodes: {},
       links: {},
       layers: { [DEFAULT_LAYER.id]: DEFAULT_LAYER },
@@ -176,26 +176,26 @@ const buildScene = (element: SceneElement, registry: NodeRegistry, scenes: Scene
         links.set(id, { layer: DEFAULT_LAYER.id, ...child.link, id, z });
         break;
       }
-      case 'scene': {
+      case 'view': {
         if (!child.frame) {
-          throw new Error(`Nested scene ${child.id} needs a frame: call at(box).`);
+          throw new Error(`Nested view ${child.id} needs a box: call at(box).`);
         }
-        const node: FrameNode = {
-          ...createNode({ type: 'frame', id: child.id, z, center: center(child.frame), size: sizeOf(child.frame) }),
+        const node: ViewNode = {
+          ...createNode({ type: 'view', id: child.id, z, center: center(child.frame), size: sizeOf(child.frame) }),
           layer: DEFAULT_LAYER.id,
           ...child.portal,
-          type: 'frame',
+          type: 'view',
           scene: child.id,
         };
         check(registry, node);
         claim(nodes, node.id, element.id);
         nodes.set(node.id, node);
-        buildScene(child, registry, scenes);
+        buildView(child, registry, views);
         break;
       }
     }
   });
-  scenes[index] = { ...scenes[index], nodes: Object.fromEntries(nodes), links: Object.fromEntries(links) };
+  views[index] = { ...views[index], nodes: Object.fromEntries(nodes), links: Object.fromEntries(links) };
 };
 
 /** A node its type does not describe (a wrong value, or a property the type does not have) fails the build. */
@@ -211,9 +211,9 @@ const check = (registry: NodeRegistry, node: Node): void => {
 };
 
 /** Two elements given one id would leave only the second, so the fixture fails instead. */
-const claim = (taken: ReadonlyMap<string, unknown>, id: string, sceneId: SceneId): void => {
+const claim = (taken: ReadonlyMap<string, unknown>, id: string, viewId: ViewId): void => {
   if (taken.has(id)) {
-    throw new Error(`Duplicate id ${id} in scene ${sceneId}.`);
+    throw new Error(`Duplicate id ${id} in view ${viewId}.`);
   }
 };
 
@@ -245,7 +245,15 @@ function node(type: string, id: string, box: Box): NodeElement<NodeBase> {
   return new NodeElement<NodeBase>(base);
 }
 
-const BUILTIN_TYPES: readonly string[] = ['rect', 'ellipse', 'note', 'frame'] satisfies BuiltinNodeType[];
+const BUILTIN_TYPES: readonly string[] = [
+  'rect',
+  'ellipse',
+  'cloud',
+  'polygon',
+  'polyline',
+  'note',
+  'view',
+] satisfies BuiltinNodeType[];
 const isBuiltinType = (type: string): type is BuiltinNodeType => BUILTIN_TYPES.includes(type);
 
 type Ends = Pick<Link, 'source' | 'target'>;
@@ -261,13 +269,16 @@ const LINKS: Record<LinkType, (ends: Ends) => LinkBody> = {
 const link = <T extends LinkType>(type: T, from: string, to: string): LinkElement<LinkOf<T>> =>
   new LinkElement<LinkOf<T>>(LINKS[type]({ source: endpoint(from), target: endpoint(to) }));
 
-/** Factories for scene fixtures; see the module comment. */
-export const SceneBuilder = {
-  /** A scene of `elements`; the root of a fixture, or nested, a scene shape and its child scene. */
-  scene: (id: SceneId, elements: readonly BuilderElement[] = []) => new SceneElement(id, elements),
+/** Factories for View fixtures; see the module comment. */
+export const ViewBuilder = {
+  /** A View of `elements`; the root of a fixture, or nested, a view node and its child View. */
+  view: (id: ViewId, elements: readonly BuilderElement[] = []) => new ViewElement(id, elements),
   node,
   rect: (id: string, box: Box) => node('rect', id, box),
   ellipse: (id: string, box: Box) => node('ellipse', id, box),
+  cloud: (id: string, box: Box) => node('cloud', id, box),
+  polygon: (id: string, box: Box) => node('polygon', id, box),
+  polyline: (id: string, box: Box) => node('polyline', id, box),
   note: (id: string, box: Box) => node('note', id, box),
   link,
 };
