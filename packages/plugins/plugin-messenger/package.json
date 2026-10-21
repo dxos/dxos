@@ -57,6 +57,11 @@
       "types": "./dist/types/src/plugin.d.ts",
       "default": "./dist/lib/plugin.mjs"
     },
+    "#push": {
+      "source": "./src/push/index.ts",
+      "types": "./dist/types/src/push/index.d.ts",
+      "default": "./dist/lib/push.mjs"
+    },
     "#translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
@@ -100,6 +105,11 @@
       "types": "./dist/types/src/types/Notifications.d.ts",
       "import": "./dist/lib/Notifications.mjs"
     },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
     "./package.json": "./package.json",
     "./translations": {
       "source": "./src/translations.ts",
@@ -137,6 +147,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/compute": "workspace:*",
+    "@dxos/context": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
@@ -147,6 +158,7 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-card": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/types": "workspace:*",

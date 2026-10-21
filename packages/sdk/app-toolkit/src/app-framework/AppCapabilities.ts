@@ -28,6 +28,8 @@ import type { AnchoredTo } from '@dxos/types';
 import * as Position from '@dxos/util/Position';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
+import type * as AppPush$ from '../app/AppPush.ts';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as AppUpdate$ from '../app/AppUpdate.ts';
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as Translations$ from '../app/Translations.ts';
@@ -521,6 +523,15 @@ export const ProgressRegistry = Capability$.makeSingleton<ProgressRegistry>()(
  */
 export const UpdateManager = Capability$.makeSingleton<AppUpdate$.Manager>()(
   'org.dxos.app-toolkit.capability.updateManager',
+);
+
+/**
+ * The device side of push notifications, contributed by whichever plugin owns it on this platform —
+ * `plugin-pwa` for the browser's push service. Absent where the platform has none.
+ * @category Capability
+ */
+export const PushProvider = Capability$.makeSingleton<AppPush$.Provider>()(
+  'org.dxos.app-toolkit.capability.pushProvider',
 );
 
 export type ObservabilityMapping = ObservabilityMapping$.ObservabilityMapping;

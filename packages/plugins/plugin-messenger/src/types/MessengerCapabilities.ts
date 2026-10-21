@@ -14,6 +14,8 @@ import { meta } from '#meta';
 
 import { type InboxSendError } from './errors.ts';
 import * as Notifications from './Notifications.ts';
+// eslint-disable-next-line @dxos/rules/import-as-namespace
+import type * as Settings$ from './Settings.ts';
 
 export interface Sender {
   /**
@@ -32,4 +34,24 @@ export const Sender = Capability.makeSingleton<Sender>()(`${meta.profile.key}.ca
  */
 export const NotificationsContainers = Capability.makeSingleton<Atom.Atom<readonly Notifications.Notifications[]>>()(
   `${meta.profile.key}.capability.notificationsContainers`,
+);
+
+/** This device's messenger settings. */
+export const Settings = Capability.makeSingleton<Atom.Writable<Settings$.Settings>>()(
+  `${meta.profile.key}.capability.settings`,
+);
+
+/** Where this device stands on push; see `PushRegistration` in `#push`. */
+export type PushStatus = 'unsupported' | 'off' | 'denied' | 'on' | 'failed';
+
+export interface PushNotifications {
+  status: Atom.Atom<PushStatus>;
+  /** Opts this device in; call it from the user's click, since it may show the permission prompt. */
+  enable(): Promise<PushStatus>;
+  disable(): Promise<PushStatus>;
+}
+
+/** Push notifications for inbox notices on this device, registered with EDGE. */
+export const PushNotifications = Capability.makeSingleton<PushNotifications>()(
+  `${meta.profile.key}.capability.pushNotifications`,
 );

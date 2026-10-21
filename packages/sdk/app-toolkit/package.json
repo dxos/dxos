@@ -76,6 +76,11 @@
       "types": "./dist/types/src/ui/components/AppSurface/AppSurface.d.ts",
       "import": "./dist/lib/AppSurface.mjs"
     },
+    "./AppPush": {
+      "source": "./src/app/AppPush.ts",
+      "types": "./dist/types/src/app/AppPush.d.ts",
+      "import": "./dist/lib/app/AppPush.mjs"
+    },
     "./AppUpdate": {
       "source": "./src/app/AppUpdate.ts",
       "types": "./dist/types/src/app/AppUpdate.d.ts",

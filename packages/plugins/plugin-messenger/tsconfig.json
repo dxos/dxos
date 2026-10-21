@@ -22,6 +22,9 @@
       "path": "../../common/async"
     },
     {
+      "path": "../../common/context"
+    },
+    {
       "path": "../../common/effect"
     },
     {
@@ -89,6 +92,9 @@
     },
     {
       "path": "../../ui/react-ui-card"
+    },
+    {
+      "path": "../../ui/react-ui-form"
     },
     {
       "path": "../../ui/react-ui-menu"

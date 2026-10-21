@@ -41,11 +41,27 @@ export const PluginAsset = AppCapability.pluginAsset({
   mimeType: 'application/x-mdl',
 });
 
+// Headless: a device that opted in re-registers on every start, whether or not settings are ever opened.
+export const PushNotifications = Capability.lazyModule(
+  'PushNotifications',
+  {
+    requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, MessengerCapabilities.Settings],
+    provides: [MessengerCapabilities.PushNotifications],
+    activatesOn: ClientEvents.SpacesAvailable,
+    environments: ['browser'],
+  },
+  () => import('./push-notifications.ts'),
+);
+
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
-  roles: ['org.dxos.role.deckCompanion.messenger'],
+  roles: ['org.dxos.role.deckCompanion.messenger', 'org.dxos.role.article'],
 });
 
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
+
+export const Settings = AppCapability.settings(() => import('./settings.ts'), {
+  provides: [MessengerCapabilities.Settings],
+});
 
 export const Sender = Capability.lazyModule(
   'Sender',

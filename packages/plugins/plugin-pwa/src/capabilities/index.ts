@@ -23,6 +23,7 @@ import { log } from '@dxos/log';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
+import { makePushProvider } from './push-provider.ts';
 import { makeUpdateManager, progressStatus } from './update-manager.ts';
 
 // Every 15 minutes rather than hourly. A check is one conditional request for the worker script, and
@@ -49,7 +50,10 @@ const isPrecacheProgress = (data: unknown): data is PrecacheProgress =>
 
 export const RegisterPwa = Capability.inlineModule(
   'RegisterPwa',
-  { requires: [Capabilities.OperationInvoker, Capabilities.AtomRegistry], provides: [AppCapabilities.UpdateManager] },
+  {
+    requires: [Capabilities.OperationInvoker, Capabilities.AtomRegistry],
+    provides: [AppCapabilities.UpdateManager, AppCapabilities.PushProvider],
+  },
   Effect.fnUntraced(function* () {
     const { invokePromise } = yield* Capabilities.OperationInvoker;
     const atomRegistry = yield* Capabilities.AtomRegistry;
@@ -148,7 +152,19 @@ export const RegisterPwa = Capability.inlineModule(
 
     yield* Effect.addFinalizer(() => Fiber.interrupt(fiber));
 
-    return Capability.contribute(AppCapabilities.UpdateManager, manager);
+    // Push rides the same registration. Under the dev server the worker never registers, so push is off there too.
+    const pushSupported = supported && !dev && 'PushManager' in window && 'Notification' in window;
+    const pushProvider = makePushProvider({
+      supported: pushSupported,
+      pushManager: whenRegistered.then((swRegistration) => swRegistration?.pushManager),
+      permission: () => (pushSupported ? Notification.permission : 'denied'),
+      requestPermission: () => Notification.requestPermission(),
+    });
+
+    return [
+      Capability.contribute(AppCapabilities.UpdateManager, manager),
+      Capability.contribute(AppCapabilities.PushProvider, pushProvider),
+    ];
   }),
 );
 
