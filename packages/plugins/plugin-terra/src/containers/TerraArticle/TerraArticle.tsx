@@ -53,7 +53,8 @@ const buildSimEngine = (values: TerraConfigValues, definitions: readonly TerraOb
  * Samples the telemetry panel at a modest rate rather than every sim frame (60fps) — the panel is
  * for a human to read, and re-rendering React that often would both thrash the DOM for no visual
  * benefit and contend with the render loop for the main thread. ~6.6Hz sits in the middle of the
- * requested 4–10Hz band.
+ * requested 4–10Hz band. Measured from the previous sample's commit, so a device that renders the
+ * panel slower than this still leaves the main thread a gap between renders.
  */
 const TELEMETRY_SAMPLE_INTERVAL_MS = 150;
 
@@ -102,9 +103,9 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
   // Mutated directly by `handleTogglePlaying` and read fresh each frame by the mount-once render-loop
   // observer below — mirrors `simEngineRef`'s ref-for-freshness pattern so the closure never goes stale.
   const clockRef = useRef<SimClock>({ pausedTotalMs: 0, pausedAtMs: null });
-  // Wall-clock instant the telemetry panel was last sampled at, so the render-loop observer (which
-  // runs every frame) only calls `setTelemetry` at `TELEMETRY_SAMPLE_INTERVAL_MS`, not 60 times a second.
-  const telemetrySampleRef = useRef(0);
+  // Wall-clock instant the last telemetry sample committed, or `null` while one is rendering, so the
+  // render-loop observer (which runs every frame) only calls `setTelemetry` at `TELEMETRY_SAMPLE_INTERVAL_MS`.
+  const telemetrySampleRef = useRef<number | null>(0);
   const [config, updateConfig] = useObject(terra, 'config');
   const [objectRefs] = useObject(terra, 'objects');
   // The plugin owns the cache so it survives this article's remounts (resize, companion, navigation);
@@ -185,9 +186,9 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
       }
 
       // Throttled: see `TELEMETRY_SAMPLE_INTERVAL_MS`'s doc for why this isn't every frame.
-      const wallClockNow = performance.now();
-      if (wallClockNow - telemetrySampleRef.current >= TELEMETRY_SAMPLE_INTERVAL_MS) {
-        telemetrySampleRef.current = wallClockNow;
+      const sampledAt = telemetrySampleRef.current;
+      if (sampledAt !== null && performance.now() - sampledAt >= TELEMETRY_SAMPLE_INTERVAL_MS) {
+        telemetrySampleRef.current = null;
         setTelemetry(buildTelemetry(engine.objects, engineConfig));
         // The map renders from React state, so it samples on the same throttle rather than every
         // frame; skipped entirely while it is hidden, when nothing would consume it.
@@ -233,6 +234,10 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
     }, 150);
     return () => clearTimeout(handle);
   }, [values, planetCache]);
+
+  useEffect(() => {
+    telemetrySampleRef.current = performance.now();
+  }, [telemetry]);
 
   // After the mount effect that creates the manager, and again whenever the app's theme changes.
   useEffect(() => {
