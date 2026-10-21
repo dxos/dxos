@@ -71,10 +71,10 @@ const make = () =>
           3. Use the introspect-mcp tools (list_packages, get_package,
              list_symbols, find_symbol, get_symbol) to look up DXOS / Composer
              APIs before writing code. Prefer reading existing plugin examples
-             over guessing API shapes. The tools come from the space's DXOS
-             Introspect connection, not from this skill. If they are missing, the
-             connection may be off in this conversation: turn it on with the Skill
-             Manager's set-mcp-connection, or ask the user to connect it.
+             over guessing API shapes. The tools come from the built-in DXOS
+             Introspect MCP server (\`org.dxos.mcp.introspect\`), which is off until
+             turned on: turn it on with the Skill Manager's set-mcp-connection when
+             you need them.
           4. Use ${tool(CodeOperation.ScaffoldProject)} to bootstrap a new project, then ${tool(CodeOperation.WriteFile)} to add
              files and overwrite as you iterate. Read before you re-write.
           5. After writing source, call ${tool(CodeOperation.BuildProject)}. Surface any diagnostics

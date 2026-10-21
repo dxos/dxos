@@ -103,9 +103,6 @@
       "path": "../plugin-client"
     },
     {
-      "path": "../plugin-connector"
-    },
-    {
       "path": "../plugin-space"
     },
     {

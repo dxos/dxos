@@ -11,18 +11,34 @@ import { useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
-/** The space's connections whose connector declares an MCP server: the only ones a chat connects. */
+/**
+ * The MCP servers a chat can connect: the space's connections whose connector declares one, then the
+ * built-in servers plugins ship, which live in the registry.
+ */
 export const useMcpConnections = (db: Database.Database | undefined) => {
   const connectors = Hooks.useCapabilities(ConnectorSpec.Connector).flat();
   const connections = useQuery(db, Filter.type(Connection.Connection));
+  const builtins = useBuiltinMcpServers(db);
   return useMemo(
     () =>
-      connections.flatMap((connection) => {
+      [...connections, ...builtins].flatMap((connection) => {
         const endpoint = ConnectorSpec.mcpEndpoint(connectors, connection);
         return endpoint ? [{ connection, endpoint }] : [];
       }),
-    [connectors, connections],
+    [connectors, connections, builtins],
   );
+};
+
+const queryBuiltins = (db: Database.Database | undefined): Connection.Connection[] =>
+  db?.graph.registry.query(Filter.type(Connection.Connection)).runSync().filter(Connection.isBuiltin) ?? [];
+
+const useBuiltinMcpServers = (db: Database.Database | undefined): Connection.Connection[] => {
+  const [builtins, setBuiltins] = useState(() => queryBuiltins(db));
+  useEffect(() => {
+    setBuiltins(queryBuiltins(db));
+    return db?.graph.registry.changed.on(() => setBuiltins(queryBuiltins(db)));
+  }, [db]);
+  return builtins;
 };
 
 /** The conversation's per-connection MCP switches, live with the binder. */

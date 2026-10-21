@@ -16,13 +16,13 @@ export const CODE_PROJECT_BUILD_TYPE = `${meta.profile.key}.code-project-build`;
  */
 export const PLUGIN_SPEC_TYPE = 'org.dxos.plugin.spec';
 
-/** Connector id of the connection to the introspect-mcp server. */
-export const INTROSPECT_PROVIDER_ID = 'dxos-introspect';
+/** Registry key of the built-in introspect-mcp server behind the Coder skill. */
+export const INTROSPECT_MCP_KEY = 'org.dxos.mcp.introspect';
 
 /**
  * The introspect-mcp server, whose tools (list_packages, get_package, list_symbols, find_symbol,
  * get_symbol) look up DXOS and Composer APIs. Addressed through the EDGE entrypoint, like every
- * other service; a connector has no access to the client config, so the environment is pinned here.
+ * other service; a built-in server has no access to the client config, so the environment is pinned here.
  * TODO(burdon): Make configurable via plugin Settings.
  */
 export const INTROSPECT_MCP_ENDPOINT = { url: 'https://dxos.network/introspect/mcp', protocol: 'http' } as const;

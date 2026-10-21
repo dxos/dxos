@@ -21,7 +21,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Template from '@dxos/compute/Template';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
@@ -123,7 +123,9 @@ export default AgentOperation.RunInstructions.pipe(
         );
 
         // The space's MCP connections, re-read each iteration so one the run adds connects on its next turn.
-        const mcpServers = loadMcpServers({ feed }).pipe(Effect.provide(runtime));
+        const mcpServers = loadMcpServers({ feed }).pipe(
+          Effect.provide(yield* Effect.context<Database.Service | Registry.Service>()),
+        );
 
         yield* session
           .createRequest({

@@ -586,9 +586,23 @@ export const connectionStates = (items: readonly Binding[]): ReadonlyMap<URI.URI
   return states;
 };
 
-/** Whether a connection's MCP server is on in a conversation with these states: on unless turned off. */
+/**
+ * Whether a connection's MCP server is on in a conversation with these states. A space's connection
+ * is on unless turned off; a built-in server (keyed in the registry) is off unless turned on.
+ */
 export const isConnectionOn = (states: ReadonlyMap<URI.URI, boolean>, connection: Obj.Unknown): boolean =>
-  states.get(refKey(Obj.getURI(connection))) ?? true;
+  states.get(connectionKey(connection)) ?? Obj.getMeta(connection).key === undefined;
+
+/**
+ * The ref a binding records a connection by. A built-in server is a registry object made afresh in
+ * each process, so it is named by its key, which every process shares.
+ */
+export const connectionRef = (connection: Obj.Unknown): Ref.Ref<Obj.Unknown> =>
+  Obj.getMeta(connection).key !== undefined
+    ? Ref.fromURI(Obj.getURI(connection, { prefer: 'named' }))
+    : Ref.make(connection);
+
+const connectionKey = (connection: Obj.Unknown): URI.URI => refKey(connectionRef(connection).uri);
 
 /** The net connection changes of held bindings, as one binding writes them. */
 const connectionChanges = (

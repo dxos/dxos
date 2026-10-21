@@ -4,23 +4,25 @@
 
 import * as Effect from 'effect/Effect';
 
-import { Harness } from '@dxos/assistant';
+import { AiContext, Harness } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Ref } from '@dxos/echo';
-import { Connection } from '@dxos/link';
+import { Obj } from '@dxos/echo';
 
 import { SetMcpConnection } from './definitions.ts';
+import { describe, mcpConnections } from './mcp-connections.ts';
 
 export default SetMcpConnection.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ id, enabled }) {
-      const connection = (yield* Database.query(Filter.id(id)).run).find(Connection.instanceOf);
+      const connection = (yield* mcpConnections).find(
+        (connection) => connection.id === id || Obj.getMeta(connection).key === id,
+      );
       if (!connection) {
-        return yield* Effect.die(new Error(`No connection with id ${id}.`));
+        return yield* Effect.die(new Error(`No connection or built-in MCP server ${id}.`));
       }
       const binder = yield* Harness.binder.pipe(Effect.orDie);
-      yield* Effect.promise(() => binder.setConnection(Ref.make(connection), enabled));
-      return { id: connection.id, name: connection.name, connectorId: connection.connectorId, enabled };
+      yield* Effect.promise(() => binder.setConnection(AiContext.connectionRef(connection), enabled));
+      return describe(connection, binder.getConnections());
     }),
   ),
 );

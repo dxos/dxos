@@ -5,8 +5,6 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
-import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { meta } from '#meta';
@@ -20,17 +18,13 @@ export const PluginAsset = AppCapability.pluginAsset({
   content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });
+export const McpServer = AppCapability.mcpServer(() => import('./mcp-server.ts'));
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 export const BuildRunState = Capability.lazyModule(
   'BuildRunState',
   { provides: [CodeCapabilities.BuildRun], activatesOn: CodeEvents.Start },
   () => import('./build-run-state.ts'),
-);
-export const Connector = Capability.lazyModule(
-  'IntrospectConnector',
-  { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
-  () => import('./connector.ts'),
 );
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'));
 export const NavigationTargetResolver = AppCapability.navigationResolver(

@@ -64,3 +64,15 @@ export const getAccessToken = (connection: Connection): Ref.Ref<AccessToken.Acce
 };
 
 export const make = (props: Obj.MakeProps<typeof Connection>) => Obj.make(Connection, props);
+
+/**
+ * An MCP server a plugin ships, which takes no credential. It reaches chats from the registry as a
+ * keyed connection, never from a space, and is off in a chat until the chat or its agent turns it on.
+ */
+export type Builtin = { key: string; name: string; mcp: McpEndpoint };
+
+export const makeBuiltin = ({ key, name, mcp }: Builtin): Connection =>
+  Obj.make(Connection, { [Obj.Meta]: { key }, name, mcp });
+
+/** A built-in MCP server carries a registry key; a connection a space holds has none. */
+export const isBuiltin = (connection: Connection): boolean => Obj.getMeta(connection).key !== undefined;

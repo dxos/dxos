@@ -382,8 +382,8 @@ type CoderSkill
       - op:buildProject
       - op:runBuild
     # The introspect-mcp tools (list_packages, get_package, list_symbols,
-    # find_symbol, get_symbol) come from the DXOS Introspect connection
-    # (connector dxos-introspect, no credential), not from the skill.
+    # find_symbol, get_symbol) come from the built-in DXOS Introspect MCP
+    # server (org.dxos.mcp.introspect), off in a chat until turned on.
     instructions: prose
 ```
 

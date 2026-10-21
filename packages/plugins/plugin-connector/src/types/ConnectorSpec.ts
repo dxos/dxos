@@ -274,8 +274,6 @@ export type ConnectorEntry = {
   label?: string;
   kind: ConnectorKind;
   oauth?: ConnectorOAuthSpec;
-  /** The service takes no credential, such as an open MCP server: connecting stores the connection alone. */
-  noCredential?: boolean;
   /** How this connector syncs; absent for a connector that only authenticates. */
   sync?: ConnectorSync;
   /**
@@ -360,4 +358,7 @@ export const mcpEndpoint = (
   connectors: readonly ConnectorEntry[],
   connection: Connection.Connection,
 ): Connection.McpEndpoint | undefined =>
-  connectors.find((connector) => connector.id === connection.connectorId)?.mcp?.(connection);
+  // A built-in MCP server belongs to no connector and stores its own endpoint.
+  connection.connectorId === undefined
+    ? connection.mcp
+    : connectors.find((connector) => connector.id === connection.connectorId)?.mcp?.(connection);

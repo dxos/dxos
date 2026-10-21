@@ -56,10 +56,13 @@ export const EnableSkills = Operation.make({
 });
 
 const McpConnection = Schema.Struct({
-  id: Schema.String,
+  id: Schema.String.annotate({ description: "The connection's id, or a built-in server's key." }),
   name: Schema.optional(Schema.String),
   connectorId: Schema.optional(Schema.String),
   enabled: Schema.Boolean.annotate({ description: 'Whether this conversation connects its MCP server.' }),
+  builtin: Schema.optional(Schema.Boolean).annotate({
+    description: 'A server Composer ships rather than a connection the space holds; off until turned on.',
+  }),
 });
 
 export const QueryMcpConnections = Operation.make({
@@ -67,12 +70,12 @@ export const QueryMcpConnections = Operation.make({
     key: DXN.make('org.dxos.operation.assistantToolkit.queryMcpConnections'),
     name: 'Query MCP connections',
     description:
-      "Lists the space's connections and whether this conversation connects each one's MCP server. Connections are on unless the conversation turned them off. A connection is not a skill: a skill whose tools come from a connection (such as Browser) needs both.",
+      "Lists the MCP servers this conversation can connect and whether each is on: the space's connections, on unless the conversation turned them off, and the built-in servers Composer ships (such as Browser), off until turned on. A connection is not a skill: a skill whose tools come from one needs both.",
     icon: 'ph--plugs-connected--regular',
   },
   input: Schema.Struct({}),
   output: Schema.Array(McpConnection),
-  services: [Database.Service, Harness.HarnessService],
+  services: [Database.Service, Registry.Service, Harness.HarnessService],
 });
 
 export const SetMcpConnection = Operation.make({
@@ -84,11 +87,13 @@ export const SetMcpConnection = Operation.make({
     icon: 'ph--plugs-connected--regular',
   },
   input: Schema.Struct({
-    id: Schema.String.annotate({ description: 'The connection id, as listed by the query.' }),
+    id: Schema.String.annotate({
+      description: "The connection's id or the built-in server's key, as the query lists it.",
+    }),
     enabled: Schema.Boolean,
   }),
   output: McpConnection,
-  services: [Database.Service, Harness.HarnessService],
+  services: [Database.Service, Registry.Service, Harness.HarnessService],
 });
 
 export const AddMcpConnection = Operation.make({

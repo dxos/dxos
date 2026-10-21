@@ -45,10 +45,11 @@ export const make = () =>
         [query-skills] with a \`query\` describing the tool (e.g. "link task to feature"). Each skill it
         returns lists the tools it provides; enable the one that has the tool you need.
 
-        Connections to services can also give you their MCP servers' tools. They are on unless this
-        conversation turned them off: use [query-mcp-connections] to see which are off, and
-        [set-mcp-connection] to turn one on when you need its tools; they are available from your
-        next step. A connection is not a skill, and enabling a skill does not turn its connection on.
+        Connections to services can also give you their MCP servers' tools. A space's connections are
+        on unless this conversation turned them off; the built-in servers Composer ships are off until
+        turned on. Use [query-mcp-connections] to see which are off, and [set-mcp-connection] to turn
+        one on when you need its tools; they are available from your next step. A connection is not a
+        skill, and enabling a skill does not turn its server on.
         To use an MCP server the space has no connection for, add it with [add-mcp-connection].
       `,
       inputs: [

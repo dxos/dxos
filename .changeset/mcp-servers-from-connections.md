@@ -2,7 +2,7 @@
 '@dxos/plugin-assistant': minor
 ---
 
-GitHub and Linear connections now give the assistant their MCP server's tools, acting as whoever the connection signs in as, and any other MCP server can be added as a Custom MCP Server connection. Each chat can turn a connection's MCP server off, and the agent can add one with the Skill Manager. The Browser and DXOS Introspect servers are now connectors that take no credential.
+GitHub and Linear connections now give the assistant their MCP server's tools, acting as whoever the connection signs in as, and any other MCP server can be added as a Custom MCP Server connection. Each chat can turn a connection's MCP server off, and the agent can add one with the Skill Manager. The Browser and DXOS Introspect servers are built in: plugins contribute them (`AppCapabilities.McpServer`), they live in the registry rather than a space, and each chat turns them on as its skills need them.
 
 Breaking:
 

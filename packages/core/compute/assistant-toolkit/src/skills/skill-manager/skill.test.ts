@@ -11,7 +11,7 @@ import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiContext, Harness } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Filter, Obj } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId, type URI } from '@dxos/keys';
@@ -83,6 +83,32 @@ describe('Skill Manager', () => {
 
         expect(before.map(({ enabled }) => enabled)).toEqual([true]);
         expect(after.map(({ enabled }) => enabled)).toEqual([false]);
+      },
+      provideTestLayers,
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  it.effect(
+    'set-mcp-connection: turns a built-in server on by its key; it is listed off until then',
+    Effect.fnUntraced(
+      function* (_) {
+        const conversation = yield* getConversationDXN;
+        (yield* Registry.Service).add([
+          Connection.makeBuiltin({
+            key: 'org.dxos.mcp.test',
+            name: 'Test',
+            mcp: { url: 'https://mcp.example.com/mcp', protocol: 'http' },
+          }),
+        ]);
+
+        const before = yield* Operation.invoke(QueryMcpConnections, {}, { conversation });
+        yield* Operation.invoke(SetMcpConnection, { id: 'org.dxos.mcp.test', enabled: true }, { conversation });
+        const after = yield* Operation.invoke(QueryMcpConnections, {}, { conversation });
+
+        expect(before).toEqual([{ id: 'org.dxos.mcp.test', name: 'Test', enabled: false, builtin: true }]);
+        expect(after.map(({ enabled }) => enabled)).toEqual([true]);
       },
       provideTestLayers,
       TestHelpers.provideTestContext,

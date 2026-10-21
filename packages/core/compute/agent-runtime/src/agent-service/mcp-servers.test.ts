@@ -10,7 +10,7 @@ import { expect } from 'vitest';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
 import * as Credential from '@dxos/compute/Credential';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref, Registry } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { AccessToken, Connection } from '@dxos/link';
@@ -89,6 +89,37 @@ describe('MCP servers', () => {
       Effect.provide(
         AssistantTestLayer({ types: [AccessToken.AccessToken, AiContext.Binding, Connection.Connection] }),
       ),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'connects a built-in server from the registry only once the conversation turns it on',
+    Effect.fnUntraced(
+      function* (_) {
+        const server = yield* withTestServer;
+        const feed = yield* Database.add(Feed.make());
+        const builtin = Connection.makeBuiltin({
+          key: 'org.dxos.mcp.test',
+          name: 'Test',
+          mcp: { url: server.urls.open, protocol: 'http' },
+        });
+        (yield* Registry.Service).add([builtin]);
+
+        const before = yield* loadMcpServers({ feed });
+        yield* Feed.append(feed, [
+          Obj.make(AiContext.Binding, {
+            skills: { added: [], removed: [] },
+            objects: { added: [], removed: [] },
+            connections: { added: [AiContext.connectionRef(builtin)], removed: [] },
+          }),
+        ]);
+        const after = yield* loadMcpServers({ feed });
+
+        expect(before).toEqual([]);
+        expect(after).toEqual([{ url: server.urls.open, protocol: 'http' }]);
+      },
+      Effect.provide(AssistantTestLayer({ types: [AiContext.Binding, Connection.Connection] })),
       TestHelpers.provideTestContext,
     ),
   );

@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 
 import { AiContext } from '@dxos/assistant';
 import * as Credential from '@dxos/compute/Credential';
-import { Database, type Feed, Filter, type Ref } from '@dxos/echo';
+import { Database, type Feed, Filter, type Ref, Registry } from '@dxos/echo';
 import { type AccessToken, Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import { type McpToolkit } from '@dxos/mcp-client';
@@ -23,9 +23,10 @@ export const storedMcpEndpoint: McpEndpointOf = (connection) => connection.mcp;
 
 /**
  * The MCP servers a conversation connects, read at the start of every turn so a server added, toggled
- * or signed in to applies from the next turn on: every connection with an endpoint the conversation
- * has not turned off. A host without {@link Credential.CredentialsService} connects them without their
- * credentials, and a server that needs one answers 401.
+ * or signed in to applies from the next turn on: every space connection with an endpoint the
+ * conversation has not turned off, and every built-in server in the registry it has turned on. A host
+ * without {@link Credential.CredentialsService} connects them without their credentials, and a server
+ * that needs one answers 401.
  */
 export const loadMcpServers = ({
   feed,
@@ -33,10 +34,13 @@ export const loadMcpServers = ({
 }: {
   feed: Feed.Feed;
   endpointOf?: McpEndpointOf;
-}): Effect.Effect<McpToolkit.Options[], never, Database.Service> =>
+}): Effect.Effect<McpToolkit.Options[], never, Database.Service | Registry.Service> =>
   Effect.gen(function* () {
     const states = yield* AiContext.boundConnections(feed);
-    const connections = yield* Database.query(Filter.type(Connection.Connection)).run;
+    const connections = [
+      ...(yield* Database.query(Filter.type(Connection.Connection)).run),
+      ...(yield* Registry.runQuery(Filter.type(Connection.Connection))).filter(Connection.isBuiltin),
+    ];
     const servers = yield* Effect.forEach(
       connections.filter((connection) => AiContext.isConnectionOn(states, connection)),
       (connection) => {

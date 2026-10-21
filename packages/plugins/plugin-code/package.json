@@ -170,7 +170,6 @@
     "@dxos/invariant": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/plugin-connector": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",

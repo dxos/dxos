@@ -5,7 +5,7 @@
 import React, { useCallback, useRef } from 'react';
 
 import { AiContext } from '@dxos/assistant';
-import { type Database, Ref } from '@dxos/echo';
+import { type Database } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { type Connection } from '@dxos/link';
 import * as Button from '@dxos/react-ui/Button';
@@ -110,7 +110,9 @@ export const ChatAddMenu = ({
                 connection={connection}
                 checked={AiContext.isConnectionOn(connectionStates, connection)}
                 onCheckedChange={
-                  context ? (enabled) => void context.setConnection(Ref.make(connection), enabled) : undefined
+                  context
+                    ? (enabled) => void context.setConnection(AiContext.connectionRef(connection), enabled)
+                    : undefined
                 }
               />
             ))}

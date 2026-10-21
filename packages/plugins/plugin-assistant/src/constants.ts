@@ -17,8 +17,8 @@ export const DEEPSEEK_SOURCE = 'deepseek.com';
 /** Stable id of the Custom MCP Server connector; stored as `Connection.connectorId`. */
 export const MCP_PROVIDER_ID = 'mcp';
 
-/** Connector id of the connection to the hosted browser the Browser skill drives. */
-export const BROWSER_PROVIDER_ID = 'dxos-browser';
+/** Registry key of the built-in MCP server behind the Browser skill. */
+export const BROWSER_MCP_KEY = 'org.dxos.mcp.browser';
 
 /** The hosted Playwright MCP server behind the Browser skill. */
 // https://dash.cloudflare.com/950816f3f59b079880a1ae33fb0ec320/workers/services/view/playwright-mcp-example/production

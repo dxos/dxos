@@ -10071,9 +10071,6 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
-      '@dxos/plugin-connector':
-        specifier: workspace:*
-        version: link:../plugin-connector
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space

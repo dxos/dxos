@@ -628,7 +628,9 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               log('begin request', { prompt });
               log('trace agent request begin');
               yield* Trace.write(Trace.AgentRequestBegin, {});
-              const mcpContext = yield* Effect.context<Database.Service | Credential.CredentialsService>();
+              const mcpContext = yield* Effect.context<
+                Database.Service | Registry.Service | Credential.CredentialsService
+              >();
               markWork('agent.turn-begin');
               yield* session
                 .runTurn({
