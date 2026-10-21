@@ -95,46 +95,52 @@ type EditFieldProps = {
   label: string;
   testId: string;
   autoFocus?: boolean;
-  /** `start` where something sits right after the field (the header's Save button), so the box clears only the start. */
-  extend?: 'both' | 'start';
+  /** Wraps and grows with its text; Enter still commits, Shift+Enter breaks the line. */
+  multiline?: boolean;
   onCommit: (value: string) => void;
 };
 
 const stopPropagation = (event: MouseEvent | PointerEvent) => event.stopPropagation();
 
 /**
- * A single-line field of a card in edit mode, committed when it loses focus (Enter does that). Keys and presses stay in
- * the field: the card would toggle its selection, and a canvas would delete the box on Backspace.
+ * A field of a card in edit mode, committed when it loses focus (Enter does that). Keys and presses stay in the field:
+ * the card would toggle its selection, and a canvas would delete the box on Backspace.
  */
-const EditField = ({ value, placeholder, label, testId, autoFocus, extend = 'both', onCommit }: EditFieldProps) => {
-  const handleBlur = (event: FocusEvent<HTMLInputElement>) => {
+const EditField = ({ value, placeholder, label, testId, autoFocus, multiline, onCommit }: EditFieldProps) => {
+  const handleBlur = (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const next = event.currentTarget.value.trim();
     if (next !== value) {
       onCommit(next);
     }
   };
-  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     event.stopPropagation();
-    if (event.key === 'Enter') {
+    if (event.key === 'Enter' && !(multiline && event.shiftKey)) {
       event.preventDefault();
       event.currentTarget.blur();
     }
   };
-  return (
-    <Input.Root
-      // Pulled out (and widened) by its padding and by its height over a line, so the text stays where it was read, the
-      // box clears it and the card keeps its size.
-      classNames={['-ms-2 -my-0.5', extend === 'both' ? '-me-2 w-[calc(100%+1rem)]' : 'w-[calc(100%+0.5rem)]']}
-      defaultValue={value}
-      placeholder={placeholder}
-      aria-label={label}
-      data-testid={testId}
-      autoFocus={autoFocus}
-      onBlur={handleBlur}
-      onKeyDown={handleKeyDown}
-      onPointerDown={stopPropagation}
-      onClick={stopPropagation}
+  const props = {
+    'defaultValue': value,
+    placeholder,
+    'aria-label': label,
+    'data-testid': testId,
+    autoFocus,
+    'onBlur': handleBlur,
+    'onKeyDown': handleKeyDown,
+    'onPointerDown': stopPropagation,
+    'onClick': stopPropagation,
+  };
+  // A narrow inline padding, pulled out by the same amount at the start, so the text stays where it was read and the
+  // box ends at the column's edge (a canvas card's scroll area would clip anything past it).
+  return multiline ? (
+    // Sized by its content rather than `rows`, so a one-line description keeps the card's size.
+    <Input.Textarea
+      {...props}
+      classNames='-ms-1 my-1 px-1 py-0 w-[calc(100%+0.25rem)] min-h-0 [field-sizing:content] resize-none'
     />
+  ) : (
+    <Input.Root {...props} classNames='-ms-1 px-1 -my-0.5 w-[calc(100%+0.25rem)]' />
   );
 };
 
@@ -184,7 +190,8 @@ export const FeatureCard = ({
         <Layout.Block rail='start'>
           <Icon.Icon icon={status.icon} hue={status.hue} label={t(`feature-status.${feature.status}.label`)} />
         </Layout.Block>
-        <Card.Title lines={2}>
+        {/* Unclamped while editing: the clamp clips overflow, which would cut off the field's box beyond the text. */}
+        <Card.Title lines={editing && onRename ? undefined : 2}>
           {editing && onRename ? (
             <EditField
               value={feature.name}
@@ -192,7 +199,6 @@ export const FeatureCard = ({
               label={t('feature-card.name.label')}
               testId='feature-card.name.input'
               autoFocus
-              extend='start'
               onCommit={(name) => onRename(feature, name)}
             />
           ) : (
@@ -330,12 +336,14 @@ export const FeatureCardBody = ({
     <Card.Body>
       {/* Directly under the title, which it describes. */}
       {showFields && editing && onDescribe ? (
-        <Card.Row span='end'>
+        // The row's content clips overflow (for truncation), which would cut off the field's box beyond the text.
+        <Card.Row span='end' classNames='[&_.dx-card-row-content]:overflow-visible'>
           <EditField
             value={feature.description ?? ''}
             placeholder={t('feature-card.description.placeholder')}
             label={t('feature-card.description.label')}
             testId='feature-card.description.input'
+            multiline
             onCommit={(description) => onDescribe(feature, description)}
           />
         </Card.Row>
@@ -343,7 +351,7 @@ export const FeatureCardBody = ({
         showFields &&
         feature.description && (
           <Card.Row span='end' data-testid='feature-card.description'>
-            <Card.Text variant='muted' {...(expanded ? { lines: 3 } : { truncate: true })}>
+            <Card.Text variant='muted' lines={3}>
               {feature.description}
             </Card.Text>
           </Card.Row>

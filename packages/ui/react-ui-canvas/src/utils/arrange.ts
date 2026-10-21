@@ -18,7 +18,8 @@ export type Slot = { column: number; row: number };
  * - `rank`: each rank's nodes in id order.
  * - `crossings`: each rank ordered by its neighbours' mean column, sweeping down and up, keeping the order with the
  *   fewest crossings between adjacent ranks.
- * - `force`: a force layout seeded from the ranks and run to rest, each node then snapped to the nearest free slot.
+ * - `force`: a force layout seeded from the ranks (which it then ignores) and run to rest, each node then snapped to
+ *   the nearest free slot.
  * - `force-free`: the same force layout where it came to rest, unsnapped, to compare against `force`.
  * - `routed`: `crossings`, then improved by moving and swapping nodes against the cost of their routed links; it needs
  *   the routes, so here it gives the `crossings` seed and the dynamic projection runs the search.
@@ -142,7 +143,7 @@ const orderRows = (rows: readonly string[][], edges: readonly ArrangeEdge[]): st
   return best;
 };
 
-type SimNode = { id: string; x: number; y: number; rank: number };
+type SimNode = { id: string; x: number; y: number };
 
 /**
  * A force layout in slot units, seeded from `seed` so it needs no randomness. Snapped, in reading order: each node
@@ -157,7 +158,7 @@ const forceSlots = (
 ): Map<string, Slot> => {
   const nodes: SimNode[] = [...ranks].map(([id, rank]) => {
     const slot = seed.get(id) ?? { column: 0, row: rank };
-    return { id, x: slot.column, y: slot.row, rank };
+    return { id, x: slot.column, y: slot.row };
   });
   const links = edges
     .filter(({ from, to }) => ranks.has(from) && ranks.has(to))
@@ -173,9 +174,9 @@ const forceSlots = (
     // Short-range, so unrelated nodes make room for each other without the graph spreading across the canvas.
     .force('charge', forceManyBody().strength(-repulsion).distanceMax(range))
     .force('collide', forceCollide(0.5))
-    // Flow stays top-down: each node is held at its rank and gently towards the middle.
-    .force('y', forceY<SimNode>(({ rank }) => rank).strength(1))
+    // Ranks only seed the layout; the forces alone place nodes, gently held towards the middle so the graph stays together.
     .force('x', forceX(0).strength(0.05))
+    .force('y', forceY(0).strength(0.05))
     .stop()
     .tick(FORCE_TICKS);
 
