@@ -36,7 +36,7 @@ export type FeatureBoardProps = {
   /** Opens a spec, task or showcase listed on a card. */
   onOpenObject?: (id: string) => void;
   onSetStatus?: (id: string, status: FeatureStatus) => void;
-  /** Takes a feature off the map; the feature itself is kept. */
+  /** Takes a feature off its project; the feature itself is kept. */
   onRemove?: (id: string) => void;
   /** Make each card's name and description editable in place. */
   onRename?: (id: string, name: string) => void;
@@ -96,7 +96,7 @@ const FeatureTile = ({ data: feature }: { data: FeatureModel }) => {
 };
 
 /**
- * The cards view of a feature map: one card per feature in map order, under a count per status.
+ * The cards view of a project's features: one card per feature, under a count per status.
  * Selecting a card labels the features it needs and the features that need it, and fades the rest,
  * so a dependency chain reads without drawing edges.
  */

@@ -8,7 +8,7 @@ import type * as Theme from '@dxos/react-ui/Theme';
 import { Repo } from '@dxos/types';
 
 import { meta } from '#meta';
-import { Feature, FeatureMap, Showcase } from '#types';
+import { Feature, Showcase } from '#types';
 
 export const translations = [
   {
@@ -43,16 +43,6 @@ export const translations = [
         'delete-object.label': 'Delete feature',
         'object-deleted.label': 'Feature deleted',
       },
-      [Type.getTypename(FeatureMap.FeatureMap)]: {
-        'typename.label': 'Feature map',
-        'typename.label_zero': 'Feature maps',
-        'typename.label_one': 'Feature map',
-        'typename.label_other': 'Feature maps',
-        'object-name.placeholder': 'New feature map',
-        'rename-object.label': 'Rename feature map',
-        'delete-object.label': 'Delete feature map',
-        'object-deleted.label': 'Feature map deleted',
-      },
       [Type.getTypename(Showcase.Showcase)]: {
         'typename.label': 'Showcase',
         'typename.label_zero': 'Showcases',
@@ -74,6 +64,7 @@ export const translations = [
         'views.label': 'Views',
         'overview.label': 'Overview',
         'tasks.label': 'Tasks',
+        'features.label': 'Features',
         'view.label': 'View',
         'pipeline.label': 'Show pipeline',
         'no-sessions.message': 'No agent sessions yet. Assign tasks to an agent to start one.',
@@ -128,7 +119,7 @@ export const translations = [
         'feature-card.open.label': 'Open feature',
         'feature-card.menu.label': 'Feature actions',
         'feature-card.status.label': 'Status',
-        'feature-card.remove.label': 'Remove from map',
+        'feature-card.remove.label': 'Remove from project',
         'feature-card.remove-dependency.label': 'Remove dependency on {{name}}',
         'feature-edit-error.title': 'Edit not applied',
         'feature-article.add-dependency.label': 'Add dependency',

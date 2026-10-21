@@ -4,13 +4,12 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Filter, Query, Ref, Relation } from '@dxos/echo';
+import { Filter, Query, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 import { File, PullRequest, Task } from '@dxos/types';
 
 import * as Feature from './Feature.ts';
-import * as FeatureMap from './FeatureMap.ts';
 import * as Showcase from './Showcase.ts';
 
 describe('Feature', () => {
@@ -30,7 +29,6 @@ describe('Feature', () => {
         Feature.Feature,
         Feature.DependsOn,
         Feature.Implements,
-        FeatureMap.FeatureMap,
         Showcase.Showcase,
         Showcase.Demonstrates,
         Task.Task,
@@ -72,7 +70,6 @@ describe('Feature', () => {
     const showcase = db.add(Showcase.make({ name: 'Sending a reply', content: 'Reply from the inbox.' }));
     db.add(Showcase.makeDemonstrates({ [Relation.Source]: showcase, [Relation.Target]: compose }));
     db.add(Showcase.makeDemonstrates({ [Relation.Source]: showcase, [Relation.Target]: task }));
-    db.add(FeatureMap.make({ name: 'Inbox', features: [Ref.make(compose), Ref.make(tokens)] }));
     await db.flush();
 
     const dependencies = await db.query(Query.select(Filter.id(compose.id)).sourceOf(Feature.DependsOn).target()).run();

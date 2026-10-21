@@ -8,6 +8,7 @@ import React from 'react';
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import * as Project from '@dxos/compute/Project';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -21,23 +22,22 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
 import { translations } from '#translations';
-import { FeatureMap } from '#types';
 
-import { FeatureMapArticle } from './FeatureMapArticle.tsx';
+import { ProjectFeatures } from './ProjectFeatures.tsx';
 
-type StoryArgs = { role: string; attendableId: string };
+type StoryArgs = { attendableId: string };
 
-const DefaultStory = ({ role, attendableId }: StoryArgs) => {
+const DefaultStory = ({ attendableId }: StoryArgs) => {
   const [space] = useSpaces();
-  const [map] = useQuery(space?.db, Filter.type(FeatureMap.FeatureMap));
-  if (!map) {
-    return <Loading data={{ db: !!space?.db, map: !!map }} />;
+  const [project] = useQuery(space?.db, Filter.type(Project.Project));
+  if (!project) {
+    return <Loading data={{ db: !!space?.db, project: !!project }} />;
   }
 
   // Marks the subtree attendable, as the deck's plank does, so the toolbar is live.
   return (
     <AttendableContainer id={attendableId} classNames='contents'>
-      <FeatureMapArticle role={role} subject={map} attendableId={attendableId} />
+      <ProjectFeatures project={project} attendableId={attendableId} />
     </AttendableContainer>
   );
 };
@@ -66,7 +66,7 @@ const openCardMenu = async (card: HTMLElement) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-projects/containers/FeatureMapArticle',
+  title: 'plugins/plugin-projects/containers/ProjectFeatures',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
@@ -95,7 +95,7 @@ const meta = {
     controls: { disable: true },
     translations: [...translations, ...reactUiTranslations, ...formTranslations],
   },
-  args: { role: 'article', attendableId: 'test' },
+  args: { attendableId: 'test' },
 } satisfies Meta<typeof DefaultStory>;
 
 export default meta;
@@ -114,7 +114,7 @@ export const Cards: Story = {
   },
 };
 
-/** The same map on the canvas, laid out by dependency with an arrow per `DependsOn`. */
+/** The same features on the canvas, laid out by dependency with an arrow per `DependsOn`. */
 export const Canvas: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -137,8 +137,8 @@ export const SetStatus: Story = {
   },
 };
 
-/** Removing a card takes the feature off this map only. */
-export const RemoveFromMap: Story = {
+/** Removing a card takes the feature off this project only. */
+export const RemoveFromProject: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(() => expect(canvas.getAllByTestId('feature-card')).toHaveLength(8), { timeout: 10_000 });
@@ -149,7 +149,7 @@ export const RemoveFromMap: Story = {
   },
 };
 
-/** The toolbar's add button creates a feature named from the query and puts it on the map. */
+/** The toolbar's add button creates a feature named from the query and puts it in the project. */
 export const CreateFeature: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -165,7 +165,7 @@ export const CreateFeature: Story = {
   },
 };
 
-/** Selecting a box and pressing Delete removes the feature from the map, not from the space. */
+/** Selecting a box and pressing Delete removes the feature from the project, not from the space. */
 export const CanvasRemove: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -184,7 +184,7 @@ export const CanvasRemove: Story = {
   },
 };
 
-/** The toolbar's New feature puts an unnamed card on the map with its name field open, so it is named in place. */
+/** The toolbar's New feature puts an unnamed card in the project with its name field open, so it is named in place. */
 export const NewFeature: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

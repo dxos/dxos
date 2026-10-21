@@ -6,7 +6,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Format, Obj, Relation, Type } from '@dxos/echo';
+import * as Project from '@dxos/compute/Project';
+import { Annotation, DXN, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { Task } from '@dxos/types';
 
@@ -29,6 +30,10 @@ export const StatusOptions: Task.Option<Status>[] = [
 //
 // Feature
 //
+
+/** Where a feature's card sits on its project's canvas. */
+export const Position = Schema.Struct({ x: Schema.Number, y: Schema.Number });
+export type Position = Schema.Schema.Type<typeof Position>;
 
 /** A part of a feature with its own status; specs, dependencies and tasks belong to the feature. */
 export const Subfeature = Schema.Struct({
@@ -68,6 +73,15 @@ export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.fe
      * two levels deep, a part has a status but no specs, dependencies or tasks of its own.
      */
     subfeatures: Schema.optional(Schema.Array(Subfeature).pipe(Schema.annotate({ title: 'Subfeatures' }))),
+
+    /**
+     * The project whose feature board lists this feature. Held by the feature rather than the project, since a
+     * project is a generic compute type that knows nothing of features; not owned, so deleting a project keeps it.
+     */
+    project: Schema.optional(Ref.Ref(Project.Project).pipe(Annotation.FormInputAnnotation.set(false))),
+
+    /** Where the user dragged the card on its project's canvas; a feature without one is laid out automatically. */
+    position: Schema.optional(Position.pipe(Annotation.FormInputAnnotation.set(false))),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--puzzle-piece--regular', hue: 'violet' }),

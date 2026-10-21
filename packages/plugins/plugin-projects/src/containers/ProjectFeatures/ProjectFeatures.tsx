@@ -4,9 +4,9 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import type * as Project from '@dxos/compute/Project';
 import { EID, Filter, Obj } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
+import { useQuery } from '@dxos/echo-react';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
@@ -16,35 +16,49 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { FeatureBoard } from '#components';
 import { meta } from '#meta';
-import { Feature, type FeatureMap, FeatureMapView } from '#types';
+import { Feature, FeatureMapView } from '#types';
 
 // Not in the components barrel: the canvas engine is large, and the barrel is also loaded by capabilities at boot.
 import { FeatureCanvas } from '../../components/FeatureCanvas/index.ts';
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
 import { useFeatureEditing, useFeatureGraph, useOpenObject } from '../../hooks/index.ts';
 
-export type FeatureMapArticleProps = AppSurface.ObjectArticleProps<FeatureMap.FeatureMap>;
+export type ProjectFeaturesProps = {
+  project: Project.Project;
+  attendableId?: string;
+};
+
+type Point = NonNullable<Feature.Feature['position']>;
+
+const projectIdOf = (feature: Feature.Feature) => feature.project && EID.getEntityId(EID.parse(feature.project.uri));
 
 const MODES: { mode: FeatureMapView.Mode; icon: string }[] = [
   { mode: 'cards', icon: 'ph--cards--regular' },
   { mode: 'canvas', icon: 'ph--graph--regular' },
 ];
 
-/** Article surface for a {@link FeatureMap.FeatureMap}: its features as cards (the default) or on a canvas. */
-export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArticleProps) => {
+/** A project's Features tab: the features that belong to it, as cards (the default) or on a canvas. */
+export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { mode } = useViewState(FeatureMapView.aspect, subject.id);
-  const { update: updateView } = useViewStateActions(FeatureMapView.aspect, subject.id);
-  const db = Obj.getDatabase(subject);
-  const [refs = []] = useObject(subject, 'features');
-  // Subscribed, not read off the subject, so a drag by another peer or an agent re-lays out an open canvas.
-  const [positions] = useObject(subject, 'positions');
-  // The map's refs are the scope: only these features and their relations are queried.
-  const ids = useMemo(() => refs.flatMap((ref) => EID.getEntityId(EID.parse(ref.uri)) ?? []), [refs]);
+  const { mode } = useViewState(FeatureMapView.aspect, project.id);
+  const { update: updateView } = useViewStateActions(FeatureMapView.aspect, project.id);
+  const db = Obj.getDatabase(project);
+  // Queried, not read off the project: membership lives on each feature, so a move by an agent shows up here.
+  const allFeatures = useQuery(db, Filter.type(Feature.Feature));
+  const members = useMemo(
+    () =>
+      allFeatures.filter((feature) => projectIdOf(feature) === project.id).sort((a, b) => a.name.localeCompare(b.name)),
+    [allFeatures, project.id],
+  );
+  const ids = useMemo(() => members.map((feature) => feature.id), [members]);
+  const positions = useMemo(
+    () => Object.fromEntries(members.flatMap((feature) => (feature.position ? [[feature.id, feature.position]] : []))),
+    [members],
+  );
   const graph = useFeatureGraph(db, ids);
   const features = useMemo(() => ids.flatMap((id) => graph.lookup(id) ?? []), [ids, graph]);
   const openObject = useOpenObject(db, attendableId);
-  const editing = useFeatureEditing(db, subject);
+  const editing = useFeatureEditing(db, project);
   const handleOpen = useCallback((id: string) => void openObject(id), [openObject]);
   // The card whose name field is open: a feature created from the toolbar is named in place on the map.
   const [editingId, setEditingId] = useState<string>();
@@ -94,7 +108,7 @@ export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArt
                 db={db}
                 filter={Filter.type(Feature.Feature)}
                 exclude={ids}
-                onSelect={editing.addToMap}
+                onSelect={editing.addToProject}
                 onCreate={editing.createFeature}
                 trigger={
                   <Button.Root
@@ -113,16 +127,22 @@ export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArt
     [mode, updateView, db, ids, editing, handleNew, t],
   );
 
+  // Only the features whose box moved are written, so a drag touches one object rather than the whole project.
   const handlePositionsChange = useCallback(
-    (positions: FeatureMap.FeatureMap['positions']) =>
-      Obj.update(subject, (subject) => {
-        subject.positions = { ...positions };
+    (next: Record<string, Point>) =>
+      members.forEach((feature) => {
+        const point = next[feature.id];
+        if (point && (point.x !== feature.position?.x || point.y !== feature.position?.y)) {
+          Obj.update(feature, (feature) => {
+            feature.position = { x: point.x, y: point.y };
+          });
+        }
       }),
-    [subject],
+    [members],
   );
 
   return (
-    <Panel.Root role={role}>
+    <Panel.Root>
       <Panel.Header>
         <ActionToolbar {...menu} attendableId={attendableId} />
       </Panel.Header>
@@ -136,7 +156,7 @@ export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArt
               onOpen={handleOpen}
               onLink={editing.addDependency}
               onUnlink={editing.removeDependency}
-              onRemove={editing.removeFromMap}
+              onRemove={editing.removeFromProject}
               onRename={editing.rename}
               onDescribe={editing.describe}
               editingId={editingId}
@@ -151,7 +171,7 @@ export const FeatureMapArticle = ({ role, subject, attendableId }: FeatureMapArt
                 onOpen={handleOpen}
                 onOpenObject={handleOpen}
                 onSetStatus={editing.setStatus}
-                onRemove={editing.removeFromMap}
+                onRemove={editing.removeFromProject}
                 onRename={editing.rename}
                 onDescribe={editing.describe}
                 editingId={editingId}

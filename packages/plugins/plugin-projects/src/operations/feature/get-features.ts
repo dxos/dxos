@@ -3,28 +3,24 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Option from 'effect/Option';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Obj, Query } from '@dxos/echo';
+import { Database, EID, Filter, Obj, Query } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
 import { Feature, FeatureOperation, Showcase } from '#types';
 
 import { endpoints } from './util.ts';
 
-const handler: Operation.WithHandler<typeof FeatureOperation.GetMap> = FeatureOperation.GetMap.pipe(
+const handler: Operation.WithHandler<typeof FeatureOperation.GetFeatures> = FeatureOperation.GetFeatures.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ map: mapRef }) {
-      const map = yield* Database.load(mapRef);
+    Effect.fn(function* ({ project: projectRef }) {
+      const projectId = EID.getEntityId(EID.parse(projectRef.uri));
+      const members = (yield* Database.query(Filter.type(Feature.Feature)).run)
+        .filter((feature) => feature.project && EID.getEntityId(EID.parse(feature.project.uri)) === projectId)
+        .sort((a, b) => a.name.localeCompare(b.name));
       const features: FeatureOperation.FeatureSummary[] = [];
-      for (const ref of map.features) {
-        // A member deleted since it was added is left out rather than failing the whole read.
-        const loaded = yield* Effect.option(Database.load(ref));
-        if (Option.isNone(loaded)) {
-          continue;
-        }
-        const feature = loaded.value;
+      for (const feature of members) {
         const selected = Query.select(Filter.id(feature.id));
         const dependsOn = yield* Database.query(selected.sourceOf(Feature.DependsOn)).run;
         const tasks = yield* Database.query(selected.targetOf(Feature.Implements).source()).run;
@@ -42,7 +38,7 @@ const handler: Operation.WithHandler<typeof FeatureOperation.GetMap> = FeatureOp
           showcases: showcases.map(({ id, name }) => ({ id, name })),
         });
       }
-      return { name: map.name, features };
+      return { features };
     }),
   ),
 );

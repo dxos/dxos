@@ -7,11 +7,12 @@ import { useMemo } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as Operation from '@dxos/compute/Operation';
+import type * as Project from '@dxos/compute/Project';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
-import { Feature, type FeatureMap, FeatureOperation } from '#types';
+import { Feature, FeatureOperation } from '#types';
 
 export type FeatureEditing = {
   setStatus: (featureId: string, status: Feature.Status) => void;
@@ -20,20 +21,20 @@ export type FeatureEditing = {
   addDependency: (featureId: string, dependsOnId: string) => void;
   removeDependency: (featureId: string, dependsOnId: string) => void;
   linkTask: (taskId: string, featureId: string) => void;
-  /** Requires a map; a no-op without one. */
-  addToMap: (featureId: string) => void;
-  /** Requires a map; a no-op without one. */
-  removeFromMap: (featureId: string) => void;
-  /** Creates a planned feature, on the map when there is one; resolves to its id. */
+  /** Moves the feature onto the project; requires a project, a no-op without one. */
+  addToProject: (featureId: string) => void;
+  /** Takes the feature off its project; the feature itself is kept. */
+  removeFromProject: (featureId: string) => void;
+  /** Creates a planned feature, on the project when there is one; resolves to its id. */
   createFeature: (name: string) => Promise<string | undefined>;
 };
 
 /**
- * Edits for the feature map UI, each through the `FeatureOperation` verb an agent would use, so a person and an
+ * Edits for a project's feature board, each through the `FeatureOperation` verb an agent would use, so a person and an
  * agent get the same rules. A refused edit (a dependency that would close a cycle) is shown as a toast carrying the
  * operation's own message, which names the features involved.
  */
-export const useFeatureEditing = (db: Database.Database | undefined, map?: FeatureMap.FeatureMap): FeatureEditing => {
+export const useFeatureEditing = (db: Database.Database | undefined, project?: Project.Project): FeatureEditing => {
   const { invokePromise } = Hooks.useOperationInvoker();
 
   return useMemo(() => {
@@ -66,7 +67,7 @@ export const useFeatureEditing = (db: Database.Database | undefined, map?: Featu
       return data;
     };
 
-    const mapRef = map ? Ref.make(map) : undefined;
+    const projectRef = project ? Ref.make(project) : undefined;
 
     return {
       setStatus: (featureId, status) =>
@@ -88,18 +89,18 @@ export const useFeatureEditing = (db: Database.Database | undefined, map?: Featu
         void Promise.all([taskRef(taskId), featureRef(featureId)]).then(
           ([task, feature]) => task && feature && run(FeatureOperation.LinkTask, { task, feature }),
         ),
-      addToMap: (featureId) =>
+      addToProject: (featureId) =>
         void featureRef(featureId).then(
-          (feature) => feature && mapRef && run(FeatureOperation.AddToMap, { map: mapRef, feature }),
+          (feature) => feature && projectRef && run(FeatureOperation.Update, { feature, project: projectRef }),
         ),
-      removeFromMap: (featureId) =>
+      removeFromProject: (featureId) =>
         void featureRef(featureId).then(
-          (feature) => feature && mapRef && run(FeatureOperation.RemoveFromMap, { map: mapRef, feature }),
+          (feature) => feature && run(FeatureOperation.Update, { feature, project: null }),
         ),
       createFeature: async (name) => {
-        const result = await run(FeatureOperation.Create, { name, map: mapRef });
+        const result = await run(FeatureOperation.Create, { name, project: projectRef });
         return result?.feature.id;
       },
     };
-  }, [db, map, invokePromise]);
+  }, [db, project, invokePromise]);
 };

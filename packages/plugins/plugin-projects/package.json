@@ -79,11 +79,6 @@
       "types": "./dist/types/src/types/Feature.d.ts",
       "import": "./dist/lib/Feature.mjs"
     },
-    "./FeatureMap": {
-      "source": "./src/types/FeatureMap.ts",
-      "types": "./dist/types/src/types/FeatureMap.d.ts",
-      "import": "./dist/lib/FeatureMap.mjs"
-    },
     "./FeatureMapView": {
       "source": "./src/types/FeatureMapView.ts",
       "types": "./dist/types/src/types/FeatureMapView.d.ts",
