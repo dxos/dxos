@@ -20,6 +20,9 @@ export type FrameMode = 'overlay' | 'layout';
  */
 export type BandStyle = 'band' | 'panel';
 
+/** Where the caption sits: against the top or bottom edge, or centred vertically. */
+export type CaptionPosition = 'top' | 'middle' | 'bottom';
+
 export type FrameOptions = {
   /**
    * `overlay` fixes the header and caption over the page; `layout` lays them over the host's children (through a
@@ -36,6 +39,10 @@ export type FrameOptions = {
   size?: FrameSize;
   /** The caption's style; defaults to `panel`. */
   captionStyle?: BandStyle;
+  /** Where the caption sits; defaults to `bottom`. */
+  captionPosition?: CaptionPosition;
+  /** The opacity (0–1) of the caption panel's black background; unset keeps `--autocue-caption-alpha`. */
+  captionBackground?: number;
   /** On, the header's text also shows as a translucent band over the top; defaults to off (no panels). */
   headerBand?: boolean;
   /** Milliseconds to hold the header as a centred panel when the frame opens (see `playOpen`); 0 or unset skips it. */
@@ -52,6 +59,8 @@ export type FrameHandle = {
   setCaption: (text?: FrameText) => void;
   setSize: (size?: FrameSize) => void;
   setCaptionStyle: (style: BandStyle) => void;
+  setCaptionPosition: (position: CaptionPosition) => void;
+  setCaptionBackground: (alpha?: number) => void;
   setHeaderBand: (show: boolean) => void;
   /**
    * Shows the header's text alone, as a panel centred in the frame, for `ms`; then fades it out as the header and
@@ -83,6 +92,8 @@ export const FRAME_STYLES = `
   .frame.overlay .band:not(.panel) { position: fixed; z-index: var(--autocue-layer); }
   .header:not(.panel) { top: 0; }
   .caption:not(.panel) { bottom: 0; }
+  .caption.top:not(.panel) { top: 0; bottom: auto; }
+  .caption.middle:not(.panel) { top: 50%; bottom: auto; transform: translateY(-50%); }
   .panel { position: absolute; z-index: 1; left: 50%; transform: translateX(-50%); width: max-content; max-width: 80%;
     border-radius: var(--autocue-panel-radius); box-shadow: var(--autocue-panel-shadow);
     --autocue-band-surface: var(--autocue-panel-surface); --autocue-band-fg: var(--autocue-panel-fg);
@@ -96,9 +107,11 @@ export const FRAME_STYLES = `
     justify-content: center; }
   /* Final Cut Pro's caption: a black box fitted to the text, low in the frame, with no shadow or blur. */
   .caption.panel { bottom: var(--autocue-caption-inset); height: auto; padding: 14px 30px 16px;
-    border-radius: var(--autocue-caption-radius); box-shadow: none; backdrop-filter: none;
-    --autocue-band-surface: var(--autocue-caption-surface); --autocue-band-fg: var(--autocue-caption-fg);
+    border-radius: var(--autocue-caption-radius); box-shadow: none; backdrop-filter: blur(var(--autocue-caption-blur));
+    --autocue-band-surface: rgba(0, 0, 0, var(--autocue-caption-alpha)); --autocue-band-fg: var(--autocue-caption-fg);
     --autocue-band-muted: var(--autocue-caption-muted); }
+  .caption.panel.top { top: var(--autocue-caption-inset); bottom: auto; }
+  .caption.panel.middle { top: 50%; bottom: auto; transform: translate(-50%, -50%); }
   .caption.panel .title { font: 700 40px/1.2 var(--autocue-caption-font); letter-spacing: -0.01em; }
   .caption.panel .subtitle { font: 500 20px/1.3 var(--autocue-caption-font); margin-top: 6px; }
   .caption .title, .caption .subtitle, .panel .title, .panel .subtitle { white-space: nowrap; overflow: hidden;
@@ -149,6 +162,8 @@ export const createFrame = (
     caption,
     size,
     captionStyle = 'panel',
+    captionPosition = 'bottom',
+    captionBackground,
     headerBand: showHeaderBand = false,
     open,
   }: FrameOptions = {},
@@ -255,6 +270,21 @@ export const createFrame = (
   };
   setCaptionStyle(captionStyle);
 
+  const setCaptionPosition = (position: CaptionPosition) => {
+    captionBand.classList.toggle('top', position === 'top');
+    captionBand.classList.toggle('middle', position === 'middle');
+  };
+  setCaptionPosition(captionPosition);
+
+  const setCaptionBackground = (alpha?: number) => {
+    if (alpha === undefined) {
+      frame.style.removeProperty('--autocue-caption-alpha');
+    } else {
+      frame.style.setProperty('--autocue-caption-alpha', String(Math.min(1, Math.max(0, alpha))));
+    }
+  };
+  setCaptionBackground(captionBackground);
+
   const setHeaderBand = (show: boolean) => {
     headerBand.classList.toggle('off', !show);
   };
@@ -314,6 +344,8 @@ export const createFrame = (
     setCaption,
     setSize,
     setCaptionStyle,
+    setCaptionPosition,
+    setCaptionBackground,
     setHeaderBand,
     playOpen,
     dispose: () => {

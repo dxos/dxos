@@ -27,8 +27,10 @@ export const TOKENS = `
     --autocue-open-fade: 600ms;
     --autocue-caption-fade: 300ms;
     --autocue-panel-surface: rgba(17, 17, 17, 0.92);
-    /* Final Cut Pro's caption: white bold type on black at 85%, the same in both themes, so it reads over any frame. */
-    --autocue-caption-surface: rgba(0, 0, 0, 0.85);
+    /* Final Cut Pro's caption: white bold type on translucent black, the same in both themes; the blur behind it keeps
+       the type legible over any frame. The alpha is the frame's \`captionBackground\`. */
+    --autocue-caption-alpha: 0.6;
+    --autocue-caption-blur: 8px;
     --autocue-caption-fg: #fff;
     --autocue-caption-muted: rgba(255, 255, 255, 0.75);
     --autocue-caption-font: 'Helvetica Neue', Helvetica, Arial, sans-serif;

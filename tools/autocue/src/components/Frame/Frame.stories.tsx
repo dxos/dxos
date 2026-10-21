@@ -70,7 +70,7 @@ const SIZES = {
 
 type Size = keyof typeof SIZES;
 
-type StoryProps = Pick<FrameProps, 'captionStyle' | 'headerBand' | 'open'> & {
+type StoryProps = Pick<FrameProps, 'captionStyle' | 'captionPosition' | 'captionBackground' | 'headerBand' | 'open'> & {
   /** The recording's aspect ratio, which every view keeps, letterboxed. */
   size?: Size;
   /** Off, the script still steps the app but shows no captions. */
@@ -85,6 +85,8 @@ type StoryProps = Pick<FrameProps, 'captionStyle' | 'headerBand' | 'open'> & {
 const TakeStory = ({
   size = '16:10',
   captionStyle,
+  captionPosition,
+  captionBackground,
   headerBand,
   open,
   captions = true,
@@ -120,6 +122,8 @@ const TakeStory = ({
         caption={captions ? STEPS[step] : undefined}
         size={SIZES[size]}
         captionStyle={captionStyle}
+        captionPosition={captionPosition}
+        captionBackground={captionBackground}
         headerBand={headerBand}
         open={open}
       >
@@ -212,6 +216,8 @@ const meta: Meta<typeof TakeStory> = {
   argTypes: {
     size: { control: 'select', options: Object.keys(SIZES) },
     captionStyle: { control: 'inline-radio', options: ['band', 'panel'] },
+    captionPosition: { control: 'inline-radio', options: ['top', 'middle', 'bottom'] },
+    captionBackground: { control: { type: 'range', min: 0, max: 1, step: 0.05 } },
   },
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
@@ -238,9 +244,16 @@ export const Footer: Story = {
   args: { size: '16:10', captionStyle: 'band' },
 };
 
-/** The title opens alone in the centre, then the step captions float over the bottom. */
+/** The title opens alone in the centre, then the step captions float over the frame, at the bottom by default. */
 export const Floating: Story = {
-  args: { size: '16:10', open: 3_000, captionStyle: 'panel', interval: 4_000 },
+  args: {
+    size: '16:10',
+    open: 3_000,
+    captionStyle: 'panel',
+    captionPosition: 'bottom',
+    captionBackground: 0.6,
+    interval: 4_000,
+  },
 };
 
 /** The floating take, between the DXOS open and close cards. */
