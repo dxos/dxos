@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Session from '@dxos/assistant/Session';
 import type * as Project from '@dxos/compute/Project';
 import * as AssistantHooks from '@dxos/plugin-assistant/Hooks';
 import { type Space } from '@dxos/react-client/echo';
@@ -39,7 +39,7 @@ export type ProjectPipelineProps = {
   /** Called with the task behind a task lane the reader picks. */
   onSelectTask?: (taskId: string) => void;
   /** Called with the chat behind a session lane the reader picks, and a task lane's with no `onSelectTask`. */
-  onSelectChat?: (chat: Chat.Chat) => void;
+  onSelectChat?: (chat: Session.Session) => void;
 };
 
 /**

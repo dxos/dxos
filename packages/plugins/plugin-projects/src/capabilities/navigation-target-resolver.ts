@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Project from '@dxos/compute/Project';
 import { Database, Entity, Obj } from '@dxos/echo';
 import { DXN, EID } from '@dxos/keys';
@@ -48,7 +48,7 @@ export default Capability.makeModule(
           return [];
         }
 
-        const path = Obj.instanceOf(Chat.Chat, object)
+        const path = Obj.instanceOf(Session.Session, object)
           ? getProjectChatPath(db.spaceId, project.id, object.id)
           : ContainerModel.includes(artifacts(project), object)
             ? getProjectArtifactPath(db.spaceId, project.id, object.id)

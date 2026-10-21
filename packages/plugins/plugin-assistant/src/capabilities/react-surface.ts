@@ -10,7 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Instructions from '@dxos/compute/Instructions';
 import { Sequence } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
@@ -71,7 +71,7 @@ export default Capability.makeModule(() =>
         id: 'chat',
         filter: AppSurface.object(
           AppSurface.Article,
-          Chat.Chat,
+          Session.Session,
           (data) => data.variant !== ASSISTANT_COMPANION_VARIANT,
         ),
         component: ChatArticle,
@@ -101,7 +101,7 @@ export default Capability.makeModule(() =>
           AppSurface.Article,
           (data) =>
             Obj.isObject(data.companionTo) &&
-            (Obj.instanceOf(Chat.Chat, data.subject) || isUnprovisionedAssistantCompanion(data)),
+            (Obj.instanceOf(Session.Session, data.subject) || isUnprovisionedAssistantCompanion(data)),
         ),
         component: ChatCompanion,
         props: ({ role, ref, data: { subject, attendableId, nodeId, companionTo } }) => ({

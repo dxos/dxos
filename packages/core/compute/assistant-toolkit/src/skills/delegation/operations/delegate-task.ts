@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Harness } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import { Database } from '@dxos/echo';
 import { trim } from '@dxos/util';
@@ -30,7 +30,7 @@ const handler: Operation.WithHandler<typeof DelegateTask> = DelegateTask.pipe(
 
       // Queued (`todo`) rather than `started`: the reconcile loop spawns the sub-agent and marks
       // the task started at spawn, so `started` always means a live process.
-      const task = Chat.addTask(db, chat, title, {
+      const task = Session.addTask(db, chat, title, {
         status: 'todo',
         assignee: { role: 'assistant' },
       });
@@ -40,7 +40,7 @@ const handler: Operation.WithHandler<typeof DelegateTask> = DelegateTask.pipe(
         Delegated "${task.title}" as a queued agent task (id: ${task.id}).
 
         <checklist>
-          ${yield* Chat.formatChecklist(chat)}
+          ${yield* Session.formatChecklist(chat)}
         </checklist>
       `;
     }),

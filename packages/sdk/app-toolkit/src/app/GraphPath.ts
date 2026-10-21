@@ -222,7 +222,7 @@ const getTypeSectionObjectPath = (spaceId: string, typename: string, objectId: s
  *
  * ```ts
  * const { getSectionPath: getChatsPath, getObjectPath: getChatPath } =
- *   createTypeSectionPaths(Chat.Chat, { groupId: GraphPath.GroupSegments.ai });
+ *   createTypeSectionPaths(Session.Session, { groupId: GraphPath.GroupSegments.ai });
  * export { getChatsPath, getChatPath };
  * ```
  *

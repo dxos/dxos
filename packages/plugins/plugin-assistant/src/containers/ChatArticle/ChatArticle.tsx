@@ -9,7 +9,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Session from '@dxos/assistant/Session';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
@@ -26,8 +26,8 @@ import { useChatModel, useChatServices, usePlatform, usePresets, useSelectionCon
 import { AssistantCapabilities } from '#types';
 
 export type ChatArticleProps = Merge<
-  Omit<AppSurface.ObjectSectionProps<Chat.Chat>, 'subject'> & {
-    subject?: Chat.Chat;
+  Omit<AppSurface.ObjectSectionProps<Session.Session>, 'subject'> & {
+    subject?: Session.Session;
     companionTo?: Obj.Unknown;
   },
   Pick<ChatRootProps, 'debug' | 'onEvent' | 'onSubmit'>
@@ -157,7 +157,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                   </Layout.Grid>
                 )}
 
-                {/* Composer and checklist in one: `Chat.Prompt` owns the disclosure between them. */}
+                {/* Composer and checklist in one: `Session.Prompt` owns the disclosure between them. */}
                 <ChatComponent.Prompt
                   {...chatProps}
                   outline

@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
@@ -89,9 +89,9 @@ const currentConversation = Effect.gen(function* () {
   const { db } = yield* Database.Service;
   // The environment names the conversation's chat (EDGE's agent turn) or its feed.
   const object = db.getObjectById(id);
-  const chat = Obj.instanceOf(Chat.Chat, object)
+  const chat = Obj.instanceOf(Session.Session, object)
     ? object
-    : (yield* Database.query(Filter.type(Chat.Chat)).run.pipe(Effect.orDie)).find(
+    : (yield* Database.query(Filter.type(Session.Session)).run.pipe(Effect.orDie)).find(
         (chat) => entityIdOf(chat.feed.uri) === id,
       );
   const where = chat && AgentChannels.conversationOf(chat);

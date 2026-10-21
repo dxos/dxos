@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -28,7 +28,7 @@ EntityId.dangerouslyDisableRandomness();
 // A live model, not the test, chooses whether an omitted field arrives absent or as `null`.
 const TestLayer = AssistantTestLayer({
   operationHandlers: OperationHandlerSet.make(defaultAgentPrompt),
-  types: [Chat.Chat, Message.Message, AiContext.Binding, Text.Text, Outline.Outline, Feed.Feed],
+  types: [Session.Session, Message.Message, AiContext.Binding, Text.Text, Outline.Outline, Feed.Feed],
   // No `model`: the operation resolves its own from the invocation and never reads a layer model.
   aiServicePreset: 'direct',
 });

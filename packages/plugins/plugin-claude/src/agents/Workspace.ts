@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import type { Chat } from '@dxos/assistant';
+import type { Session } from '@dxos/assistant';
 import * as Project from '@dxos/compute/Project';
 import { Obj } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
@@ -15,13 +15,13 @@ const SEPARATOR = '_';
 const MAX_SLUG = 40;
 
 /** The project a chat was opened under, whose folder it works in. */
-export const projectOf = (chat: Chat.Chat): Project.Project | undefined => {
+export const projectOf = (chat: Session.Session): Project.Project | undefined => {
   const parent = Obj.getParent(chat);
   return parent && Obj.instanceOf(Project.Project, parent) ? parent : undefined;
 };
 
 /** Names the chat's worktree: its space and id, which is how a sweep finds the chat again. */
-export const worktreeKey = (chat: Chat.Chat): string | undefined => {
+export const worktreeKey = (chat: Session.Session): string | undefined => {
   const spaceId = Obj.getDatabase(chat)?.spaceId;
   return spaceId ? `${spaceId}${SEPARATOR}${chat.id}` : undefined;
 };
@@ -41,7 +41,7 @@ const BRANCH_KEY = `${AGENT_KEY_PREFIX}.git-branch`;
  * name and unique by its id. Recorded because the chat's name changes (it is titled after its first
  * turn) and the branch holding its work must not.
  */
-export const branchName = (chat: Chat.Chat): string => {
+export const branchName = (chat: Session.Session): string => {
   const recorded = Obj.getKeys(chat, BRANCH_KEY).at(-1)?.id;
   if (recorded) {
     return recorded;
@@ -56,7 +56,7 @@ export const branchName = (chat: Chat.Chat): string => {
 };
 
 /** Remembers the branch the chat's worktree is on; a folder that is not a repository has none. */
-export const recordBranch = (chat: Chat.Chat, branch: string): void => {
+export const recordBranch = (chat: Session.Session, branch: string): void => {
   if (branch && Obj.getKeys(chat, BRANCH_KEY).at(-1)?.id !== branch) {
     Obj.update(chat, (chat) => {
       Obj.getMeta(chat).keys.push({ source: BRANCH_KEY, id: branch });

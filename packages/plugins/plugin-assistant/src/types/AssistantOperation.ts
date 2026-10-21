@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
 import * as Capability from '@dxos/app-framework/Capability';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -35,7 +35,7 @@ export const CreateChat = Operation.make({
     instructions: Schema.optional(Ref.Ref(Instructions.Instructions)),
   }),
   output: Schema.Struct({
-    object: Type.getSchema(Chat.Chat),
+    object: Type.getSchema(Session.Session),
   }),
 });
 
@@ -47,7 +47,7 @@ export const UpdateChatName = Operation.make({
   },
   services: [Database.Service, AiService.AiService],
   input: Schema.Struct({
-    chat: Type.getSchema(Chat.Chat),
+    chat: Type.getSchema(Session.Session),
     /** Initial user message text; used when the feed has no history yet (e.g. auto-rename on first send). */
     prompt: Schema.optional(Schema.String),
   }),
@@ -63,7 +63,7 @@ export const SetCurrentChat = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     companionTo: Obj.Unknown,
-    chat: Type.getSchema(Chat.Chat).pipe(Schema.optional),
+    chat: Type.getSchema(Session.Session).pipe(Schema.optional),
   }),
   output: Schema.Void,
 });
@@ -77,12 +77,12 @@ export const ForkChat = Operation.make({
   },
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
-    chat: Type.getSchema(Chat.Chat),
+    chat: Type.getSchema(Session.Session),
     /** When provided, the forked chat is set as the companion for this object rather than opened standalone. */
     companionTo: Schema.optional(Obj.Unknown),
   }),
   output: Schema.Struct({
-    object: Type.getSchema(Chat.Chat),
+    object: Type.getSchema(Session.Session),
   }),
 });
 
@@ -100,7 +100,7 @@ export const BindChatContext = Operation.make({
   },
   services: [Capability.Service, Registry.Service],
   input: Schema.Struct({
-    chat: Type.getSchema(Chat.Chat),
+    chat: Type.getSchema(Session.Session),
     /** The object the chat runs against — a companion's primary object, or a chat's originating object. */
     subject: Obj.Unknown,
   }),
@@ -118,7 +118,7 @@ export const EnsureCompanionChat = Operation.make({
     companionTo: Obj.Unknown,
   }),
   output: Schema.Struct({
-    chat: Type.getSchema(Chat.Chat),
+    chat: Type.getSchema(Session.Session),
     /** Whether the returned chat was already persisted in the space. */
     persisted: Schema.Boolean,
   }),
@@ -143,7 +143,7 @@ export const RunPromptInChat = Operation.make({
   },
   services: [Capability.Service, Database.Service, AgentService.AgentService],
   input: Schema.Struct({
-    chat: Schema.optional(Type.getSchema(Chat.Chat)),
+    chat: Schema.optional(Type.getSchema(Session.Session)),
     // The object whose companion chat should run the prompt — the way to name a companion chat that
     // has not been persisted yet, which a caller outside the page (an agent) cannot hold.
     companionTo: Schema.optional(Obj.Unknown),
@@ -174,7 +174,7 @@ export const RespondToRequest = Operation.make({
   },
   services: [Capability.Service, Database.Service],
   input: Schema.Struct({
-    chat: Type.getSchema(Chat.Chat),
+    chat: Type.getSchema(Session.Session),
     /** The message holding the request block. */
     messageId: Schema.String,
     requestId: Schema.String,

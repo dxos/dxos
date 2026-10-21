@@ -6,7 +6,7 @@ import React, { forwardRef, useCallback } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { Obj } from '@dxos/echo';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
@@ -14,8 +14,8 @@ import { AssistantOperation } from '#types';
 
 import ChatArticle from '../ChatArticle/index.ts';
 
-export type ChatCompanionProps = Omit<AppSurface.ArticleProps<Chat.Chat, {}, Obj.Unknown>, 'subject'> & {
-  subject?: Chat.Chat;
+export type ChatCompanionProps = Omit<AppSurface.ArticleProps<Session.Session, {}, Obj.Unknown>, 'subject'> & {
+  subject?: Session.Session;
 };
 
 export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
@@ -32,7 +32,7 @@ export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
 
       // Ref on the subject (annotation) + parent edge: the chat belongs to its subject (cascades
       // on delete, keeps it out of the standalone Chats section).
-      Chat.linkCompanion({ chat, subject: companionTo });
+      Session.linkCompanion({ chat, subject: companionTo });
       await invokePromise(SpaceOperation.AddObject, { object: chat }, { spaceId: db.spaceId });
       await invokePromise(AssistantOperation.SetCurrentChat, {
         companionTo,

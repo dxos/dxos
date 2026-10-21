@@ -12,7 +12,7 @@ import * as Struct from 'effect/Struct';
 import type { AgentProcessDefinition, MakeTurnProducer } from '@dxos/agent-runtime';
 import * as Capability from '@dxos/app-framework/Capability';
 import type { AiContext } from '@dxos/assistant';
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Session from '@dxos/assistant/Session';
 import type * as Instructions from '@dxos/compute/Instructions';
 import { type Database, type Obj, type Ref, type Registry } from '@dxos/echo';
 import { type Message } from '@dxos/types';
@@ -84,7 +84,7 @@ export type AgentAvailability = { readonly available: true } | { readonly availa
 
 /** A person's answer to a request block an agent added to a chat. */
 export type AgentResponse = {
-  chat: Chat.Chat;
+  chat: Session.Session;
   /** The message holding the request block. */
   message: Message.Message;
   requestId: string;
@@ -134,7 +134,7 @@ export type SubjectContext = {
   appliesTo?: (subject: Obj.Unknown) => boolean;
   getBindings: (params: {
     subject: Obj.Unknown;
-    chat: Chat.Chat;
+    chat: Session.Session;
   }) => Effect.Effect<SubjectBindings, Error, Database.Service | Registry.Service>;
 };
 

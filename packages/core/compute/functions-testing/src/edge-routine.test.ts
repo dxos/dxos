@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { Client } from '@dxos/client';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -46,7 +46,7 @@ describe('Edge instructions', { tags: ['functions-e2e'] }, () => {
         Skill.Skill,
         Feed.Feed,
         Text.Text,
-        Chat.Chat,
+        Session.Session,
         TestSchema.Organization,
       ],
     }).initialize();

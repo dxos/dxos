@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import { expect } from 'vitest';
 
 import { HarnessControl } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
@@ -28,14 +28,14 @@ const EchoProcess: AgentProcessDefinition = Operation.makeDurable({
   key: ECHO_PROCESS_KEY,
   input: AgentInput,
   output: Schema.Void,
-  types: [Chat.Chat, Feed.Feed, Message.Message],
+  types: [Session.Session, Feed.Feed, Message.Message],
   services: [Database.Service],
   rpcs: HarnessControl,
 }).pipe(
   Operation.withDurableHandler((ctx) =>
     Effect.gen(function* () {
       const chatDxn = Option.getOrThrow(Annotation.getDictionary(ctx.params.annotations, Process.TargetAnnotation));
-      const chat = yield* Database.resolve(chatDxn, Chat.Chat).pipe(Effect.orDie);
+      const chat = yield* Database.resolve(chatDxn, Session.Session).pipe(Effect.orDie);
       const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
       const reply = (text: string) =>
         Feed.append(feed, [
@@ -59,7 +59,7 @@ const TestLayer = AssistantTestLayer({
 
 const makeChat = Effect.fnUntraced(function* (process?: string) {
   const feed = yield* Database.add(Feed.make());
-  return yield* Database.add(Chat.make({ feed: Ref.make(feed), ...(process ? { session: { process } } : {}) }));
+  return yield* Database.add(Session.make({ feed: Ref.make(feed), ...(process ? { session: { process } } : {}) }));
 });
 
 const runningKeys = Effect.gen(function* () {

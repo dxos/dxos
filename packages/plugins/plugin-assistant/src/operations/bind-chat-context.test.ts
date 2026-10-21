@@ -12,7 +12,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { AiContext } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Query, Ref } from '@dxos/echo';
@@ -32,7 +32,7 @@ const GATED = 'from the gated provider';
 // the manager, so it must read the binding rather than capture one.
 const TestLayer = AssistantTestLayer({
   operationHandlers: AssistantOperationHandlerSet,
-  types: [Chat.Chat, Feed.Feed, Text.Text, AiContext.Binding],
+  types: [Session.Session, Feed.Feed, Text.Text, AiContext.Binding],
   extraServices: Layer.sync(Capability.Service, () => manager),
 });
 
@@ -131,7 +131,7 @@ describe('BindChatContext over a stable subject', () => {
   );
 });
 
-const bindingCount = Effect.fnUntraced(function* (chat: Chat.Chat) {
+const bindingCount = Effect.fnUntraced(function* (chat: Session.Session) {
   const feed = yield* Database.load(chat.feed);
   return (yield* Feed.query(feed, Query.type(AiContext.Binding)).run).length;
 });
@@ -153,13 +153,13 @@ const makeText = Effect.fnUntraced(function* (content: string) {
 
 const makeChat = Effect.fnUntraced(function* () {
   const { db } = yield* Database.Service;
-  const chat = db.add(Chat.make({ feed: Ref.make(db.add(Feed.make())) }));
+  const chat = db.add(Session.make({ feed: Ref.make(db.add(Feed.make())) }));
   yield* Database.flush();
   return chat;
 });
 
 /** Content of the text objects the feed's binding events add up to. */
-const boundText = Effect.fnUntraced(function* (chat: Chat.Chat) {
+const boundText = Effect.fnUntraced(function* (chat: Session.Session) {
   const feed = yield* Database.load(chat.feed);
   const bindings = yield* Feed.query(feed, Query.type(AiContext.Binding)).run;
   const objects = yield* Effect.forEach(

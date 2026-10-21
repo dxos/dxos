@@ -3,7 +3,7 @@
 //
 
 import * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import { Ref } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
@@ -21,7 +21,7 @@ export const TaskSlashCommands: SlashCommand.SlashCommand[] = [
       if (title.length === 0) {
         return new Error('Usage: /task:create <description>');
       }
-      Chat.addTask(db, chat, title);
+      Session.addTask(db, chat, title);
       await db.flush();
       return { summary: `Created task “${title}”.` };
     },
@@ -46,7 +46,7 @@ export const TaskSlashCommands: SlashCommand.SlashCommand[] = [
         if (seen.has(task.id)) {
           continue;
         }
-        for (const member of Chat.deleteTask(db, chat, tasks, task)) {
+        for (const member of Session.deleteTask(db, chat, tasks, task)) {
           seen.add(member.id);
         }
         deleted.push(task);
@@ -124,11 +124,11 @@ const run = async <I, O>(
  * The checklist in full: a reopened chat's refs are unresolved until loaded, and an unresolved
  * entry is invisible to both selector matching and the subtree sweep.
  */
-const hydrate = async (chat: Chat.Chat): Promise<Task.Task[]> => {
+const hydrate = async (chat: Session.Session): Promise<Task.Task[]> => {
   // `tryLoad`, not `load`: the latter throws on an entry whose object is gone, failing the whole
   // command instead of proceeding with the tasks that do resolve.
   await Promise.all(chat.tasks.map((ref) => ref.tryLoad()));
-  return Chat.resolveTasks(chat);
+  return Session.resolveTasks(chat);
 };
 
 /** Resolves selectors against `tasks`, in the order the user named them. */

@@ -5,7 +5,7 @@
 import { AiContext, Alarm, SessionLink } from '@dxos/assistant';
 import * as Memory from '@dxos/assistant-toolkit/Memory';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as McpServer from '@dxos/compute/McpServer';
 import * as Skill from '@dxos/compute/Skill';
@@ -18,7 +18,7 @@ import { HasSubject, Message } from '@dxos/types';
 // variant's schema module: these types ride heavy barrels (@dxos/assistant → @effect/ai →
 // fast-check/zod) that must stay out of the definition's static closure.
 const types: ReadonlyArray<Type.AnyEntity> = [
-  Chat.Chat,
+  Session.Session,
   Skill.Skill,
   AiContext.Binding,
   Alarm.Alarm,

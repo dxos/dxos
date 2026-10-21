@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
@@ -48,7 +48,7 @@ describe('Agent prompt (composer plugin harness)', () => {
             Effect.map(Array.length),
           );
 
-          const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+          const chat = yield* Database.add(Session.make({ feed: Ref.make(feed) }));
           const instructions = yield* Database.add(
             Instructions.make({
               name: 'chat-mode-test',

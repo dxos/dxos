@@ -3,7 +3,7 @@
 //
 
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as McpServer from '@dxos/compute/McpServer';
 import * as Skill from '@dxos/compute/Skill';
@@ -59,7 +59,7 @@ export const translations: Theme.Resource[] = [
         'delete-object.label': 'Delete sequence',
         'object-deleted.label': 'Sequence deleted',
       },
-      [Type.getTypename(Chat.Chat)]: {
+      [Type.getTypename(Session.Session)]: {
         'typename.label': 'Session',
         'typename.label_zero': 'Sessions',
         'typename.label_one': 'Session',

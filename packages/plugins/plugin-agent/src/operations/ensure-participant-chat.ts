@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -27,7 +27,7 @@ const FEED_SYNC_TIMEOUT = '5 seconds';
  * Of several chats that each match, the one with the newest message: two opens at once each make a chat, and the
  * person's conversation is in the one they last talked in.
  */
-const latestOf = Effect.fnUntraced(function* (chats: readonly Chat.Chat[]) {
+const latestOf = Effect.fnUntraced(function* (chats: readonly Session.Session[]) {
   if (chats.length < 2) {
     return chats[0];
   }
@@ -68,7 +68,7 @@ export const ensureParticipantChat = Effect.fnUntraced(function* (
   // An empty owner is no owner, for the lookup as for a chat created here.
   const owner = givenOwner || undefined;
   const key = { source: ChatParticipant.PARTICIPANT_SOURCE, id: person.id };
-  const existing = yield* Database.query(Query.select(Filter.foreignKeys(Chat.Chat, [key]))).run;
+  const existing = yield* Database.query(Query.select(Filter.foreignKeys(Session.Session, [key]))).run;
   const candidates = existing.filter((chat) => Obj.getParent(chat)?.id === agent.id);
   // A private chat is never a shared one adopted: with an owner, only that owner's chats match. Without one
   // (a relay addressing the person), the shared chat is preferred, then the person's private one.
@@ -92,7 +92,7 @@ export const ensureParticipantChat = Effect.fnUntraced(function* (
   const primary = yield* Agent.loadChat(agent);
   const location = remote ?? primary?.remote;
   const feed = yield* Database.add(Feed.make());
-  const draft = Chat.make({
+  const draft = Session.make({
     [Obj.Meta]: { keys: [key] },
     [Obj.Parent]: agent,
     name: person.preferredName ?? person.fullName,
@@ -101,7 +101,7 @@ export const ensureParticipantChat = Effect.fnUntraced(function* (
     ...(location !== undefined ? { remote: location } : {}),
   });
   // Runs on the same model as the agent's own conversation.
-  Chat.seedSession(draft, primary?.session);
+  Session.seedSession(draft, primary?.session);
   // Annotated before it is added: queries re-emit on membership only, so a reader would never see later annotations.
   Obj.update(draft, (draft) => {
     ChatParticipant.set(draft, person);

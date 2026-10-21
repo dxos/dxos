@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import { type Database } from '@dxos/echo';
 
@@ -23,7 +23,7 @@ export type SlashCommand = {
 /** `invoke` is the caller's own invoker, so a command's effect goes through the verb itself. */
 export type SlashCommandContext = {
   db: Database.Database;
-  chat: Chat.Chat;
+  chat: Session.Session;
   invoke: OperationInvoke;
 };
 

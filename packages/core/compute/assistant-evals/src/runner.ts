@@ -21,7 +21,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { AiContext } from '@dxos/assistant';
 import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { Config } from '@dxos/client';
 import { FeedTraceSink } from '@dxos/compute-runtime';
 import * as AgentService from '@dxos/compute/AgentService';
@@ -184,16 +184,16 @@ const runInstructions = <I>(
   spaceId: SpaceId,
   input: I,
   sessionChat?: boolean,
-  seededChat?: Ref.Ref<Chat.Chat>,
+  seededChat?: Ref.Ref<Session.Session>,
 ) =>
   harness.runPromise(
     Effect.gen(function* () {
       yield* seedInstructions(instructions);
 
-      let chatRef: Ref.Ref<Chat.Chat> | undefined = seededChat;
+      let chatRef: Ref.Ref<Session.Session> | undefined = seededChat;
       if (!chatRef && sessionChat) {
         const feed = yield* Database.add(Feed.make());
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), name: 'Eval Chat' }));
+        const chat = yield* Database.add(Session.make({ feed: Ref.make(feed), name: 'Eval Chat' }));
         yield* Database.flush();
         chatRef = Ref.make(chat);
       }
@@ -225,7 +225,7 @@ const runAgentSession = <I>(
   model: DXN.DXN,
   spaceId: SpaceId,
   input: I,
-  seededChat?: Ref.Ref<Chat.Chat>,
+  seededChat?: Ref.Ref<Session.Session>,
   conversation?: Conversation<I>,
   transcript: Scorer.Turn[] = [],
 ) =>
@@ -291,7 +291,7 @@ const runAgentSession = <I>(
  * tools then see the seeded chat and its state rather than a new one.
  */
 const sessionOnChat = (
-  chat: Chat.Chat,
+  chat: Session.Session,
   skills: readonly Ref.Ref<Skill.Skill>[],
   objects: Ref.Ref<Obj.Unknown>[],
   model: DXN.DXN,
@@ -411,7 +411,7 @@ export interface CreateEvalRunnerOptions<I, O> {
 /** Entities a {@link CreateEvalRunnerOptions.seed} hook contributes to the run. */
 export type SeedResult = {
   objects?: Ref.Ref<Obj.Unknown>[];
-  chat?: Ref.Ref<Chat.Chat>;
+  chat?: Ref.Ref<Session.Session>;
 };
 
 export type VariantConfig =

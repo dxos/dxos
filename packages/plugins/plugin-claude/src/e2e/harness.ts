@@ -11,7 +11,7 @@ import { type IncomingMessage, type ServerResponse, createServer } from 'node:ht
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Session from '@dxos/assistant/Session';
 import type * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -250,7 +250,7 @@ export const answerPermissions = ({
   sessions,
   decide,
 }: {
-  chat: Chat.Chat;
+  chat: Session.Session;
   feed: Feed.Feed;
   sessions: AcpAgent.Sessions;
   decide: (title: string) => Decision;

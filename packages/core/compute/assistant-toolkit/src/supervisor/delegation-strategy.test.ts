@@ -12,7 +12,7 @@ import { AssistantTestLayer, collectEphemeral, messageTextIncludes, waitForMessa
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
@@ -66,7 +66,7 @@ const TestLayer = AssistantTestLayer({
     Agent.Agent,
     Outline.Outline,
     Task.Task,
-    Chat.Chat,
+    Session.Session,
     AiContext.Binding,
     Text.Text,
     Message.Message,
@@ -109,7 +109,7 @@ const FailingTestLayer = AssistantTestLayer({
     Agent.Agent,
     Outline.Outline,
     Task.Task,
-    Chat.Chat,
+    Session.Session,
     AiContext.Binding,
     Text.Text,
     Message.Message,
@@ -133,11 +133,11 @@ const TurnFailingTestLayer = AssistantTestLayer({
   ]),
   operationHandlers: [DelegationSkill.Handlers, AgentHandlers],
   skills: [DelegationSkill.make()],
-  types: [Agent.Agent, Task.Task, Chat.Chat, AiContext.Binding, Message.Message, Project.Project],
+  types: [Agent.Agent, Task.Task, Session.Session, AiContext.Binding, Message.Message, Project.Project],
 });
 
 /** A chat's checklist as the three kinds of task it can hold, for the failure paths below. */
-const addChecklist = (chat: Chat.Chat) =>
+const addChecklist = (chat: Session.Session) =>
   Effect.gen(function* () {
     // Delegated to the chat itself: its own agent is working it.
     const held = yield* Database.add(
@@ -198,7 +198,7 @@ describe('makeDelegationStrategy', () => {
         expect(streamedText).toContain('On it');
 
         // DelegateTask promoted the work to a durable agent task on the chat's checklist.
-        const tasks = yield* Chat.loadTasks(chat);
+        const tasks = yield* Session.loadTasks(chat);
         expect(tasks).toHaveLength(1);
         expect(tasks[0]).toMatchObject({ title: TASK_TITLE, assignee: { role: 'assistant' } });
 
@@ -248,7 +248,7 @@ describe('makeDelegationStrategy', () => {
         // The full cause (with stack frames) belongs to the log, not the conversation.
         expect(messageText).not.toMatch(/\bat .*[/(]/);
 
-        expect((yield* Chat.loadTasks(chat))[0]?.status).toEqual('failed');
+        expect((yield* Session.loadTasks(chat))[0]?.status).toEqual('failed');
       },
       Effect.provide(FailingTestLayer),
       TestHelpers.provideTestContext,
@@ -332,7 +332,7 @@ describe('makeDelegationStrategy.onTurnFailed', () => {
 
 describe('isSubAgentTask', () => {
   test('is only a bare assistant assignee: a subject names a session that already owns the task', ({ expect }) => {
-    const chat = Chat.make({ feed: Ref.make(Feed.make()) });
+    const chat = Session.make({ feed: Ref.make(Feed.make()) });
     expect(isSubAgentTask(Task.make({ title: 'unassigned' }))).toBe(false);
     expect(isSubAgentTask(Task.make({ title: 'person', assignee: { name: 'Alice' } }))).toBe(false);
     expect(isSubAgentTask(Task.make({ title: 'delegated', assignee: { role: 'assistant' } }))).toBe(true);

@@ -11,7 +11,7 @@ import { SessionConfig } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { AiContext } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
@@ -106,8 +106,8 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         // Parent edge before the add, as the project's own create-chat action does: it files the
         // chat under the project rather than the space root.
         if (project) {
-          Chat.linkCompanion({ chat, subject: project });
-          Chat.seedSession(chat, project.session);
+          Session.linkCompanion({ chat, subject: project });
+          Session.seedSession(chat, project.session);
         }
 
         // Every new chat names its agent, so the agent service never has to guess from an unset field.
@@ -258,7 +258,10 @@ const currentActor = Effect.gen(function* () {
  * contributed subject-context provider: that operation requires `Registry.Service`, and declaring it
  * makes this one unresolvable on a host that does not provide it.
  */
-const bindDelegationContext = Effect.fnUntraced(function* (chat: Chat.Chat, project: Project.Project | undefined) {
+const bindDelegationContext = Effect.fnUntraced(function* (
+  chat: Session.Session,
+  project: Project.Project | undefined,
+) {
   const feed = yield* Database.load(chat.feed);
   const runtime = yield* Effect.context<Database.Service>();
   const binder = new AiContext.Binder({ feed, runtime });

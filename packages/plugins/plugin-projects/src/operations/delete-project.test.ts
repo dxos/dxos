@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import * as Routine from '@dxos/compute/Routine';
@@ -35,7 +35,7 @@ describe('deleting a project', () => {
       types: [
         Project.Project,
         Instructions.Instructions,
-        Chat.Chat,
+        Session.Session,
         Collection.Collection,
         Feed.Feed,
         Text.Text,
@@ -54,8 +54,8 @@ describe('deleting a project', () => {
 
     // Mirrors a project companion chat: the chat is owned by the parent edge, not a ref field.
     const feed = db.add(Feed.make());
-    const chat = db.add(Chat.make({ name: 'Chat', feed: Ref.make(feed) }));
-    Chat.linkCompanion({ chat, subject: project });
+    const chat = db.add(Session.make({ name: 'Chat', feed: Ref.make(feed) }));
+    Session.linkCompanion({ chat, subject: project });
 
     const ownedRoutine = Routine.make({ name: 'Owned', triggers: [] });
     Project.addRoutine(project, ownedRoutine);
@@ -104,14 +104,14 @@ describe('deleting a project', () => {
   test('the owned instructions and chats are removed with it', async ({ expect }) => {
     const { db, project, instructions } = await setup();
     expect(await countOf(db, Filter.type(Project.Project))).toEqual(1);
-    expect(await countOf(db, Filter.type(Chat.Chat))).toEqual(1);
+    expect(await countOf(db, Filter.type(Session.Session))).toEqual(1);
     expect(await countOf(db, Filter.id(instructions.id))).toEqual(1);
 
     db.remove(project);
     await db.flush();
 
     expect(await countOf(db, Filter.type(Project.Project))).toEqual(0);
-    expect(await countOf(db, Filter.type(Chat.Chat))).toEqual(0);
+    expect(await countOf(db, Filter.type(Session.Session))).toEqual(0);
     expect(await countOf(db, Filter.id(instructions.id))).toEqual(0);
   });
 

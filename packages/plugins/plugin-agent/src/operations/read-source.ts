@@ -7,7 +7,7 @@ import * as Order from 'effect/Order';
 
 import type { AiService } from '@dxos/ai';
 import type * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Error';
@@ -158,7 +158,7 @@ const renderSegment = ({ text, speaker, at }: Segment): string => `[${at}] ${spe
 const readChat = Effect.fnUntraced(function* (
   members: readonly Space.Member[],
   agent: Agent.Agent,
-  chat: Chat.Chat,
+  chat: Session.Session,
   after?: string,
 ) {
   const feed = yield* Database.load(chat.feed);
@@ -227,7 +227,7 @@ const readObject = Effect.fnUntraced(function* (
   if (Obj.instanceOf(Text.Text, source)) {
     return { text: source.content, segments: segmentMarkdown(members, source.content) };
   }
-  if (Obj.instanceOf(Chat.Chat, source)) {
+  if (Obj.instanceOf(Session.Session, source)) {
     return yield* readChat(members, agent, source);
   }
   return yield* Effect.fail(
@@ -318,7 +318,7 @@ export const readSource: (
   AgentOperationError | EntityNotFoundError | SemanticIndexError | BrainService.BrainError,
   Database.Service | AiService.AiService | Space.Service | Operation.Service | BrainService.BrainService
 > = Effect.fnUntraced(function* (agent, { source, url, text }) {
-  if (source && Obj.instanceOf(Chat.Chat, source) && text === undefined) {
+  if (source && Obj.instanceOf(Session.Session, source) && text === undefined) {
     const brain = yield* BrainService.BrainService;
     const uri = Obj.getURI(source);
     const cursor = yield* brain.readThrough(AgentPresence.brainId(agent), uri);

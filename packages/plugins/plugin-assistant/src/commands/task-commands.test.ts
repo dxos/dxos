@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { Feed, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Task } from '@dxos/types';
@@ -42,10 +42,10 @@ describe('task slash commands', () => {
   test('/task:delete takes ordinals and quoted titles, and sweeps sub-tasks', async ({ expect }) => {
     const { db, chat, run } = await setup(builder);
 
-    const parent = Chat.addTask(db, chat, 'Ship the release');
-    nest(parent, Chat.addTask(db, chat, 'Write the changelog'));
-    Chat.addTask(db, chat, 'Unrelated');
-    Chat.addTask(db, chat, 'Also unrelated');
+    const parent = Session.addTask(db, chat, 'Ship the release');
+    nest(parent, Session.addTask(db, chat, 'Write the changelog'));
+    Session.addTask(db, chat, 'Unrelated');
+    Session.addTask(db, chat, 'Also unrelated');
     await db.flush();
 
     // Ordinal 1 is the parent, so its sub-task goes with it even though nothing named the child.
@@ -59,8 +59,8 @@ describe('task slash commands', () => {
   test('/task:delete names a parent and its sub-task once each', async ({ expect }) => {
     const { db, chat, run } = await setup(builder);
 
-    const parent = Chat.addTask(db, chat, 'Parent');
-    nest(parent, Chat.addTask(db, chat, 'Child'));
+    const parent = Session.addTask(db, chat, 'Parent');
+    nest(parent, Session.addTask(db, chat, 'Child'));
     await db.flush();
 
     // The child is swept with the parent, so naming both must not report it twice.
@@ -71,8 +71,8 @@ describe('task slash commands', () => {
   test('a dangling checklist entry does not fail the command', async ({ expect }) => {
     const { db, chat, run } = await setup(builder);
 
-    Chat.addTask(db, chat, 'Still here');
-    const gone = Chat.addTask(db, chat, 'Removed behind the array');
+    Session.addTask(db, chat, 'Still here');
+    const gone = Session.addTask(db, chat, 'Removed behind the array');
     await db.flush();
     // Removed without sweeping the array, so its entry can no longer resolve — `load` would throw
     // and take the whole command with it.
@@ -85,7 +85,7 @@ describe('task slash commands', () => {
   test('/task:delete reports an unmatched selector rather than deleting anything', async ({ expect }) => {
     const { db, chat, run } = await setup(builder);
 
-    Chat.addTask(db, chat, 'Only task');
+    Session.addTask(db, chat, 'Only task');
     await db.flush();
 
     expect(await run('/task:delete 7')).toBeInstanceOf(Error);
@@ -100,8 +100,8 @@ const unexpectedInvoke: SlashCommand.OperationInvoke = async () => {
 };
 
 const setup = async (builder: EchoTestBuilder) => {
-  const { db } = await builder.createDatabase({ types: [Chat.Chat, Feed.Feed, Task.Task] });
-  const chat = db.add(Chat.make({ name: 'Test', feed: Ref.make(db.add(Feed.make())) }));
+  const { db } = await builder.createDatabase({ types: [Session.Session, Feed.Feed, Task.Task] });
+  const chat = db.add(Session.make({ name: 'Test', feed: Ref.make(db.add(Feed.make())) }));
   await db.flush();
 
   /** Routes through `resolveSlashCommand`, so the tests exercise the prompt's own dispatch. */
@@ -116,7 +116,7 @@ const setup = async (builder: EchoTestBuilder) => {
   return { db, chat, run };
 };
 
-const titles = (chat: Chat.Chat) => Chat.resolveTasks(chat).map((task) => task.title);
+const titles = (chat: Session.Session) => Session.resolveTasks(chat).map((task) => task.title);
 
 /**
  * Files `child`, already on the checklist, as a sub-task of `parent`. The edge is moved explicitly:

@@ -14,7 +14,7 @@ import * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 
 import { type MakeTurnProducer, type TurnRequest } from '@dxos/agent-runtime';
-import { AiAssistantError, type Chat } from '@dxos/assistant';
+import { AiAssistantError, type Session } from '@dxos/assistant';
 import * as Trace from '@dxos/compute/Trace';
 import { type Database, Feed, Obj } from '@dxos/echo';
 import { type ContentBlock, Message } from '@dxos/types';
@@ -37,7 +37,7 @@ export const IDLE_TIMEOUT = Duration.minutes(30);
 export const sessionKeySource = (agent: string): string => `${AGENT_KEY_PREFIX}.acp-session.${agent}`;
 
 /** The agent's session id recorded on the chat, to continue it after a restart. */
-export const sessionIdOf = (chat: Chat.Chat, agent: string): string | undefined =>
+export const sessionIdOf = (chat: Session.Session, agent: string): string | undefined =>
   Obj.getKeys(chat, sessionKeySource(agent)).at(-1)?.id;
 
 type Live = { session: AcpSession.Session; idle?: Fiber.Fiber<void> };
@@ -148,13 +148,13 @@ export type AgentOptions = {
   /** Starts the agent process in `cwd`, with Composer's tools token in its environment, and returns its ACP stream. */
   connect: (cwd: string, toolsToken?: string) => Effect.Effect<acp.Stream, AgentError>;
   /** The directory the agent works in for this chat. */
-  workspace: (chat: Chat.Chat) => Effect.Effect<string, AgentError>;
+  workspace: (chat: Session.Session) => Effect.Effect<string, AgentError>;
   /** Permission mode a new session starts in. */
   mode?: () => string | undefined;
   /** Agent-specific options every session opens with (ACP `_meta`). */
   sessionMeta?: Record<string, unknown>;
   /** Composer's MCP tools for the chat, and the token the agent presents for them; fresh for each session. */
-  tools?: (chat: Chat.Chat) => Effect.Effect<{ servers: acp.McpServer[]; token: string } | undefined>;
+  tools?: (chat: Session.Session) => Effect.Effect<{ servers: acp.McpServer[]; token: string } | undefined>;
   /** This device's key: a chat runs only on the device that first ran it, since the agent's state lives there. */
   device?: () => string | undefined;
 };
@@ -185,7 +185,7 @@ export const makeTurnProducer =
 /** One turn of an ACP agent against a chat; what the turn producer runs. */
 export const runTurn = (
   options: AgentOptions,
-  { chat, feed }: { chat: Chat.Chat; feed: Feed.Feed },
+  { chat, feed }: { chat: Session.Session; feed: Feed.Feed },
   request: TurnRequest,
 ): Effect.Effect<Message.Message[], AgentError, Database.Service | Trace.TraceService> =>
   Effect.gen(function* () {
@@ -323,7 +323,7 @@ export const runTurn = (
   });
 
 export type RespondOptions = {
-  chat: Chat.Chat;
+  chat: Session.Session;
   feed: Feed.Feed;
   /** The message holding the request block. */
   message: Message.Message;

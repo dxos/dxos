@@ -5,7 +5,7 @@
 import { AssistantTestLayerWithTriggers } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { SpaceProperties } from '@dxos/client-protocol';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -45,7 +45,7 @@ export const OperationTestLayer = AssistantTestLayerWithTriggers({
   types: [
     Agent.Agent,
     AiContext.Binding,
-    Chat.Chat,
+    Session.Session,
     Collection.Collection,
     Employer.Employer,
     Feed.Feed,

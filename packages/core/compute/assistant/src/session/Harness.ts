@@ -21,7 +21,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { type ContentBlock, Message } from '@dxos/types';
 
-import * as Chat from '../types/Chat.ts';
+import * as Session from '../types/Session.ts';
 import * as AiContext from './AiContext.ts';
 import { type HarnessControlRpcs } from './harness-control.ts';
 import { SessionStore } from './SessionStore.ts';
@@ -29,8 +29,8 @@ import { SessionStore } from './SessionStore.ts';
 export interface Service {
   /** The conversation {@link AiContext.Binder} (Tier A). */
   binder: Effect.Effect<AiContext.Binder, NotSupportedError>;
-  /** The {@link Chat.Chat} the conversation belongs to (Tier A). */
-  chat: Effect.Effect<Chat.Chat, NotSupportedError>;
+  /** The {@link Session.Session} the conversation belongs to (Tier A). */
+  chat: Effect.Effect<Session.Session, NotSupportedError>;
   /** The conversation message history (Tier A). */
   history: Effect.Effect<Message.Message[], NotSupportedError>;
   /** Objects bound to the conversation that match the filter (Tier A). */
@@ -63,7 +63,7 @@ export const binder: Effect.Effect<AiContext.Binder, NotSupportedError, HarnessS
  * conversation's plan, checklist and instructions from here rather than by looking for a Chat among
  * the bound context objects.
  */
-export const getChat: Effect.Effect<Chat.Chat, NotSupportedError, HarnessService> = Effect.flatMap(
+export const getChat: Effect.Effect<Session.Session, NotSupportedError, HarnessService> = Effect.flatMap(
   HarnessService,
   (service) => service.chat,
 );
@@ -183,7 +183,7 @@ export const make = ({
     // invokes, and most never ask for the chat — resolving one here would put a lookup on the tool
     // path. The agent process is spawned against the chat, so the host is discovered by the chat's
     // URI; a feed with no chat (e.g. a bare `AiSession`) keeps the feed as its own host target.
-    const chat = yield* Effect.cached(Chat.loadForFeed(feed).pipe(Effect.provide(runtime)));
+    const chat = yield* Effect.cached(Session.loadForFeed(feed).pipe(Effect.provide(runtime)));
     return makeService({
       feed,
       chat: chatOrFail(chat),
@@ -211,7 +211,7 @@ export const fromBinder = ({ feed, runtime, binder }: FromBinderOptions): Servic
     feed,
     // Resolved per call rather than up front: this is the synchronous constructor, and the chat is
     // only needed by the tools that ask for it.
-    chat: chatOrFail(Chat.loadForFeed(feed).pipe(Effect.provide(runtime))),
+    chat: chatOrFail(Session.loadForFeed(feed).pipe(Effect.provide(runtime))),
     runtime,
     binder,
     owningHost: Effect.fail(new NotSupportedError()),
@@ -219,7 +219,7 @@ export const fromBinder = ({ feed, runtime, binder }: FromBinderOptions): Servic
 
 interface MakeServiceOptions {
   feed: Feed.Feed;
-  chat: Effect.Effect<Chat.Chat, NotSupportedError>;
+  chat: Effect.Effect<Session.Session, NotSupportedError>;
   runtime: Context.Context<Database.Service>;
   binder: AiContext.Binder;
   owningHost: Effect.Effect<RpcClient.RpcClient<HarnessControlRpcs>, NotSupportedError>;
@@ -243,7 +243,9 @@ const makeService = ({ feed, chat, runtime, binder, owningHost }: MakeServiceOpt
 });
 
 /** A chat-less conversation (e.g. a bare `AiSession` feed) has no chat to hand out. */
-const chatOrFail = (chat: Effect.Effect<Chat.Chat | undefined, never>): Effect.Effect<Chat.Chat, NotSupportedError> =>
+const chatOrFail = (
+  chat: Effect.Effect<Session.Session | undefined, never>,
+): Effect.Effect<Session.Session, NotSupportedError> =>
   Effect.flatMap(chat, (chat) => (chat ? Effect.succeed(chat) : Effect.fail(new NotSupportedError())));
 
 /**

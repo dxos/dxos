@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 // otherwise needs a transitive `@dxos/keys` import that's hard for d.ts emit to surface.
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
@@ -83,7 +83,7 @@ export const RunPromptInNewChat = Operation.make({
     background: Schema.optional(Schema.Boolean),
   }),
   output: Schema.Struct({
-    object: Type.getSchema(Chat.Chat),
+    object: Type.getSchema(Session.Session),
   }),
 });
 

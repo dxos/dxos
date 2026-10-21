@@ -7,12 +7,12 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as Surface from '@dxos/app-framework/Surface';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
-import * as AssistantChat from '@dxos/assistant/Chat';
+import * as AssistantSession from '@dxos/assistant/Session';
 import { Filter, Obj } from '@dxos/echo';
 import * as AgentChannels from '@dxos/plugin-agent/AgentChannels';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
-import * as Chat from '@dxos/plugin-assistant/Chat';
 import * as AssistantHooks from '@dxos/plugin-assistant/Hooks';
+import * as Session from '@dxos/plugin-assistant/Session';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -31,7 +31,7 @@ export const ConversationModule = (_props: Surface.ComponentProps<Record<string,
 };
 
 const ConversationPanel = ({ space }: { space: Space }) => {
-  const chats = useQuery(space.db, Filter.type(AssistantChat.Chat));
+  const chats = useQuery(space.db, Filter.type(AssistantSession.Session));
   // In the order they started, as the Activity panel lists them (ULID ids sort by creation); the last is the newest.
   const conversations = useMemo(
     () =>
@@ -82,7 +82,7 @@ const ConversationPanel = ({ space }: { space: Space }) => {
           {conversations.length === 0 && <Status.Empty>No channel conversations yet.</Status.Empty>}
           {[visible, chat]
             .filter(
-              (conversation, index, all): conversation is AssistantChat.Chat =>
+              (conversation, index, all): conversation is AssistantSession.Session =>
                 conversation !== undefined && all.indexOf(conversation) === index,
             )
             .map((conversation) => (
@@ -102,7 +102,7 @@ const ConversationPanel = ({ space }: { space: Space }) => {
 
 type ConversationThreadProps = {
   space: Space;
-  chat: AssistantChat.Chat;
+  chat: AssistantSession.Session;
   hidden: boolean;
   /** Called with the chat's id once its model is ready. */
   onReady?: (id: string) => void;
@@ -128,12 +128,12 @@ const ConversationThread = ({ space, chat, hidden, onReady }: ConversationThread
   }
 
   return (
-    <Chat.Root chat={chat} chatModel={chatModel}>
-      <Chat.Content>
-        <Chat.Thread viewType={view} />
-      </Chat.Content>
-    </Chat.Root>
+    <Session.Root chat={chat} chatModel={chatModel}>
+      <Session.Content>
+        <Session.Thread viewType={view} />
+      </Session.Content>
+    </Session.Root>
   );
 };
 
-const titleOf = (chat: AssistantChat.Chat): string => Obj.getLabel(chat) ?? chat.name ?? chat.id;
+const titleOf = (chat: AssistantSession.Session): string => Obj.getLabel(chat) ?? chat.name ?? chat.id;

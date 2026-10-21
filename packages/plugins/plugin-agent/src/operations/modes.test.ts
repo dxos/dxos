@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -44,7 +44,7 @@ const tool = Operation.toolName;
 
 const TYPES = [
   Agent.Agent,
-  Chat.Chat,
+  Session.Session,
   Skill.Skill,
   Feed.Feed,
   Text.Text,
@@ -83,7 +83,7 @@ const TestLayer = AssistantTestLayer({
 });
 
 /** The registry keys a chat binds, read through `ListSkills`. */
-const boundKeys = (agent: Ref.Ref<Agent.Agent>, chat: Chat.Chat) =>
+const boundKeys = (agent: Ref.Ref<Agent.Agent>, chat: Session.Session) =>
   Operation.invoke(AgentOperation.ListSkills, { agent, chat: Ref.make(chat) }).pipe(
     Effect.map(({ skills }) => skills.map(({ key }) => key)),
   );

@@ -11,7 +11,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { Event } from '@dxos/async';
 import { Database, Feed, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -45,7 +45,7 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
       return undefined;
     }
     const feed = Feed.make();
-    return { feed, chat: Chat.make({ feed: Ref.make(feed) }) };
+    return { feed, chat: Session.make({ feed: Ref.make(feed) }) };
   }, [space, draftGeneration]);
   const chat = draft?.chat;
   const context = useDraftContext({ db: space?.db, draft, registry: atomRegistry, pluginManager });
@@ -77,7 +77,7 @@ SpaceHomePrompt.displayName = 'SpaceHomePrompt';
 
 type UseDraftSendProps = {
   space?: Space;
-  draft?: { feed: Feed.Feed; chat: Chat.Chat };
+  draft?: { feed: Feed.Feed; chat: Session.Session };
   context?: AiContext.Binder;
   onSent: () => void;
 };
@@ -125,7 +125,7 @@ const useDraftSend = ({ space, draft, context, onSent }: UseDraftSendProps) => {
 
 type UseDraftContextProps = {
   db?: Database.Database;
-  draft?: { feed: Feed.Feed; chat: Chat.Chat };
+  draft?: { feed: Feed.Feed; chat: Session.Session };
   registry: AtomRegistry.AtomRegistry;
   pluginManager: boolean;
 };

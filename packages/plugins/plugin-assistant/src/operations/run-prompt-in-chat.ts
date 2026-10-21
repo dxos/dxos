@@ -9,7 +9,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
@@ -45,7 +45,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> 
         // the first request, so the agent process can resolve a durable conversation feed and space.
         const db = companionTo !== undefined ? Obj.getDatabase(companionTo) : undefined;
         if (companionTo !== undefined && db && !Obj.getDatabase(chat)) {
-          Chat.linkCompanion({ chat, subject: companionTo });
+          Session.linkCompanion({ chat, subject: companionTo });
           yield* Operation.invoke(SpaceOperation.AddObject, { object: chat }, { spaceId: db.spaceId });
           yield* Operation.invoke(AssistantOperation.SetCurrentChat, { companionTo, chat });
           yield* Effect.promise(() => db.flush());

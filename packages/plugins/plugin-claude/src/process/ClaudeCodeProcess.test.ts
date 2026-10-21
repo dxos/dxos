@@ -12,7 +12,7 @@ import { expect } from 'vitest';
 
 import { type AgentProcessDefinition } from '@dxos/agent-runtime';
 import { AssistantTestLayer, waitForMessage } from '@dxos/agent-runtime/testing';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as NodeShell from '@dxos/compute-runtime/node-shell';
 import * as AgentService from '@dxos/compute/AgentService';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
@@ -44,7 +44,7 @@ const setup = Effect.fnUntraced(function* (command: ClaudeCodeProcess.Command, e
     command: { ...command, env: { ...command.env, ...env } },
   });
   const feed = yield* Database.add(Feed.make());
-  const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), session: { process: ClaudeCodeProcess.KEY } }));
+  const chat = yield* Database.add(Session.make({ feed: Ref.make(feed), session: { process: ClaudeCodeProcess.KEY } }));
   return { chat, workspace };
 });
 

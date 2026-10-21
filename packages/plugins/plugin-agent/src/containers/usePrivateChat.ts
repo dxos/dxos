@@ -8,7 +8,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import type * as Agent from '@dxos/assistant/Agent';
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Session from '@dxos/assistant/Session';
 import type * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -42,7 +42,7 @@ export const shareInFlight = <T>(
 
 export type PrivateChatState = {
   /** The viewer's chat with the agent, once opened. */
-  chat?: Chat.Chat;
+  chat?: Session.Session;
   /** Opening failed; {@link retry} tries again. */
   failed: boolean;
   retry: () => void;
@@ -56,7 +56,7 @@ export const usePrivateChat = (agent: Agent.Agent | undefined): PrivateChatState
   const { invokePromise } = Hooks.useOperationInvoker();
   const identity = useIdentity();
   const db = agent && Obj.getDatabase(agent);
-  const [chat, setChat] = useState<Chat.Chat>();
+  const [chat, setChat] = useState<Session.Session>();
   const [failed, setFailed] = useState(false);
   // Bumped by the retry button to re-run the effect.
   const [attempt, setAttempt] = useState(0);
@@ -97,7 +97,7 @@ export const usePrivateChat = (agent: Agent.Agent | undefined): PrivateChatState
 
       // The returned ref crossed the operation boundary without a resolver, so it is re-made on the database.
       const loaded = await db
-        .makeRef<Chat.Chat>(data.chat.uri)
+        .makeRef<Session.Session>(data.chat.uri)
         .tryLoad()
         .catch(() => undefined);
       if (!cancelled) {

@@ -16,7 +16,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
@@ -143,7 +143,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
         Stream.runForEach((event) =>
           Effect.sync(() => {
             const chat: unknown = event.output?.chat;
-            if (Obj.instanceOf(Chat.Chat, chat) && Chat.peekProject(chat)?.id === subject.id) {
+            if (Obj.instanceOf(Session.Session, chat) && Session.peekProject(chat)?.id === subject.id) {
               updateView((prev) => ({ ...prev, tab: 'tasks', pipeline: true }));
             }
           }),
@@ -176,7 +176,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   });
 
   const handleSelectChat = useCallback(
-    (chat: Chat.Chat) => {
+    (chat: Session.Session) => {
       if (!db) {
         return;
       }
@@ -502,8 +502,8 @@ const useToolbarActions = ({
       return;
     }
 
-    Chat.linkCompanion({ chat, subject: project });
-    Chat.seedSession(chat, project.session);
+    Session.linkCompanion({ chat, subject: project });
+    Session.seedSession(chat, project.session);
     await invokePromise(SpaceOperation.AddObject, { object: chat }, { spaceId });
     await invokePromise(AssistantOperation.SetCurrentChat, { companionTo: project, chat }, { spaceId });
   }, [invokePromise, project, spaceId]);

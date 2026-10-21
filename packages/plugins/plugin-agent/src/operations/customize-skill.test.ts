@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -39,7 +39,7 @@ const TestLayer = AssistantTestLayer({
   operationHandlers: AgentOperationHandlerSet,
   types: [
     Agent.Agent,
-    Chat.Chat,
+    Session.Session,
     Skill.Skill,
     Feed.Feed,
     Text.Text,
@@ -59,7 +59,7 @@ const TestLayer = AssistantTestLayer({
 });
 
 /** The instructions a turn in the chat would render for the skill, read through a fresh binder as a session does. */
-const resolveInstructions = (chat: Chat.Chat, key: string) =>
+const resolveInstructions = (chat: Session.Session, key: string) =>
   Effect.gen(function* () {
     const binder = yield* openBinder(chat);
     const skill = findBound(binder, key);

@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
@@ -26,7 +26,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: DelegationSkillHandlers,
-  types: [Agent.Agent, Outline.Outline, Task.Task, Text.Text, Chat.Chat, Skill.Skill, Feed.Feed, Project.Project],
+  types: [Agent.Agent, Outline.Outline, Task.Task, Text.Text, Session.Session, Skill.Skill, Feed.Feed, Project.Project],
   skills: [DelegationSkill.make()],
   disableLlmMemoization: true,
 });
@@ -66,7 +66,7 @@ describe('DelegateTask', () => {
         // The durable task lands on the chat's checklist with an agent assignee.
         const chat = yield* Agent.loadChat(agent);
         invariant(chat, 'Agent chat not found.');
-        const tasks = yield* Chat.loadTasks(chat);
+        const tasks = yield* Session.loadTasks(chat);
         expect(tasks).toHaveLength(1);
         expect(tasks[0]).toMatchObject({
           title: 'Research widgets',
@@ -98,7 +98,7 @@ describe('DelegateTask', () => {
 
         const chat = yield* Agent.loadChat(agent);
         invariant(chat, 'Agent chat not found.');
-        const tasks = yield* Chat.loadTasks(chat);
+        const tasks = yield* Session.loadTasks(chat);
         expect(tasks.map((task) => task.title)).toEqual(['Research widgets', 'Summarize findings']);
       },
       Effect.provide(TestLayer),
@@ -125,7 +125,7 @@ describe('DelegateTask', () => {
 
         const chat = yield* Agent.loadChat(agent);
         invariant(chat, 'Agent chat not found.');
-        expect(yield* Chat.loadTasks(chat)).toHaveLength(1);
+        expect(yield* Session.loadTasks(chat)).toHaveLength(1);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

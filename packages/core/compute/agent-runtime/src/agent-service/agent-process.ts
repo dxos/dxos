@@ -28,7 +28,7 @@ import {
   makeToolExecutionService,
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { OperationProcess } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as McpServer from '@dxos/compute/McpServer';
@@ -190,7 +190,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
     // empty and runs every turn with an EMPTY TOOLKIT — the model can only answer in prose.
     // `McpServer` and `AccessToken` are read each turn to connect the space's MCP servers.
     types: [
-      Chat.Chat,
+      Session.Session,
       Feed.Feed,
       Message.Message,
       Alarm.Alarm,
@@ -224,7 +224,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         // The process is bound to the chat, not to its feed: the queue, the steering instructions
         // and the checklist are all read from the chat, and a rehydrated process recovers them by
         // re-reading it rather than from spawn annotations.
-        const chat = yield* Database.resolve(chatDxn, Chat.Chat).pipe(Effect.orDie);
+        const chat = yield* Database.resolve(chatDxn, Session.Session).pipe(Effect.orDie);
         const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
         // A broken instructions ref degrades to an unsteered session rather than failing the process.
         const instructions = chat.instructions

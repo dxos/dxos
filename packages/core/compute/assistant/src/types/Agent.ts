@@ -16,7 +16,7 @@ import { IdentityDid } from '@dxos/keys';
 
 import type * as Harness from '../session/Harness.ts';
 import { HarnessContextError } from '../util/errors.ts';
-import * as Chat from './Chat.ts';
+import * as Session from './Session.ts';
 
 /**
  * An agent identity: a personality (attribution DID) plus its preset payload (instructions with
@@ -103,11 +103,11 @@ export const loadInstructions = (
  * agent. Entity ids are ULIDs, so the id order is creation order — `resetChatHistory` makes the
  * replacement chat primary simply by creating it later.
  */
-export const loadChat = (agent: Agent): Effect.Effect<Chat.Chat | undefined, never, Database.Service> =>
+export const loadChat = (agent: Agent): Effect.Effect<Session.Session | undefined, never, Database.Service> =>
   Effect.gen(function* () {
     // A child-of filter rather than a `.children()` traversal: EDGE's query planner has no hierarchy
     // traversal, so an agent hosted there could not resolve its chat.
-    const chats = yield* Database.query(Filter.and(Filter.type(Chat.Chat), Filter.childOf(agent))).run;
+    const chats = yield* Database.query(Filter.and(Filter.type(Session.Session), Filter.childOf(agent))).run;
     return (
       chats
         // Chats bridged from an external conversation (a Discord thread) carry its foreign key; they are
@@ -122,7 +122,7 @@ export const loadChat = (agent: Agent): Effect.Effect<Chat.Chat | undefined, nev
  * Resolves the agent a chat runs as, if any. Plain (agentless) chats yield `undefined`.
  * The parent is loaded with the object, so this is synchronous — no query.
  */
-export const loadForChat = (chat: Chat.Chat): Effect.Effect<Agent | undefined> =>
+export const loadForChat = (chat: Session.Session): Effect.Effect<Agent | undefined> =>
   Effect.sync(() => {
     const parent = Obj.getParent(chat);
     return parent && Obj.instanceOf(Agent, parent) ? parent : undefined;
@@ -133,11 +133,11 @@ export const loadForChat = (chat: Chat.Chat): Effect.Effect<Agent | undefined> =
  * the agent's one brain, which only EDGE holds. An explicit `remote: false` keeps an agent's chats local, for
  * a runtime with no EDGE to reach (a story or test), where every chat shares the client's brain instead.
  */
-export const chatLocation = (chat: Chat.Chat): AgentService.AgentLocation =>
+export const chatLocation = (chat: Session.Session): AgentService.AgentLocation =>
   (chat.remote ?? isAgentChat(chat)) ? 'edge' : 'local';
 
 /** Whether the chat runs as an agent (the agent parents it); synchronous, like {@link loadForChat}. */
-export const isAgentChat = (chat: Chat.Chat): boolean => {
+export const isAgentChat = (chat: Session.Session): boolean => {
   const parent = Obj.getParent(chat);
   return parent !== undefined && Obj.instanceOf(Agent, parent);
 };
@@ -202,14 +202,14 @@ export const makeInitialized = (
     const agentSkill = Ref.isRef(skill) ? skill : Ref.make(yield* Database.add(Obj.clone(skill, { deep: 'all' })));
 
     const chat = yield* Database.add(
-      Chat.make({
+      Session.make({
         feed: Ref.make(feed),
         // Steered through the chat's own channel: instructions render into the system prompt.
         // Identity/attribution comes from the companion link (ref on the agent + parent edge).
         instructions: Ref.make(instructions),
       }),
     );
-    Chat.linkCompanion({ chat, subject: agent });
+    Session.linkCompanion({ chat, subject: agent });
     yield* Effect.promise(() =>
       contextBinder.bind({
         skills: [agentSkill, ...persistedPropsSkills],
@@ -246,19 +246,19 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EchoError.En
     const skills = existingContextBinder.getSkills().map(Skill.makeRef);
     const objects = existingContextBinder
       .getObjects()
-      .filter((object) => !Obj.instanceOf(Chat.Chat, object))
+      .filter((object) => !Obj.instanceOf(Session.Session, object))
       .map((object) => Ref.make(object));
 
     const feed = yield* Database.add(Feed.make());
     const contextBinder = yield* EffectEx.acquireReleaseResource(() => new AiContextRuntime.Binder({ feed, runtime }));
 
     const chat = yield* Database.add(
-      Chat.make({
+      Session.make({
         feed: Ref.make(feed),
         instructions: agent.instructions,
       }),
     );
-    Chat.linkCompanion({ chat, subject: agent });
+    Session.linkCompanion({ chat, subject: agent });
     yield* Effect.promise(() =>
       contextBinder.bind({
         skills,

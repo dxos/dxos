@@ -15,7 +15,7 @@ import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
@@ -102,7 +102,7 @@ const setup = ({ reportStruggles, telemetry }: { reportStruggles: boolean; telem
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: AssistantOperationHandlerSet,
-  types: [Chat.Chat, Feed.Feed, Message.Message, Skill.Skill],
+  types: [Session.Session, Feed.Feed, Message.Message, Skill.Skill],
   skills: [TurnReviewSkill.make()],
   // The reviewer gets the verdict; the conversational turn gets a plain reply.
   aiService: ScriptedLanguageModel.scriptedAiService((request) => ({

@@ -12,7 +12,7 @@ import * as Schema from 'effect/Schema';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiSession } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -84,7 +84,7 @@ const gateCall = { parts: [toolCall(Operation.toolName(Gate), { label: 'gate' })
 
 const testLayer = (script: ScriptedLanguageModel.Script) =>
   AssistantTestLayer({
-    types: [Chat.Chat, Feed.Feed, Message.Message],
+    types: [Session.Session, Feed.Feed, Message.Message],
     operationHandlers: [GateHandlers],
     skills: [GateSkill],
     aiService: scriptedAiService(script),
@@ -105,7 +105,7 @@ const providerFailure = (description: string) => ({
  */
 const setup = Effect.fn(function* ({ skills = [] }: { skills?: Skill.Skill[] } = {}) {
   const feed = yield* Database.add(Feed.make());
-  const chat = yield* Database.add(Chat.make({ name: 'Test', feed: Ref.make(feed) }));
+  const chat = yield* Database.add(Session.make({ name: 'Test', feed: Ref.make(feed) }));
   const runtime = yield* Effect.context<Database.Service>();
   const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
   if (skills.length > 0) {

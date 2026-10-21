@@ -9,7 +9,7 @@ import * as Exit from 'effect/Exit';
 import { type Delegation, type DelegationStrategy } from '@dxos/agent-runtime';
 import { AiContext } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { OperationProcess } from '@dxos/compute-runtime';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Process from '@dxos/compute/Process';
@@ -80,11 +80,11 @@ export const isSubAgentTask = (task: Task.Task): boolean =>
  * is an orphan — {@link sweepOrphanedTasks}.
  */
 const findPendingTasks = (
-  chat: Chat.Chat,
+  chat: Session.Session,
   activeIds: ReadonlySet<string>,
 ): Effect.Effect<Task.Task[], never, Database.Service> =>
   Effect.gen(function* () {
-    const tasks = yield* Chat.loadTasks(chat);
+    const tasks = yield* Session.loadTasks(chat);
     // The chat's `tasks` array is flat, so a delegated sub-task is found without descending.
     return tasks.filter(
       (task) =>
@@ -100,11 +100,11 @@ const findPendingTasks = (
  * sub-agent (e.g. the host reloaded mid-run) must not wedge the task or the delegation loop.
  */
 const sweepOrphanedTasks = (
-  chat: Chat.Chat,
+  chat: Session.Session,
   activeIds: ReadonlySet<string>,
 ): Effect.Effect<void, never, Database.Service> =>
   Effect.gen(function* () {
-    const tasks = yield* Chat.loadTasks(chat);
+    const tasks = yield* Session.loadTasks(chat);
     const orphans = tasks.filter(
       (task) => isSubAgentTask(task) && task.status === 'started' && !activeIds.has(task.id),
     );
@@ -125,9 +125,12 @@ const sweepOrphanedTasks = (
  * process before any reconcile, so a task left `started` would read as underway indefinitely.
  * Sub-agent tasks are left to their own process's exit, which may still succeed.
  */
-const failHeldTasks = (chat: Chat.Chat, cause: Cause.Cause<unknown>): Effect.Effect<void, never, Database.Service> =>
+const failHeldTasks = (
+  chat: Session.Session,
+  cause: Cause.Cause<unknown>,
+): Effect.Effect<void, never, Database.Service> =>
   Effect.gen(function* () {
-    const held = (yield* Chat.loadTasks(chat)).filter((task) => Task.isAgentWorking(task) && !isSubAgentTask(task));
+    const held = (yield* Session.loadTasks(chat)).filter((task) => Task.isAgentWorking(task) && !isSubAgentTask(task));
     if (held.length === 0) {
       return;
     }

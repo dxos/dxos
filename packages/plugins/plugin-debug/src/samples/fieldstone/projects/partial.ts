@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import * as Routine from '@dxos/compute/Routine';
@@ -34,7 +34,7 @@ export type Provides = {
   readonly taskSets: Record<'cache' | 'billing' | 'soc2' | 'offsite', TaskSet.TaskSet>;
   /** Every task by key; must include `cacheKeyCollision` (the Okapi fix) and `release18`. */
   readonly tasks: Record<string, Task.Task>;
-  readonly chats: Record<string, Chat.Chat>;
+  readonly chats: Record<string, Session.Session>;
   readonly artifacts: Record<
     'cacheDesign' | 'billingPlan' | 'soc2Policies' | 'offsiteAgenda' | 'releaseNotes',
     Markdown.Document
@@ -44,7 +44,7 @@ export type Provides = {
 /** Alien Labs' projects, their tasks, and the agent runs behind them. Spec: `CONTENT.md`. */
 export const Partial: SampleSpace.Partial<Provides, Requires> = SampleSpace.partial('fieldstoneProjects', {
   schemas: [
-    Chat.Chat,
+    Session.Session,
     Feed.Feed,
     Instructions.Instructions,
     Markdown.Document,

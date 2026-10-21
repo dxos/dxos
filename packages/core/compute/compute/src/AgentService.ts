@@ -19,7 +19,7 @@ import type * as Trace from './Trace.ts';
 import { Instructions } from './types/index.ts';
 
 /**
- * Structural view of the `Chat` object (`@dxos/assistant/Chat`): the durable conversation an agent
+ * Structural view of the `Session` object (`@dxos/assistant/Session`): the durable conversation an agent
  * runs on, carrying its message feed and the instructions steering it. Declared structurally
  * because `@dxos/assistant` sits above this package.
  */

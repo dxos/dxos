@@ -12,7 +12,7 @@ import * as Semaphore from 'effect/Semaphore';
 
 import { SessionConfig } from '@dxos/ai';
 import { AiContext, type HarnessControlRpcs } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
@@ -66,7 +66,7 @@ export const createSession: (
     // The agent process runs on a chat, so the conversation gets one even when the caller only
     // wanted a bare session; the model is the chat's own, which is where the process reads it from.
     const chat = yield* Database.add(
-      Chat.make({ feed: Ref.make(feed), ...(opts?.model ? { session: { model: opts.model } } : {}) }),
+      Session.make({ feed: Ref.make(feed), ...(opts?.model ? { session: { model: opts.model } } : {}) }),
     );
     return yield* AgentService.getSession(chat, {
       provider: opts?.provider,
@@ -85,7 +85,7 @@ export interface Options {
   makeTurnProducer?: MakeTurnProducer;
 
   /**
-   * Model for a chat that has not selected one (`Chat.session.model` unset).
+   * Model for a chat that has not selected one (`Session.session.model` unset).
    */
   defaultModel?: DXN.DXN;
 

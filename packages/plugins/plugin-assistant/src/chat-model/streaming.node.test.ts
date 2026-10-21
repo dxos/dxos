@@ -11,7 +11,7 @@ import * as Stream from 'effect/Stream';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiSession } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
@@ -22,7 +22,7 @@ import { type ContentBlock, type Message } from '@dxos/types';
 import { ChatModel } from './chat-model.ts';
 import { makeStubSpaceLayer, makeTestRuntime } from './testing/harness.ts';
 
-const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Chat.Chat, Feed.Feed] });
+const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Session.Session, Feed.Feed] });
 
 describe('ChatModel streaming', () => {
   it.effect(
@@ -31,7 +31,7 @@ describe('ChatModel streaming', () => {
       function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
         // The chat model resolves its agent session from the chat it runs on.
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        const chat = yield* Database.add(Session.make({ feed: Ref.make(feed) }));
         const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
 
@@ -94,7 +94,7 @@ describe('ChatModel streaming', () => {
         // The growing m1 partial was upserted in place (a single entry per snapshot), and the
         // stale partial that arrived after finalization never surfaced. Transient two-phase
         // artifacts (a brief [] on finalize, a brief duplicate on flush) are expected — the UI
-        // masks them via `Chat.Root`'s dedupe-by-id merge.
+        // masks them via `Session.Root`'s dedupe-by-id merge.
         expect(snapshots).toContainEqual(['Hel']);
         expect(snapshots).toContainEqual(['Hello']);
         expect(snapshots.flat()).not.toContain('Hello world. (stale)');
@@ -114,7 +114,7 @@ describe('ChatModel streaming', () => {
       function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
         // The chat model resolves its agent session from the chat it runs on.
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        const chat = yield* Database.add(Session.make({ feed: Ref.make(feed) }));
         const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
 
@@ -186,7 +186,7 @@ describe('ChatModel streaming', () => {
       function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
         // The chat model resolves its agent session from the chat it runs on.
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        const chat = yield* Database.add(Session.make({ feed: Ref.make(feed) }));
         const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
 
@@ -238,7 +238,7 @@ describe('ChatModel streaming', () => {
       function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
         // The chat model resolves its agent session from the chat it runs on.
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        const chat = yield* Database.add(Session.make({ feed: Ref.make(feed) }));
         const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
 
@@ -308,7 +308,7 @@ describe('ChatModel streaming', () => {
     Effect.fn(
       function* ({ expect }) {
         const feed = yield* Database.add(Feed.make());
-        const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+        const chat = yield* Database.add(Session.make({ feed: Ref.make(feed) }));
         const runtime = yield* Effect.context<Database.Service>();
         const session = yield* EffectEx.acquireReleaseResource(() => new AiSession.Session({ feed, runtime }));
 
@@ -429,7 +429,7 @@ const quiesce = Effect.promise(
  * session's turn-settles-after-streaming ordering.
  */
 const makeStubSession = (
-  chat: Chat.Chat,
+  chat: Session.Session,
   feed: Feed.Feed,
   batches: Trace.Message[],
   options: { running?: boolean } = {},
@@ -453,7 +453,7 @@ const makeStubSession = (
 
 /** Stub session whose stream pauses between the two batches; `release` resumes delivery. */
 const makeGatedSession = (
-  chat: Chat.Chat,
+  chat: Session.Session,
   feed: Feed.Feed,
   before: Trace.Message[],
   after: Trace.Message[],

@@ -7,7 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
@@ -34,7 +34,7 @@ export const RunInstructions = Operation.make({
     /**
      * When set, runs in this chat (history, queue, and bound context). Routine skills and context objects are merged into the conversation for this request.
      */
-    chat: Schema.optional(Ref.Ref(Chat.Chat)),
+    chat: Schema.optional(Ref.Ref(Session.Session)),
 
     /**
      * @default `dxn:com.anthropic.model.claude-opus-5.default`.
@@ -48,7 +48,7 @@ export const RunInstructions = Operation.make({
   output: Schema.Any,
   // ECHO types that the handler loads via Database.load(). Declaring them here ensures the
   // runtime registers their schema before remote invocation (e.g. via the EDGE function service).
-  types: [Instructions.Instructions, Text.Text, Feed.Feed, Chat.Chat],
+  types: [Instructions.Instructions, Text.Text, Feed.Feed, Session.Session],
   services: [
     AiService.AiService,
     Database.Service,

@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Model, Provider } from '@dxos/ai';
 import * as Hooks from '@dxos/app-framework/Hooks';
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Session from '@dxos/assistant/Session';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -32,10 +32,10 @@ export type UsePresets = {
 
 /**
  * Resolves the chat model presets for the provider selected in settings ({@link Assistant.Settings.modelProvider}).
- * The selection is the chat's own (`Chat.session.model`), written back to it when the user picks; a chat that
+ * The selection is the chat's own (`Session.session.model`), written back to it when the user picks; a chat that
  * has not selected one shows the configured per-provider model.
  */
-export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UsePresets => {
+export const usePresets = (settings: Assistant.Settings, chat?: Session.Session): UsePresets => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   // Subscribed rather than read: the picker has to follow a selection made on another mount of the
   // same chat, and the stamp the chat model writes before the first request.

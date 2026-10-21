@@ -10,7 +10,7 @@ import { describe, expect, test } from 'vitest';
 
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import { setupPluginManager } from '@dxos/app-framework/testing';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { Database, Feed, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
@@ -21,7 +21,7 @@ import { type Assistant } from '#types';
 import { usePresets } from './usePresets.ts';
 
 describe('usePresets', () => {
-  const TestLayer = TestDatabaseLayer({ types: [Chat.Chat, Feed.Feed, Text.Text, Message.Message, Task.Task] });
+  const TestLayer = TestDatabaseLayer({ types: [Session.Session, Feed.Feed, Text.Text, Message.Message, Task.Task] });
 
   // No plugins registered: the Ollama manager capability stays absent, which is the browser build the
   // chat's picker runs in — presets then come straight from the edge catalog.
@@ -30,12 +30,12 @@ describe('usePresets', () => {
     <PluginManagerProvider.Root value={pluginManager}>{children}</PluginManagerProvider.Root>
   );
 
-  // The selection round-trips through `Chat.session`, so it only moves if what is read back out of the
+  // The selection round-trips through `Session.session`, so it only moves if what is read back out of the
   // object still carries the model — the defect that left the picker showing the fallback forever.
   test('picking a preset moves the selection', async () => {
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make());
-      const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+      const chat = yield* Database.add(Session.make({ feed: Ref.make(feed) }));
       const settings: Assistant.Settings = {};
 
       const { result } = renderHook(() => usePresets(settings, chat), { wrapper });

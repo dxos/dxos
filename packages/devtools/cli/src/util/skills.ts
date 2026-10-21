@@ -12,7 +12,7 @@ import * as Layer from 'effect/Layer';
 import { OpaqueToolkit } from '@dxos/ai';
 import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
 import * as WebSearchSkill from '@dxos/assistant-toolkit/WebSearchSkill';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { Feed, Tag, type Type } from '@dxos/echo';
@@ -118,7 +118,7 @@ export const toolkits: OpaqueToolkit.OpaqueToolkit[] = [
 export const types: Type.AnyEntity[] = [
   // NOTE: Types referenced by skills above need to be added here.
   DataTypes,
-  [Chat.Chat],
+  [Session.Session],
   [Game.Game, Chess.State],
   [Markdown.Document],
   [Mailbox.Mailbox, Calendar.Calendar, Feed.Feed],

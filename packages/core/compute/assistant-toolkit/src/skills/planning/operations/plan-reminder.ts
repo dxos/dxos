@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 
 import { AiPreprocessor, AiService } from '@dxos/ai';
 import { Harness } from '@dxos/assistant';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import * as Operation from '@dxos/compute/Operation';
 import { ContentBlock } from '@dxos/types';
 import { concat, trim } from '@dxos/util';
@@ -33,11 +33,11 @@ export default PlanReminder.pipe(
           return;
         }
 
-        const tasks = yield* Chat.loadTasks(chat);
-        if (!tasks.some(Chat.isOpenTask)) {
+        const tasks = yield* Session.loadTasks(chat);
+        if (!tasks.some(Session.isOpenTask)) {
           return;
         }
-        const checklist = yield* Chat.formatChecklist(chat);
+        const checklist = yield* Session.formatChecklist(chat);
 
         const history = yield* Harness.history;
         const prompt = Prompt.concat(

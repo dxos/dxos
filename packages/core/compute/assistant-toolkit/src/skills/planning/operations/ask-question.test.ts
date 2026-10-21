@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { AiContext } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
-import * as Chat from '@dxos/assistant/Chat';
+import * as Session from '@dxos/assistant/Session';
 import { FeedTraceSink } from '@dxos/compute-runtime';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -28,7 +28,7 @@ EntityId.dangerouslyDisableRandomness();
 
 const layerOptions = {
   operationHandlers: PlanningHandlers,
-  types: [Agent.Agent, Outline.Outline, Task.Task, Text.Text, Chat.Chat, Skill.Skill, Feed.Feed],
+  types: [Agent.Agent, Outline.Outline, Task.Task, Text.Text, Session.Session, Skill.Skill, Feed.Feed],
   skills: [PlanningSkill.make()],
   disableLlmMemoization: true,
 };
@@ -39,7 +39,7 @@ const TracingTestLayer = AssistantTestLayer({ ...layerOptions, tracing: 'feed' }
 /** A chat with a bound conversation feed, and an `invoke` that runs against it. */
 const setupChat = Effect.gen(function* () {
   const feed = yield* Database.add(Feed.make());
-  const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
+  const chat = yield* Database.add(Session.make({ feed: Ref.make(feed) }));
   const runtime = yield* Effect.context<Database.Service>();
   const binder = new AiContext.Binder({ feed, runtime });
   yield* Effect.promise(() => binder.bind({ objects: [Ref.make(chat)] }));
@@ -52,8 +52,8 @@ const setupChat = Effect.gen(function* () {
 });
 
 /** The questions filed on the chat's checklist, oldest first. */
-const loadQuestions = (chat: Chat.Chat) =>
-  Chat.loadTasks(chat).pipe(
+const loadQuestions = (chat: Session.Session) =>
+  Session.loadTasks(chat).pipe(
     Effect.map((tasks) => tasks.flatMap((task) => Task.getQuestions(task.history).map(({ question }) => question))),
   );
 
@@ -73,7 +73,7 @@ describe('AskQuestion', () => {
         });
         yield* Database.flush();
 
-        const [task] = yield* Chat.loadTasks(chat);
+        const [task] = yield* Session.loadTasks(chat);
         expect(task.status).toBe('blocked');
 
         // Filed in the task's own history, so a reader arriving at the blocked task finds what is
@@ -104,7 +104,7 @@ describe('AskQuestion', () => {
         yield* Database.flush();
 
         expect(yield* loadQuestions(chat)).toEqual([]);
-        const [task] = yield* Chat.loadTasks(chat);
+        const [task] = yield* Session.loadTasks(chat);
         expect(task.status).toBe('started');
         expect(String(result)).toContain('No task titled');
       },
@@ -146,7 +146,7 @@ describe('AskQuestion', () => {
 
         expect(String(result)).toContain('question is empty');
         expect(yield* loadQuestions(chat)).toEqual([]);
-        const [task] = yield* Chat.loadTasks(chat);
+        const [task] = yield* Session.loadTasks(chat);
         expect(task.status).toBe('started');
       },
       Effect.provide(TestLayer),
@@ -171,7 +171,7 @@ describe('AskQuestion', () => {
 
         expect(yield* loadQuestions(chat)).toEqual([]);
         expect(String(result)).toContain('is the title of 2 tasks');
-        const tasks = yield* Chat.loadTasks(chat);
+        const tasks = yield* Session.loadTasks(chat);
         expect(tasks.map(({ status }) => status)).toEqual(['todo', 'todo']);
       },
       Effect.provide(TestLayer),
@@ -186,7 +186,7 @@ describe('AskQuestion', () => {
         const { chat, invoke } = yield* setupChat;
         yield* invoke(UpdateTasks, { changes: [{ create: true, title: 'Draft the reply', status: 'started' }] });
         yield* invoke(AskQuestion, { task: 'Draft the reply', question: 'First?' });
-        const [task] = yield* Chat.loadTasks(chat);
+        const [task] = yield* Session.loadTasks(chat);
         const [first] = yield* loadQuestions(chat);
         Task.answer(task, first.id, '30 days');
         yield* Database.flush();
@@ -215,7 +215,7 @@ describe('AskQuestion', () => {
         });
         yield* Database.flush();
 
-        const [task] = yield* Chat.loadTasks(chat);
+        const [task] = yield* Session.loadTasks(chat);
         const [question] = yield* loadQuestions(chat);
         expect(yield* readEvents(Trace.TaskStatusChanged)).toEqual([
           { taskId: task.id, title: 'Draft the reply', status: 'started' },

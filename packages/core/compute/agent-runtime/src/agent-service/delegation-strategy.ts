@@ -6,7 +6,7 @@ import type * as Cause from 'effect/Cause';
 import type * as Effect from 'effect/Effect';
 import type * as Exit from 'effect/Exit';
 
-import type * as Chat from '@dxos/assistant/Chat';
+import type * as Session from '@dxos/assistant/Session';
 import type * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import type * as Process from '@dxos/compute/Process';
 import { type Database } from '@dxos/echo';
@@ -54,7 +54,7 @@ export interface DelegationStrategy {
    * @param activeIds - Ids of delegations already running, so reconcile does not double-spawn.
    */
   readonly reconcile: (
-    chat: Chat.Chat,
+    chat: Session.Session,
     activeIds: ReadonlySet<string>,
   ) => Effect.Effect<readonly Delegation[], never, StrategyServices>;
 
@@ -63,7 +63,7 @@ export interface DelegationStrategy {
    * update the plan task status and append a message to the conversation feed).
    */
   readonly onComplete: (
-    chat: Chat.Chat,
+    chat: Session.Session,
     id: string,
     exit: Exit.Exit<unknown>,
   ) => Effect.Effect<void, never, StrategyServices>;
@@ -74,7 +74,7 @@ export interface DelegationStrategy {
    * that the work the conversation held has stopped.
    */
   readonly onTurnFailed?: (
-    chat: Chat.Chat,
+    chat: Session.Session,
     cause: Cause.Cause<unknown>,
   ) => Effect.Effect<void, never, StrategyServices>;
 }
