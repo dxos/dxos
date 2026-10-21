@@ -208,8 +208,7 @@ describe('bindCanvasStore', () => {
           z: 'a0',
           ...frame,
           scene: 'f',
-          link: { object: Ref.make(person) },
-          role: 'section',
+          link: { object: Ref.make(person), role: 'section' },
         },
       };
     });
@@ -222,7 +221,7 @@ describe('bindCanvasStore', () => {
     const scenes = registry.get(bound.store.views);
     expect(Object.keys(scenes).some((id) => parseLinkedViewId(id))).toBe(false);
     const node = scenes.root.nodes.f;
-    expect(node).toMatchObject({ scene: 'f', role: 'section' });
+    expect(node).toMatchObject({ scene: 'f', link: { role: 'section' } });
     expect(await objectRef(node)?.load()).toBe(person);
     bound.dispose();
   });

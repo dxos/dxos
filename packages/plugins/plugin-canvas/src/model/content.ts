@@ -456,29 +456,32 @@ const withLegacyLine = (link: Link): Link => {
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
 /**
- * A node saved before its opacity moved into its style, or a frame saved before its `object` and `contents` moved
- * into its `link`, reads in the current shape; the next write stores it so. Takes a fresh clone, which it edits in
+ * A node saved before its opacity moved into its style, or a frame saved before its `object`, `contents` and `role`
+ * moved into its `link`, reads in the current shape; the next write stores it so. Takes a fresh clone, which it edits in
  * place.
  */
 const withLegacyNode = (node: Node): Node => {
   const opacity: unknown = Reflect.get(node, 'opacity');
   const object: unknown = Reflect.get(node, 'object');
   const contents: unknown = Reflect.get(node, 'contents');
+  const role: unknown = Reflect.get(node, 'role');
   Reflect.deleteProperty(node, 'opacity');
   let style = node.style;
   if (typeof opacity === 'number' && style?.opacity === undefined) {
     style = { ...style, opacity };
   }
-  // Only a frame ever carried `object` and `contents`; on another type they are a host's own fields.
-  const framed = isViewNode(node) && (object !== undefined || contents !== undefined);
+  // Only a frame ever carried `object`, `contents` and `role`; on another type they are a host's own fields.
+  const framed = isViewNode(node) && (object !== undefined || contents !== undefined || role !== undefined);
   if (!framed) {
     return style === node.style ? node : { ...node, style };
   }
   Reflect.deleteProperty(node, 'object');
   Reflect.deleteProperty(node, 'contents');
+  Reflect.deleteProperty(node, 'role');
   const current: unknown = Reflect.get(node, 'link');
   const link = {
     ...(object !== undefined ? { object } : {}),
+    ...(typeof role === 'string' ? { role } : {}),
     ...(typeof contents === 'boolean' ? { contents } : {}),
     ...(isRecord(current) ? current : {}),
   };

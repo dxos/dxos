@@ -151,8 +151,7 @@ export const ObjectView: Story = {
         center: { x, y: 0 },
         size: { width: cells.width * DEFAULT_CELL, height: cells.height * DEFAULT_CELL },
         scene: id,
-        link: { object: Ref.make(document) },
-        role,
+        link: { object: Ref.make(document), role },
       },
     });
     Obj.update(canvas, (canvas) => {

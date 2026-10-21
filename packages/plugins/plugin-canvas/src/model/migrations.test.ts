@@ -24,7 +24,7 @@ const legacyContent = {
   'node:f': {
     kind: 'node',
     scene: 'scene:root',
-    node: { id: 'f', type: 'frame', z: 'a1', ...box, scene: 'child', contents: true, opacity: 0.5 },
+    node: { id: 'f', type: 'frame', z: 'a1', ...box, scene: 'child', contents: true, role: 'section', opacity: 0.5 },
   },
   'node:c': { kind: 'node', scene: 'child', node: { id: 'c', type: 'rect', z: 'a0', ...box, label: 'Current' } },
   'link:p-f': {
@@ -82,7 +82,7 @@ describe('dxos.org/scene/1 → dxos.org/scene/2', () => {
         ...box,
         scene: 'child',
         style: { opacity: 0.5 },
-        link: { contents: true },
+        link: { role: 'section', contents: true },
       },
     });
     expect(content['node:c']).toEqual(legacyContent['node:c']);

@@ -194,7 +194,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
       return {
         ...(locked ? { 'link.object': { readonly: true } } : {}),
         ...(linked ? { scene: { hidden: true } } : {}),
-        ...(surfaced ? {} : { role: { hidden: true } }),
+        ...(surfaced ? {} : { 'link.role': { hidden: true } }),
       };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
