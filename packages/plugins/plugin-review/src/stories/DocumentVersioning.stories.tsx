@@ -773,8 +773,7 @@ export const AmbientReviewTest: Story = {
   args: {
     content: '# Hello World\n',
   },
-  // Excluded from the headless CI runner (`tags: ['!test']`): asserts live suggestion/comment overlay
-  // settling that the headless plugin host cannot reach within the timeout; run manually in storybook.
+  // TODO(wittjosiah): Fails headless on every run: the seeded comment's `.cm-comment` highlight never renders.
   tags: ['!test'],
   parameters: {
     ambientReview: true,
@@ -828,9 +827,8 @@ export const EditingTypingTest: Story = {
   args: {
     content: '# Hello World\n\nBody paragraph.\n',
   },
-  // Excluded from the headless CI runner (`tags: ['!test']`): the regression needs real keystrokes into
-  // the editor, and headless `userEvent` typing does not produce CodeMirror document changes. Run
-  // manually in storybook to guard the "each keypress creates a suggestion" bug.
+  // TODO(wittjosiah): Fails headless on every run: typing reaches the editor, but `doc.history` is never
+  //   initialized, which the play requires before it asserts no suggestion branch was spawned.
   tags: ['!test'],
   parameters: {
     ambientReview: true,
@@ -873,9 +871,6 @@ export const SuggestingTest: Story = {
   args: {
     content: '# Hello World\n',
   },
-  // Excluded from the headless CI runner (`tags: ['!test']`): needs real keystrokes into the editor
-  // (headless `userEvent` typing does not produce CodeMirror document changes); run manually in storybook.
-  tags: ['!test'],
   parameters: {
     ambientReview: true,
   },
