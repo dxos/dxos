@@ -28,6 +28,8 @@ mode `light`, its turns are ordinary turns whose parent is the thread, and a `th
 | `feat`     | `org.dxos.mdl.feat@1.0`      |
 | `scenario` | `org.dxos.mdl.scenario@1.0`  |
 | `decision` | `org.dxos.mdl.decision@1.0`  |
+| `test`     | `org.dxos.mdl.test@1.0`      |
+| `step`     | `org.dxos.mdl.step@1.0`      |
 
 ## Model
 
@@ -249,6 +251,34 @@ scenario T-5: Off by default
   then: B is queued and runs after A, and no `threadOpen` is written
 ```
 
+## QA
+
+```mdl
+test QA-1: Three prompts sent while the agent researches
+  desc: The scripted story `stories-assistant/LightThreads` (Scripted) walked by a person.
+  actors: human
+  covers: [F-1.1, F-1.2, F-3.1, F-3.2, F-4.1, F-4.2, F-4.3, T-4]
+  status: draft
+  given:
+    - the story `stories/stories-assistant/LightThreads` Scripted, with Parallel threads on
+  steps:
+    - name: Start the research
+      do: Send "Research the factorials of 5 to 9 and summarise them."
+      expect: the agent starts computing 5!, 6!, … one calculator call at a time
+    - name: Ask a quick question
+      do: While it computes, send "Meanwhile, what is 17 × 23?"
+      expect: the research collapses into a fixed-height card with a coloured gutter; the new thread answers 391
+    - name: Ask another
+      do: Send "And what is the capital of Australia?"
+      expect: a third lane, in its own colour, answers Canberra
+    - name: Ask something that depends on the research
+      do: Send "When the research is done, translate its summary into French."
+      expect: the lane's header says it is waiting for the research lane, in that lane's colour
+    - name: Watch the research finish
+      do: Wait for the research to finish.
+      expect: the research summary is echoed at the end of the transcript; the waiting lane continues and answers in French
+```
+
 ## Changelog
 
 ```mdl
@@ -385,4 +415,13 @@ decision D-13: A thread's owner is the `sender` of its `threadOpen`; the separat
   for: user:dmaretskyi
   affects: [ThreadOpen, ThreadLane, F-2.1]
   why: `Sender` already carries identity, subject and name, so two agents in one chat need no new field.
+```
+
+```mdl
+decision D-14: `test QA-1` walks the scripted LightThreads story, which is what the recorded demo binds to.
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4]
+  why: The user asked for a story and recorded demos; autocue flows bind to a QA test.
 ```

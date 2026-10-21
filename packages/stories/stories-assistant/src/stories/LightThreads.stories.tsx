@@ -178,3 +178,16 @@ export const Live: Story = {
   },
   tags: ['!test'],
 };
+
+/** {@link Scripted} without its play function, for a recorded walkthrough that types the prompts itself. */
+export const Demo: Story = {
+  decorators: createDecorators({
+    skills: [CalculatorSkill.key],
+    scripted: script,
+    assistantSettings: { parallelThreads: true },
+  }),
+  args: {
+    layout: [[StoryRole.Chat]],
+  },
+  tags: ['!test'],
+};
