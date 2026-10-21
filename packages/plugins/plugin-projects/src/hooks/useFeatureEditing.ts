@@ -15,6 +15,8 @@ import { Feature, type FeatureMap, FeatureOperation } from '#types';
 
 export type FeatureEditing = {
   setStatus: (featureId: string, status: Feature.Status) => void;
+  /** Subfeatures are records inside their feature, so the whole list is rewritten with one status changed. */
+  setSubfeatureStatus: (featureId: string, index: number, status: Feature.Status) => void;
   rename: (featureId: string, name: string) => void;
   describe: (featureId: string, description: string) => void;
   addDependency: (featureId: string, dependsOnId: string) => void;
@@ -71,6 +73,18 @@ export const useFeatureEditing = (db: Database.Database | undefined, map?: Featu
     return {
       setStatus: (featureId, status) =>
         void featureRef(featureId).then((feature) => feature && run(FeatureOperation.Update, { feature, status })),
+      setSubfeatureStatus: (featureId, index, status) =>
+        void featureRef(featureId).then(async (feature) => {
+          const subfeatures = feature && (await feature.load()).subfeatures;
+          if (feature && subfeatures?.[index]) {
+            await run(FeatureOperation.Update, {
+              feature,
+              subfeatures: subfeatures.map((subfeature, candidate) =>
+                candidate === index ? { ...subfeature, status } : { ...subfeature },
+              ),
+            });
+          }
+        }),
       rename: (featureId, name) =>
         void featureRef(featureId).then((feature) => feature && run(FeatureOperation.Update, { feature, name })),
       describe: (featureId, description) =>

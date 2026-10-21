@@ -12,6 +12,7 @@ import React, {
   useState,
 } from 'react';
 
+import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -41,6 +42,8 @@ export const FEATURE_STATUS_STYLE: Record<FeatureStatus, { icon: string; hue: Ta
   'operational': { icon: 'ph--seal-check--regular', hue: 'emerald' },
   'failing': { icon: 'ph--warning-octagon--regular', hue: 'rose' },
 };
+
+const STATUSES: FeatureStatus[] = ['planned', 'in-progress', 'prototype', 'operational', 'failing'];
 
 const SIGNAL_STYLE: Record<FeatureSignal, { icon: string; hue: Tag.TagHue }> = {
   'blocked': { icon: 'ph--lock--regular', hue: 'error' },
@@ -75,6 +78,8 @@ export type FeatureCardBodyProps = {
   onOpenObject?: (id: string) => void;
   /** Lets edit mode change the description. */
   onDescribe?: (feature: FeatureModel, description: string) => void;
+  /** Makes each subfeature's status icon a picker. */
+  onSetSubfeatureStatus?: (feature: FeatureModel, index: number, status: FeatureStatus) => void;
   /** Edit mode: the description is a field, shown even while empty. */
   editing?: boolean;
 };
@@ -109,6 +114,86 @@ type EditFieldProps = {
 };
 
 const stopPropagation = (event: MouseEvent | PointerEvent) => event.stopPropagation();
+
+type StatusItemsProps = {
+  value: FeatureStatus;
+  onChange: (status: FeatureStatus) => void;
+  testId: string;
+};
+
+/** The five statuses as radio items, shared by the card menu and the status icon's own menu. */
+const StatusItems = ({ value, onChange, testId }: StatusItemsProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  return (
+    <Menu.RadioItemGroup
+      value={value}
+      onValueChange={({ value: selected }) => {
+        const next = STATUSES.find((candidate) => candidate === selected);
+        if (next && next !== value) {
+          onChange(next);
+        }
+      }}
+    >
+      <Menu.ItemGroupLabel>{t('feature-card.status.label')}</Menu.ItemGroupLabel>
+      {STATUSES.map((candidate) => (
+        <Menu.RadioItem
+          key={candidate}
+          item={{
+            value: candidate,
+            label: t(`feature-status.${candidate}.label`),
+            icon: FEATURE_STATUS_STYLE[candidate].icon,
+          }}
+          data-testid={`${testId}.${candidate}`}
+        />
+      ))}
+    </Menu.RadioItemGroup>
+  );
+};
+
+type StatusIconProps = {
+  status: FeatureStatus;
+  /** Without it the icon is a plain glyph. */
+  onChange?: (status: FeatureStatus) => void;
+  /** Row icons are muted, so the header's status icon stays the card's one strong glyph. */
+  muted?: boolean;
+  testId: string;
+};
+
+/** A status glyph that, given `onChange`, opens a menu of the statuses; neither press selects the card. */
+const StatusIcon = ({ status, onChange, muted, testId }: StatusIconProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const style = FEATURE_STATUS_STYLE[status];
+  const glyph = (
+    <Icon.Icon
+      icon={style.icon}
+      hue={muted ? undefined : style.hue}
+      tone={muted ? 'muted' : undefined}
+      label={t(`feature-status.${status}.label`)}
+    />
+  );
+  if (!onChange) {
+    return glyph;
+  }
+  return (
+    <Menu.Root>
+      <Menu.Trigger asChild>
+        <Button.Root
+          variant='ghost'
+          compact
+          data-testid={testId}
+          // Takes the press itself, so it neither selects the card nor drags a canvas box.
+          onPointerDown={stopPropagation}
+          onClick={stopPropagation}
+        >
+          {glyph}
+        </Button.Root>
+      </Menu.Trigger>
+      <Menu.Content onClick={stopPropagation}>
+        <StatusItems value={status} onChange={onChange} testId={testId} />
+      </Menu.Content>
+    </Menu.Root>
+  );
+};
 
 /**
  * A field of a card in edit mode, committed when it loses focus (Enter does that). Keys and presses stay in the field:
@@ -172,8 +257,6 @@ const EditField = ({ value, placeholder, label, testId, autoFocus, multiline, on
 /** Row icons sit a step below the text, so the header's status icon stays the card's one strong glyph. */
 const RowIcon = ({ icon }: { icon: string }) => <Icon.Icon icon={icon} tone='muted' />;
 
-const STATUSES: FeatureStatus[] = ['planned', 'in-progress', 'prototype', 'operational', 'failing'];
-
 /**
  * One feature: its status, the derived signals, the work toward it, the evidence that it works, and the
  * features it needs. Status and signals each carry an icon and a word, so colour is never the only cue.
@@ -192,7 +275,6 @@ export const FeatureCard = ({
 }: FeatureCardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const { feature, selected, relation, onDescribe } = props;
-  const status = FEATURE_STATUS_STYLE[feature.status];
   const [editingState, setEditingState] = useState(false);
   const editing = editingProp ?? editingState;
   const setEditing = (next: boolean) => {
@@ -213,7 +295,11 @@ export const FeatureCard = ({
     >
       <Card.Header>
         <Layout.Block rail='start'>
-          <Icon.Icon icon={status.icon} hue={status.hue} label={t(`feature-status.${feature.status}.label`)} />
+          <StatusIcon
+            status={feature.status}
+            onChange={onSetStatus && ((next) => onSetStatus(feature, next))}
+            testId='feature-card.status-icon'
+          />
         </Layout.Block>
         {/* Unclamped while editing: the clamp clips overflow, which would cut off the field's box beyond the text. */}
         <Card.Title lines={editing && onRename ? undefined : 2}>
@@ -270,28 +356,11 @@ export const FeatureCard = ({
               )}
               {onOpen && onSetStatus && <Menu.Separator />}
               {onSetStatus && (
-                <Menu.RadioItemGroup
+                <StatusItems
                   value={feature.status}
-                  onValueChange={({ value }) => {
-                    const next = STATUSES.find((candidate) => candidate === value);
-                    if (next && next !== feature.status) {
-                      onSetStatus(feature, next);
-                    }
-                  }}
-                >
-                  <Menu.ItemGroupLabel>{t('feature-card.status.label')}</Menu.ItemGroupLabel>
-                  {STATUSES.map((candidate) => (
-                    <Menu.RadioItem
-                      key={candidate}
-                      item={{
-                        value: candidate,
-                        label: t(`feature-status.${candidate}.label`),
-                        icon: FEATURE_STATUS_STYLE[candidate].icon,
-                      }}
-                      data-testid={`feature-card.status.${candidate}`}
-                    />
-                  ))}
-                </Menu.RadioItemGroup>
+                  onChange={(next) => onSetStatus(feature, next)}
+                  testId='feature-card.status'
+                />
               )}
               {(onOpen || onSetStatus) && onRemove && <Menu.Separator />}
               {onRemove && (
@@ -337,6 +406,7 @@ export const FeatureCardBody = ({
   onRemoveDependency,
   onOpenObject,
   onDescribe,
+  onSetSubfeatureStatus,
   editing,
 }: FeatureCardBodyProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
@@ -479,7 +549,14 @@ export const FeatureCardBody = ({
           {feature.subfeatures.map((subfeature, index) => (
             <Card.Row
               key={index}
-              leading={<RowIcon icon={FEATURE_STATUS_STYLE[subfeature.status].icon} />}
+              leading={
+                <StatusIcon
+                  status={subfeature.status}
+                  muted
+                  onChange={onSetSubfeatureStatus && ((next) => onSetSubfeatureStatus(feature, index, next))}
+                  testId={`feature-card.subfeature.${index}.status`}
+                />
+              }
               trailing={<Card.Text variant='muted'>{t(`feature-status.${subfeature.status}.label`)}</Card.Text>}
             >
               <Card.Text truncate>{subfeature.name}</Card.Text>

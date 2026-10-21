@@ -41,7 +41,7 @@ export type FeatureArticleProps = AppSurface.ObjectArticleProps<Feature.Feature>
  */
 export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticleProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const [, updateFeature] = useObject(subject);
+  const [snapshot, updateFeature] = useObject(subject);
   const db = Obj.getDatabase(subject);
   const graph = useFeatureGraph(db, [subject.id], { neighbours: true });
   const feature = graph.lookup(subject.id);
@@ -55,16 +55,16 @@ export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticlePr
   const excludedDependencies = useMemo(() => [subject.id, ...(feature?.dependsOn ?? [])], [subject.id, feature]);
   const linkedTasks = useMemo(() => feature?.tasks.map((task) => task.id) ?? [], [feature]);
 
-  // Read once per feature; the uncontrolled form owns edits after mount.
-  const defaultValues = useMemo<Partial<Values>>(
+  // Bound to the live feature, so a status set from a card icon (or by an agent) reaches the open form.
+  const values = useMemo<Partial<Values>>(
     () => ({
-      name: subject.name,
-      description: subject.description,
-      status: subject.status,
-      specs: subject.specs,
-      subfeatures: subject.subfeatures,
+      name: snapshot?.name,
+      description: snapshot?.description,
+      status: snapshot?.status,
+      specs: snapshot?.specs,
+      subfeatures: snapshot?.subfeatures,
     }),
-    [subject],
+    [snapshot],
   );
 
   const handleValuesChanged = useCallback(
@@ -86,7 +86,7 @@ export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticlePr
   return (
     <Panel.Root role={role}>
       <Panel.Body>
-        <Form.Root db={db} schema={Values} defaultValues={defaultValues} onValuesChanged={handleValuesChanged}>
+        <Form.Root db={db} schema={Values} values={values} onValuesChanged={handleValuesChanged}>
           <Form.Viewport scroll>
             <Form.Content>
               <Form.Fields />
@@ -102,6 +102,9 @@ export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticlePr
                       onSelectDependency={(id) => void openObject(id)}
                       onRemoveDependency={(id) => editing.removeDependency(subject.id, id)}
                       onOpenObject={(id) => void openObject(id)}
+                      onSetSubfeatureStatus={(_, index, status) =>
+                        editing.setSubfeatureStatus(subject.id, index, status)
+                      }
                     />
                   </Card.Root>
                   <Layout.Flex wrap gap='xs'>
