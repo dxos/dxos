@@ -112,7 +112,11 @@ FocusGroup.displayName = 'Focus.Group';
 type FocusItemProps = {
   /** `aria-current`: the item is where the user is ("you are here"), set by the caller; focus alone does not set it. */
   current?: boolean;
-  /** `aria-selected`: the item is selected in its collection, drawn by the shared selected edge (`focus.css`). */
+  /**
+   * `aria-selected`: the item is selected in its collection, drawn by the shared selected edge (`focus.css`). A selectable
+   * item is an `option` unless it names its own role (e.g. `gridcell`); its collection must be the matching `listbox` or
+   * `grid`.
+   */
   selected?: boolean;
   /** A separator-coloured border while unfocused. */
   border?: boolean;
@@ -166,6 +170,8 @@ const FocusItem = slottable<HTMLDivElement, FocusItemProps>(
         data-border={border ? '' : undefined}
         // Focus is drawn by the focus ring; `current` and `selected` are the caller's states, never inferred from it.
         aria-current={current || undefined}
+        // `aria-selected` is only valid on a selectable role, so a selectable item without one is an option.
+        role={rest.role ?? (selected === undefined ? undefined : 'option')}
         aria-selected={selected}
         className={className}
         onClick={handleClick}

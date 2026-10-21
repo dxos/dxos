@@ -396,7 +396,8 @@ export const FeatureCard = ({
       onClickCapture={
         inItem && onOpen
           ? (event) => {
-              if (event.metaKey || event.ctrlKey) {
+              // A control's own ⌘-click (the menu, an edit button) stays the control's.
+              if ((event.metaKey || event.ctrlKey) && !isControl(event.target)) {
                 event.stopPropagation();
                 onOpen(feature);
               }
