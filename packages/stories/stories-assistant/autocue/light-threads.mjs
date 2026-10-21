@@ -34,7 +34,7 @@ export const steps = [
       await demo.caption({ value: 'Start a long task', subtitle: 'LIGHT-THREADS.mdl QA-1' });
       await send({ demo, page }, 'Research the factorials of 5 to 9 and summarise them.');
       await page
-        .getByText(/Computing 6!/)
+        .getByText(/Computing 5!/)
         .first()
         .waitFor({ state: 'visible', timeout: 30_000 });
     },

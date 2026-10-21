@@ -58,7 +58,7 @@ describe('arrangeLanes', () => {
     expect(arranged.lanes.size).to.eq(0);
   });
 
-  test('lanes are grouped; older running lanes collapse into cards; the queued tail stays last', ({ expect }) => {
+  test('older running lanes collapse into a card at their first row; the queued tail stays last', ({ expect }) => {
     const arranged = arrangeLanes({
       messages,
       tail: 1,
@@ -74,7 +74,7 @@ describe('arrangeLanes', () => {
     expect(card._tag === 'text' && card.text).to.include('computing');
   });
 
-  test('when every lane has finished they show in full, in the order they opened', ({ expect }) => {
+  test('when every lane has finished they show in full, in feed order, with no echoes', ({ expect }) => {
     const arranged = arrangeLanes({
       messages: [...messages.slice(0, 5), message('a3', 'assistant', 'summary'), message('c2', 'assistant', 'résumé')],
       tail: 0,
@@ -83,14 +83,12 @@ describe('arrangeLanes', () => {
     });
     expect(texts(arranged.messages)).to.deep.eq([
       'research',
-      'computing',
-      'summary',
       '17 x 23',
+      'computing',
       '391',
       'translate',
+      'summary',
       'résumé',
-      'lane-done:a',
-      'lane-done:b',
     ]);
   });
 });

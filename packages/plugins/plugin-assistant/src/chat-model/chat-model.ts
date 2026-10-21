@@ -373,6 +373,7 @@ export class ChatModel {
         tail: projection.tail,
         lanes: view.lanes,
         laneOf: view.laneOf,
+        delivery: projection.delivery,
       });
       return { ...projection, ...arranged };
     });

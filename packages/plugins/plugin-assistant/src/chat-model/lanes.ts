@@ -62,10 +62,11 @@ const laneRow = (key: string, created: string, text: string): Message.Message =>
 };
 
 /**
- * Arranges the thread's rows by lane for a chat that ran several requests at once (light threads): each lane's rows
- * stay together, in the order the lanes opened; the newest running lane is the foreground and shows in full, other
- * running lanes collapse into a card that follows their tail, and a lane that finished in the background is echoed
- * at the end. A chat whose lanes never overlapped is returned as it is.
+ * Arranges the thread's rows by lane for a chat that ran several requests at once (light threads): rows keep feed
+ * order, so lanes interleave and their gutters tell them apart (moving a row the list already placed makes the
+ * virtual list re-anchor without end); the newest running lane is the foreground and shows in full, other running
+ * lanes collapse into a card at their first row that follows their tail, and a lane that finished in the background
+ * is echoed at the end. A chat whose lanes never overlapped is returned as it is.
  *
  * `tail` rows at the end (prompts not taken up yet) stay last.
  */
@@ -73,14 +74,27 @@ export const arrangeLanes = ({
   messages,
   tail,
   lanes,
-  laneOf,
+  laneOf: laneOfMessage,
+  delivery,
 }: {
   messages: readonly Message.Message[];
   tail: number;
   lanes: readonly Reducer.Lane[];
   /** The lane of each message, by id. */
   laneOf: ReadonlyMap<string, string>;
+  /** A prompt's row is keyed by its outbox id; its delivery names the message it became. */
+  delivery?: ReadonlyMap<string, { entryId?: string; turnId?: string }>;
 }): LaneArrangement => {
+  const laneOf = {
+    get: (id: string): string | undefined => {
+      const row = delivery?.get(id);
+      return (
+        laneOfMessage.get(id) ??
+        (row?.turnId !== undefined ? laneOfMessage.get(row.turnId) : undefined) ??
+        (row?.entryId !== undefined ? laneOfMessage.get(row.entryId) : undefined)
+      );
+    },
+  };
   const overlapped = lanes.filter((lane) => lane.overlapped);
   if (overlapped.length === 0) {
     return { messages: [...messages], lanes: new Map() };
@@ -122,27 +136,23 @@ export const arrangeLanes = ({
 
   const arranged: Message.Message[] = [];
   const chrome = new Map<string, ThreadLane>();
-  const placed = new Set<string>();
+  const carded = new Set<string>();
+  const threadLanes = new Map<string, ThreadLane>();
   for (const message of body) {
     const id = laneOf.get(message.id);
     const lane = id !== undefined ? byId.get(id) : undefined;
     if (!lane) {
       arranged.push(message);
-      continue;
-    }
-    if (placed.has(lane.id)) {
-      continue;
-    }
-    placed.add(lane.id);
-    const members = buckets.get(lane.id) ?? [];
-    if (background.has(lane.id)) {
-      arranged.push(card(lane, 'lane', members.flatMap(toLines).slice(-CARD_LINES)));
-      continue;
-    }
-    const threadLane = toThreadLane(lane);
-    for (const member of members) {
-      chrome.set(member.id, threadLane);
-      arranged.push(member);
+    } else if (background.has(lane.id)) {
+      if (!carded.has(lane.id)) {
+        carded.add(lane.id);
+        arranged.push(card(lane, 'lane', (buckets.get(lane.id) ?? []).flatMap(toLines).slice(-CARD_LINES)));
+      }
+    } else {
+      const threadLane = threadLanes.get(lane.id) ?? toThreadLane(lane);
+      threadLanes.set(lane.id, threadLane);
+      chrome.set(message.id, threadLane);
+      arranged.push(message);
     }
   }
 
@@ -154,7 +164,8 @@ export const arrangeLanes = ({
     }
     burst.unshift(lane);
   }
-  const notices = burst
+  // Only while a lane still runs: once every lane has finished, each answer is in view where its lane is.
+  const notices = (running.length > 0 ? burst : [])
     .slice(0, -1)
     .filter((lane) => lane.status === 'done' || lane.status === 'failed')
     .flatMap((lane) => {

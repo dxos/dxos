@@ -42,17 +42,27 @@ const CALCULATE = Operation.toolName(Calculate);
 /** A status line the runtime appends about other threads; never the request itself. */
 const isStatusLine = (value: string) => /^Thread \S+ .* is (running|done)/.test(value);
 
-const partText = (content: ScriptedLanguageModel.ScriptedRequest['prompt']['content'][number]) =>
+/** The text parts of a message, in order. */
+const textParts = (content: ScriptedLanguageModel.ScriptedRequest['prompt']['content'][number]): string[] =>
   typeof content.content === 'string'
-    ? content.content
-    : content.content.flatMap((part) => (part.type === 'text' ? [part.text] : [])).join('\n');
+    ? [content.content]
+    : content.content.flatMap((part) => (part.type === 'text' ? [part.text] : []));
 
-/** The request a call answers: the last user message that is not a thread status line. */
+/**
+ * The request a call answers: the last text of the last user message that is not a thread status line or a sibling
+ * snapshot (a provider merges adjacent user messages, so those can share the request's message).
+ */
 const currentRequest = ({ prompt }: ScriptedLanguageModel.ScriptedRequest): { text: string; index: number } => {
   for (let index = prompt.content.length - 1; index >= 0; index--) {
     const message = prompt.content[index];
-    if (message.role === 'user' && !isStatusLine(partText(message))) {
-      return { text: partText(message), index };
+    if (message.role !== 'user') {
+      continue;
+    }
+    const request = textParts(message)
+      .filter((part) => !isStatusLine(part) && !part.includes('<thread '))
+      .at(-1);
+    if (request !== undefined) {
+      return { text: request, index };
     }
   }
   return { text: '', index: -1 };
@@ -77,7 +87,7 @@ const script: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
     if (step < 5) {
       const value = step + 5;
       return {
-        delay: '1500 millis',
+        delay: '9 seconds',
         parts: [
           reasoning(`Computing ${value}!.`),
           text(`Computing ${value}!…`),

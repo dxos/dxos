@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -15,8 +15,7 @@ import { type LaneCardData, type ThreadLane } from '../types.ts';
 /** Height of a background lane's tail: a few lines, so several running lanes stay on one screen. */
 export const LANE_CARD_HEIGHT = 168;
 
-const parse = (children: WidgetProps['children']): LaneCardData | undefined => {
-  const text = getXmlTextChild(children ?? []);
+const parse = (text: string | null | undefined): LaneCardData | undefined => {
   if (!text) {
     return undefined;
   }
@@ -103,17 +102,19 @@ const Lines = ({ lines }: { lines: LaneCardData['lines'] }) => (
  */
 export const LaneCardWidget = ({ view, children }: WidgetProps) => {
   const { t } = Hooks.useTranslation(translationKey);
-  const data = parse(children);
+  const text = getXmlTextChild(children ?? []);
+  const data = useMemo(() => parse(text), [text]);
   const [expanded, setExpanded] = useState(false);
   const scrollerRef = useRef<HTMLDivElement>(null);
 
-  // Follows the tail: the newest work of a background lane is what the reader wants to glance at.
+  // Follows the tail: the newest work of a background lane is what the reader wants to glance at. Keyed on the text,
+  // so a re-render with the same content does not touch the scroller.
   useLayoutEffect(() => {
     const scroller = scrollerRef.current;
-    if (scroller && !expanded) {
+    if (scroller && !expanded && scroller.scrollTop !== scroller.scrollHeight - scroller.clientHeight) {
       scroller.scrollTop = scroller.scrollHeight;
     }
-  }, [data, expanded]);
+  }, [text, expanded]);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => view?.requestMeasure());
@@ -155,7 +156,8 @@ export const LaneCardWidget = ({ view, children }: WidgetProps) => {
  * colour, so it is seen without the reader leaving their place.
  */
 export const LaneNoticeWidget = ({ view, children }: WidgetProps) => {
-  const data = parse(children);
+  const text = getXmlTextChild(children ?? []);
+  const data = useMemo(() => parse(text), [text]);
   useEffect(() => {
     const frame = requestAnimationFrame(() => view?.requestMeasure());
     return () => cancelAnimationFrame(frame);
