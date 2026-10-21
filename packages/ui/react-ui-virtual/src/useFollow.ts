@@ -347,7 +347,11 @@ export const useFollow = ({
     (index: number) => {
       const wants = index >= countRef.current - 1;
       setFollowing(!!enabled && wants);
-      if (!wants) {
+      if (wants) {
+        // A jump to the tail lands on estimates, and the rest of the way is arrival, not growth: the
+        // reader was no more watching it than an opening, so it is not held to the model-change gate.
+        positioned.current = false;
+      } else {
         follower?.cancel();
       }
     },
