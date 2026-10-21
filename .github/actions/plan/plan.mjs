@@ -47,8 +47,8 @@ const main = () => {
     rest: affected?.some(([project, task]) => project !== 'composer-e2e' && task === 'e2e') ?? true,
   };
   const outputs = {
-    'node': String(plan.node),
-    'browser': String(plan.browser),
+    node: String(plan.node),
+    browser: String(plan.browser),
     ...cellOutputs('browser', browserCells(browserTargets)),
     ...cellOutputs('composer', plan.composer ? composerCells(browsers) : []),
     ...cellOutputs('rest', plan.rest ? restCells(browsers) : []),
