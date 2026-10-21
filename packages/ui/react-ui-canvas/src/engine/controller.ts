@@ -37,6 +37,7 @@ import {
   pruneOrphaned,
   removeKey as removeTimelineKey,
   setKey,
+  storeVersions,
   timelineFps,
 } from '../model/index.ts';
 import {
@@ -64,8 +65,6 @@ import {
   pastedRecords,
   pasteFragment,
   promotedBy,
-  recordStoreStep,
-  recordViews,
   restackZ,
   topZ,
   ungroupInstance,
@@ -73,6 +72,7 @@ import {
   zoomAt,
 } from '../utils/index.ts';
 import { type CanvasAtoms, type HistoryEntry } from './atoms.ts';
+import { type CanvasHistory, createCommitter } from './history.ts';
 import { type Projection, readonlyCapabilities, reduceIntent } from './projection.ts';
 
 /** The grid a paste steps along and snaps to, which depends on the zoom. */
@@ -124,6 +124,8 @@ export type CanvasControllerOptions = {
   camera?: () => CameraMotion;
   fit?: () => ViewFit;
   look?: () => LookHandlers;
+  /** Runs each edit as one undo step; without one, edits are applied and nothing is recorded. */
+  history?: () => Pick<CanvasHistory, 'commit'>;
   /** Fresh ids; injectable so tests are deterministic. */
   createId?: (prefix: string) => string;
 };
@@ -227,7 +229,6 @@ export type ToolsCommands = {
   setTool: (tool: Tool) => void;
   toggleSnap: () => void;
   toggleGuides: () => void;
-  toggleLattice: () => void;
   toggleDebug: () => void;
 };
 
@@ -280,8 +281,19 @@ export const createCanvasController = ({
   camera: cameraMotion,
   fit: viewFit,
   look: lookHandlers,
+  history: historyOption,
   createId: newId = createId,
 }: CanvasControllerOptions): CanvasController => {
+  const unrecorded = createCommitter(
+    {
+      store: storeVersions(registry, store),
+      model: () => baseProjection().model,
+      context: () => ({ path: [], selection: [] }),
+    },
+    () => {},
+  );
+  const commit: CanvasHistory['commit'] = (change, options) =>
+    (historyOption?.().commit ?? unrecorded)(change, options);
   // A read-only canvas edits nothing whatever its projection allows, as `CanvasRoot` gates its own controls.
   const capabilities = (): Capabilities => (readonly() ? readonlyCapabilities : projection().capabilities);
   const currentScene = () => registry.get(projection().scene);
@@ -307,25 +319,19 @@ export const createCanvasController = ({
     target: Projection,
     intent: Intent,
     edit: (views: ViewMap) => ViewMap = (views) => views,
-  ): boolean => {
-    const before = registry.get(store.views);
-    const model = target.snapshot();
-    target.apply(intent);
-    if (target.snapshot() === model) {
-      return false;
-    }
-    const after = registry.get(store.views);
-    const edited = edit(after);
-    const next = pruneOrphaned(before, edited, roots(edited));
-    if (next !== after) {
-      registry.set(store.views, next);
-      const view = currentView();
-      if (view) {
-        recordViews(registry, atoms.undo, view, before);
+  ): boolean =>
+    commit(() => {
+      const before = registry.get(store.views);
+      if (!commit(() => target.apply(intent))) {
+        return;
       }
-    }
-    return true;
-  };
+      const after = registry.get(store.views);
+      const edited = edit(after);
+      const next = pruneOrphaned(before, edited, roots(edited));
+      if (next !== after) {
+        registry.set(store.views, next);
+      }
+    });
 
   const selection: SelectionCommands = {
     select,
@@ -466,7 +472,6 @@ export const createCanvasController = ({
     },
     toggleSnap: toggle(atoms.snap),
     toggleGuides: toggle(atoms.guides),
-    toggleLattice: toggle(atoms.lattice),
     toggleDebug: toggle(atoms.debug),
   };
 
@@ -835,13 +840,7 @@ export const createCanvasController = ({
         : link
           ? { ...host, links: { ...host.links, [element]: { ...link, z } } }
           : host;
-      // Its own undo step: the projection's model is unchanged, so only the views are restored.
-      const model = projection().snapshot();
-      registry.set(store.views, { ...views, [container]: moved });
-      const view = currentView();
-      if (view) {
-        recordStoreStep(registry, atoms.undo, view, model, views);
-      }
+      commit(() => registry.set(store.views, { ...views, [container]: moved }));
       return true;
     },
     duplicate: (ids, delta) => {

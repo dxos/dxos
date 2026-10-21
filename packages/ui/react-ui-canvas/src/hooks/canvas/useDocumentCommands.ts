@@ -2,19 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as Atom from 'effect/reactivity/Atom';
 import { useCallback, useMemo, useRef } from 'react';
 
-import { type CanvasAtoms, type Projection } from '../../engine/index.ts';
-import {
-  type Capabilities,
-  type ElementId,
-  type NodeRegistry,
-  type NodeType,
-  type Size,
-  type ViewId,
-  type ViewStore,
-} from '../../model/index.ts';
-import { createId, nominalSize, redo, screenToScene, undo } from '../../utils/index.ts';
+import { type CanvasAtoms, type CanvasHistory, type HistoryState, type Projection } from '../../engine/index.ts';
+import { type Capabilities, type NodeRegistry, type NodeType, type Size } from '../../model/index.ts';
+import { createId, nominalSize, screenToScene } from '../../utils/index.ts';
 import { type useRegistry } from '../useRegistry.ts';
 import { type PointerMachine } from './usePointerMachine.ts';
 
@@ -22,6 +15,8 @@ import { type PointerMachine } from './usePointerMachine.ts';
 export type DocumentCommands = {
   undo: () => void;
   redo: () => void;
+  /** Whether there is anything to undo or redo, for the toolbar. */
+  history: Atom.Atom<HistoryState>;
   /** A default-sized node of `type` centred in the view, its top-left on the grid. */
   create: (type: NodeType) => void;
   /** Lays out the selection of two or more, else the board. */
@@ -31,11 +26,9 @@ export type DocumentCommands = {
 export type UseDocumentCommandsOptions = {
   registry: ReturnType<typeof useRegistry>;
   atoms: CanvasAtoms;
-  store: ViewStore;
   projection: Projection;
+  history: Pick<CanvasHistory, 'undo' | 'redo' | 'state'>;
   readonly: boolean;
-  sceneId: ViewId;
-  select: (ids: Iterable<ElementId>) => void;
   nodeRegistry: NodeRegistry;
   capabilities: Capabilities;
   /** Scene px of one nominal unit (the model's major grid cell), which a new node's default size is counted in. */
@@ -48,11 +41,9 @@ export type UseDocumentCommandsOptions = {
 export const useDocumentCommands = ({
   registry,
   atoms,
-  store,
   projection,
+  history,
   readonly,
-  sceneId,
-  select,
   nodeRegistry,
   capabilities,
   cell,
@@ -61,17 +52,9 @@ export const useDocumentCommands = ({
   createdNode,
   commitCreated,
 }: UseDocumentCommandsOptions): DocumentCommands => {
-  // Undo restores a whole model snapshot, so the selection may name elements that no longer exist.
-  const onUndo = useCallback(() => {
-    if (!readonly && undo(projection, registry, atoms.undo, sceneId, store)) {
-      select([]);
-    }
-  }, [readonly, projection, registry, atoms.undo, sceneId, store, select]);
-  const onRedo = useCallback(() => {
-    if (!readonly && redo(projection, registry, atoms.undo, sceneId, store)) {
-      select([]);
-    }
-  }, [readonly, projection, registry, atoms.undo, sceneId, store, select]);
+  // The history returns the view to where the edit happened, selection included.
+  const onUndo = useCallback(() => void (!readonly && history.undo()), [readonly, history]);
+  const onRedo = useCallback(() => void (!readonly && history.redo()), [readonly, history]);
 
   const createAtCentre = (type: NodeType) => {
     const def = nodeRegistry[type];
@@ -95,6 +78,7 @@ export const useDocumentCommands = ({
     () => ({
       undo: () => latestRef.current.onUndo(),
       redo: () => latestRef.current.onRedo(),
+      history: history.state,
       create: (type) => latestRef.current.createAtCentre(type),
       // A selection of two or more is what the user asked to tidy; one node alone means the board.
       layout: () => {
@@ -102,6 +86,6 @@ export const useDocumentCommands = ({
         latestRef.current.projection.apply({ kind: 'layout', ids: selection.size > 1 ? [...selection] : undefined });
       },
     }),
-    [registry, atoms.selection],
+    [registry, atoms.selection, history.state],
   );
 };

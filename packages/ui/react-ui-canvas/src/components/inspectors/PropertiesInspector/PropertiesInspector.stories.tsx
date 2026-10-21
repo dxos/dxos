@@ -15,7 +15,7 @@ import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
 import { ViewBuilder } from '../../../builder/index.ts';
 import { createCanvasAtoms } from '../../../engine/index.ts';
-import { useRegistry, useViewProjection } from '../../../hooks/index.ts';
+import { useCanvasHistory, useRegistry, useViewProjection } from '../../../hooks/index.ts';
 import { type ElementId, type Layer, type View, createMemoryStore, getElement } from '../../../model/index.ts';
 import { between } from '../../../utils/index.ts';
 import { InspectorFrame } from '../../panels/testing.ts';
@@ -56,7 +56,8 @@ const DefaultStory = ({ select }: StoryArgs) => {
   const registry = useRegistry();
   const store = useMemo(() => createMemoryStore([VIEW]), []);
   const atoms = useMemo(() => createCanvasAtoms(VIEW.id), []);
-  const projection = useViewProjection({ store, atoms });
+  const history = useCanvasHistory({ registry, atoms, store });
+  const projection = useViewProjection({ store, atoms, history });
   useLayoutEffect(() => {
     registry.set(atoms.selection, new Set(select));
   }, [registry, atoms, select]);

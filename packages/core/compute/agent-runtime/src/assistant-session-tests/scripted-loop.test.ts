@@ -20,7 +20,7 @@ import { ContentBlock, type Message } from '@dxos/types';
 
 import { AssistantTestLayer } from '../testing/index.ts';
 
-const { text, toolCall, scriptedAiService } = ScriptedLanguageModel;
+const { reasoning, text, toolCall, scriptedAiService } = ScriptedLanguageModel;
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -134,6 +134,63 @@ describe('AiRequest loop (scripted model)', () => {
         testLayer([
           { fail: toolNotFound('space-query-objects', ['Echo']) },
           { parts: [text('Understood, I will use Echo.')] },
+        ]),
+      ),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  // Seen live through the EDGE provider: the model thought, then called a tool the toolkit lacks. The provider closes
+  // the call with a `tool-call` part, which fails to decode and drops the batch it arrived in (the call's params
+  // included), so the turn ended on the thought alone. The call must instead reach the loop and be answered.
+  it.effect(
+    'answers a call to an unknown tool that the provider closes with a tool-call part, and keeps going',
+    Effect.fnUntraced(
+      function* (_) {
+        const request = new AiRequest.Request();
+        const toolkit = yield* OpaqueToolkit.fromContext(TestToolkit);
+        const messages = yield* request.run({ toolkit, prompt: 'Create the tasks.', history: [] });
+
+        const result = messages
+          .flatMap((message) => message.blocks)
+          .filter(ContentBlock.is('toolResult'))
+          .find((block) => block.name === 'tasks-create');
+        expect(result?.error).toContain('tasks-create');
+        expect(textOf(messages)).toContain('Understood, I will use Echo.');
+      },
+      Effect.provide(
+        testLayer([
+          {
+            parts: [reasoning('The user wants tasks; I will create them.'), toolCall('tasks-create', { title: 'A' })],
+            emitToolCalls: true,
+          },
+          { parts: [text('Understood, I will use Echo.')] },
+        ]),
+      ),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  // A call to a declared tool with parameters its schema rejects takes the same path, and must also be answered.
+  it.effect(
+    'answers a call whose parameters the tool rejects when the provider closes it with a tool-call part',
+    Effect.fnUntraced(
+      function* (_) {
+        const request = new AiRequest.Request();
+        const toolkit = yield* OpaqueToolkit.fromContext(TestToolkit);
+        const messages = yield* request.run({ toolkit, prompt: 'Echo something.', history: [] });
+
+        const result = messages
+          .flatMap((message) => message.blocks)
+          .filter(ContentBlock.is('toolResult'))
+          .find((block) => block.name === 'Echo');
+        expect(result?.error).toBeDefined();
+        expect(textOf(messages)).toContain('Retried.');
+      },
+      Effect.provide(
+        testLayer([
+          { parts: [reasoning('Echo it.'), toolCall('Echo', { wrong: 1 })], emitToolCalls: true },
+          { parts: [text('Retried.')] },
         ]),
       ),
       TestHelpers.provideTestContext,

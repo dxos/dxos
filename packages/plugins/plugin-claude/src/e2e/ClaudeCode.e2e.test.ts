@@ -19,8 +19,6 @@ import * as Project from '@dxos/compute/Project';
 import { Database, Feed, Filter, Obj, Ref, Registry } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AccessToken } from '@dxos/link';
-import * as AcpAgent from '@dxos/plugin-code/AcpAgent';
-import * as ComposerMcp from '@dxos/plugin-code/ComposerMcp';
 import * as ProjectOperationHandlerSet from '@dxos/plugin-projects/ProjectOperationHandlerSet';
 import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as SpaceOperationHandlerSet from '@dxos/plugin-space/SpaceOperationHandlerSet';
@@ -29,6 +27,8 @@ import * as TasksOperationHandlerSet from '@dxos/plugin-tasks/TasksOperationHand
 import { Text } from '@dxos/schema';
 import { Message, Milestone, Outline, RemoteSession, Task, TaskSet } from '@dxos/types';
 
+import * as AcpAgent from '../agents/AcpAgent.ts';
+import * as ComposerMcp from '../agents/ComposerMcp.ts';
 import { CLAUDE_CODE_AGENT, CLAUDE_CODE_TOKEN_SOURCE } from '../constants.ts';
 import * as ClaudeCodeProcess from '../process/ClaudeCodeProcess.ts';
 import {
@@ -443,6 +443,6 @@ describe.skipIf(!HAS_CREDENTIAL)('Claude Code, end to end', { tags: ['manual'] }
     it.todo('remote: Composer MCP reaches the sandboxed agent with the credentials provisioned for it');
     it.todo('registry: a chat names its process by a dxn: reference, resolved through the operation registry');
     it.todo('shell: ShellService runs, streams and kills bash commands, through Tauri and the vite dev server');
-    it.todo("shell: plugin-computer's Bash and ApplyEdits run through ShellService");
+    it.todo("shell: plugin-dev-shell's Bash and ApplyEdits run through ShellService");
   });
 });
