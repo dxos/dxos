@@ -8511,9 +8511,6 @@ importers:
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
-      '@dxos/react-ui-search':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-search
       '@dxos/react-ui-task':
         specifier: workspace:*
         version: link:../../ui/react-ui-task
@@ -23176,9 +23173,6 @@ importers:
       '@dxos/async':
         specifier: workspace:*
         version: link:../../common/async
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui

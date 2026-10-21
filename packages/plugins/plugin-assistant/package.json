@@ -289,7 +289,6 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
-    "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-task": "workspace:*",
     "@dxos/react-ui-trace": "workspace:*",
     "@dxos/react-ui-transcription": "workspace:*",
