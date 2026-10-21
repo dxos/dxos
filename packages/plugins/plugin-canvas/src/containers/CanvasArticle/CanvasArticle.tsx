@@ -48,7 +48,7 @@ import {
   updateCanvasRecord,
 } from '#model';
 // Aliased: `Canvas` here is the scene engine's component namespace.
-import { Canvas as CanvasFormat, CanvasCapabilities } from '#types';
+import { CanvasCapabilities, Canvas as CanvasFormat } from '#types';
 
 import { CanvasDatabaseContext } from './CanvasViewNodeView.tsx';
 import { createTrackerHistory } from './tracker-history.ts';
