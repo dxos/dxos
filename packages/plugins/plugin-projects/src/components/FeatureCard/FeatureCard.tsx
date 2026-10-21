@@ -69,6 +69,8 @@ export type FeatureCardBodyProps = {
   showDependencies?: boolean;
   /** False where the description and specs are edited beside the card, as in the feature's article. */
   showFields?: boolean;
+  /** False where the subfeatures are edited beside the card, as in the feature's article. */
+  showSubfeatures?: boolean;
   /** Features that depend on this one; listed only when expanded, as the model stores one direction. */
   dependents?: readonly FeatureModel[];
   onSelectDependency?: (id: string) => void;
@@ -78,8 +80,6 @@ export type FeatureCardBodyProps = {
   onOpenObject?: (id: string) => void;
   /** Lets edit mode change the description. */
   onDescribe?: (feature: FeatureModel, description: string) => void;
-  /** Makes each subfeature's status icon a picker. */
-  onSetSubfeatureStatus?: (feature: FeatureModel, index: number, status: FeatureStatus) => void;
   /** Edit mode: the description is a field, shown even while empty. */
   editing?: boolean;
 };
@@ -110,6 +110,8 @@ type EditFieldProps = {
   autoFocus?: boolean;
   /** Wraps and grows with its text; Enter still commits, Shift+Enter breaks the line. */
   multiline?: boolean;
+  /** No well, for a field that should read as the row's text until it is focused. */
+  subdued?: boolean;
   onCommit: (value: string) => void;
 };
 
@@ -199,7 +201,7 @@ const StatusIcon = ({ status, onChange, muted, testId }: StatusIconProps) => {
  * A field of a card in edit mode, committed when it loses focus (Enter does that). Keys and presses stay in the field:
  * the card would toggle its selection, and a canvas would delete the box on Backspace.
  */
-const EditField = ({ value, placeholder, label, testId, autoFocus, multiline, onCommit }: EditFieldProps) => {
+const EditField = ({ value, placeholder, label, testId, autoFocus, multiline, subdued, onCommit }: EditFieldProps) => {
   // Uncontrolled, so typing never re-renders the card; a newer model value (another peer's edit) still replaces the
   // field's text while the user has not changed it, so blur cannot commit the stale text over it.
   const fieldRef = useRef<HTMLInputElement & HTMLTextAreaElement>(null);
@@ -250,12 +252,81 @@ const EditField = ({ value, placeholder, label, testId, autoFocus, multiline, on
       classNames='-ms-1 my-1 px-1 py-0 w-[calc(100%+0.25rem)] min-h-0 [field-sizing:content] resize-none'
     />
   ) : (
-    <Input.Root {...props} classNames='-ms-1 px-1 -my-0.5 w-[calc(100%+0.25rem)]' />
+    <Input.Root
+      {...props}
+      variant={subdued ? 'subdued' : undefined}
+      classNames='-ms-1 px-1 -my-0.5 w-[calc(100%+0.25rem)]'
+    />
   );
 };
 
 /** Row icons sit a step below the text, so the header's status icon stays the card's one strong glyph. */
 const RowIcon = ({ icon }: { icon: string }) => <Icon.Icon icon={icon} tone='muted' />;
+
+export type SubfeatureEditorProps = {
+  subfeatures: readonly Feature.Subfeature[];
+  onChange: (subfeatures: Feature.Subfeature[]) => void;
+};
+
+/**
+ * Subfeatures as the card lists them, editable in place: the status icon picks a status, the name is a field, and each
+ * row removes itself. Every edit hands back the whole list, since subfeatures are records inside their feature.
+ */
+export const SubfeatureEditor = ({ subfeatures, onChange }: SubfeatureEditorProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  // The row just added takes focus, so a new subfeature is named before anything else.
+  const [focusIndex, setFocusIndex] = useState<number>();
+  const update = (index: number, patch: Partial<Feature.Subfeature>) =>
+    onChange(subfeatures.map((subfeature, candidate) => ({ ...subfeature, ...(candidate === index ? patch : {}) })));
+  return (
+    <Card.Root grid border={false} data-testid='subfeature-editor'>
+      {subfeatures.map((subfeature, index) => (
+        <Card.Row
+          key={index}
+          leading={
+            <StatusIcon
+              status={subfeature.status}
+              muted
+              onChange={(status) => update(index, { status })}
+              testId={`subfeature-editor.${index}.status`}
+            />
+          }
+          trailing={
+            <Layout.Flex gap='xs' classNames='items-center'>
+              <Card.Text variant='muted'>{t(`feature-status.${subfeature.status}.label`)}</Card.Text>
+              <Card.Action
+                icon='ph--x--regular'
+                label={t('subfeature-editor.remove.label', { name: subfeature.name })}
+                data-testid={`subfeature-editor.${index}.remove`}
+                onClick={() => onChange(subfeatures.filter((_, candidate) => candidate !== index))}
+              />
+            </Layout.Flex>
+          }
+        >
+          <EditField
+            value={subfeature.name}
+            placeholder={t('subfeature-editor.name.placeholder')}
+            label={t('subfeature-editor.name.label')}
+            testId={`subfeature-editor.${index}.name`}
+            autoFocus={index === focusIndex}
+            subdued
+            onCommit={(name) => update(index, { name })}
+          />
+        </Card.Row>
+      ))}
+      <Card.Row
+        leading={<RowIcon icon='ph--plus--regular' />}
+        data-testid='subfeature-editor.add'
+        onClick={() => {
+          setFocusIndex(subfeatures.length);
+          onChange([...subfeatures.map((subfeature) => ({ ...subfeature })), { name: '', status: 'planned' }]);
+        }}
+      >
+        <Card.Text variant='muted'>{t('subfeature-editor.add.label')}</Card.Text>
+      </Card.Row>
+    </Card.Root>
+  );
+};
 
 /**
  * One feature: its status, the derived signals, the work toward it, the evidence that it works, and the
@@ -401,12 +472,12 @@ export const FeatureCardBody = ({
   relation,
   showDependencies = true,
   showFields = true,
+  showSubfeatures = true,
   dependents = [],
   onSelectDependency,
   onRemoveDependency,
   onOpenObject,
   onDescribe,
-  onSetSubfeatureStatus,
   editing,
 }: FeatureCardBodyProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
@@ -544,19 +615,12 @@ export const FeatureCardBody = ({
         </Card.Section>
       )}
 
-      {expanded && feature.subfeatures.length > 0 && (
+      {expanded && showSubfeatures && feature.subfeatures.length > 0 && (
         <Card.Section title={t('feature-card.subfeatures.title')}>
           {feature.subfeatures.map((subfeature, index) => (
             <Card.Row
               key={index}
-              leading={
-                <StatusIcon
-                  status={subfeature.status}
-                  muted
-                  onChange={onSetSubfeatureStatus && ((next) => onSetSubfeatureStatus(feature, index, next))}
-                  testId={`feature-card.subfeature.${index}.status`}
-                />
-              }
+              leading={<RowIcon icon={FEATURE_STATUS_STYLE[subfeature.status].icon} />}
               trailing={<Card.Text variant='muted'>{t(`feature-status.${subfeature.status}.label`)}</Card.Text>}
             >
               <Card.Text truncate>{subfeature.name}</Card.Text>

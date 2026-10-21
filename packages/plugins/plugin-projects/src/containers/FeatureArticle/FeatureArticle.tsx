@@ -9,7 +9,7 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
-import { Form } from '@dxos/react-ui-form';
+import { Form, type FormFieldMap, type FormFieldRenderer } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -20,7 +20,7 @@ import { Task } from '@dxos/types';
 import { meta } from '#meta';
 import { Feature } from '#types';
 
-import { FeatureCardBody, getDependents } from '../../components/FeatureCard/index.ts';
+import { FeatureCardBody, SubfeatureEditor, getDependents } from '../../components/FeatureCard/index.ts';
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
 import { useFeatureEditing, useFeatureGraph, useOpenObject } from '../../hooks/index.ts';
 
@@ -31,6 +31,15 @@ type Values = Pick<Feature.Feature, 'name' | 'description' | 'status' | 'specs' 
 const Values = Schema.make<Schema.Codec<Values, any>>(
   SchemaAST.pick(Type.getSchema(Feature.Feature).ast, ['name', 'description', 'status', 'specs', 'subfeatures']),
 );
+
+/** Subfeatures render as the card's rows rather than the generic list of nested forms. */
+const SubfeaturesField: FormFieldRenderer = ({ type, label, getValue, onValueChange }) => (
+  <Form.Field label={label} standalone>
+    <SubfeatureEditor subfeatures={getValue() ?? []} onChange={(subfeatures) => onValueChange(type, subfeatures)} />
+  </Form.Field>
+);
+
+const FIELD_MAP: FormFieldMap = { subfeatures: SubfeaturesField };
 
 export type FeatureArticleProps = AppSurface.ObjectArticleProps<Feature.Feature>;
 
@@ -86,7 +95,7 @@ export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticlePr
   return (
     <Panel.Root role={role}>
       <Panel.Body>
-        <Form.Root db={db} schema={Values} values={values} onValuesChanged={handleValuesChanged}>
+        <Form.Root db={db} schema={Values} values={values} fieldMap={FIELD_MAP} onValuesChanged={handleValuesChanged}>
           <Form.Viewport scroll>
             <Form.Content>
               <Form.Fields />
@@ -98,13 +107,11 @@ export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticlePr
                       lookup={graph.lookup}
                       expanded
                       showFields={false}
+                      showSubfeatures={false}
                       dependents={dependents}
                       onSelectDependency={(id) => void openObject(id)}
                       onRemoveDependency={(id) => editing.removeDependency(subject.id, id)}
                       onOpenObject={(id) => void openObject(id)}
-                      onSetSubfeatureStatus={(_, index, status) =>
-                        editing.setSubfeatureStatus(subject.id, index, status)
-                      }
                     />
                   </Card.Root>
                   <Layout.Flex wrap gap='xs'>
