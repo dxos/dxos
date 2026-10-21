@@ -9,7 +9,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { Person } from '@dxos/types';
+import { Message, Person } from '@dxos/types';
 
 import { AgentOperation, ChatParticipant, Mode } from '#types';
 
@@ -19,6 +19,35 @@ import { BASE_SKILL_KEYS, skillRef } from './modes.ts';
 
 /** Loaded on demand: the context runtime is heavy and only needed when a chat is first created. */
 const aiContextRuntime = () => import('@dxos/assistant/AiContext');
+
+/** How long choosing between a person's chats waits for their messages to arrive from EDGE. */
+const FEED_SYNC_TIMEOUT = '5 seconds';
+
+/**
+ * Of several chats that each match, the one with the newest message: two opens at once each make a chat, and the
+ * person's conversation is in the one they last talked in.
+ */
+const latestOf = Effect.fnUntraced(function* (chats: readonly Chat.Chat[]) {
+  if (chats.length < 2) {
+    return chats[0];
+  }
+
+  const dated = yield* Effect.forEach(
+    chats,
+    (chat) =>
+      Effect.gen(function* () {
+        const feed = yield* Database.load(chat.feed);
+        // A chat hosted on EDGE may not have its messages on this device yet, and would read as empty.
+        yield* Feed.sync(feed, { shouldPush: false }).pipe(Effect.timeoutOption(FEED_SYNC_TIMEOUT), Effect.exit);
+        const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+        // Compared as instants: an ISO timestamp may carry any offset.
+        const last = messages.reduce((newest, message) => Math.max(newest, Date.parse(message.created) || 0), 0);
+        return { chat, last };
+      }).pipe(Effect.orElseSucceed(() => ({ chat, last: 0 }))),
+    { concurrency: 4 },
+  );
+  return dated.reduce((latest, entry) => (entry.last > latest.last ? entry : latest)).chat;
+});
 
 /**
  * The agent's Composer chat with the person, created on first use. Given an owner, the chat is private to
@@ -34,16 +63,17 @@ export type ParticipantChatOptions = {
 export const ensureParticipantChat = Effect.fnUntraced(function* (
   agent: Agent.Agent,
   person: Person.Person,
-  { owner, remote }: ParticipantChatOptions = {},
+  { owner: givenOwner, remote }: ParticipantChatOptions = {},
 ) {
+  // An empty owner is no owner, for the lookup as for a chat created here.
+  const owner = givenOwner || undefined;
   const key = { source: ChatParticipant.PARTICIPANT_SOURCE, id: person.id };
   const existing = yield* Database.query(Query.select(Filter.foreignKeys(Chat.Chat, [key]))).run;
   const candidates = existing.filter((chat) => Obj.getParent(chat)?.id === agent.id);
-  // A private chat is never a shared one adopted: with an owner, only that owner's chat matches. Without one
+  // A private chat is never a shared one adopted: with an owner, only that owner's chats match. Without one
   // (a relay addressing the person), the shared chat is preferred, then the person's private one.
-  const match = owner
-    ? candidates.find((chat) => ChatParticipant.getOwner(chat) === owner)
-    : (candidates.find((chat) => ChatParticipant.getOwner(chat) === undefined) ?? candidates[0]);
+  const preferred = candidates.filter((chat) => ChatParticipant.getOwner(chat) === owner);
+  const match = (yield* latestOf(preferred)) ?? (owner === undefined ? yield* latestOf(candidates) : undefined);
   if (match) {
     // `AgentService.getSession` sees the location change and moves the conversation to a fresh EDGE
     // process, which replays the feed, so flipping the flag is the migration.

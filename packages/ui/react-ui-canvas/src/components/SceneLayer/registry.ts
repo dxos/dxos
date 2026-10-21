@@ -8,9 +8,9 @@
 //
 
 import {
+  CloudNode,
   DiagramNode,
   EllipseNode,
-  FrameNode,
   GeneratorNode,
   InstanceNode,
   type LinkRegistry,
@@ -19,20 +19,29 @@ import {
   type NodeType,
   NoteNode,
   PathNode,
+  PolygonNode,
+  PolylineNode,
   RectNode,
   type Size,
+  ViewNode,
   createNodeRegistry,
+  isCloudNode,
+  isPolygonNode,
+  isPolylineNode,
 } from '../../model/index.ts';
-import { NOMINAL_SIZES, createNode } from '../../utils/index.ts';
+import { NOMINAL_SIZES, cloudPath, createNode, polygonPath, polylinePath } from '../../utils/index.ts';
 import {
   BoxNodeView,
+  CloudNodeView,
   DiagramNodeView,
   EllipseNodeView,
-  FrameNodeView,
   GeneratorNodeView,
   InstanceNodeView,
   NoteNodeView,
   PathNodeView,
+  PolygonNodeView,
+  PolylineNodeView,
+  ViewNodeView,
 } from './SceneLayer.tsx';
 
 const MIN_SIZE: Size = { width: 64, height: 32 };
@@ -74,7 +83,70 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     resizable: true,
     minSize: MIN_SIZE,
   },
-
+  polygon: {
+    name: 'Polygon',
+    icon: 'ph--hexagon--regular',
+    key: 'N',
+    schema: PolygonNode,
+    component: PolygonNodeView,
+    create: (props) => createNode({ type: 'polygon', ...props }),
+    defaultSize: NOMINAL_SIZES.polygon,
+    silhouette: (node, inset, radius) =>
+      polygonPath(node.size, {
+        inset,
+        ...(isPolygonNode(node) ? node.params : undefined),
+        radius,
+      }),
+    bounds: (node) => (isPolygonNode(node) && node.params?.fit === 'circle' ? 'circle' : 'frame'),
+    portsPerSide: 1,
+    parts: [{ field: 'label' }],
+    resizable: true,
+    minSize: MIN_SIZE,
+  },
+  cloud: {
+    name: 'Cloud',
+    icon: 'ph--cloud--regular',
+    key: 'C',
+    schema: CloudNode,
+    component: CloudNodeView,
+    create: (props) => createNode({ type: 'cloud', ...props }),
+    defaultSize: NOMINAL_SIZES.cloud,
+    silhouette: (node, inset) => cloudPath(node.size, inset, isCloudNode(node) ? node.params?.bumps : undefined),
+    // Only the side centres of the frame lie near the outline.
+    portsPerSide: 1,
+    parts: [{ field: 'label' }],
+    resizable: true,
+    minSize: MIN_SIZE,
+  },
+  polyline: {
+    name: 'Polyline',
+    icon: 'ph--line-segments--regular',
+    key: 'Y',
+    schema: PolylineNode,
+    component: PolylineNodeView,
+    create: (props) => createNode({ type: 'polyline', ...props }),
+    createFromPoints: (props, points, closed) => ({
+      ...createNode({ type: 'polyline', ...props }),
+      points: [...points],
+      ...(closed ? { params: { closed } } : {}),
+    }),
+    defaultSize: NOMINAL_SIZES.polyline,
+    silhouette: (node, inset, radius) =>
+      isPolylineNode(node)
+        ? polylinePath(node.size, node.points, {
+            inset,
+            closed: node.params?.closed,
+            radius,
+          })
+        : '',
+    filled: (node) => isPolylineNode(node) && node.params?.closed === true,
+    // Its label is edited in the properties panel: a double-click shows the vertices to drag.
+    editor: 'vertices',
+    portsPerSide: 1,
+    parts: [{ field: 'label' }],
+    resizable: true,
+    minSize: { width: 16, height: 16 },
+  },
   note: {
     name: 'Note',
     icon: 'ph--text-t--regular',
@@ -87,15 +159,15 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     resizable: true,
     minSize: MIN_SIZE,
   },
-  frame: {
+  view: {
     extends: 'box',
-    name: 'Frame',
+    name: 'View',
     icon: 'ph--frame-corners--regular',
     key: 'F',
-    schema: FrameNode,
-    component: FrameNodeView,
-    create: (props) => createNode({ type: 'frame', ...props }),
-    defaultSize: NOMINAL_SIZES.frame,
+    schema: ViewNode,
+    component: ViewNodeView,
+    create: (props) => createNode({ type: 'view', ...props }),
+    defaultSize: NOMINAL_SIZES.view,
     minSize: { width: 96, height: 60 },
     openable: true,
   },

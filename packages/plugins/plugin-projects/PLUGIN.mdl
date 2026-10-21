@@ -12,8 +12,8 @@ The **Composer Plugin** template (`src/templates/composer-plugin.ts`) is offered
 builds a TypeScript Composer plugin in a local sandbox and offers it back to load. The sandbox holds nothing but
 the bun runtime the app ships; the guide comes from GitHub and the packages from pkg.pr.new and npm, pinned to
 the commit and library versions the app was built from (`VITE_DX_PLUGIN_TOOLCHAIN`, stamped by composer-app's
-vite config). The browser has no local sandbox, so there plugin-computer contributes its own version of the
-template, which builds with the Computer shell of a vite server.
+vite config). The browser has no local sandbox, so there plugin-dev-shell contributes its own version of the
+template, which builds with the dev shell of a vite server.
 
 ## Extensions
 

@@ -594,8 +594,9 @@ export class Client {
     // Registered with or without an edge endpoint: a write is confirmed once the host stores it
     // locally, and the host replicates to the edge, when configured, on its own.
     const edgeHttpClient = this._edgeHttpClient;
+    const services = this._services;
     const blobBackend = createEdgeBlobBackend({
-      store: createRpcBlobStore(this._services.rpc, this._effectRuntime),
+      store: createRpcBlobStore(() => services.rpc, this._effectRuntime),
       finalizeUpload: edgeHttpClient && ((uploadId) => edgeHttpClient.finalizeBlobUpload(Context.default(), uploadId)),
     });
     const unregisterBlobBackend = this._echoClient.graph.registerBlobBackend(Blob.Storage.edge, blobBackend, {

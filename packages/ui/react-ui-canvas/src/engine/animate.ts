@@ -18,13 +18,13 @@ import {
   type Intent,
   type Node,
   type NodeValues,
-  type Scene,
   type Timeline,
+  type View,
   createTimeline,
   getPath,
   hasTrack,
   removePath,
-  sampleScene,
+  sampleView,
   setKey,
   setPath,
 } from '../model/index.ts';
@@ -49,7 +49,7 @@ const START_EPSILON = 1e-6;
  */
 export const animate = (base: Projection, options: AnimateOptions): Projection => {
   const { registry, clock } = options;
-  const scene = Atom.keepAlive(Atom.make((get) => sampleScene(get(base.scene), get(clock.time))));
+  const scene = Atom.keepAlive(Atom.make((get) => sampleView(get(base.scene), get(clock.time))));
   return {
     ...base,
     scene,
@@ -63,14 +63,14 @@ export const animate = (base: Projection, options: AnimateOptions): Projection =
  * track, otherwise as keys at `t` (with auto-key) or as base values (without). Exported for tests.
  */
 export const rewriteIntent = (
-  scene: Scene,
+  scene: View,
   intent: Intent,
   t: number,
   { autoKey = () => true, animatable = () => BASE_ANIMATABLE }: Pick<AnimateOptions, 'autoKey' | 'animatable'> = {},
 ): Intent => {
   const atStart = Math.abs(t) < START_EPSILON;
   const keying = autoKey();
-  const shown = sampleScene(scene, t);
+  const shown = sampleView(scene, t);
   let timeline: Timeline | undefined = scene.timeline;
   const rest: Intent[] = [];
 

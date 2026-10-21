@@ -223,7 +223,11 @@ export class Connection extends Resource {
   readonly #reconnectCallbacks: Array<() => Promise<void>> = [];
 
   readonly closed = new Event<Error | undefined>();
-  readonly reconnected = new Event<void>();
+  /**
+   * Fires when a connection after the first is established; `isOwner` is true when this tab just became
+   * leader and spawned the worker it reconnected to.
+   */
+  readonly reconnected = new Event<{ isOwner: boolean }>();
 
   constructor(options: Options) {
     super();
@@ -731,7 +735,7 @@ export class Connection extends Resource {
         log('worker-connection: reconnecting, calling callbacks', { count: this.#reconnectCallbacks.length });
         // Isolated: a caller's failing callback must not fail the reconnection it is reacting to.
         await Promise.all(this.#reconnectCallbacks.map((cb) => cb().catch((err) => log.catch(err))));
-        this.reconnected.emit();
+        this.reconnected.emit({ isOwner });
       }
     } catch (caught: any) {
       if (ctx.disposed && !sessionFailure) {

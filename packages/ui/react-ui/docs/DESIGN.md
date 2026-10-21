@@ -500,8 +500,8 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
       locale, typed digit by digit with auto-advance, stepped with ArrowUp/Down, PageUp/Down, Home/End. zag's formatter
       always includes the date, so `time` passes its own `DateFormatter` and the segments it yields, over a fixed
       base date. The native input goes rather than staying as a light option: two date APIs would overlap, and the
-      segmented one is a single format in every browser (the AUDIT gap). `react-aria-components` stays only in the
-      current `Field`.
+      segmented one is a single format in every browser (the AUDIT gap). `react-aria-components` is no longer a
+      dependency: its import-time focus patch collided with zag's non-writable one on page unload.
     - **Calendar.** `date` and `datetime-local` wrap the row in Ark `DatePicker` sharing the value: the row is its
       `Control` (floating-ui's anchor, so no virtual anchor as the current `PickerWrapper` needed), the trailing
       trigger is `DatePicker.Trigger asChild` over a ghost icon-only Button (the `Field.TriggerIcon` role), and the

@@ -238,10 +238,25 @@ const timeline = (() => {
   const file = options.timeline ?? path.join(path.dirname(options.in), 'timeline.json');
   return existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {};
 })();
-const captions = (timeline.steps ?? []).map((step) => ({
-  ...step,
-  frame: Math.round((step.ms / 1000) * options.fps),
-}));
+// The driver commits a step's chapter after the step's own captions, so the entries arrive out of time order.
+const captions = (timeline.steps ?? [])
+  .toSorted((a, b) => a.ms - b.ms)
+  .map((step) => ({
+    ...step,
+    frame: Math.round((step.ms / 1000) * options.fps),
+  }));
+
+/**
+ * Frames from a caption onwards during which a pause is worth holding, keyed by source frame, valued in frames to hold.
+ * A caption sent with `hold` (ms) asks the viewer to linger that long, so its window outlasts `--caption-hold`.
+ */
+const readingWindow = new Map();
+for (const caption of captions) {
+  const hold = Math.max(1, Math.round(Math.max(options['caption-hold'], (caption.hold ?? 0) / 1000) * options.fps));
+  for (let offset = 0; offset <= hold; offset++) {
+    readingWindow.set(caption.frame + offset, Math.max(readingWindow.get(caption.frame + offset) ?? 0, hold));
+  }
+}
 const frameBytes = (width * height * 3) / 2; // yuv420p
 const holdFrames = Math.max(1, Math.round(options['max-static'] * options.fps));
 
@@ -331,18 +346,10 @@ if (options.report) {
   }
 
   const seconds = (count) => +(count / options.fps).toFixed(1);
-  const captionHold = Math.max(1, Math.round(options['caption-hold'] * options.fps));
-  const captionFrames = new Set();
-  for (const caption of captions) {
-    for (let offset = 0; offset <= captionHold; offset++) {
-      captionFrames.add(caption.frame + offset);
-    }
-  }
   const capped = (cap) =>
     runs.reduce(
       (total, { length, start }) =>
-        total +
-        Math.min(length, captionFrames.has(start) ? Math.max(captionHold, cap * options.fps) : cap * options.fps),
+        total + Math.min(length, Math.max(readingWindow.get(start) ?? 0, cap * options.fps)),
       0,
     );
   console.log(
@@ -466,15 +473,6 @@ let read = 0;
 let kept = 0;
 let longestRun = 0;
 
-const captionHoldFrames = Math.max(1, Math.round(options['caption-hold'] * options.fps));
-/** Frames from a caption onwards during which a pause is worth holding, keyed by source frame. */
-const readingWindow = new Set();
-for (const caption of captions) {
-  for (let offset = 0; offset <= captionHoldFrames; offset++) {
-    readingWindow.add(caption.frame + offset);
-  }
-}
-
 // The driver's `speed` ops, as source frame ranges: inside one only every `factor`-th frame survives.
 const speedRanges = (timeline.speed ?? []).map((change, index, all) => ({
   from: Math.round((change.ms / 1000) * options.fps),
@@ -497,7 +495,7 @@ for await (const chunk of decoder.stdout) {
     longestRun = Math.max(longestRun, staticRun);
 
     // A caption's reading pause is never held for less than any other pause.
-    const cap = readingWindow.has(index) ? Math.max(captionHoldFrames, holdFrames) : holdFrames;
+    const cap = Math.max(readingWindow.get(index) ?? 0, holdFrames);
     // Inclusive: `--report` prices a run at `min(length, cap)`, and an exclusive test would keep one
     // frame fewer than it promised, so the estimate could never be trusted for tuning.
     const range = speedAt(index);

@@ -34,9 +34,10 @@ export type KeyAction =
   | 'undo'
   | 'redo'
   | 'selectAll'
+  | 'group'
+  | 'ungroup'
   | 'snap'
   | 'guides'
-  | 'lattice'
   | 'debug'
   | 'play'
   | 'stepBack'
@@ -62,10 +63,10 @@ export const KEY_BINDINGS: Record<KeyAction, KeyBinding[]> = {
   undo: [{ key: 'z', meta: true, shift: false }],
   redo: [{ key: 'z', meta: true, shift: true }],
   selectAll: [{ key: 'a', meta: true }],
-  // Not with Shift: Shift+G is the lattice toggle.
+  group: [{ key: 'g', meta: true, shift: false }],
+  ungroup: [{ key: 'g', meta: true, shift: true }],
   snap: [{ key: 'g', shift: false }],
   guides: [{ key: ';' }],
-  lattice: [{ key: 'G', shift: true }],
   debug: [{ key: 'd' }],
   // The timeline's (ANIMATION.md §5.8); the view hands them on to the tools while the scene has no timeline.
   play: [{ key: ' ' }],
