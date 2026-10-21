@@ -9,6 +9,8 @@ import { addPlugins, cleanupOutdatedCaches, createHandlerBoundToURL, precacheAnd
 import { NavigationRoute, registerRoute } from 'workbox-routing';
 import { CacheFirst } from 'workbox-strategies';
 
+import { describePushMessage, parsePushMessage } from './push/notification.ts';
+
 declare const self: ServiceWorkerGlobalScope;
 
 const precacheManifest = self.__WB_MANIFEST;
@@ -313,6 +315,59 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => undefined);
       return cached ?? (await networkPromise) ?? new Response('Plugin asset unavailable offline', { status: 504 });
+    })(),
+  );
+});
+
+//
+// Push: EDGE pushes each notice put into the identity's inbox (see `@dxos/plugin-messenger` for registration).
+//
+
+/**
+ * Safari revokes a subscription whose pushes do not each show a notification, so on Apple's push service one is
+ * shown even while Composer has focus. Elsewhere a focused window already toasts the notice itself.
+ */
+const mustShowNotification = async (): Promise<boolean> => {
+  const subscription = await self.registration.pushManager.getSubscription();
+  return !subscription || new URL(subscription.endpoint).hostname.endsWith('.push.apple.com');
+};
+
+self.addEventListener('push', (event) => {
+  event.waitUntil(
+    (async () => {
+      let data: unknown;
+      try {
+        data = event.data?.json();
+      } catch {
+        data = undefined;
+      }
+      const message = parsePushMessage(data) ?? { v: 1, id: 'unknown', senderDid: '', sentAt: Date.now() };
+
+      const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      if (windows.some((client) => client.focused) && !(await mustShowNotification())) {
+        return;
+      }
+
+      const { title, body, tag, url } = describePushMessage(message);
+      await self.registration.showNotification(title, { body, tag, icon: '/pwa-192x192.png', data: { url } });
+    })(),
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      // An open window has already toasted the notice with its own Join action; reloading it to follow the link
+      // would throw away its state, so it is only brought forward.
+      const open = windows.find((client) => new URL(client.url).origin === self.location.origin);
+      if (open) {
+        await open.focus();
+        return;
+      }
+      const url = typeof event.notification.data?.url === 'string' ? event.notification.data.url : '/';
+      await self.clients.openWindow(new URL(url, self.location.origin).href);
     })(),
   );
 });
