@@ -97,8 +97,6 @@ const LINK_DXN = 'eid:echo:@:01JXAMPLE0000000000000000';
  * there swapped the outline for the task under the pointer.
  */
 export const TestLinkActivation: Story = {
-  // TODO(wittjosiah): Flaky in CI (fails intermittently); fix and re-enable.
-  tags: ['!test'],
   args: {
     content: `- [x] [${LINK_LABEL}](${LINK_DXN})\n- [ ] Another item`,
     onSelectLink: fn(),
@@ -120,9 +118,8 @@ export const TestLinkActivation: Story = {
     window.addEventListener('dx-anchor-activate', listen, { capture: true });
 
     await page.getByText(LINK_LABEL).hover();
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    await waitFor(() => expect(activations).toContain('open'));
     await expect(args.onSelectLink).not.toHaveBeenCalled();
-    await expect(activations).toContain('open');
     await expect(canvas.getByText('Another item')).toBeVisible();
 
     await userEvent.click(anchor);
