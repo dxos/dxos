@@ -18,7 +18,7 @@ edge Connection -> AccessToken
 edge Cursor -> AccessToken "source"
 edge Cursor -> Repo "target"
 edge PullRequest -> Repo "repository"
-edge TaskSet -> Repo "repository"
+edge TaskSet -> Repo "same foreign key" stroke=dashed
 edge TaskSet composes Task "tasks[]"
 edge TaskSet composes Milestone
 edge PullRequest -> Task "closes" stroke=dashed

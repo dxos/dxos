@@ -39,7 +39,7 @@ Diagrams are plugin-illustrator renders. The `diagram` block is the source; rege
 
 ### Object model
 
-![The binding's Cursor targets a Repo; PullRequest and TaskSet hold a Ref to the Repo; TaskSet composes issue Tasks and Milestones; a Walkthrough's subject is a PullRequest.](diagrams/p1-ontology.dx.svg)
+![The binding's Cursor targets a Repo; PullRequest holds a Ref to the Repo and TaskSet shares its github.com foreign key; TaskSet composes issue Tasks and Milestones; a Walkthrough's subject is a PullRequest.](diagrams/p1-ontology.dx.svg)
 
 ```diagram
 diagram flow=down
@@ -62,7 +62,7 @@ edge Connection -> AccessToken
 edge Cursor -> AccessToken "source"
 edge Cursor -> Repo "target"
 edge PullRequest -> Repo "repository"
-edge TaskSet -> Repo "repository"
+edge TaskSet -> Repo "same foreign key" stroke=dashed
 edge TaskSet composes Task "tasks[]"
 edge TaskSet composes Milestone
 edge PullRequest -> Task "closes" stroke=dashed
@@ -122,12 +122,13 @@ reviewDecision: Schema.optional(ReviewDecision.annotate({ title: 'Review' })),
 closes: Schema.optional(Schema.Array(Ref.Ref(Task.Task)).annotate({ title: 'Closes' })),
 ```
 
-`TaskSet` gains the repository it mirrors; it stays the container for issue `Task`s and milestones.
+`TaskSet` gains no field: it stays a use-case agnostic container for `Task`s and milestones. The set
+that mirrors a repository's issues is found by the foreign key `MaterializeGitHubTarget` already writes
+to its `Obj.Meta`, which the `Repo` carries too:
 
 ```ts
-// packages/sdk/types/src/types/TaskSet.ts — field added.
-/** The repository whose issues this set mirrors; absent on a set not bound to a repository. */
-repository: Schema.optional(Ref.Ref(Repo.Repo).annotate({ title: 'Repository' })),
+// The issue set for a bound repository: same github.com key as the Repo, no field on TaskSet.
+const [issues] = yield* Database.query(Filter.foreignKeys(TaskSet.TaskSet, [{ source: 'github.com', id: repoId }])).run;
 ```
 
 ```mdl
@@ -185,7 +186,6 @@ type SyncOptions
   desc: Per-binding options, validated by the connector's optionsSchema.
   fields:
     maxDaysBack?: number     # first run only: how far back the initial delta reaches; omit for full history
-    intervalMinutes?: number # poll interval; default 3, minimum 1
 ```
 
 ```mdl
@@ -333,7 +333,7 @@ feat F-1: One object per GitHub item
 
   req F-1.2: A pull request is one PullRequest object with `repository` set, whether it arrived by sync, by import or from a link opened in the space.
 
-  req F-1.3: An issue is a Task in the TaskSet whose `repository` is the bound Repo.
+  req F-1.3: An issue is a Task in the TaskSet that carries the bound Repo's github.com foreign key; TaskSet itself has no repository field.
 
   req F-1.4:
     when: ImportPullRequest names a pull request in a bound repository
@@ -371,7 +371,7 @@ feat F-2: Delta polling
 ```mdl
 feat F-3: Scheduling
 
-  req F-3.1: The GitHub connector entry sets `trigger` to a timer of SyncOptions.intervalMinutes (default 3) and `remote: true`, so polls run on EDGE with no client open.
+  req F-3.1: The GitHub connector entry sets `trigger` to a timer with a default schedule of every 3 minutes and `remote: true`, so polls run on EDGE with no client open. The interval belongs to that trigger: changing it means editing the trigger, and nothing on the binding mirrors it.
 
   req F-3.2: RefreshPullRequests and its hourly trigger are removed; an imported pull request outside any bound repository is polled with the same delta, grouped by repository.
 
@@ -477,4 +477,46 @@ decision D-5: Polls run on EDGE every 3 minutes by default, and RefreshPullReque
   for: user:dmaretskyi
   affects: [F-3]
   why: At one request per quiet repository the default costs at most 20 requests an hour per binding; one polling path replaces two.
+```
+
+```mdl
+decision D-6: TaskSet should not gain coding-specific fields; it stays use-case agnostic. Fields a specific use case needs could be added through an annotation, or a relation, though an annotation is likely better.
+  date: 2026-10-21
+  by: user:wittjosiah
+  affects: [F-1.3]
+  source: https://claude.ai/code/artifact/3c2feabe-985f-479a-aeea-1d598f6bf1e0
+```
+
+```mdl
+decision D-7: The poll interval is a property of the trigger; the binding's options should not mirror it.
+  date: 2026-10-21
+  by: user:wittjosiah
+  affects: [SyncOptions, F-3.1]
+  source: https://claude.ai/code/artifact/3c2feabe-985f-479a-aeea-1d598f6bf1e0
+```
+
+```mdl
+decision D-8: Apply [D-6] and [D-7] to the spec.
+  date: 2026-10-21
+  by: user:dmaretskyi
+  source: https://claude.ai/code/session_01BvVEssur2xxCiXewKjKQ3Z
+```
+
+```mdl
+decision D-9: TaskSet has no repository field; the issue set is found by the github.com foreign key in its Obj.Meta, which MaterializeGitHubTarget already writes and the Repo also carries. Fills in [D-6]; narrows [D-2], whose TaskSet referred to the Repo by a field.
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.3]
+  why: Object metadata is ECHO's existing per-object annotation and already holds this key, so the link needs no new field, annotation type or object.
+  rejected:
+    - A relation between TaskSet and Repo: one more object for sync to create, query and clean up.
+```
+
+```mdl
+decision D-10: SyncOptions has no poll interval; the timer trigger's schedule (every 3 minutes by default) is the only place it lives. Fills in [D-7].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [SyncOptions, F-3.1]
 ```

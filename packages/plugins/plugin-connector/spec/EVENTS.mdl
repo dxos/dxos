@@ -191,8 +191,6 @@ events?: {
   resource: (binding: Cursor.ExternalCursor, target: Obj.Unknown) => string;
   /** Provider event names that wake the binding. */
   names: readonly string[];
-  /** Poll interval while events are flowing; part 1's interval applies when they are not. Default 60. */
-  backstopMinutes?: number;
 };
 ```
 
@@ -394,7 +392,7 @@ feat F-5: Revocation
 ```mdl
 feat F-6: Backstop
 
-  req F-6.1: While a binding's event trigger holds a valid grant, its timer trigger runs every events.backstopMinutes (default 60) instead of part 1's interval.
+  req F-6.1: While a binding's event trigger holds a valid grant, plugin-connector sets the binding's timer trigger to an hourly schedule, and restores the 3-minute default when the grant lapses. The schedule lives only on the trigger.
 ```
 
 ## Acceptance
@@ -541,4 +539,13 @@ decision D-11: The spec omits renewing a grant before it expires (formerly F-2.3
   by: user:dmaretskyi
   affects: [F-2, EventSpec]
   source: https://claude.ai/code/artifact/3c2feabe-985f-479a-aeea-1d598f6bf1e0
+```
+
+```mdl
+decision D-12: The connector declares no backstop interval; while events flow, plugin-connector edits the timer trigger's own schedule, so the interval lives only on the trigger. Follows from plugin-github SYNC.mdl D-7.
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6.1]
+  why: A backstop interval on the connector would mirror the trigger's schedule, which SYNC.mdl D-7 rules out.
 ```
