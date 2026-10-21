@@ -108,7 +108,7 @@ export const CanvasProperties = ({ drawing }: CanvasPropertiesProps) => {
     [updateCanvas],
   );
 
-  if (!canvas || canvas.schema !== Canvas.SCENE_SCHEMA) {
+  if (!canvas || !Canvas.isSceneSchema(canvas.schema)) {
     return null;
   }
 

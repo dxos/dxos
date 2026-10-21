@@ -93,7 +93,7 @@ export const viewRole = (node: NodeBase): ViewRole => {
 };
 
 /** Whether a canvas belongs to this variant, so a drawing over it embeds as a scene rather than a surface. */
-export const isSceneCanvas = (canvas: Drawing.Canvas | undefined): boolean => canvas?.schema === Canvas.SCENE_SCHEMA;
+export const isSceneCanvas = (canvas: Drawing.Canvas | undefined): boolean => Canvas.isSceneSchema(canvas?.schema);
 
 /**
  * Whether an object is a drawing of this variant, which a frame embeds as a scene; `undefined` while it is a

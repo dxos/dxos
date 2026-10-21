@@ -1,6 +1,6 @@
 # Migrations: upgrading stored data across plugin versions
 
-Status: design. Nothing below the "Object migrations" section is implemented yet.
+Status: object and content migrations are implemented (the canvas is the first content user). The update warning, consent gating, retiring steps and `dx migrate` are not.
 
 A plugin that changes the shape of data it stores declares the change as a **migration**: a pure
 function from the old shape to the new one, keyed by a version. The client runs every contributed

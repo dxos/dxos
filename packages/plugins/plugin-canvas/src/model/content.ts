@@ -503,6 +503,38 @@ const withLegacyTimeline = (timeline: Timeline): Timeline => {
   return { ...timeline, tracks };
 };
 
+/**
+ * A stored node in the current shape: its legacy type name (`frame`), settings beside the shared fields, opacity
+ * and frame fields moved. Returns a fresh clone.
+ */
+export const upgradeNode = (node: Node): Node => withLegacyNode(withLegacyParams(withLegacyNodeType(clone(node))));
+
+/** A stored link in the current shape: the retired `directed` and `line` moved into `ends` and `style`. Returns a fresh clone. */
+export const upgradeLink = (link: Link): Link => withLegacyLine(withLegacyDirection(clone(link)));
+
+/** A stored timeline in the current shape: opacity tracks keyed by `style.opacity`. Returns a fresh clone. */
+export const upgradeTimeline = (timeline: Timeline): Timeline => withLegacyTimeline(clone(timeline));
+
+/**
+ * The content with every record in the current shape: the legacy root scene renamed (`migrateContent`) and each
+ * node, link and timeline upgraded. Pure, so peers migrating one canvas write the same records; returns a new map.
+ */
+export const upgradeSceneContent = (content: ContentMap): ContentMap => {
+  const next = clone(content);
+  migrateContent(next);
+  for (const [key, value] of Object.entries(next)) {
+    const record: unknown = value;
+    if (isNodeRecord(record)) {
+      next[key] = { ...record, node: upgradeNode(record.node) } satisfies NodeRecord;
+    } else if (isLinkRecord(record)) {
+      next[key] = { ...record, link: upgradeLink(record.link) } satisfies LinkRecord;
+    } else if (isSceneRecord(record) && record.timeline) {
+      next[key] = { ...record, timeline: upgradeTimeline(record.timeline) } satisfies SceneRecord;
+    }
+  }
+  return next;
+};
+
 /** Scenes assembled from the records; nodes and links of an unknown scene are dropped. */
 export const readViews = (content: ContentMap): ViewMap => {
   const headers: Record<ViewId, SceneRecord> = {};
@@ -517,9 +549,9 @@ export const readViews = (content: ContentMap): ViewMap => {
   }
   for (const record of Object.values(content)) {
     if (isNodeRecord(record) && nodes[record.scene]) {
-      nodes[record.scene][record.node.id] = withLegacyNode(withLegacyParams(withLegacyNodeType(clone(record.node))));
+      nodes[record.scene][record.node.id] = upgradeNode(record.node);
     } else if (isLinkRecord(record) && links[record.scene]) {
-      links[record.scene][record.link.id] = withLegacyLine(withLegacyDirection(clone(record.link)));
+      links[record.scene][record.link.id] = upgradeLink(record.link);
     }
   }
   const scenes: Record<ViewId, View> = {};
@@ -532,7 +564,7 @@ export const readViews = (content: ContentMap): ViewMap => {
       ...(header.layers ? { layers: clone(header.layers) } : {}),
       ...(header.sceneKind ? { kind: header.sceneKind } : {}),
       ...(header.anonymous ? { anonymous: true } : {}),
-      ...(header.timeline ? { timeline: withLegacyTimeline(clone(header.timeline)) } : {}),
+      ...(header.timeline ? { timeline: upgradeTimeline(header.timeline) } : {}),
     };
   }
   return scenes;
