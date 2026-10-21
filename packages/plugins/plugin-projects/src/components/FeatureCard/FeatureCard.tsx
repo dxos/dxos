@@ -60,6 +60,8 @@ export type FeatureCardBodyProps = {
   feature: FeatureModel;
   /** Resolves `dependsOn` ids to features, for their labels, statuses and the derived signals. */
   lookup: FeatureLookup;
+  /** Edit mode: the description is a field, shown even while empty. */
+  editing?: boolean;
   /** Adds the description and the spec, subfeature, task and showcase lists. */
   expanded?: boolean;
   /** Like `expanded`, shows every signal and each dependency rather than their counts. */
@@ -79,12 +81,10 @@ export type FeatureCardBodyProps = {
   onRemoveDependency?: (id: string) => void;
   /** Opens a listed task or showcase by id; rows are plain text without it. */
   onOpenObject?: (id: string) => void;
-  /** How a listed spec opens in the app; a spec it gives no way to open links to GitHub. */
-  openSpec?: (spec: string) => (() => void) | undefined;
+  /** Opens a listed spec; without it each spec links to GitHub. */
+  onOpenSpec?: (spec: string) => void;
   /** Lets edit mode change the description. */
   onDescribe?: (feature: FeatureModel, description: string) => void;
-  /** Edit mode: the description is a field, shown even while empty. */
-  editing?: boolean;
 };
 
 export type FeatureCardProps = FeatureCardBodyProps & {
@@ -535,7 +535,7 @@ export const FeatureCardBody = ({
   onSelectDependency,
   onRemoveDependency,
   onOpenObject,
-  openSpec,
+  onOpenSpec,
   onDescribe,
   editing,
 }: FeatureCardBodyProps) => {
@@ -717,29 +717,27 @@ export const FeatureCardBody = ({
         </Card.Section>
       )}
 
-      {/* Also beside the article's editable spec list, since there each row opens the imported spec. */}
-      {detailed && (showFields || onOpenObject || openSpec) && feature.specs.length > 0 && (
+      {/* Also beside the article's editable spec list, since there each row opens the spec. */}
+      {detailed && (showFields || onOpenSpec) && feature.specs.length > 0 && (
         <Card.Section title={t('feature-card.specs.title')}>
-          {feature.specs.map((spec) => {
-            // An imported spec is the space's own copy, so it wins over the one a plugin bundles.
-            const specId = feature.specObjects?.[Feature.getSpecPath(spec)];
-            const openBundled = openSpec?.(spec);
-            const onClick =
-              specId && onOpenObject
-                ? open(specId)
-                : openBundled &&
-                  ((event: MouseEvent) => {
-                    event.stopPropagation();
-                    openBundled();
-                  });
-            return onClick ? (
-              <Card.Row key={spec} icon='ph--file-code--regular' onClick={onClick} data-testid='feature-card.spec'>
+          {feature.specs.map((spec) =>
+            onOpenSpec ? (
+              <Card.Row
+                key={spec}
+                icon='ph--file-code--regular'
+                onClick={(event: MouseEvent) => {
+                  // The row sits inside a clickable card; opening the spec must not also select the card.
+                  event.stopPropagation();
+                  onOpenSpec(spec);
+                }}
+                data-testid='feature-card.spec'
+              >
                 <Card.Text truncate>{spec}</Card.Text>
               </Card.Row>
             ) : (
               <Card.Link key={spec} label={spec} href={Feature.getSpecUrl(spec)} />
-            );
-          })}
+            ),
+          )}
         </Card.Section>
       )}
     </Card.Body>

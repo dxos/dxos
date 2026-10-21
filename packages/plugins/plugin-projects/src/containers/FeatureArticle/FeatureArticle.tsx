@@ -61,6 +61,18 @@ export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticlePr
   );
   const openObject = useOpenObject(db, attendableId);
   const openSpec = useOpenSpec();
+  // An imported spec is the space's own copy, so it wins over the one a plugin bundles.
+  const handleOpenSpec = useCallback(
+    (spec: string) => {
+      const specId = feature?.specObjects?.[Feature.getSpecPath(spec)];
+      if (specId) {
+        void openObject(specId);
+      } else {
+        openSpec(spec);
+      }
+    },
+    [feature, openObject, openSpec],
+  );
   const editing = useFeatureEditing(db);
   // A feature cannot depend on itself; the operation refuses longer cycles with their path.
   const excludedDependencies = useMemo(() => [subject.id, ...(feature?.dependsOn ?? [])], [subject.id, feature]);
@@ -129,7 +141,7 @@ export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticlePr
                       onSelectDependency={(id) => void openObject(id)}
                       onRemoveDependency={(id) => editing.removeDependency(subject.id, id)}
                       onOpenObject={(id) => void openObject(id)}
-                      openSpec={openSpec}
+                      onOpenSpec={handleOpenSpec}
                     />
                   </Card.Root>
                   {canFileTask && (

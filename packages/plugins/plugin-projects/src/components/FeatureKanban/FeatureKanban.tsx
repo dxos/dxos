@@ -22,6 +22,12 @@ import {
   makeFeatureLookup,
 } from '../FeatureCard/index.ts';
 
+/** Mosaic tiles get only their item, so the board's callbacks reach the cards through context. */
+const FeatureKanbanContext = createContext<FeatureKanbanContextValue>({ lookup: () => undefined });
+
+const isFeatureModel = (value: unknown): value is FeatureModel =>
+  typeof value === 'object' && value !== null && 'id' in value && 'status' in value && 'dependsOn' in value;
+
 /** Column order follows a feature's lifecycle; failing sits last, beside the operational features that regressed. */
 export const FEATURE_KANBAN_STATUSES: readonly FeatureStatus[] = [
   'planned',
@@ -37,8 +43,6 @@ export type FeatureKanbanProps = {
   onSetStatus?: (id: string, status: FeatureStatus) => void;
   onOpen?: (id: string) => void;
   onOpenObject?: (id: string) => void;
-  /** How a spec listed on a card opens in the app; specs it cannot open link to GitHub. */
-  openSpec?: (spec: string) => (() => void) | undefined;
   onRemove?: (id: string) => void;
   onRename?: (id: string, name: string) => void;
   onDescribe?: (id: string, description: string) => void;
@@ -48,25 +52,9 @@ export type FeatureKanbanProps = {
 
 type FeatureKanbanContextValue = Omit<FeatureKanbanProps, 'features'> & { lookup: FeatureLookup };
 
-/** Mosaic tiles get only their item, so the board's callbacks reach the cards through context. */
-const FeatureKanbanContext = createContext<FeatureKanbanContextValue>({ lookup: () => undefined });
-
-const isFeatureModel = (value: unknown): value is FeatureModel =>
-  typeof value === 'object' && value !== null && 'id' in value && 'status' in value && 'dependsOn' in value;
-
 const FeatureKanbanCard = ({ data: feature, location, draggable }: MosaicTileProps<FeatureModel>) => {
-  const {
-    lookup,
-    onOpen,
-    onOpenObject,
-    openSpec,
-    onSetStatus,
-    onRemove,
-    onRename,
-    onDescribe,
-    editingId,
-    onEditingChange,
-  } = useContext(FeatureKanbanContext);
+  const { lookup, onOpen, onOpenObject, onSetStatus, onRemove, onRename, onDescribe, editingId, onEditingChange } =
+    useContext(FeatureKanbanContext);
   const editing = onEditingChange ? feature.id === editingId : undefined;
   return (
     // The whole card is the drag source; while its fields are open the pointer must select text instead.
@@ -84,7 +72,6 @@ const FeatureKanbanCard = ({ data: feature, location, draggable }: MosaicTilePro
         focusItem
         onOpen={onOpen ? (feature) => onOpen(feature.id) : undefined}
         onOpenObject={onOpenObject}
-        openSpec={openSpec}
         onSetStatus={onSetStatus ? (feature, status) => onSetStatus(feature.id, status) : undefined}
         onRemove={onRemove ? (feature) => onRemove(feature.id) : undefined}
         onRename={onRename ? (feature, name) => onRename(feature.id, name) : undefined}
@@ -148,7 +135,6 @@ export const FeatureKanban = Util.composable<HTMLDivElement, FeatureKanbanProps>
       onSetStatus,
       onOpen,
       onOpenObject,
-      openSpec,
       onRemove,
       onRename,
       onDescribe,
@@ -193,7 +179,6 @@ export const FeatureKanban = Util.composable<HTMLDivElement, FeatureKanbanProps>
           onSetStatus,
           onOpen,
           onOpenObject,
-          openSpec,
           onRemove,
           onRename,
           onDescribe,

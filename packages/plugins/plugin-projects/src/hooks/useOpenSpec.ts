@@ -12,31 +12,28 @@ import * as RegistryPaths from '@dxos/plugin-registry/RegistryPaths';
 
 import { Feature } from '#types';
 
-/** Returns how a spec opens in the app, or undefined when it only opens on GitHub. */
-export type SpecOpener = (spec: string) => (() => void) | undefined;
-
 /**
- * Opens a plugin's spec rendered in the app, from the copy the plugin bundles, when a feature's spec path names it;
- * other specs keep their GitHub link.
+ * Opens a spec: rendered in the app from the copy a plugin bundles, when the spec path names one; otherwise on GitHub.
  */
-export const useOpenSpec = (): SpecOpener => {
+export const useOpenSpec = () => {
   const manager = PluginManagerProvider.usePluginManager();
   const plugins = useAtomValue(manager.plugins);
   const { invokePromise } = Hooks.useOperationInvoker();
-  return useCallback<SpecOpener>(
-    (spec) => {
+  return useCallback(
+    (spec: string) => {
       const pluginKey = Feature.findSpecPlugin(
         spec,
         plugins.map(({ meta }) => meta.profile),
       );
-      return pluginKey
-        ? () =>
-            void invokePromise(LayoutOperation.Open, {
-              subject: [RegistryPaths.getPluginSpecPath(pluginKey)],
-              pivotId: RegistryPaths.getPluginPath(pluginKey),
-              disposition: 'detail',
-            })
-        : undefined;
+      if (pluginKey) {
+        void invokePromise(LayoutOperation.Open, {
+          subject: [RegistryPaths.getPluginSpecPath(pluginKey)],
+          pivotId: RegistryPaths.getPluginPath(pluginKey),
+          disposition: 'detail',
+        });
+      } else {
+        window.open(Feature.getSpecUrl(spec), '_blank', 'noopener,noreferrer');
+      }
     },
     [plugins, invokePromise],
   );
