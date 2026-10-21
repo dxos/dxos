@@ -9,7 +9,5 @@ import { createConfig } from '../../vitest.base.config.ts';
 
 export default createConfig({
   dirname: typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url)),
-  // The config's own helpers (`test/`); the stories run in the storybook project.
-  node: true,
   storybook: true,
 });
