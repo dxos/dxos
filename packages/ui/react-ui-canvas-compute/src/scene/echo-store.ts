@@ -24,10 +24,10 @@ import {
   type LinkType,
   type Node,
   type NodeStyle,
-  type Scene,
-  type SceneId,
-  type SceneMap,
-  type SceneStore,
+  type View,
+  type ViewId,
+  type ViewMap,
+  type ViewStore,
   initialKeys,
   sortByZ,
 } from '@dxos/react-ui-canvas/scene';
@@ -39,7 +39,7 @@ import { type CanvasBoard } from '../types/index.ts';
 type Layout = { nodes: CanvasBoard.Shape[]; edges: CanvasBoard.Connection[] };
 
 /** The scene id a board's own layout takes; a board holds one scene, so it is the board's id. */
-export const boardSceneId = (board: CanvasBoard.CanvasBoard): SceneId => board.id;
+export const boardViewId = (board: CanvasBoard.CanvasBoard): ViewId => board.id;
 
 /** An edge naming a type the engine does not have is drawn as a curve, which is what the editor drew. */
 const DEFAULT_LINK_TYPE: LinkType = 'curve';
@@ -55,7 +55,7 @@ const linkType = (type: string | undefined): LinkType =>
  * first read of an existing board reproduces its stacking exactly; every later read uses the key the
  * write path put the node's position in the array for.
  */
-export const sceneFromLayout = (id: SceneId, layout: Partial<Layout> | undefined, name?: string): Scene => {
+export const viewFromLayout = (id: ViewId, layout: Partial<Layout> | undefined, name?: string): View => {
   const shapes = layout?.nodes ?? [];
   const edges = layout?.edges ?? [];
   const nodeKeys = initialKeys(shapes.length);
@@ -114,7 +114,7 @@ const linkFromEdge = (edge: CanvasBoard.Connection, z: string): Link => {
  * arrays left in z order. A wholesale rebuild would be one Automerge delta per drag frame covering the
  * whole board, so every change here touches only what changed.
  */
-export const applySceneToLayout = (layout: Layout, scene: Scene): void => {
+export const applyViewToLayout = (layout: Layout, scene: View): void => {
   applyElements(layout.nodes, sortByZ(Object.values(scene.nodes)).map(shapeFromNode));
   applyElements(layout.edges, sortByZ(Object.values(scene.links)).map(edgeFromLink));
 };
@@ -202,36 +202,36 @@ const assignFields = (element: Record<string, unknown>, next: Record<string, unk
 
 export type EchoStoreOptions = {
   /** The scene the board's own layout is; defaults to the board's id. */
-  sceneId?: SceneId;
+  sceneId?: ViewId;
 };
 
 /**
- * A `SceneStore` over a board's layout: reads derive the scene from the object (re-deriving whenever
+ * A `ViewStore` over a board's layout: reads derive the scene from the object (re-deriving whenever
  * ECHO announces a change, including a peer's edit), writes go back through `Obj.update`. Only the
  * board's own scene lives here — a nested scene needs another object and is not part of M4.
  */
-export const createEchoStore = (board: CanvasBoard.CanvasBoard, options: EchoStoreOptions = {}): SceneStore => {
-  const sceneId = options.sceneId ?? boardSceneId(board);
+export const createEchoStore = (board: CanvasBoard.CanvasBoard, options: EchoStoreOptions = {}): ViewStore => {
+  const sceneId = options.sceneId ?? boardViewId(board);
   const scenes = Atom.keepAlive(
-    Atom.writable<SceneMap, SceneMap>(
+    Atom.writable<ViewMap, ViewMap>(
       (get) => {
         const snapshot = get(Obj.atom(board));
-        return { [sceneId]: sceneFromLayout(sceneId, snapshot.layout as Partial<Layout>, snapshot.name) };
+        return { [sceneId]: viewFromLayout(sceneId, snapshot.layout as Partial<Layout>, snapshot.name) };
       },
       (ctx, next) => {
         const scene = next[sceneId];
         if (scene) {
-          Obj.update(board, (board) => applySceneToLayout(board.layout as Layout, scene));
+          Obj.update(board, (board) => applyViewToLayout(board.layout as Layout, scene));
         }
         ctx.refreshSelf();
       },
     ),
   );
 
-  const derived = new Map<SceneId, Atom.Atom<Scene | undefined>>();
+  const derived = new Map<ViewId, Atom.Atom<View | undefined>>();
   return {
-    scenes,
-    scene: (id) => {
+    views: scenes,
+    view: (id) => {
       let atom = derived.get(id);
       if (!atom) {
         atom = Atom.keepAlive(Atom.make((get) => get(scenes)[id]));

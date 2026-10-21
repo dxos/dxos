@@ -241,6 +241,14 @@
   },
   "overrides": [
     {
+      // Every folder is private; react-ui-canvas imports across folders only through barrels. Its headless entry
+      // imports single files on purpose, to keep React out of its bundle.
+      "files": ["packages/ui/react-ui-canvas/src/**"],
+      "rules": {
+        "@dxos/eslint-plugin-rules/folder-barrel-imports": ["error", { "allow": ["src/headless.ts"] }]
+      }
+    },
+    {
       "files": ["packages/ui/react-ui/src/recipes.ts"],
       "rules": {
         "perfectionist/sort-objects": [

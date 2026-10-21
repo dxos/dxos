@@ -81,6 +81,10 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
     return this.#connection.reconnected;
   }
 
+  get hostStatus() {
+    return this.#connection.workerStatus;
+  }
+
   onReconnect = (callback: () => Promise<void>) => {
     this.#connection.onReconnect(callback);
   };

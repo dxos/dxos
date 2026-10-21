@@ -72,7 +72,7 @@ describe('CanvasBoard', () => {
   test('the echo store reads the persisted layout as a scene', async ({ expect }) => {
     const [board] = await EffectEx.runPromise(loadBoard);
     const store = createEchoStore(board);
-    const scene = Registry.make().get(store.scene(board.id));
+    const scene = Registry.make().get(store.view(board.id));
     expect(scene?.name).toBe('Circuit');
     expect(Object.keys(scene?.nodes ?? {})).toEqual(['switch-1', 'note-1']);
     expect(scene?.nodes['note-1']).toMatchObject({ type: 'note', text: 'Hello', center: { x: 0, y: -128 } });
@@ -86,7 +86,7 @@ describe('CanvasBoard', () => {
     const [board] = await EffectEx.runPromise(loadBoard);
     const store = createEchoStore(board);
     const registry = Registry.make();
-    const scene = registry.get(store.scene(board.id));
+    const scene = registry.get(store.view(board.id));
     if (!scene) {
       throw new Error('The board has no scene.');
     }
@@ -98,7 +98,7 @@ describe('CanvasBoard', () => {
       size: { width: 128, height: 64 },
       label: 'Added',
     };
-    registry.set(store.scenes, { [board.id]: { ...scene, nodes: { ...scene.nodes, [rect.id]: rect } } });
+    registry.set(store.views, { [board.id]: { ...scene, nodes: { ...scene.nodes, [rect.id]: rect } } });
     expect(board.layout.nodes.map((node) => node.id)).toEqual(['switch-1', 'note-1', 'rect-1']);
     expect(board.layout.nodes[2]).toMatchObject({ type: 'rect', size: { width: 128, height: 64 } });
   });

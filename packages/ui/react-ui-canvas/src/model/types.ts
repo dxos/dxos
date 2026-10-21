@@ -11,6 +11,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import { Scene as Dsl } from '@dxos/diagram';
 import { Annotation } from '@dxos/echo';
 import { HueAnnotationId, StepAnnotationId } from '@dxos/ui-types';
 
@@ -67,7 +68,7 @@ export type NodeId = string;
 export type LinkId = string;
 /** A node or link id; the two namespaces never collide within a scene. */
 export type ElementId = string;
-export type SceneId = string;
+export type ViewId = string;
 export type PortId = string;
 
 export const Side = Schema.Literals(['n', 'e', 's', 'w']);
@@ -124,12 +125,18 @@ export const lineStyleFields = {
   lineStyle: Schema.optional(Schema.Literals(LINE_STYLES).annotate({ title: 'Line style' })),
 };
 
-/** A link's style: the common base, unset drawn neutral and solid. */
-export const LineStyle = Schema.Struct(lineStyleFields);
+/** Text size in scene units; unset is the element's own (stored values outside the editor's range are kept). */
+const fontSizeField = Schema.optional(Schema.Number.annotate({ title: 'Font size' }));
+
+/** A link's style: the common base and its caption's size, unset drawn neutral, solid and small. */
+export const LineStyle = Schema.Struct({ ...lineStyleFields, fontSize: fontSizeField });
 export type LineStyle = Schema.Schema.Type<typeof LineStyle>;
 
 /** A shape's text size in scene units when its style sets none. */
 export const DEFAULT_FONT_SIZE = 24;
+
+/** A link caption's text size in scene units when its style sets none. */
+export const LINK_FONT_SIZE = 14;
 
 /**
  * The common base plus a frame and text: what a shape draws. A shape with more to style extends it
@@ -155,8 +162,8 @@ export const styleFields = {
   guide: Schema.optional(Schema.Boolean),
   /** The face of the shape's text; unset is the theme's body face. */
   fontFamily: Schema.optional(Schema.Literals(FONT_FAMILIES).annotate({ title: 'Font' })),
-  /** Text size in scene units; unset is `DEFAULT_FONT_SIZE` (stored values outside the editor's range are kept). */
-  fontSize: Schema.optional(Schema.Number.annotate({ title: 'Font size' })),
+  /** Unset is `DEFAULT_FONT_SIZE`; the same field as a link's, so a mixed selection edits it once. */
+  fontSize: fontSizeField,
   /** Where the text sits across the shape; unset is the type's own (a label centres, a note starts at the left). */
   alignHorizontal: Schema.optional(Schema.Literals(HORIZONTAL_ALIGNS).annotate({ title: 'Horizontal' })),
   /** Where the text sits down the shape; unset is the type's own (a label is middled, a note starts at the top). */
@@ -176,6 +183,14 @@ export const nodeBase = {
   center: NodeCenter,
   /** The frame is `size` centred on `center`, whatever the type draws inside it. */
   size: NodeSize,
+  /** Degrees clockwise about `center`; unset is 0. */
+  rotation: Schema.optional(
+    Schema.Number.pipe(Schema.check(Schema.isBetween({ minimum: -360, maximum: 360 }))).annotate({
+      title: 'Rotation',
+      [StepAnnotationId]: 15,
+      [AnimatableAnnotationId]: 'number',
+    }),
+  ),
   /** Per-node ports; absent means the node type's definition supplies them (decision 12). */
   ports: Schema.optional(Schema.Array(Port)),
   /** Ports spread along each side, overriding the type's layout; ignored when the node carries `ports`. */
@@ -224,6 +239,51 @@ export const EllipseNode = Schema.Struct({
 });
 export type EllipseNode = Schema.Schema.Type<typeof EllipseNode>;
 
+/** A cloud's own settings, in its `params`. */
+export const CloudParams = Schema.Struct({
+  /** Bumps around the outline; unset, `DEFAULT_CLOUD_BUMPS`. */
+  bumps: Schema.optional(
+    Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 3, maximum: 24 })).annotate({ title: 'Bumps' }),
+  ),
+}).annotate({ title: 'Cloud' });
+export type CloudParams = Schema.Schema.Type<typeof CloudParams>;
+
+/** A cloud filling the frame, its outline a ring of bumps; labelled like a box. */
+export const CloudNode = Schema.Struct({
+  type: Schema.Literal('cloud'),
+  ...nodeBase,
+  ...boxFields,
+  params: Schema.optional(CloudParams),
+});
+export type CloudNode = Schema.Schema.Type<typeof CloudNode>;
+
+/**
+ * How a polygon sits in its frame: `frame` scales it to fill the frame, centred by its own bounds; `circle` puts its
+ * vertices on the circle that fits the frame, centred on it.
+ */
+export const POLYGON_FITS = ['frame', 'circle'] as const;
+export type PolygonFit = (typeof POLYGON_FITS)[number];
+
+/** A polygon's own settings, in its `params`. */
+export const PolygonParams = Schema.Struct({
+  /** Unset, `DEFAULT_POLYGON_SIDES`. */
+  sides: Schema.optional(
+    Schema.Number.check(Schema.isInt(), Schema.isBetween({ minimum: 3, maximum: 24 })).annotate({ title: 'Sides' }),
+  ),
+  /** Unset, `frame`. */
+  fit: Schema.optional(Schema.Literals(POLYGON_FITS).annotate({ title: 'Fit' })),
+}).annotate({ title: 'Polygon' });
+export type PolygonParams = Schema.Schema.Type<typeof PolygonParams>;
+
+/** A regular polygon, as large as fits the frame and centred in it, a vertex at the top; labelled like a box. */
+export const PolygonNode = Schema.Struct({
+  type: Schema.Literal('polygon'),
+  ...nodeBase,
+  ...boxFields,
+  params: Schema.optional(PolygonParams),
+});
+export type PolygonNode = Schema.Schema.Type<typeof PolygonNode>;
+
 /** Free text on the canvas. Named for what it is, so a host may keep `text` for a type of its own. */
 export const NoteNode = Schema.Struct({
   type: Schema.Literal('note'),
@@ -236,23 +296,23 @@ export type NoteNode = Schema.Schema.Type<typeof NoteNode>;
  * What a frame links to and how it shows it. A host extends the struct with its own target (an object reference)
  * ahead of these fields, so the panel's Link section lists the target before how it is shown.
  */
-export const frameLinkFields = {
-  /** Draw the linked scene inside the frame rather than the label; unset, it does so while there is no label. */
+export const viewLinkFields = {
+  /** Draw the linked View inside the node rather than the label; unset, it does so while there is no label. */
   contents: Schema.optional(Schema.Boolean.annotate({ title: 'Show contents' })),
 };
 
-export const FrameLink = Schema.Struct(frameLinkFields).annotate({ title: 'Link' });
-export type FrameLink = Schema.Schema.Type<typeof FrameLink>;
+export const ViewLink = Schema.Struct(viewLinkFields).annotate({ title: 'Link' });
+export type ViewLink = Schema.Schema.Type<typeof ViewLink>;
 
-/** A frame onto the next depth: renders its child scene scaled into this node's bounds. */
-export const FrameNode = Schema.Struct({
-  type: Schema.Literal('frame'),
+/** A View onto the next depth: renders its child View (`scene`, the stored field name) scaled into its bounds. */
+export const ViewNode = Schema.Struct({
+  type: Schema.Literal('view'),
   ...nodeBase,
   ...boxFields,
   scene: Schema.String,
-  link: Schema.optional(FrameLink),
+  link: Schema.optional(ViewLink),
 });
-export type FrameNode = Schema.Schema.Type<typeof FrameNode>;
+export type ViewNode = Schema.Schema.Type<typeof ViewNode>;
 
 /** How an instance draws its composite in its frame: scaled uniformly to fit inside, to fill it, or at true size. */
 export const INSTANCE_FITS = ['fit', 'fill', 'none'] as const;
@@ -286,6 +346,36 @@ export const PathNode = Schema.Struct({
 });
 export type PathNode = Schema.Schema.Type<typeof PathNode>;
 
+/** Where a diagram shape's heading (a group's name) sits, from the frame's top-left corner, and how it is set. */
+export const DiagramHeading = Schema.Struct({
+  /** The DSL element the heading came from, so the drawing reads it back under its own id. */
+  id: Schema.String,
+  x: Schema.Number,
+  y: Schema.Number,
+  w: Schema.optional(Schema.Number),
+  color: Schema.optional(Dsl.Color),
+  weight: Schema.optional(Dsl.Weight),
+});
+export type DiagramHeading = Schema.Schema.Type<typeof DiagramHeading>;
+
+/** The DSL elements a diagram node can be. */
+export const DiagramShape = Schema.Union([Dsl.Box, Dsl.Circle, Dsl.Text, Dsl.Portal]);
+export type DiagramShape = Schema.Schema.Type<typeof DiagramShape>;
+
+/**
+ * A shape of a laid-out diagram (`@dxos/diagram`'s scene DSL), drawn by the renderer that writes the diagram's SVG file
+ * (`SvgFile.elementMarkup`) so it reads on the canvas as it does there. The element's geometry is the node's frame and
+ * its text the node's `label` (the heading's, when it has one), so a move, a resize or a relabel edits the element.
+ */
+export const DiagramNode = Schema.Struct({
+  type: Schema.Literal('diagram'),
+  ...nodeBase,
+  ...boxFields,
+  element: DiagramShape,
+  heading: Schema.optional(DiagramHeading),
+});
+export type DiagramNode = Schema.Schema.Type<typeof DiagramNode>;
+
 /**
  * A node whose content an agent-written generator computes from its parameters and the time (ANIMATION.md §6): the
  * generator is a `Generator` object the host resolves by `generator` (a reference string), and `params` are its
@@ -305,22 +395,28 @@ export type GeneratorNode = Schema.Schema.Type<typeof GeneratorNode>;
 export const BuiltinNode = Schema.Union([
   RectNode,
   EllipseNode,
+  CloudNode,
+  PolygonNode,
   NoteNode,
-  FrameNode,
+  ViewNode,
   InstanceNode,
   PathNode,
   GeneratorNode,
+  DiagramNode,
 ]);
 export type BuiltinNode = Schema.Schema.Type<typeof BuiltinNode>;
 export type BuiltinNodeType = BuiltinNode['type'];
 export const NODE_TYPES: readonly BuiltinNodeType[] = [
   'rect',
   'ellipse',
+  'cloud',
+  'polygon',
   'note',
-  'frame',
+  'view',
   'instance',
   'path',
   'generator',
+  'diagram',
 ];
 
 /** A node of the scene: the engine handles any `NodeBase`; built-in code narrows with the guards below. */
@@ -331,16 +427,45 @@ export type NodeType = string;
 /** Narrows a node to one built-in type; sound because the registry maps each type name to one schema. */
 export const isRectNode = (node: NodeBase): node is RectNode => node.type === 'rect';
 export const isEllipseNode = (node: NodeBase): node is EllipseNode => node.type === 'ellipse';
+export const isCloudNode = (node: NodeBase): node is CloudNode => node.type === 'cloud';
+export const isPolygonNode = (node: NodeBase): node is PolygonNode => node.type === 'polygon';
 export const isNoteNode = (node: NodeBase): node is NoteNode => node.type === 'note';
-export const isFrameNode = (node: NodeBase): node is FrameNode => node.type === 'frame';
+export const isViewNode = (node: NodeBase): node is ViewNode => node.type === 'view';
 export const isInstanceNode = (node: NodeBase): node is InstanceNode => node.type === 'instance';
 export const isPathNode = (node: NodeBase): node is PathNode => node.type === 'path';
 export const isGeneratorNode = (node: NodeBase): node is GeneratorNode => node.type === 'generator';
+export const isDiagramNode = (node: NodeBase): node is DiagramNode => node.type === 'diagram';
 /** A node built on the `box` prototype, carrying a centred, editable label. */
-export const isBoxNode = (node: NodeBase): node is RectNode | FrameNode => isRectNode(node) || isFrameNode(node);
-/** Whether a frame draws its child scene: as set, else while it has no label to show instead. */
-export const showsContents = (node: FrameNode): boolean => node.link?.contents ?? node.label === undefined;
+export const isBoxNode = (node: NodeBase): node is RectNode | ViewNode => isRectNode(node) || isViewNode(node);
+/** Whether a view node draws its child View: as set, else while it has no label to show instead. */
+export const showsContents = (node: ViewNode): boolean => node.link?.contents ?? node.label === undefined;
 export const isBuiltinNode = (node: NodeBase): node is BuiltinNode => NODE_TYPES.some((type) => type === node.type);
+
+/** Node types stored under an earlier name: `frame` is what `view` was called before the View rename. */
+const LEGACY_NODE_TYPES: ReadonlyMap<string, BuiltinNodeType> = new Map([['frame', 'view']]);
+
+/** A node stored under an earlier type name reads as its current type; any other node is returned as it is. */
+export const withLegacyNodeType = (node: NodeBase): NodeBase => {
+  const type = LEGACY_NODE_TYPES.get(node.type);
+  return type ? { ...node, type } : node;
+};
+
+/** The settings each type once stored beside the shared fields, which it now keeps in `params`. */
+const LEGACY_PARAMS: Readonly<Record<string, readonly string[]>> = { cloud: ['bumps'], polygon: ['sides', 'fit'] };
+
+/** A node storing its type's settings beside the shared fields reads with them in `params`; any other is returned as it is. */
+export const withLegacyParams = (node: NodeBase): NodeBase => {
+  const keys = (LEGACY_PARAMS[node.type] ?? []).filter((key) => key in node);
+  if (keys.length === 0) {
+    return node;
+  }
+  const params: unknown = Reflect.get(node, 'params');
+  const lifted = Object.fromEntries(keys.map((key) => [key, Reflect.get(node, key)]));
+  const next = { ...node };
+  keys.forEach((key) => Reflect.deleteProperty(next, key));
+  // A value already in `params` was written later, so it wins over the stored one.
+  return Object.assign(next, { params: { ...lifted, ...(typeof params === 'object' ? params : {}) } });
+};
 
 //
 // Links
@@ -391,6 +516,31 @@ export type StyleClass = Schema.Schema.Type<typeof StyleClass>;
 /** A drawing's style classes by id. */
 export type StyleMap = Readonly<Record<string, StyleClass>>;
 
+/** Where a diagram connector's caption sits (scene coordinates, its top-left), and how it is set. */
+export const DiagramCaption = Schema.Struct({
+  x: Schema.Number,
+  y: Schema.Number,
+  w: Schema.optional(Schema.Number),
+  color: Schema.optional(Dsl.Color),
+  weight: Schema.optional(Dsl.Weight),
+});
+export type DiagramCaption = Schema.Schema.Type<typeof DiagramCaption>;
+
+/**
+ * A connector of a laid-out diagram, drawn by the diagram's SVG renderer: its relation's markers and dash, and the
+ * route the layout gave it (scene coordinates, source end first) for as long as its ends are where the route meets them.
+ */
+export const DiagramConnector = Schema.Struct({
+  relation: Schema.optional(Dsl.Relation),
+  head: Schema.optional(Dsl.ArrowHead),
+  tail: Schema.optional(Dsl.ArrowTail),
+  stroke: Schema.optional(Dsl.Stroke),
+  color: Schema.optional(Dsl.Color),
+  route: Schema.optional(Schema.Array(Point)),
+  caption: Schema.optional(DiagramCaption),
+});
+export type DiagramConnector = Schema.Schema.Type<typeof DiagramConnector>;
+
 const linkBase = {
   id: Schema.String,
   z: Schema.String,
@@ -406,6 +556,8 @@ const linkBase = {
   layer: Schema.optional(Schema.String.annotate({ title: 'Layer' })),
   class: Schema.optional(Schema.String.annotate({ title: 'Class' })),
   style: Schema.optional(LineStyle),
+  /** Drawn as a diagram connector rather than in the canvas's own link style. */
+  connector: Schema.optional(DiagramConnector),
 };
 
 export const LineLink = Schema.Struct({ type: Schema.Literal('line'), ...linkBase });
@@ -507,50 +659,67 @@ export const Timeline = Schema.Struct({
 });
 export type Timeline = Schema.Schema.Type<typeof Timeline>;
 
-/** A plain scene, or the definition of a composite object that instances draw (ANIMATION.md §4.1). */
-export const SceneKind = Schema.Literals(['scene', 'composite']);
-export type SceneKind = Schema.Schema.Type<typeof SceneKind>;
+/** A plain View, or the definition of a composite object that instances draw (ANIMATION.md §4.1). */
+export const ViewKind = Schema.Literals(['view', 'composite']);
+export type ViewKind = Schema.Schema.Type<typeof ViewKind>;
 
 /**
- * The scene schema over a set of node schemas: a host composes it from its registry's types, so the
+ * The View schema over a set of node schemas: a host composes it from its registry's types, so the
  * schema stays exact for every type while the engine only ever sees `NodeBase`.
  */
-export const createSceneSchema = <const Nodes extends readonly Schema.Codec<NodeBase, unknown>[]>(nodes: Nodes) =>
+export const createViewSchema = <const Nodes extends readonly Schema.Codec<NodeBase, unknown>[]>(nodes: Nodes) =>
   Schema.Struct({
     id: Schema.String,
     name: Schema.optional(Schema.String),
     nodes: Schema.Record(Schema.String, Schema.Union(nodes)),
     links: Schema.Record(Schema.String, Link),
     layers: Schema.optional(Schema.Record(Schema.String, Layer)),
-    kind: Schema.optional(SceneKind),
+    kind: Schema.optional(ViewKind),
+    /** An Object the Group command made: kept out of the library until it is named or placed again. */
+    anonymous: Schema.optional(Schema.Boolean),
     timeline: Schema.optional(Timeline),
   });
 
-/** The scene schema over the built-in node types. */
-export const Scene = createSceneSchema([
+/** The View schema over the built-in node types. */
+export const View = createViewSchema([
   RectNode,
   EllipseNode,
+  CloudNode,
+  PolygonNode,
   NoteNode,
-  FrameNode,
+  ViewNode,
   InstanceNode,
   PathNode,
   GeneratorNode,
+  DiagramNode,
 ]);
 
-/** The scene schema over any node with the shared fields: what the engine itself can validate for a host. */
-export const OpenScene = createSceneSchema([NodeBase]);
-export type Scene = {
-  readonly id: SceneId;
+/** The View schema over any node with the shared fields: what the engine itself can validate for a host. */
+export const OpenView = createViewSchema([NodeBase]);
+export type View = {
+  readonly id: ViewId;
   readonly name?: string;
   readonly nodes: Readonly<Record<NodeId, Node>>;
   readonly links: Readonly<Record<LinkId, Link>>;
   readonly layers?: Readonly<Record<LayerId, Layer>>;
-  readonly kind?: SceneKind;
+  readonly kind?: ViewKind;
+  readonly anonymous?: boolean;
   readonly timeline?: Timeline;
 };
 
-/** A node or link of the scene by id. */
-export const getElement = (scene: Scene, id: ElementId): Element | undefined => scene.nodes[id] ?? scene.links[id];
+/** A View as stored before a rename, read in the current shape: its nodes' legacy type names and settings mapped. */
+export const withLegacyView = (view: View): View =>
+  Object.values(view.nodes).some((node) => LEGACY_NODE_TYPES.has(node.type) || withLegacyParams(node) !== node)
+    ? {
+        ...view,
+        nodes: Object.fromEntries(
+          Object.entries(view.nodes).map(([id, node]) => [id, withLegacyParams(withLegacyNodeType(node))]),
+        ),
+      }
+    : view;
+
+/** A node or link of the View by id. */
+export const getElement = (scene: View, id: ElementId): Element | undefined => scene.nodes[id] ?? scene.links[id];
 
 /** Property edits: the shared fields typed, a type's own fields by name. */
 export type NodeValues = Partial<Omit<NodeBase, 'id' | 'type'>> & { readonly [key: string]: unknown };

@@ -9,7 +9,7 @@
 
 import { type Scene as Diagram } from '@dxos/diagram';
 
-import { type ElementId, type Link, type NodeRegistry, type Point, type Scene, isEllipseNode } from '../model/index.ts';
+import { type ElementId, type Link, type NodeRegistry, type Point, type View, isEllipseNode } from '../model/index.ts';
 import { nodeTitle } from './parts.ts';
 import { curvePoint, linkGeometry, smartPoints } from './route.ts';
 import { nodeBounds } from './shapes.ts';
@@ -30,7 +30,7 @@ export type DiagramObjects = {
 const objectId = (id: ElementId): string => encodeURIComponent(id);
 
 /** The polyline a link is drawn along, in scene coordinates. */
-const linkPoints = (scene: Scene, registry: NodeRegistry, link: Link): Point[] | undefined => {
+const linkPoints = (scene: View, registry: NodeRegistry, link: Link): Point[] | undefined => {
   const geometry = linkGeometry(scene, registry, link);
   if (!geometry) {
     return undefined;
@@ -53,7 +53,7 @@ const linkPoints = (scene: Scene, registry: NodeRegistry, link: Link): Point[] |
  * compares nodes across objects exactly as it does for an engine's output. Nodes that enclose
  * others read as containers there, which is what a guide frame around a group is.
  */
-export const toDiagramObjects = (scene: Scene, registry: NodeRegistry): DiagramObjects => {
+export const toDiagramObjects = (scene: View, registry: NodeRegistry): DiagramObjects => {
   const elementOf = new Map<string, ElementId>();
   const objects: Diagram.WorldObject[] = [];
   for (const node of Object.values(scene.nodes)) {

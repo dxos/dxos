@@ -14,10 +14,11 @@ import * as Icon from '@dxos/react-ui/Icon';
 import { SIZE_ARG_TYPES, type SizeArgs, withLayout, withRegistry, withSizes, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '@dxos/react-ui/translations';
 
+import { filterTreeModel } from './filter-tree-model.ts';
 import { createStaticTreeModel } from './static-tree-model.ts';
 import { type TestItem, createTree, updateState } from './testing.ts';
 import { type TreeNode } from './tree-collection.ts';
-import { Tree, type TreeDropEvent, type TreeSelectEvent } from './Tree.tsx';
+import { Tree, type TreeDropEvent, type TreeRootHandle, type TreeSelectEvent } from './Tree.tsx';
 import { type TreeVirtual } from './TreeContext.ts';
 
 random.seed(1234);
@@ -112,6 +113,7 @@ type StoryArgs = SizeArgs & {
   /** Ids of rows that cannot be selected; activating such a branch toggles it. */
   unselectable?: string[];
   selectionFollowsFocus?: boolean;
+  selectionMode?: 'single' | 'multiple';
   dropAtEnd?: boolean;
   dropBelowExpanded?: boolean;
   onSelect?: Mock<(event: TreeSelectEvent<TestItem>) => void>;
@@ -119,6 +121,10 @@ type StoryArgs = SizeArgs & {
   testId?: string;
   /** Ancestors the rows' paths start from, ahead of the tree's id. */
   path?: string[];
+  /** Shows only the rows whose name contains this (any case), with their ancestors (`filterTreeModel`). */
+  filter?: string;
+  /** A Reveal button above the tree that reveals the row at this path (`Tree.Root` `ref`). */
+  reveal?: string[];
 };
 
 /** A static model wired the way a consumer wires one: open/current state written back through the registry. */
@@ -231,14 +237,22 @@ const DefaultStory = ({
   multiline,
   unselectable,
   selectionFollowsFocus,
+  selectionMode,
   dropAtEnd,
   dropBelowExpanded,
   onSelect: onSelectSpy,
   height = '24rem',
   testId,
   path,
+  filter,
+  reveal,
 }: StoryArgs) => {
   const { model, onOpenChange, onSelect, onDrop } = useStaticTree(tree, open);
+  const shown = useMemo(
+    () => (filter ? filterTreeModel(model, (item) => item.name.toLowerCase().includes(filter.toLowerCase())) : model),
+    [model, filter],
+  );
+  const treeRef = useRef<TreeRootHandle>(null);
   const canSelect = useCallback(({ item }: { item: TestItem }) => !unselectable?.includes(item.id), [unselectable]);
   const handleSelect = useCallback(
     (event: TreeSelectEvent<TestItem>) => {
@@ -249,8 +263,10 @@ const DefaultStory = ({
   );
   return (
     <div data-place='full' style={{ height, display: 'flex', flexDirection: 'column' }} data-testid={testId}>
+      {reveal && <Button.Root label='Reveal' data-testid='reveal' onClick={() => treeRef.current?.reveal(reveal)} />}
       <Tree.Root
-        model={model}
+        ref={treeRef}
+        model={shown}
         rootId={model.rootId}
         id={`tree-${size}`}
         path={path}
@@ -260,6 +276,7 @@ const DefaultStory = ({
         indentGuides={indentGuides}
         animate={animate}
         selectionFollowsFocus={selectionFollowsFocus}
+        selectionMode={selectionMode}
         dropAtEnd={dropAtEnd}
         dropBelowExpanded={dropBelowExpanded}
         columns={columns ? COLUMNS : undefined}
@@ -566,6 +583,112 @@ export const StaticTest: Story = {
     await expect(recorder.events('Banana')).toEqual(['mounted', 'removed']);
     await expect(recorder.phases()).toEqual([]);
     recorder.stop();
+  },
+};
+
+/** `selectionMode='multiple'`: a click on a branch's disclosure opens and closes it, rather than selecting the row. */
+export const MultipleTest: Story = {
+  args: { tree: createFixedTree, animate: false, selectionMode: 'multiple' },
+  play: async ({ canvasElement }) => {
+    const tree = within(canvasElement).getByRole('tree');
+    const fruit = () => within(tree).getByRole('treeitem', { name: /Fruit/ });
+    const disclosure = () => fruit().querySelector<HTMLElement>('[data-part="branch-trigger"]');
+    // 1. The disclosure opens the branch.
+    await userEvent.click(disclosure() ?? tree);
+    await waitFor(() => expect(fruit()).toHaveAttribute('aria-expanded', 'true'));
+    await expect(rows(tree)).toHaveLength(5);
+    // 2. And closes it again.
+    await userEvent.click(disclosure() ?? tree);
+    await waitFor(() => expect(fruit()).toHaveAttribute('aria-expanded', 'false'));
+    await expect(rows(tree)).toHaveLength(3);
+  },
+};
+
+/** `filterTreeModel`: the rows matching the filter, under their ancestors, which open to show them. */
+export const FilterTest: Story = {
+  args: { tree: createFixedTree, animate: false, filter: 'e' },
+  play: async ({ canvasElement }) => {
+    const tree = within(canvasElement).getByRole('tree');
+    // Apple under its branch; Vegetables matches itself and keeps no children; Banana, Carrot and Grain go.
+    await waitFor(() => expect(names(tree)).toEqual(['Fruit', 'Apple', 'Vegetables']));
+    await expect(within(tree).getByRole('treeitem', { name: /Fruit/ })).toHaveAttribute('aria-expanded', 'true');
+  },
+};
+
+/** `ref.reveal(path)`: the row's ancestors open, and the row takes focus even from outside the tree. */
+export const RevealTest: Story = {
+  args: { tree: () => createWideTree(40, 20), animate: false, virtual: 'fixed', reveal: ['tree-md', 'b30', 'b30-l12'] },
+  play: async ({ canvasElement }) => {
+    const tree = within(canvasElement).getByRole('tree');
+    await expect(within(tree).queryByRole('treeitem', { name: /Leaf 31\.13/ })).toBeNull();
+    await userEvent.click(within(canvasElement).getByTestId('reveal'));
+    await waitFor(() => expect(focusedName()).toMatch(/Leaf 31\.13/));
+    await expect(within(tree).getByRole('treeitem', { name: /Branch 31/ })).toHaveAttribute('aria-expanded', 'true');
+  },
+};
+
+/** ⌘↑ moves focus to the parent row; ⌘↓ to the parent's next sibling (or, at the top level, past the row's subtree). */
+export const ParentKeysTest: Story = {
+  args: { tree: createFixedTree, animate: false, open: true },
+  play: async ({ canvasElement }) => {
+    const tree = within(canvasElement).getByRole('tree');
+    const focus = (name: RegExp) => {
+      const item = within(tree).getByRole('treeitem', { name });
+      // A branch's treeitem holds its children too, so focus goes to its own row.
+      (item.querySelector<HTMLElement>('[data-tree-row]') ?? item).focus();
+    };
+    focus(/Banana/);
+    await userEvent.keyboard('{Meta>}{ArrowUp}{/Meta}');
+    await waitFor(() => expect(focusedName()).toMatch(/^Fruit/));
+    focus(/Apple/);
+    await userEvent.keyboard('{Meta>}{ArrowDown}{/Meta}');
+    await waitFor(() => expect(focusedName()).toMatch(/^Vegetables/));
+    focus(/Carrot/);
+    await userEvent.keyboard('{Meta>}{ArrowDown}{/Meta}');
+    await waitFor(() => expect(focusedName()).toMatch(/^Grain/));
+    // Nothing further: focus stays.
+    await userEvent.keyboard('{Meta>}{ArrowDown}{/Meta}');
+    await expect(focusedName()).toMatch(/^Grain/);
+    await userEvent.keyboard('{Meta>}{ArrowUp}{/Meta}');
+    await expect(focusedName()).toMatch(/^Grain/);
+  },
+};
+
+/** `selectionMode='multiple'`: a shift-click reports the rows from the anchor (the last plain click) to the row. */
+export const RangeTest: Story = {
+  args: { tree: createFixedTree, animate: false, open: true, selectionMode: 'multiple', onSelect: fn() },
+  play: async ({ args, canvasElement }) => {
+    const tree = within(canvasElement).getByRole('tree');
+    const row = (name: RegExp) => within(tree).getByRole('treeitem', { name });
+    const spy = args.onSelect;
+    // 1. A plain click sets the anchor and reports no range.
+    await userEvent.click(row(/Apple/));
+    await waitFor(() => expect(spy).toHaveBeenLastCalledWith(expect.objectContaining({ shift: false })));
+    await expect(spy?.mock.lastCall?.[0].range).toBeUndefined();
+    // 2. A shift-click reports every row down to Carrot, branches included.
+    const user = userEvent.setup();
+    await user.keyboard('{Shift>}');
+    await user.click(row(/Carrot/));
+    await user.keyboard('{/Shift}');
+    await waitFor(() =>
+      expect(spy?.mock.lastCall?.[0].range?.map(({ item }: { item: TestItem }) => item.name)).toEqual([
+        'Apple',
+        'Banana',
+        'Vegetables',
+        'Carrot',
+      ]),
+    );
+    // 3. Upwards from the same anchor, in row order.
+    await user.keyboard('{Shift>}');
+    // A branch's treeitem holds its children too, so the click goes to its own row.
+    await user.click(row(/Fruit/).querySelector<HTMLElement>('[data-tree-row]') ?? tree);
+    await user.keyboard('{/Shift}');
+    await waitFor(() =>
+      expect(spy?.mock.lastCall?.[0].range?.map(({ item }: { item: TestItem }) => item.name)).toEqual([
+        'Fruit',
+        'Apple',
+      ]),
+    );
   },
 };
 

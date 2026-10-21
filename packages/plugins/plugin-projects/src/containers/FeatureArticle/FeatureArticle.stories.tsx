@@ -5,13 +5,13 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { FeatureSeed } from '@dxos/plugin-projects/testing';
+import { FeatureEditingPlugin, FeatureSeed } from '@dxos/plugin-projects/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -64,6 +64,7 @@ const meta = {
             }),
         }),
         StorybookPlugin.make({}),
+        FeatureEditingPlugin.make(),
       ],
     }),
     withTheme(),
@@ -90,5 +91,37 @@ export const Default: Story = {
     await expect(relations.getByText('Compose & send')).toBeInTheDocument();
     await expect(relations.getByText('Move sync to EDGE')).toBeInTheDocument();
     await expect(relations.getByText('First sync of a Gmail inbox')).toBeInTheDocument();
+  },
+};
+
+const pick = async (canvasElement: HTMLElement, testId: string, label: string) => {
+  const canvas = within(canvasElement);
+  await userEvent.click(await canvas.findByTestId(testId, undefined, { timeout: 10_000 }));
+  // The picker queries the space only once open, so its options arrive after the popup does.
+  await userEvent.click(await screen.findByRole('option', { name: new RegExp(label) }, { timeout: 5_000 }));
+};
+
+/** A dependency is added from the picker and removed from its row. */
+export const EditDependencies: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const relations = within(await canvas.findByTestId('feature-article.relations', undefined, { timeout: 10_000 }));
+    await pick(canvasElement, 'feature-article.add-dependency', 'Accounts');
+    await expect(await relations.findByText('Accounts', undefined, { timeout: 5_000 })).toBeInTheDocument();
+    await userEvent.click(relations.getByRole('button', { name: 'Remove dependency on Accounts' }));
+    await waitFor(() => expect(relations.queryByText('Accounts')).toBeNull(), { timeout: 5_000 });
+  },
+};
+
+/** A dependency that would close a cycle is refused and names the features in it. */
+export const RefusedCycle: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const relations = within(await canvas.findByTestId('feature-article.relations', undefined, { timeout: 10_000 }));
+    await pick(canvasElement, 'feature-article.add-dependency', 'Compose & send');
+    await expect(
+      await screen.findByText(/Provider sync → Compose & send → Provider sync/, undefined, { timeout: 5_000 }),
+    ).toBeInTheDocument();
+    await expect(relations.queryAllByRole('button', { name: 'Remove dependency on Compose & send' })).toHaveLength(0);
   },
 };

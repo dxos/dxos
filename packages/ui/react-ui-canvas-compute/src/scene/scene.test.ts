@@ -8,20 +8,29 @@ import { describe, test } from 'vitest';
 
 import { Event } from '@dxos/async';
 import { DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
-import { type Link, type Node, createMemoryStore, createSceneSchema, nodePorts } from '@dxos/react-ui-canvas/scene';
+import {
+  type Link,
+  type Node,
+  createLocalHistory,
+  createMemoryStore,
+  createViewSchema,
+  nodePorts,
+  storeVersions,
+  withHistory,
+} from '@dxos/react-ui-canvas/scene';
 
 import { createComputeGraph } from '../hooks/index.ts';
 import { computeNodeDefs, computeNodeRegistry } from '../registry.ts';
 import { createRowPorts } from '../shapes/index.ts';
 import { createControlCircuit, createTemplateCircuit, createTransformCircuit } from '../testing/index.ts';
 import { createComputeProjection } from './projection.ts';
-import { sceneFromCircuit } from './scene.ts';
+import { viewFromCircuit } from './scene.ts';
 
 /** The template circuit under a compute projection over a memory store. */
 const setup = () => {
   const circuit = createTemplateCircuit();
   const model = createComputeGraph(circuit);
-  const initial = sceneFromCircuit(circuit);
+  const initial = viewFromCircuit(circuit);
   const registry = Registry.make();
   const store = createMemoryStore([initial]);
   const update = new Event();
@@ -46,7 +55,7 @@ const setup = () => {
     }
     return node.node;
   };
-  return { model, update, projection, scene, nodeOf, computeIdOf };
+  return { model, registry, store, update, projection, scene, nodeOf, computeIdOf };
 };
 
 const line = (id: string, source: Link['source'], target: Link['target']): Link => ({
@@ -61,9 +70,9 @@ describe('compute scene', () => {
   test('the circuit becomes a scene the compute schema union accepts', ({ expect }) => {
     const circuit = createTemplateCircuit();
     createComputeGraph(circuit);
-    const scene = sceneFromCircuit(circuit);
-    const ComputeScene = createSceneSchema(computeNodeDefs.map((def) => def.schema));
-    expect(Schema.is(ComputeScene)(scene)).toBe(true);
+    const scene = viewFromCircuit(circuit);
+    const ComputeView = createViewSchema(computeNodeDefs.map((def) => def.schema));
+    expect(Schema.is(ComputeView)(scene)).toBe(true);
     expect(Object.keys(scene.nodes).length).toBe(circuit.nodes.length);
     expect(Object.keys(scene.links).length).toBe(circuit.edges.length);
     // Every compute shape carries its compute node id into the scene.
@@ -72,7 +81,7 @@ describe('compute scene', () => {
 
   test('a note becomes the engine text node and edges pin the property ports', ({ expect }) => {
     const circuit = createTransformCircuit();
-    const scene = sceneFromCircuit(circuit);
+    const scene = viewFromCircuit(circuit);
     const note = Object.values(scene.nodes).find((node) => node.type === 'note');
     expect(note && 'text' in note && note.text).toBe('Random number generator');
     const expression = Object.values(scene.links).find(
@@ -86,7 +95,7 @@ describe('compute scene', () => {
   });
 
   test('ports follow the anchors: stacked inputs on the west side, outputs east, exact offsets', ({ expect }) => {
-    const scene = sceneFromCircuit(createControlCircuit());
+    const scene = viewFromCircuit(createControlCircuit());
     const ifElse = Object.values(scene.nodes).find((node) => node.type === 'if-else');
     if (!ifElse) {
       throw new Error('no if-else node');
@@ -169,8 +178,16 @@ describe('compute projection', () => {
     expect(scene().nodes[gpt.id]).toBeUndefined();
   });
 
-  test('restoring a snapshot brings the compute graph back with it', ({ expect }) => {
-    const { model, projection, scene, nodeOf, computeIdOf } = setup();
+  test('undoing an edit brings the compute graph back with the scene', ({ expect }) => {
+    const { model, registry, store, projection: compute, scene, nodeOf, computeIdOf } = setup();
+    const history = createLocalHistory()({
+      registry,
+      store: storeVersions(registry, store),
+      context: () => ({ path: [], selection: [] }),
+      view: {},
+    });
+    const projection = withHistory(compute, history);
+    history.view.projection = projection;
     const gpt = nodeOf('gpt');
     const gptCompute = computeIdOf('gpt');
     const nodes = model.nodes.length;
@@ -178,17 +195,15 @@ describe('compute projection', () => {
     const links = Object.keys(scene().links).length;
     const incident = model.edges.filter((edge) => edge.source === gptCompute || edge.target === gptCompute).length;
     expect(incident).toBeGreaterThan(0);
-    const before = projection.snapshot();
     projection.apply({ kind: 'delete', ids: [gpt.id] });
     expect(model.findNode(gptCompute)).toBeUndefined();
     expect(model.edges.length).toBe(edges - incident);
-    projection.restore(before);
+    history.undo();
     expect(model.findNode(gptCompute)?.type).toBe('gpt');
     expect(model.nodes.length).toBe(nodes);
     expect(model.edges.length).toBe(edges);
     expect(Object.keys(scene().links).length).toBe(links);
 
-    const created = projection.snapshot();
     const node = computeNodeRegistry.constant.create({
       id: 'k',
       z: 'z',
@@ -197,7 +212,7 @@ describe('compute projection', () => {
     });
     projection.apply({ kind: 'create', node });
     expect(model.nodes.length).toBe(nodes + 1);
-    projection.restore(created);
+    history.undo();
     expect(model.nodes.length).toBe(nodes);
     expect(scene().nodes.k).toBeUndefined();
   });

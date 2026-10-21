@@ -23,11 +23,11 @@ import {
   type StyleVariant,
   type VerticalAlign,
   isEllipseNode,
-  isFrameNode,
+  isViewNode,
   showsContents,
   styleVariant,
 } from '../model/index.ts';
-import { DEFAULT_TEXT, FRAME_FILLS, NEAREST_HUE, RADIUS_CLASSES, type SetSurface, SURFACES } from './surfaces.ts';
+import { DEFAULT_TEXT, NEAREST_HUE, RADIUS_CLASSES, type SetSurface, SURFACES, VIEW_FILLS } from './surfaces.ts';
 
 export type HueClasses = { surface: string; text: string; border: string };
 
@@ -148,11 +148,16 @@ export const classedNode = (node: Node, styles: StyleMap | undefined): Node => {
   return style ? { ...node, style: overlay(style, node.style) } : node;
 };
 
-/** A link as drawn: its class's colour and line style under its own. */
+/** A link as drawn: its class's colour, line style and caption size under its own. */
 export const classedLink = (link: Link, styles: StyleMap | undefined): Link => {
   const style = link.class ? styles?.[link.class]?.style : undefined;
-  // A link draws only the common base (`LineStyle`) of its class's style.
-  return style ? { ...link, style: overlay({ hue: style.hue, lineStyle: style.lineStyle }, link.style) } : link;
+  // A link draws only what `LineStyle` shares with its class's style; an edit of a classed link writes there.
+  return style
+    ? {
+        ...link,
+        style: overlay({ hue: style.hue, lineStyle: style.lineStyle, fontSize: style.fontSize }, link.style),
+      }
+    : link;
 };
 
 /**
@@ -217,13 +222,13 @@ export const frameClasses = (
   const style = resolveStyle(node.style);
   const tokens = styleVariant(look.styleSet, style.tone);
   const hue = variantClasses(style.hue, tokens, look.tone);
-  const { frame } = look.styleSet;
+  const { view } = look.styleSet;
   const filled = style.fill && !style.guide;
-  // A scene shape drawing its contents is a window onto another canvas, so it is opaque even in outline: the
+  // A view node drawing its contents is a window onto another canvas, so it is opaque even in outline: the
   // grid behind it would read as part of the child scene.
-  const opaque = isFrameNode(node) && showsContents(node);
+  const opaque = isViewNode(node) && showsContents(node);
   const clear = !filled || hue.surface === 'bg-transparent';
-  const surface = opaque && clear ? FRAME_FILLS[frame.contents][look.tone] : filled ? hue.surface : '';
+  const surface = opaque && clear ? VIEW_FILLS[view.contents][look.tone] : filled ? hue.surface : '';
   const lineStyle = style.lineStyle ?? tokens.borderStyle;
   return [
     surface,
@@ -234,7 +239,7 @@ export const frameClasses = (
       : hovered
         ? 'border-focus/50'
         : // A frame always shows its edge: it bounds a scene or an embedded object, which has none of its own.
-          style.border === false && !style.guide && !isFrameNode(node)
+          style.border === false && !style.guide && !isViewNode(node)
           ? 'border-transparent'
           : hue.border,
     style.guide || lineStyle === 'dashed' ? 'border-dashed' : lineStyle === 'dotted' ? 'border-dotted' : '',

@@ -12,7 +12,7 @@ import React, { memo } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { type ControlPointRef, type Drag, type Handle, isMoving } from '../../engine/index.ts';
+import { type ControlPointRef, type Drag, type Handle, type LinkEnd, isMoving } from '../../engine/index.ts';
 import {
   type Bounds,
   type Capabilities,
@@ -24,8 +24,8 @@ import {
   type NodeRegistry,
   type Point,
   type Port,
-  type Scene,
   type SplineLink,
+  type View,
   endpointNode,
   isPointEndpoint,
   nodeDef,
@@ -34,37 +34,22 @@ import {
   type LatticeSpec,
   boundsFromPoints,
   curvePath,
+  handlePoint,
   linkGeometry,
   nodeBounds,
   nodePorts,
   oppositeSide,
   portPoint,
-  sceneLinkGeometry,
+  viewLinkGeometry,
 } from '../../utils/index.ts';
 
 const HANDLES: readonly Handle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
 
-export const handlePoint = (bounds: Bounds, handle: Handle): Point => {
-  const x = handle.includes('w')
-    ? bounds.x
-    : handle.includes('e')
-      ? bounds.x + bounds.width
-      : bounds.x + bounds.width / 2;
-  const y = handle.includes('n')
-    ? bounds.y
-    : handle.includes('s')
-      ? bounds.y + bounds.height
-      : bounds.y + bounds.height / 2;
-  return { x, y };
-};
-
 const cursorFor = (handle: Handle) =>
   ({ n: 'ns', s: 'ns', e: 'ew', w: 'ew', ne: 'nesw', sw: 'nesw', nw: 'nwse', se: 'nwse' })[handle] + '-resize';
 
-export type LinkEnd = 'source' | 'target';
-
 export type ControlFrameProps = {
-  scene: Scene;
+  scene: View;
   registry: NodeRegistry;
   /** What the view may do: no handle is drawn for a gesture that could not apply. */
   capabilities: Capabilities;
@@ -144,7 +129,7 @@ export const ControlFrame = memo(
     const lanes =
       lattice && (selectedLinks.length > 0 || linkUnder !== undefined)
         ? new Map(
-            sceneLinkGeometry(scene, registry, Object.values(scene.links), lattice).map((geometry) => [
+            viewLinkGeometry(scene, registry, Object.values(scene.links), lattice).map((geometry) => [
               geometry.link.id,
               geometry,
             ]),

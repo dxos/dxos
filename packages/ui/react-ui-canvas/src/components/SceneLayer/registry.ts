@@ -8,8 +8,9 @@
 //
 
 import {
+  CloudNode,
+  DiagramNode,
   EllipseNode,
-  FrameNode,
   GeneratorNode,
   InstanceNode,
   type LinkRegistry,
@@ -18,19 +19,26 @@ import {
   type NodeType,
   NoteNode,
   PathNode,
+  PolygonNode,
   RectNode,
   type Size,
+  ViewNode,
   createNodeRegistry,
+  isCloudNode,
+  isPolygonNode,
 } from '../../model/index.ts';
-import { NOMINAL_SIZES, createNode } from '../../utils/index.ts';
+import { NOMINAL_SIZES, cloudPath, createNode, polygonPath } from '../../utils/index.ts';
 import {
   BoxNodeView,
+  CloudNodeView,
+  DiagramNodeView,
   EllipseNodeView,
-  FrameNodeView,
   GeneratorNodeView,
   InstanceNodeView,
   NoteNodeView,
   PathNodeView,
+  PolygonNodeView,
+  ViewNodeView,
 } from './SceneLayer.tsx';
 
 const MIN_SIZE: Size = { width: 64, height: 32 };
@@ -72,7 +80,42 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     resizable: true,
     minSize: MIN_SIZE,
   },
-
+  cloud: {
+    name: 'Cloud',
+    icon: 'ph--cloud--regular',
+    key: 'C',
+    schema: CloudNode,
+    component: CloudNodeView,
+    create: (props) => createNode({ type: 'cloud', ...props }),
+    defaultSize: NOMINAL_SIZES.cloud,
+    silhouette: (node, inset) => cloudPath(node.size, inset, isCloudNode(node) ? node.params?.bumps : undefined),
+    // Only the side centres of the frame lie near the outline.
+    portsPerSide: 1,
+    parts: [{ field: 'label' }],
+    resizable: true,
+    minSize: MIN_SIZE,
+  },
+  polygon: {
+    name: 'Polygon',
+    icon: 'ph--hexagon--regular',
+    key: 'N',
+    schema: PolygonNode,
+    component: PolygonNodeView,
+    create: (props) => createNode({ type: 'polygon', ...props }),
+    defaultSize: NOMINAL_SIZES.polygon,
+    // Only a rounded polygon softens its corners, as a box's square corners stay square.
+    silhouette: (node, inset, radius) =>
+      polygonPath(node.size, {
+        inset,
+        ...(isPolygonNode(node) ? node.params : undefined),
+        radius: node.style?.rounded ? radius : 0,
+      }),
+    bounds: (node) => (isPolygonNode(node) && node.params?.fit === 'circle' ? 'circle' : 'frame'),
+    portsPerSide: 1,
+    parts: [{ field: 'label' }],
+    resizable: true,
+    minSize: MIN_SIZE,
+  },
   note: {
     name: 'Note',
     icon: 'ph--text-t--regular',
@@ -85,15 +128,15 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     resizable: true,
     minSize: MIN_SIZE,
   },
-  frame: {
+  view: {
     extends: 'box',
-    name: 'Frame',
+    name: 'View',
     icon: 'ph--frame-corners--regular',
     key: 'F',
-    schema: FrameNode,
-    component: FrameNodeView,
-    create: (props) => createNode({ type: 'frame', ...props }),
-    defaultSize: NOMINAL_SIZES.frame,
+    schema: ViewNode,
+    component: ViewNodeView,
+    create: (props) => createNode({ type: 'view', ...props }),
+    defaultSize: NOMINAL_SIZES.view,
     minSize: { width: 96, height: 60 },
     openable: true,
   },
@@ -136,6 +179,21 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     minSize: { width: 4, height: 4 },
     palette: false,
     bare: true,
+  },
+  diagram: {
+    name: 'Diagram shape',
+    icon: 'ph--flow-arrow--regular',
+    schema: DiagramNode,
+    component: DiagramNodeView,
+    // Made from a laid-out diagram (the illustrator's DSL), not drawn from the palette; a fresh one is an empty box.
+    create: (props) => createNode({ type: 'diagram', ...props }),
+    parts: [{ field: 'label' }],
+    defaultSize: NOMINAL_SIZES.rect,
+    resizable: true,
+    minSize: { width: 16, height: 16 },
+    palette: false,
+    bare: true,
+    unclipped: true,
   },
 };
 

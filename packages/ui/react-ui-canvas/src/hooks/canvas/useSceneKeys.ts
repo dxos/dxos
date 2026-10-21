@@ -1,0 +1,293 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { type KeyboardEvent, useCallback } from 'react';
+
+import {
+  type CanvasAtoms,
+  type CanvasHistory,
+  type EditingCommands,
+  type NavigationCommands,
+  type Projection,
+  type SelectionCommands,
+  type ToolsCommands,
+} from '../../engine/index.ts';
+import {
+  type Capabilities,
+  type ElementId,
+  type LinkRegistry,
+  type NodeRegistry,
+  type View,
+  isToolKey,
+  keyAction,
+  nodeDef,
+} from '../../model/index.ts';
+import { toolForKey } from '../../utils/index.ts';
+import { type useRegistry } from '../useRegistry.ts';
+import { type PointerMachine } from './usePointerMachine.ts';
+import { type SceneSnap } from './useSceneSnap.ts';
+
+/** What the timeline keys (space, `,` `.`, `[` `]`, `K`) do; inactive while the scene has no timeline. */
+export type TimelineKeys = {
+  active: boolean;
+  togglePlay: () => void;
+  /** Moves the playhead by whole frames. */
+  step: (frames: number) => void;
+  /** Moves the playhead to the selection's next or previous key. */
+  jumpKey: (direction: 1 | -1) => void;
+  addKey: () => void;
+  /** Removes the selection's keys at the playhead. */
+  removeKey: () => void;
+};
+
+export type UseSceneKeysOptions = {
+  registry: ReturnType<typeof useRegistry>;
+  atoms: CanvasAtoms;
+  scene: View;
+  nodeRegistry: NodeRegistry;
+  linkRegistry: LinkRegistry;
+  projection: Projection;
+  capabilities: Capabilities;
+  navigation: NavigationCommands;
+  /** Minor grid spacing in scene px; an arrow nudges by it. */
+  grid: number;
+  select: (ids: Iterable<ElementId>) => void;
+  toggleSnap: () => void;
+  toggleGuides: () => void;
+  toggleLattice: () => void;
+  toggleDebug: () => void;
+  onUndo: () => void;
+  onRedo: () => void;
+  /** Runs an edit as an undo step; a run of nudges of one selection is one step. */
+  commit: CanvasHistory['commit'];
+  timeline?: TimelineKeys;
+} & Pick<SceneSnap, 'major'> &
+  Pick<EditingCommands, 'copy' | 'cut' | 'paste'> &
+  Pick<SelectionCommands, 'delete' | 'group' | 'ungroup'> &
+  Pick<PointerMachine, 'cancelDrag' | 'removePoint'> &
+  Pick<ToolsCommands, 'setTool'>;
+
+/**
+ * What a chord does in the state the view is in. Every chord itself comes from `KEY_BINDINGS`, so this
+ * decides only what the action means here — Escape backs out of whatever is innermost (a drag, then a
+ * selected control point, then the selection, then the scene itself), and Delete reads the same way.
+ */
+export const useSceneKeys = ({
+  registry,
+  atoms,
+  scene,
+  nodeRegistry,
+  linkRegistry,
+  projection,
+  capabilities,
+  navigation,
+  grid,
+  select,
+  toggleSnap,
+  toggleGuides,
+  toggleLattice,
+  toggleDebug,
+  onUndo,
+  onRedo,
+  commit,
+  major,
+  copy,
+  cut,
+  paste,
+  delete: deleteSelection,
+  group,
+  ungroup,
+  cancelDrag,
+  removePoint,
+  setTool,
+  timeline,
+}: UseSceneKeysOptions): ((event: KeyboardEvent) => void) => {
+  return useCallback(
+    (event: KeyboardEvent) => {
+      const selected = [...registry.get(atoms.selection)];
+      const selectedNodes = selected.filter((id) => scene.nodes[id] !== undefined);
+      const point = registry.get(atoms.point);
+      const action = keyAction(event);
+      // The timeline's keys act only while the scene has one; otherwise `K` is still a tool's.
+      if (timeline?.active) {
+        switch (action) {
+          case 'play':
+            timeline.togglePlay();
+            event.preventDefault();
+            return;
+          case 'stepBack':
+            timeline.step(-1);
+            return;
+          case 'stepForward':
+            timeline.step(1);
+            return;
+          // ⌘← and ⌘→ also go back and forward in the browser's history, which a jump must not do.
+          case 'previousKey':
+            timeline.jumpKey(-1);
+            event.preventDefault();
+            return;
+          case 'nextKey':
+            timeline.jumpKey(1);
+            event.preventDefault();
+            return;
+          case 'addKey':
+            if (selected.length > 0) {
+              timeline.addKey();
+            }
+            return;
+        }
+      }
+      switch (action) {
+        case 'cancel':
+          if (registry.get(atoms.drag)) {
+            cancelDrag();
+          } else if (point) {
+            registry.set(atoms.point, undefined);
+          } else if (selected.length > 0) {
+            select([]);
+          } else {
+            navigation.back();
+          }
+          break;
+        case 'delete':
+          if (point) {
+            removePoint(point);
+          } else {
+            deleteSelection();
+          }
+          break;
+        case 'open': {
+          const node = selected.length === 1 ? scene.nodes[selected[0]] : undefined;
+          if (node && nodeDef(nodeRegistry, node)?.openable) {
+            navigation.drillIn(node);
+          }
+          break;
+        }
+        case 'fit':
+          navigation.fit();
+          event.preventDefault();
+          break;
+        case 'fitSelection':
+          navigation.fitSelection();
+          break;
+        case 'zoomReset':
+          navigation.resetZoom();
+          break;
+        case 'back':
+          navigation.goHistory(-1);
+          break;
+        case 'forward':
+          navigation.goHistory(1);
+          break;
+        case 'nudge': {
+          if (selectedNodes.length === 0 || !capabilities.move) {
+            break;
+          }
+          // Shift moves by a major cell rather than a minor one.
+          const step = event.shiftKey ? major : grid;
+          const delta = {
+            x: event.key === 'ArrowLeft' ? -step : event.key === 'ArrowRight' ? step : 0,
+            y: event.key === 'ArrowUp' ? -step : event.key === 'ArrowDown' ? step : 0,
+          };
+          commit(() => projection.apply({ kind: 'move', ids: selectedNodes, delta }), {
+            mergeKey: `nudge:${[...selectedNodes].sort().join(',')}`,
+          });
+          event.preventDefault();
+          break;
+        }
+        case 'copy':
+          copy();
+          event.preventDefault();
+          break;
+        case 'cut':
+          cut();
+          event.preventDefault();
+          break;
+        case 'paste':
+          paste();
+          event.preventDefault();
+          break;
+        case 'undo':
+          onUndo();
+          event.preventDefault();
+          break;
+        case 'redo':
+          onRedo();
+          event.preventDefault();
+          break;
+        // ⌘G is the browser's find-next, which a canvas with the focus takes for itself.
+        case 'group':
+          group();
+          event.preventDefault();
+          break;
+        case 'ungroup':
+          ungroup();
+          event.preventDefault();
+          break;
+        case 'selectAll':
+          select([...Object.keys(scene.nodes), ...Object.keys(scene.links)]);
+          event.preventDefault();
+          break;
+        case 'snap':
+          toggleSnap();
+          break;
+        case 'guides':
+          toggleGuides();
+          break;
+        case 'lattice':
+          toggleLattice();
+          break;
+        case 'debug':
+          toggleDebug();
+          break;
+        case 'play':
+        case 'stepBack':
+        case 'stepForward':
+        case 'previousKey':
+        case 'nextKey':
+        case 'addKey':
+        case undefined:
+          if (isToolKey(event)) {
+            const next = toolForKey(nodeRegistry, linkRegistry, capabilities, event.key);
+            if (next) {
+              setTool(next);
+            }
+          }
+          break;
+      }
+    },
+    [
+      registry,
+      atoms.selection,
+      atoms.drag,
+      atoms.point,
+      removePoint,
+      cancelDrag,
+      select,
+      navigation,
+      capabilities,
+      projection,
+      scene,
+      nodeRegistry,
+      linkRegistry,
+      grid,
+      major,
+      setTool,
+      toggleSnap,
+      toggleGuides,
+      toggleLattice,
+      toggleDebug,
+      onUndo,
+      onRedo,
+      commit,
+      copy,
+      cut,
+      paste,
+      deleteSelection,
+      group,
+      ungroup,
+      timeline,
+    ],
+  );
+};

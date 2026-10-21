@@ -10,36 +10,35 @@
 
 import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
-import * as Schema from 'effect/Schema';
 
 import {
   type Capabilities,
   type Intent,
   type Link,
   type Node,
-  OpenScene,
-  type Scene,
-  type SceneId,
-  type SceneStore,
+  type VersionedSource,
+  type View,
+  type ViewId,
+  type ViewStore,
   endpointNode,
-  putScene,
   removeTargets,
-  updateScene,
+  updateView,
 } from '../model/index.ts';
-import { type LatticeSpec, layoutScene, reduceLayerIntent, resizeNode } from '../utils/index.ts';
+import { type LatticeSpec, layoutView, reduceLayerIntent, resizeNode } from '../utils/index.ts';
 
 export type Projection = {
   /** Positioned nodes and links; re-emitted on every model change. */
-  readonly scene: Atom.Atom<Scene>;
+  readonly scene: Atom.Atom<View>;
   /** May apply, partially apply, rewrite the model, or reject. */
   apply: (intent: Intent) => void;
   readonly capabilities: Capabilities;
   /**
-   * The model as an opaque immutable value, identical (`===`) when nothing changed, so the view can
-   * keep an undo log without knowing what the model is (`undo.ts`).
+   * The projection's own model, when it keeps one beside the store (constraints, a graph), versioned so undo patches
+   * it as it patches the store (VIEWS.md §8); absent, the store is the whole model.
    */
-  snapshot: () => unknown;
-  restore: (snapshot: unknown) => void;
+  model?: VersionedSource;
+  /** Called after undo or redo patched the store, so a projection mirroring it elsewhere (a compute graph) catches up. */
+  restored?: () => void;
   /**
    * What `apply` would make of `intent`, without applying it: the rewritten intent, or undefined when it
    * would be refused. Absent means intents apply as given. Previews of a gesture in flight read it, so a
@@ -50,10 +49,10 @@ export type Projection = {
   lattice?: LatticeSpec;
 };
 
-const EMPTY: Scene = { id: '', nodes: {}, links: {} };
+const EMPTY: View = { id: '', nodes: {}, links: {} };
 
 /** Freehand semantics as a pure reducer, so it is testable and reusable by other projections. */
-export const reduceIntent = (scene: Scene, intent: Intent): Scene => {
+export const reduceIntent = (scene: View, intent: Intent): View => {
   switch (intent.kind) {
     case 'move': {
       const nodes = { ...scene.nodes };
@@ -142,7 +141,7 @@ export const reduceIntent = (scene: Scene, intent: Intent): Scene => {
     }
 
     case 'layout':
-      return layoutScene(scene, intent.ids);
+      return layoutView(scene, intent.ids);
 
     case 'batch':
       return intent.intents.reduce(reduceIntent, scene);
@@ -169,8 +168,8 @@ export const reduceIntent = (scene: Scene, intent: Intent): Scene => {
 
 export type FreehandProjectionOptions = {
   registry: Registry.AtomRegistry;
-  store: SceneStore;
-  sceneId: SceneId;
+  store: ViewStore;
+  sceneId: ViewId;
   /**
    * Whether a constraining projection (the lattice) applies its constraint now; the view passes its snap
    * toggle. Read per intent, so turning it off frees the next gesture without rebuilding the projection.
@@ -201,14 +200,7 @@ export const readonlyCapabilities: Capabilities = {
 
 /** Identity projection over the store: what the surface asks for is what the model becomes. */
 export const createFreehandProjection = ({ registry, store, sceneId }: FreehandProjectionOptions): Projection => ({
-  scene: Atom.keepAlive(Atom.make((get) => get(store.scene(sceneId)) ?? EMPTY)),
-  apply: (intent) => updateScene(registry, store, sceneId, (scene) => reduceIntent(scene, intent)),
+  scene: Atom.keepAlive(Atom.make((get) => get(store.view(sceneId)) ?? EMPTY)),
+  apply: (intent) => updateView(registry, store, sceneId, (scene) => reduceIntent(scene, intent)),
   capabilities: freehandCapabilities,
-  snapshot: () => registry.get(store.scene(sceneId)),
-  restore: (snapshot) => {
-    // A host's nodes are `NodeBase` to the engine, so a snapshot is checked against the open schema.
-    if (Schema.is(OpenScene)(snapshot)) {
-      putScene(registry, store, snapshot);
-    }
-  },
 });

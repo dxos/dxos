@@ -144,6 +144,16 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         yield* bindDelegationContext(chat, project);
         yield* Database.flush();
 
+        // Several tasks leave the chat unnamed, and its opening prompt never passes through the chat
+        // UI that names a chat after its first message — so it is named from what it was handed.
+        if (!chat.name) {
+          yield* Operation.schedule(
+            AssistantOperation.UpdateChatName,
+            { chat, prompt: requested.map((task) => task.title).join('\n') },
+            { spaceId: db.spaceId },
+          );
+        }
+
         // The project's companion shows the delegated chat, so opening the Assistant beside the ledger
         // lands on the session holding the tasks rather than on a fresh, empty one. Best-effort like the
         // opening turn below: the delegation is durable either way.

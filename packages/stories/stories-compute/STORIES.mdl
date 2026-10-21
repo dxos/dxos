@@ -32,3 +32,44 @@ test QA-1: Prompt background agents locally and on EDGE
     - name: Let every agent finish
       do: Wait for all four transcripts to end.
       expect: every card ends with an answer and its state reads SUCCEEDED; the delete action replaces Kill.
+
+test QA-2: Grant agents permissions and watch the guard admit or refuse their tools
+  desc: |
+    The Permissions story: a configurator spawns an agent on a real model (through the EDGE AI service)
+    whose process holds a guard with grants for exactly the ticked permissions. Its tools are copies of
+    plugin-space's queryObjects, getObjects and updateObject that declare /space/read and /space/write,
+    and a sandboxExec stand-in that declares /sandbox/exec. A tool call the grants do not cover dies
+    with OperationDeniedError before its handler runs; the agent sees the refusal as its tool result.
+  actors: human
+  status: verified
+  given:
+    - storybook serves `stories/stories-compute/Permissions` `Edge`
+    - the space holds the organizations Acme Robotics (prospect), Bramble Coffee Roasters and Lisbon Tram Company
+    - dev EDGE hosts the agent process, and preview.dxos.network/ai answers the model
+  steps:
+    - name: Grant Database read and list the organizations
+      do: Tick only Database read, click the "List the organizations in the database." suggestion and click Spawn agent.
+      expect: an "Agent 1 · local" card shows a Query Objects call, the three organizations in the answer, and a queryObjects process that SUCCEEDED.
+    - name: Ask the read-only agent to write
+      do: With the same grant, click the "Mark Acme Robotics as an active customer." suggestion and click Spawn agent.
+      expect: |
+        Agent 2's queryObjects SUCCEEDED and its updateObject process FAILED; the card reads "updateObject refused,
+        denied: no grant covers the subject and command", and the agent's reply says it lacks write permission.
+    - name: Run a sandbox command without Sandbox exec
+      do: Click the "Run `uname -a` in the sandbox." suggestion and click Spawn agent.
+      expect: Agent 3's sandboxExec process FAILED with the same denial, and the agent says it cannot run the command.
+    - name: Grant Sandbox exec and run it again
+      do: Tick Sandbox exec, keep the sandbox suggestion, and click Spawn agent.
+      expect: Agent 4's sandboxExec process SUCCEEDED and its reply quotes the stand-in's uname output.
+    - name: Ask a read-only agent on EDGE to write
+      do: Untick Sandbox exec, choose EDGE in the location select, click the "Mark Acme Robotics as an active customer." suggestion and click Spawn agent.
+      expect: |
+        an "Agent 5 · edge" card warns "No guard on EDGE: these grants are not enforced"; its Update Object call
+        succeeds and the agent reports Acme Robotics as active, although only Database read was granted.
+      note: |
+        Observed, not designed: RemoteProcessManager.spawn does not send SpawnOptions.guard, and deployed EDGE
+        runs published @dxos packages that predate the guard check, with its own undeclared copies of the
+        database operations. The sandboxExec stand-in is story-local, so an EDGE agent has no such tool.
+    - name: Compare the agents
+      do: Look at the five cards side by side.
+      expect: local agents held exactly their grants (passes and refusals as above); the EDGE agent was not checked.

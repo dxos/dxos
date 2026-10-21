@@ -16,7 +16,7 @@ import { Database, DXN, Obj, Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as PageAction from '@dxos/plugin-crx/PageAction';
-import { PullRequest } from '@dxos/types';
+import { PullRequest, Repo } from '@dxos/types';
 
 import * as Walkthrough from './Walkthrough.ts';
 
@@ -99,10 +99,11 @@ export const SyncGitHubRepositories = Operation.make({
 
 /**
  * Import a pull request named by a github.com URL or `owner/repo#123` into the space, so it can be
- * opened, reviewed and walked through without waiting for a sync of the whole repository.
+ * opened, reviewed and walked through without waiting for a sync of the whole repository. Its
+ * repository comes in with it as a `Repo`, which a project or chat can then name to have it checked out.
  *
- * Idempotent by coordinates — a pull request the space already holds is returned as it stands
- * rather than duplicated.
+ * Idempotent by coordinates — a pull request or repository the space already holds is returned as it
+ * stands rather than duplicated.
  */
 export const ImportPullRequest = Operation.make({
   meta: {
@@ -118,10 +119,12 @@ export const ImportPullRequest = Operation.make({
   }),
   output: Schema.Struct({
     pullRequest: Ref.Ref(PullRequest.PullRequest),
+    /** The repository the pull request belongs to; absent where GitHub did not describe it. */
+    repo: Schema.optional(Ref.Ref(Repo.Repo)),
     /** False where the space already held the pull request, which is then returned unchanged. */
     imported: Schema.Boolean,
   }),
-  types: [PullRequest.PullRequest],
+  types: [PullRequest.PullRequest, Repo.Repo],
 }).pipe(Operation.visible, Operation.mutation('write'));
 
 /**

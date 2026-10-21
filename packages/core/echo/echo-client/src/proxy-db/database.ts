@@ -424,7 +424,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     }
 
     if (this._preloadSchemaOnOpen) {
-      await this.query(Filter.type(PersistentSchema)).run();
+      await this.query(Filter.type(PersistentSchema))
+        .run()
+        .catch((err) => log.warn('schema preload failed', { spaceId: this.spaceId, err }));
     }
 
     if (this._reactiveSchemaQuery) {

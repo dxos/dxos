@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -12,7 +13,7 @@ const template = (icon?: string): AppCapabilities.SpaceTemplate => ({
   id: 'com.example.template',
   label: 'Example',
   icon,
-  apply: () => Promise.resolve(),
+  apply: () => Effect.void,
 });
 
 describe('getTemplateIcon', () => {
