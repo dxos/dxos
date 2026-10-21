@@ -149,7 +149,7 @@ Vite server from the driver, and Node 20 cannot load its `dx.config.ts`.
 1. **Prepare the profile once (Rich, about 10 min).** Run a manual-mode driver on
    `~/.local/state/dxos/autocue/showcase`, sign in, create a Mailbox named "Gmail", connect it and let it sync.
    Close the window.
-2. **Pre-run the coding project** on the same profile with `plugin-computer/autocue/composer-plugin.mjs`. It
+2. **Pre-run the coding project** on the same profile with `plugin-dev-shell/autocue/composer-plugin.mjs`. It
    runs unattended for about 20 min. Scene 6 starts from the finished project, and the plugin's dev server
    on :3967 must still be up when scene 6 records. For the Sandbox claim, use the registry variant on EDGE dev
    instead (see the scene 6 caveat).

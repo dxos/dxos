@@ -157,4 +157,47 @@ describe('dynamic projection', () => {
     expect(registry.get(graphAtom).nodes.map(({ id }) => id)).toEqual(['root', 'right', 'leaf']);
     expect(registry.get(graphAtom).edges.map(({ id }) => id)).toEqual(['e2', 'e4']);
   });
+
+  test('on a lattice, nodes sit one per cell and a move lands on a free cell', ({ expect }) => {
+    const spec = { width: 256, height: 128, gutterX: 128, gutterY: 64 };
+    const registry = Registry.make();
+    const overlay = Atom.make<Overlay>({ positions: {} });
+    const projection = createDynamicProjection({
+      registry,
+      graph: Atom.make(graph),
+      overlay,
+      options: { nodes: defaultNodeRegistry, lattice: spec },
+    });
+    expect(projection.lattice).toEqual(spec);
+    const scene = registry.get(projection.scene);
+    for (const node of Object.values(scene.nodes)) {
+      expect(node.size).toEqual({ width: 256, height: 128 });
+      expect(Math.abs(node.center.x % 384)).toBe(0);
+      expect(Math.abs(node.center.y % 192)).toBe(0);
+    }
+
+    const leaf = centerOf(scene, 'leaf');
+    projection.apply({ kind: 'move', ids: ['leaf'], delta: { x: 400, y: 10 } });
+    expect(registry.get(overlay).positions.leaf).toEqual({ x: leaf.x + 384, y: leaf.y });
+
+    // The cell under the root is taken, so the move is refused.
+    const root = centerOf(registry.get(projection.scene), 'root');
+    const left = centerOf(registry.get(projection.scene), 'left');
+    projection.apply({ kind: 'move', ids: ['left'], delta: { x: root.x - left.x, y: root.y - left.y } });
+    expect(registry.get(overlay).positions.left).toBeUndefined();
+  });
+
+  test('a free force layout keeps the lattice sizes but neither snaps nor routes on it', ({ expect }) => {
+    const spec = { width: 256, height: 128, gutterX: 128, gutterY: 64 };
+    const registry = Registry.make();
+    const projection = createDynamicProjection({
+      registry,
+      graph: Atom.make(graph),
+      overlay: Atom.make<Overlay>({ positions: {} }),
+      options: { nodes: defaultNodeRegistry, lattice: spec, arrange: 'force-free' },
+    });
+    expect(projection.lattice).toBeUndefined();
+    expect(projection.constrain).toBeUndefined();
+    expect(registry.get(projection.scene).nodes.root.size).toEqual({ width: 256, height: 128 });
+  });
 });

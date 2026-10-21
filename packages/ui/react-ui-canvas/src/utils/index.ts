@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+export * from './arrange.ts';
+export * from './arrange-search.ts';
 export * from './camera.ts';
 export * from './chrome.ts';
 export * from './clipboard.ts';
@@ -18,6 +20,7 @@ export * from './layout.ts';
 export * from './order.ts';
 export * from './parts.ts';
 export * from './path.ts';
+export * from './polyline.ts';
 export * from './ports.ts';
 export * from './properties.ts';
 export * from './resize.ts';

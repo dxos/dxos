@@ -9,7 +9,7 @@
  *
  * @mdl packages/apps/composer-app/spec/APP.mdl test QA-16
  * @app composer-app bundled dev build against EDGE preview (launch config `composer-showcase`, :4183), on a
- *   profile where `plugin-computer/autocue/composer-plugin.mjs` has run to the end (its dev server on :3967 must
+ *   profile where `plugin-dev-shell/autocue/composer-plugin.mjs` has run to the end (its dev server on :3967 must
  *   still be up), or against EDGE dev after `plugin-projects/autocue/composer-plugin-registry.mjs`, which builds
  *   the plugin in a Cloudflare Sandbox and installs it from the private registry.
  */

@@ -9,7 +9,7 @@ import { ViewBuilder } from '../builder/index.ts';
 import { defaultNodeRegistry } from '../components/index.ts';
 import { CLASSIC_LOOK, type NodeRegistry, nodeBase } from '../model/index.ts';
 import { isMultiline, nodeParts, nodeTitle, partText, partValues } from './parts.ts';
-import { frameClasses, hueClasses, resolveStyle } from './style.ts';
+import { cornerRadius, frameClasses, hueClasses, resolveStyle } from './style.ts';
 
 // These pin the canvas's original classes, so they draw in its classic look rather than the default theme's.
 const classicFrame = (node: Parameters<typeof frameClasses>[0], selected: boolean, hovered = false) =>
@@ -115,9 +115,20 @@ describe('parts', () => {
     expect(hueClasses(undefined, 3)).toEqual(hueClasses(undefined));
   });
 
-  test('an unset fill or border resolves to drawn', ({ expect }) => {
-    expect(resolveStyle(undefined)).toEqual({ fill: true, border: true });
-    expect(resolveStyle({ hue: 'orange' })).toEqual({ hue: 'orange', fill: true, border: true });
-    expect(resolveStyle({ fill: false, border: false })).toEqual({ fill: false, border: false });
+  test('an unset fill, border or corner resolves to drawn', ({ expect }) => {
+    expect(resolveStyle(undefined)).toEqual({ fill: true, border: true, rounded: true });
+    expect(resolveStyle({ hue: 'orange' })).toEqual({ hue: 'orange', fill: true, border: true, rounded: true });
+    expect(resolveStyle({ fill: false, border: false, rounded: false })).toEqual({
+      fill: false,
+      border: false,
+      rounded: false,
+    });
+  });
+
+  test("rounded's two states always differ: off is square, on is the look's rounded corner", ({ expect }) => {
+    const tokens = { radius: 'sm', roundedRadius: '2xl' } as const;
+    expect(cornerRadius({ rounded: false }, tokens)).toBe('none');
+    expect(cornerRadius({ rounded: true }, tokens)).toBe('2xl');
+    expect(cornerRadius(undefined, tokens)).toBe('sm');
   });
 });

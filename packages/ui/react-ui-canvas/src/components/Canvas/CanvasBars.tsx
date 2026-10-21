@@ -167,7 +167,6 @@ export const CanvasTheme = ({ classNames = 'bottom-2 right-2' }: CanvasBarProps)
   const { projection, readonly } = useCanvasDocument('Canvas.Theme');
   const guides = useAtomValue(atoms.guides);
   const snap = useAtomValue(atoms.snap);
-  const lattice = useAtomValue(atoms.lattice);
   return (
     <div className={mx(barFrame, classNames)}>
       <DisplayPanel
@@ -179,12 +178,12 @@ export const CanvasTheme = ({ classNames = 'bottom-2 right-2' }: CanvasBarProps)
         onThemeChange={setTheme}
         onGridChange={setBackgroundGrid}
         guides={guides}
-        onGuidesToggle={commands.toggleGuides}
-        // Snap applies to edits, so a read-only canvas offers none; only a lattice scene has a lattice to snap to.
+        // The guides are the lattice's cells, so only a lattice scene has any to show.
+        onGuidesToggle={projection.lattice ? commands.toggleGuides : undefined}
+        // Snap applies to edits, so a read-only canvas offers none.
         snap={snap}
         onSnapToggle={readonly ? undefined : commands.toggleSnap}
-        lattice={lattice}
-        onLatticeToggle={readonly || !projection.lattice ? undefined : commands.toggleLattice}
+        lattice={projection.lattice !== undefined}
       />
     </div>
   );

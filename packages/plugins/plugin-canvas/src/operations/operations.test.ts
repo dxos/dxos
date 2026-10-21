@@ -8,14 +8,14 @@ import { describe } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Ref } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { isGeneratorNode } from '@dxos/react-ui-canvas/headless';
 
 import { createCanvas, readViews, rootOf } from '#model';
 import { CanvasOperationHandlerSet } from '#operations';
-import { CanvasOperation, Generator } from '#types';
+import { Canvas, CanvasOperation, Generator } from '#types';
 
 const TestLayer = AssistantTestLayer({
   operationHandlers: CanvasOperationHandlerSet.handlers,
@@ -188,4 +188,41 @@ describe('canvas edit operations', () => {
     ),
     60_000,
   );
+
+  it.effect(
+    'apply refuses a canvas a newer plugin wrote and writes nothing',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const canvas = yield* Database.add(createCanvas());
+        yield* Database.add(Drawing.make({ name: 'Test', canvas }));
+        Obj.update(canvas, (canvas) => {
+          canvas.schema = `dxos.org/scene/${Canvas.SCENE_REVISION + 1}`;
+        });
+        yield* Database.flush();
+        const root = rootOf(canvas.content) ?? '';
+        const node = { id: 'n', type: 'rect', z: 'a0', center: { x: 0, y: 0 }, size: { width: 64, height: 64 } };
+        const exit = yield* Operation.invoke(CanvasOperation.Apply, {
+          canvas: Ref.make(canvas),
+          intents: [{ kind: 'create', node }],
+        }).pipe(Effect.exit);
+        expect(exit._tag).toBe('Failure');
+        expect(String(exit)).toContain('update the Canvas plugin');
+        expect(readViews(canvas.content)[root].nodes.n).toBeUndefined();
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    60_000,
+  );
+});
+
+describe('scene revisions', () => {
+  it('a later revision is newer, this one and earlier ones and other dialects are not', ({ expect }) => {
+    expect(Canvas.sceneRevision('dxos.org/scene/2')).toBe(2);
+    expect(Canvas.sceneRevision('tldraw.com/2')).toBeUndefined();
+    expect(Canvas.isNewerScene(`dxos.org/scene/${Canvas.SCENE_REVISION + 1}`)).toBe(true);
+    expect(Canvas.isNewerScene(Canvas.SCENE_SCHEMA)).toBe(false);
+    expect(Canvas.isNewerScene(Canvas.SCENE_SCHEMA_V1)).toBe(false);
+    expect(Canvas.isNewerScene(undefined)).toBe(false);
+  });
 });
