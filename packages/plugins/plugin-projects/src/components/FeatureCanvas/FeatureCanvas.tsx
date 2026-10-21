@@ -107,7 +107,7 @@ const createRegistry = (open: (id: string) => void) =>
  * One card per lattice cell. Cells are centred on whole pitches, so a card's edges sit half its size from a pitch
  * point: both sizes are multiples of twice the major grid, so the edges land on the coarsest dots.
  */
-const LATTICE: LatticeSpec = { width: 384, height: 256, gutterX: 64, gutterY: 64 };
+const LATTICE: LatticeSpec = { width: 256, height: 256, gutterX: 64, gutterY: 64 };
 
 const LAYOUT: Omit<DynamicOptions, 'nodes'> = {
   lattice: LATTICE,
