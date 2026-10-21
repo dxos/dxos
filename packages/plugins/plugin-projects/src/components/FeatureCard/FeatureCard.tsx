@@ -144,8 +144,7 @@ const FeatureCardRoot = Util.composable<HTMLDivElement, FeatureCardRootProps>(
       <Card.Root
         grid
         {...props}
-        // A group, so the header's edit button is muted until the pointer is over the card.
-        classNames={['group/card', scroll && 'h-full grid-rows-[min-content_minmax(0,1fr)]', classNames]}
+        classNames={[scroll && 'h-full grid-rows-[min-content_minmax(0,1fr)]', classNames]}
         data-testid='feature-card'
         data-feature={feature.id}
         data-status={feature.status}
@@ -228,47 +227,34 @@ const FeatureCardTitle = (_: FeatureCardTitleProps) => {
 FeatureCardTitle.displayName = 'FeatureCard.Title';
 
 //
-// EditToggle
+// Save
 //
 
-type FeatureCardEditToggleProps = {};
+type FeatureCardSaveProps = {};
 
-/** Enters and leaves edit mode; absent on a read-only card. */
-const FeatureCardEditToggle = (_: FeatureCardEditToggleProps) => {
-  const { editing, setEditing, onChange } = useFeatureCardContext('FeatureCard.EditToggle');
-  if (!onChange) {
+/** Leaves edit mode; shown only while editing, since the menu's Edit enters it. */
+const FeatureCardSave = (_: FeatureCardSaveProps) => {
+  const { editing, setEditing } = useFeatureCardContext('FeatureCard.Save');
+  if (!editing) {
     return null;
   }
   return (
     <Layout.Block rail='end'>
-      {editing ? (
-        <SystemButton.Save
-          variant='ghost'
-          data-testid='feature-card.done'
-          // Takes the press itself, so it neither selects the card nor drags a canvas box.
-          onPointerDown={stopPropagation}
-          onClick={(event) => {
-            event.stopPropagation();
-            setEditing(false);
-          }}
-        />
-      ) : (
-        <SystemButton.Edit
-          variant='ghost'
-          classNames='text-fg-muted group-hover/card:text-inherit'
-          data-testid='feature-card.edit'
-          onPointerDown={stopPropagation}
-          onClick={(event) => {
-            event.stopPropagation();
-            setEditing(true);
-          }}
-        />
-      )}
+      <SystemButton.Save
+        variant='ghost'
+        data-testid='feature-card.done'
+        // Takes the press itself, so it neither selects the card nor drags a canvas box.
+        onPointerDown={stopPropagation}
+        onClick={(event) => {
+          event.stopPropagation();
+          setEditing(false);
+        }}
+      />
     </Layout.Block>
   );
 };
 
-FeatureCardEditToggle.displayName = 'FeatureCard.EditToggle';
+FeatureCardSave.displayName = 'FeatureCard.Save';
 
 //
 // Menu
@@ -279,11 +265,13 @@ type FeatureCardMenuProps = {
   onRemove?: (feature: FeatureModel) => void;
 };
 
-/** Open, the status picker and remove, each when its handler is given. */
+/** Open, edit, the status picker and remove, each when its handler is given. */
 const FeatureCardMenu = ({ onRemove }: FeatureCardMenuProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { feature, onOpen, onChange } = useFeatureCardContext('FeatureCard.Menu');
+  const { feature, editing, setEditing, onOpen, onChange } = useFeatureCardContext('FeatureCard.Menu');
   const setStatus = onChange && ((status: FeatureStatus) => onChange(feature, { status }));
+  // Entered a frame later: the menu refocuses its trigger as it closes, which would take focus from the name field.
+  const edit = onChange && !editing ? () => requestAnimationFrame(() => setEditing(true)) : undefined;
   if (!onOpen && !setStatus && !onRemove) {
     return null;
   }
@@ -297,9 +285,16 @@ const FeatureCardMenu = ({ onRemove }: FeatureCardMenuProps) => {
             onClick={() => onOpen({ type: 'object', id: feature.id })}
           />
         )}
-        {onOpen && setStatus && <Menu.Separator />}
+        {edit && (
+          <Menu.Item
+            item={{ value: 'edit', label: t('feature-card.edit.label'), icon: 'ph--pencil-simple--regular' }}
+            data-testid='feature-card.edit'
+            onClick={edit}
+          />
+        )}
+        {(onOpen || edit) && setStatus && <Menu.Separator />}
         {setStatus && <StatusItems value={feature.status} onChange={setStatus} testId='feature-card.status' />}
-        {(onOpen || setStatus) && onRemove && <Menu.Separator />}
+        {(onOpen || edit || setStatus) && onRemove && <Menu.Separator />}
         {onRemove && (
           <Menu.Item
             item={{ value: 'remove', label: t('feature-card.remove.label'), icon: 'ph--minus-circle--regular' }}
@@ -679,11 +674,11 @@ export {
   FeatureCardDependencyCount as DependencyCount,
   FeatureCardDependents as Dependents,
   FeatureCardDescription as Description,
-  FeatureCardEditToggle as EditToggle,
   FeatureCardHeader as Header,
   FeatureCardMenu as Menu,
   FeatureCardProvider as Provider,
   FeatureCardRoot as Root,
+  FeatureCardSave as Save,
   FeatureCardShowcaseLead as ShowcaseLead,
   FeatureCardShowcases as Showcases,
   FeatureCardSpecs as Specs,
@@ -702,11 +697,11 @@ export type {
   FeatureCardDependenciesProps as DependenciesProps,
   FeatureCardDependentsProps as DependentsProps,
   FeatureCardDescriptionProps as DescriptionProps,
-  FeatureCardEditToggleProps as EditToggleProps,
   FeatureCardHeaderProps as HeaderProps,
   FeatureCardMenuProps as MenuProps,
   FeatureCardProviderProps as ProviderProps,
   FeatureCardRootProps as RootProps,
+  FeatureCardSaveProps as SaveProps,
   FeatureCardShowcasesProps as ShowcasesProps,
   FeatureCardSpecsProps as SpecsProps,
   FeatureCardStatusProps as StatusProps,

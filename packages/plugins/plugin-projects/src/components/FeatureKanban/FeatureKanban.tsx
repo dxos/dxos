@@ -68,20 +68,20 @@ const FeatureKanbanCard = ({ data: feature, location, draggable }: MosaicTilePro
       {/* The tile is the board's arrow-key item; the card is its content. */}
       <Focus.Item asChild data-focus-click>
         <FeatureCard.Root
+          editing={editing}
+          feature={feature}
+          lookup={lookup}
           // Safari does not focus a clicked element that is not a control, and the ring marks where arrows continue.
           onClick={(event) => event.currentTarget.focus()}
           {...cardOpenHandlers(onOpen && (() => onOpen({ type: 'object', id: feature.id })), { disabled: editing })}
-          feature={feature}
-          lookup={lookup}
           onOpen={onOpen}
           onChange={onChange ? (feature, changes) => onChange(feature.id, changes) : undefined}
-          editing={editing}
           onEditingChange={(editing) => onEditingChange?.(editing ? feature.id : undefined)}
         >
           <FeatureCard.Header>
             <FeatureCard.Status />
             <FeatureCard.Title />
-            <FeatureCard.EditToggle />
+            <FeatureCard.Save />
             <FeatureCard.Menu onRemove={onRemove ? (feature) => onRemove(feature.id) : undefined} />
           </FeatureCard.Header>
           <FeatureCard.Body>

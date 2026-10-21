@@ -85,7 +85,7 @@ const FeatureTile = ({ data: feature }: { data: FeatureModel }) => {
         <FeatureCard.Header>
           <FeatureCard.Status />
           <FeatureCard.Title />
-          <FeatureCard.EditToggle />
+          <FeatureCard.Save />
           <FeatureCard.Menu onRemove={onRemove ? (feature) => onRemove(feature.id) : undefined} />
         </FeatureCard.Header>
         <FeatureCard.Body>

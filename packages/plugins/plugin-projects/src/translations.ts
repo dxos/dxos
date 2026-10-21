@@ -117,6 +117,7 @@ export const translations = [
         'feature-card.specs.title': 'Specs',
         'feature-board.status-count.label': '{{count}} {{status}}',
         'feature-card.open.label': 'Open feature',
+        'feature-card.edit.label': 'Edit',
         'feature-card.menu.label': 'Feature actions',
         'feature-card.status.label': 'Status',
         'feature-card.remove.label': 'Remove from project',

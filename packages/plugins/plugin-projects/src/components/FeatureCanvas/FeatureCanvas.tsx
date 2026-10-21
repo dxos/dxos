@@ -82,7 +82,8 @@ const FeatureNodeView = ({ node }: NodeViewProps) => {
           <FeatureCard.Header>
             <FeatureCard.Status />
             <FeatureCard.Title />
-            <FeatureCard.EditToggle />
+            <FeatureCard.Save />
+            <FeatureCard.Menu />
           </FeatureCard.Header>
           {/* Dependencies are the canvas's arrows, so the card leaves them out. */}
           <FeatureCard.Body>

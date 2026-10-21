@@ -57,7 +57,7 @@ const FeatureTile = ({
           <FeatureCard.Header>
             <FeatureCard.Status />
             <FeatureCard.Title />
-            <FeatureCard.EditToggle />
+            <FeatureCard.Save />
             <FeatureCard.Menu />
           </FeatureCard.Header>
           <FeatureCard.Body>
@@ -83,7 +83,7 @@ const FeatureTile = ({
           <FeatureCard.Header>
             <FeatureCard.Status />
             <FeatureCard.Title />
-            <FeatureCard.EditToggle />
+            <FeatureCard.Save />
             <FeatureCard.Menu />
           </FeatureCard.Header>
           <FeatureCard.Body>
@@ -116,6 +116,7 @@ const SectionCards = ({ dependents, ...root }: FeatureCard.RootProps & { depende
     ['Showcases', <FeatureCard.Showcases key='showcases' />],
     ['Specs', <FeatureCard.Specs key='specs' />],
   ];
+
   return (
     <>
       {sections.map(([name, section]) => (
@@ -197,7 +198,7 @@ export const Compact: Story = {
   },
 };
 
-/** Without `onChange` a card is read-only: a plain status glyph and no edit button. */
+/** Without `onChange` a card is read-only: a plain status glyph and no edit or status items in its menu. */
 export const ReadOnly: Story = {
   args: {
     ids: ['compose', 'sync'],
@@ -205,7 +206,7 @@ export const ReadOnly: Story = {
   },
   play: async ({ canvasElement }) => {
     const sync = within(card(canvasElement, 'sync'));
-    await expect(sync.queryByTestId('feature-card.edit')).toBeNull();
+    await expect(sync.queryByTestId('feature-card.menu')).toBeNull();
     await expect(sync.queryByTestId('feature-card.status-icon')).toBeNull();
   },
 };
