@@ -43,7 +43,7 @@ import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import { type Trajectory } from '@dxos/trajectory';
+import { Reducer, type Trajectory } from '@dxos/trajectory';
 import { Actor, ContentBlock, Message } from '@dxos/types';
 import { markWork, trim } from '@dxos/util';
 
@@ -640,6 +640,10 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                       open: (pending) => TrajectoryStore.openLightThread(feed, { purpose: purposeOf(pending) }),
                       merge: (thread) => TrajectoryStore.mergeThread(feed, thread),
                       interrupted: (pending) => TrajectoryStore.interruptedThread(feed, pending.id),
+                      started: (pending) =>
+                        Effect.map(TrajectoryStore.load(feed, Reducer.thread), ({ state }) =>
+                          state.items.some((item) => item.id === pending.id && item.status === 'consumed'),
+                        ),
                     },
                     { ...threading, wake },
                   );

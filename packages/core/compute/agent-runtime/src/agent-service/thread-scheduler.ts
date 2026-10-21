@@ -17,6 +17,10 @@ export const DEFAULT_THREAD_LIMIT = 3;
 /** How often the scheduler re-reads the queue while lanes run, for a prompt whose wake it missed. */
 const POLL_MS = 1_000;
 
+/** How often, and for how long, the scheduler waits for a just-started lane to take up its prompt. */
+const START_POLL_MS = 25;
+const START_TIMEOUT_MS = 10_000;
+
 export type ThreadingOptions = {
   /** Light threads that run at once, besides the turn on main. */
   readonly limit?: number;
@@ -36,6 +40,8 @@ export type LaneRunner<R> = {
   readonly merge: (thread: Trajectory.EventId) => Effect.Effect<void, never, R>;
   /** The light thread of a turn that answered `message` and died mid-way, so its redelivery runs there again. */
   readonly interrupted: (message: Message.Message) => Effect.Effect<Trajectory.EventId | undefined, never, R>;
+  /** Whether the turn answering `message` has begun and taken it up, so a light thread opened now sees it. */
+  readonly started: (message: Message.Message) => Effect.Effect<boolean, never, R>;
 };
 
 type Finished = { readonly id: string; readonly thread?: Trajectory.EventId; readonly exit: Exit.Exit<void> };
@@ -53,6 +59,28 @@ export const runLanes = <R>(
   Effect.gen(function* () {
     const finished = yield* Queue.unbounded<Finished>();
     const running = new Map<string, Trajectory.EventId | undefined>();
+    // Prompts of running lanes whose turn is known to have begun.
+    const begun = new Set<string>();
+    const pendingById = new Map<string, Message.Message>();
+
+    // A light thread snapshots the lanes running when it opens, so a lane started a moment ago (a burst of queued
+    // prompts) must have begun its turn first, or the new thread would not see it at all.
+    const awaitStarted = Effect.gen(function* () {
+      const waiting = () => [...running.keys()].filter((id) => !begun.has(id));
+      const check: Effect.Effect<boolean, never, R> = Effect.gen(function* () {
+        for (const id of waiting()) {
+          const message = pendingById.get(id);
+          if (message === undefined || (yield* runner.started(message))) {
+            begun.add(id);
+          }
+        }
+        return waiting().length === 0;
+      });
+      const loop: Effect.Effect<void, never, R> = Effect.flatMap(check, (done) =>
+        done ? Effect.void : Effect.flatMap(Effect.sleep(START_POLL_MS), () => loop),
+      );
+      yield* loop.pipe(Effect.timeoutOption(START_TIMEOUT_MS));
+    });
     // Handled in this run: the queue read is eventually consistent, so an acked prompt can still read as pending.
     const handled = new Set<string>();
     let failure: Cause.Cause<never> | undefined;
@@ -60,6 +88,7 @@ export const runLanes = <R>(
     const start = (message: Message.Message, thread: Trajectory.EventId | undefined) =>
       Effect.gen(function* () {
         running.set(message.id, thread);
+        pendingById.set(message.id, message);
         handled.add(message.id);
         log('lane start', { message: message.id, thread, running: running.size });
         yield* runner.run(message, thread).pipe(
@@ -72,6 +101,8 @@ export const runLanes = <R>(
     const settle = ({ id, thread, exit }: Finished) =>
       Effect.gen(function* () {
         running.delete(id);
+        begun.delete(id);
+        pendingById.delete(id);
         log('lane end', { message: id, thread, success: Exit.isSuccess(exit) });
         if (thread !== undefined) {
           yield* runner.merge(thread);
@@ -92,6 +123,7 @@ export const runLanes = <R>(
           } else if (running.size === 0) {
             yield* start(message, undefined);
           } else if (lights < limit) {
+            yield* awaitStarted;
             yield* start(message, yield* runner.open(message));
           } else {
             break;
