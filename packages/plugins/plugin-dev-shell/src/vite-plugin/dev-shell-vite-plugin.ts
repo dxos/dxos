@@ -5,9 +5,10 @@
 import type { Connect, Plugin } from 'vite';
 
 import * as AgentHostMiddleware from './agent-host-middleware.ts';
+import * as ExecRunner from './exec-runner.ts';
 import * as ShellMiddleware from './shell-middleware.ts';
 
-export type DevShellVitePluginOptions = Omit<ShellMiddleware.MakeOptions, 'root'> & {
+export type DevShellVitePluginOptions = Omit<ShellMiddleware.MakeOptions, 'root' | 'runner'> & {
   /** Defaults to the directory the vite process was started in. */
   root?: string;
   /** Where the coding-agent host finds its agents and worktrees; `false` leaves the route out. */
@@ -31,14 +32,16 @@ export const DevShellVitePlugin = ({
   ...options
 }: DevShellVitePluginOptions = {}): Plugin => {
   const host = agentHost === false ? undefined : AgentHostMiddleware.make(agentHost);
+  const runner = ExecRunner.make();
   const mount = (server: {
     middlewares: Connect.Server;
     httpServer: { on: (event: 'close', listener: () => void) => unknown } | null;
   }) => {
-    server.middlewares.use(ShellMiddleware.make({ root, ...options }));
+    server.middlewares.use(ShellMiddleware.make({ root, ...options, runner }));
+    // The exec runner and the agent server stop when their input closes, so they go with the dev server.
+    server.httpServer?.on('close', () => void runner.close());
     if (host) {
       server.middlewares.use(host.middleware);
-      // The agent server stops when its input closes, so it goes with the dev server.
       server.httpServer?.on('close', () => void host.close());
     }
   };
@@ -46,7 +49,10 @@ export const DevShellVitePlugin = ({
     name: 'dx-dev-shell',
     apply: 'serve',
     // Before the server's watcher opens a descriptor per watched file: past macOS's `OPEN_MAX` it can spawn nothing.
-    configResolved: () => host?.prepare(),
+    configResolved: () => {
+      runner.prepare();
+      host?.prepare();
+    },
     configureServer: (server) => mount(server),
     configurePreviewServer: (server) => mount(server),
   };

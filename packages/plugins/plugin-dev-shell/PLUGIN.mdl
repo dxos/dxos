@@ -236,3 +236,12 @@ decision D-3: Under `vite dev` the plugin is core (tagged `system`, registered i
   affects: [DevShellPlugin]
   why: Every tool it offers needs the dev server's routes, which exist exactly under `vite dev`, so availability follows the server rather than an environment flag.
 ```
+
+```mdl
+decision D-4: The `/api/dev-shell/exec` route runs its scripts in a long-lived runner process that the Vite plugin starts in `configResolved`, before the dev server's watcher opens its files; the route keeps every request check in the Vite process and forwards the validated script to the runner. Builds on [D-2].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [DevShellVitePlugin]
+  why: On macOS `posix_spawn` rejects descriptors at or above `OPEN_MAX` (10240), and a Composer dev server watching the monorepo holds about 24k, so every script the Vite process spawned itself failed with `EBADF`.
+```

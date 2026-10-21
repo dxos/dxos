@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import { spawn } from 'node:child_process';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import { log } from '@dxos/log';
@@ -10,6 +9,7 @@ import { log } from '@dxos/log';
 import { Shell } from '#shell';
 
 import { materializeScripts } from './apply-edits-program.ts';
+import * as ExecRunner from './exec-runner.ts';
 import { resolveWithin } from './path-scope.ts';
 
 // Raw promises throughout: this module is the node platform boundary (a connect middleware over
@@ -35,22 +35,21 @@ export type MakeOptions = {
   path?: string;
   /** Shell binary; defaults to `bash`. */
   shell?: string;
+  /** Process that runs the scripts; a vite host prepares one early, other hosts get one started on first request. */
+  runner?: ExecRunner.ExecRunner;
 };
 
-type RunOptions = Shell.Request & {
-  cwd: string;
-  scriptsDir: string;
-  root: string;
-  shell: string;
-  timeout: number;
-  maxOutputChars: number;
+export type Middleware = ((req: IncomingMessage, res: ServerResponse, next: () => void) => Promise<void>) & {
+  /** Stops the runner this middleware started or was given. */
+  close: () => Promise<void>;
 };
 
 /**
  * Connect-style middleware exposing the harness's one verb: run a script, return its result.
  *
- * Hosted by whichever dev server serves the app, so the browser reaches it same-origin — no CORS, no
- * second process to supervise, and nothing at all in a deployed build.
+ * Hosted by whichever dev server serves the app, so the browser reaches it same-origin — no CORS, and
+ * nothing at all in a deployed build. The scripts themselves run in an {@link ExecRunner} process,
+ * since a dev server holding more descriptors than macOS's `OPEN_MAX` cannot spawn them itself.
  *
  * The route runs arbitrary shell commands as the developer, which is the point of a coding harness
  * and also its whole risk: mounting it is an explicit opt-in (see `dev-shell-vite-plugin.ts`), and
@@ -63,7 +62,8 @@ export const make = ({
   maxOutputChars = MAX_OUTPUT_CHARS,
   path = Shell.PATH,
   shell = 'bash',
-}: MakeOptions) => {
+  runner = ExecRunner.make(),
+}: MakeOptions): Middleware => {
   // Canonicalized once, at mount: every path the host hands out (a request's `cwd`, and the root the
   // editor checks its own paths against) has to be the same shape, or a symlinked root — `/tmp` on
   // macOS — makes every file inside it look like an escape.
@@ -73,7 +73,7 @@ export const make = ({
   // never call it — but the mounted root is the first thing to check when a tool misbehaves.
   log.debug('dev shell mounted', { path, root: realRoot, scriptsDir });
 
-  return async (req: IncomingMessage, res: ServerResponse, next: () => void): Promise<void> => {
+  const middleware = async (req: IncomingMessage, res: ServerResponse, next: () => void): Promise<void> => {
     if (req.method !== 'POST' || !req.url?.startsWith(path)) {
       return next();
     }
@@ -120,23 +120,25 @@ export const make = ({
 
     let result: Shell.Result;
     try {
-      result = await run({
-        ...request,
+      result = await runner.run({
+        script: request.script,
+        stdin: request.stdin,
         cwd,
-        root: realRoot,
-        scriptsDir,
         shell,
         maxOutputChars,
         timeout: clampTimeout(request.timeout, defaultTimeout, maxTimeout),
+        env: { [Shell.SCRIPTS_ENV]: scriptsDir, [Shell.ROOT_ENV]: realRoot },
       });
     } catch (error) {
-      // A spawn that throws (`EBADF`) rejects here; left unhandled it would end the dev server.
-      return fail(res, 500, `could not start the shell: ${String(error)}`);
+      // Rejected when the runner cannot start or dies; left unhandled it would end the dev server.
+      return fail(res, 500, `could not run the script: ${error instanceof Error ? error.message : String(error)}`);
     }
 
     res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-cache' });
     res.end(JSON.stringify(result));
   };
+
+  return Object.assign(middleware, { close: runner.close });
 };
 
 /** Whether a peer address is this machine, including the IPv4-mapped IPv6 form. */
@@ -178,100 +180,4 @@ export const readBody = (req: IncomingMessage): Promise<string> =>
     });
     req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
     req.on('error', reject);
-  });
-
-/**
- * Runs one script to completion.
- *
- * The child gets its own process group (`detached`) so a timeout can kill everything it started
- * rather than only the shell — a backgrounded build would otherwise outlive the request that
- * spawned it and keep writing to a dead pipe.
- */
-const run = ({
-  script,
-  stdin,
-  cwd,
-  root,
-  scriptsDir,
-  shell,
-  timeout,
-  maxOutputChars,
-}: RunOptions): Promise<Shell.Result> =>
-  new Promise((resolve) => {
-    const started = Date.now();
-    const child = spawn(shell, ['-c', script], {
-      cwd,
-      detached: true,
-      env: { ...process.env, [Shell.SCRIPTS_ENV]: scriptsDir, [Shell.ROOT_ENV]: root },
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-
-    let truncated = false;
-    const collect = () => {
-      let text = '';
-      return {
-        get: () => text,
-        append: (chunk: string) => {
-          const room = maxOutputChars - text.length;
-          if (room <= 0) {
-            truncated = true;
-            return;
-          }
-          if (chunk.length > room) {
-            truncated = true;
-          }
-          text += chunk.slice(0, room);
-        },
-      };
-    };
-
-    const stdout = collect();
-    const stderr = collect();
-    child.stdout.setEncoding('utf8');
-    child.stderr.setEncoding('utf8');
-    child.stdout.on('data', stdout.append);
-    child.stderr.on('data', stderr.append);
-
-    let timedOut = false;
-    const timer = setTimeout(() => {
-      timedOut = true;
-      const { pid } = child;
-      if (pid === undefined) {
-        return;
-      }
-      try {
-        // Negative pid: the group, not just the shell.
-        process.kill(-pid, 'SIGKILL');
-      } catch (error) {
-        log.warn('failed to kill script', { error: String(error) });
-      }
-    }, timeout);
-
-    // A script that never reads stdin (`echo hi`) closes the pipe under us; without a handler that
-    // EPIPE would surface as an unhandled error event and take the dev server down.
-    child.stdin.on('error', () => {});
-    if (stdin !== undefined) {
-      child.stdin.write(stdin);
-    }
-    child.stdin.end();
-
-    const finish = (exitCode: number | null, signal: string | null) => {
-      clearTimeout(timer);
-      resolve({
-        stdout: stdout.get(),
-        stderr: stderr.get(),
-        exitCode,
-        signal: signal ?? undefined,
-        timedOut,
-        truncated,
-        cwd,
-        durationMs: Date.now() - started,
-      });
-    };
-
-    child.on('close', finish);
-    child.on('error', (error) => {
-      stderr.append(String(error));
-      finish(null, null);
-    });
   });

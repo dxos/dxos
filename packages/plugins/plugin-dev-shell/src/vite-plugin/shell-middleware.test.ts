@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -9,6 +10,7 @@ import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import { Shell } from '#shell';
 
+import * as ExecRunner from './exec-runner.ts';
 import { isLoopback } from './shell-middleware.ts';
 import { type Host, startHost } from './testing.ts';
 
@@ -83,6 +85,37 @@ describe('shell middleware', () => {
 
     await new Promise((resolve) => setTimeout(resolve, 1_500));
     expect(fs.existsSync(path.join(root, 'survivor')), 'the spawned process group outlived the request').to.be.false;
+  });
+
+  test('runs scripts after the host holds more descriptors than macOS can spawn with', async ({ expect, skip }) => {
+    // A Composer dev server watches ~24k files with one descriptor each; `posix_spawn` rejects any at or above
+    // `OPEN_MAX` (10240), so a runner prepared before then is the only thing that can still start a script.
+    const runner = ExecRunner.make();
+    runner.prepare();
+    const crowded = await startHost({ root, runner });
+    const descriptors: number[] = [];
+    try {
+      while (descriptors.length === 0 || descriptors[descriptors.length - 1] < 10_400) {
+        try {
+          descriptors.push(fs.openSync('/dev/null', 'r'));
+        } catch {
+          break;
+        }
+      }
+      if (descriptors[descriptors.length - 1] < 10_400) {
+        skip('this process cannot open enough descriptors');
+      }
+      if (process.platform === 'darwin') {
+        expect(() => execFileSync('/bin/echo', ['x']), 'the host itself should no longer spawn').toThrow(/EBADF/);
+      }
+
+      const result = await Shell.exec({ script: 'echo still running' }, { path: crowded.path });
+      expect(result.exitCode).to.eq(0);
+      expect(result.stdout).to.eq('still running\n');
+    } finally {
+      descriptors.forEach((descriptor) => fs.closeSync(descriptor));
+      await crowded.close();
+    }
   });
 
   test('refuses a working directory outside the root', async ({ expect }) => {

@@ -42,6 +42,9 @@ export const startHost = async (options: ShellMiddleware.MakeOptions): Promise<H
 
   return {
     path: `http://127.0.0.1:${address.port}${Shell.PATH}`,
-    close: () => new Promise<void>((resolve) => server.close(() => resolve())),
+    close: async () => {
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+      await middleware.close();
+    },
   };
 };
