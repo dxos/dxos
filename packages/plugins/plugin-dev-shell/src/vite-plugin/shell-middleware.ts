@@ -118,15 +118,21 @@ export const make = ({
     // of any file the developer can read — neither belongs in a log sink.
     log.info('exec', { cwd, scriptLength: request.script.length, hasStdin: request.stdin !== undefined });
 
-    const result = await run({
-      ...request,
-      cwd,
-      root: realRoot,
-      scriptsDir,
-      shell,
-      maxOutputChars,
-      timeout: clampTimeout(request.timeout, defaultTimeout, maxTimeout),
-    });
+    let result: Shell.Result;
+    try {
+      result = await run({
+        ...request,
+        cwd,
+        root: realRoot,
+        scriptsDir,
+        shell,
+        maxOutputChars,
+        timeout: clampTimeout(request.timeout, defaultTimeout, maxTimeout),
+      });
+    } catch (error) {
+      // A spawn that throws (`EBADF`) rejects here; left unhandled it would end the dev server.
+      return fail(res, 500, `could not start the shell: ${String(error)}`);
+    }
 
     res.writeHead(200, { 'content-type': 'application/json', 'cache-control': 'no-cache' });
     res.end(JSON.stringify(result));

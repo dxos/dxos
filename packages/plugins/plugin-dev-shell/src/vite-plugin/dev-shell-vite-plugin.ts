@@ -30,21 +30,23 @@ export const DevShellVitePlugin = ({
   agentHost = {},
   ...options
 }: DevShellVitePluginOptions = {}): Plugin => {
+  const host = agentHost === false ? undefined : AgentHostMiddleware.make(agentHost);
   const mount = (server: {
     middlewares: Connect.Server;
     httpServer: { on: (event: 'close', listener: () => void) => unknown } | null;
   }) => {
     server.middlewares.use(ShellMiddleware.make({ root, ...options }));
-    if (agentHost !== false) {
-      const host = AgentHostMiddleware.make(agentHost);
+    if (host) {
       server.middlewares.use(host.middleware);
-      // The agent server and the agents it started live in this process; they go when the dev server does.
+      // The agent server stops when its input closes, so it goes with the dev server.
       server.httpServer?.on('close', () => void host.close());
     }
   };
   return {
     name: 'dx-dev-shell',
     apply: 'serve',
+    // Before the server's watcher opens a descriptor per watched file: past macOS's `OPEN_MAX` it can spawn nothing.
+    configResolved: () => host?.prepare(),
     configureServer: (server) => mount(server),
     configurePreviewServer: (server) => mount(server),
   };

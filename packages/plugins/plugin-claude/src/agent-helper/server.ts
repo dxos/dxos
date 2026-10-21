@@ -88,7 +88,15 @@ export const serve = async ({
             bridge.attach(ws);
             return;
           }
-          const child = relay({ ws, path, launch, ...target });
+          let child: ChildProcessWithoutNullStreams;
+          try {
+            child = relay({ ws, path, launch, ...target });
+          } catch (error) {
+            // Thrown inside a socket callback, a spawn failure would otherwise end the whole host process.
+            log.warn('agent process failed to spawn', { agent: target.spec.id, error });
+            ws.close(1011, 'agent failed to start');
+            return;
+          }
           children.add(child);
           child.once('exit', () => children.delete(child));
         });
@@ -132,11 +140,17 @@ export const probe = async (spec: AgentSpec.AgentSpec, path: readonly string[]):
   if (!executable) {
     return { id: spec.id, available: false, reason: `${tool.name} is not installed` };
   }
-  const output = await new Promise<string | undefined>((resolve) => {
-    execFile(executable, [...tool.versionArgs], { timeout: PROBE_TIMEOUT_MS }, (error, stdout) =>
-      resolve(error ? undefined : stdout.trim().split('\n')[0]),
-    );
-  });
+  let output: string | undefined;
+  try {
+    output = await new Promise<string | undefined>((resolve) => {
+      execFile(executable, [...tool.versionArgs], { timeout: PROBE_TIMEOUT_MS }, (error, stdout) =>
+        resolve(error ? undefined : stdout.trim().split('\n')[0]),
+      );
+    });
+  } catch (error) {
+    // `spawn` throws rather than calling back when the host cannot start processes at all (`EBADF`).
+    return { id: spec.id, available: false, reason: `could not run ${tool.name}: ${String(error)}` };
+  }
   return output === undefined
     ? { id: spec.id, available: false, reason: `${tool.name} did not report a version` }
     : { id: spec.id, available: true, version: output };

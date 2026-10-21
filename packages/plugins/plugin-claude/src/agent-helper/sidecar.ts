@@ -8,7 +8,7 @@ import { type Readable, type Writable } from 'node:stream';
 import { pathToFileURL } from 'node:url';
 
 import * as AgentSpec from './AgentSpec.ts';
-import { serve } from './server.ts';
+import { type Launch, serve } from './server.ts';
 
 /**
  * Tools a desktop app launched from the Finder would otherwise lack: its `PATH` is only the system
@@ -44,6 +44,8 @@ export type AgentHelperOptions = {
   input: Readable;
   output: Writable;
   env: Record<string, string | undefined>;
+  /** How an agent's entry starts; by default the compiled helper runs it as itself (see {@link AGENT_FLAG}). */
+  launch?: Launch;
 };
 
 /**
@@ -55,7 +57,12 @@ export type AgentHelperOptions = {
  * shipped a helper-side entry. Worktrees go in `DX_AGENT_WORKTREES`, which the app points at its data
  * folder.
  */
-export const runAgentHelper = async ({ input, output, env }: AgentHelperOptions): Promise<void> => {
+export const runAgentHelper = async ({
+  input,
+  output,
+  env,
+  launch = (entry) => ({ command: process.execPath, args: [AGENT_FLAG, entry] }),
+}: AgentHelperOptions): Promise<void> => {
   const lines = createInterface({ input })[Symbol.asyncIterator]();
   const first = await lines.next();
   const token = first.done ? '' : first.value.trim();
@@ -69,7 +76,7 @@ export const runAgentHelper = async ({ input, output, env }: AgentHelperOptions)
     token,
     agents,
     path,
-    launch: (entry) => ({ command: process.execPath, args: [AGENT_FLAG, entry] }),
+    launch,
     worktrees: env.DX_AGENT_WORKTREES,
   });
   output.write(`${JSON.stringify({ port: server.port })}\n`);
