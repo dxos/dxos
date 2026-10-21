@@ -23,6 +23,7 @@ import {
   type Point,
   type Size,
   type View,
+  atomSource,
   isBuiltinNode,
   isViewNode,
 } from '../../model/index.ts';
@@ -336,11 +337,6 @@ export const createConstrainedProjection = ({ registry, model, options }: Constr
     scene,
     apply,
     capabilities: constrainedCapabilities,
-    snapshot: () => registry.get(model),
-    restore: (snapshot) => {
-      if (isConstrainedModel(snapshot)) {
-        registry.set(model, snapshot);
-      }
-    },
+    model: atomSource(registry, model, isConstrainedModel),
   };
 };

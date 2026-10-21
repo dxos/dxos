@@ -9,7 +9,7 @@ keep what they build.
 
 It also contributes the **Composer Plugin (Sandbox)** project template: a project whose agent builds a
 TypeScript Composer plugin in an EDGE sandbox, serves the build from the container, and offers the exposed
-URL back to load — the Coding (Dev) template's demo without a locally served Composer.
+URL back to load — the Dev Shell template's demo without a locally served Composer.
 
 ## Exposed ports
 

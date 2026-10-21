@@ -255,7 +255,7 @@ const leastBends = (from: RouteEnd, to: RouteEnd): number => {
  * pinned ones), the one whose route is cheapest, fewest bends first, so a link leaves straight down a free column
  * rather than from the nearest port round a corner. Pairs are tried nearest first, so a tie keeps the nearest.
  */
-const latticeEnds = (
+export const latticeEnds = (
   scene: View,
   registry: NodeRegistry,
   link: Link,

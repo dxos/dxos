@@ -105,22 +105,93 @@
       "source": "./src/types/ClaudeManagedAgent.ts",
       "types": "./dist/types/src/types/ClaudeManagedAgent.d.ts",
       "import": "./dist/lib/ClaudeManagedAgent.mjs"
+    },
+    "./ClaudeCapabilities": {
+      "source": "./src/types/ClaudeCapabilities.ts",
+      "types": "./dist/types/src/types/ClaudeCapabilities.d.ts",
+      "import": "./dist/lib/ClaudeCapabilities.mjs"
+    },
+    "./HelperClient": {
+      "source": "./src/agents/HelperClient.ts",
+      "types": "./dist/types/src/agents/HelperClient.d.ts",
+      "import": "./dist/lib/HelperClient.mjs"
+    },
+    "./Settings": {
+      "source": "./src/types/Settings.ts",
+      "types": "./dist/types/src/types/Settings.d.ts",
+      "import": "./dist/lib/Settings.mjs"
+    },
+    "./State": {
+      "source": "./src/types/State.ts",
+      "types": "./dist/types/src/types/State.d.ts",
+      "import": "./dist/lib/State.mjs"
+    },
+    "./vite-plugin": {
+      "types": "./dist/types/src/agent-helper/index.d.ts",
+      "import": "./dist/lib/vite-plugin.mjs"
+    },
+    "./AcpAgent": {
+      "source": "./src/agents/AcpAgent.ts",
+      "types": "./dist/types/src/agents/AcpAgent.d.ts",
+      "import": "./dist/lib/AcpAgent.mjs"
+    },
+    "./CodeAgent": {
+      "source": "./src/agents/CodeAgent.ts",
+      "types": "./dist/types/src/agents/CodeAgent.d.ts",
+      "import": "./dist/lib/CodeAgent.mjs"
+    },
+    "./ComposerMcp": {
+      "source": "./src/agents/ComposerMcp.ts",
+      "types": "./dist/types/src/agents/ComposerMcp.d.ts",
+      "import": "./dist/lib/ComposerMcp.mjs"
+    },
+    "./EdgeAgent": {
+      "source": "./src/agents/EdgeAgent.ts",
+      "types": "./dist/types/src/agents/EdgeAgent.d.ts",
+      "import": "./dist/lib/EdgeAgent.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "AcpAgent": [
+        "dist/types/src/agents/AcpAgent.d.ts"
+      ],
       "ClaudeAgentOperation": [
         "dist/types/src/types/ClaudeAgentOperation.d.ts"
       ],
       "ClaudeAgentSession": [
         "dist/types/src/types/ClaudeAgentSession.d.ts"
       ],
+      "ClaudeCapabilities": [
+        "dist/types/src/types/ClaudeCapabilities.d.ts"
+      ],
       "ClaudeEvents": [
         "dist/types/src/types/ClaudeEvents.d.ts"
       ],
       "ClaudeManagedAgent": [
         "dist/types/src/types/ClaudeManagedAgent.d.ts"
+      ],
+      "CodeAgent": [
+        "dist/types/src/agents/CodeAgent.d.ts"
+      ],
+      "ComposerMcp": [
+        "dist/types/src/agents/ComposerMcp.d.ts"
+      ],
+      "EdgeAgent": [
+        "dist/types/src/agents/EdgeAgent.d.ts"
+      ],
+      "HelperClient": [
+        "dist/types/src/agents/HelperClient.d.ts"
+      ],
+      "Settings": [
+        "dist/types/src/types/Settings.d.ts"
+      ],
+      "State": [
+        "dist/types/src/types/State.d.ts"
+      ],
+      "vite-plugin": [
+        "dist/types/src/agent-helper/index.d.ts"
       ]
     }
   },
@@ -136,35 +207,49 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
+    "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/compute-runtime": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/edge-client": "workspace:*",
+    "@dxos/edge-compute": "workspace:*",
+    "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/invariant": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/mcp-server": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
-    "@dxos/plugin-code": "workspace:*",
+    "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
+    "@dxos/plugin-projects": "workspace:*",
     "@dxos/protocols": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
-    "effect": "catalog:"
+    "@tauri-apps/api": "catalog:",
+    "@tauri-apps/plugin-dialog": "catalog:",
+    "@tauri-apps/plugin-shell": "catalog:",
+    "effect": "catalog:",
+    "ws": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
-    "@dxos/edge-compute": "workspace:*",
-    "@dxos/effect": "workspace:*",
     "@dxos/log": "workspace:*",
-    "@dxos/plugin-projects": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-tasks": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@effect/vitest": "catalog:",
+    "@storybook/react-vite": "catalog:",
+    "@types/react": "catalog:",
+    "@types/ws": "catalog:",
+    "react": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {
-    "@dxos/react-ui": "workspace:^"
+    "@dxos/react-ui": "workspace:^",
+    "react": "catalog:"
   }
 }

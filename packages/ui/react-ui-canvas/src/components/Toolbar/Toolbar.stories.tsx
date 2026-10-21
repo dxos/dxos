@@ -15,7 +15,6 @@ import { ActionToolbar, CameraToolbar, NavigationToolbar, type ToolbarActions } 
 
 /** The bar over a fake view: every action appends to a log so each button is seen to fire. */
 const DefaultStory = () => {
-  const [snap, setSnap] = useState(true);
   const [debug, setDebug] = useState(false);
   const [zoom, setZoom] = useState(1);
   const actions: ToolbarActions = {
@@ -26,8 +25,6 @@ const DefaultStory = () => {
     zoomReset: () => setZoom(1),
     zoomIn: () => setZoom((value) => value * 1.25),
     zoomOut: () => setZoom((value) => value / 1.25),
-    snap,
-    toggleSnap: () => setSnap((value) => !value),
     debug,
     toggleDebug: () => setDebug((value) => !value),
     canUndo: true,
@@ -48,7 +45,7 @@ const DefaultStory = () => {
       <NavigationToolbar actions={actions} />
       <ActionToolbar actions={actions} nodes={defaultNodeRegistry} capabilities={freehandCapabilities} />
       <CameraToolbar actions={actions}>
-        {Math.round(zoom * 100)}% · snap {snap ? 'on' : 'off'} · debug {debug ? 'on' : 'off'}
+        {Math.round(zoom * 100)}% · debug {debug ? 'on' : 'off'}
       </CameraToolbar>
     </div>
   );
