@@ -278,7 +278,7 @@ review runs the subagent workflow above. Then fix or dismiss each issue, set its
   on HEAD's first-parent line touched and that still differ from the base, so a merge from
   main — and the conflict resolution inside it — brings nothing into the review. `--pr-only`
   starts from a prior review only if it was made on this branch (not already on main).
-- **CI (`.depot/workflows/agentic-review.yml`, advisory — never a required check).**
+- **CI (`.github/workflows/agentic-review.yml`, advisory — never a required check).**
   `check-pr.ts` fails when the PR's diff adds no finalized review store, when any issue in
   those stores is still `unresolved`, or when drift exceeds 20%:
   `LOC(non-merge first-parent commits since the newest review) / LOC(diff merge-base..HEAD)`,

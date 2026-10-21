@@ -44,7 +44,6 @@ export const ViewportBackground = ({
   const tools = useCanvasTools('Canvas.Viewport');
   const { childFrame } = useCanvasNavigation('Canvas.Viewport').commands;
   const snapEnabled = useAtomValue(tools.atoms.snap);
-  const latticeOn = useAtomValue(tools.atoms.lattice);
   const field = useMemo(
     () => backgroundField(look.background, backgroundBounds ?? bounds, latticeBounds),
     [look.background, backgroundBounds, bounds, latticeBounds],
@@ -53,9 +52,11 @@ export const ViewportBackground = ({
   // While editing with snap on, a lines grid is the snap grid, which adapts its levels to the zoom, so the field draws
   // no lines too; with snap off, or on a lattice scene that snaps to its cells, the field draws the lines itself.
   const snapLines = !readonly && look.background.grid === 'lines';
-  const snapGridDrawn = snapEnabled && snapLines && !(latticeOn && projection.lattice);
+  const snapGridDrawn = snapEnabled && snapLines && !projection.lattice;
   // Dots are drawn in screen space, as the snap grid is, so they hold their size and keep showing while the camera moves.
-  const dotsDrawn = look.background.grid === 'dots';
+  // A lattice scene shows its cells instead, which are what a shape lands on, so it draws no dots or lines at all.
+  const latticeScene = projection.lattice !== undefined;
+  const dotsDrawn = look.background.grid === 'dots' && !latticeScene;
   // As a frame grows to fill the view the canvas's grid fades and the frame's own scene grid fades in inside it, mapped
   // as drilling in maps the scene, so the drill crossfades into the grid the scene then shows rather than swapping.
   const focusNode = focus && focus.opacity < 1 ? displayScene.nodes[focus.id] : undefined;
@@ -81,10 +82,10 @@ export const ViewportBackground = ({
   const fieldBackground = useMemo(
     () => ({
       ...look.background,
-      ...((snapGridDrawn || dotsDrawn) && { grid: 'none' as const }),
+      ...((snapGridDrawn || dotsDrawn || latticeScene) && { grid: 'none' as const }),
       ...(gpuWashes && { washes: [] }),
     }),
-    [snapGridDrawn, dotsDrawn, gpuWashes, look.background],
+    [snapGridDrawn, dotsDrawn, latticeScene, gpuWashes, look.background],
   );
 
   return (

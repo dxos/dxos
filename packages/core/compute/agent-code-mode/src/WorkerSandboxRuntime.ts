@@ -13,6 +13,7 @@ import * as RpcClient from 'effect/rpc/RpcClient';
 import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, JsonSchema, Type } from '@dxos/echo';
 import { EchoClient } from '@dxos/echo-client';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -85,9 +86,14 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
     // One at a time: the JSON-schema round trip does not cover every schema (a record keyed by a
     // pattern, for one), and a type the worker cannot rebuild must cost only that type — not every
     // evaluation in a workspace that happens to register it.
-    const types = init.types.flatMap(({ typename, version, jsonSchema }) => {
+    const types = init.types.flatMap(({ typename, version, jsonSchema, skills }) => {
       try {
-        return [Type.makeObject(DXN.make(typename, version))(JsonSchema.toEffectSchema(jsonSchema))];
+        const schema = JsonSchema.toEffectSchema(jsonSchema);
+        return [
+          Type.makeObject(DXN.make(typename, version))(
+            skills === undefined ? schema : schema.pipe(Skill.SkillsAnnotation.set([...skills])),
+          ),
+        ];
       } catch (error) {
         log.warn('code-mode worker cannot rebuild type; it is unavailable to the sandbox', { typename, error });
         return [];
@@ -148,6 +154,7 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
     const bindings = dialect.bindings({
       runtime,
       operations,
+      skills: init.skills,
       // Sent as it happens rather than batched with the result, so output survives a worker that is
       // killed for outrunning its budget; sent formatted, since a live object cannot cross the port.
       print: (...values: unknown[]) => {

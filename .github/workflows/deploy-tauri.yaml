@@ -52,7 +52,7 @@ env:
 
 jobs:
   draft_tauri:
-    runs-on: depot-ubuntu-24.04
+    runs-on: ubuntu-24.04
 
     outputs:
       version: ${{ steps.bump-version.outputs.version }}
@@ -125,15 +125,15 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - depot-macos-latest
-          # - depot-ubuntu-24.04-4
-          # - depot-windows-2022-4
+          - macos-26
+          # - ubuntu-24.04
+          # - windows-2022
 
     runs-on: ${{ matrix.os }}
 
-    # A production build (no remote cache) already ran 27 min in the v0.10.2 release, close enough to the
-    # previous 45 that a slower runner would have been cut off mid-notarization.
-    timeout-minutes: 60
+    # A production build (no remote cache) ran 27 min in the v0.10.2 release on Depot's macOS runner. The
+    # standard `macos-26` runner has 3 cores and 7 GB, so the cap allows for a build several times slower.
+    timeout-minutes: 120
 
     steps:
       - uses: actions/checkout@v5
@@ -143,7 +143,7 @@ jobs:
           ref: ${{ inputs.ref || github.sha }}
 
       - name: Install Linux dependencies
-        if: matrix.os == 'depot-ubuntu-24.04-4'
+        if: matrix.os == 'ubuntu-24.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y jq webkit2gtk-4.1
@@ -183,7 +183,7 @@ jobs:
         working-directory: ./packages/apps/composer-app/src-tauri
 
       - name: Import Apple Developer Certificate
-        if: matrix.os == 'depot-macos-latest'
+        if: matrix.os == 'macos-26'
         env:
           APPLE_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
@@ -198,14 +198,14 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" build.keychain
 
       - name: Verify Certificate
-        if: matrix.os == 'depot-macos-latest'
+        if: matrix.os == 'macos-26'
         run: |
           CERT_INFO=$(security find-identity -v -p codesigning build.keychain | grep -E "(Developer ID Application)" | head -1)
           CERT_ID=$(echo "$CERT_INFO" | awk -F'"' '{print $2}')
           echo "CERT_ID=$CERT_ID" >> $GITHUB_ENV
 
       - name: Save Apple API Key
-        if: matrix.os == 'depot-macos-latest'
+        if: matrix.os == 'macos-26'
         env:
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
         run: |
@@ -216,7 +216,7 @@ jobs:
           sudo chmod 400 ${{ github.workspace }}/apple-api-key.p8
 
       - name: Verify Apple API Key
-        if: matrix.os == 'depot-macos-latest'
+        if: matrix.os == 'macos-26'
         run: |
           if [ ! -f ${{ github.workspace }}/apple-api-key.p8 ]; then
             echo "Apple API Key not found!"
@@ -227,7 +227,7 @@ jobs:
       # production's. The app is signed under whichever App ID the embedded profile grants, so the two
       # cannot disagree.
       - name: Install macOS Provisioning Profile
-        if: matrix.os == 'depot-macos-latest'
+        if: matrix.os == 'macos-26'
         working-directory: ./packages/apps/composer-app/src-tauri
         env:
           ENVIRONMENT: ${{ inputs.environment }}
@@ -309,7 +309,7 @@ jobs:
       # mlx.metallib — not Mach-O, so it can't survive Tauri's `xattr -crs`; that's handled
       # separately via sidecar/ollama-metal.framework (see fetch-ollama.mjs).
       - name: Sign Ollama runtime
-        if: matrix.os == 'depot-macos-latest'
+        if: matrix.os == 'macos-26'
         run: |
           find packages/apps/composer-app/src-tauri/sidecar/ollama-runtime -type f -print0 |
             xargs -0 -I{} codesign --force --options runtime --sign "$CERT_ID" "{}"
@@ -324,17 +324,17 @@ jobs:
       # Signed with its own entitlements: a Bun executable's JIT needs the unrestricted
       # `allow-jit` family, and must not get the app's restricted ones (which macOS kills it for).
       - name: Sign sandbox helper
-        if: matrix.os == 'depot-macos-latest'
+        if: matrix.os == 'macos-26'
         run: |
           codesign --force --options runtime --sign "$CERT_ID" \
             --entitlements packages/apps/composer-app/src-tauri/SandboxHelper.entitlements.plist \
             packages/apps/composer-app/src-tauri/sandbox/dx-sandbox
 
-      # plugin-code's coding-agent helper and the agents plugins ship for it (plugin-claude's Claude Code
-      # adapter), bundled like the sandbox helper (see plugin-code's capabilities/agent-launcher.ts).
+      # plugin-claude's coding-agent helper and the agents plugins ship for it (plugin-claude's Claude Code
+      # adapter), bundled like the sandbox helper (see plugin-claude's capabilities/agent-launcher.ts).
       - name: Build agent helper
         run: proto run bun -- ./scripts/build-agent-helper.ts
-        working-directory: ./packages/plugins/plugin-code
+        working-directory: ./packages/plugins/plugin-claude
 
       - name: Build Claude Code agent
         run: proto run bun -- ./scripts/build-agent.ts
@@ -347,7 +347,7 @@ jobs:
       # Signed like the sandbox helper: a Bun executable's JIT needs `allow-jit`, never the app's
       # restricted entitlements.
       - name: Sign agent helper
-        if: matrix.os == 'depot-macos-latest'
+        if: matrix.os == 'macos-26'
         run: |
           codesign --force --options runtime --sign "$CERT_ID" \
             --entitlements src-tauri/SandboxHelper.entitlements.plist \
@@ -358,15 +358,15 @@ jobs:
         run: pnpm exec tauri build
         working-directory: ./packages/apps/composer-app
         env:
-          # The following environment variables are only set when building on macOS runners (depot-macos-latest).
+          # The following environment variables are only set when building on macOS runners (macos-26).
           # This ensures that Apple-specific signing and notarization steps are only attempted on macOS,
           # and are skipped on other platforms (Linux, Windows).
-          APPLE_API_ISSUER: ${{ matrix.os == 'depot-macos-latest' && secrets.APPLE_API_ISSUER || '' }}
-          APPLE_API_KEY: ${{ matrix.os == 'depot-macos-latest' && secrets.APPLE_API_KEY_ID || '' }}
-          APPLE_API_KEY_PATH: ${{ matrix.os == 'depot-macos-latest' && format('{0}/apple-api-key.p8', github.workspace) || '' }}
-          APPLE_CERTIFICATE: ${{ matrix.os == 'depot-macos-latest' && secrets.MACOS_CERTIFICATE || '' }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ matrix.os == 'depot-macos-latest' && secrets.MACOS_CERTIFICATE_PASSWORD || '' }}
-          APPLE_SIGNING_IDENTITY: ${{ matrix.os == 'depot-macos-latest' && env.CERT_ID || '' }}
+          APPLE_API_ISSUER: ${{ matrix.os == 'macos-26' && secrets.APPLE_API_ISSUER || '' }}
+          APPLE_API_KEY: ${{ matrix.os == 'macos-26' && secrets.APPLE_API_KEY_ID || '' }}
+          APPLE_API_KEY_PATH: ${{ matrix.os == 'macos-26' && format('{0}/apple-api-key.p8', github.workspace) || '' }}
+          APPLE_CERTIFICATE: ${{ matrix.os == 'macos-26' && secrets.MACOS_CERTIFICATE || '' }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ matrix.os == 'macos-26' && secrets.MACOS_CERTIFICATE_PASSWORD || '' }}
+          APPLE_SIGNING_IDENTITY: ${{ matrix.os == 'macos-26' && env.CERT_ID || '' }}
           NODE_ENV: production
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
@@ -375,7 +375,7 @@ jobs:
       # plugin-native's capabilities/ollama.ts). Assert the shipped launcher claims none, so that
       # regression fails the release rather than the user's first chat.
       - name: Verify Ollama launcher signature
-        if: matrix.os == 'depot-macos-latest'
+        if: matrix.os == 'macos-26'
         run: |
           app=$(ls -d packages/apps/composer-app/src-tauri/target/release/bundle/macos/*.app)
           launcher="$app/Contents/Resources/ollama"
@@ -388,7 +388,7 @@ jobs:
       # The helper must run under the hardened runtime and claim none of the app's restricted
       # entitlements, which only the app's provisioning profile covers.
       - name: Verify sandbox helper signature
-        if: matrix.os == 'depot-macos-latest'
+        if: matrix.os == 'macos-26'
         run: |
           app=$(ls -d packages/apps/composer-app/src-tauri/target/release/bundle/macos/*.app)
           helper="$app/Contents/Resources/dx-sandbox"
@@ -404,7 +404,7 @@ jobs:
       # profile grants, or when the profile does not list the certificate it was signed with. The channel
       # profiles outlive the certificate, so rotating MACOS_CERTIFICATE means regenerating them.
       - name: Verify app signature matches its provisioning profile
-        if: matrix.os == 'depot-macos-latest'
+        if: matrix.os == 'macos-26'
         run: |
           app=$(ls -d packages/apps/composer-app/src-tauri/target/release/bundle/macos/*.app)
           profile="$RUNNER_TEMP/embedded-profile.plist"
@@ -433,7 +433,7 @@ jobs:
           fi
 
       - name: Verify agent helper signature
-        if: matrix.os == 'depot-macos-latest'
+        if: matrix.os == 'macos-26'
         run: |
           app=$(ls -d src-tauri/target/release/bundle/macos/*.app)
           helper="$app/Contents/Resources/dx-agent"
@@ -479,9 +479,10 @@ jobs:
     # environment should fail to build, not ship somewhere unintended.
     if: inputs.ios && inputs.environment == 'dev'
 
-    runs-on: depot-macos-latest
+    runs-on: macos-26
 
-    timeout-minutes: 90
+    # 90 min on Depot's macOS runner; doubled for the 3-core 7 GB `macos-26`, as `build_tauri` is.
+    timeout-minutes: 180
 
     continue-on-error: true
 
@@ -703,7 +704,7 @@ jobs:
     # job too — leaving the desktop release drafted but never published.
     if: ${{ !cancelled() && needs.build_tauri.result == 'success' }}
 
-    runs-on: depot-ubuntu-24.04
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v5

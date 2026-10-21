@@ -32,9 +32,11 @@ import {
   isViewNode,
   useRegistry,
 } from '@dxos/react-ui-canvas/scene';
+import * as Banner from '@dxos/react-ui/Banner';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 
+import { meta } from '#meta';
 import {
   canvasRecordOf,
   generatorCompiler,
@@ -45,7 +47,8 @@ import {
   resolveDrawingLook,
   updateCanvasRecord,
 } from '#model';
-import { CanvasCapabilities } from '#types';
+// Aliased: `Canvas` here is the scene engine's component namespace.
+import { CanvasCapabilities, Canvas as CanvasFormat } from '#types';
 
 import { CanvasDatabaseContext } from './CanvasViewNodeView.tsx';
 import { createTrackerHistory } from './tracker-history.ts';
@@ -53,6 +56,17 @@ import { createGeneratorWorker, useBoundCanvasStore, useCanvasGenerators, useCan
 import { canvasViewAspect } from './view-state.ts';
 
 export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
+
+/** Why a canvas a newer plugin saved opens read-only, and what unlocks it. */
+const NewerFormatBanner = () => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  return (
+    <Banner.Root valence='warning' data-testid='canvas.newer-format'>
+      <Banner.Title>{t('newer-format.title')}</Banner.Title>
+      <Banner.Body>{t('newer-format.message')}</Banner.Body>
+    </Banner.Root>
+  );
+};
 
 /** The article surface of the canvas variant: the scene engine over the drawing's canvas. */
 export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
@@ -119,7 +133,8 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   const section = role === AppSurface.Section.role;
   // Only the main article draws the canvas chrome (top edge, grid, guides); elsewhere it is the bare drawing.
   const article = role === AppSurface.Article.role;
-  const readonly = (viewReadonly ?? record?.readonly ?? false) || section;
+  const newer = CanvasFormat.isNewerScene(canvas.schema);
+  const readonly = (viewReadonly ?? record?.readonly ?? false) || section || newer;
   const handleInspectorsChange = useCallback(
     (mode: InspectorMode) => updateViewState((state) => ({ ...state, floating: mode === 'floating' })),
     [updateViewState],
@@ -179,7 +194,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
       return {
         ...(locked ? { 'link.object': { readonly: true } } : {}),
         ...(linked ? { scene: { hidden: true } } : {}),
-        ...(surfaced ? {} : { role: { hidden: true } }),
+        ...(surfaced ? {} : { 'link.role': { hidden: true } }),
       };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -190,6 +205,11 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
     // A section takes the document's width and has no height of its own (read-only, it has no dock), so its height
     // follows from the drawing's 3:2 frame.
     <Panel.Root role={role} classNames={section ? 'w-full aspect-[3/2]' : undefined}>
+      {newer && !section && (
+        <Panel.Header>
+          <NewerFormatBanner />
+        </Panel.Header>
+      )}
       <Panel.Body>
         {bound && (
           // An unset preference leaves the engine's own default in place.
@@ -208,10 +228,12 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               styleSet={look.styleSet}
               background={look.background}
               backgroundGrid={article ? look.backgroundGrid : 'none'}
-              onThemeChange={section ? undefined : handleThemeChange}
-              onBackgroundGridChange={section ? undefined : handleBackgroundGridChange}
+              // Both write the canvas record, which a newer plugin's format keeps read-only here.
+              onThemeChange={section || newer ? undefined : handleThemeChange}
+              onBackgroundGridChange={section || newer ? undefined : handleBackgroundGridChange}
               readonly={readonly}
-              onReadonlyChange={section ? undefined : handleReadonlyChange}
+              // A newer plugin's format stays read-only here, so the toggle that would unlock it is not offered.
+              onReadonlyChange={section || newer ? undefined : handleReadonlyChange}
               initialCamera={savedCamera}
               onCameraChange={handleCameraChange}
               initialDisplay={{ snap, guides: article && guides, fit }}

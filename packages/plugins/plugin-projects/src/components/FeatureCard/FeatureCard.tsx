@@ -12,6 +12,7 @@ import React, {
   useState,
 } from 'react';
 
+import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -42,6 +43,8 @@ export const FEATURE_STATUS_STYLE: Record<FeatureStatus, { icon: string; hue: Ta
   'failing': { icon: 'ph--warning-octagon--regular', hue: 'rose' },
 };
 
+const STATUSES: FeatureStatus[] = ['planned', 'in-progress', 'prototype', 'operational', 'failing'];
+
 const SIGNAL_STYLE: Record<FeatureSignal, { icon: string; hue: Tag.TagHue }> = {
   'blocked': { icon: 'ph--lock--regular', hue: 'error' },
   'ahead': { icon: 'ph--arrow-fat-up--regular', hue: 'warning' },
@@ -66,6 +69,8 @@ export type FeatureCardBodyProps = {
   showDependencies?: boolean;
   /** False where the description and specs are edited beside the card, as in the feature's article. */
   showFields?: boolean;
+  /** False where the subfeatures are edited beside the card, as in the feature's article. */
+  showSubfeatures?: boolean;
   /** Features that depend on this one; listed only when expanded, as the model stores one direction. */
   dependents?: readonly FeatureModel[];
   onSelectDependency?: (id: string) => void;
@@ -73,6 +78,8 @@ export type FeatureCardBodyProps = {
   onRemoveDependency?: (id: string) => void;
   /** Opens a listed task or showcase by id; rows are plain text without it. */
   onOpenObject?: (id: string) => void;
+  /** How a listed spec opens in the app; a spec it gives no way to open links to GitHub. */
+  openSpec?: (spec: string) => (() => void) | undefined;
   /** Lets edit mode change the description. */
   onDescribe?: (feature: FeatureModel, description: string) => void;
   /** Edit mode: the description is a field, shown even while empty. */
@@ -105,16 +112,102 @@ type EditFieldProps = {
   autoFocus?: boolean;
   /** Wraps and grows with its text; Enter still commits, Shift+Enter breaks the line. */
   multiline?: boolean;
+  /** No well, for a field that should read as the row's text until it is focused. */
+  subdued?: boolean;
   onCommit: (value: string) => void;
 };
 
 const stopPropagation = (event: MouseEvent | PointerEvent) => event.stopPropagation();
 
+/** Presses on the card's own buttons and fields are theirs, not the card's. */
+const isControl = (target: EventTarget): boolean =>
+  target instanceof Element && target.closest('button, input, textarea, [role="menu"]') !== null;
+
+type StatusItemsProps = {
+  value: FeatureStatus;
+  onChange: (status: FeatureStatus) => void;
+  testId: string;
+};
+
+/** The five statuses as radio items, shared by the card menu and the status icon's own menu. */
+const StatusItems = ({ value, onChange, testId }: StatusItemsProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  return (
+    <Menu.RadioItemGroup
+      value={value}
+      onValueChange={({ value: selected }) => {
+        const next = STATUSES.find((candidate) => candidate === selected);
+        if (next && next !== value) {
+          onChange(next);
+        }
+      }}
+    >
+      <Menu.ItemGroupLabel>{t('feature-card.status.label')}</Menu.ItemGroupLabel>
+      {STATUSES.map((candidate) => (
+        <Menu.RadioItem
+          key={candidate}
+          item={{
+            value: candidate,
+            label: t(`feature-status.${candidate}.label`),
+            icon: FEATURE_STATUS_STYLE[candidate].icon,
+          }}
+          data-testid={`${testId}.${candidate}`}
+        />
+      ))}
+    </Menu.RadioItemGroup>
+  );
+};
+
+type StatusIconProps = {
+  status: FeatureStatus;
+  /** Without it the icon is a plain glyph. */
+  onChange?: (status: FeatureStatus) => void;
+  /** Row icons are muted, so the header's status icon stays the card's one strong glyph. */
+  muted?: boolean;
+  testId: string;
+};
+
+/** A status glyph that, given `onChange`, opens a menu of the statuses; neither press selects the card. */
+const StatusIcon = ({ status, onChange, muted, testId }: StatusIconProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const style = FEATURE_STATUS_STYLE[status];
+  const glyph = (
+    <Icon.Icon
+      icon={style.icon}
+      hue={muted ? undefined : style.hue}
+      tone={muted ? 'muted' : undefined}
+      label={t(`feature-status.${status}.label`)}
+    />
+  );
+  if (!onChange) {
+    return glyph;
+  }
+  return (
+    <Menu.Root>
+      <Menu.Trigger asChild>
+        <Button.Root
+          variant='ghost'
+          compact
+          data-testid={testId}
+          // Takes the press itself, so it neither selects the card nor drags a canvas box.
+          onPointerDown={stopPropagation}
+          onClick={stopPropagation}
+        >
+          {glyph}
+        </Button.Root>
+      </Menu.Trigger>
+      <Menu.Content onClick={stopPropagation}>
+        <StatusItems value={status} onChange={onChange} testId={testId} />
+      </Menu.Content>
+    </Menu.Root>
+  );
+};
+
 /**
  * A field of a card in edit mode, committed when it loses focus (Enter does that). Keys and presses stay in the field:
  * the card would toggle its selection, and a canvas would delete the box on Backspace.
  */
-const EditField = ({ value, placeholder, label, testId, autoFocus, multiline, onCommit }: EditFieldProps) => {
+const EditField = ({ value, placeholder, label, testId, autoFocus, multiline, subdued, onCommit }: EditFieldProps) => {
   // Uncontrolled, so typing never re-renders the card; a newer model value (another peer's edit) still replaces the
   // field's text while the user has not changed it, so blur cannot commit the stale text over it.
   const fieldRef = useRef<HTMLInputElement & HTMLTextAreaElement>(null);
@@ -165,14 +258,81 @@ const EditField = ({ value, placeholder, label, testId, autoFocus, multiline, on
       classNames='-ms-1 my-1 px-1 py-0 w-[calc(100%+0.25rem)] min-h-0 [field-sizing:content] resize-none'
     />
   ) : (
-    <Input.Root {...props} classNames='-ms-1 px-1 -my-0.5 w-[calc(100%+0.25rem)]' />
+    <Input.Root
+      {...props}
+      variant={subdued ? 'subdued' : undefined}
+      classNames='-ms-1 px-1 -my-0.5 w-[calc(100%+0.25rem)]'
+    />
   );
 };
 
 /** Row icons sit a step below the text, so the header's status icon stays the card's one strong glyph. */
 const RowIcon = ({ icon }: { icon: string }) => <Icon.Icon icon={icon} tone='muted' />;
 
-const STATUSES: FeatureStatus[] = ['planned', 'in-progress', 'prototype', 'operational', 'failing'];
+export type SubfeatureEditorProps = {
+  subfeatures: readonly Feature.Subfeature[];
+  onChange: (subfeatures: Feature.Subfeature[]) => void;
+};
+
+/**
+ * Subfeatures as the card lists them, editable in place: the status icon picks a status, the name is a field, and each
+ * row removes itself. Every edit hands back the whole list, since subfeatures are records inside their feature.
+ */
+export const SubfeatureEditor = ({ subfeatures, onChange }: SubfeatureEditorProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  // The row just added takes focus, so a new subfeature is named before anything else.
+  const [focusIndex, setFocusIndex] = useState<number>();
+  const update = (index: number, patch: Partial<Feature.Subfeature>) =>
+    onChange(subfeatures.map((subfeature, candidate) => ({ ...subfeature, ...(candidate === index ? patch : {}) })));
+  return (
+    <Card.Root grid border={false} data-testid='subfeature-editor'>
+      {subfeatures.map((subfeature, index) => (
+        <Card.Row
+          key={index}
+          leading={
+            <StatusIcon
+              status={subfeature.status}
+              muted
+              onChange={(status) => update(index, { status })}
+              testId={`subfeature-editor.${index}.status`}
+            />
+          }
+          trailing={
+            <Layout.Flex gap='xs' classNames='items-center'>
+              <Card.Text variant='muted'>{t(`feature-status.${subfeature.status}.label`)}</Card.Text>
+              <Card.Action
+                icon='ph--x--regular'
+                label={t('subfeature-editor.remove.label', { name: subfeature.name })}
+                data-testid={`subfeature-editor.${index}.remove`}
+                onClick={() => onChange(subfeatures.filter((_, candidate) => candidate !== index))}
+              />
+            </Layout.Flex>
+          }
+        >
+          <EditField
+            value={subfeature.name}
+            placeholder={t('subfeature-editor.name.placeholder')}
+            label={t('subfeature-editor.name.label')}
+            testId={`subfeature-editor.${index}.name`}
+            autoFocus={index === focusIndex}
+            subdued
+            onCommit={(name) => update(index, { name })}
+          />
+        </Card.Row>
+      ))}
+      <Card.Row
+        leading={<RowIcon icon='ph--plus--regular' />}
+        data-testid='subfeature-editor.add'
+        onClick={() => {
+          setFocusIndex(subfeatures.length);
+          onChange([...subfeatures.map((subfeature) => ({ ...subfeature })), { name: '', status: 'planned' }]);
+        }}
+      >
+        <Card.Text variant='muted'>{t('subfeature-editor.add.label')}</Card.Text>
+      </Card.Row>
+    </Card.Root>
+  );
+};
 
 /**
  * One feature: its status, the derived signals, the work toward it, the evidence that it works, and the
@@ -192,7 +352,6 @@ export const FeatureCard = ({
 }: FeatureCardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const { feature, selected, relation, onDescribe } = props;
-  const status = FEATURE_STATUS_STYLE[feature.status];
   const [editingState, setEditingState] = useState(false);
   const editing = editingProp ?? editingState;
   const setEditing = (next: boolean) => {
@@ -205,7 +364,21 @@ export const FeatureCard = ({
       // A group, so the header's edit button is muted until the pointer is over the card.
       classNames={['group/card', scroll && 'h-full grid-rows-[min-content_minmax(0,1fr)]']}
       selected={markSelected && selected}
-      onClick={onSelect ? () => onSelect(feature) : undefined}
+      // TODO(richburdon): Make click-to-open a pattern.
+      onClick={(event) => {
+        if (onOpen && (event.metaKey || event.ctrlKey)) {
+          // Opening is the whole gesture: the host must not also treat it as selecting the card.
+          event.stopPropagation();
+          onOpen(feature);
+          return;
+        }
+        onSelect?.(feature);
+      }}
+      onDoubleClick={(event) => {
+        if (onOpen && !editing && !isControl(event.target)) {
+          onOpen(feature);
+        }
+      }}
       data-testid='feature-card'
       data-feature={feature.id}
       data-status={feature.status}
@@ -213,7 +386,11 @@ export const FeatureCard = ({
     >
       <Card.Header>
         <Layout.Block rail='start'>
-          <Icon.Icon icon={status.icon} hue={status.hue} label={t(`feature-status.${feature.status}.label`)} />
+          <StatusIcon
+            status={feature.status}
+            onChange={onSetStatus && ((next) => onSetStatus(feature, next))}
+            testId='feature-card.status-icon'
+          />
         </Layout.Block>
         {/* Unclamped while editing: the clamp clips overflow, which would cut off the field's box beyond the text. */}
         <Card.Title lines={editing && onRename ? undefined : 2}>
@@ -270,28 +447,11 @@ export const FeatureCard = ({
               )}
               {onOpen && onSetStatus && <Menu.Separator />}
               {onSetStatus && (
-                <Menu.RadioItemGroup
+                <StatusItems
                   value={feature.status}
-                  onValueChange={({ value }) => {
-                    const next = STATUSES.find((candidate) => candidate === value);
-                    if (next && next !== feature.status) {
-                      onSetStatus(feature, next);
-                    }
-                  }}
-                >
-                  <Menu.ItemGroupLabel>{t('feature-card.status.label')}</Menu.ItemGroupLabel>
-                  {STATUSES.map((candidate) => (
-                    <Menu.RadioItem
-                      key={candidate}
-                      item={{
-                        value: candidate,
-                        label: t(`feature-status.${candidate}.label`),
-                        icon: FEATURE_STATUS_STYLE[candidate].icon,
-                      }}
-                      data-testid={`feature-card.status.${candidate}`}
-                    />
-                  ))}
-                </Menu.RadioItemGroup>
+                  onChange={(next) => onSetStatus(feature, next)}
+                  testId='feature-card.status'
+                />
               )}
               {(onOpen || onSetStatus) && onRemove && <Menu.Separator />}
               {onRemove && (
@@ -332,10 +492,12 @@ export const FeatureCardBody = ({
   relation,
   showDependencies = true,
   showFields = true,
+  showSubfeatures = true,
   dependents = [],
   onSelectDependency,
   onRemoveDependency,
   onOpenObject,
+  openSpec,
   onDescribe,
   editing,
 }: FeatureCardBodyProps) => {
@@ -474,7 +636,7 @@ export const FeatureCardBody = ({
         </Card.Section>
       )}
 
-      {expanded && feature.subfeatures.length > 0 && (
+      {expanded && showSubfeatures && feature.subfeatures.length > 0 && (
         <Card.Section title={t('feature-card.subfeatures.title')}>
           {feature.subfeatures.map((subfeature, index) => (
             <Card.Row
@@ -517,11 +679,29 @@ export const FeatureCardBody = ({
         </Card.Section>
       )}
 
-      {expanded && showFields && feature.specs.length > 0 && (
+      {/* Also beside the article's editable spec list, since there each row opens the imported spec. */}
+      {detailed && (showFields || onOpenObject || openSpec) && feature.specs.length > 0 && (
         <Card.Section title={t('feature-card.specs.title')}>
-          {feature.specs.map((spec) => (
-            <Card.Link key={spec} label={spec} href={Feature.getSpecUrl(spec)} />
-          ))}
+          {feature.specs.map((spec) => {
+            // An imported spec is the space's own copy, so it wins over the one a plugin bundles.
+            const specId = feature.specObjects?.[Feature.getSpecPath(spec)];
+            const openBundled = openSpec?.(spec);
+            const onClick =
+              specId && onOpenObject
+                ? open(specId)
+                : openBundled &&
+                  ((event: MouseEvent) => {
+                    event.stopPropagation();
+                    openBundled();
+                  });
+            return onClick ? (
+              <Card.Row key={spec} icon='ph--file-code--regular' onClick={onClick} data-testid='feature-card.spec'>
+                <Card.Text truncate>{spec}</Card.Text>
+              </Card.Row>
+            ) : (
+              <Card.Link key={spec} label={spec} href={Feature.getSpecUrl(spec)} />
+            );
+          })}
         </Card.Section>
       )}
     </Card.Body>

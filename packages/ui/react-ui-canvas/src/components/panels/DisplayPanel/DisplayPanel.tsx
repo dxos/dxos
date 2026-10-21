@@ -108,9 +108,8 @@ export type DisplayPanelProps = PanelProps & {
   /** Whether moves, resizes and new nodes snap to the grid; with `onSnapToggle`, a toggle leads the grid controls. */
   snap?: boolean;
   onSnapToggle?: () => void;
-  /** On a lattice scene: whether snap lands on the lattice rather than the basic grid; the toggle shows only then. */
+  /** A lattice scene: snap lands on the lattice's cells, and the lattice is the grid, so no grid choice is offered. */
   lattice?: boolean;
-  onLatticeToggle?: () => void;
 };
 
 /**
@@ -132,7 +131,6 @@ export const DisplayPanel = ({
   snap,
   onSnapToggle,
   lattice,
-  onLatticeToggle,
 }: DisplayPanelProps) => (
   // Visible overflow, so the focused trigger's ring is not clipped by the bar's horizontal scroll.
   <Toolbar.Root classNames={mx(barClasses, 'overflow-visible', classNames)} data-testid='canvas-display'>
@@ -141,32 +139,22 @@ export const DisplayPanel = ({
       <Button.Toggle
         variant='ghost'
         iconOnly
-        icon='ph--grid-four--regular'
-        label={`Snap (${shortcutFor('snap')}): snap moves, resizes and new nodes to the major grid, or with the lattice on to its cells`}
+        icon='ph--magnet--regular'
+        label={`Snap (${shortcutFor('snap')}): snap moves, resizes and new nodes to the ${lattice ? "lattice's cells" : 'major grid'}`}
         disabled={readonly}
         pressed={snap === true}
         data-testid='toolbar-snap'
         onPressedChange={onSnapToggle}
       />
     )}
-    {onLatticeToggle && (
-      <Button.Toggle
-        variant='ghost'
-        iconOnly
-        icon='ph--squares-four--regular'
-        label={`Lattice (${shortcutFor('lattice')}): snap to the lattice's cells rather than the basic grid`}
-        disabled={readonly}
-        pressed={lattice === true}
-        data-testid='toolbar-lattice'
-        onPressedChange={onLatticeToggle}
-      />
-    )}
+    {/* Snapping is behaviour, the rest is what the canvas draws. */}
+    {onSnapToggle && <Toolbar.Separator variant='line' />}
     {/* A guide is drawn on the grid, so the toggle leads the grid options. */}
     {onGuidesToggle && (
       <Button.Toggle
         variant='ghost'
         iconOnly
-        icon='ph--frame-corners--regular'
+        icon='ph--squares-four--regular'
         label={`Guides (${shortcutFor('guides')}): show the lattice cells`}
         disabled={readonly}
         pressed={guides === true}
@@ -174,25 +162,27 @@ export const DisplayPanel = ({
         onPressedChange={onGuidesToggle}
       />
     )}
-    {/* One group of toggles, at most one pressed: pressing the one drawn turns the grid off. */}
-    <Button.Group compact role='group' aria-label='Grid'>
-      {GRID_OPTIONS.map((option) => (
-        <Button.Toggle
-          key={option.grid}
-          variant='ghost'
-          iconOnly
-          icon={option.icon}
-          label={option.label}
-          disabled={readonly || !onGridChange}
-          pressed={grid === option.grid}
-          data-testid={`theme-grid-${option.grid}`}
-          onPressedChange={(pressed) => {
-            const next: BackgroundGrid = pressed ? option.grid : 'none';
-            onGridChange?.(next === themeGrid ? undefined : next);
-          }}
-        />
-      ))}
-    </Button.Group>
+    {/* One group of toggles, at most one pressed: pressing the one drawn turns the grid off; hidden on a lattice scene. */}
+    {lattice !== true && (
+      <Button.Group compact role='group' aria-label='Grid'>
+        {GRID_OPTIONS.map((option) => (
+          <Button.Toggle
+            key={option.grid}
+            variant='ghost'
+            iconOnly
+            icon={option.icon}
+            label={option.label}
+            disabled={readonly || !onGridChange}
+            pressed={grid === option.grid}
+            data-testid={`theme-grid-${option.grid}`}
+            onPressedChange={(pressed) => {
+              const next: BackgroundGrid = pressed ? option.grid : 'none';
+              onGridChange?.(next === themeGrid ? undefined : next);
+            }}
+          />
+        ))}
+      </Button.Group>
+    )}
     <Toolbar.Separator variant='line' />
     <Menu.Root positioning={{ placement: 'top-end', gutter: 4 }}>
       <Menu.Trigger asChild disabled={readonly || !onThemeChange}>

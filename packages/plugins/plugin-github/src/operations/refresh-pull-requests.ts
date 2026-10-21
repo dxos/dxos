@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 
 import { GitHubOperation } from '#types';
 
-import { githubToken } from './pull-request.ts';
+import { githubAccess } from './pull-request.ts';
 import { ensureRefreshTrigger, queryInFlightPullRequests, refreshPullRequest, selectRefreshBatch } from './refresh.ts';
 
 /** Bounded so a space with many open pull requests does not burst GitHub's secondary rate limit. */
@@ -34,13 +34,13 @@ const handler: Operation.WithHandler<typeof GitHubOperation.RefreshPullRequests>
         const window = Math.floor((yield* Clock.currentTimeMillis) / REFRESH_INTERVAL_MS);
         const pullRequests = selectRefreshBatch(inFlight, window);
 
-        const token = yield* githubToken();
+        const access = yield* githubAccess();
         const results = yield* Effect.forEach(
           pullRequests,
           (pullRequest) =>
             // One deleted or unreachable pull request must not fail the run: EDGE disables a trigger
             // after repeated failures, which would stop refreshing every other one.
-            refreshPullRequest(pullRequest, token).pipe(
+            refreshPullRequest(pullRequest, access).pipe(
               Effect.map((updated) => (updated.length > 0 ? 'updated' : 'unchanged')),
               Effect.catchDefect((cause) =>
                 Effect.sync(() => {

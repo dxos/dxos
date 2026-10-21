@@ -20,14 +20,16 @@ import {
   NoteNode,
   PathNode,
   PolygonNode,
+  PolylineNode,
   RectNode,
   type Size,
   ViewNode,
   createNodeRegistry,
   isCloudNode,
   isPolygonNode,
+  isPolylineNode,
 } from '../../model/index.ts';
-import { NOMINAL_SIZES, cloudPath, createNode, polygonPath } from '../../utils/index.ts';
+import { NOMINAL_SIZES, cloudPath, createNode, polygonPath, polylinePath } from '../../utils/index.ts';
 import {
   BoxNodeView,
   CloudNodeView,
@@ -38,6 +40,7 @@ import {
   NoteNodeView,
   PathNodeView,
   PolygonNodeView,
+  PolylineNodeView,
   ViewNodeView,
 } from './SceneLayer.tsx';
 
@@ -80,6 +83,26 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     resizable: true,
     minSize: MIN_SIZE,
   },
+  polygon: {
+    name: 'Polygon',
+    icon: 'ph--hexagon--regular',
+    key: 'N',
+    schema: PolygonNode,
+    component: PolygonNodeView,
+    create: (props) => createNode({ type: 'polygon', ...props }),
+    defaultSize: NOMINAL_SIZES.polygon,
+    silhouette: (node, inset, radius) =>
+      polygonPath(node.size, {
+        inset,
+        ...(isPolygonNode(node) ? node.params : undefined),
+        radius,
+      }),
+    bounds: (node) => (isPolygonNode(node) && node.params?.fit === 'circle' ? 'circle' : 'frame'),
+    portsPerSide: 1,
+    parts: [{ field: 'label' }],
+    resizable: true,
+    minSize: MIN_SIZE,
+  },
   cloud: {
     name: 'Cloud',
     icon: 'ph--cloud--regular',
@@ -95,26 +118,34 @@ export const defaultNodeTypes: Readonly<Record<NodeType, NodeDefSpec>> = {
     resizable: true,
     minSize: MIN_SIZE,
   },
-  polygon: {
-    name: 'Polygon',
-    icon: 'ph--hexagon--regular',
-    key: 'N',
-    schema: PolygonNode,
-    component: PolygonNodeView,
-    create: (props) => createNode({ type: 'polygon', ...props }),
-    defaultSize: NOMINAL_SIZES.polygon,
-    // Only a rounded polygon softens its corners, as a box's square corners stay square.
+  polyline: {
+    name: 'Polyline',
+    icon: 'ph--line-segments--regular',
+    key: 'Y',
+    schema: PolylineNode,
+    component: PolylineNodeView,
+    create: (props) => createNode({ type: 'polyline', ...props }),
+    createFromPoints: (props, points, closed) => ({
+      ...createNode({ type: 'polyline', ...props }),
+      points: [...points],
+      ...(closed ? { params: { closed } } : {}),
+    }),
+    defaultSize: NOMINAL_SIZES.polyline,
     silhouette: (node, inset, radius) =>
-      polygonPath(node.size, {
-        inset,
-        ...(isPolygonNode(node) ? node.params : undefined),
-        radius: node.style?.rounded ? radius : 0,
-      }),
-    bounds: (node) => (isPolygonNode(node) && node.params?.fit === 'circle' ? 'circle' : 'frame'),
+      isPolylineNode(node)
+        ? polylinePath(node.size, node.points, {
+            inset,
+            closed: node.params?.closed,
+            radius,
+          })
+        : '',
+    filled: (node) => isPolylineNode(node) && node.params?.closed === true,
+    // Its label is edited in the properties panel: a double-click shows the vertices to drag.
+    editor: 'vertices',
     portsPerSide: 1,
     parts: [{ field: 'label' }],
     resizable: true,
-    minSize: MIN_SIZE,
+    minSize: { width: 16, height: 16 },
   },
   note: {
     name: 'Note',

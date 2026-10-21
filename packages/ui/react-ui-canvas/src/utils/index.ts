@@ -20,6 +20,7 @@ export * from './layout.ts';
 export * from './order.ts';
 export * from './parts.ts';
 export * from './path.ts';
+export * from './polyline.ts';
 export * from './ports.ts';
 export * from './properties.ts';
 export * from './resize.ts';

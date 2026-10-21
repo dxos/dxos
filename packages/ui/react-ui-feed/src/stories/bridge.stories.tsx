@@ -194,6 +194,8 @@ export const Assistant: Story = holdsStill('assistant', 200);
  * corrections disengage. Both presented as "the tail is in the wrong place".
  */
 export const Tail: Story = {
+  // TODO(wittjosiah): Flaky in CI (passes only on retry); fix and re-enable.
+  tags: ['!test'],
   args: { scenario: 'assistant', count: 200, sticky: true },
   play: async ({ canvasElement }) => {
     await settle();
