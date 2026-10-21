@@ -24,7 +24,7 @@ import { requestEndpoint } from '../capabilities/agent-host.ts';
 import { type AgentHost, startAgentHost } from './testing.ts';
 
 /** The fake agent's script, copied into a temporary agents directory as that agent's entry. */
-const FAKE_AGENT = new URL('./fake-acp-agent.mjs', import.meta.url);
+const FAKE_AGENT = new URL('../testing/fake-acp-agent.mjs', import.meta.url);
 
 const TestLayer = Layer.mergeAll(
   TestDatabaseLayer({ types: [Feed.Feed, Message.Message, Chat.Chat] }),
