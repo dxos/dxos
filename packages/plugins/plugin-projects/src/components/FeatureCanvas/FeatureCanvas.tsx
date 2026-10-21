@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
 import {
+  type Arrangement,
   Canvas,
   type CreateProps,
   DYNAMIC_VIEW_ID,
@@ -149,6 +150,8 @@ export type FeatureCanvasProps = {
   /** The box whose name field is open, as for a feature just created; cleared when it closes. */
   editingId?: string;
   onEditingChange?: (id: string | undefined) => void;
+  /** How boxes take their lattice cells: by rank, with fewest crossing arrows (the default), or by a force layout. */
+  arrange?: Arrangement;
 };
 
 /**
@@ -168,6 +171,7 @@ export const FeatureCanvas = ({
   onDescribe,
   editingId,
   onEditingChange,
+  arrange = 'crossings',
 }: FeatureCanvasProps) => {
   const atomRegistry = useContext(RegistryContext);
   const lookup = useMemo(() => makeFeatureLookup(features), [features]);
@@ -215,7 +219,7 @@ export const FeatureCanvas = ({
         constrained,
         graph,
         overlay,
-        options: { ...LAYOUT, nodes },
+        options: { ...LAYOUT, nodes, arrange },
         capabilities: { move: true, ...editable },
         onLink: ({ from, to }) => callbacks.current.onLink?.(from, to),
         onDelete: (ids) => {
@@ -229,7 +233,7 @@ export const FeatureCanvas = ({
           }
         },
       }),
-    [graph, overlay, nodes, editable.link, editable.delete],
+    [graph, overlay, nodes, arrange, editable.link, editable.delete],
   );
 
   return (

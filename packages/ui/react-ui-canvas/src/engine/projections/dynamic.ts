@@ -33,7 +33,9 @@ import {
   endpointNode,
 } from '../../model/index.ts';
 import {
+  type Arrangement,
   type GridExtent,
+  arrange,
   type LatticeSpec,
   boundsCenter,
   centeredOrigin,
@@ -77,6 +79,8 @@ export type DynamicOptions = {
    * overrides `pitch` and `size`.
    */
   lattice?: LatticeSpec;
+  /** How nodes take their slots once ranked; `rank` by default. */
+  arrange?: Arrangement;
   /** The first slot's centre; by default the layout straddles the origin. */
   origin?: Point;
   /**
@@ -101,25 +105,15 @@ export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: Dynami
   const { pitch, size } = options.lattice ? latticeSlots(options.lattice) : { ...DEFAULTS, ...options };
   const ids = graph.nodes.map(({ id }) => id);
   const known = new Set(ids);
-  const ranks = Layout.rank(
-    ids,
-    graph.edges.filter(({ from, to }) => known.has(from) && known.has(to)),
-  );
-  const byRow = new Map<number, string[]>();
-  for (const id of ids) {
-    const row = ranks.get(id) ?? 0;
-    byRow.set(row, [...(byRow.get(row) ?? []), id]);
-  }
-  const columns = new Map<string, number>();
-  for (const members of byRow.values()) {
-    [...members].sort().forEach((id, index) => columns.set(id, index));
-  }
+  const edges = graph.edges.filter(({ from, to }) => known.has(from) && known.has(to));
+  const ranks = Layout.rank(ids, edges);
+  const slots = arrange(new Map(ids.map((id) => [id, ranks.get(id) ?? 0])), edges, options.arrange);
 
-  // Taken from the ranks rather than from the placed nodes, so dragging a node (which only writes an
+  // Taken from the slots rather than from the placed nodes, so dragging a node (which only writes an
   // override) leaves the rest of the graph where it is.
   const extent = {
-    columns: Math.max(...[...byRow.values()].map(({ length }) => length), 1),
-    rows: Math.max(...byRow.keys(), 0) + 1,
+    columns: Math.max(...[...slots.values()].map(({ column }) => column + 1), 1),
+    rows: Math.max(...[...slots.values()].map(({ row }) => row + 1), 1),
   };
   const origin =
     options.origin ?? (options.lattice ? latticeOrigin(extent, pitch) : centeredOrigin(extent, pitch, size));
@@ -129,8 +123,8 @@ export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: Dynami
   graph.nodes.forEach((node, index) => {
     const override = overlay.positions[node.id];
     const center = override ?? {
-      x: origin.x + (columns.get(node.id) ?? 0) * pitch.width,
-      y: origin.y + (ranks.get(node.id) ?? 0) * pitch.height,
+      x: origin.x + (slots.get(node.id)?.column ?? 0) * pitch.width,
+      y: origin.y + (slots.get(node.id)?.row ?? 0) * pitch.height,
     };
     const props = { id: node.id, z: keys[graph.edges.length + index], center, size };
     nodes[node.id] = options.createNode

@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+export * from './arrange.ts';
 export * from './camera.ts';
 export * from './chrome.ts';
 export * from './clipboard.ts';

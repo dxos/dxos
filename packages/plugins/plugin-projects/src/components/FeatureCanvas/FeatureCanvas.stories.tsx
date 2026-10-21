@@ -6,17 +6,20 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
-import { type Point } from '@dxos/react-ui-canvas/scene';
+import { type Arrangement, type Point } from '@dxos/react-ui-canvas/scene';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
 import { translations } from '#translations';
 
-import { SAMPLE_FEATURES } from '../FeatureCard/testing.ts';
+import { type FeatureModel } from '../FeatureCard/index.ts';
+import { LAYERED_FEATURES, SAMPLE_FEATURES } from '../FeatureCard/testing.ts';
 import { FeatureCanvas } from './FeatureCanvas.tsx';
 
-const DefaultStory = () => {
-  const [features, setFeatures] = useState(SAMPLE_FEATURES);
+type StoryArgs = { arrange?: Arrangement; features?: FeatureModel[] };
+
+const DefaultStory = ({ arrange, features: initial = SAMPLE_FEATURES }: StoryArgs) => {
+  const [features, setFeatures] = useState(initial);
   const [positions, setPositions] = useState<Record<string, Point>>({});
   const update = (id: string, values: { name?: string; description?: string }) =>
     setFeatures((current) => current.map((feature) => (feature.id === id ? { ...feature, ...values } : feature)));
@@ -26,6 +29,7 @@ const DefaultStory = () => {
         features={features}
         positions={positions}
         onPositionsChange={setPositions}
+        arrange={arrange}
         onRename={(id, name) => update(id, { name })}
         onDescribe={(id, description) => update(id, { description })}
       />
@@ -33,7 +37,7 @@ const DefaultStory = () => {
   );
 };
 
-const meta: Meta = {
+const meta: Meta<StoryArgs> = {
   title: 'plugins/plugin-projects/components/FeatureCanvas',
   render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
@@ -50,4 +54,19 @@ export const Default: StoryObj<typeof meta> = {
       timeout: 10_000,
     });
   },
+};
+
+/** Each rank in id order: arrows cross wherever the ids happen to sort against the dependencies. */
+export const RankOrder: StoryObj<typeof meta> = {
+  args: { arrange: 'rank', features: LAYERED_FEATURES },
+};
+
+/** Each rank ordered by its neighbours' mean column over several sweeps, keeping the order with fewest crossings. */
+export const FewestCrossings: StoryObj<typeof meta> = {
+  args: { arrange: 'crossings', features: LAYERED_FEATURES },
+};
+
+/** A force layout seeded from the ranks, run to rest, then snapped to the nearest free lattice cell. */
+export const ForceSnapped: StoryObj<typeof meta> = {
+  args: { arrange: 'force', features: LAYERED_FEATURES },
 };

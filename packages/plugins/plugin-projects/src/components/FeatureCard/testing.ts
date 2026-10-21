@@ -90,3 +90,21 @@ export const SAMPLE_FEATURES: FeatureModel[] = [
     showcases: [{ id: 'showcase-5', name: 'Agent closes a task' }],
   }),
 ];
+
+/**
+ * Three ranks of a workspace app whose id order crosses most dependencies, so a layout that orders each rank by id
+ * draws tangled arrows and one that minimises crossings does visibly better.
+ */
+export const LAYERED_FEATURES: FeatureModel[] = [
+  feature({ id: 'app-search', name: 'Search', status: 'prototype', dependsOn: ['svc-presence', 'svc-editor'] }),
+  feature({ id: 'app-calendar', name: 'Calendar', status: 'in-progress', dependsOn: ['svc-sync'] }),
+  feature({ id: 'app-chat', name: 'Chat', status: 'operational', dependsOn: ['svc-index', 'svc-presence'] }),
+  feature({ id: 'app-notes', name: 'Notes', status: 'operational', dependsOn: ['svc-index'] }),
+  feature({ id: 'svc-index', name: 'Full-text index', status: 'operational', dependsOn: ['core-identity'] }),
+  feature({ id: 'svc-sync', name: 'Sync', status: 'in-progress', dependsOn: ['core-storage', 'core-network'] }),
+  feature({ id: 'svc-presence', name: 'Presence', status: 'planned', dependsOn: ['core-identity', 'core-network'] }),
+  feature({ id: 'svc-editor', name: 'Collaborative editor', status: 'prototype', dependsOn: ['core-storage'] }),
+  feature({ id: 'core-storage', name: 'Storage', status: 'operational' }),
+  feature({ id: 'core-network', name: 'Network', status: 'operational' }),
+  feature({ id: 'core-identity', name: 'Identity', status: 'failing' }),
+];
