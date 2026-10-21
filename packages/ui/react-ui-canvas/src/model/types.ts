@@ -272,7 +272,9 @@ export const PolygonParams = Schema.Struct({
   ),
   /** Unset, `frame`. */
   fit: Schema.optional(Schema.Literals(POLYGON_FITS).annotate({ title: 'Fit' })),
-}).annotate({ title: 'Polygon' });
+})
+  .pipe(Annotation.FormLayoutAnnotation.set({ [Annotation.DEFAULT_LAYOUT_NAME]: pairLayout('sides', 'fit') }))
+  .annotate({ title: 'Polygon' });
 export type PolygonParams = Schema.Schema.Type<typeof PolygonParams>;
 
 /** A regular polygon, as large as fits the frame and centred in it, a vertex at the top; labelled like a box. */
