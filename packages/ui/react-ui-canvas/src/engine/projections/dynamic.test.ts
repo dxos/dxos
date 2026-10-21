@@ -186,4 +186,18 @@ describe('dynamic projection', () => {
     projection.apply({ kind: 'move', ids: ['left'], delta: { x: root.x - left.x, y: root.y - left.y } });
     expect(registry.get(overlay).positions.left).toBeUndefined();
   });
+
+  test('a free force layout keeps the lattice sizes but neither snaps nor routes on it', ({ expect }) => {
+    const spec = { width: 256, height: 128, gutterX: 128, gutterY: 64 };
+    const registry = Registry.make();
+    const projection = createDynamicProjection({
+      registry,
+      graph: Atom.make(graph),
+      overlay: Atom.make<Overlay>({ positions: {} }),
+      options: { nodes: defaultNodeRegistry, lattice: spec, arrange: 'force-free' },
+    });
+    expect(projection.lattice).toBeUndefined();
+    expect(projection.constrain).toBeUndefined();
+    expect(registry.get(projection.scene).nodes.root.size).toEqual({ width: 256, height: 128 });
+  });
 });

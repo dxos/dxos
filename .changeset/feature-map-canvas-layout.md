@@ -12,3 +12,4 @@ The dynamic projection lays a graph out on a lattice and orders it to read clean
   - `force` and `force-free` run a d3-force layout. `force` snaps the result to free cells; `force-free` leaves it where it came to rest. `DynamicOptions.force` tunes attraction, repulsion and repulsion range.
 - New exports: `improveSlots`, `routeCost` and `latticeEnds`.
 - Masonry draws a selected tile's ring on an overlay above the tile, so an opaque tile (such as a card) no longer hides it.
+- The markdown editor shows the link button (`decorateMarkdown`'s `renderLinkButton`) after bare URLs and `<url>` autolinks too, as it does for `[label](url)` links.

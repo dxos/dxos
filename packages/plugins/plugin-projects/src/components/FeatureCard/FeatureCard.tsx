@@ -2,7 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type FocusEvent, type KeyboardEvent, type MouseEvent, type PointerEvent, useState } from 'react';
+import React, {
+  type FocusEvent,
+  type KeyboardEvent,
+  type MouseEvent,
+  type PointerEvent,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -107,6 +115,18 @@ const stopPropagation = (event: MouseEvent | PointerEvent) => event.stopPropagat
  * the card would toggle its selection, and a canvas would delete the box on Backspace.
  */
 const EditField = ({ value, placeholder, label, testId, autoFocus, multiline, onCommit }: EditFieldProps) => {
+  // Uncontrolled, so typing never re-renders the card; a newer model value (another peer's edit) still replaces the
+  // field's text while the user has not changed it, so blur cannot commit the stale text over it.
+  const fieldRef = useRef<HTMLInputElement & HTMLTextAreaElement>(null);
+  const shownRef = useRef(value);
+  useEffect(() => {
+    const field = fieldRef.current;
+    if (field && field.value === shownRef.current) {
+      field.value = value;
+    }
+    shownRef.current = value;
+  }, [value]);
+
   const handleBlur = (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const next = event.currentTarget.value.trim();
     if (next !== value) {
@@ -125,6 +145,7 @@ const EditField = ({ value, placeholder, label, testId, autoFocus, multiline, on
     }
   };
   const props = {
+    'ref': fieldRef,
     'defaultValue': value,
     placeholder,
     'aria-label': label,

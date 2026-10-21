@@ -281,7 +281,8 @@ export const createDynamicProjection = ({
   const scene = Atom.keepAlive(
     Atom.make((get) => layoutGraph(get(graph), pruneOverlay(get(graph), get(overlay)), options)),
   );
-  const { lattice } = options;
+  // A free force layout leaves nodes between cells, so it keeps the lattice's sizes but not its snapping or routing.
+  const lattice = options.arrange === 'force-free' ? undefined : options.lattice;
   const constrain =
     lattice && ((intent: Intent) => (constrained() ? constrainIntent(registry.get(scene), intent, lattice) : intent));
   const apply = (intent: Intent) => {
