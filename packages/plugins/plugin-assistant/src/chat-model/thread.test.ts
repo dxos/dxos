@@ -406,6 +406,22 @@ describe('collapseToolRuns', () => {
     expect(text([collapsed[2]])).toEqual(['answer']);
   });
 
+  test('a run never spans two lanes, and a result joins only a call in its own lane', ({ expect }) => {
+    // Lanes A and B ran side by side, so their tool messages interleave in the feed.
+    const callA = toolCall('tc-a');
+    const callB = toolCall('tc-b');
+    const resultA = toolResult('tc-a');
+    const laneOf = new Map([
+      [callA.id, 'a'],
+      [callB.id, 'b'],
+      [resultA.id, 'a'],
+    ]);
+    const collapsed = collapseToolRuns([callA, callB, resultA], laneOf);
+    expect(collapsed.map((entry) => entry.id)).toEqual([callA.id, callB.id]);
+    expect(collapsed[0].blocks.map((block) => block._tag)).toEqual(['toolCall', 'toolResult']);
+    expect(collapsed[1].blocks.map((block) => block._tag)).toEqual(['toolCall']);
+  });
+
   test('a lone tool message is passed through unchanged', ({ expect }) => {
     const only = toolCall('tc-1');
     const collapsed = collapseToolRuns([message('prompt'), only]);

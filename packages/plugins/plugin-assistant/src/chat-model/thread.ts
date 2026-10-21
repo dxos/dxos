@@ -83,6 +83,7 @@ export const projectThread = ({
   outbox = [],
   discarded = [],
   sender,
+  laneOf,
 }: {
   feedMessages: readonly Message.Message[];
   /** Messages a rewind discarded: neither they nor a prompt that became one come back as rows. */
@@ -95,6 +96,8 @@ export const projectThread = ({
   outbox?: readonly OutboxEntry[];
   /** Who this chat's prompts are from, for an outbox row no feed copy attributes yet. */
   sender?: Actor.Actor;
+  /** The lane of each message, when the chat runs several requests at once: a folded tool run stays in its lane. */
+  laneOf?: ReadonlyMap<string, string>;
 }): ThreadProjection => {
   const all = Array.dedupeWith([...feedMessages, ...pendingMessages], ({ id: a }, { id: b }) => a === b);
   // A turn's messages that the feed has not caught up with yet continue from the thread's head, so
@@ -113,7 +116,7 @@ export const projectThread = ({
   const sorted = feedMessages.filter((message) => !Legacy.isQueued(message));
   const entries = all.filter((message) => Legacy.isQueued(message));
 
-  const history = projectHistory(sorted, unrecorded, rewindFrom);
+  const history = projectHistory(sorted, unrecorded, rewindFrom, laneOf);
   // The turn's own user message may still be only in the streaming turn, ahead of the feed.
   const turnCandidates = [...sorted, ...unrecorded];
   const claimed = new Set<string>();
@@ -179,23 +182,24 @@ const projectHistory = (
   sorted: readonly Message.Message[],
   unrecorded: readonly Message.Message[],
   rewindFrom: string | undefined,
+  laneOf?: ReadonlyMap<string, string>,
 ): Message.Message[] => {
   if (rewindFrom !== undefined) {
     const index = sorted.findIndex((message) => message.id === rewindFrom);
     if (index === 0) {
       // Rewound to the first turn: nothing precedes it.
-      return collapseToolRuns(unrecorded);
+      return collapseToolRuns(unrecorded, laneOf);
     }
     // Once a recorded message continues from the rewind head the fork is lineage, whether or not the
     // pointer has been cleared yet.
     if (index > 0 && !sorted.slice(index + 1).some((message) => Feed.getParent(message) === sorted[index - 1].id)) {
-      return collapseToolRuns([...Feed.history(sorted, { head: sorted[index - 1].id }).items, ...unrecorded]);
+      return collapseToolRuns([...Feed.history(sorted, { head: sorted[index - 1].id }).items, ...unrecorded], laneOf);
     }
     // Not present — a stale pointer (e.g. the message never replicated) — or already continued; fall
     // through to the feed's own lineage rather than blanking the thread.
   }
 
-  return collapseToolRuns([...Feed.history(sorted).items, ...unrecorded]);
+  return collapseToolRuns([...Feed.history(sorted).items, ...unrecorded], laneOf);
 };
 
 /**
@@ -289,7 +293,13 @@ const foldRun = (run: readonly Message.Message[]): Message.Message => {
  * panel's summary cannot count the run it belongs to. The run's first message supplies the identity,
  * keeping the row stable as the run grows and leaving `data-object-id` pointing at a real object.
  */
-export const collapseToolRuns = (messages: readonly Message.Message[]): Message.Message[] => {
+export const collapseToolRuns = (
+  messages: readonly Message.Message[],
+  /** The lane of each message: in a chat running several requests at once, a run never spans two lanes. */
+  laneOf?: ReadonlyMap<string, string>,
+): Message.Message[] => {
+  const sameLane = (left: Message.Message, right: Message.Message) =>
+    laneOf === undefined || laneOf.get(left.id) === laneOf.get(right.id);
   const collapsed: Message.Message[] = [];
   // The messages each entry was folded from, so a later result can join the fold that holds its call.
   const sources: (readonly Message.Message[])[] = [];
@@ -302,7 +312,7 @@ export const collapseToolRuns = (messages: readonly Message.Message[]): Message.
     }
 
     let end = index;
-    while (end + 1 < messages.length && isToolOnly(messages[end + 1])) {
+    while (end + 1 < messages.length && isToolOnly(messages[end + 1]) && sameLane(message, messages[end + 1])) {
       end++;
     }
     const run = messages.slice(index, end + 1);
@@ -313,8 +323,10 @@ export const collapseToolRuns = (messages: readonly Message.Message[]): Message.
     const results = run.flatMap((entry) => entry.blocks);
     const callIds = new Set(results.map((block) => (block._tag === 'toolResult' ? block.toolCallId : undefined)));
     const caller = results.every((block) => block._tag === 'toolResult')
-      ? collapsed.findLastIndex((earlier) =>
-          earlier.blocks.some((block) => block._tag === 'toolCall' && callIds.has(block.toolCallId)),
+      ? collapsed.findLastIndex(
+          (earlier) =>
+            sameLane(earlier, message) &&
+            earlier.blocks.some((block) => block._tag === 'toolCall' && callIds.has(block.toolCallId)),
         )
       : -1;
     if (caller >= 0) {

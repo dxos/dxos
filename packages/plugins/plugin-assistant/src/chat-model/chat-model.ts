@@ -367,6 +367,7 @@ export class ChatModel {
         rewindFrom: get(Obj.atom(this._feed)).rewindFrom,
         outbox: get(this.outbox),
         sender: this._options.sender,
+        laneOf: view.laneOf,
       });
       const arranged = arrangeLanes({
         messages: projection.messages,
