@@ -228,8 +228,9 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               styleSet={look.styleSet}
               background={look.background}
               backgroundGrid={article ? look.backgroundGrid : 'none'}
-              onThemeChange={section ? undefined : handleThemeChange}
-              onBackgroundGridChange={section ? undefined : handleBackgroundGridChange}
+              // Both write the canvas record, which a newer plugin's format keeps read-only here.
+              onThemeChange={section || newer ? undefined : handleThemeChange}
+              onBackgroundGridChange={section || newer ? undefined : handleBackgroundGridChange}
               readonly={readonly}
               // A newer plugin's format stays read-only here, so the toggle that would unlock it is not offered.
               onReadonlyChange={section || newer ? undefined : handleReadonlyChange}

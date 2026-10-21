@@ -296,7 +296,8 @@ export const PropertiesInspector = ({
       const classes: Record<string, StyleClass> = {};
       const intents = elements.map((element) => {
         const shown = formValues(nodes, element, styleMap, layers);
-        const patch = patchValues(shown, values, paths);
+        // The element's own style as the base, so a field the panel shows resolved (an unset corner as on) is not written.
+        const patch = patchValues({ ...shown, style: element.style }, values, paths);
         const styleClass = styles && element.class ? (classes[element.class] ?? styleMap[element.class]) : undefined;
         // Taking a class drops the element's own look, so it derives the class's whole rather than in part.
         if (typeof patch.class === 'string') {

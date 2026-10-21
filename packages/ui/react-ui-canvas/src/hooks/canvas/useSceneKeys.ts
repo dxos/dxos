@@ -132,7 +132,16 @@ export const useSceneKeys = ({
       // A node in vertex edit mode: Enter or Escape leaves it, each drag having landed already, and Delete removes the
       // vertex last pressed rather than the node.
       const editing = registry.get(atoms.editing);
-      if (editing?.kind === 'vertices' && !registry.get(atoms.drag)) {
+      // An undo, Select All or the inspector can take the node away or select others; then the mode is stale.
+      const editable =
+        editing?.kind === 'vertices' &&
+        scene.nodes[editing.id] !== undefined &&
+        selected.length === 1 &&
+        selected[0] === editing.id;
+      if (editing?.kind === 'vertices' && !editable) {
+        exitEdit();
+      }
+      if (editing?.kind === 'vertices' && editable && !registry.get(atoms.drag)) {
         if (action === 'open' || action === 'cancel') {
           exitEdit();
           event.preventDefault();

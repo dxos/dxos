@@ -108,7 +108,8 @@ export const CanvasProperties = ({ drawing }: CanvasPropertiesProps) => {
     [updateCanvas],
   );
 
-  if (!canvas || !Canvas.isSceneSchema(canvas.schema)) {
+  // A newer plugin's format is read-only here, and every control below writes the canvas.
+  if (!canvas || !Canvas.isSceneSchema(canvas.schema) || Canvas.isNewerScene(canvas.schema)) {
     return null;
   }
 
