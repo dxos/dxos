@@ -6,10 +6,10 @@ Call it after `setup`, which is what puts node on PATH:
 
 ```yaml
 - name: Setup
-  uses: ./.depot/actions/setup
+  uses: ./.github/actions/setup
 
 - name: Resolve affected scope
-  uses: ./.depot/actions/affected
+  uses: ./.github/actions/affected
 ```
 
 It exports `MOON_AFFECTED=remote` and `MOON_BASE=<sha>`, or nothing for a full run, except `MOON_FORCE=true` on the scheduled run. `moon run` and `moon exec` both read all three (2.5.2), including through the Trunk uploader's `run:` input, which is why a scoped command can stay a plain string.
@@ -62,7 +62,7 @@ Both catch a property of an import edge, where the offending commit lands in a p
 `resolve-affected.mjs` needs no arguments and no CI environment. With no `GITHUB_*` set it falls back to the merge-base, so it tells you what CI would decide for the checkout you are in.
 
 ```bash
-A=.depot/actions/affected/resolve-affected.mjs
+A=.github/actions/affected/resolve-affected.mjs
 node $A                       # what CI would decide here
 node $A --event merge_group   # emulate another trigger
 node $A --help                # every flag

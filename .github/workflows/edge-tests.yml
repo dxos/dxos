@@ -13,19 +13,14 @@ on:
         required: false
         default: false
 
-env:
-  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
-
 # https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# TODO(wittjosiah): https://moonrepo.dev/docs/ci/intro/tutorials/github-actions
-# https://nx.dev/ci/intro/tutorials/github-actions
 jobs:
   edge-test:
-    runs-on: depot-ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
       - name: Setup tmate session

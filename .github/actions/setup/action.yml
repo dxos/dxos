@@ -29,11 +29,29 @@ inputs:
 runs:
   using: 'composite'
   steps:
-    # A job on the `ci-image.yml` snapshot already has the cargo registry and moon's toolchains, so it
-    # skips restoring them.
-    - name: Detect the CI image
-      id: image
-      run: echo "baked=$([ -f /opt/dxos-ci/commit ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+    # A bare runner has neither node nor pnpm on PATH, and once moon's toolchain cache is restored
+    # `moon setup` skips installing them, so `pnpm store path` would come back empty. The
+    # `ghcr.io/dxos/gh-actions` container already ships both. Versions come from `.prototools`.
+    - name: Detect node and pnpm
+      id: bootstrap
+      run: |
+        version() { sed -n "s/^$1 = \"\(.*\)\"$/\1/p" .prototools; }
+        echo "node=$(version node)" >> "$GITHUB_OUTPUT"
+        echo "pnpm=$(version pnpm)" >> "$GITHUB_OUTPUT"
+        echo "missing=$(command -v pnpm >/dev/null && echo false || echo true)" >> "$GITHUB_OUTPUT"
+      shell: bash
+
+    - name: Install node
+      if: ${{ steps.bootstrap.outputs.missing == 'true' }}
+      uses: actions/setup-node@v5
+      with:
+        node-version: ${{ steps.bootstrap.outputs.node }}
+        # Otherwise v5 reads `packageManager` and wants pnpm for its cache before pnpm exists.
+        package-manager-cache: false
+
+    - name: Install pnpm
+      if: ${{ steps.bootstrap.outputs.missing == 'true' }}
+      run: npm install -g pnpm@${{ steps.bootstrap.outputs.pnpm }}
       shell: bash
 
     # TODO(wittjosiah): This shouldn't be necessary, but it is when running in BuildJet.
@@ -46,7 +64,8 @@ runs:
     # `.moon/workspace.yml` points the remote cache at a self-hosted bazel-remote behind mTLS.
     # moon degrades to local-cache-only when it cannot authenticate — silently, and green — so a
     # missing secret would cost every job its cache with no red build to notice it. Fail here
-    # instead, except on fork PRs, which cannot be given secrets at all.
+    # instead, except on fork PRs, which get no secrets, and Dependabot's, which get only Dependabot
+    # secrets.
     #
     # MOON_CACHE_* are read straight from the environment: a composite action cannot access the
     # `secrets` context, so each workflow binds them once in a workflow-level `env:` block rather
@@ -54,6 +73,7 @@ runs:
     - name: Install remote cache certificates
       env:
         IS_FORK: ${{ github.event.pull_request.head.repo.fork }}
+        ACTOR: ${{ github.actor }}
         REMOTE_CACHE: ${{ inputs.remote-cache }}
       run: |
         if [ "$REMOTE_CACHE" != "true" ]; then
@@ -65,8 +85,8 @@ runs:
           exit 0
         fi
         if [ -z "$MOON_CACHE_CA_PEM" ] || [ -z "$MOON_CACHE_CLIENT_PEM" ] || [ -z "$MOON_CACHE_CLIENT_KEY" ]; then
-          if [ "$IS_FORK" = "true" ]; then
-            echo "::warning::Fork PR — no remote cache credentials, moon will use the local cache only."
+          if [ "$IS_FORK" = "true" ] || [ "$ACTOR" = "dependabot[bot]" ]; then
+            echo "::warning::Fork or Dependabot PR — no remote cache credentials, moon will use the local cache only."
             exit 0
           fi
           echo "::error::Remote cache certificates are missing. Bind MOON_CACHE_CA_PEM / MOON_CACHE_CLIENT_PEM / MOON_CACHE_CLIENT_KEY in the workflow's env block, or pass remote-cache: 'false'."
@@ -149,7 +169,6 @@ runs:
     # TODO(wittjosiah): Install moon in docker image?
     - uses: moonrepo/setup-toolchain@v0
       with:
-        cache: ${{ steps.image.outputs.baked != 'true' }}
         # IMPORTANT: Keep in-sync with .prototools
         moon-version: '2.5.2'
         proto-version: '0.60.2'
@@ -164,7 +183,7 @@ runs:
     # Only a job whose crate inputs changed compiles, since moon's remote cache restores the addon and
     # skips `cargo-test` otherwise; the registry is cached because that compile would refetch every crate.
     - name: Cache cargo registry
-      if: ${{ inputs.rust == 'true' && steps.image.outputs.baked != 'true' }}
+      if: ${{ inputs.rust == 'true' }}
       uses: actions/cache@v4
       with:
         path: |
