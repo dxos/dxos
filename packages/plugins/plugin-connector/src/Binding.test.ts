@@ -802,6 +802,20 @@ describe('Binding.syncAll', () => {
     expect(synced).toContain(Ref.make(cursor).uri);
   });
 
+  // A target bound and synced straight away can reach EDGE after the run starts.
+  test('waits for a priority binding that has not arrived yet', async ({ expect }) => {
+    const { db, connection, cursor, token } = await setup();
+    const target = db.add(Obj.make(Expando.Expando, { name: 'Late' }));
+    const late = Cursor.makeExternal({ source: Ref.make(token), target: Ref.make(target) });
+    setTimeout(() => db.add(late), 100);
+
+    const outcome = await runFanOut(connection, late.id);
+
+    invariant(outcome._tag === 'Success');
+    expect(outcome.success.synced).toBe(2);
+    expect(synced).toEqual([Ref.make(late).uri, Ref.make(cursor).uri]);
+  });
+
   test('re-raises runAgain after every binding had its turn', async ({ expect }) => {
     const { db, connection, cursor, token } = await setup();
     const second = await addCursor(db, token);
