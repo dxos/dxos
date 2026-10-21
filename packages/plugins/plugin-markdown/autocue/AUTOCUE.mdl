@@ -32,8 +32,8 @@ test QA-4: Write, comment on, and link from a document
       expect: an empty document opens in a new plank
     - name: Write in markdown
       do: |
-        Type a "# Launch plan" heading, a sentence with a **bold** word, and a three-item list,
-        starting only the first item with "- ".
+        Type a "# Launch plan" heading, a sentence with a **bold** word, and a three-item list
+        ending with "Links between pages", starting only the first item with "- ".
       expect: the heading, bold text and bullets render as they are typed, and the document takes
         the heading as its name in the navtree
       note: The editor continues a list on Enter and leaves it on an empty item.
@@ -81,4 +81,13 @@ decision D-1: This spec holds plugin-markdown's recorded demo flows, QA-4 and QA
   date: 2026-10-19
   by: user:richburdon
   affects: [QA-4, QA-5]
+```
+
+```mdl
+decision D-2: QA-4's writing step names "Links between pages" as the list's last item, the phrase its next step comments on.
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [QA-4]
+  why: Without it a tester can type a list the comment step then cannot select; the recorded flow already types this item.
 ```

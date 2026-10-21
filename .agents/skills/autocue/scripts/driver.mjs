@@ -133,6 +133,25 @@ const parseArgs = () => {
 };
 
 const options = parseArgs();
+// An invalid caption flag would otherwise reach the frame as NaN or an unknown class and silently drop the caption's look.
+const background = options['caption-background'];
+if (typeof background !== 'number' || !Number.isFinite(background) || background < 0 || background > 1) {
+  console.error(`--caption-background must be a number from 0 to 1, not ${JSON.stringify(background)}`);
+  process.exit(1);
+}
+if (!['top', 'middle', 'bottom'].includes(options['caption-position'])) {
+  console.error(`--caption-position must be top, middle or bottom, not ${JSON.stringify(options['caption-position'])}`);
+  process.exit(1);
+}
+if (
+  options['caption-colors'] !== undefined &&
+  !['white-on-black', 'black-on-white'].includes(options['caption-colors'])
+) {
+  console.error(
+    `--caption-colors must be white-on-black or black-on-white, not ${JSON.stringify(options['caption-colors'])}`,
+  );
+  process.exit(1);
+}
 const manual = options.mode === 'manual';
 const tauri = options.target === 'tauri';
 mkdirSync(options.out, { recursive: true });
