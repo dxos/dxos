@@ -70,6 +70,8 @@ describe('diagram preview', () => {
     const result = await renderDiagram(SOURCE);
     expect('svg' in result && result.svg.startsWith('<svg xmlns="http://www.w3.org/2000/svg"')).toBe(true);
     expect('svg' in result && result.svg).toContain('Alpha');
+    // The widget reserves this size before the image decodes, so it must match the SVG's own.
+    expect('svg' in result && result.width > 0 && result.height > 0).toBe(true);
   });
 
   test('reports an error instead of an image for an empty source', async ({ expect }) => {

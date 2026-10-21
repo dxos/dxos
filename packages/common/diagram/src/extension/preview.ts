@@ -20,9 +20,19 @@ const FENCE_NAMES = new Set(['diagram', 'dxd']);
 /** Renders kept by source text, so re-decorating after an unrelated edit does not lay the diagram out again. */
 const MAX_RENDERS = 32;
 
-export type DiagramRender = { readonly svg: string } | { readonly error: string };
+export type DiagramRender =
+  | { readonly svg: string; readonly width: number; readonly height: number }
+  | { readonly error: string };
 
 const renders = new Map<string, Promise<DiagramRender>>();
+
+/** Renders that have finished, so a widget can be drawn at its final size synchronously. */
+const settled = new Map<string, DiagramRender>();
+
+/** Width the editor's text column usually has, for estimating a diagram's height before it is measured. */
+const ESTIMATED_COLUMN_WIDTH = 720;
+
+const PREVIEW_PADDING = 24 + 16;
 
 /** Lays out one diagram DSL source and serializes it as a standalone SVG document. */
 export const renderDiagram = (source: string): Promise<DiagramRender> => {
@@ -30,20 +40,30 @@ export const renderDiagram = (source: string): Promise<DiagramRender> => {
   if (cached) {
     return cached;
   }
-  const pending = EffectEx.runPromise(compile(source)).then(
-    ({ commands, problems }): DiagramRender => {
-      const objects = commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
-      if (objects.length === 0) {
-        return { error: problems.find((problem) => problem.severity === 'error')?.message ?? 'The diagram is empty.' };
-      }
-      return { svg: SvgFile.toSvgFile(objects) };
-    },
-    (error: unknown): DiagramRender => ({ error: error instanceof Error ? error.message : String(error) }),
-  );
+  const pending = EffectEx.runPromise(compile(source))
+    .then(
+      ({ commands, problems }): DiagramRender => {
+        const objects = commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
+        if (objects.length === 0) {
+          return {
+            error: problems.find((problem) => problem.severity === 'error')?.message ?? 'The diagram is empty.',
+          };
+        }
+        const svg = SvgFile.toSvgFile(objects);
+        const [, width = '0', height = '0'] = /<svg [^>]*?width="([\d.]+)" height="([\d.]+)"/.exec(svg) ?? [];
+        return { svg, width: Number(width), height: Number(height) };
+      },
+      (error: unknown): DiagramRender => ({ error: error instanceof Error ? error.message : String(error) }),
+    )
+    .then((result) => {
+      settled.set(source, result);
+      return result;
+    });
   if (renders.size >= MAX_RENDERS) {
     const oldest = renders.keys().next();
     if (!oldest.done) {
       renders.delete(oldest.value);
+      settled.delete(oldest.value);
     }
   }
   renders.set(source, pending);
@@ -60,33 +80,49 @@ class DiagramWidget extends WidgetType {
   }
 
   override get estimatedHeight(): number {
+    const result = settled.get(this.source);
+    if (result && 'svg' in result && result.width > 0) {
+      return Math.min(result.height, (result.height * ESTIMATED_COLUMN_WIDTH) / result.width) + PREVIEW_PADDING;
+    }
     return 320;
   }
 
   override toDOM(view: EditorView): HTMLElement {
     const container = document.createElement('div');
     container.className = 'cm-diagram-preview';
-    container.textContent = 'Rendering diagram…';
     // A collapsed fence has no text to click into, so clicking the diagram moves the cursor into its source.
     container.addEventListener('mousedown', (event) => {
       event.preventDefault();
       view.dispatch({ selection: { anchor: view.posAtDOM(container) } });
       view.focus();
     });
-    void renderDiagram(this.source).then((result) => {
+    const show = (result: DiagramRender) => {
       if ('svg' in result) {
-        // An <img> isolates the SVG's own stylesheet and marker ids from the page and from other diagrams.
+        // An <img> isolates the SVG's stylesheet and marker ids; its width and height reserve the final size before it decodes.
         const image = document.createElement('img');
         image.alt = 'Diagram';
-        image.onload = () => view.requestMeasure();
+        image.width = result.width;
+        image.height = result.height;
         image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(result.svg)}`;
         container.replaceChildren(image);
       } else {
         container.classList.add('cm-diagram-preview-error');
         container.textContent = result.error;
       }
-      view.requestMeasure();
-    });
+    };
+    // A widget whose size changes after mount shifts everything below it, which moves the reader's scroll position.
+    const ready = settled.get(this.source);
+    if (ready) {
+      show(ready);
+    } else {
+      container.style.minHeight = `${this.estimatedHeight}px`;
+      container.textContent = 'Rendering diagram…';
+      void renderDiagram(this.source).then((result) => {
+        container.style.minHeight = '';
+        show(result);
+        view.requestMeasure();
+      });
+    }
     return container;
   }
 
@@ -113,7 +149,10 @@ export const buildDiagramPreviews = (state: EditorState): DecorationSet => {
       const info = node.node.getChild('CodeInfo');
       const body = node.node.getChild('CodeText');
       if (info && body && FENCE_NAMES.has(state.doc.sliceString(info.from, info.to).trim())) {
-        const widget = new DiagramWidget(state.doc.sliceString(body.from, body.to));
+        const source = state.doc.sliceString(body.from, body.to);
+        // Laid out ahead of scrolling, so a widget that mounts later is drawn at its final size at once.
+        void renderDiagram(source);
+        const widget = new DiagramWidget(source);
         if (isEditing(state, node.from, node.to)) {
           builder.add(node.to, node.to, Decoration.widget({ widget, block: true, side: 1 }));
         } else {
