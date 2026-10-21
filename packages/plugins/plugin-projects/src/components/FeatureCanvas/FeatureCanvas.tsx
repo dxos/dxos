@@ -13,6 +13,7 @@ import {
   type CreateProps,
   DYNAMIC_VIEW_ID,
   type DynamicOptions,
+  type ForceOptions,
   type FreehandProjectionOptions,
   type GraphModel,
   type LatticeSpec,
@@ -155,6 +156,8 @@ export type FeatureCanvasProps = {
   onEditingChange?: (id: string | undefined) => void;
   /** How boxes take their lattice cells (see `Arrangement`); fewest crossing arrows by default. */
   arrange?: Arrangement;
+  /** Strengths of the force arrangements. */
+  force?: ForceOptions;
 };
 
 /**
@@ -175,6 +178,7 @@ export const FeatureCanvas = ({
   editingId,
   onEditingChange,
   arrange = 'crossings',
+  force,
 }: FeatureCanvasProps) => {
   const atomRegistry = useContext(RegistryContext);
   const lookup = useMemo(() => makeFeatureLookup(features), [features]);
@@ -222,7 +226,7 @@ export const FeatureCanvas = ({
         constrained,
         graph,
         overlay,
-        options: { ...LAYOUT, nodes, arrange },
+        options: { ...LAYOUT, nodes, arrange, force: { attraction: force?.attraction, repulsion: force?.repulsion } },
         capabilities: { move: true, ...editable },
         onLink: ({ from, to }) => callbacks.current.onLink?.(from, to),
         onDelete: (ids) => {
@@ -236,7 +240,7 @@ export const FeatureCanvas = ({
           }
         },
       }),
-    [graph, overlay, nodes, arrange, editable.link, editable.delete],
+    [graph, overlay, nodes, arrange, force?.attraction, force?.repulsion, editable.link, editable.delete],
   );
 
   return (

@@ -25,6 +25,11 @@ export type Slot = { column: number; row: number };
  */
 export type Arrangement = 'rank' | 'crossings' | 'force' | 'force-free' | 'routed';
 
+/** The force layouts' strengths: how hard linked nodes pull together and how hard every node pushes its neighbours. */
+export type ForceOptions = { attraction?: number; repulsion?: number };
+
+export const DEFAULT_FORCE: Required<ForceOptions> = { attraction: 1, repulsion: 0.2 };
+
 const SWEEPS = 8;
 const FORCE_TICKS = 300;
 
@@ -33,6 +38,7 @@ export const arrange = (
   ranks: ReadonlyMap<string, number>,
   edges: readonly ArrangeEdge[],
   arrangement: Arrangement = 'rank',
+  force: ForceOptions = {},
 ): Map<string, Slot> => {
   const rows = rowsOf(ranks);
   switch (arrangement) {
@@ -43,7 +49,10 @@ export const arrange = (
       return slotsOf(orderRows(rows, edges));
     case 'force':
     case 'force-free':
-      return forceSlots(ranks, edges, slotsOf(orderRows(rows, edges)), arrangement === 'force');
+      return forceSlots(ranks, edges, slotsOf(orderRows(rows, edges)), arrangement === 'force', {
+        ...DEFAULT_FORCE,
+        ...force,
+      });
   }
 };
 
@@ -140,6 +149,7 @@ const forceSlots = (
   edges: readonly ArrangeEdge[],
   seed: ReadonlyMap<string, Slot>,
   snap: boolean,
+  { attraction, repulsion }: Required<ForceOptions>,
 ): Map<string, Slot> => {
   const nodes: SimNode[] = [...ranks].map(([id, rank]) => {
     const slot = seed.get(id) ?? { column: 0, row: rank };
@@ -154,10 +164,10 @@ const forceSlots = (
       forceLink<SimNode, { source: string; target: string }>(links)
         .id(({ id }) => id)
         .distance(1)
-        .strength(1),
+        .strength(attraction),
     )
     // Short-range, so unrelated nodes make room for each other without the graph spreading across the canvas.
-    .force('charge', forceManyBody().strength(-0.2).distanceMax(3))
+    .force('charge', forceManyBody().strength(-repulsion).distanceMax(3))
     .force('collide', forceCollide(0.5))
     // Flow stays top-down: each node is held at its rank and gently towards the middle.
     .force('y', forceY<SimNode>(({ rank }) => rank).strength(1))

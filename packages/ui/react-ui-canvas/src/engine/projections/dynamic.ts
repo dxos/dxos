@@ -34,6 +34,7 @@ import {
 } from '../../model/index.ts';
 import {
   type Arrangement,
+  type ForceOptions,
   type GridExtent,
   type LatticeSpec,
   type Slot,
@@ -85,6 +86,8 @@ export type DynamicOptions = {
   lattice?: LatticeSpec;
   /** How nodes take their slots once ranked; `rank` by default. */
   arrange?: Arrangement;
+  /** Strengths of the `force` and `force-free` arrangements. */
+  force?: ForceOptions;
   /** The first slot's centre; by default the layout straddles the origin. */
   origin?: Point;
   /**
@@ -111,7 +114,7 @@ export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: Dynami
   const known = new Set(ids);
   const edges = graph.edges.filter(({ from, to }) => known.has(from) && known.has(to));
   const ranks = Layout.rank(ids, edges);
-  const seed = arrange(new Map(ids.map((id) => [id, ranks.get(id) ?? 0])), edges, options.arrange);
+  const seed = arrange(new Map(ids.map((id) => [id, ranks.get(id) ?? 0])), edges, options.arrange, options.force);
   const slots =
     options.arrange === 'routed' && options.lattice ? routedSlots(graph, edges, seed, options, options.lattice) : seed;
 
