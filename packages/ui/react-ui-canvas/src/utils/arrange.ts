@@ -11,7 +11,7 @@ import { forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY
 
 export type ArrangeEdge = { from: string; to: string };
 
-/** A node's slot: its column, and its row (the rank, unless a force layout moved it). */
+/** A node's slot: its column, and its row (the rank, unless a force layout moved it); fractional only for `force-free`. */
 export type Slot = { column: number; row: number };
 
 /**
@@ -19,8 +19,11 @@ export type Slot = { column: number; row: number };
  * - `crossings`: each rank ordered by its neighbours' mean column, sweeping down and up, keeping the order with the
  *   fewest crossings between adjacent ranks.
  * - `force`: a force layout seeded from the ranks and run to rest, each node then snapped to the nearest free slot.
+ * - `force-free`: the same force layout where it came to rest, unsnapped, to compare against `force`.
+ * - `routed`: `crossings`, then improved by moving and swapping nodes against the cost of their routed links; it needs
+ *   the routes, so here it gives the `crossings` seed and the dynamic projection runs the search.
  */
-export type Arrangement = 'rank' | 'crossings' | 'force';
+export type Arrangement = 'rank' | 'crossings' | 'force' | 'force-free' | 'routed';
 
 const SWEEPS = 8;
 const FORCE_TICKS = 300;
@@ -36,9 +39,11 @@ export const arrange = (
     case 'rank':
       return slotsOf(rows);
     case 'crossings':
+    case 'routed':
       return slotsOf(orderRows(rows, edges));
     case 'force':
-      return forceSlots(ranks, edges, slotsOf(orderRows(rows, edges)));
+    case 'force-free':
+      return forceSlots(ranks, edges, slotsOf(orderRows(rows, edges)), arrangement === 'force');
   }
 };
 
@@ -127,13 +132,14 @@ const orderRows = (rows: readonly string[][], edges: readonly ArrangeEdge[]): st
 type SimNode = { id: string; x: number; y: number; rank: number };
 
 /**
- * A force layout in slot units, seeded from `seed` so it needs no randomness, then snapped in reading order: each node
+ * A force layout in slot units, seeded from `seed` so it needs no randomness. Snapped, in reading order: each node
  * takes its nearest slot, or the nearest free one, so no two share a slot.
  */
 const forceSlots = (
   ranks: ReadonlyMap<string, number>,
   edges: readonly ArrangeEdge[],
   seed: ReadonlyMap<string, Slot>,
+  snap: boolean,
 ): Map<string, Slot> => {
   const nodes: SimNode[] = [...ranks].map(([id, rank]) => {
     const slot = seed.get(id) ?? { column: 0, row: rank };
@@ -161,6 +167,9 @@ const forceSlots = (
 
   const minX = Math.min(...nodes.map(({ x }) => x));
   const minY = Math.min(...nodes.map(({ y }) => y));
+  if (!snap) {
+    return new Map(nodes.map(({ id, x, y }) => [id, { column: x - minX, row: y - minY }]));
+  }
   const taken = new Set<string>();
   const slots = new Map<string, Slot>();
   for (const node of [...nodes].sort((a, b) => a.y - b.y || a.x - b.x || a.id.localeCompare(b.id))) {

@@ -3,6 +3,7 @@
 //
 
 export * from './arrange.ts';
+export * from './arrange-search.ts';
 export * from './camera.ts';
 export * from './chrome.ts';
 export * from './clipboard.ts';

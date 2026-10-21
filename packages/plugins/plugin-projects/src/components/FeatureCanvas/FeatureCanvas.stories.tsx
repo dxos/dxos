@@ -66,7 +66,20 @@ export const FewestCrossings: StoryObj<typeof meta> = {
   args: { arrange: 'crossings', features: LAYERED_FEATURES },
 };
 
+/**
+ * Fewest crossings, then improved card by card: each moves to a nearby free cell or swaps with a nearby card when that
+ * lowers the cost of the links as the canvas routes them (crossings, then bends, then length).
+ */
+export const Routed: StoryObj<typeof meta> = {
+  args: { arrange: 'routed', features: LAYERED_FEATURES },
+};
+
 /** A force layout seeded from the ranks, run to rest, then snapped to the nearest free lattice cell. */
 export const ForceSnapped: StoryObj<typeof meta> = {
   args: { arrange: 'force', features: LAYERED_FEATURES },
+};
+
+/** The same force layout where it came to rest, before snapping, to see what the snap changes. */
+export const ForceUnsnapped: StoryObj<typeof meta> = {
+  args: { arrange: 'force-free', features: LAYERED_FEATURES },
 };

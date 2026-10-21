@@ -35,12 +35,16 @@ import {
 import {
   type Arrangement,
   type GridExtent,
-  arrange,
   type LatticeSpec,
+  type Slot,
+  arrange,
   boundsCenter,
   centeredOrigin,
   createNode,
+  improveSlots,
   initialKeys,
+  latticeEnds,
+  routeCost,
   withTitle,
 } from '../../utils/index.ts';
 import { type Projection } from '../projection.ts';
@@ -107,7 +111,9 @@ export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: Dynami
   const known = new Set(ids);
   const edges = graph.edges.filter(({ from, to }) => known.has(from) && known.has(to));
   const ranks = Layout.rank(ids, edges);
-  const slots = arrange(new Map(ids.map((id) => [id, ranks.get(id) ?? 0])), edges, options.arrange);
+  const seed = arrange(new Map(ids.map((id) => [id, ranks.get(id) ?? 0])), edges, options.arrange);
+  const slots =
+    options.arrange === 'routed' && options.lattice ? routedSlots(graph, edges, seed, options, options.lattice) : seed;
 
   // Taken from the slots rather than from the placed nodes, so dragging a node (which only writes an
   // override) leaves the rest of the graph where it is.
@@ -147,6 +153,70 @@ export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: Dynami
     }
   });
   return { id: DYNAMIC_VIEW_ID, name: 'Dynamic', nodes, links };
+};
+
+/** Weights of a routed arrangement's score: a crossing outweighs any number of bends, a bend any detour. */
+const CROSSING_COST = 1_000;
+const BEND_COST = 20;
+
+/** The last few routed arrangements by graph, so a drag (which re-runs the layout) does not re-run the search. */
+const routedCache = new Map<string, Map<string, Slot>>();
+const ROUTED_CACHE_SIZE = 8;
+
+/**
+ * `seed` improved by moving and swapping nodes on the lattice, scored by routing every edge through the gutters as the
+ * canvas draws it.
+ */
+const routedSlots = (
+  graph: GraphModel,
+  edges: readonly GraphEdge[],
+  seed: ReadonlyMap<string, Slot>,
+  options: DynamicOptions,
+  lattice: LatticeSpec,
+): Map<string, Slot> => {
+  const key = JSON.stringify([lattice, graph.nodes.map(({ id }) => id), edges.map(({ from, to }) => [from, to])]);
+  const cached = routedCache.get(key);
+  if (cached) {
+    return cached;
+  }
+  const { pitch, size } = latticeSlots(lattice);
+  const links: Link[] = edges.map(({ id, from, to }) => ({
+    type: 'smart',
+    id,
+    z: 'a0',
+    source: { node: from },
+    target: { node: to },
+  }));
+  const score = (slots: ReadonlyMap<string, Slot>) => {
+    const nodes: Record<string, Node> = {};
+    for (const node of graph.nodes) {
+      const slot = slots.get(node.id) ?? { column: 0, row: 0 };
+      const props = {
+        id: node.id,
+        z: 'a0',
+        center: { x: slot.column * pitch.width, y: slot.row * pitch.height },
+        size,
+      };
+      nodes[node.id] = options.createNode
+        ? options.createNode(node, props)
+        : createNode({ type: node.type ?? 'rect', ...props });
+    }
+    const view: View = { id: DYNAMIC_VIEW_ID, name: 'Dynamic', nodes, links: {} };
+    const route = { spec: lattice, nodes: Object.values(nodes) };
+    const routes = links.flatMap((link) => {
+      const routed = latticeEnds(view, options.nodes, link, route);
+      return routed ? [routed.points] : [];
+    });
+    const cost = routeCost(routes);
+    const unrouted = links.length - routes.length;
+    return (cost.crossings + unrouted) * CROSSING_COST + cost.bends * BEND_COST + cost.length / pitch.width;
+  };
+  const slots = improveSlots(seed, score);
+  routedCache.set(key, slots);
+  if (routedCache.size > ROUTED_CACHE_SIZE) {
+    routedCache.delete(routedCache.keys().next().value ?? '');
+  }
+  return slots;
 };
 
 /** One-cell slots, a cell plus a gutter apart. */

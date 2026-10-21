@@ -153,7 +153,7 @@ export type FeatureCanvasProps = {
   /** The box whose name field is open, as for a feature just created; cleared when it closes. */
   editingId?: string;
   onEditingChange?: (id: string | undefined) => void;
-  /** How boxes take their lattice cells: by rank, with fewest crossing arrows (the default), or by a force layout. */
+  /** How boxes take their lattice cells (see `Arrangement`); fewest crossing arrows by default. */
   arrange?: Arrangement;
 };
 
@@ -241,7 +241,15 @@ export const FeatureCanvas = ({
 
   return (
     <FeatureNodeContext.Provider value={nodeContext}>
-      <Canvas.Root store={store} root={DYNAMIC_VIEW_ID} atoms={atoms} nodes={nodes} createProjection={createProjection}>
+      <Canvas.Root
+        store={store}
+        root={DYNAMIC_VIEW_ID}
+        atoms={atoms}
+        nodes={nodes}
+        createProjection={createProjection}
+        // The lattice guides are the board's structure; dots between them would only add noise.
+        backgroundGrid='none'
+      >
         <Canvas.Viewport />
         <Canvas.Navigation />
       </Canvas.Root>
