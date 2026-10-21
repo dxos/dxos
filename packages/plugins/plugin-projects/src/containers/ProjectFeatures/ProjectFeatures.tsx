@@ -21,7 +21,7 @@ import { Feature, FeatureMapView } from '#types';
 // Not in the components barrel: the canvas engine is large, and the barrel is also loaded by capabilities at boot.
 import { FeatureCanvas } from '../../components/FeatureCanvas/index.ts';
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
-import { useFeatureEditing, useFeatureGraph, useOpenObject } from '../../hooks/index.ts';
+import { useFeatureEditing, useFeatureGraph, useOpenFeatureTarget } from '../../hooks/index.ts';
 
 export type ProjectFeaturesProps = {
   project: Project.Project;
@@ -54,9 +54,8 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
   );
   const graph = useFeatureGraph(db, ids);
   const features = useMemo(() => ids.flatMap((id) => graph.lookup(id) ?? []), [ids, graph]);
-  const openObject = useOpenObject(db, attendableId);
+  const handleOpen = useOpenFeatureTarget(db, attendableId);
   const editing = useFeatureEditing(db, project);
-  const handleOpen = useCallback((id: string) => void openObject(id), [openObject]);
   // The card whose name field is open: a feature created from the toolbar is named in place on the map.
   const [editingId, setEditingId] = useState<string>();
   const handleNew = useCallback(() => void editing.createFeature('').then((id) => id && setEditingId(id)), [editing]);
@@ -154,8 +153,7 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
               onLink={editing.addDependency}
               onUnlink={editing.removeDependency}
               onRemove={editing.removeFromProject}
-              onRename={editing.rename}
-              onDescribe={editing.describe}
+              onChange={editing.update}
               editingId={editingId}
               onEditingChange={setEditingId}
             />
@@ -163,12 +161,9 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
         ) : mode === 'kanban' ? (
           <FeatureKanban
             features={features}
-            onSetStatus={editing.setStatus}
             onOpen={handleOpen}
-            onOpenObject={handleOpen}
             onRemove={editing.removeFromProject}
-            onRename={editing.rename}
-            onDescribe={editing.describe}
+            onChange={editing.update}
             editingId={editingId}
             onEditingChange={setEditingId}
           />
@@ -178,11 +173,8 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
               <FeatureBoard
                 features={features}
                 onOpen={handleOpen}
-                onOpenObject={handleOpen}
-                onSetStatus={editing.setStatus}
                 onRemove={editing.removeFromProject}
-                onRename={editing.rename}
-                onDescribe={editing.describe}
+                onChange={editing.update}
                 editingId={editingId}
                 onEditingChange={setEditingId}
               />

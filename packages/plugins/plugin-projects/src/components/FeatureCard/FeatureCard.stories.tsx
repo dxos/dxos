@@ -12,40 +12,45 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 
 import { translations } from '#translations';
 
-import { type FeatureLookup, type FeatureModel, makeFeatureLookup } from './feature.ts';
+import {
+  type FeatureChanges,
+  type FeatureLookup,
+  type FeatureModel,
+  type FeatureTarget,
+  makeFeatureLookup,
+} from './feature.ts';
 import { FeatureCard } from './FeatureCard.tsx';
 import { SAMPLE_FEATURES } from './testing.ts';
 
 type StoryArgs = {
   ids: string[];
   expanded?: boolean;
-  onSelectDependency?: (id: string) => void;
+  onOpen?: (target: FeatureTarget) => void;
 };
 
-type TileData = Pick<StoryArgs, 'expanded' | 'onSelectDependency'> & {
+type TileData = Pick<StoryArgs, 'expanded' | 'onOpen'> & {
   feature: FeatureModel;
   lookup: FeatureLookup;
-  onRename: (feature: FeatureModel, name: string) => void;
-  onDescribe: (feature: FeatureModel, description: string) => void;
+  onChange: (feature: FeatureModel, changes: FeatureChanges) => void;
 };
 
 const FeatureTile = ({ data: { feature, ...props } }: { data: TileData }) => (
   <FeatureCard feature={feature} {...props} />
 );
 
-const DefaultStory = ({ ids, expanded, onSelectDependency }: StoryArgs) => {
+const DefaultStory = ({ ids, expanded, onOpen }: StoryArgs) => {
   const [features, setFeatures] = useState(SAMPLE_FEATURES);
   const lookup = useMemo(() => makeFeatureLookup(features), [features]);
   const items = useMemo(() => {
-    const update = (id: string, values: Partial<FeatureModel>) =>
-      setFeatures((current) => current.map((feature) => (feature.id === id ? { ...feature, ...values } : feature)));
-    const onRename = (feature: FeatureModel, name: string) => update(feature.id, { name });
-    const onDescribe = (feature: FeatureModel, description: string) => update(feature.id, { description });
+    const onChange = (changed: FeatureModel, changes: FeatureChanges) =>
+      setFeatures((current) =>
+        current.map((feature) => (feature.id === changed.id ? { ...feature, ...changes } : feature)),
+      );
     return ids.flatMap((id): TileData[] => {
       const feature = lookup(id);
-      return feature ? [{ feature, lookup, expanded, onSelectDependency, onRename, onDescribe }] : [];
+      return feature ? [{ feature, lookup, expanded, onOpen, onChange }] : [];
     });
-  }, [ids, lookup, expanded, onSelectDependency]);
+  }, [ids, lookup, expanded, onOpen]);
 
   return (
     <Masonry.Root Tile={FeatureTile} minColumnWidth={18}>
@@ -116,7 +121,7 @@ export const Expanded: Story = {
   args: {
     ids: ['sync'],
     expanded: true,
-    onSelectDependency: fn(),
+    onOpen: fn(),
   },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
@@ -124,6 +129,6 @@ export const Expanded: Story = {
     await expect(canvas.getByText('IMAP')).toBeInTheDocument();
     await expect(canvas.getByText('First sync of a Gmail inbox')).toBeInTheDocument();
     await userEvent.click(canvas.getByText('OAuth tokens'));
-    await expect(args.onSelectDependency).toHaveBeenCalledWith('tokens');
+    await expect(args.onOpen).toHaveBeenCalledWith({ type: 'object', id: 'tokens' });
   },
 };

@@ -12,16 +12,16 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 
 import { translations } from '#translations';
 
-import { type FeatureModel, type FeatureStatus } from '../FeatureCard/index.ts';
+import { type FeatureChanges, type FeatureModel, type FeatureStatus } from '../FeatureCard/index.ts';
 import { SAMPLE_FEATURES } from '../FeatureCard/testing.ts';
 import { FeatureKanban } from './FeatureKanban.tsx';
 
 /** Holds the features in state, so a drop that sets a status moves the card as the operation would. */
 const DefaultStory = ({ features: initial }: { features: FeatureModel[] }) => {
   const [features, setFeatures] = useState(initial);
-  const handleSetStatus = (id: string, status: FeatureStatus) =>
-    setFeatures((features) => features.map((feature) => (feature.id === id ? { ...feature, status } : feature)));
-  return <FeatureKanban features={features} onSetStatus={handleSetStatus} />;
+  const handleChange = (id: string, changes: FeatureChanges) =>
+    setFeatures((features) => features.map((feature) => (feature.id === id ? { ...feature, ...changes } : feature)));
+  return <FeatureKanban features={features} onChange={handleChange} />;
 };
 
 const meta: Meta<typeof DefaultStory> = {

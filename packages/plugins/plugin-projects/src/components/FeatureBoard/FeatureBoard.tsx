@@ -16,9 +16,11 @@ import { meta } from '#meta';
 import {
   FEATURE_STATUS_STYLE,
   FeatureCard,
+  type FeatureChanges,
   type FeatureLookup,
   type FeatureModel,
   type FeatureStatus,
+  type FeatureTarget,
   getFeatureRelation,
   makeFeatureLookup,
 } from '../FeatureCard/index.ts';
@@ -32,16 +34,12 @@ export type FeatureBoardProps = {
   /** The card selected when the board opens, as for a link to one feature; the user can then select others. */
   defaultSelectedId?: string;
   onSelect?: (id: string | undefined) => void;
-  /** Each given action is offered in every card's menu. */
-  onOpen?: (id: string) => void;
-  /** Opens a spec, task or showcase listed on a card. */
-  onOpenObject?: (id: string) => void;
-  onSetStatus?: (id: string, status: FeatureStatus) => void;
+  /** Opens a feature, or something a card lists. */
+  onOpen?: (target: FeatureTarget) => void;
   /** Takes a feature off its project; the feature itself is kept. */
   onRemove?: (id: string) => void;
   /** Make each card's name and description editable in place. */
-  onRename?: (id: string, name: string) => void;
-  onDescribe?: (id: string, description: string) => void;
+  onChange?: (id: string, changes: FeatureChanges) => void;
   /** The card whose name field is open, as for a feature just created; cleared when it closes. */
   editingId?: string;
   onEditingChange?: (id: string | undefined) => void;
@@ -60,19 +58,8 @@ const FeatureTileContext = createContext<FeatureTileContextValue>({
 });
 
 const FeatureTile = ({ data: feature }: { data: FeatureModel }) => {
-  const {
-    lookup,
-    selectedId,
-    onSelect,
-    onOpen,
-    onOpenObject,
-    onSetStatus,
-    onRemove,
-    onRename,
-    onDescribe,
-    editingId,
-    onEditingChange,
-  } = useContext(FeatureTileContext);
+  const { lookup, selectedId, onSelect, onOpen, onRemove, onChange, editingId, onEditingChange } =
+    useContext(FeatureTileContext);
   const selected = selectedId ? lookup(selectedId) : undefined;
   const relation = getFeatureRelation(feature, selected);
   const faded = selected && feature.id !== selected.id && !relation;
@@ -85,13 +72,9 @@ const FeatureTile = ({ data: feature }: { data: FeatureModel }) => {
         // The tile marks the selection; the other cards' relation tags and fading show what it needs.
         inItem
         relation={relation}
-        onSelectDependency={onSelect}
-        onOpen={onOpen ? (feature) => onOpen(feature.id) : undefined}
-        onOpenObject={onOpenObject}
-        onSetStatus={onSetStatus ? (feature, status) => onSetStatus(feature.id, status) : undefined}
+        onOpen={onOpen}
         onRemove={onRemove ? (feature) => onRemove(feature.id) : undefined}
-        onRename={onRename ? (feature, name) => onRename(feature.id, name) : undefined}
-        onDescribe={onDescribe ? (feature, description) => onDescribe(feature.id, description) : undefined}
+        onChange={onChange ? (feature, changes) => onChange(feature.id, changes) : undefined}
         // Controlled only for a host that tracks it; otherwise the edit button's toggle would be overridden.
         editing={onEditingChange ? feature.id === editingId : undefined}
         onEditingChange={(editing) => onEditingChange?.(editing ? feature.id : undefined)}
@@ -111,11 +94,8 @@ export const FeatureBoard = ({
   defaultSelectedId,
   onSelect,
   onOpen,
-  onOpenObject,
-  onSetStatus,
   onRemove,
-  onRename,
-  onDescribe,
+  onChange,
   editingId,
   onEditingChange,
 }: FeatureBoardProps) => {
@@ -135,11 +115,8 @@ export const FeatureBoard = ({
     selectedId,
     onSelect: handleSelect,
     onOpen,
-    onOpenObject,
-    onSetStatus,
     onRemove,
-    onRename,
-    onDescribe,
+    onChange,
     editingId,
     onEditingChange,
   };

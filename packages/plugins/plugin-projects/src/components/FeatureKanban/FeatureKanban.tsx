@@ -16,9 +16,11 @@ import { meta } from '#meta';
 
 import {
   FeatureCard,
+  type FeatureChanges,
   type FeatureLookup,
   type FeatureModel,
   type FeatureStatus,
+  type FeatureTarget,
   makeFeatureLookup,
 } from '../FeatureCard/index.ts';
 
@@ -39,13 +41,10 @@ export const FEATURE_KANBAN_STATUSES: readonly FeatureStatus[] = [
 
 export type FeatureKanbanProps = {
   features: readonly FeatureModel[];
-  /** Called when a card is dropped on another column; the card moves once the feature's status changes. */
-  onSetStatus?: (id: string, status: FeatureStatus) => void;
-  onOpen?: (id: string) => void;
-  onOpenObject?: (id: string) => void;
+  onOpen?: (target: FeatureTarget) => void;
   onRemove?: (id: string) => void;
-  onRename?: (id: string, name: string) => void;
-  onDescribe?: (id: string, description: string) => void;
+  /** Also called with a status when a card is dropped on another column; the card moves once the feature changes. */
+  onChange?: (id: string, changes: FeatureChanges) => void;
   editingId?: string;
   onEditingChange?: (id: string | undefined) => void;
 };
@@ -53,8 +52,7 @@ export type FeatureKanbanProps = {
 type FeatureKanbanContextValue = Omit<FeatureKanbanProps, 'features'> & { lookup: FeatureLookup };
 
 const FeatureKanbanCard = ({ data: feature, location, draggable }: MosaicTileProps<FeatureModel>) => {
-  const { lookup, onOpen, onOpenObject, onSetStatus, onRemove, onRename, onDescribe, editingId, onEditingChange } =
-    useContext(FeatureKanbanContext);
+  const { lookup, onOpen, onRemove, onChange, editingId, onEditingChange } = useContext(FeatureKanbanContext);
   const editing = onEditingChange ? feature.id === editingId : undefined;
   return (
     // The whole card is the drag source; while its fields are open the pointer must select text instead.
@@ -70,12 +68,9 @@ const FeatureKanbanCard = ({ data: feature, location, draggable }: MosaicTilePro
         lookup={lookup}
         showDependencies={false}
         focusItem
-        onOpen={onOpen ? (feature) => onOpen(feature.id) : undefined}
-        onOpenObject={onOpenObject}
-        onSetStatus={onSetStatus ? (feature, status) => onSetStatus(feature.id, status) : undefined}
+        onOpen={onOpen}
         onRemove={onRemove ? (feature) => onRemove(feature.id) : undefined}
-        onRename={onRename ? (feature, name) => onRename(feature.id, name) : undefined}
-        onDescribe={onDescribe ? (feature, description) => onDescribe(feature.id, description) : undefined}
+        onChange={onChange ? (feature, changes) => onChange(feature.id, changes) : undefined}
         editing={editing}
         onEditingChange={(editing) => onEditingChange?.(editing ? feature.id : undefined)}
       />
@@ -86,24 +81,24 @@ const FeatureKanbanCard = ({ data: feature, location, draggable }: MosaicTilePro
 const FeatureKanbanColumn = ({ data: status, location }: MosaicTileProps<FeatureStatus>) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const { model } = useBoard<FeatureStatus, FeatureModel>('FeatureKanban.Column');
-  const { onSetStatus } = useContext(FeatureKanbanContext);
+  const { onChange } = useContext(FeatureKanbanContext);
   const count = useAtomValue(model.items(status)).length;
 
   // Order within a column is not stored, so only a drop on another column means anything.
   const eventHandler = useMemo<DndContainerHandler<FeatureModel>>(
     () => ({
       id: `feature-kanban-${status}`,
-      canDrop: ({ source }) => !!onSetStatus && isFeatureModel(source.data) && source.data.status !== status,
+      canDrop: ({ source }) => !!onChange && isFeatureModel(source.data) && source.data.status !== status,
       onTake: ({ source }, cb) => {
         void cb(source.data);
       },
       onDrop: ({ source }) => {
         if (isFeatureModel(source.data) && source.data.status !== status) {
-          onSetStatus?.(source.data.id, status);
+          onChange?.(source.data.id, { status });
         }
       },
     }),
-    [status, onSetStatus],
+    [status, onChange],
   );
 
   return (
@@ -129,21 +124,7 @@ const FeatureKanbanColumn = ({ data: status, location }: MosaicTileProps<Feature
  */
 // Composable, so a host's slot (the Features tab's `Panel.Body asChild`) styles the board itself.
 export const FeatureKanban = Util.composable<HTMLDivElement, FeatureKanbanProps>(
-  (
-    {
-      features,
-      onSetStatus,
-      onOpen,
-      onOpenObject,
-      onRemove,
-      onRename,
-      onDescribe,
-      editingId,
-      onEditingChange,
-      ...props
-    },
-    forwardedRef,
-  ) => {
+  ({ features, onOpen, onRemove, onChange, editingId, onEditingChange, ...props }, forwardedRef) => {
     const registry = useContext(RegistryContext);
     // Stable atoms fed from props, so a status change moves one card rather than rebuilding the board.
     const [featuresAtom] = useState(() => Atom.make<readonly FeatureModel[]>(features));
@@ -176,12 +157,9 @@ export const FeatureKanban = Util.composable<HTMLDivElement, FeatureKanbanProps>
       <FeatureKanbanContext.Provider
         value={{
           lookup,
-          onSetStatus,
           onOpen,
-          onOpenObject,
           onRemove,
-          onRename,
-          onDescribe,
+          onChange,
           editingId,
           onEditingChange,
         }}

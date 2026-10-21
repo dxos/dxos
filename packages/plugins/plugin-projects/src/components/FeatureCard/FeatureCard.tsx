@@ -28,11 +28,13 @@ import { meta } from '#meta';
 import { Feature } from '#types';
 
 import {
+  type FeatureChanges,
   type FeatureLookup,
   type FeatureModel,
   type FeatureRelation,
   type FeatureSignal,
   type FeatureStatus,
+  type FeatureTarget,
   getFeatureSignals,
 } from './feature.ts';
 
@@ -76,26 +78,18 @@ export type FeatureCardBodyProps = {
   showSubfeatures?: boolean;
   /** Features that depend on this one; listed only when expanded, as the model stores one direction. */
   dependents?: readonly FeatureModel[];
-  onSelectDependency?: (id: string) => void;
   /** Adds a remove action to each dependency row of a detailed card. */
   onRemoveDependency?: (id: string) => void;
-  /** Opens a listed task or showcase by id; rows are plain text without it. */
-  onOpenObject?: (id: string) => void;
-  /** Opens a listed spec; without it each spec links to GitHub. */
-  onOpenSpec?: (spec: string) => void;
-  /** Lets edit mode change the description. */
-  onDescribe?: (feature: FeatureModel, description: string) => void;
+  /** Opens the feature or anything it lists; without it rows are plain text and specs link to GitHub. */
+  onOpen?: (target: FeatureTarget) => void;
+  /** Writes edited fields; without it the card is read-only (no status picker or edit button). */
+  onChange?: (feature: FeatureModel, changes: FeatureChanges) => void;
 };
 
 export type FeatureCardProps = FeatureCardBodyProps & {
   onSelect?: (feature: FeatureModel) => void;
-  /** The header menu offers each of these that is given. */
-  onOpen?: (feature: FeatureModel) => void;
-  onSetStatus?: (feature: FeatureModel, status: FeatureStatus) => void;
   /** Takes the feature off the map it is shown on; the feature itself is kept. */
   onRemove?: (feature: FeatureModel) => void;
-  /** Lets edit mode change the name; with `onDescribe`, either adds the header's edit button. */
-  onRename?: (feature: FeatureModel, name: string) => void;
   /** Controlled edit mode, as for a feature just created; uncontrolled when omitted. */
   editing?: boolean;
   onEditingChange?: (editing: boolean) => void;
@@ -349,10 +343,7 @@ export const SubfeatureEditor = ({ subfeatures, onChange }: SubfeatureEditorProp
  */
 export const FeatureCard = ({
   onSelect,
-  onOpen,
-  onSetStatus,
   onRemove,
-  onRename,
   editing: editingProp,
   onEditingChange,
   scroll,
@@ -361,7 +352,9 @@ export const FeatureCard = ({
   ...props
 }: FeatureCardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { feature, selected, relation, onDescribe } = props;
+  const { feature, selected, relation, onOpen, onChange } = props;
+  const openSelf = onOpen && (() => onOpen({ type: 'object', id: feature.id }));
+  const setStatus = onChange && ((status: FeatureStatus) => onChange(feature, { status }));
   const [editingState, setEditingState] = useState(false);
   const editing = editingProp ?? editingState;
   const setEditing = (next: boolean) => {
@@ -383,10 +376,10 @@ export const FeatureCard = ({
                 // Safari does not focus a clicked element that is not a control, and the ring marks where arrows continue.
                 event.currentTarget.focus();
               }
-              if (onOpen && (event.metaKey || event.ctrlKey)) {
+              if (openSelf && (event.metaKey || event.ctrlKey)) {
                 // Opening is the whole gesture: the host must not also treat it as selecting the card.
                 event.stopPropagation();
-                onOpen(feature);
+                openSelf();
                 return;
               }
               onSelect?.(feature);
@@ -394,19 +387,19 @@ export const FeatureCard = ({
       }
       // In a host's item, opening is caught before the item's own click selects.
       onClickCapture={
-        inItem && onOpen
+        inItem && openSelf
           ? (event) => {
               // A control's own ⌘-click (the menu, an edit button) stays the control's.
               if ((event.metaKey || event.ctrlKey) && !isControl(event.target)) {
                 event.stopPropagation();
-                onOpen(feature);
+                openSelf();
               }
             }
           : undefined
       }
       onDoubleClick={(event) => {
-        if (onOpen && !editing && !isControl(event.target)) {
-          onOpen(feature);
+        if (openSelf && !editing && !isControl(event.target)) {
+          openSelf();
         }
       }}
       data-testid='feature-card'
@@ -416,15 +409,11 @@ export const FeatureCard = ({
     >
       <Card.Header>
         <Layout.Block rail='start'>
-          <StatusIcon
-            status={feature.status}
-            onChange={onSetStatus && ((next) => onSetStatus(feature, next))}
-            testId='feature-card.status-icon'
-          />
+          <StatusIcon status={feature.status} onChange={setStatus} testId='feature-card.status-icon' />
         </Layout.Block>
         {/* Unclamped while editing: the clamp clips overflow, which would cut off the field's box beyond the text. */}
-        <Card.Title lines={editing && onRename ? undefined : 2}>
-          {editing && onRename ? (
+        <Card.Title lines={editing && onChange ? undefined : 2}>
+          {editing && onChange ? (
             <EditField
               value={feature.name}
               placeholder={t('feature-card.name.placeholder')}
@@ -432,13 +421,13 @@ export const FeatureCard = ({
               testId='feature-card.name.input'
               autoFocus
               // A feature always has a name, so clearing the field keeps the old one.
-              onCommit={(name) => name && onRename(feature, name)}
+              onCommit={(name) => name && onChange(feature, { name })}
             />
           ) : (
             feature.name
           )}
         </Card.Title>
-        {(onRename || onDescribe) && (
+        {onChange && (
           <Layout.Block rail='end'>
             {editing ? (
               <SystemButton.Save
@@ -465,25 +454,19 @@ export const FeatureCard = ({
             )}
           </Layout.Block>
         )}
-        {(onOpen || onSetStatus || onRemove) && (
+        {(openSelf || setStatus || onRemove) && (
           <Layout.Block rail='end' data-testid='feature-card.menu'>
             <Card.Menu label={t('feature-card.menu.label')}>
-              {onOpen && (
+              {openSelf && (
                 <Menu.Item
                   item={{ value: 'open', label: t('feature-card.open.label'), icon: 'ph--arrow-square-out--regular' }}
                   data-testid='feature-card.open'
-                  onClick={() => onOpen(feature)}
+                  onClick={openSelf}
                 />
               )}
-              {onOpen && onSetStatus && <Menu.Separator />}
-              {onSetStatus && (
-                <StatusItems
-                  value={feature.status}
-                  onChange={(next) => onSetStatus(feature, next)}
-                  testId='feature-card.status'
-                />
-              )}
-              {(onOpen || onSetStatus) && onRemove && <Menu.Separator />}
+              {openSelf && setStatus && <Menu.Separator />}
+              {setStatus && <StatusItems value={feature.status} onChange={setStatus} testId='feature-card.status' />}
+              {(openSelf || setStatus) && onRemove && <Menu.Separator />}
               {onRemove && (
                 <Menu.Item
                   item={{ value: 'remove', label: t('feature-card.remove.label'), icon: 'ph--minus-circle--regular' }}
@@ -532,11 +515,9 @@ export const FeatureCardBody = ({
   showFields = true,
   showSubfeatures = true,
   dependents = [],
-  onSelectDependency,
   onRemoveDependency,
-  onOpenObject,
-  onOpenSpec,
-  onDescribe,
+  onOpen,
+  onChange,
   editing,
 }: FeatureCardBodyProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
@@ -549,19 +530,19 @@ export const FeatureCardBody = ({
   const openTasks = feature.tasks.filter((task) => !task.done);
   const milestones = [...new Set(openTasks.flatMap((task) => (task.milestone ? [task.milestone] : [])))];
   const dependencies = showDependencies ? feature.dependsOn.flatMap((id) => lookup(id) ?? []) : [];
-  const open = (id: string) =>
-    onOpenObject
+  const open = (target: FeatureTarget) =>
+    onOpen
       ? (event: MouseEvent) => {
-          // The row sits inside a clickable card; opening the object must not also select the card.
+          // The row sits inside a clickable card; opening the target must not also select the card.
           event.stopPropagation();
-          onOpenObject(id);
+          onOpen(target);
         }
       : undefined;
 
   return (
     <Card.Body>
       {/* Directly under the title, which it describes. */}
-      {showFields && editing && onDescribe ? (
+      {showFields && editing && onChange ? (
         // The row's content clips overflow (for truncation), which would cut off the field's box beyond the text.
         <Card.Row span='end' classNames='[&_.dx-card-row-content]:overflow-visible'>
           <EditField
@@ -570,7 +551,7 @@ export const FeatureCardBody = ({
             label={t('feature-card.description.label')}
             testId='feature-card.description.input'
             multiline
-            onCommit={(description) => onDescribe(feature, description)}
+            onCommit={(description) => onChange(feature, { description })}
           />
         </Card.Row>
       ) : (
@@ -644,15 +625,7 @@ export const FeatureCardBody = ({
                   />
                 )
               }
-              onClick={
-                onSelectDependency
-                  ? (event: MouseEvent) => {
-                      // The row sits inside a clickable card; selecting the dependency must not also select this card.
-                      event.stopPropagation();
-                      onSelectDependency(dependency.id);
-                    }
-                  : undefined
-              }
+              onClick={open({ type: 'object', id: dependency.id })}
             >
               <Card.Text truncate>{dependency.name}</Card.Text>
             </Card.Row>
@@ -666,7 +639,7 @@ export const FeatureCardBody = ({
             <Card.Row
               key={dependent.id}
               leading={<RowIcon icon={FEATURE_STATUS_STYLE[dependent.status].icon} />}
-              onClick={onSelectDependency ? () => onSelectDependency(dependent.id) : undefined}
+              onClick={open({ type: 'object', id: dependent.id })}
             >
               <Card.Text truncate>{dependent.name}</Card.Text>
             </Card.Row>
@@ -695,7 +668,7 @@ export const FeatureCardBody = ({
               key={task.id}
               leading={<RowIcon icon={task.done ? 'ph--check-square--regular' : 'ph--square--regular'} />}
               trailing={task.milestone && <Tag.Tag>{task.milestone}</Tag.Tag>}
-              onClick={open(task.id)}
+              onClick={open({ type: 'object', id: task.id })}
             >
               <Card.Text truncate>{task.title}</Card.Text>
             </Card.Row>
@@ -709,7 +682,7 @@ export const FeatureCardBody = ({
             <Card.Row
               key={showcase.id}
               leading={<RowIcon icon='ph--presentation-chart--regular' />}
-              onClick={open(showcase.id)}
+              onClick={open({ type: 'object', id: showcase.id })}
             >
               <Card.Text truncate>{showcase.name}</Card.Text>
             </Card.Row>
@@ -718,18 +691,14 @@ export const FeatureCardBody = ({
       )}
 
       {/* Also beside the article's editable spec list, since there each row opens the spec. */}
-      {detailed && (showFields || onOpenSpec) && feature.specs.length > 0 && (
+      {detailed && (showFields || onOpen) && feature.specs.length > 0 && (
         <Card.Section title={t('feature-card.specs.title')}>
           {feature.specs.map((spec) =>
-            onOpenSpec ? (
+            onOpen ? (
               <Card.Row
                 key={spec}
                 icon='ph--file-code--regular'
-                onClick={(event: MouseEvent) => {
-                  // The row sits inside a clickable card; opening the spec must not also select the card.
-                  event.stopPropagation();
-                  onOpenSpec(spec);
-                }}
+                onClick={open({ type: 'spec', path: spec, id: feature.specObjects?.[Feature.getSpecPath(spec)] })}
                 data-testid='feature-card.spec'
               >
                 <Card.Text truncate>{spec}</Card.Text>

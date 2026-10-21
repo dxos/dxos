@@ -41,6 +41,15 @@ export type FeatureModel = {
   showcases: readonly FeatureRef[];
 };
 
+/** The fields a card edits in place. */
+export type FeatureChanges = Partial<Pick<FeatureModel, 'name' | 'description' | 'status'>>;
+
+/** Something a card links to: an object of the space (the feature, a dependency, a task, a showcase) or a spec path. */
+export type FeatureTarget =
+  | { type: 'object'; id: string }
+  /** `id` is the space's imported copy of the spec, when there is one. */
+  | { type: 'spec'; path: string; id?: string };
+
 /** A derived warning or status; never stored. */
 export type FeatureSignal = 'blocked' | 'ahead' | 'no-evidence' | 'in-flight' | 'unplanned';
 

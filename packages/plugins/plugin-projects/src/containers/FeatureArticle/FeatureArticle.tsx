@@ -23,7 +23,7 @@ import { Feature } from '#types';
 
 import { FeatureCardBody, SubfeatureEditor, getDependents } from '../../components/FeatureCard/index.ts';
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
-import { useFeatureEditing, useFeatureGraph, useOpenObject, useOpenSpec } from '../../hooks/index.ts';
+import { useFeatureEditing, useFeatureGraph, useOpenFeatureTarget } from '../../hooks/index.ts';
 
 // The editable fields, picked from the schema on the AST as ProjectArticle does: `Type.getSchema` erases to
 // `Codec`, so the field types are re-attached here.
@@ -59,20 +59,7 @@ export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticlePr
     () => getDependents(subject.id, graph.features).flatMap((id) => graph.lookup(id) ?? []),
     [subject.id, graph],
   );
-  const openObject = useOpenObject(db, attendableId);
-  const openSpec = useOpenSpec();
-  // An imported spec is the space's own copy, so it wins over the one a plugin bundles.
-  const handleOpenSpec = useCallback(
-    (spec: string) => {
-      const specId = feature?.specObjects?.[Feature.getSpecPath(spec)];
-      if (specId) {
-        void openObject(specId);
-      } else {
-        openSpec(spec);
-      }
-    },
-    [feature, openObject, openSpec],
-  );
+  const handleOpen = useOpenFeatureTarget(db, attendableId);
   const editing = useFeatureEditing(db);
   // A feature cannot depend on itself; the operation refuses longer cycles with their path.
   const excludedDependencies = useMemo(() => [subject.id, ...(feature?.dependsOn ?? [])], [subject.id, feature]);
@@ -138,10 +125,8 @@ export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticlePr
                       showFields={false}
                       showSubfeatures={false}
                       dependents={dependents}
-                      onSelectDependency={(id) => void openObject(id)}
                       onRemoveDependency={(id) => editing.removeDependency(subject.id, id)}
-                      onOpenObject={(id) => void openObject(id)}
-                      onOpenSpec={handleOpenSpec}
+                      onOpen={handleOpen}
                     />
                   </Card.Root>
                   {canFileTask && (
