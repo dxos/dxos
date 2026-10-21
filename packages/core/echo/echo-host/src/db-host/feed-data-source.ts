@@ -52,6 +52,9 @@ export class FeedDataSource implements IndexDataSource {
    */
   #passReads: Map<string, FeedProtocol.QueryResponse> | undefined;
 
+  /** Feeds already reported as re-read: an empty feed's cursor is never rewritten, so every pass meets it again. */
+  readonly #restartedFeeds = new Set<string>();
+
   constructor(options: FeedDataSourceOptions) {
     this._feedStore = options.feedStore;
     this._runtime = options.runtime;
@@ -134,9 +137,25 @@ export class FeedDataSource implements IndexDataSource {
           continue;
         }
 
-        const currentCursor =
+        const storedCursor =
           typeof cursor.cursor === 'string' && cursor.cursor !== ''
             ? FeedProtocol.FeedCursor.make(cursor.cursor)
+            : undefined;
+        // The store fails a read from a cursor it did not issue, which would fail every pass; the index is
+        // derived, so reading the feed again from the start is safe.
+        const storedIsCurrent =
+          storedCursor !== undefined && (yield* this._feedStore.isCursorCurrent(cursor.spaceId, storedCursor));
+        const feedKey = `${cursor.spaceId}|${cursor.resourceId}`;
+        if (storedCursor && !storedIsCurrent && !this.#restartedFeeds.has(feedKey)) {
+          this.#restartedFeeds.add(feedKey);
+          log.warn('feed index cursor was issued by another store, reading the feed again', {
+            spaceId: cursor.spaceId,
+            feedNamespace: cursor.resourceId,
+          });
+        }
+        const currentCursor =
+          storedCursor && storedIsCurrent
+            ? storedCursor
             : FeedProtocol.encodeFeedCursor(
                 yield* this._feedStore.getServerToken(cursor.spaceId),
                 FeedProtocol.FEED_START,

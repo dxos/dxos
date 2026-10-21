@@ -7,18 +7,20 @@ import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Option from 'effect/Option';
 
 import * as Operation from '@dxos/compute/Operation';
+import { Database } from '@dxos/echo';
 
 import { GitHubOperation } from '#types';
 
 import { approvalCommentBody, isApprovalRefused } from '../approval.ts';
 import { GitHubApi } from '../services/index.ts';
-import { resolvePullRequest } from './pull-request.ts';
+import { githubWriteCredentials, resolvePullRequest } from './pull-request.ts';
 
 const handler: Operation.WithHandler<typeof GitHubOperation.SubmitPullRequestApproval> =
   GitHubOperation.SubmitPullRequestApproval.pipe(
     Operation.withHandler(
       Effect.fn(function* ({ pullRequest: ref, body }) {
-        const { pullRequest, credentials } = yield* resolvePullRequest(ref);
+        const { pullRequest, db } = yield* resolvePullRequest(ref);
+        const credentials = yield* githubWriteCredentials().pipe(Effect.provide(Database.layer(db)));
         const { owner, repo, number } = pullRequest;
         const review = yield* GitHubApi.approvePullRequest(owner, repo, number, body).pipe(
           Effect.provide(credentials),

@@ -7,7 +7,7 @@ import * as Project from '@dxos/compute/Project';
 import * as Routine from '@dxos/compute/Routine';
 import { Repo } from '@dxos/types';
 
-import { Feature, FeatureMap, Showcase } from '#types';
+import { Feature, Showcase } from '#types';
 
 /**
  * Schemas this plugin registers, loaded on demand: the capability activates at idle,
@@ -23,7 +23,6 @@ export default [
   Feature.Feature,
   Feature.DependsOn,
   Feature.Implements,
-  FeatureMap.FeatureMap,
   Showcase.Showcase,
   Showcase.Demonstrates,
 ];

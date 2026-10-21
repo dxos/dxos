@@ -79,11 +79,6 @@
       "types": "./dist/types/src/types/Feature.d.ts",
       "import": "./dist/lib/Feature.mjs"
     },
-    "./FeatureMap": {
-      "source": "./src/types/FeatureMap.ts",
-      "types": "./dist/types/src/types/FeatureMap.d.ts",
-      "import": "./dist/lib/FeatureMap.mjs"
-    },
     "./FeatureMapView": {
       "source": "./src/types/FeatureMapView.ts",
       "types": "./dist/types/src/types/FeatureMapView.d.ts",
@@ -202,6 +197,7 @@
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-registry": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-tasks": "workspace:*",
@@ -209,9 +205,11 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-canvas": "workspace:*",
+    "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-task": "workspace:*",
     "@dxos/react-ui-trace": "workspace:*",

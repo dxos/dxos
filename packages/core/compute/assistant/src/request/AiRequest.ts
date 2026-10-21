@@ -361,10 +361,17 @@ export class Request {
       let finishReason: ContentBlock.FinishReason | undefined;
 
       // v4 overloads `streamText` on the presence of `toolkit`, so the two cases branch explicitly
-      // rather than passing a possibly-undefined key.
+      // rather than passing a possibly-undefined key. Deferred validation lets a call to an unknown tool, or with
+      // parameters the tool rejects, through to `callTool`, which answers it; decoded strictly, it fails the whole
+      // batch of parts it arrived in and the turn ends without the call.
       const openStream = () =>
         toolkit
-          ? LanguageModel.streamText({ prompt, toolkit, disableToolCallResolution: true })
+          ? LanguageModel.streamText({
+              prompt,
+              toolkit,
+              disableToolCallResolution: true,
+              toolCallValidation: 'deferred',
+            })
           : LanguageModel.streamText({ prompt, disableToolCallResolution: true });
 
       // Counts attempts at the provider rather than turns: the retry below re-runs the whole

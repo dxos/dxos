@@ -6,8 +6,9 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
-import { Annotation, DXN, Format, Obj, Relation, Type } from '@dxos/echo';
+import { Annotation, DXN, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { Task } from '@dxos/types';
 
@@ -30,6 +31,10 @@ export const StatusOptions: Task.Option<Status>[] = [
 //
 // Feature
 //
+
+/** Where a feature's card sits on its project's canvas. */
+export const Position = Schema.Struct({ x: Schema.Number, y: Schema.Number });
+export type Position = Schema.Schema.Type<typeof Position>;
 
 /** A part of a feature with its own status; specs, dependencies and tasks belong to the feature. */
 export const Subfeature = Schema.Struct({
@@ -69,6 +74,15 @@ export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.fe
      * two levels deep, a part has a status but no specs, dependencies or tasks of its own.
      */
     subfeatures: Schema.optional(Schema.Array(Subfeature).pipe(Schema.annotate({ title: 'Subfeatures' }))),
+
+    /**
+     * The project whose feature board lists this feature. Held by the feature rather than the project, since a
+     * project is a generic compute type that knows nothing of features; not owned, so deleting a project keeps it.
+     */
+    project: Schema.optional(Ref.Ref(Project.Project).pipe(Annotation.FormInputAnnotation.set(false))),
+
+    /** Where the user dragged the card on its project's canvas; a feature without one is laid out automatically. */
+    position: Schema.optional(Position.pipe(Annotation.FormInputAnnotation.set(false))),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--puzzle-piece--regular', hue: 'violet' }),
@@ -122,7 +136,34 @@ export const DEFAULT_SPEC_REPOSITORY = 'https://github.com/dxos/dxos';
  * default branch, without the block anchor, which GitHub cannot resolve inside an `.mdl` file.
  */
 export const getSpecUrl = (spec: string, repository = DEFAULT_SPEC_REPOSITORY): string =>
-  /^https?:\/\//.test(spec) ? spec : `${repository}/blob/main/${spec.replace(/#.*$/, '').replace(/^\/+/, '')}`;
+  /^https?:\/\//.test(spec) ? spec : `${repository}/blob/main/${getSpecPath(spec)}`;
+
+/** A repo spec path without its block anchor or leading slashes. */
+export const getSpecPath = (spec: string): string => spec.replace(/#.*$/, '').replace(/^\/+/, '');
+
+/** The parts of a plugin's profile that say where its bundled spec comes from. */
+export type SpecSource = { key: string; source?: string; spec?: string };
+
+/**
+ * The key of the plugin that bundles the spec a repo path names: the path is the plugin's source directory joined
+ * with its spec file (`packages/plugins/plugin-inbox/PLUGIN.mdl`), so the app can open the spec without GitHub.
+ */
+export const findSpecPlugin = (spec: string, plugins: readonly SpecSource[]): string | undefined => {
+  if (/^https?:\/\//.test(spec)) {
+    return undefined;
+  }
+  const path = getSpecPath(spec);
+  return plugins.find(({ source, spec: file }) => {
+    const directory = source?.match(/\/tree\/[^/]+\/(.+?)\/?$/)?.[1];
+    return !!directory && !!file && path === `${directory}/${file}`;
+  })?.key;
+};
+
+/** Foreign-key source of a spec imported into a space, whose key id is its repo path. */
+export const SPEC_KEY_SOURCE = 'github.com/dxos/dxos';
+
+/** Type of an imported spec; named by URI because plugin-code owns the schema and projects must not depend on it. */
+export const SPEC_TYPE = DXN.make('org.dxos.type.spec');
 
 //
 // Relations
