@@ -9,6 +9,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as Operation from '@dxos/compute/Operation';
 import type * as Project from '@dxos/compute/Project';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
+import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -21,6 +22,8 @@ export type FeatureEditing = {
   addDependency: (featureId: string, dependsOnId: string) => void;
   removeDependency: (featureId: string, dependsOnId: string) => void;
   linkTask: (taskId: string, featureId: string) => void;
+  /** Files a new task into the feature's project and links it to the feature; resolves to whether it was filed. */
+  fileTask: (featureId: string, title: string) => Promise<boolean>;
   /** Moves the feature onto the project; requires a project, a no-op without one. */
   addToProject: (featureId: string) => void;
   /** Takes the feature off its project; the feature itself is kept. */
@@ -89,6 +92,23 @@ export const useFeatureEditing = (db: Database.Database | undefined, project?: P
         void Promise.all([taskRef(taskId), featureRef(featureId)]).then(
           ([task, feature]) => task && feature && run(FeatureOperation.LinkTask, { task, feature }),
         ),
+      fileTask: async (featureId, title) => {
+        const [feature] = db ? await db.query(Filter.id(featureId)).run() : [];
+        const project = Feature.instanceOf(feature) ? await feature.project?.load() : undefined;
+        if (!project?.taskSet) {
+          return false;
+        }
+        const created = await run(TaskOperation.CreateTask, { taskSet: project.taskSet, title });
+        const [task, featureRefValue] = await Promise.all([
+          created ? taskRef(created.task.id) : undefined,
+          featureRef(featureId),
+        ]);
+        if (!task || !featureRefValue) {
+          return false;
+        }
+        await run(FeatureOperation.LinkTask, { task, feature: featureRefValue });
+        return true;
+      },
       addToProject: (featureId) =>
         void featureRef(featureId).then(
           (feature) => feature && projectRef && run(FeatureOperation.Update, { feature, project: projectRef }),

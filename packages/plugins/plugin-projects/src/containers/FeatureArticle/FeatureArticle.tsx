@@ -3,16 +3,17 @@
 //
 
 import * as Schema from 'effect/Schema';
-import React, { useCallback, useMemo } from 'react';
+import React, { type KeyboardEvent, useCallback, useMemo } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
+import { useObject, useResolveRef } from '@dxos/echo-react';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { Form, type FormFieldMap, type FormFieldRenderer } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import { Task } from '@dxos/types';
@@ -62,6 +63,21 @@ export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticlePr
   const editing = useFeatureEditing(db);
   // A feature cannot depend on itself; the operation refuses longer cycles with their path.
   const excludedDependencies = useMemo(() => [subject.id, ...(feature?.dependsOn ?? [])], [subject.id, feature]);
+  // Filing needs somewhere to file into: the project the feature belongs to, and its task set.
+  const project = useResolveRef(snapshot?.project);
+  const canFileTask = !!project?.taskSet;
+  const handleFileTask = useCallback(
+    (event: KeyboardEvent<HTMLInputElement>) => {
+      const input = event.currentTarget;
+      const title = input.value.trim();
+      if (event.key !== 'Enter' || !title) {
+        return;
+      }
+      input.value = '';
+      void editing.fileTask(subject.id, title);
+    },
+    [editing, subject.id],
+  );
   const linkedTasks = useMemo(() => feature?.tasks.map((task) => task.id) ?? [], [feature]);
 
   // Bound to the live feature, so a status set from a card icon (or by an agent) reaches the open form.
@@ -114,6 +130,14 @@ export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticlePr
                       onOpenObject={(id) => void openObject(id)}
                     />
                   </Card.Root>
+                  {canFileTask && (
+                    <Input.Root
+                      placeholder={t('feature-article.file-task.placeholder')}
+                      aria-label={t('feature-article.file-task.placeholder')}
+                      data-testid='feature-article.file-task'
+                      onKeyDown={handleFileTask}
+                    />
+                  )}
                   <Layout.Flex wrap gap='xs'>
                     <ObjectAddPicker
                       db={db}

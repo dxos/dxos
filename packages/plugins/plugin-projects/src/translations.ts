@@ -124,6 +124,7 @@ export const translations = [
         'feature-edit-error.title': 'Edit not applied',
         'feature-article.add-dependency.label': 'Add dependency',
         'feature-article.link-task.label': 'Link task',
+        'feature-article.file-task.placeholder': "File a task in this feature's project…",
         'feature-map.add-feature.label': 'Add an existing feature',
         'feature-map.new-feature.label': 'New feature',
         'feature-card.name.label': 'Feature name',
