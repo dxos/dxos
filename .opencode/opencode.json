@@ -1,0 +1,18 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "references": {
+    "effect": {
+      "repository": "Effect-TS/effect",
+      "branch": "main",
+      "description": "Effect-TS monorepo — use for Effect core, Schema, Layer, and runtime implementation details"
+    }
+  },
+  "permissions": [
+    { "action": "external_directory", "resource": "~/Code/edge/*", "effect": "allow" },
+    { "action": "external_directory", "resource": "~/Code/plugins/*", "effect": "allow" },
+    { "action": "read", "resource": "~/Code/edge/*", "effect": "allow" },
+    { "action": "read", "resource": "~/Code/plugins/*", "effect": "allow" },
+    { "action": "edit", "resource": "~/Code/edge/*", "effect": "allow" },
+    { "action": "edit", "resource": "~/Code/plugins/*", "effect": "allow" }
+  ]
+}
