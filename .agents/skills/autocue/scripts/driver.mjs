@@ -80,6 +80,8 @@ const parseArgs = () => {
     // Manual mode only: the app's identity, spaces and dismissed first-run UI survive between sessions,
     // so the user's recording starts in a prepared app instead of onboarding.
     'profile': path.join(homedir(), '.local/state/dxos/autocue/profile'),
+    // Where captions sit: `bottom`, or `middle` on a translucent surface so they hide less of the demo.
+    'caption-position': 'bottom',
     // Emulated `prefers-color-scheme`; `--theme light` for a light recording.
     'theme': 'dark',
     // Per-gesture wait for its target: a wrong selector should fail in seconds, not stall the demo.
@@ -301,14 +303,17 @@ const speedChanges = [];
 const updateFrame = async (update) => {
   await injectModule(page, FRAME_MODULE, '__autocueFrame');
   await page.evaluate(
-    ({ id, update }) => {
+    ({ id, update, captionPosition }) => {
       let host = document.getElementById(id);
       if (!host) {
         host = document.createElement('div');
         host.id = id;
         host.style.cssText = 'position:fixed;inset:0;z-index:2147483647;pointer-events:none';
         document.body.appendChild(host);
-        host.__frame = window.__autocueFrame.createFrame(host.attachShadow({ mode: 'open' }), { mode: 'overlay' });
+        host.__frame = window.__autocueFrame.createFrame(host.attachShadow({ mode: 'open' }), {
+          mode: 'overlay',
+          captionPosition,
+        });
       }
       const frame = host.__frame;
       if ('headerBand' in update) {
@@ -324,7 +329,7 @@ const updateFrame = async (update) => {
         void frame.playOpen(update.open);
       }
     },
-    { id: CAPTION_ID, update },
+    { id: CAPTION_ID, update, captionPosition: options['caption-position'] },
   );
 };
 

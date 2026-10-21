@@ -20,6 +20,9 @@ export type FrameMode = 'overlay' | 'layout';
  */
 export type BandStyle = 'band' | 'panel';
 
+/** Where a `panel` caption sits: low in the frame, or over its middle on a translucent surface. */
+export type CaptionPosition = 'bottom' | 'middle';
+
 export type FrameOptions = {
   /**
    * `overlay` fixes the header and caption over the page; `layout` lays them over the host's children (through a
@@ -36,6 +39,8 @@ export type FrameOptions = {
   size?: FrameSize;
   /** The caption's style; defaults to `panel`. */
   captionStyle?: BandStyle;
+  /** Where a `panel` caption sits; defaults to `bottom`. */
+  captionPosition?: CaptionPosition;
   /** On, the header's text also shows as a translucent band over the top; defaults to off (no panels). */
   headerBand?: boolean;
   /** Milliseconds to hold the header as a centred panel when the frame opens (see `playOpen`); 0 or unset skips it. */
@@ -52,6 +57,7 @@ export type FrameHandle = {
   setCaption: (text?: FrameText) => void;
   setSize: (size?: FrameSize) => void;
   setCaptionStyle: (style: BandStyle) => void;
+  setCaptionPosition: (position: CaptionPosition) => void;
   setHeaderBand: (show: boolean) => void;
   /**
    * Shows the header's text alone, as a panel centred in the frame, for `ms`; then fades it out as the header and
@@ -99,6 +105,9 @@ export const FRAME_STYLES = `
     border-radius: var(--autocue-caption-radius); box-shadow: none; backdrop-filter: none;
     --autocue-band-surface: var(--autocue-caption-surface); --autocue-band-fg: var(--autocue-caption-fg);
     --autocue-band-muted: var(--autocue-caption-muted); }
+  /* Over the middle, where the demo's controls usually are not, and see-through so it hides less of what is shown. */
+  .caption.panel.middle { top: 50%; bottom: auto; transform: translate(-50%, -50%);
+    --autocue-band-surface: var(--autocue-caption-surface-translucent); }
   .caption.panel .title { font: 700 40px/1.2 var(--autocue-caption-font); letter-spacing: -0.01em; }
   .caption.panel .subtitle { font: 500 20px/1.3 var(--autocue-caption-font); margin-top: 6px; }
   .caption .title, .caption .subtitle, .panel .title, .panel .subtitle { white-space: nowrap; overflow: hidden;
@@ -149,6 +158,7 @@ export const createFrame = (
     caption,
     size,
     captionStyle = 'panel',
+    captionPosition = 'bottom',
     headerBand: showHeaderBand = false,
     open,
   }: FrameOptions = {},
@@ -255,6 +265,11 @@ export const createFrame = (
   };
   setCaptionStyle(captionStyle);
 
+  const setCaptionPosition = (position: CaptionPosition) => {
+    captionBand.classList.toggle('middle', position === 'middle');
+  };
+  setCaptionPosition(captionPosition);
+
   const setHeaderBand = (show: boolean) => {
     headerBand.classList.toggle('off', !show);
   };
@@ -314,6 +329,7 @@ export const createFrame = (
     setCaption,
     setSize,
     setCaptionStyle,
+    setCaptionPosition,
     setHeaderBand,
     playOpen,
     dispose: () => {

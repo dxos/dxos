@@ -456,18 +456,19 @@ are encoded once, on `stop`, to VP9 at constant quality (`session.webm`, 3456x21
 viewport). Without one it falls back to Playwright's `recordVideo` at 1x and says so at startup — that
 encoder is a fixed 1 Mbit realtime VP8, so asking it for a bigger frame only smears the same bits wider.
 
-| flag               | default         | effect                                                                                                                            |
-| ------------------ | --------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `--scale`          | `2`             | device pixel ratio; `1.5` → 2592x1620, `1` for the smallest file                                                                  |
-| `--width`          | `1728`          | CSS viewport (with `--height 1080`); sets the layout, not sharpness — `1280`/`800` for a small-laptop look                        |
-| `--crf`            | `28`            | VP9 quality, lower is better and larger                                                                                           |
-| `--fps`            | `25`            | cap on frames kept during motion; still stretches cost one frame whatever this is                                                 |
-| `--quality`        | `92`            | JPEG quality of the screencast frames                                                                                             |
-| `--theme`          | `dark`          | emulated `prefers-color-scheme`; `light` for a light recording                                                                    |
-| `--action-timeout` | `5000`          | ms a gesture (or a flow script's raw locator) waits for its target; a wrong selector fails fast                                   |
-| `--cadence`        | `600`           | least ms between two on-camera gestures, the pause a person takes to find the next control; `cadence` on one command overrides it |
-| `--log`            | `<out>/app.log` | NDJSON of the app's `@dxos/log` output (page and dedicated workers); `off` to skip                                                |
-| `--chromium-args`  | none            | extra Chromium flags, comma-separated — e.g. a fake microphone playing a voice file (see `plugin-meeting-recorder/autocue`)       |
+| flag                 | default         | effect                                                                                                                            |
+| -------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `--scale`            | `2`             | device pixel ratio; `1.5` → 2592x1620, `1` for the smallest file                                                                  |
+| `--width`            | `1728`          | CSS viewport (with `--height 1080`); sets the layout, not sharpness — `1280`/`800` for a small-laptop look                        |
+| `--crf`              | `28`            | VP9 quality, lower is better and larger                                                                                           |
+| `--fps`              | `25`            | cap on frames kept during motion; still stretches cost one frame whatever this is                                                 |
+| `--quality`          | `92`            | JPEG quality of the screencast frames                                                                                             |
+| `--theme`            | `dark`          | emulated `prefers-color-scheme`; `light` for a light recording                                                                    |
+| `--caption-position` | `bottom`        | `middle` centres captions on a translucent surface, so they hide less of what the demo shows                                      |
+| `--action-timeout`   | `5000`          | ms a gesture (or a flow script's raw locator) waits for its target; a wrong selector fails fast                                   |
+| `--cadence`          | `600`           | least ms between two on-camera gestures, the pause a person takes to find the next control; `cadence` on one command overrides it |
+| `--log`              | `<out>/app.log` | NDJSON of the app's `@dxos/log` output (page and dedicated workers); `off` to skip                                                |
+| `--chromium-args`    | none            | extra Chromium flags, comma-separated — e.g. a fake microphone playing a voice file (see `plugin-meeting-recorder/autocue`)       |
 
 **`deviceScaleFactor` alone does not make the video 2x.** The page renders at 2x (`devicePixelRatio`
 reads 2, screenshots are sharp), but Chromium's screencast still captures at CSS size, so the frames
