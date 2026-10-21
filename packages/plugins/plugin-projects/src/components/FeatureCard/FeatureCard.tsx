@@ -95,6 +95,8 @@ type EditFieldProps = {
   label: string;
   testId: string;
   autoFocus?: boolean;
+  /** `start` where something sits right after the field (the header's Save button), so the box clears only the start. */
+  extend?: 'both' | 'start';
   onCommit: (value: string) => void;
 };
 
@@ -104,7 +106,7 @@ const stopPropagation = (event: MouseEvent | PointerEvent) => event.stopPropagat
  * A single-line field of a card in edit mode, committed when it loses focus (Enter does that). Keys and presses stay in
  * the field: the card would toggle its selection, and a canvas would delete the box on Backspace.
  */
-const EditField = ({ value, placeholder, label, testId, autoFocus, onCommit }: EditFieldProps) => {
+const EditField = ({ value, placeholder, label, testId, autoFocus, extend = 'both', onCommit }: EditFieldProps) => {
   const handleBlur = (event: FocusEvent<HTMLInputElement>) => {
     const next = event.currentTarget.value.trim();
     if (next !== value) {
@@ -120,9 +122,9 @@ const EditField = ({ value, placeholder, label, testId, autoFocus, onCommit }: E
   };
   return (
     <Input.Root
-      // Pulled out by its padding and its height over a line, so the text stays where it was read and the card keeps
-      // its size.
-      classNames='-ms-2 -my-0.5'
+      // Pulled out (and widened) by its padding and by its height over a line, so the text stays where it was read, the
+      // box clears it and the card keeps its size.
+      classNames={['-ms-2 -my-0.5', extend === 'both' ? '-me-2 w-[calc(100%+1rem)]' : 'w-[calc(100%+0.5rem)]']}
       defaultValue={value}
       placeholder={placeholder}
       aria-label={label}
@@ -190,6 +192,7 @@ export const FeatureCard = ({
               label={t('feature-card.name.label')}
               testId='feature-card.name.input'
               autoFocus
+              extend='start'
               onCommit={(name) => onRename(feature, name)}
             />
           ) : (
