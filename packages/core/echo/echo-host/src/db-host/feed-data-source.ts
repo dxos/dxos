@@ -137,28 +137,32 @@ export class FeedDataSource implements IndexDataSource {
           continue;
         }
 
-        // Empty string cursor means "start from beginning".
         const storedCursor =
           typeof cursor.cursor === 'string' && cursor.cursor !== ''
             ? FeedProtocol.FeedCursor.make(cursor.cursor)
             : undefined;
         // The store fails a read from a cursor it did not issue, which would fail every pass; the index is
         // derived, so reading the feed again from the start is safe.
-        const currentCursor =
-          storedCursor && (yield* this._feedStore.isCursorCurrent(cursor.spaceId, storedCursor))
-            ? storedCursor
-            : undefined;
+        const storedIsCurrent =
+          storedCursor !== undefined && (yield* this._feedStore.isCursorCurrent(cursor.spaceId, storedCursor));
         const feedKey = `${cursor.spaceId}|${cursor.resourceId}`;
-        if (storedCursor && !currentCursor && !this.#restartedFeeds.has(feedKey)) {
+        if (storedCursor && !storedIsCurrent && !this.#restartedFeeds.has(feedKey)) {
           this.#restartedFeeds.add(feedKey);
           log.warn('feed index cursor was issued by another store, reading the feed again', {
             spaceId: cursor.spaceId,
             feedNamespace: cursor.resourceId,
           });
         }
+        const currentCursor =
+          storedCursor && storedIsCurrent
+            ? storedCursor
+            : FeedProtocol.encodeFeedCursor(
+                yield* this._feedStore.getServerToken(cursor.spaceId),
+                FeedProtocol.FEED_START,
+              );
 
         try {
-          const readKey = JSON.stringify([cursor.spaceId, cursor.resourceId, currentCursor ?? null, remainingLimit]);
+          const readKey = JSON.stringify([cursor.spaceId, cursor.resourceId, currentCursor, remainingLimit]);
           const result =
             this.#passReads?.get(readKey) ??
             (yield* this._feedStore.query({

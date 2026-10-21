@@ -52,6 +52,7 @@ export const ClaudeCodeConnector: ConnectorSpec.ConnectorEntry = {
   id: CLAUDE_CODE_CONNECTOR_ID,
   source: CLAUDE_CODE_TOKEN_SOURCE,
   label: LABEL,
+  kind: 'user',
   credentialForm: {
     schema: TokenForm,
     defaultValues: { token: '' },

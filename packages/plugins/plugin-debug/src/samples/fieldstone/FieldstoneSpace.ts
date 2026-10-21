@@ -12,6 +12,7 @@ import * as Architecture from '@dxos/plugin-canvas/Architecture';
 
 import * as Docs from './docs/index.ts';
 import * as InboxCrm from './inbox-crm/index.ts';
+import * as Metrics from './metrics/index.ts';
 import * as Projects from './projects/index.ts';
 import * as Team from './team/index.ts';
 import { REFERENCE } from './util.ts';
@@ -21,21 +22,22 @@ const partials = {
   inboxCrm: InboxCrm.Partial,
   projects: Projects.Partial,
   docs: Docs.Partial,
+  metrics: Metrics.Partial,
   architecture: Architecture.Partial,
 };
 
-/** Fieldstone Labs: a software team that runs on agents, with Cairn's architecture diagrams alongside. */
 export type Result = {
   readonly team: Team.Provides;
   readonly inboxCrm: InboxCrm.Provides;
   readonly projects: Projects.Provides;
   readonly docs: Docs.Provides;
+  readonly metrics: Metrics.Provides;
   readonly architecture: Architecture.Provides;
 };
 
 export const make = (): SampleSpace.Definition<typeof partials, Result> =>
   SampleSpace.make({
-    space: { name: 'Fieldstone Labs', icon: 'users-three', hue: 'teal' },
+    space: { name: 'Alien Labs', icon: 'users-three', hue: 'teal' },
     reference: REFERENCE,
     partials,
     build: (partials) =>
@@ -45,7 +47,8 @@ export const make = (): SampleSpace.Definition<typeof partials, Result> =>
         const projects = yield* partials.projects({ team, inboxCrm });
         const architecture = yield* partials.architecture();
         const docs = yield* partials.docs({ team, inboxCrm, projects, architecture });
-        return { team, inboxCrm, projects, docs, architecture };
+        const metrics = yield* partials.metrics();
+        return { team, inboxCrm, projects, docs, metrics, architecture };
       }),
   });
 
@@ -53,6 +56,6 @@ export const makeTemplate = (): AppCapabilities.SpaceTemplate =>
   SampleSpace.makeTemplate({
     id: 'org.dxos.plugin-debug.template.fieldstone',
     description:
-      'A software team run largely by agents: two months of mail, a year of calendar, projects with their agent runs, and shared docs.',
+      'A software team run largely by agents: two months of mail, a year of calendar, projects with their agent runs, shared docs, and charted metrics.',
     definition: make(),
   });

@@ -38,6 +38,8 @@ export type ObjectAvatarProps = Pick<DxAvatarProps, 'variant' | 'size' | 'onClic
   object: Entity.Unknown | Entity.Snapshot;
   /** Fallback glyph when the object has neither a picture nor a label. */
   fallbackIcon?: string;
+  /** False when the host already shows the picture nearby (e.g., a card body), so the avatar keeps to initials. */
+  showImage?: boolean;
 };
 
 /**
@@ -48,10 +50,17 @@ export type ObjectAvatarProps = Pick<DxAvatarProps, 'variant' | 'size' | 'onClic
  * directory of cards is scanned by kind, and giving every object a per-instance disc would trade
  * that away; the type glyph stays the default.
  */
-export const ObjectAvatar = ({ object, variant = 'circle', size = 6, fallbackIcon, onClick }: ObjectAvatarProps) => {
+export const ObjectAvatar = ({
+  object,
+  variant = 'circle',
+  size = 6,
+  fallbackIcon,
+  showImage = true,
+  onClick,
+}: ObjectAvatarProps) => {
   const live = isLiveObject(object) ? object : undefined;
   const [liveImage] = useObject(live, IMAGE_PROPERTY);
-  const image = live ? asImage(liveImage) : getObjectImage(object);
+  const image = showImage ? (live ? asImage(liveImage) : getObjectImage(object)) : undefined;
   const label = useLabel(object);
   const iconAnnotation = Entity.getIcon(object);
 

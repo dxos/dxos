@@ -16,6 +16,7 @@ import { QueryAST } from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import type * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { type IndexEngine } from '@dxos/index-core';
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { QueryService } from '@dxos/protocols/rpc';
@@ -44,11 +45,12 @@ export type QueryServiceProps = {
   updateIndexes: () => Promise<void>;
 
   /**
-   * True once every indexed object has a snapshot. The compiled executor reads that store rather
-   * than loading documents, so while it is still filling after upgrade a query awaits indexing
-   * before its first execution. Ignored on the in-memory path, which loads documents itself.
+   * True once every indexed object in scope has a snapshot (see `IndexEngine.hasCompleteSnapshots`).
+   * The compiled executor reads that store rather than loading documents, so while it is still
+   * filling after upgrade a query awaits indexing before its first execution. Ignored on the
+   * in-memory path, which loads documents itself.
    */
-  hasCompleteSnapshots?: () => Promise<boolean>;
+  hasCompleteSnapshots?: (scope: { spaceIds?: readonly SpaceId[]; feeds: boolean }) => Promise<boolean>;
 
   /** Evaluation path for every query this service creates; see {@link QueryExecutorMode}. */
   executor?: QueryExecutorMode;
@@ -144,23 +146,31 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     return Array.from(this._queries, (query) => query.executor.trace);
   }
 
-  /** Cached once true: the store only ever finishes filling, so the check need not repeat. */
-  #snapshotsKnownComplete = false;
+  readonly #snapshotsKnownComplete = new Set<string>();
 
-  /** Shared by queries that register while a check is running; each check is a full scan. */
-  #snapshotsCheck: Promise<boolean> | undefined;
+  readonly #snapshotsChecks = new Map<string, Promise<boolean>>();
 
-  async #snapshotsComplete(): Promise<boolean> {
-    if (this.#snapshotsKnownComplete || !this._params.hasCompleteSnapshots) {
+  async #snapshotsComplete(executor: QueryExecutor): Promise<boolean> {
+    const hasCompleteSnapshots = this._params.hasCompleteSnapshots;
+    if (!hasCompleteSnapshots) {
       return true;
     }
-    this.#snapshotsCheck ??= this._params.hasCompleteSnapshots().finally(() => {
-      this.#snapshotsCheck = undefined;
-    });
-    if (await this.#snapshotsCheck) {
-      this.#snapshotsKnownComplete = true;
+    const spaceIds = executor.spaceIds ? [...executor.spaceIds].sort() : undefined;
+    const feeds = executor.readsFeeds;
+    const key = `${spaceIds?.join(',') ?? '*'}:${feeds}`;
+    if (this.#snapshotsKnownComplete.has(key)) {
+      return true;
     }
-    return this.#snapshotsKnownComplete;
+    let check = this.#snapshotsChecks.get(key);
+    if (!check) {
+      check = hasCompleteSnapshots({ spaceIds, feeds }).finally(() => this.#snapshotsChecks.delete(key));
+      this.#snapshotsChecks.set(key, check);
+    }
+    if (await check) {
+      this.#snapshotsKnownComplete.add(key);
+      return true;
+    }
+    return false;
   }
 
   // 'all' = catch-all; null = no pending hint.
@@ -255,7 +265,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       scheduleMicroTask(ctx, async () => {
         await queryEntry.executor.open();
         const readsSnapshotStore = queryEntry.executor.compiled;
-        if (queryEntry.feedScoped || (readsSnapshotStore && !(await this.#snapshotsComplete()))) {
+        if (queryEntry.feedScoped || (readsSnapshotStore && !(await this.#snapshotsComplete(queryEntry.executor)))) {
           // A failed pass is logged and retried by the scheduler; the query answers from the index as it stands.
           await this._params.updateIndexes().catch((error) => {
             if (!(error instanceof IndexPassFailedError)) {

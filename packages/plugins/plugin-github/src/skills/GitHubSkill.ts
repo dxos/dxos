@@ -40,6 +40,7 @@ export const make = (): Skill.Skill =>
         Never create the object by hand, since only an import fills its title, state and diff.
         Importing is idempotent: a pull request the space already holds is returned unchanged, so import before referencing one rather than searching first.
         Pass the returned pullRequest reference to the other tools, and use it wherever the pull request must be attached to another object, such as a task's artifacts.
+        The import also returns the pull request's repository as a repo reference; add it to a project's repositories, or bind it to the chat, to have coding agents check it out.
         Read the state and CI status with ${Operation.toolName(GitHubOperation.GetPullRequestStatus)} before reporting whether a pull request is open, merged or green; the stored object may be stale.
       `,
     }),

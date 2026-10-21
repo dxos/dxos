@@ -76,8 +76,10 @@ const projectCellProps = (model: SheetModel, col: number, row: number): DxGridCe
   const format = description?.format;
   const classNames = ranges?.map(SheetRange.cellClassNameForRange).reverse();
 
+  const value = parseValue({ type, format, value: rawValue });
   return {
-    value: parseValue({ type, format, value: rawValue }),
+    // A plain number reads in the viewer's locale (grouping, decimal mark); a formatted one keeps its format.
+    value: typeof value === 'number' && !format ? value.toLocaleString() : value,
     className: mx(cellClassesForFieldType({ type, format }), threadRefs && commentedClassName, classNames),
     dataRefs: threadRefs,
   };

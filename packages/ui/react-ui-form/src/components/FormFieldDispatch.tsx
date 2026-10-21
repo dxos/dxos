@@ -112,8 +112,11 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   const description = override?.description ?? SchemaEx.getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
   const examples = SchemaEx.getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(type);
   const label = useMemo(
-    () => override?.label ?? labelProp ?? title ?? (name == null ? '' : String.capitalize(name)),
-    [override?.label, labelProp, title, name],
+    () =>
+      override?.hideLabel
+        ? ''
+        : (override?.label ?? labelProp ?? title ?? (name == null ? '' : String.capitalize(name))),
+    [override?.hideLabel, override?.label, labelProp, title, name],
   );
   const readonly = override?.readonly ?? readonlyProp;
   // A settings row shows its description beside the control, so the description never doubles as the placeholder.
@@ -201,7 +204,14 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
   }
   if (resolution.kind === 'object') {
     return (
-      <FormFieldSet label={label} collapsible nested data-testid={`group.${jsonPath}`}>
+      <FormFieldSet
+        label={label}
+        collapsible
+        nested
+        open={override?.open}
+        onOpenChange={override?.onOpenChange}
+        data-testid={`group.${jsonPath}`}
+      >
         <FormFields
           schema={resolution.schema}
           path={path}

@@ -17,8 +17,8 @@ import {
   type NoteNode,
   type PathNode,
   type Point,
-  type Scene,
   type Size,
+  type View,
   compositeBounds,
   instancePorts,
   pathBounds,
@@ -74,7 +74,7 @@ const glyphNode = (glyph: DXOSLockupGlyph, index: number): PathNode => {
 };
 
 /** The logo's definition: a composite scene of the mark and the four letters. */
-export const logoComposite = (): Scene => {
+export const logoComposite = (): View => {
   const nodes = DXOS_LOCKUP_GLYPHS.map(glyphNode);
   return {
     id: LOGO_OBJECT,
@@ -125,7 +125,7 @@ export const LAYOUT = {
 const RULE_PATH = 'M 2 0 L 238 0 Q 240 0 240 2 Q 240 4 238 4 L 2 4 Q 0 4 0 2 Q 0 0 2 0 Z';
 
 /** The end card's root scene at rest: the logo instance, the tagline, the rule and the call to action. */
-export const rootScene = (): Scene => {
+export const rootScene = (): View => {
   const composite = logoComposite();
   const content = compositeBounds(composite) ?? { x: 0, y: 0, width: 0, height: 0 };
   const logo: InstanceNode = {
@@ -181,8 +181,8 @@ const logoAt = (scale: number): { center: Point; size: Size } => {
 
 /** A fade and a rise of `rise` scene units from `from` to `to` seconds, as `EndCard` gives each line. */
 const entrance = (target: string, rest: Point, from: number, to: number, rise: number, opacity = 1): KeySpec[] => [
-  { target, property: 'opacity', t: from, value: 0 },
-  { target, property: 'opacity', t: to, value: opacity, easing: OUT },
+  { target, property: 'style.opacity', t: from, value: 0 },
+  { target, property: 'style.opacity', t: to, value: opacity, easing: OUT },
   { target, property: 'center', t: from, value: { x: rest.x, y: rest.y + rise } },
   { target, property: 'center', t: to, value: rest, easing: OUT },
 ];
@@ -200,8 +200,8 @@ export const endCardKeys = (): KeySpec[] => {
     [DURATION, 1.012, 'linear'],
   ];
   return [
-    { target: LOGO, property: 'opacity', t: 0, value: 0 },
-    { target: LOGO, property: 'opacity', t: 0.3, value: 1, easing: OUT },
+    { target: LOGO, property: 'style.opacity', t: 0, value: 0 },
+    { target: LOGO, property: 'style.opacity', t: 0.3, value: 1, easing: OUT },
     ...scales.flatMap(([t, scale, easing]): KeySpec[] => {
       const { center, size } = logoAt(scale);
       return [

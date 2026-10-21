@@ -8,7 +8,7 @@ import React, { useCallback, useContext, useEffect, useLayoutEffect, useMemo, us
 import {
   type BackgroundGrid,
   type Bounds,
-  SceneView,
+  Canvas,
   createMemoryStore,
   defaultThemeRegistry,
   resolveLook,
@@ -16,10 +16,10 @@ import {
 import { useThemeContext } from '@dxos/react-ui/Theme';
 
 import {
-  DATA_FLOW_SCENE_ID,
+  DATA_FLOW_VIEW_ID,
   type DataFlowLayout,
   type DataFlowSpec,
-  createDataFlowScene,
+  createDataFlowView,
   layoutDataFlow,
   partitionHub,
 } from './layout.ts';
@@ -126,7 +126,7 @@ export const DataFlowView = ({
   const layout = morph && partitioned ? { ...laidOut, hub: morph.target } : laidOut;
   // Created once per simulation: a new store would reset the view, so later layouts rewrite its one scene instead.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const store = useMemo(() => createMemoryStore([createDataFlowScene(layout, revealed)]), [simulation]);
+  const store = useMemo(() => createMemoryStore([createDataFlowView(layout, revealed)]), [simulation]);
   // Running, the split is made in the simulation, so what arrives afterwards lands in the new buckets; held, the morph
   // only redraws the frame. The ref keeps one toggle to one split, however often the effect runs.
   const [applied, setApplied] = useState<ReadonlyMap<string, SplitMove>>();
@@ -213,8 +213,8 @@ export const DataFlowView = ({
     return () => clearInterval(timer);
   }, [drifting, refocus]);
   useLayoutEffect(() => {
-    const scene = createDataFlowScene(layout, revealed);
-    registry.set(store.scenes, { ...registry.get(store.scenes), [scene.id]: scene });
+    const scene = createDataFlowView(layout, revealed);
+    registry.set(store.views, { ...registry.get(store.views), [scene.id]: scene });
   }, [registry, store, layout, revealed]);
   useLayoutEffect(() => {
     simulation.agentReads = revealed;
@@ -230,9 +230,9 @@ export const DataFlowView = ({
   // The containers are drawn by the overlay, in the theme's style set (glass for one the sample has no palette for).
   const overlayLook = LOOKS.find((candidate) => candidate === look.styleSet.id) ?? 'glass';
   return (
-    <SceneView.Root
+    <Canvas.Root
       store={store}
-      root={DATA_FLOW_SCENE_ID}
+      root={DATA_FLOW_VIEW_ID}
       readonly
       theme={theme}
       backgroundGrid={grid}
@@ -245,7 +245,7 @@ export const DataFlowView = ({
       onThemeChange={setTheme}
       onBackgroundGridChange={setGrid}
     >
-      <SceneView.Canvas
+      <Canvas.Viewport
         backgroundBounds={field}
         overlay={
           <MoleculeOverlay
@@ -269,11 +269,11 @@ export const DataFlowView = ({
       />
       {chrome && (
         <>
-          <SceneView.Navigation />
-          <SceneView.Debug />
-          <SceneView.Theme />
+          <Canvas.Navigation />
+          <Canvas.Debug />
+          <Canvas.Theme />
         </>
       )}
-    </SceneView.Root>
+    </Canvas.Root>
   );
 };

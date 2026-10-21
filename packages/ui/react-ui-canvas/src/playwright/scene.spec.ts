@@ -9,11 +9,12 @@ import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 import { SceneManager } from './SceneManager.ts';
 
 const PORT = 9006;
-const FREEHAND_URL = storybookUrl('ui-react-ui-canvas-sceneview--freehand', PORT);
+// The Readonly story's fixture with editing on: Storybook's `args` URL override, so the suite needs no story of its own.
+const FREEHAND_URL = `${storybookUrl('ui-react-ui-canvas-components-canvas--readonly', PORT)}&args=readonly:!false`;
 
-// The fixture (`createSceneTree(1)`): rectangle A, ellipse B, text T, rectangle C; links A→B (curve), A→C
+// The fixture (`createViewTree(1)`): rectangle A, ellipse B, text T, rectangle C; links A→B (curve), A→C
 // (line, directed) and B→C (spline). Every edge sits on the major grid.
-test.describe('SceneView', () => {
+test.describe('Canvas', () => {
   let page: Page;
   let scene: SceneManager;
   let close: (() => Promise<void>) | undefined;
@@ -117,6 +118,41 @@ test.describe('SceneView', () => {
     expect(selected[0]).not.toBe(id);
   });
 
+  test('with snap on, a move and a resize land the node on the major grid', async () => {
+    const id = 'scene:root/a';
+    const snap = page.getByTestId('toolbar-snap');
+    if ((await snap.getAttribute('aria-pressed')) !== 'true') {
+      await snap.click();
+    }
+    await scene.clickNode(id);
+    // The properties form edits the centre and the size; the edges follow from them.
+    const fields = page.locator('[data-testid="properties"] [role="spinbutton"]');
+    const edges = async () => {
+      const [x, y, width, height] = await Promise.all(
+        [0, 1, 2, 3].map(async (index) => Number(await fields.nth(index).inputValue())),
+      );
+      return [x - width / 2, y - height / 2, x + width / 2, y + height / 2];
+    };
+    const onMajor = (values: number[]) => values.every((value) => Math.abs(value % 64) === 0);
+    const before = await edges();
+
+    // Well under a major cell on screen: on the minor grid this lands a 16px step away, on the major one a whole cell.
+    const box = await scene.box(scene.node(id));
+    const center = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    await scene.drag(center, { x: center.x + 37, y: center.y + 23 });
+    await expect.poll(edges).not.toEqual(before);
+    expect(onMajor(await edges())).toBe(true);
+
+    const moved = await edges();
+    const east = await scene.handle(id, 'e');
+    await scene.drag(
+      { x: east.x + east.width / 2, y: east.y + east.height / 2 },
+      { x: east.x + east.width / 2 + 45, y: east.y + east.height / 2 },
+    );
+    await expect.poll(edges).not.toEqual(moved);
+    expect(onMajor(await edges())).toBe(true);
+  });
+
   test('shift-resize keeps the centre; a plain resize keeps the opposite edge', async () => {
     const id = 'scene:root/a';
     await scene.clickNode(id);
@@ -183,7 +219,9 @@ test.describe('SceneView', () => {
     await scene.focus();
     await page.keyboard.press('l');
     const right = await scene.nodesRight();
-    const from = { x: right + (view.x + view.width - right) / 2, y: view.y + view.height / 2 };
+    // Between the shapes and the floating inspector panel, which covers the canvas's right edge.
+    const panel = await scene.box(page.getByTestId('scene-view-dock'));
+    const from = { x: right + (Math.min(panel.x, view.x + view.width) - right) / 2, y: view.y + view.height / 2 };
     await page.mouse.move(from.x, from.y);
     await page.mouse.down();
     // A few pixels is well under a grid cell at any zoom the story fits to.
@@ -192,8 +230,8 @@ test.describe('SceneView', () => {
     await page.mouse.up();
     expect(await scene.linkCount()).toBe(3);
     // A click on the background ends the link tool: the select tool is back.
-    await expect(page.getByTestId('palette-L')).not.toHaveClass(/bg-primary-500\/20/);
-    await expect(page.getByTestId('palette-V')).toHaveClass(/bg-primary-500\/20/);
+    await expect(page.getByTestId('palette-L')).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.getByTestId('palette-V')).toHaveAttribute('aria-pressed', 'true');
   });
 
   test('picking a creation tool clears the selection', async () => {
@@ -264,7 +302,7 @@ test.describe('SceneView', () => {
       .toBe(true);
     // A frame made from the toolbar gets its child scene, so Enter opens it.
     await page.getByTestId('toolbar-create').click();
-    await page.getByTestId('create-frame').click();
+    await page.getByTestId('create-view').click();
     await scene.focus();
     await page.keyboard.press('Enter');
     await expect(page.getByTestId('toolbar-up')).toBeEnabled();
@@ -272,7 +310,7 @@ test.describe('SceneView', () => {
 
   test('a frame opens from its zoom-in control', async () => {
     await page.getByTestId('toolbar-create').click();
-    await page.getByTestId('create-frame').click();
+    await page.getByTestId('create-view').click();
     await page.getByTestId('portal-open').first().click();
     await expect(page.getByTestId('toolbar-up')).toBeEnabled();
   });
@@ -280,7 +318,9 @@ test.describe('SceneView', () => {
   test('the properties panel edits the selected node', async () => {
     await scene.clickNode('scene:root/c');
     const labels = await page.locator('[data-testid="properties"] label').allTextContents();
-    expect(labels).toEqual(expect.arrayContaining(['Label', 'Style']));
+    expect(labels).toEqual(expect.arrayContaining(['Label']));
+    // The style swatches sit under the Style section's heading rather than a field label of their own.
+    await expect(page.locator('[data-testid="properties"] [data-testid="style-grid"]')).toBeVisible();
     // Geometry is two labelled number fields per row.
     expect(labels).toEqual(expect.arrayContaining(['X', 'Y', 'Width', 'Height', 'Ports per side']));
   });
@@ -291,15 +331,15 @@ test.describe('SceneView', () => {
     const option = (key: string) => grid.locator(`[data-style-option="${key}"]`);
     // An unstyled node matches no swatch.
     await expect(grid.locator('[aria-checked="true"]')).toHaveCount(0);
-    // Tone 1 is the strongest fill.
-    await option('blue:1').click();
-    await expect(option('blue:1')).toHaveAttribute('aria-checked', 'true');
-    await expect(scene.node('scene:root/a')).toHaveClass(/bg-blue-500/);
+    // The default (flat) set's last tone is its strongest fill.
+    await option('blue:3').click();
+    await expect(option('blue:3')).toHaveAttribute('aria-checked', 'true');
+    await expect(scene.node('scene:root/a')).toHaveClass(/bg-blue-300/);
     await option('neutral:0').click();
     await expect(option('neutral:0')).toHaveAttribute('aria-checked', 'true');
-    // Outline: the fill goes (the selected frame's border shows the selection, not the hue).
+    // Tone 0 is clear: the fill goes (the selected frame's border shows the selection, not the hue).
     await expect(scene.node('scene:root/a')).toHaveClass(/bg-transparent/);
-    await expect(scene.node('scene:root/a')).not.toHaveClass(/bg-blue-500/);
+    await expect(scene.node('scene:root/a')).not.toHaveClass(/bg-blue-300/);
   });
 
   test('the geometry fields step by the grid and move the node', async () => {
@@ -321,7 +361,7 @@ test.describe('SceneView', () => {
   test('a read-only view selects nothing, draws no handles and applies no edit', async ({ browser }) => {
     await close?.();
     ({ page, close } = await setupPage(browser, {
-      url: storybookUrl('ui-react-ui-canvas-sceneview--readonly', PORT),
+      url: storybookUrl('ui-react-ui-canvas-components-canvas--readonly', PORT),
       viewportSize: { width: 1400, height: 800 },
     }));
     page.on('pageerror', (error) => errors.push(error.message));

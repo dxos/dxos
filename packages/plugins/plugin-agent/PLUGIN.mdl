@@ -24,7 +24,8 @@ EDGE's operation service can host the agent and knowledge operations.
 The following extension dialects are used in this document. `op@1.1`, `test@1.0` and `step@1.0`
 are defined in [`packages/reflect/deus/lang/qa.mdl`](../../reflect/deus/lang/qa.mdl); `node`,
 `companion` and `surface` in [`packages/reflect/deus/lang/app.mdl`](../../reflect/deus/lang/app.mdl); `skill@1.0` in
-[`packages/plugins/plugin-crm/PLUGIN.mdl`](../plugin-crm/PLUGIN.mdl); the rest in the Appendix.
+[`packages/plugins/plugin-crm/PLUGIN.mdl`](../plugin-crm/PLUGIN.mdl); `decision@1.0` in
+[`packages/reflect/deus/lang/changelog.mdl`](../../reflect/deus/lang/changelog.mdl); the rest in the Appendix.
 
 | Term        | URI                            |
 |-------------|--------------------------------|
@@ -39,6 +40,7 @@ are defined in [`packages/reflect/deus/lang/qa.mdl`](../../reflect/deus/lang/qa.
 | `surface`   | `org.dxos.mdl.surface@1.0`     |
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `step`      | `org.dxos.mdl.step@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
 
 ## External types
 
@@ -598,6 +600,7 @@ feat F-1: Agents
     then: an Agent exists with Instructions holding the Interview skill and a first chat bound to the Agent conversation skill
   req F-1.3: op:listAgents reports each Agent with the number of chats parented to it.
   req F-1.4: A space's agents are added, opened and deleted in Settings › Agents; "Add to space" does not offer them.
+  req F-1.5: A member has one private chat with an agent in a space. Opening the agent again while the first open is still making that chat waits for it, and when two opens each made one (two devices at once), the article opens the one with the latest message.
 ```
 
 ```mdl
@@ -684,8 +687,8 @@ feat F-8: An agent in several spaces
     then: that agent is returned and nothing is created
   req F-8.3: A presence carries its home's name, DID and instructions, keyed to the home agent's URI; inviting a presence keys the new one to the same home. An admin who cannot reach the home invites from the agent's own space instead (F-7.8), and the presence starts from the base instructions for its name.
   req F-8.4:
-    when: a member opens an agent invited from another space
-    then: its article is the member's one private chat with the agent, the same as at home, and its companions show the home agent's knowledge and activity, when the member can reach the home space; otherwise the presence's own
+    when: a member opens an agent in a space it was invited to
+    then: its article is the member's private chat with the agent in that space, a conversation of its own that the agent's other spaces do not show, and its companions show that space's goals, watches and channels; what the agent knows comes from its one brain (F-6.1), whichever space the member talks to it in
   req F-8.5: Inviting writes no conversation: nothing is quoted from any chat into the space.
   req F-8.6: Only an agent's admins can add it to another space. The picker offers only the agents the member administers, and op:inviteAgent registers the space with EDGE, which EDGE refuses anyone else, before it makes the presence; EDGE's brain serves only its home and the spaces registered so, so a presence made any other way reads and writes nothing of the brain, and EDGE runs no turn of its chats.
 ```
@@ -832,15 +835,12 @@ Design items from `docs/DESIGN.md` and `docs/FACTS.md` that this package does no
 - The EDGE gateway Durable Object and the agent turn on EDGE live outside this package (EDGE repo).
   Until edge step 4 the gateway still reads a `DiscordBinding` and calls `ensureThreadChat`, neither of
   which exists any more, so Discord conversations do not reach the agent.
-- The intended shape: an agent is a member of the spaces it is invited to, people talk to it there as a
-  bot in their chats, and each person has one conversation with it at the top level (L0), not one per space.
-  As built, an agent with an identity is a member of each shared space it is in (F-7.2), but people talk to it
-  through a presence (an `Agent` keyed to its home); the member's one conversation is their private chat in
-  the agent's home space, which the presence's article opens; its messages carry no identity (`sender` is
-  `{ role: 'assistant' }`); and chats in a space do not wake the agent.
+- The intended shape: an agent is a member of the spaces it is invited to, and people talk to it there as a
+  bot in their chats. As built, an agent with an identity is a member of each shared space it is in (F-7.2), but
+  people talk to it through a presence (an `Agent` keyed to its home), in a private chat of their own in each
+  space (F-8.4); its messages carry no identity (`sender` is `{ role: 'assistant' }`); and chats in a space do
+  not wake the agent.
 - Removing an agent from a space's members leaves its presence there and the space registered with its brain.
-- A member who cannot reach the agent's home space talks to the presence in a chat of its own, which reads
-  the home's brain but not the home conversation.
 - Goals are objects in the space they were recorded in; only facts are shared through the brain.
 - Runtime-assembled knowledge context at the start of each turn; consolidation (dedupe, promotion of
   inferred facts); editing or retracting single facts in the UI (Reset wipes the brain).
@@ -1132,6 +1132,39 @@ test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own sp
     - name: Remove Kai from Offsite team and Bob from Kai's space
       do: In Offsite team's Settings › Agents delete Kai; in Kai's space open Settings › Members and remove Bob.
       expect: Offsite team no longer lists Kai, and Bob's Agents panel no longer lists Kai
+```
+
+## Changelog
+
+```mdl
+decision D-1: A member has one private chat with an agent in a space. An open that starts while another is still making that chat waits for it, and of two chats made at once the article opens the one with the latest message.
+  date: 2026-10-19
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-1.5]
+  why: Reopening an agent within the two seconds its first open takes made a second chat, and after a reload the article opened the empty one, so the member's conversation looked lost.
+  rejected:
+    - A lock inside `ensureParticipantChat`: the second open starts in the article, and a lock would leave chats already duplicated opening the empty one.
+  source: https://github.com/dxos/dxos/pull/14082
+```
+
+```mdl
+decision D-2: A member who sees the same conversation with an agent in each space the agent is in has hit a bug, which is to be reproduced and fixed.
+  date: 2026-10-19
+  by: user:mykola-vrmchk
+  affects: [F-8.4]
+```
+
+```mdl
+decision D-3: Opening an agent in a space opens the member's private chat with it in that space, a conversation the agent's other spaces do not show, and what the agent knows stays shared through its one brain. Fills in [D-2].
+  date: 2026-10-19
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-8.4]
+  why: The article opened the private chat of the agent's home whichever space it was opened from. A chat per space removes the shared conversation, and the brain every presence names keeps the agent's knowledge whole across spaces (F-6.1).
+  rejected:
+    - One conversation per member, shown in every space the agent is in: the behaviour reported as the bug.
+  source: https://github.com/dxos/dxos/pull/14074
 ```
 
 ---

@@ -13,6 +13,7 @@ import { type Actor, Message, type Person } from '@dxos/types';
 import { type Agents, type PersonKey } from '../team/index.ts';
 import { type Make, personActor } from '../util.ts';
 import { type ContactKey, EXTRACTED } from './contacts.ts';
+import { MESSAGE_SUMMARIES, messageSummaryKey } from './message-summaries.ts';
 import { type Clock, address, at, isWeekday, makeRandom, textBlock, threadIdFor } from './util.ts';
 
 export type ThreadKey =
@@ -21,8 +22,21 @@ export type ThreadKey =
   | 'meridianSecurity'
   | 'okapiIncident'
   | 'brightwaterIntro'
+  | 'halcyonInbound'
+  | 'kestrelInbound'
+  | 'vantageDiscovery'
+  | 'vantageResidency'
+  | 'meridianProposal'
+  | 'tidewaterSecurity'
+  | 'tidewaterMsa'
+  | 'lumenSigned'
+  | 'lumenRollout'
+  | 'pallasDecision'
+  | 'corvidEvaluation'
+  | 'larkspurDemo'
+  | 'aldermoorProposal'
   | 'stripeBilling'
-  | 'awsCredits'
+  | 'cloudflareCredits'
   | 'cloudflareR2'
   | 'githubPartner'
   | 'offsite'
@@ -249,7 +263,7 @@ Astrid`,
         time: [11, 45],
         body: `Ruth,
 
-180 seats on the annual plan comes to $86,400, which keeps your current rate of $40 a seat per month. A dedicated region in us-east-2 adds $1,500 a month with a 99.95% uptime commitment, plus a one-time setup fee of $5,000.
+180 seats on the annual plan comes to $86,400, which keeps your current rate of $40 a seat per month. A dedicated US region adds $1,500 a month with a 99.95% uptime commitment, plus a one-time setup fee of $5,000.
 
 If you sign for two years we'll hold the seat rate for both years and waive the region setup fee. Seats added mid-term are prorated at the same rate.
 
@@ -353,7 +367,7 @@ Sections 3 to 6 are filled in. The short version:
 
 - The agent uploads content-addressed build outputs and their hashes. Nothing else. I've added a captured upload request to the sheet as an example.
 - Environment variables and command lines are never sent. Request logs keep path, status code and latency only, for 30 days.
-- Encryption at rest is AES-256, keys in AWS KMS, rotated yearly. TLS 1.2 or later in transit.
+- Encryption at rest is AES-256, keys managed in Cloudflare and rotated yearly. TLS 1.2 or later in transit.
 - RPO is 24 hours and RTO is 4 hours. Cache contents can be rebuilt from your CI, so losing them costs time, not data.
 
 Astrid is finishing sections 1, 2 and 5.
@@ -369,7 +383,7 @@ Anika`,
         body: `Thanks Anika, this is clear. Two follow-ups:
 
 1. Do you have a SOC 2 Type II report, or only Type I?
-2. Who at Fieldstone can access customer cache buckets, and is that access logged? I'd like to know how access is granted and how long it lasts, not only who holds it.
+2. Who at Alien Labs can access customer cache buckets, and is that access logged? I'd like to know how access is granted and how long it lasts, not only who holds it.
 
 Ted Kowalski
 Security Engineer, Meridian Health Data`,
@@ -386,7 +400,7 @@ Ted,
 
 Type I for now. Our auditor finishes fieldwork this month and the report is due a few weeks after; I'll send it under NDA as soon as it lands. The Type II observation window starts right after, so expect that report next year.
 
-Bucket access is limited to Anika and Omar, and neither has standing access. Each session is a short-lived role, granted for at most an hour through an approval in our access tool, and every session and API call goes to CloudTrail. We review the log monthly. Nobody else at Fieldstone, me included, can read a customer bucket.
+Bucket access is limited to Anika and Omar, and neither has standing access. Each session is a short-lived role, granted for at most an hour through an approval in our access tool, and every session and API call goes to CloudTrail. We review the log monthly. Nobody else at Alien Labs, me included, can read a customer bucket.
 
 Astrid`,
       },
@@ -661,6 +675,609 @@ Leo`,
     ],
   },
 ];
+//
+// Pipeline threads: the sales conversations behind the Sales pipeline deals the customer threads above do not cover.
+//
+
+const PIPELINE_THREADS: Thread[] = [
+  {
+    key: 'halcyonInbound',
+    subject: "Cairn for Halcyon Freight's Android builds",
+    customer: true,
+    mail: [
+      {
+        from: 'priya',
+        to: ['astrid'],
+        day: 8,
+        time: [13, 20],
+        body: `Hi Astrid,
+
+I read the Monorepo Notes piece on Gradle build caches and followed the link to Cairn. We're about 30 engineers on a Kotlin and Android codebase, with CI on GitHub Actions. Clean builds take 35 minutes and the Gradle cache we run on a single VM is full by Wednesday every week.
+
+Two questions before I take this to my manager: does Cairn work as a Gradle remote cache without a plugin of our own, and can we try it on one repo without a sales process?
+
+Priya Raman
+Platform Engineer, Halcyon Freight`,
+      },
+      {
+        from: 'astrid',
+        to: ['priya'],
+        cc: ['kofi', 'lucia'],
+        day: 7,
+        time: [9, 40],
+        body: `Hi Priya,
+
+Yes to both. Cairn speaks the Gradle HTTP cache protocol, so it is a URL and a token in settings.gradle. The Team plan has a free 14-day trial and needs no call to start.
+
+That said, a full VM by midweek usually means outputs that should not be cached at all, so a short call would save you a week. Kofi has tuned a lot of Android builds and can look at a build scan with you. Lucía is copied for pricing once you know what you need.
+
+Astrid`,
+      },
+      {
+        from: 'priya',
+        to: ['astrid', 'kofi'],
+        cc: ['lucia'],
+        day: 5,
+        time: [15, 5],
+        body: `Thanks both. I've started the trial on our main app repo and booked 30 minutes next Tuesday. I'll bring a build scan from a clean CI run.
+
+Priya`,
+      },
+    ],
+  },
+  {
+    key: 'kestrelInbound',
+    subject: 'Remote cache for a Bazel monorepo at Kestrel',
+    customer: true,
+    mail: [
+      {
+        from: 'owen',
+        to: ['astrid', 'kofi'],
+        day: 2,
+        time: [16, 30],
+        body: `Hello,
+
+Your Cache Line issue on affected-target detection was passed around our team last week. We run grid-management software from one Bazel monorepo: 140 engineers, about 9,000 targets, and a self-hosted bazel-remote on two machines that we keep resizing.
+
+We'd like to stop operating the cache ourselves. Before anyone on our side spends time on it, I need to know three things: whether you support the Bazel remote APIs including remote execution, where data is stored, and what a team our size pays.
+
+Owen Fairley
+Build Infrastructure Lead, Kestrel Energy`,
+      },
+      {
+        from: 'kofi',
+        to: ['owen'],
+        cc: ['astrid', 'lucia'],
+        day: 1,
+        time: [10, 15],
+        body: `Hi Owen, thanks for reading.
+
+> whether you support the Bazel remote APIs including remote execution
+
+Remote caching, yes, over gRPC with the standard flags. Remote execution is not something we offer; most teams your size get the bigger win from a shared cache with a high hit rate first.
+
+Data sits on Cloudflare R2 in the US by default, with an EU option. For 140 engineers you would be on Business, around $3,500 a month; Lucía can make that exact.
+
+Could we do a discovery call next week? Bring a recent build event log and I'll show you what we'd hit.
+
+Kofi`,
+      },
+      {
+        from: 'owen',
+        to: ['kofi'],
+        cc: ['astrid', 'lucia'],
+        day: 0,
+        time: [9, 40],
+        body: `No remote execution is fine for now. Friday next week works; I've accepted the invite and will bring two event logs, one clean and one incremental.
+
+Owen`,
+      },
+    ],
+  },
+  {
+    key: 'vantageDiscovery',
+    subject: 'Vantage Aerospace: notes from discovery',
+    customer: true,
+    mail: [
+      {
+        from: 'claire',
+        to: ['astrid'],
+        cc: ['lucia'],
+        day: 14,
+        time: [18, 0],
+        body: `Astrid, Lucía,
+
+Thanks for the time yesterday. To confirm what we covered: 300 engineers across flight software and ground systems, CMake with ccache today, CI runs about 4,000 builds a day, and a full flight-software build takes 70 minutes. We'd like to get that under 15.
+
+We have budget this fiscal year if we choose a vendor by the end of next quarter. I'm the decision maker for tooling; our security team will need to review anything that stores build output.
+
+Can you send a short technical summary I can circulate internally?
+
+Claire Dubois
+Director of Software Engineering, Vantage Aerospace`,
+      },
+      {
+        from: 'astrid',
+        to: ['claire'],
+        cc: ['lucia', 'omar'],
+        day: 13,
+        time: [11, 30],
+        body: `Claire,
+
+Here is the short version to circulate. Cairn replaces your ccache directories with a shared cache keyed on compiler, flags and inputs; builds on any runner reuse each other's output. For a codebase like yours we usually see full builds drop by 70 to 80 percent once the cache is warm.
+
+Omar, who leads our cache engine, is copied. He can go deeper on how we key C++ builds and what we never store.
+
+Astrid`,
+      },
+      {
+        from: 'claire',
+        to: ['astrid', 'omar'],
+        cc: ['lucia'],
+        day: 12,
+        time: [17, 45],
+        body: `That's what I needed. I've shared it with my leads. The open question will be where the data lives; I'll write separately about that.
+
+Claire`,
+      },
+    ],
+  },
+  {
+    key: 'vantageResidency',
+    subject: 'Vantage: US-only data residency',
+    customer: true,
+    mail: [
+      {
+        from: 'claire',
+        to: ['astrid'],
+        cc: ['anika'],
+        day: 6,
+        time: [16, 20],
+        body: `Astrid,
+
+Some of our flight software is export-controlled, so our security team's first question is residency. Build output and cache metadata must stay in the US, and only US persons may have access to it.
+
+Can you meet that today, or is it on a roadmap? If it is a dedicated deployment, we'd want to understand the cost before the deep dive.
+
+Claire`,
+      },
+      {
+        from: 'anika',
+        to: ['claire'],
+        cc: ['astrid'],
+        day: 5,
+        time: [10, 50],
+        body: `Hi Claire,
+
+Storage can be pinned to US-only R2 buckets today, and the Workers that serve your tenant can be restricted to US data centres. Access to production is limited to four of us, and we can name a US-person on-call rotation for your tenant.
+
+What we can't do yet is a separate control plane, so cache metadata goes through the same API as other tenants, with the same encryption. I'd walk through exactly that in the deep dive so your security team can judge it.
+
+Anika`,
+      },
+    ],
+  },
+  {
+    key: 'meridianProposal',
+    subject: 'Meridian paid plan proposal',
+    customer: true,
+    mail: [
+      {
+        from: 'lucia',
+        to: ['aisha'],
+        cc: ['astrid', 'kenji'],
+        day: 2,
+        time: [14, 30],
+        body: `Aisha,
+
+Following Kenji's sign-off, here is our proposal for the paid plan: 60 seats on Enterprise at $40 a seat per month, $28,800 a year, billed annually. It includes SAML, audit-log export and the SOC 2 Type I report within the 60 days Kenji asked for.
+
+If you expect the trial to grow, we can price a ramp: seats added in the first year at the same rate, prorated monthly.
+
+The order form follows once you confirm the seat count.
+
+Lucía`,
+      },
+      {
+        from: 'aisha',
+        to: ['lucia', 'astrid'],
+        cc: ['kenji'],
+        day: 1,
+        time: [19, 10],
+        body: `Lucía,
+
+60 to start, but two more teams join in Q2, so call it 90 by June. Please add the ramp. Procurement will also ask for the SOC 2 condition to be written into the order form rather than an email.
+
+Can we review it together next week before it goes to them?
+
+Aisha`,
+      },
+      {
+        from: 'lucia',
+        to: ['aisha'],
+        cc: ['astrid', 'kenji'],
+        day: 0,
+        time: [10, 30],
+        body: `> Please add the ramp.
+
+Done: 60 seats now, up to 90 at the same rate, and the SOC 2 Type I delivery date as a clause in the order form. I've sent an invite for Wednesday to walk through it with you and Kenji.
+
+Lucía`,
+      },
+    ],
+  },
+  {
+    key: 'tidewaterSecurity',
+    subject: 'Tidewater vendor security review',
+    customer: true,
+    mail: [
+      {
+        from: 'rohan',
+        to: ['astrid'],
+        cc: ['anika'],
+        day: 28,
+        time: [15, 10],
+        body: `Astrid,
+
+Our security team has finished the paper review of Cairn. Three items before they can approve:
+
+- Evidence that tokens are scoped per project and revocable without a redeploy.
+- Your breach-notification window. Our regulator expects us to hear within 48 hours.
+- Whether build logs, which can contain policy numbers in test fixtures, are ever stored.
+
+They'd like to cover these on a call next week rather than over email.
+
+Rohan Mehta
+VP Platform Engineering, Tidewater Insurance`,
+      },
+      {
+        from: 'anika',
+        to: ['rohan'],
+        cc: ['astrid'],
+        day: 27,
+        time: [9, 0],
+        body: `Rohan,
+
+Short answers so your team can prepare: tokens are per project and revoke immediately from the dashboard or the API; our standard breach notice is 72 hours, and we can commit to 48 in your contract; build logs are never stored, only content-addressed outputs and their hashes.
+
+I'll demo token revocation live on the call. Tuesday afternoon your time works for me.
+
+Anika`,
+      },
+      {
+        from: 'rohan',
+        to: ['astrid', 'anika'],
+        day: 21,
+        time: [20, 5],
+        body: `Security approved this afternoon, conditional on the 48-hour notice appearing in the MSA. Legal will send redlines next.
+
+Rohan`,
+      },
+    ],
+  },
+  {
+    key: 'tidewaterMsa',
+    subject: 'Tidewater MSA redlines',
+    customer: true,
+    mail: [
+      {
+        from: 'rohan',
+        to: ['lucia'],
+        cc: ['astrid'],
+        day: 13,
+        time: [14, 45],
+        body: `Lucía,
+
+Our legal team's redlines on the MSA are attached to the shared folder. The ones that matter:
+
+- Liability cap at three times annual fees, not one.
+- 48-hour breach notification, as agreed with security.
+- 99.9% monthly uptime with service credits, not a best-efforts clause.
+
+Everything else is wording. We'd like to sign this month; 220 seats on Enterprise is what we have budget for.
+
+Rohan`,
+      },
+      {
+        from: 'lucia',
+        to: ['rohan'],
+        cc: ['astrid'],
+        day: 12,
+        time: [10, 20],
+        body: `Rohan,
+
+48 hours and 99.9% with credits are both fine; they match what we already run to. The liability cap is the hard one. Three times fees is beyond what our insurance covers, so we can offer two times, with uncapped liability for a data breach caused by our negligence.
+
+220 seats at $40 a seat per month is $105,600 a year. I can hold that rate for a second year if you sign this month.
+
+Lucía`,
+      },
+      {
+        from: 'rohan',
+        to: ['lucia'],
+        cc: ['astrid'],
+        day: 7,
+        time: [18, 30],
+        body: `Legal can accept two times with the breach carve-out. They want the uptime credits to apply automatically rather than on request. If you agree to that, we're down to signatures.
+
+Rohan`,
+      },
+      {
+        from: 'astrid',
+        to: ['rohan'],
+        cc: ['lucia'],
+        day: 6,
+        time: [9, 15],
+        body: `> They want the uptime credits to apply automatically
+
+Agreed. Anika already reports uptime per tenant, so credits can follow from it. Lucía will send the final MSA and order form; let's go through them together on Thursday so legal has one clean version.
+
+Astrid`,
+      },
+    ],
+  },
+  {
+    key: 'lumenSigned',
+    subject: 'Lumen Biotech order form',
+    customer: true,
+    mail: [
+      {
+        from: 'lucia',
+        to: ['tobias'],
+        cc: ['astrid'],
+        day: 23,
+        time: [11, 0],
+        body: `Tobias,
+
+The order form is in your inbox for signature: 150 seats on Enterprise, $72,000 a year with the research-institution discount we discussed, starting on signature. It includes SAML, the EU region and priority support.
+
+Once it's signed, Astrid will introduce your onboarding team.
+
+Lucía`,
+      },
+      {
+        from: 'tobias',
+        to: ['lucia'],
+        cc: ['astrid'],
+        day: 21,
+        time: [16, 40],
+        body: `Signed and returned. The validation runs settled it: our pipeline builds went from 41 minutes to 9 with a warm cache, and the cluster team stopped asking for more disk.
+
+Tobias Lindqvist
+Head of Research Computing, Lumen Biotech`,
+      },
+      {
+        from: 'astrid',
+        to: ['tobias'],
+        cc: ['lucia', 'kofi', 'june'],
+        day: 20,
+        time: [9, 30],
+        body: `Welcome aboard, Tobias, and thank you.
+
+Kofi will run your rollout and June will set up SAML with your identity team. They'll start with the pipelines from the validation, then move the remaining groups one at a time so we can watch hit rates as we go.
+
+Astrid`,
+      },
+    ],
+  },
+  {
+    key: 'lumenRollout',
+    subject: 'Lumen rollout: second pipeline group',
+    customer: true,
+    mail: [
+      {
+        from: 'tobias',
+        to: ['kofi'],
+        cc: ['astrid', 'june'],
+        day: 9,
+        time: [13, 5],
+        body: `Kofi,
+
+First group is settled: hit rate 88% over the week and no complaints. SAML is live for everyone, thanks June.
+
+The second group is our imaging pipelines. They build large C++ libraries against two compiler versions, so I expect a lower hit rate at first. Anything we should change before we switch them over?
+
+Tobias`,
+      },
+      {
+        from: 'kofi',
+        to: ['tobias'],
+        cc: ['astrid', 'june'],
+        day: 8,
+        time: [10, 10],
+        body: `Tobias,
+
+Two things. Pin the compiler version in each pipeline's environment so the keys stay stable, and warm the cache with one build per compiler before you move the group. Expect around 60% the first week, rising as their branches converge.
+
+Once the group has run for a week, send me the numbers and we'll decide whether a check-in is worth it.
+
+Kofi`,
+      },
+      {
+        from: 'tobias',
+        to: ['kofi'],
+        cc: ['astrid'],
+        day: 7,
+        time: [15, 50],
+        body: `Will do. Warm-up builds are running tonight.
+
+Tobias`,
+      },
+    ],
+  },
+  {
+    key: 'pallasDecision',
+    subject: 'Pallas Retail: decision on Cairn',
+    customer: true,
+    mail: [
+      {
+        from: 'carmen',
+        to: ['astrid'],
+        cc: ['lucia'],
+        day: 16,
+        time: [12, 25],
+        body: `Astrid, Lucía,
+
+Thank you for the demo and the proposal. We've decided not to go ahead this year. Our infrastructure board ruled that build output must stay in our own data centre in Madrid, and a hosted cache, even in an EU region, doesn't meet that. We'll run a self-hosted cache instead.
+
+This was not about the product. The team liked it, and the hit rates in the demo were better than what we expect to get ourselves.
+
+Carmen Ruiz
+Engineering Director, Pallas Retail Group`,
+      },
+      {
+        from: 'astrid',
+        to: ['carmen'],
+        cc: ['lucia'],
+        day: 15,
+        time: [9, 5],
+        body: `Carmen,
+
+Thank you for telling us directly, and for the reason. A customer-hosted tier is something we're weighing for next year; if it happens, you'll be among the first we call.
+
+Astrid`,
+      },
+      {
+        from: 'carmen',
+        to: ['astrid'],
+        day: 14,
+        time: [17, 0],
+        body: `Please do. Good luck with the 1.8 release.
+
+Carmen`,
+      },
+    ],
+  },
+  {
+    key: 'corvidEvaluation',
+    subject: 'Corvid Analytics: Pants remote cache evaluation',
+    customer: true,
+    mail: [
+      {
+        from: 'daniel',
+        to: ['astrid'],
+        cc: ['kofi'],
+        day: 22,
+        time: [11, 10],
+        body: `Hi Astrid,
+
+Thanks for the call last week. I took Cairn to our engineering leadership and the budget for an evaluation is approved.
+
+For context: about 180 engineers on one Python and Rust monorepo built with Pants, with CI on Buildkite. Median CI time is 28 minutes and most of it is rebuilding Rust crates nobody touched.
+
+Before we start, two requirements. The cache must work with the Pants remote cache settings we already have, and our security team needs to know where artifacts are stored. Can Kofi run a technical evaluation with us in the next few weeks?
+
+Daniel Okafor
+Head of Developer Productivity, Corvid Analytics`,
+      },
+      {
+        from: 'astrid',
+        to: ['daniel'],
+        cc: ['kofi', 'lucia'],
+        day: 21,
+        time: [9, 25],
+        body: `Hi Daniel,
+
+Good news on the budget. Pants speaks the Bazel remote APIs, so Cairn works with your existing remote_store_address and a token; no plugin needed. Artifacts are stored on Cloudflare R2 in the US by default, and I'll send our data handling summary for your security team.
+
+Kofi will run the evaluation. Lucía is copied for the commercial side once you know your seat count.
+
+Astrid`,
+      },
+      {
+        from: 'daniel',
+        to: ['astrid', 'kofi'],
+        cc: ['lucia'],
+        day: 19,
+        time: [15, 40],
+        body: `That works. I've booked the technical evaluation with Kofi and will bring two weeks of CI timings so we can compare hit rates.
+
+Daniel`,
+      },
+    ],
+  },
+  {
+    key: 'larkspurDemo',
+    subject: 'Nx remote cache demo for Larkspur Media',
+    customer: true,
+    mail: [
+      {
+        from: 'yuki',
+        to: ['astrid', 'kofi'],
+        day: 16,
+        time: [14, 5],
+        body: `Hi both,
+
+We build our web, TV and mobile apps from one Nx monorepo, about 120 engineers. Nx Cloud is getting expensive and we'd rather own where our cache lives.
+
+Could you show us Cairn as an Nx remote cache? I'd like our two tech leads in the room, and ideally you'd run it against a fork of one of our repos.
+
+Yuki Tanaka
+Staff Engineer, Developer Experience, Larkspur Media`,
+      },
+      {
+        from: 'kofi',
+        to: ['yuki'],
+        cc: ['astrid', 'lucia'],
+        day: 15,
+        time: [10, 30],
+        body: `Hi Yuki,
+
+Happy to. Cairn implements the Nx remote cache API, so the demo is one environment variable change on your fork. Send me the fork and a CI run we can replay, and I'll show cold and warm builds side by side.
+
+I've sent an invite for a 45-minute demo. Lucía can walk through pricing at the end if that's useful.
+
+Kofi`,
+      },
+    ],
+  },
+  {
+    key: 'aldermoorProposal',
+    subject: 'Aldermoor Bank: Enterprise proposal',
+    customer: true,
+    mail: [
+      {
+        from: 'henrik',
+        to: ['astrid'],
+        cc: ['lucia'],
+        day: 28,
+        time: [10, 0],
+        body: `Hi Astrid,
+
+The demo landed well with the platform team. We're moving 400 engineers from Maven to Bazel this year and want the cache in place before the first services move.
+
+Please send a proposal for Enterprise. Two requirements from our risk office: all data in the EU region, and a customer-managed encryption key.
+
+Henrik Solberg
+Director of Engineering Platforms, Aldermoor Bank`,
+      },
+      {
+        from: 'lucia',
+        to: ['henrik'],
+        cc: ['astrid'],
+        day: 27,
+        time: [16, 20],
+        body: `Hi Henrik,
+
+Here is the proposal in short: Enterprise for 400 seats, EU region only, with customer-managed keys through your KMS, and the migration support Kofi described in the demo. The order form follows once procurement has reviewed the terms.
+
+Happy to walk your procurement team through it.
+
+Lucía`,
+      },
+      {
+        from: 'henrik',
+        to: ['lucia', 'astrid'],
+        day: 26,
+        time: [11, 45],
+        body: `Thanks, Lucía. Procurement has it. Let's review it together with their questions; I'll send a time.
+
+Henrik`,
+      },
+    ],
+  },
+];
+
 const VENDOR_THREADS: Thread[] = [
   {
     key: 'stripeBilling',
@@ -680,7 +1297,7 @@ We're moving Cairn from flat per-seat plans to per-seat plus metered cache stora
 2. Is there a rate limit on meter events? We'd report storage hourly per customer, about 300 customers, so roughly 7,200 events a day.
 
 June Okonkwo
-Fieldstone Labs`,
+Alien Labs`,
       },
       {
         from: 'dana',
@@ -752,8 +1369,8 @@ Dana`,
     ],
   },
   {
-    key: 'awsCredits',
-    subject: 'AWS credits and a Savings Plan',
+    key: 'cloudflareCredits',
+    subject: 'Cloudflare credits and an annual commit',
     mail: [
       {
         from: 'elena',
@@ -763,14 +1380,14 @@ Dana`,
         time: [17, 10],
         body: `Hi Astrid,
 
-Following up on our call: you qualify for $25,000 in Activate credits, valid for twelve months. They apply to most services, including EC2, Fargate and S3, but not to Marketplace purchases or support plans.
+Following up on our call: you qualify for $25,000 in Cloudflare for Startups credits, valid for twelve months. They apply to most developer platform products, including Workers, Containers and R2, but not to add-on services or support plans.
 
-Separately, your EC2 and Fargate spend has been steady for six months, so a one-year Compute Savings Plan at your current baseline would cut that bill by about 28%. Compute Savings Plans apply across instance families and regions, so they'd survive a change of instance type.
+Separately, your Workers and Containers spend has been steady for six months, so a one-year committed-use contract at your current baseline would cut that bill by about 28%. The commit applies across products and regions, so it would survive a change of instance type.
 
 I'll submit the credit application once you confirm.
 
 Elena Marsh
-Solutions Architect, AWS`,
+Solutions Architect, Cloudflare`,
       },
       {
         from: 'astrid',
@@ -780,7 +1397,7 @@ Solutions Architect, AWS`,
         time: [8, 40],
         body: `Thanks Elena. Credits, yes please.
 
-On the Savings Plan: Anika is about to move the cache nodes to Graviton, which changes our baseline. Her benchmarks showed the same p99 for about 20% less, so I'd rather commit once against the new number.
+On the commit: Anika is about to move the cache nodes to arm64, which changes our baseline. Her benchmarks showed the same p99 for about 20% less, so I'd rather commit once against the new number.
 
 Anika, can you size the commitment after the move?
 
@@ -794,9 +1411,9 @@ Astrid`,
         time: [15, 25],
         body: `Hi Elena,
 
-The Graviton move is done for cache nodes and baseline compute dropped about 20%, in line with the benchmarks. I'd commit to $4.10 an hour, roughly 80% of the new baseline, which leaves headroom for the spikes around customer release days.
+The arm64 move is done for cache nodes and baseline compute dropped about 20%, in line with the benchmarks. I'd commit to $4.10 an hour, roughly 80% of the new baseline, which leaves headroom for the spikes around customer release days.
 
-Could you also review the setup with us before we commit? We're adding a dedicated region in us-east-2 for one customer, and I'd like to know how that changes what we can commit to.
+Could you also review the setup with us before we commit? We're adding a dedicated US region for one customer, and I'd like to know how that changes what we can commit to.
 
 Anika`,
       },
@@ -805,9 +1422,9 @@ Anika`,
         to: ['anika', 'astrid'],
         day: 7,
         time: [16, 50],
-        body: `Credits are on your account. I've set up an architecture review for the week after next to cover the Savings Plan and the new region together.
+        body: `Credits are on your account. I've set up an architecture review for the week after next to cover the commit and the new region together.
 
-If you can, bring a Cost Explorer view of the last three months grouped by service.
+If you can, bring a billing export of the last three months grouped by product.
 
 Elena`,
       },
@@ -834,7 +1451,7 @@ Two questions:
 Felix is building the cost model and is copied here.
 
 Omar Haddad
-Fieldstone Labs`,
+Alien Labs`,
       },
       {
         from: 'ines',
@@ -897,7 +1514,7 @@ Partner Manager, GitHub`,
         time: [15, 15],
         body: `Hi Sofia,
 
-The action is published under fieldstone-labs, and security@fieldstone.dev is our contact; it reaches Anika and Omar.
+The action is published under alien-labs, and security@alienlabs.io is our contact; it reaches Anika and Omar.
 
 Self-hosted runner docs are the gap. They'll be up within two weeks, including how to keep the cache volume warm on ephemeral runners, which is the question we get most.
 
@@ -934,10 +1551,10 @@ const WEEKLY_UPDATES: Array<{ readonly day: number; readonly body: string }> = [
   {
     day: 54,
     body: `Shipped: Cairn 1.7.2 with the eviction memory fix.
-In progress: SCIM beta with two customers; Graviton benchmarks for cache nodes.
+In progress: SCIM beta with two customers; arm64 benchmarks for cache nodes.
 Hiring: backend loop for Lena Vogt is being scheduled.
 
-AWS is forecast to go over budget this month, almost all of it EC2. Anika's Graviton work is the fix, so expect the numbers next week.
+Cloudflare is forecast to go over budget this month, almost all of it compute. Anika's arm64 work is the fix, so expect the numbers next week.
 
 Please put Q4 time off in the calendar by Friday.
 
@@ -949,7 +1566,7 @@ Astrid`,
 
 - Kofi applied to GitHub's Actions partner program for setup-cairn.
 - June is scoping usage-based billing on Stripe.
-- Anika's Graviton numbers look good: same p99, about 20% cheaper.
+- Anika's arm64 numbers look good: same p99, about 20% cheaper.
 - Omar's eviction worker now bounds the LRU by bytes, with a count ceiling as a backstop.
 
 One page this week, disk pressure on cache-node-03. Felix has the pager next.
@@ -991,7 +1608,7 @@ Astrid`,
     day: 19,
     body: `Stripe's working session fixed prepay credits on the metered line, so the billing migration starts next week with ten customers.
 
-AWS offered $25k in credits and a Savings Plan; Anika will size it after the Graviton move.
+Cloudflare offered $25k in credits and an annual commit; Anika will size it after the arm64 move.
 
 Hana starts Wednesday. Omar is her buddy, and her first task is the flaky eviction test.
 
@@ -1005,7 +1622,7 @@ Northpine opened their renewal: 180 seats plus a dedicated region. Lucía is quo
 
 Omar is testing Cloudflare R2 as a read tier to cut our S3 egress bill. Early numbers from Felix point to a big saving.
 
-The Graviton move for cache nodes is done.
+The arm64 move for cache nodes is done.
 
 Astrid`,
   },
@@ -1038,7 +1655,7 @@ We're a team of ten planning a three-day offsite about two months from now, idea
 Do you have availability, and could you send rates for full board?
 
 Astrid Holm
-Engineering Manager, Fieldstone Labs`,
+Engineering Manager, Alien Labs`,
       },
       {
         from: 'wren',
@@ -1122,7 +1739,7 @@ Lucía`,
         cc: ['omar'],
         day: 14,
         time: [12, 15],
-        body: `Hana, welcome to Fieldstone!
+        body: `Hana, welcome to Alien Labs!
 
 Today is mostly setup: laptop, accounts, and a walkthrough of the cache engine with Omar at 13:00. He's your onboarding buddy for the first month, so ask him anything, including the questions that feel too small to ask.
 
@@ -1471,7 +2088,7 @@ Tomás`,
 
 Quiet week. One page Tuesday night for disk pressure on cache-node-03, resolved by expanding the volume from 2 TB to 3 TB. The runbook now has the resize steps.
 
-Nothing open. Datadog warnings on cache-node-07 disk are noisy; ack them unless usage passes 90%.
+Nothing open. PostHog warnings on cache-node-07 disk are noisy; ack them unless usage passes 90%.
 
 Anika`,
       },
@@ -1679,9 +2296,9 @@ const sender = (name: string, email: string): Actor.Actor => ({ role: 'user', na
 
 const GITHUB = sender('GitHub', 'notifications@github.com');
 const LINEAR = sender('Linear', 'notifications@linear.app');
-const DATADOG = sender('Datadog', 'alert@dtdg.co');
+const POSTHOG = sender('PostHog', 'alerts@posthog.com');
 const STRIPE = sender('Stripe', 'notifications@stripe.com');
-const AWS_BUDGETS = sender('AWS Budgets', 'no-reply@budgets.amazonaws.com');
+const CLOUDFLARE_BILLING = sender('Cloudflare', 'noreply@notify.cloudflare.com');
 const CACHE_LINE = sender('Cache Line', 'editor@cacheline.news');
 const MONOREPO_NOTES = sender('Monorepo Notes', 'hello@monoreponotes.dev');
 
@@ -1740,7 +2357,7 @@ const REVIEW_REQUESTS = [
   {
     day: 19,
     author: 'anika',
-    title: 'Build cache nodes for Graviton',
+    title: 'Build cache nodes for arm64',
     summary:
       'Adds arm64 images and an arm64 leg to the CI matrix. Benchmarks are in the description of the linked issue.',
   },
@@ -1806,62 +2423,67 @@ const CI_FAILURES = [
   { workflow: 'Nightly', branch: 'main', job: 'soak', error: 'cache-node RSS above 6 GiB after 4 hours' },
 ] as const;
 
-const DATADOG_ALERTS = [
+const POSTHOG_ALERTS = [
   {
     day: 44,
     time: [3, 10],
-    title: '[Warn] Disk usage above 80% on cache-node-07',
-    query: 'avg(last_10m):avg:system.disk.in_use{host:cache-node-07} > 0.8',
+    title: '[Warning] Disk usage above 80% on cache-node-07',
+    insight: 'cache-node disk usage, cache-node-07',
+    threshold: 'above 80%',
     value: '83.4%',
     message: 'Check the eviction backlog before expanding the volume. Runbook: Disk pressure on a cache node.',
   },
   {
     day: 35,
     time: [7, 20],
-    title: '[Triggered] cairn-cache p99 read latency above 250 ms on eu-west-1',
-    query: 'avg(last_5m):p99:cairn.cache.read.latency{service:cairn-cache,region:eu-west-1} > 250',
+    title: '[Firing] cairn-cache p99 read latency above 250 ms in the EU',
+    insight: 'cairn-cache p99 read latency, EU',
+    threshold: 'above 250 ms',
     value: '412 ms',
-    message: 'Reads are slow for customers in eu-west-1. Check node CPU and the storage read path.',
+    message: 'Reads are slow for customers in the EU. Check node CPU and the storage read path.',
   },
   {
     day: 35,
     time: [10, 45],
-    title: '[Recovered] cairn-cache p99 read latency above 250 ms on eu-west-1',
-    query: 'avg(last_5m):p99:cairn.cache.read.latency{service:cairn-cache,region:eu-west-1} > 250',
+    title: '[Resolved] cairn-cache p99 read latency above 250 ms in the EU',
+    insight: 'cairn-cache p99 read latency, EU',
+    threshold: 'above 250 ms',
     value: '138 ms',
     message: 'Read latency is back under threshold.',
   },
   {
     day: 27,
     time: [6, 5],
-    title: '[Triggered] Hash-mismatch writes detected on cairn-cache',
-    query: 'sum(last_5m):sum:cairn.cache.write.hash_mismatch{service:cairn-cache}.as_count() > 0',
+    title: '[Firing] Hash-mismatch writes detected on cairn-cache',
+    insight: 'cairn-cache hash-mismatch writes',
+    threshold: 'above 0 in 5 minutes',
     value: '2',
     message: 'A write to an existing key carried different content and was rejected. Check which org and runner image.',
   },
   {
     day: 17,
     time: [14, 5],
-    title: '[Triggered] cairn-api 5xx rate above 1% on us-east-1',
-    query:
-      'sum(last_5m):sum:cairn.api.requests{status_class:5xx,region:us-east-1}.as_count() / sum:cairn.api.requests{region:us-east-1}.as_count() > 0.01',
+    title: '[Firing] cairn-api 5xx rate above 1% in the US',
+    insight: 'cairn-api 5xx rate, US',
+    threshold: 'above 1%',
     value: '3.2%',
-    message: 'API errors are elevated in us-east-1. Check for a single key retrying in a loop before scaling.',
+    message: 'API errors are elevated in the US. Check for a single key retrying in a loop before scaling.',
   },
   {
     day: 17,
     time: [14, 50],
-    title: '[Recovered] cairn-api 5xx rate above 1% on us-east-1',
-    query:
-      'sum(last_5m):sum:cairn.api.requests{status_class:5xx,region:us-east-1}.as_count() / sum:cairn.api.requests{region:us-east-1}.as_count() > 0.01',
+    title: '[Resolved] cairn-api 5xx rate above 1% in the US',
+    insight: 'cairn-api 5xx rate, US',
+    threshold: 'above 1%',
     value: '0.4%',
     message: 'API error rate is back under threshold.',
   },
   {
     day: 6,
     time: [11, 30],
-    title: '[Warn] S3 multipart upload retries above baseline',
-    query: "avg(last_15m):anomalies(sum:cairn.storage.multipart.retries{*}.as_count(), 'basic', 2) >= 1",
+    title: '[Warning] S3 multipart upload retries above baseline',
+    insight: 'Storage multipart upload retries',
+    threshold: 'more than 2 standard deviations above the 7-day mean',
     value: '47 retries/min',
     message: 'Uploads are retrying more than usual. Usually S3 throttling in one region; check 503 counts per bucket.',
   },
@@ -1906,7 +2528,7 @@ const NEWSLETTERS: Array<{
         headline: '#114: The hermeticity tax',
         summary:
           'A survey of 40 teams on what full hermeticity costs in engineering time and what it saves in cache hits and debugging.',
-        also: 'Correction: last issue overstated spot interruption rates in us-east-1.',
+        also: 'Correction: last issue overstated spot interruption rates in US regions.',
       },
       {
         headline: '#115: Cache poisoning, revisited',
@@ -1974,13 +2596,13 @@ const makeAutomated = (clock: Clock, people: Directory, coveredDays: Set<number>
     const number = 1401 + index * 7 + random.int(0, 5);
     const files = random.int(2, 14);
     const commits = random.int(1, 6);
-    const url = `https://github.com/fieldstone-labs/cairn/pull/${number}`;
+    const url = `https://github.com/alien-labs/cairn/pull/${number}`;
     placed.push({
       sender: GITHUB,
       day: request.day,
       time: hourOf(),
-      subject: `[fieldstone-labs/cairn] ${request.title} (PR #${number})`,
-      body: `@${loginOf(people[request.author])} requested your review on: fieldstone-labs/cairn#${number} ${request.title}.
+      subject: `[alien-labs/cairn] ${request.title} (PR #${number})`,
+      body: `@${loginOf(people[request.author])} requested your review on: alien-labs/cairn#${number} ${request.title}.
 
 ${request.summary}
 
@@ -2005,10 +2627,10 @@ ${GITHUB_FOOTER}`,
     });
   }
 
-  for (const alert of DATADOG_ALERTS) {
-    const monitor = random.int(100_000, 999_999);
+  for (const alert of POSTHOG_ALERTS) {
+    const alertId = random.int(100_000, 999_999);
     placed.push({
-      sender: DATADOG,
+      sender: POSTHOG,
       day: alert.day,
       time: alert.time,
       subject: alert.title,
@@ -2016,14 +2638,15 @@ ${GITHUB_FOOTER}`,
 
 ${alert.message}
 
-Metric value: ${alert.value}
-Query: ${alert.query}
-Tags: env:prod, service:${alert.query.includes('cairn.api') ? 'cairn-api' : 'cairn-cache'}
+Insight: ${alert.insight}
+Current value: ${alert.value}
+Threshold: ${alert.threshold}
+Project: cairn-prod
 
-Notified: @oncall-cairn @slack-cairn-alerts
+Notified: #cairn-alerts on Slack, Cairn on-call
 
-Monitor status: https://app.datadoghq.eu/monitors/${monitor}
-Edit monitor: https://app.datadoghq.eu/monitors/${monitor}/edit`,
+View alert: https://eu.posthog.com/project/48213/alerts/${alertId}
+Edit alert: https://eu.posthog.com/project/48213/alerts/${alertId}/edit`,
     });
   }
 
@@ -2051,7 +2674,7 @@ Top of the backlog:
 
 Assigned to you: ${random.int(1, 4)} open, ${random.int(0, 2)} due this week.
 
-View cycle: https://linear.app/fieldstone/team/CAI/cycle/${cycle}
+View cycle: https://linear.app/alien-labs/team/CAI/cycle/${cycle}
 
 You're receiving the weekly digest for teams you're a member of. Change this in Settings > Notifications.`,
     });
@@ -2090,55 +2713,53 @@ You're receiving this because you subscribed at ${newsletter.from.email?.split('
       subject: `Your payout of $${amount} is on the way`,
       body: `Your payout of $${amount} is on the way
 
-A payout of $${amount} USD to your Fieldstone Labs bank account ending in 4821 is expected to arrive in 2 business days.
+A payout of $${amount} USD to your Alien Labs bank account ending in 4821 is expected to arrive in 2 business days.
 
 Payout ID: ${payout}
 Includes: ${random.int(120, 190)} charges, ${random.int(0, 4)} refunds, less Stripe fees
 
 View it in the Dashboard: https://dashboard.stripe.com/payouts/${payout}
 
-You're receiving this email because you're an administrator of the Fieldstone Labs Stripe account.`,
+You're receiving this email because you're an administrator of the Alien Labs Stripe account.`,
     });
   }
 
   placed.push(
     {
-      sender: AWS_BUDGETS,
+      sender: CLOUDFLARE_BILLING,
       day: 60,
       time: [4, 0],
-      subject: 'AWS Budgets: cairn-prod-monthly is forecast to exceed 100%',
-      body: `Dear AWS Customer,
+      subject: 'Cloudflare billing: cairn-prod-monthly is forecast to exceed 100% of budget',
+      body: `Hello,
 
-You requested that we alert you when the FORECASTED cost associated with your cairn-prod-monthly budget is greater than $18,000.00 for the current month. The FORECASTED cost associated with this budget is $18,940.12. You can find additional details below and in the AWS Budgets dashboard.
+You asked us to notify you when forecast usage on the Alien Labs account passes your cairn-prod-monthly budget of $18,000.00 for the current billing period. Forecast usage is now $18,940.12. Details are below and in the Billing section of the Cloudflare dashboard.
 
-Budget Name: cairn-prod-monthly
-Budget Type: Cost
-Budgeted Amount: $18,000.00
-Alert Type: FORECASTED
-Alert Threshold: > $18,000.00 (100%)
-FORECASTED Amount: $18,940.12
-Top service: Amazon EC2
+Budget name: cairn-prod-monthly
+Budgeted amount: $18,000.00
+Notification type: Forecast usage
+Threshold: > $18,000.00 (100%)
+Forecast usage: $18,940.12
+Top product: Containers
 
-https://console.aws.amazon.com/billing/home#/budgets`,
+https://dash.cloudflare.com/?to=/:account/billing`,
     },
     {
-      sender: AWS_BUDGETS,
+      sender: CLOUDFLARE_BILLING,
       day: 25,
       time: [4, 0],
-      subject: 'AWS Budgets: cairn-prod-monthly has exceeded 80%',
-      body: `Dear AWS Customer,
+      subject: 'Cloudflare billing: cairn-prod-monthly has passed 80% of budget',
+      body: `Hello,
 
-You requested that we alert you when the ACTUAL cost associated with your cairn-prod-monthly budget is greater than $14,400.00 for the current month. The ACTUAL cost associated with this budget is $14,612.55. You can find additional details below and in the AWS Budgets dashboard.
+You asked us to notify you when actual usage on the Alien Labs account passes 80% of your cairn-prod-monthly budget for the current billing period. Usage to date is $14,612.55. Details are below and in the Billing section of the Cloudflare dashboard.
 
-Budget Name: cairn-prod-monthly
-Budget Type: Cost
-Budgeted Amount: $18,000.00
-Alert Type: ACTUAL
-Alert Threshold: > $14,400.00 (80%)
-ACTUAL Amount: $14,612.55
-Top service: Amazon S3 (data transfer)
+Budget name: cairn-prod-monthly
+Budgeted amount: $18,000.00
+Notification type: Actual usage
+Threshold: > $14,400.00 (80%)
+Usage to date: $14,612.55
+Top product: R2 (Class B operations)
 
-https://console.aws.amazon.com/billing/home#/budgets`,
+https://dash.cloudflare.com/?to=/:account/billing`,
     },
   );
 
@@ -2159,7 +2780,7 @@ https://console.aws.amazon.com/billing/home#/budgets`,
       sender: GITHUB,
       day,
       time: hourOf(),
-      subject: `[fieldstone-labs/cairn] Run failed: ${failure.workflow} - ${failure.branch} (${sha})`,
+      subject: `[alien-labs/cairn] Run failed: ${failure.workflow} - ${failure.branch} (${sha})`,
       body: `${failure.workflow}: Some jobs were not successful
 
 Workflow: ${failure.workflow}
@@ -2173,9 +2794,9 @@ Annotations
 1 error
 ${failure.error}
 
-View workflow run: https://github.com/fieldstone-labs/cairn/actions/runs/${random.int(10_000_000, 99_999_999)}
+View workflow run: https://github.com/alien-labs/cairn/actions/runs/${random.int(10_000_000, 99_999_999)}
 
-You are receiving this because this workflow ran on a branch in fieldstone-labs/cairn you watch.`,
+You are receiving this because this workflow ran on a branch in alien-labs/cairn you watch.`,
     });
   }
 
@@ -2206,9 +2827,10 @@ const SUMMARIES: Partial<Record<ThreadKey, string>> = {
 export type MailResult = { readonly mailbox: Mailbox.Mailbox; readonly threads: Threads };
 
 /**
- * Astrid's inbox: 150 messages in 90 threads over two months, in the mailbox's feed, with system
- * tags in its tag index, five summaries in its annotations feed, and the five extracted contacts
- * recorded in `mailbox.extracted` as `ExtractMessage` records them.
+ * Astrid's inbox: 188 messages in 103 threads over two months, in the mailbox's feed, with system
+ * tags in its tag index, five thread summaries and ten summaries of the newest messages in its
+ * annotations feed, and the seven extracted contacts recorded in `mailbox.extracted` as
+ * `ExtractMessage` records them.
  */
 export const makeMail = (people: Directory, agents: Agents): Make<MailResult> =>
   Effect.gen(function* () {
@@ -2223,7 +2845,7 @@ export const makeMail = (people: Directory, agents: Agents): Make<MailResult> =>
     const scribe: Actor.Actor = {
       role: 'assistant',
       name: agents.scribe.name,
-      email: 'scribe@agents.fieldstone.dev',
+      email: 'scribe@agents.alienlabs.io',
       identityDid: agents.scribe.did,
     };
     const actorFor = (who: Who | 'scribe'): Actor.Actor => (who === 'scribe' ? scribe : personActor(people[who]));
@@ -2232,14 +2854,28 @@ export const makeMail = (people: Directory, agents: Agents): Make<MailResult> =>
     const astrid = address(people.astrid);
 
     const entries: Array<{ message: Message.Message; tags: SystemTags.SystemTagId[] }> = [];
+    const summarized: Array<{ message: Message.Message; text: string }> = [];
     const threads: Threads = {
       northpineSso: [],
       northpineRenewal: [],
       meridianSecurity: [],
       okapiIncident: [],
       brightwaterIntro: [],
+      halcyonInbound: [],
+      kestrelInbound: [],
+      vantageDiscovery: [],
+      vantageResidency: [],
+      meridianProposal: [],
+      tidewaterSecurity: [],
+      tidewaterMsa: [],
+      lumenSigned: [],
+      lumenRollout: [],
+      pallasDecision: [],
+      corvidEvaluation: [],
+      larkspurDemo: [],
+      aldermoorProposal: [],
       stripeBilling: [],
-      awsCredits: [],
+      cloudflareCredits: [],
       cloudflareR2: [],
       githubPartner: [],
       offsite: [],
@@ -2249,7 +2885,13 @@ export const makeMail = (people: Directory, agents: Agents): Make<MailResult> =>
     };
 
     const covered = new Set<number>();
-    for (const thread of [...CUSTOMER_THREADS, ...VENDOR_THREADS, ...INTERNAL_THREADS, ...BACKGROUND_THREADS]) {
+    for (const thread of [
+      ...CUSTOMER_THREADS,
+      ...PIPELINE_THREADS,
+      ...VENDOR_THREADS,
+      ...INTERNAL_THREADS,
+      ...BACKGROUND_THREADS,
+    ]) {
       const threadId = threadIdFor(thread.subject);
       let parent: Message.Message | undefined;
       for (const mail of thread.mail) {
@@ -2279,6 +2921,10 @@ export const makeMail = (people: Directory, agents: Agents): Make<MailResult> =>
           },
         });
         parent = message;
+        const summary = MESSAGE_SUMMARIES[messageSummaryKey(thread.subject, mail.from, mail.day)];
+        if (summary) {
+          summarized.push({ message, text: summary });
+        }
         entries.push({
           message,
           tags: [
@@ -2335,15 +2981,25 @@ export const makeMail = (people: Directory, agents: Agents): Make<MailResult> =>
       }
     }
 
-    const summaries = Object.entries(SUMMARIES).map(([key, text]) => {
-      const thread = threads[key as ThreadKey];
-      const newest = thread[thread.length - 1];
-      return Mailbox.makeSummary({
-        message: newest,
-        text,
-        created: new Date(Date.parse(newest.created) + 60 * 60 * 1000).toISOString(),
-      });
-    });
+    const summaries = [
+      ...Object.entries(SUMMARIES).map(([key, text]) => {
+        const thread = threads[key as ThreadKey];
+        const newest = thread[thread.length - 1];
+        return Mailbox.makeSummary({
+          message: newest,
+          text,
+          created: new Date(Date.parse(newest.created) + 60 * 60 * 1000).toISOString(),
+        });
+      }),
+      // Summarized shortly after arrival, so even the newest is dated before the reference time.
+      ...summarized.map(({ message, text }) =>
+        Mailbox.makeSummary({
+          message,
+          text,
+          created: new Date(Date.parse(message.created) + 15 * 60 * 1000).toISOString(),
+        }),
+      ),
+    ];
 
     const { db } = yield* Database.Service;
     yield* SampleSpace.appendToFeed(feed, messages);

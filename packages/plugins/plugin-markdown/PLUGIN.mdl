@@ -23,6 +23,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `op`        | `org.dxos.mdl.op@1.1`          |
 | `service`   | `org.dxos.mdl.service@1.0`     |
 | `test`      | `org.dxos.mdl.test@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
 | `step`      | `org.dxos.mdl.step@1.0`        |
 
 ## External types & capabilities
@@ -561,34 +562,25 @@ test QA-3: A contributed slash-command runs
       do: Select all and delete.
 ```
 
+The recorded demo flows (QA-4, QA-5) live in [autocue/AUTOCUE.mdl](autocue/AUTOCUE.mdl).
+
+## Changelog
+
 ```mdl
-test QA-4: Write, comment on, and link from a document
-  desc: The demo path — create, write with live formatting, and create a linked page with `@`.
-  actors: human
-  covers: [F-1.1, F-4.1, F-4.2]
-  status: passing            # 2026-10-09, recorded by autocue/write-and-link.mjs
-  given:
-    - an identity exists, on a fresh profile
-    - space: the default space is open on its Home
-  steps:
-    - name: Create a markdown document
-      do: Click "Add to space" and choose Document.
-      expect: an empty document opens in a new plank
-    - name: Write in markdown
-      do: |
-        Type a "# Launch plan" heading, a sentence with a **bold** word, and a three-item list,
-        starting only the first item with "- ".
-      expect: the heading, bold text and bullets render as they are typed, and the document takes
-        the heading as its name in the navtree
-      note: The editor continues a list on Enter and leaves it on an empty item.
-    - name: Comment on a phrase
-      do: Select "Links between pages", click the comment button, type "Can we show backlinks too?" and
-        press Enter.
-      expect: the phrase is highlighted and the thread appears in the Comments panel
-    - name: Link a new page with @
-      do: Type "Next: @Release checklist", choose "Add object", then Document.
-      expect: a "Release checklist" reference appears inline and a new document of that name joins
-        the navtree
+decision D-1: The recorded demo flows QA-4 and QA-5 move out of this spec into their own `autocue` spec, which holds only the flow tests.
+  date: 2026-10-19
+  by: user:richburdon
+  affects: [QA-4, QA-5]
+```
+
+```mdl
+decision D-2: The flow spec is `autocue/AUTOCUE.mdl`, beside the flows that record it, and keeps the test ids QA-4 and QA-5. Fills in [D-1].
+  date: 2026-10-19
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [QA-4, QA-5]
+  why: Upper case matches the repo's other spec files (SPEC.mdl, STORIES.mdl); keeping the ids leaves `markdown QA-4` and the flows' `@mdl` headers addressing the same tests.
+  rejected: A lower-case `autocue.mdl` at the plugin root.
 ```
 
 ---

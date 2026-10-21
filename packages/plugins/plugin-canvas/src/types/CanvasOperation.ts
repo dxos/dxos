@@ -132,7 +132,7 @@ export const SetTimelineKey = Operation.make({
     key: DXN.make('org.dxos.operation.canvas.setTimelineKey'),
     name: 'Set timeline key',
     description:
-      'Sets a keyframe on a scene timeline: a node property (center, size, opacity, or params.<name> of a generator), or the camera (x, y: the scene point at the view centre; zoom). Creates the timeline, and extends its duration to the key, as needed.',
+      'Sets a keyframe on a scene timeline: a node property (center, size, style.opacity, or params.<name> of a generator), or the camera (x, y: the scene point at the view centre; zoom). Creates the timeline, and extends its duration to the key, as needed.',
     icon: 'ph--diamond--regular',
   },
   input: Schema.Struct({
@@ -149,4 +149,63 @@ export const SetTimelineKey = Operation.make({
     keys: Schema.Number.annotate({ description: 'Keys now on the track.' }),
   }),
   services: [Database.Service],
+});
+
+/** Each bound drawing's Automerge heads, keyed by its URI (the drawing's own under `''`). */
+const Heads = Schema.Record(Schema.String, Schema.Array(Schema.String)).annotate({
+  description: "Each drawing's Automerge heads, keyed by its URI; the canvas's own drawing under the empty key.",
+});
+
+/** Leaf paths into the canvas's Views, as `[viewId, 'nodes', nodeId, 'center', 'x']`. */
+const Paths = Schema.Array(Schema.Array(Schema.String)).annotate({
+  description: "Leaf paths into the canvas's Views, e.g. [viewId, 'nodes', nodeId, 'center', 'x'].",
+});
+
+export const Apply = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.canvas.apply'),
+    name: 'Apply canvas intents',
+    description:
+      'Applies canvas intents (move, resize, link, create, delete, reorder, update, layout, layer, timeline, batch) to a View of a canvas, freehand; returns the heads before and after and the paths written, which undo patches back.',
+    icon: 'ph--pencil-simple--regular',
+  },
+  input: Schema.Struct({
+    canvas: Ref.Ref(Drawing.Canvas),
+    view: Schema.optional(Schema.String.annotate({ description: 'View id; the root View by default.' })),
+    intents: Schema.Array(Schema.Any).annotate({ description: "Intents of the canvas's `Intent` union." }),
+  }),
+  output: Schema.Struct({
+    canvas: Schema.String.annotate({ description: "The canvas object's id: the undo scope." }),
+    before: Heads,
+    after: Heads,
+    paths: Paths,
+  }),
+});
+
+export const Patch = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.canvas.applyPatch'),
+    name: 'Apply canvas patch',
+    description:
+      'Moves each path of a canvas from its value at `from` to its value at `to`, skipping a path someone has changed since; how canvas edits are undone and redone.',
+    icon: 'ph--arrow-u-up-left--regular',
+  },
+  input: Schema.Struct({
+    canvas: Ref.Ref(Drawing.Canvas),
+    from: Heads,
+    to: Heads,
+    paths: Paths,
+    context: Schema.optional(
+      Schema.Any.annotate({ description: 'The View path and selection the canvas returns to on undo and redo.' }),
+    ),
+    mergeKey: Schema.optional(
+      Schema.String.annotate({ description: 'Consecutive patches with one key fold into one undo step.' }),
+    ),
+  }),
+  output: Schema.Struct({
+    canvas: Schema.String.annotate({ description: "The canvas object's id: the undo scope." }),
+    written: Schema.Number,
+    unchanged: Schema.Number,
+    skipped: Schema.Number.annotate({ description: 'Paths left alone because someone changed them since.' }),
+  }),
 });

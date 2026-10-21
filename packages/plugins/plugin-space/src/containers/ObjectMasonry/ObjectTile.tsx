@@ -3,7 +3,7 @@
 //
 
 import * as Option from 'effect/Option';
-import React, { useCallback, useMemo } from 'react';
+import React, { type PointerEvent, useCallback, useMemo, useRef } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
@@ -59,10 +59,22 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
 
   const { archived, item: archiveItem } = useArchiveMenuItem(object);
 
-  // `Focus.Item` calls `onCurrentChange` on click and on Enter. A card click toggles selection —
-  // the companion follows the selection, so navigating away on every click would fight the review
-  // workflow; opening stays available from the card menu.
-  const handleCurrentChange = useCallback(() => onSelect?.(object.id), [onSelect, object]);
+  // `Focus.Item` calls `onCurrentChange` on click and on Enter, without the event, so the press records its
+  // modifiers first. A plain click opens the object when it can be opened; a modified one (or a card that cannot
+  // open) toggles selection, so the review workflow still selects without navigating.
+  const selectPressRef = useRef(false);
+  const handlePointerDown = useCallback((event: PointerEvent) => {
+    selectPressRef.current = event.metaKey || event.ctrlKey || event.shiftKey;
+  }, []);
+  const handleCurrentChange = useCallback(() => {
+    const select = selectPressRef.current;
+    selectPressRef.current = false;
+    if (onOpen && !select) {
+      onOpen(object);
+    } else {
+      onSelect?.(object.id);
+    }
+  }, [onOpen, onSelect, object]);
 
   const menuItems = useMemo(
     () => [
@@ -107,7 +119,10 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
 
   return (
     <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-      <ObjectCard.Root classNames={['dx-hover', onSelect && 'cursor-pointer', current && 'dx-current']}>
+      <ObjectCard.Root
+        classNames={['dx-hover', (onSelect || onOpen) && 'cursor-pointer', current && 'dx-current']}
+        onPointerDown={handlePointerDown}
+      >
         <ObjectCard.Header
           subject={live}
           menu={

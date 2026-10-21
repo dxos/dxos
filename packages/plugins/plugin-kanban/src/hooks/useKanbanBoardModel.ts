@@ -114,7 +114,12 @@ export function useKanbanBoardModel<T extends KanbanLayout.BaseKanbanItem = Kanb
           const selectOptions = fieldProj.props.options ?? [];
           const pivotPath = fieldProj.props.property;
           const validColumnValues = new Set(selectOptions.map((opt) => opt.id));
+          const byColumn = get(effectiveByColumnAtom);
           const getColumn = (item: T): string | undefined => {
+            // An empty pivot path (an items kanban arranged by hand) places each card by the arrangement alone.
+            if (pivotPath === '') {
+              return Object.keys(byColumn).find((key) => byColumn[key].ids.includes(item.id));
+            }
             const value =
               pivotPath === undefined
                 ? undefined
@@ -124,7 +129,7 @@ export function useKanbanBoardModel<T extends KanbanLayout.BaseKanbanItem = Kanb
           return orderItemsInColumn(allItems, columnArr.ids, columnValue, getColumn, validColumnValues);
         }).pipe(Atom.withEquality<T[]>(shallowEqual)),
       ),
-    [columnArrangementAtomFamily, itemsAtom, pivotFieldIdAtom, projection],
+    [columnArrangementAtomFamily, effectiveByColumnAtom, itemsAtom, pivotFieldIdAtom, projection],
   );
 
   return useMemo(

@@ -62,6 +62,7 @@
    */
   :not(
       .dx-container,
+      .dx-card[data-grid] .dx-card-body,
       .dx-listbox,
       .dx-scroll-root,
       dx-surface,

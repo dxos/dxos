@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-calls",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "description": "DXOS Calls (video / audio conferencing) plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -46,6 +46,11 @@
       "types": "./dist/types/src/meta.d.ts",
       "default": "./dist/lib/meta.mjs"
     },
+    "#operations": {
+      "source": "./src/operations/index.ts",
+      "types": "./dist/types/src/operations/index.d.ts",
+      "default": "./dist/lib/operations.mjs"
+    },
     "#plugin": {
       "source": "./src/plugin.tsx",
       "types": "./dist/types/src/plugin.d.ts",
@@ -69,6 +74,11 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
+    "./CallOperation": {
+      "source": "./src/types/CallOperation.ts",
+      "types": "./dist/types/src/types/CallOperation.d.ts",
+      "import": "./dist/lib/CallOperation.mjs"
+    },
     "./CallManager": {
       "source": "./src/CallManager.ts",
       "types": "./dist/types/src/CallManager.d.ts",
@@ -99,6 +109,9 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
+      "CallOperation": [
+        "dist/types/src/types/CallOperation.d.ts"
+      ],
       "CallsCapabilities": [
         "dist/types/src/types/CallsCapabilities.d.ts"
       ],
@@ -121,6 +134,7 @@
     "@dxos/av": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
+    "@dxos/compute": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
@@ -150,6 +164,7 @@
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",
     "@dxos/react-client": "workspace:*",
+    "@dxos/react-ui-experimental": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

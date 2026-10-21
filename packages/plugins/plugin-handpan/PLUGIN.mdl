@@ -223,4 +223,22 @@ test QA-1: Calibrate and play in the simulated session
     - name: Stop
       do: Click the mic button.
       expect: the button is no longer red
+
+test QA-2: Showcase clip
+  desc: |
+    The 10s showcase clip: Play a melody around the handpan. Recorded light at 60 fps with no ident, captions or
+    count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: handpan` step.
+  actors: human
+  status: unverified        # driven by autocue/showcase.mjs
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-handpan enabled
+  steps:
+    - name: Create a handpan
+      do: Create an Instrument named Handpan.
+      expect: the handpan renders
+    - name: Play a melody
+      do: Click the notes around the ring.
+      expect: each note lights as it plays
 ```

@@ -12,15 +12,16 @@ import { Actor, Task, TaskSet } from '@dxos/types';
 import { daysAgo } from './util.ts';
 
 //
-// Five steps, flat and in order.
+// Six steps, flat and in order.
 //
 // Flat on purpose: the whole run is one afternoon's work, and a tree would imply stages that can be
-// planned against each other. Everything is `todo` — this is a plan to run, not a project caught
+// planned against each other. The diagram comes first so the reader can check the shape of the run
+// before anything is built. Everything is `todo` — this is a plan to run, not a project caught
 // mid-flight — and each step depends on the one before it, so a runner working ahead is visibly out
 // of order rather than merely early.
 //
 
-type TaskSeed = {
+export type TaskSeed = {
   readonly title: string;
   readonly description: string;
   readonly estimate?: Task.Estimate;
@@ -34,7 +35,16 @@ type TaskSeed = {
  */
 const USER: Actor.Actor = { role: 'user', name: 'You' };
 
+/** The first step, on its own: the evals give an agent exactly this task. */
+export const ARCHITECTURE: TaskSeed = {
+  title: 'Draw the proposed architecture',
+  description:
+    "A diagram on the canvas, filed on the project, before any code: the sandbox where wrangler runs, the Worker it deploys, the temporary Cloudflare account that hosts it, and the request and JSON response between a client and the Worker URL. Write it in the Drawing skill's semantic diagram language (`node`, `edge`, `group`) and draw it, so the layout engine places every box and routes every arrow; never position the boxes by hand. Label each arrow in a few words, keep to what the later steps build, and draw again until the result reports no errors.",
+  estimate: 'xs',
+};
+
 const STEPS: ReadonlyArray<TaskSeed> = [
+  ARCHITECTURE,
   {
     title: 'Create a sandbox and install wrangler',
     description:
@@ -70,7 +80,7 @@ const STEPS: ReadonlyArray<TaskSeed> = [
 
 export type TasksResult = { taskSet: TaskSet.TaskSet; tasks: Task.Task[] };
 
-/** The five steps, each depending on the one before it. */
+/** The six steps, each depending on the one before it. */
 export const Tasks: SampleSpace.Partial<TasksResult> = SampleSpace.partial('tasks', {
   schemas: [TaskSet.TaskSet, Task.Task],
   run: () =>

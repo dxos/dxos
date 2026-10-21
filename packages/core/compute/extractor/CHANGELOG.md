@@ -1,5 +1,16 @@
 # @dxos/extractor
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/echo@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/ai@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+
 ## 0.15.0
 
 ### Patch Changes

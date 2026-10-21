@@ -17,6 +17,7 @@ import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-te
 import { createCanvas, linkKey, nodeKey, rootOf } from '#model';
 import { CanvasPlugin } from '#plugin';
 import { translations } from '#translations';
+import { Canvas } from '#types';
 
 random.seed(1234);
 
@@ -106,8 +107,31 @@ export const Test: Story = {
   },
 };
 
-/** Frames holding a markdown document, which is no canvas drawing, show its card and its section surfaces. */
-export const ObjectFrame: Story = {
+/**
+ * A canvas a newer Canvas plugin saved (a later `dxos.org/scene/<n>`) opens read-only under a banner saying why.
+ *
+ * Test:
+ * 1. The banner shows and the palette offers only select and pan.
+ */
+export const NewerFormat: Story = {
+  decorators: withDrawing((db, canvas) => {
+    seedBasic(db, canvas);
+    Obj.update(canvas, (canvas) => {
+      canvas.schema = `dxos.org/scene/${Canvas.SCENE_REVISION + 1}`;
+    });
+  }),
+  play: async ({ canvasElement }) => {
+    const view = within(canvasElement);
+    await expect(await view.findByTestId('canvas.newer-format', undefined, { timeout: 30_000 })).toBeVisible();
+    await expect(await view.findByTestId('scene-view')).toBeInTheDocument();
+    // Read-only, the palette has no shape tools and no toggle to unlock it.
+    await waitFor(() => expect(view.queryByTestId('palette-R')).toBeNull());
+    await expect(view.queryByTestId('palette-readonly')).toBeNull();
+  },
+};
+
+/** View nodes holding a markdown document, which is no canvas drawing, show its card and its section surfaces. */
+export const ObjectView: Story = {
   decorators: withDrawing((db, canvas) => {
     const document = db.add(
       Markdown.make({
@@ -122,13 +146,12 @@ export const ObjectFrame: Story = {
       scene: rootOf(canvas.content),
       node: {
         id,
-        type: 'frame',
+        type: 'view',
         z: id === 'card' ? 'a1' : 'a2',
         center: { x, y: 0 },
         size: { width: cells.width * DEFAULT_CELL, height: cells.height * DEFAULT_CELL },
         scene: id,
-        object: Ref.make(document),
-        role,
+        link: { object: Ref.make(document), role },
       },
     });
     Obj.update(canvas, (canvas) => {

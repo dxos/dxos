@@ -12,14 +12,19 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Space } from '@dxos/client/echo';
+import { Ref } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import * as DrawingOperation from '@dxos/plugin-illustrator/DrawingOperation';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import * as IllustratorEvents from '@dxos/plugin-illustrator/IllustratorEvents';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Theme from '@dxos/react-ui/Theme';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
@@ -27,27 +32,65 @@ import { fileName, importDrawing, openDrawing, openSpace, toDxSvg } from '../mod
 
 type Opened = { space: Space; drawing: Drawing.Drawing };
 
-/** Reads `?src=<url>` once, so a reload after editing reopens the edited copy rather than importing again. */
-const takeSourceParam = (): string | undefined => {
+/**
+ * Reads `?src=<url>` and `?d=<share id>` once, so a reload after editing reopens the edited copy rather than
+ * importing again.
+ */
+const takeSourceParams = (): { src?: string; share?: string } => {
   const url = new URL(window.location.href);
   const src = url.searchParams.get('src') ?? undefined;
-  if (src) {
+  const share = url.searchParams.get('d') ?? undefined;
+  if (src || share) {
     url.searchParams.delete('src');
+    url.searchParams.delete('d');
     window.history.replaceState(null, '', url);
   }
-  return src;
+  return { src, share };
 };
 
 const isDxSvg = (file: File) => file.name.endsWith('.svg') || file.type === 'image/svg+xml';
 
 /**
- * The whole app: one drawing on the Canvas, filling the viewport, with only open and download controls over it.
+ * The "Edit in …" actions Composer offers on a drawing's plank: each converts it to another variant's editor.
+ * Re-reads the drawing's canvas, so the choices follow a conversion.
+ */
+const EditActions = ({ space, drawing, onError }: Opened & { onError: (message: string) => void }) => {
+  const { t } = UiHooks.useTranslation();
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const variants = Hooks.useCapabilities(IllustratorCapabilities.VariantProvider);
+  // Only the schema is read: an editor writes its canvas while it renders, which must not re-render this.
+  const [canvasRef] = useObject(drawing, 'canvas');
+  const [schema] = useObject(canvasRef, 'schema');
+  if (!schema) {
+    return null;
+  }
+  return IllustratorCapabilities.editTargets(variants, schema).map((variant) => (
+    <Button.Root
+      key={variant.id}
+      variant='ghost'
+      icon={variant.icon ?? DrawingOperation.Convert.meta.icon}
+      label={Theme.toLocalizedString(IllustratorCapabilities.editLabel(variant), t)}
+      data-testid={`drawing-app.edit.${IllustratorCapabilities.variantSlug(variant)}`}
+      onClick={() =>
+        void invokePromise(
+          DrawingOperation.Convert,
+          // In place: the app shows this one drawing, so it must become editable itself rather than gain a copy.
+          { drawing: Ref.make(drawing), variant: variant.id, replace: true },
+          { spaceId: space.id },
+        ).then(({ error }) => error && onError(error.message))
+      }
+    />
+  ));
+};
+
+/**
+ * The whole app: one drawing in the view Composer opens it in (a laid-out drawing reads as its SVG; an edited one
+ * opens in its editor), filling the viewport, with open, edit and download controls over it.
  * Dropping a `.dx.svg` anywhere replaces the open drawing with an imported copy.
  */
 export const DrawingRoot = () => {
   const manager = Hooks.useCapability(Capabilities.PluginManager);
   const client = Hooks.useCapability(ClientCapabilities.Client);
-  const invoker = Hooks.useOperationInvoker();
   const variants = Hooks.useCapabilities(IllustratorCapabilities.VariantProvider);
   const [opened, setOpened] = useState<Opened>();
   const [error, setError] = useState<string>();
@@ -87,18 +130,18 @@ export const DrawingRoot = () => {
       return;
     }
     startedRef.current = true;
-    const src = takeSourceParam();
+    const { src, share } = takeSourceParams();
     run(
       Effect.gen(function* () {
-        // Convert needs the operation handlers (Idle) and both variants (the illustrator's start) before any surface asks.
+        // The edit actions need the operation handlers (Idle) and every variant (the illustrator's start) before any surface asks.
         yield* manager.activate(ActivationEvents.Idle);
         yield* manager.activate(IllustratorEvents.Start);
         const space = yield* openSpace(client);
-        const drawing = yield* openDrawing({ invoker, space, src });
+        const drawing = yield* openDrawing({ space, src, share });
         return { space, drawing };
       }),
     );
-  }, [manager, client, invoker, run]);
+  }, [manager, client, run]);
 
   const handleFile = useCallback(
     (file: File) => {
@@ -109,12 +152,12 @@ export const DrawingRoot = () => {
       run(
         Effect.gen(function* () {
           const svg = yield* Effect.promise(() => file.text());
-          const drawing = yield* importDrawing(invoker, space, svg);
+          const drawing = yield* importDrawing(space, svg);
           return { space, drawing };
         }),
       );
     },
-    [opened, invoker, run],
+    [opened, run],
   );
 
   const handleDownload = useCallback(() => {
@@ -212,6 +255,7 @@ export const DrawingRoot = () => {
             disabled={!opened}
             onClick={handleDownload}
           />
+          {opened && <EditActions key={opened.drawing.id} {...opened} onError={setError} />}
         </Toolbar.Root>
       </div>
       <input

@@ -70,7 +70,10 @@ const SIZES = {
 
 type Size = keyof typeof SIZES;
 
-type StoryProps = Pick<FrameProps, 'captionStyle' | 'headerBand' | 'open'> & {
+type StoryProps = Pick<
+  FrameProps,
+  'captionStyle' | 'captionPosition' | 'captionBackground' | 'colors' | 'headerBand' | 'open'
+> & {
   /** The recording's aspect ratio, which every view keeps, letterboxed. */
   size?: Size;
   /** Off, the script still steps the app but shows no captions. */
@@ -85,6 +88,9 @@ type StoryProps = Pick<FrameProps, 'captionStyle' | 'headerBand' | 'open'> & {
 const TakeStory = ({
   size = '16:10',
   captionStyle,
+  captionPosition,
+  captionBackground,
+  colors,
   headerBand,
   open,
   captions = true,
@@ -120,6 +126,9 @@ const TakeStory = ({
         caption={captions ? STEPS[step] : undefined}
         size={SIZES[size]}
         captionStyle={captionStyle}
+        captionPosition={captionPosition}
+        captionBackground={captionBackground}
+        colors={colors}
         headerBand={headerBand}
         open={open}
       >
@@ -205,6 +214,8 @@ const IdentStory = ({ openCard = 'dxos', size = '16:10', logoColor, ...props }: 
  * 5. Ident: the DXOS open card, the floating take, then the close card, all at the same 16:10 size, looped; in the light
  *    theme the cards are drawn off-black on off-white; Logo colour recolours the logo and the close card's rule.
  * 6. Footer: the band stays up between steps; only its text fades.
+ * 7. Caption: no title; black-on-white floating captions, fading between steps. Position, background and colours
+ *    follow their controls as the script plays.
  */
 const meta: Meta<typeof TakeStory> = {
   title: 'tools/autocue/Frame',
@@ -212,6 +223,9 @@ const meta: Meta<typeof TakeStory> = {
   argTypes: {
     size: { control: 'select', options: Object.keys(SIZES) },
     captionStyle: { control: 'inline-radio', options: ['band', 'panel'] },
+    captionPosition: { control: 'inline-radio', options: ['top', 'middle', 'bottom'] },
+    captionBackground: { control: { type: 'range', min: 0, max: 1, step: 0.05 } },
+    colors: { control: 'inline-radio', options: ['white-on-black', 'black-on-white'] },
   },
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
@@ -238,9 +252,29 @@ export const Footer: Story = {
   args: { size: '16:10', captionStyle: 'band' },
 };
 
-/** The title opens alone in the centre, then the step captions float over the bottom. */
+/** The title opens alone in the centre, then the step captions float over the frame, at the bottom by default. */
 export const Floating: Story = {
-  args: { size: '16:10', open: 3_000, captionStyle: 'panel', interval: 4_000 },
+  args: {
+    size: '16:10',
+    open: 3_000,
+    captionStyle: 'panel',
+    captionPosition: 'bottom',
+    captionBackground: 0.6,
+    colors: 'white-on-black',
+    interval: 4_000,
+  },
+};
+
+/** The step captions alone, with no title: a floating panel whose position, background and colours are controls. */
+export const Caption: Story = {
+  args: {
+    size: '16:10',
+    captionStyle: 'panel',
+    captionPosition: 'bottom',
+    captionBackground: 0.85,
+    colors: 'black-on-white',
+    interval: 3_000,
+  },
 };
 
 /** The floating take, between the DXOS open and close cards. */

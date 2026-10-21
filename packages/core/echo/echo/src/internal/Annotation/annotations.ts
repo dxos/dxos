@@ -650,6 +650,30 @@ export const SetParentAnnotation: Omit<Annotation.Annotation<SetParentAnnotation
   set: ({ override = true }: SetParentAnnotationOptions = {}) => setParentAnnotation.set({ value: true, override }),
 };
 
+/** Value of {@link ContentVersionAnnotation}. */
+export type ContentVersionAnnotationValue = {
+  /** Sibling fields whose format the annotated field versions. */
+  readonly fields: readonly string[];
+};
+
+/**
+ * Marks a string field of an object schema as the content version of named sibling fields: the
+ * format and revision (e.g. `dxos.org/scene/1`) of data ECHO stores opaquely. Content migrations
+ * (`Migration.defineContent`) find the version through it.
+ *
+ * @example
+ * ```ts
+ * Schema.Struct({
+ *   schema: Schema.String.pipe(Annotation.ContentVersionAnnotation.set({ fields: ['content'] }), Schema.optional),
+ *   content: Schema.Record(Schema.String, Schema.Any),
+ * })
+ * ```
+ */
+export const ContentVersionAnnotation = makeUserAnnotation<ContentVersionAnnotationValue>({
+  id: 'org.dxos.annotation.contentVersion',
+  schema: Schema.Struct({ fields: Schema.Array(Schema.String) }),
+});
+
 /** Value of {@link UserTypeAnnotation}. */
 export type UserTypeAnnotationValue = {
   /** Keys a surface filters on (e.g. which types a collection's create dialog offers); opaque to ECHO. */

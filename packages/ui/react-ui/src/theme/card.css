@@ -21,9 +21,9 @@
     box-sizing: border-box;
     padding-block: var(--dx-gap-size);
     padding-inline: var(--dx-card-inset);
-    /* In light mode the raised surface is one step off its host and the separator barely reads, so a card takes a
-       darker edge and a soft shadow there; dark mode separates the levels by lightness alone. */
-    border: 1px solid light-dark(oklch(from var(--color-separator) calc(l - 0.06) c h), var(--color-separator));
+    /* In light mode the soft shadow is the card's edge, so its border is transparent (kept for its width, which a
+       selected card colours); dark mode has no shadow and keeps the separator. */
+    border: 1px solid light-dark(transparent, var(--color-separator));
     border-radius: var(--radius-md, 0.375rem);
     box-shadow:
       0 1px 2px 0 light-dark(rgb(0 0 0 / 0.06), transparent),
@@ -45,6 +45,10 @@
   }
   .dx-card > .dx-card-poster {
     margin-inline: calc(-1 * var(--dx-card-inset));
+  }
+  /* A wide card would otherwise grow its poster to dominate the card; the image covers the capped frame. */
+  .dx-card-poster {
+    max-height: 200px;
   }
   /* Inside the border, so the inner radius is the card's less its border width. */
   .dx-card > .dx-card-poster:first-child {

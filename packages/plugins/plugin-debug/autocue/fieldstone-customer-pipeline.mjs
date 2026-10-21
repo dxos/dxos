@@ -3,7 +3,7 @@
 //
 
 /**
- * Fieldstone vignette: the customer pipeline. The CRM section's organizations and people, the pricing sheet behind a quote, and a
+ * Alien Labs vignette: the customer pipeline. The CRM section's organizations and people, the pricing sheet behind a quote, and a
  * customer note that leads to one of its contacts.
  *
  * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-6
@@ -29,7 +29,7 @@
  * Not yet run: written ahead of its first take, so selectors past the setup are unverified.
  */
 
-const TEMPLATE = 'Fieldstone Labs';
+const TEMPLATE = 'Alien Labs';
 
 /** A beat for the viewer after a visible change. */
 const BEAT = 1_500;
@@ -95,7 +95,7 @@ const closeCompanion = async (page) => {
   }
 };
 
-const caption = (demo, value) => demo.caption({ value, subtitle: 'Fieldstone Labs' });
+const caption = (demo, value) => demo.caption({ value, subtitle: 'Alien Labs' });
 
 /** The companion's message card for `sender` whose body starts with `text`. */
 const messageCard = (page, sender, text) =>
@@ -238,7 +238,7 @@ export const steps = [
   },
   {
     name: 'The accounts',
-    narration: 'Fieldstone keeps its customers and vendors in the CRM: each organization with its people.',
+    narration: 'Alien Labs keeps its customers and vendors in the CRM: each organization with its people.',
     run: async ({ demo, page }) => {
       await caption(demo, 'The CRM: every organization and its people');
       await demo.click({

@@ -12,9 +12,8 @@ import React, { useEffect, useId, useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { type Background, type LookTone } from '../../model/style-set.ts';
-import { type Bounds, MAJOR_GRID_RATIO } from '../../model/types.ts';
-import { BACKGROUND_FILLS, GRID_CLASSES, WASH_TEXT } from '../../utils/surfaces.ts';
+import { type Background, type Bounds, type LookTone, MAJOR_GRID_RATIO } from '../../model/index.ts';
+import { BACKGROUND_FILLS, GRID_CLASSES, WASH_TEXT } from '../../utils/index.ts';
 
 /** Scene px the field reaches beyond the scene's bounds. */
 export const BACKGROUND_PAD = 240;

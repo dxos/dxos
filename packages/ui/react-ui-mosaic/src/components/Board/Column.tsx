@@ -71,7 +71,8 @@ const BoardColumnRootInner = Util.composable<HTMLDivElement, BoardColumnRootProp
           border
           classNames={mx(
             'group/column',
-            'dx-fill md:w-card-default-width snap-center dx-deck-surface',
+            // The cards' own surface, so a column reads as one raised panel holding them.
+            'dx-fill md:w-card-default-width snap-center rounded-md bg-card-surface',
             'overflow-hidden',
             classNames,
           )}
@@ -124,7 +125,7 @@ const BoardColumnHeader = Util.composable<HTMLDivElement, BoardColumnHeaderProps
       <>
         {/* TODO(burdon): Use Card.Header. */}
         <Toolbar.Root
-          {...Util.composableProps(props, { classNames: 'gap-0 border-b border-separator' })}
+          {...Util.composableProps(props, { classNames: 'gap-0' })}
           data-testid='board-column-header'
           ref={forwardedRef}
         >
@@ -159,12 +160,12 @@ BoardColumnHeader.displayName = BOARD_COLUMN_HEADER_NAME;
 
 const BOARD_COLUMN_BODY_NAME = 'Board.Column.Body';
 
-type BoardColumnBodyProps = Pick<BoardColumnProps, 'data'> &
+type BoardColumnBodyProps<TItem = Obj.Unknown> = Pick<BoardColumnProps, 'data'> &
   Pick<MosaicContainerProps, 'eventHandler' | 'debug'> & {
-    Tile?: MosaicStackProps<Obj.Unknown>['Tile'];
+    Tile?: MosaicStackProps<TItem>['Tile'];
   };
 
-const BoardColumnBody = Util.composable<HTMLDivElement, BoardColumnBodyProps>(
+const BoardColumnBodyInner = Util.composable<HTMLDivElement, BoardColumnBodyProps>(
   ({ data, eventHandler, Tile = BoardItem, debug, ...props }, forwardedRef) => {
     const { model } = useBoard(BOARD_COLUMN_BODY_NAME);
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
@@ -194,7 +195,12 @@ const BoardColumnBody = Util.composable<HTMLDivElement, BoardColumnBodyProps>(
   },
 );
 
-BoardColumnBody.displayName = BOARD_COLUMN_BODY_NAME;
+BoardColumnBodyInner.displayName = BOARD_COLUMN_BODY_NAME;
+
+// Generic over the item, so a board of plain records (not ECHO objects) can pass a typed Tile.
+const BoardColumnBody = BoardColumnBodyInner as <TItem = Obj.Unknown>(
+  props: BoardColumnBodyProps<TItem> & { ref?: ReactRef<HTMLDivElement> },
+) => ReactElement;
 
 //
 // Column Footer
@@ -215,7 +221,7 @@ const BoardColumnFooter = forwardRef<HTMLDivElement, BoardColumnFooterProps>(
     const handleAdd = onAdd ?? (model.onItemCreate && data ? () => void model.onItemCreate?.(data) : undefined);
 
     return (
-      <Toolbar.Root classNames={mx('rounded-b-sm border-t border-separator', classNames)} ref={forwardedRef}>
+      <Toolbar.Root classNames={mx('rounded-b-sm', classNames)} ref={forwardedRef}>
         {handleAdd && (
           <Button.Root
             data-testid='board-column-add-item'
@@ -279,10 +285,10 @@ const DefaultBoardColumn = forwardRef<HTMLDivElement, DefaultBoardColumnProps>(
       >
         <BoardColumnHeader label={(column && Obj.getLabel(column)) ?? data.id} dragHandleRef={setDragHandle} />
         <BoardColumnBody data={data} eventHandler={eventHandler} debug={debugHandler} Tile={Tile} />
-        <div className='flex flex-col col-span-full'>
+        <Layout.Flex column classNames='col-span-full'>
           <BoardColumnFooter data={data} />
           <DebugInfo />
-        </div>
+        </Layout.Flex>
       </BoardColumnRootInner>
     );
   },

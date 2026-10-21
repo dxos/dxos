@@ -8,7 +8,6 @@
 // functions here that return the scenes and intents the view applies, so each is one undoable step.
 //
 
-import { type SceneMap } from '../model/store.ts';
 import {
   type Bounds,
   type Endpoint,
@@ -21,31 +20,63 @@ import {
   type NodeId,
   type Point,
   type Port,
-  type Scene,
-  type SceneId,
   type Side,
   type Timeline,
   type Track,
+  type View,
+  type ViewId,
+  type ViewMap,
   endpointNode,
   isInstanceNode,
-} from '../model/types.ts';
+  pruneOrphaned,
+} from '../model/index.ts';
 import { unionBounds } from './hit.ts';
-import { elementLayer, sceneLayers } from './layers.ts';
+import { elementLayer, viewLayers } from './layers.ts';
 import { topZ } from './order.ts';
 import { nodeBounds } from './shapes.ts';
 
 /** Whether a scene is a composite's definition. */
-export const isComposite = (scene: Scene | undefined): boolean => scene?.kind === 'composite';
+export const isComposite = (scene: View | undefined): boolean => scene?.kind === 'composite';
 
 /** The composites of a drawing, by name. */
-export const compositeScenes = (scenes: SceneMap): Scene[] =>
+export const compositeViews = (scenes: ViewMap): View[] =>
   Object.values(scenes)
     .filter(isComposite)
     .sort((left, right) => (left.name ?? left.id).localeCompare(right.name ?? right.id));
 
+/** Whether a scene is an anonymous Object: one the Group command made, not yet named or placed again. */
+export const isAnonymous = (scene: View | undefined): boolean => isComposite(scene) && scene?.anonymous === true;
+
+/** The Objects library: the composites by name, without the anonymous ones (VIEWS.md §4.4). */
+export const libraryViews = (scenes: ViewMap): View[] => compositeViews(scenes).filter((scene) => !isAnonymous(scene));
+
+/** `scene` named or placed again, so it joins the library; the same scene when it was not anonymous. */
+export const promoted = (scene: View): View => {
+  if (scene.anonymous === undefined) {
+    return scene;
+  }
+  const { anonymous: _, ...rest } = scene;
+  return rest;
+};
+
+/**
+ * The anonymous Objects that `nodes` place again, promoted (VIEWS.md §4.4): what a paste or a duplicate writes into
+ * the store with its intent. Empty when none of them is an Instance of an anonymous Object in `scenes`.
+ */
+export const promotedBy = (scenes: ViewMap, nodes: Iterable<Node>): Record<ViewId, View> => {
+  const result: Record<ViewId, View> = {};
+  for (const node of nodes) {
+    const definition = isInstanceNode(node) ? scenes[node.composite] : undefined;
+    if (definition && isAnonymous(definition)) {
+      result[definition.id] = promoted(definition);
+    }
+  }
+  return result;
+};
+
 /** How many instances of each composite the drawing holds, in any scene. */
-export const instanceCounts = (scenes: SceneMap): Record<SceneId, number> => {
-  const counts: Record<SceneId, number> = {};
+export const instanceCounts = (scenes: ViewMap): Record<ViewId, number> => {
+  const counts: Record<ViewId, number> = {};
   for (const scene of Object.values(scenes)) {
     for (const node of Object.values(scene.nodes)) {
       if (isInstanceNode(node)) {
@@ -56,8 +87,46 @@ export const instanceCounts = (scenes: SceneMap): Record<SceneId, number> => {
   return counts;
 };
 
+/**
+ * `views` without the composite `composite` and, with `instances`, without every Instance of it and the links on them;
+ * the records only those Instances pointed at (an anonymous Object or a View inside one) go too. Undefined when the
+ * composite is still placed and `instances` is off, as deleting it would leave Instances drawing nothing.
+ */
+export const removeComposite = (
+  views: ViewMap,
+  composite: ViewId,
+  { instances, roots }: { instances: boolean; roots: readonly ViewId[] },
+): ViewMap | undefined => {
+  if (!instances && (instanceCounts(views)[composite] ?? 0) > 0) {
+    return undefined;
+  }
+  const { [composite]: _, ...rest } = views;
+  const next = Object.fromEntries(
+    Object.entries(rest).map(([id, view]): [ViewId, View] => {
+      const gone = new Set(
+        Object.values(view.nodes).flatMap((node) =>
+          isInstanceNode(node) && node.composite === composite ? [node.id] : [],
+        ),
+      );
+      if (gone.size === 0) {
+        return [id, view];
+      }
+      const touches = (link: Link) => [link.source, link.target].some((end) => gone.has(endpointNode(end) ?? ''));
+      return [
+        id,
+        {
+          ...view,
+          nodes: Object.fromEntries(Object.entries(view.nodes).filter(([nodeId]) => !gone.has(nodeId))),
+          links: Object.fromEntries(Object.entries(view.links).filter(([, link]) => !touches(link))),
+        },
+      ];
+    }),
+  );
+  return pruneOrphaned(views, next, roots);
+};
+
 /** The box a composite's nodes fill, unpadded: what an instance scales into its frame. */
-export const compositeBounds = (composite: Scene): Bounds | undefined =>
+export const compositeBounds = (composite: View): Bounds | undefined =>
   unionBounds(Object.values(composite.nodes).map(nodeBounds));
 
 /** How an instance maps its composite's coordinates into its own frame: scaled, then moved. */
@@ -105,7 +174,7 @@ export const overriddenNode = (instance: InstanceNode, node: Node): Node => {
 };
 
 /** The composite with an instance's overrides applied to its nodes, as the instance draws it. */
-export const instanceScene = (instance: InstanceNode, composite: Scene): Scene =>
+export const instanceView = (instance: InstanceNode, composite: View): View =>
   instance.overrides
     ? {
         ...composite,
@@ -131,7 +200,7 @@ const sideToward = (frame: Bounds, point: Point): { side: Side; offset: number }
  * An instance's ports: one per exposed node of its composite, named by that node's id, on the side of the instance
  * that faces where the node is drawn.
  */
-export const instancePorts = (frame: Bounds, composite: Scene, fit?: InstanceFit): Port[] => {
+export const instancePorts = (frame: Bounds, composite: View, fit?: InstanceFit): Port[] => {
   const transform = instanceTransform(frame, compositeBounds(composite), fit);
   return Object.values(composite.nodes)
     .filter((node) => node.exposed)
@@ -163,16 +232,18 @@ const movedTracks = (timeline: Timeline | undefined, ids: ReadonlySet<string>, s
 
 export type ComposeOptions = {
   /** The new composite scene's id. */
-  compositeId: SceneId;
+  compositeId: ViewId;
   /** The instance node that replaces the selection. */
   instanceId: NodeId;
   name?: string;
   /** The layer the instance goes on. */
   layer?: LayerId;
+  /** Marks the composite anonymous, as the Group command makes it. */
+  anonymous?: boolean;
 };
 
 /** What grouping a selection as an object makes: the composite, and the intents that put an instance in its place. */
-export type Composition = { composite: Scene; intents: Intent[] };
+export type Composition = { composite: View; intents: Intent[] };
 
 /**
  * Groups the selected nodes as an object (`compose`): they and the links wholly inside the selection move into a new
@@ -181,9 +252,9 @@ export type Composition = { composite: Scene; intents: Intent[] };
  * moved nodes move with them. None when no node is selected or a selected node is locked.
  */
 export const composeSelection = (
-  scene: Scene,
+  scene: View,
   ids: Iterable<string>,
-  { compositeId, instanceId, name, layer }: ComposeOptions,
+  { compositeId, instanceId, name, layer, anonymous }: ComposeOptions,
 ): Composition | undefined => {
   const selected = new Set(ids);
   const nodes = Object.values(scene.nodes).filter((node) => selected.has(node.id));
@@ -207,7 +278,7 @@ export const composeSelection = (
     crossing.flatMap((link) => [link.source, link.target].map(endpointNode).filter((id) => id && inside.has(id))),
   );
 
-  const layers = sceneLayers(scene);
+  const layers = viewLayers(scene);
   const placed = <T extends Node | Link>(element: T): T => ({ ...element, layer: elementLayer(element, layers) });
   const shiftPoint = (point: Point): Point => ({ x: point.x + shift.x, y: point.y + shift.y });
   const shiftEnd = (end: Endpoint): Endpoint => ('point' in end ? { point: shiftPoint(end.point) } : end);
@@ -224,10 +295,11 @@ export const composeSelection = (
   );
   const used = new Set([...childNodes, ...childLinks].map((element) => element.layer));
   const timeline = movedTracks(scene.timeline, inside, shift);
-  const composite: Scene = {
+  const composite: View = {
     id: compositeId,
     name: name ?? 'Object',
     kind: 'composite',
+    ...(anonymous ? { anonymous: true } : {}),
     nodes: Object.fromEntries(childNodes.map((node) => [node.id, node])),
     links: Object.fromEntries(childLinks.map((link) => [link.id, link])),
     layers: Object.fromEntries(layers.filter((entry) => used.has(entry.id)).map((entry) => [entry.id, entry])),
@@ -268,9 +340,9 @@ export const composeSelection = (
  * definition is left as it is, for any other instance.
  */
 export const ungroupInstance = (
-  scene: Scene,
+  scene: View,
   instance: InstanceNode,
-  composite: Scene,
+  composite: View,
   createId: (prefix: string) => string,
 ): Intent[] => {
   const transform = instanceTransform(nodeBounds(instance), compositeBounds(composite), instance.fit);
@@ -317,18 +389,62 @@ export const ungroupInstance = (
       id: link.id,
       values: { source: onInstance(link.source), target: onInstance(link.target) },
     }));
-  return [...created, ...linked, ...reattached, { kind: 'delete', ids: [instance.id] }];
+  // The Object's animation comes back out with its nodes: renamed to them, and placed and sized as the Instance drew it.
+  const mapValue = (property: string, value: unknown): unknown =>
+    property === 'center' && isPointValue(value)
+      ? map(value)
+      : property === 'size' && isSizeValue(value)
+        ? { width: value.width * transform.scale, height: value.height * transform.scale }
+        : value;
+  const tracks = Object.values(composite.timeline?.tracks ?? {}).map((track): [string, Track] => {
+    const target = ids.get(track.target) ?? track.target;
+    return [
+      `${target}:${track.property}`,
+      { ...track, target, keys: track.keys.map((key) => ({ ...key, value: mapValue(track.property, key.value) })) },
+    ];
+  });
+  const timed: Intent[] =
+    tracks.length === 0 || !composite.timeline
+      ? []
+      : [
+          {
+            kind: 'timeline',
+            timeline: {
+              ...(scene.timeline ?? { duration: composite.timeline.duration }),
+              tracks: {
+                // The Instance's own tracks go with it.
+                ...Object.fromEntries(
+                  Object.entries(scene.timeline?.tracks ?? {}).filter(([, track]) => track.target !== instance.id),
+                ),
+                ...Object.fromEntries(tracks),
+              },
+            },
+          },
+        ];
+  return [...created, ...linked, ...reattached, ...timed, { kind: 'delete', ids: [instance.id] }];
 };
+
+const isPointValue = (value: unknown): value is Point =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof Reflect.get(value, 'x') === 'number' &&
+  typeof Reflect.get(value, 'y') === 'number';
+
+const isSizeValue = (value: unknown): value is { width: number; height: number } =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof Reflect.get(value, 'width') === 'number' &&
+  typeof Reflect.get(value, 'height') === 'number';
 
 /**
  * A copy of `composite` under `compositeId` with fresh node and link ids (a drawing keys nodes by id across scenes), and
  * the renaming it used, for the instances that move onto the copy (`retargetInstance`).
  */
 export const copyComposite = (
-  composite: Scene,
-  compositeId: SceneId,
+  composite: View,
+  compositeId: ViewId,
   createId: (prefix: string) => string,
-): { composite: Scene; rename: (id: NodeId) => NodeId } => {
+): { composite: View; rename: (id: NodeId) => NodeId } => {
   const ids = new Map(Object.keys(composite.nodes).map((id) => [id, createId('node')]));
   const rename = (id: NodeId) => ids.get(id) ?? id;
   const renameEnd = (end: Endpoint): Endpoint => ('node' in end ? { ...end, node: rename(end.node) } : end);
@@ -344,7 +460,7 @@ export const copyComposite = (
   return {
     rename,
     composite: {
-      ...composite,
+      ...promoted(composite),
       id: compositeId,
       name: `${composite.name ?? 'Object'} copy`,
       nodes: Object.fromEntries(
@@ -364,7 +480,7 @@ export const copyComposite = (
 /** The instance pointed at the composite copy `compositeId`, its overrides and ports renamed as the copy's nodes were. */
 export const retargetInstance = (
   instance: InstanceNode,
-  compositeId: SceneId,
+  compositeId: ViewId,
   rename: (id: NodeId) => NodeId,
 ): InstanceNode => ({
   ...instance,
@@ -376,7 +492,7 @@ export const retargetInstance = (
 });
 
 /** The links in `scene` attached to an instance's ports, renamed after `copyComposite` renamed the ports. */
-export const renamePortLinks = (scene: Scene, before: InstanceNode, after: InstanceNode): Intent[] => {
+export const renamePortLinks = (scene: View, before: InstanceNode, after: InstanceNode): Intent[] => {
   const names = new Map((before.ports ?? []).map((port, index) => [port.id, after.ports?.[index]?.id ?? port.id]));
   const rename = (end: Endpoint): Endpoint =>
     'node' in end && end.node === before.id && end.port ? { ...end, port: names.get(end.port) ?? end.port } : end;

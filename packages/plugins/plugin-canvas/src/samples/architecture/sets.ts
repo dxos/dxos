@@ -9,7 +9,7 @@ export const composerDiagrams = (diagrams: DiagramSet['diagrams']): DiagramSet =
   root: 'composer',
   diagrams,
   names: {
-    'composer': 'Composer',
+    'composer': 'Overview',
     'composer-framework': 'App Framework',
     'composer-data': 'Data Stack',
     'composer-plugin': 'Plugin Anatomy',
@@ -34,7 +34,7 @@ export const edgeDiagrams = (diagrams: DiagramSet['diagrams']): DiagramSet => ({
   root: 'edge',
   diagrams,
   names: {
-    'edge': 'EDGE',
+    'edge': 'CF Workers',
     'edge-router': 'Router',
     'edge-db': 'db-service',
     'edge-compute': 'compute-service',

@@ -26,7 +26,6 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as CloudflarePlugin from '@dxos/plugin-cloudflare/CloudflarePlugin';
 import * as CodePlugin from '@dxos/plugin-code/CodePlugin';
 import * as CommercePlugin from '@dxos/plugin-commerce/CommercePlugin';
-import * as ComputerPlugin from '@dxos/plugin-computer/ComputerPlugin';
 import * as ConductorPlugin from '@dxos/plugin-conductor/ConductorPlugin';
 import * as CrmPlugin from '@dxos/plugin-crm/CrmPlugin';
 import * as CrxPlugin from '@dxos/plugin-crx/CrxPlugin';
@@ -272,9 +271,6 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     CloudflarePlugin.make(),
     CodePlugin.make(),
     CommercePlugin.make(),
-    // Dev-only coding harness, gated on `isDev` for availability (not just defaults, unlike
-    // Debug/Devtools below) since its tools need the dev server's route (vite.config.ts).
-    isDev && ComputerPlugin.make(),
     ConductorPlugin.make(),
     CrmPlugin.make(),
     !isTauri && CrxPlugin.make(),

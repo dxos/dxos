@@ -175,6 +175,13 @@ export const echoHostLayer = (options: { useSubduction?: boolean; queryExecutor?
   Layer.effectDiscard(
     Effect.gen(function* () {
       const echoHost = yield* EchoHostService;
+      const controller = yield* Hook.Controller;
+      const unsubscribeStatus = echoHost.indexStatus.updated.on((status) => {
+        void EffectEx.runPromise(
+          Hook.emit(Events.IndexStatus, status).pipe(Effect.provideService(Hook.Controller, controller)),
+        );
+      });
+      yield* Effect.addFinalizer(() => Effect.sync(() => unsubscribeStatus()));
       yield* Effect.acquireRelease(
         Effect.promise(() => echoHost.open()),
         () => Effect.promise(() => echoHost.close()),

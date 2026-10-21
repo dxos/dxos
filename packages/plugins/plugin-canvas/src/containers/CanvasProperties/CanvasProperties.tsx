@@ -8,7 +8,7 @@ import React, { useCallback, useMemo } from 'react';
 import { useObject } from '@dxos/echo-react';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { DEFAULT_GRID } from '@dxos/react-ui-canvas/scene';
-import { Form } from '@dxos/react-ui-form';
+import { Form, type FormFieldOverride } from '@dxos/react-ui-form';
 
 import { canvasRecordOf, deleteStyleClass, readStyles, styleClassUses, updateCanvasRecord, writeStyles } from '#model';
 import { Canvas, Settings } from '#types';
@@ -47,6 +47,13 @@ const CanvasPropertiesSchema = Schema.Struct({
     }),
   ),
 });
+
+/** Unset, a select shows nothing rather than its description, which reads as a value. */
+const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
+  theme: { placeholder: '' },
+  styleSet: { placeholder: '' },
+  background: { placeholder: '' },
+};
 
 /** A stored id as a built-in choice; an id this host does not know (from a newer one) shows as unset. */
 const isThemeChoice = Schema.is(Settings.ThemeChoice);
@@ -108,13 +115,20 @@ export const CanvasProperties = ({ drawing }: CanvasPropertiesProps) => {
     [updateCanvas],
   );
 
-  if (!canvas || canvas.schema !== Canvas.SCENE_SCHEMA) {
+  // A newer plugin's format is read-only here, and every control below writes the canvas.
+  if (!canvas || !Canvas.isSceneSchema(canvas.schema) || Canvas.isNewerScene(canvas.schema)) {
     return null;
   }
 
   return (
     <>
-      <Form.Root schema={CanvasPropertiesSchema} values={values} autoSave onSave={handleSave}>
+      <Form.Root
+        schema={CanvasPropertiesSchema}
+        values={values}
+        fieldOverrides={FIELD_OVERRIDES}
+        autoSave
+        onSave={handleSave}
+      >
         <Form.Fields />
       </Form.Root>
       <StyleClassList classes={classes} uses={uses} onRename={handleRename} onDelete={handleDelete} />

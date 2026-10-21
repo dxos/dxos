@@ -387,6 +387,8 @@ Do not paste real credential values into any shell command, and do not paste the
 - **Skills** (`.agents/skills/*`) — deep, task-specific how-to. Follow the
   relevant skill for the area you're working in (echo, effect, composer-ui,
   operations, testing, code-style, submit-pr, pr-description, land, …).
+- **A status page for a long session** — one Artifact board with questions, work in progress and
+  results, each a short STE line that expands → `status-board` skill (`.agents/skills/status-board/SKILL.md`).
 - **Writing in Simplified Technical English (ASD-STE100)** — the rules, the approved word
   list, and `scripts/ste_check.py` → `simplified-technical-english` skill
   (`.agents/skills/simplified-technical-english/SKILL.md`).
@@ -409,6 +411,9 @@ Do not paste real credential values into any shell command, and do not paste the
   Trunk test uploads → `trunk-quarantine` skill
   (`.agents/skills/trunk-quarantine/SKILL.md`); adding the Trunk MCP server →
   `REPOSITORY_GUIDE.md`.
+- **`.mdl` specs** (`PLUGIN.mdl`, `SPEC.mdl`) — the Deus language, and the `## Changelog`
+  decision that every spec change must add, attributed to a `user:` or an `agent:` → `mdl` skill
+  (`.agents/skills/mdl/SKILL.md`).
 - **SQLite schema changes** — adding a migration, creating a new SQLite-backed
   store, or anything under `src/migrations/` →
   [`.agents/projects/sql-migrations/DESIGN.md`](.agents/projects/sql-migrations/DESIGN.md).

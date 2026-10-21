@@ -74,7 +74,7 @@ const BoardContentInner = Util.composable<HTMLDivElement, BoardContentProps>(
             placeholderDebug={debug}
           >
             <ScrollArea.Root orientation='horizontal'>
-              <ScrollArea.Viewport classNames='snap-mandatory snap-x md:snap-none' ref={setViewport}>
+              <ScrollArea.Viewport classNames='py-2 snap-mandatory snap-x md:snap-none' ref={setViewport}>
                 <Mosaic.Stack items={items} getId={model.getColumnId} Tile={Tile} debug={debug} />
               </ScrollArea.Viewport>
             </ScrollArea.Root>

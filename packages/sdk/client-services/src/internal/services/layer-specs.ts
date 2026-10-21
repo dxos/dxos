@@ -427,7 +427,7 @@ export const EchoHostSpec = (options: ServiceStackServices) =>
   LayerSpec.make(
     {
       affinity: 'application',
-      requires: [IdentityContract.ManagerService, SpaceManagerService, SqlClient.SqlClient],
+      requires: [Hook.Controller, IdentityContract.ManagerService, SpaceManagerService, SqlClient.SqlClient],
       provides: [EchoHostService],
     },
     () =>

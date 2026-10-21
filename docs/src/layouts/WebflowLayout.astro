@@ -32,7 +32,7 @@ const { title, description, ogImage, wfPageId } = Astro.props;
   <PostHog />
   <!-- Chooses the waitlist form or the welcome card before first paint, so the hero never re-centers. -->
   <script is:inline>
-    if (['/composer-welcome', '/welcome'].includes(location.pathname)) {
+    if (['/composer-welcome', '/welcome'].includes(location.pathname.replace(/\/+$/, ''))) {
       document.cookie = 'user_subscribed=true; expires=' + new Date(Date.now() + 365 * 864e5).toUTCString() + '; path=/';
     }
     if (document.cookie.split('; ').includes('user_subscribed=true')) {
