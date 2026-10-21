@@ -15,7 +15,13 @@ import { layerMemory } from '@dxos/sql-sqlite/Platform';
 import { isTauri } from '@dxos/util';
 
 import { initEchoHostWasm } from '../util/automerge-wasm.ts';
-import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES, WorkerLogProcessor, initializeObservability } from '../util/index.ts';
+import {
+  LOG_STORE_DB_NAME,
+  LOG_STORE_MAX_BYTES,
+  WorkerLogProcessor,
+  initializeObservability,
+  onWorkerStart,
+} from '../util/index.ts';
 
 /**
  * Echo's hot paths log at verbose per document and message, and every forwarded line costs a postMessage;
@@ -54,30 +60,33 @@ if (sqliteLayer) {
 // while the tab is still booting; `onBeforeStart` awaits the same memoized init, which surfaces a failure.
 void initEchoHostWasm().catch((err) => log.verbose('early wasm init failed; retried on init', { err }));
 
-runDedicatedWorker({
-  sqliteLayer,
-  onBeforeStart: async (cfg) => {
-    const logFilter = cfg.get('runtime.client.log.filter');
-    if (logFilter) {
-      logProcessor.setFilter(logFilter);
-    }
-    observability = initializeObservability(cfg, isTauri(), logStore, undefined, {
-      post: (message) => observabilityWorker.postMessage(message),
-    });
-    observability.catch((err) => log.catch(err));
-    // The runtime this worker starts hosts echo; automerge is slim-resolved and must be
-    // initialized before it runs (see util/automerge-wasm.ts).
-    await initEchoHostWasm();
-  },
-  onStart: async (stack) => {
-    const instance = await observability;
-    if (instance) {
-      const identityManager = await EffectEx.runPromise(
-        stack.getServiceResolver().resolve(IdentityContract.ManagerService, {}).pipe(Effect.orDie, Effect.scoped),
-      );
-      await EffectEx.runPromise(
-        instance.addDataProvider(ObservabilityClientProvider.Client.identityManagerProvider(identityManager)),
-      );
-    }
-  },
-});
+// A prespawned worker loads ahead of its tab's election and must not join the storage lock until the tab leads.
+onWorkerStart(() =>
+  runDedicatedWorker({
+    sqliteLayer,
+    onBeforeStart: async (cfg) => {
+      const logFilter = cfg.get('runtime.client.log.filter');
+      if (logFilter) {
+        logProcessor.setFilter(logFilter);
+      }
+      observability = initializeObservability(cfg, isTauri(), logStore, undefined, {
+        post: (message) => observabilityWorker.postMessage(message),
+      });
+      observability.catch((err) => log.catch(err));
+      // The runtime this worker starts hosts echo; automerge is slim-resolved and must be
+      // initialized before it runs (see util/automerge-wasm.ts).
+      await initEchoHostWasm();
+    },
+    onStart: async (stack) => {
+      const instance = await observability;
+      if (instance) {
+        const identityManager = await EffectEx.runPromise(
+          stack.getServiceResolver().resolve(IdentityContract.ManagerService, {}).pipe(Effect.orDie, Effect.scoped),
+        );
+        await EffectEx.runPromise(
+          instance.addDataProvider(ObservabilityClientProvider.Client.identityManagerProvider(identityManager)),
+        );
+      }
+    },
+  }),
+);

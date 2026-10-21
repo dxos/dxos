@@ -30,6 +30,7 @@ The following extension dialects are used in this document.
 | `module` | `org.dxos.mdl.module@1.0`    |
 | `feat`   | `org.dxos.mdl.feat@1.0`      |
 | `scenario` | `org.dxos.mdl.scenario@1.0`  |
+| `decision` | `org.dxos.mdl.decision@1.0`  |
 
 ## Modules
 
@@ -287,6 +288,13 @@ feat F-3: Worker lifecycle and displacement
   req F-3.11:
     when: a `start-session` arrives while the worker is shutting down
     then: it is ignored rather than forked from the closing runtime scope
+
+  req F-3.12:
+    when: a newer worker displaces a worker that has not yet advertised `ready`
+    then: the displaced worker posts `displaced` before it shuts down, and posts neither
+          `ready` nor `init-failed` afterwards; the leader fails that session with a
+          `WorkerDisplacedError` at once and re-enters election after its retry backoff,
+          instead of waiting out its handshake timeout
 ```
 
 ```mdl
@@ -388,6 +396,20 @@ scenario T-3: Duplicate sessions are de-duplicated
     - extra start-session messages are ignored
 ```
 
+## Changelog
+
+```mdl
+decision D-1: A worker displaced before it advertised `ready` tells its leader with a `displaced` message, and the leader retries at once instead of waiting out its handshake timeout.
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.12]
+  why: Composer's prespawned worker, started by a tab that then lost the election, displaced the elected leader's queued worker; that worker stood down silently, so the leader waited the full 15s handshake budget and the tab's 30s boot budget ran out before a second worker could start (PostHog `WorkerConnectionError: ... opening worker leader session`).
+  rejected:
+    - Raising the handshake timeout: hides the stall and still costs every affected boot 15s.
+    - Reporting the displacement as `init-failed`: a start failure ends the initial connection for good, while displacement is retryable.
+```
+
 ---
 
 ## Appendix: Extension Definitions
@@ -427,4 +449,23 @@ ext scenario
     when?: Step | Step[]
     then: Step | Step[]
     tags?: TagList
+```
+
+```mdl
+ext decision
+  uri: org.dxos.mdl.decision@1.0
+  desc: |
+    One decision about the spec, attributed to exactly one actor. The inline prose is the decision
+    itself, stated as what is now true ("Bounds are derived, never stored."), not as the edit
+    that was made.
+  fields:
+    date: Date                  # YYYY-MM-DD, the day the decision was made
+    by: ActorRef                # user:<handle> | agent:<name> — the decider
+    for?: UserRef               # agent entries only: the person the agent acted for
+    affects?: RefList           # block ids the decision constrains, e.g. [Scene, F-2.1]
+    supersedes?: Identifier     # an earlier decision this one replaces
+    why?: Prose                 # the reason; on a user entry, only a reason the person gave
+    rejected?: ProseList        # alternatives considered and why they lost
+    source?: URI                # PR, review comment, issue, or session where it was made
+  inline-prose: true
 ```

@@ -84,6 +84,14 @@ export interface DedicatedWorkerInitFailedMessage {
 }
 
 /**
+ * Worker -> Leader Client when a newer worker displaced this one before it advertised `ready`; the
+ * worker shuts down after sending it, so the leader retries now instead of at its handshake deadline.
+ */
+export interface DedicatedWorkerDisplacedMessage {
+  type: 'displaced';
+}
+
+/**
  * Any Client -> Worker to start a session.
  */
 export interface DedicatedWorkerStartSessionMessage {
@@ -148,6 +156,7 @@ export type DedicatedWorkerMessage =
   | DedicatedWorkerPingMessage
   | DedicatedWorkerPongMessage
   | DedicatedWorkerInitFailedMessage
+  | DedicatedWorkerDisplacedMessage
   | DedicatedWorkerStartSessionMessage
   | DedicatedWorkerSessionMessage
   | DedicatedWorkerSessionFailedMessage;

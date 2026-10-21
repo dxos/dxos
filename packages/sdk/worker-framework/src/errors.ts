@@ -16,6 +16,15 @@ export class WorkerError extends BaseError.extend('WorkerError', 'Worker failed'
 export class WorkerConnectionError extends BaseError.extend('WorkerConnectionError', 'Worker connection failed') {}
 
 /**
+ * The worker a leader started was displaced by a newer worker for the same storage lock before it
+ * became ready, so the leader session fails at once and the tab re-enters election.
+ */
+export class WorkerDisplacedError extends BaseError.extend(
+  'WorkerDisplacedError',
+  'Worker was displaced by a newer worker before it became ready',
+) {}
+
+/**
  * A worker ignored the cooperative displacement signal for its whole grace period and had to be
  * killed by the tab owning its handle. Raised at error level because a worker that stops servicing
  * its event loop is a fault rather than routine displacement, so it reaches error telemetry; its

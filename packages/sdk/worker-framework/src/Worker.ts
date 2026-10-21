@@ -253,16 +253,28 @@ export const run = ({
       releaseStorageLock();
     };
     shutdownOnLockLost = shutdown;
+    let advertisedReady = false;
+    let reportedDisplaced = false;
+    // Until `ready`, nothing else tells the tab this worker stood down — it would wait out its whole
+    // handshake budget — so it is told before `shutdown` closes the endpoint.
+    const reportDisplaced = () => {
+      if (!advertisedReady && !reportedDisplaced) {
+        reportedDisplaced = true;
+        endpoint.postMessage({ type: 'displaced' } satisfies WorkerProtocol.DedicatedWorkerMessage);
+      }
+    };
     // Set before the first await, so a displace arriving while this worker starts up cannot land in a
     // gap and leave it holding the storage lock a displacer is waiting on.
     channel.onStop = () => {
       log('displaced by newer worker, shutting down');
+      reportDisplaced();
       void shutdown();
     };
     if (displaced) {
       // A newer worker broadcast while this one queued: it is waiting behind us on the storage lock,
       // and serving here would strand it for the leader session's whole budget.
       log('displaced while waiting for the storage lock, not serving');
+      reportDisplaced();
       // Through `shutdown` rather than closing the channel alone, so the liveness lock is released:
       // clients watch that key to detect termination and would otherwise see this worker as alive.
       await shutdown();
@@ -296,6 +308,11 @@ export const run = ({
               ),
             );
           } catch (err) {
+            // The runtime's scope closing under it is how displacement ends a start in progress, and
+            // the tab, already told, must retry rather than treat it as a runtime that cannot start.
+            if (reportedDisplaced) {
+              break;
+            }
             // A worker with no runtime serves nothing, so it reports why and exits instead of advertising `ready`.
             log.error('dedicated-worker: runtime failed to start', { err });
             endpoint.postMessage({
@@ -305,7 +322,11 @@ export const run = ({
             await shutdown();
             break;
           }
+          if (reportedDisplaced) {
+            break;
+          }
           log('dedicated-worker: runtime ready, posting ready');
+          advertisedReady = true;
           endpoint.postMessage({
             type: 'ready',
             livenessLockKey,
