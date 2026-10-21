@@ -610,6 +610,56 @@ decision D-8: Approve [D-7].
   by: user:wittjosiah
 ```
 
+```mdl
+decision D-9: A chat's MCP servers come from connections. A connector that declares an MCP server makes each connection made with it an MCP server, acting as whoever the connection signs in as; a Custom MCP Server connector adds any other server by URL. The `McpServer` object type and `Skill.mcpServers` are removed, without migrating existing `McpServer` objects.
+  date: 2026-10-21
+  by: user:wittjosiah
+  affects: [QA-4]
+```
+
+```mdl
+decision D-10: The MCP servers Composer ships, Browser and DXOS Introspect, are built in: they come from plugin code and config, with no object in the space. They are off in a chat by default, and the skill that uses one knows about it, so the agent turns it on when needed.
+  date: 2026-10-21
+  by: user:wittjosiah
+  affects: [QA-3, QA-4]
+```
+
+```mdl
+decision D-11: The "+" menu's submenu is "Connectors" and lists only the connections that have an MCP server, since those are the only ones relevant to a chat. "Manage connections…" opens the space's Connections settings as a pivot of the chat (under breadcrumbs, or in a plank beside it when the deck is not flat), and has no dialog of its own.
+  date: 2026-10-21
+  by: user:wittjosiah
+  affects: [QA-3, QA-4]
+```
+
+```mdl
+decision D-12: A built-in server lives in the registry as a keyed connection, contributed through `AppCapabilities.McpServer`, and a chat binds it by `dxn:<key>`. Fills in [D-10].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: Each process makes its own copy from code, so the key is the one id they share, and the registry is where the agent runtime, the Skill Manager and the menu already look for skills.
+  rejected:
+    - Connectors that take no credential: each space would need a connection made, and Settings would list something nobody configures.
+```
+
+```mdl
+decision D-13: The Skill Manager adds a server as a Custom MCP Server connection (`add-mcp-connection`), and a session re-reads its MCP servers at every step, so a server added or turned on during a response is used in the same response. Fills in [D-9].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: The weather and stockfish samples registered their deployed server on a skill; with that field gone, the agent needs its own way to add one and use it without a restart.
+```
+
+```mdl
+decision D-14: Creating a connection from a deck that already holds several planks opens it beside them instead of replacing the deck. Fills in [D-11].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-4]
+  why: Adding a server from the Connections pivot otherwise closed the chat that opened it.
+```
+
 ---
 
 ## Appendix: Extension Definitions

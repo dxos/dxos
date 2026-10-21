@@ -38,6 +38,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `service`   | `org.dxos.mdl.service@1.0`    |
 | `test`      | `org.dxos.mdl.test@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
@@ -891,6 +892,14 @@ test QA-2: Showcase clip
     - name: Work in it
       do: Click across it as the clip gesture does.
       expect: the object responds to each click
+```
+
+## Changelog
+
+```mdl
+decision D-1: The Coder skill's introspect-mcp server is the built-in DXOS Introspect MCP server, from plugin code with no object in the space and off in a chat by default; the skill no longer declares it, and its instructions tell the agent to turn it on when it needs the tools.
+  date: 2026-10-21
+  by: user:wittjosiah
 ```
 
 ---
