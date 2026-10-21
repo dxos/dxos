@@ -74,8 +74,9 @@ export class Canvas extends Type.makeObject<Canvas>(DXN.make('org.dxos.type.canv
 
 `Drawing.Canvas` already stores `schema`, which names the renderer dialect, so the canvas needs the
 annotation and no new field. One type can hold several formats: each migration matches one version
-string, so tldraw's steps never touch a scene canvas. The field is optional today, so a canvas with
-no `schema` is treated as the oldest version of its variant's default format.
+string, so tldraw's steps never touch a scene canvas. The field is optional in the schema, but a canvas
+with no `schema` is never migrated: its format cannot be known, and a step that guessed would rewrite another
+format's records as its own. Every scene canvas has carried a `schema` since plugin-canvas was introduced.
 
 ### Declaring a step
 
