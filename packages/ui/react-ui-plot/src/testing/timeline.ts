@@ -876,7 +876,7 @@ export const technologyTimeline: PlotValue[][] = [
   [
     '2020-03',
     'Tech/AI',
-    'Agent57',
+    'DeepMind Agent57',
     'DeepMind’s agent is the first to beat the human benchmark on all 57 Atari games.',
     null,
   ],
