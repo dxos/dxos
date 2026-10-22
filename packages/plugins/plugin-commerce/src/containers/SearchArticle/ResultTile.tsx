@@ -2,10 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback } from 'react';
-
-import { Obj } from '@dxos/echo';
-import * as Focus from '@dxos/react-ui/Focus';
+import React from 'react';
 
 import { Result } from '#types';
 
@@ -15,27 +12,18 @@ export type ResultTileProps = {
   result: Result.Result;
   current?: boolean;
   starred?: boolean;
-  onSelect?: (id: string) => void;
   onToggleStar?: (result: Result.Result) => void;
 };
 
-/** Selectable masonry tile wrapping a {@link ResultCard}. */
-export const ResultTile = ({ result, current, starred, onSelect, onToggleStar }: ResultTileProps) => {
-  // `Focus.Item` calls `onCurrentChange` on click and on Enter.
-  const handleCurrentChange = useCallback(() => {
-    onSelect?.(Obj.getURI(result));
-  }, [onSelect, result]);
-
-  return (
-    <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-      <ResultCard
-        subject={result}
-        current={current}
-        starred={starred}
-        onToggleStar={onToggleStar ? () => onToggleStar(result) : undefined}
-      />
-    </Focus.Item>
-  );
-};
+/** Masonry tile wrapping a {@link ResultCard}; the masonry item around it takes focus and selects it. */
+export const ResultTile = ({ result, current, starred, onToggleStar }: ResultTileProps) => (
+  <ResultCard
+    subject={result}
+    current={current}
+    aria-current={current || undefined}
+    starred={starred}
+    onToggleStar={onToggleStar ? () => onToggleStar(result) : undefined}
+  />
+);
 
 ResultTile.displayName = 'ResultTile';
