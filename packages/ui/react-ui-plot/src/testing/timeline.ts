@@ -117,6 +117,12 @@ export const technologyTimeline: PlotValue[][] = [
   ['1996-03', 'Personal', 'D. E. Shaw', 'Senior Engineer, Advanced Development Group, Mar 1996 – May 1997.'],
   ['1997-05', 'Tech/AI', 'Deep Blue beats Kasparov', 'IBM’s chess computer defeats the world champion in a match.'],
   [
+    '1997-06',
+    'Personal',
+    'Filming The Phantom Menace',
+    'Filming Star Wars: Episode I – The Phantom Menace, June 1997.',
+  ],
+  [
     '1997-07',
     'Macro',
     'Hong Kong returns to China',
