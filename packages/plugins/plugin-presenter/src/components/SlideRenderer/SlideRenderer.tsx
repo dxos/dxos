@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
 import React from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
@@ -47,15 +48,15 @@ const TextSlide = ({ text }: { text: Text.Text }) => {
 };
 
 const ObjectSlide = ({ object, attendableId }: { object: Obj.Unknown; attendableId?: string }) => {
-  const isAvailable = Surface.useIsAvailable();
+  // Subscribed to the role's candidates because `useIsAvailable` is a one-shot check that never re-renders
+  // when a lazily gated surface registers.
+  const surfaceManager = Surface.useSurfaceManager();
+  const candidates = useAtomValue(surfaceManager.candidatesAtom(AppSurface.Slide.role));
   const data = { subject: object, attendableId: attendableId ?? object.id };
+  const available = candidates.some(({ filter }) => !filter || filter(data, AppSurface.Slide.role));
   return (
     <SlideFrame>
-      {isAvailable({ type: AppSurface.Slide, data }) ? (
-        <Surface.Surface type={AppSurface.Slide} data={data} limit={1} />
-      ) : (
-        <TitleSlide object={object} />
-      )}
+      {available ? <Surface.Surface type={AppSurface.Slide} data={data} limit={1} /> : <TitleSlide object={object} />}
     </SlideFrame>
   );
 };
