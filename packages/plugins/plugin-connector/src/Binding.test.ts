@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Registry from 'effect/reactivity/AtomRegistry';
+import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
@@ -17,11 +18,12 @@ import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Trigger as AsyncTrigger } from '@dxos/async';
 import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
 import * as Routine from '@dxos/compute/Routine';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { operationServiceLayerNoop } from '@dxos/compute/testing';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Database, DXN, Filter, Obj, Ref, URI } from '@dxos/echo';
+import { Database, DXN, EID, Filter, Key, Obj, Ref, URI } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
@@ -689,6 +691,49 @@ describe('binding lifecycle', () => {
   });
 });
 
+describe('Binding.loadReplicated', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  const retries = Schedule.spaced('20 millis').pipe(Schedule.upTo({ times: 10 }));
+
+  /** Loads `entityId`, reporting how the load ended; `arriving` is added to the database shortly after. */
+  const load = async (entityId: Key.EntityId, arriving?: Expando.Expando) => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([Expando.Expando]);
+    if (arriving) {
+      setTimeout(() => db.add(arriving), 50);
+    }
+    return EffectEx.runPromise(
+      Binding.loadReplicated(db.makeRef<Expando.Expando>(EID.make({ entityId })), { retries }).pipe(
+        Effect.map((object) => object.name),
+        Effect.catchTag('EntityNotFoundError', () => Effect.succeed('not found')),
+        Effect.catchDefect((defect) => Effect.succeed(Process.RunAgainError.is(defect) ? 'run again' : 'died')),
+      ),
+    );
+  };
+
+  test('an object that arrives during the retries loads', async ({ expect }) => {
+    const object = Obj.make(Expando.Expando, { name: 'late' });
+    expect(await load(object.id, object)).toBe('late');
+  });
+
+  test('a new object that does not arrive runs the operation again', async ({ expect }) => {
+    expect(await load(Key.EntityId.random())).toBe('run again');
+  });
+
+  test('an old object that does not arrive is not found', async ({ expect }) => {
+    expect(await load(Key.EntityId.deterministic('long gone'))).toBe('not found');
+  });
+});
+
 describe('Binding.syncAll', () => {
   let builder: EchoTestBuilder;
   // One runtime per test, disposed below: `makeInvoker` is called per invocation, so building a
@@ -800,6 +845,20 @@ describe('Binding.syncAll', () => {
     expect(synced[0]).toBe(Ref.make(second).uri);
     expect(synced).toHaveLength(2);
     expect(synced).toContain(Ref.make(cursor).uri);
+  });
+
+  // A target bound and synced straight away can reach EDGE after the run starts.
+  test('waits for a priority binding that has not arrived yet', async ({ expect }) => {
+    const { db, connection, cursor, token } = await setup();
+    const target = db.add(Obj.make(Expando.Expando, { name: 'Late' }));
+    const late = Cursor.makeExternal({ source: Ref.make(token), target: Ref.make(target) });
+    setTimeout(() => db.add(late), 100);
+
+    const outcome = await runFanOut(connection, late.id);
+
+    invariant(outcome._tag === 'Success');
+    expect(outcome.success.synced).toBe(2);
+    expect(synced).toEqual([Ref.make(late).uri, Ref.make(cursor).uri]);
   });
 
   test('re-raises runAgain after every binding had its turn', async ({ expect }) => {

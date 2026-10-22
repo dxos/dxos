@@ -8,7 +8,7 @@ import { useMemo } from 'react';
 
 import { type Database, EID, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Task } from '@dxos/types';
+import { Spec, Task } from '@dxos/types';
 
 import { Feature, Showcase } from '#types';
 
@@ -101,7 +101,7 @@ export const useFeatureGraph = (
       specPaths
         ? Query.select(
             Filter.foreignKeys(
-              Feature.SPEC_TYPE,
+              Spec.Spec,
               specPaths.split('\n').map((id) => ({ source: Feature.SPEC_KEY_SOURCE, id })),
             ),
           )

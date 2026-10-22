@@ -14,7 +14,7 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 
 import { translations } from '#translations';
 
-import { type FeatureModel } from '../FeatureCard/index.ts';
+import { type FeatureChanges, type FeatureModel } from '../FeatureCard/index.ts';
 import { LAYERED_FEATURES, SAMPLE_FEATURES } from '../FeatureCard/testing.ts';
 import { FeatureCanvas } from './FeatureCanvas.tsx';
 
@@ -32,8 +32,8 @@ const DefaultStory = ({ arrange, features: initial = SAMPLE_FEATURES, force, lat
   const [features, setFeatures] = useState(initial);
   const [positions, setPositions] = useState<Record<string, Point>>({});
   useEffect(() => setPositions({}), [layoutKey]);
-  const update = (id: string, values: { name?: string; description?: string }) =>
-    setFeatures((current) => current.map((feature) => (feature.id === id ? { ...feature, ...values } : feature)));
+  const handleChange = (id: string, changes: FeatureChanges) =>
+    setFeatures((current) => current.map((feature) => (feature.id === id ? { ...feature, ...changes } : feature)));
   return (
     <div className='dx-fill relative'>
       <FeatureCanvas
@@ -43,8 +43,7 @@ const DefaultStory = ({ arrange, features: initial = SAMPLE_FEATURES, force, lat
         arrange={arrange}
         force={force}
         lattice={lattice}
-        onRename={(id, name) => update(id, { name })}
-        onDescribe={(id, description) => update(id, { description })}
+        onChange={handleChange}
       />
     </div>
   );

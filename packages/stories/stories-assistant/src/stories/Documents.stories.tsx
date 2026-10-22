@@ -129,7 +129,7 @@ const submitPrompt = async (canvasElement: HTMLElement, prompt: string) => {
   const canvas = within(canvasElement);
 
   // The chat prompt is a CodeMirror editor; locate it via its placeholder.
-  const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
+  const placeholder = await canvas.findByText(/@ for content/i, {}, { timeout: 30_000 });
   const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
   if (!editor) {
     throw new Error('Chat editor not found.');

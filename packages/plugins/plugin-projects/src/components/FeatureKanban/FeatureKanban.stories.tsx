@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
-import { expect, waitFor } from 'storybook/test';
+import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
@@ -12,16 +12,16 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 
 import { translations } from '#translations';
 
-import { type FeatureModel, type FeatureStatus } from '../FeatureCard/index.ts';
+import { type FeatureChanges, type FeatureModel, type FeatureStatus } from '../FeatureCard/index.ts';
 import { SAMPLE_FEATURES } from '../FeatureCard/testing.ts';
 import { FeatureKanban } from './FeatureKanban.tsx';
 
 /** Holds the features in state, so a drop that sets a status moves the card as the operation would. */
 const DefaultStory = ({ features: initial }: { features: FeatureModel[] }) => {
   const [features, setFeatures] = useState(initial);
-  const handleSetStatus = (id: string, status: FeatureStatus) =>
-    setFeatures((features) => features.map((feature) => (feature.id === id ? { ...feature, status } : feature)));
-  return <FeatureKanban features={features} onSetStatus={handleSetStatus} />;
+  const handleChange = (id: string, changes: FeatureChanges) =>
+    setFeatures((features) => features.map((feature) => (feature.id === id ? { ...feature, ...changes } : feature)));
+  return <FeatureKanban features={features} onChange={handleChange} />;
 };
 
 const meta: Meta<typeof DefaultStory> = {
@@ -92,5 +92,28 @@ export const Default: Story = {
     }
     await waitFor(() => expect(cardIn(canvasElement, 'prototype', 'triage')).toBeTruthy(), { timeout: 5_000 });
     await expect(cardIn(canvasElement, 'planned', 'triage')).toBeFalsy();
+  },
+};
+
+/** Selection follows focus across columns, as in the cards view: the arrow keys move it, and Escape clears it. */
+export const Selection: Story = {
+  play: async ({ canvasElement }) => {
+    const card = (id: string) => canvasElement.querySelector<HTMLElement>(`[data-feature="${id}"]`);
+    const selected = () =>
+      [...canvasElement.querySelectorAll('[aria-selected="true"]')].map((element) =>
+        element.getAttribute('data-feature'),
+      );
+    await waitFor(() => expect(card('feature-map')).toBeTruthy(), { timeout: 10_000 });
+    const featureMap = card('feature-map');
+    if (!featureMap) {
+      throw new Error('no card for feature-map');
+    }
+    await userEvent.click(featureMap);
+    await waitFor(() => expect(selected()).toEqual(['feature-map']));
+    // In progress → Prototype: the next column's card is selected, and the rest fade.
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() => expect(selected()).toEqual(['sync']));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(selected()).toEqual([]));
   },
 };

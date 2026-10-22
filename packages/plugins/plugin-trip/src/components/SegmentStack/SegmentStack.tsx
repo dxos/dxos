@@ -39,10 +39,14 @@ export const SegmentStack = Util.composable<HTMLDivElement, SegmentStackProps>(
       [onAction],
     );
 
-    const handleSelectionChange = useCallback(
+    // Click / Enter toggle the segment's selection, as they make it current.
+    const itemProps = useCallback(
       (id: string) => {
-        const isSelected = selectedIds?.has(id) ?? false;
-        onAction?.({ type: isSelected ? 'deselect' : 'select', segmentId: id });
+        const selected = selectedIds?.has(id) ?? false;
+        return {
+          'aria-selected': selectedIds ? selected : undefined,
+          'onActivate': () => onAction?.({ type: selected ? 'deselect' : 'select', segmentId: id }),
+        };
       },
       [onAction, selectedIds],
     );
@@ -61,8 +65,7 @@ export const SegmentStack = Util.composable<HTMLDivElement, SegmentStackProps>(
           withFocus
           currentId={currentId}
           onCurrentChange={handleCurrentChange}
-          selectedIds={selectedIds}
-          onSelectionChange={handleSelectionChange}
+          itemProps={itemProps}
         >
           <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport ref={setViewport}>

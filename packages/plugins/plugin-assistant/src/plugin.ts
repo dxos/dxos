@@ -26,6 +26,7 @@ import {
   Schema,
   Settings,
   SkillDefinition,
+  SlashCommands,
   SubjectContext,
   Toolkit,
   Translations,
@@ -69,6 +70,7 @@ export const AssistantPlugin = Plugin.define<AssistantOptions.AssistantPluginOpt
     Plugin.addModule(SubjectContext),
     Plugin.addModule(Connector),
     Plugin.addModule(PluginAsset),
+    Plugin.addModule(SlashCommands),
     Plugin.make,
   );
 

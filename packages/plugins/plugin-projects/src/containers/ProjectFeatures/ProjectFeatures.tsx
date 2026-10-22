@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import type * as Project from '@dxos/compute/Project';
-import { EID, Filter, Obj } from '@dxos/echo';
+import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -21,7 +21,7 @@ import { Feature, FeatureMapView } from '#types';
 // Not in the components barrel: the canvas engine is large, and the barrel is also loaded by capabilities at boot.
 import { FeatureCanvas } from '../../components/FeatureCanvas/index.ts';
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
-import { useFeatureEditing, useFeatureGraph, useOpenObject, useOpenSpec } from '../../hooks/index.ts';
+import { useFeatureEditing, useFeatureGraph, useOpenFeatureTarget } from '../../hooks/index.ts';
 
 export type ProjectFeaturesProps = {
   project: Project.Project;
@@ -29,8 +29,6 @@ export type ProjectFeaturesProps = {
 };
 
 type Point = NonNullable<Feature.Feature['position']>;
-
-const projectIdOf = (feature: Feature.Feature) => feature.project && EID.getEntityId(EID.parse(feature.project.uri));
 
 const MODES: { mode: FeatureMapView.Mode; icon: string }[] = [
   { mode: 'cards', icon: 'ph--cards--regular' },
@@ -44,13 +42,11 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
   const { mode } = useViewState(FeatureMapView.aspect, project.id);
   const { update: updateView } = useViewStateActions(FeatureMapView.aspect, project.id);
   const db = Obj.getDatabase(project);
-  // Queried, not read off the project: membership lives on each feature, so a move by an agent shows up here.
-  const allFeatures = useQuery(db, Filter.type(Feature.Feature));
-  const members = useMemo(
-    () =>
-      allFeatures.filter((feature) => projectIdOf(feature) === project.id).sort((a, b) => a.name.localeCompare(b.name)),
-    [allFeatures, project.id],
-  );
+  // Queried, not read off the project: membership lives on each feature, so a move by an agent shows up here. Filtered
+  // in the query rather than after it, since clearing a feature's `project` leaves the set of features unchanged and a
+  // filter over that set would never re-run.
+  const projectFeatures = useQuery(db, Filter.type(Feature.Feature, { project: Ref.make(project) }));
+  const members = useMemo(() => [...projectFeatures].sort((a, b) => a.name.localeCompare(b.name)), [projectFeatures]);
   const ids = useMemo(() => members.map((feature) => feature.id), [members]);
   const positions = useMemo(
     () => Object.fromEntries(members.flatMap((feature) => (feature.position ? [[feature.id, feature.position]] : []))),
@@ -58,10 +54,8 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
   );
   const graph = useFeatureGraph(db, ids);
   const features = useMemo(() => ids.flatMap((id) => graph.lookup(id) ?? []), [ids, graph]);
-  const openObject = useOpenObject(db, attendableId);
-  const openSpec = useOpenSpec();
+  const handleOpen = useOpenFeatureTarget(db, attendableId);
   const editing = useFeatureEditing(db, project);
-  const handleOpen = useCallback((id: string) => void openObject(id), [openObject]);
   // The card whose name field is open: a feature created from the toolbar is named in place on the map.
   const [editingId, setEditingId] = useState<string>();
   const handleNew = useCallback(() => void editing.createFeature('').then((id) => id && setEditingId(id)), [editing]);
@@ -159,8 +153,7 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
               onLink={editing.addDependency}
               onUnlink={editing.removeDependency}
               onRemove={editing.removeFromProject}
-              onRename={editing.rename}
-              onDescribe={editing.describe}
+              onChange={editing.update}
               editingId={editingId}
               onEditingChange={setEditingId}
             />
@@ -168,13 +161,9 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
         ) : mode === 'kanban' ? (
           <FeatureKanban
             features={features}
-            onSetStatus={editing.setStatus}
             onOpen={handleOpen}
-            onOpenObject={handleOpen}
-            openSpec={openSpec}
             onRemove={editing.removeFromProject}
-            onRename={editing.rename}
-            onDescribe={editing.describe}
+            onChange={editing.update}
             editingId={editingId}
             onEditingChange={setEditingId}
           />
@@ -184,12 +173,8 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
               <FeatureBoard
                 features={features}
                 onOpen={handleOpen}
-                onOpenObject={handleOpen}
-                openSpec={openSpec}
-                onSetStatus={editing.setStatus}
                 onRemove={editing.removeFromProject}
-                onRename={editing.rename}
-                onDescribe={editing.describe}
+                onChange={editing.update}
                 editingId={editingId}
                 onEditingChange={setEditingId}
               />

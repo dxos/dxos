@@ -8,9 +8,9 @@ import React, { useEffect, useState } from 'react';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Spec } from '@dxos/types';
 
 import { translations } from '#translations';
-import { Spec } from '#types';
 
 import CHESS_1_MDL from '../../../../../reflect/deus/lang/examples/chess-1.mdl?raw';
 import { SpecArticle } from './SpecArticle.tsx';

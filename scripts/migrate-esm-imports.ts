@@ -259,7 +259,6 @@ async function main() {
       '**/coverage/**',
       '**/*.d.ts',
       '**/.store/**',
-      '**/.depot/**',
     ],
   });
 
