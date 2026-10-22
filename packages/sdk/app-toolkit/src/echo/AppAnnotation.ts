@@ -51,6 +51,15 @@ export const GraphPropsAnnotation = Annotation.make<{ managesAutofocus?: boolean
   schema: Schema.Struct({ managesAutofocus: Schema.optional(Schema.Boolean) }),
 });
 
+/**
+ * Makes an object's navtree node a list of the ref array `property`: drag-reorder writes the array and
+ * removing a member goes through `ContainerModel.remove` (deleting owned members when `deleteOwned`).
+ */
+export const ContainerAnnotation = Annotation.make<{ property: string; deleteOwned?: boolean }>({
+  id: 'org.dxos.annotation.container',
+  schema: Schema.Struct({ property: Schema.String, deleteOwned: Schema.optional(Schema.Boolean) }),
+});
+
 /** Per-type object ordering stored on space.properties, keyed by typename. */
 export const SectionOrderAnnotation = Annotation.make({
   id: 'org.dxos.space.sectionOrder',

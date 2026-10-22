@@ -4,6 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
@@ -19,6 +20,8 @@ export class Presentation extends Type.makeObject<Presentation>(DXN.make('org.dx
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--presentation--regular', hue: 'orange' }),
     Annotation.UserType.set({}),
+    // Its navtree node lists `sections`; removing an owned slide there deletes it, as `remove` does.
+    AppAnnotation.ContainerAnnotation.set({ property: 'sections', deleteOwned: true }),
   ),
 ) {}
 

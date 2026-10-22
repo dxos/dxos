@@ -16,6 +16,7 @@ export const translations = [
         'add-slide.label': 'Add slide',
         'fullscreen.label': 'Fullscreen',
         'add-section.label': 'Link object',
+        'slide-fallback.label': 'Slide {{count}}',
       },
     },
   },

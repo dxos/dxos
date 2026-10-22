@@ -13,11 +13,12 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Filter } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
+import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
+import type * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -34,26 +35,23 @@ import { Presentation, PresenterOperation } from '#types';
 import { PresentationArticle } from './PresentationArticle.tsx';
 
 /**
- * Stands in for the deck plugin: `SetPresenting` flips a flag that the layout reports as
- * `solo--fullscreen`, which is all the article reads.
+ * Stands in for the deck plugin: `SetPresenting` sets the deck's fullscreen plank to the presentation,
+ * which is all the article reads.
  */
 const createPresenterStoryPlugin = () => {
-  const presentingAtom = Atom.make(false).pipe(Atom.keepAlive);
-  const layoutAtom = Atom.make((get): AppCapabilities.Layout => ({
-    mode: get(presentingAtom) ? 'solo--fullscreen' : 'storybook',
+  const ephemeralAtom = Atom.make<DeckSchema.EphemeralDeckState>({
+    open: {},
     dialogOpen: false,
-    sidebarOpen: false,
-    complementarySidebarOpen: false,
-    workspace: 'default',
-    active: [],
-    inactive: [],
-    scrollIntoView: undefined,
-  }));
+    dialogContent: null,
+    popoverOpen: false,
+    popoverContent: null,
+    toasts: [],
+  }).pipe(Atom.keepAlive);
   const setPresenting = PresenterOperation.SetPresenting.pipe(
-    Operation.withHandler(({ state }) =>
+    Operation.withHandler(({ object, state }) =>
       Effect.gen(function* () {
         const registry = yield* Capability.get(Capabilities.AtomRegistry);
-        registry.set(presentingAtom, state);
+        registry.update(ephemeralAtom, (ephemeral) => ({ ...ephemeral, fullscreen: state ? object.id : undefined }));
       }),
     ),
   );
@@ -62,11 +60,11 @@ const createPresenterStoryPlugin = () => {
     Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test.presentationArticle'), name: 'PresentationArticleStory' }),
   ).pipe(
     Plugin.addModule({
-      id: 'layout',
-      provides: [AppCapabilities.Layout, Capabilities.OperationHandler],
+      id: 'deck',
+      provides: [DeckCapabilities.EphemeralState, Capabilities.OperationHandler],
       activate: () =>
         Effect.succeed([
-          Capability.contribute(AppCapabilities.Layout, layoutAtom),
+          Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
           Capability.contribute(Capabilities.OperationHandler, OperationHandlerSet.make(setPresenting)),
         ]),
     }),

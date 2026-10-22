@@ -24,6 +24,8 @@ export type Container = {
   /** Which objects the list takes; any object when absent. */
   readonly accepts?: (object: Obj.Unknown) => boolean;
   readonly removeLabel?: Translations.Label;
+  /** Whether {@link remove} deletes a member the container owns rather than orphaning it. */
+  readonly deleteOwned?: boolean;
 };
 
 type RefArrayKeys<T> = {
@@ -34,7 +36,7 @@ type RefArrayKeys<T> = {
 export const make = <T extends Obj.Unknown>(
   object: T,
   property: RefArrayKeys<T>,
-  options: Pick<Container, 'moveScope' | 'accepts' | 'removeLabel'> = {},
+  options: Pick<Container, 'moveScope' | 'accepts' | 'removeLabel' | 'deleteOwned'> = {},
 ): Container => ({ object, property, ...options });
 
 const refs = (container: Container): Ref.Ref<Obj.Unknown>[] => {
@@ -140,6 +142,16 @@ export const release = ({ container, object, to }: Omit<LinkProps, 'index'> & { 
   unlink({ container, object });
   if (Obj.getParent(object)?.id === container.object.id) {
     Obj.setParent(object, to?.object);
+  }
+};
+
+/** Removes the object at the user's request; an owned object is deleted when the container says so, else released. */
+export const remove = ({ container, object }: Omit<LinkProps, 'index'>): void => {
+  if (container.deleteOwned && Obj.getParent(object)?.id === container.object.id) {
+    unlink({ container, object });
+    Obj.getDatabase(object)?.remove(object);
+  } else {
+    release({ container, object });
   }
 };
 

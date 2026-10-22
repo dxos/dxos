@@ -6,8 +6,12 @@ import type * as Schema from 'effect/Schema';
 import { useCallback } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import { type Obj } from '@dxos/echo';
+import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 
 import { PresenterOperation } from '#types';
+
+import { isPresenting } from '../paths.ts';
 
 /** An object `SetPresenting` can present. */
 export type PresentableObject = Schema.Schema.Type<typeof PresenterOperation.SetPresenting.input>['object'];
@@ -32,4 +36,13 @@ export const useSetPresenting = (object: PresentableObject) => {
 export const useExitPresenter = (object: PresentableObject) => {
   const setPresenting = useSetPresenting(object);
   return useCallback(() => setPresenting(false), [setPresenting]);
+};
+
+/**
+ * Whether the object is the one being presented; read from the deck's fullscreen plank so a fullscreen
+ * change for another object leaves this one alone.
+ */
+export const useIsPresenting = (object: Obj.Unknown): boolean => {
+  const ephemeral = Hooks.useOptionalAtomCapability(DeckCapabilities.EphemeralState);
+  return ephemeral ? isPresenting(ephemeral, object) : false;
 };

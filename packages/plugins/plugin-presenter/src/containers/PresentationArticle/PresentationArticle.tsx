@@ -5,7 +5,6 @@
 import React, { useCallback } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import * as AppHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { useAttention } from '@dxos/react-ui-attention';
 import * as Button from '@dxos/react-ui/Button';
@@ -13,7 +12,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { Deck, SectionPicker } from '#components';
 import { usePresentationDeck } from '#deck';
-import { useSetPresenting, useSlideIndex } from '#hooks';
+import { useIsPresenting, useSetPresenting, useSlideIndex } from '#hooks';
 import { meta } from '#meta';
 import { Presentation } from '#types';
 
@@ -29,7 +28,7 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
   const { t } = Hooks.useTranslation(meta.profile.key);
   const slides = usePresentationDeck(subject);
   const [index, setIndex] = useSlideIndex(Obj.getURI(subject), slides.length);
-  const fullscreen = AppHooks.useLayout().mode === 'solo--fullscreen';
+  const fullscreen = useIsPresenting(subject);
   const setPresenting = useSetPresenting(subject);
   // Only the attended article takes focus, so opening one unattended (or a reload) leaves the caret where it is.
   const { hasAttention } = useAttention(attendableId);

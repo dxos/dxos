@@ -390,7 +390,7 @@ const constructObjectActions = ({
       ? [
           AppGraphNode.makeAction({
             id: 'removeFromContainer',
-            data: () => Effect.sync(() => ContainerModel.release({ container, object })),
+            data: () => Effect.sync(() => ContainerModel.remove({ container, object })),
             properties: {
               label: container.removeLabel ?? REMOVE_FROM_COLLECTION_LABEL,
               icon: 'ph--minus-circle--regular',

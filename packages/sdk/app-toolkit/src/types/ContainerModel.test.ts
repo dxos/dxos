@@ -255,3 +255,47 @@ describe('ownership', () => {
     expect(results).toEqual([]);
   });
 });
+
+describe('remove', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test('releases the object when the container has no remove handler', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Collection.Collection, Item] });
+    const item = db.add(Obj.make(Item, { name: 'alice' }));
+    const collection = db.add(Collection.make({ objects: [Ref.make(item)] }));
+    await db.flush();
+
+    ContainerModel.remove({ container: ContainerModel.collection(collection), object: item });
+    expect(collection.objects).toHaveLength(0);
+    expect(Obj.getParent(item)).toBeUndefined();
+  });
+
+  test('deletes an owned object when the container deletes owned members', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Collection.Collection, Item] });
+    const owned = db.add(Obj.make(Item, { name: 'alice' }));
+    const linked = db.add(Obj.make(Item, { name: 'bob' }));
+    const collection = db.add(Collection.make({ objects: [Ref.make(owned)] }));
+    const other = db.add(Collection.make({ objects: [Ref.make(linked)] }));
+    Obj.update(collection, (collection) => {
+      collection.objects.push(Ref.make(linked));
+    });
+    await db.flush();
+
+    const container = ContainerModel.make(collection, 'objects', { deleteOwned: true });
+    ContainerModel.remove({ container, object: owned });
+    ContainerModel.remove({ container, object: linked });
+    await db.flush();
+    expect(collection.objects).toHaveLength(0);
+    expect(Obj.isDeleted(owned)).toBe(true);
+    expect(Obj.isDeleted(linked)).toBe(false);
+    expect(Obj.getParent(linked)?.id).toBe(other.id);
+  });
+});
