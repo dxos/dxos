@@ -226,6 +226,37 @@ describe('AcpAgent', () => {
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 
+  it.live("offers the chat's connections, and reloads the session when they change", () =>
+    Effect.gen(function* () {
+      const { feed, chat, options } = yield* setup();
+      const servers: string[] = [];
+      const app = makeFakeAgent({ servers });
+      const offers: string[][] = [];
+      const withConnections: AcpAgent.AgentOptions = {
+        ...options,
+        connect: () => Effect.succeed(inMemory(app)),
+        connections: (_, connections) =>
+          Effect.sync(() => {
+            offers.push(connections.map(({ apiKey }) => apiKey ?? 'none'));
+            return connections.map(({ url }) => ({ type: 'http', name: new URL(url).hostname, url, headers: [] }));
+          }),
+      };
+      const linear = { url: 'https://linear.example.com/mcp', protocol: 'http' as const, apiKey: 'key-1' };
+      const github = { url: 'https://github.example.com/mcp', protocol: 'http' as const };
+      const turn = (prompt: string, connections: AcpAgent.McpConnection[]) =>
+        AcpAgent.runTurn(withConnections, { chat, feed }, { prompt, mcpServers: Effect.succeed(connections) });
+
+      yield* turn('first', [linear]);
+      // A refreshed credential is offered again, but the session the agent has stays open.
+      yield* turn('second', [{ ...linear, apiKey: 'key-2' }]);
+      yield* turn('third', [linear, github]);
+
+      expect(servers).toEqual(['new: linear.example.com', 'load: linear.example.com, github.example.com']);
+      expect(offers).toEqual([['key-1'], ['key-2'], ['key-1', 'none']]);
+      expect(AcpAgent.sessionIdOf(chat, 'fake')).toBe('fake-1');
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
   it.live('starts over when the agent no longer has the session the chat recorded', () =>
     Effect.gen(function* () {
       const { feed, chat, options } = yield* setup();

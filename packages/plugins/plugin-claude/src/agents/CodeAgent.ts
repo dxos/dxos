@@ -30,6 +30,7 @@ import * as Settings from '../types/Settings.ts';
 import * as State from '../types/State.ts';
 import * as AcpAgent from './AcpAgent.ts';
 import * as ComposerMcp from './ComposerMcp.ts';
+import * as McpProxy from './McpProxy.ts';
 import * as Protocol from './Protocol.ts';
 import * as Workspace from './Workspace.ts';
 
@@ -110,15 +111,21 @@ export const make = (definition: Definition): Effect.Effect<CodeAgent, never, Sc
     }).pipe(Effect.repeat(Schedule.spaced(SWEEP_INTERVAL)), Effect.forkScoped);
 
     // One MCP server per chat, scoped to the chat's space, built on first use and kept while the app runs.
+    // `token` is the one its latest session presents, which the chat's proxied connections accept too.
     const served = new Map<
       string,
-      { server: string; handle: ClaudeCapabilities.McpHandle; dispose: () => Promise<void> }
+      { server: string; handle: ClaudeCapabilities.McpHandle; dispose: () => Promise<void>; token?: string }
     >();
+    const proxies = new McpProxy.Proxies({
+      relay: () => helper()?.mcp,
+      serverId: randomToken,
+      reserved: [ComposerMcp.SERVER_NAME],
+    });
     yield* Effect.addFinalizer(() =>
       Effect.promise(async () => {
         await Promise.all([...served.values()].map(({ dispose }) => dispose()));
         served.clear();
-      }),
+      }).pipe(Effect.andThen(proxies.close())),
     );
     const composerTools = (
       chat: Chat.Chat,
@@ -152,6 +159,7 @@ export const make = (definition: Definition): Effect.Effect<CodeAgent, never, Sc
         }
         // A fresh token per session: the previous agent's stops working once this one starts.
         const token = randomToken();
+        entry.token = token;
         const { url } = yield* agentHelper.mcp.serve(entry.server, entry.handle, token);
         return {
           token,
@@ -228,6 +236,7 @@ export const make = (definition: Definition): Effect.Effect<CodeAgent, never, Sc
             }),
           ),
         ),
+      connections: (chat, servers) => proxies.offer(chat.id, servers, served.get(chat.id)?.token),
       device: () => toPublicKey(manager.getAll(ClientCapabilities.Client).at(0)?.halo.device?.deviceKey)?.toHex(),
     };
 

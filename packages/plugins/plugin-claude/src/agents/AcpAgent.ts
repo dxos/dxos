@@ -40,7 +40,7 @@ export const sessionKeySource = (agent: string): string => `${AGENT_KEY_PREFIX}.
 export const sessionIdOf = (chat: Chat.Chat, agent: string): string | undefined =>
   Obj.getKeys(chat, sessionKeySource(agent)).at(-1)?.id;
 
-type Live = { session: AcpSession.Session; idle?: Fiber.Fiber<void> };
+type Live = { session: AcpSession.Session; idle?: Fiber.Fiber<void>; servers?: string };
 
 /**
  * Live agent sessions, one per chat, kept connected between turns: an agent process ends with each
@@ -68,23 +68,34 @@ export class Sessions {
       return sessions;
     });
 
-  /** The chat's live session, or a new one from `open`; either way its idle clock restarts. */
+  /**
+   * The chat's live session, or a new one from `open`; either way its idle clock restarts. A live
+   * session opened with other MCP `servers` is closed first, since an agent takes them only when a
+   * session opens; the new one continues it.
+   */
   acquire(
     key: string,
     open: () => Effect.Effect<AcpSession.Session, AgentError>,
+    servers?: string,
   ): Effect.Effect<AcpSession.Session, AgentError> {
     // One at a time per chat, so two turns never each start an agent and orphan one of them.
     return this.#lockFor(key).withPermits(1)(
       Effect.gen({ self: this }, function* () {
-        const existing = this.#live.get(key);
+        let existing = this.#live.get(key);
         if (existing?.idle) {
           yield* Fiber.interrupt(existing.idle);
+        }
+        if (existing && existing.servers !== servers) {
+          this.#live.delete(key);
+          existing.session.close();
+          existing = undefined;
         }
         if (!existing) {
           this.#opening.add(key);
         }
         const live = existing ?? {
           session: yield* open().pipe(Effect.ensuring(Effect.sync(() => this.#opening.delete(key)))),
+          servers,
         };
         if (!existing) {
           this.#live.set(key, live);
@@ -155,9 +166,25 @@ export type AgentOptions = {
   sessionMeta?: Record<string, unknown>;
   /** Composer's MCP tools for the chat, and the token the agent presents for them; fresh for each session. */
   tools?: (chat: Chat.Chat) => Effect.Effect<{ servers: acp.McpServer[]; token: string } | undefined>;
+  /**
+   * The MCP servers of the chat's connections as the agent reaches them. Called after `tools` when a
+   * session opens and again on every turn, so a credential refreshed since then applies; without it
+   * the agent gets none of them.
+   */
+  connections?: (chat: Chat.Chat, servers: readonly McpConnection[]) => Effect.Effect<acp.McpServer[]>;
   /** This device's key: a chat runs only on the device that first ran it, since the agent's state lives there. */
   device?: () => string | undefined;
 };
+
+/** An MCP server a chat's connection exposes, as the agent process resolves it each turn. */
+export type McpConnection = Effect.Success<NonNullable<TurnRequest['mcpServers']>>[number];
+
+/** Which servers a session was opened with: a change reopens it, a refreshed credential does not. */
+const serversKey = (servers: readonly McpConnection[]): string =>
+  servers
+    .map(({ url, protocol, apiKey }) => `${protocol} ${url}${apiKey === undefined ? '' : ' (credential)'}`)
+    .sort()
+    .join('\n');
 
 type TurnEvent =
   | { _tag: 'update'; update: acp.SessionUpdate }
@@ -224,21 +251,31 @@ export const runTurn = (
         yield* Feed.append(feed, messages);
       });
 
+    const servers = request.mcpServers ? yield* request.mcpServers : [];
     return yield* Effect.gen(function* () {
-      const session = yield* options.sessions.acquire(chat.id, () =>
-        Effect.gen(function* () {
-          const tools = options.tools ? yield* options.tools(chat) : undefined;
-          const stream = yield* options.connect(cwd, tools?.token);
-          return yield* AcpSession.open({
-            stream,
-            cwd,
-            resume,
-            mcpServers: tools?.servers ?? [],
-            mode: options.mode?.(),
-            meta: options.sessionMeta,
-          });
-        }),
+      let opened = false;
+      const session = yield* options.sessions.acquire(
+        chat.id,
+        () =>
+          Effect.gen(function* () {
+            opened = true;
+            const tools = options.tools ? yield* options.tools(chat) : undefined;
+            const connections = options.connections ? yield* options.connections(chat, servers) : [];
+            const stream = yield* options.connect(cwd, tools?.token);
+            return yield* AcpSession.open({
+              stream,
+              cwd,
+              resume,
+              mcpServers: [...(tools?.servers ?? []), ...connections],
+              mode: options.mode?.(),
+              meta: options.sessionMeta,
+            });
+          }),
+        serversKey(servers),
       );
+      if (!opened && options.connections) {
+        yield* options.connections(chat, servers);
+      }
       if (session.sessionId !== resume) {
         Obj.update(chat, (chat) => {
           Obj.getMeta(chat).keys.push({ source: sessionKeySource(options.id), id: session.sessionId });
