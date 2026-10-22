@@ -170,7 +170,7 @@ const waitForCount = async (
 /** Types a prompt into the chat editor and submits it. */
 const submitPrompt = async (canvasElement: HTMLElement, text: string) => {
   const canvas = within(canvasElement);
-  const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
+  const placeholder = await canvas.findByText(/ask anything/i, {}, { timeout: 30_000 });
   const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
   if (!editor) {
     throw new Error('Chat editor not found.');
@@ -458,7 +458,7 @@ export const TestDelegation: Story = {
     const canvas = within(canvasElement);
 
     // The chat prompt is a CodeMirror editor; locate it via its placeholder.
-    const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
+    const placeholder = await canvas.findByText(/ask anything/i, {}, { timeout: 30_000 });
     const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
     if (!editor) {
       throw new Error('Chat editor not found.');
@@ -597,7 +597,7 @@ export const TestDelegationScripted: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
+    const placeholder = await canvas.findByText(/ask anything/i, {}, { timeout: 30_000 });
     const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
     if (!editor) {
       throw new Error('Chat editor not found.');

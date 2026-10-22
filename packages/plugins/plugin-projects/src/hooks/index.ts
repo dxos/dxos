@@ -5,4 +5,4 @@
 export * from './useFeatureEditing.ts';
 export * from './useFeatureGraph.ts';
 export * from './useOpenObject.ts';
-export * from './useOpenSpec.ts';
+export * from './useOpenFeatureTarget.ts';
