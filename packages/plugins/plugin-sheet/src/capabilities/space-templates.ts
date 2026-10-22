@@ -4,6 +4,6 @@
 
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
-import { MacroSpace } from '../samples/macro/index.ts';
+import { SalesSpace } from '../samples/sales/index.ts';
 
-export default [MacroSpace.makeTemplate()] satisfies ReadonlyArray<AppCapabilities.SpaceTemplate>;
+export default [SalesSpace.makeTemplate()] satisfies ReadonlyArray<AppCapabilities.SpaceTemplate>;

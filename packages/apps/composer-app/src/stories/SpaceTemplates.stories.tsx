@@ -64,7 +64,8 @@ const TEMPLATES = {
   architecture: 'org.dxos.plugin.canvas.template.architecture',
   fieldstone: 'org.dxos.plugin-debug.template.fieldstone',
   incident: 'org.dxos.plugin-debug.template.incident',
-  macro: 'org.dxos.plugin.sheet.template.macro',
+  macro: 'org.dxos.plugin-debug.template.macro',
+  sales: 'org.dxos.plugin.sheet.template.sales',
   pipeline: 'org.dxos.plugin-debug.template.pipeline',
   review: 'org.dxos.plugin-debug.template.review',
   stockfish: 'org.dxos.plugin-debug.template.stockfish',
@@ -325,6 +326,8 @@ export const Incident: Story = { args: { template: TEMPLATES.incident }, play };
 
 /** The Macro events sheet, its timeline chart and a deck whose second slide presents the chart. */
 export const Macro: Story = { args: { template: TEMPLATES.macro }, play };
+
+export const Sales: Story = { args: { template: TEMPLATES.sales }, play };
 
 export const Pipeline: Story = { args: { template: TEMPLATES.pipeline }, play };
 

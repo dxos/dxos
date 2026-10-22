@@ -33,7 +33,7 @@ const meta = {
   title: 'ui/react-ui-plot/Timeline',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ classNames: 'w-[60rem]' })],
-  args: { spine: 'center', scale: 'linear', start: '1920', end: '2030', today: true, zoom: 1 },
+  args: { spine: 'center', scale: 'linear', start: '1940', end: '2030', today: true, zoom: 1 },
   argTypes: {
     spine: { control: 'inline-radio', options: TIMELINE_SPINES },
     scale: { control: 'inline-radio', options: TIMELINE_SCALES },
@@ -58,13 +58,7 @@ export const Log: Story = {
 
 export const TwoColumns: Story = {
   args: {
-    hidden: ['Macro/MIC', 'Macro/FIC', 'Macro/TIC', 'Personal'],
-  },
-};
-
-export const Resume: Story = {
-  args: {
-    hidden: ['Macro', 'Macro/MIC', 'Macro/FIC', 'Macro/TIC'],
+    hidden: ['Macro/MIC', 'Macro/FIC', 'Macro/TIC'],
   },
 };
 
@@ -107,12 +101,12 @@ export const Dates: Story = {
 
 export const Macro: Story = {
   args: {
-    hidden: ['Tech/Hardware', 'Tech/Software', 'Tech/AI', 'Personal'],
+    hidden: ['Tech/Hardware', 'Tech/Software', 'Tech/AI'],
   },
 };
 
 export const Tech: Story = {
   args: {
-    hidden: ['Macro', 'Macro/FIC', 'Macro/TIC', 'Macro/MIC', 'Personal'],
+    hidden: ['Macro', 'Macro/FIC', 'Macro/TIC', 'Macro/MIC'],
   },
 };

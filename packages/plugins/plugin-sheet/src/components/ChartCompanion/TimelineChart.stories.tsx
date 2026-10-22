@@ -36,7 +36,7 @@ const timelineChart = (hidden?: string[]): Sheet.ChartProperties => ({
   range: timelineTestRange,
   type: 'timeline',
   header: true,
-  timeline: { start: '1920', end: '2030', order: technologyTimelineOrder, colors: technologyTimelineColors, hidden },
+  timeline: { start: '1940', end: '2030', order: technologyTimelineOrder, colors: technologyTimelineColors, hidden },
 });
 
 /** The sheet's charts, as the app's charts companion shows them. */
@@ -93,23 +93,16 @@ export const Timeline: Story = {
   },
 };
 
-export const Resume: Story = {
-  args: {
-    mode: 'end',
-    hidden: ['Macro', 'Macro/MIC', 'Macro/FIC', 'Macro/TIC'],
-  },
-};
-
 export const Macro: Story = {
   args: {
     mode: 'end',
-    hidden: ['Tech/Hardware', 'Tech/Software', 'Tech/AI', 'Personal'],
+    hidden: ['Tech/Hardware', 'Tech/Software', 'Tech/AI'],
   },
 };
 
 export const Tech: Story = {
   args: {
     mode: 'end',
-    hidden: ['Macro', 'Macro/FIC', 'Macro/TIC', 'Macro/MIC', 'Personal'],
+    hidden: ['Macro', 'Macro/FIC', 'Macro/TIC', 'Macro/MIC'],
   },
 };

@@ -7,6 +7,7 @@ import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import {
   FieldstoneSpace,
   IncidentSpace,
+  MacroSpace,
   PipelineSpace,
   ReviewSpace,
   StockfishSpace,
@@ -24,4 +25,5 @@ export default [
   IncidentSpace.makeTemplate(),
   ReviewSpace.makeTemplate(),
   FieldstoneSpace.makeTemplate(),
+  MacroSpace.makeTemplate(),
 ] satisfies ReadonlyArray<AppCapabilities.SpaceTemplate>;

@@ -5,9 +5,7 @@
 import { defaultColSize } from '@dxos/lit-grid';
 import { technologyTimeline } from '@dxos/react-ui-plot/testing';
 
-import { Sheet, SheetRange } from '#types';
-
-import { toCells } from '../samples/macro/data.ts';
+import { Sheet, SheetRange, SheetUtil } from '#types';
 
 export const createTestCells = (testSheetName = 'test'): Record<string, Sheet.CellValue> => ({
   B1: { value: 'Qty2' },
@@ -77,7 +75,8 @@ export const createChartTestRanges = (): Sheet.Range[] => [
 ];
 
 /** Technology, macro, robotics and industrial-complex events (A1:E{n}), one per row, for timelines. */
-export const createTimelineTestCells = (): Record<string, Sheet.CellValue> => toCells(technologyTimeline);
+export const createTimelineTestCells = (): Record<string, Sheet.CellValue> =>
+  SheetUtil.cellsFromRows(technologyTimeline);
 
 /** The A1 range of the timeline test cells. */
 export const timelineTestRange = `A1:E${technologyTimeline.length}`;
