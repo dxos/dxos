@@ -4,7 +4,7 @@
 
 import { Transaction } from '@codemirror/state';
 import { EditorView as NaturalEditorView } from '@codemirror/view';
-import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
 import type * as Util from '@dxos/react-ui/Util';
 import { computeDocChanges, initialSync } from '@dxos/ui-editor';
@@ -21,22 +21,6 @@ export type EditorViewProps = Util.ThemedClassName<
   } & UseTextEditorProps
 >;
 
-const MAX_PENDING_ECHOES = 100;
-
-class PendingEchoes {
-  #values: string[] = [];
-
-  record(value: string): void {
-    this.#values = [...this.#values.slice(1 - MAX_PENDING_ECHOES), value];
-  }
-
-  consume(value: string): boolean {
-    const index = this.#values.indexOf(value);
-    this.#values = index === -1 ? [] : this.#values.slice(index + 1);
-    return index !== -1;
-  }
-}
-
 /**
  * Minimal text editor.
  * NOTE: This shouold not be used with the automerge extension.
@@ -50,7 +34,9 @@ export const EditorView = forwardRef<EditorController, EditorViewProps>(
     const onChangeRef = useRef(onChange);
     onChangeRef.current = onChange;
 
-    const [echoes] = useState(() => new PendingEchoes());
+    // Counts the edits reported through onChange; a `value` rendered before the latest of them is stale.
+    const emitted = useRef(0);
+    const renderedAt = emitted.current;
 
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({
@@ -63,8 +49,10 @@ export const EditorView = forwardRef<EditorController, EditorViewProps>(
             const isInitialSync = transactions.some((tr) => tr.annotation(Transaction.userEvent) === initialSync.value);
             if (!isInitialSync && docChanged) {
               const doc = view.state.doc.toString();
-              echoes.record(doc);
-              onChangeRef.current?.(doc);
+              if (onChangeRef.current) {
+                emitted.current++;
+                onChangeRef.current(doc);
+              }
             }
           }),
         ],
@@ -86,12 +74,13 @@ export const EditorView = forwardRef<EditorController, EditorViewProps>(
         return;
       }
       const next = value;
-      if (echoes.consume(next) || view.state.doc.toString() === next) {
+      const stale = () => emitted.current !== renderedAt;
+      if (stale() || view.state.doc.toString() === next) {
         return;
       }
       requestAnimationFrame(() => {
         const current = view.state.doc.toString();
-        if (current === next) {
+        if (stale() || current === next) {
           return;
         }
         // Only what moved: replacing the whole document would drop the reader's folds, selection

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { act, createRef } from 'react';
+import React, { act, createRef, useLayoutEffect, useState } from 'react';
 import { type Root, createRoot } from 'react-dom/client';
 import { beforeAll, describe, onTestFinished, test } from 'vitest';
 
@@ -11,25 +11,40 @@ import { EditorView } from './EditorView.tsx';
 
 const nextFrame = () => new Promise((resolve) => requestAnimationFrame(resolve));
 
-const mountControlled = async (initial: string) => {
+type CallerProps = {
+  initial: string;
+  editor: React.Ref<EditorController>;
+  transform?: (value: string) => string;
+  onCommit?: (value: string) => void;
+};
+
+/** Holds the editor's value in React state, as a form or a `useState` caller does. */
+const Caller = ({ initial, editor, transform = (value) => value, onCommit }: CallerProps) => {
+  const [value, setValue] = useState(initial);
+  useLayoutEffect(() => onCommit?.(value), [value]);
+  return <EditorView ref={editor} value={value} onChange={(next) => setValue(transform(next))} />;
+};
+
+const mount = async (props: Omit<CallerProps, 'editor'>) => {
   const container = document.createElement('div');
   document.body.append(container);
   const root: Root = createRoot(container);
   const editor = createRef<EditorController>();
-  const render = (value: string) => act(async () => root.render(<EditorView ref={editor} value={value} />));
-  await render(initial);
+  await act(async () => root.render(<Caller {...props} editor={editor} />));
   onTestFinished(() => {
     act(() => root.unmount());
     container.remove();
   });
 
+  const type = (text: string) => {
+    const view = editor.current!.view!;
+    view.dispatch({ changes: { from: view.state.doc.length, insert: text }, userEvent: 'input.type' });
+  };
+
   return {
-    type: (text: string) => {
-      const view = editor.current!.view!;
-      view.dispatch({ changes: { from: view.state.doc.length, insert: text }, userEvent: 'input.type' });
-    },
-    pass: async (value: string) => {
-      await render(value);
+    type,
+    act: async (fn: () => void) => {
+      await act(async () => fn());
       await act(nextFrame);
     },
     doc: () => editor.current!.getText(),
@@ -41,21 +56,27 @@ describe('EditorView', () => {
     Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', true);
   });
 
-  test('a value the editor emitted earlier does not undo the keystrokes typed since', async ({ expect }) => {
-    const editor = await mountControlled('a');
-    editor.type('b');
-    editor.type('c');
-    await editor.pass('ab');
-    expect(editor.doc()).toBe('abc');
-    await editor.pass('abc');
+  test('a value rendered before the next keystroke does not undo it', async ({ expect }) => {
+    let typed = false;
+    const editor = await mount({
+      initial: 'a',
+      onCommit: (value) => {
+        if (value === 'ab' && !typed) {
+          typed = true;
+          editor.type('c');
+        }
+      },
+    });
+    await editor.act(() => editor.type('b'));
     expect(editor.doc()).toBe('abc');
   });
 
-  test('a value the editor never emitted replaces the doc', async ({ expect }) => {
-    const editor = await mountControlled('a');
-    editor.type('b');
-    await editor.pass('ab');
-    await editor.pass('reset');
-    expect(editor.doc()).toBe('reset');
+  test('a value the caller derives after the keystrokes replaces the doc', async ({ expect }) => {
+    const editor = await mount({ initial: 'a', transform: (value) => value.slice(0, 2) });
+    await editor.act(() => {
+      editor.type('b');
+      editor.type('c');
+    });
+    expect(editor.doc()).toBe('ab');
   });
 });
