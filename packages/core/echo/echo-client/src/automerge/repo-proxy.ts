@@ -8,13 +8,13 @@ import * as Context from 'effect/Context';
 import * as Schema from 'effect/Schema';
 
 import { Event, Trigger, UpdateScheduler, scheduleTask, sleep, yieldOrContinue } from '@dxos/async';
-import { LifecycleState, Resource } from '@dxos/context';
+import { type Context as DxosContext, LifecycleState, Resource } from '@dxos/context';
 import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService } from '@dxos/protocols/rpc';
 
-import { RepoClosedError } from '../errors.ts';
+import { CLOSE_REASON_ATTRIBUTE, RepoClosedError } from '../errors.ts';
 import { type ChangeEvent, DocHandleProxy, type PassiveDocument } from './doc-handle-proxy.ts';
 import { toDocumentId } from './document-id.ts';
 import { sameHeads } from './heads.ts';
@@ -154,6 +154,12 @@ export class RepoProxy extends Resource {
   #inbox: { update: DataService.DocumentUpdate; bulk: boolean }[] = [];
   #inboxHead = 0;
   #draining = false;
+
+  /**
+   * What stopped the proxy taking work, recorded once when it does: a close, whose error's stack is the call site,
+   * or the error that put it in the ERROR state. Carried by every later {@link RepoClosedError}.
+   */
+  #stoppedBy: { reason: string; error: Error } | undefined = undefined;
 
   readonly saveStateChanged = new Event<SaveStateChangedEvent>();
   private _lastSaveStateKey = '';
@@ -399,7 +405,39 @@ export class RepoProxy extends Resource {
     }
   }
 
+  /** @param ctx A {@link CLOSE_REASON_ATTRIBUTE} on it names why the proxy is closing. */
+  override async close(ctx?: DxosContext): Promise<this> {
+    if (this.isOpen && !this.#stoppedBy) {
+      const given: string | undefined = ctx?.getAttribute(CLOSE_REASON_ATTRIBUTE);
+      const reason = given ?? 'closed';
+      this.#stoppedBy = { reason, error: new Error(`Repo proxy closed: ${reason}`) };
+      // A close with no reason is routine teardown, too frequent to log above debug.
+      if (given) {
+        log.info('repo proxy closing', { spaceId: this._spaceId, reason });
+      } else {
+        log('repo proxy closing', { spaceId: this._spaceId, reason });
+      }
+    }
+    return super.close(ctx);
+  }
+
+  protected override async _catch(err: Error): Promise<void> {
+    if (!this.#stoppedBy) {
+      this.#stoppedBy = { reason: 'error', error: err };
+      log.warn('repo proxy stopped by an error', { spaceId: this._spaceId, error: err });
+    }
+    return super._catch(err);
+  }
+
+  #closedError(documentId?: DocumentId): RepoClosedError {
+    return new RepoClosedError(
+      { spaceId: this._spaceId, documentId, closeReason: this.#stoppedBy?.reason },
+      { cause: this.#stoppedBy?.error },
+    );
+  }
+
   protected override async _open(): Promise<void> {
+    this.#stoppedBy = undefined;
     // A close during the resubscribe or retry delay cancels the task that clears these flags.
     this._isReconnecting = false;
     this._sendRetryScheduled = false;
@@ -418,7 +456,7 @@ export class RepoProxy extends Resource {
       handle.off('change');
       // A load in flight can never complete now; `Trigger` already marks its own promise handled, since a close
       // may fail a load nobody is awaiting.
-      handle._failReady(new RepoClosedError({ spaceId: this._spaceId, documentId: handle.documentId }));
+      handle._failReady(this.#closedError(handle.documentId));
     }
 
     this._handles = {};
@@ -626,7 +664,7 @@ export class RepoProxy extends Resource {
    */
   #requireOpen(documentId?: DocumentId): UpdateScheduler {
     if (!this.isOpen || !this._sendUpdatesJob) {
-      throw new RepoClosedError({ spaceId: this._spaceId, documentId });
+      throw this.#closedError(documentId);
     }
     return this._sendUpdatesJob;
   }
