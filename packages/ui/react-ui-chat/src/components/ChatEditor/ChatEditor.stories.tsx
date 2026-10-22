@@ -108,6 +108,16 @@ export const WithMentions: Story = {
 const projectCommands: CommandData[] = [
   { sentinel: '$track', description: 'Record a follow-up task' },
   { sentinel: '$hydrate', description: 'Checkpoint project state' },
+  // Enough rows to overflow the popover's fixed height, so it scrolls.
+  { sentinel: '$plan', description: 'Draft a plan for the current task' },
+  { sentinel: '$review', description: 'Review the changes made so far' },
+  { sentinel: '$summarize', description: 'Summarize the conversation' },
+  { sentinel: '$explain', description: 'Explain the selected code in detail, step by step' },
+  { sentinel: '$refactor', description: 'Refactor for clarity' },
+  { sentinel: '$search', description: 'Search the workspace' },
+  { sentinel: '$notes', description: 'Open the project notes' },
+  { sentinel: '$lint', description: 'Lint and fix the changed files' },
+  { sentinel: '$branch', description: 'Show the current branch' },
 ];
 
 // Reset per play run (module re-imports fresh on a vitest retry, so this doesn't leak across tests).
@@ -149,10 +159,12 @@ export const WithCommands: Story = {
     await userEvent.click(content);
     await userEvent.type(content, '$t');
 
-    // The sentinel-command popover lists only prefix matches for the typed token. The matched
-    // prefix renders in its own span, so read the option label's full text rather than matching text nodes.
+    // The sentinel-command popover lists only prefix matches for the typed token; it is portalled, so
+    // read its options from the document rather than the canvas.
     const optionLabels = () =>
-      Array.from(canvasElement.querySelectorAll('.cm-completionLabel')).map((node) => node.textContent);
+      Array.from(document.querySelectorAll('[role="listbox"][aria-label="Commands"] [data-part="item-text"]')).map(
+        (node) => node.textContent,
+      );
     await waitFor(() => expect(optionLabels()).toEqual(['$track']));
 
     // `acceptCompletion` ignores Enter within `interactionDelay` (75ms, default) of the popover
