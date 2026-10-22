@@ -103,6 +103,10 @@ const Presentation = Schema.Struct({
 - **Decided (Q3, user):** fallback chain when no `Slide` surface matches: `Slide` → `Section` → `CardContent` →
   a title slide (object icon + label). `Section` surfaces may be editable; the frame passes the `Slide` role so
   plugins that honour it render read-only, and the frame blocks pointer edits otherwise (_agent call_).
+- **Decided (Q3, user):** the "Add to presentation" picker has a toggle that filters to objects whose schema
+  has a dedicated `Slide` surface; with it off, any object can be linked and uses the fallback chain. The
+  filter needs a way to ask "does a surface exist for role X and this schema" without rendering
+  (_agent call_: a surface lookup helper in app-framework; to be confirmed against its API).
 - Follow-up contributions: sheet, canvas, tldraw (reads the role but registers no filter), outline.
 
 ### 3. Presentation article: fullscreen toggle and pager
