@@ -70,6 +70,12 @@ export const technologyTimeline: PlotValue[][] = [
     'Honda begins the walking-robot program that leads to ASIMO.',
   ],
   [
+    '1986-09',
+    'Personal',
+    'VSEL (Trident launch)',
+    'VSEL (Vickers Shipbuilding and Engineering), Trident launch, September 1986.',
+  ],
+  [
     '1987',
     'Tech/Hardware',
     'Commodore Amiga',
