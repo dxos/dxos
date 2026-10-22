@@ -159,15 +159,79 @@ export const openLightThread = Effect.fnUntraced(function* (
   return open.id;
 });
 
+/** Who a delegated subagent's lane names as its owner. */
+export const SUBAGENT: Trajectory.Sender = { role: 'assistant', name: 'subagent' };
+
 /**
- * Joins a light thread to main: its entries follow what main holds now, as one block, without its snapshot.
+ * Delegates `task` to a subagent: opens a fresh thread on main, which starts with nothing but the task, and queues the
+ * task in it for the lane scheduler to run in the background. Returns the thread's id, which `waitForThread` takes.
  */
-export const mergeThread = (
+export const delegate = Effect.fnUntraced(function* (
+  feed: Feed.Feed,
+  { task, purpose, by }: { task: string; purpose?: string; by?: Trajectory.Sender },
+): Effect.fn.Return<Trajectory.EventId, never, Database.Service> {
+  const open = Trajectory.make({
+    payload: { _tag: 'threadOpen', mode: 'fresh', ...(purpose !== undefined ? { purpose } : {}) },
+    sender: SUBAGENT,
+  });
+  // A queued prompt is a user message; the delegating agent is the subagent's user.
+  const prompt = Trajectory.make({
+    payload: { _tag: 'message', blocks: [{ _tag: 'text', text: task }] },
+    sender: { role: 'user', name: by?.name ?? 'assistant' },
+    thread: open.id,
+  });
+  yield* append(feed, [open, prompt]);
+  return open.id;
+});
+
+/**
+ * The subagent thread a queued message was delegated to, while that thread runs; none for a person's prompt.
+ */
+export const delegatedThread = Effect.fnUntraced(function* (
+  feed: Feed.Feed,
+  message: Trajectory.EventId,
+): Effect.fn.Return<Trajectory.EventId | undefined, never, Database.Service> {
+  const { state } = yield* load(feed, Reducer.thread);
+  const item = state.items.find((item) => item.id === message && item.status === 'queued');
+  const lane = item?.thread === undefined ? undefined : state.lanes.find((lane) => lane.id === item.thread);
+  return lane?.kind === 'fresh' && lane.status === 'running' ? lane.id : undefined;
+});
+
+/** The text of a lane's last assistant message: what a subagent answers. */
+const finalAnswer = (view: Reducer.ThreadView, lane: Trajectory.EventId): string =>
+  view.items
+    .filter((item) => item.lane === lane && item.sender.role === 'assistant' && item.status !== 'rewound')
+    .map((item) => Message.extractText(Message.make({ sender: 'assistant', blocks: [...item.blocks] })).trim())
+    .filter((value) => value.length > 0)
+    .at(-1) ?? '';
+
+/** How a subagent's answer reads in the conversation that delegated to it. */
+const subagentAnswer = (lane: Reducer.Lane | undefined, id: Trajectory.EventId, answer: string) =>
+  `Subagent ${lane?.purpose ? `"${lane.purpose}" ` : ''}(thread ${id}) finished:\n\n${answer || '(no answer)'}`;
+
+/**
+ * Joins a thread whose work is done to main. A light thread's entries follow what main holds now, as one block,
+ * without its snapshot; a fresh thread (a subagent) never saw main, so only its final answer joins, as a summary.
+ */
+export const mergeThread = Effect.fnUntraced(function* (
   feed: Feed.Feed,
   thread: Trajectory.EventId,
   sender: Trajectory.Sender = { role: 'assistant' },
-): Effect.Effect<void, never, Database.Service> =>
-  append(feed, [Trajectory.make({ payload: { _tag: 'threadMerge', thread, mode: 'raw' }, sender })]);
+): Effect.fn.Return<void, never, Database.Service> {
+  const { state: view } = yield* load(feed, Reducer.thread);
+  const lane = view.lanes.find((lane) => lane.id === thread);
+  if (lane?.kind !== 'fresh') {
+    yield* append(feed, [Trajectory.make({ payload: { _tag: 'threadMerge', thread, mode: 'raw' }, sender })]);
+    return;
+  }
+  const summary = subagentAnswer(lane, thread, finalAnswer(view, thread));
+  yield* append(feed, [
+    Trajectory.make({
+      payload: { _tag: 'threadMerge', thread, mode: 'summary', summary: [{ _tag: 'text', text: summary }] },
+      sender,
+    }),
+  ]);
+});
 
 /** How often a waiting turn looks at the lane it waits for. */
 const WAIT_POLL_MS = 500;
@@ -204,6 +268,9 @@ export const waitForThread = Effect.fnUntraced(function* (
     return `Thread ${target} is still running.`;
   }
   const lane = view.value.lanes.find((lane) => lane.id === target);
+  if (lane?.kind === 'fresh') {
+    return subagentAnswer(lane, target, finalAnswer(view.value, target));
+  }
   const entries = view.value.items
     .filter((item) => item.lane === target && item.status !== 'rewound')
     .map((item) => ({ role: item.sender.role, name: item.sender.name, blocks: item.blocks }));

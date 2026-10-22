@@ -261,6 +261,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           selfQueued.has(message.id) ? undefined : tenantOf(message, threading?.tenants);
         // Signals the lane scheduler that a prompt was queued while it runs; the alarm that also fires waits its turn.
         const wake = yield* Queue.sliding<void>(1);
+        // Threads running a delegated subagent's task, as the lane scheduler found them.
+        const subagentThreads = new Set<Trajectory.EventId>();
         // KV holds only undelivered tool results; queued prompts and alarms live in the feed via
         // `sessionStore`.
         let toolResults: ToolResultEvent[] = [...(yield* ToolResultsCell.get)];
@@ -472,10 +474,13 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           dequeued,
           thread,
           tenant,
+          delegation,
         }: {
           prompt: ContentBlock.Any[];
           dequeued: Message.Message | Alarm.Alarm | undefined;
           thread?: Trajectory.EventId;
+          /** Whether the turn may delegate to subagents in background threads. */
+          delegation?: boolean;
           /** Another agent sharing the chat that runs this turn; the process's own when absent. */
           tenant?: { producer: TurnProducer; model?: DXN.DXN };
         }) {
@@ -510,6 +515,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                     : { alarm: dequeued.id },
               model: tenant?.model ?? model,
               thread,
+              delegation,
             })
             .pipe(
               Effect.onExit((exit) =>
@@ -658,7 +664,10 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                         pendingMessages.filter((pending) => !ackedEntries.includes(pending.id)),
                       ),
                       run: (pending, thread) => {
-                        const tenant = addressee(pending);
+                        // A subagent's task is never a person's prompt, so it runs on the process's own agent, and a
+                        // subagent does not delegate in turn.
+                        const subagent = thread !== undefined && subagentThreads.has(thread);
+                        const tenant = subagent ? undefined : addressee(pending);
                         // A turn on main has no light thread yet runs beside the others, so the trace names its lane
                         // after the prompt it answers.
                         return executeTurn({
@@ -666,6 +675,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                           dequeued: pending,
                           thread,
                           tenant: tenant ? tenants.get(tenant.name) : undefined,
+                          delegation: !subagent && tenant === undefined,
                         }).pipe(Effect.provideService(Trace.CurrentThread, thread ?? pending.id), Effect.orDie);
                       },
                       open: (pending) => {
@@ -683,6 +693,13 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                       },
                       merge: (thread) => TrajectoryStore.mergeThread(feed, thread),
                       interrupted: (pending) => TrajectoryStore.interruptedThread(feed, pending.id),
+                      delegated: (pending) =>
+                        Effect.map(TrajectoryStore.delegatedThread(feed, pending.id), (thread) => {
+                          if (thread !== undefined) {
+                            subagentThreads.add(thread);
+                          }
+                          return thread;
+                        }),
                       started: (pending) =>
                         Effect.map(TrajectoryStore.load(feed, Reducer.thread), ({ state }) =>
                           state.items.some((item) => item.id === pending.id && item.status === 'consumed'),

@@ -68,6 +68,8 @@ export type LaneRunner<R> = {
   readonly merge: (thread: Trajectory.EventId) => Effect.Effect<void, never, R>;
   /** The light thread of a turn that answered `message` and died mid-way, so its redelivery runs there again. */
   readonly interrupted: (message: Message.Message) => Effect.Effect<Trajectory.EventId | undefined, never, R>;
+  /** The subagent thread `message` was delegated to, which runs it; none for a person's prompt. */
+  readonly delegated: (message: Message.Message) => Effect.Effect<Trajectory.EventId | undefined, never, R>;
   /** Whether the turn answering `message` has begun and taken it up, so a light thread opened now sees it. */
   readonly started: (message: Message.Message) => Effect.Effect<boolean, never, R>;
 };
@@ -77,7 +79,8 @@ type Finished = { readonly id: string; readonly thread?: Trajectory.EventId; rea
 /**
  * Runs queued prompts in parallel lanes until the queue is drained and every lane has ended: the first prompt runs on
  * main, and a prompt that arrives while lanes run opens a light thread, up to `limit` of them; the rest wait in order.
- * A light thread merges into main as soon as its turn ends. `wake` signals a new prompt; a lane that fails fails the
+ * A task delegated to a subagent runs in the thread it was delegated to, up to `limit` subagents besides. A thread
+ * merges into main as soon as its turn ends. `wake` signals a new prompt; a lane that fails fails the
  * run once the others have ended.
  */
 export const runLanes = <R>(
@@ -89,6 +92,8 @@ export const runLanes = <R>(
     const running = new Map<string, Trajectory.EventId | undefined>();
     // Prompts of running lanes whose turn is known to have begun.
     const begun = new Set<string>();
+    // Threads of delegated subagents now running, up to `limit` of their own.
+    const subagents = new Set<Trajectory.EventId>();
     const pendingById = new Map<string, Message.Message>();
 
     // A light thread snapshots the lanes running when it opens, so a lane started a moment ago (a burst of queued
@@ -133,6 +138,7 @@ export const runLanes = <R>(
         pendingById.delete(id);
         log('lane end', { message: id, thread, success: Exit.isSuccess(exit) });
         if (thread !== undefined) {
+          subagents.delete(thread);
           yield* runner.merge(thread);
         }
         if (Exit.isFailure(exit) && !Cause.hasInterruptsOnly(exit.cause)) {
@@ -145,9 +151,19 @@ export const runLanes = <R>(
         const queue = (yield* runner.pending).filter((message) => !handled.has(message.id));
         for (const message of queue) {
           const resumed = yield* runner.interrupted(message);
-          const lights = [...running.values()].filter((thread) => thread !== undefined).length;
+          const subagent = resumed === undefined ? yield* runner.delegated(message) : undefined;
+          const lights = [...running.values()].filter(
+            (thread) => thread !== undefined && !subagents.has(thread),
+          ).length;
           if (resumed !== undefined) {
             yield* start(message, resumed);
+          } else if (subagent !== undefined) {
+            // Its thread is already open; subagents run beside the light threads, which they do not count against.
+            if (subagents.size >= limit) {
+              continue;
+            }
+            subagents.add(subagent);
+            yield* start(message, subagent);
           } else if (running.size === 0 && tenants.length === 0) {
             yield* start(message, undefined);
           } else if (lights < limit) {

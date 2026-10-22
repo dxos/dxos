@@ -83,6 +83,42 @@ const script = (request: ScriptedLanguageModel.ScriptedRequest) => {
   };
 };
 
+/** Requests the delegation test's model saw, in call order. */
+const delegationRequests: ScriptedLanguageModel.ScriptedRequest[] = [];
+
+/**
+ * The main turn delegates one task per library, waits for each subagent in turn, then compares; a subagent answers its
+ * task at once.
+ */
+const delegationScript = (request: ScriptedLanguageModel.ScriptedRequest) => {
+  delegationRequests.push(request);
+  // A subagent never sees the conversation that delegated to it.
+  if (!request.text.includes('Compare libraries')) {
+    return { parts: [text(request.text.includes('Describe library alpha') ? 'Alpha is fast.' : 'Beta is small.')] };
+  }
+  // `text` holds only text parts; tool results are in the prompt, where their quotes are escaped.
+  const prompt = JSON.stringify(request.prompt.content);
+  const started = (purpose: string) =>
+    new RegExp(`Started subagent thread (\\w+) \\(\\\\*"${purpose}`).exec(prompt)?.[1];
+  const alpha = started('Alpha');
+  const beta = started('Beta');
+  if (alpha === undefined || beta === undefined) {
+    return {
+      parts: [
+        toolCall('thread_delegate', { task: 'Describe library alpha.', purpose: 'Alpha' }),
+        toolCall('thread_delegate', { task: 'Describe library beta.', purpose: 'Beta' }),
+      ],
+    };
+  }
+  if (!prompt.includes('Alpha is fast.')) {
+    return { parts: [toolCall('thread_wait', { thread: alpha })] };
+  }
+  if (!prompt.includes('Beta is small.')) {
+    return { parts: [toolCall('thread_wait', { thread: beta })] };
+  }
+  return { parts: [text('Alpha is fast; beta is small.')] };
+};
+
 const layer = () =>
   AssistantTestLayer({
     types: [Alarm.Alarm],
@@ -294,6 +330,58 @@ describe('light threads (scripted)', () => {
             delay: '500 millis',
             parts: [text('Plan drafted. @claude, please confirm the folder matches it.')],
           })),
+        }),
+      ),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  // Live clock: the waiting tool polls the feed on a timer.
+  it.live(
+    'a turn delegates to subagents in background threads, waits for them and answers from their results',
+    Effect.fnUntraced(
+      function* (_) {
+        const session = yield* AgentService.createSession();
+        yield* session.submitPrompt('Compare libraries alpha and beta.');
+        yield* session.waitForCompletion();
+
+        const view = yield* read(session.feed, Reducer.thread);
+        expect(
+          view.lanes.map((lane) => [lane.kind, lane.owner.name, lane.purpose, lane.status, lane.backgrounded]),
+        ).toEqual([
+          ['turn', undefined, undefined, 'done', undefined],
+          ['fresh', 'subagent', 'Alpha', 'done', true],
+          ['fresh', 'subagent', 'Beta', 'done', true],
+        ]);
+        const [main, alpha, beta] = view.lanes;
+        expect(itemTexts(view, alpha.id)).toEqual(['Describe library alpha.', 'Alpha is fast.']);
+        expect(itemTexts(view, beta.id)).toEqual(['Describe library beta.', 'Beta is small.']);
+        expect(itemTexts(view, main.id).at(-1)).toEqual('Alpha is fast; beta is small.');
+
+        // A subagent starts with its task alone, and cannot delegate in turn.
+        const subagentRequests = delegationRequests.filter((request) => request.text.includes('Describe library'));
+        expect(subagentRequests).toHaveLength(2);
+        for (const request of subagentRequests) {
+          expect(request.text).not.toContain('Compare libraries');
+          expect(request.tools).not.toContain('thread_delegate');
+        }
+
+        // Only the subagents' answers join main, not their work.
+        const history = (yield* TrajectoryStore.history(session.feed))
+          .map((message) => Message.extractText(message))
+          .filter((value) => value.length > 0);
+        expect(history.filter((value) => value.startsWith('Subagent '))).toEqual([
+          `Subagent "Alpha" (thread ${alpha.id}) finished:\n\nAlpha is fast.`,
+          `Subagent "Beta" (thread ${beta.id}) finished:\n\nBeta is small.`,
+        ]);
+        expect(history).not.toContain('Describe library alpha.');
+      },
+      Effect.provide(
+        AssistantTestLayer({
+          types: [Alarm.Alarm],
+          agent: { threading: () => ({ limit: 3 }) },
+          aiService: scriptedAiService(delegationScript),
         }),
       ),
       TestHelpers.provideTestContext,

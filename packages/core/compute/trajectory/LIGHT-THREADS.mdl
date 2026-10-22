@@ -229,6 +229,30 @@ feat F-7: Agents sharing a chat (multi-tenancy)
       other and the number of turns equals the number of prompts the person sent
 ```
 
+```mdl
+feat F-8: Delegate to subagents in background threads
+
+  req F-8.1:
+    when: Parallel threads is on and a turn calls `thread_delegate { task, purpose }`
+    then: the writer opens a fresh thread on main (`threadOpen` mode `fresh`, owner `subagent`) and queues the task
+      in it; the tool returns the thread's id at once and the turn continues
+
+  req F-8.2:
+    when: a delegated task is queued
+    then: the scheduler runs it in its thread, whose prompt is the task alone; subagents run beside the light
+      threads, up to the limit of their own, and a subagent's turns cannot delegate
+
+  req F-8.3:
+    when: a subagent's thread ends
+    then: the writer appends `threadMerge { mode: summary }` holding the subagent's final answer, so only that answer
+      joins main; `thread_wait` on the thread returns the same answer
+
+  req F-8.4:
+    when: a subagent thread opens
+    then: its lane is in the background from the start (a card), and it does not send the delegating lane to the
+      background
+```
+
 ## Scenarios
 
 ```mdl
@@ -274,6 +298,17 @@ scenario T-5: Off by default
   given: Parallel threads is off; turn A is running
   when: the person sends prompt B
   then: B is queued and runs after A, and no `threadOpen` is written
+```
+
+```mdl
+scenario T-6: Delegation
+  given: Parallel threads is on
+  when: the person asks for work that splits into independent parts
+  then:
+    - the turn delegates each part with `thread_delegate` and waits for each subagent with `thread_wait`
+    - each subagent's prompt holds only its task; its work shows in a card of its own
+    - a prompt sent meanwhile starts a light thread and answers at once
+    - main holds each subagent's final answer, not its work, and the turn answers from them
 ```
 
 ## QA
@@ -355,6 +390,29 @@ test QA-3: A live assistant draws while live Claude Code edits files
     - name: Check that nothing runs on
       do: Wait ten seconds.
       expect: no new lane opens and no new turn starts, although the replies may name the other agent
+```
+
+```mdl
+test QA-4: Three subagents compare savings plans
+  desc: The scripted story `stories-assistant/Subagents` (Demo) walked by a person.
+  actors: human
+  covers: [F-8.1, F-8.2, F-8.3, F-8.4, T-6]
+  status: draft
+  given:
+    - the story `stories/stories-assistant/Subagents` Demo, with Parallel threads on
+  steps:
+    - name: Ask for a comparison
+      do: Send "Compare three savings plans for $10,000 at 4%, 6% and 8% a year over 30 years."
+      expect: the agent delegates one plan to each of three subagents; three cards appear, one per plan
+    - name: Watch the subagents work
+      do: Wait a few seconds.
+      expect: each card shows its subagent computing its plan, one calculator call at a time
+    - name: Ask a quick question
+      do: Send "Meanwhile, what is 17 × 23?"
+      expect: a light thread answers 391 at once while the subagents keep working
+    - name: Watch the comparison arrive
+      do: Wait for the subagents to finish.
+      expect: the agent's comparison table shows each plan's balance after 10, 20 and 30 years
 ```
 
 ## Changelog
@@ -636,4 +694,62 @@ decision D-25: The trace draws each lane as a branch of its own. Every event a t
     closed the wrong span; the reader asked for the trace panel to show the lanes as a tree.
   rejected:
     - A process per lane; a lane is a turn of the chat's one agent process, and its tools are that process's children.
+```
+
+```mdl
+decision D-26: Build a third demo: classic subagents on top of light threading, delegating work to a background
+  thread.
+  date: 2026-10-22
+  by: user:dmaretskyi
+  affects: [F-8, QA-4]
+```
+
+```mdl
+decision D-27: A subagent is a fresh thread on main that the delegating turn opens with `thread_delegate`; its task is
+  a queued message in that thread, which the lane scheduler runs there. Fills in [D-26].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-8.1, F-8.2]
+  why: The `fresh` mode, per-thread buffers and the scheduler's lanes already do the work; a queued message is how a
+    lane gets a turn, so the subagent restarts after a crash the same way a prompt does, and no new payload is needed.
+  rejected:
+    - Running the subagent inside the tool call; it would hold the delegating turn and die with it.
+    - A light thread for the subagent; it would start with the whole conversation, which a subagent is meant to spare.
+```
+
+```mdl
+decision D-28: A subagent starts with its task alone, and only its final answer merges into main, as a summary
+  (`threadMerge` mode `summary`); the demo is scripted only. Defaults taken while the person's answers were pending.
+  Fills in [D-26].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-8.2, F-8.3, QA-4]
+  why: That is the subagent contract people know: a clean context in, a result out, the work kept out of the
+    delegating conversation's prompt.
+  rejected:
+    - A raw merge; the subagent's tool calls would land in main and grow every later prompt.
+```
+
+```mdl
+decision D-29: Subagents run up to the thread limit of their own, beside the light threads, and a subagent's turns get
+  `thread_wait` but not `thread_delegate`. Fills in [D-27].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-8.2]
+  why: A burst of delegations must not stop the reader's own prompts from starting, and delegation that nests can
+    fan out without bound.
+```
+
+```mdl
+decision D-30: A subagent's lane is in the background from the start, and it never sends the delegating lane to the
+  background. Fills in [D-26] and [D-20].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-8.4, ThreadLane]
+  why: The reader asked the delegating agent, not the subagent, so the subagent's work belongs in a card; its owner is
+    `subagent`, which keeps [D-20]'s same-owner rule from moving the delegating lane.
 ```

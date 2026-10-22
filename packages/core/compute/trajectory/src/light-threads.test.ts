@@ -210,3 +210,74 @@ describe('light threads', () => {
     expect(decodedThread.lanes).to.deep.eq(thread.lanes);
   });
 });
+
+/**
+ * Turn A on main delegates a task to subagent S, a fresh thread on main whose task is queued in it; S runs one turn
+ * and merges its final answer into main as a summary.
+ */
+const delegation = () => {
+  const prompt = message('Compare the three libraries.', user);
+  const turnA = event({ _tag: 'turnBegin', from: { event: prompt.id } });
+  const consumeA = event({ _tag: 'promptConsume', message: prompt.id }, assistant, turnA.id);
+  const contextA = message('I will ask a subagent about the first one.', assistant, turnA.id);
+  const subagent = event(
+    { _tag: 'threadOpen', mode: 'fresh', purpose: 'Research effect' },
+    { role: 'assistant', name: 'subagent' },
+  );
+  const task = message('Research effect.', { role: 'user', name: 'composer' }, subagent.id);
+  const turnS = event({ _tag: 'turnBegin', from: { thread: subagent.id, event: task.id } });
+  const consumeS = event({ _tag: 'promptConsume', message: task.id }, assistant, turnS.id);
+  const workS = message('Reading the docs.', assistant, turnS.id);
+  const answerS = message('Effect is a typed effect system.', assistant, turnS.id);
+  const endS = event({ _tag: 'turnEnd', begin: turnS.id, finishReason: 'stop' });
+  const merge = event({
+    _tag: 'threadMerge',
+    thread: subagent.id,
+    mode: 'summary',
+    summary: text('Subagent "Research effect" finished: Effect is a typed effect system.'),
+  });
+  return {
+    turnA,
+    turnS,
+    subagent,
+    running: [prompt, turnA, consumeA, contextA, subagent, task, turnS, consumeS, workS],
+    rest: [answerS, endS, merge],
+  };
+};
+
+describe('delegated subagents', () => {
+  test('a subagent sees only its task, and only its summary joins main', ({ expect }) => {
+    const { running, rest, turnS, subagent } = delegation();
+    const during = Reducer.run(Reducer.prompt, running).state;
+    expect(texts(Reducer.promptFor(during, turnS.id))).to.deep.eq(['Research effect.', 'Reading the docs.']);
+
+    const after = Reducer.run(Reducer.prompt, rest, Reducer.run(Reducer.prompt, running)).state;
+    expect(texts(after.entries)).to.deep.eq(['Subagent "Research effect" finished: Effect is a typed effect system.']);
+    expect(after.threads[subagent.id]).to.eq(undefined);
+  });
+
+  test('a subagent is a lane of its own that starts in the background', ({ expect }) => {
+    const { running, rest, turnA, subagent } = delegation();
+    const during = Reducer.run(Reducer.thread, running).state;
+    expect(
+      during.lanes.map(({ id, kind, status, overlapped, backgrounded }) => ({
+        id,
+        kind,
+        status,
+        overlapped,
+        backgrounded,
+      })),
+    ).to.deep.eq([
+      // Another owner's lane leaves the delegating turn in view.
+      { id: turnA.id, kind: 'turn', status: 'running', overlapped: true, backgrounded: undefined },
+      { id: subagent.id, kind: 'fresh', status: 'running', overlapped: true, backgrounded: true },
+    ]);
+    expect(during.items.filter((item) => item.lane === subagent.id).map((item) => item.status)).to.deep.eq([
+      'consumed',
+      'sent',
+    ]);
+
+    const done = Reducer.run(Reducer.thread, rest, Reducer.run(Reducer.thread, running)).state;
+    expect(done.lanes[1].status).to.eq('done');
+  });
+});
