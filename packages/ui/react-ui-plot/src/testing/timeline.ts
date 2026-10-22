@@ -328,11 +328,11 @@ export const technologyTimelineOrder = [
   'Personal',
 ];
 
-/** Colors for `technologyTimeline`: Tech in greys, the complexes in their own hues. */
+/** Colors for `technologyTimeline`: Tech in shades of blue, the complexes in their own hues. */
 export const technologyTimelineColors: Record<string, string> = {
-  'Tech/Hardware': 'neutral-300',
-  'Tech/Software': 'neutral-400',
-  'Tech/AI': 'neutral-500',
+  'Tech/Hardware': 'blue-300',
+  'Tech/Software': 'blue-400',
+  'Tech/AI': 'blue-600',
   'Macro/FIC': 'green',
   'Macro/TIC': 'blue',
   'Macro/MIC': 'rose',
