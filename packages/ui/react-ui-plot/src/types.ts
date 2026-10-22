@@ -63,8 +63,8 @@ export type TimelineScale = Schema.Schema.Type<typeof TimelineScale>;
 
 export const TIMELINE_SCALES: readonly TimelineScale[] = TimelineScale.literals;
 
-/** Text size; spacing scales with it. */
-export const TimelineFontSize = Schema.Literals(['xs', 'sm', 'md', 'lg', 'xl']);
+/** Text size, or `auto` to follow the timeline's width; spacing scales with it. */
+export const TimelineFontSize = Schema.Literals(['auto', 'xs', 'sm', 'md', 'lg', 'xl']);
 export type TimelineFontSize = Schema.Schema.Type<typeof TimelineFontSize>;
 
 export const TIMELINE_FONT_SIZES: readonly TimelineFontSize[] = TimelineFontSize.literals;

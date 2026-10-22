@@ -113,7 +113,10 @@ const DATE_FONT_SIZE = 11;
 const DATE_GAP = 6;
 
 // Text and spacing grow together, so a larger font also spreads the timeline out.
-const FONT_SCALES: Record<TimelineFontSize, number> = { xs: 0.7, sm: 0.85, md: 1, lg: 1.25, xl: 1.5 };
+const FONT_SCALES: Record<Exclude<TimelineFontSize, 'auto'>, number> = { xs: 0.7, sm: 0.85, md: 1, lg: 1.25, xl: 1.5 };
+
+// At this width the automatic size is medium; it scales in proportion, between extra small and extra large.
+const AUTO_FONT_WIDTH = 640;
 
 /** Sizes that follow the font size. */
 type Metrics = {
@@ -127,8 +130,11 @@ type Metrics = {
   evenStep: number;
 };
 
-const metricsFor = (fontSize: TimelineFontSize = 'md'): Metrics => {
-  const scale = FONT_SCALES[fontSize];
+const metricsFor = (fontSize: TimelineFontSize = 'auto', width: number): Metrics => {
+  const scale =
+    fontSize === 'auto'
+      ? Math.min(FONT_SCALES.xl, Math.max(FONT_SCALES.xs, width / AUTO_FONT_WIDTH))
+      : FONT_SCALES[fontSize];
   return {
     font: FONT_SIZE * scale,
     lineHeight: LINE_HEIGHT * scale,
@@ -301,8 +307,8 @@ export const Timeline = ({
   onHiddenChange,
 }: TimelineProps) => {
   const { spine = 'center', scale = 'linear', hidden, today = true, dates = true, order, colors, fontSize } = options;
-  const metrics = useMemo(() => metricsFor(fontSize), [fontSize]);
   const { ref: scrollRef, width = 0, height = 0 } = useResizeDetector<HTMLDivElement>({ refreshRate: 100 });
+  const metrics = useMemo(() => metricsFor(fontSize, width), [fontSize, width]);
   const [zoom, setZoom] = useState(initialZoom);
 
   // Labels are measured in the font the timeline inherits.

@@ -88,6 +88,7 @@ export const translations = [
         'delete-timeline.label': 'Delete timeline',
         'timeline-dates.label': 'Show dates in labels',
         'timeline-font-size.label': 'Font size',
+        'timeline-font-size.auto.label': 'Fit to width',
         'timeline-font-size.xs.label': 'Extra small',
         'timeline-font-size.sm.label': 'Small',
         'timeline-font-size.md.label': 'Medium',

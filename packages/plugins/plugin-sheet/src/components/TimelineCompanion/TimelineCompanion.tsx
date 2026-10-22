@@ -61,7 +61,7 @@ export const TimelineCompanion = ({
 }: TimelineCompanionProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [editing, setEditing] = useState(false);
-  const { spine = 'center', scale = 'linear', hidden = [], dates = true, fontSize = 'md' } = timeline ?? {};
+  const { spine = 'center', scale = 'linear', hidden = [], dates = true, fontSize = 'auto' } = timeline ?? {};
 
   const data = useMemo(() => {
     const values = timeline && getValues(timeline.range);

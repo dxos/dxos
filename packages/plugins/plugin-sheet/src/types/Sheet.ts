@@ -68,7 +68,7 @@ export type TimelineSpine = Schema.Schema.Type<typeof TimelineSpine>;
 export const TimelineScale = Schema.Literals(['linear', 'log', 'even']);
 export type TimelineScale = Schema.Schema.Type<typeof TimelineScale>;
 
-export const TimelineFontSize = Schema.Literals(['xs', 'sm', 'md', 'lg', 'xl']);
+export const TimelineFontSize = Schema.Literals(['auto', 'xs', 'sm', 'md', 'lg', 'xl']);
 export type TimelineFontSize = Schema.Schema.Type<typeof TimelineFontSize>;
 
 /**

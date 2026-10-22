@@ -25,13 +25,6 @@ export const technologyTimeline: PlotValue[][] = [
     'Trade liberalization and freer capital flows expand worldwide.',
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8b/Early_migrations_mercator.svg/500px-Early_migrations_mercator.svg.png',
   ],
-  [
-    '1980-05',
-    'Tech/Hardware',
-    'Arcade & home games',
-    'Atari consoles and arcade cabinets bring computing into homes and malls.',
-    'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/91/Arcade-20071020-a.jpg/500px-Arcade-20071020-a.jpg',
-  ],
   ['1980-05', 'Tech/Software', 'Pac-Man', 'Namco’s maze game becomes the best-known arcade game of all time.', null],
   ['1980-11', 'Personal', 'Sinclair Scientific Calculator', 'Sinclair Scientific Calculator, November 1980.', null],
   [
