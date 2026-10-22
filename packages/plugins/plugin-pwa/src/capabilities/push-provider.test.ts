@@ -167,15 +167,15 @@ describe('makePushProvider', () => {
     await expect(provider.subscribe({ applicationServerKey: KEY_A })).rejects.toThrow(/did not answer/);
   });
 
-  test('a sample shown by the worker is confirmed, and one that never comes is not', async () => {
+  test('a test push shown by the worker is confirmed, and one that never comes is not', async () => {
     const { provider, messages } = setup();
 
-    const confirmed = provider.waitForSample('1 second');
+    const confirmed = provider.waitForTest('1 second');
     messages.post({ type: 'dxos:precache-progress' });
-    messages.post({ type: 'dxos:push-sample-shown' });
+    messages.post({ type: 'dxos:push-test-shown' });
     expect(await confirmed).toBe(true);
 
-    expect(await provider.waitForSample('10 millis')).toBe(false);
+    expect(await provider.waitForTest('10 millis')).toBe(false);
   });
 
   test('an unsupported device has no subscription and refuses to subscribe', async () => {
@@ -183,7 +183,7 @@ describe('makePushProvider', () => {
 
     expect(provider.supported).toBe(false);
     expect(await provider.current()).toBeUndefined();
-    expect(await provider.waitForSample('1 second')).toBe(false);
+    expect(await provider.waitForTest('1 second')).toBe(false);
     await expect(provider.subscribe({ applicationServerKey: KEY_A })).rejects.toThrow();
   });
 });

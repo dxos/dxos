@@ -12,10 +12,10 @@ import { describePushMessage, parsePushMessage } from './notification.ts';
 declare const self: ServiceWorkerGlobalScope;
 
 /**
- * Posted to every window once a sample (`test`) push is shown, so the page that asked for one knows push works end to
+ * Posted to every window once a test push is shown, so the page that asked for one knows push works end to
  * end. Mirrored in `@dxos/plugin-pwa`'s push provider — keep in sync.
  */
-const PUSH_SAMPLE_SHOWN = 'dxos:push-sample-shown';
+const PUSH_TEST_SHOWN = 'dxos:push-test-shown';
 
 // Unlike the offline worker, nothing here needs a page reload to take effect, so a new version takes over at once.
 self.addEventListener('install', () => {
@@ -45,7 +45,7 @@ self.addEventListener('push', (event) => {
       }
       const message = parsePushMessage(data) ?? { v: 1, id: 'unknown', senderDid: '', sentAt: Date.now() };
 
-      // A sample must show even with Composer focused: the user is looking at the toggle that asked for it.
+      // A test must show even with Composer focused: the user is looking at the button that asked for it.
       const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
       if (!message.test && windows.some((client) => client.focused) && !(await mustShowNotification())) {
         return;
@@ -63,7 +63,7 @@ self.addEventListener('push', (event) => {
       await self.registration.showNotification(title, options);
       if (message.test) {
         for (const client of windows) {
-          client.postMessage({ type: PUSH_SAMPLE_SHOWN });
+          client.postMessage({ type: PUSH_TEST_SHOWN });
         }
       }
     })(),

@@ -21,14 +21,14 @@ type FakeProviderOptions = {
   supported?: boolean;
   permission?: AppPush.Permission;
   answer?: AppPush.Permission;
-  sampleShown?: boolean;
+  testShown?: boolean;
 };
 
 const makeProvider = ({
   supported = true,
   permission = 'default',
   answer = 'granted',
-  sampleShown = true,
+  testShown = true,
 }: FakeProviderOptions = {}) => {
   let current: AppPush.DeviceSubscription | undefined;
   let state = permission;
@@ -47,7 +47,7 @@ const makeProvider = ({
     unsubscribe: vi.fn(async () => {
       current = undefined;
     }),
-    waitForSample: vi.fn(async () => sampleShown),
+    waitForTest: vi.fn(async () => testShown),
   } satisfies AppPush.Provider;
 };
 
@@ -78,7 +78,7 @@ const setup = (providerOptions?: FakeProviderOptions, edgeOptions?: { configured
 };
 
 describe('makePushRegistration', () => {
-  test('enable asks first, then subscribes with the VAPID key and registers without waiting for a sample', async () => {
+  test('enable asks first, then subscribes with the VAPID key and registers without sending a test', async () => {
     const { provider, edge, registration } = setup();
 
     expect(await registration.enable()).toBe('on');
@@ -90,9 +90,9 @@ describe('makePushRegistration', () => {
     expect(edge.putPushSubscription).toHaveBeenCalledWith({
       endpoint: SUBSCRIPTION.endpoint,
       keys: SUBSCRIPTION.keys,
-      welcome: false,
+      test: false,
     });
-    expect(provider.waitForSample).not.toHaveBeenCalled();
+    expect(provider.waitForTest).not.toHaveBeenCalled();
   });
 
   test('the choice is saved once permission is granted, before registering', async () => {
@@ -177,15 +177,15 @@ describe('makePushRegistration', () => {
     expect(await registration.enable()).toBe('on');
   });
 
-  test('a test asks EDGE for a sample, listening first, and reports whether it was shown', async () => {
+  test('a test asks EDGE for a test push, listening first, and reports whether it was shown', async () => {
     const shown = setup({ permission: 'granted' });
     expect(await shown.registration.sendTest()).toBe('shown');
-    expect(shown.edge.putPushSubscription).toHaveBeenCalledWith(expect.objectContaining({ welcome: true }));
-    expect(shown.provider.waitForSample.mock.invocationCallOrder[0]).toBeLessThan(
+    expect(shown.edge.putPushSubscription).toHaveBeenCalledWith(expect.objectContaining({ test: true }));
+    expect(shown.provider.waitForTest.mock.invocationCallOrder[0]).toBeLessThan(
       shown.edge.putPushSubscription.mock.invocationCallOrder[0],
     );
 
-    const missed = setup({ permission: 'granted', sampleShown: false });
+    const missed = setup({ permission: 'granted', testShown: false });
     expect(await missed.registration.sendTest()).toBe('not-shown');
   });
 
@@ -234,8 +234,8 @@ describe('makePushRegistration', () => {
     expect(await registration.refresh()).toBe('on');
 
     expect(provider.requestPermission).not.toHaveBeenCalled();
-    expect(provider.waitForSample).not.toHaveBeenCalled();
-    expect(edge.putPushSubscription).toHaveBeenCalledWith(expect.objectContaining({ welcome: false }));
+    expect(provider.waitForTest).not.toHaveBeenCalled();
+    expect(edge.putPushSubscription).toHaveBeenCalledWith(expect.objectContaining({ test: false }));
   });
 
   test('refresh never prompts when the user has not answered', async () => {

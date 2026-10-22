@@ -32,14 +32,14 @@ export type WorkerMessagesLike = {
   removeEventListener: (type: 'message', listener: (event: MessageEvent) => void) => void;
 };
 
-/** Posted by the host's service worker once it shows a sample push; mirrors `composer-app/src/sw.ts`. */
-const PUSH_SAMPLE_SHOWN = 'dxos:push-sample-shown';
+/** Posted by the host's push worker once it shows a test push; mirrors `composer-app/src/push/push-worker.ts`. */
+const PUSH_TEST_SHOWN = 'dxos:push-test-shown';
 
-const isSampleShown = (data: unknown): boolean => Predicate.isObject(data) && data.type === PUSH_SAMPLE_SHOWN;
+const isTestShown = (data: unknown): boolean => Predicate.isObject(data) && data.type === PUSH_TEST_SHOWN;
 
 export type PushProviderOptions = {
   supported: boolean;
-  /** Undefined where there is no service worker; a sample is then never confirmed. */
+  /** Undefined where there is no service worker; a test push is then never confirmed. */
   messages: WorkerMessagesLike | undefined;
   /** Resolves once the push worker is active, which subscribing needs; `undefined` when registration failed. */
   pushManager: Promise<PushManagerLike | undefined>;
@@ -139,15 +139,15 @@ export const makePushProvider = ({
       }
       await (await (await pushManager()).getSubscription())?.unsubscribe();
     },
-    waitForSample: async (timeout) => {
+    waitForTest: async (timeout) => {
       if (!supported || !messages) {
         return false;
       }
       let listener: ((event: MessageEvent) => void) | undefined;
-      // The executor runs now, so the listener is attached before the caller asks for the sample.
+      // The executor runs now, so the listener is attached before the caller asks for the test.
       const shown = new Promise<void>((resolve) => {
         listener = (event) => {
-          if (isSampleShown(event.data)) {
+          if (isTestShown(event.data)) {
             resolve();
           }
         };

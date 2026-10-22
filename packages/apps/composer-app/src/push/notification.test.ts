@@ -109,7 +109,7 @@ describe('describePushMessage', () => {
     });
   });
 
-  test('a test push is a sample of what notifications look like', () => {
+  test('a test push shows what notifications look like', () => {
     expect(describePushMessage({ ...pushMessage(), test: true })).toMatchObject({
       title: 'Notifications are on',
       body: 'This is how Composer will tell you about invitations and messages.',

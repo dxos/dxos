@@ -39,7 +39,6 @@ export const translations = [
           'Show a system notification for invitations and messages, even while Composer is closed.',
         'settings.notifications.unsupported.message':
           'This browser or deployment cannot show notifications while Composer is closed.',
-        'settings.notifications.pending.message': 'Turning on notifications…',
         'settings.notifications.denied.message':
           'Notifications are blocked for Composer. Allow them in your browser settings, then turn this on again.',
         'settings.notifications.failed.message': 'Notifications could not be turned on. Try again.',

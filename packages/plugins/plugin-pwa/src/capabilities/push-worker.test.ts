@@ -27,17 +27,13 @@ const makeSubscription = (): PushSubscriptionLike => ({
   unsubscribe: vi.fn(async () => true),
 });
 
-const makeRegistration = (
-  scope: string,
-  { active = true, subscription = null }: { active?: boolean; subscription?: PushSubscriptionLike | null } = {},
-) => {
+const makeRegistration = ({ active = true }: { active?: boolean } = {}) => {
   const worker = new FakeWorker();
   const pushManager: PushManagerLike = {
-    getSubscription: async () => subscription,
+    getSubscription: async () => null,
     subscribe: async () => makeSubscription(),
   };
   const registration: PushWorkerRegistrationLike = {
-    scope,
     active: active ? {} : null,
     installing: active ? null : worker,
     waiting: null,
@@ -50,10 +46,9 @@ const BASE = 'https://composer.space/';
 
 describe('registerPushWorker', () => {
   test('registers at the script directory as a module and waits for the worker to activate', async () => {
-    const { registration, worker } = makeRegistration(`${BASE}assets/`, { active: false });
+    const { registration, worker } = makeRegistration({ active: false });
     const container: ServiceWorkerContainerLike = {
       register: vi.fn(async () => registration),
-      getRegistration: async () => undefined,
     };
 
     let settled = false;
@@ -72,25 +67,11 @@ describe('registerPushWorker', () => {
     });
   });
 
-  test('drops a push subscription left on the offline worker', async () => {
-    const legacySubscription = makeSubscription();
-    const offline = makeRegistration(BASE, { subscription: legacySubscription });
-    const push = makeRegistration(`${BASE}assets/`);
-    const container: ServiceWorkerContainerLike = {
-      register: async () => push.registration,
-      getRegistration: async () => offline.registration,
-    };
-
-    await registerPushWorker(container, '/assets/push-worker.js', BASE);
-    await vi.waitFor(() => expect(legacySubscription.unsubscribe).toHaveBeenCalledOnce());
-  });
-
   test('a registration the browser refuses resolves undefined', async () => {
     const container: ServiceWorkerContainerLike = {
       register: async () => {
         throw new DOMException('Failed to register a ServiceWorker', 'SecurityError');
       },
-      getRegistration: async () => undefined,
     };
 
     expect(await registerPushWorker(container, '/assets/push-worker.js', BASE)).toBeUndefined();

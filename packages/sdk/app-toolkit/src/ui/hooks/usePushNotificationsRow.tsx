@@ -18,7 +18,7 @@ export type PushNotificationsRowProps = {
 };
 
 export type PushNotificationsRowContent = {
-  /** Shown above the row while push is unavailable, turning on, blocked or failed. */
+  /** Shown above the row while push is unavailable, blocked or failed; turning on only disables the toggle. */
   notice?: { valence: 'info' | 'error'; message: string; detail?: string };
   toggle: ReactNode;
   /** The test control, offered only while notifications are on. */
@@ -38,7 +38,7 @@ export const usePushNotificationsRow = ({ push, t }: PushNotificationsRowProps):
   const [test, setTest] = useState<TestState>('idle');
 
   const notice: PushNotificationsRowContent['notice'] =
-    status === 'unsupported' || status === 'pending' || status === 'denied' || status === 'failed'
+    status === 'unsupported' || status === 'denied' || status === 'failed'
       ? {
           valence: status === 'failed' ? 'error' : 'info',
           message: t(`settings.notifications.${status}.message`),
