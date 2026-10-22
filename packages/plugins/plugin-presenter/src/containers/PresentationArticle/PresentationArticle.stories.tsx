@@ -6,44 +6,23 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
-import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
-import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { useQuery } from '@dxos/react-client/echo';
-import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
+import { useClientStory } from '@dxos/react-client/testing';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
-import { withAttention } from '@dxos/react-ui-attention/testing';
-import { translations as formTranslations } from '@dxos/react-ui-form/translations';
-import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
-import { Text } from '@dxos/schema';
+import { Loading } from '@dxos/react-ui/testing';
 
-import { createPresenterStoryPlugin } from '#testing';
-import { translations } from '#translations';
 import { Presentation } from '#types';
 
+import {
+  ATTENDED_ID,
+  PresentationStory,
+  presentationStoryDecorators,
+  presentationStoryParameters,
+} from '../../testing/presenterStory.tsx';
 import { PresentationArticle } from './PresentationArticle.tsx';
 
-/** Attended from the start (see `withAttention` below), as a plank the user just opened. */
-const ATTENDED_ID = 'story';
-
-const DefaultStory = () => {
-  const { space } = useClientStory();
-  const [presentation] = useQuery(space?.db, Filter.type(Presentation.Presentation));
-  const attributes = useAttentionAttributes(ATTENDED_ID);
-  if (!presentation) {
-    return <Loading />;
-  }
-
-  return (
-    <div {...attributes} className='contents'>
-      <PresentationArticle role='article' attendableId={ATTENDED_ID} subject={presentation} />
-    </div>
-  );
-};
-
-/** The deck beside another attendable whose input holds the caret, as with an editor in another plank. */
 const UnattendedStory = () => {
   const { space } = useClientStory();
   const [presentation] = useQuery(space?.db, Filter.type(Presentation.Presentation));
@@ -63,30 +42,17 @@ const UnattendedStory = () => {
 
 const meta = {
   title: 'plugins/plugin-presenter/containers/PresentationArticle',
-  render: DefaultStory,
-  decorators: [
-    withTheme(),
-    withLayout({ layout: 'fullscreen' }),
-    withClientProvider({
-      types: [Presentation.Presentation, Text.Text, Markdown.Document],
-      createIdentity: true,
-      createSpace: true,
-      onCreateSpace: async ({ space }) => {
-        const presentation = space.db.add(Presentation.make({ name: 'Demo', slides: ['# One', '# Two', '# Three'] }));
-        Presentation.link(presentation, space.db.add(Markdown.make({ name: 'Notes', content: '# Notes' })));
-        space.db.add(Markdown.make({ name: 'Appendix', content: '# Appendix' }));
-        await space.db.flush({ indexes: true });
-      },
-    }),
-    withPluginManager({ plugins: [ProcessManagerPlugin.make(), createPresenterStoryPlugin()()] }),
-    // Outermost, so the plugin manager's atom registry is not replaced by the decorator's own.
-    withAttention(ATTENDED_ID),
-  ],
-  parameters: {
-    layout: 'fullscreen',
-    translations: [...translations, ...reactUiTranslations, ...formTranslations],
-  },
-} satisfies Meta<typeof DefaultStory>;
+  render: PresentationStory,
+  decorators: presentationStoryDecorators({
+    onCreateSpace: async ({ space }) => {
+      const presentation = space.db.add(Presentation.make({ name: 'Demo', slides: ['# One', '# Two', '# Three'] }));
+      Presentation.link(presentation, space.db.add(Markdown.make({ name: 'Notes', content: '# Notes' })));
+      space.db.add(Markdown.make({ name: 'Appendix', content: '# Appendix' }));
+      await space.db.flush({ indexes: true });
+    },
+  }),
+  parameters: presentationStoryParameters,
+} satisfies Meta<typeof PresentationStory>;
 
 export default meta;
 

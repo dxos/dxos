@@ -17,8 +17,9 @@ import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import type * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
-import { SlideArticle } from '#containers';
 import { PresenterOperation } from '#types';
+
+import { SlideArticle } from '../containers/SlideArticle/SlideArticle.tsx';
 
 /**
  * Stands in for the deck plugin: `SetPresenting` sets the deck's fullscreen plank to the presentation,

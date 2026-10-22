@@ -62,6 +62,15 @@ const slides = [
     '',
     'Text beside an image.',
   ],
+  [
+    '---',
+    `image: "${createImage('#10b981', '#3b82f6', 'Rows')}"`,
+    'layout: rows',
+    '---',
+    '# Rows',
+    '',
+    'Text above an image.',
+  ],
   ['---', `image: "${createImage('#f97316', '#ec4899', 'Fullscreen')}"`, 'layout: fullscreen', '---'],
 ].map((lines) => lines.join('\n'));
 
