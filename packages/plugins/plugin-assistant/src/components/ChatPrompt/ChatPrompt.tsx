@@ -38,7 +38,9 @@ import {
 } from '@dxos/react-ui-chat';
 import type { ActionGraphProps } from '@dxos/react-ui-menu';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 import type * as Util from '@dxos/react-ui/Util';
 import { objectLinks, pendingText } from '@dxos/ui-editor';
 import { type Merge } from '@dxos/util';
@@ -384,11 +386,23 @@ export const ChatPrompt = ({
             markdown
             lineWrapping
             classNames='col-span-2 pt-0.5'
-            placeholder={placeholder ?? t('prompt.placeholder')}
+            placeholder={placeholder}
             extensions={extensions}
             menu={mentions}
             onSubmit={handleSubmit}
           />
+          {/* The usage hint is too long for a placeholder in a narrow prompt, so it waits behind an icon. */}
+          {!placeholder && (
+            <Tooltip.Trigger asChild content={t('prompt-hint.label')} side='top'>
+              <Icon.Icon
+                icon='ph--info--regular'
+                label={t('prompt-hint.label')}
+                tone='muted'
+                classNames='shrink-0 mt-1.5'
+                data-testid='assistant.prompt-hint'
+              />
+            </Tooltip.Trigger>
+          )}
         </Layout.Flex>
 
         {db && settings && (

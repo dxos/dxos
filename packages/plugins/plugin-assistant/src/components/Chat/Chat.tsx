@@ -798,11 +798,19 @@ const ChatPrompt = ({ classNames, ...props }: ChatPromptProps) => {
   }, [chat, chatModel, db, tasks]);
   const open = drawer && available.includes(drawer) ? drawer : undefined;
 
-  const shownRef = useRef(open);
-  if (open) {
-    shownRef.current = open;
+  // Switching drawers closes the open one first, so the next slides in rather than swapping in place.
+  const [visible, setVisible] = useState(open);
+  const [requested, setRequested] = useState(open);
+  if (open !== requested) {
+    setRequested(open);
+    setVisible(visible && open ? undefined : open);
   }
-  const shown = open ?? shownRef.current ?? available[0];
+
+  const shownRef = useRef(visible);
+  if (visible) {
+    shownRef.current = visible;
+  }
+  const shown = visible ?? shownRef.current ?? available[0];
 
   const contextOpenedRef = useRef(false);
   if (open === 'context') {
@@ -811,13 +819,16 @@ const ChatPrompt = ({ classNames, ...props }: ChatPromptProps) => {
 
   return (
     <Collapsible.Root
-      open={open !== undefined}
+      open={visible !== undefined}
       onOpenChange={({ open }) => !open && setDrawer(undefined)}
       lazyMount={false}
     >
       {/* The height the machine measures is what the ramp animates against, so the region clips. */}
       {available.length > 0 && (
-        <Collapsible.Content className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'>
+        <Collapsible.Content
+          className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'
+          onAnimationEnd={(event) => event.target === event.currentTarget && !visible && open && setVisible(open)}
+        >
           {/* The same surface and border as the prompt below, so the two read as one shell. */}
           <div className='shrink-0 max-h-[40dvh] overflow-y-auto dx-group-surface border border-separator-subtle border-b-0 rounded-t-sm'>
             {available.includes('tasks') && (
@@ -835,7 +846,7 @@ const ChatPrompt = ({ classNames, ...props }: ChatPromptProps) => {
       )}
       <NaturalChatPrompt
         {...props}
-        classNames={[open && 'rounded-t-none', classNames]}
+        classNames={[visible && 'rounded-t-none', classNames]}
         db={db}
         chat={chat}
         chatModel={chatModel}
