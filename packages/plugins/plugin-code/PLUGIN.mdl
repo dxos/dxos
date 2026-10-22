@@ -38,6 +38,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `service`   | `org.dxos.mdl.service@1.0`    |
 | `test`      | `org.dxos.mdl.test@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
@@ -86,6 +87,7 @@ type Settings
     the composer credentials API.
   fields:
     endpoint?: string           # URL of the EDGE build service (phase-2 wiring)
+    repos?: string[]            # local checkouts for spec sync (F-14.2)
 ```
 
 ## Components
@@ -133,13 +135,29 @@ component FileTree
 ```mdl
 component SpecArticle
   desc: |
-    Article surface for a bare Spec. Uses `react-ui-editor`'s Editor primitives
-    with the existing `mdl()` / `mdlBlockDescription` / `mdlLint` /
-    `mdlComplete` CodeMirror extensions for `.mdl` syntax, lint, completion.
+    Article surface for a Spec, laid out as an IDE page: the MDL editor beside a
+    panel of views (definitions graph, review, code, decisions, data model, API).
+    Uses `react-ui-editor`'s Editor primitives with the `mdl()` extensions.
+    Source keys in the text are links (F-15); the latest review marks each
+    reviewed item (F-16). Implemented by
+    github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx#SpecArticle.
   props:
     role: string
-    subject: Spec
+    subject?: Spec
+    content?: string            # static text, e.g. a bundled PLUGIN.mdl
+    sourceKey?: string          # github: key of static content
     attendableId?: string
+  state:
+    view: definitions | review | code | decisions | data | api
+    codeTarget?: string         # the github: key open in the code view
+  layout: |
+    ┌──────────────────────────┬──────────────────────────────┐
+    │ key · sync status        │ [Defs|Review|Code|…]         │
+    ├──────────────────────────┼──────────────────────────────┤
+    │ ```mdl          [Done]   │  ┌─────┐   ┌ ─ ─ ─ ┐         │
+    │ feat F-1: …   [Missing]  │  │ F-1 │──▶  Obj (echo)      │
+    │   github:…#make  ← link  │  └─────┘   └ ─ ─ ─ ┘         │
+    └──────────────────────────┴──────────────────────────────┘
 ```
 
 ```mdl
@@ -356,6 +374,30 @@ op runBuild
   effects: [echo:read]
   requires: [Database]
   note:   Operation key `org.dxos.operation.code.runBuild`.
+```
+
+```mdl
+op importSpec
+  key: org.dxos.operation.code.importSpec
+  desc: |
+    Links a spec file in a local checkout to a Spec, keyed by its source key;
+    returns the existing Spec when one already carries the key (F-14.6).
+  input:
+    key: string                 # github:<owner>/<repo>/<path>.mdl
+  output: { spec: Ref<Spec>, created: boolean }
+  errors:
+    - CodeOperationError: not a spec key, no checkout of the repository, or no such file
+  effects: [fs, echo:write]
+```
+
+```mdl
+op listLocalSpecs
+  key: org.dxos.operation.code.listLocalSpecs
+  desc: Lists the `.mdl` specs in every known checkout as source keys, reviews excluded.
+  input:
+    (none)
+  output: { roots: { repo: string, path: string }[], keys: string[] }
+  effects: [fs]
 ```
 
 ## Skills
@@ -619,6 +661,69 @@ feat F-12b: Local build & run — multi-file bundling
   req F-12b.5: External imports (anything not matching a path in the
                project's SourceFiles) are treated as build errors in
                F-12b. Host-externals via import maps are deferred to F-13.
+```
+
+```mdl
+feat F-14: Two-way spec sync with a local checkout
+  desc: |
+    A Spec can be linked to a `.mdl` file in a git checkout by source key
+    (`github:<owner>/<repo>/<path>`), stored in its meta keys in the shape
+    plugin-projects already writes ({ source: github.com/<owner>/<repo>, id: <path> }).
+    Linked specs sync both ways while the app runs, so Composer is the viewer
+    for specs that live in the repository.
+
+  req F-14.1: One file service, SpecFs, reaches local files on both hosts: the
+              Tauri fs plugin in the desktop app, and a dev-only vite route
+              (`/__dx/spec-fs`) in a Composer dev server, the same pattern as
+              github:dxos/dxos/packages/plugins/plugin-dev-shell/PLUGIN.mdl#bash.
+              A deployed web app has neither and leaves sync off.
+  req F-14.2: A key's repository resolves to a checkout from the `repos` setting
+              (an absolute path whose GitHub remote names the repo, or
+              `owner/repo=/abs/path`), then from the dev server's own working tree.
+  req F-14.3: Every 2 seconds each linked Spec is reconciled three-way against the
+              last text both sides agreed on: a change on one side flows to the
+              other; with no base, or when both changed, the file wins.
+              Implemented by github:dxos/dxos/packages/plugins/plugin-code/src/sync/spec-sync.ts#reconcile.
+  req F-14.4: A pull applies a minimal text diff
+              (github:dxos/dxos/packages/core/echo/echo-doc/src/Doc.ts#updateText),
+              so open editors keep their cursors.
+  req F-14.5: The dev route reads files only inside its roots (the workspace and
+              `DX_SPEC_ROOTS`) and writes only `.mdl` files.
+  req F-14.6: op:importSpec links a file to a new Spec, or returns the Spec that
+              already carries the key.
+```
+
+```mdl
+feat F-15: Source-key references to other specs and code
+  desc: |
+    A spec names a block of another spec or a code symbol by source key with a
+    fragment, e.g. github:dxos/dxos/packages/core/echo/echo/SPEC.mdl#Database or
+    github:dxos/dxos/packages/sdk/types/src/types/Spec.ts#make.
+
+  req F-15.1: The definitions graph draws each named external block or symbol as a
+              dashed box with an edge from the block that names it; another spec's
+              block is described from that spec's text when its checkout is known.
+  req F-15.2: Ctrl/⌘-click on a key in the editor, or double-click on an external
+              box, opens it: a code key in the Code view at its symbol, another
+              spec's key as its own synced Spec.
+  req F-15.3: The Code view reveals the symbol's declaration line, and opens the
+              file in VS Code where the host knows its local path.
+```
+
+```mdl
+feat F-16: Compliance review annotations
+  desc: |
+    The `spec-review` skill writes `<SPEC>.review.mdl` beside a spec: one verdict
+    per item (github:dxos/dxos/packages/reflect/deus/lang/review.mdl).
+
+  req F-16.1: SpecArticle reads the review beside the spec from the checkout and
+              re-reads it every 3 seconds.
+  req F-16.2: Each reviewed item's declaration line gets a status bar and chip in
+              the margin; a chip opens the verdict in the Review view.
+  req F-16.3: Each definitions-graph box gets a status badge; a feature shows the
+              worst status of its requirements.
+  req F-16.4: The Review view lists verdicts worst first; an evidence key opens
+              the code at its symbol.
 ```
 
 ## Acceptance
@@ -892,6 +997,92 @@ test QA-2: Showcase clip
     - name: Work in it
       do: Click across it as the clip gesture does.
       expect: the object responds to each click
+```
+
+## Changelog
+
+```mdl
+decision D-1: Specs sync both ways with their files in a local checkout, in the desktop app and in a Composer dev server, through one shared file service; Composer is the spec viewer.
+  date: 2026-10-22
+  by: user:dmaretskyi
+  affects: [F-14]
+```
+
+```mdl
+decision D-2: A synced spec references its original location by the key `github:<owner>/<repo>/<path>`. The checkout is found in a predictable place: a list of repositories in settings, or the working directory.
+  date: 2026-10-22
+  by: user:dmaretskyi
+  affects: [F-14.2, Settings]
+```
+
+```mdl
+decision D-3: A spec can reference blocks of other specs, and the spec's existing visualizations show those blocks as boxes on the graph.
+  date: 2026-10-22
+  by: user:dmaretskyi
+  affects: [F-15.1]
+```
+
+```mdl
+decision D-4: An agent skill reviews a spec's compliance and produces a review; the spec viewer annotates the spec with the status from the latest review.
+  date: 2026-10-22
+  by: user:dmaretskyi
+  affects: [F-16]
+```
+
+```mdl
+decision D-5: Specs reference code symbols as `github:<owner>/<repo>/<path>#<Symbol>`; double-click or Ctrl-click navigates to the symbol.
+  date: 2026-10-22
+  by: user:dmaretskyi
+  affects: [F-15.2, F-15.3]
+```
+
+```mdl
+decision D-6: The key is stored in the Spec's meta keys as { source: github.com/<owner>/<repo>, id: <path> } and written in text with the `github:` prefix. Fills in [D-2].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-14]
+  why: plugin-projects and plugin-debug already key imported specs this way, so those specs sync with no migration.
+  rejected: A new `source` field on Spec; a single `github:` source string with the repo in the id.
+```
+
+```mdl
+decision D-7: Sync polls every 2 seconds and reconciles three-way against the last agreed text; with no base or on conflict the file wins. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-14.3]
+  why: Polling is one code path for Tauri and the dev route; the repository is where specs are reviewed and versioned, so it wins ties.
+  rejected: Tauri's fs watch plus a dev-server websocket (two mechanisms); Composer winning conflicts.
+```
+
+```mdl
+decision D-8: The dev route reads only inside the workspace root and `DX_SPEC_ROOTS`, and writes only `.mdl` files; the desktop app adds no Tauri command and uses the fs plugin's existing scope. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-14.1, F-14.5]
+  why: The route is reachable by any page that can hit localhost, so it is no wider than a spec sync needs.
+```
+
+```mdl
+decision D-9: A source key with a fragment names a spec block or a code symbol by the file's extension; the graph draws both as dashed external boxes, and the Code view shows the file at the symbol inside the spec page. Fills in [D-3] and [D-5].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-15]
+  why: Showing code beside the spec keeps the spec page the IDE; VS Code is one button away where the host knows the path.
+  rejected: Symbol lookup through introspect-mcp, which is node-only and indexes by package rather than by file.
+```
+
+```mdl
+decision D-10: A review is a `<SPEC>.review.mdl` beside the spec with one `verdict` per item, statuses done, untested, partial, diverged and missing; a feature shows the worst status of its requirements. Fills in [D-4].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-16]
+  why: An `.mdl` file reuses the parser, syncs through the same file service, and diffs in review like the spec.
+  rejected: A JSON sidecar; a section inside the spec, which would make every review a spec change.
 ```
 
 ---

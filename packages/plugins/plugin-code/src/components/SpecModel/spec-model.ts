@@ -4,6 +4,8 @@
 
 import { type MdlBlock, parseMdlBlocks } from '@dxos/deus/extension';
 
+import { type SourceKey, findSourceKeys, formatSourceKey, isSpecKey } from '#sync';
+
 /** A top-level spec block that other blocks can depend on. */
 export type DefinitionModel = {
   id: string;
@@ -11,7 +13,22 @@ export type DefinitionModel = {
   title?: string;
   /** Ids of the other definitions this one names, in order of first mention. */
   dependsOn: string[];
+  /** Set on a node that lives outside this spec: a block of another spec, or a code symbol. */
+  external?: ExternalModel;
 };
+
+/** Where an external node comes from; its id is the `github:` key itself. */
+export type ExternalModel = {
+  target: 'spec' | 'code';
+  key: SourceKey;
+  /** The block or symbol named; absent for a key that names a whole file. */
+  fragment?: string;
+  /** Whether the other spec's text was available to describe the block. */
+  resolved: boolean;
+};
+
+/** The texts of other specs, keyed by their `github:` key without a fragment. */
+export type SpecTexts = ReadonlyMap<string, string>;
 
 /** The definitions of a spec and which name which, pointing from the dependent to what it names. */
 export type DefinitionGraphModel = {
@@ -220,21 +237,65 @@ const namedIds = (text: string, ids: ReadonlySet<string>, self?: string): string
   ),
 ];
 
-/** Every definition of a spec with an edge to each other definition its title or body names. */
-export const buildDefinitionGraph = (text: string): DefinitionGraphModel => {
-  const blocks = definitionBlocks(text);
-  const ids = new Set(blocks.map(({ id }) => id));
-  const definitions = blocks.map(({ type, id, title, body }): DefinitionModel => ({
-    id,
-    kind: type,
-    ...(title && { title }),
-    dependsOn: namedIds(`${title ?? ''}\n${body}`, ids, id),
-  }));
+/**
+ * The node a `github:` key names. A spec key with a fragment becomes that block of the other spec, described from
+ * its text when `specs` has it; any other key (code, or a whole file) becomes one node for the key.
+ */
+const externalDefinition = (key: SourceKey, specs: SpecTexts): DefinitionModel => {
+  const id = formatSourceKey(key);
+  if (!isSpecKey(key)) {
+    return {
+      id,
+      kind: 'code',
+      title: key.fragment ?? key.path.split('/').pop(),
+      dependsOn: [],
+      external: { target: 'code', key, ...(key.fragment && { fragment: key.fragment }), resolved: true },
+    };
+  }
+  const text = specs.get(formatSourceKey(key, false));
+  const blocks = text ? definitionBlocks(text) : [];
+  const owner = key.fragment ? resolveToken(key.fragment, new Set(blocks.map((block) => block.id))) : undefined;
+  const block = blocks.find((candidate) => candidate.id === owner);
   return {
-    definitions,
-    edges: definitions.flatMap(({ id, dependsOn }) => dependsOn.map((to) => ({ id: `${id}->${to}`, from: id, to }))),
+    id,
+    kind: block?.type ?? 'spec',
+    title: block?.title ?? key.fragment ?? key.path,
+    dependsOn: [],
+    external: { target: 'spec', key, ...(key.fragment && { fragment: key.fragment }), resolved: block !== undefined },
   };
 };
+
+/**
+ * Every definition of a spec with an edge to each other definition its title or body names, plus a node for each
+ * block of another spec or code symbol it names by `github:` key, so a spec's graph shows what it rests on elsewhere.
+ */
+export const buildDefinitionGraph = (text: string, specs: SpecTexts = new Map()): DefinitionGraphModel => {
+  const blocks = definitionBlocks(text);
+  const ids = new Set(blocks.map(({ id }) => id));
+  const externals = new Map<string, DefinitionModel>();
+  const definitions = blocks.map(({ type, id, title, body }): DefinitionModel => {
+    const prose = `${title ?? ''}\n${body}`;
+    const linked = findSourceKeys(prose).map(({ key }) => {
+      const external = externals.get(formatSourceKey(key)) ?? externalDefinition(key, specs);
+      externals.set(external.id, external);
+      return external.id;
+    });
+    return {
+      id,
+      kind: type,
+      ...(title && { title }),
+      // Keys are removed first so their paths' words are not read as names of this spec's blocks.
+      dependsOn: [...new Set([...namedIds(prose.replace(SOURCE_KEYS, ' '), ids, id), ...linked])],
+    };
+  });
+  const all = [...definitions, ...externals.values()];
+  return {
+    definitions: all,
+    edges: all.flatMap(({ id, dependsOn }) => dependsOn.map((to) => ({ id: `${id}->${to}`, from: id, to }))),
+  };
+};
+
+const SOURCE_KEYS = /github:\S+/g;
 
 /** A definition graph narrowed to the kinds still shown, with lookups for drawing it. */
 export type DefinitionSelection = DefinitionGraphModel & {

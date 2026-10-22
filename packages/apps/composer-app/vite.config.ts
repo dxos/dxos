@@ -41,6 +41,7 @@ import { debugPortSidecarPlugin, resolveDebugPortSession } from './src/vite/debu
 import { nodeBuiltinStubs } from './src/vite/node-builtin-stubs.ts';
 import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
 import { reactRefreshPreamble } from './src/vite/react-refresh-preamble.ts';
+import { specFsPlugin } from './src/vite/spec-fs.ts';
 import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
@@ -587,6 +588,9 @@ export default defineConfig((env) => ({
     // Hosts the dev shell's shell route against the vite process cwd. Imported dynamically
     // because this config's static imports are bundled as CJS `require` and the package is ESM-only.
     import('@dxos/plugin-dev-shell/vite-plugin').then(({ DevShellVitePlugin }) => DevShellVitePlugin()),
+
+    // Dev-only: local spec files for plugin-code's spec sync (the desktop app uses the Tauri fs plugin instead).
+    specFsPlugin(rootDir),
 
     // RSS proxy middleware for CORS-free feed fetching.
     {

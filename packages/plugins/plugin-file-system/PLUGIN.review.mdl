@@ -1,0 +1,321 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-file-system/PLUGIN.mdl
+commit: 64dcf3f44a541fdf0b3e55803f38d214e76a6279
+date: 2026-10-22
+by: agent:claude-code
+---
+
+# Review: FileSystemPlugin
+
+The core loop is solid: the open operation shows a native picker, scans markdown files, and registers
+or replaces a workspace by path. Each markdown file is bound to an ECHO `Text` object in a
+per-workspace mirror space. Edits are auto-saved back to disk, and watchers on the directory and on
+each file pull external changes back in. The data types match the spec field for field.
+
+What is missing is mostly the user-facing surface the spec describes. No "Close Folder" or
+"Refresh Folder" action exists in the navtree. Close is reachable only from the "Remove folder"
+button in the General settings article, and `RefreshDirectory` is never invoked anywhere; refresh
+happens only through the directory watcher. The settings form edits icon and hue, not the name, so
+rename (F-6.3) does not exist.
+
+The biggest cross-cutting divergence is the platform. The spec intro (and `dx.config.ts`) says the
+plugin needs the Electron-based desktop app, but every disk call goes through Tauri
+(`@tauri-apps/plugin-dialog`, `@tauri-apps/plugin-fs`, the `get_xattr`/`set_xattr` commands). Composer
+registers the plugin only when `isTauri && !isMobile && !isPopover`
+(`packages/apps/composer-app/src/plugin-defs.tsx`). The spec also contradicts itself on images: the
+intro and F-1.3 say images are surfaced and scanned, while F-4.5 says they are ignored. The code
+ignores them; `SUPPORTED_IMAGE_EXTENSIONS` is declared but unused.
+
+Other notes:
+
+- Workspace persistence is in browser `localforage`, not ECHO, though `closeDirectory` declares
+  `echo:write`.
+- Opening a folder writes to disk (`.composer/meta.json`, `.composer/filemap.json`, and an
+  `org.dxos.dxn` xattr on every markdown file).
+- Closing a workspace leaves its mirror ECHO space behind.
+- Tests cover only nested-directory graph expansion and the module activation of `OperationHandler`.
+  Nothing tests open, close, refresh, save-to-disk, ordering, or settings.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict FileSystemFile: The type matches field for field, but the scanner never produces `type: image`.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file-system/src/types/FileSystemCapabilities.ts#FileSystemFile]
+  note: The shape matches. `processEntry` only ever emits `type: 'markdown'` because `isSupportedFile` accepts .md/.markdown only.
+```
+
+```mdl
+verdict FileSystemDirectory: The type matches.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file-system/src/types/FileSystemCapabilities.ts#FileSystemDirectory]
+  note: The scanner drops empty directories, dot-entries and symlinks, so `children` is never empty in practice.
+```
+
+```mdl
+verdict FileSystemEntry: The union matches.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file-system/src/types/FileSystemCapabilities.ts#FileSystemEntry]
+```
+
+```mdl
+verdict FileSystemWorkspace: The type matches; icon, hue and spaceId come from `.composer/meta.json`.
+  status: done
+  evidence:
+    [github:dxos/dxos/packages/plugins/plugin-file-system/src/types/FileSystemCapabilities.ts#FileSystemWorkspace,
+     github:dxos/dxos/packages/plugins/plugin-file-system/src/util.ts#loadWorkspace]
+  note: spaceId is the workspace's own mirror space, created by `MirrorSpaceManager`. It is not used for ordering, as the spec's desc says; ordering uses the settings-space shared order (see F-4.6).
+```
+
+```mdl
+verdict FileSystemState: The type matches, but `currentFile` is dead.
+  status: done
+  evidence:
+    [github:dxos/dxos/packages/plugins/plugin-file-system/src/types/FileSystemCapabilities.ts#FileSystemState,
+     github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/state/state.ts#stateAtom]
+  note: The shape matches, and the state is a keep-alive writable atom contributed as `FileSystemCapabilities.State`. Nothing reads or writes `currentFile` except its `undefined` initialiser.
+```
+
+```mdl
+verdict WorkspaceSettings: The settings form edits icon and hue and can remove the folder; it has no rename and takes no workspace prop.
+  status: diverged
+  evidence:
+    [github:dxos/dxos/packages/plugins/plugin-file-system/src/containers/WorkspaceSettingsContainer.tsx#WorkspaceSettingsContainer,
+     github:dxos/dxos/packages/plugins/plugin-file-system/src/hooks/useActiveFileSystemWorkspace.ts#useActiveFileSystemWorkspace]
+  note: |
+    `WorkspaceSettingsSchema` has only `icon` and `hue`, which are written to the atom and to `.composer/meta.json`. There is no
+    name input and no `rename` action. The workspace comes from the layout via `useActiveFileSystemWorkspace`, not from a
+    `workspace` prop. `closeWorkspace` exists as a "Remove folder" button, which invokes `CloseDirectory` and then switches to
+    the default space.
+```
+
+```mdl
+verdict openDirectory: The op picks, scans, registers or replaces by path, and returns the subject, but does not navigate itself.
+  status: partial
+  evidence:
+    [github:dxos/dxos/packages/plugins/plugin-file-system/src/operations/open-directory.ts,
+     github:dxos/dxos/packages/plugins/plugin-file-system/src/types/FileSystemOperation.ts#OpenDirectory,
+     github:dxos/dxos/packages/plugins/plugin-file-system/src/util.ts#loadWorkspace]
+  note: |
+    The key, the Void input and the output schema match. Navigation is done by the app-graph action that wraps the op
+    (`LayoutOperation.SwitchWorkspace`), so invoking the op directly (e.g. over MCP) does not navigate. Beyond the desc, the op
+    also starts watchers, creates the mirror ECHO space and Text objects, writes `.composer/*` and xattrs to disk, and persists
+    the list to localforage. No test covers it.
+```
+
+```mdl
+verdict closeDirectory: The op removes the workspace from the atom, stops its watchers, and persists the list; it never touches fs or ECHO.
+  status: untested
+  evidence:
+    [github:dxos/dxos/packages/plugins/plugin-file-system/src/types/FileSystemOperation.ts#CloseDirectory,
+     github:dxos/dxos/packages/plugins/plugin-file-system/src/operations/close-directory.ts,
+     github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/state/FileSystemManager.ts#deactivateWorkspace]
+  note: The declared effects `[fs, echo:write]` are wrong. Persistence goes to localforage, and the mirror space is left in place, not removed. No test.
+```
+
+```mdl
+verdict refreshDirectory: The op re-scans and replaces the workspace in the atom, then re-binds markdown docs.
+  status: untested
+  evidence:
+    [github:dxos/dxos/packages/plugins/plugin-file-system/src/types/FileSystemOperation.ts#RefreshDirectory,
+     github:dxos/dxos/packages/plugins/plugin-file-system/src/operations/refresh-directory.ts,
+     github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/state/FileSystemManager.ts#refreshWorkspaceContent]
+  note: The op works as described, but nothing in the repo invokes it (no graph action, no UI). The refreshed list is not persisted. No test.
+```
+
+```mdl
+verdict F-1.1: An "Open folder" action is contributed at the graph root, first in position.
+  status: untested
+  evidence:
+    [github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/app-graph-builder.ts,
+     github:dxos/dxos/packages/plugins/plugin-file-system/src/types/FileSystemOperation.ts#OpenDirectory]
+  note: The action is in the `primaryActions` extension with `disposition: 'menu'` and `Position.first`. The label is "Open folder", not "Open Folder". No test asserts the action.
+```
+
+```mdl
+verdict F-1.2: The action opens the native directory picker, through Tauri rather than Electron.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file-system/src/util.ts#openDirectoryPicker]
+  note: The picker uses `@tauri-apps/plugin-dialog` `open({ directory: true, recursive: true })`. Outside Tauri it logs and returns null. No test.
+```
+
+```mdl
+verdict F-1.3: The tree is scanned and the workspace is added, but only markdown files are scanned; images are dropped.
+  status: partial
+  evidence:
+    [github:dxos/dxos/packages/plugins/plugin-file-system/src/util.ts#readDirectoryContents,
+     github:dxos/dxos/packages/plugins/plugin-file-system/src/util.ts#isSupportedFile]
+  note: |
+    `isSupportedFile` accepts .md/.markdown only (with a `TODO: Add image/PDF support`). `isImageFile` and `SUPPORTED_IMAGE_EXTENSIONS`
+    are unused. The scan also skips dot-entries, symlinks and empty directories, and reads every file's full text eagerly.
+```
+
+```mdl
+verdict F-1.4: Re-opening a path replaces the existing entry at the same index.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file-system/src/operations/open-directory.ts#existingIndex]
+  note: The match is by `path`, and the id is derived from the path, so it is stable. No test (scenario T-2 is not automated).
+```
+
+```mdl
+verdict F-1.5: The navigation happens in the graph action after the op returns, not in the op.
+  status: partial
+  evidence:
+    [github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/app-graph-builder.ts,
+     github:dxos/dxos/packages/plugins/plugin-file-system/src/operations/open-directory.ts]
+  note: The action invokes `LayoutOperation.SwitchWorkspace` with the returned subject. Any other caller of `op:openDirectory` gets no navigation.
+```
+
+```mdl
+verdict F-2.1: The workspace is removed from state and the navtree, but there is no "Close Folder" action in the navtree.
+  status: partial
+  evidence:
+    [github:dxos/dxos/packages/plugins/plugin-file-system/src/containers/WorkspaceSettingsContainer.tsx#handleRemove,
+     github:dxos/dxos/packages/plugins/plugin-file-system/src/types/FileSystemOperation.ts#CloseDirectory]
+  note: The only entry point is the "Remove folder" button in the General settings article. The `close-directory.label` translation is unused. Nothing tests it.
+```
+
+```mdl
+verdict F-2.2: Closing does not modify the directory on disk.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/state/FileSystemManager.ts#deactivateWorkspace]
+  note: Close only stops watchers and evicts the in-memory maps. Opening, however, does write `.composer/meta.json`, `.composer/filemap.json` and xattrs into the directory, and those stay after close. No test.
+```
+
+```mdl
+verdict F-2.3: The list is persisted after removal, to localforage.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/state/FileSystemManager.ts#persistState]
+  note: The state is stored per browser profile in localforage (IndexedDB), not in ECHO, so it does not follow the user across devices. No test.
+```
+
+```mdl
+verdict F-3.1: The re-scan works, but no user-invocable "Refresh Folder" exists; refresh happens only through the directory watcher.
+  status: partial
+  evidence:
+    [github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/state/directory-watcher.ts#createDirectoryWatcher,
+     github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/state/state.ts#handleDirectoryRefresh]
+  note: |
+    `RefreshDirectory` is defined and handled, but no graph action or UI invokes it (grep finds no caller). The watcher
+    (`watchImmediate`, recursive, 500 ms debounce) refreshes on create, remove and rename. Graph sync on state replacement is
+    tested with a mock; the refresh path itself is not.
+```
+
+```mdl
+verdict F-3.2: Open files are not closed, but their nodes go briefly to the pending state during a manual refresh.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/state/FileSystemManager.ts#refreshWorkspaceContent]
+  note: |
+    `refreshWorkspaceContent` evicts all docs before the async disk re-scan. The open node's data flips to `null`
+    (`markdown-pending`) until `syncFromDisk` re-binds it through the xattr or filemap. If that lookup fails, a new Text object is
+    created, so the open editor ends up on a different object. The watcher path (`handleDirectoryRefresh`) evicts after the scan,
+    so the gap is shorter. No test.
+```
+
+```mdl
+verdict F-4.1: Each workspace is a root node with disposition `workspace`, but only once the settings space has loaded.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/app-graph-builder.ts#FILESYSTEM_TYPE]
+  note: The `workspaces` connector returns `[]` while `AppSpace.getSettingsSpace` is undefined, so folders are invisible until it loads. The graph test replaces this extension with a stand-in (`testWorkspaces`), so the real one is untested.
+```
+
+```mdl
+verdict F-4.2: Subdirectories are branch nodes under their parent, to any depth.
+  status: done
+  evidence:
+    [github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/app-graph-builder.ts#constructEntryNode,
+     github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/app-graph-builder.test.ts#setupTestContext]
+```
+
+```mdl
+verdict F-4.3: Markdown files are Text-typed leaf nodes whose data is the ECHO Text in the workspace's mirror space.
+  status: untested
+  evidence:
+    [github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/app-graph-builder.ts#constructEntryNode,
+     github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/state/markdown-documents.ts#ensureDocumentForFile]
+  note: The graph test seeds Text through a mock manager but asserts only node ids, not the node type or data.
+```
+
+```mdl
+verdict F-4.4: Editor changes are auto-saved to disk after a 1 s debounce.
+  status: untested
+  evidence:
+    [github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/markdown-extension.ts#getDebouncedSave,
+     github:dxos/dxos/packages/plugins/plugin-file-system/src/util.ts#writeFileContent]
+  note: The save target is resolved by DXN at save time, and `modified` is cleared only if the text has not changed since. No test.
+```
+
+```mdl
+verdict F-4.5: Image files are ignored by the scanner and by the graph builder.
+  status: untested
+  evidence:
+    [github:dxos/dxos/packages/plugins/plugin-file-system/src/util.ts#isSupportedFile,
+     github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/app-graph-builder.ts#constructEntryNode]
+  note: This contradicts the spec's own intro ("Markdown files and images … are surfaced") and F-1.3; the spec needs to pick one. No test.
+```
+
+```mdl
+verdict F-4.6: The order is stored in the settings space's `shared-spaces` Expando, the same array plugin-space uses.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/app-graph-builder.ts#workspaceRearrangeCache]
+  note: |
+    `onRearrange` is attached only if the shared order object already exists. It is cached for each workspace id in a module-level
+    map that is never cleared, so it keeps the first `spacesOrder` object it saw (and survives plugin reloads). The spec says
+    "personal space"; the code reads `AppSpace.getSettingsSpace`. No test.
+```
+
+```mdl
+verdict F-5.1: The registered Markdown extension is a save-to-disk listener; the shared editor comes from emitting Text-typed nodes.
+  status: diverged
+  evidence:
+    [github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/markdown-extension.ts#extensionProvider,
+     github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/index.ts#Markdown]
+  note: The outcome the requirement wants (same editor surface) holds, but not because of the extension. The `ExtensionProvider` is a `listener` that writes edits back to disk. Reword the requirement.
+```
+
+```mdl
+verdict F-5.2: Text objects are created eagerly for every markdown file when a workspace is activated, not when a node is activated.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/state/markdown-documents.ts#syncFromDisk]
+  note: |
+    `syncFromDisk` runs on open, on refresh and on startup restore. It restores Text through the xattr or filemap, or creates a new
+    one for each file, before anything is opened. Disk wins on divergence (`updateText`). Large folders pay the full cost up front.
+```
+
+```mdl
+verdict F-5.3: An unbound file shows a `markdown-pending` placeholder with its name and icon.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/app-graph-builder.ts#MARKDOWN_PENDING_TYPE]
+  note: No surface is registered for the pending type, so opening a pending node renders nothing until the binding arrives. No test.
+```
+
+```mdl
+verdict F-6.1: Each workspace node has a "General" child node, first in position.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/app-graph-builder.ts#GENERAL_TYPE]
+  note: The `workspaceSettings` extension contributes it. No test.
+```
+
+```mdl
+verdict F-6.2: The General article renders the settings form, but the form's content diverges from WorkspaceSettings.
+  status: partial
+  evidence:
+    [github:dxos/dxos/packages/plugins/plugin-file-system/src/capabilities/react-surface.ts#GENERAL_TYPE,
+     github:dxos/dxos/packages/plugins/plugin-file-system/src/containers/WorkspaceSettingsContainer.tsx#WorkspaceSettingsSchema]
+  note: The article surface is wired to `WorkspaceSettingsContainer`, which shows icon, hue and Remove folder, not name and Close (see the WorkspaceSettings verdict).
+```
+
+```mdl
+verdict F-6.3: There is no rename.
+  status: missing
+  note: |
+    I searched `WorkspaceSettingsContainer.tsx` (the schema has only icon and hue), `util.ts` (`ComposerConfig` has no name field, and
+    `loadWorkspace` sets `name` from the path basename on every load), and the operations (none renames). A name edited in the atom
+    would be lost on the next refresh or reload anyway.
+```
