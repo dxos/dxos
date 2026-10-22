@@ -553,7 +553,9 @@ class ManagerImpl implements PluginManager {
       // An id already in the enabled set (persisted from an earlier session) would otherwise read
       // as enabled while none of its modules is registered, and no toggle short of off-and-on starts it.
       Effect.tap((plugin) =>
-        this._state.isEnabled(plugin.meta.profile.key) ? this.enable(plugin.meta.profile.key) : Effect.void,
+        this._state.isEnabled(plugin.meta.profile.key)
+          ? this.enable(plugin.meta.profile.key).pipe(Effect.asVoid)
+          : Effect.void,
       ),
     );
   }
