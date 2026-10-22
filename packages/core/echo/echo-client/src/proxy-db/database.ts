@@ -492,7 +492,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   @synchronized
-  protected override async _close(): Promise<void> {
+  protected override async _close(ctx: Context): Promise<void> {
     const disposals = await Promise.allSettled([...this.#feeds.values()].map((feed) => feed.dispose()));
     for (const disposal of disposals) {
       if (disposal.status === 'rejected') {
@@ -502,7 +502,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this.#feeds.clear();
     await Promise.allSettled([...this.#retiredFeeds]);
     this.#retiredFeeds.clear();
-    await this._entityManager.close();
+    await this._entityManager.close(ctx);
   }
 
   // ── Space state ─────────────────────────────────────────────────────────
