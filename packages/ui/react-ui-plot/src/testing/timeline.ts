@@ -29,13 +29,13 @@ export const technologyTimeline: PlotValue[][] = [
     'ZX Spectrum',
     'Sinclair’s low-cost home computer brings programming to a generation in the UK.',
   ],
-  ['1982', 'Personal', 'West Midlands Ms. Pac-Man champion', 'West Midlands Ms. Pac-Man champion, 1982.'],
   [
     '1982-02',
     'Tech/Software',
     'Ms. Pac-Man',
     'The sequel, first built as an unauthorized enhancement, outsells the original in the US.',
   ],
+  ['1982-10', 'Personal', 'West Midlands Ms. Pac-Man champion', 'West Midlands Ms. Pac-Man champion, October 1982.'],
   ['1983', 'Tech/Software', 'Bulletin boards (BBS)', 'Dial-up bulletin boards form the first online communities.'],
   [
     '1983-03',
