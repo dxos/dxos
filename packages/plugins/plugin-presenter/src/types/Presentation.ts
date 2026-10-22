@@ -51,8 +51,9 @@ export const addSlide = (presentation: Presentation, content: string, index?: nu
   const text = Text.make({ content });
   Obj.update(presentation, (presentation) => {
     presentation.sections.splice(clampIndex(index, presentation.sections.length), 0, Ref.make(text));
+    // Inside the update so subscribers never see the section before its owner.
+    Obj.setParent(text, presentation);
   });
-  Obj.setParent(text, presentation);
   return text;
 };
 
