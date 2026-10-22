@@ -96,6 +96,9 @@ export class FeedObjectCore {
 
   #nextToken = 0;
 
+  /** The token of the write {@link #applied} names, so a write confirmed out of order cannot step it back. */
+  #appliedToken = 0;
+
   constructor(entity: Entity.Unknown, onDirty: (core: FeedObjectCore) => void) {
     this.entity = entity;
     const ref = EchoFeedCodec.blockOfKeys([
@@ -114,11 +117,6 @@ export class FeedObjectCore {
 
   get deleted(): boolean {
     return this.#deleted;
-  }
-
-  /** Whether the entity holds a write the feed has not acknowledged: unsent, or sent and awaiting its block. */
-  get hasLocalWrite(): boolean {
-    return this.#dirty || this.#pending !== undefined;
   }
 
   /**
@@ -142,6 +140,12 @@ export class FeedObjectCore {
    */
   confirmAppend(token: number, blockId: string | undefined): void {
     if (this.#pending?.token !== token) {
+      // A write a newer capture superseded still landed: its block is ours and older than the pending state, so
+      // an echo of it must be recognised as such rather than read as a newer block from elsewhere.
+      if (blockId !== undefined && this.#pending !== undefined && token > this.#appliedToken) {
+        this.#applied = EchoFeedCodec.blockOfKeys([{ source: FeedProtocol.KEY_FEED_BLOCK, id: blockId }]);
+        this.#appliedToken = token;
+      }
       return;
     }
     if (blockId === undefined) {
@@ -150,6 +154,7 @@ export class FeedObjectCore {
     }
     this.#pending = undefined;
     this.#applied = EchoFeedCodec.blockOfKeys([{ source: FeedProtocol.KEY_FEED_BLOCK, id: blockId }]);
+    this.#appliedToken = token;
   }
 
   /**

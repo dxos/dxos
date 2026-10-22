@@ -426,6 +426,8 @@ describe('feeds', () => {
       const feed = db.add(Feed.make({ name: 'people' }));
 
       await db.appendToFeed(feed, [Obj.make(TestSchema.Person, { name: 'john' })]);
+      // Nothing written here stays held, so only the index can answer.
+      await db.evictFeedHandle(feed);
 
       const query = db.query(Query.select(Filter.type(TestSchema.Person)).from(Scope.feed(Feed.getFeedUri(feed)!)));
       const observed: number[] = [];

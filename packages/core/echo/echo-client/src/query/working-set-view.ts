@@ -50,6 +50,8 @@ export class WorkingSetView {
   #delta?: { filter: QueryAST.Filter; options: QueryAST.QueryOptions | undefined } = undefined;
   /** Present when the query selects from feeds: their unacknowledged writes, which no index has seen yet. */
   #feedTail?: FeedTail = undefined;
+  /** The ids of the feed tail's entries as last signalled. */
+  #tailSignature = '';
   private readonly _executor: WorkingSetQueryExecutor;
   private readonly _planner: QueryPlanner;
 
@@ -155,7 +157,7 @@ export class WorkingSetView {
     return result ? { id, result, match: { rank: 1 }, resolution: { source: 'local', time: 0 } } : undefined;
   }
 
-  /** The object of a feed write in the query's scope that no index has seen, if `id` is one. */
+  /** The object of a feed write made here in the query's scope, which the index may not have seen, if `id` is one. */
   feedLocalWrite(id: string): Entity.Unknown | undefined {
     if (!this.#feedTail || !EntityId.isValid(id)) {
       return undefined;
@@ -187,8 +189,11 @@ export class WorkingSetView {
     if (this.#feedTail || isFeedSelection(query)) {
       // A feed the query reaches can be first opened after it starts, by the write that should show up in it.
       this._database._feedHandleCreated.on(this._ctx, () => {
+        const before = this.#tailSignature;
         this.#watchFeedTail(query);
-        this.changed.emit();
+        if (this.#tailSignature !== before) {
+          this.changed.emit();
+        }
       });
     }
     if (!this._evaluates(query)) {
@@ -225,8 +230,18 @@ export class WorkingSetView {
         continue;
       }
       // Both fire inside the write, so a feed write reaches the query before the writing call returns.
-      handle.localWrite.on(this._ctx, () => this.changed.emit());
-      handle.updated.on(this._ctx, () => this.changed.emit());
+      handle.localWrite.on(this._ctx, () => this.#onFeedTailChanged());
+      handle.updated.on(this._ctx, () => this.#onFeedTailChanged());
+    }
+    this.#tailSignature = this.#feedTail ? tailSignature(this.#feedTail) : '';
+  }
+
+  /** Signals only when the tail's entries change: a streamed edit to a message already shown changes no entry. */
+  #onFeedTailChanged(): void {
+    const signature = this.#feedTail ? tailSignature(this.#feedTail) : '';
+    if (signature !== this.#tailSignature) {
+      this.#tailSignature = signature;
+      this.changed.emit();
     }
   }
 
@@ -237,8 +252,15 @@ export class WorkingSetView {
       return undefined;
     }
     const allFeeds = queryIncludesAllFeeds(query);
+    // "All feeds" means the feeds of the spaces the query names, and a database holds handles for other spaces' too.
+    const targetSpaces = getTargetSpacesForQuery(query);
+    if (allFeeds && targetSpaces.length > 0 && !targetSpaces.includes(this._database.spaceId)) {
+      return undefined;
+    }
     const handles = allFeeds
-      ? [...this._database._knownFeedHandles()]
+      ? [...this._database._knownFeedHandles()].filter(
+          (handle) => EID.getSpaceId(handle.uri) === this._database.spaceId,
+        )
       : getTargetFeedsForQuery(query).flatMap((uri) => {
           const eid = EID.tryParse(uri);
           const handle = eid ? this._database._tryGetFeedHandle(eid) : undefined;
@@ -462,6 +484,11 @@ const feedEntries = ({ filter, options, handles }: FeedTail): SourceEntry[] =>
           : [],
       ),
   );
+
+const tailSignature = (tail: FeedTail): string =>
+  feedEntries(tail)
+    .map((entry) => entry.id)
+    .join(',');
 
 /** Natural order: code units, as the host and the working-set executor sort ids. */
 export const compareIds = (left: string, right: string): number => (left < right ? -1 : left > right ? 1 : 0);

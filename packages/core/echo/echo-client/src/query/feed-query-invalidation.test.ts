@@ -25,6 +25,8 @@ describe('feed query invalidation', () => {
       Array.from({ length: 50 }, (_, index) => Obj.make(TestSchema.Person, { name: `person-${index}` })),
     );
     await db.flush({ indexes: true });
+    // Nothing written here stays held, so the index answers the query and its re-runs are what this counts.
+    await db.evictFeedHandle(feed);
 
     const feedUri = Obj.getURI(feed);
     let feedQueryRuns = 0;

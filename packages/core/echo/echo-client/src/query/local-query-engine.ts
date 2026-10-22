@@ -10,6 +10,7 @@ import { type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type ItemsUpdatedEvent } from '../core-db/index.ts';
+import { isEchoObject } from '../echo-handler/index.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
 import { adjustGroups, withMembers } from './manifest-merge.ts';
 import {
@@ -418,7 +419,7 @@ export class LocalQueryEngine implements QueryContext {
       }
     }
     if (!plan.window) {
-      const merged = [...local, ...kept];
+      const merged = plan.feed ? feedOrder(local, kept) : [...local, ...kept];
       // Stable, so an in-process entry stays ahead of the remote duplicate that presentation drops.
       if (plan.order) {
         const orders = plan.order;
@@ -574,3 +575,17 @@ const whileLive =
       handler(value);
     }
   };
+
+/**
+ * A feed's order is its blocks' order, which only the remote knows: writes made here that it has not answered yet
+ * are the newest, so they follow its entries rather than lead them, and the remote's entry stands for one it has.
+ */
+const feedOrder = (local: readonly SourceEntry[], kept: readonly SourceEntry[]): SourceEntry[] => {
+  const answered = new Set(kept.map((entry) => entry.id));
+  const tail = local.filter((entry) => !isEchoObject(entry.result));
+  return [
+    ...local.filter((entry) => isEchoObject(entry.result)),
+    ...kept,
+    ...tail.filter((entry) => !answered.has(entry.id)),
+  ];
+};

@@ -97,6 +97,15 @@ export class FeedHandle {
   readonly #dirtyCores = new Set<FeedObjectCore>();
   /** In-flight append RPCs, awaited by {@link waitForPendingWrites}. */
   readonly #inFlight = new Set<Promise<void>>();
+
+  /** Cores of the objects appended or edited through this handle, in the order they were first written. */
+  readonly #writtenHere = new Set<FeedObjectCore>();
+
+  /**
+   * Settles when the last send does: each send starts after the one before it, because the store orders
+   * blocks as they arrive and two writes of one object racing would let the older one land last.
+   */
+  #sendTail: Promise<void> = Promise.resolve();
   /** Dedupes concurrent hydrations of the same id (reactive query + one-shot query racing). */
   readonly #hydrating = new Map<EntityId, Promise<Entity.Unknown | undefined>>();
 
@@ -205,9 +214,8 @@ export class FeedHandle {
       return { core, json, token };
     });
 
-    this.#addOptimistic(cores);
-
     if (this.#endpointClosed) {
+      this.#addOptimistic(cores);
       // Revert first: the capture above cleared each core's dirty flag and left a pending-append
       // token, so leaving without it would drop the write AND leave `reconcile` preferring the
       // never-sent local state over every inbound block for the life of the handle.
@@ -222,8 +230,10 @@ export class FeedHandle {
       throw this.#endpointClosed;
     }
 
-    const sendPromise = this.#sendAppendBatches(batch);
+    // Queued before subscribers hear of it: one that writes from the notification must send after this batch.
+    const sendPromise = this.#sendInOrder(batch);
     this.#inFlight.add(sendPromise);
+    this.#addOptimistic(cores);
     try {
       await sendPromise;
     } finally {
@@ -269,6 +279,7 @@ export class FeedHandle {
       const id = EntityId.make(item.id);
       const existingCore = this.#cores.get(id);
       const core = existingCore ?? this.#registerCore(item);
+      this.#writtenHere.add(core);
       if (existingCore && existingCore.entity !== item) {
         existingCore.applyLocalUpdate(item);
       }
@@ -292,30 +303,24 @@ export class FeedHandle {
 
   /** Enqueue a core for the next background append and wake the scheduler. */
   #onCoreDirty(core: FeedObjectCore): void {
+    this.#writtenHere.add(core);
     this.#dirtyCores.add(core);
     this.#appendScheduler.trigger();
     this.localWrite.emit();
   }
 
   /**
-   * The objects holding a write the feed has not acknowledged. The index cannot have seen these writes, so a
-   * query evaluates them here; everything else in the feed it answers itself.
+   * The objects written through this handle, which the index may not have seen yet. A query shows them until its
+   * index answer does; keeping one past its acknowledgement keeps it from vanishing until the index catches up.
    */
   localWrites(): Entity.Unknown[] {
-    return [...this.#cores.values()]
-      .filter((core) => this.#holdsLocalWrite(core) && !core.deleted)
-      .map((core) => core.entity);
+    return [...this.#writtenHere].filter((core) => !core.deleted).map((core) => core.entity);
   }
 
-  /** The object of a local write the feed has not acknowledged, if `id` is one. */
+  /** The object written through this handle under `id`, if there is one. */
   getLocalWrite(id: EntityId): Entity.Unknown | undefined {
     const core = this.#cores.get(id);
-    return core && this.#holdsLocalWrite(core) ? core.entity : undefined;
-  }
-
-  /** A core queued for the next append holds a write even before the batch marks it pending. */
-  #holdsLocalWrite(core: FeedObjectCore): boolean {
-    return core.hasLocalWrite || this.#dirtyCores.has(core);
+    return core && this.#writtenHere.has(core) && !core.deleted ? core.entity : undefined;
   }
 
   async delete(ids: string[]): Promise<void> {
@@ -355,6 +360,16 @@ export class FeedHandle {
    * assigns a fresh sequence per object, so re-sending a chunk that already committed appends a
    * second block rather than reconciling with the first.
    */
+  /** Sends a batch once every earlier batch has settled; the returned promise carries this batch's own outcome. */
+  #sendInOrder(batch: AppendCapture[]): Promise<void> {
+    const send = this.#sendTail.then(() => this.#sendAppendBatches(batch));
+    this.#sendTail = send.then(
+      () => undefined,
+      () => undefined,
+    );
+    return send;
+  }
+
   async #sendAppendBatches(batch: AppendCapture[]): Promise<void> {
     for (let i = 0; i < batch.length; i += FEED_APPEND_BATCH_SIZE) {
       const chunk = batch.slice(i, i + FEED_APPEND_BATCH_SIZE);
@@ -461,7 +476,7 @@ export class FeedHandle {
     });
     this.#dirtyCores.clear();
 
-    const sendPromise = this.#sendAppendBatches(batch);
+    const sendPromise = this.#sendInOrder(batch);
     this.#inFlight.add(sendPromise);
     try {
       await sendPromise;

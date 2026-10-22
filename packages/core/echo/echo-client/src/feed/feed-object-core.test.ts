@@ -87,6 +87,29 @@ describe('FeedObjectCore', () => {
     core.dispose();
   });
 
+  test('an echo of a superseded write does not override the write that replaced it', ({ expect }) => {
+    const entity = Obj.make(TestSchema.Person, { name: 'v1' });
+    const core = new FeedObjectCore(entity, () => {});
+
+    Obj.update(entity, (entity) => {
+      entity.name = 'v2';
+    });
+    const first = core.captureForAppend();
+    Obj.update(entity, (entity) => {
+      entity.name = 'v3';
+    });
+    const second = core.captureForAppend();
+
+    // The first write lands after the second was captured, and the store then echoes it back ordered.
+    core.confirmAppend(first.token, EchoFeedCodec.blockId('a', 1));
+    expect(core.accepts({ actorId: 'a', sequence: 1, position: 5 })).toBe(false);
+    expect(entity.name).toEqual('v3');
+
+    core.confirmAppend(second.token, EchoFeedCodec.blockId('a', 2));
+    expect(core.accepts({ actorId: 'a', sequence: 2 })).toBe(false);
+    core.dispose();
+  });
+
   test('an append whose store reports no block id waits for a block ordered after the current state', ({ expect }) => {
     const entity = stamped(Obj.make(TestSchema.Person, { name: 'v1' }), { position: 3 });
     const core = new FeedObjectCore(entity, () => {});
