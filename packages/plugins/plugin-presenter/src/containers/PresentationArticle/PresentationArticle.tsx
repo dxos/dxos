@@ -11,8 +11,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { Deck, SectionPicker } from '#components';
-import { usePresentationDeck } from '#deck';
-import { useIsPresenting, useSetPresenting, useSlideIndex } from '#hooks';
+import { useIsPresenting, usePresentationDeck, useSetPresenting, useSlideIndex } from '#hooks';
 import { meta } from '#meta';
 import { Presentation } from '#types';
 

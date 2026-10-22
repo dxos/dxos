@@ -3,5 +3,4 @@
 //
 
 export * from './SlideSource.ts';
-export * from './usePresentationDeck.ts';
 export * from './slideSourcesAtom.ts';
