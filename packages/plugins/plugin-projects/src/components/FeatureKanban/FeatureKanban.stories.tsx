@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
-import { expect, waitFor } from 'storybook/test';
+import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
@@ -92,5 +92,28 @@ export const Default: Story = {
     }
     await waitFor(() => expect(cardIn(canvasElement, 'prototype', 'triage')).toBeTruthy(), { timeout: 5_000 });
     await expect(cardIn(canvasElement, 'planned', 'triage')).toBeFalsy();
+  },
+};
+
+/** Selection follows focus across columns, as in the cards view: the arrow keys move it, and Escape clears it. */
+export const Selection: Story = {
+  play: async ({ canvasElement }) => {
+    const card = (id: string) => canvasElement.querySelector<HTMLElement>(`[data-feature="${id}"]`);
+    const selected = () =>
+      [...canvasElement.querySelectorAll('[aria-selected="true"]')].map((element) =>
+        element.getAttribute('data-feature'),
+      );
+    await waitFor(() => expect(card('feature-map')).toBeTruthy(), { timeout: 10_000 });
+    const featureMap = card('feature-map');
+    if (!featureMap) {
+      throw new Error('no card for feature-map');
+    }
+    await userEvent.click(featureMap);
+    await waitFor(() => expect(selected()).toEqual(['feature-map']));
+    // In progress → Prototype: the next column's card is selected, and the rest fade.
+    await userEvent.keyboard('{ArrowRight}');
+    await waitFor(() => expect(selected()).toEqual(['sync']));
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(selected()).toEqual([]));
   },
 };
