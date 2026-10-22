@@ -76,3 +76,21 @@ export const Selected: Story = {
     await expect(tile('triage')).toHaveAttribute('aria-selected', 'false');
   },
 };
+
+/** The text filter matches names and descriptions; a pressed status shows only that status, and pressing none shows all. */
+export const Filter: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const cards = () => canvasElement.querySelectorAll('[data-testid="feature-card"]');
+    await waitFor(async () => expect(cards()).toHaveLength(SAMPLE_FEATURES.length));
+    await userEvent.type(canvas.getByTestId('feature-board.filter'), 'sync');
+    await waitFor(async () => expect(cards().length).toBeLessThan(SAMPLE_FEATURES.length));
+    await expect(card(canvasElement, 'sync')).toBeInTheDocument();
+    await userEvent.clear(canvas.getByTestId('feature-board.filter'));
+    await userEvent.click(canvas.getByTestId('feature-board.status.operational'));
+    const operational = SAMPLE_FEATURES.filter((feature) => feature.status === 'operational').length;
+    await waitFor(async () => expect(cards()).toHaveLength(operational));
+    await userEvent.click(canvas.getByTestId('feature-board.status.operational'));
+    await waitFor(async () => expect(cards()).toHaveLength(SAMPLE_FEATURES.length));
+  },
+};

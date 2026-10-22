@@ -6,10 +6,10 @@ import React, { createContext, useContext, useMemo, useState } from 'react';
 
 import { useListSelection } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
+import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
-import * as Tag from '@dxos/react-ui/Tag';
 
 import { meta } from '#meta';
 
@@ -121,6 +121,27 @@ export const FeatureBoard = ({
   const [selectedIdState, setSelectedIdState] = useState<string | undefined>(defaultSelectedId);
   const selectedId = selectedIdProp ?? selectedIdState;
   const lookup = useMemo(() => makeFeatureLookup(features), [features]);
+  const [query, setQuery] = useState('');
+  // No status pressed shows every status.
+  const [statuses, setStatuses] = useState<ReadonlySet<FeatureStatus>>(new Set());
+  const toggleStatus = (status: FeatureStatus, pressed: boolean) =>
+    setStatuses((current) => {
+      const next = new Set(current);
+      if (pressed) {
+        next.add(status);
+      } else {
+        next.delete(status);
+      }
+      return next;
+    });
+  const shown = useMemo(() => {
+    const text = query.trim().toLowerCase();
+    return features.filter(
+      (feature) =>
+        (statuses.size === 0 || statuses.has(feature.status)) &&
+        (!text || `${feature.name} ${feature.description ?? ''}`.toLowerCase().includes(text)),
+    );
+  }, [features, query, statuses]);
 
   const handleSelect = (id: string | undefined) => {
     setSelectedIdState(id);
@@ -141,15 +162,29 @@ export const FeatureBoard = ({
 
   return (
     <Layout.Flex column gap='md' classNames='p-3 w-full' data-testid='feature-board'>
-      <Layout.Flex wrap gap='xs'>
+      {/* The status counts are the filter's toggles, so each says how many cards it adds. */}
+      <Layout.Flex wrap gap='xs' classNames='items-center'>
+        <Input.Root
+          placeholder={t('feature-board.filter.placeholder')}
+          aria-label={t('feature-board.filter.placeholder')}
+          value={query}
+          classNames='max-w-64'
+          data-testid='feature-board.filter'
+          onChange={(event) => setQuery(event.target.value)}
+        />
         {STATUSES.map((status) => {
           const count = features.filter((feature) => feature.status === status).length;
           return (
             count > 0 && (
-              <Tag.Tag key={status} hue={FEATURE_STATUS_STYLE[status].hue}>
-                <Icon.Icon icon={FEATURE_STATUS_STYLE[status].icon} size='xs' />
-                {t('feature-board.status-count.label', { count, status: t(`feature-status.${status}.label`) })}
-              </Tag.Tag>
+              <Button.Toggle
+                key={status}
+                variant='ghost'
+                icon={FEATURE_STATUS_STYLE[status].icon}
+                label={t('feature-board.status-count.label', { count, status: t(`feature-status.${status}.label`) })}
+                pressed={statuses.has(status)}
+                onPressedChange={(pressed) => toggleStatus(status, pressed)}
+                data-testid={`feature-board.status.${status}`}
+              />
             )
           );
         })}
@@ -160,7 +195,7 @@ export const FeatureBoard = ({
         <FeatureTileContext.Provider value={tileContext}>
           <Masonry.Root Tile={FeatureTile} minColumnWidth={17}>
             <Masonry.Viewport
-              items={features}
+              items={shown}
               getId={(feature) => feature.id}
               itemProps={(id) => bind(id).rowProps}
               scroll={false}

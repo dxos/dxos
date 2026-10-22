@@ -116,6 +116,7 @@ export const translations = [
         'feature-card.showcases.title': 'Showcases',
         'feature-card.specs.title': 'Specs',
         'feature-board.status-count.label': '{{count}} {{status}}',
+        'feature-board.filter.placeholder': 'Filter features',
         'feature-card.open.label': 'Open feature',
         'feature-card.edit.label': 'Edit',
         'feature-card.menu.label': 'Feature actions',
