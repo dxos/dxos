@@ -43,7 +43,7 @@ export const Slide = ({ content = '', classes = theme.nodes }: SlideProps) => {
  * Rehype plugin to format DOM based on frontmatter.
  * https://github.com/unifiedjs/unified#plugin
  * TODO(burdon): See tools/presenter: remarkPluginLayout
- *  E.g., layout image from front-matter.
+ * E.g., layout image from front-matter.
  */
 const slideLayout =
   (_options = {}) =>
