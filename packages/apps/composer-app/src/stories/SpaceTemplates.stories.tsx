@@ -70,6 +70,7 @@ const TEMPLATES = {
   review: 'org.dxos.plugin-debug.template.review',
   stockfish: 'org.dxos.plugin-debug.template.stockfish',
   tidepool: 'org.dxos.plugin-debug.template.tidepool',
+  timeline: 'org.dxos.plugin-debug.template.timeline',
   weather: 'org.dxos.plugin-debug.template.weather',
   worker: 'org.dxos.plugin-debug.template.worker',
 } as const;
@@ -336,5 +337,8 @@ export const Review: Story = { args: { template: TEMPLATES.review }, play };
 export const Stockfish: Story = { args: { template: TEMPLATES.stockfish }, play };
 
 export const Tidepool: Story = { args: { template: TEMPLATES.tidepool }, play };
+
+/** The timeline chart's project: its feature map and open tasks. */
+export const TimelineProject: Story = { args: { template: TEMPLATES.timeline }, play };
 
 export const Weather: Story = { args: { template: TEMPLATES.weather }, play };

@@ -21,6 +21,7 @@ export default defineConfig({
     ReviewSpace: 'src/samples/review/ReviewSpace.ts',
     StockfishSpace: 'src/samples/stockfish/StockfishSpace.ts',
     TidepoolSpace: 'src/samples/tidepool/TidepoolSpace.ts',
+    TimelineSpace: 'src/samples/timeline/TimelineSpace.ts',
     WeatherSpace: 'src/samples/weather/WeatherSpace.ts',
     WorkerSpace: 'src/samples/worker/WorkerSpace.ts',
     translations: 'src/translations.ts',

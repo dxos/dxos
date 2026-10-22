@@ -12,6 +12,7 @@ import {
   ReviewSpace,
   StockfishSpace,
   TidepoolSpace,
+  TimelineSpace,
   WeatherSpace,
   WorkerSpace,
 } from '../samples/index.ts';
@@ -26,4 +27,5 @@ export default [
   ReviewSpace.makeTemplate(),
   FieldstoneSpace.makeTemplate(),
   PresenterSpace.makeTemplate(),
+  TimelineSpace.makeTemplate(),
 ] satisfies ReadonlyArray<AppCapabilities.SpaceTemplate>;
