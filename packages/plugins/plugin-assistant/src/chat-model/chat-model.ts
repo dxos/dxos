@@ -46,7 +46,7 @@ import { TurnReviewSkill } from '#skills';
 import { AssistantOperation } from '#types';
 
 import { findInCause } from '../util/error-cause.ts';
-import { arrangeLanes } from './lanes.ts';
+import { arrangeLanes, makeLaneRowCache } from './lanes.ts';
 import { Outbox, type OutboxEntry, PromptCancelledError } from './outbox.ts';
 import { providerForModel } from './presets.ts';
 import { type ChatRequestContext, createPromptContent } from './prompt.ts';
@@ -264,6 +264,9 @@ export class ChatModel {
   /** Set of message IDs that have been finalized (non-pending delivered via ephemeral). */
   readonly #finalizedIds = new Set<string>();
 
+  /** Lane rows kept between arrangements, so a lane's card keeps its identity while the chat is open. */
+  readonly #laneRows = makeLaneRowCache();
+
   /** Timestamp of the newest trace event applied this turn, overall and per streamed message. */
   #appliedAt = 0;
   readonly #appliedAtByMessage = new Map<string, number>();
@@ -375,6 +378,7 @@ export class ChatModel {
         lanes: view.lanes,
         laneOf: view.laneOf,
         delivery: projection.delivery,
+        cache: this.#laneRows,
       });
       return { ...projection, ...arranged };
     });

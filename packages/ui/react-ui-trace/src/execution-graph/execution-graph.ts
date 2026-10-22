@@ -860,21 +860,24 @@ const spanTreeToCommits = (
       }
     }
 
-    for (let index = 0; index < span.children.length; index += 1) {
-      const child = span.children[index]!;
+    // Light threads of one process run at once, so a run of them is emitted in time order across the
+    // run; emitted one after another, their lanes would never be open side by side.
+    let threads: Span[] = [];
+    const flushThreads = () => {
+      if (threads.length > 0) {
+        emitThreadCommits(threads);
+        threads = [];
+      }
+    };
+    for (const child of span.children) {
       if (child.meta.thread === undefined) {
+        flushThreads();
         emitSpanCommits(child);
-        continue;
+      } else {
+        threads.push(child);
       }
-      // Light threads of one process run at once, so a run of them is emitted in time order across the
-      // run; emitted one after another, their lanes would never be open side by side.
-      const threads = [child];
-      while (span.children[index + 1]?.meta.thread !== undefined) {
-        index += 1;
-        threads.push(span.children[index]!);
-      }
-      emitThreadCommits(threads);
     }
+    flushThreads();
 
     for (let eventIndex = 0; eventIndex < span.events.length; eventIndex += 1) {
       const event = span.events[eventIndex]!;
