@@ -706,10 +706,20 @@ export class EdgeHttpClient extends BaseHttpClient {
     });
   }
 
-  public async forceRunCronTrigger(ctx: Context, spaceId: SpaceId, triggerId: ObjectId) {
+  /**
+   * Runs a cron trigger now. `data` becomes the fire event's `data`, which the trigger's
+   * `{{event.data.*}}` input templates read, and is kept across the run's `runAgain` continuations.
+   */
+  public async forceRunCronTrigger(
+    ctx: Context,
+    spaceId: SpaceId,
+    triggerId: ObjectId,
+    { data }: { data?: Record<string, unknown> } = {},
+  ) {
     return this._call(ctx, new URL(`/compute/functions/${spaceId}/triggers/crons/${triggerId}/run`, this.baseUrl), {
       method: 'POST',
       auth: true,
+      ...(data ? { body: { data } } : {}),
     });
   }
 

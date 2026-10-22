@@ -107,7 +107,12 @@ export const AgentsDebug = ({ role }: AgentsDebugProps) => {
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>
-        {view === 'credentials' ? <CredentialsTable credentials={credentials} /> : <JsonView data={identity} />}
+        {/* Keyed by the agent, so a credential picked for one agent is not shown as another's. */}
+        {view === 'credentials' && !error ? (
+          <CredentialsTable key={agent?.did} credentials={credentials} />
+        ) : (
+          <JsonView data={identity} />
+        )}
       </Panel.Body>
     </Panel.Root>
   );
