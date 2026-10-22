@@ -895,6 +895,9 @@ const LaneEvents = ({
   );
 };
 
+/** Whether an image looks like a logo: a vector drawing or a file named as one. */
+const isLogo = (url: string) => /logo|\.svg/i.test(url);
+
 type EventCardProps = {
   event: TimelineEvent;
   side: Side;
@@ -925,7 +928,15 @@ const EventCard = ({ event, side, getAnchorElement, color, onClose, onHover, onL
       onPointerEnter={onHover}
       onPointerLeave={onLeave}
     >
-      {event.image && <img src={event.image} alt='' loading='lazy' className='max-h-48 w-full object-cover' />}
+      {event.image &&
+        (isLogo(event.image) ? (
+          // Logos are shown whole on white, so they are neither cropped nor lost against a dark card.
+          <div className='flex h-28 items-center justify-center bg-white p-4'>
+            <img src={event.image} alt='' loading='lazy' className='max-h-full max-w-full object-contain' />
+          </div>
+        ) : (
+          <img src={event.image} alt='' loading='lazy' className='max-h-48 w-full object-cover' />
+        ))}
       <div className='flex flex-col gap-1 p-3'>
         <Popover.Title>{event.label}</Popover.Title>
         <div className='text-sm font-medium' style={{ color }}>

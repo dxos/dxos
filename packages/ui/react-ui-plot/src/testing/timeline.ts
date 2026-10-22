@@ -155,7 +155,7 @@ export const technologyTimeline: PlotValue[][] = [
     'Personal',
     'VSEL (Trident launch)',
     'VSEL (Vickers Shipbuilding and Engineering), Trident launch, September 1986.',
-    null,
+    'https://upload.wikimedia.org/wikipedia/commons/9/9f/VSEL.png',
   ],
   [
     '1987',
@@ -227,7 +227,13 @@ export const technologyTimeline: PlotValue[][] = [
     'Guido van Rossum releases Python 0.9.0.',
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c3/Python-logo-notext.svg/500px-Python-logo-notext.svg.png',
   ],
-  ['1991-04', 'Personal', 'Sony', 'Research Engineer, Apr 1991 – Mar 1993.', null],
+  [
+    '1991-04',
+    'Personal',
+    'Sony',
+    'Research Engineer, Apr 1991 – Mar 1993.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ca/Sony_logo.svg/500px-Sony_logo.svg.png',
+  ],
   [
     '1991-08',
     'Tech/Software',
@@ -256,7 +262,13 @@ export const technologyTimeline: PlotValue[][] = [
     'Intel’s superscalar x86 processor.',
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d5/Intel_Pentium_2020_logo.svg/500px-Intel_Pentium_2020_logo.svg.png',
   ],
-  ['1993-04', 'Personal', 'Goldman Sachs', 'Senior Programmer Analyst, Apr 1993 – Apr 1996.', null],
+  [
+    '1993-04',
+    'Personal',
+    'Goldman Sachs',
+    'Senior Programmer Analyst, Apr 1993 – Apr 1996.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/61/Goldman_Sachs.svg/500px-Goldman_Sachs.svg.png',
+  ],
   ['1993-07', 'Macro/MIC', '“Last Supper”', 'The Pentagon urges contractors to consolidate after the Cold War.', null],
   ['1994-10', 'Tech/Software', 'Netscape', 'The Netscape Navigator browser brings the web to the mainstream.', null],
   [
@@ -295,7 +307,13 @@ export const technologyTimeline: PlotValue[][] = [
     'Shields online platforms from liability for what their users post.',
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/Great_Seal_of_the_United_States_%28obverse%29.svg/500px-Great_Seal_of_the_United_States_%28obverse%29.svg.png',
   ],
-  ['1996-03', 'Personal', 'D. E. Shaw', 'Senior Engineer, Advanced Development Group, Mar 1996 – May 1997.', null],
+  [
+    '1996-03',
+    'Personal',
+    'D. E. Shaw',
+    'Senior Engineer, Advanced Development Group, Mar 1996 – May 1997.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/62/D._E._Shaw_%26_Co._Logo.svg/500px-D._E._Shaw_%26_Co._Logo.svg.png',
+  ],
   ['1997', 'Personal', 'Industrial Light & Magic', 'Senior FX Engineer, 1997 – May 1999.', null],
   [
     '1997-05',
@@ -446,7 +464,13 @@ export const technologyTimeline: PlotValue[][] = [
     'iRobot’s vacuum becomes the first mass-market home robot.',
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f5/Roomba_original.jpg/500px-Roomba_original.jpg',
   ],
-  ['2003', 'Personal', 'Silicongo acquired by Oracle', 'Oracle acquires Silicongo, 2003.', null],
+  [
+    '2003',
+    'Personal',
+    'Silicongo acquired by Oracle',
+    'Oracle acquires Silicongo, 2003.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/50/Oracle_logo.svg/500px-Oracle_logo.svg.png',
+  ],
   [
     '2003-03',
     'Macro/MIC',
@@ -483,7 +507,13 @@ export const technologyTimeline: PlotValue[][] = [
     'The term names a web of platforms and user-generated content.',
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a7/Web_2.0_Map.svg/500px-Web_2.0_Map.svg.png',
   ],
-  ['2004-11', 'Personal', 'Google', 'Firestarter, Nov 2004 – Jan 2014.', null],
+  [
+    '2004-11',
+    'Personal',
+    'Google',
+    'Firestarter, Nov 2004 – Jan 2014.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2f/Google_2015_logo.svg/500px-Google_2015_logo.svg.png',
+  ],
   ['2004-12', 'Tech/Software', 'MapReduce', 'Google publishes MapReduce for processing data across clusters.', null],
   [
     '2005',
@@ -506,7 +536,13 @@ export const technologyTimeline: PlotValue[][] = [
     'Linus Torvalds writes Git to manage Linux kernel development.',
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e0/Git-logo.svg/500px-Git-logo.svg.png',
   ],
-  ['2006', 'Personal', 'Google Docs', 'Google Docs, 2006.', null],
+  [
+    '2006',
+    'Personal',
+    'Google Docs',
+    'Google Docs, 2006.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/01/Google_Docs_logo_%282014-2020%29.svg/500px-Google_Docs_logo_%282014-2020%29.svg.png',
+  ],
   [
     '2006-03',
     'Tech/Software',
@@ -550,7 +586,13 @@ export const technologyTimeline: PlotValue[][] = [
     'General-purpose programming on GPUs, later the engine of deep learning.',
     'https://upload.wikimedia.org/wikipedia/commons/b/b9/Nvidia_CUDA_Logo.jpg',
   ],
-  ['2008', 'Personal', 'Google App Engine', 'Google App Engine, 2008.', null],
+  [
+    '2008',
+    'Personal',
+    'Google App Engine',
+    'Google App Engine, 2008.',
+    'https://upload.wikimedia.org/wikipedia/commons/e/e7/Google_App_Engine_icon.jpg',
+  ],
   [
     '2008-04',
     'Tech/Software',
@@ -669,7 +711,13 @@ export const technologyTimeline: PlotValue[][] = [
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/AlexNet_block_diagram.svg/500px-AlexNet_block_diagram.svg.png',
   ],
   ['2012-12', 'Tech/Software', 'Gangnam Style', 'The first YouTube video to pass a billion views.', null],
-  ['2013', 'Personal', 'Google Inbox (Matrix)', 'Google Inbox (Matrix), 2013.', null],
+  [
+    '2013',
+    'Personal',
+    'Google Inbox (Matrix)',
+    'Google Inbox (Matrix), 2013.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f2/Google_Inbox_by_Gmail_logo.svg/500px-Google_Inbox_by_Gmail_logo.svg.png',
+  ],
   [
     '2013-03',
     'Macro/TIC',
