@@ -7,11 +7,11 @@ import React, {
   type KeyboardEvent,
   type MouseEvent,
   type PointerEvent,
-  type RefObject,
   useEffect,
   useRef,
 } from 'react';
 
+import { useMasonryTileRevealed } from '@dxos/react-ui-masonry';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -132,34 +132,6 @@ export const StatusIcon = ({ status, onChange, muted, testId }: StatusIconProps)
   );
 };
 
-const REVEAL_FOCUS_FRAMES = 60;
-
-/** Focuses `ref` on mount, or once it becomes focusable, unless focus has moved elsewhere first. */
-const useFocusWhenRevealed = (ref: RefObject<HTMLElement | null>, enabled: boolean) => {
-  useEffect(() => {
-    const element = ref.current;
-    if (!enabled || !element) {
-      return;
-    }
-
-    const origin = document.activeElement;
-    let frame = 0;
-    let frames = REVEAL_FOCUS_FRAMES;
-    const attempt = () => {
-      if (document.activeElement === element || document.activeElement !== origin || frames-- <= 0) {
-        return;
-      }
-
-      element.focus();
-      if (document.activeElement !== element) {
-        frame = requestAnimationFrame(attempt);
-      }
-    };
-    attempt();
-    return () => cancelAnimationFrame(frame);
-  }, [enabled]);
-};
-
 /**
  * A field of a card in edit mode, committed when it loses focus (Enter does that). Keys and presses stay in the field:
  * the card would toggle its selection, and a canvas would delete the box on Backspace.
@@ -186,7 +158,13 @@ export const EditField = ({
     shownRef.current = value;
   }, [value]);
 
-  useFocusWhenRevealed(fieldRef, !!autoFocus);
+  // A new card's tile stays hidden until the board has measured it, so focus waits for the reveal.
+  const revealed = useMasonryTileRevealed();
+  useEffect(() => {
+    if (autoFocus && revealed) {
+      fieldRef.current?.focus();
+    }
+  }, [autoFocus, revealed]);
 
   const handleBlur = (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const next = event.currentTarget.value.trim();
