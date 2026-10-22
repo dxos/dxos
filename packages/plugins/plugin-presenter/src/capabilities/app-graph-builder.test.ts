@@ -18,6 +18,7 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
+import { slideSourcesAtom } from '#deck';
 import { meta } from '#meta';
 import { Presentation } from '#types';
 
@@ -101,7 +102,7 @@ describe('presentation sections', () => {
     expect(children().map((child) => child.data.id)).toEqual([...order].reverse());
   });
 
-  test('removing an owned section deletes it; removing a linked one only unlinks', async ({ expect }) => {
+  test('owned sections offer no remove; removing a linked one only unlinks', async ({ expect }) => {
     const { db, presentation, notes, parent } = await setup();
     const container = AppNode.getListOf(parent());
     expect(container?.removeLabel).toEqual(['remove-section.label', { ns: meta.profile.key }]);
@@ -114,11 +115,22 @@ describe('presentation sections', () => {
       return;
     }
 
-    ContainerModel.remove({ container, object: owned });
-    ContainerModel.remove({ container, object: notes });
+    expect(ContainerModel.isRemovable(container, owned)).toBe(false);
+    expect(ContainerModel.isRemovable(container, notes)).toBe(true);
+    ContainerModel.release({ container, object: notes });
     await db.flush();
-    expect(presentation.sections).toHaveLength(1);
-    expect(Obj.isDeleted(owned)).toBe(true);
+    expect(presentation.sections).toHaveLength(2);
     expect(Obj.isDeleted(notes)).toBe(false);
+  });
+
+  test('a deleted section leaves the children, which match the deck', async ({ expect }) => {
+    const { db, registry, graphBuilder, presentation, notes, children } = await setup();
+    const deck = () => registry.get(slideSourcesAtom(presentation));
+    registry.subscribe(slideSourcesAtom(presentation), () => {});
+    db.remove(notes);
+    await db.flush();
+    await expect.poll(() => deck().map((source) => source.kind)).toEqual(['text', 'text']);
+    await AppGraphBuilder.flush(graphBuilder);
+    expect(children().map((child) => child.data.id)).toEqual(deck().map((source) => source.id));
   });
 });

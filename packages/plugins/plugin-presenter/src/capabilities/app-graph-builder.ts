@@ -13,12 +13,12 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { Text } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
+import { slideSourcesAtom } from '#deck';
 import { meta } from '#meta';
 import { Presentation, PresenterOperation } from '#types';
 
@@ -41,20 +41,23 @@ export const createSectionsExtension = () =>
         return Effect.succeed([]);
       }
 
-      const refs = get(Obj.atomProperty(presentation, 'sections'));
+      // The deck's sources, so the folder lists the same slides in the same order (pending ones aside).
       return Effect.succeed(
-        get(Obj.atomReactive(refs))
-          .map((object) => {
+        get(slideSourcesAtom(presentation))
+          .map((source, position) => {
+            if (source.kind === 'pending') {
+              return undefined;
+            }
+            const object = source.kind === 'text' ? source.text : source.object;
             const node = AppNode.makeObject({ get, db, object, navigable: true });
-            if (!node || !Obj.instanceOf(Text.Text, object) || get(Obj.parentAtom(object))?.id !== presentation.id) {
+            if (!node || source.kind !== 'text') {
               return node;
             }
 
-            const index = refs.findIndex(Ref.hasEntityId(object.id)) + 1;
-            const label: Translations.Label = get(Obj.atomProperty(object, 'name')) ||
-              get(Obj.atomProperty(object, 'content')).match(HEADING)?.[1] || [
+            const label: Translations.Label = get(Obj.atomProperty(source.text, 'name')) ||
+              get(Obj.atomProperty(source.text, 'content')).match(HEADING)?.[1] || [
                 'slide-fallback.label',
-                { ns: meta.profile.key, count: index },
+                { ns: meta.profile.key, count: position + 1 },
               ];
             return { ...node, properties: { ...node.properties, label } };
           })

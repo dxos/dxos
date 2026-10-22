@@ -46,6 +46,26 @@ describe('slideSourcesAtom', () => {
     expect(sources[2].kind).toBe('text');
   });
 
+  test('omits a deleted linked document instead of leaving it pending', async ({ expect }) => {
+    const { db, presentation, registry, atom } = await setup(['a', 'b']);
+    const doc = db.add(Markdown.make({ content: 'x' }));
+    Presentation.link(presentation, doc);
+    await db.flush({ indexes: true });
+    await expect.poll(() => registry.get(atom).map((source) => source.kind)).toEqual(['text', 'text', 'object']);
+    db.remove(doc);
+    await db.flush();
+    await expect.poll(() => registry.get(atom).map((source) => source.kind)).toEqual(['text', 'text']);
+  });
+
+  test('omits a deleted owned slide', async ({ expect }) => {
+    const { db, presentation, registry, atom } = await setup(['a', 'b']);
+    const [, second] = registry.get(atom);
+    const text = await presentation.sections[0].load();
+    db.remove(text);
+    await db.flush();
+    await expect.poll(() => registry.get(atom).map((source) => source.id)).toEqual([second.id]);
+  });
+
   test('reorders when sections move', async ({ expect }) => {
     const { presentation, registry, atom } = await setup(['a', 'b']);
     const [first, second] = registry.get(atom).map((source) => source.id);

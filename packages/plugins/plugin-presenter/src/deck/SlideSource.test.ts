@@ -54,6 +54,18 @@ describe('toSlideSources', () => {
     expect(sources[0].id).toBe(first.id);
   });
 
+  test('deleted targets are omitted', async ({ expect }) => {
+    const { db } = await setup();
+    const presentation = db.add(Presentation.make({ slides: ['a'] }));
+    const doc = db.add(Markdown.make({ content: 'x' }));
+    Presentation.link(presentation, doc);
+    await db.flush({ indexes: true });
+    const text = await presentation.sections[0].load();
+    db.remove(doc);
+    const sources = toSlideSources(presentation, [text, doc]);
+    expect(sources.map((source) => source.id)).toEqual([text.id]);
+  });
+
   test('empty presentation', async ({ expect }) => {
     const { db } = await setup();
     const presentation = db.add(Presentation.make());
