@@ -85,6 +85,7 @@ export const technologyTimeline: PlotValue[][] = [
     'Unix / SQL client-server',
     'Workloads move off mainframes to Unix servers and SQL databases.',
   ],
+  ['1990-06', 'Personal', 'Graduated from Sheffield University', 'Graduated from Sheffield University, June 1990.'],
   ['1991-01', 'Macro/MIC', 'Gulf War', 'Precision-guided munitions are shown on live television.'],
   ['1991-02', 'Tech/Software', 'Python', 'Guido van Rossum releases Python 0.9.0.'],
   ['1991-04', 'Personal', 'Sony', 'Research Engineer, Apr 1991 – Mar 1993.'],
