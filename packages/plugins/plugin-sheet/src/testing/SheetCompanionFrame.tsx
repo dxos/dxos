@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ReactNode, useState } from 'react';
+import React, { type ReactNode, useLayoutEffect, useRef, useState } from 'react';
 
 import { useSpaces } from '@dxos/react-client/echo';
 import * as Splitter from '@dxos/react-ui/Splitter';
@@ -29,7 +29,7 @@ export type SheetCompanionFrameProps = {
   label: string;
   icon: string;
   mode?: SheetCompanionFrameMode;
-  /** The companion pane's initial width in rem. */
+  /** The companion pane's initial width in rem; half the frame without one. */
   size?: number;
 };
 
@@ -43,19 +43,31 @@ export const SheetCompanionFrame = ({
   label,
   icon,
   mode: initialMode = 'split',
-  size = 40,
+  size,
 }: SheetCompanionFrameProps) => {
   const [mode, setMode] = useState<SheetCompanionFrameMode>(initialMode);
+
   const [space] = useSpaces();
   const graph = useComputeGraph(space);
   const sheet = useTestSheet(space, graph, sheetProps);
+
+  // The splitter sizes in rem, so an even split is measured from the frame once it is laid out.
+  const frameRef = useRef<HTMLDivElement>(null);
+  const [defaultSize, setDefaultSize] = useState(size);
+  useLayoutEffect(() => {
+    const frame = frameRef.current;
+    if (size === undefined && frame) {
+      const rem = Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
+      setDefaultSize(frame.getBoundingClientRect().width / 2 / rem);
+    }
+  }, [size, sheet]);
   if (!sheet || !graph) {
     return null;
   }
 
   return (
     <SheetRoot graph={graph} sheet={sheet} attendableId='test' ignoreAttention>
-      <div className='grid grid-rows-[min-content_1fr] dx-fill'>
+      <div ref={frameRef} className='grid grid-rows-[min-content_1fr] dx-fill'>
         <div className='flex p-1 border-b border-separator'>
           <ToggleGroup.Root
             type='single'
@@ -69,11 +81,13 @@ export const SheetCompanionFrame = ({
           </ToggleGroup.Root>
         </div>
         <Splitter.Root
+          // Remounts once the even split is measured, since the default only applies on mount.
+          key={defaultSize === undefined ? 'unmeasured' : 'measured'}
           orientation='horizontal'
           mode={mode}
           onModeChange={setMode}
           anchor='end'
-          defaultSize={size}
+          defaultSize={defaultSize}
           minSize={16}
           resizable
         >

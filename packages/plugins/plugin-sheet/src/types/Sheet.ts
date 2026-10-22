@@ -82,6 +82,8 @@ export const Timeline = Schema.Struct({
   start: Schema.optional(Schema.String.annotate({ title: 'Start', description: 'Year or date (e.g., 1980).' })),
   end: Schema.optional(Schema.String.annotate({ title: 'End', description: 'Year or date (e.g., 2030).' })),
   today: Schema.optional(Schema.Boolean.annotate({ title: 'Show today' })),
+  /** Show each event's date beside its title; on by default. */
+  dates: Schema.optional(Schema.Boolean.annotate({ title: 'Show dates' })),
   /** Categories that are not drawn. */
   hidden: Schema.optional(Schema.Array(Schema.String).pipe(Annotation.FormInputAnnotation.set(false))),
 });

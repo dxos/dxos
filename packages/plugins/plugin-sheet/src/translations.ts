@@ -86,6 +86,12 @@ export const translations = [
         'timeline-columns.label': 'Categories',
         'timeline-settings.label': 'Timeline settings',
         'delete-timeline.label': 'Delete timeline',
+        'timeline-dates.label': 'Show dates in labels',
+        'timeline-filter.placeholder': 'Filter events…',
+        'timeline-filter.clear.label': 'Clear filter',
+        'timeline-filter.matches.label': '{{matched}} of {{total}}',
+        'timeline-filter.total.label_one': '{{count}} event',
+        'timeline-filter.total.label_other': '{{count}} events',
         'no-timeline.message':
           'Select a range of rows (a time column, then a column per category) and choose “Use sheet selection”.',
       },

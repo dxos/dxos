@@ -6,9 +6,21 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { Form } from '@dxos/react-ui-form';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import { type PlotValue, Timeline, toPlotData, toTimelineEvents } from '@dxos/react-ui-plot';
+import {
+  type PlotValue,
+  Timeline,
+  matchesTimelineFilter,
+  timelineRange,
+  toPlotData,
+  toTimelineEvents,
+} from '@dxos/react-ui-plot';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
 import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Typography from '@dxos/react-ui/Typography';
 
 import { meta } from '#meta';
@@ -48,13 +60,23 @@ export const TimelineCompanion = ({
 }: TimelineCompanionProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [editing, setEditing] = useState(false);
-  const { spine = 'center', scale = 'linear', hidden = [] } = timeline ?? {};
+  const { spine = 'center', scale = 'linear', hidden = [], dates = true } = timeline ?? {};
 
   const data = useMemo(() => {
     const values = timeline && getValues(timeline.range);
     return values && toPlotData(values, { header: timeline.header });
   }, [getValues, timeline?.range, timeline?.header]);
-  const columns = useMemo(() => (data ? toTimelineEvents(data).columns : []), [data]);
+  const { columns, events } = useMemo(() => (data ? toTimelineEvents(data) : { columns: [], events: [] }), [data]);
+
+  // The filter is a view of the moment, not a setting of the timeline, so it is not saved.
+  const [filter, setFilter] = useState('');
+  const counts = useMemo(() => {
+    const range = timelineRange(events, { start: timeline?.start, end: timeline?.end });
+    const shown = events.filter(
+      (event) => !hidden.includes(event.column) && range && event.time >= range[0] && event.time <= range[1],
+    );
+    return { total: shown.length, matched: shown.filter((event) => matchesTimelineFilter(event, filter)).length };
+  }, [events, hidden, timeline?.start, timeline?.end, filter]);
 
   const handleUpdate = useCallback(
     (values: Partial<Sheet.Timeline>) => timeline && onChange({ ...timeline, ...values }),
@@ -156,6 +178,21 @@ export const TimelineCompanion = ({
                     ),
                 )),
         )
+        .subgraph(
+          !!timeline &&
+            ((builder) =>
+              builder.action(
+                'dates',
+                {
+                  label: ['timeline-dates.label', { ns: meta.profile.key }],
+                  icon: 'ph--calendar-dots--regular',
+                  iconOnly: true,
+                  variant: 'toggle',
+                  checked: dates,
+                },
+                () => handleUpdate({ dates: !dates }),
+              )),
+        )
         .separator('gap')
         .action(
           'settings',
@@ -189,6 +226,7 @@ export const TimelineCompanion = ({
       hidden,
       columns,
       editing,
+      dates,
       handleUseSelection,
       handleUpdate,
       handleToggleColumn,
@@ -222,11 +260,40 @@ export const TimelineCompanion = ({
             </Form.Viewport>
           </Form.Root>
         ) : data ? (
-          <Timeline data={data} options={timeline} classNames='p-2' />
+          <Timeline data={data} options={timeline} filter={filter} classNames='p-2' />
         ) : (
           <Typography.Text classNames='p-2 text-fg-subtle'>{t('invalid-range.message')}</Typography.Text>
         )}
       </Panel.Body>
+      {timeline && data && !editing && (
+        <Panel.Footer>
+          <Toolbar.Root classNames='bg-transparent'>
+            <Field.Root>
+              <Input.Root
+                placeholder={t('timeline-filter.placeholder')}
+                value={filter}
+                autoComplete='off'
+                spellCheck={false}
+                onChange={(event) => setFilter(event.target.value)}
+                start={<Icon.Icon icon='ph--magnifying-glass--regular' />}
+              />
+            </Field.Root>
+            {filter.length > 0 && (
+              <Button.Root
+                icon='ph--x--regular'
+                iconOnly
+                label={t('timeline-filter.clear.label')}
+                onClick={() => setFilter('')}
+              />
+            )}
+            <Typography.Text classNames='shrink-0 px-2 text-sm text-fg-subtle'>
+              {filter.trim()
+                ? t('timeline-filter.matches.label', { matched: counts.matched, total: counts.total })
+                : t('timeline-filter.total.label', { count: counts.total })}
+            </Typography.Text>
+          </Toolbar.Root>
+        </Panel.Footer>
+      )}
     </Panel.Root>
   );
 };

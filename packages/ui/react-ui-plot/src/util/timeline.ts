@@ -61,7 +61,7 @@ const toText = (value: PlotValue | undefined) => (value == null ? '' : String(va
  */
 export const toTimelineEvents = ({ rows }: PlotData): { columns: string[]; events: TimelineEvent[] } => {
   const columns = new Set<string>();
-  const events = rows.flatMap((row): TimelineEvent[] => {
+  const events = rows.flatMap((row, index): TimelineEvent[] => {
     const when = toTime(row[0]);
     const column = toText(row[1]);
     const label = toText(row[2]);
@@ -71,10 +71,19 @@ export const toTimelineEvents = ({ rows }: PlotData): { columns: string[]; event
 
     columns.add(column);
     const description = toText(row[3]);
-    return [{ ...when, column, label, ...(description && { description }) }];
+    return [{ id: String(index), ...when, column, label, ...(description && { description }) }];
   });
 
   return { columns: [...columns], events: events.sort((a, b) => a.time - b.time) };
+};
+
+/** Whether an event's title, description, category or date contains the text, ignoring case; empty text matches all. */
+export const matchesTimelineFilter = (event: TimelineEvent, filter: string | undefined): boolean => {
+  const text = filter?.trim().toLowerCase();
+  return (
+    !text ||
+    [event.label, event.description, event.column, event.date].some((field) => field?.toLowerCase().includes(text))
+  );
 };
 
 // The log scale's curvature: the latest tenth of the range gets this many times the room of a linear scale.
@@ -180,4 +189,32 @@ export const fitTimelineHeight = (
     }
   }
   return Math.ceil(high);
+};
+
+/** Text width per pixel of font size, so a width at size `n` is `n` times it. */
+export type MeasureText = (text: string) => number;
+
+/**
+ * The largest font size in `[min, max]` at which `prefix text` fits `width`; below `min`, the text (never the
+ * prefix) is cut short with an ellipsis at `min`.
+ */
+export const fitLabel = (
+  { prefix, text }: { prefix: string; text: string },
+  width: number,
+  measure: MeasureText,
+  { min, max }: { min: number; max: number },
+): { text: string; fontSize: number } => {
+  const unit = measure(`${prefix} ${text}`);
+  if (unit <= 0 || width / unit >= max) {
+    return { text, fontSize: max };
+  }
+  if (width / unit >= min) {
+    return { text, fontSize: width / unit };
+  }
+
+  let chars = text.length;
+  while (chars > 0 && measure(`${prefix} ${text.slice(0, chars)}…`) * min > width) {
+    chars--;
+  }
+  return { text: chars > 0 ? `${text.slice(0, chars).trimEnd()}…` : '', fontSize: min };
 };

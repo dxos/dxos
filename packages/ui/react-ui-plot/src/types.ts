@@ -78,12 +78,16 @@ export const TimelineOptions = Schema.Struct({
   hidden: Schema.optional(Schema.Array(Schema.String)),
   /** Mark the current date. */
   today: Schema.optional(Schema.Boolean.annotate({ title: 'Show today' })),
+  /** Show each event's date beside its title; on by default. */
+  dates: Schema.optional(Schema.Boolean.annotate({ title: 'Show dates' })),
 });
 
 export type TimelineOptions = Schema.Schema.Type<typeof TimelineOptions>;
 
 /** One event: a row of time, category, title and optional description. */
 export type TimelineEvent = {
+  /** The event's row index, stable while the rows are. */
+  id: string;
   /** Milliseconds since the epoch (UTC). */
   time: number;
   /** The row's time as written: a bare year stays a year. */

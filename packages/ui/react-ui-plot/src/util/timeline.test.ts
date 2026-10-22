@@ -5,7 +5,9 @@
 import { describe, test } from 'vitest';
 
 import {
+  fitLabel,
   fitTimelineHeight,
+  matchesTimelineFilter,
   spreadLabels,
   timelineFraction,
   timelineRange,
@@ -111,5 +113,53 @@ describe('fitTimelineHeight', () => {
 
   test('events at the same time do not force growth', ({ expect }) => {
     expect(fitTimelineHeight([[0.5, 0.5, 0.5, 0.5, 0.5, 0.5]], options)).to.eq(100);
+  });
+});
+
+describe('matchesTimelineFilter', () => {
+  const event = {
+    id: '0',
+    time: 0,
+    date: 'Oct 1987',
+    column: 'FIC',
+    label: 'Black Monday',
+    description: 'The Dow falls.',
+  };
+
+  test('matches title, description, category and date, ignoring case', ({ expect }) => {
+    expect(matchesTimelineFilter(event, 'black')).to.be.true;
+    expect(matchesTimelineFilter(event, 'DOW')).to.be.true;
+    expect(matchesTimelineFilter(event, 'fic')).to.be.true;
+    expect(matchesTimelineFilter(event, '1987')).to.be.true;
+    expect(matchesTimelineFilter(event, 'robot')).to.be.false;
+  });
+
+  test('empty text matches everything', ({ expect }) => {
+    expect(matchesTimelineFilter(event, '  ')).to.be.true;
+    expect(matchesTimelineFilter(event, undefined)).to.be.true;
+  });
+});
+
+describe('fitLabel', () => {
+  // Every character is half the font size wide.
+  const measure = (text: string) => text.length / 2;
+  const sizes = { min: 10, max: 15 };
+
+  test('short labels take the maximum size', ({ expect }) => {
+    expect(fitLabel({ prefix: '1987', text: 'Crash' }, 200, measure, sizes)).to.deep.eq({
+      text: 'Crash',
+      fontSize: 15,
+    });
+  });
+
+  test('longer labels shrink to fit', ({ expect }) => {
+    // "1987 Black Monday" is 17 characters: 8.5 per pixel of font size.
+    expect(fitLabel({ prefix: '1987', text: 'Black Monday' }, 102, measure, sizes).fontSize).to.eq(12);
+  });
+
+  test('labels that do not fit at the minimum are cut short, keeping the prefix', ({ expect }) => {
+    const { text, fontSize } = fitLabel({ prefix: '1987', text: 'Black Monday' }, 60, measure, sizes);
+    expect(fontSize).to.eq(10);
+    expect(text).to.eq('Black…');
   });
 });

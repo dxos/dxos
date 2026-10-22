@@ -72,7 +72,6 @@ const DefaultStory = ({ mode }: StoryArgs) => (
     label='Charts'
     icon='ph--chart-bar--regular'
     mode={mode}
-    size={28}
   />
 );
 
