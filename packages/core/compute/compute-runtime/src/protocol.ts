@@ -188,9 +188,11 @@ export const wrapFunctionHandler = (
   };
 };
 
-/** Whether `exit` is the {@link Operation.runAgain} defect: the run stopped at a checkpoint, not on an error. */
+/** Whether every reason in `exit` is the {@link Operation.runAgain} defect: the run stopped at a checkpoint, not on an error. */
 const isRunAgainExit = (exit: Exit.Exit<unknown>): boolean =>
-  Exit.isFailure(exit) && Process.RunAgainError.is(Cause.squash(exit.cause));
+  Exit.isFailure(exit) &&
+  exit.cause.reasons.length > 0 &&
+  exit.cause.reasons.every((reason) => Cause.isDieReason(reason) && Process.RunAgainError.is(reason.defect));
 
 /**
  * Container for services and context for a function.
