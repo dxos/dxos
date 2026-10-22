@@ -4,6 +4,8 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import { type Server, createServer } from 'node:http';
+import { type AddressInfo } from 'node:net';
 
 import { startTestServer } from '@dxos/mcp-client/testing';
 
@@ -143,5 +145,80 @@ describe('McpProxy', () => {
       expect(yield* proxies.offer('chat', [], 'token')).toEqual([]);
       expect(closed).toEqual(['proxy-1']);
     }, Effect.scoped),
+  );
+
+  it.effect(
+    'serves two connections to one server with their own credentials',
+    Effect.fnUntraced(function* () {
+      const server = yield* withTestServer;
+      const { relay, served } = makeRelay();
+      let ids = 0;
+      const proxies = new McpProxy.Proxies({ relay: () => relay, serverId: () => `proxy-${++ids}` });
+
+      const offered = yield* proxies.offer(
+        'chat',
+        [
+          { url: server.urls.key, protocol: 'http', name: 'work', apiKey: server.apiKey },
+          { url: server.urls.key, protocol: 'http', name: 'personal', apiKey: 'revoked' },
+        ],
+        'session-token',
+      );
+
+      expect(offered.map(({ name }) => name)).toEqual(['work', 'personal']);
+      expect((yield* Effect.promise(() => served('proxy-1').handle(initialize()))).status).toBe(200);
+      expect((yield* Effect.promise(() => served('proxy-2').handle(initialize()))).status).toBe(401);
+    }, Effect.scoped),
+  );
+
+  it.effect(
+    'offers a server under the name Composer gave it',
+    Effect.fnUntraced(function* () {
+      const proxies = new McpProxy.Proxies({ relay: () => undefined, serverId: () => 'unused' });
+      // A repeat's suffix runs past a label's length, and the first of the name is off in this chat.
+      const offered = yield* proxies.offer('chat', [
+        { url: 'https://two.example.com/mcp', protocol: 'http', name: 'acme-corporation-2' },
+      ]);
+      expect(offered.map(({ name }) => name)).toEqual(['acme-corporation-2']);
+    }),
+  );
+
+  it.effect(
+    'answers a status that carries no body without one',
+    Effect.fnUntraced(function* () {
+      // An MCP server may end a session with a bare 204.
+      const upstream = yield* Effect.acquireRelease(
+        Effect.promise(
+          () =>
+            new Promise<Server>((resolve) => {
+              const server = createServer((_, response) => response.writeHead(204).end());
+              server.listen(0, () => resolve(server));
+            }),
+        ),
+        (server) => Effect.promise(() => new Promise<void>((resolve) => server.close(() => resolve()))),
+      );
+      const { port } = upstream.address() as AddressInfo;
+      const handle = McpProxy.handler(() => ({ url: `http://localhost:${port}/mcp`, apiKey: 'key' }));
+
+      const response = yield* Effect.promise(() =>
+        handle(new Request('http://localhost/mcp/proxy', { method: 'DELETE' })),
+      );
+      expect(response.status).toBe(204);
+    }, Effect.scoped),
+  );
+
+  it.effect(
+    'never sends a credential to a server outside HTTPS',
+    Effect.fnUntraced(function* () {
+      const { relay, closed } = makeRelay();
+      const proxies = new McpProxy.Proxies({ relay: () => relay, serverId: () => 'proxy-1' });
+
+      const offered = yield* proxies.offer(
+        'chat',
+        [{ url: 'http://mcp.example.com/mcp', protocol: 'http', apiKey: 'secret' }],
+        'session-token',
+      );
+      expect(offered).toEqual([]);
+      expect(closed).toEqual([]);
+    }),
   );
 });

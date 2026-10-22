@@ -101,7 +101,7 @@ export const AddMcpConnection = Operation.make({
     key: DXN.make('org.dxos.operation.assistantToolkit.addMcpConnection'),
     name: 'Add MCP connection',
     description:
-      "Adds an MCP server to the space as a connection, with no credential or with an API key. It is on in this conversation, so its tools are available from your next step. A server that needs sign-in can't be added this way: ask the user to connect it.",
+      "Adds an MCP server to the space as a connection, with no credential or with an API key, or updates the connection the space already has for it. It is on in this conversation, so its tools are available from your next step. A server that needs sign-in can't be added this way: ask the user to connect it.",
     icon: 'ph--plugs-connected--regular',
   },
   input: Schema.Struct({
@@ -125,5 +125,5 @@ export const AddMcpConnection = Operation.make({
       description: 'Why the server could not be reached just now; the connection is still added.',
     }),
   }),
-  services: [Database.Service],
+  services: [Database.Service, Harness.HarnessService],
 });

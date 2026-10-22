@@ -125,7 +125,9 @@ const runCodeModeTurn = ({
         yield* Effect.promise(() => session.context.sync());
         const skills = session.context.getSkills();
         // An MCP tool has no operation behind it, so it reaches the code as a call the dialect binds by name.
-        const mcps = yield* AiSession.connectMcpServers(params.mcpServers ? yield* params.mcpServers : []);
+        const mcps = yield* AiSession.connectMcpServers(
+          params.mcpServers ? yield* AiSession.readMcpServers(params.mcpServers) : [],
+        );
         const operations = yield* projectOperations(skills, mcps);
         labelCall = labelEvalCall(operations);
         const toolkit = makeEvalToolkit({

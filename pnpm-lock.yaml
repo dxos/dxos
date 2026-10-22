@@ -9759,6 +9759,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/mcp-client':
+        specifier: workspace:*
+        version: link:../../core/compute/mcp-client
       '@dxos/mcp-server':
         specifier: workspace:*
         version: link:../../core/compute/mcp-server
@@ -9805,9 +9808,6 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
-      '@dxos/mcp-client':
-        specifier: workspace:*
-        version: link:../../core/compute/mcp-client
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space

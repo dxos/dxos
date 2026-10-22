@@ -17,7 +17,6 @@ import * as Struct from 'effect/Struct';
 
 import { AiService, Model, OpaqueToolkit } from '@dxos/ai';
 import {
-  AiContext,
   Alarm,
   HarnessControl,
   type HarnessControlRpcs,
@@ -39,11 +38,11 @@ import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-import { AccessToken, Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Actor, ContentBlock, Message } from '@dxos/types';
 import { markWork, trim } from '@dxos/util';
 
+import { mcpServerTypes } from '../mcp-server-types.ts';
 import { type DelegationStrategy } from './delegation-strategy.ts';
 import { type McpEndpointOf, loadMcpServers } from './mcp-servers.ts';
 import { type MakeTurnProducer, makeAiSessionTurnProducer } from './turn-producer.ts';
@@ -193,17 +192,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
     // registers exactly these with the process's database, and a typed query for a type it does
     // not know matches nothing. Without them a hosted agent reads its own skill bindings back
     // empty and runs every turn with an EMPTY TOOLKIT — the model can only answer in prose.
-    // `Connection` and `AccessToken` are read each turn to connect the MCP servers.
-    types: [
-      Chat.Chat,
-      Feed.Feed,
-      Message.Message,
-      Alarm.Alarm,
-      AiContext.Binding,
-      Skill.Skill,
-      Connection.Connection,
-      AccessToken.AccessToken,
-    ],
+    // `mcpServerTypes` (bindings among them) are read each turn to connect the MCP servers.
+    types: [Chat.Chat, Feed.Feed, Message.Message, Alarm.Alarm, Skill.Skill, ...mcpServerTypes],
     services: [
       Database.Service,
       OpaqueToolkit.OpaqueToolkitProvider,

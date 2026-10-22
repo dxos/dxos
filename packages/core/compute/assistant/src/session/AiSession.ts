@@ -13,6 +13,7 @@ import * as Layer from 'effect/Layer';
 import * as Order from 'effect/Order';
 import type * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Record from 'effect/Record';
+import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 
 import { AiTelemetry, type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
@@ -39,6 +40,12 @@ import { SessionStore, isQueued } from './SessionStore.ts';
 import * as SkillHooks from './SkillHooks.ts';
 import { createToolkit } from './toolkit.ts';
 
+/** The MCP servers could not be read, which is not the same as there being none. */
+export class McpServersUnavailable extends Schema.TaggedError<McpServersUnavailable>('McpServersUnavailable')(
+  'McpServersUnavailable',
+  { message: Schema.String },
+) {}
+
 export type RunProps<R = never> = {
   prompt: string | ContentBlock.Any[];
   /** Who the prompt is from, when not the session's reader (e.g. one of several people in a shared agent chat). */
@@ -49,9 +56,9 @@ export type RunProps<R = never> = {
 
   /**
    * The MCP servers to connect, read at the start of every iteration so a server added during the
-   * request connects on the model's next turn.
+   * request connects on the model's next turn. An iteration whose read fails connects none; the next reads again.
    */
-  mcpServers?: Effect.Effect<readonly McpToolkit.Options[]>;
+  mcpServers?: Effect.Effect<readonly McpToolkit.Options[], McpServersUnavailable>;
 
   /**
    * When false, messages from this request are not appended to the feed or persisted to trace.
@@ -294,7 +301,7 @@ export class Session extends Resource {
         yield* Effect.promise(() => this.context.sync());
         markWork('session.context-synced');
         const currentSkills = this.context.getSkills();
-        const mcps = yield* connectMcpServers(params.mcpServers ? yield* params.mcpServers : []);
+        const mcps = yield* connectMcpServers(params.mcpServers ? yield* readMcpServers(params.mcpServers) : []);
         yield* Trace.emitRequestPhase('building-toolkit');
         const toolkit = yield* createToolkit({
           toolkit: params.toolkit,
@@ -356,6 +363,19 @@ export class Session extends Resource {
     );
   }
 }
+
+/** The servers to connect this step: none when they cannot be read, which the next step reads again. */
+export const readMcpServers = (
+  servers: NonNullable<RunProps['mcpServers']>,
+): Effect.Effect<readonly McpToolkit.Options[]> =>
+  servers.pipe(
+    Effect.catchTag('McpServersUnavailable', (error) =>
+      Effect.sync(() => {
+        log.warn('MCP servers not read; none connected this step', { error: error.message });
+        return [];
+      }),
+    ),
+  );
 
 /**
  * Opens the MCP servers for one iteration of a turn, closed with the scope. A server that cannot be

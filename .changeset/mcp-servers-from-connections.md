@@ -9,4 +9,5 @@ Breaking:
 
 - `Connection.accessToken` is optional, so code reading it must handle a connection with no credential (`Connection.getAccessToken` asserts one).
 - `Skill.mcpServers` is removed: a skill carries instructions and tools, and its servers come from connections.
+- An MCP server's tools are offered to the agent as `mcp__<connection>__<tool>` (for example `mcp__weather__get_weather`), as other MCP hosts name them; instructions that name a tool by its bare name should name the prefixed one.
 - The `McpServer` ECHO type (`@dxos/compute/McpServer`) is removed without a migration. Servers stored that way are no longer connected; add them again as Custom MCP Server connections.

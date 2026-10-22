@@ -29,8 +29,12 @@ const withTestServer = Effect.acquireRelease(
 
 /** The same call to the test server's one tool, written in each dialect. */
 const DIALECTS = [
-  { name: 'plain', dialect: PlainDialect, code: `print(await ops.get_weather({ city: 'Paris' }));` },
-  { name: 'effect', dialect: EffectDialect, code: `yield* print(yield* Tools.get_weather({ city: 'Paris' }));` },
+  { name: 'plain', dialect: PlainDialect, code: `print(await ops['mcp__localhost__get_weather']({ city: 'Paris' }));` },
+  {
+    name: 'effect',
+    dialect: EffectDialect,
+    code: `yield* print(yield* Tools['mcp__localhost__get_weather']({ city: 'Paris' }));`,
+  },
 ];
 
 describe('code mode', () => {

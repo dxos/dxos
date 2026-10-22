@@ -660,6 +660,25 @@ decision D-14: Creating a connection from a deck that already holds several plan
   why: Adding a server from the Connections pivot otherwise closed the chat that opened it.
 ```
 
+```mdl
+decision D-15: Every MCP tool is offered to the agent as `mcp__<connection>__<tool>`, as other MCP hosts name them, so two connections never share a tool name and each acts as its own account.
+  date: 2026-10-22
+  by: user:wittjosiah
+  affects: [QA-3, QA-4]
+```
+
+```mdl
+decision D-16: A connection's name in a tool prefix is its own name, or its endpoint's host, as lower-case letters, digits and dashes of at most 16 characters, unique across all the space's connections whether a chat has them on or not; a prefixed name over 64 characters is cut short and ends in a hash. A connection whose key is gone or cannot be read is left out for that read; a failed read of the connection list connects no servers for that step. Fills in [D-15].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [QA-3, QA-4]
+  why: A name that depended on which other servers were connected moved between accounts mid-conversation, and providers reject a request with a tool name over 64 characters.
+  rejected:
+    - Prefix only tools whose names clash: a tool's name then changed whenever another server came or went.
+    - Keep the last set of servers read when a read fails: the agent process ends with each turn, so the set never outlived one.
+```
+
 ---
 
 ## Appendix: Extension Definitions

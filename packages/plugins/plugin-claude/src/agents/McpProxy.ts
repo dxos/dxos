@@ -9,6 +9,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 
 import { log } from '@dxos/log';
+import { McpToolkit } from '@dxos/mcp-client';
 
 import type * as ClaudeCapabilities from '../types/ClaudeCapabilities.ts';
 import type * as AcpAgent from './AcpAgent.ts';
@@ -25,6 +26,9 @@ const FORWARDED_REQUEST = ['accept', 'content-type', 'last-event-id', 'mcp-proto
  * decoded, and a challenge would send the agent to sign in to a server whose credential the page holds.
  */
 const DROPPED_RESPONSE = ['content-encoding', 'content-length', 'transfer-encoding', 'www-authenticate'];
+
+/** Statuses a `Response` must be built without a body for, an empty one included. */
+const NULL_BODY_STATUSES = new Set([101, 204, 205, 304]);
 
 /**
  * Serves `upstream()` to an agent, presenting the connection's credential in place of the token the
@@ -55,7 +59,8 @@ export const handler =
     });
     const answer = new Headers(response.headers);
     DROPPED_RESPONSE.forEach((name) => answer.delete(name));
-    return new Response(await response.text(), { status: response.status, headers: answer });
+    const body = NULL_BODY_STATUSES.has(response.status) ? null : await response.text();
+    return new Response(body, { status: response.status, headers: answer });
   };
 
 type Proxy = { server: string; upstream: Upstream };
@@ -75,7 +80,7 @@ export type ProxiesOptions = {
  * page, since the agent's MCP config is public and the credential must not be in it.
  */
 export class Proxies {
-  /** Per chat, the proxy of each server whose credential stays in the page, by the server's URL. */
+  /** Per chat, the proxy of each server whose credential stays in the page, by the name it is offered under. */
   readonly #chats = new Map<string, Map<string, Proxy>>();
   readonly #options: ProxiesOptions;
 
@@ -95,20 +100,24 @@ export class Proxies {
       this.#chats.set(chat, proxies);
       const names = new Set(this.#options.reserved);
       const offered: acp.McpServer[] = [];
-      for (const { url, protocol, apiKey } of servers) {
-        const name = uniqueName(names, url);
+      const proxied = new Set<string>();
+      for (const { url, protocol, name: label, apiKey } of servers) {
+        const name = uniqueName(names, label, url);
         if (apiKey === undefined) {
           offered.push({ type: protocol, name, url, headers: [] });
           continue;
         }
-        // The relay answers with whole bodies, which a server sending events over SSE never finishes.
-        if (protocol !== 'http' || !relay || !token) {
+        // The relay answers with whole bodies, which a server sending events over SSE never finishes. A
+        // credential goes only where Composer's own agent would send it.
+        if (protocol !== 'http' || !McpToolkit.isSecureUrl(url) || !relay || !token) {
           log.warn('MCP connection not offered to the agent', { chat, url, protocol });
           continue;
         }
-        const proxy = proxies.get(url) ?? { server: this.#options.serverId(), upstream: { url, apiKey } };
+        // By name, not URL: two connections to one server are two accounts, each with its own credential.
+        const proxy = proxies.get(name) ?? { server: this.#options.serverId(), upstream: { url, apiKey } };
         proxy.upstream = { url, apiKey };
-        proxies.set(url, proxy);
+        proxies.set(name, proxy);
+        proxied.add(name);
         const reached = yield* relay
           .serve(
             proxy.server,
@@ -131,10 +140,9 @@ export class Proxies {
           });
         }
       }
-      const current = new Set(servers.map(({ url }) => url));
-      for (const [url, { server }] of proxies) {
-        if (!current.has(url)) {
-          proxies.delete(url);
+      for (const [name, { server }] of proxies) {
+        if (!proxied.has(name)) {
+          proxies.delete(name);
           yield* relay?.close(server) ?? Effect.void;
         }
       }
@@ -155,9 +163,13 @@ export class Proxies {
   }
 }
 
-/** An MCP server's name in the agent, which prefixes its tools there: its host, made unique among `taken`. */
-const uniqueName = (taken: Set<string>, url: string): string => {
-  const base = (URL.canParse(url) ? new URL(url).hostname : 'mcp').replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+/**
+ * An MCP server's name in the agent, which prefixes its tools there (`mcp__<name>__<tool>`): the name
+ * Composer gave it, unique over all the space's connections, or a label of its host; either made unique
+ * among `taken`.
+ */
+const uniqueName = (taken: Set<string>, given: string | undefined, url: string): string => {
+  const base = given ?? McpToolkit.label(URL.canParse(url) ? new URL(url).hostname : 'mcp');
   let name = base;
   for (let index = 2; taken.has(name); index++) {
     name = `${base}-${index}`;

@@ -18,6 +18,7 @@ import {
   makeToolResolverFromOperations,
 } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
+import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Template from '@dxos/compute/Template';
 import * as Trace from '@dxos/compute/Trace';
@@ -124,7 +125,7 @@ export default AgentOperation.RunInstructions.pipe(
 
         // The space's MCP connections, re-read each iteration so one the run adds connects on its next turn.
         const mcpServers = loadMcpServers({ feed }).pipe(
-          Effect.provide(yield* Effect.context<Database.Service | Registry.Service>()),
+          Effect.provide(yield* Effect.context<Database.Service | Registry.Service | Credential.CredentialsService>()),
         );
 
         yield* session

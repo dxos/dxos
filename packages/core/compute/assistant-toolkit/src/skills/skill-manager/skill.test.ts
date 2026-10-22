@@ -117,6 +117,65 @@ describe('Skill Manager', () => {
   );
 
   it.effect(
+    'add-mcp-connection: adding a server the space already has turns that connection on with the latest key',
+    Effect.fnUntraced(
+      function* (_) {
+        const conversation = yield* getConversationDXN;
+        const server = yield* Effect.acquireRelease(
+          Effect.promise(() => startTestServer()),
+          (server) => Effect.promise(() => server.close()),
+        );
+
+        const added = yield* Operation.invoke(
+          AddMcpConnection,
+          { url: server.urls.key, key: server.apiKey },
+          { conversation },
+        );
+        yield* Operation.invoke(SetMcpConnection, { id: added.id, enabled: false }, { conversation });
+
+        // No key this time: the stored one answers the probe, and the connection is switched back on.
+        const again = yield* Operation.invoke(AddMcpConnection, { url: server.urls.key }, { conversation });
+        expect(again.id).toBe(added.id);
+        expect(again.enabled).toBe(true);
+        const listed = yield* Operation.invoke(QueryMcpConnections, {}, { conversation });
+        expect(listed.find(({ id }) => id === added.id)?.enabled).toBe(true);
+
+        // A new key replaces the old one rather than leaving it in the space.
+        yield* Operation.invoke(AddMcpConnection, { url: server.urls.key, key: server.apiKey }, { conversation });
+        const connections = yield* Database.query(Filter.type(Connection.Connection)).run;
+        expect(connections.map(({ mcp }) => mcp?.url)).toEqual([server.urls.key]);
+        expect(yield* Database.query(Filter.type(AccessToken.AccessToken)).run).toHaveLength(1);
+      },
+      provideTestLayers,
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  it.effect(
+    'add-mcp-connection: a re-add keeps the endpoint it probed',
+    Effect.fnUntraced(
+      function* (_) {
+        const conversation = yield* getConversationDXN;
+        const server = yield* Effect.acquireRelease(
+          Effect.promise(() => startTestServer()),
+          (server) => Effect.promise(() => server.close()),
+        );
+        const connection = yield* Database.add(
+          Connection.make({ connectorId: 'mcp', name: 'open', mcp: { url: server.urls.open, protocol: 'sse' } }),
+        );
+
+        // The reply describes the endpoint that answered, so the connection dials that one from now on.
+        yield* Operation.invoke(AddMcpConnection, { url: server.urls.open, protocol: 'http' }, { conversation });
+        expect(connection.mcp).toEqual({ url: server.urls.open, protocol: 'http' });
+      },
+      provideTestLayers,
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  it.effect(
     'add-mcp-connection: adds a server that answers, and refuses one that needs sign-in',
     Effect.fnUntraced(
       function* (_) {

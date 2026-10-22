@@ -65,7 +65,7 @@ describe('weather MCP hand-off', () => {
             },
             // Step four: the tool exists on this turn only if the session connected the server it
             // added on the previous one.
-            { parts: [ScriptedLanguageModel.toolCall('get_weather', BERLIN)] },
+            { parts: [ScriptedLanguageModel.toolCall('mcp__weather__get_weather', BERLIN)] },
             { parts: [ScriptedLanguageModel.toolCall('completeJob', { success: 'called' })] },
             { parts: [ScriptedLanguageModel.text('Done.')] },
           ]),
@@ -122,7 +122,7 @@ describe('weather MCP hand-off', () => {
           called: true,
           calledAfterConfiguring: true,
         });
-        const call = invocations.find(({ name }) => name === 'get_weather');
+        const call = invocations.find(({ name }) => name === 'mcp__weather__get_weather');
         expect(call?.error).toBeUndefined();
         // The trace holds the tool's text result re-serialized, so the field arrives escaped.
         expect(String(call?.result)).toContain('temperature_2m');

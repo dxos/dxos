@@ -8,7 +8,7 @@ import * as Layer from 'effect/Layer';
 import { expect } from 'vitest';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import { AiContext } from '@dxos/assistant';
+import { AiContext, AiSession } from '@dxos/assistant';
 import * as Credential from '@dxos/compute/Credential';
 import { Database, Feed, Filter, Obj, Ref, Registry } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
@@ -76,7 +76,8 @@ describe('MCP servers', () => {
           }),
         });
         const stored = yield* loadMcpServers({ feed }).pipe(Effect.provide(credentials));
-        expect(stored).toEqual([{ url: server.urls.key, protocol: 'http', apiKey: server.apiKey }]);
+        // Named after the server's host, since the connection has no name of its own.
+        expect(stored).toEqual([{ url: server.urls.key, protocol: 'http', name: 'localhost', apiKey: server.apiKey }]);
 
         // A host that knows the connector registry also resolves a connector's declared endpoint.
         const resolved = yield* loadMcpServers({
@@ -117,7 +118,192 @@ describe('MCP servers', () => {
         const after = yield* loadMcpServers({ feed });
 
         expect(before).toEqual([]);
-        expect(after).toEqual([{ url: server.urls.open, protocol: 'http' }]);
+        expect(after).toEqual([{ url: server.urls.open, protocol: 'http', name: 'test' }]);
+      },
+      Effect.provide(AssistantTestLayer({ types: [AiContext.Binding, Connection.Connection] })),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'connects every connection to a server, each under its own name',
+    Effect.fnUntraced(
+      function* (_) {
+        const feed = yield* Database.add(Feed.make());
+        const endpoint = { url: 'https://mcp.example.com/mcp', protocol: 'http' } as const;
+        const first = yield* Database.add(AccessToken.make({ source: 'mcp.example.com', token: 'first' }));
+        const second = yield* Database.add(AccessToken.make({ source: 'mcp.example.com', token: 'second' }));
+        yield* Database.add(
+          Connection.make({ connectorId: 'mcp', name: 'Work', mcp: endpoint, accessToken: Ref.make(first) }),
+        );
+        yield* Database.add(
+          Connection.make({ connectorId: 'mcp', name: 'Personal', mcp: endpoint, accessToken: Ref.make(second) }),
+        );
+
+        const credentials = Layer.succeed(Credential.CredentialsService, {
+          queryCredentials: async () => [],
+          getCredential: async ({ accessTokenId }) => ({
+            service: 'mcp.example.com',
+            apiKey: accessTokenId === first.id ? 'first' : 'second',
+          }),
+        });
+        expect(yield* loadMcpServers({ feed }).pipe(Effect.provide(credentials))).toEqual([
+          { ...endpoint, name: 'work', apiKey: 'first' },
+          { ...endpoint, name: 'personal', apiKey: 'second' },
+        ]);
+      },
+      Effect.provide(
+        AssistantTestLayer({ types: [AccessToken.AccessToken, AiContext.Binding, Connection.Connection] }),
+      ),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'names each server after its connection, the same whichever connections are on',
+    Effect.fnUntraced(
+      function* (_) {
+        const feed = yield* Database.add(Feed.make());
+        const first = yield* Database.add(
+          Connection.make({
+            connectorId: 'mcp',
+            name: 'GitHub',
+            mcp: { url: 'https://one.example.com/mcp', protocol: 'http' },
+          }),
+        );
+        yield* Database.add(
+          Connection.make({
+            connectorId: 'mcp',
+            name: 'GitHub',
+            mcp: { url: 'https://two.example.com/mcp', protocol: 'http' },
+          }),
+        );
+        const names = loadMcpServers({ feed }).pipe(Effect.map((servers) => servers.map(({ name }) => name)));
+        expect(yield* names).toEqual(['github', 'github-2']);
+
+        // Turning the first off leaves the second's tools under the names the model already knows.
+        yield* Feed.append(feed, [
+          Obj.make(AiContext.Binding, {
+            skills: { added: [], removed: [] },
+            objects: { added: [], removed: [] },
+            connections: { added: [], removed: [Ref.make(first)] },
+          }),
+        ]);
+        expect(yield* names).toEqual(['github-2']);
+      },
+      Effect.provide(AssistantTestLayer({ types: [AiContext.Binding, Connection.Connection] })),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'leaves out only a connection whose credential cannot be read, or whose key is gone',
+    Effect.fnUntraced(
+      function* (_) {
+        const feed = yield* Database.add(Feed.make());
+        const token = yield* Database.add(AccessToken.make({ source: 'keyed.example.com', token: 'key' }));
+        yield* Database.add(
+          Connection.make({
+            connectorId: 'mcp',
+            name: 'Keyed',
+            mcp: { url: 'https://keyed.example.com/mcp', protocol: 'http' },
+            accessToken: Ref.make(token),
+          }),
+        );
+        yield* Database.add(
+          Connection.make({
+            connectorId: 'mcp',
+            name: 'Open',
+            mcp: { url: 'https://open.example.com/mcp', protocol: 'http' },
+          }),
+        );
+        const credentials = (
+          getCredential: (query: Credential.CredentialQuery) => Promise<Credential.ServiceCredential>,
+        ) => Layer.succeed(Credential.CredentialsService, { queryCredentials: async () => [], getCredential });
+        const names = (servers: readonly { name?: string }[]) => servers.map(({ name }) => name);
+
+        // Never offered without its key, which would send an agent to sign in to it itself; the rest connect.
+        const unreadable = yield* loadMcpServers({ feed }).pipe(
+          Effect.provide(credentials(async () => Promise.reject(new Error('EDGE unreachable')))),
+        );
+        expect(names(unreadable)).toEqual(['open']);
+
+        const gone = yield* loadMcpServers({ feed }).pipe(
+          Effect.provide(credentials(async () => ({ service: 'keyed.example.com', apiKey: undefined }))),
+        );
+        expect(names(gone)).toEqual(['open']);
+      },
+      Effect.provide(
+        AssistantTestLayer({ types: [AccessToken.AccessToken, AiContext.Binding, Connection.Connection] }),
+      ),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'the agent reaches each of two servers that name a tool alike',
+    Effect.fnUntraced(
+      function* (_) {
+        const first = yield* withTestServer;
+        const second = yield* withTestServer;
+        yield* Database.add(
+          Connection.make({ connectorId: 'mcp', name: 'First', mcp: { url: first.urls.open, protocol: 'http' } }),
+        );
+        yield* Database.add(
+          Connection.make({ connectorId: 'mcp', name: 'Second', mcp: { url: second.urls.open, protocol: 'http' } }),
+        );
+
+        const session = yield* AgentService.createSession();
+        yield* session.submitPrompt('What is the weather in Paris, by each server?');
+        yield* session.waitForCompletion();
+
+        const results = yield* toolResults(session.feed);
+        expect(results.filter((result) => result?.includes('Weather in Paris'))).toHaveLength(2);
+      },
+      Effect.provide(
+        AssistantTestLayer({
+          types: [AccessToken.AccessToken, Connection.Connection],
+          aiService: scriptedAiService([
+            {
+              parts: [
+                toolCall('mcp__first__get_weather', { city: 'Paris' }),
+                toolCall('mcp__second__get_weather', { city: 'Paris' }),
+              ],
+            },
+            { parts: [text('Both say it is sunny.')] },
+          ]),
+        }),
+      ),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 30_000 },
+  );
+
+  it.effect(
+    'reports a read that fails rather than an empty set of servers',
+    Effect.fnUntraced(
+      function* (_) {
+        const feed = yield* Database.add(Feed.make());
+        yield* Database.add(
+          Connection.make({ connectorId: 'mcp', mcp: { url: 'https://mcp.example.com/mcp', protocol: 'http' } }),
+        );
+
+        // A feed-scoped read waits on the index, which can time out under load.
+        const { db } = yield* Database.Service;
+        const timingOut = new Proxy(db, {
+          get: (target, property) =>
+            property === 'query'
+              ? (query: unknown) =>
+                  JSON.stringify(query).includes(String(Feed.getFeedUri(feed)))
+                    ? { run: () => Promise.reject(new Error('index query timed out')) }
+                    : target.query(query as never)
+              : Reflect.get(target, property, target),
+        });
+        const servers = yield* loadMcpServers({ feed }).pipe(
+          Effect.provideService(Database.Service, { db: timingOut }),
+          Effect.flip,
+        );
+        expect(servers).toBeInstanceOf(AiSession.McpServersUnavailable);
       },
       Effect.provide(AssistantTestLayer({ types: [AiContext.Binding, Connection.Connection] })),
       TestHelpers.provideTestContext,
@@ -142,7 +328,7 @@ describe('MCP servers', () => {
         AssistantTestLayer({
           types: [AccessToken.AccessToken, Connection.Connection],
           aiService: scriptedAiService([
-            { parts: [toolCall('get_weather', { city: 'Paris' })] },
+            { parts: [toolCall('mcp__localhost__get_weather', { city: 'Paris' })] },
             { parts: [text('It is sunny in Paris.')] },
           ]),
         }),

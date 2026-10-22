@@ -10,6 +10,7 @@ import * as Effect from 'effect/Effect';
 import type * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Queue from 'effect/Queue';
+import * as Result from 'effect/Result';
 import * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 
@@ -17,6 +18,8 @@ import { type MakeTurnProducer, type TurnRequest } from '@dxos/agent-runtime';
 import { AiAssistantError, type Chat } from '@dxos/assistant';
 import * as Trace from '@dxos/compute/Trace';
 import { type Database, Feed, Obj } from '@dxos/echo';
+import { log } from '@dxos/log';
+import { type McpToolkit } from '@dxos/mcp-client';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { AGENT_KEY_PREFIX } from '../constants.ts';
@@ -40,7 +43,20 @@ export const sessionKeySource = (agent: string): string => `${AGENT_KEY_PREFIX}.
 export const sessionIdOf = (chat: Chat.Chat, agent: string): string | undefined =>
   Obj.getKeys(chat, sessionKeySource(agent)).at(-1)?.id;
 
-type Live = { session: AcpSession.Session; idle?: Fiber.Fiber<void>; servers?: string };
+/**
+ * `token` is the bearer the agent was started with for Composer's MCP tools, which its proxied connections
+ * take too; `offered` is which connections' servers it was given.
+ */
+type Live = {
+  session: AcpSession.Session;
+  idle?: Fiber.Fiber<void>;
+  servers?: string;
+  token?: string;
+  offered?: string;
+};
+
+/** What {@link Sessions.acquire} hands back of a live session. */
+export type Acquired = { session: AcpSession.Session; token?: string; offered?: string };
 
 /**
  * Live agent sessions, one per chat, kept connected between turns: an agent process ends with each
@@ -71,13 +87,14 @@ export class Sessions {
   /**
    * The chat's live session, or a new one from `open`; either way its idle clock restarts. A live
    * session opened with other MCP `servers` is closed first, since an agent takes them only when a
-   * session opens; the new one continues it.
+   * session opens; the new one continues it. Unknown `servers` (they could not be read) keep the live
+   * session as it is.
    */
   acquire(
     key: string,
-    open: () => Effect.Effect<AcpSession.Session, AgentError>,
+    open: () => Effect.Effect<Acquired, AgentError>,
     servers?: string,
-  ): Effect.Effect<AcpSession.Session, AgentError> {
+  ): Effect.Effect<Acquired, AgentError> {
     // One at a time per chat, so two turns never each start an agent and orphan one of them.
     return this.#lockFor(key).withPermits(1)(
       Effect.gen({ self: this }, function* () {
@@ -85,7 +102,7 @@ export class Sessions {
         if (existing?.idle) {
           yield* Fiber.interrupt(existing.idle);
         }
-        if (existing && existing.servers !== servers) {
+        if (existing && servers !== undefined && existing.servers !== servers) {
           this.#live.delete(key);
           existing.session.close();
           existing = undefined;
@@ -93,8 +110,8 @@ export class Sessions {
         if (!existing) {
           this.#opening.add(key);
         }
-        const live = existing ?? {
-          session: yield* open().pipe(Effect.ensuring(Effect.sync(() => this.#opening.delete(key)))),
+        const live: Live = existing ?? {
+          ...(yield* open().pipe(Effect.ensuring(Effect.sync(() => this.#opening.delete(key))))),
           servers,
         };
         if (!existing) {
@@ -106,7 +123,24 @@ export class Sessions {
           });
         }
         live.idle = undefined;
-        return live.session;
+        return { session: live.session, token: live.token, offered: live.offered };
+      }),
+    );
+  }
+
+  /** Ends the chat's live session; the next {@link acquire} opens it again. */
+  close(key: string): Effect.Effect<void> {
+    return this.#lockFor(key).withPermits(1)(
+      Effect.gen({ self: this }, function* () {
+        const live = this.#live.get(key);
+        if (!live) {
+          return;
+        }
+        if (live.idle) {
+          yield* Fiber.interrupt(live.idle);
+        }
+        this.#live.delete(key);
+        live.session.close();
       }),
     );
   }
@@ -167,22 +201,36 @@ export type AgentOptions = {
   /** Composer's MCP tools for the chat, and the token the agent presents for them; fresh for each session. */
   tools?: (chat: Chat.Chat) => Effect.Effect<{ servers: acp.McpServer[]; token: string } | undefined>;
   /**
-   * The MCP servers of the chat's connections as the agent reaches them. Called after `tools` when a
-   * session opens and again on every turn, so a credential refreshed since then applies; without it
-   * the agent gets none of them.
+   * The MCP servers of the chat's connections as the agent reaches them, a proxied one with `token`, the
+   * bearer the session was started with. Called after `tools` when a session opens and again on every
+   * turn, so a credential refreshed since then applies; without it the agent gets none of them.
    */
-  connections?: (chat: Chat.Chat, servers: readonly McpConnection[]) => Effect.Effect<acp.McpServer[]>;
+  connections?: (
+    chat: Chat.Chat,
+    servers: readonly McpConnection[],
+    token: string | undefined,
+  ) => Effect.Effect<acp.McpServer[]>;
   /** This device's key: a chat runs only on the device that first ran it, since the agent's state lives there. */
   device?: () => string | undefined;
 };
 
 /** An MCP server a chat's connection exposes, as the agent process resolves it each turn. */
-export type McpConnection = Effect.Success<NonNullable<TurnRequest['mcpServers']>>[number];
+export type McpConnection = McpToolkit.Options;
 
 /** Which servers a session was opened with: a change reopens it, a refreshed credential does not. */
 const serversKey = (servers: readonly McpConnection[]): string =>
   servers
-    .map(({ url, protocol, apiKey }) => `${protocol} ${url}${apiKey === undefined ? '' : ' (credential)'}`)
+    .map(
+      ({ url, protocol, name, apiKey }) =>
+        `${protocol} ${url} ${name ?? ''}${apiKey === undefined ? '' : ' (credential)'}`,
+    )
+    .sort()
+    .join('\n');
+
+/** Which servers the agent was given, as it reaches them. */
+const offeredKey = (servers: readonly acp.McpServer[]): string =>
+  servers
+    .map((server) => `${server.name} ${'url' in server ? server.url : ''}`)
     .sort()
     .join('\n');
 
@@ -251,18 +299,27 @@ export const runTurn = (
         yield* Feed.append(feed, messages);
       });
 
-    const servers = request.mcpServers ? yield* request.mcpServers : [];
+    // Servers that could not be read leave the live session with the ones it has, rather than none.
+    const read = request.mcpServers ? yield* Effect.result(request.mcpServers) : Result.succeed([]);
+    const servers = Result.isSuccess(read) ? read.success : undefined;
+    if (Result.isFailure(read)) {
+      log.warn('MCP connections not read; the session keeps its servers', {
+        chat: chat.id,
+        error: read.failure.message,
+      });
+    }
     return yield* Effect.gen(function* () {
       let opened = false;
-      const session = yield* options.sessions.acquire(
+      const acquire = options.sessions.acquire(
         chat.id,
         () =>
           Effect.gen(function* () {
             opened = true;
             const tools = options.tools ? yield* options.tools(chat) : undefined;
-            const connections = options.connections ? yield* options.connections(chat, servers) : [];
+            const connections =
+              options.connections && servers ? yield* options.connections(chat, servers, tools?.token) : [];
             const stream = yield* options.connect(cwd, tools?.token);
-            return yield* AcpSession.open({
+            const session = yield* AcpSession.open({
               stream,
               cwd,
               resume,
@@ -270,12 +327,21 @@ export const runTurn = (
               mode: options.mode?.(),
               meta: options.sessionMeta,
             });
+            return { session, token: tools?.token, offered: offeredKey(connections) };
           }),
-        serversKey(servers),
+        servers && serversKey(servers),
       );
-      if (!opened && options.connections) {
-        yield* options.connections(chat, servers);
+      let live = yield* acquire;
+      if (!opened && options.connections && servers) {
+        const offered = yield* options.connections(chat, servers, live.token);
+        // A server the session was opened without, such as one whose proxy could not be served then,
+        // reaches the agent only through a session that opens with it.
+        if (offeredKey(offered) !== live.offered) {
+          yield* options.sessions.close(chat.id);
+          live = yield* acquire;
+        }
       }
+      const { session } = live;
       if (session.sessionId !== resume) {
         Obj.update(chat, (chat) => {
           Obj.getMeta(chat).keys.push({ source: sessionKeySource(options.id), id: session.sessionId });
