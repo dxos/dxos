@@ -161,7 +161,7 @@ describe("the Composer app's on:'edge' invocations", () => {
       'com.example.operation.test.broken': () => 'not a number',
     });
     app = await createApp(edge.url);
-  }, 60_000);
+  });
 
   afterEach(async () => {
     await app.harness[Symbol.asyncDispose]();

@@ -12,7 +12,7 @@ import { CallsPlugin } from '#plugin';
 
 describe('CallsPlugin', () => {
   // Calls own no persistent schema, so this is a load smoke test (activation rethrows on error).
-  test('loads and is enabled', { timeout: 60_000 }, async ({ expect }) => {
+  test('loads and is enabled', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), CallsPlugin()],
     });
