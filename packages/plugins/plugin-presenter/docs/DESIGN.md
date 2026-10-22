@@ -1,73 +1,56 @@
 # plugin-presenter — Design
 
-Status: **draft for discussion** (2026-10-22). Decisions marked _agent call_ are proposals, not agreed.
+Status: **decisions agreed, awaiting approval** (2026-10-22). Items marked _agent call_ were settled by the agent
+and are open to review; everything marked _user_ was decided in discussion.
 
 ## Intent
 
-Present anything in Composer as a slide deck. A deck is either one markdown document cut into slides, or a
-collection whose objects are each a slide. Any plugin can make its objects presentable by contributing a slide
-surface. An assistant can turn a markdown outline into a deck.
+Present anything in Composer as a slide deck. A user creates a **Presentation**: an ordered list of sections,
+each either a markdown slide written in place or a link to another object (document, canvas, sheet, …). Any
+plugin makes its objects presentable by contributing a slide surface. A markdown document can still be previewed
+as a deck directly. An assistant can turn a markdown outline into a presentation.
 
 ## Goals
 
-1. Two deck formats, one runtime: **document decks** (markdown split into slides) and **collection decks**
-   (one object per slide).
-2. Any plugin contributes a `role=slide` surface for its schema (canvas, sheet, drawing, table, …).
-3. The presenter article toggles in and out of fullscreen in place, and always shows the pager.
-4. One pager primitive, shared with autocue and reconciled with `react-ui` `Carousel`.
-5. A markdown slide renderer we control: live re-render on edit, our theme tokens, our key bindings.
-6. An assistant skill: markdown outline → presentation.
+1. A `Presentation` type: ordered sections, one slide each, shown in the navtree as a folder of slides.
+2. A quick-preview companion that presents any markdown document split on `---`.
+3. Any plugin contributes a `role=slide` surface for its schema; objects without one still render.
+4. The presentation article toggles in and out of fullscreen in place, and always shows the pager.
+5. One `Pager` primitive in `@dxos/react-ui`, styled consistently with `Carousel`, used by autocue too.
+6. A markdown slide renderer we control: live re-render on edit, our theme tokens, our key bindings.
+7. An assistant skill: markdown outline → presentation.
 
 ## Non-goals
 
-- Slide authoring UI (WYSIWYG layout editor). Authoring stays in the markdown editor or the object's own plugin.
-- Transitions, auto-animate, overview grid (reveal.js features we would drop).
+- A WYSIWYG slide layout editor. Authoring stays in the markdown editor or the linked object's own plugin.
+- Transitions, auto-animate, overview grid (reveal.js features we drop).
 - Server-side or headless PDF export. Print-to-PDF only.
+- A presenter view (notes + next slide + timer). Later; see Phase 6.
 
 ## Anti-goals
 
 - Two markdown renderers that show the same markdown differently (today: reveal.js for document decks,
-  ReactMarkdown for markdown slides in a collection deck).
+  ReactMarkdown for markdown slides in collection decks).
 - Global CSS or global key listeners leaking out of the deck (today: reveal theme CSS; `Pager`'s `window`
   keydown).
-- A slide surface that needs the presenter to know about its schema.
+- A slide surface that requires the presenter to know about its schema.
+- Slide position shared between collaborators.
 
 ## Current state
 
-| Area            | Today                                                                                                                                          | Problem                                                                                                                                              |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Entry           | `~presenter` companion on `Markdown.Document` and (behind the `presentCollections` setting) `Collection`; action `SetPresenting` (Shift+Mod+P) | Collections are experimental.                                                                                                                        |
-| Fullscreen      | `SetPresenting` → `DeckOperation.Adjust({type:'fullscreen'})`; containers read `layout.mode === 'solo--fullscreen'`                            | No in-article toggle; exit only via ESC or the action.                                                                                               |
-| Document deck   | `DocumentArticle` → `PresentationShell` → `RevealPlayer` (reveal.js, `---` separators)                                                         | Reveal parses once at init, global theme CSS, owns the keyboard, no pager. Vertical slides (`----`) promised in PLUGIN.mdl F-2.2 are not configured. |
-| Collection deck | `CollectionArticle` → `PresentationShell` → `Layout` (corner slots) + `Pager`/`PageNumber` → `Surface role=slide`                              | `Pager` keys gated on `PresenterContext.running`, which has **no provider**, so keys never work. Indexes `objects[slide]` refs directly.             |
-| Slide surfaces  | Markdown (presenter `SlideArticle` = `Panel` + `Slide`), Table, Drawing (illustrator), File                                                    | Sheet, canvas, tldraw, outline have none. No fallback when a schema has no slide surface.                                                            |
-| Pager           | `Pager` (first/prev/next/last, `window` keydown), `PageNumber`, `StartButton` (stories only)                                                   | Duplicates `Carousel` triggers; error-prone controlled/uncontrolled state.                                                                           |
-| Assistant       | None                                                                                                                                           | —                                                                                                                                                    |
+| Area            | Today                                                                                                                              | Problem                                                                                                                        |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Entry           | `~presenter` companion on `Markdown.Document` and (behind `presentCollections`) `Collection`; action `SetPresenting` (Shift+Mod+P) | Collections experimental; no first-class deck object.                                                                          |
+| Fullscreen      | `SetPresenting` → `DeckOperation.Adjust({type:'fullscreen'})`; containers read `layout.mode === 'solo--fullscreen'`                | No in-article toggle; exit only via ESC or the action.                                                                         |
+| Document deck   | `DocumentArticle` → `PresentationShell` → `RevealPlayer` (reveal.js, `---`)                                                        | Parses once at init, global theme CSS, owns the keyboard, no pager. `----` vertical slides in PLUGIN.mdl F-2.2 not configured. |
+| Collection deck | `CollectionArticle` → `PresentationShell` → `Layout` + `Pager`/`PageNumber` → `Surface role=slide`                                 | Keys gated on `PresenterContext.running`, which has **no provider**, so keys never work. Indexes refs directly.                |
+| Slide surfaces  | Markdown (`SlideArticle` = `Panel` + `Slide`), Table, Drawing, File                                                                | Sheet, canvas, tldraw, outline have none; no fallback.                                                                         |
+| Pager           | `Pager` (`window` keydown), `PageNumber`, `StartButton` (stories only)                                                             | Duplicates `Carousel` triggers; error-prone controlled/uncontrolled state.                                                     |
+| Assistant       | None                                                                                                                               | —                                                                                                                              |
 
 ## Design
 
-### 1. Model: a deck is a list of slides
-
-```ts
-type SlideSource =
-  | { kind: 'markdown'; id: string; content: string; meta: SlideMeta } // one section of a document deck
-  | { kind: 'object'; id: string; object: Ref<Obj.Unknown> }; // one item of a collection deck
-
-type Deck = { slides: SlideSource[] };
-```
-
-- `useDocumentDeck(document)` parses the document into `SlideSource[]` (see §5); memoized per slide so an edit
-  re-renders only the changed slide.
-- `useCollectionDeck(collection)` maps `collection.objects` to `SlideSource[]`, resolving refs lazily.
-- Both feed one `Deck` runtime component. The two containers collapse into one `PresentationArticle` that picks
-  the hook by subject type.
-
-**Decided (Q1, user):** a `Presentation` ECHO type that owns an ordered list of sections. The user creates a
-Presentation explicitly. Each section is either an owned markdown `Text` (written inline in the presentation)
-or a link to another ECHO object (markdown document, canvas, sheet, …). The app graph shows the Presentation as
-a folder whose children are its slides. This replaces collection decks.
-
-Schema sketch (_agent call_ on shape; open to change):
+### 1. The `Presentation` type _(user)_
 
 ```ts
 const Presentation = Schema.Struct({
@@ -77,162 +60,177 @@ const Presentation = Schema.Struct({
 }).pipe(Type.object({ typename: 'org.dxos.type.presentation', version: '0.1.0' }));
 ```
 
-- Owned vs linked is read from the target's parent (`Obj.getParent(target) === presentation`), so one array keeps
-  the order and no wrapper struct is needed. Deleting an owned section deletes its `Text`; unlinking a linked one
-  leaves the object.
-- App graph: `Presentation` node → one child per section, labelled by the first heading (owned `Text`) or the
-  object's own label (linked). Reorder by drag in the navtree writes `sections`.
-- **Decided (Q2, user):** one section is exactly one slide. `---` inside a section's text is a horizontal rule,
-  not a slide break. The navtree, the pager count and `sections` always agree.
-- **Decided (Q2b, user):** the `~presenter` companion on `Markdown.Document` stays as a quick preview. It
-  splits the document on `---` at render time into transient `SlideSource`s and runs the same `Deck` runtime and
-  markdown renderer. Nothing is persisted; reveal.js is no longer needed once the renderer reaches parity.
-  The one-section-one-slide rule applies inside a `Presentation` only.
-- The `Deck` runtime above maps `sections` to `SlideSource[]`; owned `Text` and linked `Markdown.Document`
-  both render with the markdown slide renderer, everything else through `Surface role=slide`.
+- The user creates a Presentation explicitly (space "create object" menu). It replaces collection decks; the
+  `presentCollections` setting and `CollectionArticle` are removed.
+- A section is either an **owned markdown `Text`** or a **link** to any ECHO object. Owned vs linked is read from
+  the target's parent (`Obj.getParent(target) === presentation`) so one array keeps the order (_agent call_).
+  Removing an owned section deletes its `Text`; removing a linked one only unlinks.
+- **One section is exactly one slide** _(user)_. `---` inside a section is a horizontal rule, not a slide break,
+  so the navtree, the pager count and `sections` always agree.
+- App graph: the Presentation is a folder node; each section is a child, labelled by its first heading (owned) or
+  the object's own label (linked). Drag-reorder in the navtree writes `sections`. Selecting a child opens the
+  presentation at that slide.
+- "Add to presentation": a picker over space objects with a toggle _(user)_ that filters to schemas with a
+  dedicated `Slide` surface. With the toggle off, anything can be linked and renders through the fallback chain
+  (§3). The filter needs a "does a surface exist for role X and schema Y" query that does not render
+  (_agent call_: a lookup helper in app-framework; confirm against its API).
 
-### 2. Slide surface contract
+### 2. One deck runtime
+
+```ts
+type SlideSource =
+  | { kind: 'markdown'; id: string; content: string } // owned Text, linked Markdown.Document, or a preview section
+  | { kind: 'object'; id: string; object: Ref<Obj.Unknown> }; // any other linked object
+```
+
+- `usePresentationDeck(presentation)` maps `sections` to `SlideSource[]`, resolving refs lazily.
+- `useDocumentDeck(document)` — the **quick-preview companion** _(user)_: the existing `~presenter` companion on
+  `Markdown.Document` splits the document on `---` at render time into transient sources. Nothing is persisted.
+  The one-section-one-slide rule applies only inside a Presentation.
+- Both feed one `Deck` component rendered by one `PresentationArticle`. `DocumentArticle`, `CollectionArticle`
+  and `SlideArticle` go away; the markdown `role=slide` surface stays (it is what a linked `Markdown.Document`
+  renders through).
+- Per-slide memoization keyed by content, so an edit re-renders only the slide that changed.
+
+### 3. Slide surfaces
 
 - Role stays `AppSurface.Slide` (`org.dxos.role.slide`, `SectionData`).
-- The presenter renders every slide inside a **`SlideFrame`**: a fixed 16:9 logical canvas (today's `Panel`
-  scaling logic) so contributors design for one size.
-- Contract for contributors: render read-only, fill the frame, no own toolbar/chrome, no global key listeners.
-  Data: `{ subject, attendableId }`.
-- Markdown slides are a slide surface like any other: the presenter contributes `role=slide` for
-  `Markdown.Document`, and the document deck renders its sections with the same component.
-- **Decided (Q3, user):** fallback chain when no `Slide` surface matches: `Slide` → `Section` → `CardContent` →
-  a title slide (object icon + label). `Section` surfaces may be editable; the frame passes the `Slide` role so
-  plugins that honour it render read-only, and the frame blocks pointer edits otherwise (_agent call_).
-- **Decided (Q3, user):** the "Add to presentation" picker has a toggle that filters to objects whose schema
-  has a dedicated `Slide` surface; with it off, any object can be linked and uses the fallback chain. The
-  filter needs a way to ask "does a surface exist for role X and this schema" without rendering
-  (_agent call_: a surface lookup helper in app-framework; to be confirmed against its API).
-- Follow-up contributions: sheet, canvas, tldraw (reads the role but registers no filter), outline.
+- Every slide renders inside **`SlideFrame`**: a fixed 16:9 logical canvas (today's `Panel` scaling), so
+  contributors design for one size.
+- Contract for contributors: read-only, fill the frame, no toolbar or chrome, no global key listeners. Data:
+  `{ subject, attendableId }`.
+- **Fallback chain** _(user)_: `Slide` → `Section` → `CardContent` → title slide (object icon + label).
+  `Section` surfaces may be editable; the frame passes the `Slide` role so plugins that honour it render
+  read-only, and the frame blocks pointer edits otherwise (_agent call_).
+- New contributions: sheet, canvas, tldraw (already reads the role but registers no filter), outline.
 
-### 3. Presentation article: fullscreen toggle and pager
+### 4. Presentation article: fullscreen toggle and pager
 
 ```
 PresentationArticle
 └─ Panel.Root
-   ├─ Panel.Toolbar   [◀◀ ◀  3 / 12  ▶ ▶▶] ··· [⛶ fullscreen]   (hidden in fullscreen)
+   ├─ Panel.Toolbar   [⏮ ◀  3 / 12  ▶ ⏭] ··· [⛶ fullscreen]   (hidden in fullscreen)
    └─ Panel.Body
       └─ PresentationShell  (focus scope, fade, ESC in fullscreen)
          ├─ SlideFrame → current slide
-         └─ Pager overlay (fullscreen only; auto-hides after idle, shows on mouse move)
+         └─ Pager overlay (fullscreen only; auto-hides when idle, shows on pointer move)
 ```
 
-- Fullscreen toggle button and `F` key call `SetPresenting` / `DeckOperation.Adjust` (no new layout mode).
-- Keys bind on the shell's focus scope, not `window`: ←/→ step, Shift+←/→ first/last, Home/End, ESC exits
-  fullscreen. Remove `PresenterContext` (no provider exists) and `StartButton`.
-- `PresentationShell` absorbs `Layout`'s corner slots, which also removes the `[ESC]` hint / `topLeft` overlap.
-- **Decided (Q4, user):** the current slide is per-user, per-presentation view state in
-  `@dxos/react-ui-attention` — a `ViewState.define({ key: 'presenter-slide', backend: 'local', … })` aspect read
-  with `useViewState(aspect, contextId)`, where `contextId` is the presentation's (or companion document's) URI.
-  It survives navigation and reloads, never syncs to collaborators. Operations reach it via
+- The fullscreen button and `F` key call `SetPresenting` / `DeckOperation.Adjust`; no new layout mode.
+- Keys bind on the shell's focus scope, never `window`: ←/→ step, Shift+←/→ or Home/End first/last, ESC exits
+  fullscreen. `PresenterContext`, `StartButton` and `Layout` are deleted; the shell owns the overlay slots, which
+  also fixes the `[ESC]` hint overlapping `Layout`'s top-left slot.
+- **Current slide** _(user)_: per-user, per-deck view state in `@dxos/react-ui-attention` —
+  `ViewState.define({ key: 'presenter-slide', backend: 'local', … })`, read with
+  `useViewState(aspect, contextId)` where `contextId` is the Presentation's (or previewed document's) URI.
+  Survives navigation and reloads; never syncs to collaborators. Operations reach it through
   `AttentionCapabilities.ViewState`. Pattern: `plugin-deck` `CompanionViewState`.
 
-### 4. One pager primitive
+### 5. `Pager` primitive _(user)_
 
 - New composite in `@dxos/react-ui`: `Pager.Root` (`index`, `count`, `onIndexChange`, `loop?`), `Pager.First`,
-  `Pager.Prev`, `Pager.Next`, `Pager.Last`, `Pager.Count` (`3 / 12`), `Pager.Indicators` (dots). Fully
-  controlled; keyboard opt-in through a `Pager.Keys` that binds to a given element, never `window`.
-- **Decided (Q5, user):** `Pager` is a separate primitive. `Carousel` keeps the Ark/zag implementation; its
-  `PrevTrigger`/`NextTrigger`/`IndicatorGroup` adopt the pager's styles (shared theme, not shared code).
-- autocue: no pager exists in `tools/autocue` (checked `main` after autocue-ui #14028 merged); only
-  `Frame.stories.tsx` `TakeStory` hand-rolls play/pause, next and `n / N`. Replace that with `Pager` once it
-  exists.
+  `Pager.Prev`, `Pager.Next`, `Pager.Last`, `Pager.Count` (`3 / 12`), `Pager.Indicators` (dots), and
+  `Pager.Keys` (binds keys to a given element, never `window`). Fully controlled.
+- Separate from `Carousel`, which keeps its Ark/zag implementation; its `PrevTrigger`/`NextTrigger`/
+  `IndicatorGroup` adopt the pager's styles (shared theme, not shared code).
+- autocue has no pager on `main` (checked after autocue-ui #14028 merged); `Frame.stories.tsx` `TakeStory`
+  hand-rolls play/pause, next and `n / N` and moves to `Pager`.
 
-### 5. Markdown slide renderer (replaces reveal.js)
+### 6. Markdown slide renderer (replaces reveal.js)
 
 Research (Oct 2026): no embeddable library beats building our own. Slidev has the best authoring model but is a
-Vue/Vite build tool; Marp renders pure HTML strings with no navigation; Spectacle brings its own styling and
-global keys; reveal.js 6 still parses markdown only at init and ships global theme CSS.
+Vue/Vite build tool; Marp renders HTML strings with no navigation; Spectacle brings its own styling and global
+keys; reveal.js 6 still parses markdown only at init and ships global theme CSS.
 
-Pipeline: `remark-parse` + `remark-gfm` + `remark-frontmatter` + `remark-directive` → split on `---` → per-slide
-`remark-rehype` → `hast-util-to-jsx-runtime` (React elements, no `innerHTML`) → existing code highlighter.
+Pipeline: `remark-parse` + `remark-gfm` + `remark-frontmatter` + `remark-directive` → `remark-rehype` →
+`hast-util-to-jsx-runtime` (React elements, no `innerHTML`) → the existing code highlighter. The preview companion
+splits on `---` before this pipeline; inside a Presentation each section is one run of it.
 
-DSL (Slidev/Quarto/Presenterm conventions):
+DSL for one slide (Slidev/Quarto/Presenterm conventions; frontmatter is optional):
 
-```markdown
+```text
 ---
-theme: dark # deck frontmatter (first block)
----
-
-# Title slide
-
----
-
-layout: two-cols # per-slide frontmatter
+layout: two-cols
 background: ./image.png
 ---
 
-## Left
-
-:::right
-![](chart.png)
-:::
+## Results
 
 - one
 - two <!-- pause -->
 - three
 
+:::right
+![](chart.png)
+:::
+
 :::notes
-Speaker notes.
+Speaker notes (parsed and hidden now; shown by the presenter view later).
 :::
 ```
 
-- Layouts: `title`, `section`, `default`, `two-cols`, `image-left`, `image-right`, `fullscreen-image`
-  (subsumes today's `slideLayout` `fullscreen`/`columns`/`rows`).
-- Fragments: `<!-- pause -->`. Notes: `:::notes`. Embedded objects: _open_ (Q2).
-- Migration: map reveal's `<!-- .slide: -->` / `<!-- .element: class="fragment" -->` to the DSL; keep
-  `RevealPlayer` behind a setting until parity, then delete it.
+- Layouts: `title`, `section`, `default`, `two-cols`, `image-left`, `image-right`, `fullscreen-image` (subsumes
+  today's `slideLayout` `fullscreen`/`columns`/`rows`).
+- Fragments: `<!-- pause -->`. Notes: `:::notes`.
+- Deck-level options (theme, aspect) live on the Presentation (_agent call_: add fields when the first one is
+  needed; not in v0.1.0).
+- Migration: map reveal's `<!-- .slide: -->` / `<!-- .element: class="fragment" -->` in `testing/*.md` to the DSL;
+  `RevealPlayer` stays behind a setting until parity, then is deleted with its dependency.
 - Print: a print stylesheet, one slide per page.
 
-### 6. Assistant skill
+### 7. Assistant skill _(user)_
 
-- **Decided (Q6, user):** `PresenterSkill` (`src/skills/`), contributed via `AppCapabilities.SkillDefinition`, is
-  attached to the `Presentation` type only, through `Skill.SkillsAnnotation`. `agentCanEnable: true` lets the
-  agent enable it for "make a deck from this outline" when no presentation exists yet. No annotation on
-  `Markdown.Document`.
-- Operations exposed as tools (_agent call_, revised for the `Presentation` type):
+- `PresenterSkill` (`src/skills/`), contributed via `AppCapabilities.SkillDefinition` and attached to the
+  `Presentation` type only through `Skill.SkillsAnnotation`. `agentCanEnable: true` covers "make a deck from this
+  outline" before any presentation exists. Not attached to `Markdown.Document`.
+- Tools (_agent call_):
   - `CreatePresentation({ name, slides: string[], target? })` — the model expands the outline into one DSL
-    markdown string per slide; the operation validates each (unknown layouts, empty slides) and creates a
-    `Presentation` with one owned `Text` section per slide.
-  - `AddSection({ presentation, object | content, index? })` — link an existing object or add an owned slide.
+    string per slide; the operation validates each (unknown layout, empty slide) and creates a Presentation
+    with one owned `Text` per slide.
+  - `AddSection({ presentation, object | content, index? })` — link an object or add an owned slide.
   - `ListLayouts()` — the DSL reference, so the instructions don't embed it.
   - `PresentObject({ object })` — wraps `SetPresenting`.
-- "Markdown outline" input: any markdown with headings/bullets; `Outline` (`org.dxos.type.outline`) checklists
-  accepted too.
-- Evals: one `assistant-evals` eval with memoized fixtures (outline → deck, checks slide count and layouts).
+- Input: any markdown outline (headings, bullets); `Outline` (`org.dxos.type.outline`) checklists accepted too.
+- Eval: one `assistant-evals` eval with memoized fixtures (outline → presentation; checks slide count and
+  layouts).
 
 ## Phases
 
-1. **Runtime unification** — `Deck` model, `PresentationArticle`, `SlideFrame`, in-article fullscreen toggle,
-   pager toolbar + overlay, focus-scoped keys; delete `PresenterContext`, `StartButton`, `Layout`. Reveal stays
-   as the document renderer.
-2. **Pager primitive** in `@dxos/react-ui`; presenter adopts it; Carousel/autocue reconciled.
-3. **Markdown renderer + DSL**; document decks move off reveal.js behind a setting; migrate test decks.
-4. **Slide surfaces** for sheet, canvas, tldraw; fallback chain; picker filter toggle.
+1. **Presentation type + runtime** — schema, create action, app-graph folder and children, "Add to presentation"
+   picker (toggle off until Phase 4); `Deck`, `PresentationArticle`, `SlideFrame`, preview companion on the same
+   runtime; fullscreen toggle, toolbar and overlay pager (existing `Pager`), focus-scoped keys, view-state slide
+   index; delete `PresenterContext`, `StartButton`, `Layout`, `CollectionArticle`, `presentCollections`. Reveal
+   still renders markdown slides.
+2. **`Pager` primitive** in `@dxos/react-ui`; presenter adopts it; `Carousel` styles and autocue `TakeStory`
+   follow.
+3. **Markdown renderer + DSL**; reveal behind a setting; migrate test decks; print stylesheet.
+4. **Slide surfaces** for sheet, canvas, tldraw, outline; fallback chain; surface-lookup helper and picker
+   filter.
 5. **Assistant skill** + eval.
-6. Update `PLUGIN.mdl` (features, scenarios, changelog) at each phase.
+6. **Later:** presenter view (notes, next slide, timer; single window first, second window once view state is
+   confirmed to sync across windows).
 
-## Open questions
+Each phase updates `PLUGIN.mdl` (features, scenarios, QA, `## Changelog`) and ships with stories and tests.
 
-1. Do we need a `Presentation` ECHO object (title, theme, source ref, last slide), or is "a companion on a
-   document/collection" enough?
-2. Should a document deck embed objects as slides (e.g. a `::object{ref=…}` directive), which would make
-   collection decks a special case of document decks?
-3. Fallback for objects with no slide surface: `Card` surface, a title slide with the object's name, or skip?
-4. Slide index: ephemeral, persisted per user, or synced across viewers (audience follows presenter)?
-5. Pager vs Carousel: share styling only, or rebuild `Carousel` on top of `Pager`?
-6. Skill trigger: annotate `Markdown.Document`/`Collection` with the skill, or enable it only on request?
-7. Presenter view (notes + next slide in a second window) — in scope now or later?
+## Decisions log
+
+| #   | Question                     | Decision                                                                               | By   |
+| --- | ---------------------------- | -------------------------------------------------------------------------------------- | ---- |
+| Q1  | Dedicated deck object?       | `Presentation` type owning ordered sections (owned `Text` or links); navtree folder    | user |
+| Q2  | Section → slides?            | One section = one slide                                                                | user |
+| Q2b | Keep the document companion? | Yes, as a quick preview split on `---`                                                 | user |
+| Q3  | No slide surface?            | Fallback `Slide` → `Section` → `CardContent` → title; picker toggle filters to `Slide` | user |
+| Q4  | Slide index storage?         | `react-ui-attention` view state, `local` backend, per user per deck                    | user |
+| Q5  | Pager vs Carousel?           | Separate `Pager`; Carousel shares styles                                               | user |
+| Q6  | Skill trigger?               | Annotate `Presentation` only; `agentCanEnable`                                         | user |
+| Q7  | Presenter view now?          | Later (Phase 6); notes parsed now                                                      | user |
 
 ## References
 
 - `packages/plugins/plugin-presenter/PLUGIN.mdl` — current spec (stale: "solo fullscreen", vertical slides).
 - `packages/sdk/app-toolkit/src/ui/components/AppSurface/AppSurface.ts:379` — `AppSurface.Slide`.
 - `packages/ui/react-ui/src/components/Carousel/Carousel.tsx` — Carousel.
+- `packages/ui/react-ui-attention/src/types/ViewState.ts` — view-state aspects.
 - `packages/plugins/plugin-markdown/src/skills/MarkdownSkill.ts` — skill pattern.
 - Slidev https://sli.dev · Marp https://github.com/marp-team/marp-core · Quarto revealjs
   https://quarto.org/docs/presentations/revealjs/ · Presenterm https://github.com/mfontanini/presenterm ·
