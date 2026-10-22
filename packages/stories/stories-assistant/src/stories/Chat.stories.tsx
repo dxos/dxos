@@ -532,6 +532,18 @@ export const TestPlanningScripted: Story = {
   },
 };
 
+// Released by the delegation play once it has seen the delegated item unchecked; a scripted sub-agent would
+// otherwise finish before the checklist could be read.
+let releaseSubAgent: () => void = () => {};
+let subAgentReleased = Promise.resolve();
+
+const holdSubAgent = async ({ space }: { space: Space }) => {
+  await captureSpace({ space });
+  subAgentReleased = new Promise((resolve) => {
+    releaseSubAgent = resolve;
+  });
+};
+
 /**
  * Deterministic end-to-end delegation over a scripted (offline) model — the storybook analog of
  * `assistant-toolkit/src/supervisor/delegation-strategy.test.ts`, sharing the same routed turn
@@ -552,12 +564,15 @@ export const TestDelegationScripted: Story = {
       };
     },
     skills: [DelegationSkill.key, PlanningSkill.key, MarkdownSkill.key],
-    onInit: captureSpace,
+    onInit: holdSubAgent,
     scripted: [
       {
         name: 'sub-agent',
         match: promptIncludes('non-interactive mode'),
-        turns: [{ parts: [toolCall('completeJob', { success: '3628800' })] }, { parts: [text('Done.')] }],
+        turns: [
+          { gate: () => subAgentReleased, parts: [toolCall('completeJob', { success: '3628800' })] },
+          { parts: [text('Done.')] },
+        ],
       },
       {
         name: 'chat-name',
@@ -595,8 +610,9 @@ export const TestDelegationScripted: Story = {
     await canvas.findByText(/On it — delegating/i, {}, { timeout: 30_000 });
 
     // Delegation is the promotion moment: the durable task it creates is mirrored into the
-    // conversation's checklist.
-    await waitForChecklist((items) => items.some(({ title }) => title === TASK_TITLE));
+    // conversation's checklist, unchecked while the sub-agent works.
+    await waitForChecklist((items) => items.some(({ title, done }) => title === TASK_TITLE && !done));
+    releaseSubAgent();
 
     // The supervisor spawns the sub-agent after the turn and folds its result back.
     await canvas.findByText(/sub-agent completed/i, {}, { timeout: 60_000 });
