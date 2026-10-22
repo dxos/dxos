@@ -15457,6 +15457,9 @@ importers:
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../plugin-assistant
+      '@dxos/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugin-attention
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox

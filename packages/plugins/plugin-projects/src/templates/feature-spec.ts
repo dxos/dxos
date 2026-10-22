@@ -32,6 +32,8 @@ export const featureSpec: ProjectCapabilities.Template = {
   id: 'org.dxos.project.featureSpec',
   label: 'Feature Spec',
   icon: 'ph--puzzle-piece--regular',
+  // The features start as a dependency graph to draw on.
+  featureView: 'canvas',
   scaffold: ({ name, subject }) =>
     Effect.succeed(
       scaffoldProject({
