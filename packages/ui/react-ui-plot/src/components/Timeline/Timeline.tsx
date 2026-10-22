@@ -480,11 +480,13 @@ export const Timeline = ({
   const select = useCallback(
     (event: TimelineEvent | undefined) => {
       setCurrentId(event?.id);
-      if (event) {
-        dotOf(event)?.scrollIntoView({ block: 'nearest' });
+      // Scroll only the timeline (not its ancestors) so the event sits in the middle of the view.
+      const scroller = scrollRef.current;
+      if (event && scroller) {
+        scroller.scrollTo({ top: yOf(event.time) - scroller.clientHeight / 2, behavior: 'smooth' });
       }
     },
-    [dotOf],
+    [scrollRef, yOf],
   );
 
   const handleSelect = useCallback(
