@@ -39,17 +39,17 @@ type PluginRow = {
   status: string;
 };
 
-describe('plugin add --dev', () => {
+describe.concurrent('plugin add --dev', () => {
   test(
     'reads a directory in place, loads it, and behaves like a builtin under disable/enable',
-    ({ expect }) => {
-      withIsolatedHome((home) => {
-        const { stdout, status } = runDx(['plugin', 'add', '--dev', '--yes', FIXTURE_DIR], { home });
+    async ({ expect }) => {
+      await withIsolatedHome(async (home) => {
+        const { stdout, status } = await runDx(['plugin', 'add', '--dev', '--yes', FIXTURE_DIR], { home });
         expect(status).toBe(0);
         // The user typed a locator, so the resolved id is the useful output.
         expect(stdout).toContain(FIXTURE_ID);
 
-        const installed = findFixture(home);
+        const installed = await findFixture(home);
         expect(installed?.source).toBe('dev');
         expect(installed?.enabled).toBe(true);
         // Loading must actually work, not merely be recorded.
@@ -58,13 +58,13 @@ describe('plugin add --dev', () => {
         // A link is read in place, so nothing is copied under the CLI's own directory.
         expect(fs.existsSync(path.join(home, '.config', 'dx', 'plugins', FIXTURE_ID))).toBe(false);
 
-        expect(runDx(['plugin', 'disable', FIXTURE_ID], { home }).status).toBe(0);
-        const disabled = findFixture(home);
+        expect((await runDx(['plugin', 'disable', FIXTURE_ID], { home })).status).toBe(0);
+        const disabled = await findFixture(home);
         expect(disabled?.enabled).toBe(false);
         // Disabling must not discard the install record.
         expect(disabled?.source).toBe('dev');
 
-        expect(runDx(['plugin', 'enable', FIXTURE_ID], { home }).status).toBe(0);
+        expect((await runDx(['plugin', 'enable', FIXTURE_ID], { home })).status).toBe(0);
       });
     },
     TIMEOUT,
@@ -73,13 +73,13 @@ describe('plugin add --dev', () => {
   // With no terminal to prompt, consent has to be refusal — a script must say `--yes`.
   test(
     'refuses to install without confirmation, naming --yes',
-    ({ expect }) => {
-      withIsolatedHome((home) => {
-        const { stdout, stderr, status } = runDx(['plugin', 'add', '--dev', FIXTURE_DIR], { home });
+    async ({ expect }) => {
+      await withIsolatedHome(async (home) => {
+        const { stdout, stderr, status } = await runDx(['plugin', 'add', '--dev', FIXTURE_DIR], { home });
         expect(status).not.toBe(0);
         expect(stdout + stderr).toContain('--yes');
         // Refusal has to leave nothing behind, or the next command loads code never consented to.
-        expect(findFixture(home)).toBeUndefined();
+        expect(await findFixture(home)).toBeUndefined();
       });
     },
     TIMEOUT,
@@ -87,11 +87,11 @@ describe('plugin add --dev', () => {
 
   test(
     '--no-enable records the plugin without activating it',
-    ({ expect }) => {
-      withIsolatedHome((home) => {
+    async ({ expect }) => {
+      await withIsolatedHome(async (home) => {
         // The fixture ships a built `manifest.json`, so only its metadata is read.
-        expect(runDx(['plugin', 'add', '--dev', '--yes', FIXTURE_DIR, '--no-enable'], { home }).status).toBe(0);
-        const row = findFixture(home);
+        expect((await runDx(['plugin', 'add', '--dev', '--yes', FIXTURE_DIR, '--no-enable'], { home })).status).toBe(0);
+        const row = await findFixture(home);
         expect(row?.enabled).toBe(false);
         expect(row?.status).toBe('disabled');
       });
@@ -100,19 +100,19 @@ describe('plugin add --dev', () => {
   );
 });
 
-describe('plugin add <url>', () => {
+describe.concurrent('plugin add <url>', () => {
   test(
     'snapshots the bundle and its manifest, loads offline, and is deleted by remove',
     async ({ expect }) => {
-      const home = await withFixtureServer((baseUrl) => {
+      const home = await withFixtureServer(async (baseUrl) => {
         const isolated = fs.mkdtempSync(path.join(os.tmpdir(), 'dx-test-'));
         // `--dev` means "read in place", which a URL cannot satisfy.
-        const dev = runDx(['plugin', 'add', '--dev', '--yes', `${baseUrl}/manifest.json`], { home: isolated });
+        const dev = await runDx(['plugin', 'add', '--dev', '--yes', `${baseUrl}/manifest.json`], { home: isolated });
         expect(dev.status).toBe(1);
         expect(dev.stdout + dev.stderr).toContain('directory');
 
         // An asset naming another host would make `add` fetch somewhere the user never named.
-        const hostile = runDx(['plugin', 'add', '--yes', `${baseUrl}/hostile-manifest.json`], { home: isolated });
+        const hostile = await runDx(['plugin', 'add', '--yes', `${baseUrl}/hostile-manifest.json`], { home: isolated });
         expect(hostile.status).toBe(1);
         expect(hostile.stdout + hostile.stderr).toContain('origin');
         expect(fs.existsSync(path.join(isolated, '.config', 'dx', 'plugins', 'com.example.plugin.hostile'))).toBe(
@@ -120,11 +120,15 @@ describe('plugin add <url>', () => {
         );
 
         // `..%5C` survives URL normalization and is a separator once decoded on Windows.
-        const traversal = runDx(['plugin', 'add', '--yes', `${baseUrl}/traversal-manifest.json`], { home: isolated });
+        const traversal = await runDx(['plugin', 'add', '--yes', `${baseUrl}/traversal-manifest.json`], {
+          home: isolated,
+        });
         expect(traversal.status).toBe(1);
         expect(traversal.stdout + traversal.stderr).toContain('below its manifest');
 
-        expect(runDx(['plugin', 'add', '--yes', `${baseUrl}/manifest.json`], { home: isolated }).status).toBe(0);
+        expect((await runDx(['plugin', 'add', '--yes', `${baseUrl}/manifest.json`], { home: isolated })).status).toBe(
+          0,
+        );
         return isolated;
       });
 
@@ -138,7 +142,7 @@ describe('plugin add <url>', () => {
           true,
         );
 
-        const row = findFixture(home);
+        const row = await findFixture(home);
         expect(row?.source).toBe('url');
         expect(row?.version).toBe('1.2.3');
         // A snapshot lives outside any node_modules tree, so it only loads because the shared scope
@@ -146,7 +150,7 @@ describe('plugin add <url>', () => {
         expect(row?.failure).toBeUndefined();
         expect(row?.status).toBe('enabled');
 
-        expect(runDx(['plugin', 'remove', FIXTURE_ID], { home }).status).toBe(0);
+        expect((await runDx(['plugin', 'remove', FIXTURE_ID], { home })).status).toBe(0);
         // A copy is the CLI's to delete, unlike a linked directory.
         expect(fs.existsSync(path.join(home, '.config', 'dx', 'plugins', FIXTURE_ID))).toBe(false);
       } finally {
@@ -157,29 +161,29 @@ describe('plugin add <url>', () => {
   );
 });
 
-describe('plugin remove', () => {
+describe.concurrent('plugin remove', () => {
   test(
     'forgets a link without touching it, and refuses a builtin, an unknown id, or a bare path',
-    ({ expect }) => {
-      withIsolatedHome((home) => {
-        runDx(['plugin', 'add', '--dev', '--yes', FIXTURE_DIR], { home });
-        expect(runDx(['plugin', 'remove', FIXTURE_ID], { home }).status).toBe(0);
+    async ({ expect }) => {
+      await withIsolatedHome(async (home) => {
+        await runDx(['plugin', 'add', '--dev', '--yes', FIXTURE_DIR], { home });
+        expect((await runDx(['plugin', 'remove', FIXTURE_ID], { home })).status).toBe(0);
         expect(fs.readFileSync(path.join(home, '.config', 'dx', 'plugins', 'default.yml'), 'utf8')).not.toContain(
           FIXTURE_ID,
         );
         // The user owns a linked directory; uninstalling must not delete their working copy.
         expect(fs.existsSync(path.join(FIXTURE_DIR, 'index.mjs'))).toBe(true);
 
-        const builtin = runDx(['plugin', 'remove', MARKDOWN], { home });
+        const builtin = await runDx(['plugin', 'remove', MARKDOWN], { home });
         expect(builtin.status).toBe(1);
         expect(builtin.stdout + builtin.stderr).toContain('disable');
 
-        const unknown = runDx(['plugin', 'remove', 'com.example.nope'], { home });
+        const unknown = await runDx(['plugin', 'remove', 'com.example.nope'], { home });
         expect(unknown.status).toBe(1);
         expect(unknown.stdout + unknown.stderr).toContain('not found');
 
         // Installing from a path without `--dev` would have to snapshot it, which is not supported.
-        const bare = runDx(['plugin', 'add', '--yes', FIXTURE_DIR], { home });
+        const bare = await runDx(['plugin', 'add', '--yes', FIXTURE_DIR], { home });
         expect(bare.status).toBe(1);
         expect(bare.stdout + bare.stderr).toContain('--dev');
       });
@@ -188,12 +192,12 @@ describe('plugin remove', () => {
   );
 });
 
-describe('a broken install', () => {
+describe.concurrent('a broken install', () => {
   test(
     'is reported by `plugin list` instead of taking down the CLI',
-    ({ expect }) => {
-      withIsolatedHome((home) => {
-        runDx(['plugin', 'add', '--dev', '--yes', FIXTURE_DIR], { home });
+    async ({ expect }) => {
+      await withIsolatedHome(async (home) => {
+        await runDx(['plugin', 'add', '--dev', '--yes', FIXTURE_DIR], { home });
         // Point the record at a directory that no longer holds an entry module — the state a user
         // reaches by moving or deleting a linked checkout.
         const contents = fs.readFileSync(path.join(home, '.config', 'dx', 'plugins', 'default.yml'), 'utf8');
@@ -204,32 +208,30 @@ describe('a broken install', () => {
 
         // The plugin manager resolves lazy plugins inside its init chain, so an unhandled import
         // failure here would fail every command — including the ones needed to recover.
-        const { status } = runDx(['--json', 'plugin', 'list'], { home });
+        const { status } = await runDx(['--json', 'plugin', 'list'], { home });
         expect(status).toBe(0);
 
-        const row = findFixture(home);
+        const row = await findFixture(home);
         expect(row?.status).toBe('failed');
         expect(row?.failure).toBeDefined();
 
         // And the user can still get out of it.
-        expect(runDx(['plugin', 'remove', FIXTURE_ID], { home }).status).toBe(0);
+        expect((await runDx(['plugin', 'remove', FIXTURE_ID], { home })).status).toBe(0);
       });
     },
     TIMEOUT,
   );
 });
 
-const listPlugins = (home: string): PluginRow[] => JSON.parse(runDx(['--json', 'plugin', 'list'], { home }).stdout);
+const listPlugins = async (home: string): Promise<PluginRow[]> =>
+  JSON.parse((await runDx(['--json', 'plugin', 'list'], { home })).stdout);
 
-const findFixture = (home: string) => listPlugins(home).find((row) => row.id === FIXTURE_ID);
+const findFixture = async (home: string) => (await listPlugins(home)).find((row) => row.id === FIXTURE_ID);
 
 /**
  * Serves the fixture directory on a loopback port for the duration of `fn`.
- *
- * The server runs in a child process because `runDx` spawns synchronously, so an in-process server
- * would be blocked by the very subprocess making the request.
  */
-const withFixtureServer = async <T>(fn: (baseUrl: string) => T): Promise<T> => {
+const withFixtureServer = async <T>(fn: (baseUrl: string) => Promise<T>): Promise<T> => {
   const source = `
     const http = require('node:http');
     const fs = require('node:fs');

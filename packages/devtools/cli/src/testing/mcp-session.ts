@@ -20,7 +20,7 @@ export const MCP_REQUEST_META: {
 /**
  * A live `dx mcp serve` stdio session the caller keeps open across several calls.
  *
- * `runDx` cannot serve here: `spawnSync` closes stdin as soon as its input is written and the
+ * `runDx` cannot serve here: it closes stdin as soon as its input is written and the
  * server exits with the stream, so a scaffold needing three ordered calls would need three
  * servers — each paying the client boot again, and the second racing the first one's shutdown
  * over the same data directory.

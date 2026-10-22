@@ -14,8 +14,8 @@ import { runDx } from '../../testing/index.ts';
  */
 
 describe('chat command', () => {
-  test('--help describes the command and its options', ({ expect }) => {
-    const { stdout, status } = runDx(['chat', '--help']);
+  test('--help describes the command and its options', async ({ expect }) => {
+    const { stdout, status } = await runDx(['chat', '--help']);
     expect(status).toBe(0);
     expect(stdout).toContain('chat');
     expect(stdout).toContain('Open chat interface.');

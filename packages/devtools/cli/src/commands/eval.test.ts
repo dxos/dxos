@@ -33,9 +33,9 @@ describe('eval', () => {
 
   test(
     'writes in one process and reads back in another',
-    ({ expect }) => {
+    async ({ expect }) => {
       // Plain dialect, from stdin: `make` takes the unversioned typename.
-      const created = run(
+      const created = await run(
         ['--dialect', 'plain'],
         `const task = await make('org.dxos.type.task', { title: 'Written by dx eval' });
          await add(task);
@@ -47,7 +47,7 @@ describe('eval', () => {
       expect(hasErrorTrace(created.stderr)).toBe(false);
 
       // Effect dialect, the default, as an argument.
-      const read = run([
+      const read = await run([
         `const tasks = yield* Database.query(Filter.type(DXN.make('org.dxos.type.task'))).run;
          yield* print(tasks.map((task) => task.title));`,
       ]);
@@ -59,8 +59,11 @@ describe('eval', () => {
 
   test(
     'a failing program prints what it printed and the error, and exits non-zero',
-    ({ expect }) => {
-      const { stdout, status } = run(['--json', `yield* print('before'); yield* Effect.fail(new Error('boom'));`]);
+    async ({ expect }) => {
+      const { stdout, status } = await run([
+        '--json',
+        `yield* print('before'); yield* Effect.fail(new Error('boom'));`,
+      ]);
       expect(status).not.toBe(0);
       const result = JSON.parse(stdout.slice(0, stdout.lastIndexOf('}') + 1));
       expect(result.ok).toBe(false);
@@ -71,8 +74,8 @@ describe('eval', () => {
 
   test(
     '--instructions prints the API reference the agent is given',
-    ({ expect }) => {
-      const { stdout, status } = run(['--instructions']);
+    async ({ expect }) => {
+      const { stdout, status } = await run(['--instructions']);
       expect(status).toBe(0);
       expect(stdout).toContain('## Code mode');
       expect(stdout).toContain('Database.resolve');

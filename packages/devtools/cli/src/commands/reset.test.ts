@@ -21,11 +21,11 @@ const writeSentinel = (home: string, rel: string): string => {
   return full;
 };
 
-describe('dx reset', () => {
-  test('without --hard exits non-zero and preserves data', ({ expect }) => {
-    withIsolatedHome((home) => {
+describe.concurrent('dx reset', () => {
+  test('without --hard exits non-zero and preserves data', async ({ expect }) => {
+    await withIsolatedHome(async (home) => {
       const sentinel = writeSentinel(home, '.local/share/dx/level/sentinel.txt');
-      const { stderr, status } = runDx(['reset'], { home });
+      const { stderr, status } = await runDx(['reset'], { home });
       expect(status).not.toBe(0);
       expect(stderr).toMatch(/--hard/);
       // Sentinel still there.
@@ -33,13 +33,13 @@ describe('dx reset', () => {
     });
   });
 
-  test('--hard on default profile removes the XDG data/state/cache roots', ({ expect }) => {
-    withIsolatedHome((home) => {
+  test('--hard on default profile removes the XDG data/state/cache roots', async ({ expect }) => {
+    await withIsolatedHome(async (home) => {
       const dataSentinel = writeSentinel(home, '.local/share/dx/level/sentinel.txt');
       const stateSentinel = writeSentinel(home, '.local/state/dx/something/sentinel.txt');
       const cacheSentinel = writeSentinel(home, '.cache/dx/x/sentinel.txt');
 
-      const { stdout, status } = runDx(['reset', '--hard'], { home });
+      const { stdout, status } = await runDx(['reset', '--hard'], { home });
       expect(status).toBe(0);
       expect(stdout).toContain('Deleted');
 
@@ -49,10 +49,10 @@ describe('dx reset', () => {
     });
   });
 
-  test('--hard --json reports the deleted paths as JSON', ({ expect }) => {
-    withIsolatedHome((home) => {
+  test('--hard --json reports the deleted paths as JSON', async ({ expect }) => {
+    await withIsolatedHome(async (home) => {
       writeSentinel(home, '.local/share/dx/level/sentinel.txt');
-      const { stdout, status } = runDx(['--json', 'reset', '--hard'], { home });
+      const { stdout, status } = await runDx(['--json', 'reset', '--hard'], { home });
       expect(status).toBe(0);
       const parsed = JSON.parse(stdout);
       expect(parsed).toMatchObject({ profile: 'default' });
@@ -62,14 +62,14 @@ describe('dx reset', () => {
     });
   });
 
-  test('--hard --profile <name> only touches that profile, not the default roots', ({ expect }) => {
-    withIsolatedHome((home) => {
+  test('--hard --profile <name> only touches that profile, not the default roots', async ({ expect }) => {
+    await withIsolatedHome(async (home) => {
       // Named profile paths are under profile/<name>.
       const namedData = writeSentinel(home, '.local/share/dx/profile/my-profile/level/sentinel.txt');
       // Default-profile data lives at the XDG root and MUST survive.
       const defaultData = writeSentinel(home, '.local/share/dx/level/sentinel.txt');
 
-      const { status } = runDx(['--profile', 'my-profile', 'reset', '--hard'], { home });
+      const { status } = await runDx(['--profile', 'my-profile', 'reset', '--hard'], { home });
       expect(status).toBe(0);
 
       expect(fs.existsSync(namedData)).toBe(false);

@@ -61,8 +61,8 @@ describe.skipIf(!API_KEY)('claude code uploads a file through dx mcp serve', { t
   let image: Uint8Array;
   let agent: ClaudeAgent;
 
-  const query = (typename: string): Row[] => {
-    const { stdout, stderr, status } = runDx(
+  const query = async (typename: string): Promise<Row[]> => {
+    const { stdout, stderr, status } = await runDx(
       ['--json', 'database', 'query', '--space-id', spaceId, '--typename', typename],
       { home, timeout: 120_000 },
     );
@@ -130,7 +130,7 @@ describe.skipIf(!API_KEY)('claude code uploads a file through dx mcp serve', { t
   test(
     'the agent uploads the image and attaches it to the task',
     async ({ expect }) => {
-      expect(query(FILE_TYPE)).toHaveLength(0);
+      expect(await query(FILE_TYPE)).toHaveLength(0);
 
       const turn = await agent.send(
         `The file ./${IMAGE_NAME} in your working directory is a screenshot. Using the ${SERVER} MCP server, ` +
@@ -142,20 +142,20 @@ describe.skipIf(!API_KEY)('claude code uploads a file through dx mcp serve', { t
       expect(turn.isError, `turn failed: ${turn.result}`).toBe(false);
       expect(turn.toolCalls).toContain(tool('createUpload'));
 
-      const files = query(FILE_TYPE);
+      const files = await query(FILE_TYPE);
       // The agent's own account rides the message, so a failure says what it believed it did.
       expect(files, `agent said: ${turn.result}`).toHaveLength(1);
       const [file] = files;
       expect(file.name).toBe(IMAGE_NAME);
 
-      const tasks = query(TASK_TYPE);
+      const tasks = await query(TASK_TYPE);
       expect(tasks).toHaveLength(1);
       const artifacts = tasks[0].artifacts;
       expect(Array.isArray(artifacts) ? artifacts.map(refId) : artifacts).toEqual([file.id]);
 
       // The bytes, not only the object: an upload that stored an empty or truncated blob would
       // still produce a File row and a ref.
-      const [blob] = query(BLOB_TYPE);
+      const [blob] = await query(BLOB_TYPE);
       expect(refId(file.data)).toBe(blob.id);
       expect(blob.type).toBe('image/png');
       expect(blob.size).toBe(image.byteLength);

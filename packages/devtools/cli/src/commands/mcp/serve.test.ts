@@ -16,7 +16,7 @@ import { MCP_REQUEST_META, dxBin } from '../../testing/index.ts';
  * Protocol-level test for `dx mcp serve`: drives a real MCP session over stdio against an isolated
  * HOME (no identity — the projected surface comes from the operation registry, not from spaces).
  *
- * `runDx` cannot serve here: `spawnSync` closes stdin as soon as its input is written, and the
+ * `runDx` cannot serve here: it closes stdin as soon as its input is written, and the
  * server exits with the stream rather than answering.
  */
 

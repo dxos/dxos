@@ -17,17 +17,17 @@ import { runDx, withIsolatedHome } from '../../testing/index.ts';
  * configured (instead of crashing into the TUI).
  */
 
-describe('dx chat --prompt (non-interactive)', () => {
-  test('chat --help advertises --prompt and --json composes with it', ({ expect }) => {
-    const { stdout, status } = runDx(['chat', '--help']);
+describe.concurrent('dx chat --prompt (non-interactive)', () => {
+  test('chat --help advertises --prompt and --json composes with it', async ({ expect }) => {
+    const { stdout, status } = await runDx(['chat', '--help']);
     expect(status).toBe(0);
     expect(stdout).toMatch(/--prompt/);
     expect(stdout).toMatch(/non-interactively/);
   });
 
-  test('chat --prompt without a HALO identity exits cleanly with guidance', { timeout: 60_000 }, ({ expect }) => {
-    withIsolatedHome((home) => {
-      const { stdout, stderr, status } = runDx(['chat', '--prompt', 'research test@example.com'], {
+  test('chat --prompt without a HALO identity exits cleanly with guidance', { timeout: 60_000 }, async ({ expect }) => {
+    await withIsolatedHome(async (home) => {
+      const { stdout, stderr, status } = await runDx(['chat', '--prompt', 'research test@example.com'], {
         home,
         timeout: 60_000,
       });
