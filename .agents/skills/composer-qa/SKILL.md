@@ -63,7 +63,7 @@ moon run composer-app:serve-qa -- --port "$QA_PORT" --strictPort --host 127.0.0.
 SERVER_PID=$!
 ```
 
-`serve-qa` sets `DX_DEBUG_PORT=true`, which mints a session as the app boots and starts the port
+`serve-qa` sets `DX_DEBUG_PORT=true` (plain `serve` defaults to it too), which mints a session as the app boots and starts the port
 from `main.tsx`; without `DX_DEBUG_PORT_SESSION` the id lands in `temp/debug-port.json`
 (`{ session, pid, port, url }`) and in the server log as `Debug port session: <uuid>`. The first
 start builds the app's dependency graph, which takes minutes on a cold worktree; wait until
