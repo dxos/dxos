@@ -16,7 +16,7 @@ import { makeSpec } from './spec.ts';
 import { makeTasks } from './tasks.ts';
 import { REFERENCE } from './util.ts';
 
-export { type FeatureSeed, type Config, type Toolchain } from './config.ts';
+export { type Config, type FeatureSeed, type Toolchain } from './config.ts';
 export { PLAN, architecture, completeSpec } from './tasks.ts';
 export { instructions } from './project.ts';
 
