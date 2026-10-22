@@ -373,16 +373,16 @@ type EdgeStressSpec = {
 };
 ```
 
-**Every field is optional at the edges and complete in the middle.** `defaultsFor(edge)` in
-`plan.ts` is the only place a default is written down, `resolveSpec` merges the overrides over it
-(reading `edge` first, since it selects them), and `urlsFor(edge)` derives `edgeUrl` and the
-`/hub/` endpoint from that one field so the two halves cannot name different deployments.
+**Every field is required, and none has a default in code.** `EdgeStressSpec` is an Effect
+schema, and the plan's `decodeSpec` rejects a spec with a missing, unknown or out-of-range field
+before the run starts. `urlsFor(edge)` derives `edgeUrl` and the `/hub/` endpoint from that one field
+so the two halves cannot name different deployments.
 
-There is deliberately **no config file**: a file holding the defaults would be a second copy of
-them, and one holding only comments would be a second copy of this type's documentation. A one-off
-variant is `--spec '<json>'` (`{"edge":"dev"}`, `{"cleanup":false}`,
-`{"plan":"out/<run>/command-trace.jsonl"}`), merged over the defaults; `-s <file>` still works for
-a spec worth keeping, and is merged the same way.
+The values live in **one config file**, `configs/edge-nightly.yml`, keyed by plan name and read with
+`--specfile configs/edge-nightly.yml --section edgeStress`. It is the only place a value is written
+down: the nightly workflow passes no inputs and no overrides, and there is no `--spec` merge. A
+variant is a copy of that file with the changed field (`edge: dev`, `cleanup: false`,
+`plan: out/<run>/command-trace.jsonl`).
 
 Nightly targets (D12): 10 clients / 7 identities / 10 spaces / 60-minute budget / node-only.
 

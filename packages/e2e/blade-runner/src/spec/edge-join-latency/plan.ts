@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -10,7 +11,7 @@ import { log } from '@dxos/log';
 
 import { type SchedulerEnvImpl } from '../../env/index.ts';
 import {
-  type Platform,
+  Platform,
   type ReplicantBrain,
   type ReplicantsSummary,
   type TestPlan,
@@ -19,19 +20,22 @@ import {
 } from '../../plan/index.ts';
 import { ClientReplicant, type SpaceDigest } from '../../replicants/client-replicant.ts';
 import { describeError } from '../../util.ts';
-import { type EdgeTarget, assertCanCleanUp, canonical, isDevLikeTarget, urlsFor } from '../edge-stress/index.ts';
+import { EdgeTarget, assertCanCleanUp, canonical, isDevLikeTarget, urlsFor } from '../edge-stress/index.ts';
 
 //
 // Spec.
 //
 
-export type EdgeJoinLatencySpec = {
-  platform: Platform;
-  edge: EdgeTarget;
+const PositiveInt = Schema.Int.pipe(Schema.check(Schema.isGreaterThan(0)));
+
+/** Every field is required and none has a default in code: the values live in `configs/edge-nightly.yml`. */
+export const EdgeJoinLatencySpec = Schema.Struct({
+  platform: Platform,
+  edge: EdgeTarget,
   /** Objects the seeder writes before any joiner is admitted — the size of the space under test. */
-  objects: number;
+  objects: PositiveInt,
   /** Peers that accept an invitation, each an identity of its own, each timed independently. */
-  joiners: number;
+  joiners: PositiveInt,
   /**
    * Give every client an EDGE agent.
    *
@@ -41,17 +45,18 @@ export type EdgeJoinLatencySpec = {
    * rather than hardcoded so the no-agent path stays testable; with it on, a client that cannot get
    * an agent fails the run.
    */
-  agents: boolean;
+  agents: Schema.Boolean,
   /**
    * Ceiling on one joiner's catch-up. Exceeding it fails that joiner rather than the run, so a
    * single stuck peer still yields timings for the rest.
    */
-  joinTimeoutMs: number;
+  joinTimeoutMs: PositiveInt,
   /** Ceiling on the seeder's own upload before any joiner starts; the measurement is invalid without it. */
-  seedTimeoutMs: number;
+  seedTimeoutMs: PositiveInt,
   /** Delete the space and identities the run created, through the self-serve routes. */
-  cleanup: boolean;
-};
+  cleanup: Schema.Boolean,
+});
+export type EdgeJoinLatencySpec = typeof EdgeJoinLatencySpec.Type;
 
 export type JoinMeasurement = {
   joiner: number;
@@ -116,22 +121,6 @@ export type EdgeJoinLatencyResult = {
   agents: 'disabled' | 'provisioned' | 'failed';
 };
 
-export const DEFAULT_SPEC: EdgeJoinLatencySpec = {
-  platform: 'nodejs',
-  edge: 'local',
-  objects: 100,
-  joiners: 5,
-  agents: true,
-  joinTimeoutMs: 5 * 60_000,
-  seedTimeoutMs: 10 * 60_000,
-  cleanup: true,
-};
-
-export const resolveSpec = (overrides: Partial<EdgeJoinLatencySpec> = {}): EdgeJoinLatencySpec => ({
-  ...DEFAULT_SPEC,
-  ...overrides,
-});
-
 /**
  * An EDGE agent could not be provisioned. Distinct from a join failure so the per-joiner fallback
  * can rethrow it: a client without an agent is a broken precondition, not a slow joiner, and
@@ -190,15 +179,15 @@ const awaitDigest = async (
  * to time. Here the joiners are spawned only once the space exists and has reached EDGE.
  */
 export class EdgeJoinLatency implements TestPlan<EdgeJoinLatencySpec, EdgeJoinLatencyResult> {
-  defaultSpec(): EdgeJoinLatencySpec {
-    return DEFAULT_SPEC;
+  decodeSpec(input: unknown): EdgeJoinLatencySpec {
+    return Schema.decodeUnknownSync(EdgeJoinLatencySpec)(input, { onExcessProperty: 'error' });
   }
 
   async run(
     env: SchedulerEnvImpl<EdgeJoinLatencySpec>,
     params: TestProps<EdgeJoinLatencySpec>,
   ): Promise<EdgeJoinLatencyResult> {
-    const spec = resolveSpec(params.spec);
+    const { spec } = params;
     const { edgeUrl, hubUrl } = urlsFor(spec.edge);
     assertCanCleanUp(spec.edge, spec.cleanup);
     const resultPath = path.join(params.outDir, 'join-latency.json');

@@ -9,15 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import {
-  type GlobalOptions,
-  type RunPlanProps,
-  type RunProps,
-  type TestPlan,
-  readYAMLSpecFile,
-  runPlan,
-  runReplicant,
-} from './plan/index.ts';
+import { type GlobalOptions, type RunProps, type TestPlan, readSpecFile, runPlan, runReplicant } from './plan/index.ts';
 
 /**
  * Plans by name, each importing its own spec module on demand.
@@ -81,6 +73,11 @@ const start = async () => {
   const argv = yargs(hideBin(process.argv))
     .options({
       specfile: { type: 'string', alias: 's', describe: 'read this YAML file for the test spec' },
+      section: {
+        type: 'string',
+        implies: 'specfile',
+        describe: 'read the spec from this top-level key of the spec file',
+      },
       repeatAnalysis: {
         type: 'string',
         alias: 'r',
@@ -90,17 +87,12 @@ const start = async () => {
       headless: { type: 'boolean', default: true, describe: 'run browser agents in headless browsers' },
       browser: { type: 'boolean', default: true, describe: 'build the browser bundle', alias: 'b' },
       seed: { type: 'string', describe: 'random seed; fixes the generated command sequence' },
-      spec: {
-        type: 'string',
-        describe: 'JSON object of spec fields, merged over the spec file or the plan defaults',
-      },
     })
     .demandCommand(1, `need to provide name of test to run\navailable tests: ${Object.keys(plans).join(', ')}`)
     .help().argv;
 
   const name = argv._[0] as string;
 
-  let plan: () => RunPlanProps<any>;
   const planGenerator = plans[name];
 
   if (!planGenerator) {
@@ -123,36 +115,13 @@ const start = async () => {
 
   const testPlan = await planGenerator();
   if (argv.specfile) {
-    log.info(`using spec file: ${argv.specfile}`);
-    plan = await readYAMLSpecFile(argv.specfile, testPlan, options);
-  } else {
-    plan = () => ({
-      plan: testPlan,
-      spec: testPlan.defaultSpec(),
-      options,
-    });
+    log.info('using spec file', { specfile: argv.specfile, section: argv.section });
   }
-
-  // A spec file replaces the spec wholesale rather than merging, so without this every one-off
-  // variant of a run — another EDGE, cleanup off, a fixed plan — needed a config file of its own.
-  const props = plan();
-  const overrides = argv.spec === undefined ? undefined : parseSpecOverride(argv.spec);
+  const spec = argv.specfile ? await readSpecFile(argv.specfile, argv.section) : testPlan.defaultSpec?.();
+  invariant(spec !== undefined, `${name} has no built-in spec; pass --specfile`);
 
   log.info(`\nrunning test: ${name}`, { options });
-  await runPlan(overrides === undefined ? props : { ...props, spec: { ...props.spec, ...overrides } });
-};
-
-/**
- * `--spec '{"edge":"dev","cleanup":false}'` — only the fields a run changes. Returned as
- * `object` rather than a record so the merge needs no cast.
- */
-const parseSpecOverride = (text: string): object => {
-  const parsed: unknown = JSON.parse(text);
-  invariant(
-    typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed),
-    `--spec must be a JSON object: ${text}`,
-  );
-  return parsed;
+  await runPlan({ plan: testPlan, spec: testPlan.decodeSpec ? testPlan.decodeSpec(spec) : spec, options });
 };
 
 /**

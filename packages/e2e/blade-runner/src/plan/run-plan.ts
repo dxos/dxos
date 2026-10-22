@@ -9,6 +9,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import seedrandom from 'seedrandom';
 
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
 import { type ResourceUsageStats, analyzeResourceUsage } from '../analysys/resource-usage.ts';
@@ -43,18 +44,20 @@ if (typeof (globalThis as any).dxgravity_env !== 'undefined') {
   process.env = (globalThis as any).dxgravity_env;
 }
 
-// TODO(nf): merge with defaults
-export const readYAMLSpecFile = async <S>(
-  path: string,
-  plan: TestPlan<S>,
-  options: GlobalOptions,
-): Promise<() => RunPlanProps<any>> => {
-  const yamlSpec = yaml.load(await readFile(path, 'utf8')) as S;
-  return () => ({
-    plan,
-    spec: yamlSpec,
-    options,
-  });
+/**
+ * A YAML spec file, or one top-level `section` of it when a single file holds the specs of several
+ * runs. Returned undecoded: only the plan knows its spec's shape.
+ */
+export const readSpecFile = async (path: string, section?: string): Promise<unknown> => {
+  const document: unknown = yaml.load(await readFile(path, 'utf8'));
+  if (section === undefined) {
+    return document;
+  }
+
+  invariant(typeof document === 'object' && document !== null, `${path} is not a YAML mapping`);
+  const entry = Object.entries(document).find(([key]) => key === section);
+  invariant(entry, `${path} has no section \`${section}\``);
+  return entry[1];
 };
 
 export const runPlan = async <S>({ plan, spec, options }: RunPlanProps<S>) => {

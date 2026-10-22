@@ -20,37 +20,17 @@ name: EDGE nightly
 # `assertCanCleanUp` refuses any target without that hatch rather than leak, so pointing this at
 # staging or production fails before it creates anything. Cleanup runs in the plan's own `finally`
 # and on SIGTERM.
+#
+# Every test parameter, the target EDGE included, lives in `packages/e2e/blade-runner/configs/edge-nightly.yml`
+# and is decoded against the plan's schema before a run starts; nothing here supplies or overrides one.
 
 on:
   schedule:
     # 02:00 UTC, before the `Check` nightly at 04:00 so a shared-environment problem is visible first.
     - cron: '0 2 * * *'
 
+  # No inputs: to run a variant, change the config on a branch and dispatch on that branch.
   workflow_dispatch:
-    inputs:
-      edge:
-        type: choice
-        description: 'Which EDGE to run against'
-        options: [preview, dev, local]
-        default: preview
-      objects:
-        type: string
-        description: 'Join latency: objects in the space under test'
-        default: '100'
-      joiners:
-        type: string
-        description: 'Join latency: peers that accept an invitation'
-        default: '5'
-      soak_minutes:
-        type: string
-        description: 'Soak: wall-clock budget in minutes'
-        default: '60'
-      # Sized so the run keeps issuing commands for at least half an hour: a healthy command costs
-      # ~3s against preview, and overshooting is free because `maxRuntimeMs` stops the run early.
-      soak_commands:
-        type: string
-        description: 'Soak: executable commands to plan'
-        default: '800'
 
 permissions:
   contents: read
@@ -104,13 +84,9 @@ jobs:
 
       - name: Measure join latency
         working-directory: packages/e2e/blade-runner
-        env:
-          EDGE: ${{ inputs.edge || 'preview' }}
-          OBJECTS: ${{ inputs.objects || '100' }}
-          JOINERS: ${{ inputs.joiners || '5' }}
         run: |
           GRAVITY_OUT_BASE="$PWD" node --import tsx src/main.ts edgeJoinLatency --no-browser \
-            --spec "{\"edge\":\"$EDGE\",\"objects\":$OBJECTS,\"joiners\":$JOINERS}"
+            --specfile configs/edge-nightly.yml --section edgeJoinLatency
 
       # `always()`: the summary is most wanted precisely when the step above failed. The plan writes
       # it in its own `finally`, so it exists either way.
@@ -156,8 +132,9 @@ jobs:
   # model. Independent of `join-latency`: a red soak should not withhold a latency number.
   soak:
     runs-on: ubuntu-24.04
-    # Headroom over the run's own `maxRuntimeMs`, which stops issuing commands and proceeds to the
-    # final assertion; hitting the job timeout instead cancels mid-flight and proves nothing.
+    # Headroom over `edgeStress.maxRuntimeMs` in the config (60 minutes), which stops issuing commands
+    # and proceeds to the final assertion; hitting the job timeout instead cancels mid-flight and
+    # proves nothing. Raise this with that value.
     timeout-minutes: 90
     services:
       redis:
@@ -185,23 +162,19 @@ jobs:
       # a failure is replayable from the seed alone, and from the trace even if the generator changes.
       - name: Soak
         working-directory: packages/e2e/blade-runner
-        env:
-          EDGE: ${{ inputs.edge || 'preview' }}
-          MINUTES: ${{ inputs.soak_minutes || '60' }}
-          COMMANDS: ${{ inputs.soak_commands || '800' }}
         run: |
           SEED="soak-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           echo "Seed: $SEED"
           GRAVITY_OUT_BASE="$PWD" node --import tsx src/main.ts edgeStress --no-browser --seed "$SEED" \
-            --spec "{\"edge\":\"$EDGE\",\"maxRuntimeMs\":$((MINUTES * 60000)),\"maxCommands\":$COMMANDS}"
+            --specfile configs/edge-nightly.yml --section edgeStress
 
       - name: Report
         if: always()
         working-directory: packages/e2e/blade-runner
         run: cat "$(ls -td out/results/*/ | head -1)summary.md" >> "$GITHUB_STEP_SUMMARY" || true
 
-      # `command-trace.jsonl` is the replay input as well as the record: its last `plan` entry feeds
-      # `--spec '{"plan":"<path>"}'` to re-run the exact sequence that failed.
+      # `command-trace.jsonl` is the replay input as well as the record: set `edgeStress.plan` in the
+      # config to its path to re-run the exact sequence that failed.
       - name: Upload traces and logs
         if: always()
         uses: actions/upload-artifact@v7

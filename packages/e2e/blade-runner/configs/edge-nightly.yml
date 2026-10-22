@@ -1,0 +1,46 @@
+# The complete spec of both `EDGE nightly` runs (`.github/workflows/edge-nightly.yml`).
+#
+# The single source of truth: neither the workflow nor the plans hold a default, and each section is
+# decoded against its plan's schema (`EdgeJoinLatencySpec`, `EdgeStressSpec`) before anything runs,
+# so a missing, misspelled or out-of-range field fails the run up front. To run a variant, edit this
+# file on a branch and dispatch the workflow on that branch.
+#
+# Run locally from `packages/e2e/blade-runner`:
+#   node --import tsx src/main.ts <section> --no-browser --specfile configs/edge-nightly.yml --section <section>
+
+# How long a peer takes to accept an invitation to an existing space and hold every object in it.
+edgeJoinLatency:
+  platform: nodejs
+  edge: preview
+  objects: 100
+  joiners: 5
+  # Required for the measurement: without an agent EDGE cannot redeem the DELEGATED invitation.
+  agents: true
+  # 5 minutes per joiner.
+  joinTimeoutMs: 300000
+  # 10 minutes for the seeder's upload.
+  seedTimeoutMs: 600000
+  cleanup: true
+
+# Randomized commands against a fleet of real peers, asserted against an in-memory model.
+edgeStress:
+  platform: nodejs
+  edge: preview
+  # Five identities, one of them with a second device, so HALO replication is always in play.
+  devicesPerIdentity: [2, 1, 1, 1, 1]
+  # D11: the agent is the always-online member that lets a joiner in when every device is offline.
+  agents: true
+  maxSpaces: 5
+  maxDocumentsPerSpace: 100
+  # Sized so the run keeps issuing commands for at least half an hour: a healthy command costs ~3s
+  # against preview, and overshooting is free because `maxRuntimeMs` stops the run early.
+  maxCommands: 800
+  sampleDraws: 12
+  # 60 minutes. A ceiling, not the expected duration: a stall is caught by `quiescenceTimeoutMs` (or
+  # the per-call budget for a hung peer) in a minute or two. The workflow's job timeout sits above it.
+  maxRuntimeMs: 3600000
+  quiescenceTimeoutMs: 90000
+  checkpoints: true
+  # Off until finding 5 (a cut link crashes the peer) is fixed; see RESULTS.md.
+  partitions: false
+  cleanup: true
