@@ -581,16 +581,30 @@ export const Timeline = ({
   );
 
   // While an event is selected its card stays put; hovering others shows no card.
-  // When the layout changes (scale, size, spine, dates, categories), the selected event stays in the middle of the view,
-  // following it through every frame of a scale transition; scrolling by hand is left alone.
+  // When the view changes (scale, size, spine, dates, future, categories, width), the selected event — or with none,
+  // the first event that was in view — moves to the middle and stays there through a scale transition. Scrolling and
+  // zooming by hand are left alone.
+  const viewKey = JSON.stringify([scale, fontSize, spine, dates, future, hidden, width]);
+  const drawn = useRef({ yOf, viewKey: '' });
+  const anchorId = useRef<string>(undefined);
   useLayoutEffect(() => {
     const scroller = scrollRef.current;
-    if (current && scroller) {
-      cancelScroll.current?.();
-      scroller.scrollTop = yOf(current.time) - scroller.clientHeight / 2;
+    const changed = drawn.current.viewKey !== viewKey;
+    if (scroller && (changed || layout.progress < 1)) {
+      if (changed && !current) {
+        // Measured against the previous layout, so it is the event the reader was looking at.
+        const top = scroller.scrollTop;
+        anchorId.current = ordered.find((event) => drawn.current.yOf(event.time) >= top)?.id;
+      }
+      const target = current ?? ordered.find((event) => event.id === anchorId.current);
+      if (target) {
+        cancelScroll.current?.();
+        scroller.scrollTop = yOf(target.time) - scroller.clientHeight / 2;
+      }
     }
-    // Only layout changes recentre: `yOf` is a new function each render, so it is read but not a dependency.
-  }, [layout.progress, contentHeight, scale, fontSize, spine, dates, hidden, width]);
+    drawn.current = { yOf, viewKey };
+    // `yOf` and `ordered` are read, not dependencies: only a view change or a transition frame recentres.
+  }, [layout.progress, viewKey]);
 
   const card = current ?? hovered;
 

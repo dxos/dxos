@@ -729,6 +729,13 @@ export const technologyTimeline: PlotValue[][] = [
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d4/Cloudflare_office_entrance_area.jpg/500px-Cloudflare_office_entrance_area.jpg',
   ],
   [
+    '2011',
+    'Tech/AI',
+    'Google Brain',
+    'Jeff Dean, Greg Corrado and Andrew Ng start Google’s deep learning research team.',
+    null,
+  ],
+  [
     '2011-02',
     'Tech/AI',
     'Watson wins Jeopardy!',
@@ -802,6 +809,13 @@ export const technologyTimeline: PlotValue[][] = [
     'One of a string of robotics acquisitions by Google.',
     null,
   ],
+  [
+    '2014-01',
+    'Macro/TIC',
+    'Google acquires DeepMind',
+    'Google buys the London AI lab for a reported $500M or more.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4b/Platform_37_-_2026-04-25_2.jpg/500px-Platform_37_-_2026-04-25_2.jpg',
+  ],
   ['2014-02', 'Tech/Software', 'Slack', 'Slack launches team messaging.', null],
   ['2014-06', 'Tech/Software', 'Kubernetes', 'Google open-sources container orchestration.', null],
   [
@@ -833,6 +847,13 @@ export const technologyTimeline: PlotValue[][] = [
     'Falcon 9 lands',
     'A Falcon 9 first stage lands upright after an orbital launch, the start of reusable boosters.',
     null,
+  ],
+  [
+    '2015-12',
+    'Macro/TIC',
+    'OpenAI founded',
+    'A non-profit AI lab launches with $1B in pledges from backers including Sam Altman and Elon Musk.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a7/1515_Third_Street.jpg/500px-1515_Third_Street.jpg',
   ],
   [
     '2016-03',
