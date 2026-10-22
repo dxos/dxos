@@ -64,14 +64,18 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Typing in the editor re-renders the slide preview beside it. */
+/** Typing in the editor re-renders the 16:9 slide preview above it. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const editor = await canvas.findByRole('textbox', undefined, { timeout: 10_000 });
     await userEvent.click(editor);
     await userEvent.keyboard('# Hello');
-    const preview = within(canvas.getByTestId('presenter.slide-editor.preview'));
+    const previewElement = canvas.getByTestId('presenter.slide-editor.preview');
+    const preview = within(previewElement);
     await expect(await preview.findByRole('heading', { name: 'Hello' })).toBeVisible();
+    const { width, height } = previewElement.getBoundingClientRect();
+    await expect(width).toBeGreaterThan(0);
+    await expect(Math.abs(height - (width * 9) / 16)).toBeLessThan(2);
   },
 };

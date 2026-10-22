@@ -35,14 +35,18 @@ export const SlideEditorArticle = ({ role, subject }: SlideEditorArticleProps) =
 
   return (
     <Panel.Root role={role}>
-      <Panel.Body classNames='grid grid-cols-2 divide-x divide-separator'>
-        <div className='flex overflow-hidden'>
+      <Panel.Body classNames='flex flex-col divide-y divide-separator'>
+        {/* A 16:9 box gives SlideFrame a real size to scale into, whatever the plank's height. */}
+        <div
+          data-testid='presenter.slide-editor.preview'
+          className='relative flex shrink-0 aspect-video overflow-hidden'
+        >
+          <SlideRenderer source={source} />
+        </div>
+        <div className='flex grow overflow-hidden'>
           <Editor.Root>
             <Editor.View classNames='dx-expand p-4' extensions={extensions} />
           </Editor.Root>
-        </div>
-        <div data-testid='presenter.slide-editor.preview' className='relative flex overflow-hidden'>
-          <SlideRenderer source={source} />
         </div>
       </Panel.Body>
     </Panel.Root>

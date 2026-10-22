@@ -118,7 +118,7 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
     const body =
       count === 0 ? (
         <div className='flex grow items-center justify-center'>
-          <Button.Root label={t('add-slide.label')} onClick={onAddSlide} />
+          {onAddSlide && <Button.Root label={t('add-slide.label')} onClick={onAddSlide} />}
         </div>
       ) : (
         slide && <SlideRenderer source={slide} attendableId={attendableId} />

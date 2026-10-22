@@ -138,7 +138,7 @@ export const Default: Story = {
 
 export const Empty: Story = {
   decorators: [withEmptyPlugins],
-  args: { count: 0 },
+  args: { count: 0, onAddSlide: fn() },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(() => expect(canvas.getByText('Add slide')).toBeVisible());
@@ -146,6 +146,17 @@ export const Empty: Story = {
     for (const label of ['Jump to first', 'Previous', 'Next', 'Jump to last']) {
       await expect(canvas.getByLabelText(label)).toBeDisabled();
     }
+  },
+};
+
+/** Without `onAddSlide` the empty deck offers no button that would do nothing. */
+export const EmptyReadonly: Story = {
+  decorators: [withEmptyPlugins],
+  args: { count: 0 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByText('0 / 0')).toBeVisible();
+    await expect(canvas.queryByText('Add slide')).toBeNull();
   },
 };
 

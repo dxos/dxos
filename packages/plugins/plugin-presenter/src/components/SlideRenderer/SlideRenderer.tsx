@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
@@ -51,7 +51,7 @@ const ObjectSlide = ({ object, attendableId }: { object: Obj.Unknown; attendable
   // Subscribed so the slide swaps in when a lazily gated surface registers.
   const surfaceManager = Surface.useSurfaceManager();
   const candidates = useAtomValue(surfaceManager.candidatesAtom(AppSurface.Slide.role));
-  const data = { subject: object, attendableId: attendableId ?? object.id };
+  const data = useMemo(() => ({ subject: object, attendableId: attendableId ?? object.id }), [object, attendableId]);
   const available = Surface.matchCandidates(candidates, AppSurface.Slide.role, data).length > 0;
 
   // The availability check fires the role's demand on a miss, which loads gated surface modules.
@@ -60,7 +60,7 @@ const ObjectSlide = ({ object, attendableId }: { object: Obj.Unknown; attendable
     if (!available) {
       isAvailable({ type: AppSurface.Slide, data });
     }
-  }, [available, isAvailable, object]);
+  }, [available, isAvailable, data]);
 
   return (
     <SlideFrame>

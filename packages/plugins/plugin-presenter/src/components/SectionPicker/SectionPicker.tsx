@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -23,9 +23,9 @@ export type SectionPickerProps = {
  */
 export const SectionPicker = ({ presentation }: SectionPickerProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const db = Obj.getDatabase(presentation);
-  // Queried while mounted rather than on open: results landing while the user types reset the popup's query.
-  const objects = useQuery(db, Filter.everything());
+  const [open, setOpen] = useState(false);
+  // Whole-space query runs only while the popup is open so a mounted deck does not watch every object.
+  const objects = useQuery(open ? Obj.getDatabase(presentation) : undefined, Filter.everything());
   const [sections] = useObject(presentation, 'sections');
   const candidates = useMemo(
     () =>
@@ -37,9 +37,20 @@ export const SectionPicker = ({ presentation }: SectionPickerProps) => {
   const options = useMemo(
     () =>
       candidates
-        .map((object) => ({ id: object.id, label: Obj.getLabel(object) ?? object.id }))
+        .map((object) => {
+          const typename = Obj.getTypename(object) ?? '';
+          return {
+            id: object.id,
+            label:
+              Obj.getLabel(object) ??
+              t('untitled-object.label', {
+                type: t('typename.label', { ns: typename, defaultValue: typename }) ?? typename,
+              }) ??
+              object.id,
+          };
+        })
         .sort((a, b) => a.label.localeCompare(b.label)),
-    [candidates],
+    [candidates, t],
   );
 
   const handleSelect = useCallback(
@@ -56,6 +67,7 @@ export const SectionPicker = ({ presentation }: SectionPickerProps) => {
     <ObjectPicker
       options={options}
       onSelect={handleSelect}
+      onOpenChange={setOpen}
       trigger={
         <Button.Root
           data-testid='presenter.section-picker'
