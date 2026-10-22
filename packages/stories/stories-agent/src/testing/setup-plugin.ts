@@ -15,8 +15,14 @@ import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { resolveStorySpace } from '@dxos/storybook-testing';
 
 export type StorySetupOptions = {
-  /** Seeds the space through plugin operations (an agent needs `createAgent` for its skills and modes). */
-  onReady: (props: { db: Database.Database; invoker: Capabilities.OperationInvoker }) => Promise<void>;
+  /**
+   * Seeds the space through plugin operations (an agent needs `createAgent` for its skills and modes). A returned
+   * function runs when the plugin deactivates, before the client closes.
+   */
+  onReady: (props: {
+    db: Database.Database;
+    invoker: Capabilities.OperationInvoker;
+  }) => Promise<void | (() => Promise<void>)>;
 };
 
 /** Runs the story's seeding once the space is available and operations can be invoked. */
@@ -33,7 +39,10 @@ export const StorySetupPlugin = Plugin.define<StorySetupOptions>(
       const client = yield* ClientCapabilities.Client;
       const space = yield* resolveStorySpace(client);
       yield* invoker.invoke(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(space.id) });
-      yield* Effect.tryPromise(() => onReady({ db: space.db, invoker }));
+      const stop = yield* Effect.tryPromise(() => onReady({ db: space.db, invoker }));
+      if (stop) {
+        yield* Effect.addFinalizer(() => Effect.promise(stop));
+      }
     }),
   })),
   Plugin.make,

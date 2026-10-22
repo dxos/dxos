@@ -60,8 +60,11 @@ const TYPES: Type.AnyEntity[] = [
 export type DecoratorsProps = {
   /** The client config; the live stories use {@link storyConfig}. */
   config?: Config;
-  /** Seeds the space through plugin operations once it is available. */
-  onReady: (props: { db: Database.Database; invoker: Capabilities.OperationInvoker }) => Promise<void>;
+  /** Seeds the space through plugin operations once it is available; a returned function runs on teardown. */
+  onReady: (props: {
+    db: Database.Database;
+    invoker: Capabilities.OperationInvoker;
+  }) => Promise<void | (() => Promise<void>)>;
 };
 
 /** Props, or a function of the story's args, so a story's config (e.g. `persistent`) can follow its Controls. */

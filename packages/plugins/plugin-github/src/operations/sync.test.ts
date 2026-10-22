@@ -3,8 +3,14 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
+import * as Progress from '@dxos/app-toolkit/Progress';
+import * as Credential from '@dxos/compute/Credential';
+import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -13,7 +19,7 @@ import { Milestone, Organization, Person, Task, TaskSet } from '@dxos/types';
 
 import { GITHUB_SOURCE } from '../constants.ts';
 import { GitHubApi } from '../services/index.ts';
-import { pushRepoUpdates, setTaskContainer, upsertMilestone, upsertTask } from './sync.ts';
+import { pushRepoUpdates, setTaskContainer, syncRepoBinding, upsertMilestone, upsertTask } from './sync.ts';
 
 const repo = (overrides: Partial<GitHubApi.GitHubRepo> = {}): GitHubApi.GitHubRepo => ({
   id: 1234,
@@ -42,6 +48,22 @@ const milestone = (overrides: Partial<GitHubApi.GitHubMilestone> = {}): GitHubAp
   due_on: '2026-06-01T07:00:00Z',
   ...overrides,
 });
+
+/** Answers the endpoints a repo sync calls; the repo's owner is a user, so the org lookup is a 404. */
+const githubFetch =
+  (issues: GitHubApi.GitHubIssue[]): typeof globalThis.fetch =>
+  async (input) => {
+    const { pathname } = new URL(input instanceof Request ? input.url : input);
+    const body =
+      pathname === '/user/repos'
+        ? [repo()]
+        : pathname === '/repos/dxos/composer/milestones'
+          ? []
+          : pathname === '/repos/dxos/composer/issues'
+            ? issues
+            : undefined;
+    return body === undefined ? new Response('Not Found', { status: 404 }) : Response.json(body);
+  };
 
 describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
   let builder: EchoTestBuilder;
@@ -449,5 +471,62 @@ describe('plugin-github sync — push (snapshot diff → PATCH)', () => {
     }).pipe(Effect.provide(layer), EffectEx.runAndForwardErrors);
 
     expect(task.milestone).toBeUndefined();
+  });
+
+  test('reports one meter per repo, sized to its issues before any is counted', async ({ expect }) => {
+    const { db, binding, project } = await setup({});
+    const issues = [
+      issue({ id: 1, number: 1 }),
+      issue({ id: 2, number: 2, title: 'Second' }),
+      issue({ id: 3, number: 3, title: 'Third' }),
+    ];
+
+    const statusUpdates: Trace.PayloadType<typeof Trace.StatusUpdate>[] = [];
+    const traceLayer = Trace.testTraceService().pipe(
+      Layer.provide(
+        Layer.succeed(Trace.TraceSink, {
+          write: (message) => {
+            for (const event of Trace.flatten(message)) {
+              if (Trace.isOfType(Trace.StatusUpdate, event)) {
+                statusUpdates.push(event.data);
+              }
+            }
+          },
+        }),
+      ),
+    );
+    const services = Layer.mergeAll(
+      Database.layer(db),
+      traceLayer,
+      Layer.succeed(Operation.Service, {
+        invoke: (operation, ..._args) => Effect.fail(new Operation.NoHandlerError(operation.meta.key)),
+        schedule: () => Effect.void,
+        invokePromise: async () => ({ error: new Error('Operation.Service unused') }),
+      }),
+      Layer.succeed(Credential.CredentialsService, {
+        queryCredentials: async () => [],
+        getCredential: async () => {
+          throw new Error('the token is stored on the object');
+        },
+      }),
+    );
+
+    await syncRepoBinding(binding).pipe(
+      Effect.provideService(FetchHttpClient.Fetch, githubFetch(issues)),
+      Effect.provide(services),
+      EffectEx.runAndForwardErrors,
+    );
+
+    const syncKey = Progress.createSyncKey(project);
+    expect(statusUpdates.every((update) => update.progress?.key === syncKey)).toBe(true);
+    const totalIndex = statusUpdates.findIndex((update) => update.progress?.total !== undefined);
+    const firstCountIndex = statusUpdates.findIndex((update) => (update.progress?.current ?? 0) > 0);
+    expect(statusUpdates[totalIndex]?.progress?.total).toBe(issues.length);
+    expect(totalIndex).toBeLessThan(firstCountIndex);
+    const counts = statusUpdates.flatMap((update) =>
+      update.progress?.current === undefined ? [] : [update.progress.current],
+    );
+    expect(counts.at(-1)).toBe(issues.length);
+    expect(statusUpdates.at(-1)?.message).toBe(Progress.STATUS_COMPLETE);
   });
 });

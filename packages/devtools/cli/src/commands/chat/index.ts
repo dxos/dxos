@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './chat.tsx';
+export * from './chat.ts';

@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
-import { userEvent, within } from 'storybook/test';
+import { userEvent } from 'storybook/test';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { log } from '@dxos/log';
@@ -19,6 +19,7 @@ import {
   VoyageSpacePlugin,
   config,
   createDecorators,
+  findPromptEditor,
   storyParameters,
 } from '../testing/index.ts';
 import { isPersistent } from '../testing/persistence.ts';
@@ -143,12 +144,7 @@ const sharedArgs = {
  * actually shows up in the thread (the editor clearing is NOT proof of submission).
  */
 const submitPrompt = async (canvasElement: HTMLElement, text: string) => {
-  const canvas = within(canvasElement);
-  const placeholder = await canvas.findByText(/ask anything/i, {}, { timeout: 60_000 });
-  const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
-  if (!editor) {
-    throw new Error('Chat editor not found.');
-  }
+  const editor = await findPromptEditor(canvasElement, 60_000);
   const needle = text.slice(0, 30);
   const promptRoot = editor.closest('.cm-editor');
   const submitted = () =>

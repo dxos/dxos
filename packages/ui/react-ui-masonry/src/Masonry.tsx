@@ -10,6 +10,8 @@ import React, {
   type PropsWithChildren,
   type Ref,
   type RefObject,
+  createContext as createReactContext,
+  useContext,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -89,6 +91,12 @@ type MasonryContextValue = {
 const MASONRY_NAME = 'Masonry';
 
 const [MasonryProvider, useMasonryContext] = createContext<MasonryContextValue>(MASONRY_NAME);
+
+// A tile is laid out but hidden until the grid reveals it and its own height is measured; hidden content cannot take focus.
+const TileRevealedContext = createReactContext(true);
+
+/** Whether the enclosing Masonry tile is shown; true outside a Masonry. */
+export const useMasonryTileRevealed = () => useContext(TileRevealedContext);
 
 //
 // Root
@@ -330,7 +338,9 @@ const MasonryViewportInner = Util.composable<HTMLDivElement, MasonryViewportProp
                       visibility: estimated ? 'hidden' : undefined,
                     }}
                   >
-                    <Tile index={index} data={item} selected={selected} />
+                    <TileRevealedContext.Provider value={revealed && !estimated}>
+                      <Tile index={index} data={item} selected={selected} />
+                    </TileRevealedContext.Provider>
                   </div>
                 </Focus.Item>
               );

@@ -12,6 +12,9 @@ import { translations } from '#translations';
 
 import DEUS_SPEC from '../../../../../reflect/deus/SPEC.mdl?raw';
 import CALLS_SPEC from '../../../../plugin-calls/PLUGIN.mdl?raw';
+import CONNECTOR_EVENTS_SPEC from '../../../../plugin-connector/spec/EVENTS.mdl?raw';
+import GITHUB_FILE_SYNC_SPEC from '../../../../plugin-github/spec/FILE-SYNC.mdl?raw';
+import GITHUB_SYNC_SPEC from '../../../../plugin-github/spec/SYNC.mdl?raw';
 import CANVAS_AUTOGROW_SPEC from '../ChangelogGraph/__fixtures__/canvas-autogrow.mdl?raw';
 import INBOX_SYNC_SPEC from '../ChangelogGraph/__fixtures__/inbox-sync.mdl?raw';
 import { SpecChangelog } from './SpecChangelog.tsx';
@@ -73,4 +76,21 @@ export const SwitchViews: Story = {
       }, TIMEOUT);
     }
   },
+};
+
+// The GitHub sync stories come last: laying out their diagrams keeps the page busy after each story ends.
+
+/** GitHub sync, part 1: polling over one object model; its ```diagram fences render inline. */
+export const GitHubSync: Story = {
+  args: { content: GITHUB_SYNC_SPEC },
+};
+
+/** GitHub sync, part 2: extensible two-way file sync. */
+export const GitHubFileSync: Story = {
+  args: { content: GITHUB_FILE_SYNC_SPEC },
+};
+
+/** GitHub sync, part 3: connector event dispatch. */
+export const ConnectorEvents: Story = {
+  args: { content: CONNECTOR_EVENTS_SPEC },
 };
