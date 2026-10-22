@@ -10,6 +10,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { translations as assistantTranslations } from '@dxos/react-ui-assistant/translations';
+import { translations as chatTranslations } from '@dxos/react-ui-chat/translations';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as taskTranslations } from '@dxos/react-ui-task/translations';
@@ -20,6 +21,7 @@ import { meta } from '#meta';
 
 export const translations: Theme.Resource[] = [
   ...assistantTranslations,
+  ...chatTranslations,
   ...componentsTranslations,
   ...formTranslations,
   ...taskTranslations,
