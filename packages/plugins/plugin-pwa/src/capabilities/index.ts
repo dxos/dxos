@@ -156,7 +156,10 @@ export const RegisterPwa = Capability.inlineModule(
     const pushSupported = supported && !dev && 'PushManager' in window && 'Notification' in window;
     const pushProvider = makePushProvider({
       supported: pushSupported,
-      pushManager: whenRegistered.then((swRegistration) => swRegistration?.pushManager),
+      // Subscribing needs an active worker, and a first install precaches the whole build before it activates.
+      pushManager: whenRegistered.then(
+        (swRegistration) => swRegistration && navigator.serviceWorker.ready.then((ready) => ready.pushManager),
+      ),
       permission: () => (pushSupported ? Notification.permission : 'denied'),
       requestPermission: () => Notification.requestPermission(),
     });

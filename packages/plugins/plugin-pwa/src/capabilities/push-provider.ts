@@ -2,7 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
+
 import type * as AppPush from '@dxos/app-toolkit/AppPush';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 /** The parts of a browser `PushSubscription` the provider reads, so it can be driven without a browser. */
 export type PushSubscriptionLike = {
@@ -22,11 +27,16 @@ export type PushManagerLike = {
 
 export type PushProviderOptions = {
   supported: boolean;
-  /** Resolves once the service worker registers; `undefined` when registration failed. */
+  /** Resolves once the service worker is active, which push needs; `undefined` when registration failed. */
   pushManager: Promise<PushManagerLike | undefined>;
   permission: () => AppPush.Permission;
   requestPermission: () => Promise<AppPush.Permission>;
+  /** How long to wait for the worker to activate before giving up. */
+  activationTimeout?: Duration.Input;
 };
+
+/** A first install precaches the whole build before the worker activates, which takes a while on a slow link. */
+const DEFAULT_ACTIVATION_TIMEOUT = Duration.minutes(1);
 
 const decodeBase64Url = (value: string): Uint8Array<ArrayBuffer> =>
   Uint8Array.from(atob(value.replace(/-/g, '+').replace(/_/g, '/')), (char) => char.charCodeAt(0));
@@ -48,13 +58,22 @@ export const makePushProvider = ({
   pushManager: whenRegistered,
   permission,
   requestPermission,
+  activationTimeout = DEFAULT_ACTIVATION_TIMEOUT,
 }: PushProviderOptions): AppPush.Provider => {
   const pushManager = async (): Promise<PushManagerLike> => {
-    const manager = supported ? await whenRegistered : undefined;
-    if (!manager) {
+    const manager = await EffectEx.runPromise(
+      // A worker whose install failed never activates; failing beats leaving the toggle spinning forever.
+      Effect.promise(() => (supported ? whenRegistered : Promise.resolve(undefined))).pipe(
+        Effect.timeoutOption(activationTimeout),
+      ),
+    );
+    if (Option.isNone(manager)) {
+      throw new Error('Composer is still installing for offline use. Try again shortly.');
+    }
+    if (!manager.value) {
       throw new Error('Push is not available on this device.');
     }
-    return manager;
+    return manager.value;
   };
 
   return {
@@ -79,14 +98,14 @@ export const makePushProvider = ({
       if (!supported) {
         return undefined;
       }
-      const subscription = await (await whenRegistered)?.getSubscription();
+      const subscription = await (await pushManager()).getSubscription();
       return subscription ? toDeviceSubscription(subscription) : undefined;
     },
     unsubscribe: async () => {
       if (!supported) {
         return;
       }
-      await (await (await whenRegistered)?.getSubscription())?.unsubscribe();
+      await (await (await pushManager()).getSubscription())?.unsubscribe();
     },
   };
 };

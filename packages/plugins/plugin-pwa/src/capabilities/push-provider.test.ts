@@ -114,6 +114,18 @@ describe('makePushProvider', () => {
     expect(subscription?.unsubscribe).toHaveBeenCalledOnce();
   });
 
+  test('a worker that never activates fails instead of hanging', async () => {
+    const provider = makePushProvider({
+      supported: true,
+      pushManager: new Promise(() => {}),
+      permission: () => 'granted',
+      requestPermission: async () => 'granted',
+      activationTimeout: '10 millis',
+    });
+
+    await expect(provider.subscribe({ applicationServerKey: KEY_A })).rejects.toThrow();
+  });
+
   test('an unsupported device has no subscription and refuses to subscribe', async () => {
     const { provider } = setup({ supported: false });
 
