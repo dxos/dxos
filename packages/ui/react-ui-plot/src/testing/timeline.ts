@@ -1224,7 +1224,7 @@ export const technologyTimeline: PlotValue[][] = [
   [
     '2025-08',
     'Macro/TIC',
-    'US takes a stake in Intel',
+    'US takes stake in Intel',
     'The US government takes about a 10% stake in Intel, converting CHIPS Act grants into equity.',
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/Intel_logo_2023.svg/500px-Intel_logo_2023.svg.png',
   ],
@@ -1253,8 +1253,8 @@ export const technologyTimeline: PlotValue[][] = [
   [
     '2028-12',
     'Macro/TIC',
-    'US bails out BigAI',
-    'Speculative: the US government rescues the largest AI companies.',
+    'US takes stake in BigAI',
+    'Speculative: the US government takes ownership stakes in the largest AI companies.',
     null,
   ],
 ];
