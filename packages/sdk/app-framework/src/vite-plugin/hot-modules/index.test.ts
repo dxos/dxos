@@ -1,0 +1,55 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { describe, test } from 'vitest';
+
+import { findModuleLoaders, rewriteLoaders, wrapModuleBody } from './index.ts';
+
+describe('findModuleLoaders', () => {
+  test('finds loaders passed to module makers', async ({ expect }) => {
+    const code = `
+      export const State = Capability.lazyModule('State', { provides: [] }, () => import('./state.ts'));
+      export const Surface = AppCapability.surface(() => import('./react-surface.tsx'), { roles: [] });
+    `;
+    expect((await findModuleLoaders('/src/capabilities/index.ts', code)).map(({ specifier }) => specifier)).toEqual([
+      './state.ts',
+      './react-surface.tsx',
+    ]);
+  });
+
+  test('skips lazy components, plugin entries, assets and non-loader arrows', async ({ expect }) => {
+    const code = `
+      const Panel = lazy(() => import('./Panel.tsx'));
+      const Other = React.lazy(() => import('./Other.tsx'));
+      export const make = Plugin.lazy(meta, () => import('#plugin'));
+      export const Doc = AppCapability.doc({ content: () => import('../../PLUGIN.mdl?raw') });
+      register((props) => import('./with-params.ts'));
+      register(() => import('./raw.ts?raw'));
+    `;
+    expect(await findModuleLoaders('/src/capabilities/index.ts', code)).toEqual([]);
+  });
+});
+
+describe('rewriteLoaders', () => {
+  test('resolves each loader to the newest version of its body', async ({ expect }) => {
+    const code = `a(() => import('./a.ts')); b(() => import('./b.ts'));`;
+    const rewritten = rewriteLoaders(code, await findModuleLoaders('/src/index.ts', code));
+    expect(rewritten).toBe(
+      "a(() => import('./a.ts').then((module) => globalThis.__DX_HOT_MODULES__?.latest(module) ?? module)); " +
+        "b(() => import('./b.ts').then((module) => globalThis.__DX_HOT_MODULES__?.latest(module) ?? module));",
+    );
+  });
+});
+
+describe('wrapModuleBody', () => {
+  test('accepts before the body runs, keeps its line numbers and exports the key', ({ expect }) => {
+    const body = 'import x from "x";\nexport default 1;';
+    const wrapped = wrapModuleBody(body, '/src/state.ts');
+    const lines = wrapped.split('\n');
+    expect(lines[0]).toMatch(/^if \(import\.meta\.hot\).*import x from "x";$/);
+    expect(lines[1]).toBe('export default 1;');
+    expect(wrapped).toContain('export const __dxHotKey = "/src/state.ts";');
+    expect(wrapped).toContain('import.meta.hot.invalidate(');
+  });
+});

@@ -1004,4 +1004,42 @@ test QA-14: Bramble — Kai locks the Spring Blend
     - name: Close
       do: Return to the Inbox and hold.
       expect: the inbox, as the take began
+
+test QA-16: Hot-reload a plugin capability
+  desc: |
+    Dev-server demo of plugin-module hot replacement on a capability with no React in it: edits to
+    plugin-space's app-graph builder, made from a terminal floated over the app, re-run that module in
+    place and the navtree follows; an edit to the plugin definition still reloads the page, for contrast.
+    Recorded by `autocue/hot-reload.mjs` against `composer-app:serve`.
+  actors: human
+  status: passing           # 2026-10-22, recorded by autocue/hot-reload.mjs
+  given:
+    - the composer-app dev server is running
+    - the space settings section's label in plugin-space's extensions/settings.ts reads "Settings · v1",
+      set for the take
+  steps:
+    - name: Show the running capability
+      do: Open the default space.
+      expect: the navtree shows "Settings · v1"
+    - name: Edit the node's label
+      do: In the terminal, replace v1 with v2 in extensions/settings.ts.
+      expect: the row reads "Settings · v2" within a second, and the page does not reload
+    - name: Edit the node's icon colour
+      do: Replace the section's emerald icon hue with rose.
+      expect: the row's icon turns rose, and the page does not reload
+    - name: Edit the plugin definition
+      do: Append a comment to plugin-space's src/plugin.ts.
+      expect: the page reloads, and the navtree comes back after the boot
+      note: plugin.ts is not a hot boundary; reloading a whole plugin in place is not built yet.
+```
+
+## Changelog
+
+```mdl
+decision D-1: QA-16 records plugin-module hot replacement on a non-React capability, with a plugin-definition edit as the full-reload contrast.
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmytro
+  affects: [QA-16]
+  why: The user asked for a recording that shows a non-React capability reloading, since a React component change already hot-reloads.
 ```

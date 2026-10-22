@@ -54,6 +54,7 @@ import { log } from '@dxos/log';
 
 import type * as ActivationEvent from '../activation-event.ts';
 import * as CapabilityManager from '../capability-manager.ts';
+import * as HotModules from '../hot-modules.ts';
 import * as Plugin from '../plugin.ts';
 // Imported with a `PluginRegistry` alias because the unrelated `@effect/atom-react`
 // `Registry` is already imported above; from outside this file the namespace is
@@ -286,6 +287,14 @@ export interface PluginManager {
   reset(event: ActivationEvent.ActivationEvent | string): Effect.Effect<boolean, Error>;
 
   /**
+   * Re-runs the given active modules in place: deactivates them and every active module that
+   * transitively requires a singleton capability they provide, then activates that set again.
+   * Hot module replacement calls this after swapping a module's body; inactive ids are ignored.
+   * @returns Whether any module was reloaded and every re-activation succeeded.
+   */
+  reload(moduleIds: readonly string[]): Effect.Effect<boolean, Error>;
+
+  /**
    * Shuts down the manager by deactivating all active modules in reverse activation order,
    * clearing all capabilities, and resetting lifecycle bookkeeping.
    * Plugins, core, enabled, and modules remain intact so the manager can be reused.
@@ -353,6 +362,7 @@ class ManagerImpl implements PluginManager {
       onRemove,
     });
     this._superviseFailures();
+    HotModules.register(this);
 
     // The initialization flag lets event dispatch wait for the constructor-launched
     // core/enabled `enable()` calls to finish registering modules. Lazy plugins make
@@ -412,7 +422,7 @@ class ManagerImpl implements PluginManager {
    * module id (structural failures, lazy plugin loads) are handled by their own paths.
    */
   private _autoDisableOnModuleError(message: ActivationMessage): void {
-    if (message.state !== 'error' || message.module === undefined) {
+    if (message.state !== 'error' || message.module === undefined || this._state.reloading.has(message.module)) {
       return;
     }
     const pluginId = this._state.pluginIdOfModule(message.module);
@@ -543,7 +553,9 @@ class ManagerImpl implements PluginManager {
       // An id already in the enabled set (persisted from an earlier session) would otherwise read
       // as enabled while none of its modules is registered, and no toggle short of off-and-on starts it.
       Effect.tap((plugin) =>
-        this._state.isEnabled(plugin.meta.profile.key) ? this.enable(plugin.meta.profile.key) : Effect.void,
+        this._state.isEnabled(plugin.meta.profile.key)
+          ? this.enable(plugin.meta.profile.key).pipe(Effect.asVoid)
+          : Effect.void,
       ),
     );
   }
@@ -583,6 +595,10 @@ class ManagerImpl implements PluginManager {
 
   reset(event: ActivationEvent.ActivationEvent | string): Effect.Effect<boolean, Error> {
     return this._scheduler.resetEvent(event).pipe(this._withRuntime);
+  }
+
+  reload(moduleIds: readonly string[]): Effect.Effect<boolean, Error> {
+    return this._scheduler.reloadModules(moduleIds).pipe(this._withRuntime);
   }
 
   shutdown(): Effect.Effect<boolean, Error> {
