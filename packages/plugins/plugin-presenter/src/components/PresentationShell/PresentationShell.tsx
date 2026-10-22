@@ -2,7 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
+import React, {
+  type KeyboardEventHandler,
+  type PropsWithChildren,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import { useComposedRefs } from '@dxos/react-hooks';
 import * as Util from '@dxos/react-ui/Util';
@@ -17,6 +24,8 @@ export type PresentationShellProps = PropsWithChildren<{
   fullscreen?: boolean;
   /** Invoked once the exit fade-out has completed. */
   onExit?: () => void;
+  /** Receives keys while focus is inside the shell. */
+  onKeyDown?: KeyboardEventHandler<HTMLDivElement>;
 }>;
 
 /**

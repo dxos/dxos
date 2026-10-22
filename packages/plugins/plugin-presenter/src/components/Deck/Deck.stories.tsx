@@ -1,0 +1,174 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Effect from 'effect/Effect';
+import React, { useMemo, useState } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
+
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Surface from '@dxos/app-framework/Surface';
+import { withPluginManager } from '@dxos/app-framework/testing';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { DXN } from '@dxos/keys';
+import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import { withClientProvider } from '@dxos/react-client/testing';
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Text } from '@dxos/schema';
+
+import { type SlideSource } from '#deck';
+import { useSlideIndex } from '#hooks';
+import { translations } from '#translations';
+
+import { Deck, type DeckProps } from './Deck.tsx';
+
+const createTextSlides = (count: number): SlideSource[] =>
+  Array.from({ length: count }, (_, index) => ({
+    kind: 'text' as const,
+    id: `slide-${index}`,
+    text: Text.make({ content: `# Slide ${index + 1}` }),
+  }));
+
+const DefaultStory = ({ count = 5, ...props }: Partial<DeckProps> & { count?: number }) => {
+  const slides = useMemo(() => createTextSlides(count), [count]);
+  const [index, setIndex] = useState(0);
+  const [fullscreen, setFullscreen] = useState(props.fullscreen ?? false);
+  return (
+    <Deck
+      {...props}
+      slides={slides}
+      index={index}
+      onIndexChange={setIndex}
+      fullscreen={fullscreen}
+      onFullscreenChange={setFullscreen}
+    />
+  );
+};
+
+const EditableStory = () => {
+  const slides = useMemo(
+    (): SlideSource[] =>
+      [0, 1].map((index) => ({
+        kind: 'object' as const,
+        id: `object-${index}`,
+        object: Markdown.make({ name: `Doc ${index}`, content: '# Editable' }),
+      })),
+    [],
+  );
+  const [index, setIndex] = useState(0);
+  return <Deck slides={slides} index={index} onIndexChange={setIndex} />;
+};
+
+/** Index is far past the end, as when slides were deleted since the view state was saved. */
+const StaleIndexStory = () => {
+  const slides = useMemo(() => createTextSlides(3), []);
+  const [, setIndex] = useSlideIndex('stale-index-story', slides.length);
+  return <Deck slides={slides} index={9} onIndexChange={setIndex} />;
+};
+
+const InputSlide = () => <input data-testid='slide-input' />;
+
+const createInputPlugin = () =>
+  Plugin.define(
+    Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test.presenterInput'), name: 'PresenterInputStory' }),
+  ).pipe(
+    Plugin.addModule({
+      id: 'surfaces',
+      provides: [Capabilities.ReactSurface],
+      activate: () =>
+        Effect.succeed(
+          Capability.contribute(Capabilities.ReactSurface, [
+            Surface.create({
+              id: 'slide',
+              filter: AppSurface.object(AppSurface.Slide, Markdown.Document),
+              component: InputSlide,
+              props: ({ data }) => ({ ...data }),
+            }),
+          ]),
+        ),
+    }),
+    Plugin.make,
+  );
+
+const meta = {
+  title: 'plugins/plugin-presenter/components/Deck',
+  render: DefaultStory,
+  decorators: [
+    withTheme(),
+    withLayout({ layout: 'fullscreen' }),
+    withClientProvider({ types: [Markdown.Document, Text.Text], createIdentity: true }),
+  ],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
+} satisfies Meta<typeof DefaultStory>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+const withEmptyPlugins = withPluginManager({ plugins: [] });
+
+export const Default: Story = {
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const deck = await canvas.findByTestId('presenter.deck');
+    deck.focus();
+    await userEvent.keyboard('{ArrowRight}{ArrowRight}');
+    await expect(await canvas.findByText('3 / 5')).toBeVisible();
+    await userEvent.keyboard('{Shift>}{ArrowLeft}{/Shift}');
+    await expect(await canvas.findByText('1 / 5')).toBeVisible();
+    await userEvent.keyboard('{End}');
+    await expect(await canvas.findByText('5 / 5')).toBeVisible();
+  },
+};
+
+export const Empty: Story = {
+  decorators: [withEmptyPlugins],
+  args: { count: 0 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getByText('Add slide')).toBeVisible());
+    await expect(await canvas.findByText('0 / 0')).toBeVisible();
+  },
+};
+
+export const EditableSlide: Story = {
+  render: EditableStory,
+  decorators: [withPluginManager({ plugins: [createInputPlugin()()] })],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = await canvas.findByTestId('slide-input', undefined, { timeout: 10_000 });
+    await userEvent.click(input);
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(await canvas.findByText('1 / 2')).toBeVisible();
+  },
+};
+
+export const Fullscreen: Story = {
+  decorators: [withEmptyPlugins],
+  args: { fullscreen: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByTestId('presenter.overlay')).toBeInTheDocument();
+    await expect(canvas.queryByTestId('presenter.fullscreen')).toBeNull();
+    await waitFor(() => expect(canvas.getByTestId('presenter.overlay')).toHaveAttribute('data-visible', 'false'), {
+      timeout: 5_000,
+    });
+    window.dispatchEvent(new PointerEvent('pointermove'));
+    await waitFor(() => expect(canvas.getByTestId('presenter.overlay')).toHaveAttribute('data-visible', 'true'));
+  },
+};
+
+export const StaleIndex: Story = {
+  decorators: [withEmptyPlugins],
+  render: StaleIndexStory,
+  play: async ({ canvasElement }) => {
+    await expect(await within(canvasElement).findByText('3 / 3')).toBeVisible();
+  },
+};

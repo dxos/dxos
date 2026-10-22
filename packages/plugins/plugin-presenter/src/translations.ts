@@ -13,6 +13,8 @@ export const translations = [
         'plugin.name': 'Presenter',
         'toggle-presentation.label': 'Present',
         'slide-pending.label': 'Loading…',
+        'add-slide.label': 'Add slide',
+        'fullscreen.label': 'Fullscreen',
       },
     },
   },

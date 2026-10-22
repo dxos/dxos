@@ -8,11 +8,11 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Collection, Obj } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as Position from '@dxos/util/Position';
 
-import { CollectionArticle, DocumentArticle, SlideArticle } from '#containers';
+import { DocumentArticle, SlideArticle } from '#containers';
 import { meta } from '#meta';
 
 export default Capability.makeModule(() =>
@@ -32,22 +32,6 @@ export default Capability.makeModule(() =>
             Obj.instanceOf(Markdown.Document, data.subject.object),
         ),
         component: DocumentArticle,
-        props: ({ role, data: { subject } }) => ({ role, subject: subject.object }),
-      }),
-      Surface.create({
-        id: 'collection',
-        position: Position.first,
-        filter: Surface.makeFilter(
-          AppSurface.Article,
-          (data): data is AppSurface.ArticleData<{ type: typeof meta.profile.key; object: Collection.Collection }> =>
-            !!data.subject &&
-            typeof data.subject === 'object' &&
-            'type' in data.subject &&
-            'object' in data.subject &&
-            data.subject.type === meta.profile.key &&
-            Obj.instanceOf(Collection.Collection, data.subject.object),
-        ),
-        component: CollectionArticle,
         props: ({ role, data: { subject } }) => ({ role, subject: subject.object }),
       }),
       Surface.create({
