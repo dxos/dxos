@@ -75,7 +75,13 @@
       "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8b/Early_migrations_mercator.svg/500px-Early_migrations_mercator.svg.png"
     ],
     ["1980-05", "Tech/Software", "Pac-Man", "Namco’s maze game becomes the best-known arcade game of all time.", null],
-    ["1980-11", "Personal", "Sinclair Scientific Calculator", "Sinclair Scientific Calculator, November 1980.", null],
+    [
+      "1978-07",
+      "Personal",
+      "Sinclair Enterprise",
+      "99 step programmable calculator.",
+      "https://upload.wikimedia.org/wikipedia/commons/8/89/Sinclair_Enterprise_Calculators.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=original"
+    ],
     [
       "1981-03",
       "Macro/MIC",
@@ -156,13 +162,6 @@
       "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/Computer_macintosh_128k%2C_1984_%28all_about_Apple_onlus%29.jpg/500px-Computer_macintosh_128k%2C_1984_%28all_about_Apple_onlus%29.jpg"
     ],
     ["1984-09", "Personal", "Published Music Box", "Published Music Box, September 1984.", null],
-    [
-      "1985-04",
-      "Tech/Hardware",
-      "ARM",
-      "The first ARM processor runs; its low-power design later powers most phones.",
-      "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/41/AArch64_logo.svg/500px-AArch64_logo.svg.png"
-    ],
     [
       "1985-09",
       "Tech/Software",

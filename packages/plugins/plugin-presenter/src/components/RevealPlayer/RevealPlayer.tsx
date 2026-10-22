@@ -149,7 +149,12 @@ const updateSlides = async (player: Player, content: string) => {
 };
 
 /** Builds a Markdown deck on `element`, seeded with `content`, and waits for it to be ready. */
-const createPlayer = async (element: HTMLElement, slides: HTMLElement, content: string): Promise<Player> => {
+const createPlayer = async (
+  element: HTMLElement,
+  slides: HTMLElement,
+  content: string,
+  keyboardCondition: (event: KeyboardEvent) => boolean,
+): Promise<Player> => {
   // Required for syntax highlighting.
   hljs.registerLanguage('typescript', typescript);
 
@@ -172,6 +177,8 @@ const createPlayer = async (element: HTMLElement, slides: HTMLElement, content: 
     embedded: true,
     // Narrow decks scale like wide ones; scroll view would wrap the sections that edits replace.
     scrollActivationWidth: 0,
+    // Asked before every key the deck would act on.
+    keyboardCondition,
 
     // Disable autoplay to prevent errors in headless environments (e.g., CI).
     autoPlayMedia: false,
@@ -221,6 +228,9 @@ export const RevealPlayer = Util.composable<HTMLDivElement, RevealProps>(
     const [player, setPlayer] = useState<Player>();
     // The objects embedded in the current slide.
     const [embeds, setEmbeds] = useState<SlideEmbed[]>([]);
+    // While an embedded object fills the viewport its keys are its own: the deck acts only on Escape, to exit.
+    const embedShowingRef = useRef(false);
+    embedShowingRef.current = renderEmbed !== undefined && embeds.length > 0;
     const content = renderEmbed ? markEmbeds(contentProp) : contentProp;
 
     useEffect(() => {
@@ -237,7 +247,12 @@ export const RevealPlayer = Util.composable<HTMLDivElement, RevealProps>(
         return;
       }
 
-      const player = await createPlayer(element, slides, content);
+      const player = await createPlayer(
+        element,
+        slides,
+        content,
+        (event) => !embedShowingRef.current || event.key === 'Escape',
+      );
       const { deck } = player;
       if (controller.signal.aborted) {
         deck.destroy();

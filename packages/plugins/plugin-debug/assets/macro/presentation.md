@@ -1,10 +1,20 @@
-# AI
+# The Meta Crisis
 
 ---
 
-# Timeline
-
 ![Macro timeline|480]({{timeline}})
+
+---
+
+# History
+
+---
+
+# Today
+
+---
+
+# Future
 
 ---
 
