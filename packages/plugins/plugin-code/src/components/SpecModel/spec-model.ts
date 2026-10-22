@@ -165,14 +165,35 @@ const parseErrors = (field?: { inline?: string; lines: string[] }): ErrorModel[]
   }),
 ];
 
+const OPENERS = '<([{';
+const CLOSERS = '>)]}';
+
+/** Splits on commas outside brackets, so a parameter typed `Map<string, Participant>` stays whole. */
+export const splitTopLevel = (text: string): string[] => {
+  const parts: string[] = [];
+  let depth = 0;
+  let start = 0;
+  [...text].forEach((char, index) => {
+    if (OPENERS.includes(char)) {
+      depth++;
+    } else if (CLOSERS.includes(char) && !(char === '>' && '-='.includes(text[index - 1] ?? ''))) {
+      depth = Math.max(0, depth - 1);
+    } else if (char === ',' && depth === 0) {
+      parts.push(text.slice(start, index));
+      start = index + 1;
+    }
+  });
+  parts.push(text.slice(start));
+  return parts;
+};
+
 /** `name(a: A, b?: B) → Out`; arrows may be written `→` or `->`. */
 const parseSignature = (line: string): Pick<EndpointModel, 'name' | 'inputs' | 'output'> | undefined => {
   const match = line.match(/^([\w.]+)\s*\((.*?)\)\s*(?:(?:→|->)\s*(.+?))?\s*(?:#.*)?$/);
   if (!match) {
     return undefined;
   }
-  const inputs = match[2]
-    .split(',')
+  const inputs = splitTopLevel(match[2])
     .map((param) => parseField(param.trim()))
     .filter((field): field is FieldModel => field !== undefined);
   return { name: match[1], inputs, ...(match[3] && { output: match[3] }) };

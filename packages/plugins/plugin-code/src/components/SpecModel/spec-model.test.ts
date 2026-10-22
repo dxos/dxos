@@ -13,6 +13,7 @@ import {
   parseField,
   parseFields,
   selectDefinitions,
+  splitTopLevel,
 } from './spec-model.ts';
 
 describe('spec model', () => {
@@ -88,5 +89,23 @@ describe('spec model', () => {
     const ids = new Set(definitions.map(({ id }) => id));
     expect(edges.every(({ from, to }) => ids.has(from) && ids.has(to))).toBe(true);
     expect(dependents.get('CallTransport')).toBe(edges.filter(({ to }) => to === 'CallTransport').length);
+  });
+
+  test('keeps generic and compound parameter types whole', ({ expect }) => {
+    expect(splitTopLevel('peers: Map<string, Participant>, id: string, cb: (a: A, b: B) => void')).toEqual([
+      'peers: Map<string, Participant>',
+      ' id: string',
+      ' cb: (a: A, b: B) => void',
+    ]);
+    const spec = [
+      '```mdl',
+      'service Swarm',
+      '  ops:',
+      '    join(peers: Map<string, Peer>, id: string) -> Peer[]',
+      '```',
+    ].join('\n');
+    const [join] = buildApiModel(spec).groups[0].endpoints;
+    expect(join.inputs.map(({ name, type }) => `${name}: ${type}`)).toEqual(['peers: Map<string, Peer>', 'id: string']);
+    expect(join.output).toBe('Peer[]');
   });
 });
