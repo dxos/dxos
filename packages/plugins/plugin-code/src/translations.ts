@@ -89,6 +89,7 @@ export const translations = [
         'decision-log.count.label_one': '{{count}} decision',
         'decision-log.count.label_other': '{{count}} decisions',
         'decision-log.empty.message': 'This spec has no changelog.',
+        'definition-graph.acceptance.label': 'Scenarios & tests',
         'definition-graph.uses.label_one': 'Uses {{count}}',
         'definition-graph.uses.label_other': 'Uses {{count}}',
         'definition-graph.used-by.label_one': 'Used by {{count}}',

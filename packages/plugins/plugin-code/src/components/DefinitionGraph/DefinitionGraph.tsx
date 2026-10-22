@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { type GraphModel, type LatticeSpec } from '@dxos/react-ui-canvas/scene';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 
@@ -15,6 +16,9 @@ import { meta } from '#meta';
 
 import { LatticeGraph } from '../LatticeGraph/index.ts';
 import { type DefinitionModel, buildDefinitionGraph, kindStyle } from '../SpecModel/index.ts';
+
+/** Acceptance blocks; they name most of the design, so they are hidden until asked for to keep the design legible. */
+const ACCEPTANCE_KINDS = ['scenario', 'test', 'suite'];
 
 /** Short cards: a definition shows its kind, id and title, and its dependencies are the arrows. */
 const LATTICE: LatticeSpec = { width: 256, height: 128, gutterX: 64, gutterY: 64 };
@@ -52,36 +56,50 @@ const DefinitionCard = ({ definition, dependents }: { definition: DefinitionMode
   );
 };
 
-const KindLegend = ({ kinds }: { kinds: string[] }) => (
-  <Layout.Flex
-    wrap
-    gap='xs'
-    classNames='absolute top-2 start-2 z-10 p-2 rounded-sm bg-base-surface border border-separator'
-    data-testid='definition-graph.legend'
-  >
-    {kinds.map((kind) => (
-      <Tag.Tag key={kind} hue={kindStyle(kind).hue}>
-        <Icon.Icon icon={kindStyle(kind).icon} size='xs' />
-        {kind}
-      </Tag.Tag>
-    ))}
-  </Layout.Flex>
-);
+type KindLegendProps = { kinds: string[]; acceptance: boolean; onAcceptanceChange: (acceptance: boolean) => void };
+
+const KindLegend = ({ kinds, acceptance, onAcceptanceChange }: KindLegendProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  return (
+    <Layout.Flex
+      wrap
+      gap='xs'
+      classNames='absolute top-2 start-2 z-10 p-2 items-center rounded-sm bg-base-surface border border-separator'
+      data-testid='definition-graph.legend'
+    >
+      {kinds.map((kind) => (
+        <Tag.Tag key={kind} hue={kindStyle(kind).hue}>
+          <Icon.Icon icon={kindStyle(kind).icon} size='xs' />
+          {kind}
+        </Tag.Tag>
+      ))}
+      <Input.Switch
+        checked={acceptance}
+        onCheckedChange={({ checked }) => onAcceptanceChange(checked)}
+        label={t('definition-graph.acceptance.label')}
+        data-testid='definition-graph.acceptance'
+      />
+    </Layout.Flex>
+  );
+};
 
 export type DefinitionGraphProps = {
   /** The text of a `.mdl` spec. */
   content: string;
-  /** Block kinds to leave out, e.g. `scenario` and `test` to show only the design. */
+  /** Block kinds to leave out. */
   exclude?: string[];
+  /** Whether scenarios, tests and suites start shown; a toggle in the legend changes it. */
+  defaultAcceptance?: boolean;
 };
 
 /**
  * Every definition of a spec on a lattice, with an arrow from each to the definitions it names, so the
  * spec reads top-down from features to the types they rest on.
  */
-export const DefinitionGraph = ({ content, exclude = [] }: DefinitionGraphProps) => {
+export const DefinitionGraph = ({ content, exclude = [], defaultAcceptance = false }: DefinitionGraphProps) => {
+  const [acceptance, setAcceptance] = useState(defaultAcceptance);
   // A key rather than the array, so a caller passing a fresh literal each render does not re-lay out the graph.
-  const excludeKey = exclude.join(',');
+  const excludeKey = [...exclude, ...(acceptance ? [] : ACCEPTANCE_KINDS)].join(',');
   const model = useMemo(() => {
     const { definitions, edges } = buildDefinitionGraph(content);
     const excluded = new Set(excludeKey.split(','));
@@ -112,8 +130,8 @@ export const DefinitionGraph = ({ content, exclude = [] }: DefinitionGraphProps)
   );
 
   return (
-    <LatticeGraph graph={graph} renderNode={renderNode} lattice={LATTICE}>
-      <KindLegend kinds={kinds} />
+    <LatticeGraph graph={graph} renderNode={renderNode} lattice={LATTICE} arrange='force'>
+      <KindLegend kinds={kinds} acceptance={acceptance} onAcceptanceChange={setAcceptance} />
     </LatticeGraph>
   );
 };

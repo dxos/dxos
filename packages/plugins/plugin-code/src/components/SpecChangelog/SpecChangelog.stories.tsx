@@ -66,16 +66,23 @@ export const DecisionLog: Story = {
   },
 };
 
-/** Every definition of plugin-calls on a lattice, each arrow running through the gutters to what it names. */
+/**
+ * plugin-calls's design on a lattice, each arrow running through the gutters to what it names; the legend's
+ * switch adds the scenarios and tests.
+ */
 export const Definitions: Story = {
   args: { content: CALLS_SPEC, defaultView: 'definitions' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
+    const { definitions } = buildDefinitionGraph(CALLS_SPEC);
+    const design = definitions.filter(({ kind }) => !['scenario', 'test', 'suite'].includes(kind));
     await waitFor(
-      () =>
-        expect(canvas.getAllByTestId('definition-graph.definition')).toHaveLength(
-          buildDefinitionGraph(CALLS_SPEC).definitions.length,
-        ),
+      () => expect(canvas.getAllByTestId('definition-graph.definition')).toHaveLength(design.length),
+      TIMEOUT,
+    );
+    await userEvent.click(canvas.getByText('Scenarios & tests'));
+    await waitFor(
+      () => expect(canvas.getAllByTestId('definition-graph.definition')).toHaveLength(definitions.length),
       TIMEOUT,
     );
   },

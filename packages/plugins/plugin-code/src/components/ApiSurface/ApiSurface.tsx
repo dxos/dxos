@@ -181,7 +181,7 @@ export const ApiSurface = ({ content }: ApiSurfaceProps) => {
         <div
           role='table'
           className='grid gap-x-3 gap-y-2 p-4 items-start'
-          style={{ gridTemplateColumns: `minmax(0,1fr) repeat(${model.effects.length}, 2.5rem) minmax(0,12rem)` }}
+          style={{ gridTemplateColumns: `minmax(0,1fr) repeat(${model.effects.length}, 2.5rem) minmax(0,18rem)` }}
         >
           <div role='row' className='contents'>
             <div role='columnheader' className='text-xs text-description'>
