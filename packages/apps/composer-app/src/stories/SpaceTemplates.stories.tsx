@@ -39,6 +39,7 @@ import * as MagazinePlugin from '@dxos/plugin-magazine/MagazinePlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as NavTreePlugin from '@dxos/plugin-navtree/NavTreePlugin';
 import * as PipelinePlugin from '@dxos/plugin-pipeline/PipelinePlugin';
+import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
 import * as PreviewPlugin from '@dxos/plugin-preview/PreviewPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
@@ -63,6 +64,7 @@ const TEMPLATES = {
   architecture: 'org.dxos.plugin.canvas.template.architecture',
   fieldstone: 'org.dxos.plugin-debug.template.fieldstone',
   incident: 'org.dxos.plugin-debug.template.incident',
+  macro: 'org.dxos.plugin.sheet.template.macro',
   pipeline: 'org.dxos.plugin-debug.template.pipeline',
   review: 'org.dxos.plugin-debug.template.review',
   stockfish: 'org.dxos.plugin-debug.template.stockfish',
@@ -241,6 +243,7 @@ const meta = {
         MagazinePlugin.make(),
         MarkdownPlugin.make(),
         PipelinePlugin.make(),
+        PresenterPlugin.make(),
         ProjectsPlugin.make(),
         ReviewPlugin.make(),
         ScriptPlugin.make(),
@@ -319,6 +322,9 @@ export const AlienLabs: Story = { args: { template: TEMPLATES.fieldstone }, play
 export const HelloWorker: Story = { args: { template: TEMPLATES.worker }, play };
 
 export const Incident: Story = { args: { template: TEMPLATES.incident }, play };
+
+/** The Macro events sheet, its timeline chart and a deck whose second slide presents the chart. */
+export const Macro: Story = { args: { template: TEMPLATES.macro }, play };
 
 export const Pipeline: Story = { args: { template: TEMPLATES.pipeline }, play };
 

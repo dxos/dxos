@@ -10,7 +10,8 @@ import 'highlight.js/styles/tokyo-night-dark.css';
 
 import hljs from 'highlight.js';
 import typescript from 'highlight.js/lib/languages/typescript';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { type ReactNode, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Reveal from 'reveal.js';
 import RevealHighlight from 'reveal.js/plugin/highlight/highlight';
 import RevealMarkdown, { type MarkdownPlugin } from 'reveal.js/plugin/markdown/plugin.js';
@@ -19,6 +20,8 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
+
+import { type EmbedTarget, type SlideEmbed, findEmbeds, markEmbeds } from './embeds.ts';
 
 const styles = `
 <style type="text/css">
@@ -52,6 +55,13 @@ const styles = `
   .reveal pre {
     margin-left: 0;
   }
+  .reveal .dx-slide-embed {
+    width: 100%;
+    height: 520px;
+    font-size: 1rem;
+    line-height: normal;
+    text-align: left;
+  }
   .reveal code {
     font-size: 20px;
     background: #111111;
@@ -63,6 +73,8 @@ const styles = `
 
 export type RevealProps = {
   content: string;
+  /** Renders an embedded object in place of its image; without one, embeds render as images. */
+  renderEmbed?: (embed: SlideEmbed) => ReactNode;
   slide?: number;
   fullscreen?: boolean;
   onExit?: () => void;
@@ -180,14 +192,17 @@ const createPlayer = async (element: HTMLElement, slides: HTMLElement, content: 
 };
 
 export const RevealPlayer = Util.composable<HTMLDivElement, RevealProps>(
-  ({ content, slide, fullscreen = true, onExit, children, ...props }, forwardedRef) => {
+  ({ content: contentProp, slide, fullscreen = true, onExit, renderEmbed, children, ...props }, forwardedRef) => {
     const deckDivRef = useRef<HTMLDivElement>(null);
     const slidesRef = useRef<HTMLDivElement>(null);
     const [player, setPlayer] = useState<Player>();
+    const [embeds, setEmbeds] = useState<EmbedTarget[]>([]);
+    const content = renderEmbed ? markEmbeds(contentProp) : contentProp;
 
     useEffect(() => {
       if (player && player.renderedContent !== content) {
-        void updateSlides(player, content);
+        // Rebuilding the slides replaces the embeds' blocks, so they are found again once it is done.
+        void updateSlides(player, content).then(() => setEmbeds(findEmbeds(player.slides)));
       }
     }, [player, content]);
 
@@ -214,6 +229,7 @@ export const RevealPlayer = Util.composable<HTMLDivElement, RevealProps>(
       });
 
       setPlayer(player);
+      setEmbeds(findEmbeds(slides));
 
       // Reveal re-lays out only on window resize; a plank or companion resizes without one.
       const resizeObserver = new ResizeObserver(() => deck.layout());
@@ -251,6 +267,10 @@ export const RevealPlayer = Util.composable<HTMLDivElement, RevealProps>(
             <div ref={slidesRef} className={mx('slides', !fullscreen && 'dx-base-surface p-8')} />
           </div>
         </div>
+        {renderEmbed &&
+          embeds.map(({ element, ...embed }, index) =>
+            createPortal(renderEmbed(embed), element, `${index}:${embed.uri}`),
+          )}
       </Layout.Grid>
     );
   },
