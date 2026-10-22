@@ -1136,6 +1136,13 @@ export const technologyTimeline: PlotValue[][] = [
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ac/Seal_of_the_U.S._District_Court_for_the_District_of_Columbia.png/500px-Seal_of_the_U.S._District_Court_for_the_District_of_Columbia.png',
   ],
   [
+    '2024-09',
+    'Macro/FIC',
+    'US debt interest passes defense spending',
+    'In fiscal 2024, interest on the federal debt costs more than the defense budget for the first time.',
+    null,
+  ],
+  [
     '2024-10',
     'Tech/Hardware',
     'Starship booster caught',
