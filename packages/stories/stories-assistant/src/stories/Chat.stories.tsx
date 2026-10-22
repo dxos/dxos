@@ -595,7 +595,7 @@ export const TestDelegationScripted: Story = {
     await canvas.findByText(/On it — delegating/i, {}, { timeout: 30_000 });
 
     // Delegation is the promotion moment: the durable task it creates is mirrored into the
-    // conversation's checklist. Not asserted unchecked: the scripted sub-agent can finish first.
+    // conversation's checklist.
     await waitForChecklist((items) => items.some(({ title }) => title === TASK_TITLE));
 
     // The supervisor spawns the sub-agent after the turn and folds its result back.

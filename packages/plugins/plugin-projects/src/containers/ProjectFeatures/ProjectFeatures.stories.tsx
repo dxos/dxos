@@ -234,7 +234,6 @@ export const EditInline: Story = {
     const card = within(element);
     await openCardMenu(element);
     await userEvent.click(await screen.findByTestId('feature-card.edit'));
-    // The menu reports its selection after the click returns, so edit mode renders a beat later.
     const name = await card.findByTestId('feature-card.name.input');
     await userEvent.clear(name);
     await userEvent.type(name, 'Smart inbox{Enter}');

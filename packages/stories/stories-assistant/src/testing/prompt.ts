@@ -6,7 +6,6 @@ import { userEvent, waitFor } from 'storybook/test';
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** The chat prompt's CodeMirror content, found by the prompt's test id rather than its placeholder copy. */
 export const findPromptEditor = (canvasElement: HTMLElement, timeout: number): Promise<HTMLElement> =>
   waitFor(
     () => {

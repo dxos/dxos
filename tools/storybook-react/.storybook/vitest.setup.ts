@@ -23,7 +23,6 @@ const annotations = setProjectAnnotations([preview]);
 // Run Storybook's beforeAll hook.
 beforeAll(annotations.beforeAll);
 
-// Emulate a slower CPU when `DX_STORYBOOK_CPU_THROTTLE` is set (see `throttleCpu` in vite.base.config.ts).
 beforeAll(() => commands.throttleCpu());
 
 // Clear ErrorBoundary error tracking before each test.

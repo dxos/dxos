@@ -237,8 +237,7 @@ const makePlay =
       { timeout: 180_000, interval: 500 },
     );
 
-    // Every sub-task's history records the agent starting and finishing it; a finish without a sign-off
-    // lands in review rather than done (see `AgentSimulator.isFinished`).
+    // Every sub-task's history records the agent starting and finishing it.
     for (const task of subtasks) {
       const log = (task.history ?? []).flatMap((entry) => (Task.isChangeEntry(entry) ? [entry.description ?? ''] : []));
       await expect(log.some((line) => /started/i.test(line))).toBe(true);
@@ -266,10 +265,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** The same plays without the demo's pacing, for the CI story run. */
 const TEST_PACE: AgentSimulator.Pace = { think: '50 millis', work: '200 millis' };
 
-/** One sub-task at a time, in order. Paced for a watchable demo (about a minute), so not run in CI. */
+/** One sub-task at a time, in order. */
 export const Sequential: Story = {
   decorators: createDecorators(),
   tags: ['!test'],

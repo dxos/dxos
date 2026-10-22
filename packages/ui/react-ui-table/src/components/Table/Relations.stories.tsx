@@ -194,7 +194,6 @@ export const Default: Story = {
     await expect(targetCell).toHaveFocus();
     await userEvent.keyboard('{Enter}');
 
-    // The editor shows the reference as a button that opens the picker; its search field takes focus.
     const openPicker = async () => {
       await userEvent.click(await body.findByRole('button', { name: /Employer/ }));
       const search = await body.findByRole('combobox');

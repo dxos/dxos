@@ -11,7 +11,6 @@ import { EditorView } from './EditorView.tsx';
 
 const nextFrame = () => new Promise((resolve) => requestAnimationFrame(resolve));
 
-/** Mounts a controlled editor whose `value` the test passes back only when it chooses, as a slow caller would. */
 const mountControlled = async (initial: string) => {
   const container = document.createElement('div');
   document.body.append(container);

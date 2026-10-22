@@ -171,8 +171,6 @@ const PROSE_SUGGESTION_ALICE = [
 // Play functions drive document edits through the data layer (exercising the editor's live
 // automerge binding) and all versioning actions through the UI. Captured per story run.
 let currentDoc: Markdown.Document | undefined;
-// The story that may set `currentDoc`: a story without a play ends while its client is still initializing,
-// and that initialization finishing during the next story must not hand it the previous story's document.
 let currentStory: string | undefined;
 
 const getDoc = (): Markdown.Document => {
@@ -773,7 +771,6 @@ export const AmbientReviewTest: Story = {
   args: {
     content: '# Hello World\n',
   },
-  // TODO(wittjosiah): Fails headless on every run: the seeded comment's `.cm-comment` highlight never renders.
   tags: ['!test'],
   parameters: {
     ambientReview: true,
@@ -827,8 +824,6 @@ export const EditingTypingTest: Story = {
   args: {
     content: '# Hello World\n\nBody paragraph.\n',
   },
-  // TODO(wittjosiah): Fails headless on every run: typing reaches the editor, but `doc.history` is never
-  //   initialized, which the play requires before it asserts no suggestion branch was spawned.
   tags: ['!test'],
   parameters: {
     ambientReview: true,

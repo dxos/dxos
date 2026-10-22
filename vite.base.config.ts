@@ -589,10 +589,6 @@ const SANDBOX_LAUNCH_OPTIONS = process.env.CLAUDE_CODE_REMOTE
     }
   : {};
 
-/**
- * Slows the story page's CPU by `DX_STORYBOOK_CPU_THROTTLE` (a Chromium slowdown factor), so a story
- * that only fails on CI's smaller runners fails locally too. A no-op when unset or outside Chromium.
- */
 const throttleCpu: BrowserCommand<[]> = async ({ context, page }) => {
   const rate = Number(process.env.DX_STORYBOOK_CPU_THROTTLE ?? 1);
   if (rate > 1 && context.browser()?.browserType().name() === 'chromium') {

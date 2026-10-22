@@ -93,8 +93,6 @@ const DefaultStory = ({ count = 0, options, groupByThread, knownSenders, ...prop
       .forEach((sender) => {
         space.db.add(Obj.make(Person.Person, { fullName: sender?.name, emails: [{ value: sender?.email ?? '' }] }));
       });
-    // The lookup reads an indexed query, so the seeds have to land before it can resolve them. The story can
-    // unmount first, closing the client under the flush.
     space.db.flush({ indexes: true }).catch((error) => log.warn('seed flush interrupted', { error }));
   }, [space, items, knownSenders]);
 

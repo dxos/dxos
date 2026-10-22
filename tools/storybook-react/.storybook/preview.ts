@@ -29,8 +29,6 @@ import { docsTheme } from './theme.tsx';
 // Restores the "Download logs" action on a crashed story.
 globalThis.__STORY_ERROR_FALLBACK__ = StorybookErrorFallback;
 
-// A play starts while its story is still booting (a client, a space, wasm), which takes longer than
-// testing-library's 1 s default for `findBy*` and `waitFor` on CI's 4 vCPU runners.
 configure({ asyncUtilTimeout: 5_000 });
 
 /**
