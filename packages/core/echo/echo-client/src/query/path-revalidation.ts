@@ -62,74 +62,87 @@ const chainOf = (node: QueryAST.Query): QueryAST.Filter[][] | undefined => {
 const conjoin = (filters: readonly QueryAST.Filter[]): QueryAST.Filter | undefined =>
   filters.length === 0 ? undefined : filters.length === 1 ? filters[0] : { type: 'and', filters: [...filters] };
 
+/** What local evidence says of one derivation, or of one level or edge of it. */
+export type PathCheck = 'holds' | 'broken' | 'unknown';
+
 /**
- * Whether any derivation of a remote traversal hit still holds against what is loaded here. An edge whose
- * holder is not loaded, and an object that is not loaded, stand on the remote's word; an edge the holder's
- * document no longer records, or an object a level's filter now rejects, kills the path.
+ * What the derivations of a remote traversal hit say against what is loaded here: `holds` when some
+ * derivation is confirmed at every level and edge, `broken` when every derivation is contradicted, and
+ * `unknown` otherwise. An object or holder that is not loaded can neither confirm nor contradict.
  */
-export const anyPathHolds = (
+export const checkPaths = (
   plan: PathPlan,
   paths: readonly (readonly QueryService.PathEdge[])[],
   lookup: CoreLookup,
   spaceId: SpaceId,
-): boolean => paths.some((path) => pathHolds(plan, path, lookup, spaceId));
+): PathCheck => {
+  const checks = paths.map((path) => checkPath(plan, path, lookup, spaceId));
+  return checks.includes('holds')
+    ? 'holds'
+    : checks.length > 0 && checks.every((check) => check === 'broken')
+      ? 'broken'
+      : 'unknown';
+};
 
-const pathHolds = (
+const checkPath = (
   plan: PathPlan,
   path: readonly QueryService.PathEdge[],
   lookup: CoreLookup,
   spaceId: SpaceId,
-): boolean => {
+): PathCheck => {
   if (path.length === 0 || path.length !== plan.levels.length - 1) {
     // A path that does not match the chain was produced for another plan; it proves nothing either way.
-    return true;
+    return 'unknown';
   }
+  const checks: PathCheck[] = [];
   for (const [hop, edge] of path.entries()) {
-    if (!levelHolds(plan, hop, edge.from, lookup, spaceId) || !edgeHolds(edge, lookup)) {
-      return false;
-    }
+    checks.push(checkLevel(plan, hop, edge.from, lookup, spaceId), checkEdge(edge, lookup));
   }
-  return levelHolds(plan, path.length, path[path.length - 1].to, lookup, spaceId);
+  checks.push(checkLevel(plan, path.length, path[path.length - 1].to, lookup, spaceId));
+  return checks.includes('broken') ? 'broken' : checks.every((check) => check === 'holds') ? 'holds' : 'unknown';
 };
 
-const levelHolds = (plan: PathPlan, level: number, id: string, lookup: CoreLookup, spaceId: SpaceId): boolean => {
+const checkLevel = (plan: PathPlan, level: number, id: string, lookup: CoreLookup, spaceId: SpaceId): PathCheck => {
   const local = lookup(id);
   const structure = local?.core.getObjectStructure();
   if (!local || structure === undefined) {
-    return true;
+    return 'unknown';
   }
   // Every hop excludes deleted objects; only the hit itself answers to the query's own deleted option.
   const deleted = level === plan.levels.length - 1 ? plan.deleted : 'exclude';
   if (deleted !== 'include' && (deleted === 'only') !== local.core.isDeleted()) {
-    return false;
+    return 'broken';
   }
   const filter = plan.levels[level];
-  return filter === undefined || filterMatchDoc(filter, { id, doc: structure, spaceId });
+  return filter === undefined || filterMatchDoc(filter, { id, doc: structure, spaceId }) ? 'holds' : 'broken';
 };
 
-const edgeHolds = (edge: QueryService.PathEdge, lookup: CoreLookup): boolean => {
+const checkEdge = (edge: QueryService.PathEdge, lookup: CoreLookup): PathCheck => {
   const holder = lookup(edge.holder);
   const structure = holder?.core.getObjectStructure();
   if (!holder || structure === undefined) {
-    return true;
+    return 'unknown';
   }
   if (edge.holderHeads && holder.heads && sameHeads(edge.holderHeads, holder.heads)) {
-    return true;
+    return 'holds';
   }
   // The endpoint the holder's document names: the one that is not the holder itself.
   const other = edge.holder === edge.from ? edge.to : edge.from;
-  switch (edge.kind) {
-    case 'ref':
-    case 'incoming-ref':
-      return edge.property !== undefined && referencesAt(structure, edge.property, other);
-    case 'relation-source':
-      return refersTo(EntityStructure.getRelationSource(structure), other);
-    case 'relation-target':
-      return refersTo(EntityStructure.getRelationTarget(structure), other);
-    case 'parent':
-    case 'child':
-      return refersTo(EntityStructure.getParent(structure), other);
-  }
+  const recorded = (() => {
+    switch (edge.kind) {
+      case 'ref':
+      case 'incoming-ref':
+        return edge.property !== undefined && referencesAt(structure, edge.property, other);
+      case 'relation-source':
+        return refersTo(EntityStructure.getRelationSource(structure), other);
+      case 'relation-target':
+        return refersTo(EntityStructure.getRelationTarget(structure), other);
+      case 'parent':
+      case 'child':
+        return refersTo(EntityStructure.getParent(structure), other);
+    }
+  })();
+  return recorded ? 'holds' : 'broken';
 };
 
 /** Whether the property at `escapedPath` holds a reference to `id`, directly or in an array. */

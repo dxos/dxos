@@ -782,6 +782,42 @@ describe.each(['memory', 'sql'] as const)('EchoHost %s executor evidence', (quer
     ]);
   });
 
+  test('a re-run that reaches the same hit by another edge resends it', async () => {
+    const context = await setup({ queryExecutor });
+    const { spaceId, organization, root } = await saveLinked(context);
+    const emissions: QueryService.QueryResponse[] = [];
+    const twoPaths = (response: QueryService.QueryResponse) => response.results?.[0]?.paths?.length === 2;
+    const done = EffectEx.runPromise(
+      context.host.queryService['QueryService.execQuery']({
+        queryId: EntityId.random(),
+        reactivity: QueryReactivity.REACTIVE,
+        query: JSON.stringify(
+          Query.select(Filter.everything())
+            .reference('employer')
+            .from([{ _tag: 'space', spaceId }]).ast,
+        ),
+      }).pipe(
+        Stream.tap((response) => Effect.sync(() => emissions.push(response))),
+        Stream.takeUntil(twoPaths),
+        Stream.runDrain,
+      ),
+    );
+    await expect.poll(() => emissions.length).toBeGreaterThan(0);
+    expect(emissions[0].results?.map((row) => row.id)).toEqual([organization]);
+
+    root.change((doc) => {
+      doc.objects ??= {};
+      doc.objects[EntityId.random()] = EntityStructure.makeObject({
+        type: TEST_TYPE,
+        data: { title: 'bob', employer: { '/': `echo:///${organization}` } },
+      });
+    });
+    await context.host.flush(Context.default());
+    await context.host.updateIndexes();
+    await asyncTimeout(done, 5_000);
+    expect(emissions.at(-1)?.results?.map((row) => row.id)).toEqual([organization]);
+  });
+
   test('a collapsed group ships each member with its share', async () => {
     const context = await setup({ queryExecutor });
     const { spaceId, organization, person } = await saveLinked(context);

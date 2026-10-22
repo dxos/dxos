@@ -101,6 +101,22 @@ describe('LocalQueryEngine', () => {
     return engine;
   };
 
+  test('a stopped engine stops listening to its views, and a restart serves the query again', ({ expect }) => {
+    const engine = engineFor(Query.select(Filter.type(TestSchema.Person)), new FixedRemote([]));
+    const changed = vi.fn();
+    engine.changed.on(changed);
+
+    engine.stop();
+    const added = db.add(Obj.make(TestSchema.Person, { name: 'while stopped' }));
+    expect(changed).not.toHaveBeenCalled();
+
+    engine.start();
+    expect(engine.getResults().map((entry) => entry.id)).toEqual([added.id]);
+    db.add(Obj.make(TestSchema.Person, { name: 'after restart' }));
+    expect(changed).toHaveBeenCalled();
+    engine.stop();
+  });
+
   test('an unordered selection merges in id order, whichever side holds each object', ({ expect }) => {
     const local = [
       db.add(Obj.make(TestSchema.Person, { name: 'a' })),

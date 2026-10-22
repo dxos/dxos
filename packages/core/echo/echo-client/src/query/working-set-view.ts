@@ -181,6 +181,8 @@ export class WorkingSetView {
     void this._ctx.dispose().catch((err) => log.catch(err));
     this._ctx = new Context();
     this._results = undefined;
+    // The handles were watched through the context just disposed, so each one is subscribed again.
+    this.#feedTail = undefined;
     this.#watchFeedTail(query);
     if (this.#feedTail || isFeedSelection(query)) {
       // A feed the query reaches can be first opened after it starts, by the write that should show up in it.

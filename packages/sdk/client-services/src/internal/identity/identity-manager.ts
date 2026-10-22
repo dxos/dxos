@@ -302,6 +302,7 @@ export class IdentityManager {
     await this._metadataStore.setIdentityRecord(identityRecord);
     this._identity = identity;
     await this._identity.ready();
+    markMilestone('identity.ready');
     await this._anchorHaloOnRootDocument(this._ctx, this._identity);
     log.trace('dxos.halo.identity', {
       identityKey: identityRecord.identityKey,
@@ -384,6 +385,7 @@ export class IdentityManager {
 
     // Identity becomes ready after device chain is replicated. Wait for it before storing the record.
     await this._identity.ready();
+    markMilestone('identity.ready');
     await this._metadataStore.setIdentityRecord(identityRecord);
 
     log.trace('dxos.halo.identity', {

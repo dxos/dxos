@@ -93,7 +93,10 @@ export class LocalQueryEngine implements QueryContext {
     this.#remotes.add(source);
     if (this.#ctx) {
       source.open();
-      source.changed.on(this.#ctx, () => this.#onRemoteChanged());
+      source.changed.on(
+        this.#ctx,
+        whileLive(this.#ctx, () => this.#onRemoteChanged()),
+      );
       if (this.#remotesActive && this.#query) {
         source.update(this.#query);
       }
@@ -105,9 +108,18 @@ export class LocalQueryEngine implements QueryContext {
     this.#ctx = ctx;
     this._params.onStart();
     for (const view of this.#spaces.values()) {
+      if (this.#query) {
+        view.update(this.#query);
+      }
       this.#watchSpace(ctx, view);
     }
-    this.#registry.changed.on(ctx, () => this.changed.emit());
+    if (this.#query) {
+      this.#registry.update(this.#query);
+    }
+    this.#registry.changed.on(
+      ctx,
+      whileLive(ctx, () => this.changed.emit()),
+    );
     for (const source of this.#remotes) {
       source.open();
     }
@@ -115,14 +127,22 @@ export class LocalQueryEngine implements QueryContext {
     this.#syncRemotes();
     // Subscribing after `update` skips the `changed` events the update itself generates.
     for (const source of this.#remotes) {
-      source.changed.on(ctx, () => this.#onRemoteChanged());
+      source.changed.on(
+        ctx,
+        whileLive(ctx, () => this.#onRemoteChanged()),
+      );
     }
     this.#loadUnanswered();
   }
 
   stop(): void {
-    void this.#ctx?.dispose();
+    void this.#ctx?.dispose().catch((err) => log.catch(err));
     this.#ctx = undefined;
+    // The views hold their own subscriptions, which would otherwise outlive the query's.
+    for (const view of this.#spaces.values()) {
+      view.close();
+    }
+    this.#registry.close();
     for (const source of this.#remotes) {
       source.close();
     }
@@ -450,11 +470,17 @@ export class LocalQueryEngine implements QueryContext {
   }
 
   #watchSpace(ctx: Context, view: WorkingSetView): void {
-    view.changed.on(ctx, () => {
-      this.#syncRemotes();
-      this.changed.emit();
-    });
-    view.localCommits.on(ctx, (event) => this.#onLocalCommit(view, event));
+    view.changed.on(
+      ctx,
+      whileLive(ctx, () => {
+        this.#syncRemotes();
+        this.changed.emit();
+      }),
+    );
+    view.localCommits.on(
+      ctx,
+      whileLive(ctx, (event: ItemsUpdatedEvent) => this.#onLocalCommit(view, event)),
+    );
   }
 
   /**
@@ -536,3 +562,15 @@ const selectIds = (query: QueryAST.Query, ids: readonly EntityId[]): QueryAST.Qu
       return query;
   }
 };
+
+/**
+ * A listener that ignores events once its context is disposed: disposal removes listeners asynchronously, so a
+ * write in the same tick as `stop` would otherwise still reach a stopped engine.
+ */
+const whileLive =
+  <T>(ctx: Context, handler: (value: T) => void) =>
+  (value: T): void => {
+    if (!ctx.disposed) {
+      handler(value);
+    }
+  };

@@ -13,7 +13,7 @@ import { getDeep } from '@dxos/util';
 import { type ObjectCore } from '../core-db/index.ts';
 import { getObjectCore, isEchoObject } from '../echo-handler/index.ts';
 import { type ManifestPlan } from './manifest-merge.ts';
-import { type CoreLookup, type PathPlan, anyPathHolds, pathPlanOf } from './path-revalidation.ts';
+import { type CoreLookup, type PathPlan, checkPaths, pathPlanOf } from './path-revalidation.ts';
 import { type SourceEntry } from './query-context.ts';
 import { getQueryDeletedOption, isSimpleSelectionQuery, queryIncludesAllFeeds } from './util.ts';
 import { compareOrderValues } from './working-set-executor.ts';
@@ -174,7 +174,8 @@ export const judgeRemoteEntry = (
     if (!entry.paths || spaceId === undefined) {
       return 'trusted';
     }
-    return anyPathHolds(plan.paths, entry.paths, lookup, spaceId) ? 'verified' : 'drop';
+    const check = checkPaths(plan.paths, entry.paths, lookup, spaceId);
+    return check === 'holds' ? 'verified' : check === 'broken' ? 'drop' : 'trusted';
   }
   if (!plan.revalidate) {
     return 'trusted';

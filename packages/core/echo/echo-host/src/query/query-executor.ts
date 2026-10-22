@@ -3086,6 +3086,10 @@ const parseCompiledManifest = (text: string): QueryService.ManifestEntry[] => {
  * item the steps built is compared on the fields `getResults` derives the record from.
  */
 const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
+  // A client drops a hit by its paths and adjusts a group by its manifest, so stale evidence must be resent.
+  if (evidenceKey(a) !== evidenceKey(b)) {
+    return false;
+  }
   if (a.result !== undefined || b.result !== undefined) {
     return (
       a.result?.id === b.result?.id &&
@@ -3114,6 +3118,11 @@ const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
     _serializeCollapsed(a) === _serializeCollapsed(b)
   );
 };
+
+const evidenceKey = (item: QueryItem): string =>
+  item.paths === undefined && item.manifest === undefined && !item.derivationUnknown
+    ? ''
+    : JSON.stringify([item.derivationUnknown ?? false, item.paths ?? null, item.manifest ?? null]);
 
 const STORED_CHANGES_CONCURRENCY = 16;
 
