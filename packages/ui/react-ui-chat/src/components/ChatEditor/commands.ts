@@ -148,10 +148,16 @@ const INTERACTION_DELAY = 75;
 /** Accepts the completion at `index` (e.g., on click). */
 export const acceptCommandCompletion = (view: EditorView, index: number): void => {
   selectCommandCompletion(view, index);
+  const clicked = currentCompletions(view.state)[index];
   if (!acceptCompletion(view)) {
-    // A click is deliberate, so one inside the delay is accepted once it ends rather than dropped.
+    // A click is deliberate, so one inside the delay is accepted once it ends rather than dropped — but only the
+    // option clicked: a list reopened meanwhile builds new options, which may sit at the same index.
     setTimeout(() => {
-      if (completionStatus(view.state) === 'active' && selectedCompletionIndex(view.state) === index) {
+      if (
+        completionStatus(view.state) === 'active' &&
+        selectedCompletionIndex(view.state) === index &&
+        currentCompletions(view.state)[index] === clicked
+      ) {
         acceptCompletion(view);
       }
     }, INTERACTION_DELAY);
