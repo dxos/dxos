@@ -85,6 +85,39 @@ describe('Presentation', () => {
     expect(await db.query(Filter.id(doc.id)).run()).toHaveLength(1);
   });
 
+  test('link of a parentless Text stays linked', async ({ expect }) => {
+    const { db } = await setup();
+    const presentation = db.add(Presentation.make());
+    const text = db.add(Text.make({ content: 'x' }));
+    Presentation.link(presentation, text);
+    await db.flush({ indexes: true });
+    expect(Presentation.isOwned(presentation, text)).toBe(false);
+    expect(Obj.getParent(text)).toBeUndefined();
+    Presentation.remove(presentation, text);
+    await db.flush({ indexes: true });
+    expect(presentation.sections.length).toBe(0);
+    expect(await db.query(Filter.id(text.id)).run()).toHaveLength(1);
+  });
+
+  test('remove of a non-section is a no-op', async ({ expect }) => {
+    const { db } = await setup();
+    const presentation = db.add(Presentation.make({ slides: ['a'] }));
+    const other = db.add(Text.make({ content: 'x' }));
+    Presentation.remove(presentation, other);
+    await db.flush({ indexes: true });
+    expect(presentation.sections.length).toBe(1);
+    expect(await db.query(Filter.id(other.id)).run()).toHaveLength(1);
+  });
+
+  test('owned slides are parented to the presentation', async ({ expect }) => {
+    const { db } = await setup();
+    const presentation = db.add(Presentation.make({ slides: ['a'] }));
+    const added = Presentation.addSlide(presentation, 'b');
+    expect(Obj.getParent(added)?.id).toBe(presentation.id);
+    const first = await presentation.sections[0].load();
+    expect(Obj.getParent(first)?.id).toBe(presentation.id);
+  });
+
   test('addSlide at index inserts in order', async ({ expect }) => {
     const { db } = await setup();
     const presentation = db.add(Presentation.make({ slides: ['a', 'c'] }));

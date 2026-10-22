@@ -14,10 +14,7 @@ export class Presentation extends Type.makeObject<Presentation>(DXN.make('org.dx
   Schema.Struct({
     name: Schema.optional(Schema.String),
     /** Sections in slide order; owned `Text` targets are parented to the presentation. */
-    sections: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(
-      Annotation.SetParent.set({ override: false }),
-      Annotation.FormInputAnnotation.set(false),
-    ),
+    sections: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--presentation--regular', hue: 'orange' }),
@@ -31,15 +28,18 @@ const clampIndex = (index: number | undefined, length: number): number =>
 /**
  * Creates a presentation with one owned `Text` section per slide string.
  */
-export const make = ({ name, slides = [] }: { name?: string; slides?: string[] } = {}): Presentation =>
-  Obj.make(Presentation, {
-    name,
-    sections: slides.map((content) => Ref.make(Text.make({ content }))),
-  });
+export const make = ({ name, slides = [] }: { name?: string; slides?: string[] } = {}): Presentation => {
+  const texts = slides.map((content) => Text.make({ content }));
+  const presentation = Obj.make(Presentation, { name, sections: texts.map((text) => Ref.make(text)) });
+  // Parent is set after the refs exist because setParent warns when the parent holds no ref.
+  for (const text of texts) {
+    Obj.setParent(text, presentation);
+  }
+  return presentation;
+};
 
 /**
- * Whether the target is an owned slide, read from its parent so one array keeps the order. Only `Text` can be
- * owned because the parent annotation also adopts parentless linked objects, which must stay unowned.
+ * Whether the target is an owned slide, read from its parent so one array keeps the order.
  */
 export const isOwned = (presentation: Presentation, target: Obj.Unknown): boolean =>
   Obj.instanceOf(Text.Text, target) && Obj.getParent(target)?.id === presentation.id;
@@ -52,6 +52,7 @@ export const addSlide = (presentation: Presentation, content: string, index?: nu
   Obj.update(presentation, (presentation) => {
     presentation.sections.splice(clampIndex(index, presentation.sections.length), 0, Ref.make(text));
   });
+  Obj.setParent(text, presentation);
   return text;
 };
 
@@ -71,12 +72,13 @@ export const link = (presentation: Presentation, object: Obj.Unknown, index?: nu
  * Removes the section; an owned target is also deleted from its database, a linked one is only unlinked.
  */
 export const remove = (presentation: Presentation, target: Obj.Unknown): void => {
+  const index = presentation.sections.findIndex(Ref.hasEntityId(target.id));
+  if (index < 0) {
+    return;
+  }
   const owned = isOwned(presentation, target);
   Obj.update(presentation, (presentation) => {
-    const index = presentation.sections.findIndex(Ref.hasEntityId(target.id));
-    if (index >= 0) {
-      presentation.sections.splice(index, 1);
-    }
+    presentation.sections.splice(index, 1);
   });
   if (owned) {
     Obj.getDatabase(target)?.remove(target);
