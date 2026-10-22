@@ -8,6 +8,8 @@
   :root {
     --dx-focus-ring-color: var(--color-focus, oklch(70.5% 0.213 47.604));
     --dx-focus-ring-width: 2px;
+    /* The selected item's edge in every collection; neutral, so a selection that has lost focus never reads as focus. */
+    --dx-selected-color: var(--color-focus-ring-subtle);
     /* One timing for every open/close: content arriving decelerates, content leaving accelerates away. */
     --dx-disclosure-duration: var(--duration-tree-disclosure, 200ms);
     --dx-disclosure-ease-open: ease-out;
@@ -1017,12 +1019,13 @@
   }
   /*
    * A visible edge at either end of the toolbar starts one gap in, on a list's icon column; an icon-only Button's icon
-   * already sits there in its square cell, so only its hover fill reaches the inset.
+   * already sits there in its square cell, so only its hover fill reaches the inset. A Block is such a cell too, even
+   * when empty (a Board column's place for a drag handle it does not have).
    */
-  .dx-toolbar:has(> :first-child:not([data-square], .dx-toolbar-text, .dx-toolbar-gap)) {
+  .dx-toolbar:has(> :first-child:not([data-square], .dx-block, .dx-toolbar-text, .dx-toolbar-gap)) {
     padding-inline-start: calc(var(--dx-gap-size) - var(--dx-control-inset));
   }
-  .dx-toolbar:has(> :last-child:not([data-square], .dx-toolbar-text, .dx-toolbar-gap)) {
+  .dx-toolbar:has(> :last-child:not([data-square], .dx-block, .dx-toolbar-text, .dx-toolbar-gap)) {
     padding-inline-end: calc(var(--dx-gap-size) - var(--dx-control-inset));
   }
   .dx-toolbar > .dx-input {

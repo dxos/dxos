@@ -8,7 +8,7 @@ import { useMemo } from 'react';
 
 import { type Database, EID, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Task } from '@dxos/types';
+import { Spec, Task } from '@dxos/types';
 
 import { Feature, Showcase } from '#types';
 
@@ -85,6 +85,42 @@ export const useFeatureGraph = (
   const implementsTasks = useQuery(scope && db, scopeQuery.targetOf(Feature.Implements));
   const demonstrates = useQuery(scope && db, scopeQuery.targetOf(Showcase.Demonstrates));
 
+  // Specs imported into the space are matched by the foreign key that records their repo path.
+  const specPaths = [
+    ...new Set(
+      members
+        .filter(Feature.instanceOf)
+        .flatMap((feature) => feature.specs ?? [])
+        .map(Feature.getSpecPath),
+    ),
+  ]
+    .sort()
+    .join('\n');
+  const specQuery = useMemo(
+    () =>
+      specPaths
+        ? Query.select(
+            Filter.foreignKeys(
+              Spec.Spec,
+              specPaths.split('\n').map((id) => ({ source: Feature.SPEC_KEY_SOURCE, id })),
+            ),
+          )
+        : Query.select(Filter.nothing()),
+    [specPaths],
+  );
+  const specs = useQuery(specPaths ? db : undefined, specQuery);
+  const specObjects = useMemo(
+    () =>
+      Object.fromEntries(
+        specs.flatMap((spec) =>
+          Obj.getMeta(spec)
+            .keys.filter((key) => key.source === Feature.SPEC_KEY_SOURCE)
+            .map((key) => [key.id, spec.id]),
+        ),
+      ),
+    [specs],
+  );
+
   // An atom rather than a memo: query results keep their identity when a member's field changes, so each object is
   // read through `Obj.atom` to re-derive the graph when a status, name or task changes.
   const graphAtom = useMemo(
@@ -123,11 +159,12 @@ export const useFeatureGraph = (
             const showcase = get(Obj.atom(source));
             return [[{ id: showcase.id, name: showcase.name }, entityId(Relation.getTargetURI(relation))] as const];
           }),
+          specObjects,
         };
         const models = buildFeatureModels(input);
         return { features: models, lookup: makeFeatureLookup(models) };
       }),
-    [features, edges, implementsTasks, demonstrates],
+    [features, edges, implementsTasks, demonstrates, specObjects],
   );
   return useAtomValue(graphAtom);
 };

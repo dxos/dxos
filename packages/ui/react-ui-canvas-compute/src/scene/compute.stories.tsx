@@ -16,6 +16,7 @@ import {
   type FreehandProjectionOptions,
   createCanvasAtoms,
   createMemoryStore,
+  useCanvasHistory,
   useRegistry,
   useViewProjection,
 } from '@dxos/react-ui-canvas/scene';
@@ -68,7 +69,9 @@ const DefaultStory = ({ controller, circuit, sidebar: sidebarProp }: StoryProps)
     (options: FreehandProjectionOptions) => createComputeProjection({ ...options, controller }),
     [controller],
   );
-  const projection = useViewProjection({ store, atoms, createProjection });
+  // Shared with the canvas, so its edits through this projection undo there.
+  const history = useCanvasHistory({ registry, atoms, store });
+  const projection = useViewProjection({ store, atoms, createProjection, history });
   // A function body opening grows its node through the model, so links re-route with it.
   const resize = useCallback(
     (id: string, delta: number) => {
@@ -102,7 +105,14 @@ const DefaultStory = ({ controller, circuit, sidebar: sidebarProp }: StoryProps)
     <div className='grid grid-cols-[1fr_360px] dx-fill'>
       <ComputeContext.Provider value={{ controller, resize }}>
         <div className={sidebar ? 'relative flex overflow-hidden' : 'relative flex overflow-hidden col-span-2'}>
-          <Canvas.Root store={store} root={scene.id} atoms={atoms} nodes={computeNodeRegistry} projection={projection}>
+          <Canvas.Root
+            store={store}
+            root={scene.id}
+            atoms={atoms}
+            nodes={computeNodeRegistry}
+            projection={projection}
+            history={history}
+          >
             <Canvas.Viewport overlay={<Bullets controller={controller} projection={projection} />} />
             <Canvas.Navigation />
             <Canvas.Actions />

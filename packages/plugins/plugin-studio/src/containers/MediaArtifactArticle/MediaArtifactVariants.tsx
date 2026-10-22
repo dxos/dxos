@@ -186,12 +186,15 @@ export const MediaArtifactVariants = ({
           <VariantGallery
             variants={galleryItems}
             emptyMessage={t('empty.message')}
-            onSelect={(id) => {
-              const index = variants.findIndex((variant) => variant.id === id);
-              if (index >= 0) {
-                setSelected(index);
-              }
-            }}
+            // A tile opens its variant (click or Enter); the gallery has no selection of its own.
+            itemProps={(id) => ({
+              onActivate: () => {
+                const index = variants.findIndex((variant) => variant.id === id);
+                if (index >= 0) {
+                  setSelected(index);
+                }
+              },
+            })}
           />
         ) : (
           selectedVariant &&

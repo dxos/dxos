@@ -34,6 +34,10 @@ export const make = () =>
         NOTE: A skill's tools only appear once it is enabled. Skills already enabled in this
         conversation expose their tools to you directly — do not re-enable a skill whose tools you
         can already see.
+
+        When the task needs a tool you do not have, do not work around it with other tools: call
+        [query-skills] with a \`query\` describing the tool (e.g. "link task to feature"). Each skill it
+        returns lists the tools it provides; enable the one that has the tool you need.
       `,
       inputs: [
         {

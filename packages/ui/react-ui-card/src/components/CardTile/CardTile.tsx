@@ -21,7 +21,7 @@ import { Row } from '../Row/index.ts';
 
 type CardTileRootProps = Util.ThemedClassName<
   PropsWithChildren<
-    Pick<MosaicTileProps<unknown>, 'data' | 'location' | 'current'> & {
+    Pick<MosaicTileProps<unknown>, 'data' | 'location' | 'current' | 'binding'> & {
       'id': string;
       'onCurrentChange': () => void;
       'onClick'?: (event: MouseEvent) => void;
@@ -39,7 +39,7 @@ type CardTileRootProps = Util.ThemedClassName<
  */
 const CardTileRoot = forwardRef<HTMLDivElement, CardTileRootProps>(
   (
-    { id, data, location, current, onCurrentChange, onClick, classNames, children, 'data-testid': testId },
+    { id, data, location, current, binding, onCurrentChange, onClick, classNames, children, 'data-testid': testId },
     forwardedRef,
   ) => (
     <Mosaic.Tile
@@ -47,9 +47,11 @@ const CardTileRoot = forwardRef<HTMLDivElement, CardTileRootProps>(
       id={id}
       data={data}
       location={location}
+      binding={binding}
       classNames={classNames ?? 'dx-hover dx-current dx-selected p-1 rounded-md'}
     >
-      <Focus.Item asChild current={current} onCurrentChange={onCurrentChange}>
+      {/* Selected here too: the item would otherwise override the tile's `aria-selected` with its own unset one. */}
+      <Focus.Item asChild current={current} selected={binding?.['aria-selected']} onCurrentChange={onCurrentChange}>
         <Card.Root grid border={false} onClick={onClick} ref={forwardedRef} data-testid={testId} data-focus-click=''>
           {children}
         </Card.Root>

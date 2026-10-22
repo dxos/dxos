@@ -16,7 +16,7 @@ import {
   resolveLook,
   styleVariant,
 } from '../../model/index.ts';
-import { ThemePanel } from '../panels/index.ts';
+import { DisplayPanel } from '../panels/index.ts';
 import { StyleGrid, type StyleGridProps } from './StyleGrid.tsx';
 
 type StoryArgs = Pick<StyleGridProps, 'indeterminate' | 'readonly'> & { theme?: string };
@@ -34,7 +34,7 @@ const DefaultStory = ({ indeterminate, readonly, theme: initialTheme }: StoryArg
   return (
     <div className='grid grid-cols-2 gap-4 w-[48rem]'>
       <div className='flex flex-col gap-2'>
-        <ThemePanel
+        <DisplayPanel
           registry={defaultThemeRegistry}
           theme={look.theme}
           override={theme}

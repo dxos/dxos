@@ -209,9 +209,12 @@ const openSyncTargetsDialogAfterConnectionCreated = (
   existingTarget: Ref.Ref<Obj.Any> | undefined,
 ): Effect.Effect<void, never> =>
   Effect.gen(function* () {
-    const { targets } = yield* invoker.invoke(getTargets, {
-      connection: Ref.make(persistedConnection),
-    });
+    // The space carries the services a connector's targets lookup may need, such as credentials.
+    const { targets } = yield* invoker.invoke(
+      getTargets,
+      { connection: Ref.make(persistedConnection) },
+      { spaceId: Obj.getDatabase(persistedConnection)?.spaceId },
+    );
     yield* invoker.invoke(LayoutOperation.UpdateDialog, {
       subject: SYNC_TARGETS_DIALOG,
       state: true,
@@ -442,7 +445,7 @@ export default Capability.makeModule(
         const edge = getEdgeClient();
         edgeOrigin = new URL(edge.baseUrl).origin;
 
-        yield* beginOAuthFlow(edge, spaceId, oauth, token.id, loginHint).pipe(
+        yield* beginOAuthFlow(edge, spaceId, { kind: connector.kind, oauth }, token.id, loginHint).pipe(
           Effect.tapError(() =>
             Effect.sync(() => {
               pending.delete(token.id);
@@ -491,7 +494,7 @@ export default Capability.makeModule(
         const edge = getEdgeClient();
         edgeOrigin = new URL(edge.baseUrl).origin;
 
-        yield* beginOAuthFlow(edge, spaceId, oauth, accessToken.id, loginHint).pipe(
+        yield* beginOAuthFlow(edge, spaceId, { kind: connector.kind, oauth }, accessToken.id, loginHint).pipe(
           Effect.tapError(() =>
             Effect.sync(() => {
               pending.delete(accessToken.id);

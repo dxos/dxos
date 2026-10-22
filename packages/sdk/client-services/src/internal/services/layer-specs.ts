@@ -600,6 +600,7 @@ export const IdentityServiceSpec = LayerSpec.make(
       KeyringApiService,
       SpacesContract.ManagerService,
       SqlClient.SqlClient,
+      EchoHostService,
     ],
     provides: [IdentityService.Tag],
   },

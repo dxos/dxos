@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
+import { useListSelection } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -35,19 +36,8 @@ export const Default: Story = {
 export const Selectable: Story = {
   render: () => {
     const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(() => new Set());
-    return (
-      <VariantGallery
-        variants={variants}
-        selectedIds={selectedIds}
-        onSelect={(id) =>
-          setSelectedIds((current) => {
-            const next = new Set(current);
-            next.has(id) ? next.delete(id) : next.add(id);
-            return next;
-          })
-        }
-      />
-    );
+    const { bind } = useListSelection({ mode: 'multi', value: selectedIds, onValueChange: setSelectedIds });
+    return <VariantGallery variants={variants} itemProps={(id) => bind(id).rowProps} />;
   },
 };
 
