@@ -2,11 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
+
 import { asyncTimeout, sleep } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type Platform, type ReplicantBrain } from '../../plan/index.ts';
+import { Platform, type ReplicantBrain } from '../../plan/index.ts';
 import { type ClientReplicant, type SpaceDigest } from '../../replicants/client-replicant.ts';
 import {
   type ClientIndex,
@@ -31,7 +33,8 @@ import {
  * own `isTestAccountEnvironment` rather than on `isDevLikeEnvironment`. Staging and production do
  * not, and are absent here for that reason: a run there could not delete what it created.
  */
-export type EdgeTarget = 'local' | 'dev' | 'preview';
+export const EdgeTarget = Schema.Literals(['local', 'dev', 'preview']);
+export type EdgeTarget = typeof EdgeTarget.Type;
 
 /**
  * Where the test-email hatch is open, hence where a run can bind accounts and clean up after itself.
@@ -57,54 +60,58 @@ export const assertCanCleanUp = (edge: EdgeTarget, cleanup: boolean): void => {
   );
 };
 
+const PositiveInt = Schema.Int.pipe(Schema.check(Schema.isGreaterThan(0)));
+
 /**
- * Every field is optional at the call site and complete here: `defaultsFor` in `plan.ts` is the
- * only place a default is written down, and `resolveSpec` merges a spec file or `--spec` over it.
- * This declaration is therefore also the documentation of what a run can be told to do.
+ * Every field is required and none has a default in code: a run reads its spec from a file
+ * (`configs/edge-stress-nightly.yml` for the nightly), optionally with a `--spec` override, and
+ * the result is decoded against this schema. It is therefore also the documentation of what a run
+ * can be told to do.
  */
-export type EdgeStressSpec = {
+export const EdgeStressSpec = Schema.Struct({
   /** Where replicants run. */
-  platform: Platform;
-  /** Which EDGE to run against; it also selects the default timeouts and the Hub endpoint. */
-  edge: EdgeTarget;
+  platform: Platform,
+  /** Which EDGE to run against; it also selects the Hub endpoint. */
+  edge: EdgeTarget,
 
   /** Devices per identity; its length is the identity count and its sum the client count. */
-  devicesPerIdentity: number[];
+  devicesPerIdentity: Schema.Array(PositiveInt).pipe(Schema.check(Schema.isMinLength(1))),
   /** Create an EDGE agent per identity — an always-online member that can admit late joiners. */
-  agents: boolean;
+  agents: Schema.Boolean,
 
   /** Slot counts the generator draws within; a command that exceeds them fails its precondition. */
-  maxSpaces: number;
-  maxDocumentsPerSpace: number;
+  maxSpaces: PositiveInt,
+  maxDocumentsPerSpace: PositiveInt,
   /** Commands that will *execute*, not commands drawn — most of a uniform draw is unreachable. */
-  maxCommands: number;
+  maxCommands: PositiveInt,
   /**
    * How many command lists to draw from the seed; the longest is executed. `FastCheck.assert`
    * biases its first run toward tiny inputs (measured: 2 commands), so drawing and picking is what
    * actually yields a long sequence — deterministically, since the seed fixes every draw.
    */
-  sampleDraws: number;
+  sampleDraws: PositiveInt,
   /** Wall-clock budget; exhausting it stops issuing commands and proceeds to the final assertion. */
-  maxRuntimeMs: number;
+  maxRuntimeMs: PositiveInt,
   /** How long a space may take to converge before a stall is called a failure rather than waited on. */
-  quiescenceTimeoutMs: number;
+  quiescenceTimeoutMs: PositiveInt,
   /** Mid-run quiesce-and-assert over the online members. */
-  checkpoints: boolean;
+  checkpoints: Schema.Boolean,
   /**
    * Draw `GoOffline`/`GoOnline`/`Restart`. Off isolates convergence from partition tolerance, and
-   * is the default while finding 5 stands — a cut link crashes the peer.
+   * is the nightly setting while finding 5 stands — a cut link crashes the peer.
    */
-  partitions: boolean;
+  partitions: Schema.Boolean,
   /**
    * Run this plan instead of drawing one: the commands inline, or the path of a
    * `command-trace.jsonl` from an earlier run (its last `plan` entry is used). Turns a
    * counterexample into a fixture — and lets one be shrunk by hand, since a sampled sequence has no
    * fast-check shrinker.
    */
-  plan?: string | unknown[];
+  plan: Schema.optionalKey(Schema.Union([Schema.String, Schema.Array(Schema.Unknown)])),
   /** Delete the spaces and identities the run created, through the self-serve routes first. */
-  cleanup: boolean;
-};
+  cleanup: Schema.Boolean,
+});
+export type EdgeStressSpec = typeof EdgeStressSpec.Type;
 
 export type EdgeStressResult = {
   seed: string | undefined;
