@@ -854,6 +854,13 @@ export const technologyTimeline: PlotValue[][] = [
     null,
   ],
   [
+    '2020-06',
+    'Tech/AI',
+    'Diffusion models',
+    'Denoising diffusion (DDPM) makes generating images by reversing added noise practical; the idea dates to 2015.',
+    null,
+  ],
+  [
     '2020-10',
     'Macro/TIC',
     'DOJ sues Google',
