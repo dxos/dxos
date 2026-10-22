@@ -17,6 +17,7 @@ export const translations = [
         'fullscreen.label': 'Fullscreen',
         'add-section.label': 'Link object',
         'slide-fallback.label': 'Slide {{count}}',
+        'remove-section.label': 'Remove from presentation',
       },
     },
   },

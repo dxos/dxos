@@ -161,7 +161,7 @@ describe('makeObject: container annotation', () => {
 
   beforeEach(async () => {
     testBuilder = await new EchoTestBuilder().open();
-    ({ db } = (await testBuilder.createDatabase({ types: [Deck, Doc] })) as { db: Database.Database });
+    ({ db } = await testBuilder.createDatabase({ types: [Deck, Doc] }));
   });
 
   afterEach(async () => {

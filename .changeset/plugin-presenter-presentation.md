@@ -1,6 +1,6 @@
 ---
 '@dxos/plugin-presenter': minor
-'@dxos/app-framework': patch
+'@dxos/app-framework': minor
 ---
 
-Add the `Presentation` type: an ordered deck of owned markdown slides and linked objects, shown in the navtree as a folder whose children can be reordered by drag. Collection decks, the `presentCollections` setting and the `./Settings` and `./PresenterCapabilities` exports of `@dxos/plugin-presenter` are removed. `@dxos/app-framework` exports `Surface.matchCandidates`, and `@dxos/app-toolkit` adds `AppAnnotation.ContainerAnnotation` and `ContainerModel.remove` so an object's node can list one of its ref arrays.
+Add the `Presentation` type, an ordered deck of owned markdown slides and linked objects that the navtree shows as a reorderable folder; collection decks and the `./Settings` and `./PresenterCapabilities` exports of `@dxos/plugin-presenter` are removed. `@dxos/app-framework` exports `Surface.matchCandidates`, and `@dxos/app-toolkit` adds `AppAnnotation.ContainerAnnotation` (an object's node lists one of its ref arrays) and `ContainerModel.remove`, which deletes owned members of a container marked `deleteOwned`.

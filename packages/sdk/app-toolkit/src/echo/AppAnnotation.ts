@@ -10,6 +10,7 @@ import { Annotation, Collection, type Database, Obj, Ref } from '@dxos/echo';
 
 // The module, not the barrel: the barrel pulls in `AppNode`, which imports this file back, and the
 // annotation below reads the schema at module-init time.
+import * as Translations from '../app/Translations.ts';
 import * as AppSettings from '../types/AppSettings.ts';
 /** Root navigation collection for a space. */
 export const RootCollectionAnnotation = Annotation.make({
@@ -55,9 +56,17 @@ export const GraphPropsAnnotation = Annotation.make<{ managesAutofocus?: boolean
  * Makes an object's navtree node a list of the ref array `property`: drag-reorder writes the array and
  * removing a member goes through `ContainerModel.remove` (deleting owned members when `deleteOwned`).
  */
-export const ContainerAnnotation = Annotation.make<{ property: string; deleteOwned?: boolean }>({
+export const ContainerAnnotation = Annotation.make<{
+  property: string;
+  deleteOwned?: boolean;
+  removeLabel?: Translations.Label;
+}>({
   id: 'org.dxos.annotation.container',
-  schema: Schema.Struct({ property: Schema.String, deleteOwned: Schema.optional(Schema.Boolean) }),
+  schema: Schema.Struct({
+    property: Schema.String,
+    deleteOwned: Schema.optional(Schema.Boolean),
+    removeLabel: Schema.optional(Translations.Label),
+  }),
 });
 
 /** Per-type object ordering stored on space.properties, keyed by typename. */

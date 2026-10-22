@@ -8,6 +8,8 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
+import { meta } from '#meta';
+
 /**
  * An ordered deck of sections; each section is an owned markdown `Text` or a link to any ECHO object.
  */
@@ -21,7 +23,11 @@ export class Presentation extends Type.makeObject<Presentation>(DXN.make('org.dx
     Annotation.IconAnnotation.set({ icon: 'ph--presentation--regular', hue: 'orange' }),
     Annotation.UserType.set({}),
     // Its navtree node lists `sections`; removing an owned slide there deletes it, as `remove` does.
-    AppAnnotation.ContainerAnnotation.set({ property: 'sections', deleteOwned: true }),
+    AppAnnotation.ContainerAnnotation.set({
+      property: 'sections',
+      deleteOwned: true,
+      removeLabel: ['remove-section.label', { ns: meta.profile.key }],
+    }),
   ),
 ) {}
 

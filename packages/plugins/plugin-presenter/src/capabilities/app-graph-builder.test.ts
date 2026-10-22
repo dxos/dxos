@@ -104,7 +104,7 @@ describe('presentation sections', () => {
   test('removing an owned section deletes it; removing a linked one only unlinks', async ({ expect }) => {
     const { db, presentation, notes, parent } = await setup();
     const container = AppNode.getListOf(parent());
-    expect(container).toBeDefined();
+    expect(container?.removeLabel).toEqual(['remove-section.label', { ns: meta.profile.key }]);
     if (!container) {
       return;
     }
