@@ -125,7 +125,11 @@ PresentationArticle
 - Keys bind on the shell's focus scope, not `window`: ←/→ step, Shift+←/→ first/last, Home/End, ESC exits
   fullscreen. Remove `PresenterContext` (no provider exists) and `StartButton`.
 - `PresentationShell` absorbs `Layout`'s corner slots, which also removes the `[ESC]` hint / `topLeft` overlap.
-- Current slide index is ephemeral per article (_agent call_; Q4 asks whether to persist or sync it).
+- **Decided (Q4, user):** the current slide is per-user, per-presentation view state in
+  `@dxos/react-ui-attention` — a `ViewState.define({ key: 'presenter-slide', backend: 'local', … })` aspect read
+  with `useViewState(aspect, contextId)`, where `contextId` is the presentation's (or companion document's) URI.
+  It survives navigation and reloads, never syncs to collaborators. Operations reach it via
+  `AttentionCapabilities.ViewState`. Pattern: `plugin-deck` `CompanionViewState`.
 
 ### 4. One pager primitive
 
