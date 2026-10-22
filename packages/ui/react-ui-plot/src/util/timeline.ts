@@ -93,7 +93,11 @@ const LOG_BASE = 10;
  * Maps a time to its fraction [0, 1] of the way down the range. The log scale measures distance back
  * from the end, so the recent past spreads out and the distant past compresses.
  */
-export const timelineFraction = (time: number, [start, end]: [number, number], scale: TimelineScale = 'linear') => {
+export const timelineFraction = (
+  time: number,
+  [start, end]: [number, number],
+  scale: Exclude<TimelineScale, 'even'> = 'linear',
+) => {
   const fraction = (time - start) / (end - start || 1);
   if (scale === 'linear') {
     return fraction;
@@ -101,6 +105,40 @@ export const timelineFraction = (time: number, [start, end]: [number, number], s
 
   const distance = Math.min(1, Math.max(0, 1 - fraction));
   return 1 - Math.log1p((LOG_BASE - 1) * distance) / Math.log(LOG_BASE);
+};
+
+/**
+ * Maps a time to its fraction [0, 1] with the event times (sorted, distinct) spaced equally; times between two events
+ * fall between their positions in proportion, and times outside them clamp to the ends.
+ */
+export const evenFraction = (time: number, times: readonly number[]): number => {
+  if (times.length < 2) {
+    return times.length === 0 ? 0 : 0.5;
+  }
+  if (time <= times[0]) {
+    return 0;
+  }
+  if (time >= times[times.length - 1]) {
+    return 1;
+  }
+
+  const index = d3.bisectRight(times, time) - 1;
+  const step = (time - times[index]) / (times[index + 1] - times[index]);
+  return (index + step) / (times.length - 1);
+};
+
+/** The fraction function for a scale; the even scale spaces the given event times equally. */
+export const createTimelineFraction = (
+  scale: TimelineScale,
+  range: [number, number],
+  times: readonly number[],
+): ((time: number) => number) => {
+  if (scale === 'even') {
+    const sorted = [...new Set(times)].sort((a, b) => a - b);
+    return (time) => evenFraction(time, sorted);
+  }
+
+  return (time) => timelineFraction(time, range, scale);
 };
 
 /** The range to draw: the explicit start and end where given, otherwise the events' extent rounded outward. */

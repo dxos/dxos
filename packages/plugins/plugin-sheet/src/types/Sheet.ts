@@ -65,7 +65,7 @@ export type Chart = Schema.Schema.Type<typeof Chart>;
 export const TimelineSpine = Schema.Literals(['left', 'center', 'right']);
 export type TimelineSpine = Schema.Schema.Type<typeof TimelineSpine>;
 
-export const TimelineScale = Schema.Literals(['linear', 'log']);
+export const TimelineScale = Schema.Literals(['linear', 'log', 'even']);
 export type TimelineScale = Schema.Schema.Type<typeof TimelineScale>;
 
 /**

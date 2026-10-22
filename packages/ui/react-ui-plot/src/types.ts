@@ -57,8 +57,8 @@ export type TimelineSpine = Schema.Schema.Type<typeof TimelineSpine>;
 
 export const TIMELINE_SPINES: readonly TimelineSpine[] = TimelineSpine.literals;
 
-/** A log scale gives recent events more room than distant ones. */
-export const TimelineScale = Schema.Literals(['linear', 'log']);
+/** A log scale gives recent events more room than distant ones; an even scale spaces events equally, whatever their dates. */
+export const TimelineScale = Schema.Literals(['linear', 'log', 'even']);
 export type TimelineScale = Schema.Schema.Type<typeof TimelineScale>;
 
 export const TIMELINE_SCALES: readonly TimelineScale[] = TimelineScale.literals;

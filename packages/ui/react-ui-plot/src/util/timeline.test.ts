@@ -5,6 +5,8 @@
 import { describe, test } from 'vitest';
 
 import {
+  createTimelineFraction,
+  evenFraction,
   fitLabel,
   fitTimelineHeight,
   matchesTimelineFilter,
@@ -161,5 +163,28 @@ describe('fitLabel', () => {
     const { text, fontSize } = fitLabel({ prefix: '1987', text: 'Black Monday' }, 60, measure, sizes);
     expect(fontSize).to.eq(10);
     expect(text).to.eq('Black…');
+  });
+});
+
+describe('evenFraction', () => {
+  const times = [0, 10, 1000];
+
+  test('event times are spaced equally', ({ expect }) => {
+    expect(times.map((time) => evenFraction(time, times))).to.deep.eq([0, 0.5, 1]);
+  });
+
+  test('times between events fall between their positions', ({ expect }) => {
+    expect(evenFraction(5, times)).to.eq(0.25);
+    expect(evenFraction(505, times)).to.eq(0.75);
+  });
+
+  test('times outside the events clamp to the ends', ({ expect }) => {
+    expect(evenFraction(-5, times)).to.eq(0);
+    expect(evenFraction(2000, times)).to.eq(1);
+  });
+
+  test('the even scale ignores duplicate times', ({ expect }) => {
+    const fraction = createTimelineFraction('even', [0, 1000], [10, 0, 10, 1000]);
+    expect(fraction(10)).to.eq(0.5);
   });
 });

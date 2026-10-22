@@ -99,7 +99,7 @@ export const Timeline: Story = {
   },
 };
 
-export const TechAndResume: Story = {
+export const Resume: Story = {
   args: {
     hidden: ['Macro', 'Robotics', 'MIC', 'FIC', 'TIC'],
   },

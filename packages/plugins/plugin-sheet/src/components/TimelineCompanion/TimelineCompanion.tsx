@@ -37,6 +37,7 @@ const SPINE_ICONS: Record<Sheet.TimelineSpine, string> = {
 const SCALE_ICONS: Record<Sheet.TimelineScale, string> = {
   linear: 'ph--chart-line--regular',
   log: 'ph--chart-line-up--regular',
+  even: 'ph--rows--regular',
 };
 
 export type TimelineCompanionProps = {

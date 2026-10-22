@@ -3,7 +3,16 @@
 //
 
 import * as d3 from 'd3';
-import React, { type KeyboardEvent, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import React, {
+  type KeyboardEvent,
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
 import * as Popover from '@dxos/react-ui/Popover';
@@ -14,11 +23,11 @@ import { type ChromaticPalette, type ThemedClassName } from '@dxos/ui-types';
 import { type PlotData, type TimelineEvent, type TimelineOptions, type TimelineSpine } from '../../types.ts';
 import {
   type MeasureText,
+  createTimelineFraction,
   fitLabel,
   fitTimelineHeight,
   matchesTimelineFilter,
   spreadLabels,
-  timelineFraction,
   timelineRange,
   toTimelineEvents,
 } from '../../util/index.ts';
@@ -60,6 +69,12 @@ const CATEGORY_HUES: ChromaticPalette[] = [
   'cyan',
   'lime',
 ];
+
+// Vertical step between events on the even scale.
+const EVEN_STEP = 28;
+
+// Duration of the transition between scales.
+const TRANSITION_MS = 400;
 
 const DOT_RADIUS = 3.5;
 const CURRENT_DOT_RADIUS = 7;
@@ -142,6 +157,59 @@ const createMeasure = (fontFamily: string): MeasureText => {
   };
 };
 
+type Layout = {
+  /** Maps a time to its fraction [0, 1] of the way down the content. */
+  fraction: (time: number) => number;
+  height: number;
+};
+
+const easeInOut = (progress: number) => (progress < 0.5 ? 2 * progress * progress : 1 - (-2 * progress + 2) ** 2 / 2);
+
+/**
+ * The layout to draw: the target, or while `key` has just changed, a blend from the previous layout to the target over
+ * TRANSITION_MS, re-rendered each animation frame.
+ */
+const useAnimatedLayout = (target: Layout, key: string): { height: number; yOf: (time: number) => number } => {
+  const previous = useRef({ key, layout: target });
+  const [transition, setTransition] = useState<{ from: Layout; start: number }>();
+  const [now, setNow] = useState(0);
+
+  useLayoutEffect(() => {
+    if (previous.current.key !== key) {
+      const start = performance.now();
+      setTransition({ from: previous.current.layout, start });
+      setNow(start);
+    }
+    previous.current = { key, layout: target };
+  }, [key, target]);
+
+  useEffect(() => {
+    if (!transition) {
+      return;
+    }
+
+    let frame = requestAnimationFrame(function tick(time) {
+      setNow(time);
+      if (time - transition.start < TRANSITION_MS) {
+        frame = requestAnimationFrame(tick);
+      } else {
+        setTransition(undefined);
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [transition]);
+
+  const progress = transition ? easeInOut(Math.min(1, Math.max(0, (now - transition.start) / TRANSITION_MS))) : 1;
+  const from = transition?.from ?? target;
+  const blend = (a: number, b: number) => a + (b - a) * progress;
+  const positionIn = ({ fraction, height }: Layout, time: number) => PADDING + fraction(time) * (height - PADDING * 2);
+
+  return {
+    height: blend(from.height, target.height),
+    yOf: (time) => blend(positionIn(from, time), positionIn(target, time)),
+  };
+};
+
 export type TimelineProps = ThemedClassName<{
   /** The first column is the time (a year, date or date serial); each other column is a category of events. */
   data: PlotData;
@@ -208,28 +276,43 @@ export const Timeline = ({
     [lanes, events, range, filter],
   );
 
-  // Crowded lanes grow the content past the viewport, so labels stay near their events.
-  const contentHeight = useMemo(
+  // The scale's fraction function; the even scale spaces the visible events' distinct times equally.
+  const fraction = useMemo(
     () =>
       range
-        ? fitTimelineHeight(
-            laneEvents.map((events) => events.map((event) => timelineFraction(event.time, range, scale))),
-            {
-              minHeight: Math.max(height * zoom, PADDING * 2),
-              gap: LINE_HEIGHT,
-              maxDrift: MAX_DRIFT,
-              padding: PADDING,
-            },
+        ? createTimelineFraction(
+            scale,
+            range,
+            laneEvents.flatMap((events) => events.map((event) => event.time)),
           )
-        : height,
-    [laneEvents, range, scale, height, zoom],
+        : () => 0,
+    [scale, range, laneEvents],
   );
+
+  // Crowded lanes grow the content past the viewport, so labels stay near their events.
+  const targetHeight = useMemo(() => {
+    const times = new Set(laneEvents.flatMap((events) => events.map((event) => event.time)));
+    const evenHeight = scale === 'even' ? Math.max(0, times.size - 1) * EVEN_STEP + PADDING * 2 : 0;
+    return range
+      ? fitTimelineHeight(
+          laneEvents.map((events) => events.map((event) => fraction(event.time))),
+          {
+            minHeight: Math.max(height * zoom, evenHeight, PADDING * 2),
+            gap: LINE_HEIGHT,
+            maxDrift: MAX_DRIFT,
+            padding: PADDING,
+          },
+        )
+      : height;
+  }, [laneEvents, range, scale, fraction, height, zoom]);
+
+  // Switching scale eases every position and the height from the old layout to the new one.
+  const target = useMemo(() => ({ fraction, height: targetHeight }), [fraction, targetHeight]);
+  const layout = useAnimatedLayout(target, scale);
+  const contentHeight = layout.height;
   const top = PADDING;
   const bottom = contentHeight - PADDING;
-  const yOf = useCallback(
-    (time: number) => (range ? top + timelineFraction(time, range, scale) * (bottom - top) : top),
-    [range, scale, top, bottom],
-  );
+  const yOf = layout.yOf;
 
   const ticks = useMemo(() => {
     if (!range) {
