@@ -8,3 +8,8 @@ import { BaseError } from '@dxos/errors';
  * Thrown when attempting to send a message to a peer that is not connected.
  */
 export class PeerNotFoundError extends BaseError.extend('PeerNotFoundError', 'Peer not found') {}
+
+/**
+ * Raised to a caller waiting on, or leasing, a document the host has quarantined.
+ */
+export class DocumentQuarantinedError extends BaseError.extend('DocumentQuarantinedError', 'Document is quarantined') {}

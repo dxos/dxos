@@ -13,6 +13,18 @@ import IconX from '../components/svg/IconX.astro';
   ogImage="/webflow/images/dxos-composer-og-image.png"
   wfPageId="680aa2a5da61b51e4a5da064"
 >
+  <!-- Kit's confirm-subscription link redirects here with `?confirmed=1`; swap the card copy before first paint. -->
+  <script is:inline slot="head">
+    if (new URLSearchParams(location.search).has('confirmed')) {
+      document.documentElement.classList.add('user-confirmed');
+    }
+  </script>
+  <style is:inline slot="head">
+    html.user-confirmed [show-unconfirmed],
+    html:not(.user-confirmed) [show-confirmed] {
+      display: none;
+    }
+  </style>
   <div>
     <div data-animation="default" class="nav_component w-nav" data-easing2="ease" fs-scrolldisable-element="smart-nav" data-easing="ease" data-collapse="medium" data-w-id="bfd0a663-f65c-39fd-83f7-9ca4ebde13e6" role="banner" data-duration="400">
       <div class="nav_container">
@@ -39,49 +51,39 @@ import IconX from '../components/svg/IconX.astro';
     <div class="welcome-grid_wrap">
       <div class="welcome-grid">
         <div id="w-node-e7ce91bb-b9ba-c9c9-d22c-4038690104b8-4a5da064">
-          <div class="div-block-29">
-            <div show-subscribe="" class="show-subscribe">
-              <div class="form-block w-form">
-                <form class="early-access-form">
-                  <input class="form-input w-input" maxlength="256" name="email" placeholder="Email" type="email" id="Email" required>
-                  <input type="submit" class="button is-secondary w-button" value="Request Access">
-                </form>
-                <div class="success-message w-form-done">
-                  <div>Thank you! Check your email to confirm your address</div>
-                </div>
-                <div class="error-message w-form-fail">
-                  <div>Oops! Something went wrong while submitting the form.</div>
-                </div>
-              </div>
+          <div class="welcome-grid_card">
+            <div class="card-text-wrapper">
+              <div show-unconfirmed="" class="heading-style-h5">You&#x27;re on the list! </div>
+              <div show-unconfirmed="" class="text-style-muted balanced">Please check your email to confirm your subscription. </div>
+              <div show-confirmed="" class="heading-style-h5">You&#x27;re confirmed!</div>
+              <div show-confirmed="" class="text-style-muted balanced">We&#x27;ll email you when your invite to Composer is ready.</div>
             </div>
-            <div show-welcome="" class="show-welcome">
-              <div class="welcome-grid_card">
-                <div class="card-text-wrapper">
-                  <div class="heading-style-h5">You&#x27;re on the list! </div>
-                  <div class="text-style-muted balanced">Please check your email to confirm your subscription. </div>
-                </div>
-                <a href="/composer-welcome" aria-current="page" class="button is-secondary w-inline-block w--current">
-                  <div>Welcome </div>
-                  <div class="icon-1x1-xxsmall nav-arrow w-embed"><IconExternalLink /></div>
-                </a>
-                <div class="spacer-small"></div>
-                <div class="display-inlineflex hide-mobile">
-                  <a href="https://github.com/dxos" target="_blank" class="button is-link is-icon-only c w-inline-block">
-                    <div class="icon-1x1-xsmall w-embed"><IconGitHub /></div>
-                  </a>
-                  <a href="https://dxos.org/discord" target="_blank" class="button is-link is-icon-only c w-inline-block">
-                    <div class="icon-1x1-xsmall w-embed"><IconDiscord /></div>
-                  </a>
-                  <a href="https://bsky.app/profile/dxos.org" target="_blank" class="button is-link is-icon-only c w-inline-block">
-                    <div class="icon-1x1-xsmall w-embed"><IconBluesky /></div>
-                  </a>
-                  <a href="https://x.com/dxos_org" target="_blank" class="button is-link is-icon-only c w-inline-block">
-                    <div class="icon-1x1-xsmall w-embed"><IconX /></div>
-                  </a>
-                </div>
-              </div>
+            <div class="spacer-small"></div>
+            <div class="display-inlineflex hide-mobile">
+              <a href="https://github.com/dxos" target="_blank" class="button is-link is-icon-only c w-inline-block">
+                <div class="icon-1x1-xsmall w-embed"><IconGitHub /></div>
+              </a>
+              <a href="https://dxos.org/discord" target="_blank" class="button is-link is-icon-only c w-inline-block">
+                <div class="icon-1x1-xsmall w-embed"><IconDiscord /></div>
+              </a>
+              <a href="https://bsky.app/profile/dxos.org" target="_blank" class="button is-link is-icon-only c w-inline-block">
+                <div class="icon-1x1-xsmall w-embed"><IconBluesky /></div>
+              </a>
+              <a href="https://x.com/dxos_org" target="_blank" class="button is-link is-icon-only c w-inline-block">
+                <div class="icon-1x1-xsmall w-embed"><IconX /></div>
+              </a>
             </div>
           </div>
+        </div>
+        <div id="w-node-welcome-discord-4a5da064" class="welcome-grid_card">
+          <div class="card-text-wrapper">
+            <div class="heading-style-h5">Want to skip the line?</div>
+            <div class="text-style-muted balanced">Join our Discord to get an invite to Composer.</div>
+          </div>
+          <a href="https://dxos.org/discord" target="_blank" class="button is-secondary w-inline-block">
+            <div>Join Discord</div>
+            <div class="icon-1x1-xxsmall nav-arrow w-embed"><IconExternalLink /></div>
+          </a>
         </div>
         <div id="w-node-_17dde100-223f-3887-dbaf-c0eb73df3dc4-4a5da064" class="welcome-grid_card">
           <div class="card-text-wrapper">
@@ -104,33 +106,4 @@ import IconX from '../components/svg/IconX.astro';
       <div class="composer-hero-bkg-wrap welcmoe"><img src="/webflow/images/Composer-home-hero-rings.webp" loading="lazy" sizes="100vw" srcset="/webflow/images/Composer-home-hero-rings-p-500.png 500w, /webflow/images/Composer-home-hero-rings-p-800.png 800w, /webflow/images/Composer-home-hero-rings-p-1080.png 1080w, /webflow/images/Composer-home-hero-rings.webp 1170w" alt="" class="composer-ring-element"></div>
     </div>
   </div>
-  <script is:inline>
-    document.querySelectorAll('.early-access-form').forEach(function (form) {
-      form.addEventListener('submit', async function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        const email = form.querySelector('[name="email"]').value;
-        const block = form.closest('.w-form');
-        block.querySelector('.w-form-done').style.display = 'none';
-        block.querySelector('.w-form-fail').style.display = 'none';
-        try {
-          const res = await fetch('https://dxos.network/hub/account/request-access', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email }),
-          });
-          if (!res.ok) throw new Error('request-access failed');
-          block.querySelector('.w-form-done').style.display = 'block';
-          form.style.display = 'none';
-          const expires = new Date(Date.now() + 365 * 864e5).toUTCString();
-          document.cookie = 'user_subscribed=true; expires=' + expires + '; path=/';
-          document.querySelectorAll('[show-subscribe]').forEach(function (el) { el.style.display = 'none'; });
-          document.querySelectorAll('[show-welcome]').forEach(function (el) { el.style.display = 'block'; });
-        } catch (_) {
-          block.querySelector('.w-form-fail').style.display = 'block';
-          form.style.display = 'none';
-        }
-      }, true);
-    });
-  </script>
 </WebflowLayout>

@@ -26,15 +26,15 @@ export type Options = {
  * review carry the PRs still open.
  */
 export const make = ({ loadAsset = fetchAsset }: Options = {}) => {
-  const phases = { media: makeMedia(loadAsset), work: Work };
+  const partials = { media: makeMedia(loadAsset), work: Work };
   return SampleSpace.make({
     space: { name: 'Composer — Review queue', icon: 'medal-military', hue: 'green' },
     reference: REFERENCE,
-    phases,
-    build: (phases) =>
+    partials,
+    build: (partials) =>
       Effect.gen(function* () {
-        const media = yield* phases.media();
-        return yield* phases.work(media);
+        const media = yield* partials.media();
+        return yield* partials.work(media);
       }),
   });
 };

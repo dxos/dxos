@@ -7,7 +7,7 @@ import { mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { type Attached, type Cdp, detachAll, refreshTargets } from './cdp.ts';
+import { type Attached, type Cdp, type TargetFilter, detachAll, refreshTargets } from './cdp.ts';
 import { type CallCounter, startCallCounting } from './collectors/calls.ts';
 import {
   EMPTY_THREAD,
@@ -76,6 +76,8 @@ export type RunnerOptions = {
    */
   snapshotStages?: ReadonlySet<string>;
   snapshotDir?: string;
+  /** Off, a snapshot holds only the allocator dumps; see {@link takeMemorySnapshot}. */
+  heapSnapshots?: boolean;
   /**
    * The costed work counters to run (`parseCounters(process.env.DX_PERF_COUNTERS)`); defaults to
    * {@link DEFAULT_COUNTERS}. The React counter also needs `installReactProbe` before navigation.
@@ -83,6 +85,13 @@ export type RunnerOptions = {
   counters?: CounterSet;
   /** Where the per-stage call and React breakdowns are written; defaults to a directory under the OS temp dir. */
   counterDir?: string;
+  /** The targets each boundary attaches to; defaults to every measured realm. */
+  include?: TargetFilter;
+  /**
+   * The last stage to run; later stages skip their body and record no row. Defaults to
+   * `DX_PERF_UNTIL`, which `pnpm perf --until` sets. Work a flow does between stages still runs.
+   */
+  until?: string;
 };
 
 /** A boundary reading: everything sampled together, so a stage's deltas describe one interval. */
@@ -114,9 +123,13 @@ export class StageRunner {
   readonly #counters: CounterSet;
   readonly #counterDir: string;
   readonly #calls: CallCounter | undefined;
+  readonly #until: string | undefined;
+  #past = false;
+  #throttled = false;
 
   constructor(options: RunnerOptions) {
     this.#options = options;
+    this.#until = options.until ?? (process.env.DX_PERF_UNTIL || undefined);
     this.#counters = options.counters ?? DEFAULT_COUNTERS;
     this.#counterDir = options.counterDir ?? path.join(tmpdir(), 'dxos-perf-counters');
     this.#calls = this.#counters.calls ? startCallCounting(this.#counterDir) : undefined;
@@ -167,6 +180,17 @@ export class StageRunner {
       .catch(() => undefined);
   }
 
+  /** Applies `comparability.cpuThrottle` through the page's session, once. */
+  async #throttle(): Promise<void> {
+    const { page, comparability } = this.#options;
+    if (this.#throttled || !comparability.cpuThrottle) {
+      return;
+    }
+    this.#throttled = true;
+    const session = await page.context().newCDPSession(page);
+    await session.send('Emulation.setCPUThrottlingRate', { rate: comparability.cpuThrottle });
+  }
+
   /** One PNG per stage, for a reviewer who wants to see what the numbers describe. */
   async #screenshot(id: string): Promise<string | undefined> {
     const { screenshotDir, page } = this.#options;
@@ -189,7 +213,7 @@ export class StageRunner {
   }
 
   /**
-   * Runs one stage, bracketing `body` with the boundary reads.
+   * Runs one stage, bracketing `body` with the boundary reads; nothing once past {@link RunnerOptions.until}.
    *
    * @param restartsApp The stage reloads the app, which starts every realm's counters over under the
    *   same names; its opening readings are dropped, so each realm's closing reading is the stage's whole.
@@ -198,10 +222,15 @@ export class StageRunner {
     id: string,
     body: () => Promise<void>,
     { restartsApp = false }: { restartsApp?: boolean } = {},
-  ): Promise<StageRow> {
+  ): Promise<StageRow | undefined> {
+    if (this.#past) {
+      return undefined;
+    }
+    this.#past = id === this.#until;
     const { page, browserCdp, debugPort, network, mode } = this.#options;
+    await this.#throttle();
 
-    this.#targets = await refreshTargets(debugPort, this.#targets);
+    this.#targets = await refreshTargets(debugPort, this.#targets, this.#options.include);
     if (restartsApp) {
       // A debugger session left on the shared coordinator across the restart keeps the new page's
       // worker from ever connecting, so workers are detached here and attached afresh at the close.
@@ -277,7 +306,7 @@ export class StageRunner {
     // Refreshed before the per-realm readings: a stage can BRING a realm into existence — `boot` is
     // where the shared worker running ECHO first appears — and a set captured only at the opening
     // boundary would report that stage's heap as the page's alone.
-    this.#targets = await refreshTargets(debugPort, this.#targets);
+    this.#targets = await refreshTargets(debugPort, this.#targets, this.#options.include);
 
     // AFTER the refresh, unlike the readings above, and the difference is load-bearing. SQLite runs
     // in the dedicated worker, and `boot` is the stage that creates it: read against the opening
@@ -345,6 +374,7 @@ export class StageRunner {
           dir: path.join(snapshotDir, id),
           preGc,
           preGcHeap,
+          heapSnapshots: this.#options.heapSnapshots,
         })
       : undefined;
 

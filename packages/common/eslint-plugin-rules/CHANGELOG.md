@@ -1,5 +1,13 @@
 # @dxos/eslint-plugin-rules
 
+## 0.16.0
+
+### Minor Changes
+
+- b406c2c: Add the `folder-barrel-imports` rule, which requires a relative import into another folder to go through that folder's barrel (`index` or `testing` by default, configurable via `barrels`, with an `allow` list for exempt importers).
+
+## 0.15.0
+
 ## 0.14.0
 
 ## 0.13.0

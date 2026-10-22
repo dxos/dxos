@@ -6,7 +6,11 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
+
+/** Key of the skill an agent sends email with; a plain key, so the config type need not import the skill. */
+export const SKILL_KEY = 'org.dxos.skill.agentEmail';
 
 /** `Channel.backend.kind` of a channel whose conversations are email threads, hosted by EDGE's compute-service. */
 export const BACKEND_KIND = 'org.dxos.channel.backend.email';
@@ -18,7 +22,7 @@ export const DEFAULT_ALLOWED_SENDERS: readonly string[] = ['braneframe.com', 'dx
 export const Properties = Schema.Struct({
   handle: Schema.String.annotate({
     title: 'Address',
-    description: 'The part before the @: `kai` receives mail for kai@dx.pub.',
+    description: 'The part before the @: `kai` receives mail for kai@dxos.ai.',
   }),
   displayName: Schema.optional(
     Schema.String.annotate({
@@ -49,6 +53,8 @@ export class AgentEmail extends Type.makeObject<AgentEmail>(DXN.make('org.dxos.t
   }).pipe(
     Annotation.LabelAnnotation.set(['handle']),
     Annotation.IconAnnotation.set({ icon: 'ph--envelope--regular', hue: 'amber' }),
+    // Bound to every conversation of the channel's agent: its written text is not mailed, so this is how it answers.
+    Skill.SkillsAnnotation.set([SKILL_KEY]),
   ),
 ) {}
 

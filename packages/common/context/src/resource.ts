@@ -165,7 +165,14 @@ export abstract class Resource implements Lifecycle {
     this.#closePromise = null;
     this.#parentCtx = ctx?.derive({ name: this.#name }) ?? this.#createParentContext();
     this.#internalCtx = this.#createContext(this.#parentCtx);
-    await this._open(this.#parentCtx);
+    try {
+      await this._open(this.#parentCtx);
+    } catch (err) {
+      this.#openPromise = null;
+      await this.#internalCtx.dispose();
+      this.#internalCtx = this.#createContext();
+      throw err;
+    }
     this.#lifecycleState = LifecycleState.OPEN;
   }
 

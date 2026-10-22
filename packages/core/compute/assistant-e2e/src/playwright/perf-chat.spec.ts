@@ -134,7 +134,7 @@ const readQueuedProbe = async (page: Page): Promise<number | undefined> => {
 
 const chatPrompt = (page: Page): Locator =>
   page
-    .getByText(/enter question or command/i)
+    .getByText(/ask anything/i)
     .locator('xpath=ancestor::*[contains(@class,"cm-editor")]//*[contains(@class,"cm-content")]');
 
 /**
@@ -266,7 +266,9 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
         throw new Error('the submitted prompt never showed as a queued row');
       }
     });
-    turnsRow.submitToQueuedVisibleMs = submitToQueuedVisibleMs;
+    if (turnsRow) {
+      turnsRow.submitToQueuedVisibleMs = submitToQueuedVisibleMs;
+    }
 
     await runner.stage('scroll-thread', async () => {
       await page.getByText(DONE).first().hover({ timeout: BUDGET_MS });

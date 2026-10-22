@@ -15,8 +15,9 @@
 // Options: --base=<ref> (diff base for context; default the review's base, or the merge-base
 // with origin/main for a full-project review), --threshold=0.8, --uncertain=0.15, --lift=0.15,
 // --need=0.35, --chunk=15 (files per follow-up batch),
-// --rounds=2, --model=jev-latest, --concurrency=16, --dry-run (plan and price, no API calls),
-// --json (probe mode: print raw verdicts).
+// --rounds=2, --model=jev-latest, --concurrency=16, --max-cost=5 (USD; a run predicted to cost more
+// is refused before any call, and no request past it is sent), --dry-run (plan and price, no API
+// calls), --json (probe mode: print raw verdicts).
 //
 // Needs TYPESAFE_API_KEY. In store mode it appends diagnostics to groups/NN.md, records the run in
 // the REVIEW.md appendix, writes system-one.json (every verdict), and prints what still needs an
@@ -40,11 +41,14 @@ import {
 } from '../lib/store.ts';
 import {
   classify,
+  costForTokens,
+  DEFAULT_MAX_COST_USD,
   DEFAULTS,
   diagnosticBody,
   diagnosticLine,
   followUpBatches,
   isReportableVerdict,
+  predictCostUsd,
   runReview,
   uncertainBounds,
   type FileTarget,
@@ -74,6 +78,7 @@ const { values } = parseArgs({
     'dry-run': { type: 'boolean', default: false },
     'json': { type: 'boolean', default: false },
     'chunk': { type: 'string', default: '15' },
+    'max-cost': { type: 'string', default: String(DEFAULT_MAX_COST_USD) },
   },
 });
 
@@ -87,6 +92,10 @@ const settings: Settings = {
   rounds: Number.parseInt(values.rounds ?? '2', 10),
 };
 const chunkSize = Math.max(1, Number.parseInt(values.chunk ?? '15', 10) || 15);
+const maxCostUsd = Number(values['max-cost']);
+if (!Number.isFinite(maxCostUsd) || maxCostUsd < 0) {
+  throw new Error(`--max-cost must be a non-negative number of USD, got ${values['max-cost']}`);
+}
 const log = (message: string): void => console.error(`system-one: ${message}`);
 const client = values['dry-run']
   ? null
@@ -143,13 +152,47 @@ const summarizeStats = (stats: ReviewStats): string =>
     ...(stats.failedRequests
       ? [`failed requests: ${stats.failedRequests} (their pairs are listed as unanswered)`]
       : []),
+    ...(stats.budgetSkipped
+      ? [
+          `requests not sent past the $${maxCostUsd} ceiling: ${stats.budgetSkipped} (their pairs are listed as unanswered)`,
+        ]
+      : []),
     ...(client
       ? [
           `billed input tokens: ${stats.inputTokens} (cost $${stats.costUsd.toFixed(4)})`,
           `measured chars per token: ${stats.charsPerTokenMeasured?.toFixed(2) ?? 'n/a'}`,
         ]
-      : [`estimated cost: $${((stats.estimatedTokens / 1_000_000) * 0.042).toFixed(4)}`]),
+      : [
+          `estimated round-one cost: $${costForTokens(stats.estimatedTokens).toFixed(4)}`,
+          `predicted cost, both rounds: $${predictCostUsd(stats.estimatedTokens).toFixed(4)} (ceiling $${maxCostUsd})`,
+        ]),
   ].join('\n');
+
+/**
+ * Run the review only if a plan made without the API predicts it within `--max-cost`; the ceiling
+ * also stops requests mid-run, in case the prediction undershoots.
+ */
+const guardedReview = async (
+  options: Omit<Parameters<typeof runReview>[0], 'client' | 'settings' | 'log' | 'maxCostUsd'>,
+): ReturnType<typeof runReview> => {
+  const plan = await runReview({ ...options, client: null, settings, log });
+  const predicted = predictCostUsd(plan.stats.estimatedTokens);
+  if (!client) {
+    return plan;
+  }
+  if (predicted > maxCostUsd) {
+    console.error(
+      [
+        `system-one: refusing — predicted cost $${predicted.toFixed(2)} exceeds the $${maxCostUsd} ceiling (${plan.stats.requests} round-one requests, ~${plan.stats.estimatedTokens} tokens).`,
+        'A review this large belongs to subagents (plan usage), not System One: spawn one subagent per',
+        'group as staged in STAGING.md. Pass --max-cost=<usd> only when a human approved the spend.',
+      ].join('\n'),
+    );
+    process.exit(2);
+  }
+  log(`predicted cost $${predicted.toFixed(4)} (ceiling $${maxCostUsd})`);
+  return runReview({ ...options, client, settings, maxCostUsd, log });
+};
 
 const reviewBase = (declared: string | null | undefined): string | null =>
   values.base ?? (declared && declared !== FULL_BASE ? declared : mainMergeBase());
@@ -175,7 +218,7 @@ if (values.file?.length) {
     pairs.push(...matched.map((file) => ({ rule, file })));
   }
   const base = reviewBase(null);
-  const result = await runReview({ client, root, base, ...buildTargets(pairs), settings, log });
+  const result = await guardedReview({ root, base, ...buildTargets(pairs) });
   if (values.json) {
     console.log(
       JSON.stringify(
@@ -223,7 +266,7 @@ if (values.file?.length) {
     }
     pairs.push(...group.files.map((file) => ({ rule, file, nn })));
   }
-  const result = await runReview({ client, root, base, ...buildTargets(pairs), settings, log });
+  const result = await guardedReview({ root, base, ...buildTargets(pairs) });
 
   const groupOf = (ruleId: string, file: string): string | undefined =>
     Object.entries(manifest).find(([, group]) => group.ruleId === ruleId && group.files.includes(file))?.[0];

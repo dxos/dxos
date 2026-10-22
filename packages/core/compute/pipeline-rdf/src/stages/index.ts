@@ -11,6 +11,9 @@ export * from './normalize-predicates.ts';
 export {
   DEFAULT_EXTRACTION_RULES,
   ExtractedFact,
+  TRANSCRIPT_RULE,
+  TranscriptFact,
   buildExtractionPrompt,
   parseExtractPayload,
+  parseTranscriptPayload,
 } from '../internal/stages/extract.ts';

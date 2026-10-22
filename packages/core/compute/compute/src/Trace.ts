@@ -106,6 +106,15 @@ export const CommonRuntimeName = {
 export const Meta = Schema.Struct({
   pid: Schema.optional(Schema.String), // NOTE: Not Process.ID to avoid circular dependency.
   parentPid: Schema.optional(Schema.String),
+
+  /**
+   * Pid of the first invocation of the run this message belongs to.
+   * A run that calls `Operation.runAgain()` continues in a new invocation with its own `pid`; each
+   * continuation carries the first invocation's `pid` here so consumers can show the run as one unit.
+   * Absent on the first invocation, whose own `pid` is the run's id.
+   */
+  runId: Schema.optional(Schema.String),
+
   processName: Schema.optional(Schema.String),
 
   /**
@@ -308,6 +317,7 @@ export const matchesFilter = (message: Pick<MessageData, 'meta' | 'events'>, fil
 const encodeMetaForWire = (meta: Meta): Meta => ({
   pid: meta.pid,
   parentPid: meta.parentPid,
+  runId: meta.runId,
   processName: meta.processName,
   space: meta.space,
   toolCallId: meta.toolCallId,

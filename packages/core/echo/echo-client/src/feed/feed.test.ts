@@ -490,6 +490,18 @@ describe('Feed', () => {
       await expect(db.flush()).rejects.toThrow('alice refused');
     });
 
+    test('an append the feed service has not taken is an unsaved change', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      db._setFeedService(await makeFeedClient(refusingHandlers(peer.host.feedService, 'alice')));
+
+      const feed = db.add(Feed.make({ name: 'refusing' }));
+      db.add(Obj.make(TestSchema.Person, { name: 'alice' }), { to: feed });
+      // The flush hands every document change to the host, so what is left unsaved is the append.
+      await expect(db.flush()).rejects.toThrow('alice refused');
+      expect(db.hasUnsavedChanges()).toBe(true);
+    });
+
     test('flushes and new writes do not resend ahead of the backoff while an append keeps failing', async ({
       expect,
     }) => {

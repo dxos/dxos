@@ -30,7 +30,7 @@ Use `mcp__github__pull_request_read` with `{ owner: "dxos", repo: "dxos", pullNu
 - Title, body, labels.
 
 If the PR is already merged or closed, tell the user and stop. If it is a draft,
-run `gh pr ready <number>`: CI skips drafts and the merge queue rejects them.
+run `gh pr ready <number>`: a draft skips the browser and e2e suites and the merge queue rejects it.
 
 Check whether the PR belongs to a stack (GitHub native stacked PRs): the stack
 map on the PR page is the test — `baseRefName` ≠ `main` is only a hint, and a
@@ -150,6 +150,9 @@ stays as it is. Rules for the body and bump level:
 
 ## Step 8 — Enable auto-merge (merge queue)
 
+A ready PR runs every suite, browser, storybook and e2e included, so its own Check run is the signal;
+the merge queue runs them again on top of `main` and drops the PR if they fail there.
+
 Once all required checks pass and there are no blocking reviews, enable auto-merge so the PR enters the merge queue automatically:
 
 ```
@@ -217,7 +220,10 @@ On each wakeup (task-completion notification for the sleep):
 2. **If merged**: print success, unsubscribe, stop.
 3. **If closed**: ask the user what happened.
 4. **If open and auto_merge is null** (was dequeued):
-   a. Sync with `main`:
+   a. Find out why. A failed merge-queue run is the usual cause: the queue tests the PR on top of
+   what landed on `main` since its own Check run. Read the failed `Check / …` run's logs (`gh run view <run-id> --log-failed`), fix the
+   failure at its root, and push the fix before re-queueing; re-queueing an unfixed failure
+   just fails again. Then sync with `main`:
    ```bash
    git fetch origin main
    git merge origin/main --no-edit

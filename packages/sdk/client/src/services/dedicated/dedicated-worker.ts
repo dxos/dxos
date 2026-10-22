@@ -14,6 +14,7 @@ import { Config } from '@dxos/config';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import type * as SqlExport from '@dxos/sql-sqlite/SqlExport';
+import { TRACE_PROCESSOR } from '@dxos/tracing';
 import * as Worker from '@dxos/worker-framework/Worker';
 
 import { STORAGE_LOCK_KEY } from '../../lock-key.ts';
@@ -60,8 +61,10 @@ const probeOpfs = Effect.tryPromise({
 export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): void => {
   Worker.run({
     storageLockKey: STORAGE_LOCK_KEY,
-    createRuntime: ({ config: configValues, requestShutdown }) =>
+    createRuntime: ({ config: configValues, requestShutdown, reportStatus }) =>
       Effect.gen(function* () {
+        // Devtools addresses this worker's diagnostics (e.g. echo-stats) by tag.
+        TRACE_PROCESSOR.setInstanceTag('dedicated-worker');
         const config = new Config(configValues ?? {});
         if (!options.sqliteLayer) {
           log('dedicated-worker: probing OPFS');
@@ -83,6 +86,7 @@ export const runDedicatedWorker = (options: RunDedicatedWorkerOptions = {}): voi
           }),
           automaticallyConnectWebrtc: false,
           sqliteLayer: options.sqliteLayer,
+          onIndexStatus: reportStatus,
         });
         log('dedicated-worker: WorkerRuntime started');
         if (options.onStart) {

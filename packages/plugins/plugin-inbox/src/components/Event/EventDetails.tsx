@@ -10,7 +10,6 @@ import { Row } from '@dxos/react-ui-card';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Layout from '@dxos/react-ui/Layout';
 import { type Actor, type Event as EventType } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -82,13 +81,11 @@ export const EventDetails = ({
   return (
     <>
       {title === 'heading' && (
-        <Card.Row>
-          <Layout.Block>
-            <Row.Star starred={starred} onToggle={onToggleStar} />
-          </Layout.Block>
-          <Card.Text classNames='text-lg line-clamp-2'>{data.title ?? t('event-untitled.label')}</Card.Text>
-          {meeting && (
-            <Layout.Block rail='end'>
+        // The star and the meeting go in the row's rails: as children they would sit in its text cell.
+        <Card.Row
+          leading={<Row.Star starred={starred} onToggle={onToggleStar} />}
+          end={
+            meeting && (
               <Button.Root
                 iconOnly
                 variant='ghost'
@@ -96,16 +93,15 @@ export const EventDetails = ({
                 label={Obj.getLabel(meeting) ?? 'Meeting'}
                 onClick={onOpenObject ? () => onOpenObject(meeting) : undefined}
               />
-            </Layout.Block>
-          )}
+            )
+          }
+        >
+          <Card.Text classNames='text-lg line-clamp-2'>{data.title ?? t('event-untitled.label')}</Card.Text>
         </Card.Row>
       )}
 
       {title === 'text' && (
-        <Card.Row>
-          <Layout.Block>
-            <Row.Star starred={starred} onToggle={onToggleStar} />
-          </Layout.Block>
+        <Card.Row leading={<Row.Star starred={starred} onToggle={onToggleStar} />}>
           <Card.Text>{data.title ?? t('event-untitled.label')}</Card.Text>
         </Card.Row>
       )}
@@ -127,6 +123,11 @@ export const EventDetails = ({
           onContactCreate={onContactCreate}
         />
       ))}
+      {data.attendees.length > attendees.length && (
+        <Card.Row>
+          <Card.Text variant='muted'>{`+${data.attendees.length - attendees.length} more`}</Card.Text>
+        </Card.Row>
+      )}
     </>
   );
 };

@@ -13,7 +13,7 @@ import { Expando } from '@dxos/schema';
 import { createSpaceSaveTracker } from './save-tracker.ts';
 
 describe('createSpaceSaveTracker', () => {
-  test('a failed flush reports the space unsaved instead of leaving an unhandled rejection', async ({ expect }) => {
+  test('a failed flush reports the save as failing instead of leaving an unhandled rejection', async ({ expect }) => {
     const unhandled: unknown[] = [];
     const onUnhandled = (reason: unknown) => unhandled.push(reason);
     process.on('unhandledRejection', onUnhandled);
@@ -42,13 +42,31 @@ describe('createSpaceSaveTracker', () => {
     onTestFinished(dispose);
 
     await new Promise((resolve) => setTimeout(resolve));
-    saveStateChanged.emit({ unsavedDocuments: [] });
+    saveStateChanged.emit({ unsavedDocuments: [], pendingCreations: 0, failing: false });
     await expect((await flushed.wait()).flush).rejects.toBe(failure);
     // Unhandled rejections are reported after the microtask queue drains, so give it one macrotask.
     await new Promise((resolve) => setImmediate(resolve));
 
     expect(unhandled).toEqual([]);
-    expect(states).toEqual(['saving']);
+    expect(states).toEqual(['failing']);
+  });
+
+  test('a change the worker would not take is failing, and saved once it does', async ({ expect }) => {
+    const saveStateChanged = new Event<SaveStateChangedEvent>();
+    const states = new Event<string>();
+    const dispose = createSpaceSaveTracker(
+      { waitUntilReady: async () => {}, db: { saveStateChanged, flush: async () => {} } },
+      (state) => states.emit(state),
+    );
+    onTestFinished(dispose);
+    await new Promise((resolve) => setTimeout(resolve));
+
+    const failing = states.waitForCount(1);
+    saveStateChanged.emit({ unsavedDocuments: [], pendingCreations: 1, failing: true });
+    expect(await failing).toBe('failing');
+    const saved = states.waitFor((state) => state === 'saved');
+    saveStateChanged.emit({ unsavedDocuments: [], pendingCreations: 0, failing: false });
+    await saved;
   });
 
   test('a change reads as saving as soon as it is made, and saved once the worker takes it', async ({ expect }) => {

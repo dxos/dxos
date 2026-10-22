@@ -1,0 +1,26 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true
+  },
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../common/log"
+    },
+    {
+      "path": "../react-ui"
+    },
+    {
+      "path": "../react-ui-geo"
+    },
+    {
+      "path": "../ui-theme"
+    },
+    {
+      "path": "../ui-types"
+    }
+  ]
+}

@@ -297,14 +297,12 @@ Deeper conventions:
   failure, not pre-existing; fix the root cause on the branch, never merge
   around it. Inspect: `gh run list --branch <branch> --workflow "Check"`, then
   `gh run view <id> --log-failed`.
-- **Check runs on Depot, not GitHub Actions** (`.depot/workflows/check.yml`), so the
-  GitHub API returns empty output for every `Check / …` check run and its `details_url`
-  redirects to SSO. That is not "logs unreachable": `DEPOT_TOKEN` is in the environment
-  and the `depot` CLI reads it — `depot ci logs <job-id>`, `depot tests <job-id> --ci`,
-  `depot ci diagnose --job <job-id>`, `depot ci retry <run-id> --job <job-id>`. The
-  `?job=` parameter of the check run's `details_url` is the job id. → `depot-ci` skill.
+- **Retry a failed Check job** with `gh run rerun <run-id> --failed`, or `--job <job-id>` for one.
 - Commit hygiene → see "Commit nothing silently" in Non-negotiables.
-- **Every push to a ready PR runs the full Check suite.** Batch commits into one push. Merge `main`
+- **A draft PR runs `check` and the node tests**; marking it ready adds the browser, storybook and e2e
+  suites, and the merge queue runs them again on top of `main`. Reproduce a browser
+  or storybook failure with `moon run <project>:test-storybook` (or `:test-browser`).
+- **Every push to a PR runs Check**, a draft included. Batch commits into one push. Merge `main`
   in only to resolve a conflict: the merge queue already tests the PR on top of `main`. To keep
   iterating on a ready PR, convert it back to a draft (`gh pr ready --undo`) and mark it ready when done.
 - Creating or landing a PR is a procedure — use the `submit-pr` and `land`
@@ -383,18 +381,30 @@ Do not paste real credential values into any shell command, and do not paste the
 - **Skills** (`.agents/skills/*`) — deep, task-specific how-to. Follow the
   relevant skill for the area you're working in (echo, effect, composer-ui,
   operations, testing, code-style, submit-pr, pr-description, land, …).
+- **A status page for a long session** — one Artifact board with questions, work in progress and
+  results, each a short STE line that expands → `status-board` skill (`.agents/skills/status-board/SKILL.md`).
 - **Writing in Simplified Technical English (ASD-STE100)** — the rules, the approved word
   list, and `scripts/ste_check.py` → `simplified-technical-english` skill
   (`.agents/skills/simplified-technical-english/SKILL.md`).
-- **Reading a red `Check` run** — CI logs, failed test lists, failure diagnoses and
-  job retries via the `depot` CLI and `DEPOT_TOKEN` → `depot-ci` skill
-  (`.agents/skills/depot-ci/SKILL.md`).
+- **Performance** — `perf` skill (`.agents/skills/perf/SKILL.md`). Perf numbers come only from
+  `pnpm perf` output (verdict, interval, rounds), never a one-off timing or a devtools recording.
+  - Did this change make it faster or slower? `pnpm perf compare --base main --metric '<id>'`.
+  - Where does the time go? `pnpm perf summarize`, then `pnpm perf expand <handle>`.
+  - Users say X is slow? `pnpm perf capture`, then `pnpm perf scenario new` and `scenario check`.
+  - Memory grows, or boot loads too much? The skill's `MEMORY.md` and `BOOT.md`; `pnpm perf gate`
+    runs the boot budget locally, the same target CI runs as `moon run composer-app:check-boot-budget`.
+  - A node test suite is slow or leaks? `test-perf-leaks` skill.
+- **Publishing a package to npm** — first publish of a new package and its trusted publisher via
+  `scripts/publish-package.mjs` → `npm-publishing` skill (`.agents/skills/npm-publishing/SKILL.md`).
 - **Credentials (API keys, tokens, passwords)** — the `op` CLI in remote sessions only, `.secrets/` otherwise →
   `1password` skill (`.agents/skills/1password/SKILL.md`).
 - **Flaky test quarantining** — investigating a flaky/red CI run or setting up
   Trunk test uploads → `trunk-quarantine` skill
   (`.agents/skills/trunk-quarantine/SKILL.md`); adding the Trunk MCP server →
   `REPOSITORY_GUIDE.md`.
+- **`.mdl` specs** (`PLUGIN.mdl`, `SPEC.mdl`) — the Deus language, and the `## Changelog`
+  decision that every spec change must add, attributed to a `user:` or an `agent:` → `mdl` skill
+  (`.agents/skills/mdl/SKILL.md`).
 - **SQLite schema changes** — adding a migration, creating a new SQLite-backed
   store, or anything under `src/migrations/` →
   [`.agents/projects/sql-migrations/DESIGN.md`](.agents/projects/sql-migrations/DESIGN.md).

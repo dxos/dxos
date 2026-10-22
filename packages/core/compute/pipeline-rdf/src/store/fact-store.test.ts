@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as SqlClient from 'effect/sql/SqlClient';
-import * as Statement from 'effect/sql/Statement';
+
+import { SqlSparqlEngine } from '@dxos/sparql-sqlite';
+import * as SqlStorage from '@dxos/sql-sqlite/SqlStorage';
 
 import { type Fact, Ontology, Vocab } from '../types/index.ts';
 import * as FactStoreLive from './fact-store-live.ts';
@@ -27,17 +27,31 @@ const mk = (over: Partial<Fact> & Pick<Fact, 'id'>): Fact => ({
   ...over,
 });
 
-const TestLayer = FactStoreLive.layer.pipe(Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })));
+const TestLayer = FactStoreLive.layerMemory;
 
 /** Cloudflare Durable Object SQLite binds at most 100 parameters per statement; local SQLite allows far more. */
 const DO_MAX_PARAMS = 100;
 
-const withDurableObjectParamLimit = Effect.provideService(Statement.CurrentTransformer, (statement) => {
-  const [, params] = statement.compile();
-  return params.length > DO_MAX_PARAMS
-    ? Effect.die(new Error(`too many SQL variables: ${params.length}`))
-    : Effect.succeed(statement);
-});
+/** A store whose SQLite rejects statements binding more parameters than a Durable Object allows. */
+const DurableObjectLimitLayer = Layer.effect(
+  FactStore,
+  Effect.acquireRelease(SqlStorage.makeMemory(), (database) => Effect.sync(() => database.close())).pipe(
+    Effect.orDie,
+    Effect.flatMap((database) =>
+      FactStoreLive.make(
+        {
+          exec: (query, ...bindings) => {
+            if (bindings.length > DO_MAX_PARAMS) {
+              throw new Error(`too many SQL variables: ${bindings.length}`);
+            }
+            return database.exec(query, ...bindings);
+          },
+        },
+        { transactionSync: (run) => database.transactionSync(run) },
+      ),
+    ),
+  ),
+);
 
 describe('FactStore', () => {
   it.effect(
@@ -318,17 +332,21 @@ describe('FactStore', () => {
   it.effect(
     'rewrites the seed vocabulary of a store written by another seed',
     Effect.fnUntraced(function* () {
-      const sql = yield* SqlClient.SqlClient;
+      const database = yield* Effect.acquireRelease(SqlStorage.makeMemory(), (opened) =>
+        Effect.sync(() => opened.close()),
+      ).pipe(Effect.orDie);
+      yield* FactStoreLive.make(database);
       // A store an older seed wrote: a stale synonym, and the marker of another version.
-      yield* sql`INSERT INTO triples (s, p, o, oType, g)
-        VALUES (${Vocab.RDF_TYPE}, ${Vocab.SKOS_ALT_LABEL}, 'is kind of', 'literal', ${Vocab.ONTOLOGY_GRAPH})`;
-      yield* sql`UPDATE triples SET o = 'stale' WHERE g = '' AND p = ${Vocab.SX_SEED}`;
-      const entries = yield* Effect.gen(function* () {
-        return yield* (yield* FactStore).predicates();
-        // A fresh build: the store is seeded when the layer is constructed.
-      }).pipe(Effect.provide(Layer.fresh(FactStoreLive.layer)));
+      const engine = new SqlSparqlEngine(database);
+      engine.query(
+        `INSERT DATA { GRAPH <${Vocab.ONTOLOGY_GRAPH}> { <${Vocab.RDF_TYPE}> <${Vocab.SKOS_ALT_LABEL}> "is kind of" } }`,
+      );
+      engine.query(`DELETE WHERE { <${Vocab.ONTOLOGY_GRAPH}> <${Vocab.SX_SEED}> ?version }`);
+      engine.query(`INSERT DATA { <${Vocab.ONTOLOGY_GRAPH}> <${Vocab.SX_SEED}> "stale" }`);
+      // A fresh open: the store is seeded when it is constructed.
+      const entries = yield* (yield* FactStoreLive.make(database)).predicates();
       expect(entries.find(({ iri }) => iri === Vocab.RDF_TYPE)).toEqual(Ontology.DEFAULT.get(Vocab.RDF_TYPE));
-    }, Effect.provide(TestLayer)),
+    }, Effect.scoped),
   );
 
   it.effect(
@@ -339,10 +357,10 @@ describe('FactStore', () => {
       yield* store.putFacts(
         Array.from({ length: count }, (_, index) => mk({ id: `f${index}`, sourceHash: `h${index}` })),
       );
-      const all = yield* store.query({}).pipe(withDurableObjectParamLimit);
-      const bySubject = yield* store.query({ subjectEntity: 'alice' }).pipe(withDurableObjectParamLimit);
+      const all = yield* store.query({});
+      const bySubject = yield* store.query({ subjectEntity: 'alice' });
       expect(all).toHaveLength(count);
       expect(bySubject).toHaveLength(count);
-    }, Effect.provide(TestLayer)),
+    }, Effect.provide(DurableObjectLimitLayer)),
   );
 });

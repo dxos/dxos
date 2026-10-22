@@ -195,15 +195,17 @@ export type MeasureOptions = {
   timings?: boolean;
 };
 
+/** One metric's value in each iteration that measured it. */
+export type Readings = { id: string; group: string; values: number[] };
+
 /**
- * One measurement per metric: each stage's wall time, CPU and work counters, and each whole-run
- * reading, as the median across the night's iterations. A stage that failed in every iteration
- * produces no row and so no measurement, which the scorer counts at the floor.
+ * Every metric's per-iteration values: each stage's wall time, CPU and work counters, and each
+ * whole-run reading. A stage that failed in every iteration produces no row and so no readings.
  */
-export const toMeasurements = (
+export const toReadings = (
   events: ReadonlyArray<StageEvent>,
   { work = DEFAULT_WORK_METRICS, timings = true }: MeasureOptions = {},
-): Measurement[] => {
+): Readings[] => {
   const byStage = new Map<string, { wall: number[]; cpu: number[] }>();
   const byIteration = new Map<string, Properties[]>();
   for (const { properties } of events) {
@@ -225,18 +227,14 @@ export const toMeasurements = (
     byIteration.set(String(iteration), [...(byIteration.get(String(iteration)) ?? []), properties]);
   }
 
-  const stageMeasurements = [...byStage].flatMap(([stage, { wall, cpu }]) => [
-    ...(wall.length > 0 ? [{ id: `wall > ${stage}`, group: STAGE_WALL_GROUP, value: median(wall) }] : []),
-    ...(cpu.length > 0 ? [{ id: `cpu > ${stage}`, group: STAGE_CPU_GROUP, value: median(cpu) }] : []),
+  const stageReadings = [...byStage].flatMap(([stage, { wall, cpu }]) => [
+    ...(wall.length > 0 ? [{ id: `wall > ${stage}`, group: STAGE_WALL_GROUP, values: wall }] : []),
+    ...(cpu.length > 0 ? [{ id: `cpu > ${stage}`, group: STAGE_CPU_GROUP, values: cpu }] : []),
   ]);
 
-  const workMeasurements = [...workReadings(events, work)].map(([id, values]) => ({
-    id,
-    group: WORK_GROUP,
-    value: median(values),
-  }));
+  const workMetricReadings = [...workReadings(events, work)].map(([id, values]) => ({ id, group: WORK_GROUP, values }));
 
-  const runMeasurements = RUN_METRICS.flatMap(({ id, keys, reduce, when }) => {
+  const runReadings = RUN_METRICS.flatMap(({ id, keys, reduce, when }) => {
     const perIteration = [...byIteration.values()].flatMap((rows) => {
       const values = readings(rows, keys, when);
       if (values.length === 0) {
@@ -244,8 +242,15 @@ export const toMeasurements = (
       }
       return [reduce === 'max' ? Math.max(...values) : values.reduce((total, value) => total + value, 0)];
     });
-    return perIteration.length > 0 ? [{ id, group: RUN_GROUP, value: median(perIteration) }] : [];
+    return perIteration.length > 0 ? [{ id, group: RUN_GROUP, values: perIteration }] : [];
   });
 
-  return [...(timings ? [...stageMeasurements, ...runMeasurements] : []), ...workMeasurements];
+  return [...(timings ? [...stageReadings, ...runReadings] : []), ...workMetricReadings];
 };
+
+/**
+ * One measurement per metric, the median of its readings across the night's iterations. A metric
+ * with no readings has no measurement, which the scorer counts at the floor.
+ */
+export const toMeasurements = (events: ReadonlyArray<StageEvent>, options: MeasureOptions = {}): Measurement[] =>
+  toReadings(events, options).map(({ id, group, values }) => ({ id, group, value: median(values) }));

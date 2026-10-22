@@ -5,6 +5,7 @@
 import { next as A } from '@automerge/automerge';
 import { type AnyDocumentId, type DocumentId } from '@automerge/automerge-repo';
 import * as Context from 'effect/Context';
+import * as Schema from 'effect/Schema';
 
 import { Event, Trigger, UpdateScheduler, scheduleTask, sleep, yieldOrContinue } from '@dxos/async';
 import { LifecycleState, Resource } from '@dxos/context';
@@ -67,16 +68,25 @@ export class RepoProxy extends Resource {
 
   private readonly _pendingCreations = new Map<string, Promise<void>>();
 
-  /** Creations the host did not take; the handle stays unready until {@link flushCreations} lands one. */
+  /**
+   * Creations the host did not take; the handle stays unready until {@link flushCreations} lands one.
+   * An entry without `retry` was refused permanently: it is never requested again, and the next flush reports it.
+   */
   private readonly _failedCreations = new Map<
     string,
-    { handle: DocHandleProxy<any>; error: Error; retry: () => void }
+    { handle: DocHandleProxy<any>; error: Error; attempts: number; retry?: () => void }
   >();
 
   /**
    * Document ids that have pending updates.
    */
   private readonly _pendingUpdateIds = new Set<DocumentId>();
+
+  /**
+   * Documents in this generation's batch that the host has not acknowledged yet. With
+   * `_pendingUpdateIds`, every document whose changes exist only in this client.
+   */
+  private readonly _inFlightUpdateIds = new Set<DocumentId>();
 
   /**
    * Documents the host has taken a write for since a disk flush last took them: the only ones a disk
@@ -190,8 +200,7 @@ export class RepoProxy extends Resource {
     if (
       this._pendingUpdateIds.has(documentId) ||
       this._pendingCreations.has(handle._internalId) ||
-      // The pending-id sets are cleared at the start of a send, so they go quiet while a mutation is
-      // still in flight; the handle's own acknowledgement is what actually settles it.
+      // What the host has confirmed is what the handle's heads say; a handle still loading has confirmed nothing.
       !handle._isAcknowledged()
     ) {
       this._deferredReleaseIds.add(documentId);
@@ -271,6 +280,20 @@ export class RepoProxy extends Resource {
     return this._createHandle<T>({ initialValue });
   }
 
+  /** Whether a change or a new document exists only in this client, so losing the page would lose it. */
+  hasUnsavedChanges(): boolean {
+    // A closed proxy has dropped its handles: whatever it never sent is already gone, and no save can bring it back.
+    if (this._lifecycleState === LifecycleState.CLOSED) {
+      return false;
+    }
+    return (
+      this._pendingUpdateIds.size > 0 ||
+      this._inFlightUpdateIds.size > 0 ||
+      this._pendingCreations.size > 0 ||
+      this._failedCreations.size > 0
+    );
+  }
+
   /**
    * Waits until every pending document creation and update has been handed to the host, and with
    * `disk`, until the host has saved the documents this client wrote.
@@ -318,9 +341,13 @@ export class RepoProxy extends Resource {
       const documentIds = [...this._unflushedIds];
       this._unflushedIds.clear();
       if (documentIds.length > 0) {
-        const saved = runServiceCall(this._runtime, this._dataService['DataService.flush']({ documentIds }), {
-          timeout: RPC_TIMEOUT,
-        }).catch((err) => {
+        const saved = runServiceCall(
+          this._runtime,
+          this._dataService,
+          'DataService.flush',
+          { documentIds },
+          { timeout: RPC_TIMEOUT },
+        ).catch((err) => {
           documentIds.forEach((documentId) => this._unflushedIds.add(documentId));
           throw err;
         });
@@ -342,19 +369,33 @@ export class RepoProxy extends Resource {
    */
   async flushCreations(): Promise<void> {
     for (let attempt = 1; ; attempt++) {
-      for (const [id, { retry }] of this._failedCreations) {
-        this._failedCreations.delete(id);
-        retry();
-      }
+      this._retryFailedCreations();
       await Promise.all([...this._pendingCreations.values()]);
       const failed = this._failedCreations.values().next().value;
       if (!failed || this._lifecycleState === LifecycleState.CLOSED) {
         return;
       }
+      // Reported to one flush only, since a document that can never be created would fail every later one.
+      const rejected = [...this._failedCreations].find(([, { retry }]) => retry === undefined);
+      if (rejected) {
+        this._failedCreations.delete(rejected[0]);
+        this._emitSaveStateEvent();
+        throw rejected[1].error;
+      }
       if (attempt >= FLUSH_ATTEMPTS) {
         throw failed.error;
       }
       await sleep(FLUSH_RETRY_DELAY_MS * attempt);
+    }
+  }
+
+  private _retryFailedCreations(): void {
+    for (const [id, { retry }] of this._failedCreations) {
+      if (retry === undefined) {
+        continue;
+      }
+      this._failedCreations.delete(id);
+      retry();
     }
   }
 
@@ -387,6 +428,10 @@ export class RepoProxy extends Resource {
       handle._failReady(error);
     }
     this._failedCreations.clear();
+    this._pendingUpdateIds.clear();
+    this._inFlightUpdateIds.clear();
+    this._pendingCreations.clear();
+    this._emitSaveStateEvent();
     this._subscriptionCleanup?.();
     this._subscriptionCleanup = undefined;
   }
@@ -399,12 +444,15 @@ export class RepoProxy extends Resource {
     this._sendUpdatesJob?.forceTrigger();
   };
 
-  /** Registers or unregisters {@link _onPageHide} where a page exists; a worker or Node has no such event. */
+  /**
+   * workerd's global scope is an EventTarget too, and there the listener would hold this proxy, and its
+   * whole client, until close.
+   */
   private _pageEvents(method: 'addEventListener' | 'removeEventListener'): void {
-    const fn = Reflect.get(globalThis, method);
-    if (typeof fn === 'function') {
-      fn.call(globalThis, 'pagehide', this._onPageHide);
+    if (typeof globalThis.document === 'undefined') {
+      return;
     }
+    globalThis[method]('pagehide', this._onPageHide);
   }
 
   /**
@@ -426,7 +474,7 @@ export class RepoProxy extends Resource {
     this._isReconnecting = true;
 
     // Increment generation so old tasks know they're abandoned.
-    this._generation++;
+    this._abandonGeneration();
 
     // Abandon the old scheduler - don't wait for it since it may be blocked on dead RPC.
     // Create a fresh scheduler that will use the new data service.
@@ -438,6 +486,19 @@ export class RepoProxy extends Resource {
     // Hands the documents `_subscribe` re-queued to the fresh subscription, raising if they cannot
     // be registered — the caller resumes replication on the strength of this call returning.
     await this.flush();
+  }
+
+  /**
+   * Starts a new generation, handing back the documents the old one had in flight: they went to a
+   * subscription or host being replaced, which may never answer, and the replacement applies a
+   * duplicate idempotently.
+   */
+  private _abandonGeneration(): void {
+    this._generation++;
+    for (const documentId of this._inFlightUpdateIds) {
+      this._pendingUpdateIds.add(documentId);
+    }
+    this._inFlightUpdateIds.clear();
   }
 
   private _createSendUpdatesJob(): UpdateScheduler {
@@ -505,7 +566,7 @@ export class RepoProxy extends Resource {
     // Keeps the scheduler idle until the replacement is in place.
     this._isReconnecting = true;
     // Abandons the batch racing the dead subscription, so it re-queues quietly instead of raising.
-    this._generation++;
+    this._abandonGeneration();
     const generation = this._generation;
     this._resubscribeDelay = Math.min(
       RESUBSCRIBE_DELAY_MS * 2 ** this._resubscribeAttempts++,
@@ -689,15 +750,17 @@ export class RepoProxy extends Resource {
 
     const handle = new DocHandleProxy<T>({ initialValue, onDelete: cleanup });
     handle.on('change', onChange);
-    const request = () => {
+    const request = (attempt: number) => {
       const creation: Promise<void> = runServiceCall(
         this._runtime,
-        this._dataService['DataService.createDocument']({
+        this._dataService,
+        'DataService.createDocument',
+        {
           spaceId: this._spaceId,
-          // A doc's declared type is an interface without an index signature, which the Struct
-          // field's `Record` type does not accept; the value is a plain JSON object at runtime.
-          initialValue: initialValue as Record<string, unknown>,
-        }),
+          // Bytes of the handle's own doc, so the host takes its history rather than building a second copy
+          // of the initial state, and Automerge values (`RawString`, bytes) need no JSON encoding.
+          ...(initialValue === undefined ? {} : { initialDocument: A.save(handle.doc()) }),
+        },
         { timeout: RPC_TIMEOUT },
       )
         .then(
@@ -722,24 +785,41 @@ export class RepoProxy extends Resource {
               cleanup();
               return;
             }
-            if (!(err instanceof RpcClosedError)) {
-              log.catch(err);
-            }
             if (deleted) {
               return;
             }
-            this._failedCreations.set(handle._internalId, { handle, error: err, retry: request });
+            // A payload the transport cannot encode is refused identically on every attempt.
+            const permanent = Schema.isSchemaError(err);
+            if (attempt === 1 && !(err instanceof RpcClosedError)) {
+              log.catch(err);
+            } else {
+              log('document creation failed again', { attempt, err });
+            }
+            this._failedCreations.set(handle._internalId, {
+              handle,
+              error: err,
+              attempts: attempt,
+              retry: permanent ? undefined : () => request(attempt + 1),
+            });
+            if (permanent) {
+              handle._failReady(err);
+            } else {
+              this._scheduleSendRetry();
+            }
+            this._emitSaveStateEvent();
           },
         )
         .catch((err) => log.catch(err))
         .finally(() => {
           if (this._pendingCreations.get(handle._internalId) === creation) {
             this._pendingCreations.delete(handle._internalId);
+            this._emitSaveStateEvent();
           }
         });
       this._pendingCreations.set(handle._internalId, creation);
+      this._emitSaveStateEvent();
     };
-    request();
+    request(1);
 
     return handle;
   }
@@ -865,6 +945,9 @@ export class RepoProxy extends Resource {
     this._pendingAddIds.clear();
     this._pendingRemoveIds.clear();
     this._pendingUpdateIds.clear();
+    for (const documentId of updateIds) {
+      this._inFlightUpdateIds.add(documentId);
+    }
 
     try {
       await this._subscriptionReady.wait({ timeout: RPC_TIMEOUT });
@@ -877,11 +960,13 @@ export class RepoProxy extends Resource {
       if (add.length > 0 || removeIds.length > 0) {
         await runServiceCall(
           this._runtime,
-          this._dataService['DataService.updateSubscription']({
+          this._dataService,
+          'DataService.updateSubscription',
+          {
             subscriptionId: this._subscriptionId,
             add,
             removeIds,
-          }),
+          },
           { timeout: RPC_TIMEOUT },
         );
       }
@@ -908,7 +993,9 @@ export class RepoProxy extends Resource {
       if (updates.length > 0) {
         await runServiceCall(
           this._runtime,
-          this._dataService['DataService.update']({ subscriptionId: this._subscriptionId, updates }),
+          this._dataService,
+          'DataService.update',
+          { subscriptionId: this._subscriptionId, updates },
           { timeout: RPC_TIMEOUT },
         );
         updates.forEach(({ documentId }) => this._unflushedIds.add(documentId as DocumentId));
@@ -931,7 +1018,6 @@ export class RepoProxy extends Resource {
 
       this._sendRetryAttempts = 0;
       this._releaseDeferred();
-      this._emitSaveStateEvent();
     } catch (err) {
       // A reconnect replaced the subscription under this task, so its failure is not raised below.
       const isAbandoned = generation !== this._generation;
@@ -967,6 +1053,15 @@ export class RepoProxy extends Resource {
         });
         this._scheduleSendRetry();
       }
+    } finally {
+      // Settled either way: acknowledged, or re-queued into `_pendingUpdateIds` by the catch above.
+      // An abandoned pass's ids were handed back when its generation was.
+      if (generation === this._generation) {
+        for (const documentId of updateIds) {
+          this._inFlightUpdateIds.delete(documentId);
+        }
+      }
+      this._emitSaveStateEvent();
     }
   }
 
@@ -976,11 +1071,17 @@ export class RepoProxy extends Resource {
       return;
     }
     this._sendRetryScheduled = true;
-    const delay = Math.min(RESUBSCRIBE_DELAY_MS * 2 ** this._sendRetryAttempts++, RESUBSCRIBE_MAX_DELAY_MS);
+    // A successful update pass resets `_sendRetryAttempts`, so a creation the host keeps refusing backs off on its own count.
+    const creationAttempts = Math.max(0, ...Array.from(this._failedCreations.values(), ({ attempts }) => attempts));
+    const delay = Math.min(
+      RESUBSCRIBE_DELAY_MS * 2 ** Math.max(this._sendRetryAttempts++, creationAttempts - 1),
+      RESUBSCRIBE_MAX_DELAY_MS,
+    );
     scheduleTask(
       this._ctx,
       () => {
         this._sendRetryScheduled = false;
+        this._retryFailedCreations();
         this._sendUpdatesJob?.trigger();
       },
       delay,
@@ -988,16 +1089,27 @@ export class RepoProxy extends Resource {
   }
 
   private _emitSaveStateEvent(): void {
-    const unsavedDocuments = Array.from(this._pendingUpdateIds);
-    const key = unsavedDocuments.join(',');
+    if (this._lifecycleState === LifecycleState.CLOSED) {
+      return;
+    }
+    const unsavedDocuments = Array.from(new Set([...this._pendingUpdateIds, ...this._inFlightUpdateIds])).sort();
+    const pendingCreations = this._pendingCreations.size + this._failedCreations.size;
+    // Retries back off only after a send failed outright; a failed pass with no changes in it loses nothing.
+    const failing = (this._sendRetryAttempts > 0 && unsavedDocuments.length > 0) || this._failedCreations.size > 0;
+    const key = `${unsavedDocuments.join(',')}|${pendingCreations}|${failing}`;
     if (key === this._lastSaveStateKey) {
       return;
     }
     this._lastSaveStateKey = key;
-    this.saveStateChanged.emit({ unsavedDocuments });
+    this.saveStateChanged.emit({ unsavedDocuments, pendingCreations, failing });
   }
 }
 
 export type SaveStateChangedEvent = {
+  /** Documents with changes the host has not acknowledged. */
   unsavedDocuments: DocumentId[];
+  /** New documents the host has not created yet. */
+  pendingCreations: number;
+  /** Whether the last attempt to hand changes to the host failed. */
+  failing: boolean;
 };

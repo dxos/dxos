@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-theme",
-  "version": "0.14.0",
+  "version": "0.16.0",
   "description": "DXOS Surface plugin for providing the application theme.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -101,6 +101,8 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/i18n": "workspace:*",
+    "@dxos/react-ui-calendar": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",

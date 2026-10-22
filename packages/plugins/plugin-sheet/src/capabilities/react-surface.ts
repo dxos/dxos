@@ -10,7 +10,7 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 
-import { RangeList, SheetArticle } from '#containers';
+import { RangeList, SheetArticle, SheetChartsCompanion } from '#containers';
 import { Sheet } from '#types';
 
 export default Capability.makeModule(() =>
@@ -25,6 +25,15 @@ export default Capability.makeModule(() =>
         ),
         component: SheetArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+      }),
+      Surface.create({
+        id: 'charts',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'charts'),
+          AppSurface.companion(AppSurface.Article, Sheet.Sheet),
+        ),
+        component: SheetChartsCompanion,
+        props: ({ role, data: { companionTo } }) => ({ role, subject: companionTo }),
       }),
       Surface.create({
         id: 'objectProperties',

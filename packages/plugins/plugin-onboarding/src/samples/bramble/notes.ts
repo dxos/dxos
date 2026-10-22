@@ -196,7 +196,7 @@ const makeNotes = (
 /** Notes that reference people, organizations and the task set by DXN link and block embed. */
 export type NotesInput = { people: PersonMap; organizations: OrgMap; taskSet: TaskSet.TaskSet };
 
-export const Notes: SampleSpace.Phase<NotesBundle, NotesInput> = SampleSpace.phase('notes', {
+export const Notes: SampleSpace.Partial<NotesBundle, NotesInput> = SampleSpace.partial('notes', {
   schemas: [Markdown.Document],
   run: ({ people, organizations, taskSet }) =>
     Effect.gen(function* () {

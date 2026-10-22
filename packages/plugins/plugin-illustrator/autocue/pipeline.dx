@@ -1,0 +1,14 @@
+diagram aspect=4:3
+group cli "dx CLI" {
+  node CLI "dx drawing" ref="packages/devtools/cli/src/bin.ts"
+  node Plugin "Illustrator" ref="packages/plugins/plugin-illustrator/src/plugin.tsx"
+}
+group engine "@dxos/diagram" {
+  node Compile "Dsl.compile" ref="packages/common/diagram/src/dsl"
+  node Engine "SemanticEngine" ref="packages/common/diagram/src/semantic-engine.ts"
+}
+node Svg ".dx.svg" ref="packages/plugins/plugin-illustrator/src/model/svg-markup.ts"
+edge CLI -> Plugin
+edge Plugin -> Compile "render"
+edge Compile -> Engine "lay out"
+edge Engine -> Svg

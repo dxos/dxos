@@ -97,7 +97,7 @@ export type DocsResult = {
 };
 
 /** The record and the recollections the retro is written from. */
-export const Docs: SampleSpace.Phase<DocsResult> = SampleSpace.phase('docs', {
+export const Docs: SampleSpace.Partial<DocsResult> = SampleSpace.partial('docs', {
   schemas: [Markdown.Document],
   run: () =>
     Effect.gen(function* () {

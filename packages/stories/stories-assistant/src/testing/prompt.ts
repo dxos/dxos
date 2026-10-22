@@ -13,7 +13,7 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  */
 export const submitPrompt = async (canvasElement: HTMLElement, text: string): Promise<void> => {
   const canvas = within(canvasElement);
-  const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 60_000 });
+  const placeholder = await canvas.findByText(/ask anything/i, {}, { timeout: 60_000 });
   const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
   if (!editor) {
     throw new Error('Chat editor not found.');

@@ -2,13 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { readFileSync } from 'node:fs';
 import { Parser, type SparqlQuery } from 'sparqljs';
+
+import * as SqlStorage from '@dxos/sql-sqlite/SqlStorage';
 
 import { SqlSparqlEngine } from '../../engine.ts';
 import { UnsupportedSparqlError } from '../../errors.ts';
 import { type Quad, type Row } from '../../terms.ts';
-import { createNodeSqlStorage } from '../node-sql-storage.ts';
 import { type CompareOptions, compareResults } from './compare.ts';
 import { type W3cTest, localPath } from './manifest.ts';
 import { parseRdfFile } from './rdf.ts';
@@ -147,7 +149,7 @@ export const sqlEngine: W3cEngine = {
   evaluate: async (query, dataset) => {
     let engine = loaded.get(dataset);
     if (!engine) {
-      engine = new SqlSparqlEngine(createNodeSqlStorage());
+      engine = new SqlSparqlEngine(Effect.runSync(SqlStorage.makeMemory()));
       engine.init();
       engine.insert(dataset);
       loaded.set(dataset, engine);
@@ -169,7 +171,7 @@ export const sqlEngine: W3cEngine = {
     }
   },
   checkSyntax: async (query) => {
-    const engine = new SqlSparqlEngine(createNodeSqlStorage());
+    const engine = new SqlSparqlEngine(Effect.runSync(SqlStorage.makeMemory()));
     engine.init();
     try {
       engine.query(query);

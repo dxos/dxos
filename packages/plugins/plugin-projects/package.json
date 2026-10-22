@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-projects",
-  "version": "0.14.0",
+  "version": "0.16.0",
   "description": "Projects — interactive, long-running processes with instructions, routines, and artifacts",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -74,6 +74,21 @@
       "import": "./dist/lib/index.mjs"
     },
     "./package.json": "./package.json",
+    "./Feature": {
+      "source": "./src/types/Feature.ts",
+      "types": "./dist/types/src/types/Feature.d.ts",
+      "import": "./dist/lib/Feature.mjs"
+    },
+    "./FeatureMapView": {
+      "source": "./src/types/FeatureMapView.ts",
+      "types": "./dist/types/src/types/FeatureMapView.d.ts",
+      "import": "./dist/lib/FeatureMapView.mjs"
+    },
+    "./FeatureOperation": {
+      "source": "./src/types/FeatureOperation.ts",
+      "types": "./dist/types/src/types/FeatureOperation.d.ts",
+      "import": "./dist/lib/FeatureOperation.mjs"
+    },
     "./ProjectCapabilities": {
       "source": "./src/types/ProjectCapabilities.ts",
       "types": "./dist/types/src/types/ProjectCapabilities.d.ts",
@@ -118,6 +133,11 @@
       "source": "./src/types/Settings.ts",
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
+    },
+    "./Showcase": {
+      "source": "./src/types/Showcase.ts",
+      "types": "./dist/types/src/types/Showcase.d.ts",
+      "import": "./dist/lib/Showcase.mjs"
     },
     "./Templates": {
       "source": "./src/Templates.ts",
@@ -167,6 +187,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/extractor-lib": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
@@ -176,15 +197,20 @@
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-registry": "workspace:*",
     "@dxos/plugin-routine": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-tasks": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-canvas": "workspace:*",
+    "@dxos/react-ui-dnd": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
+    "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
     "@dxos/react-ui-task": "workspace:*",
     "@dxos/react-ui-trace": "workspace:*",

@@ -1,6 +1,21 @@
 layer: tool
 language: typescript
 tasks:
+  # The config's own helpers only; the stories run under `test-storybook` in the packages that own them. Not the
+  # `ts-test` tag, whose `^:build` would build every package the storybook depends on.
+  test:
+    command: pnpm exec dx-killorphans vitest run --passWithNoTests --config vitest.node.config.ts
+    deps:
+      - esbuild-plugins:build
+      - node-std:build
+      - vite-plugin-import-source:build
+      - vite-plugin-module-url:build
+    inputs:
+      - .storybook/indexers.ts
+      - test/**/*
+      - vitest.node.config.ts
+      - /vitest.base.config.ts
+      - /vite.base.config.ts
   #
   # Test locally via: npx http-server ./out/storybook-react
   #
@@ -25,6 +40,8 @@ tasks:
       - /tools/storybook-react/.storybook/main.ts
       - static/*
       - $NODE_OPTIONS
+      # Finds every package's stories by glob, not through a dependency, so no closure covers them.
+      - /pnpm-lock.yaml
     outputs:
       - out/storybook-react/
   # Static build of only the stories the chat perf flow loads (`assistant-e2e:e2e-perf`), which serves

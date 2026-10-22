@@ -9,6 +9,7 @@ export * from './useEmailComposerExtensions.ts';
 export * from './useExtractedObjects.ts';
 export * from './useInjectedMailboxActions.tsx';
 export * from './useMailboxExtractorActions.tsx';
+export * from './useQueryFilter.tsx';
 export * from './useSendEmail.ts';
 export * from './useShadowObject.ts';
 export * from './useSyncTrigger.ts';

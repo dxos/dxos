@@ -5,6 +5,8 @@ mod audio_input;
 mod asset_cache;
 pub mod channel;
 #[cfg(desktop)]
+mod exit_guard;
+#[cfg(desktop)]
 mod last_url;
 #[cfg(desktop)]
 mod oauth;
@@ -247,6 +249,9 @@ pub fn run() {
         #[cfg(target_os = "macos")]
         spotlight::hide_spotlight,
         web_process::take_web_process_terminations,
+        exit_guard::defer_exit,
+        exit_guard::confirm_exit,
+        exit_guard::cancel_exit,
     ]);
 
     #[cfg(mobile)]
@@ -449,6 +454,19 @@ pub fn run() {
                     });
                 }
 
+                // Closing the window ends the page and then the app, so the page is asked first, as on the tray's Quit.
+                {
+                    let window = main_window.clone();
+                    main_window.on_window_event(move |event| {
+                        if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                            use tauri::Manager;
+                            if exit_guard::on_exit_requested(window.app_handle(), MAIN_WINDOW_LABEL) {
+                                api.prevent_close();
+                            }
+                        }
+                    });
+                }
+
                 #[cfg(target_os = "macos")]
                 {
                     let window = main_window.clone();
@@ -493,10 +511,13 @@ pub fn run() {
         .run(|_app, _event| {
             // Quit from the menu, Cmd+Q and the updater's relaunch exit without closing the window first.
             #[cfg(desktop)]
-            if let tauri::RunEvent::ExitRequested { .. } = _event {
+            if let tauri::RunEvent::ExitRequested { api, .. } = _event {
                 use tauri::Manager;
                 if let Some(window) = _app.get_webview_window(MAIN_WINDOW_LABEL) {
                     last_url::save(&window, &app_root_url(&_app.config().identifier));
+                }
+                if exit_guard::on_exit_requested(_app, MAIN_WINDOW_LABEL) {
+                    api.prevent_exit();
                 }
             }
         });

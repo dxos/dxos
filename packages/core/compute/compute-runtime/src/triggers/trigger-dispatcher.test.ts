@@ -34,7 +34,7 @@ import { Person, Task } from '@dxos/types';
 
 import * as ProcessManager from '../ProcessManager.ts';
 import { credentialsLayerConfig } from '../services/credentials.ts';
-import { LEGACY_KEY_FEED_CURSOR, TriggerDispatcher } from './trigger-dispatcher.ts';
+import { LEGACY_KEY_FEED_CURSOR, TriggerDispatcher, resetFeedCursor } from './trigger-dispatcher.ts';
 import { TriggerStateStore } from './trigger-state-store.ts';
 
 /**
@@ -121,6 +121,14 @@ const PriorityOp = Operation.make({
   output: Schema.Void,
 });
 
+/** Rewinds every feed trigger in the space when invoked, so a test can land a reset while a batch runs. */
+const ResetFeedTriggersOp = Operation.make({
+  meta: { key: DXN.make('com.example.operation.triggerDispatcher.resetFeedTriggers'), name: 'Reset feed triggers' },
+  input: Schema.Any,
+  output: Schema.Void,
+  services: [Database.Service],
+});
+
 /** Opens a span when invoked, so a test can see which tracer a dispatched trigger ran under. */
 const TracedOp = Operation.make({
   meta: { key: DXN.make('com.example.operation.triggerDispatcher.traced'), name: 'Traced' },
@@ -142,6 +150,14 @@ const dispatcherSpans: Tracer.Span[] = [];
 
 const TestHanlers = OperationHandlerSet.make(
   PriorityOp.pipe(Operation.withHandler(() => Effect.void)),
+  ResetFeedTriggersOp.pipe(
+    Operation.withHandler(
+      Effect.fn(function* () {
+        const triggers = yield* Database.query(Filter.type(Trigger.Trigger)).run;
+        triggers.filter((trigger) => trigger.spec?.kind === 'feed').forEach(resetFeedCursor);
+      }),
+    ),
+  ),
   SubjectProbeOp.pipe(
     Operation.withHandler(
       Effect.fn(function* (event: TriggerEvent.SubscriptionEvent) {
@@ -189,6 +205,7 @@ const TestLayer = (
     failureCooldown?: Duration.Duration;
     livePollInterval?: Duration.Duration;
     spaceAwareResolver?: boolean;
+    traceSink?: Trace.Sink;
   } = {},
 ) =>
   Layer.empty.pipe(
@@ -222,7 +239,7 @@ const TestLayer = (
       ),
     ),
     Layer.provideMerge(Registry.layer),
-    Layer.provideMerge(Trace.layerNoop),
+    Layer.provideMerge(options.traceSink ? Layer.succeed(Trace.TraceSink, options.traceSink) : Trace.layerNoop),
   );
 
 /**
@@ -941,6 +958,84 @@ describe('TriggerDispatcher', () => {
       }, Effect.provide(TestLayer())),
     );
 
+    const decodeBatch = Schema.decodeUnknownSync(
+      Schema.Struct({ names: Schema.Array(Schema.Struct({ fullName: Schema.String })) }),
+    );
+
+    it.effect(
+      'delivers batchSize items per invocation, in feed order',
+      Effect.fnUntraced(function* ({ expect }) {
+        const feed = yield* Database.add(Feed.make());
+        const functionObj = yield* registerOperation(Reply);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specFeed(feed, { batchSize: 2 }),
+          input: { names: '{{event.items}}' },
+        });
+        yield* Database.add(trigger);
+        yield* Feed.append(
+          feed,
+          ['Alice', 'Bob', 'Charlie'].map((fullName) => Obj.make(Person.Person, { fullName })),
+        );
+
+        const dispatcher = yield* TriggerDispatcher;
+        const results = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'], untilExhausted: true });
+        const batches = results.map(({ result }) => {
+          invariant(Exit.isSuccess(result));
+          return decodeBatch(result.value).names.map(({ fullName }) => fullName);
+        });
+        expect(batches).toEqual([['Alice', 'Bob'], ['Charlie']]);
+        expect(yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] })).toEqual([]);
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'a reset cursor reads the feed again from its first item',
+      Effect.fnUntraced(function* ({ expect }) {
+        const feed = yield* Database.add(Feed.make());
+        const functionObj = yield* registerOperation(Reply);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specFeed(feed),
+        });
+        yield* Database.add(trigger);
+        yield* Feed.append(feed, [
+          Obj.make(Person.Person, { fullName: 'Alice' }),
+          Obj.make(Person.Person, { fullName: 'Bob' }),
+        ]);
+
+        const dispatcher = yield* TriggerDispatcher;
+        expect(yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'], untilExhausted: true })).toHaveLength(2);
+        expect(yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] })).toEqual([]);
+
+        resetFeedCursor(trigger);
+        yield* Database.flush();
+        expect(yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'], untilExhausted: true })).toHaveLength(2);
+      }, Effect.provide(TestLayer())),
+    );
+
+    it.effect(
+      'a reset during the first batch is not overwritten by that batch',
+      Effect.fnUntraced(function* ({ expect }) {
+        const feed = yield* Database.add(Feed.make());
+        const functionObj = yield* registerOperation(ResetFeedTriggersOp);
+        const trigger = Trigger.make({
+          runnable: Ref.make(functionObj),
+          enabled: true,
+          spec: Trigger.specFeed(feed),
+        });
+        yield* Database.add(trigger);
+        yield* Feed.append(feed, [Obj.make(Person.Person, { fullName: 'Alice' })]);
+
+        const dispatcher = yield* TriggerDispatcher;
+        const [result] = yield* dispatcher.invokeScheduledTriggers({ kinds: ['feed'] });
+        expect(Exit.isSuccess(result.result)).toBe(true);
+        expect(Annotation.get(trigger, Feed.CursorAnnotation).pipe(Option.getOrUndefined)).toBe(Feed.START);
+      }, Effect.provide(TestLayer())),
+    );
+
     it.effect(
       'builds input from pattern',
       Effect.fnUntraced(function* ({ expect }) {
@@ -1518,6 +1613,37 @@ describe('TriggerDispatcher', () => {
         const triggerStatus = status.triggers.find((t) => t.triggerId === trigger.id);
         expect(triggerStatus?.retryPending).toBe(false);
       }, Effect.provide(TestLayer())),
+    );
+
+    // Each retry is a new process. Its trace names the first invocation's pid as `runId`, so the trace
+    // shows the invocations as one run.
+    const traced: Trace.Message[] = [];
+    it.effect(
+      'a retry traces as a continuation of the run that requested it',
+      Effect.fnUntraced(
+        function* ({ expect }) {
+          const dispatcher = yield* TriggerDispatcher;
+          const op = yield* registerOperation(RetryOp);
+          const trigger = Trigger.make({ runnable: Ref.make(op), enabled: true, spec: Trigger.specDirect() });
+          yield* Database.add(trigger);
+          yield* dispatcher.invokeTrigger({ trigger, event: {} });
+          yield* dispatcher.invokeScheduledTriggers({ untilExhausted: true });
+
+          const starts = traced
+            .filter((message) => !message.meta.parentPid)
+            .filter((message) => message.events.some((event) => event.type === Trace.OperationStart.key))
+            .map((message) => message.meta);
+          expect(starts.length).toBeGreaterThanOrEqual(3);
+          const [first, ...retries] = starts;
+          expect(first.runId).toBeUndefined();
+          expect(first.pid).toBeDefined();
+          for (const retry of retries) {
+            expect(retry.pid).not.toBe(first.pid);
+            expect(retry.runId).toBe(first.pid);
+          }
+        },
+        Effect.provide(TestLayer({ traceSink: { write: (message) => traced.push(message) } })),
+      ),
     );
 
     it.effect(

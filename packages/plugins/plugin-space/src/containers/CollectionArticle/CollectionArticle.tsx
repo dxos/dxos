@@ -58,7 +58,7 @@ export const CollectionArticle = ({
               <Layout.Container padBlock>
                 <Mosaic.Container asChild>
                   <Mosaic.Stack
-                    classNames='gap-1'
+                    classNames='gap-2'
                     draggable={false}
                     items={items}
                     getId={(item) => item.id}

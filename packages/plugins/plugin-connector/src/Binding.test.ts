@@ -256,6 +256,7 @@ describe('Binding.sync', () => {
   const connector: ConnectorSpec.ConnectorEntry = {
     id: 'example',
     source: 'example.com',
+    kind: 'user',
     sync: { operation: TestSync, trigger: Trigger.specTimer('*/10 * * * *') },
   };
 
@@ -270,6 +271,7 @@ describe('Binding.sync', () => {
       trigger.enabled
         ? Effect.sync(() => void fired.push(trigger.id))
         : Effect.fail(new Trigger.TriggerDisabledError(trigger.id)),
+    resetTrigger: () => Effect.void,
   };
 
   const toastHandler = LayoutOperation.AddToast.pipe(
@@ -506,6 +508,7 @@ describe('binding lifecycle', () => {
   const connector: ConnectorSpec.ConnectorEntry = {
     id: 'gmail',
     source: SOURCE,
+    kind: 'user',
     sync: { operation: TestSync, trigger: Trigger.specTimer('*/10 * * * *') },
   };
 
@@ -771,6 +774,7 @@ describe('Binding.syncAll', () => {
         fired.push(trigger.id);
         recorded.wake();
       }),
+    resetTrigger: () => Effect.void,
   };
 
   test('fans out to each binding', async ({ expect }) => {
@@ -984,6 +988,7 @@ describe('Binding.syncAll', () => {
   }): ConnectorSpec.ConnectorEntry => ({
     id: 'example',
     source: 'example.com',
+    kind: 'user',
     sync: {
       operation: TestSync,
       ...(auto ? { auto: true } : {}),

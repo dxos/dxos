@@ -4,13 +4,13 @@
 
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
+import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Banner from '@dxos/react-ui/Banner';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
@@ -27,20 +27,19 @@ const DiscordSetupRoot = ({ role, error, toolbar, children }: DiscordSetupRootPr
   return (
     <Panel.Root role={role} data-testid='discord-setup'>
       {toolbar && <Panel.Header>{toolbar}</Panel.Header>}
+      {/* The form's frame and field spacing, so its sections read as the forms around it do. */}
       <Panel.Body asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport asChild>
-            <Layout.Container gap='lg'>
-              {error && (
-                <Banner.Root valence='error'>
-                  <Banner.Title>{t('discord-setup-error.label')}</Banner.Title>
-                  <Banner.Body>{error}</Banner.Body>
-                </Banner.Root>
-              )}
-              {children}
-            </Layout.Container>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
+        <Form.Viewport scroll>
+          <Layout.Container gutter='inherit' gap='sm'>
+            {error && (
+              <Banner.Root valence='error'>
+                <Banner.Title>{t('discord-setup-error.label')}</Banner.Title>
+                <Banner.Body>{error}</Banner.Body>
+              </Banner.Root>
+            )}
+            {children}
+          </Layout.Container>
+        </Form.Viewport>
       </Panel.Body>
     </Panel.Root>
   );
@@ -60,6 +59,8 @@ type DiscordSetupToolbarProps = {
   onConnect?: () => void;
   onSignOut?: () => void;
   onRefresh?: () => void;
+  /** The hub console's page for the bots on this EDGE; its action opens it in a new tab. */
+  consoleUrl?: string;
 };
 
 /** Signs the user in to (or out of) Discord, and re-reads the servers. */
@@ -70,6 +71,7 @@ const DiscordSetupToolbar = ({
   onConnect,
   onSignOut,
   onRefresh,
+  consoleUrl,
 }: DiscordSetupToolbarProps) => {
   const menuActions = useMenuBuilder(
     () =>
@@ -96,8 +98,20 @@ const DiscordSetupToolbar = ({
           },
           () => (signedIn ? onSignOut : onConnect)?.(),
         )
+        .subgraph(
+          consoleUrl !== undefined &&
+            ((builder) =>
+              builder.action(
+                'console',
+                {
+                  label: ['discord-setup-console.label', { ns: meta.profile.key }],
+                  icon: 'ph--arrow-square-out--regular',
+                },
+                () => window.open(consoleUrl, '_blank', 'noopener,noreferrer'),
+              )),
+        )
         .build(),
-    [signedIn, busy, onConnect, onSignOut, onRefresh],
+    [signedIn, busy, onConnect, onSignOut, onRefresh, consoleUrl],
   );
 
   const { t } = Hooks.useTranslation(meta.profile.key);

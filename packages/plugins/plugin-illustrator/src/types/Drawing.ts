@@ -19,7 +19,11 @@ import { CardAnnotation } from '@dxos/schema';
  */
 export class Canvas extends Type.makeObject<Canvas>(DXN.make('org.dxos.type.canvas', '0.1.0'))(
   Schema.Struct({
-    schema: Schema.String.pipe(Schema.optional),
+    /** Content version of `content` and `styles`; content migrations (`Migration.defineContent`) key on it. */
+    schema: Schema.String.pipe(
+      Annotation.ContentVersionAnnotation.set({ fields: ['content', 'styles'] }),
+      Schema.optional,
+    ),
     /** Diagram parts by id. */
     content: Schema.Record(Schema.String, Schema.Any),
     /** Named looks the parts share, by id; opaque here like `content`, managed by the renderer's store adapter. */
@@ -35,6 +39,15 @@ export type MakeCanvasOptions = Omit<Partial<Obj.MakeProps<typeof Canvas>>, 'sch
 /** Creates a {@link Canvas} for the given renderer schema. */
 export const makeCanvas = ({ schema, content = {} }: MakeCanvasOptions): Canvas =>
   Obj.make(Canvas, { schema, content });
+
+/**
+ * The format a canvas `schema` names, without its revision (`dxos.org/scene/2` → `dxos.org/scene`); a schema with
+ * no trailing revision is its own format.
+ */
+export const getFormat = (schema: string): string => schema.replace(/\/\d+$/, '');
+
+/** Whether two canvas schemas name the same format, at any revision; how a canvas is matched to its variant. */
+export const isSameFormat = (left: string, right: string): boolean => getFormat(left) === getFormat(right);
 
 /** Type guard for {@link Canvas} objects. */
 export const isCanvas = (object: unknown): object is Canvas => Obj.instanceOf(Canvas, object);

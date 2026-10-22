@@ -14,7 +14,7 @@ import { Inbox } from './inbox.ts';
 import { PipelineBoard } from './pipeline.ts';
 import { REFERENCE } from './util.ts';
 
-const phases = {
+const partials = {
   accounts: Accounts,
   contacts: Contacts,
   pipeline: PipelineBoard,
@@ -30,17 +30,17 @@ const phases = {
  * collection-item types, so they live directly in the space DB and surface through their own
  * containers and the database viewer.
  */
-export const make = (): SampleSpace.Definition<typeof phases, void> =>
+export const make = (): SampleSpace.Definition<typeof partials, void> =>
   SampleSpace.make({
     space: { name: 'Northwind Sales', icon: 'handshake', hue: 'purple' },
     reference: REFERENCE,
-    phases,
-    build: (phases) =>
+    partials,
+    build: (partials) =>
       Effect.gen(function* () {
-        const accounts = yield* phases.accounts();
-        yield* phases.contacts(accounts);
-        yield* phases.pipeline(accounts);
-        yield* phases.inbox();
+        const accounts = yield* partials.accounts();
+        yield* partials.contacts(accounts);
+        yield* partials.pipeline(accounts);
+        yield* partials.inbox();
       }),
   });
 

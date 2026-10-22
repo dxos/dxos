@@ -12,6 +12,7 @@ import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import { meta } from '#meta';
 import { translations } from '#translations';
+import { ClaudeCapabilities } from '#types';
 
 export const ClaudeCodeAgent = Capability.lazyModule(
   'ClaudeCodeAgent',
@@ -22,6 +23,28 @@ export const ClaudeCodeAgent = Capability.lazyModule(
   },
   () => import('./claude-code-agent.ts'),
 );
+
+/** Runs coding agents through the desktop app's `dx-agent` sidecar. */
+export const AgentLauncher = Capability.lazyModule(
+  'AgentLauncher',
+  { provides: [ClaudeCapabilities.AgentHelper], activatesOn: ActivationEvents.Startup, environments: ['tauri'] },
+  () => import('./agent-launcher.ts'),
+);
+
+export const State = Capability.lazyModule(
+  'State',
+  { provides: [ClaudeCapabilities.State], activatesOn: ActivationEvents.Startup },
+  () => import('./state.ts'),
+);
+
+export const Settings = AppCapability.settings(() => import('./settings.ts'), {
+  activatesOn: ActivationEvents.Idle,
+  provides: [ClaudeCapabilities.Settings],
+});
+
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
+  roles: ['org.dxos.plugin.projects.role.settings'],
+});
 
 export const ShellService = AppCapability.layerSpec(() => import('./shell-service.ts'), {
   name: 'ShellService',

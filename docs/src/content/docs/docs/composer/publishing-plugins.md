@@ -263,7 +263,7 @@ desktop app, with the Sandbox plugin on. Its parent task and four subtasks walk 
 in a sandbox on your computer, from fetching this guide to the load prompt; assign them to the agent to start
 it.
 
-In a browser, the template comes from the Coding (Dev) plugin and needs a Composer served locally by
+In a browser, the template comes from the Dev Shell plugin and needs a Composer served locally by
 `vite preview`. There the chat writes the files and checks them against the plugin's dev server. The assistant
 cannot keep a dev server running, so start it yourself once the chat asks, from the Composer app directory:
 

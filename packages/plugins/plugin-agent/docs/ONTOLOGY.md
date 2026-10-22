@@ -1,8 +1,7 @@
-# Agent — memory ontology
+# Agent — knowledge ontology
 
-Status: draft 3 (2026-10-03), for review. Decides what an agent remembers, how it relates, and what
-context each item carries. [MEMORY.md](./MEMORY.md) covers how memories are made and recalled; this
-doc covers what they are.
+Decides what an agent knows, how it relates, and what context each item carries.
+[FACTS.md](./FACTS.md) covers how facts are made and recalled; this doc covers what they are.
 
 ## Principle
 
@@ -11,7 +10,7 @@ The agent's knowledge has five layers, from raw to curated:
 | Layer                  | Holds                                                      | Form                                                      |
 | ---------------------- | ---------------------------------------------------------- | --------------------------------------------------------- |
 | 1. Transcripts         | Every thread and chat, verbatim — the full-fidelity record | The chat's feed; never edited                             |
-| 2. Annotations         | RDF facts read from each source                            | A fact feed per source (§2)                               |
+| 2. Facts               | RDF facts read from sources or recorded by the agent       | Named graphs in the agent's brain (§2)                    |
 | 3. Curated entities    | Profiles of people, organizations and projects             | Objects in the home space, ref'ing canonical objects (§3) |
 | 4. Per-user directives | Each user's instructions and preferences                   | Objects in the home space, keyed by user (§4)             |
 | 5. Intent              | Goals shared with users, tasks the agent owes, triggers    | Goal/Task objects; triggers in process memory (§5)        |
@@ -39,11 +38,12 @@ the RDF graph and ECHO share identity.
 **Decision:** facts are not ECHO objects, nor ECHO feed items. A fact is one low-level proposition and an
 agent records hundreds a day; they live only in the agent's brain (`BrainService`: in memory in the
 app, a Durable Object with SQLite on EDGE), which already indexes them for rules and recall. The
-source remains the full-fidelity record. Annotation feeds of `FactEntry`/`ExtractionPass` items written
-before 2026-10-09 are no longer read.
+source remains the full-fidelity record.
 
-**`readSource` is the one operation that records facts** (`org.dxos.operation.agent.readSource`,
-input `{ agent, source?, url?, text? }`). It reads the source's text — a chat renders as
+Two operations write facts. **`recordFacts`** (`org.dxos.operation.agent.recordFacts`) takes facts the
+agent states itself — subject, predicate, entity or literal object, optional quote, origin, confidence
+and `supersedes` — and pushes them as the agent's own words. **`readSource`**
+(`org.dxos.operation.agent.readSource`, input `{ agent, source?, url?, text? }`) reads the source's text — a chat renders as
 `[time] speaker: text` lines, a markdown transcript keeps its `**Speaker:**` paragraphs — runs
 pipeline-rdf's extraction (chunked) as a direct model call with no chat or session, attributes each
 fact to the utterance its quote comes from (speaker, message DXN, time), pushes the facts to the
@@ -75,9 +75,10 @@ Fact {                          // pipeline-rdf
   `dima`) whenever the fact's quote locates the utterance. Sources are DXN strings (or a URL) in RDF;
   the UI resolves them to ECHO refs to jump to the message. Later: the speaker's DXN once the sender
   is a resolved `Person`.
-- **Append-only.** A correction is a new fact that supersedes (`wasDerivedFrom`); a retraction is a
-  fact with negative polarity. A fact's id is deterministic, so a source read twice stores each fact
-  once.
+- **Append-only.** A correction is a new fact whose `supersedes` lists the ids of the facts it
+  replaces; a fact whose `retracts` lists others withdraws them (no agent tool retracts). A read
+  fact's id is deterministic, so a source read twice stores each fact once; a recorded fact gets a
+  fresh id, so a correction replaces it alone.
 - **Expiry is a query concern.** `validTo` bounds a status ("on the Discord bot this week"); expired
   facts are filtered at recall, never deleted.
 - **Predicates are seeded, and grow per brain.** The extractor is shown pipeline-rdf's seed vocabulary
@@ -85,17 +86,18 @@ Fact {                          // pipeline-rdf
   one when it fits; a predicate it invents ("is blocked by") is minted in the agent's brain namespace
   (`https://dxos.org/semantic/brain/<agent id>/`) with a definition, described in the brain's ontology
   graph. Members, people and organizations are shown to it by name, so mentions resolve to their DIDs and
-  object URIs; any other mention is local to the graph that mentions it. The full declaration is EDGE's
+  object URIs; any other mention is local to the graph that mentions it. The predicate vocabulary, and how
+  its wordings and labels relate to its IRIs, is pipeline-rdf's
+  [docs/ONTOLOGY.md](../../../core/compute/pipeline-rdf/docs/ONTOLOGY.md); the full declaration is EDGE's
   `docs/ONTOLOGY.mdl`. Anything that must behave reliably (triggers, rules) matches on `illocution.force`
   and `factuality.polarity`, which the extractor always fills, not on the predicate string.
-- **Recall** (v1, as built) reads the brain of every agent in the space (`BrainService.query`) and
-  filters in JS: by subject (the entity's names as pipeline-rdf entity ids, matched against subject,
-  object and speaker), by text, and dropping facts past `validTo`; facts come back beside memories
-  with their source and time. Later: push the filters into the brain's query. Scope follows the audience rule (same space / Discord
-  server by default).
-
-`Memory` (`org.dxos.type.agent.memory`) is retired once the feeds land: `recordMemory` writes facts,
-`retrieveMemories` queries them, notes become documents (§3), directives become §4 objects.
+- **Prose predicates are read only.** The seed vocabulary keeps `claim` and `has_note` so older graphs
+  parse; `recordFacts` refuses them and the agent is never offered them.
+- **Recall** (`retrieveFacts`) reads the brain of every agent in the space (`BrainService.query`) and
+  filters in JS: by subject (the entity's keys, widened through strong identifiers, matched against
+  subject, object and speaker), by text, and dropping superseded, retracted and expired facts; each
+  fact comes back with its id, source and time. Later: push the filters into the brain's query, and
+  scope it by audience (same space / Discord server).
 
 ## 3. Curated entities
 
@@ -103,7 +105,7 @@ Objects the agent keeps because people read them:
 
 - **Profile** — a markdown document per person, team or project (`ProfileOf` → the canonical object,
   which may live in another space), regenerated from the facts about it.
-- **Note** — free-form markdown attached to any object (`HasSubject`); a note is a document, not facts.
+- **Note** — free-form markdown attached to any object (`HasSubject`); a note is a document, not facts. Not built: the Note-taker records notes as facts.
 
 The agent never copies a canonical `Person`/`Organization`/`Project` into its home space; when none
 exists it creates one there, and links it to a canonical one found later.
@@ -212,8 +214,7 @@ home before they can be relied on. Promote them to objects once the shape settle
 How the agent is working in one conversation — conversation, note-taker, interviewer, relay; later
 transcriber, designer, fact-checker, researcher. A `Mode` names a reusable bundle of skills.
 
-**As built (2026-10-03):** `Mode` (`org.dxos.type.agent.mode` 0.1.0) is `{ name, description?, skills,
-records? }`. Every agent owns five built-in modes (parented to it): **Conversation** (default),
+**As built:** `Mode` (`org.dxos.type.agent.mode` 0.1.0) is `{ name, description?, skills }`. Every agent owns five built-in modes (parented to it): **Conversation** (default),
 **Note-taker** (`org.dxos.skill.agentNotes`), **Interviewer**, **Relay** and **Support**
 (`org.dxos.skill.agentSupport`, community support in a public channel). Every chat keeps the
 base skills bound — conversation, modes (`listModes`, `switchMode`) and relay — so "tell Dima" works in

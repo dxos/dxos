@@ -5,20 +5,27 @@
 import { type Page, expect, test } from '@playwright/test';
 
 import { random } from '@dxos/random';
-import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
+import { setupPage, storybookUrl, warmStory } from '@dxos/test-utils/playwright';
 
 import { SheetManager } from './sheet-manager.ts';
+
+const url = storybookUrl('plugins-plugin-sheet-containers-sheetarticle--spec', 9005);
+const viewportSize = { width: 1280, height: 720 };
 
 test.describe('plugin-sheet', () => {
   let page: Page;
   let sheet: SheetManager;
   let close: () => Promise<void>;
 
+  test.beforeAll(async ({ browser }) => {
+    test.setTimeout(180_000);
+    await warmStory(browser, url, (warm) =>
+      warm.locator('dx-grid .dx-grid').waitFor({ state: 'visible', timeout: 150_000 }),
+    );
+  });
+
   test.beforeEach(async ({ browser }) => {
-    const setup = await setupPage(browser, {
-      url: storybookUrl('plugins-plugin-sheet-containers-sheetarticle--spec', 9005),
-      viewportSize: { width: 1280, height: 720 },
-    });
+    const setup = await setupPage(browser, { url, viewportSize });
     page = setup.page;
     close = setup.close;
     sheet = new SheetManager(page);
@@ -64,11 +71,13 @@ test.describe('plugin-sheet', () => {
     await sheet.press(')');
     await sheet.commit('Enter');
     // Check sum
-    await expect(sheet.grid.cell(0, 5, 'grid')).toHaveText(`${firstNumber + secondNumber + thirdNumber}`);
+    await expect(sheet.grid.cell(0, 5, 'grid')).toHaveText(
+      (firstNumber + secondNumber + thirdNumber).toLocaleString('en-US'),
+    );
     // Delete row of second number
     await sheet.deleteAxis('row', 3);
-    // Check sum again, it should be one cell up and reflect the updated range.
-    await expect(sheet.grid.cell(0, 4, 'grid')).toHaveText(`${firstNumber + thirdNumber}`);
+    // Check sum again, it should be one cell up and reflect the updated range (numbers render in the locale's format).
+    await expect(sheet.grid.cell(0, 4, 'grid')).toHaveText((firstNumber + thirdNumber).toLocaleString('en-US'));
   });
 
   test('ranges', async () => {

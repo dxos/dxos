@@ -60,7 +60,7 @@ export const SpaceHomeSuggestions = ({ space, onClose }: SpaceScopedProps) => {
             className='cursor-pointer w-full text-start'
             onClick={() => handleRunPrompt(prompt)}
           >
-            <Card.Root>
+            <Card.Root classNames='rounded-sm'>
               <Card.Header>
                 <Layout.Block>
                   <Icon.Icon icon='ph--sparkle--regular' />

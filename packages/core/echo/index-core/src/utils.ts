@@ -229,11 +229,11 @@ export const planChunkPairs = <A, B>(
 /**
  * Merges the rows of a read issued as several statements: the first row per `recordId`, since
  * chunks of overlapping conditions can match a row twice; then ordered by `compare` and cut to
- * `limit`, which each statement could only apply to its own chunk.
+ * `limit` rows after `skip`, which each statement could only apply to its own chunk.
  */
 export const mergeChunkedRows = <T extends { readonly recordId: number }>(
   results: readonly (readonly T[])[],
-  { compare, limit }: { compare?: (left: T, right: T) => number; limit?: number } = {},
+  { compare, skip = 0, limit }: { compare?: (left: T, right: T) => number; skip?: number; limit?: number } = {},
 ): T[] => {
   const byRecordId = new Map<number, T>();
   for (const rows of results) {
@@ -247,5 +247,5 @@ export const mergeChunkedRows = <T extends { readonly recordId: number }>(
   if (compare) {
     merged.sort(compare);
   }
-  return limit === undefined ? merged : merged.slice(0, limit);
+  return merged.slice(skip, limit === undefined ? undefined : skip + limit);
 };

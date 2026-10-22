@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type BuiltinNode, type Scene } from '../model/types.ts';
+import { type BuiltinNode, type View } from '../model/index.ts';
 import { boundsFromPoints, contentBounds, hitTest, nodesIntersecting } from './hit.ts';
 
 const nodes: Record<string, BuiltinNode> = {
@@ -13,7 +13,7 @@ const nodes: Record<string, BuiltinNode> = {
   t: { type: 'note', id: 't', z: 'F', center: { x: 500, y: 500 }, size: { width: 50, height: 20 }, text: 'x' },
 };
 
-const scene: Scene = {
+const scene: View = {
   id: 's',
   nodes,
   links: {
@@ -34,6 +34,23 @@ describe('hit', () => {
     expect(hitTest(scene, { x: 205, y: 100 }, 8)?.id).toBe('b');
   });
 
+  test('hitTest reads a rotated node in its own axes', ({ expect }) => {
+    // A 200 × 20 bar about (0, 0): flat it spans x, turned 90° it spans y.
+    const bar: BuiltinNode = {
+      type: 'rect',
+      id: 'bar',
+      z: 'A',
+      center: { x: 0, y: 0 },
+      size: { width: 200, height: 20 },
+    };
+    const flat: View = { id: 'flat', nodes: { bar }, links: {} };
+    const turned: View = { id: 'turned', nodes: { bar: { ...bar, rotation: 90 } }, links: {} };
+    expect(hitTest(flat, { x: 90, y: 0 })?.id).toBe('bar');
+    expect(hitTest(flat, { x: 0, y: 90 })).toBeUndefined();
+    expect(hitTest(turned, { x: 90, y: 0 })).toBeUndefined();
+    expect(hitTest(turned, { x: 0, y: 90 })?.id).toBe('bar');
+  });
+
   test('nodesIntersecting uses intersection, not containment', ({ expect }) => {
     const ids = nodesIntersecting(scene, boundsFromPoints({ x: 190, y: 90 }, { x: 210, y: 110 })).map(({ id }) => id);
     expect(ids).toEqual(['b']);
@@ -41,7 +58,7 @@ describe('hit', () => {
   });
 
   test('contentBounds frames the content alone, and nothing for an empty scene', ({ expect }) => {
-    const near: Scene = { id: 'near', nodes: { a: nodes.a }, links: {} };
+    const near: View = { id: 'near', nodes: { a: nodes.a }, links: {} };
     // The node's 50..150 box, padded by a major cell and grown to the grid.
     expect(contentBounds(near)).toEqual({ x: -64, y: -64, width: 320, height: 320 });
     expect(contentBounds({ id: 'empty', nodes: {}, links: {} })).toBeUndefined();

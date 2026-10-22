@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
@@ -90,10 +89,7 @@ const STUB_PAYLOADS: readonly unknown[] = [
   },
 ];
 
-const TestLayer = FactStoreLive.layer.pipe(
-  Layer.provideMerge(SqliteClient.layer({ filename: ':memory:' })),
-  Layer.provideMerge(queuedAiService(STUB_PAYLOADS)),
-);
+const TestLayer = FactStoreLive.layerMemory.pipe(Layer.provideMerge(queuedAiService(STUB_PAYLOADS)));
 
 const OUTPUT_PATH = join(dirname(fileURLToPath(import.meta.url)), '../../../temp/facts.generated.ts');
 

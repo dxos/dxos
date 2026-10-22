@@ -1,5 +1,78 @@
 # @dxos/echo-client
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [4007fa2]
+  - @dxos/echo-host@0.16.0
+  - @dxos/echo-protocol@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/async@0.16.0
+  - @dxos/context@0.16.0
+  - @dxos/debug@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/node-std@0.16.0
+  - @dxos/tracing@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/blob@0.16.0
+  - @dxos/protocols@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- b7d83c9: A one-shot lookup by id, such as `Ref.load` or `db.query(Filter.id(...)).run()`, no longer queries the worker's index for objects the working set can load, and asks it only for the ids the working set did not return. Lookups the worker does answer run as soon as they arrive instead of waiting for the query batch in flight.
+
+  When two clients of one worker write the same document at the same time, each now receives the other's change. Previously the worker could record the other client's change as already delivered to the writer and never send it.
+
+- 460bbc3: A live query that selects one type, or everything, in a space with no order, limit, skip, traversal or aggregate keeps its results in id order (the natural order the planner and the index use) whichever source holds each object. Other query shapes, by-id queries included, keep their existing order. Before, a write could move the objects it touched ahead of ones only the index held, and an object that started matching was placed by load order instead of id.
+- 37edd53: Service-RPC timeouts name the call that timed out, e.g. `RPC timeout: DataService.getDocumentHeads`, instead of `RPC timeout: call`.
+
+  - `@dxos/protocols`: `runServiceCall` now takes `(runtime, client, tag, payload, options?)` and uses the tag as the timeout label; payload and result types come from the client method. The old effect form is `runServiceEffect(runtime, effect, { label, timeout? })`, with `label` required.
+  - `@dxos/devtools`: the Indexer card logs a failed heads comparison as a warning instead of reporting an exception for every space on every poll.
+
+- Updated dependencies [ad1686c]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [419bf9a]
+- Updated dependencies [0858217]
+- Updated dependencies [3aed53a]
+- Updated dependencies [b7d83c9]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [d0728d8]
+- Updated dependencies [0420f87]
+- Updated dependencies [1e9c017]
+- Updated dependencies [16bde33]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [ce8f092]
+- Updated dependencies [37edd53]
+- Updated dependencies [7b47951]
+- Updated dependencies [d98e8b9]
+- Updated dependencies [2b6a93a]
+  - @dxos/echo-host@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/echo-protocol@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/tracing@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/blob@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/debug@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/node-std@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

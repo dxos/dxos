@@ -1,5 +1,32 @@
 # @dxos/echo-panproto
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/echo@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/invariant@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- 629c159: `useLensValue` re-reads its projection when the object changes inside components built with the React Compiler, which had cached it on the unchanged object and lens. Pipeline columns rebuild their query only when the view's query changes.
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [16bde33]
+- Updated dependencies [7b47951]
+- Updated dependencies [2b6a93a]
+  - @dxos/echo@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/invariant@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes
