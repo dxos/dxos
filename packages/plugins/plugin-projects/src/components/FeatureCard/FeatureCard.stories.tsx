@@ -28,6 +28,8 @@ type Variant = 'compact' | 'detail' | 'sections';
 
 type StoryArgs = {
   ids: string[];
+  /** The map the cards are drawn from; the sample map by default. */
+  features?: FeatureModel[];
   variant?: Variant;
   /** Read-only without it: no status picker or edit button. */
   editable?: boolean;
@@ -131,8 +133,15 @@ const SectionCards = ({ dependents, ...root }: FeatureCard.RootProps & { depende
   );
 };
 
-const DefaultStory = ({ ids, variant, editable = true, editing, onOpen }: StoryArgs) => {
-  const [features, setFeatures] = useState(SAMPLE_FEATURES);
+const DefaultStory = ({
+  ids,
+  features: initial = SAMPLE_FEATURES,
+  variant,
+  editable = true,
+  editing,
+  onOpen,
+}: StoryArgs) => {
+  const [features, setFeatures] = useState(initial);
   const lookup = useMemo(() => makeFeatureLookup(features), [features]);
   const items = useMemo(() => {
     const onChange = editable
@@ -261,5 +270,33 @@ export const Sections: Story = {
   args: {
     ids: ['sync'],
     variant: 'sections',
+  },
+};
+
+/** A list longer than a section's cap scrolls inside the card under its title, so the card keeps its size. */
+export const LongLists: Story = {
+  args: {
+    ids: ['sync'],
+    variant: 'detail',
+    features: SAMPLE_FEATURES.map((feature) =>
+      feature.id === 'sync'
+        ? {
+            ...feature,
+            tasks: Array.from({ length: 12 }, (_, index) => ({
+              id: `task-${index}`,
+              title: `Task ${index + 1}`,
+              done: index % 3 === 0,
+            })),
+          }
+        : feature,
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const tasks = await within(canvasElement).findByRole('group', { name: 'Tasks' });
+    const viewport = tasks.querySelector<HTMLElement>('[data-scope="scroll-area"][data-part="viewport"]');
+    if (!viewport) {
+      throw new Error('the tasks section does not scroll');
+    }
+    await expect(viewport.scrollHeight).toBeGreaterThan(viewport.clientHeight);
   },
 };

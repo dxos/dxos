@@ -476,6 +476,31 @@ const FeatureCardDependencyCount = (_: FeatureCardCountProps) => {
 FeatureCardDependencyCount.displayName = 'FeatureCard.DependencyCount';
 
 //
+// ListSection
+//
+
+/** Rows past which a list section scrolls, so a long list does not outgrow the card. */
+const SCROLL_ROWS = 5;
+
+type ListSectionProps = PropsWithChildren<{ title: string; count: number }>;
+
+/** A titled list of rows; past `SCROLL_ROWS` the rows scroll under the title in a capped height. */
+const ListSection = ({ title, count, children }: ListSectionProps) => (
+  <Card.Section title={title}>
+    {count > SCROLL_ROWS ? (
+      // Subgrids of the card down to the rows, so they keep its rails; containment would make a standalone grid.
+      <ScrollArea.Root classNames='col-span-full grid-cols-subgrid max-h-48 [container-type:normal]'>
+        <ScrollArea.Viewport classNames='col-span-full grid grid-cols-subgrid content-start [&>.dx-card-section]:col-span-full'>
+          <Card.Section>{children}</Card.Section>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    ) : (
+      children
+    )}
+  </Card.Section>
+);
+
+//
 // Dependencies
 //
 
@@ -491,7 +516,7 @@ const FeatureCardDependencies = ({ onRemove }: FeatureCardDependenciesProps) => 
   const open = useOpenRow('FeatureCard.Dependencies');
   const dependencies = feature.dependsOn.flatMap((id) => lookup(id) ?? []);
   return dependencies.length > 0 ? (
-    <Card.Section title={t('feature-card.depends-on.title')}>
+    <ListSection title={t('feature-card.depends-on.title')} count={dependencies.length}>
       {dependencies.map((dependency) => (
         <Card.Row
           key={dependency.id}
@@ -511,7 +536,7 @@ const FeatureCardDependencies = ({ onRemove }: FeatureCardDependenciesProps) => 
           <Card.Text truncate>{dependency.name}</Card.Text>
         </Card.Row>
       ))}
-    </Card.Section>
+    </ListSection>
   ) : null;
 };
 
@@ -531,7 +556,7 @@ const FeatureCardDependents = ({ dependents }: FeatureCardDependentsProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const open = useOpenRow('FeatureCard.Dependents');
   return dependents.length > 0 ? (
-    <Card.Section title={t('feature-card.dependents.title')}>
+    <ListSection title={t('feature-card.dependents.title')} count={dependents.length}>
       {dependents.map((dependent) => (
         <Card.Row
           key={dependent.id}
@@ -541,7 +566,7 @@ const FeatureCardDependents = ({ dependents }: FeatureCardDependentsProps) => {
           <Card.Text truncate>{dependent.name}</Card.Text>
         </Card.Row>
       ))}
-    </Card.Section>
+    </ListSection>
   ) : null;
 };
 
@@ -558,7 +583,7 @@ const FeatureCardSubfeatures = (_: FeatureCardSubfeaturesProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const { feature } = useFeatureCardContext('FeatureCard.Subfeatures');
   return feature.subfeatures.length > 0 ? (
-    <Card.Section title={t('feature-card.subfeatures.title')}>
+    <ListSection title={t('feature-card.subfeatures.title')} count={feature.subfeatures.length}>
       {feature.subfeatures.map((subfeature, index) => (
         <Card.Row
           key={index}
@@ -568,7 +593,7 @@ const FeatureCardSubfeatures = (_: FeatureCardSubfeaturesProps) => {
           <Card.Text truncate>{subfeature.name}</Card.Text>
         </Card.Row>
       ))}
-    </Card.Section>
+    </ListSection>
   ) : null;
 };
 
@@ -586,7 +611,7 @@ const FeatureCardTasks = (_: FeatureCardTasksProps) => {
   const { feature } = useFeatureCardContext('FeatureCard.Tasks');
   const open = useOpenRow('FeatureCard.Tasks');
   return feature.tasks.length > 0 ? (
-    <Card.Section title={t('feature-card.tasks.title')}>
+    <ListSection title={t('feature-card.tasks.title')} count={feature.tasks.length}>
       {feature.tasks.map((task) => (
         <Card.Row
           key={task.id}
@@ -597,7 +622,7 @@ const FeatureCardTasks = (_: FeatureCardTasksProps) => {
           <Card.Text truncate>{task.title}</Card.Text>
         </Card.Row>
       ))}
-    </Card.Section>
+    </ListSection>
   ) : null;
 };
 
@@ -615,7 +640,7 @@ const FeatureCardShowcases = (_: FeatureCardShowcasesProps) => {
   const { feature } = useFeatureCardContext('FeatureCard.Showcases');
   const open = useOpenRow('FeatureCard.Showcases');
   return feature.showcases.length > 0 ? (
-    <Card.Section title={t('feature-card.showcases.title')}>
+    <ListSection title={t('feature-card.showcases.title')} count={feature.showcases.length}>
       {feature.showcases.map((showcase) => (
         <Card.Row
           key={showcase.id}
@@ -625,7 +650,7 @@ const FeatureCardShowcases = (_: FeatureCardShowcasesProps) => {
           <Card.Text truncate>{showcase.name}</Card.Text>
         </Card.Row>
       ))}
-    </Card.Section>
+    </ListSection>
   ) : null;
 };
 
@@ -643,7 +668,7 @@ const FeatureCardSpecs = (_: FeatureCardSpecsProps) => {
   const { feature, onOpen } = useFeatureCardContext('FeatureCard.Specs');
   const open = useOpenRow('FeatureCard.Specs');
   return feature.specs.length > 0 ? (
-    <Card.Section title={t('feature-card.specs.title')}>
+    <ListSection title={t('feature-card.specs.title')} count={feature.specs.length}>
       {feature.specs.map((spec) =>
         onOpen ? (
           <Card.Row
@@ -658,7 +683,7 @@ const FeatureCardSpecs = (_: FeatureCardSpecsProps) => {
           <Card.Link key={spec} label={spec} href={Feature.getSpecUrl(spec)} />
         ),
       )}
-    </Card.Section>
+    </ListSection>
   ) : null;
 };
 
