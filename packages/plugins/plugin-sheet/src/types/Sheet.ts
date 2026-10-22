@@ -72,12 +72,12 @@ export const TimelineFontSize = Schema.Literals(['xs', 'sm', 'md', 'lg', 'xl']);
 export type TimelineFontSize = Schema.Schema.Type<typeof TimelineFontSize>;
 
 /**
- * A timeline of a 2D range with one event per row: its time (a year or date), category, title and an
- * optional description shown when the event is hovered. Each category is drawn as a column.
+ * A timeline of a 2D range with one event per row: its time (a year or date), category, title, and an
+ * optional description and image URL shown in the event's card. Each category is drawn as a column.
  */
 export const Timeline = Schema.Struct({
   // TODO(burdon): Store as an indexed range (see `SheetUtil.rangeToIndex`) so it tracks row/column edits.
-  range: Schema.String.annotate({ title: 'Range', description: 'A1 notation (e.g., A1:D30).' }),
+  range: Schema.String.annotate({ title: 'Range', description: 'A1 notation (e.g., A1:E30).' }),
   /** The first row holds column names rather than an event. */
   header: Schema.optional(Schema.Boolean.annotate({ title: 'Header row' })),
   spine: Schema.optional(TimelineSpine.annotate({ title: 'Spine' })),

@@ -899,6 +899,9 @@ const EventCard = ({ event, side, getAnchorElement, color, onClose, onHover, onL
     }}
   >
     <Popover.Content classNames='max-w-80 p-3 flex flex-col gap-1' onPointerEnter={onHover} onPointerLeave={onLeave}>
+      {event.image && (
+        <img src={event.image} alt='' loading='lazy' className='mb-1 max-h-40 w-full rounded-sm object-cover' />
+      )}
       <Popover.Title>{event.label}</Popover.Title>
       <div className='text-sm font-medium' style={{ color }}>
         <span style={{ fontVariantNumeric: 'tabular-nums' }}>{event.date}</span> · {event.column}

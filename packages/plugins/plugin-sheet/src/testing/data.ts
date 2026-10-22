@@ -78,7 +78,7 @@ export const createChartTestRanges = (): Sheet.Range[] => [
 const asText = (value: string | number | boolean) =>
   typeof value === 'string' && /^\d+$/.test(value) ? `'${value}` : value;
 
-/** Technology, macro, robotics and industrial-complex events (A1:D{n}), one per row, for timelines. */
+/** Technology, macro, robotics and industrial-complex events (A1:E{n}), one per row, for timelines. */
 export const createTimelineTestCells = (): Record<string, Sheet.CellValue> =>
   Object.fromEntries(
     technologyTimeline.flatMap((row, index) =>
@@ -91,7 +91,7 @@ export const createTimelineTestCells = (): Record<string, Sheet.CellValue> =>
   );
 
 /** The A1 range of the timeline test cells. */
-export const timelineTestRange = `A1:D${technologyTimeline.length}`;
+export const timelineTestRange = `A1:E${technologyTimeline.length}`;
 
 /** Rows enough for the timeline test cells, with room to add events. */
 export const timelineTestRows = technologyTimeline.length + 20;
@@ -100,5 +100,5 @@ export const timelineTestRows = technologyTimeline.length + 20;
 export const timelineTestColumnSizes: Record<string, number> = { D: defaultColSize * 3 };
 
 export const createTimelineTestRanges = (): Sheet.Range[] => [
-  { range: 'A1:D1', key: SheetRange.styleKey, value: 'header' },
+  { range: 'A1:E1', key: SheetRange.styleKey, value: 'header' },
 ];

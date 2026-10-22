@@ -56,7 +56,7 @@ export const toTime = (value: PlotValue): { time: number; date: string } | undef
 const toText = (value: PlotValue | undefined) => (value == null ? '' : String(value).trim());
 
 /**
- * Reads one event per row: the time, its category, its title and an optional description. Rows without a
+ * Reads one event per row: the time, its category, its title, and an optional description and image URL. Rows without a
  * readable time or a title are skipped. The categories, in order of first appearance, are the timeline's columns.
  */
 export const toTimelineEvents = ({ rows }: PlotData): { columns: string[]; events: TimelineEvent[] } => {
@@ -71,7 +71,17 @@ export const toTimelineEvents = ({ rows }: PlotData): { columns: string[]; event
 
     columns.add(column);
     const description = toText(row[3]);
-    return [{ id: String(index), ...when, column, label, ...(description && { description }) }];
+    const image = toText(row[4]);
+    return [
+      {
+        id: String(index),
+        ...when,
+        column,
+        label,
+        ...(description && { description }),
+        ...(/^https?:\/\//.test(image) && { image }),
+      },
+    ];
   });
 
   return { columns: [...columns], events: events.sort((a, b) => a.time - b.time) };

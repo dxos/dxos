@@ -108,4 +108,6 @@ export type TimelineEvent = {
   label: string;
   /** Shown in a card when the event is hovered. */
   description?: string;
+  /** URL of an image shown at the top of the event's card. */
+  image?: string;
 };

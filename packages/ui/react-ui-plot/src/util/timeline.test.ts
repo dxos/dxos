@@ -46,7 +46,7 @@ describe('toTimelineEvents', () => {
     const { columns, events } = toTimelineEvents({
       columns: ['Year', 'Category', 'Event', 'Description'],
       rows: [
-        [2000, 'Macro', 'Crash', 'The Nasdaq falls.'],
+        [2000, 'Macro', 'Crash', 'The Nasdaq falls.', 'https://example.com/crash.png'],
         [1995, 'Tech', 'JavaScript', null],
         ['?', 'Tech', 'Skipped', null],
         [1996, 'Tech', null, 'Untitled rows are skipped.'],
@@ -56,6 +56,7 @@ describe('toTimelineEvents', () => {
     expect(events.map((event) => event.label)).to.deep.eq(['JavaScript', 'Crash']);
     expect(events[0].description).to.be.undefined;
     expect(events[1].description).to.eq('The Nasdaq falls.');
+    expect(events[1].image).to.eq('https://example.com/crash.png');
   });
 });
 
