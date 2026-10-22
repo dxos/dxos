@@ -275,6 +275,9 @@ const mergeViaPanel = async (canvasElement: HTMLElement) => {
 const meta = {
   title: 'plugins/plugin-review/stories/DocumentVersioning',
   render: DefaultStory,
+  beforeEach: ({ id }) => {
+    storyDocs.delete(id);
+  },
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>((context) => {
