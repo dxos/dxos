@@ -29,8 +29,8 @@ const TIMELINE_PLACEHOLDER = '{{timeline}}';
 /** The description column is wide enough to read a sentence. */
 const DESCRIPTION_COLUMN_SIZE = 540;
 
-/** Categories outside the macro view; the sheet keeps them so the chart can show them too. */
-const HIDDEN = ['Tech/Hardware', 'Tech/Software', 'Tech/AI', 'Personal'];
+/** The chart opens on Tech and Personal; the macro categories are a tag click away. */
+const HIDDEN = ['Macro', 'Macro/FIC', 'Macro/TIC', 'Macro/MIC'];
 
 export type Provides = {
   sheet: Sheet.Sheet;

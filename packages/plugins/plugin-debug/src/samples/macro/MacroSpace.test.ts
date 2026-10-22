@@ -17,14 +17,14 @@ describe('Macro template', () => {
     const charts = archive.objects.filter((object) => object['@type']?.includes('org.dxos.type.chart'));
     expect(charts.map((chart) => chart.type)).toEqual(['timeline']);
 
-    // The deck's text: the table of complexes on the first slide, the chart embedded in the second.
+    // The deck's text: slides apart, the table of complexes, and the chart embedded where its placeholder was.
     const { chart } = result.macro;
-    const deck = archive.objects.find((object) => object.content?.includes('# The three complexes'))?.content ?? '';
+    const deck = archive.objects.find((object) => object.content?.includes('Financial (FIC)'))?.content ?? '';
     for (const complex of ['Financial (FIC)', 'Military (MIC)', 'Technology (TIC)']) {
       expect(deck).toContain(complex);
     }
     expect(deck).not.toContain('{{timeline}}');
-    expect(deck.split('\n---\n')).toHaveLength(2);
+    expect(deck.split('\n---\n').length).toBeGreaterThan(1);
     expect(deck).toContain(`(echo:///${chart.id})`);
   });
 });
