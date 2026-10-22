@@ -304,6 +304,50 @@ export class ActivationScheduler {
   }
 
   /**
+   * Deactivates the given modules — and every active module that transitively requires a
+   * singleton capability they provide — then activates the same set again. Used by hot module
+   * replacement: a module's `activate` resolves its body afresh, so re-running it swaps in new
+   * code. A module whose last activation failed is retried, so fixing a broken edit recovers it.
+   * Never-loaded or unknown ids are ignored; returns false when none was reloadable.
+   */
+  reloadModules(ids: readonly string[]): Effect.Effect<boolean, Error, Plugin.Service> {
+    return Effect.gen({ self: this }, function* () {
+      const wanted = new Set(ids);
+      // A module mid-load would otherwise contribute after its own deactivation.
+      yield* Effect.all(
+        [...wanted].map((id) => this.#loader.awaitSettled(id)),
+        { concurrency: 'unbounded', discard: true },
+      );
+
+      // Settled and not active means the last activation failed; its memoized failure is cleared
+      // by the deactivation below.
+      const active = this.#state.getActiveIds();
+      const modules = this.#state
+        .getModules()
+        .filter((module) => wanted.has(module.id) && (active.includes(module.id) || this.#loader.isLoading(module.id)));
+      if (modules.length === 0) {
+        return false;
+      }
+
+      log('reloading modules', { modules: modules.map((module) => module.id) });
+      const dependents = this.#collectCapabilityDependents(modules);
+      for (const module of [...dependents, ...[...modules].reverse()]) {
+        yield* this.#loader.deactivate(module);
+      }
+      for (const module of modules) {
+        const pluginId = this.#state.pluginIdOfModule(module.id);
+        if (pluginId !== undefined) {
+          this.#state.clearFailure(pluginId);
+        }
+      }
+
+      // Unscoped follow-up rounds: a retried module's consumers never activated while it was
+      // broken, so they are not in the candidate set but become runnable once it contributes.
+      return yield* this.runDependencyPass({ candidateModules: [...modules, ...dependents] });
+    });
+  }
+
+  /**
    * Re-activates the modules that were activated by the event.
    */
   resetEvent(event: ActivationEvent.ActivationEvent | string): Effect.Effect<boolean, Error, Plugin.Service> {

@@ -286,6 +286,14 @@ export interface PluginManager {
   reset(event: ActivationEvent.ActivationEvent | string): Effect.Effect<boolean, Error>;
 
   /**
+   * Re-runs the given active modules in place: deactivates them and every active module that
+   * transitively requires a singleton capability they provide, then activates that set again.
+   * Hot module replacement calls this after swapping a module's body; inactive ids are ignored.
+   * @returns Whether any module was reloaded and every re-activation succeeded.
+   */
+  reload(moduleIds: readonly string[]): Effect.Effect<boolean, Error>;
+
+  /**
    * Shuts down the manager by deactivating all active modules in reverse activation order,
    * clearing all capabilities, and resetting lifecycle bookkeeping.
    * Plugins, core, enabled, and modules remain intact so the manager can be reused.
@@ -583,6 +591,10 @@ class ManagerImpl implements PluginManager {
 
   reset(event: ActivationEvent.ActivationEvent | string): Effect.Effect<boolean, Error> {
     return this._scheduler.resetEvent(event).pipe(this._withRuntime);
+  }
+
+  reload(moduleIds: readonly string[]): Effect.Effect<boolean, Error> {
+    return this._scheduler.reloadModules(moduleIds).pipe(this._withRuntime);
   }
 
   shutdown(): Effect.Effect<boolean, Error> {
