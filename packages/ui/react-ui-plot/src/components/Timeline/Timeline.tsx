@@ -6,6 +6,7 @@ import * as d3 from 'd3';
 import React, {
   type KeyboardEvent,
   type MouseEvent,
+  type ReactNode,
   useCallback,
   useEffect,
   useId,
@@ -301,6 +302,8 @@ export type TimelineProps = ThemedClassName<{
   filter?: string;
   /** With this, the top row lists every category as a tag that shows or hides it. */
   onHiddenChange?: (hidden: string[]) => void;
+  /** Controls at the end of the top row (with `onHiddenChange`), aligned with its tags. */
+  actions?: ReactNode;
 }>;
 
 /** Events from tabular data plotted along a vertical, scrollable time axis. */
@@ -311,6 +314,7 @@ export const Timeline = ({
   zoom: initialZoom = MIN_ZOOM,
   filter,
   onHiddenChange,
+  actions,
 }: TimelineProps) => {
   const {
     spine = 'center',
@@ -619,54 +623,59 @@ export const Timeline = ({
   return (
     <div className={mx('dx-fill grid grid-rows-[min-content_1fr] overflow-hidden', classNames)}>
       {onHiddenChange ? (
-        <div className='flex flex-wrap items-center justify-center gap-x-4 gap-y-1 px-2 py-1'>
-          {groupCategories(columns).map((group) => {
-            const shown = group.categories.filter((column) => !hidden?.includes(column));
-            const toggle = (categories: string[], show: boolean) =>
-              onHiddenChange(
-                show
-                  ? (hidden ?? []).filter((name) => !categories.includes(name))
-                  : [...(hidden ?? []), ...categories.filter((name) => !hidden?.includes(name))],
-              );
-            // With ⌘ (Ctrl elsewhere) a tag shows only its categories; doing it again shows everything.
-            const solo = (categories: string[]) => {
-              const others = columns.filter((name) => !categories.includes(name));
-              const isSolo =
-                others.every((name) => hidden?.includes(name)) && categories.every((name) => !hidden?.includes(name));
-              onHiddenChange(isSolo ? [] : others);
-            };
-            const handleClick = (categories: string[], show: boolean) => (event: MouseEvent) =>
-              event.metaKey || event.ctrlKey ? solo(categories) : toggle(categories, show);
-            const tag = (column: string) => (
-              <Tag.Tag
-                key={column}
-                style={tagStyle(column)}
-                aria-pressed={!hidden?.includes(column)}
-                classNames={hidden?.includes(column) ? 'opacity-40' : undefined}
-                onClick={handleClick([column], !!hidden?.includes(column))}
-              >
-                {categoryLabel(column)}
-              </Tag.Tag>
-            );
-
-            return group.categories.length === 1 && group.categories[0] === group.name ? (
-              tag(group.name)
-            ) : (
-              // A parent toggles its own events and all its children: off while any is shown, on when all are hidden.
-              <div key={group.name} role='group' aria-label={group.name} className='flex items-center gap-1'>
+        // Tags centered across the full width; actions, if any, in the right column.
+        <div className='grid min-h-12 grid-cols-[1fr_auto_1fr] items-center gap-2 px-2 py-2'>
+          <div />
+          <div className='flex flex-wrap items-center justify-center gap-x-4 gap-y-1'>
+            {groupCategories(columns).map((group) => {
+              const shown = group.categories.filter((column) => !hidden?.includes(column));
+              const toggle = (categories: string[], show: boolean) =>
+                onHiddenChange(
+                  show
+                    ? (hidden ?? []).filter((name) => !categories.includes(name))
+                    : [...(hidden ?? []), ...categories.filter((name) => !hidden?.includes(name))],
+                );
+              // With ⌘ (Ctrl elsewhere) a tag shows only its categories; doing it again shows everything.
+              const solo = (categories: string[]) => {
+                const others = columns.filter((name) => !categories.includes(name));
+                const isSolo =
+                  others.every((name) => hidden?.includes(name)) && categories.every((name) => !hidden?.includes(name));
+                onHiddenChange(isSolo ? [] : others);
+              };
+              const handleClick = (categories: string[], show: boolean) => (event: MouseEvent) =>
+                event.metaKey || event.ctrlKey ? solo(categories) : toggle(categories, show);
+              const tag = (column: string) => (
                 <Tag.Tag
-                  // The parent takes its own color where it has events of its own, else its first child's.
-                  style={tagStyle(group.categories.includes(group.name) ? group.name : group.categories[0])}
-                  aria-pressed={shown.length > 0}
-                  onClick={handleClick(group.categories, shown.length === 0)}
-                  classNames={mx('font-semibold', shown.length === 0 && 'opacity-40')}
+                  key={column}
+                  style={tagStyle(column)}
+                  aria-pressed={!hidden?.includes(column)}
+                  classNames={hidden?.includes(column) ? 'opacity-40' : undefined}
+                  onClick={handleClick([column], !!hidden?.includes(column))}
                 >
-                  {group.name}
+                  {categoryLabel(column)}
                 </Tag.Tag>
-                {group.categories.filter((column) => column !== group.name).map(tag)}
-              </div>
-            );
-          })}
+              );
+
+              return group.categories.length === 1 && group.categories[0] === group.name ? (
+                tag(group.name)
+              ) : (
+                // A parent toggles its own events and all its children: off while any is shown, on when all are hidden.
+                <div key={group.name} role='group' aria-label={group.name} className='flex items-center gap-1'>
+                  <Tag.Tag
+                    // The parent takes its own color where it has events of its own, else its first child's.
+                    style={tagStyle(group.categories.includes(group.name) ? group.name : group.categories[0])}
+                    aria-pressed={shown.length > 0}
+                    onClick={handleClick(group.categories, shown.length === 0)}
+                    classNames={mx('font-semibold', shown.length === 0 && 'opacity-40')}
+                  >
+                    {group.name}
+                  </Tag.Tag>
+                  {group.categories.filter((column) => column !== group.name).map(tag)}
+                </div>
+              );
+            })}
+          </div>
+          <div className='flex justify-end'>{actions}</div>
         </div>
       ) : (
         // Clipped, so long category names cannot make the timeline scroll sideways.

@@ -11,6 +11,7 @@ import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Typography from '@dxos/react-ui/Typography';
 
@@ -163,7 +164,36 @@ export const TimelineChart = ({ data, settings = {}, onChange, chrome = true }: 
   if (!chrome) {
     return (
       <div className='dx-fill grid overflow-hidden'>
-        <Timeline data={data} options={settings} onHiddenChange={handleHiddenChange} classNames='p-2' />
+        <Timeline
+          data={data}
+          options={settings}
+          onHiddenChange={handleHiddenChange}
+          classNames='px-2 pb-2'
+          // The scale is the one view choice a slide keeps, at the end of the tag row.
+          actions={
+            <ToggleGroup.Root
+              type='single'
+              value={scale}
+              onValueChange={(value: string) => {
+                const next = Sheet.TimelineScale.literals.find((literal) => literal === value);
+                if (next) {
+                  onChange({ scale: next });
+                }
+              }}
+              aria-label={t('timeline-scale.label')}
+            >
+              {Sheet.TimelineScale.literals.map((value) => (
+                <ToggleGroup.Item
+                  key={value}
+                  value={value}
+                  icon={SCALE_ICONS[value]}
+                  label={t(`timeline-scale.${value}.label`)}
+                  iconOnly
+                />
+              ))}
+            </ToggleGroup.Root>
+          }
+        />
       </div>
     );
   }
@@ -171,7 +201,13 @@ export const TimelineChart = ({ data, settings = {}, onChange, chrome = true }: 
   return (
     <div className='dx-fill grid grid-rows-[min-content_1fr_min-content] overflow-hidden'>
       <ActionToolbar {...menuActions} alwaysActive />
-      <Timeline data={data} options={settings} filter={filter} onHiddenChange={handleHiddenChange} classNames='p-2' />
+      <Timeline
+        data={data}
+        options={settings}
+        filter={filter}
+        onHiddenChange={handleHiddenChange}
+        classNames='px-2 pb-2'
+      />
       <Toolbar.Root classNames='bg-transparent border-t border-separator'>
         <Field.Root>
           <Input.Root
