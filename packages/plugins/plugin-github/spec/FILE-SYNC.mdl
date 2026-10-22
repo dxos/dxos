@@ -424,7 +424,7 @@ feat F-4: Push
 
   req F-4.6:
     when: the write branch's tip is not a commit this space wrote (the newest push VersionLink)
-    then: the paths changed since that commit are pulled before anything is exported: a modified path as in F-3.2 with base = the blob this space last pushed, an added path as in F-3.1, and a removed path as in F-3.4, which also removes it from the push tree so F-4.2 does not restore it from the read head; a person's commit on the pull request is merged, never overwritten. The space's own commits are never pulled, since they carry edits it already holds
+    then: the paths changed since that commit are pulled before anything is exported: a modified path as in F-3.2 with base = the blob this space last pushed, an added path as in F-3.1, a renamed path as in F-3.3 (with any content change applied as in F-3.2), and a removed path as in F-3.4, which also removes it from the push tree so F-4.2 does not restore it from the read head; a person's commit on the pull request is merged, never overwritten. The space's own commits are never pulled, since they carry edits it already holds
 ```
 
 ```mdl
@@ -583,4 +583,13 @@ decision D-9: The quiet-pass check also reads the write branch's head, and F-4.6
   for: user:dmaretskyi
   affects: [F-2.2, F-4.6]
   why: Without the second read a reviewer's commit waited for some unrelated change to be noticed, and treating every path as a modification left added files without an object and let removed files come back from the read head's tree.
+```
+
+```mdl
+decision D-10: F-4.6 also routes a person's renamed path through F-3.3, applying any content change in the same step. Fills in [D-9].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.6]
+  why: compareCommits reports a rename as its own status, and without a rule for it the pass would neither re-key the object nor keep the old path from returning.
 ```
