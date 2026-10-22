@@ -16,9 +16,8 @@ import { meta } from '#meta';
 import { Feature, FeatureOperation } from '#types';
 
 export type FeatureEditing = {
-  setStatus: (featureId: string, status: Feature.Status) => void;
-  rename: (featureId: string, name: string) => void;
-  describe: (featureId: string, description: string) => void;
+  /** Writes the given fields of the feature. */
+  update: (featureId: string, changes: Partial<Pick<Feature.Feature, 'name' | 'description' | 'status'>>) => void;
   addDependency: (featureId: string, dependsOnId: string) => void;
   removeDependency: (featureId: string, dependsOnId: string) => void;
   linkTask: (taskId: string, featureId: string) => void;
@@ -73,12 +72,8 @@ export const useFeatureEditing = (db: Database.Database | undefined, project?: P
     const projectRef = project ? Ref.make(project) : undefined;
 
     return {
-      setStatus: (featureId, status) =>
-        void featureRef(featureId).then((feature) => feature && run(FeatureOperation.Update, { feature, status })),
-      rename: (featureId, name) =>
-        void featureRef(featureId).then((feature) => feature && run(FeatureOperation.Update, { feature, name })),
-      describe: (featureId, description) =>
-        void featureRef(featureId).then((feature) => feature && run(FeatureOperation.Update, { feature, description })),
+      update: (featureId, changes) =>
+        void featureRef(featureId).then((feature) => feature && run(FeatureOperation.Update, { feature, ...changes })),
       addDependency: (featureId, dependsOnId) =>
         void Promise.all([featureRef(featureId), featureRef(dependsOnId)]).then(
           ([feature, dependsOn]) => feature && dependsOn && run(FeatureOperation.AddDependency, { feature, dependsOn }),

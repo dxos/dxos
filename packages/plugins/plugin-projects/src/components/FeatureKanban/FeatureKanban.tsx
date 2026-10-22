@@ -8,7 +8,9 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
+import { useListSelection } from '@dxos/react-ui-list';
 import { Board, type BoardModel, Mosaic, type MosaicTileProps, useBoard } from '@dxos/react-ui-mosaic';
+import * as Focus from '@dxos/react-ui/Focus';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Util from '@dxos/react-ui/Util';
 
@@ -16,11 +18,21 @@ import { meta } from '#meta';
 
 import {
   FeatureCard,
+  type FeatureChanges,
   type FeatureLookup,
   type FeatureModel,
   type FeatureStatus,
+  type FeatureTarget,
+  cardOpenHandlers,
+  getFeatureRelation,
   makeFeatureLookup,
 } from '../FeatureCard/index.ts';
+
+/** Mosaic tiles get only their item, so the board's callbacks reach the cards through context. */
+const FeatureKanbanContext = createContext<FeatureKanbanContextValue>({ lookup: () => undefined });
+
+const isFeatureModel = (value: unknown): value is FeatureModel =>
+  typeof value === 'object' && value !== null && 'id' in value && 'status' in value && 'dependsOn' in value;
 
 /** Column order follows a feature's lifecycle; failing sits last, beside the operational features that regressed. */
 export const FEATURE_KANBAN_STATUSES: readonly FeatureStatus[] = [
@@ -33,41 +45,32 @@ export const FEATURE_KANBAN_STATUSES: readonly FeatureStatus[] = [
 
 export type FeatureKanbanProps = {
   features: readonly FeatureModel[];
-  /** Called when a card is dropped on another column; the card moves once the feature's status changes. */
-  onSetStatus?: (id: string, status: FeatureStatus) => void;
-  onOpen?: (id: string) => void;
-  onOpenObject?: (id: string) => void;
-  /** How a spec listed on a card opens in the app; specs it cannot open link to GitHub. */
-  openSpec?: (spec: string) => (() => void) | undefined;
+  onOpen?: (target: FeatureTarget) => void;
   onRemove?: (id: string) => void;
-  onRename?: (id: string, name: string) => void;
-  onDescribe?: (id: string, description: string) => void;
+  /** Also called with a status when a card is dropped on another column; the card moves once the feature changes. */
+  onChange?: (id: string, changes: FeatureChanges) => void;
   editingId?: string;
   onEditingChange?: (id: string | undefined) => void;
+  /** Controlled selection; uncontrolled when omitted. */
+  selectedId?: string;
+  /** The card selected when the board opens, as for a link to one feature. */
+  defaultSelectedId?: string;
+  onSelect?: (id: string | undefined) => void;
 };
 
-type FeatureKanbanContextValue = Omit<FeatureKanbanProps, 'features'> & { lookup: FeatureLookup };
+type FeatureKanbanContextValue = Omit<FeatureKanbanProps, 'features' | 'defaultSelectedId' | 'onSelect'> & {
+  lookup: FeatureLookup;
+  clearSelection?: () => void;
+};
 
-/** Mosaic tiles get only their item, so the board's callbacks reach the cards through context. */
-const FeatureKanbanContext = createContext<FeatureKanbanContextValue>({ lookup: () => undefined });
-
-const isFeatureModel = (value: unknown): value is FeatureModel =>
-  typeof value === 'object' && value !== null && 'id' in value && 'status' in value && 'dependsOn' in value;
-
-const FeatureKanbanCard = ({ data: feature, location, draggable }: MosaicTileProps<FeatureModel>) => {
-  const {
-    lookup,
-    onOpen,
-    onOpenObject,
-    openSpec,
-    onSetStatus,
-    onRemove,
-    onRename,
-    onDescribe,
-    editingId,
-    onEditingChange,
-  } = useContext(FeatureKanbanContext);
+const FeatureKanbanCard = ({ data: feature, location, draggable, binding }: MosaicTileProps<FeatureModel>) => {
+  const { lookup, selectedId, clearSelection, onOpen, onRemove, onChange, editingId, onEditingChange } =
+    useContext(FeatureKanbanContext);
   const editing = onEditingChange ? feature.id === editingId : undefined;
+  const selected = selectedId ? lookup(selectedId) : undefined;
+  const relation = getFeatureRelation(feature, selected);
+  const faded = selected && feature.id !== selected.id && !relation;
+  const { 'aria-selected': _, onClick, onKeyDown, ...selection } = Focus.bindItem(binding);
   return (
     // The whole card is the drag source; while its fields are open the pointer must select text instead.
     <Mosaic.Tile
@@ -75,22 +78,48 @@ const FeatureKanbanCard = ({ data: feature, location, draggable }: MosaicTilePro
       data={feature}
       location={location}
       draggable={draggable && !editing}
+      classNames={faded ? 'opacity-40 transition-opacity' : 'transition-opacity'}
       data-testid='feature-kanban.card'
     >
-      <FeatureCard
-        feature={feature}
-        lookup={lookup}
-        showDependencies={false}
-        onOpen={onOpen ? (feature) => onOpen(feature.id) : undefined}
-        onOpenObject={onOpenObject}
-        openSpec={openSpec}
-        onSetStatus={onSetStatus ? (feature, status) => onSetStatus(feature.id, status) : undefined}
-        onRemove={onRemove ? (feature) => onRemove(feature.id) : undefined}
-        onRename={onRename ? (feature, name) => onRename(feature.id, name) : undefined}
-        onDescribe={onDescribe ? (feature, description) => onDescribe(feature.id, description) : undefined}
-        editing={editing}
-        onEditingChange={(editing) => onEditingChange?.(editing ? feature.id : undefined)}
-      />
+      {/* The card is the board's arrow-key item, selected as the board's `itemProps` say. */}
+      <Focus.Item asChild data-focus-click selected={binding?.['aria-selected']}>
+        <FeatureCard.Root
+          editing={editing}
+          feature={feature}
+          lookup={lookup}
+          relation={relation}
+          {...selection}
+          onKeyDown={(event) => {
+            onKeyDown(event);
+            if (event.key === 'Escape') {
+              clearSelection?.();
+            }
+          }}
+          onClick={(event) => {
+            // Safari does not focus a clicked element that is not a control, and the ring marks where arrows continue.
+            event.currentTarget.focus();
+            onClick(event);
+          }}
+          {...cardOpenHandlers(onOpen && (() => onOpen({ type: 'object', id: feature.id })), { disabled: editing })}
+          onOpen={onOpen}
+          onChange={onChange ? (feature, changes) => onChange(feature.id, changes) : undefined}
+          onEditingChange={(editing) => onEditingChange?.(editing ? feature.id : undefined)}
+        >
+          <FeatureCard.Header>
+            <FeatureCard.Status />
+            <FeatureCard.Title />
+            <FeatureCard.Save />
+            <FeatureCard.Menu onRemove={onRemove ? (feature) => onRemove(feature.id) : undefined} />
+          </FeatureCard.Header>
+          <FeatureCard.Body>
+            <FeatureCard.Description />
+            <FeatureCard.Tags />
+            <FeatureCard.SubfeatureCount />
+            <FeatureCard.TaskCount />
+            <FeatureCard.ShowcaseLead />
+          </FeatureCard.Body>
+        </FeatureCard.Root>
+      </Focus.Item>
     </Mosaic.Tile>
   );
 };
@@ -98,24 +127,24 @@ const FeatureKanbanCard = ({ data: feature, location, draggable }: MosaicTilePro
 const FeatureKanbanColumn = ({ data: status, location }: MosaicTileProps<FeatureStatus>) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const { model } = useBoard<FeatureStatus, FeatureModel>('FeatureKanban.Column');
-  const { onSetStatus } = useContext(FeatureKanbanContext);
+  const { onChange } = useContext(FeatureKanbanContext);
   const count = useAtomValue(model.items(status)).length;
 
   // Order within a column is not stored, so only a drop on another column means anything.
   const eventHandler = useMemo<DndContainerHandler<FeatureModel>>(
     () => ({
       id: `feature-kanban-${status}`,
-      canDrop: ({ source }) => !!onSetStatus && isFeatureModel(source.data) && source.data.status !== status,
+      canDrop: ({ source }) => !!onChange && isFeatureModel(source.data) && source.data.status !== status,
       onTake: ({ source }, cb) => {
         void cb(source.data);
       },
       onDrop: ({ source }) => {
         if (isFeatureModel(source.data) && source.data.status !== status) {
-          onSetStatus?.(source.data.id, status);
+          onChange?.(source.data.id, { status });
         }
       },
     }),
-    [status, onSetStatus],
+    [status, onChange],
   );
 
   return (
@@ -144,19 +173,26 @@ export const FeatureKanban = Util.composable<HTMLDivElement, FeatureKanbanProps>
   (
     {
       features,
-      onSetStatus,
       onOpen,
-      onOpenObject,
-      openSpec,
       onRemove,
-      onRename,
-      onDescribe,
+      onChange,
       editingId,
       onEditingChange,
+      selectedId: selectedIdProp,
+      defaultSelectedId,
+      onSelect,
       ...props
     },
     forwardedRef,
   ) => {
+    const [selectedIdState, setSelectedIdState] = useState<string | undefined>(defaultSelectedId);
+    const selectedId = selectedIdProp ?? selectedIdState;
+    const handleSelect = (id: string | undefined) => {
+      setSelectedIdState(id);
+      onSelect?.(id);
+    };
+    // Single-select: the selected card follows the arrow keys, as in the cards view; Escape clears it.
+    const { bind, clear } = useListSelection({ mode: 'single', value: selectedId, onValueChange: handleSelect });
     const registry = useContext(RegistryContext);
     // Stable atoms fed from props, so a status change moves one card rather than rebuilding the board.
     const [featuresAtom] = useState(() => Atom.make<readonly FeatureModel[]>(features));
@@ -189,20 +225,18 @@ export const FeatureKanban = Util.composable<HTMLDivElement, FeatureKanbanProps>
       <FeatureKanbanContext.Provider
         value={{
           lookup,
-          onSetStatus,
+          selectedId,
+          clearSelection: clear,
           onOpen,
-          onOpenObject,
-          openSpec,
           onRemove,
-          onRename,
-          onDescribe,
+          onChange,
           editingId,
           onEditingChange,
         }}
       >
-        <Board.Root model={model}>
+        <Board.Root model={model} navigation='grid' itemProps={(id) => bind(id).rowProps}>
           <Board.Content
-            {...Util.composableProps(props, { classNames: 'px-2' })}
+            {...Util.composableProps(props)}
             eventHandler={columnHandler}
             Tile={FeatureKanbanColumn}
             data-testid='feature-kanban'
