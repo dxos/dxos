@@ -36,6 +36,11 @@
       "types": "./dist/types/src/containers/index.d.ts",
       "default": "./dist/lib/containers.mjs"
     },
+    "#deck": {
+      "source": "./src/deck/index.ts",
+      "types": "./dist/types/src/deck/index.d.ts",
+      "default": "./dist/lib/deck.mjs"
+    },
     "#hooks": {
       "source": "./src/hooks/index.ts",
       "types": "./dist/types/src/hooks/index.d.ts",
@@ -159,6 +164,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-react": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
