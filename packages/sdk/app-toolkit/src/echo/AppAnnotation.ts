@@ -53,8 +53,8 @@ export const GraphPropsAnnotation = Annotation.make<{ managesAutofocus?: boolean
 });
 
 /**
- * Makes an object's navtree node a list of the ref array `property`: drag-reorder writes the array and
- * removing a member goes through `ContainerModel.remove` (deleting owned members when `deleteOwned`).
+ * Makes an object's navtree node a list of the ref array `property`: drag-reorder writes the array and removing
+ * a member releases it; with `deleteOwned`, owned members have no remove action and are deleted only with the object.
  */
 export const ContainerAnnotation = Annotation.make<{
   property: string;

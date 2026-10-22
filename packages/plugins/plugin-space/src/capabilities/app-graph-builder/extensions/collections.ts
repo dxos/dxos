@@ -386,11 +386,11 @@ const constructObjectActions = ({
         testId: 'spacePlugin.renameObject',
       },
     }),
-    ...(container
+    ...(container && ContainerModel.isRemovable(container, object)
       ? [
           AppGraphNode.makeAction({
             id: 'removeFromContainer',
-            data: () => Effect.sync(() => ContainerModel.remove({ container, object })),
+            data: () => Effect.sync(() => ContainerModel.release({ container, object })),
             properties: {
               label: container.removeLabel ?? REMOVE_FROM_COLLECTION_LABEL,
               icon: 'ph--minus-circle--regular',

@@ -256,7 +256,7 @@ describe('ownership', () => {
   });
 });
 
-describe('remove', () => {
+describe('isRemovable', () => {
   let builder: EchoTestBuilder;
 
   beforeEach(async () => {
@@ -267,35 +267,29 @@ describe('remove', () => {
     await builder.close();
   });
 
-  test('releases the object when the container has no remove handler', async ({ expect }) => {
+  test('any member is removable when the container does not delete owned members', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [Collection.Collection, Item] });
     const item = db.add(Obj.make(Item, { name: 'alice' }));
     const collection = db.add(Collection.make({ objects: [Ref.make(item)] }));
     await db.flush();
 
-    ContainerModel.remove({ container: ContainerModel.collection(collection), object: item });
-    expect(collection.objects).toHaveLength(0);
-    expect(Obj.getParent(item)).toBeUndefined();
+    expect(Obj.getParent(item)?.id).toBe(collection.id);
+    expect(ContainerModel.isRemovable(ContainerModel.collection(collection), item)).toBe(true);
   });
 
-  test('deletes an owned object when the container deletes owned members', async ({ expect }) => {
+  test('owned members of a deleteOwned container are not removable; linked ones are', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [Collection.Collection, Item] });
     const owned = db.add(Obj.make(Item, { name: 'alice' }));
     const linked = db.add(Obj.make(Item, { name: 'bob' }));
     const collection = db.add(Collection.make({ objects: [Ref.make(owned)] }));
-    const other = db.add(Collection.make({ objects: [Ref.make(linked)] }));
+    db.add(Collection.make({ objects: [Ref.make(linked)] }));
     Obj.update(collection, (collection) => {
       collection.objects.push(Ref.make(linked));
     });
     await db.flush();
 
     const container = ContainerModel.make(collection, 'objects', { deleteOwned: true });
-    ContainerModel.remove({ container, object: owned });
-    ContainerModel.remove({ container, object: linked });
-    await db.flush();
-    expect(collection.objects).toHaveLength(0);
-    expect(Obj.isDeleted(owned)).toBe(true);
-    expect(Obj.isDeleted(linked)).toBe(false);
-    expect(Obj.getParent(linked)?.id).toBe(other.id);
+    expect(ContainerModel.isRemovable(container, owned)).toBe(false);
+    expect(ContainerModel.isRemovable(container, linked)).toBe(true);
   });
 });

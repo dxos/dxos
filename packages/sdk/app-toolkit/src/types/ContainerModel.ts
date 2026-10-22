@@ -24,7 +24,7 @@ export type Container = {
   /** Which objects the list takes; any object when absent. */
   readonly accepts?: (object: Obj.Unknown) => boolean;
   readonly removeLabel?: Translations.Label;
-  /** Whether {@link remove} deletes a member the container owns rather than orphaning it. */
+  /** Whether members the container owns are deleted only with it, so {@link isRemovable} refuses them. */
   readonly deleteOwned?: boolean;
 };
 
@@ -145,15 +145,9 @@ export const release = ({ container, object, to }: Omit<LinkProps, 'index'> & { 
   }
 };
 
-/** Removes the object at the user's request; an owned object is deleted when the container says so, else released. */
-export const remove = ({ container, object }: Omit<LinkProps, 'index'>): void => {
-  if (container.deleteOwned && Obj.getParent(object)?.id === container.object.id) {
-    unlink({ container, object });
-    Obj.getDatabase(object)?.remove(object);
-  } else {
-    release({ container, object });
-  }
-};
+/** Whether the user may {@link release} the object from the container; owned members of a `deleteOwned` container may not. */
+export const isRemovable = (container: Container, object: Obj.Unknown): boolean =>
+  !(container.deleteOwned && Obj.getParent(object)?.id === container.object.id);
 
 type AddProps = {
   object: Obj.Unknown;
