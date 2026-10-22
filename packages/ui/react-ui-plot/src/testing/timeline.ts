@@ -5,12 +5,40 @@
 import { type PlotValue } from '../types.ts';
 
 /**
- * Events from 1954 to 2028, a header row then one per row (with a Wikipedia image where one is free to use), dated by month (or by year where the month is uncertain).
+ * Events from 1923 to 2028, a header row then one per row (with a Wikipedia image where one is free to use), dated by month (or by year where the month is uncertain).
  * Categories nest by path: `Tech/` (Hardware, Software, AI), `Macro` and its military- (MIC), financial- (FIC) and
  * tech-industrial (TIC) complexes, and `Personal` (a resume).
  */
 export const technologyTimeline: PlotValue[][] = [
   ['Date', 'Category', 'Event', 'Description', 'Image'],
+  [
+    '1923',
+    'Tech/Hardware',
+    'Enigma',
+    'The German rotor cipher machine goes on sale; the military adopts it later in the decade.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bd/Enigma_%28crittografia%29_-_Museo_scienza_e_tecnologia_Milano.jpg/500px-Enigma_%28crittografia%29_-_Museo_scienza_e_tecnologia_Milano.jpg',
+  ],
+  [
+    '1944-02',
+    'Tech/Hardware',
+    'Colossus',
+    'Bletchley Park’s codebreaking machine, the first programmable electronic digital computer.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4b/Colossus.jpg/500px-Colossus.jpg',
+  ],
+  [
+    '1945-12',
+    'Tech/Hardware',
+    'ENIAC',
+    'The first general-purpose electronic computer runs its first job: a thermonuclear-weapon calculation for Los Alamos.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6c/ENIAC_Penn1.jpg/500px-ENIAC_Penn1.jpg',
+  ],
+  [
+    '1952-03',
+    'Tech/Hardware',
+    'MANIAC I',
+    'The Los Alamos computer runs calculations for the hydrogen bomb.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/The_MANIAC%E2%80%99s_arithmetic_unit_nearing_completion_in_1952.jpg/500px-The_MANIAC%E2%80%99s_arithmetic_unit_nearing_completion_in_1952.jpg',
+  ],
   [
     '1954',
     'Tech/Hardware',
