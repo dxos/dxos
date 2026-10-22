@@ -77,8 +77,9 @@ jobs:
       contents: read
       packages: read
     runs-on: ubuntu-24.04
-    # The scheduled run bypasses the cache and compiles everything here, in about 24 minutes.
-    timeout-minutes: 40
+    # The scheduled run bypasses the cache: the compile gate takes about 24 minutes, then module structure
+    # rebuilds every package again (another 12), before knip and the docs bundle.
+    timeout-minutes: 75
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -414,8 +415,8 @@ jobs:
       packages: read
       statuses: write
     runs-on: ubuntu-24.04
-    # The scheduled run bypasses the cache and rebuilds every dependency per shard.
-    timeout-minutes: 60
+    # The scheduled run bypasses the cache and rebuilds every dependency per shard; a cell took 58 minutes.
+    timeout-minutes: 75
     env:
       NODE_VERSION: '24.11.1'
       # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
@@ -441,8 +442,6 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
-        with:
-          rust: 'true'
 
       - name: Resolve affected scope
         uses: ./.github/actions/affected
@@ -465,6 +464,34 @@ jobs:
       - name: Advisory suites
         if: ${{ !cancelled() && strategy.job-index == 1 && github.event_name != 'merge_group' }}
         uses: ./.github/actions/advisory
+
+  # Every `:test-native`: suites that compile native code or load it, kept out of the `:test` sweep. The Rust
+  # addon compiles RocksDB from source, and on the scheduled run's forced rebuild two such compiles took 25
+  # minutes of a node cell's 4 vCPU. On a PR moon's remote cache skips both unless the crate changed.
+  native:
+    if: ${{ inputs.only != 'check' && inputs.only != 'e2e' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          rust: 'true'
+
+      - name: Resolve affected scope
+        uses: ./.github/actions/affected
+
+      - name: Test
+        run: >-
+          moon exec --on-failure continue :test-native
 
   test-browser:
     name: test browser
@@ -533,7 +560,7 @@ jobs:
   # failed or was cancelled, or `plan` failed. Skipped passes: a suite the change does not affect, or a
   # draft's browser cells.
   test:
-    needs: [plan, test-node, test-browser]
+    needs: [plan, test-node, test-browser, native]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 5

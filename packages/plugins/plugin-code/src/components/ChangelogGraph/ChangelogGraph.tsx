@@ -55,9 +55,10 @@ export const ACTOR_STYLE: Record<DecisionActor, { icon: string; hue: Tag.TagHue;
   agent: { icon: 'ph--robot--regular', hue: 'violet', frame: 'border-2 border-dashed border-violet-border' },
 };
 
-type ActorAvatarProps = { actor?: DecisionActor; handle?: string; label?: string };
+export type ActorAvatarProps = { actor?: DecisionActor; handle?: string; label?: string };
 
-const ActorAvatar = ({ actor, handle, label }: ActorAvatarProps) =>
+/** A person's GitHub avatar, or an icon for an agent or an unattributed entry. */
+export const ActorAvatar = ({ actor, handle, label }: ActorAvatarProps) =>
   actor === 'user' && handle ? (
     <Avatar.Root
       size='sm'

@@ -138,3 +138,26 @@ export const buildChangelogGraph = (
 
   return { nodes: [...decisions, ...blocks], edges };
 };
+
+/** The decisions one decider made, in log order. */
+export type DeciderGroup = { actor?: DecisionActor; handle?: string; decisions: DecisionModel[] };
+
+const ACTOR_ORDER = (actor?: DecisionActor): number => (actor === 'user' ? 0 : actor === 'agent' ? 2 : 1);
+
+/**
+ * Decisions grouped by who made them: people first, then unattributed entries, then agents, so the
+ * decisions that carry a person's authority lead; within each, the most prolific decider first.
+ */
+export const groupByDecider = (decisions: readonly DecisionModel[]): DeciderGroup[] => {
+  const groups = new Map<string, DeciderGroup>();
+  for (const decision of decisions) {
+    const key = `${decision.actor ?? ''}:${decision.handle ?? ''}`;
+    const group = groups.get(key) ?? { actor: decision.actor, handle: decision.handle, decisions: [] };
+    group.decisions.push(decision);
+    groups.set(key, group);
+  }
+  return [...groups.values()].sort(
+    (left, right) =>
+      ACTOR_ORDER(left.actor) - ACTOR_ORDER(right.actor) || right.decisions.length - left.decisions.length,
+  );
+};
