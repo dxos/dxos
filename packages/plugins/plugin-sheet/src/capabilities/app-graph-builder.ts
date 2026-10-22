@@ -12,7 +12,7 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { meta } from '#meta';
 import { Sheet } from '#types';
 
-/** Offers a "Charts" companion on every sheet. */
+/** Offers "Charts" and "Timeline" companions on every sheet. */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([
@@ -27,6 +27,20 @@ export default Capability.makeModule(
               label: ['charts-companion.label', { ns: meta.profile.key }],
               icon: 'ph--chart-bar--regular',
               data: 'charts',
+            }),
+          ]),
+      }),
+      AppGraphBuilder.createTypeExtension({
+        id: 'timelineCompanion',
+        relation: AppNode.companion,
+        type: Sheet.Sheet,
+        connector: () =>
+          Effect.succeed([
+            AppNode.makeCompanion({
+              variant: 'timeline',
+              label: ['timeline-companion.label', { ns: meta.profile.key }],
+              icon: 'ph--line-segments--regular',
+              data: 'timeline',
             }),
           ]),
       }),

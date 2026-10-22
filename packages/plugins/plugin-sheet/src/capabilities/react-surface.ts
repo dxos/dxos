@@ -10,7 +10,7 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 
-import { RangeList, SheetArticle, SheetChartsCompanion } from '#containers';
+import { RangeList, SheetArticle, SheetChartsCompanion, SheetTimelineCompanion } from '#containers';
 import { Sheet } from '#types';
 
 export default Capability.makeModule(() =>
@@ -33,6 +33,15 @@ export default Capability.makeModule(() =>
           AppSurface.companion(AppSurface.Article, Sheet.Sheet),
         ),
         component: SheetChartsCompanion,
+        props: ({ role, data: { companionTo } }) => ({ role, subject: companionTo }),
+      }),
+      Surface.create({
+        id: 'timeline',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, 'timeline'),
+          AppSurface.companion(AppSurface.Article, Sheet.Sheet),
+        ),
+        component: SheetTimelineCompanion,
         props: ({ role, data: { companionTo } }) => ({ role, subject: companionTo }),
       }),
       Surface.create({

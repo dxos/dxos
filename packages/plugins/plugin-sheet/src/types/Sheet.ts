@@ -62,6 +62,32 @@ export const Chart = Schema.Struct({
 
 export type Chart = Schema.Schema.Type<typeof Chart>;
 
+export const TimelineSpine = Schema.Literals(['left', 'center', 'right']);
+export type TimelineSpine = Schema.Schema.Type<typeof TimelineSpine>;
+
+export const TimelineScale = Schema.Literals(['linear', 'log']);
+export type TimelineScale = Schema.Schema.Type<typeof TimelineScale>;
+
+/**
+ * A timeline of a 2D range with one event per row: its time (a year or date), category, title and an
+ * optional description shown when the event is hovered. Each category is drawn as a column.
+ */
+export const Timeline = Schema.Struct({
+  // TODO(burdon): Store as an indexed range (see `SheetUtil.rangeToIndex`) so it tracks row/column edits.
+  range: Schema.String.annotate({ title: 'Range', description: 'A1 notation (e.g., A1:D30).' }),
+  /** The first row holds column names rather than an event. */
+  header: Schema.optional(Schema.Boolean.annotate({ title: 'Header row' })),
+  spine: Schema.optional(TimelineSpine.annotate({ title: 'Spine' })),
+  scale: Schema.optional(TimelineScale.annotate({ title: 'Scale' })),
+  start: Schema.optional(Schema.String.annotate({ title: 'Start', description: 'Year or date (e.g., 1980).' })),
+  end: Schema.optional(Schema.String.annotate({ title: 'End', description: 'Year or date (e.g., 2030).' })),
+  today: Schema.optional(Schema.Boolean.annotate({ title: 'Show today' })),
+  /** Categories that are not drawn. */
+  hidden: Schema.optional(Schema.Array(Schema.String).pipe(Annotation.FormInputAnnotation.set(false))),
+});
+
+export type Timeline = Schema.Schema.Type<typeof Timeline>;
+
 // TODO(burdon): Visibility, locked, frozen, etc.
 export const RowColumnMeta = Schema.Struct({
   size: Schema.optional(Schema.Number),
@@ -93,6 +119,9 @@ export class Sheet extends Type.makeObject<Sheet>(DXN.make('org.dxos.type.sheet'
 
     // Charts of ranges, shown in the charts companion.
     charts: Schema.optional(Schema.Array(Chart).pipe(Annotation.FormInputAnnotation.set(false))),
+
+    // Timeline of a range, shown in the timeline companion.
+    timeline: Schema.optional(Timeline.pipe(Annotation.FormInputAnnotation.set(false))),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--grid-nine--regular', hue: 'indigo' }),
     Skill.SkillsAnnotation.set([SKILL_KEY]),
@@ -106,9 +135,10 @@ export type SheetProps = {
   /** Formatting ranges, with `range` in A1 notation. */
   ranges?: Range[];
   charts?: Chart[];
+  timeline?: Timeline;
 } & Partial<SheetSize>;
 
-export const make = ({ name, cells = {}, ranges, charts, ...size }: SheetProps = {}) => {
+export const make = ({ name, cells = {}, ranges, charts, timeline, ...size }: SheetProps = {}) => {
   const sheet = Obj.make(Sheet, {
     name,
     cells: {},
@@ -118,6 +148,7 @@ export const make = ({ name, cells = {}, ranges, charts, ...size }: SheetProps =
     columnMeta: {},
     ranges: [],
     ...(charts && { charts }),
+    ...(timeline && { timeline }),
   });
 
   // Initialize and set cells within Obj.update to satisfy change context requirements.

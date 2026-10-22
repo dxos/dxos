@@ -9,7 +9,6 @@ import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin'
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { testFunctionPlugins } from '@dxos/compute-hyperformula/testing';
 import { Obj } from '@dxos/echo';
-import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
@@ -17,13 +16,17 @@ import { translations as formTranslations } from '@dxos/react-ui-form/translatio
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
-import { createChartTestCells, createChartTestRanges, useTestSheet, withComputeGraphDecorator } from '#testing';
+import {
+  SheetCompanionFrame,
+  type SheetCompanionFrameMode,
+  createChartTestCells,
+  createChartTestRanges,
+  withComputeGraphDecorator,
+} from '#testing';
 import { translations } from '#translations';
 import { Sheet } from '#types';
 
-import { useComputeGraph } from '../ComputeGraph/index.ts';
-import { SheetContent } from '../SheetContent/index.ts';
-import { SheetRoot, useSheetContext } from '../SheetRoot/index.ts';
+import { useSheetContext } from '../SheetRoot/index.ts';
 import { ChartCompanion } from './ChartCompanion.tsx';
 import { useRangeValues } from './useRangeValues.ts';
 
@@ -60,29 +63,22 @@ const Companion = () => {
   );
 };
 
-const DefaultStory = () => {
-  const [space] = useSpaces();
-  const graph = useComputeGraph(space);
-  const sheet = useTestSheet(space, graph, { cells: createChartTestCells(), ranges: createChartTestRanges() });
-  if (!sheet || !graph) {
-    return null;
-  }
+type StoryArgs = { mode?: SheetCompanionFrameMode };
 
-  return (
-    <SheetRoot graph={graph} sheet={sheet} attendableId='test' ignoreAttention>
-      <div className='grid grid-cols-[1fr_28rem] dx-fill divide-x divide-separator'>
-        <div className='grid'>
-          <SheetContent />
-        </div>
-        <Companion />
-      </div>
-    </SheetRoot>
-  );
-};
+const DefaultStory = ({ mode }: StoryArgs) => (
+  <SheetCompanionFrame
+    sheet={{ cells: createChartTestCells(), ranges: createChartTestRanges() }}
+    companion={<Companion />}
+    label='Charts'
+    icon='ph--chart-bar--regular'
+    mode={mode}
+    size={28}
+  />
+);
 
 const meta = {
   title: 'plugins/plugin-sheet/components/ChartCompanion',
-  render: () => <DefaultStory />,
+  render: (args) => <DefaultStory {...args} />,
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
@@ -96,7 +92,7 @@ const meta = {
     layout: 'fullscreen',
     translations: [...translations, ...formTranslations, ...uiTranslations],
   },
-} satisfies Meta;
+} satisfies Meta<StoryArgs>;
 
 export default meta;
 
