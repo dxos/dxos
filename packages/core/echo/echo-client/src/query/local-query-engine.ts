@@ -62,6 +62,8 @@ export class LocalQueryEngine implements QueryContext {
 
   /** Ids of the current by-id query already sent to load through their documents. */
   readonly #loadRequested = new Set<string>();
+  /** Each aggregate query with its members listed, which a manifest adjustment evaluates on every merge. */
+  readonly #membersQueries = new WeakMap<QueryAST.Query, QueryAST.Query>();
 
   constructor(private readonly _params: LocalQueryEngineProps) {
     this.#registry = new RegistryView(_params.registry);
@@ -371,7 +373,12 @@ export class LocalQueryEngine implements QueryContext {
   ): SourceEntry[] {
     const views = [...this.#spaces.values()].filter((view) => view.covers(query));
     if (plan.manifest && remoteAnswered) {
-      const members = views.flatMap((view) => view.evaluate(withMembers(query)));
+      let listed = this.#membersQueries.get(query);
+      if (!listed) {
+        listed = withMembers(query);
+        this.#membersQueries.set(query, listed);
+      }
+      const members = views.flatMap((view) => view.evaluate(listed));
       const adjusted = adjustGroups(plan.manifest, remote, members, {
         held: (id) => views.some((view) => view.holdsBody(id)),
         survivor: (id) => views.find((view) => view.holdsBody(id))?.survivorId(id) ?? id,

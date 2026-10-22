@@ -19,20 +19,12 @@ const MEMBERS = '__members';
  * holds is not a count of the space), but evaluates one that lists its members, which is what the adjustment
  * reads each local member's group from.
  */
-export const withMembers = (query: QueryAST.Query): QueryAST.Query => {
-  let listed = membersQueries.get(query);
-  if (!listed) {
-    listed = QueryAST.map(query, (node) =>
-      node.type === 'aggregate'
-        ? { ...node, aggregates: [...node.aggregates, { name: MEMBERS, kind: 'items' as const }] }
-        : node,
-    );
-    membersQueries.set(query, listed);
-  }
-  return listed;
-};
-
-const membersQueries = new WeakMap<QueryAST.Query, QueryAST.Query>();
+export const withMembers = (query: QueryAST.Query): QueryAST.Query =>
+  QueryAST.map(query, (node) =>
+    node.type === 'aggregate'
+      ? { ...node, aggregates: [...node.aggregates, { name: MEMBERS, kind: 'items' as const }] }
+      : node,
+  );
 
 type ScalarAggregate = Extract<QueryAST.GroupAggregate, { kind: 'count' | 'sum' | 'min' | 'max' }>;
 

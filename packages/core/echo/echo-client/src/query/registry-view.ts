@@ -7,6 +7,7 @@ import { Context } from '@dxos/context';
 import { type QueryResult, type Registry } from '@dxos/echo';
 import { filterMatchEntity } from '@dxos/echo-host/filter';
 import { type QueryAST } from '@dxos/echo-protocol';
+import { log } from '@dxos/log';
 
 import { getRegistryScopeForQuery, isSimpleSelectionQuery } from './util.ts';
 
@@ -33,13 +34,13 @@ export class RegistryView {
   }
 
   close(): void {
-    void this.#ctx?.dispose().catch(() => {});
+    void this.#ctx?.dispose().catch((err) => log.catch(err));
     this.#ctx = undefined;
     this.#query = undefined;
   }
 
   update(query: QueryAST.Query): void {
-    void this.#ctx?.dispose().catch(() => {});
+    void this.#ctx?.dispose().catch((err) => log.catch(err));
     this.#ctx = undefined;
     if (!isRegistryQuery(query)) {
       this.#query = undefined;
@@ -62,20 +63,18 @@ export class RegistryView {
     if (!simple) {
       return [];
     }
-    return this.#registry
-      .list()
-      .flatMap((object) =>
-        filterMatchEntity(simple.filter, object)
-          ? [
-              {
-                id: object.id,
-                result: object,
-                match: { rank: 1 },
-                resolution: { source: 'registry' as const, time: 0 },
-              },
-            ]
-          : [],
-      );
+    return this.#registry.list().flatMap((object) =>
+      filterMatchEntity(simple.filter, object)
+        ? [
+            {
+              id: object.id,
+              result: object,
+              match: { rank: 1 },
+              resolution: { source: 'registry' as const, time: 0 },
+            },
+          ]
+        : [],
+    );
   }
 }
 

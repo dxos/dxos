@@ -10,6 +10,7 @@ import { GroupBy, QueryPlanner, queryContainsChanges } from '@dxos/echo-host/que
 import { type EntityStructure, QueryAST } from '@dxos/echo-protocol';
 import { resolveMergeRedirect } from '@dxos/echo/internal';
 import { EID, EntityId, type SpaceId } from '@dxos/keys';
+import { log } from '@dxos/log';
 
 import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db/index.ts';
 import { type FeedHandle } from '../feed/feed-handle.ts';
@@ -43,6 +44,8 @@ export class WorkingSetView {
   private _query: QueryAST.Query | undefined = undefined;
   private _results?: SourceEntry<Obj.Any>[] = undefined;
   readonly #covers = new WeakMap<QueryAST.Query, boolean>();
+  /** Asked on every subscription and completeness read, and each answer plans the whole query. */
+  readonly #windowEvaluation = new WeakMap<QueryAST.Query, boolean>();
   /** Present when a write can be applied to cached results as a delta instead of a full recompute. */
   #delta?: { filter: QueryAST.Filter; options: QueryAST.QueryOptions | undefined } = undefined;
   /** Present when the query selects from feeds: their unacknowledged writes, which no index has seen yet. */
@@ -89,7 +92,7 @@ export class WorkingSetView {
     return (
       this._query !== undefined &&
       this._servesSpaceScope(this._query) &&
-      evaluatesWindow(this._query) &&
+      this.#evaluatesWindow(this._query) &&
       !queryAggregateNeedsIndex(this._query)
     );
   }
@@ -171,11 +174,11 @@ export class WorkingSetView {
     this._query = undefined;
     this.#feedTail = undefined;
     this._results = undefined;
-    void this._ctx.dispose().catch(() => {});
+    void this._ctx.dispose().catch((err) => log.catch(err));
   }
 
   update(query: QueryAST.Query): void {
-    void this._ctx.dispose().catch(() => {});
+    void this._ctx.dispose().catch((err) => log.catch(err));
     this._ctx = new Context();
     this._results = undefined;
     this.#watchFeedTail(query);
@@ -247,8 +250,25 @@ export class WorkingSetView {
     await this._database.batchLoadObjectCores([...ids]);
   }
 
+  /**
+   * Whether the working set's answer is a true part of the result under the query's windowing: there is none,
+   * or it is only an order the engine re-applies over the merged entries. A limit or skip is a slice of a set the
+   * working set does not hold, so only the remote can cut it.
+   */
+  #evaluatesWindow(query: QueryAST.Query): boolean {
+    if (!queryHasWindowing(query)) {
+      return true;
+    }
+    let evaluates = this.#windowEvaluation.get(query);
+    if (evaluates === undefined) {
+      evaluates = evaluatesOrderOnly(query);
+      this.#windowEvaluation.set(query, evaluates);
+    }
+    return evaluates;
+  }
+
   private _evaluates(query: QueryAST.Query): boolean {
-    return this._isValidForQuery(query) && this._servesSpaceScope(query) && evaluatesWindow(query);
+    return this._isValidForQuery(query) && this._servesSpaceScope(query) && this.#evaluatesWindow(query);
   }
 
   private _onUpdate = (updateEvent?: ItemsUpdatedEvent): void => {
@@ -406,26 +426,6 @@ export class WorkingSetView {
     );
   }
 }
-
-/**
- * Whether the working set's answer is a true part of the result under the query's windowing: there is none,
- * or it is only an order the engine re-applies over the merged entries. A limit or skip is a slice of a set the
- * working set does not hold, so only the remote can cut it.
- */
-const evaluatesWindow = (query: QueryAST.Query): boolean => {
-  if (!queryHasWindowing(query)) {
-    return true;
-  }
-  let evaluates = windowEvaluation.get(query);
-  if (evaluates === undefined) {
-    evaluates = evaluatesOrderOnly(query);
-    windowEvaluation.set(query, evaluates);
-  }
-  return evaluates;
-};
-
-/** Asked on every subscription and completeness read, and each answer plans the whole query. */
-const windowEvaluation = new WeakMap<QueryAST.Query, boolean>();
 
 const evaluatesOrderOnly = (query: QueryAST.Query): boolean => {
   let local = true;
