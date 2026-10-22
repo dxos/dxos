@@ -173,6 +173,7 @@ export const technologyTimeline: PlotValue[][] = [
   ['2020-10', 'TIC', 'DOJ sues Google', 'Antitrust suit over Google’s search monopoly.'],
   ['2020-12', 'TIC', 'FTC sues Facebook', 'Antitrust suit over the Instagram and WhatsApp acquisitions.'],
   ['2021-01', 'FIC', 'GameStop squeeze', 'Retail traders squeeze hedge funds shorting GameStop.'],
+  ['2021-01', 'Resume', 'SEC settlement', 'SEC settlement, Jan 2021.'],
   ['2021-04', 'Resume', 'DXOS', 'Founder, Apr 2021 – present.'],
   ['2021-04', 'Resume', 'Braneframe', 'CEO and founder, Apr 2021 – present.'],
   ['2021-08', 'Robotics', 'Tesla Optimus announced', 'Tesla announces a humanoid robot at its AI Day.'],
