@@ -35,8 +35,11 @@ import {
   toTimelineEvents,
 } from '../../util/index.ts';
 
-// Vertical padding above the first and below the last time.
+// Horizontal padding at the edges of the view.
 const PADDING = 16;
+
+// Room above the first and below the last event, so the enlarged current dot, labels and ticks are not clipped.
+const MARGIN = 40;
 
 // Minimum distance between label baselines.
 const LINE_HEIGHT = 20;
@@ -212,7 +215,7 @@ const useAnimatedLayout = (target: Layout, key: string): { height: number; yOf: 
   const progress = transition ? easeInOut(Math.min(1, Math.max(0, (now - transition.start) / TRANSITION_MS))) : 1;
   const from = transition?.from ?? target;
   const blend = (a: number, b: number) => a + (b - a) * progress;
-  const positionIn = ({ fraction, height }: Layout, time: number) => PADDING + fraction(time) * (height - PADDING * 2);
+  const positionIn = ({ fraction, height }: Layout, time: number) => MARGIN + fraction(time) * (height - MARGIN * 2);
 
   return {
     height: blend(from.height, target.height),
@@ -332,15 +335,15 @@ export const Timeline = ({
   // Crowded lanes grow the content past the viewport, so labels stay near their events.
   const targetHeight = useMemo(() => {
     const times = new Set(laneEvents.flatMap((events) => events.map((event) => event.time)));
-    const evenHeight = scale === 'even' ? Math.max(0, times.size - 1) * EVEN_STEP + PADDING * 2 : 0;
+    const evenHeight = scale === 'even' ? Math.max(0, times.size - 1) * EVEN_STEP + MARGIN * 2 : 0;
     return range
       ? fitTimelineHeight(
           laneEvents.map((events) => events.map((event) => fraction(event.time))),
           {
-            minHeight: Math.max(height * zoom, evenHeight, PADDING * 2),
+            minHeight: Math.max(height * zoom, evenHeight, MARGIN * 2),
             gap: LINE_HEIGHT,
             maxDrift: MAX_DRIFT,
-            padding: PADDING,
+            padding: MARGIN,
           },
         )
       : height;
@@ -350,8 +353,8 @@ export const Timeline = ({
   const target = useMemo(() => ({ fraction, height: targetHeight }), [fraction, targetHeight]);
   const layout = useAnimatedLayout(target, scale);
   const contentHeight = layout.height;
-  const top = PADDING;
-  const bottom = contentHeight - PADDING;
+  const top = MARGIN;
+  const bottom = contentHeight - MARGIN;
   const yOf = layout.yOf;
 
   const ticks = useMemo(() => {
