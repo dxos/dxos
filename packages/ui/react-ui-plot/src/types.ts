@@ -76,6 +76,10 @@ export const TimelineOptions = Schema.Struct({
   end: Schema.optional(Schema.String.annotate({ title: 'End', description: 'Year or date (e.g., 2030).' })),
   /** Categories that are not drawn. */
   hidden: Schema.optional(Schema.Array(Schema.String)),
+  /** Categories in the order they are listed and laid out; unlisted ones follow in data order. */
+  order: Schema.optional(Schema.Array(Schema.String)),
+  /** Category colors as a palette hue with an optional shade (`green`, `neutral-400`); others take unused hues. */
+  colors: Schema.optional(Schema.Record(Schema.String, Schema.String)),
   /** Mark the current date. */
   today: Schema.optional(Schema.Boolean.annotate({ title: 'Show today' })),
   /** Show each event's date beside its title; on by default. */

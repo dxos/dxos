@@ -7,7 +7,7 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { technologyTimeline } from '../../testing/index.ts';
+import { technologyTimeline, technologyTimelineColors, technologyTimelineOrder } from '../../testing/index.ts';
 import { type PlotData, TIMELINE_SCALES, TIMELINE_SPINES, type TimelineOptions } from '../../types.ts';
 import { toPlotData, toTimelineEvents } from '../../util/index.ts';
 import { Timeline } from './Timeline.tsx';
@@ -21,7 +21,12 @@ type StoryArgs = Pick<TimelineOptions, 'spine' | 'scale' | 'start' | 'end' | 'to
 };
 
 const DefaultStory = ({ data: storyData = data, zoom, ...options }: StoryArgs) => (
-  <Timeline classNames='h-[48rem]' data={storyData} zoom={zoom} options={options} />
+  <Timeline
+    classNames='h-[48rem]'
+    data={storyData}
+    zoom={zoom}
+    options={{ order: technologyTimelineOrder, colors: technologyTimelineColors, ...options }}
+  />
 );
 
 const meta = {
@@ -53,13 +58,13 @@ export const Log: Story = {
 
 export const TwoColumns: Story = {
   args: {
-    hidden: ['Robotics', 'MIC', 'FIC', 'TIC', 'Resume'],
+    hidden: ['Macro/MIC', 'Macro/FIC', 'Macro/TIC', 'Personal'],
   },
 };
 
 export const Resume: Story = {
   args: {
-    hidden: ['Macro', 'Robotics', 'MIC', 'FIC', 'TIC'],
+    hidden: ['Macro', 'Macro/MIC', 'Macro/FIC', 'Macro/TIC'],
   },
 };
 

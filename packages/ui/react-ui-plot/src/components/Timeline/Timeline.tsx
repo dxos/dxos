@@ -18,15 +18,18 @@ import { useResizeDetector } from 'react-resize-detector';
 import * as Popover from '@dxos/react-ui/Popover';
 import * as Tag from '@dxos/react-ui/Tag';
 import { mx } from '@dxos/ui-theme';
-import { type ChromaticPalette, type ThemedClassName } from '@dxos/ui-types';
+import { type ChromaticPalette, type ThemedClassName, hues } from '@dxos/ui-types';
 
 import { type PlotData, type TimelineEvent, type TimelineOptions, type TimelineSpine } from '../../types.ts';
 import {
   type MeasureText,
+  categoryLabel,
   createTimelineFraction,
   fitLabel,
   fitTimelineHeight,
+  groupCategories,
   matchesTimelineFilter,
+  orderCategories,
   spreadLabels,
   timelineRange,
   toTimelineEvents,
@@ -55,6 +58,9 @@ const MIN_YEARLY_SPAN = 2 * 365 * 24 * 60 * 60 * 1000;
 
 // Minimum distance between axis ticks.
 const TICK_SPACING = 48;
+
+// Hues a tag can take: the neutral grey and every chromatic hue.
+const TAG_HUES: Tag.TagHue[] = ['neutral', ...hues];
 
 // Distinct hues in the order categories take them.
 const CATEGORY_HUES: ChromaticPalette[] = [
@@ -109,7 +115,7 @@ type Lane = {
   width: number;
 };
 
-/** The spine's position and the lanes either side of it; on a centered spine, columns alternate sides. */
+/** The spine's position and the lanes either side of it. */
 const layoutLanes = (spine: TimelineSpine, columns: string[], width: number): { spineX: number; lanes: Lane[] } => {
   const spineX =
     spine === 'left'
@@ -117,10 +123,17 @@ const layoutLanes = (spine: TimelineSpine, columns: string[], width: number): { 
       : spine === 'right'
         ? width - SPINE_MARGIN
         : AXIS_WIDTH + (width - AXIS_WIDTH) / 2;
-  const sideOf = (index: number): Side =>
-    spine === 'left' ? 'end' : spine === 'right' ? 'start' : index % 2 ? 'end' : 'start';
+  // On a centered spine, groups of sibling categories alternate sides; a single group's categories alternate instead.
+  const groups = groupCategories(columns);
+  const slotOf = new Map(
+    groups.length > 1
+      ? groups.flatMap((group, index) => group.categories.map((column) => [column, index] as const))
+      : columns.map((column, index) => [column, index] as const),
+  );
+  const sideOf = (column: string): Side =>
+    spine === 'left' ? 'end' : spine === 'right' ? 'start' : (slotOf.get(column) ?? 0) % 2 ? 'end' : 'start';
   const lanes = (['start', 'end'] as const).flatMap((side): Lane[] => {
-    const laneColumns = columns.filter((_, index) => sideOf(index) === side);
+    const laneColumns = columns.filter((column) => sideOf(column) === side);
     if (laneColumns.length === 0) {
       return [];
     }
@@ -231,7 +244,7 @@ export const Timeline = ({
   filter,
   onHiddenChange,
 }: TimelineProps) => {
-  const { spine = 'center', scale = 'linear', hidden, today = true, dates = true } = options;
+  const { spine = 'center', scale = 'linear', hidden, today = true, dates = true, order, colors } = options;
   const { ref: scrollRef, width = 0, height = 0 } = useResizeDetector<HTMLDivElement>({ refreshRate: 100 });
   const [zoom, setZoom] = useState(initialZoom);
 
@@ -245,7 +258,8 @@ export const Timeline = ({
   }, [scrollRef]);
   useEffect(() => setZoom(initialZoom), [initialZoom]);
 
-  const { columns, events } = useMemo(() => toTimelineEvents(data), [data]);
+  const { columns: dataColumns, events } = useMemo(() => toTimelineEvents(data), [data]);
+  const columns = useMemo(() => orderCategories(dataColumns, order), [dataColumns, order]);
   // Every date takes the width of the widest, so titles line up.
   const dateWidth = useMemo(
     () => Math.ceil(Math.max(0, ...events.map((event) => measure(event.date))) * DATE_FONT_SIZE) + LABEL_MARGIN,
@@ -257,8 +271,33 @@ export const Timeline = ({
   );
   const visible = useMemo(() => columns.filter((column) => !hidden?.includes(column)), [columns, hidden]);
   // Categories take theme hues, so the dots, labels and header tags share one palette in light and dark themes.
-  const hueOf = useMemo(() => d3.scaleOrdinal<string, ChromaticPalette>(CATEGORY_HUES).domain(columns), [columns]);
-  const color = useCallback((column: string) => `var(--color-${hueOf(column)}-500)`, [hueOf]);
+  // A category's color is its `colors` entry (a palette hue, with an optional shade), else the next unused hue.
+  const paletteOf = useMemo(() => {
+    const assigned = new Map(
+      columns.flatMap((column) => (colors?.[column] ? [[column, colors[column]] as const] : [])),
+    );
+    const used = new Set([...assigned.values()].map((spec) => spec.split('-')[0]));
+    const free = CATEGORY_HUES.filter((hue) => !used.has(hue));
+    const auto = d3.scaleOrdinal<string, string>(free.length > 0 ? free : CATEGORY_HUES);
+    return (column: string) => {
+      const [hue, shade = '500'] = (assigned.get(column) ?? auto(column)).split('-');
+      return { hue, shade };
+    };
+  }, [columns, colors]);
+  const hueOf = useCallback(
+    (column: string): Tag.TagHue => {
+      const { hue } = paletteOf(column);
+      return TAG_HUES.find((candidate) => candidate === hue) ?? 'neutral';
+    },
+    [paletteOf],
+  );
+  const color = useCallback(
+    (column: string) => {
+      const { hue, shade } = paletteOf(column);
+      return `var(--color-${hue}-${shade})`;
+    },
+    [paletteOf],
+  );
   const { spineX, lanes } = useMemo(() => layoutLanes(spine, visible, width), [spine, visible, width]);
 
   const laneEvents = useMemo(
@@ -451,21 +490,44 @@ export const Timeline = ({
   return (
     <div className={mx('dx-fill grid grid-rows-[min-content_1fr] overflow-hidden', classNames)}>
       {onHiddenChange ? (
-        <div className='flex flex-wrap items-center justify-center gap-2 px-2 py-1'>
-          {columns.map((column) => (
-            <Tag.Tag
-              key={column}
-              hue={hidden?.includes(column) ? 'neutral' : hueOf(column)}
-              aria-pressed={!hidden?.includes(column)}
-              onClick={() =>
-                onHiddenChange(
-                  hidden?.includes(column) ? hidden.filter((name) => name !== column) : [...(hidden ?? []), column],
-                )
-              }
-            >
-              {column}
-            </Tag.Tag>
-          ))}
+        <div className='flex flex-wrap items-center justify-center gap-x-4 gap-y-1 px-2 py-1'>
+          {groupCategories(columns).map((group) => {
+            const shown = group.categories.filter((column) => !hidden?.includes(column));
+            const toggle = (categories: string[], show: boolean) =>
+              onHiddenChange(
+                show
+                  ? (hidden ?? []).filter((name) => !categories.includes(name))
+                  : [...(hidden ?? []), ...categories.filter((name) => !hidden?.includes(name))],
+              );
+            const tag = (column: string) => (
+              <Tag.Tag
+                key={column}
+                hue={hueOf(column)}
+                aria-pressed={!hidden?.includes(column)}
+                classNames={hidden?.includes(column) ? 'opacity-40' : undefined}
+                onClick={() => toggle([column], !!hidden?.includes(column))}
+              >
+                {categoryLabel(column)}
+              </Tag.Tag>
+            );
+
+            return group.categories.length === 1 && group.categories[0] === group.name ? (
+              tag(group.name)
+            ) : (
+              // A parent toggles its own events and all its children: off while any is shown, on when all are hidden.
+              <div key={group.name} role='group' aria-label={group.name} className='flex items-center gap-1'>
+                <Tag.Tag
+                  hue={hueOf(group.categories[0])}
+                  aria-pressed={shown.length > 0}
+                  onClick={() => toggle(group.categories, shown.length === 0)}
+                  classNames={mx('font-semibold', shown.length === 0 && 'opacity-40')}
+                >
+                  {group.name}
+                </Tag.Tag>
+                {group.categories.filter((column) => column !== group.name).map(tag)}
+              </div>
+            );
+          })}
         </div>
       ) : (
         // Clipped, so long category names cannot make the timeline scroll sideways.
@@ -478,7 +540,7 @@ export const Timeline = ({
             >
               {lane.columns.map((column) => (
                 <span key={column} style={{ color: color(column) }}>
-                  {column}
+                  {categoryLabel(column)}
                 </span>
               ))}
             </div>
@@ -699,7 +761,7 @@ const LaneEvents = ({
                 fill={fill}
                 fontSize={DATE_FONT_SIZE}
                 fontWeight={700}
-                className='tabular-nums'
+                style={{ fontVariantNumeric: 'tabular-nums' }}
               >
                 {event.date}
               </text>
@@ -749,7 +811,7 @@ const EventCard = ({ event, side, getAnchorElement, color, onClose, onHover, onL
     <Popover.Content classNames='max-w-80 p-3 flex flex-col gap-1' onPointerEnter={onHover} onPointerLeave={onLeave}>
       <Popover.Title>{event.label}</Popover.Title>
       <div className='text-sm font-medium' style={{ color }}>
-        {event.date} · {event.column}
+        <span style={{ fontVariantNumeric: 'tabular-nums' }}>{event.date}</span> · {event.column}
       </div>
       {event.description && <Popover.Description>{event.description}</Popover.Description>}
     </Popover.Content>

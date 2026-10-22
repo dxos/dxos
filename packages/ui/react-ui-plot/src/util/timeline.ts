@@ -77,6 +77,38 @@ export const toTimelineEvents = ({ rows }: PlotData): { columns: string[]; event
   return { columns: [...columns], events: events.sort((a, b) => a.time - b.time) };
 };
 
+/** Separates a category's parent from its child, as in `Tech/AI`. */
+export const CATEGORY_SEPARATOR = '/';
+
+/** A category's own name: the last segment of its path. */
+export const categoryLabel = (category: string): string => category.slice(category.lastIndexOf(CATEGORY_SEPARATOR) + 1);
+
+/**
+ * Groups categories by the first segment of their path, in order of first appearance; a category without a parent
+ * is a group of one named for itself.
+ */
+export const groupCategories = (categories: readonly string[]): { name: string; categories: string[] }[] => {
+  const groups = new Map<string, string[]>();
+  for (const category of categories) {
+    const separator = category.indexOf(CATEGORY_SEPARATOR);
+    const name = separator < 0 ? category : category.slice(0, separator);
+    groups.set(name, [...(groups.get(name) ?? []), category]);
+  }
+  return [...groups].map(([name, categories]) => ({ name, categories }));
+};
+
+/** The categories with those named in `order` first, in that order, and the rest after in their own order. */
+export const orderCategories = (categories: readonly string[], order: readonly string[] = []): string[] => {
+  const rank = (category: string) => {
+    const index = order.indexOf(category);
+    return index < 0 ? order.length : index;
+  };
+  return categories
+    .map((category, index) => ({ category, index }))
+    .sort((a, b) => rank(a.category) - rank(b.category) || a.index - b.index)
+    .map(({ category }) => category);
+};
+
 /** Whether an event's title, description, category or date contains the text, ignoring case; empty text matches all. */
 export const matchesTimelineFilter = (event: TimelineEvent, filter: string | undefined): boolean => {
   const text = filter?.trim().toLowerCase();

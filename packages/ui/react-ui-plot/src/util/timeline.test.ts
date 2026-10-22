@@ -5,11 +5,14 @@
 import { describe, test } from 'vitest';
 
 import {
+  categoryLabel,
   createTimelineFraction,
   evenFraction,
   fitLabel,
   fitTimelineHeight,
+  groupCategories,
   matchesTimelineFilter,
+  orderCategories,
   spreadLabels,
   timelineFraction,
   timelineRange,
@@ -186,5 +189,31 @@ describe('evenFraction', () => {
   test('the even scale ignores duplicate times', ({ expect }) => {
     const fraction = createTimelineFraction('even', [0, 1000], [10, 0, 10, 1000]);
     expect(fraction(10)).to.eq(0.5);
+  });
+});
+
+describe('groupCategories', () => {
+  test('groups paths by parent in order of appearance; plain categories stand alone', ({ expect }) => {
+    expect(groupCategories(['Tech/AI', 'Macro', 'Tech/Software', 'Complex/MIC'])).to.deep.eq([
+      { name: 'Tech', categories: ['Tech/AI', 'Tech/Software'] },
+      { name: 'Macro', categories: ['Macro'] },
+      { name: 'Complex', categories: ['Complex/MIC'] },
+    ]);
+  });
+
+  test('a category is labelled by its last segment', ({ expect }) => {
+    expect(categoryLabel('Tech/AI')).to.eq('AI');
+    expect(categoryLabel('Macro')).to.eq('Macro');
+  });
+});
+
+describe('orderCategories', () => {
+  test('listed categories come first in the given order; the rest keep theirs', ({ expect }) => {
+    expect(orderCategories(['Macro/MIC', 'Tech', 'Macro/FIC', 'Other'], ['Macro/FIC', 'Macro/MIC'])).to.deep.eq([
+      'Macro/FIC',
+      'Macro/MIC',
+      'Tech',
+      'Other',
+    ]);
   });
 });

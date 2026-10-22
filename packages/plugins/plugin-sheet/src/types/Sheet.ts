@@ -86,6 +86,10 @@ export const Timeline = Schema.Struct({
   dates: Schema.optional(Schema.Boolean.annotate({ title: 'Show dates' })),
   /** Categories that are not drawn. */
   hidden: Schema.optional(Schema.Array(Schema.String).pipe(Annotation.FormInputAnnotation.set(false))),
+  /** Categories in the order they are listed and laid out; unlisted ones follow in data order. */
+  order: Schema.optional(Schema.Array(Schema.String).pipe(Annotation.FormInputAnnotation.set(false))),
+  /** Category colors as a palette hue with an optional shade (`green`, `neutral-400`); others take unused hues. */
+  colors: Schema.optional(Schema.Record(Schema.String, Schema.String).pipe(Annotation.FormInputAnnotation.set(false))),
 });
 
 export type Timeline = Schema.Schema.Type<typeof Timeline>;

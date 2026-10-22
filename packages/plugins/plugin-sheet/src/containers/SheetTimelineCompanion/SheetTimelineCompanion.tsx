@@ -52,7 +52,12 @@ const SheetTimeline = ({ sheet: sheetProp, model }: { sheet: Sheet.Sheet; model:
     (timeline: Sheet.Timeline | undefined) =>
       updateSheet((sheet) => {
         // The schema type's arrays are read-only; the object takes a mutable copy.
-        sheet.timeline = timeline && { ...timeline, hidden: timeline.hidden && [...timeline.hidden] };
+        sheet.timeline = timeline && {
+          ...timeline,
+          hidden: timeline.hidden && [...timeline.hidden],
+          order: timeline.order && [...timeline.order],
+          colors: timeline.colors && { ...timeline.colors },
+        };
       }),
     [updateSheet],
   );

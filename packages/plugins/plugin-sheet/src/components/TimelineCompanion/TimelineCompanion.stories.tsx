@@ -13,6 +13,7 @@ import { withClientProvider } from '@dxos/react-client/testing';
 import { useSelection } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import { technologyTimelineColors, technologyTimelineOrder } from '@dxos/react-ui-plot/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
@@ -33,7 +34,14 @@ import { useRangeValues } from '../ChartCompanion/index.ts';
 import { useSheetContext } from '../SheetRoot/index.ts';
 import { TimelineCompanion } from './TimelineCompanion.tsx';
 
-const initialTimeline: Sheet.Timeline = { range: timelineTestRange, header: true, start: '1980', end: '2030' };
+const initialTimeline: Sheet.Timeline = {
+  range: timelineTestRange,
+  header: true,
+  start: '1980',
+  end: '2030',
+  order: technologyTimelineOrder,
+  colors: technologyTimelineColors,
+};
 
 /** The companion reads the sheet's selection through the `Selection` view state, as an app container would. */
 const Companion = ({ hidden }: Pick<Sheet.Timeline, 'hidden'>) => {
@@ -101,6 +109,6 @@ export const Timeline: Story = {
 
 export const Resume: Story = {
   args: {
-    hidden: ['Macro', 'Robotics', 'MIC', 'FIC', 'TIC'],
+    hidden: ['Macro', 'Macro/MIC', 'Macro/FIC', 'Macro/TIC'],
   },
 };
