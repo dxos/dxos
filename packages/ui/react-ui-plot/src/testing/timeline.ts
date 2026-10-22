@@ -1144,6 +1144,13 @@ export const technologyTimeline: PlotValue[][] = [
     'Humanoid robots run a half-marathon alongside people in Beijing.',
     null,
   ],
+  [
+    '2025-08',
+    'Macro/FIC',
+    'US takes a stake in Intel',
+    'The US government takes about a 10% stake in Intel, converting CHIPS Act grants into equity.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/Intel_logo_2023.svg/500px-Intel_logo_2023.svg.png',
+  ],
   ['2026-07', 'Tech/AI', 'ChatGPT attack on Hugging Face', 'Reported in July 2026.', null],
 ];
 
