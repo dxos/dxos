@@ -346,8 +346,9 @@ self.addEventListener('push', (event) => {
       }
       const message = parsePushMessage(data) ?? { v: 1, id: 'unknown', senderDid: '', sentAt: Date.now() };
 
+      // A sample must show even with Composer focused: the user is looking at the toggle that asked for it.
       const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-      if (windows.some((client) => client.focused) && !(await mustShowNotification())) {
+      if (!message.test && windows.some((client) => client.focused) && !(await mustShowNotification())) {
         return;
       }
 

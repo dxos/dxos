@@ -70,7 +70,11 @@ describe('makePushRegistration', () => {
       edge.getVapidPublicKey.mock.invocationCallOrder[0],
     );
     expect(provider.subscribe).toHaveBeenCalledWith({ applicationServerKey: PUBLIC_KEY });
-    expect(edge.putPushSubscription).toHaveBeenCalledWith({ endpoint: SUBSCRIPTION.endpoint, keys: SUBSCRIPTION.keys });
+    expect(edge.putPushSubscription).toHaveBeenCalledWith({
+      endpoint: SUBSCRIPTION.endpoint,
+      keys: SUBSCRIPTION.keys,
+      welcome: true,
+    });
   });
 
   test('a refused or dismissed prompt registers nothing', async () => {
@@ -116,7 +120,8 @@ describe('makePushRegistration', () => {
     expect(await registration.refresh()).toBe('on');
 
     expect(provider.requestPermission).not.toHaveBeenCalled();
-    expect(edge.putPushSubscription).toHaveBeenCalledOnce();
+    // A sample notification on every start would be noise; only the user's opt-in asks for one.
+    expect(edge.putPushSubscription).toHaveBeenCalledWith(expect.objectContaining({ welcome: false }));
   });
 
   test('refresh never prompts when the user has not answered', async () => {

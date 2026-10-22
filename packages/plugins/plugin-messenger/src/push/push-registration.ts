@@ -51,7 +51,8 @@ export const makePushRegistration = ({ provider, edge, setStatus }: PushRegistra
     return status;
   };
 
-  const register = async (provider: AppPush.Provider): Promise<PushStatus> => {
+  /** `welcome` asks EDGE for a sample notification, which only the user's own opt-in should trigger. */
+  const register = async (provider: AppPush.Provider, welcome: boolean): Promise<PushStatus> => {
     let publicKey: string;
     try {
       ({ publicKey } = await edge.getVapidPublicKey());
@@ -62,7 +63,7 @@ export const makePushRegistration = ({ provider, edge, setStatus }: PushRegistra
       throw error;
     }
     const { endpoint, keys } = await provider.subscribe({ applicationServerKey: publicKey });
-    await edge.putPushSubscription({ endpoint, keys });
+    await edge.putPushSubscription({ endpoint, keys, welcome });
     return settle('on');
   };
 
@@ -85,7 +86,7 @@ export const makePushRegistration = ({ provider, edge, setStatus }: PushRegistra
         if (permission !== 'granted') {
           return settle(permission === 'denied' ? 'denied' : 'off');
         }
-        return register(provider);
+        return register(provider, true);
       }),
 
     disable: () =>
@@ -112,7 +113,7 @@ export const makePushRegistration = ({ provider, edge, setStatus }: PushRegistra
         }
         switch (provider.permission()) {
           case 'granted':
-            return register(provider);
+            return register(provider, false);
           case 'denied':
             return settle('denied');
           default:

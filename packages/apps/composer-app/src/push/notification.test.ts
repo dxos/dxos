@@ -109,8 +109,11 @@ describe('describePushMessage', () => {
     });
   });
 
-  test('a test push says so', () => {
-    expect(describePushMessage({ ...pushMessage(), test: true }).body).toBe('Notifications are on for this device.');
+  test('a test push is a sample of what notifications look like', () => {
+    expect(describePushMessage({ ...pushMessage(), test: true })).toMatchObject({
+      title: 'Notifications are on',
+      body: 'This is how Composer will tell you about invitations and messages.',
+    });
   });
 });
 

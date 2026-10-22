@@ -17,6 +17,8 @@ export const PushSubscribeRequestSchema = Schema.Struct({
     /** Base64url 16-byte auth secret. */
     auth: Schema.String,
   }),
+  /** Push a sample notification to this device once registered, so the user who just opted in sees one. */
+  welcome: Schema.optional(Schema.Boolean),
 });
 export type PushSubscribeRequest = Schema.Schema.Type<typeof PushSubscribeRequestSchema>;
 
@@ -49,7 +51,7 @@ export const PushMessageSchema = Schema.Struct({
   sentAt: Schema.Number,
   /** The notice's opaque payload; absent when it would not fit in one push message. */
   payload: Schema.optional(Schema.String),
-  /** Set on `POST /push/test`, which has no notice behind it. */
+  /** Set on a sample (`POST /push/test`, or a `welcome` subscribe), which has no notice behind it. */
   test: Schema.optional(Schema.Literal(true)),
 });
 export type PushMessage = Schema.Schema.Type<typeof PushMessageSchema>;

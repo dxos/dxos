@@ -150,7 +150,12 @@ const fallback = (message: PushMessage): NoticeNotification => ({
 /** What to show for a push, from whatever of the notice can be read without the client. */
 export const describePushMessage = (message: PushMessage): NoticeNotification => {
   if (message.test) {
-    return { title: 'Composer', body: 'Notifications are on for this device.', tag: message.id, url: '/' };
+    return {
+      title: 'Notifications are on',
+      body: 'This is how Composer will tell you about invitations and messages.',
+      tag: message.id,
+      url: '/',
+    };
   }
 
   const envelope = message.payload === undefined ? undefined : readEnvelope(message.payload);
