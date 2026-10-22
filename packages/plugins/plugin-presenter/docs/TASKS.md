@@ -63,6 +63,7 @@ Design: [DESIGN.md](./DESIGN.md).
 
 ## Phase 3: Markdown renderer
 
+- [ ] **DXOS frontmatter extension** — `backgroundVideo` (loop, muted, autoplay), `backgroundOpacity`, `backgroundPosition`; convert `testing/deck.md` and `testing/2025-05-20-effect.md` from reveal syntax.
 - [ ] **unified pipeline** → React for the Slidev subset; layouts, `::slot::`, `<v-click*>`, notes.
 - [ ] **Evaluate `@slidev/parser`** for the preview `---` split (browser-safe?).
 - [ ] **Migrate** reveal syntax in test decks; reveal behind a setting until parity, then delete.
