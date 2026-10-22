@@ -19,7 +19,7 @@ Design: [DESIGN.md](./DESIGN.md).
 ## Phase 2: Pager primitive
 
 - [ ] **`@dxos/react-ui` `Pager`** composite; presenter adopts it.
-- [ ] **Reconcile** with `Carousel` and autocue (check autocue-ui branch, #14028).
+- [ ] **Reconcile** — `Carousel` triggers adopt pager styles; autocue `TakeStory` uses `Pager`.
 
 ## Phase 3: Markdown renderer
 

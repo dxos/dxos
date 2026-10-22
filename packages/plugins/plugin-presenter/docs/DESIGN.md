@@ -136,11 +136,11 @@ PresentationArticle
 - New composite in `@dxos/react-ui`: `Pager.Root` (`index`, `count`, `onIndexChange`, `loop?`), `Pager.First`,
   `Pager.Prev`, `Pager.Next`, `Pager.Last`, `Pager.Count` (`3 / 12`), `Pager.Indicators` (dots). Fully
   controlled; keyboard opt-in through a `Pager.Keys` that binds to a given element, never `window`.
-- `Carousel` keeps the Ark/zag implementation but its `PrevTrigger`/`NextTrigger`/`IndicatorGroup` share the
-  pager's visuals (_agent call_: share styles, not code; Q5).
-- autocue: no pager exists in `tools/autocue` on this branch; `Frame.stories.tsx` `TakeStory` hand-rolls one
-  (play/pause, next, `n / N`). The autocue-ui project (draft #14028) may add one — reconcile with that branch
-  before building.
+- **Decided (Q5, user):** `Pager` is a separate primitive. `Carousel` keeps the Ark/zag implementation; its
+  `PrevTrigger`/`NextTrigger`/`IndicatorGroup` adopt the pager's styles (shared theme, not shared code).
+- autocue: no pager exists in `tools/autocue` (checked `main` after autocue-ui #14028 merged); only
+  `Frame.stories.tsx` `TakeStory` hand-rolls play/pause, next and `n / N`. Replace that with `Pager` once it
+  exists.
 
 ### 5. Markdown slide renderer (replaces reveal.js)
 
