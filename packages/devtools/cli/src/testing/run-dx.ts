@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { spawn } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -54,13 +54,12 @@ export type RunDxResult = {
 /**
  * Spawn `./bin/dx` with the given args. Returns a plain result struct so the
  * caller can assert on exit code + streams without dealing with Effect.
- * Asynchronous so that tests in a `describe.concurrent` block overlap their spawns.
  *
  * The caller is responsible for cleanup when using `isolateHome: true` —
  * the helper returns `home` so the test can `fs.rmSync(home, { recursive, force })`.
  * If cleanup is inconvenient, wrap the call in a `try/finally`.
  */
-export const runDx = async (args: string[], options: RunDxOptions = {}): Promise<RunDxResult> => {
+export const runDx = (args: string[], options: RunDxOptions = {}): RunDxResult => {
   const home =
     options.home ??
     (options.isolateHome ? fs.mkdtempSync(path.join(os.tmpdir(), 'dx-test-')) : (process.env.HOME ?? ''));
@@ -68,8 +67,10 @@ export const runDx = async (args: string[], options: RunDxOptions = {}): Promise
   // Preserve proto so the `./bin/dx` bash wrapper can resolve `bun`.
   const protoHome = process.env.PROTO_HOME ?? path.join(process.env.HOME ?? '', '.proto');
 
-  const child = spawn(dxBin, args, {
+  const result = spawnSync(dxBin, args, {
+    encoding: 'utf8',
     timeout: options.timeout ?? 30_000,
+    input: options.input,
     env: {
       ...process.env,
       HOME: home,
@@ -85,26 +86,21 @@ export const runDx = async (args: string[], options: RunDxOptions = {}): Promise
     },
   });
 
-  let stdout = '';
-  let stderr = '';
-  child.stdout.setEncoding('utf8').on('data', (chunk: string) => (stdout += chunk));
-  child.stderr.setEncoding('utf8').on('data', (chunk: string) => (stderr += chunk));
-  child.stdin.end(options.input);
-  const status = await new Promise<number | null>((resolve, reject) => {
-    child.once('error', reject);
-    child.once('close', (code) => resolve(code));
-  });
-
-  return { stdout, stderr, status, home };
+  return {
+    stdout: result.stdout ?? '',
+    stderr: result.stderr ?? '',
+    status: result.status,
+    home,
+  };
 };
 
 /**
  * Convenience: runs a callback against an isolated HOME, then cleans up.
  */
-export const withIsolatedHome = async <T>(fn: (home: string) => Promise<T>): Promise<T> => {
+export const withIsolatedHome = <T>(fn: (home: string) => T): T => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'dx-test-'));
   try {
-    return await fn(home);
+    return fn(home);
   } finally {
     fs.rmSync(home, { recursive: true, force: true });
   }

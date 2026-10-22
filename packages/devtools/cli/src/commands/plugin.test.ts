@@ -34,12 +34,12 @@ type PluginRow = {
   failure?: string;
 };
 
-describe.concurrent('plugin list', () => {
+describe('plugin list', () => {
   test(
     'reports both axes, the CLI-owned core set, and the default enabled set',
-    async ({ expect }) => {
-      await withIsolatedHome(async (home) => {
-        const rows = await listPlugins(home);
+    ({ expect }) => {
+      withIsolatedHome((home) => {
+        const rows = listPlugins(home);
         expect(rows.length).toBeGreaterThan(0);
         for (const row of rows) {
           expect(typeof row.id).toBe('string');
@@ -65,7 +65,7 @@ describe.concurrent('plugin list', () => {
         const enabled = rows.filter((row) => row.enabled).map((row) => row.id);
         expect(enabled.toSorted()).toEqual([...getDefaults(), ...getCore()].toSorted());
 
-        const filtered = await listPlugins(home, ['--enabled']);
+        const filtered = listPlugins(home, ['--enabled']);
         expect(filtered.map((row) => row.id).toSorted()).toEqual(enabled.toSorted());
       });
     },
@@ -73,13 +73,13 @@ describe.concurrent('plugin list', () => {
   );
 });
 
-describe.concurrent('plugin enable / disable', () => {
+describe('plugin enable / disable', () => {
   test(
     'round-trips through the persisted file, and enabling twice is not an error',
-    async ({ expect }) => {
-      await withIsolatedHome(async (home) => {
-        expect((await runDx(['plugin', 'disable', MARKDOWN], { home })).status).toBe(0);
-        expect((await listPlugins(home)).find((row) => row.id === MARKDOWN)?.enabled).toBe(false);
+    ({ expect }) => {
+      withIsolatedHome((home) => {
+        expect(runDx(['plugin', 'disable', MARKDOWN], { home }).status).toBe(0);
+        expect(listPlugins(home).find((row) => row.id === MARKDOWN)?.enabled).toBe(false);
 
         const contents = fs.readFileSync(path.join(home, '.config', 'dx', 'plugins', 'default.yml'), 'utf8');
         expect(contents).not.toContain(MARKDOWN);
@@ -89,11 +89,11 @@ describe.concurrent('plugin enable / disable', () => {
           expect(contents).not.toContain(id);
         }
 
-        expect((await runDx(['plugin', 'enable', MARKDOWN], { home })).status).toBe(0);
+        expect(runDx(['plugin', 'enable', MARKDOWN], { home }).status).toBe(0);
         // `enable` states a desired end state, so a user scripting it should not have to branch on
         // whether they already ran it.
-        expect((await runDx(['plugin', 'enable', MARKDOWN], { home })).status).toBe(0);
-        expect((await listPlugins(home)).find((row) => row.id === MARKDOWN)?.enabled).toBe(true);
+        expect(runDx(['plugin', 'enable', MARKDOWN], { home }).status).toBe(0);
+        expect(listPlugins(home).find((row) => row.id === MARKDOWN)?.enabled).toBe(true);
       });
     },
     TIMEOUT,
@@ -101,12 +101,14 @@ describe.concurrent('plugin enable / disable', () => {
 
   test(
     'an empty file means nothing optional is enabled, not "use the defaults"',
-    async ({ expect }) => {
-      await withIsolatedHome(async (home) => {
+    ({ expect }) => {
+      withIsolatedHome((home) => {
         fs.mkdirSync(path.dirname(path.join(home, '.config', 'dx', 'plugins', 'default.yml')), { recursive: true });
         fs.writeFileSync(path.join(home, '.config', 'dx', 'plugins', 'default.yml'), '[]\n');
 
-        const enabled = (await listPlugins(home)).filter((row) => row.enabled).map((row) => row.id);
+        const enabled = listPlugins(home)
+          .filter((row) => row.enabled)
+          .map((row) => row.id);
         expect(enabled.toSorted()).toEqual(getCore().toSorted());
       });
     },
@@ -115,15 +117,15 @@ describe.concurrent('plugin enable / disable', () => {
 
   test(
     'refuses a core plugin and an unknown id, pointing at `dx plugin list`',
-    async ({ expect }) => {
-      await withIsolatedHome(async (home) => {
+    ({ expect }) => {
+      withIsolatedHome((home) => {
         // The CLI renders command failures on stdout rather than stderr; assert on both so these
         // stay true of the message, not of the stream it happens to land on.
-        const core = await runDx(['plugin', 'disable', CLIENT], { home });
+        const core = runDx(['plugin', 'disable', CLIENT], { home });
         expect(core.status).toBe(1);
         expect(core.stdout + core.stderr).toContain('dx plugin list');
 
-        const unknown = await runDx(['plugin', 'enable', 'org.dxos.plugin.nope'], { home });
+        const unknown = runDx(['plugin', 'enable', 'org.dxos.plugin.nope'], { home });
         expect(unknown.status).toBe(1);
         expect(unknown.stdout + unknown.stderr).toContain('dx plugin list');
       });
@@ -132,8 +134,8 @@ describe.concurrent('plugin enable / disable', () => {
   );
 });
 
-const listPlugins = async (home: string, args: string[] = []): Promise<PluginRow[]> => {
-  const { stdout, stderr, status } = await runDx(['--json', 'plugin', 'list', ...args], { home });
+const listPlugins = (home: string, args: string[] = []): PluginRow[] => {
+  const { stdout, stderr, status } = runDx(['--json', 'plugin', 'list', ...args], { home });
   if (status !== 0) {
     // eslint-disable-next-line no-console
     console.error('stdout:', stdout, '\nstderr:', stderr);

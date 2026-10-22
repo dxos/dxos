@@ -98,8 +98,8 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
   let agent: ClaudeAgent;
 
   /** Every task in the space, read by a `dx` process of its own — never through the agent. */
-  const readTasks = async (): Promise<TaskRow[]> => {
-    const { stdout, stderr, status } = await runDx(
+  const readTasks = (): TaskRow[] => {
+    const { stdout, stderr, status } = runDx(
       ['--json', 'database', 'query', '--space-id', spaceId, '--typename', TASK_TYPE],
       { home, timeout: 120_000 },
     );
@@ -110,8 +110,8 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
   };
 
   /** Sessions in the space, read by a `dx` process of its own — never through the agent. */
-  const readSessions = async (): Promise<SessionRow[]> => {
-    const { stdout, stderr, status } = await runDx(
+  const readSessions = (): SessionRow[] => {
+    const { stdout, stderr, status } = runDx(
       ['--json', 'database', 'query', '--space-id', spaceId, '--typename', SESSION_TYPE],
       { home, timeout: 120_000 },
     );
@@ -207,8 +207,8 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
   // a later "the task is done" assertion cannot distinguish the agent's work from a bad fixture.
   test(
     'stage 1: the scaffold is visible to a separate dx process before the agent runs',
-    async ({ expect }) => {
-      const tasks = await readTasks();
+    ({ expect }) => {
+      const tasks = readTasks();
       expect(tasks.map((task) => task.title).sort()).toEqual([BACKFILL, ROTATE]);
       expect(findTask(tasks, ROTATE).status).toBe('todo');
       expect(findTask(tasks, BACKFILL).status).toBe('todo');
@@ -232,7 +232,7 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
       expect(turn.result).toContain(ROTATE);
       expect(turn.result).toContain(BACKFILL);
 
-      const tasks = await readTasks();
+      const tasks = readTasks();
       expect(tasks).toHaveLength(2);
       expect(findTask(tasks, ROTATE).status).toBe('todo');
       expect(findTask(tasks, BACKFILL).status).toBe('todo');
@@ -254,7 +254,7 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
       expect(turn.isError, `turn failed: ${turn.result}`).toBe(false);
       expect(turn.toolCalls).toContain(tool('invokeOperation'));
 
-      const tasks = await readTasks();
+      const tasks = readTasks();
       expect(tasks).toHaveLength(2);
       expect(findTask(tasks, ROTATE).status).toBe('done');
       // The untouched task is the control: it proves the write was targeted, not a blanket update.
@@ -279,7 +279,7 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
       expect(turn.isError, `turn failed: ${turn.result}`).toBe(false);
       expect(turn.toolCalls).toContain(tool('invokeOperation'));
 
-      const tasks = await readTasks();
+      const tasks = readTasks();
       expect(tasks).toHaveLength(2);
       const backfill = findTask(tasks, BACKFILL);
       expect(backfill.status).toBe('started');
@@ -315,7 +315,7 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
         await scaffold.close();
       }
 
-      expect(await readSessions()).toHaveLength(0);
+      expect(readSessions()).toHaveLength(0);
 
       const turn = await agent.send(
         `A session report came back with these instructions:\n\n${instructions}\n\n` +
@@ -325,7 +325,7 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
       expect(turn.toolCalls).toContain(tool('invokeOperation'));
 
       // Read by a separate process: the agent saying it recorded the session is not evidence.
-      const sessions = await readSessions();
+      const sessions = readSessions();
       expect(sessions).toHaveLength(1);
       // The instructions asked for both, so a session that landed without them followed only half.
       expect(sessions[0].title, 'the agent was told to supply a title').toBeTruthy();
@@ -340,11 +340,11 @@ describe.skipIf(!API_KEY)('claude code against dx mcp serve', { tags: ['manual']
   test(
     'stage 6: a later report needs no space, and reminds the session of its open tasks',
     async ({ expect }) => {
-      const [session] = await readSessions();
+      const [session] = readSessions();
       const spaceless = await McpSession.open({ home });
       try {
         // Assigned over the same surface the agent uses, so the fixture cannot hide a defect in it.
-        const tasks = await readTasks();
+        const tasks = readTasks();
         await spaceless.invoke(
           'org.dxos.operation.tasks.update',
           {

@@ -18,10 +18,10 @@ import { hasErrorTrace, runDx, withIsolatedHome } from '../testing/index.ts';
  *   - stderr must NOT contain a stack trace.
  */
 
-describe.concurrent('space list', () => {
-  test('fresh profile (no HALO) — exits 0, empty stdout, no error trace', async ({ expect }) => {
-    await withIsolatedHome(async (home) => {
-      const { stdout, stderr, status } = await runDx(['space', 'list'], { home });
+describe('space list', () => {
+  test('fresh profile (no HALO) — exits 0, empty stdout, no error trace', ({ expect }) => {
+    withIsolatedHome((home) => {
+      const { stdout, stderr, status } = runDx(['space', 'list'], { home });
       if (status !== 0) {
         // eslint-disable-next-line no-console
         console.error('stdout:', stdout, '\nstderr:', stderr);
@@ -32,10 +32,10 @@ describe.concurrent('space list', () => {
     });
   });
 
-  test('fresh profile (no HALO) with --json — exits 0, stdout === "[]"', async ({ expect }) => {
+  test('fresh profile (no HALO) with --json — exits 0, stdout === "[]"', ({ expect }) => {
     const home = fs.mkdtempSync('/tmp/dx-test-');
     try {
-      const { stdout, stderr, status } = await runDx(['--json', 'space', 'list'], { home });
+      const { stdout, stderr, status } = runDx(['--json', 'space', 'list'], { home });
       if (status !== 0) {
         // eslint-disable-next-line no-console
         console.error('stdout:', stdout, '\nstderr:', stderr);
@@ -48,8 +48,8 @@ describe.concurrent('space list', () => {
     }
   });
 
-  test('--help advertises the --wait option', async ({ expect }) => {
-    const { stdout, status } = await runDx(['space', 'list', '--help']);
+  test('--help advertises the --wait option', ({ expect }) => {
+    const { stdout, status } = runDx(['space', 'list', '--help']);
     expect(status).toBe(0);
     expect(stdout).toMatch(/--wait/);
     // Make sure the description hints at the no-wait default — that's the
@@ -57,14 +57,14 @@ describe.concurrent('space list', () => {
     expect(stdout.toLowerCase()).toMatch(/wait|ready/);
   });
 
-  test('exits within a bounded time (no implicit wait can hang the command)', async ({ expect }) => {
+  test('exits within a bounded time (no implicit wait can hang the command)', ({ expect }) => {
     // The previous formatSpace called `space.waitUntilReady()` unconditionally,
     // which could hang forever on a partially-loaded space. Even on a fresh
     // profile this should never take more than a few seconds; assert a hard
     // ceiling so a regression to implicit-wait behaviour is caught.
-    await withIsolatedHome(async (home) => {
+    withIsolatedHome((home) => {
       const start = Date.now();
-      const { status } = await runDx(['space', 'list'], { home, timeout: 15_000 });
+      const { status } = runDx(['space', 'list'], { home, timeout: 15_000 });
       const elapsedMs = Date.now() - start;
       expect(status).toBe(0);
       expect(elapsedMs).toBeLessThan(15_000);
