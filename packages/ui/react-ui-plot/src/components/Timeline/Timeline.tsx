@@ -244,7 +244,10 @@ type Layout = {
  * The layout to draw: the target, or while `key` has just changed, a blend from the previous layout to the target over
  * TRANSITION_MS, re-rendered each animation frame.
  */
-const useAnimatedLayout = (target: Layout, key: string): { height: number; yOf: (time: number) => number } => {
+const useAnimatedLayout = (
+  target: Layout,
+  key: string,
+): { height: number; yOf: (time: number) => number; progress: number } => {
   const previous = useRef({ key, layout: target });
   const [transition, setTransition] = useState<{ from: Layout; start: number }>();
   const [now, setNow] = useState(0);
@@ -280,6 +283,7 @@ const useAnimatedLayout = (target: Layout, key: string): { height: number; yOf: 
   const positionIn = ({ fraction, height }: Layout, time: number) => MARGIN + fraction(time) * (height - MARGIN * 2);
 
   return {
+    progress,
     height: blend(from.height, target.height),
     yOf: (time) => blend(positionIn(from, time), positionIn(target, time)),
   };
@@ -561,6 +565,17 @@ export const Timeline = ({
   );
 
   // While an event is selected its card stays put; hovering others shows no card.
+  // When the layout changes (scale, size, spine, dates, categories), the selected event stays in the middle of the view,
+  // following it through every frame of a scale transition; scrolling by hand is left alone.
+  useLayoutEffect(() => {
+    const scroller = scrollRef.current;
+    if (current && scroller) {
+      cancelScroll.current?.();
+      scroller.scrollTop = yOf(current.time) - scroller.clientHeight / 2;
+    }
+    // Only layout changes recentre: `yOf` is a new function each render, so it is read but not a dependency.
+  }, [layout.progress, contentHeight, scale, fontSize, spine, dates, hidden, width]);
+
   const card = current ?? hovered;
 
   const now = Date.now();
