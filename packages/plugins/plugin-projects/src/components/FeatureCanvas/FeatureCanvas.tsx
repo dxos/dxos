@@ -32,7 +32,14 @@ import {
 } from '@dxos/react-ui-canvas/scene';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { FeatureCard, type FeatureLookup, type FeatureModel, makeFeatureLookup } from '../FeatureCard/index.ts';
+import {
+  FeatureCard,
+  type FeatureChanges,
+  type FeatureLookup,
+  type FeatureModel,
+  type FeatureTarget,
+  makeFeatureLookup,
+} from '../FeatureCard/index.ts';
 
 const FEATURE_NODE_TYPE = 'feature';
 
@@ -41,7 +48,7 @@ const FeatureNode = Schema.Struct({ type: Schema.Literal(FEATURE_NODE_TYPE), ...
 
 const createFeatureNode = (props: CreateProps): Node => ({ type: FEATURE_NODE_TYPE, ...props });
 
-type FeatureNodeContextValue = Pick<FeatureCanvasProps, 'onRename' | 'onDescribe' | 'editingId' | 'onEditingChange'> & {
+type FeatureNodeContextValue = Pick<FeatureCanvasProps, 'onChange' | 'editingId' | 'onEditingChange'> & {
   lookup: FeatureLookup;
 };
 
@@ -52,7 +59,7 @@ const FeatureNodeContext = createContext<FeatureNodeContextValue>({ lookup: () =
 const wheelOverlay = { [SCENE_OVERLAY_ATTRIBUTE]: true };
 
 const FeatureNodeView = ({ node }: NodeViewProps) => {
-  const { lookup, onRename, onDescribe, editingId, onEditingChange } = useContext(FeatureNodeContext);
+  const { lookup, onChange, editingId, onEditingChange } = useContext(FeatureNodeContext);
   const feature = lookup(node.id);
   return (
     // One bounded row, so the card fits the box and its body scrolls; presses on the card bubble to the box, which
@@ -63,17 +70,30 @@ const FeatureNodeView = ({ node }: NodeViewProps) => {
       {...wheelOverlay}
     >
       {feature && (
-        <FeatureCard
+        <FeatureCard.Root
           feature={feature}
           lookup={lookup}
-          showDependencies={false}
           scroll
-          onRename={onRename ? (feature, name) => onRename(feature.id, name) : undefined}
-          onDescribe={onDescribe ? (feature, description) => onDescribe(feature.id, description) : undefined}
+          onChange={onChange ? (feature, changes) => onChange(feature.id, changes) : undefined}
           // Controlled only for a host that tracks it; otherwise the edit button's toggle would be overridden.
           editing={onEditingChange ? feature.id === editingId : undefined}
           onEditingChange={(editing) => onEditingChange?.(editing ? feature.id : undefined)}
-        />
+        >
+          <FeatureCard.Header>
+            <FeatureCard.Status />
+            <FeatureCard.Title />
+            <FeatureCard.Save />
+            <FeatureCard.Menu />
+          </FeatureCard.Header>
+          {/* Dependencies are the canvas's arrows, so the card leaves them out. */}
+          <FeatureCard.Body>
+            <FeatureCard.Description />
+            <FeatureCard.Tags />
+            <FeatureCard.SubfeatureCount />
+            <FeatureCard.TaskCount />
+            <FeatureCard.ShowcaseLead />
+          </FeatureCard.Body>
+        </FeatureCard.Root>
       )}
     </Layout.Grid>
   );
@@ -140,7 +160,7 @@ export type FeatureCanvasProps = {
   positions?: Record<string, Point>;
   onPositionsChange?: (positions: Record<string, Point>) => void;
   /** Double-clicking a box opens its feature. */
-  onOpen?: (id: string) => void;
+  onOpen?: (target: FeatureTarget) => void;
   /** A dependency drawn from one box to another; without it, arrows cannot be drawn. */
   onLink?: (featureId: string, dependsOnId: string) => void;
   /** A selected arrow deleted; without it, arrows cannot be deleted. */
@@ -148,8 +168,7 @@ export type FeatureCanvasProps = {
   /** A selected box deleted: the feature leaves its project and is kept. Without it, boxes cannot be deleted. */
   onRemove?: (id: string) => void;
   /** Add each box's edit button, whose edit mode changes the name and description. */
-  onRename?: (id: string, name: string) => void;
-  onDescribe?: (id: string, description: string) => void;
+  onChange?: (id: string, changes: FeatureChanges) => void;
   /** The box whose name field is open, as for a feature just created; cleared when it closes. */
   editingId?: string;
   onEditingChange?: (id: string | undefined) => void;
@@ -174,8 +193,7 @@ export const FeatureCanvas = ({
   onLink,
   onUnlink,
   onRemove,
-  onRename,
-  onDescribe,
+  onChange,
   editingId,
   onEditingChange,
   arrange = 'crossings',
@@ -185,8 +203,8 @@ export const FeatureCanvas = ({
   const atomRegistry = useContext(RegistryContext);
   const lookup = useMemo(() => makeFeatureLookup(features), [features]);
   const nodeContext = useMemo(
-    () => ({ lookup, onRename, onDescribe, editingId, onEditingChange }),
-    [lookup, onRename, onDescribe, editingId, onEditingChange],
+    () => ({ lookup, onChange, editingId, onEditingChange }),
+    [lookup, onChange, editingId, onEditingChange],
   );
   // Owned by this component: the projection's scene atom reads both, so they live while the canvas is mounted.
   const graph = useMemo(() => Atom.make<GraphModel>(toGraph(features)), []);
@@ -197,7 +215,7 @@ export const FeatureCanvas = ({
   // Read through a ref so the registry and projection, which the canvas does not expect to change, stay stable.
   const callbacks = useRef({ onOpen, onLink, onUnlink, onRemove });
   callbacks.current = { onOpen, onLink, onUnlink, onRemove };
-  const nodes = useMemo(() => createRegistry((id) => callbacks.current.onOpen?.(id)), []);
+  const nodes = useMemo(() => createRegistry((id) => callbacks.current.onOpen?.({ type: 'object', id })), []);
   const editable = { link: !!onLink, delete: !!(onUnlink || onRemove) };
 
   useEffect(() => {

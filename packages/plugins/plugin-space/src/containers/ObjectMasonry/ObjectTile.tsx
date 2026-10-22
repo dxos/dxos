@@ -3,7 +3,7 @@
 //
 
 import * as Option from 'effect/Option';
-import React, { type PointerEvent, useCallback, useMemo, useRef } from 'react';
+import React, { useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
@@ -14,7 +14,6 @@ import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as Card from '@dxos/react-ui/Card';
-import * as Focus from '@dxos/react-ui/Focus';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Menu from '@dxos/react-ui/Menu';
 import * as Tag from '@dxos/react-ui/Tag';
@@ -59,23 +58,6 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
 
   const { archived, item: archiveItem } = useArchiveMenuItem(object);
 
-  // `Focus.Item` calls `onCurrentChange` on click and on Enter, without the event, so the press records its
-  // modifiers first. A plain click opens the object when it can be opened; a modified one (or a card that cannot
-  // open) toggles selection, so the review workflow still selects without navigating.
-  const selectPressRef = useRef(false);
-  const handlePointerDown = useCallback((event: PointerEvent) => {
-    selectPressRef.current = event.metaKey || event.ctrlKey || event.shiftKey;
-  }, []);
-  const handleCurrentChange = useCallback(() => {
-    const select = selectPressRef.current;
-    selectPressRef.current = false;
-    if (onOpen && !select) {
-      onOpen(object);
-    } else {
-      onSelect?.(object.id);
-    }
-  }, [onOpen, onSelect, object]);
-
   const menuItems = useMemo(
     () => [
       ...(onOpen
@@ -118,37 +100,36 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
   );
 
   return (
-    <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-      <ObjectCard.Root
-        classNames={['dx-hover', (onSelect || onOpen) && 'cursor-pointer', current && 'dx-current']}
-        onPointerDown={handlePointerDown}
+    // The masonry item around the tile takes focus and opens or selects it (`ObjectMasonry`'s `onActivate`).
+    <ObjectCard.Root
+      aria-current={current || undefined}
+      classNames={['dx-hover', (onSelect || onOpen) && 'cursor-pointer', current && 'dx-current']}
+    >
+      <ObjectCard.Header
+        subject={live}
+        menu={
+          menuItems.length > 0 && (
+            <Card.Menu label={t('toolbar-menu.label', { ns: osTranslations })}>
+              {menuItems.map((menuItem) => (
+                <Menu.Item
+                  key={menuItem.label}
+                  item={{ value: menuItem.label, label: menuItem.label, icon: menuItem.icon }}
+                  onClick={menuItem.onClick}
+                />
+              ))}
+            </Card.Menu>
+          )
+        }
       >
-        <ObjectCard.Header
-          subject={live}
-          menu={
-            menuItems.length > 0 && (
-              <Card.Menu label={t('toolbar-menu.label', { ns: osTranslations })}>
-                {menuItems.map((menuItem) => (
-                  <Menu.Item
-                    key={menuItem.label}
-                    item={{ value: menuItem.label, label: menuItem.label, icon: menuItem.icon }}
-                    onClick={menuItem.onClick}
-                  />
-                ))}
-              </Card.Menu>
-            )
-          }
-        >
-          {label}
-        </ObjectCard.Header>
-        {archived && (
-          <Card.Row>
-            <Tag.Tag classNames='justify-self-start'>{t('archived.label')}</Tag.Tag>
-          </Card.Row>
-        )}
-        {showCardContent && <Surface.Surface type={AppSurface.CardContent} data={cardData} limit={1} />}
-      </ObjectCard.Root>
-    </Focus.Item>
+        {label}
+      </ObjectCard.Header>
+      {archived && (
+        <Card.Row>
+          <Tag.Tag classNames='justify-self-start'>{t('archived.label')}</Tag.Tag>
+        </Card.Row>
+      )}
+      {showCardContent && <Surface.Surface type={AppSurface.CardContent} data={cardData} limit={1} />}
+    </ObjectCard.Root>
   );
 };
 
