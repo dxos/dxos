@@ -108,6 +108,25 @@ describe('makePushRegistration', () => {
     expect(await registration.refresh()).toBe('unsupported');
   });
 
+  test('enable reads pending while it works, and a failure carries the browser error', async () => {
+    const provider = makeProvider();
+    provider.subscribe.mockRejectedValueOnce(
+      new DOMException('Registration failed - push service error', 'AbortError'),
+    );
+    const updates: Array<[PushStatus, string | undefined]> = [];
+    const registration = makePushRegistration({
+      provider: () => provider,
+      edge: makeEdge(),
+      setStatus: (status, error) => updates.push([status, error]),
+    });
+
+    expect(await registration.enable()).toBe('failed');
+    expect(updates).toEqual([
+      ['pending', undefined],
+      ['failed', 'AbortError: Registration failed - push service error'],
+    ]);
+  });
+
   test('a provider contributed after registration was created is used', async () => {
     let provider: AppPush.Provider | undefined;
     const registration = makePushRegistration({ provider: () => provider, edge: makeEdge(), setStatus: () => {} });

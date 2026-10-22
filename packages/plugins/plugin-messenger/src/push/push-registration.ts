@@ -25,7 +25,8 @@ export type PushRegistrationOptions = {
   /** Read on every call: the platform plugin may contribute its provider after registration is created. */
   provider: () => AppPush.Provider | undefined;
   edge: PushEdge;
-  setStatus: (status: PushStatus) => void;
+  /** `error` describes a `failed` attempt. */
+  setStatus: (status: PushStatus, error?: string) => void;
 };
 
 export type PushRegistration = {
@@ -44,6 +45,14 @@ export type PushRegistration = {
 };
 
 const isNotConfigured = (error: unknown) => error instanceof EdgeCallFailedError && error.status === 404;
+
+/** A browser's `DOMException` names the failure (`AbortError`, `NotAllowedError`) apart from its message. */
+const describeError = (error: unknown): string =>
+  error instanceof Error
+    ? error.name && error.name !== 'Error'
+      ? `${error.name}: ${error.message}`
+      : error.message
+    : String(error);
 
 /** Push registration for one device, shared by every platform: the provider differs, the EDGE routes do not. */
 export const makePushRegistration = ({
@@ -77,7 +86,8 @@ export const makePushRegistration = ({
       return await task();
     } catch (error) {
       log.warn('push registration failed', { error });
-      return settle('failed');
+      setStatus('failed', describeError(error));
+      return 'failed';
     }
   };
 
@@ -88,6 +98,8 @@ export const makePushRegistration = ({
         if (!provider?.supported) {
           return settle('unsupported');
         }
+        // The browser's push service can take a while to answer, and the toggle already reads on.
+        setStatus('pending');
         const permission = await provider.requestPermission();
         if (permission !== 'granted') {
           return settle(permission === 'denied' ? 'denied' : 'off');

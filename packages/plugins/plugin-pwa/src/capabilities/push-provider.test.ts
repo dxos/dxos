@@ -126,6 +126,20 @@ describe('makePushProvider', () => {
     await expect(provider.subscribe({ applicationServerKey: KEY_A })).rejects.toThrow();
   });
 
+  test('a push service that never answers fails instead of hanging', async () => {
+    const manager = new FakePushManager();
+    manager.subscribe.mockImplementation(() => new Promise<FakeSubscription>(() => {}));
+    const provider = makePushProvider({
+      supported: true,
+      pushManager: Promise.resolve(manager),
+      permission: () => 'granted',
+      requestPermission: async () => 'granted',
+      serviceTimeout: '10 millis',
+    });
+
+    await expect(provider.subscribe({ applicationServerKey: KEY_A })).rejects.toThrow(/did not answer/);
+  });
+
   test('an unsupported device has no subscription and refuses to subscribe', async () => {
     const { provider } = setup({ supported: false });
 

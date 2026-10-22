@@ -42,10 +42,12 @@ export const Settings = Capability.makeSingleton<Atom.Writable<Settings$.Setting
 );
 
 /** Where this device stands on push; see `PushRegistration` in `#push`. */
-export type PushStatus = 'unsupported' | 'off' | 'denied' | 'on' | 'failed';
+export type PushStatus = 'unsupported' | 'off' | 'pending' | 'denied' | 'on' | 'failed';
 
 export interface PushNotifications {
   status: Atom.Atom<PushStatus>;
+  /** Why the last attempt failed, as the browser or EDGE put it; shown so a failure can be acted on. */
+  error: Atom.Atom<string | undefined>;
   /** Opts this device in; call it from the user's click, since it may show the permission prompt. */
   enable(): Promise<PushStatus>;
   disable(): Promise<PushStatus>;

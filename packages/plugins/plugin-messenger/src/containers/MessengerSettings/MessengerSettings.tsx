@@ -20,6 +20,7 @@ export type MessengerSettingsProps = AppSurface.SettingsData;
 
 /** Shown until push registration activates, or where it never does (no client, not a browser). */
 const unavailable = Atom.make<MessengerCapabilities.PushStatus>('unsupported');
+const noError = Atom.make<string | undefined>(undefined);
 
 /**
  * The toggle drives push registration instead of writing the setting: registration writes it back only once the
@@ -31,6 +32,7 @@ export const MessengerSettings = ({ subject }: MessengerSettingsProps) => {
   const { settings } = Hooks.useSettingsState<Settings.Settings>(subject.atom);
   const [push] = Hooks.useCapabilities(MessengerCapabilities.PushNotifications);
   const status = useAtomValue(push?.status ?? unavailable);
+  const error = useAtomValue(push?.error ?? noError);
   const [attempts, setAttempts] = useState(0);
 
   return (
@@ -54,7 +56,10 @@ export const MessengerSettings = ({ subject }: MessengerSettingsProps) => {
           >
             {status !== 'on' && status !== 'off' && (
               <Banner.Root valence={status === 'failed' ? 'error' : 'info'}>
-                <Banner.Body>{t(`push-status-${status}.message`)}</Banner.Body>
+                <Banner.Body>
+                  {t(`push-status-${status}.message`)}
+                  {status === 'failed' && error && <span className='block'>{error}</span>}
+                </Banner.Body>
               </Banner.Root>
             )}
             <Form.Fields />

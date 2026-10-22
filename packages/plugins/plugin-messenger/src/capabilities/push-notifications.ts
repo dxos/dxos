@@ -26,6 +26,7 @@ export default Capability.makeModule(
 
     // The outcome of the last attempt; until there is one, the status follows whether a provider is here yet.
     const result = Atom.make<MessengerCapabilities.PushStatus | undefined>(undefined).pipe(Atom.keepAlive);
+    const error = Atom.make<string | undefined>(undefined).pipe(Atom.keepAlive);
     const status = Atom.make(
       (get): MessengerCapabilities.PushStatus =>
         get(result) ?? (get(providers.atom)[0]?.supported ? 'off' : 'unsupported'),
@@ -38,7 +39,10 @@ export default Capability.makeModule(
         putPushSubscription: (subscription) => client.edge.http.putPushSubscription(ctx, subscription),
         deletePushSubscription: (endpoint) => client.edge.http.deletePushSubscription(ctx, endpoint),
       },
-      setStatus: (next) => registry.set(result, next),
+      setStatus: (next, failure) => {
+        registry.set(result, next);
+        registry.set(error, failure);
+      },
     });
 
     const setOptedIn = (notifications: boolean) =>
@@ -56,6 +60,7 @@ export default Capability.makeModule(
 
     return Capability.contribute(MessengerCapabilities.PushNotifications, {
       status,
+      error,
       enable: async () => {
         const outcome = await registration.enable();
         setOptedIn(outcome === 'on');

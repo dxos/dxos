@@ -33,10 +33,24 @@ export type PushProviderOptions = {
   requestPermission: () => Promise<AppPush.Permission>;
   /** How long to wait for the worker to activate before giving up. */
   activationTimeout?: Duration.Input;
+  /** How long to wait for the browser's push service to answer a subscribe. */
+  serviceTimeout?: Duration.Input;
 };
 
 /** A first install precaches the whole build before the worker activates, which takes a while on a slow link. */
 const DEFAULT_ACTIVATION_TIMEOUT = Duration.minutes(1);
+
+/** Firefox leaves a subscribe pending while it cannot reach its push service, which would leave the toggle on forever. */
+const DEFAULT_SERVICE_TIMEOUT = Duration.seconds(30);
+
+/** Resolves like `promise`, or throws `message` once `timeout` passes. */
+const within = async <T>(promise: () => Promise<T>, timeout: Duration.Input, message: string): Promise<T> => {
+  const result = await EffectEx.runPromise(Effect.promise(promise).pipe(Effect.timeoutOption(timeout)));
+  if (Option.isNone(result)) {
+    throw new Error(message);
+  }
+  return result.value;
+};
 
 const decodeBase64Url = (value: string): Uint8Array<ArrayBuffer> =>
   Uint8Array.from(atob(value.replace(/-/g, '+').replace(/_/g, '/')), (char) => char.charCodeAt(0));
@@ -59,21 +73,19 @@ export const makePushProvider = ({
   permission,
   requestPermission,
   activationTimeout = DEFAULT_ACTIVATION_TIMEOUT,
+  serviceTimeout = DEFAULT_SERVICE_TIMEOUT,
 }: PushProviderOptions): AppPush.Provider => {
   const pushManager = async (): Promise<PushManagerLike> => {
-    const manager = await EffectEx.runPromise(
-      // A worker whose install failed never activates; failing beats leaving the toggle spinning forever.
-      Effect.promise(() => (supported ? whenRegistered : Promise.resolve(undefined))).pipe(
-        Effect.timeoutOption(activationTimeout),
-      ),
+    // A worker whose install failed never activates; failing beats leaving the toggle spinning forever.
+    const manager = await within(
+      () => (supported ? whenRegistered : Promise.resolve(undefined)),
+      activationTimeout,
+      'Composer is still installing for offline use. Try again shortly.',
     );
-    if (Option.isNone(manager)) {
-      throw new Error('Composer is still installing for offline use. Try again shortly.');
-    }
-    if (!manager.value) {
+    if (!manager) {
       throw new Error('Push is not available on this device.');
     }
-    return manager.value;
+    return manager;
   };
 
   return {
@@ -92,7 +104,12 @@ export const makePushProvider = ({
       // The push service refuses messages signed with a different key, and a browser holds one subscription per
       // registration, so a subscription from before a key rotation is replaced rather than reused.
       await existing?.unsubscribe();
-      return toDeviceSubscription(await manager.subscribe({ userVisibleOnly: true, applicationServerKey: key }));
+      const subscription = await within(
+        () => manager.subscribe({ userVisibleOnly: true, applicationServerKey: key }),
+        serviceTimeout,
+        "This browser's push service did not answer. Check that this browser can receive push notifications.",
+      );
+      return toDeviceSubscription(subscription);
     },
     current: async () => {
       if (!supported) {
