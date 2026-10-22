@@ -417,6 +417,9 @@ catalogs:
     '@storybook/icons':
       specifier: ^2.1.0
       version: 2.1.0
+    '@storybook/react-dom-shim':
+      specifier: ^10.6.0
+      version: 10.6.1
     '@storybook/react-vite':
       specifier: ^10.6.0
       version: 10.6.1
@@ -1726,6 +1729,9 @@ patchedDependencies:
   '@vitest/browser@4.1.10':
     hash: a986f87598d00b4753574afb9fcad1a84d9b0145eaf80189a0b49d32b7af569a
     path: patches/@vitest__browser@4.1.10.patch
+  '@zag-js/combobox@1.43.3':
+    hash: 4ccbf617d5f103328400ac8e06fb4f2595ead7ac83b8b2e29cb4bcd84505f3f7
+    path: patches/@zag-js__combobox@1.43.3.patch
   '@zag-js/presence@1.43.3':
     hash: 724f6c5627fd9aad233fda4bfddc2accd0c9751bd1395affac5beee6b05e9f58
     path: patches/@zag-js__presence@1.43.3.patch
@@ -26223,6 +26229,9 @@ importers:
       '@storybook/addon-vitest':
         specifier: 'catalog:'
         version: 10.6.1(@vitest/browser-playwright@4.1.10)(@vitest/browser@4.1.10)(@vitest/runner@4.1.10)(react@19.2.7)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vitest@4.1.10)
+      '@storybook/react-dom-shim':
+        specifier: 'catalog:'
+        version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
@@ -46688,7 +46697,7 @@ snapshots:
       '@zag-js/collection': 1.43.3
       '@zag-js/color-picker': 1.43.3
       '@zag-js/color-utils': 1.43.3
-      '@zag-js/combobox': 1.43.3
+      '@zag-js/combobox': 1.43.3(patch_hash=4ccbf617d5f103328400ac8e06fb4f2595ead7ac83b8b2e29cb4bcd84505f3f7)
       '@zag-js/core': 1.43.3
       '@zag-js/date-input': 1.43.3(@internationalized/date@3.12.3)
       '@zag-js/date-picker': 1.43.3(@internationalized/date@3.12.3)
@@ -58710,7 +58719,7 @@ snapshots:
     dependencies:
       '@zag-js/utils': 1.43.3
 
-  '@zag-js/combobox@1.43.3':
+  '@zag-js/combobox@1.43.3(patch_hash=4ccbf617d5f103328400ac8e06fb4f2595ead7ac83b8b2e29cb4bcd84505f3f7)':
     dependencies:
       '@zag-js/anatomy': 1.43.3
       '@zag-js/collection': 1.43.3
