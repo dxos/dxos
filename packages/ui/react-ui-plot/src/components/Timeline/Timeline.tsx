@@ -914,6 +914,35 @@ const LaneEvents = ({
 /** Whether an image looks like a logo: a vector drawing or a file named as one. */
 const isLogo = (url: string) => /logo|\.svg/i.test(url);
 
+/**
+ * A card's image, which a click switches between filling the frame (cropped) and showing whole. Photos start
+ * filled; logos start whole on white, so they are neither cropped nor lost against a dark card.
+ */
+const CardImage = ({ src }: { src: string }) => {
+  const logo = isLogo(src);
+  const [fit, setFit] = useState<'cover' | 'contain'>(logo ? 'contain' : 'cover');
+  return (
+    <button
+      type='button'
+      aria-label={fit === 'cover' ? 'Show the whole image' : 'Fill the frame'}
+      className={mx(
+        'flex h-40 w-full items-center justify-center overflow-hidden',
+        logo ? 'bg-white' : 'bg-black/30',
+        logo && fit === 'contain' && 'p-4',
+        fit === 'cover' ? 'cursor-zoom-out' : 'cursor-zoom-in',
+      )}
+      onClick={() => setFit((fit) => (fit === 'cover' ? 'contain' : 'cover'))}
+    >
+      <img
+        src={src}
+        alt=''
+        loading='lazy'
+        className={mx('dx-fill', fit === 'cover' ? 'object-cover' : 'object-contain')}
+      />
+    </button>
+  );
+};
+
 type EventCardProps = {
   event: TimelineEvent;
   side: Side;
@@ -944,15 +973,7 @@ const EventCard = ({ event, side, getAnchorElement, color, onClose, onHover, onL
       onPointerEnter={onHover}
       onPointerLeave={onLeave}
     >
-      {event.image &&
-        (isLogo(event.image) ? (
-          // Logos are shown whole on white, so they are neither cropped nor lost against a dark card.
-          <div className='flex h-28 items-center justify-center bg-white p-4'>
-            <img src={event.image} alt='' loading='lazy' className='max-h-full max-w-full object-contain' />
-          </div>
-        ) : (
-          <img src={event.image} alt='' loading='lazy' className='max-h-48 w-full object-cover' />
-        ))}
+      {event.image && <CardImage src={event.image} />}
       <div className='flex flex-col gap-1 p-3'>
         <Popover.Title>{event.label}</Popover.Title>
         <div className='text-sm font-medium' style={{ color }}>
