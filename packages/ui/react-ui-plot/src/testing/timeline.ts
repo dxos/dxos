@@ -1246,7 +1246,7 @@ export const technologyTimeline: PlotValue[][] = [
   [
     '2027-06',
     'Macro/MIC',
-    'Major internet disruption from a bot attack',
+    'Major internet disruption from bot attack',
     'Speculative: an automated attack takes down large parts of the internet.',
     null,
   ],
