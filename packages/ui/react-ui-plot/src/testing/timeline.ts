@@ -53,6 +53,7 @@ export const technologyTimeline: PlotValue[][] = [
     'Macintosh',
     'Apple’s Macintosh brings the mouse and graphical interface to the mass market.',
   ],
+  ['1984-09', 'Personal', 'Published Music Box', 'Published Music Box, September 1984.'],
   ['1985-04', 'Tech/Hardware', 'ARM', 'The first ARM processor runs; its low-power design later powers most phones.'],
   [
     '1985-09',
@@ -101,7 +102,6 @@ export const technologyTimeline: PlotValue[][] = [
   ['1993-03', 'Tech/Hardware', 'Pentium', 'Intel’s superscalar x86 processor.'],
   ['1993-04', 'Personal', 'Goldman Sachs', 'Senior Programmer Analyst, Apr 1993 – Apr 1996.'],
   ['1993-07', 'Macro/MIC', '“Last Supper”', 'The Pentagon urges contractors to consolidate after the Cold War.'],
-  ['1994-09', 'Personal', 'Published Music Box', 'Published Music Box, September 1994.'],
   ['1994-10', 'Tech/Software', 'Netscape', 'The Netscape Navigator browser brings the web to the mainstream.'],
   [
     '1994-12',
