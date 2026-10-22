@@ -32,8 +32,5 @@ export const handlers = OperationHandlerSet.lazy([
   FeatureOperation.RemoveDependency.pipe(Operation.lazyHandler(() => import('./feature/remove-dependency.ts'))),
   FeatureOperation.LinkTask.pipe(Operation.lazyHandler(() => import('./feature/link-task.ts'))),
   FeatureOperation.CreateShowcase.pipe(Operation.lazyHandler(() => import('./feature/create-showcase.ts'))),
-  FeatureOperation.AddToMap.pipe(Operation.lazyHandler(() => import('./feature/add-to-map.ts'))),
-  FeatureOperation.CreateMap.pipe(Operation.lazyHandler(() => import('./feature/create-map.ts'))),
-  FeatureOperation.RemoveFromMap.pipe(Operation.lazyHandler(() => import('./feature/remove-from-map.ts'))),
-  FeatureOperation.GetMap.pipe(Operation.lazyHandler(() => import('./feature/get-map.ts'))),
+  FeatureOperation.GetFeatures.pipe(Operation.lazyHandler(() => import('./feature/get-features.ts'))),
 ]);

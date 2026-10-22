@@ -216,6 +216,59 @@ describe('DOCS', () => {
   );
 
   it.effect(
+    'printing.md: an object prints as a card whose fetch lines return what they count',
+    Effect.fnUntraced(
+      function* (_) {
+        const output = yield* run(`
+          ${SETUP}
+          Obj.update(project, (project) => { project.tasks.push(Ref.make(task)); });
+          Obj.setParent(task, project);
+          yield* Database.add(Relation.make(Assigned, { [Relation.Source]: ada, [Relation.Target]: task, role: 'reviewer' }));
+          yield* Database.flush();
+          yield* print(task);
+        `);
+        const lines = output.split('\n');
+        // No label: the fixture's task type declares no label field.
+        expect(lines[0]).toMatch(/^com\.example\.type\.task \w+$/);
+        expect(lines).toContain('  title: "Write"');
+        expect(lines.some((line) => /^ {2}owner: → com\.example\.type\.person \w+ "Ada"$/.test(line))).toBe(true);
+        expect(lines.some((line) => /^ {2}parent: → com\.example\.type\.project \w+ "Launch"$/.test(line))).toBe(true);
+        expect(lines).toContain('  relations: in: assigned ×1');
+        expect(lines).toContain('  referenced by: project.tasks ×1');
+
+        const fetches = lines.flatMap((line) => {
+          const match = /^ {4}(yield\* .*) {2}\/\/ (\d+)/.exec(line);
+          return match ? [{ code: match[1], count: match[2] }] : [];
+        });
+        expect(fetches).toHaveLength(2);
+        for (const { code, count } of fetches) {
+          expect(yield* run(`yield* print((${code}).length);`)).toEqual(count);
+        }
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'printing.md and errors.md: Effect values print by their real fields',
+    Effect.fnUntraced(
+      function* (_) {
+        const output = yield* run(`
+          ${SETUP}
+          const result = yield* Effect.result(Database.load(task.owner));
+          yield* print(result._tag, result.success.name);
+          yield* print(result);
+        `);
+        expect(output).toContain('Success Ada');
+        expect(output).toContain('"success": {\n    "@": "com.example.type.person');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'operations.md and errors.md: Effect.exit contains a failed operation',
     Effect.fnUntraced(
       function* (_) {

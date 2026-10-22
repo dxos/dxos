@@ -35,7 +35,7 @@ const handler: Operation.WithHandler<typeof GitHubOperation.GetGitHubRepositorie
         }
 
         return yield* Effect.gen(function* () {
-          const remoteRepos = yield* GitHubApi.fetchUserRepos();
+          const remoteRepos = yield* GitHubApi.fetchReachableRepos();
           const sorted = [...remoteRepos].sort((left, right) =>
             left.full_name.toLowerCase().localeCompare(right.full_name.toLowerCase()),
           );

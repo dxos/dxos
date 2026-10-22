@@ -102,6 +102,11 @@
       "types": "./dist/types/src/types/RegistryOperation.d.ts",
       "import": "./dist/lib/RegistryOperation.mjs"
     },
+    "./RegistryPaths": {
+      "source": "./src/RegistryPaths.ts",
+      "types": "./dist/types/src/RegistryPaths.d.ts",
+      "import": "./dist/lib/ns/RegistryPaths.mjs"
+    },
     "./RegistryPlugin": {
       "source": "./src/RegistryPlugin.ts",
       "types": "./dist/types/src/RegistryPlugin.d.ts",

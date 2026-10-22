@@ -3,5 +3,7 @@
 //
 
 export * from './feature.ts';
-export * from './FeatureCard.tsx';
-export * from './FeatureBoard.tsx';
+export * as FeatureCard from './FeatureCard.tsx';
+export { FEATURE_STATUS_STYLE } from './fields.tsx';
+export * from './SubfeatureEditor.tsx';
+export * from './cardOpenHandlers.ts';

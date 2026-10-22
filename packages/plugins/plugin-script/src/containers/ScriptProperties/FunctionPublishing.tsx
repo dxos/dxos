@@ -12,6 +12,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
+import { isManagedAccessToken } from '@dxos/protocols';
 import { Form } from '@dxos/react-ui-form';
 import * as Banner from '@dxos/react-ui/Banner';
 import * as Button from '@dxos/react-ui/Button';
@@ -30,7 +31,10 @@ export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(object);
 
-  const [githubToken] = useQuery(db, Filter.type(AccessToken.AccessToken, { source: 'github.com' }));
+  // Gists belong to a person: an App connection's token is custodied by EDGE and cannot create one.
+  const githubToken = useQuery(db, Filter.type(AccessToken.AccessToken, { source: 'github.com' })).find(
+    ({ token }) => !isManagedAccessToken(token),
+  );
   const gistKey = Obj.getMeta(object).keys.find(({ source }) => source === 'github.com');
   const [gistUrl, setGistUrl] = useState<string | undefined>();
 
@@ -64,6 +68,9 @@ export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
 
   const [publishing, setPublishing] = useState(false);
   const handlePublish = useCallback(async () => {
+    if (!githubToken) {
+      return;
+    }
     setPublishing(true);
     const octokit = new Octokit({ auth: githubToken.token });
     const source = await object.source.load();

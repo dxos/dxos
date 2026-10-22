@@ -7,80 +7,53 @@ import * as Effect from 'effect/Effect';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { EntityId } from '@dxos/echo/Key';
-import { Actor, Task, TaskSet } from '@dxos/types';
+import { Task, TaskSet } from '@dxos/types';
 
 import { daysAgo } from './util.ts';
 
 //
-// Six steps, flat and in order.
+// Three steps, flat and in order: the plan, not the work.
 //
-// Flat on purpose: the whole run is one afternoon's work, and a tree would imply stages that can be
-// planned against each other. The diagram comes first so the reader can check the shape of the run
-// before anything is built. Everything is `todo` — this is a plan to run, not a project caught
-// mid-flight — and each step depends on the one before it, so a runner working ahead is visibly out
-// of order rather than merely early.
+// The template seeds a partial spec and asks the agent to finish it, draw it and break the implementation into tasks of
+// its own before it builds anything, so a reader watches the plan take shape before the Worker does. Everything is
+// `todo`, and each step depends on the one before it, so a runner working ahead is visibly out of order.
 //
 
 export type TaskSeed = {
   readonly title: string;
   readonly description: string;
   readonly estimate?: Task.Estimate;
-  /** Set where the step needs the reader's own hands — here, the one browser consent screen. */
-  readonly assignee?: Actor.Actor;
 };
 
-/**
- * The reader, as an assignee. A template cannot know who they are, so the actor carries the role and
- * a label rather than a Person ref — enough for the row to say the step is not the agent's.
- */
-const USER: Actor.Actor = { role: 'user', name: 'You' };
-
-/** The first step, on its own: the evals give an agent exactly this task. */
-export const ARCHITECTURE: TaskSeed = {
-  title: 'Draw the proposed architecture',
+/** The spec task, on its own: the other two read what it writes. */
+export const COMPLETE_SPEC: TaskSeed = {
+  title: 'Complete the spec',
   description:
-    "A diagram on the canvas, filed on the project, before any code: the sandbox where wrangler runs, the Worker it deploys, the temporary Cloudflare account that hosts it, and the request and JSON response between a client and the Worker URL. Write it in the Drawing skill's semantic diagram language (`node`, `edge`, `group`) and draw it, so the layout engine places every box and routes every arrow; never position the boxes by hand. Label each arrow in a few words, keep to what the later steps build, and draw again until the result reports no errors.",
+    "The Hello Worker spec in this space states the greeting endpoint (F-1) and only names the other features on the project's feature map. Write a `feat` block for each of them — Deploy without an account (F-2), Verified response (F-3), Claimed account (F-4) — with requirements a later task can be checked against, edit the spec in place through the Markdown skill's update, and append a `decision` to its Changelog saying what you added. State what the project's instructions know about wrangler and the claim; invent nothing beyond them.",
   estimate: 'xs',
 };
 
-const STEPS: ReadonlyArray<TaskSeed> = [
-  ARCHITECTURE,
-  {
-    title: 'Create a sandbox and install wrangler',
-    description:
-      'One sandbox for the whole run — it keeps its filesystem between commands, so a second one pays for node and wrangler again. `--temporary` needs wrangler 4.102 or later and that wrangler needs Node 22, while the sandbox runs Node 20: install `wrangler@latest` explicitly and run its script under a newer node — `npx --yes node@22 node_modules/wrangler/bin/wrangler.js` — since a plain install resolves to the last version that fits Node 20 and has no flag. Creating one and running commands in it belong to the Sandbox skill.',
-    estimate: 's',
-  },
-  {
-    title: 'Write the Worker',
-    description:
-      "A TypeScript Worker whose fetch handler answers every request with JSON: a greeting and the current UTC time. No router, no dependencies, no build step beyond wrangler's own.",
-    estimate: 'xs',
-  },
-  {
-    title: 'Deploy it with no Cloudflare login',
-    description:
-      '`wrangler deploy --temporary` mints a temporary account and prints a Worker URL and a claim URL; plain `wrangler deploy` refuses non-interactively and demands a token, so the flag is not optional. File the Worker URL on the project. The claim URL is a bearer credential — hand it straight to me and file it nowhere.',
-    estimate: 's',
-  },
-  {
-    title: 'Fetch the deployed URL and check the response',
-    description:
-      'Fetch it and paste the body into the project. A deploy command that exited zero is not evidence that anything is serving.',
-    estimate: 'xs',
-  },
-  {
-    title: 'Claim the temporary Cloudflare account',
-    description:
-      'Yours to do: claiming signs the account into yours, which needs a browser the agent does not have. It comes after the last deploy — an agent with no login cannot update a claimed account, and `--temporary` would mint a second one under a different URL. Do it inside the hour; the account expires with the Worker on it.',
-    estimate: 'xs',
-    assignee: USER,
-  },
-];
+/** The diagram step, on its own: the evals give an agent exactly this task. */
+export const ARCHITECTURE: TaskSeed = {
+  title: 'Draw the proposed architecture',
+  description:
+    "A diagram on the canvas, filed on the project, before any code: the sandbox where wrangler runs, the Worker it deploys, the temporary Cloudflare account that hosts it, and the request and JSON response between a client and the Worker URL. Write it in the Drawing skill's semantic diagram language (`node`, `edge`, `group`) and draw it, so the layout engine places every box and routes every arrow; never position the boxes by hand. Label each arrow in a few words, keep to what the spec describes, and draw again until the result reports no errors.",
+  estimate: 'xs',
+};
+
+/** The planning step: the agent's own tasks are the implementation. */
+export const PLAN: TaskSeed = {
+  title: 'Plan the implementation as tasks',
+  description:
+    "Add one task per implementation step to this project's task set, in the order they run, each depending on the one before it, and link each to the feature it moves on the feature map. A step only the reader can do — a browser consent screen — is assigned to the reader. Then work the tasks in order, setting each one's status as you finish it, until the Worker answers.",
+  estimate: 'xs',
+};
+
+const STEPS: ReadonlyArray<TaskSeed> = [COMPLETE_SPEC, ARCHITECTURE, PLAN];
 
 export type TasksResult = { taskSet: TaskSet.TaskSet; tasks: Task.Task[] };
 
-/** The six steps, each depending on the one before it. */
+/** The three planning steps, each depending on the one before it. */
 export const Tasks: SampleSpace.Partial<TasksResult> = SampleSpace.partial('tasks', {
   schemas: [TaskSet.TaskSet, Task.Task],
   run: () =>
@@ -97,7 +70,6 @@ export const Tasks: SampleSpace.Partial<TasksResult> = SampleSpace.partial('task
           title: step.title,
           description: step.description,
           estimate: step.estimate,
-          assignee: step.assignee,
           status: 'todo',
           // Task carries no due date; its dates are activity-log lines, so that is where they go.
           history: [
@@ -114,7 +86,7 @@ export const Tasks: SampleSpace.Partial<TasksResult> = SampleSpace.partial('task
         taskSet.tasks = refs;
       });
 
-      // Nothing can be deployed before it is written, and nothing claimed before it is deployed.
+      // The diagram draws the finished spec, and the plan breaks down what the diagram shows.
       for (const [index, task] of tasks.entries()) {
         if (index > 0) {
           const previous = tasks[index - 1];

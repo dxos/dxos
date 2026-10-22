@@ -4,9 +4,10 @@
 
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
+import { Spec } from '@dxos/types';
 
 import { meta } from '#meta';
-import { CodeProject, SourceFile, Spec } from '#types';
+import { CodeProject, SourceFile } from '#types';
 
 export const translations = [
   {
@@ -69,12 +70,6 @@ export const translations = [
         'build.failed.label': 'Build failed',
         'build.clean.label': 'Build clean',
         'run.failed.label': 'Runtime error',
-        'project-folder.label': 'Code folder on this device',
-        'project-folder.description':
-          'Where Claude Code on this computer works; each delegated task gets its own git worktree of it. Cloud sessions check out the repositories above instead.',
-        'project-folder.empty.label': 'Not set',
-        'project-folder.choose.label': 'Choose folder…',
-        'project-folder.clear.label': 'Clear',
         'changelog-graph.actor.user.label': 'Person',
         'changelog-graph.actor.agent.label': 'Agent',
         'changelog-graph.unknown-actor.label': 'Unattributed',

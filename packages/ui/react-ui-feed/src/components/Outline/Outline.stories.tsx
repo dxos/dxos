@@ -144,6 +144,8 @@ export const Dismissal: Story = {
  * viewport's top-left corner.
  */
 export const Placement: Story = {
+  // TODO(wittjosiah): Flaky in CI (passes only on retry); fix and re-enable.
+  tags: ['!test'],
   args: { markers: defaultMarkers },
   play: async ({ canvasElement }) => {
     const doc = canvasElement.ownerDocument;

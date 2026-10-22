@@ -3,44 +3,166 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useMemo } from 'react';
+import React, { type ReactNode, useMemo, useState } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
-import * as Layout from '@dxos/react-ui/Layout';
+import { Masonry } from '@dxos/react-ui-masonry';
+import * as Card from '@dxos/react-ui/Card';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
 import { translations } from '#translations';
 
-import { makeFeatureLookup } from './feature.ts';
-import { FeatureCard } from './FeatureCard.tsx';
+import {
+  type FeatureChanges,
+  type FeatureLookup,
+  type FeatureModel,
+  type FeatureTarget,
+  getDependents,
+  makeFeatureLookup,
+} from './feature.ts';
+import * as FeatureCard from './FeatureCard.tsx';
 import { SAMPLE_FEATURES } from './testing.ts';
+
+type Variant = 'compact' | 'detail' | 'sections';
 
 type StoryArgs = {
   ids: string[];
-  expanded?: boolean;
-  onSelectDependency?: (id: string) => void;
+  /** The map the cards are drawn from; the sample map by default. */
+  features?: FeatureModel[];
+  variant?: Variant;
+  /** Read-only without it: no status picker or edit button. */
+  editable?: boolean;
+  /** Opens every card in edit mode. */
+  editing?: boolean;
+  onOpen?: (target: FeatureTarget) => void;
 };
 
-const DefaultStory = ({ ids, expanded, onSelectDependency }: StoryArgs) => {
-  const lookup = useMemo(() => makeFeatureLookup(SAMPLE_FEATURES), []);
+type TileData = Pick<StoryArgs, 'variant' | 'editing' | 'onOpen'> & {
+  feature: FeatureModel;
+  lookup: FeatureLookup;
+  dependents: FeatureModel[];
+  onChange?: (feature: FeatureModel, changes: FeatureChanges) => void;
+};
+
+/** One card per host composition. */
+const FeatureTile = ({
+  data: { feature, lookup, dependents, variant = 'compact', editing, onOpen, onChange },
+}: {
+  data: TileData;
+}) => {
+  const root = { feature, lookup, onOpen, onChange, editing: editing || undefined };
+  switch (variant) {
+    case 'detail':
+      return (
+        <FeatureCard.Root {...root}>
+          <FeatureCard.Header>
+            <FeatureCard.Status />
+            <FeatureCard.Title />
+            <FeatureCard.Save />
+            <FeatureCard.Menu />
+          </FeatureCard.Header>
+          <FeatureCard.Body>
+            <FeatureCard.Description />
+            <FeatureCard.Tags all />
+            <FeatureCard.TaskCount />
+            <FeatureCard.Dependencies />
+            <FeatureCard.Dependents dependents={dependents} />
+            <FeatureCard.Subfeatures />
+            <FeatureCard.Tasks />
+            <FeatureCard.Showcases />
+            <FeatureCard.Specs />
+          </FeatureCard.Body>
+        </FeatureCard.Root>
+      );
+
+    case 'sections':
+      return <SectionCards {...root} dependents={dependents} />;
+
+    default:
+      return (
+        <FeatureCard.Root {...root}>
+          <FeatureCard.Header>
+            <FeatureCard.Status />
+            <FeatureCard.Title />
+            <FeatureCard.Save />
+            <FeatureCard.Menu />
+          </FeatureCard.Header>
+          <FeatureCard.Body>
+            <FeatureCard.Description />
+            <FeatureCard.Tags />
+            <FeatureCard.SubfeatureCount />
+            <FeatureCard.TaskCount />
+            <FeatureCard.ShowcaseLead />
+            <FeatureCard.DependencyCount />
+          </FeatureCard.Body>
+        </FeatureCard.Root>
+      );
+  }
+};
+
+/** Each section part alone, in its own card under its name, to see what it draws. */
+const SectionCards = ({ dependents, ...root }: FeatureCard.RootProps & { dependents: FeatureModel[] }) => {
+  const sections: [string, ReactNode][] = [
+    ['Description', <FeatureCard.Description key='description' />],
+    ['Tags', <FeatureCard.Tags key='tags' />],
+    ['Tags all', <FeatureCard.Tags key='tags-all' all />],
+    ['SubfeatureCount', <FeatureCard.SubfeatureCount key='subfeature-count' />],
+    ['TaskCount', <FeatureCard.TaskCount key='task-count' />],
+    ['ShowcaseLead', <FeatureCard.ShowcaseLead key='showcase-lead' />],
+    ['DependencyCount', <FeatureCard.DependencyCount key='dependency-count' />],
+    ['Dependencies', <FeatureCard.Dependencies key='dependencies' />],
+    ['Dependents', <FeatureCard.Dependents key='dependents' dependents={dependents} />],
+    ['Subfeatures', <FeatureCard.Subfeatures key='subfeatures' />],
+    ['Tasks', <FeatureCard.Tasks key='tasks' />],
+    ['Showcases', <FeatureCard.Showcases key='showcases' />],
+    ['Specs', <FeatureCard.Specs key='specs' />],
+  ];
+
   return (
-    <Layout.Grid gap='md' align='start' classNames='grid-cols-[repeat(auto-fill,minmax(18rem,1fr))]'>
-      {ids.flatMap((id) => {
-        const feature = lookup(id);
-        return feature
-          ? [
-              <FeatureCard
-                key={id}
-                feature={feature}
-                lookup={lookup}
-                expanded={expanded}
-                onSelectDependency={onSelectDependency}
-              />,
-            ]
-          : [];
-      })}
-    </Layout.Grid>
+    <>
+      {sections.map(([name, section]) => (
+        <FeatureCard.Root key={name} {...root}>
+          <Card.Header>
+            <Card.Title>{name}</Card.Title>
+          </Card.Header>
+          <FeatureCard.Body>{section}</FeatureCard.Body>
+        </FeatureCard.Root>
+      ))}
+    </>
+  );
+};
+
+const DefaultStory = ({
+  ids,
+  features: initial = SAMPLE_FEATURES,
+  variant,
+  editable = true,
+  editing,
+  onOpen,
+}: StoryArgs) => {
+  const [features, setFeatures] = useState(initial);
+  const lookup = useMemo(() => makeFeatureLookup(features), [features]);
+  const items = useMemo(() => {
+    const onChange = editable
+      ? (changed: FeatureModel, changes: FeatureChanges) =>
+          setFeatures((current) =>
+            current.map((feature) => (feature.id === changed.id ? { ...feature, ...changes } : feature)),
+          )
+      : undefined;
+    return ids.flatMap((id): TileData[] => {
+      const feature = lookup(id);
+      const dependents = getDependents(id, features).flatMap((dependent) => lookup(dependent) ?? []);
+      return feature ? [{ feature, lookup, dependents, variant, editing, onOpen, onChange }] : [];
+    });
+  }, [ids, features, lookup, variant, editable, editing, onOpen]);
+
+  return (
+    <Masonry.Root Tile={FeatureTile} minColumnWidth={18}>
+      <Masonry.Content>
+        <Masonry.Viewport items={items} getId={({ feature }) => feature.id} />
+      </Masonry.Content>
+    </Masonry.Root>
   );
 };
 
@@ -85,10 +207,37 @@ export const Compact: Story = {
   },
 };
 
-/** Every derived signal at least once; problems sort before status. Expanded, so no signal is folded into a count. */
+/** Without `onChange` a card is read-only: a plain status glyph and no edit or status items in its menu. */
+export const ReadOnly: Story = {
+  args: {
+    ids: ['compose', 'sync'],
+    editable: false,
+  },
+  play: async ({ canvasElement }) => {
+    const sync = within(card(canvasElement, 'sync'));
+    await expect(sync.queryByTestId('feature-card.menu')).toBeNull();
+    await expect(sync.queryByTestId('feature-card.status-icon')).toBeNull();
+  },
+};
+
+/** Edit mode: the name and description are fields, the description shown even while empty. */
+export const Editing: Story = {
+  args: {
+    ids: ['compose', 'sync'],
+    editing: true,
+  },
+  play: async ({ canvasElement }) => {
+    const sync = within(card(canvasElement, 'sync'));
+    await expect(await sync.findByTestId('feature-card.name.input')).toBeInTheDocument();
+    await expect(sync.getByTestId('feature-card.description.input')).toBeInTheDocument();
+    await expect(sync.getByTestId('feature-card.done')).toBeInTheDocument();
+  },
+};
+
+/** Every derived signal at least once; problems sort before status. Detailed, so no signal is folded into a count. */
 export const Signals: Story = {
   args: {
-    expanded: true,
+    variant: 'detail',
     ids: ['compose', 'triage', 'feature-map'],
   },
   play: async ({ canvasElement }) => {
@@ -99,12 +248,12 @@ export const Signals: Story = {
   },
 };
 
-/** The detail form: description, dependencies, subfeatures, the implementing tasks, showcases and specs. */
-export const Expanded: Story = {
+/** The detail composition: description, dependencies, subfeatures, the implementing tasks, showcases and specs. */
+export const Detail: Story = {
   args: {
     ids: ['sync'],
-    expanded: true,
-    onSelectDependency: fn(),
+    variant: 'detail',
+    onOpen: fn(),
   },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
@@ -112,6 +261,42 @@ export const Expanded: Story = {
     await expect(canvas.getByText('IMAP')).toBeInTheDocument();
     await expect(canvas.getByText('First sync of a Gmail inbox')).toBeInTheDocument();
     await userEvent.click(canvas.getByText('OAuth tokens'));
-    await expect(args.onSelectDependency).toHaveBeenCalledWith('tokens');
+    await expect(args.onOpen).toHaveBeenCalledWith({ type: 'object', id: 'tokens' });
+  },
+};
+
+/** Each section part on its own. */
+export const Sections: Story = {
+  args: {
+    ids: ['sync'],
+    variant: 'sections',
+  },
+};
+
+/** A list longer than a section's cap scrolls inside the card under its title, so the card keeps its size. */
+export const LongLists: Story = {
+  args: {
+    ids: ['sync'],
+    variant: 'detail',
+    features: SAMPLE_FEATURES.map((feature) =>
+      feature.id === 'sync'
+        ? {
+            ...feature,
+            tasks: Array.from({ length: 12 }, (_, index) => ({
+              id: `task-${index}`,
+              title: `Task ${index + 1}`,
+              done: index % 3 === 0,
+            })),
+          }
+        : feature,
+    ),
+  },
+  play: async ({ canvasElement }) => {
+    const tasks = await within(canvasElement).findByRole('group', { name: 'Tasks' });
+    const viewport = tasks.querySelector<HTMLElement>('[data-scope="scroll-area"][data-part="viewport"]');
+    if (!viewport) {
+      throw new Error('the tasks section does not scroll');
+    }
+    await expect(viewport.scrollHeight).toBeGreaterThan(viewport.clientHeight);
   },
 };
