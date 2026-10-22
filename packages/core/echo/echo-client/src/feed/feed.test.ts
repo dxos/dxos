@@ -275,14 +275,14 @@ describe('Feed', () => {
 
       const queryResult = yield* Feed.query(feed, Filter.type(TestSchema.Person));
       const called = new Event();
-      const calledOnce = called.waitForCount(1);
       const unsubscribe = queryResult.subscribe(() => called.emit());
+      // The local append is in the results before the index answers with the rest of the feed.
+      const calledWithBoth = called.waitForCondition(() => queryResult.results.length === 2);
 
       const bob = Obj.make(TestSchema.Person, { name: 'bob' });
       yield* Feed.append(feed, [bob]);
 
-      yield* Effect.promise(() => calledOnce);
-      expect(queryResult.results).toHaveLength(2);
+      yield* Effect.promise(() => calledWithBoth);
       expect(queryResult.results.map((person) => person.name).sort()).toEqual(['alice', 'bob']);
       unsubscribe();
     }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);

@@ -68,6 +68,9 @@ export class FeedHandle {
 
   public readonly updated = new Event();
 
+  /** Fires inside every local write to an object of this feed, before it is appended. */
+  public readonly localWrite = new Event();
+
   /**
    * Debounces `Obj.update` mutations on live feed objects into a single background append per
    * flush cycle (coalescing), mirroring `RepoProxy._sendUpdatesJob`'s use of the same primitive.
@@ -291,6 +294,28 @@ export class FeedHandle {
   #onCoreDirty(core: FeedObjectCore): void {
     this.#dirtyCores.add(core);
     this.#appendScheduler.trigger();
+    this.localWrite.emit();
+  }
+
+  /**
+   * The objects holding a write the feed has not acknowledged. The index cannot have seen these writes, so a
+   * query evaluates them here; everything else in the feed it answers itself.
+   */
+  localWrites(): Entity.Unknown[] {
+    return [...this.#cores.values()]
+      .filter((core) => this.#holdsLocalWrite(core) && !core.deleted)
+      .map((core) => core.entity);
+  }
+
+  /** The object of a local write the feed has not acknowledged, if `id` is one. */
+  getLocalWrite(id: EntityId): Entity.Unknown | undefined {
+    const core = this.#cores.get(id);
+    return core && this.#holdsLocalWrite(core) ? core.entity : undefined;
+  }
+
+  /** A core queued for the next append holds a write even before the batch marks it pending. */
+  #holdsLocalWrite(core: FeedObjectCore): boolean {
+    return core.hasLocalWrite || this.#dirtyCores.has(core);
   }
 
   async delete(ids: string[]): Promise<void> {

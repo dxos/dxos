@@ -116,6 +116,11 @@ export class FeedObjectCore {
     return this.#deleted;
   }
 
+  /** Whether the entity holds a write the feed has not acknowledged: unsent, or sent and awaiting its block. */
+  get hasLocalWrite(): boolean {
+    return this.#dirty || this.#pending !== undefined;
+  }
+
   /**
    * Capture the entity's current state for an append, marking it clean. The caller (`FeedHandle`'s
    * flush) calls this once per dirty core per flush cycle, coalescing any number of synchronous

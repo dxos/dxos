@@ -111,7 +111,7 @@ type ActiveQuery = {
   /** `performance.now()` before which an invalidated query is left dirty rather than re-run. */
   debouncedUntil: number;
 
-  sendResults: (results: QueryService.QueryResult[]) => void;
+  sendResults: (results: QueryService.QueryResult[], truncated?: 'paths' | 'manifest') => void;
   /** Reports a re-run whose result matched the last one sent. */
   sendUnchanged: () => void;
   onError: (err: Error) => void;
@@ -356,11 +356,11 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       oneShot: request.reactivity === QueryReactivity.ONE_SHOT,
       cost: 0,
       debouncedUntil: 0,
-      sendResults: (results) => {
+      sendResults: (results, truncated) => {
         if (ctx.disposed) {
           return;
         }
-        onResults({ queryId: request.queryId, results });
+        onResults({ queryId: request.queryId, results, ...(truncated && { truncated }) });
       },
       sendUnchanged: () => {
         if (ctx.disposed) {
@@ -478,7 +478,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         const results = await query.executor.getResults();
         countWork('echo.queryResultsSent');
         countWork('echo.queryResultRows', results.length);
-        query.sendResults(results);
+        query.sendResults(results, query.executor.truncated);
       } else if (!query.oneShot) {
         // A client that holds local writes against this query waits for a re-run to know its answer is current.
         query.sendUnchanged();
