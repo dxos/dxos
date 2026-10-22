@@ -1221,7 +1221,21 @@ export const technologyTimeline: PlotValue[][] = [
     'The US government takes about a 10% stake in Intel, converting CHIPS Act grants into equity.',
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/Intel_logo_2023.svg/500px-Intel_logo_2023.svg.png',
   ],
+  [
+    '2026-03',
+    'Macro/MIC',
+    'US drops Anthropic',
+    'The Pentagon labels Anthropic a supply chain risk after the company refuses to drop limits on surveillance and autonomous weapons.',
+    null,
+  ],
   ['2026-07', 'Tech/AI', 'ChatGPT attack on Hugging Face', 'Reported in July 2026.', null],
+  [
+    '2026-10',
+    'Macro/MIC',
+    'US restricts Starshield in Ukraine',
+    'Starshield links for Ukrainian forces are slowed, disrupting drone operations; reports that the order came from the White House are denied.',
+    null,
+  ],
   [
     '2027-06',
     'Macro/MIC',
