@@ -40,7 +40,7 @@ export type SpecArticleProps = Omit<AppSurface.ObjectArticleProps<Spec.Spec>, 's
 
 /**
  * Renders MDL with react-ui-editor's compound primitives and the .mdl CodeMirror extensions;
- * each ```diagram fence is drawn below its source.
+ * each ```diagram fence is drawn in place of its source until the selection enters it.
  * With a `subject` it live-edits the bound ECHO `spec.content` (collaborative); without one it
  * renders the static `content` string read-only (e.g. a bundled plugin spec, no ECHO binding).
  */
