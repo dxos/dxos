@@ -6,6 +6,7 @@ import type * as Atom from 'effect/reactivity/Atom';
 
 import { createContext } from '@dxos/react-hooks';
 import { type GetId } from '@dxos/react-ui-dnd';
+import type * as Focus from '@dxos/react-ui/Focus';
 
 // Kept out of `Board.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so the model, context and hook exported beside them force a full page reload on every edit.
@@ -46,6 +47,8 @@ export const BOARD_CARD_SELECTOR = '.dx-focus-item';
 export type BoardContextValue<TColumn = any, TItem = any> = {
   model: BoardModel<TColumn, TItem>;
   navigation?: BoardNavigation;
+  /** Each card's selection and activation, by item id, as every collection takes it (`Mosaic.Container`'s `itemProps`). */
+  itemProps?: (id: string) => Focus.ItemBinding | undefined;
 };
 
 export const [BoardContextProvider, useBoardContext] = createContext<BoardContextValue>(BOARD_NAME);

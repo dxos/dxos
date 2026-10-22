@@ -35,11 +35,11 @@ const useDescription = (object: Obj.Unknown | undefined): string | undefined =>
 
 type BoardItemProps<TItem extends Obj.Unknown = any> = Pick<
   MosaicTileProps<TItem>,
-  'classNames' | 'location' | 'data' | 'debug' | 'draggable'
+  'classNames' | 'location' | 'data' | 'debug' | 'draggable' | 'binding'
 >;
 
 const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
-  ({ classNames, data, location, debug, draggable }, forwardedRef) => {
+  ({ classNames, data, location, debug, draggable, binding }, forwardedRef) => {
     const { t } = Hooks.useTranslation(translationKey);
     const rootRef = useRef<HTMLDivElement>(null);
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
@@ -78,8 +78,10 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
         data={data}
         location={location}
         debug={debug}
+        binding={binding}
       >
-        <Focus.Item asChild>
+        {/* Selected here too: the item would otherwise override the tile's `aria-selected` with its own unset one. */}
+        <Focus.Item asChild selected={binding?.['aria-selected']}>
           <Card.Root
             // A board card sits on a column panel of the same tone, so it needs an edge where a lone card relies on its shadow.
             classNames={mx('border-separator-subtle', classNames)}

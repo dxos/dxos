@@ -33,9 +33,9 @@ const BOARD_ROOT_NAME = 'Board.Root';
 
 type BoardRootProps<TColumn = any, TItem = any> = PropsWithChildren<BoardContextValue<TColumn, TItem>>;
 
-const BoardRootInner = ({ model, navigation, children }: BoardRootProps) => {
+const BoardRootInner = ({ model, navigation, itemProps, children }: BoardRootProps) => {
   return (
-    <BoardContextProvider model={model} navigation={navigation}>
+    <BoardContextProvider model={model} navigation={navigation} itemProps={itemProps}>
       {children}
     </BoardContextProvider>
   );

@@ -187,7 +187,39 @@ const FocusItem = slottable<HTMLDivElement, FocusItemProps>(
 );
 
 FocusItem.displayName = 'Focus.Item';
-export type { FocusGroupProps as GroupProps, FocusItemProps as ItemProps };
 
-export { FocusGroup as Group, FocusItem as Item };
+//
+// ItemBinding
+//
+
+/**
+ * A collection item's selection and activation, as a selection hook (`useListSelection`) gives it. Every collection
+ * (a list, a masonry, a mosaic stack or board) takes one per item as `itemProps(id)`, so they select alike.
+ */
+type FocusItemBinding = {
+  'aria-selected'?: boolean;
+  'onClick'?: (event: MouseEvent) => void;
+  'onFocus'?: (event: FocusEvent) => void;
+  /** Clicked, or Enter pressed while the item itself has focus (e.g. to open it). */
+  'onActivate'?: (event: MouseEvent | KeyboardEvent) => void;
+};
+
+/** The item element's props for a binding: activation fires on click and on the item's own Enter, not a control's. */
+const bindItem = (binding: FocusItemBinding | undefined) => ({
+  'aria-selected': binding?.['aria-selected'],
+  'onClick': (event: MouseEvent) => {
+    binding?.onClick?.(event);
+    binding?.onActivate?.(event);
+  },
+  'onFocus': binding?.onFocus,
+  'onKeyDown': (event: KeyboardEvent) => {
+    if (event.key === 'Enter' && event.target === event.currentTarget) {
+      binding?.onActivate?.(event);
+    }
+  },
+});
+
+export type { FocusGroupProps as GroupProps, FocusItemBinding as ItemBinding, FocusItemProps as ItemProps };
+
+export { FocusGroup as Group, FocusItem as Item, bindItem };
 export { type FocusContextValue, type FocusState, useFocus } from './FocusContext.ts';

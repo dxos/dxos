@@ -175,7 +175,7 @@ type BoardColumnBodyProps<TItem = Obj.Unknown> = Pick<BoardColumnProps, 'data'> 
 
 const BoardColumnBodyInner = Util.composable<HTMLDivElement, BoardColumnBodyProps>(
   ({ data, eventHandler, Tile = BoardItem, debug, ...props }, forwardedRef) => {
-    const { model } = useBoard(BOARD_COLUMN_BODY_NAME);
+    const { model, itemProps } = useBoard(BOARD_COLUMN_BODY_NAME);
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
     const items = useAtomValue(model.items(data));
 
@@ -184,6 +184,7 @@ const BoardColumnBodyInner = Util.composable<HTMLDivElement, BoardColumnBodyProp
         {...Util.composableProps(props)}
         asChild
         withFocus
+        itemProps={itemProps}
         orientation='vertical'
         autoScroll={viewport}
         eventHandler={eventHandler}

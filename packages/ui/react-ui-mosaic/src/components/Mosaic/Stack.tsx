@@ -19,6 +19,7 @@ import React, {
 import { invariant } from '@dxos/invariant';
 import { useComposedRefs } from '@dxos/react-hooks';
 import { type GetId } from '@dxos/react-ui-dnd';
+import type * as Focus from '@dxos/react-ui/Focus';
 import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 import { type Axis } from '@dxos/ui-types';
@@ -50,6 +51,17 @@ import { type MosaicTileProps } from './Tile.tsx';
 // - `asChild` composition (see the composite-components skill) factors out composable aspects (e.g., Focus, Mosaic, etc.)
 
 const MOSAIC_STACK_NAME = 'MosaicStack';
+
+/** Whether any item carries `aria-selected`: a stack with a selection is a listbox of options, the roles that carry it. */
+const useSelectable = <TData,>(
+  items: readonly TData[] | undefined,
+  getId: GetId<TData>,
+  itemProps: ((id: string) => Focus.ItemBinding | undefined) | undefined,
+) =>
+  useMemo(
+    () => !!itemProps && !!items?.some((item) => itemProps(getId(item))?.['aria-selected'] !== undefined),
+    [items, getId, itemProps],
+  );
 
 type MosaicStackTileComponent<TData = any> = FC<MosaicTileProps<TData>>;
 
@@ -93,10 +105,11 @@ const MosaicStackInner = Util.composable<HTMLDivElement, MosaicStackProps>(
       orientation = orientationProp,
       dragging,
       currentId,
-      selectedIds,
+      itemProps,
       registerScrollTo,
       setActiveLocation,
     } = useMosaicContainerContext(MOSAIC_STACK_NAME);
+    const selectable = useSelectable(items, getId, itemProps);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
     invariant(orientation === 'vertical' || orientation === 'horizontal', `Invalid orientation: ${orientation}`);
 
@@ -140,8 +153,7 @@ const MosaicStackInner = Util.composable<HTMLDivElement, MosaicStackProps>(
     return (
       <div
         {...Util.composableProps(props, {
-          // A stack with a selection is a listbox of options, the roles that carry `aria-selected`.
-          role: selectedIds ? 'listbox' : 'list',
+          role: selectable ? 'listbox' : 'list',
           classNames: [
             'flex',
             orientation === 'horizontal' && 'h-full [&>*]:shrink-0',
@@ -159,7 +171,7 @@ const MosaicStackInner = Util.composable<HTMLDivElement, MosaicStackProps>(
               location={index + 1}
               draggable={draggable}
               current={getId(item) === currentId}
-              selected={selectedIds?.has(getId(item))}
+              binding={itemProps?.(getId(item))}
               debug={debug}
             />
             {draggable && <InternalPlaceholder orientation={orientation} location={index + 1.5} />}
@@ -219,8 +231,9 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
   ) => {
     invariant(Tile);
     invariant(!pagination || !draggable, 'pagination requires draggable={false}');
-    const { id, dragging, currentId, selectedIds, registerScrollTo } =
+    const { id, dragging, currentId, itemProps, registerScrollTo } =
       useMosaicContainerContext(MOSAIC_VIRTUAL_STACK_NAME);
+    const selectable = useSelectable(items, getId, itemProps);
     const visibleItems = useVisibleItems({ id, items, dragging: dragging?.source.data, getId });
     // In draggable mode virtual indices alternate: even=placeholder, odd=tile.
     // Wrap estimateSize so placeholders get 0 (their actual negligible height) and
@@ -312,8 +325,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
     return (
       <div
         {...Util.composableProps(props, {
-          // A stack with a selection is a listbox of options, the roles that carry `aria-selected`.
-          role: selectedIds ? 'listbox' : 'list',
+          role: selectable ? 'listbox' : 'list',
           classNames: [
             // shrink-0 is required: this div sets an explicit height via inline style (getTotalSize).
             // Without it, a parent flex container (e.g. ScrollArea.Viewport) would shrink this div
@@ -366,7 +378,7 @@ const MosaicVirtualStackInner = forwardRef<HTMLDivElement, MosaicVirtualStackPro
                   location={location}
                   draggable={draggable}
                   current={getId(data) === currentId}
-                  selected={selectedIds?.has(getId(data))}
+                  binding={itemProps?.(getId(data))}
                   debug={debug}
                 />
               ) : (

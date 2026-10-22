@@ -6,10 +6,7 @@ import React, {
   type ComponentProps,
   type ComponentType,
   type CSSProperties,
-  type FocusEvent,
   type JSX,
-  type KeyboardEvent,
-  type MouseEvent,
   type PropsWithChildren,
   type Ref,
   type RefObject,
@@ -177,15 +174,6 @@ const MasonryContent = MasonryContentInner as (
 // this layer separately from Content to control the tile grid.
 //
 
-/** A tile's selection and activation props (see `MasonryViewportProps.itemProps`). */
-export type MasonryItemProps = {
-  'aria-selected'?: boolean;
-  'onClick'?: (event: MouseEvent) => void;
-  'onFocus'?: (event: FocusEvent) => void;
-  /** The tile was activated: clicked, or Enter pressed while it has focus (e.g. to open it). */
-  'onActivate'?: (event: MouseEvent | KeyboardEvent) => void;
-};
-
 type MasonryViewportProps<Item> = Util.ThemedClassName<{
   /** Items to render in the masonry grid. */
   items: readonly Item[];
@@ -198,19 +186,11 @@ type MasonryViewportProps<Item> = Util.ThemedClassName<{
    */
   cacheKey?: string;
   /**
-   * Ids of the currently-selected tiles. When `onSelect` is also provided the grid becomes
-   * selectable: selected tiles carry `aria-selected`, drawn by the shared selected edge every
-   * collection uses, and clicking a tile emits {@link onSelect}. Selection STATE (single/multi
-   * semantics) is owned by the consumer — or pass {@link itemProps} instead.
+   * Each tile's selection and activation, as `useListSelection`'s `bind(id).rowProps` gives them (`aria-selected`,
+   * click, and focus for a single-select grid whose selection follows the arrow keys), plus `onActivate`. A tile with
+   * `aria-selected` is an option of a listbox; without, a list item.
    */
-  selectedIds?: ReadonlySet<string>;
-  /** Emitted when a tile is clicked while selectable. The consumer toggles its own selection state. */
-  onSelect?: (id: string, event: MouseEvent) => void;
-  /**
-   * Each tile's selection props, as `useListSelection`'s `bind(id).rowProps` gives them (`aria-selected`, click, and
-   * focus for a single-select grid whose selection follows the arrow keys). Takes the place of `selectedIds`/`onSelect`.
-   */
-  itemProps?: (id: string) => MasonryItemProps;
+  itemProps?: (id: string) => Focus.ItemBinding | undefined;
   /**
    * Whether this layer owns scrolling. Set `false` when an ancestor already scrolls (e.g. a form's
    * viewport) to render the grid in a plain full-width block instead of a nested scroll container —
@@ -223,7 +203,7 @@ type MasonryViewportProps<Item> = Util.ThemedClassName<{
 }>;
 
 const MasonryViewportInner = Util.composable<HTMLDivElement, MasonryViewportProps<any>>(
-  ({ items, getId, cacheKey, selectedIds, onSelect, itemProps, scroll = true, ...props }, forwardedRef) => {
+  ({ items, getId, cacheKey, itemProps, scroll = true, ...props }, forwardedRef) => {
     const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gap, animate, centered } =
       useMasonryContext('Masonry.Viewport');
     const remInPx = Hooks.usePx(1);
@@ -292,7 +272,7 @@ const MasonryViewportInner = Util.composable<HTMLDivElement, MasonryViewportProp
     // so nothing overflows and left/right spacing matches the gap. The viewport always
     // renders so it can be measured; tiles render once a width is known.
     const bounds = ids.map((id) => itemProps?.(id));
-    const selectableGrid = !!onSelect || bounds.some((bound) => bound?.['aria-selected'] !== undefined);
+    const selectableGrid = bounds.some((bound) => bound?.['aria-selected'] !== undefined);
     const grid = (
       <>
         {contentWidth > 0 && (
@@ -319,8 +299,8 @@ const MasonryViewportInner = Util.composable<HTMLDivElement, MasonryViewportProp
               const rect = rects[index];
               const bound = bounds[index];
               // Activation alone does not make a tile selectable; only selection carries `aria-selected`.
-              const selectable = !!onSelect || bound?.['aria-selected'] !== undefined;
-              const selected = bound?.['aria-selected'] ?? selectedIds?.has(id) ?? false;
+              const selectable = bound?.['aria-selected'] !== undefined;
+              const { 'aria-selected': selected = false, ...handlers } = Focus.bindItem(bound);
               // A tile with no height at all — never measured, nothing remembered — is positioned by
               // a guess. Painting that guess is what flashed a tile hundreds of pixels out of place
               // when the item set was swapped wholesale. A remembered height from another width is
@@ -335,21 +315,12 @@ const MasonryViewportInner = Util.composable<HTMLDivElement, MasonryViewportProp
                     // Let the tile clamp its card: a card's own min-width must not exceed
                     // the column, or a narrow (single-column, mobile) container overflows
                     // and shows a horizontal scrollbar.
-                    className={['*:min-w-0! rounded-md', selectable && 'cursor-pointer'].filter(Boolean).join(' ')}
+                    className={['*:min-w-0! rounded-md', (selectable || bound?.onActivate) && 'cursor-pointer']
+                      .filter(Boolean)
+                      .join(' ')}
                     ref={getTileRef(id)}
                     role={selectable ? 'option' : 'listitem'}
-                    onClick={(event) => {
-                      bound?.onClick?.(event);
-                      bound?.onActivate?.(event);
-                      onSelect?.(id, event);
-                    }}
-                    onKeyDown={(event) => {
-                      // Only the tile's own Enter: a control inside it (a field, a button) keeps its key.
-                      if (event.key === 'Enter' && event.target === event.currentTarget) {
-                        bound?.onActivate?.(event);
-                      }
-                    }}
-                    onFocus={bound?.onFocus}
+                    {...handlers}
                     style={{
                       position: 'absolute',
                       insetBlockStart: 0,
