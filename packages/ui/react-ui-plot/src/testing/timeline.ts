@@ -332,6 +332,7 @@ export const technologyTimeline: PlotValue[][] = [
     'ChatGPT (RLHF)',
     'OpenAI releases ChatGPT, tuned with reinforcement learning from human feedback.',
   ],
+  ['2023', 'Personal', 'ECHO', 'ECHO, 2023.'],
   ['2023-01', 'Macro/TIC', 'Microsoft invests $10B in OpenAI', 'Extends Microsoft’s partnership with OpenAI.'],
   ['2023-03', 'Macro/FIC', 'SVB collapse', 'Silicon Valley Bank fails in a fast, phone-driven bank run.'],
   ['2023-03', 'Tech/AI', 'Claude', 'Anthropic releases its Claude assistant.'],
