@@ -65,7 +65,7 @@ const GroupRows = ({ group, effects, types }: GroupRowsProps) => {
   const { icon } = kindStyle(group.kind);
   const effectCells = (dim: boolean) =>
     effects.map((effect) => (
-      <div key={effect} role='cell' className='flex justify-center items-start pt-1'>
+      <Layout.Flex key={effect} role='cell' justify='center' align='start' classNames='pt-1'>
         {group.effects.includes(effect) && (
           <span
             className={mx('block size-2.5 rounded-full bg-orange-text', dim && 'opacity-40')}
@@ -73,34 +73,39 @@ const GroupRows = ({ group, effects, types }: GroupRowsProps) => {
             data-testid='api-surface.effect'
           />
         )}
-      </div>
+      </Layout.Flex>
     ));
   const trailing = (
-    <div role='cell' className='flex flex-wrap gap-1 items-start'>
+    <Layout.Flex role='cell' wrap gap='xs' align='start'>
       {group.requires.map((capability) => (
-        <Tag.Tag key={capability} hue='indigo' classNames='font-mono' title={t('api-surface.requires.label')}>
+        <Tag.Tag
+          key={capability}
+          hue='indigo'
+          classNames='font-mono max-w-full truncate'
+          title={`${t('api-surface.requires.label')}: ${capability}`}
+        >
           {capability}
         </Tag.Tag>
       ))}
       {group.errors.map((error) => (
-        <Tag.Tag key={error.name} hue='error' title={error.desc}>
+        <Tag.Tag key={error.name} hue='error' classNames='max-w-full truncate' title={error.desc ?? error.name}>
           {error.name}
         </Tag.Tag>
       ))}
-    </div>
+    </Layout.Flex>
   );
 
   if (group.kind === 'op') {
     const [endpoint] = group.endpoints;
     return (
       <div role='row' className='contents' data-testid='api-surface.op' data-op={group.id}>
-        <div role='cell' className='flex gap-2 items-start min-w-0'>
+        <Layout.Flex role='cell' gap='sm' align='start' classNames='min-w-0'>
           <Icon.Icon icon={icon} classNames='text-orange-text mt-0.5 shrink-0' />
-          <div className='flex flex-col min-w-0'>
+          <Layout.Flex column classNames='min-w-0'>
             <Signature endpoint={endpoint} types={types} />
             {endpoint.key && <span className='text-xs text-description font-mono truncate'>{endpoint.key}</span>}
-          </div>
-        </div>
+          </Layout.Flex>
+        </Layout.Flex>
         {effectCells(false)}
         {trailing}
       </div>
@@ -110,23 +115,23 @@ const GroupRows = ({ group, effects, types }: GroupRowsProps) => {
   return (
     <>
       <div role='row' className='contents' data-testid='api-surface.service' data-service={group.id}>
-        <div role='cell' className='flex gap-2 items-center min-w-0 pt-2'>
+        <Layout.Flex role='cell' gap='sm' align='center' classNames='min-w-0 pt-2'>
           <Icon.Icon icon={icon} classNames='text-yellow-text shrink-0' />
           <span className='font-medium truncate'>{group.id}</span>
-        </div>
+        </Layout.Flex>
         {effectCells(false)}
         {trailing}
       </div>
       {group.endpoints.map((endpoint) => (
         <div key={endpoint.id} role='row' className='contents' data-testid='api-surface.method'>
-          <div role='cell' className='flex gap-2 items-start min-w-0 ps-6'>
+          <Layout.Flex role='cell' gap='sm' align='start' classNames='min-w-0 ps-6'>
             <Icon.Icon
               icon={endpoint.event ? 'ph--broadcast--regular' : 'ph--arrow-right--regular'}
               size='sm'
               classNames='text-description mt-0.5 shrink-0'
             />
             <Signature endpoint={endpoint} types={types} />
-          </div>
+          </Layout.Flex>
           {effectCells(true)}
           <div role='cell' />
         </div>
@@ -154,7 +159,7 @@ export const ApiSurface = ({ content }: ApiSurfaceProps) => {
 
   if (model.groups.length === 0) {
     return (
-      <Layout.Flex classNames='dx-fill items-center justify-center text-description' data-testid='api-surface.empty'>
+      <Layout.Flex center grow classNames='text-description' data-testid='api-surface.empty'>
         {t('api-surface.empty.message')}
       </Layout.Flex>
     );
@@ -178,10 +183,12 @@ export const ApiSurface = ({ content }: ApiSurfaceProps) => {
   return (
     <ScrollArea.Root orientation='vertical' data-testid='api-surface'>
       <ScrollArea.Viewport>
-        <div
+        <Layout.Grid
           role='table'
-          className='grid gap-x-3 gap-y-2 p-4 items-start'
-          style={{ gridTemplateColumns: `minmax(0,1fr) repeat(${model.effects.length}, 2.5rem) minmax(0,18rem)` }}
+          cols={[3, ...model.effects.map((): Layout.GridTrack => '2.5rem'), 2]}
+          gap='sm'
+          align='start'
+          classNames='p-4'
         >
           <div role='row' className='contents'>
             <div role='columnheader' className='text-xs text-description'>
@@ -189,11 +196,11 @@ export const ApiSurface = ({ content }: ApiSurfaceProps) => {
             </div>
             {model.effects.map((effect) => (
               // Rotated so effect names of any length fit a narrow column.
-              <div key={effect} role='columnheader' className='flex justify-center h-20'>
+              <Layout.Flex key={effect} role='columnheader' justify='center' classNames='h-20'>
                 <span className='text-xs text-description [writing-mode:vertical-rl] rotate-180 truncate'>
                   {effect}
                 </span>
-              </div>
+              </Layout.Flex>
             ))}
             <div role='columnheader' className='text-xs text-description'>
               {t('api-surface.needs.label')}
@@ -201,7 +208,7 @@ export const ApiSurface = ({ content }: ApiSurfaceProps) => {
           </div>
           {section(t('api-surface.operations.label'), ops)}
           {section(t('api-surface.services.label'), services)}
-        </div>
+        </Layout.Grid>
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );

@@ -6,7 +6,14 @@ import { describe, test } from 'vitest';
 
 import CALLS_SPEC from '../../../../plugin-calls/PLUGIN.mdl?raw';
 import TRIP_SPEC from '../../../../plugin-trip/PLUGIN.mdl?raw';
-import { buildApiModel, buildDataModel, buildDefinitionGraph, parseField, parseFields } from './spec-model.ts';
+import {
+  buildApiModel,
+  buildDataModel,
+  buildDefinitionGraph,
+  parseField,
+  parseFields,
+  selectDefinitions,
+} from './spec-model.ts';
 
 describe('spec model', () => {
   test('parses top-level fields with inline and nested values', ({ expect }) => {
@@ -71,5 +78,15 @@ describe('spec model', () => {
     expect(swarm?.endpoints.find(({ name }) => name === 'join')).toMatchObject({ output: 'Participant[]' });
     expect(swarm?.endpoints.find(({ name }) => name === 'onPeerJoin')).toMatchObject({ event: true });
     expect(effects).toEqual(expect.arrayContaining(['device', 'network', 'echo:write']));
+  });
+
+  test('drops excluded kinds and their edges, and counts dependents', ({ expect }) => {
+    const graph = buildDefinitionGraph(CALLS_SPEC);
+    const { definitions, edges, dependents, kinds } = selectDefinitions(graph, ['scenario', 'test']);
+    expect(kinds).not.toContain('scenario');
+    expect(definitions.length).toBeLessThan(graph.definitions.length);
+    const ids = new Set(definitions.map(({ id }) => id));
+    expect(edges.every(({ from, to }) => ids.has(from) && ids.has(to))).toBe(true);
+    expect(dependents.get('CallTransport')).toBe(edges.filter(({ to }) => to === 'CallTransport').length);
   });
 });

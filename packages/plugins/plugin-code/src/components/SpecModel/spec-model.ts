@@ -215,6 +215,35 @@ export const buildDefinitionGraph = (text: string): DefinitionGraphModel => {
   };
 };
 
+/** A definition graph narrowed to the kinds still shown, with lookups for drawing it. */
+export type DefinitionSelection = DefinitionGraphModel & {
+  byId: ReadonlyMap<string, DefinitionModel>;
+  /** How many shown definitions name each one. */
+  dependents: ReadonlyMap<string, number>;
+  /** The kinds present, in order of first definition. */
+  kinds: string[];
+};
+
+/** Drops the given kinds, and every edge to or from them, from a definition graph. */
+export const selectDefinitions = (
+  { definitions, edges }: DefinitionGraphModel,
+  exclude: Iterable<string>,
+): DefinitionSelection => {
+  const excluded = new Set(exclude);
+  const kept = definitions.filter(({ kind }) => !excluded.has(kind));
+  const byId = new Map(kept.map((definition) => [definition.id, definition]));
+  const keptEdges = edges.filter(({ from, to }) => byId.has(from) && byId.has(to));
+  const dependents = new Map<string, number>();
+  keptEdges.forEach(({ to }) => dependents.set(to, (dependents.get(to) ?? 0) + 1));
+  return {
+    definitions: kept,
+    edges: keptEdges,
+    byId,
+    dependents,
+    kinds: [...new Set(kept.map(({ kind }) => kind))],
+  };
+};
+
 const REFERENCE_TYPE = /\bRef<\s*([\w.]+)\s*>/;
 
 /**

@@ -15,7 +15,7 @@ import * as Tag from '@dxos/react-ui/Tag';
 import { meta } from '#meta';
 
 import { LatticeGraph } from '../LatticeGraph/index.ts';
-import { type DefinitionModel, buildDefinitionGraph, kindStyle } from '../SpecModel/index.ts';
+import { type DefinitionModel, buildDefinitionGraph, kindStyle, selectDefinitions } from '../SpecModel/index.ts';
 
 /** Acceptance blocks; they name most of the design, so they are hidden until asked for to keep the design legible. */
 const ACCEPTANCE_KINDS = ['scenario', 'test', 'suite'];
@@ -100,19 +100,10 @@ export const DefinitionGraph = ({ content, exclude = [], defaultAcceptance = fal
   const [acceptance, setAcceptance] = useState(defaultAcceptance);
   // A key rather than the array, so a caller passing a fresh literal each render does not re-lay out the graph.
   const excludeKey = [...exclude, ...(acceptance ? [] : ACCEPTANCE_KINDS)].join(',');
-  const model = useMemo(() => {
-    const { definitions, edges } = buildDefinitionGraph(content);
-    const excluded = new Set(excludeKey.split(','));
-    const kept = definitions.filter(({ kind }) => !excluded.has(kind));
-    const ids = new Set(kept.map(({ id }) => id));
-    return { definitions: kept, edges: edges.filter(({ from, to }) => ids.has(from) && ids.has(to)) };
-  }, [content, excludeKey]);
-  const byId = useMemo(() => new Map(model.definitions.map((definition) => [definition.id, definition])), [model]);
-  const dependents = useMemo(() => {
-    const counts = new Map<string, number>();
-    model.edges.forEach(({ to }) => counts.set(to, (counts.get(to) ?? 0) + 1));
-    return counts;
-  }, [model]);
+  const model = useMemo(
+    () => selectDefinitions(buildDefinitionGraph(content), excludeKey.split(',')),
+    [content, excludeKey],
+  );
   const graph = useMemo<GraphModel>(
     () => ({
       nodes: model.definitions.map(({ id, title }) => ({ id, label: title ?? id })),
@@ -120,18 +111,17 @@ export const DefinitionGraph = ({ content, exclude = [], defaultAcceptance = fal
     }),
     [model],
   );
-  const kinds = useMemo(() => [...new Set(model.definitions.map(({ kind }) => kind))], [model]);
   const renderNode = useCallback(
     (id: string) => {
-      const definition = byId.get(id);
-      return definition && <DefinitionCard definition={definition} dependents={dependents.get(id) ?? 0} />;
+      const definition = model.byId.get(id);
+      return definition && <DefinitionCard definition={definition} dependents={model.dependents.get(id) ?? 0} />;
     },
-    [byId, dependents],
+    [model],
   );
 
   return (
     <LatticeGraph graph={graph} renderNode={renderNode} lattice={LATTICE} arrange='force'>
-      <KindLegend kinds={kinds} acceptance={acceptance} onAcceptanceChange={setAcceptance} />
+      <KindLegend kinds={model.kinds} acceptance={acceptance} onAcceptanceChange={setAcceptance} />
     </LatticeGraph>
   );
 };

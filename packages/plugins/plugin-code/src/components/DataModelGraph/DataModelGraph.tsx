@@ -28,6 +28,9 @@ const EDGE_STYLE: Record<DataModelEdgeKind, Pick<GraphEdge, 'ends' | 'style'>> =
   extends: { ends: { end: 'triangle' }, style: { hue: 'neutral' } },
 };
 
+/** Field names size to the longest; types take the rest and truncate. */
+const FIELD_COLUMNS = ['auto', 'fill'] as const;
+
 const TypeCard = ({ type, types }: { type: DataTypeModel; types: ReadonlySet<string> }) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
@@ -70,27 +73,26 @@ const TypeCard = ({ type, types }: { type: DataTypeModel; types: ReadonlySet<str
             </Card.Text>
           </Card.Row>
         )}
-        <dl
-          className='grid grid-cols-[auto_minmax(0,1fr)] gap-x-2 px-2 font-mono text-sm'
-          data-testid='data-model.fields'
-        >
-          {type.fields.map((field) => (
-            <div key={field.name} className='contents' title={field.comment}>
-              <dt className='text-description truncate'>
-                {field.name}
-                {field.optional && '?'}
-              </dt>
-              <dd
-                className={mx(
-                  'truncate',
-                  field.refs.some((ref) => types.has(ref)) && (field.reference ? 'text-sky-text' : 'text-blue-text'),
-                )}
-              >
-                {field.type}
-              </dd>
-            </div>
-          ))}
-        </dl>
+        <Layout.Grid asChild cols={FIELD_COLUMNS} gap='sm' classNames='px-2 font-mono text-sm'>
+          <dl data-testid='data-model.fields'>
+            {type.fields.map((field) => (
+              <div key={field.name} className='contents' title={field.comment}>
+                <dt className='text-description truncate'>
+                  {field.name}
+                  {field.optional && '?'}
+                </dt>
+                <dd
+                  className={mx(
+                    'truncate',
+                    field.refs.some((ref) => types.has(ref)) && (field.reference ? 'text-sky-text' : 'text-blue-text'),
+                  )}
+                >
+                  {field.type}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </Layout.Grid>
       </Card.Body>
     </Card.Root>
   );
@@ -159,7 +161,7 @@ export const DataModelGraph = ({ content }: DataModelGraphProps) => {
 
   if (model.types.length === 0) {
     return (
-      <Layout.Flex classNames='dx-fill items-center justify-center text-description' data-testid='data-model.empty'>
+      <Layout.Flex center grow classNames='text-description' data-testid='data-model.empty'>
         {t('data-model.empty.message')}
       </Layout.Flex>
     );
