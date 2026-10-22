@@ -1152,6 +1152,13 @@ export const technologyTimeline: PlotValue[][] = [
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/Intel_logo_2023.svg/500px-Intel_logo_2023.svg.png',
   ],
   ['2026-07', 'Tech/AI', 'ChatGPT attack on Hugging Face', 'Reported in July 2026.', null],
+  [
+    '2028-08',
+    'Macro/FIC',
+    'US bails out BigAI',
+    'Speculative: the US government rescues the largest AI companies.',
+    null,
+  ],
 ];
 
 /** The categories of `technologyTimeline` in reading order. */
