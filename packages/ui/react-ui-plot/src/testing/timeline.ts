@@ -366,6 +366,7 @@ export const technologyTimeline: PlotValue[][] = [
     'The launch tower’s arms catch a returning Super Heavy booster.',
   ],
   ['2024-11', 'Macro', 'Trump re-elected', 'Donald Trump wins a second term.'],
+  ['2025', 'Personal', 'Composer', 'Composer, 2025.'],
   ['2025-01', 'Macro/MIC', 'Golden Dome', 'A US missile-defense shield is ordered.'],
   ['2025-01', 'Macro/TIC', '“Tech–industrial complex”', 'Biden’s farewell address warns of a tech–industrial complex.'],
   ['2025-01', 'Macro/TIC', 'Stargate', 'A $500B AI infrastructure venture is announced.'],
