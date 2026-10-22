@@ -903,6 +903,13 @@ export const technologyTimeline: PlotValue[][] = [
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/2/22/EDVAdc.png/500px-EDVAdc.png',
   ],
   [
+    '2020-10',
+    'Tech/AI',
+    'Tesla FSD beta',
+    'Tesla releases its “Full Self-Driving” beta to a first group of owners; drivers must still supervise.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e7/Tesla_Autopilot_Engaged_in_Model_X.jpg/500px-Tesla_Autopilot_Engaged_in_Model_X.jpg',
+  ],
+  [
     '2020-11',
     'Tech/Hardware',
     'Apple M1',
