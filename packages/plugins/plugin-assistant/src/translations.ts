@@ -180,7 +180,7 @@ export const translations: Theme.Resource[] = [
         'plugin-url-prompt.button': 'Load plugin',
 
         'search.placeholder': 'Search...',
-        'prompt-hint.label': 'Ask anything. @ adds an object, / runs a skill or command',
+        'prompt.placeholder': '/ for skills, @ for content',
         'add-menu.button': 'Add',
         'add-files.label': 'Add files or photos',
         'add-object.menu': 'Add object…',
