@@ -190,12 +190,15 @@ Speaker notes.
 
 ### 6. Assistant skill
 
-- `PresenterSkill` (`src/skills/`), contributed via `AppCapabilities.SkillDefinition`, linked from
-  `Markdown.Document` / `Collection` through `Skill.SkillsAnnotation` only if those owners agree (Q6).
-- Operations exposed as tools:
-  - `CreatePresentation({ title, outline, format: 'document' | 'collection', target? })` — the model expands the
-    outline into DSL markdown itself; the operation parses and validates it (unknown layouts, empty slides) and
-    either writes one `Markdown.Document` or one document per slide plus a `Collection`.
+- **Decided (Q6, user):** `PresenterSkill` (`src/skills/`), contributed via `AppCapabilities.SkillDefinition`, is
+  attached to the `Presentation` type only, through `Skill.SkillsAnnotation`. `agentCanEnable: true` lets the
+  agent enable it for "make a deck from this outline" when no presentation exists yet. No annotation on
+  `Markdown.Document`.
+- Operations exposed as tools (_agent call_, revised for the `Presentation` type):
+  - `CreatePresentation({ name, slides: string[], target? })` — the model expands the outline into one DSL
+    markdown string per slide; the operation validates each (unknown layouts, empty slides) and creates a
+    `Presentation` with one owned `Text` section per slide.
+  - `AddSection({ presentation, object | content, index? })` — link an existing object or add an owned slide.
   - `ListLayouts()` — the DSL reference, so the instructions don't embed it.
   - `PresentObject({ object })` — wraps `SetPresenting`.
 - "Markdown outline" input: any markdown with headings/bullets; `Outline` (`org.dxos.type.outline`) checklists
@@ -209,7 +212,7 @@ Speaker notes.
    as the document renderer.
 2. **Pager primitive** in `@dxos/react-ui`; presenter adopts it; Carousel/autocue reconciled.
 3. **Markdown renderer + DSL**; document decks move off reveal.js behind a setting; migrate test decks.
-4. **Slide surfaces** for sheet, canvas, tldraw; `Card` fallback; collection decks out of experimental.
+4. **Slide surfaces** for sheet, canvas, tldraw; fallback chain; picker filter toggle.
 5. **Assistant skill** + eval.
 6. Update `PLUGIN.mdl` (features, scenarios, changelog) at each phase.
 

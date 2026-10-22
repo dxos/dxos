@@ -34,5 +34,5 @@ Design: [DESIGN.md](./DESIGN.md).
 
 ## Phase 5: Assistant skill
 
-- [ ] **`PresenterSkill`** — `CreatePresentation`, `ListLayouts`, `PresentObject`.
+- [ ] **`PresenterSkill`** on `Presentation` — `CreatePresentation`, `AddSection`, `ListLayouts`, `PresentObject`.
 - [ ] **Eval** with memoized fixtures.
