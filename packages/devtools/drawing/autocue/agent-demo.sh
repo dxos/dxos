@@ -19,7 +19,8 @@ export PATH="$DEMO_BIN:$PATH"
 # Started from inside an agent session, the take would otherwise inherit its child-session marker.
 unset CLAUDE_CODE_CHILD_SESSION
 export DX_PROFILE="${DEMO_DX_PROFILE:-autocue-drawing-sh}"
-# EDGE preview, which the `bundle-e2e` Composer the take opens at the end also syncs through.
+# A CLI profile created under DX_LOCAL_DEV=1 points at EDGE preview (`0` or unset means production), the
+# EDGE the `bundle-e2e` Composer the take opens at the end also syncs through.
 export DX_LOCAL_DEV=1
 # Error logs go to the terminal on camera; a reloaded `dx space share` invitation logs a stack on every `dx` start.
 export LOG_PROCESSOR=noop
