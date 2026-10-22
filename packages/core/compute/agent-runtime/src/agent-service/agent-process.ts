@@ -456,6 +456,24 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               return;
             }
 
+            // A prompt this incarnation wrote and no turn has taken up is still owed one, even when it landed after
+            // `state` was read (the end-request hooks yield) or the index trails the write: completing now would drop
+            // the wake `onInput` armed for it.
+            if (unseenWriteIds.size > 0) {
+              const { state: view } = yield* TrajectoryStore.load(feed, Reducer.thread);
+              const settled = new Set(view.items.filter((item) => item.status !== 'queued').map((item) => item.id));
+              for (const id of unseenWriteIds) {
+                if (settled.has(id)) {
+                  unseenWriteIds.delete(id);
+                }
+              }
+              if (unseenWriteIds.size > 0) {
+                log('agent work complete but a written prompt is unread, staying', { unseen: unseenWriteIds.size });
+                yield* reportSleeping(state);
+                return;
+              }
+            }
+
             if (options.resident) {
               log('agent work complete, staying resident');
               return;
@@ -587,9 +605,10 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           onInput: Effect.fnUntraced(function* (input: AgentInput) {
             log('agent onInput received', { backlog: toolResults.length });
             const message = makeInputMessage(input);
+            // Recorded before the write, which yields: a completion check running meanwhile must see the prompt as owed.
+            unseenWriteIds.add(message.id);
             yield* sessionStore.enqueueMessage(feed, message);
             markWork('agent.prompt-queued');
-            unseenWriteIds.add(message.id);
             Queue.offerUnsafe(wake, undefined);
             yield* ctx.setAlarm(0);
             log('agent onInput enqueued to feed');
