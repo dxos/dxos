@@ -374,15 +374,15 @@ type EdgeStressSpec = {
 ```
 
 **Every field is required, and none has a default in code.** `EdgeStressSpec` is an Effect
-schema, and the plan's `decodeSpec` rejects a spec with a missing, unknown or out-of-range field
-before the run starts. `urlsFor(edge)` derives `edgeUrl` and the `/hub/` endpoint from that one field
+schema, and the plan decodes its spec against it before the run starts, rejecting a missing, unknown
+or out-of-range field. `urlsFor(edge)` derives `edgeUrl` and the `/hub/` endpoint from that one field
 so the two halves cannot name different deployments.
 
-The values live in **one config file**, `configs/edge-nightly.yml`, keyed by plan name and read with
-`--specfile configs/edge-nightly.yml --section edgeStress`. It is the only place a value is written
-down: the nightly workflow passes no inputs and no overrides, and there is no `--spec` merge. A
-variant is a copy of that file with the changed field (`edge: dev`, `cleanup: false`,
-`plan: out/<run>/command-trace.jsonl`).
+The values live in `configs/edge-stress-nightly.yml`, which the nightly reads with `-s` and nothing
+else. A one-off variant is `--spec '<json>'` (`{"edge":"dev"}`, `{"cleanup":false}`,
+`{"plan":"out/<run>/command-trace.jsonl"}`) merged over that file; the workflow's `soak_spec`
+dispatch input passes the same override for debugging in CI. `defaultSpec()` throws, so a run with
+no spec file fails at once.
 
 Nightly targets (D12): 10 clients / 7 identities / 10 spaces / 60-minute budget / node-only.
 

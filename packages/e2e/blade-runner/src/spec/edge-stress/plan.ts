@@ -44,6 +44,10 @@ import {
  */
 const COMMAND_POOL_FACTOR = 8;
 
+/** A complete spec, or an error naming the missing, unknown or out-of-range field. */
+export const decodeEdgeStressSpec = (input: unknown): EdgeStressSpec =>
+  Schema.decodeUnknownSync(EdgeStressSpec)(input, { onExcessProperty: 'error' });
+
 /**
  * Both endpoints of one EDGE deployment: the Hub is served under `/hub/` of the same origin, so a
  * spec names its target once and cannot point the two halves at different deployments.
@@ -61,12 +65,14 @@ export const urlsFor = (edge: EdgeTarget): { edgeUrl: string; hubUrl: string } =
  * and the assertions this implements.
  */
 export class EdgeStress implements TestPlan<EdgeStressSpec, EdgeStressResult> {
-  decodeSpec(input: unknown): EdgeStressSpec {
-    return Schema.decodeUnknownSync(EdgeStressSpec)(input, { onExcessProperty: 'error' });
+  defaultSpec(): EdgeStressSpec {
+    throw new Error('edgeStress has no default spec; pass -s configs/edge-stress-nightly.yml');
   }
 
   async run(env: SchedulerEnvImpl<EdgeStressSpec>, params: TestProps<EdgeStressSpec>): Promise<EdgeStressResult> {
-    const { spec } = params;
+    // Decoded here rather than trusted: the spec file and any `--spec` override reach this point
+    // untyped, and a missing or misspelled field must stop the run before it creates anything.
+    const spec = decodeEdgeStressSpec(params.spec);
     const { edgeUrl, hubUrl } = urlsFor(spec.edge);
     assertCanCleanUp(spec.edge, spec.cleanup);
     const limits: Model['limits'] = {

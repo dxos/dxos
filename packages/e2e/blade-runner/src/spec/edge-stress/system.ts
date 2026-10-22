@@ -63,9 +63,10 @@ export const assertCanCleanUp = (edge: EdgeTarget, cleanup: boolean): void => {
 const PositiveInt = Schema.Int.pipe(Schema.check(Schema.isGreaterThan(0)));
 
 /**
- * Every field is required and none has a default in code: the nightly's values live in
- * `configs/edge-nightly.yml`, which is decoded against this schema. This declaration is therefore
- * also the documentation of what a run can be told to do.
+ * Every field is required and none has a default in code: a run reads its spec from a file
+ * (`configs/edge-stress-nightly.yml` for the nightly), optionally with a `--spec` override, and
+ * the result is decoded against this schema. It is therefore also the documentation of what a run
+ * can be told to do.
  */
 export const EdgeStressSpec = Schema.Struct({
   /** Where replicants run. */

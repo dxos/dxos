@@ -54,20 +54,20 @@ cd packages/services/edge && pnpm exec tsx scripts/dev.mts \
 redis-server --port 6379 &
 cd packages/e2e/blade-runner
 GRAVITY_OUT_BASE=$PWD node --import tsx src/main.ts edgeStress --no-browser --seed <seed> \
-  --specfile configs/edge-nightly.yml --section edgeStress
+  -s configs/edge-stress-nightly.yml [--spec '{"edge":"local"}']
 ```
 
-The spec lives in one file, `configs/edge-nightly.yml`, which holds the complete spec of both
-nightly runs and is what CI runs. There are no defaults in code: every knob is documented on the
-`EdgeStressSpec` schema (`system.ts`), and the file's section is decoded against it, so a missing or
-unknown field fails before anything starts. A variant of a run — another EDGE, cleanup off,
-partitions on, a fixed plan — is a copy of the file with that field changed:
+There are no defaults in code. The spec file `configs/edge-stress-nightly.yml` is the nightly's
+complete spec, every knob is documented on the `EdgeStressSpec` schema (`system.ts`), and the plan
+decodes the spec against it before it creates anything. `--spec` supplies only what a run changes
+and is merged over the file. So a variant of a run — another EDGE, cleanup off, partitions on, a
+fixed plan — is a flag:
 
-```yaml
-edge: dev # against dev.dxos.network (DX_HUB_API_KEY for the fallback)
-cleanup: false # leave state behind (recover it by hand, below)
-partitions: true # include GoOffline/GoOnline/Restart (finding 5)
-plan: out/<run>/command-trace.jsonl # replay a failed run's own plan
+```bash
+--spec '{"edge":"dev"}'                              # against dev.dxos.network (DX_HUB_API_KEY for the fallback)
+--spec '{"cleanup":false}'                           # leave state behind (recover it by hand, below)
+--spec '{"partitions":true}'                         # include GoOffline/GoOnline/Restart (finding 5)
+--spec '{"plan":"out/<run>/command-trace.jsonl"}'    # replay a failed run's own plan
 ```
 
 Notes that cost time to find:

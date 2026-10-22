@@ -86,13 +86,7 @@ export type ReplicantsSummary = { [replicantId: string]: ReplicantProps };
 // plan vs environment
 export interface TestPlan<S, R = void> {
   onError?: (err: Error) => void;
-  /** Absent for a plan whose spec lives only in a spec file, which `--specfile` must then name. */
-  defaultSpec?(): S;
-  /**
-   * Validate a spec read from a file into a complete one, rejecting missing and unknown fields.
-   * Without it the file's contents are trusted as they are.
-   */
-  decodeSpec?(input: unknown): S;
+  defaultSpec(): S;
   /**
    * Run the test.
    * @returns results of the run will be passed to the `analyze` method.
