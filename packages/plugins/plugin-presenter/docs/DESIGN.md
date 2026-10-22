@@ -1,6 +1,6 @@
 # plugin-presenter — Design
 
-Status: **decisions agreed, awaiting approval** (2026-10-22; Q8 slide syntax added). Items marked _agent call_ were settled by the agent
+Status: **Phase 1 implemented; code is the truth, spec in PLUGIN.mdl** (2026-10-22; Q8 slide syntax added). Items marked _agent call_ were settled by the agent
 and are open to review; everything marked _user_ was decided in discussion.
 
 ## Intent
@@ -64,12 +64,15 @@ const Presentation = Schema.Struct({
   `presentCollections` setting and `CollectionArticle` are removed.
 - A section is either an **owned markdown `Text`** or a **link** to any ECHO object. Owned vs linked is read from
   the target's parent (`Obj.getParent(target) === presentation`) so one array keeps the order (_agent call_).
-  Removing an owned section deletes its `Text`; removing a linked one only unlinks.
+  Removing an owned section deletes its `Text`; removing a linked one only unlinks. Ownership is set explicitly
+  when a slide is created (`Obj.setParent` after the ref exists), not by a `SetParent` annotation on `sections`,
+  which would also adopt linked parentless objects (_agent call_).
 - **One section is exactly one slide** _(user)_. `---` inside a section is a horizontal rule, not a slide break,
   so the navtree, the pager count and `sections` always agree.
 - App graph: the Presentation is a folder node; each section is a child, labelled by its first heading (owned) or
-  the object's own label (linked). Drag-reorder in the navtree writes `sections`. Selecting a child opens the
-  presentation at that slide.
+  the object's own label (linked). An owned slide is labelled by its `name`, else its first heading, else
+  "Slide N". Drag-reorder in the navtree writes `sections`. Clicking a child opens that slide's own article
+  (the markdown editor for an owned slide) rather than the deck _(agent call)_.
 - "Add to presentation": a picker over space objects with a toggle _(user)_ that filters to schemas with a
   dedicated `Slide` surface. With the toggle off, anything can be linked and renders through the fallback chain
   (§3). The filter needs a "does a surface exist for role X and schema Y" query that does not render
@@ -116,9 +119,13 @@ PresentationArticle
          └─ Pager overlay (fullscreen only; auto-hides when idle, shows on pointer move)
 ```
 
-- The fullscreen button and `F` key call `SetPresenting` / `DeckOperation.Adjust`; no new layout mode.
-- Keys bind on the shell's focus scope, never `window`: ←/→ step, Shift+←/→ or Home/End first/last, ESC exits
-  fullscreen. `PresenterContext`, `StartButton` and `Layout` are deleted; the shell owns the overlay slots, which
+- The fullscreen button and `F` key call `SetPresenting` / `DeckOperation.Adjust`; no new layout mode. A
+  Presentation presents fullscreen on its own plank (it has no presenter companion; its article is the deck);
+  a Markdown document presents through its `~presenter` companion. Fullscreen is read per object
+  (`useIsPresenting`), never from the global layout mode, so toggling one deck does not remount another
+  _(agent call)_.
+- Keys bind on the deck's focus scope, never `window`: ←/→ step, Shift+←/→ or Home/End first/last, `f` toggles
+  fullscreen, ESC exits fullscreen. `PresenterContext`, `StartButton` and `Layout` are deleted; the overlay pager lives in `Deck`, not the shell, which
   also fixes the `[ESC]` hint overlapping `Layout`'s top-left slot.
 - **Current slide** _(user)_: per-user, per-deck view state in `@dxos/react-ui-attention` —
   `ViewState.define({ key: 'presenter-slide', backend: 'local', … })`, read with
@@ -256,7 +263,7 @@ Each phase updates `PLUGIN.mdl` (features, scenarios, QA, `## Changelog`) and sh
 
 ## References
 
-- `packages/plugins/plugin-presenter/PLUGIN.mdl` — current spec (stale: "solo fullscreen", vertical slides).
+- `packages/plugins/plugin-presenter/PLUGIN.mdl` — current spec, with the attributed `## Changelog`.
 - `packages/sdk/app-toolkit/src/ui/components/AppSurface/AppSurface.ts:379` — `AppSurface.Slide`.
 - `packages/ui/react-ui/src/components/Carousel/Carousel.tsx` — Carousel.
 - `packages/ui/react-ui-attention/src/types/ViewState.ts` — view-state aspects.
