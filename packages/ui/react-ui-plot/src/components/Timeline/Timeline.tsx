@@ -123,12 +123,9 @@ const layoutLanes = (spine: TimelineSpine, columns: string[], width: number): { 
       : spine === 'right'
         ? width - SPINE_MARGIN
         : AXIS_WIDTH + (width - AXIS_WIDTH) / 2;
-  // On a centered spine, groups of sibling categories alternate sides; a single group's categories alternate instead.
-  const groups = groupCategories(columns);
+  // On a centered spine, groups alternate sides; every category in a group stays on its group's side.
   const slotOf = new Map(
-    groups.length > 1
-      ? groups.flatMap((group, index) => group.categories.map((column) => [column, index] as const))
-      : columns.map((column, index) => [column, index] as const),
+    groupCategories(columns).flatMap((group, index) => group.categories.map((column) => [column, index] as const)),
   );
   const sideOf = (column: string): Side =>
     spine === 'left' ? 'end' : spine === 'right' ? 'start' : (slotOf.get(column) ?? 0) % 2 ? 'end' : 'start';
