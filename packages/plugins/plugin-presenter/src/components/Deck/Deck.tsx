@@ -29,7 +29,7 @@ export type DeckProps = {
   fullscreen?: boolean;
   onFullscreenChange?: (fullscreen: boolean) => void;
   onAddSlide?: () => void;
-  /** Extra toolbar content, shown after the page number. */
+  /** Extra toolbar content, shown at the start of the toolbar. */
   toolbar?: ReactNode;
   attendableId?: string;
   /** Focus the deck on mount, so keys work without a click; it is refocused after every fullscreen toggle regardless. */
@@ -42,7 +42,7 @@ const isEditable = (target: EventTarget) =>
   target.closest('input, textarea, [contenteditable]:not([contenteditable="false"])') !== null;
 
 /**
- * Paged slide deck: a toolbar pager, or in fullscreen an auto-hiding overlay pager. Keys are scoped
+ * Paged slide deck: a centered status-bar pager, or in fullscreen an auto-hiding overlay pager. Keys are scoped
  * to the deck's own focus so they never leak to the surrounding app.
  */
 export const Deck = Util.composable<HTMLDivElement, DeckProps>(
@@ -151,8 +151,6 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
       <Panel.Root {...props} ref={forwardedRef}>
         <Panel.Header>
           <Toolbar.Root>
-            <Pager index={index} count={count} onChange={onIndexChange} />
-            <PageNumber index={index} count={count} />
             {toolbar}
             <div className='grow' />
             <Button.Root
@@ -166,6 +164,12 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
           </Toolbar.Root>
         </Panel.Header>
         <Panel.Body asChild>{shell}</Panel.Body>
+        <Panel.Footer>
+          <div className='flex items-center justify-center gap-4'>
+            <Pager index={index} count={count} onChange={onIndexChange} />
+            <PageNumber index={index} count={count} />
+          </div>
+        </Panel.Footer>
       </Panel.Root>
     );
   },

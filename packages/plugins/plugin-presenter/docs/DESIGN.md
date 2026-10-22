@@ -122,11 +122,12 @@ type SlideSource =
 ```
 PresentationArticle
 └─ Panel.Root
-   ├─ Panel.Toolbar   [⏮ ◀  3 / 12  ▶ ⏭] ··· [⛶ fullscreen]   (hidden in fullscreen)
-   └─ Panel.Body
-      └─ PresentationShell  (focus scope, fade, ESC in fullscreen)
-         ├─ SlideFrame → current slide
-         └─ Pager overlay (fullscreen only; auto-hides when idle, shows on pointer move)
+   ├─ Panel.Header    [+ slide] [link] ··· [⛶ fullscreen]   (hidden in fullscreen)
+   ├─ Panel.Body
+   │  └─ PresentationShell  (focus scope, fade, ESC in fullscreen)
+   │     ├─ SlideFrame → current slide
+   │     └─ Pager overlay (fullscreen only; auto-hides when idle, shows on pointer move)
+   └─ Panel.Footer    status bar, centered: [⏮ ◀  3 / 12  ▶ ⏭]   (hidden in fullscreen)
 ```
 
 - The fullscreen button and `F` key call `SetPresenting` / `DeckOperation.Adjust`; no new layout mode. A

@@ -61,7 +61,7 @@ type SlideSource
 ```mdl
 component Deck
   desc: |
-    Paged slide deck. Inline it shows a toolbar pager; in fullscreen an overlay pager that auto-hides when idle
+    Paged slide deck. Inline it shows the pager centered in a status bar below the slide; in fullscreen an overlay pager that auto-hides when idle
     and wakes on pointer movement. Keys are scoped to the deck's focus scope, never `window`: left and right
     step, Shift+left and Shift+right (or Home and End) jump to first and last, `f` toggles fullscreen,
     Escape exits fullscreen.
@@ -76,11 +76,13 @@ component Deck
     onAddSlide()
   layout: |
     ┌─────────────────────────────┐
-    │ [toolbar]  ◀ 3 / 12 ▶  [⛶] │  ← hidden in fullscreen
+    │ [toolbar]              [⛶] │  ← hidden in fullscreen
     ├─────────────────────────────┤
     │                             │
     │     SlideFrame (slide N)    │
     │   (overlay pager, idle)     │
+    ├─────────────────────────────┤
+    │      ◀◀ ◀  3 / 12  ▶ ▶▶     │  ← status bar; hidden in fullscreen
     └─────────────────────────────┘
 ```
 
@@ -639,6 +641,14 @@ decision D-20: The Phase 1 fixes are applied in one wave after the running-app v
   for: user:richburdon
   affects: [Presentation]
   why: Bugs found in the running app then land with the review fixes in one set of commits.
+```
+
+```mdl
+decision D-21: Inline, the Deck pager sits centered in a status bar below the slide, not in the top toolbar. Fills in [D-1].
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [Deck]
+  why: The toolbar keeps the editing actions; navigation sits under the slide it controls.
 ```
 
 ---
