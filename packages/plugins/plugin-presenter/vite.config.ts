@@ -13,6 +13,7 @@ export default defineConfig({
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
     deck: 'src/deck/index.ts',
+    markdown: 'src/markdown/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
     translations: 'src/translations.ts',

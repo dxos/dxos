@@ -46,6 +46,11 @@
       "types": "./dist/types/src/hooks/index.d.ts",
       "default": "./dist/lib/hooks.mjs"
     },
+    "#markdown": {
+      "source": "./src/markdown/index.ts",
+      "types": "./dist/types/src/markdown/index.d.ts",
+      "default": "./dist/lib/markdown.mjs"
+    },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
@@ -168,7 +173,8 @@
     "rehype-highlight": "catalog:",
     "remark-frontmatter": "catalog:",
     "remark-parse-frontmatter": "catalog:",
-    "reveal.js": "catalog:"
+    "reveal.js": "catalog:",
+    "yaml": "catalog:"
   },
   "devDependencies": {
     "@dxos/echo-client": "workspace:*",
