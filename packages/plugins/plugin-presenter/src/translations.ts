@@ -15,6 +15,7 @@ export const translations = [
         'slide-pending.label': 'Loading…',
         'add-slide.label': 'Add slide',
         'fullscreen.label': 'Fullscreen',
+        'add-section.label': 'Link object',
       },
     },
   },

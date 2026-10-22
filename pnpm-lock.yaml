@@ -15172,6 +15172,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-doc
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
@@ -15199,6 +15202,12 @@ importers:
       '@dxos/react-ui-attention':
         specifier: workspace:*
         version: link:../../ui/react-ui-attention
+      '@dxos/react-ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-editor
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
@@ -15251,9 +15260,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
-      '@dxos/react-ui-editor':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-editor
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../../ui/ui-theme

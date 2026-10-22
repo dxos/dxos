@@ -32,6 +32,8 @@ export type DeckProps = {
   /** Extra toolbar content, shown after the page number. */
   toolbar?: ReactNode;
   attendableId?: string;
+  /** Focus the deck on mount and whenever fullscreen toggles, so keys work without a click. */
+  autoFocus?: boolean;
 };
 
 /** Keys typed into slide content (inputs, editors) must not turn the page. */
@@ -54,6 +56,7 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
       onAddSlide,
       toolbar,
       attendableId,
+      autoFocus = false,
       ...props
     },
     forwardedRef,
@@ -75,6 +78,7 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
         };
         switch (event.key) {
           case 'f':
+          case 'F':
             event.preventDefault();
             onFullscreenChange?.(!fullscreen);
             return;
@@ -93,6 +97,14 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
       [index, count, onIndexChange, fullscreen, onFullscreenChange],
     );
 
+    const shellRef = useRef<HTMLDivElement>(null);
+    // The shell remounts on toggle, so focus is restored after leaving fullscreen as well as on mount.
+    useEffect(() => {
+      if (autoFocus) {
+        shellRef.current?.focus({ preventScroll: true });
+      }
+    }, [autoFocus, fullscreen]);
+
     const handleExit = useCallback(() => onFullscreenChange?.(false), [onFullscreenChange]);
 
     const body =
@@ -108,6 +120,7 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
       <PresentationShell
         // Remount on toggle because the shell's exiting state must reset after an ESC exit.
         key={fullscreen ? 'fullscreen' : 'inline'}
+        ref={shellRef}
         data-testid='presenter.deck'
         fullscreen={fullscreen}
         onExit={handleExit}

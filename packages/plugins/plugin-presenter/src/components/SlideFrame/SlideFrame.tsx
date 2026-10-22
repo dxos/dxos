@@ -37,7 +37,7 @@ export const SlideFrame = ({ children, classNames }: SlideFrameProps) => {
   return (
     <div ref={containerRef} className={mx('flex grow relative overflow-hidden dx-attention-surface', classNames)}>
       <div className={mx('dx-expand absolute')} style={props}>
-        {width && height && children}
+        {!!width && !!height && children}
       </div>
     </div>
   );

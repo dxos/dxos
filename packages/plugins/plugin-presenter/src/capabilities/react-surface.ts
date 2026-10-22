@@ -10,10 +10,12 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import { Text } from '@dxos/schema';
 import * as Position from '@dxos/util/Position';
 
-import { DocumentArticle, SlideArticle } from '#containers';
+import { DocumentArticle, PresentationArticle, SlideArticle, SlideEditorArticle } from '#containers';
 import { meta } from '#meta';
+import { Presentation } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -33,6 +35,23 @@ export default Capability.makeModule(() =>
         ),
         component: DocumentArticle,
         props: ({ role, data: { subject } }) => ({ role, subject: subject.object }),
+      }),
+      Surface.create({
+        id: 'presentation',
+        position: Position.first,
+        filter: AppSurface.object(AppSurface.Article, Presentation.Presentation),
+        component: PresentationArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+      }),
+      Surface.create({
+        id: 'slideEditor',
+        // First, so an owned slide opens here rather than in the markdown plugin's general `Text` article.
+        position: Position.first,
+        filter: AppSurface.object(AppSurface.Article, Text.Text, ({ subject }) =>
+          Obj.instanceOf(Presentation.Presentation, Obj.getParent(subject)),
+        ),
+        component: SlideEditorArticle,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'slide',

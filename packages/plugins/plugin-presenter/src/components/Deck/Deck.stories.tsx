@@ -200,6 +200,19 @@ export const FullscreenKey: Story = {
   },
 };
 
+/** Shift or Caps Lock still toggles fullscreen. */
+export const FullscreenShiftKey: Story = {
+  decorators: [withEmptyPlugins],
+  args: { onFullscreenChange: fn() },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const deck = await canvas.findByTestId('presenter.deck');
+    deck.focus();
+    await userEvent.keyboard('F');
+    await expect(args.onFullscreenChange).toHaveBeenCalledWith(true);
+  },
+};
+
 export const StaleIndex: Story = {
   decorators: [withEmptyPlugins],
   render: StaleIndexStory,
