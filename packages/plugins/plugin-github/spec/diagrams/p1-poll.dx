@@ -15,8 +15,8 @@ group api "api.github.com" {
 node Echo "space objects" ref="packages/sdk/types/src/types/PullRequest.ts"
 edge Timer -> Delta "per binding"
 edge Delta -> IssuesApi "1 request"
-edge Delta -> Advance "304: done" stroke=dashed
-edge Delta -> Pulls "changed PRs"
+edge Delta -> Advance "304, none pending: done" stroke=dashed
+edge Delta -> Pulls "changed or pending PRs"
 edge Pulls -> GraphQL "1 request"
 edge Pulls -> Upsert
 edge Upsert -> Echo "changed fields"

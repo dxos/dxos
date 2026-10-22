@@ -35,7 +35,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 A plugin-illustrator render, grouped by package and service. The `diagram` block is the source;
 regenerate the image with `moon run plugin-illustrator:render-diagrams -- <abs path>/spec/diagrams/p3-dispatch.dx`.
 
-![Inside kms-service, provider modules implement the Provider interface that its webhook ingress and grant issuer use; a signed webhook enters kms-service's ingress, which hands the resource to compute-service's EventRouter; the router pokes the space's TriggersDispatcher, which runs plugin-github's sync; the space's event trigger requests a grant from kms-service and registers with the router.](diagrams/p3-dispatch.dx.svg)
+![Inside kms-service, provider modules implement the Provider interface that its webhook ingress and grant issuer use; a signed webhook enters kms-service's ingress, which hands the resource to compute-service's EventRouter; the router pokes the space's TriggersDispatcher, which runs plugin-github's sync; when the TriggersDispatcher loads the space's event trigger, it gets a grant from kms-service and registers the route with the router.](diagrams/p3-dispatch.dx.svg)
 
 ```diagram
 diagram flow=right
@@ -63,8 +63,9 @@ edge App -> Ingress "signed webhook"
 edge Ingress -> Router "github.com/o/r"
 edge Router -> Dispatch "poke"
 edge Dispatch -> Sync "run"
-edge Trigger -> Grants "request grant" stroke=dashed
-edge Trigger -> Router "register + UCAN" stroke=dashed
+edge Dispatch -> Trigger "load" stroke=dashed
+edge Dispatch -> Grants "issue grant" stroke=dashed
+edge Dispatch -> Router "register" stroke=dashed
 ```
 
 ## Extension point
@@ -117,7 +118,12 @@ export interface ProviderWebhook {
 
 export type ProviderToken = { readonly accessToken: string; readonly account?: string };
 export type ProviderAccount = { readonly id: string; readonly login: string };
-export type AccessVerdict = { readonly allowed: boolean; readonly reason?: string };
+export type AccessVerdict = {
+  readonly allowed: boolean;
+  readonly reason?: string;
+  /** Installation the resource is reached through; GitHub reports it for every repository it allows. */
+  readonly installation?: string;
+};
 
 export type ProviderEvent = {
   readonly provider: OAuthProvider;
@@ -250,7 +256,7 @@ type EventGrant = {
   /** Issued-at + 24 hours. */
   exp: number;
   /** Binds the grant to the trigger and the token it was checked with. */
-  fct: [{ spaceId: string; triggerId: string; accessTokenId: string; account: string }];
+  fct: [{ spaceId: string; triggerId: string; accessTokenId: string; account: string; installation?: string }];
   prf: [];
 };
 ```
@@ -268,6 +274,7 @@ type EventGrant
     triggerId: string
     accessTokenId: string
     account: string                  # provider account the check ran as
+    installation?: string            # from AccessVerdict; present for every GitHub grant
 ```
 
 ### Routing (compute-service)
@@ -279,8 +286,9 @@ type Route = {
   spaceId: SpaceId;                // primary key part
   triggerId: ObjectId;             // primary key part
   provider: OAuthProvider;
+  accessTokenId: string;           // for token deletion; copied from the grant
   account: string;                 // for account revocations
-  installation?: string;           // for installation revocations
+  installation?: string;           // for installation revocations; copied from the grant, so set on every GitHub route
   events?: readonly string[];
   grantExp: number;
 };
@@ -302,7 +310,7 @@ type EventPoke = {
 service EventRouter
   desc: Global index of event triggers in compute-service, keyed by resource.
   ops:
-    register(trigger: EventSpec, spaceId: SpaceId, triggerId: ObjectId) → Route
+    register(trigger: EventSpec, spaceId: SpaceId, triggerId: ObjectId) → Route   # account, accessTokenId and installation come from trigger.grant
     unregister(spaceId: SpaceId, triggerId: ObjectId) → void
     match(resources: ResourceUri[], event: ProviderEvent) → Route[]
     revoke(revocation: Revocation) → number
@@ -338,7 +346,7 @@ feat F-2: Event trigger and grant
 
   req F-2.1:
     when: a connector with `events` binds a target
-    then: plugin-connector creates an event trigger with source = events.resource(binding), credential = the connection's AccessToken, and remote = true, running the connector's sync operation
+    then: plugin-connector creates an event trigger with source = events.resource(binding), credential = the connection's AccessToken, and remote = true, running the connector's sync operation scoped to that binding
 
   req F-2.2:
     when: compute-service loads an event trigger without a valid grant
@@ -364,7 +372,7 @@ feat F-3: Ingress
 ```mdl
 feat F-4: Routing and delivery
 
-  req F-4.1: A route matches when its resource is one of Provider.webhook.route(event) and its events, if set, include the event name or name.action.
+  req F-4.1: A route matches when its resource is one of Provider.webhook.route(event), or an ancestor of one at a `/` boundary (`github.com` matches `github.com/o/r`; `github.com/o` does not match `github.com/ob/r`), and its events, if set, include the event name or name.action.
 
   req F-4.2: A match is delivered to the space's TriggersDispatcher as an EventPoke; the provider's payload never enters a space.
 
@@ -382,7 +390,7 @@ feat F-5: Revocation
 
   req F-5.2:
     when: kms deletes a managed token
-    then: every route registered with that token's account is removed
+    then: every route whose accessTokenId is that token's is removed; routes another token of the same account backs stay
 
   req F-5.3:
     when: an event trigger is deleted or disabled
@@ -548,4 +556,40 @@ decision D-12: The connector declares no backstop interval; while events flow, p
   for: user:dmaretskyi
   affects: [F-6.1]
   why: A backstop interval on the connector would mirror the trigger's schedule, which SYNC.mdl D-7 rules out.
+```
+
+```mdl
+decision D-13: Provider.checkAccess reports the installation a resource is reached through; the grant and the route carry it, so every GitHub route can be removed by installation.
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [AccessVerdict, EventGrant, Route, F-5.1, T-4]
+  why: EventRouter.register had no source for the installation id, so installation.deleted could not find the routes T-4 expects it to remove.
+```
+
+```mdl
+decision D-14: A route stores the accessTokenId of its grant, and deleting a managed token removes only the routes that token backs. Narrows F-5.2, which removed by account.
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Route, F-5.2]
+  why: Two spaces can hold distinct tokens for one provider account; removing by account cut off the space whose token is still valid.
+```
+
+```mdl
+decision D-15: A route's resource matches a delivered resource it equals or is an ancestor of, at a `/` boundary.
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.1]
+  why: EventSpec allows `github.com` and owner sources, but Provider.webhook.route lists only the repository and owner, so exact matching never delivered to a `github.com` trigger.
+```
+
+```mdl
+decision D-16: An event trigger runs the connector's sync for its own binding only, so one event polls one repository; a binding-scoped input on the sync operation carries it (plugin-github SYNC.mdl D-16).
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.1, EventPoke]
+  why: The sync operation polled every binding of a connection, so several event triggers on one connection turned one burst into several full polls.
 ```

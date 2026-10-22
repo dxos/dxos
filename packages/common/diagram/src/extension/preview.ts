@@ -56,7 +56,10 @@ export const renderDiagram = (source: string): Promise<DiagramRender> => {
       (error: unknown): DiagramRender => ({ error: error instanceof Error ? error.message : String(error) }),
     )
     .then((result) => {
-      settled.set(source, result);
+      // A render evicted while pending must not repopulate the cache it was dropped from.
+      if (renders.get(source) === pending) {
+        settled.set(source, result);
+      }
       return result;
     });
   if (renders.size >= MAX_RENDERS) {
@@ -100,7 +103,8 @@ class DiagramWidget extends WidgetType {
       if ('svg' in result) {
         // An <img> isolates the SVG's stylesheet and marker ids; its width and height reserve the final size before it decodes.
         const image = document.createElement('img');
-        image.alt = 'Diagram';
+        // The fence's source is hidden while the diagram replaces it, so the image carries it as its text.
+        image.alt = `Diagram: ${this.source.trim()}`;
         image.width = result.width;
         image.height = result.height;
         image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(result.svg)}`;

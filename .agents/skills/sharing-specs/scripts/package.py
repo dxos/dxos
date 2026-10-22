@@ -35,6 +35,10 @@ parser.add_argument('--tab', action='append', required=True, help='"Label=story-
 args = parser.parse_args()
 
 tabs = [tab.split('=', 1) for tab in args.tab]
+build, out = os.path.realpath(args.build), os.path.realpath(args.out)
+# The output directory is replaced, so it must not hold the build it is made from.
+if build == out or build.startswith(out + os.sep):
+    raise SystemExit(f'{args.out}: output directory contains the build; choose another')
 shutil.rmtree(args.out, ignore_errors=True)
 shutil.copytree(args.build, args.out)
 os.chdir(args.out)

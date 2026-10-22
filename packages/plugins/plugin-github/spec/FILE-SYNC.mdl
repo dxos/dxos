@@ -380,7 +380,7 @@ feat F-2: Change detection
 
   req F-2.3:
     when: the head moved
-    then: compareCommits(token, head) lists the changed paths in one request; when it reports truncated, two fetchTree calls are diffed instead
+    then: compareCommits(token, head) lists the changed paths in one request; when it reports truncated, two fetchTree calls are diffed instead, and a removed path and an added path with the same blob SHA count as a rename
 
   req F-2.4: Only blobs for paths a mapping matches, and that are at most maxBytes, are fetched.
 ```
@@ -412,11 +412,11 @@ feat F-4: Push
     when: a bound object's content differs from its content at marker.heads
     then: export renders it, after this pass's pulls, so the pushed content contains both sides
 
-  req F-4.2: Every changed file in a pass goes into one commit on options.writeBranch, with parent = the head just pulled; the ref update is never forced.
+  req F-4.2: Every changed file in a pass goes into one commit on options.writeBranch. Its first parent is the write branch's tip; when the head just pulled from options.branch is not in the write branch's history, that head is the second parent, so the commit both fast-forwards the write branch and merges the read branch into it. A missing write branch is created at the pulled head. The ref update is never forced.
 
   req F-4.3:
     when: the ref update fails with RefMovedError
-    then: the pass pulls again and retries, at most three times
+    then: the pass reads the write branch's tip again, re-exports and retries, at most three times; the write branch's own commits are not pulled, since they carry edits this space already holds
 
   req F-4.4: The write branch has one open pull request into options.branch; the pass opens it or reuses it. Nothing is written to options.branch.
 
@@ -467,7 +467,7 @@ scenario T-3: Concurrent edits
   when: SyncGitHubFiles runs
   then:
     - Spec.content holds both edits
-    - one commit on composer/<spaceId> carries the F-1 edit with parent = the new main head
+    - one commit on composer/<spaceId> carries the F-1 edit, with parents = the write branch's tip and the new main head
     - the write branch's pull request is opened or updated
 ```
 
@@ -477,7 +477,7 @@ scenario T-4: Write branch moved
   when: SyncGitHubFiles runs
   then:
     - the first ref update fails with RefMovedError
-    - the pass pulls the write branch again, re-exports, and the second update succeeds
+    - the pass reads the write branch's tip again, re-exports, and the second update succeeds
 ```
 
 ```mdl
@@ -541,4 +541,24 @@ decision D-5: A file deleted upstream keeps its local object and drops only the 
   for: user:dmaretskyi
   affects: [F-3.4]
   why: A sync must never delete content a user may still be editing; removing it stays a user action.
+```
+
+```mdl
+decision D-6: A push commit's first parent is the write branch's tip, and the read branch's pulled head is a second parent when the write branch does not already contain it. The write branch's own commits are never pulled. Narrows [D-4], whose parent was the pulled head.
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.2, F-4.3, T-3, T-4]
+  why: The write branch lives across passes, so a commit parented only on the read branch's head stops descending from it once the read branch moves, and a non-forced update would be rejected on every retry.
+  rejected:
+    - Force-resetting the write branch to each new commit: drops commits a reviewer may have pushed onto the pull request.
+```
+
+```mdl
+decision D-7: When compareCommits is truncated and two trees are diffed instead, a removed and an added path with the same blob SHA are paired as a rename; anything unpaired is a removal plus an addition.
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.3, F-3.3]
+  why: A tree diff carries no rename information, and without pairing F-3.3 would duplicate a renamed file as a new object.
 ```

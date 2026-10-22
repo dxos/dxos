@@ -23,5 +23,6 @@ edge App -> Ingress "signed webhook"
 edge Ingress -> Router "github.com/o/r"
 edge Router -> Dispatch "poke"
 edge Dispatch -> Sync "run"
-edge Trigger -> Grants "request grant" stroke=dashed
-edge Trigger -> Router "register + UCAN" stroke=dashed
+edge Dispatch -> Trigger "load" stroke=dashed
+edge Dispatch -> Grants "issue grant" stroke=dashed
+edge Dispatch -> Router "register" stroke=dashed

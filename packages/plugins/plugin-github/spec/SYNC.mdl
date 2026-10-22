@@ -16,7 +16,7 @@ This is part 1 of a three-part design; each part ships on its own:
 
 A bound repository is polled every few minutes. A poll that finds nothing costs one conditional
 request, which GitHub answers `304 Not Modified` without charging the rate limit; a poll that finds
-changes costs two. Once implemented, this document replaces F-4 and F-5 of [PLUGIN.mdl](../PLUGIN.mdl).
+changes costs two in the common case (one page of changes, at most 100 pull requests). Once implemented, this document replaces F-4 and F-5 of [PLUGIN.mdl](../PLUGIN.mdl).
 
 ## Extensions
 
@@ -71,7 +71,7 @@ edge Walkthrough -> PullRequest "subject"
 
 ### Poll loop
 
-![A timer trigger in compute-service runs plugin-github's sync per binding: one delta request with an ETag; a 304 ends the run; otherwise one GraphQL request for the changed pull requests, then upsert and advance the cursor.](diagrams/p1-poll.dx.svg)
+![A timer trigger in compute-service runs plugin-github's sync per binding: one delta request with an ETag; a 304 with no pending checks ends the run; otherwise one GraphQL request for the changed or pending pull requests, then upsert and advance the cursor.](diagrams/p1-poll.dx.svg)
 
 ```diagram
 diagram flow=right
@@ -91,8 +91,8 @@ group api "api.github.com" {
 node Echo "space objects" ref="packages/sdk/types/src/types/PullRequest.ts"
 edge Timer -> Delta "per binding"
 edge Delta -> IssuesApi "1 request"
-edge Delta -> Advance "304: done" stroke=dashed
-edge Delta -> Pulls "changed PRs"
+edge Delta -> Advance "304, none pending: done" stroke=dashed
+edge Delta -> Pulls "changed or pending PRs"
 edge Pulls -> GraphQL "1 request"
 edge Pulls -> Upsert
 edge Upsert -> Echo "changed fields"
@@ -238,7 +238,7 @@ type PullRequestDetail
     deletions: number
     reviewDecision?: APPROVED | CHANGES_REQUESTED | REVIEW_REQUIRED
     statusCheckRollup?: { state: PENDING | SUCCESS | FAILURE | ERROR | EXPECTED }
-    closingIssuesReferences: { id: number }[]
+    closingIssuesReferences: { databaseId: number }[]   # numeric id, the Task's foreign key
 ```
 
 ## Services
@@ -252,7 +252,10 @@ export type Conditional<A> =
   | { readonly status: 'not-modified' }
   | { readonly status: 'ok'; readonly value: A; readonly etag: string | undefined };
 
-/** GET /repos/{o}/{r}/issues?state=all&sort=updated&direction=asc&since=… with If-None-Match. */
+/**
+ * GET /repos/{o}/{r}/issues?state=all&sort=updated&direction=asc&since=…&per_page=100, following `Link`
+ * pages. If-None-Match goes on the first page only; a 304 there means no page changed.
+ */
 export const listIssuesSince: (
   owner: string,
   repo: string,
@@ -305,6 +308,7 @@ op SyncGitHubRepositories
     three-way merge and push for issues, and the cursor advance.
   input:
     connection: Ref<Connection>
+    binding?: Ref<Cursor>     # poll only this binding; an event trigger sets it
     priority?: string
   output: SyncResult
   effects: [echo:read, echo:write, http]
@@ -352,18 +356,18 @@ feat F-2: Delta polling
     then: the first request is listIssuesSince with since = Cursor.max and etag = Cursor.spec.token
 
   req F-2.2:
-    when: the delta answers 304
+    when: the delta answers 304 and no open PullRequest of the binding has `checks` = pending
     then: the run ends for that binding after one request, and Cursor.lastTick advances
 
   req F-2.3:
     when: the delta returns items
     then: every item with `pull_request` is fetched in fetchPullRequestDetails batches of at most 100
 
-  req F-2.4: An open pull request whose `checks` is `pending` joins the batch on every poll until it settles, because check results do not change `updated_at`.
+  req F-2.4: An open pull request whose `checks` is `pending` joins the batch on every poll, a poll whose delta answers 304 included, until it settles, because check results do not change `updated_at`.
 
-  req F-2.5: Cursor.max becomes the largest `updated_at` returned, minus 5 seconds, so an item updated in the same second as the watermark is read again; snapshots make that re-read a no-op.
+  req F-2.5: Cursor.max advances once every page of the delta is applied, so an interrupted run re-reads from the last complete watermark. It becomes the largest `updated_at` returned, minus 5 seconds, so an item updated in the same second as the watermark is read again; snapshots make that re-read a no-op.
 
-  req F-2.6: The repository itself is read with fetchRepoConditional; organization members are read at most once a day per organization.
+  req F-2.6: The repository itself is read with fetchRepoConditional at most once an hour per binding, so it is not part of the one-request quiet poll; organization members are read at most once a day per organization.
 
   req F-2.7: Issues keep today's three-way merge and push of title, description and status; pull requests are pull-only.
 ```
@@ -519,4 +523,58 @@ decision D-10: SyncOptions has no poll interval; the timer trigger's schedule (e
   by: agent:claude-code
   for: user:dmaretskyi
   affects: [SyncOptions, F-3.1]
+```
+
+```mdl
+decision D-11: listIssuesSince follows `Link` pages of 100; the ETag goes on the first page, and Cursor.max advances only after the last page is applied. The two-request poll is the common case, not a bound.
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.5, listIssuesSince]
+  why: A first run or a burst of changes spans pages; advancing per page would skip items when a run stops midway, and a 304 on page one already proves nothing changed.
+```
+
+```mdl
+decision D-12: A delta that answers 304 still sends the GraphQL batch when an open pull request has pending checks; only a 304 with nothing pending ends the run after one request. Narrows F-2.2.
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.2, F-2.4, T-3]
+  why: Check results do not change `updated_at`, so the delta cannot see them; F-2.2 and T-3 contradicted each other without this.
+```
+
+```mdl
+decision D-13: The repository read (fetchRepoConditional) runs at most once an hour per binding.
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.6]
+  why: Repository metadata changes rarely, and reading it every poll would double the cost of a quiet poll that T-1 holds to one request.
+```
+
+```mdl
+decision D-14: `closingIssuesReferences` is read as `databaseId`, the numeric id the Task's foreign key carries; the GraphQL `id` is a node id string.
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [PullRequestDetail, PullRequest.closes]
+  why: `closes` resolves Tasks by foreign key, which is keyed by the numeric id.
+```
+
+```mdl
+decision D-15: SyncResult reports `pulled` as `{ issues, pullRequests }` only, replacing today's per-kind counts (organizations, people, projects, tasks, comments); the implementation changes with F-1.
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [SyncResult, SyncGitHubRepositories]
+  why: Under F-1 a poll pulls only issues and pull requests; organizations and people are read on their own daily cadence (F-2.6), so per-run counts for them no longer describe the run.
+```
+
+```mdl
+decision D-16: SyncGitHubRepositories takes an optional `binding` and then polls only that binding; without it, every binding of the connection is polled as before.
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [SyncGitHubRepositories]
+  why: An event trigger is per binding (plugin-connector EVENTS.mdl D-16), so its run should cost one repository's poll, not the whole connection's.
 ```

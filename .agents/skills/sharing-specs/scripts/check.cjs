@@ -32,8 +32,14 @@ void (async () => {
     await page.waitForTimeout(3_000);
     // CodeMirror renders only lines near the viewport, so scroll until every diagram has had a chance to mount.
     let diagrams = 0;
-    for (let step = 0; step < 120; step++) {
+    let reachedBottom = false;
+    // A diagram scrolled past is unmounted, so its error is collected while it is on screen.
+    const renderErrors = new Set();
+    for (let step = 0; step < 400; step++) {
       diagrams = Math.max(diagrams, await page.locator('.cm-diagram-preview').count());
+      for (const text of await page.locator('.cm-diagram-preview-error').allTextContents()) {
+        renderErrors.add(text);
+      }
       const done = await page.evaluate(() => {
         const scroller = document.querySelector('.cm-scroller');
         scroller.scrollTop += 500;
@@ -41,14 +47,20 @@ void (async () => {
       });
       await page.waitForTimeout(120);
       if (done) {
+        reachedBottom = true;
         break;
       }
     }
     await page.waitForTimeout(2_000);
-    const renderErrors = await page.locator('.cm-diagram-preview-error').allTextContents();
+    for (const text of await page.locator('.cm-diagram-preview-error').allTextContents()) {
+      renderErrors.add(text);
+    }
     const label = await page.locator('#spec-tabs button').nth(tab).textContent();
-    console.log(`tab ${tab + 1} (${label}): diagrams seen ${diagrams}, render errors ${renderErrors.length}`);
-    failed ||= renderErrors.length > 0;
+    console.log(
+      `tab ${tab + 1} (${label}): diagrams seen ${diagrams}, render errors ${renderErrors.size}` +
+        (reachedBottom ? '' : ', stopped before the end of the spec'),
+    );
+    failed ||= renderErrors.size > 0 || !reachedBottom;
   }
 
   const files = {};

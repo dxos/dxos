@@ -60,9 +60,11 @@ static build hangs on its loading spinner (automerge's top-level-await wasm init
 bundler's async module init; see `tools/storybook-react/.storybook/perf-bundle.ts`).
 
 ```bash
-cd tools/storybook-react
-DX_STORIES=plugins/plugin-code DX_PERF_BUNDLE=1 NODE_OPTIONS=--max-old-space-size=8192 \
-  npx storybook build --output-dir out/storybook-specs
+(
+  cd tools/storybook-react
+  DX_STORIES=plugins/plugin-code DX_PERF_BUNDLE=1 NODE_OPTIONS=--max-old-space-size=8192 \
+    npx storybook build --output-dir out/storybook-specs
+)
 ```
 
 ## 4. Package it
