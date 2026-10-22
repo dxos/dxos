@@ -7,16 +7,15 @@ import React, { useCallback } from 'react';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AppHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
+import { useAttention } from '@dxos/react-ui-attention';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { Deck, SectionPicker } from '#components';
 import { usePresentationDeck } from '#deck';
-import { useSlideIndex } from '#hooks';
+import { useSetPresenting, useSlideIndex } from '#hooks';
 import { meta } from '#meta';
 import { Presentation } from '#types';
-
-import { useSetPresenting } from '../../useExitPresenter.ts';
 
 /** Content of a slide created from the toolbar. */
 const NEW_SLIDE_CONTENT = '# New slide';
@@ -32,6 +31,8 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
   const [index, setIndex] = useSlideIndex(Obj.getURI(subject), slides.length);
   const fullscreen = AppHooks.useLayout().mode === 'solo--fullscreen';
   const setPresenting = useSetPresenting(subject);
+  // Only the attended article takes focus, so opening one unattended (or a reload) leaves the caret where it is.
+  const { hasAttention } = useAttention(attendableId);
 
   const handleFullscreenChange = useCallback(
     (next: boolean) => {
@@ -54,7 +55,7 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
       onFullscreenChange={handleFullscreenChange}
       onAddSlide={handleAddSlide}
       attendableId={attendableId}
-      autoFocus
+      autoFocus={hasAttention}
       toolbar={
         <>
           <SectionPicker presentation={subject} />

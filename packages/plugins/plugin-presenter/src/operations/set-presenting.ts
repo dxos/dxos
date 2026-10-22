@@ -25,8 +25,8 @@ const findPlank = Effect.fnUntraced(function* (object: Obj.Unknown) {
 
 /**
  * Enters or exits presentation for the given object by toggling the deck's fullscreen overlay onto the
- * presenter companion of the object's plank (a Presentation's own plank), opening the object first when no plank shows it. The
- * overlay is independent of what is open, so presenting leaves the URL alone.
+ * presenter companion of the object's plank (a Presentation's own plank), opening the object first when
+ * no plank shows it. The overlay is independent of what is open, so presenting leaves the URL alone.
  */
 const handler: Operation.WithHandler<typeof PresenterOperation.SetPresenting> = PresenterOperation.SetPresenting.pipe(
   Operation.withHandler(

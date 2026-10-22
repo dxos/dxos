@@ -21,6 +21,7 @@ import { DXN } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -73,14 +74,40 @@ const createPresenterStoryPlugin = () => {
   );
 };
 
+/** Attended from the start (see `withAttention` below), as a plank the user just opened. */
+const ATTENDED_ID = 'story';
+
 const DefaultStory = () => {
   const { space } = useClientStory();
   const [presentation] = useQuery(space?.db, Filter.type(Presentation.Presentation));
+  const attributes = useAttentionAttributes(ATTENDED_ID);
   if (!presentation) {
     return <Loading />;
   }
 
-  return <PresentationArticle role='article' attendableId='story' subject={presentation} />;
+  return (
+    <div {...attributes} className='contents'>
+      <PresentationArticle role='article' attendableId={ATTENDED_ID} subject={presentation} />
+    </div>
+  );
+};
+
+/** The deck beside another attendable whose input holds the caret, as with an editor in another plank. */
+const UnattendedStory = () => {
+  const { space } = useClientStory();
+  const [presentation] = useQuery(space?.db, Filter.type(Presentation.Presentation));
+  const editorAttributes = useAttentionAttributes(ATTENDED_ID);
+  const deckAttributes = useAttentionAttributes('deck');
+  return (
+    <div className='grid grid-cols-2 h-full'>
+      <div {...editorAttributes} className='p-2'>
+        <input data-testid='other-input' autoFocus />
+      </div>
+      <div {...deckAttributes} className='flex'>
+        {presentation ? <PresentationArticle role='article' attendableId='deck' subject={presentation} /> : <Loading />}
+      </div>
+    </div>
+  );
 };
 
 const meta = {
@@ -102,7 +129,7 @@ const meta = {
     }),
     withPluginManager({ plugins: [ProcessManagerPlugin.make(), createPresenterStoryPlugin()()] }),
     // Outermost, so the plugin manager's atom registry is not replaced by the decorator's own.
-    withAttention(),
+    withAttention(ATTENDED_ID),
   ],
   parameters: {
     layout: 'fullscreen',
@@ -162,5 +189,19 @@ export const LinkSection: Story = {
     await expect(screen.queryByRole('option', { name: /Demo/ })).toBeNull();
     await userEvent.click(option);
     await expect(await canvas.findByText('1 / 5')).toBeVisible();
+  },
+};
+
+/** An unattended deck leaves the caret where it is, even once its slides load. */
+export const Unattended: Story = {
+  render: UnattendedStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = await canvas.findByTestId('other-input');
+    await waitFor(() => expect(input).toHaveFocus());
+    await canvas.findByText('1 / 4', undefined, LOAD_TIMEOUT);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await expect(input).toHaveFocus();
+    await expect(canvas.getByTestId('presenter.deck')).not.toHaveFocus();
   },
 };

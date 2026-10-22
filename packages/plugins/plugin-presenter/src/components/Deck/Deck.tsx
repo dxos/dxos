@@ -32,7 +32,7 @@ export type DeckProps = {
   /** Extra toolbar content, shown after the page number. */
   toolbar?: ReactNode;
   attendableId?: string;
-  /** Focus the deck on mount and whenever fullscreen toggles, so keys work without a click. */
+  /** Focus the deck on mount, so keys work without a click; it is refocused after every fullscreen toggle regardless. */
   autoFocus?: boolean;
 };
 
@@ -98,12 +98,20 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
     );
 
     const shellRef = useRef<HTMLDivElement>(null);
-    // The shell remounts on toggle, so focus is restored after leaving fullscreen as well as on mount.
+    // Read once, on mount: a later change of `autoFocus` must not pull focus from elsewhere in the app.
+    const autoFocusRef = useRef(autoFocus);
+    const lastFullscreen = useRef<boolean>(undefined);
+    // The shell remounts on toggle, so focus is restored after an explicit toggle as well as on (opted-in) mount.
     useEffect(() => {
-      if (autoFocus) {
+      const mounting = lastFullscreen.current === undefined;
+      if (lastFullscreen.current === fullscreen) {
+        return;
+      }
+      lastFullscreen.current = fullscreen;
+      if (!mounting || autoFocusRef.current) {
         shellRef.current?.focus({ preventScroll: true });
       }
-    }, [autoFocus, fullscreen]);
+    }, [fullscreen]);
 
     const handleExit = useCallback(() => onFullscreenChange?.(false), [onFullscreenChange]);
 

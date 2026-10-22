@@ -11,8 +11,7 @@ import type * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { PresentationShell, RevealPlayer } from '#components';
-
-import { useExitPresenter } from '../../useExitPresenter.ts';
+import { useExitPresenter } from '#hooks';
 
 export type DocumentArticleProps = AppSurface.ObjectArticleProps<Markdown.Document>;
 
