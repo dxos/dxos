@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Option from 'effect/Option';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Collection, Filter, Obj, Ref } from '@dxos/echo';
+import { Annotation, Collection, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
@@ -97,6 +98,35 @@ describe('Presentation', () => {
     await db.flush({ indexes: true });
     expect(presentation.sections.length).toBe(0);
     expect(await db.query(Filter.id(text.id)).run()).toHaveLength(1);
+  });
+
+  test('deleting a presentation deletes owned slides and spares linked objects', async ({ expect }) => {
+    const { db } = await setup();
+    const presentation = db.add(Presentation.make({ slides: ['a'] }));
+    const parented = db.add(Markdown.make({ content: 'parented' }));
+    db.add(Collection.make({ objects: [Ref.make(parented)] }));
+    const looseText = db.add(Text.make({ content: 'loose' }));
+    const looseDoc = db.add(Markdown.make({ content: 'loose doc' }));
+    for (const object of [parented, looseText, looseDoc]) {
+      Presentation.link(presentation, object);
+    }
+    await db.flush({ indexes: true });
+    const owned = await presentation.sections[0].load();
+
+    db.remove(presentation);
+    await db.flush({ indexes: true });
+    expect(Obj.isDeleted(owned)).toBe(true);
+    expect(await db.query(Filter.id(owned.id)).run()).toHaveLength(0);
+    for (const object of [parented, looseText, looseDoc]) {
+      expect(Obj.isDeleted(object)).toBe(false);
+      expect(await db.query(Filter.id(object.id)).run()).toHaveLength(1);
+    }
+  });
+
+  test('presentations are filed into collections', ({ expect }) => {
+    expect(
+      Annotation.UserType.get(Type.getSchema(Presentation.Presentation)).pipe(Option.getOrUndefined)?.tags,
+    ).toContain(Collection.ItemTag);
   });
 
   test('remove of a non-section is a no-op', async ({ expect }) => {
