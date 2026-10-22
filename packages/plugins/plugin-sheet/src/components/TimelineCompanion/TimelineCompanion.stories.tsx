@@ -109,12 +109,14 @@ export const Timeline: Story = {
 
 export const Resume: Story = {
   args: {
+    mode: 'end',
     hidden: ['Macro', 'Macro/MIC', 'Macro/FIC', 'Macro/TIC'],
   },
 };
 
 export const Macro: Story = {
   args: {
+    mode: 'end',
     hidden: ['Tech/Hardware', 'Tech/Software', 'Tech/AI', 'Personal'],
   },
 };

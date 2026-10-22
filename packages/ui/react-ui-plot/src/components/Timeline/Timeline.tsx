@@ -594,7 +594,8 @@ export const Timeline = ({
   const card = current ?? hovered;
 
   const now = Date.now();
-  const showToday = today && range && now >= range[0] && now <= range[1];
+  // Without the future the range ends at today, so the line still shows at its bottom edge.
+  const showToday = today && range && now >= range[0] && (now <= range[1] || !future);
 
   return (
     <div className={mx('dx-fill grid grid-rows-[min-content_1fr] overflow-hidden', classNames)}>
