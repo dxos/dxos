@@ -33,7 +33,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 A plugin-illustrator render. The `diagram` block is the source; regenerate the image with
 `moon run plugin-illustrator:render-diagrams -- <abs path>/spec/diagrams/p2-sync.dx`.
 
-![The branch head differs from the marker's commit; compare lists changed paths; matching mappings invoke plugin-code's ImportSpec, which applies the change at the marker's heads; local edits since those heads go through ExportSpec to a commit on a branch.](diagrams/p2-sync.dx.svg)
+![The branch head differs from the marker's commit; compare lists changed paths; matching mappings invoke plugin-code's ImportSpec, which applies the change at the marker's heads; local edits since those heads go through ExportSpec to a commit on the write branch, whose parents are its tip and the read head.](diagrams/p2-sync.dx.svg)
 
 ```diagram
 diagram flow=right
@@ -60,7 +60,7 @@ edge Import -> Marker "blob, commit, heads"
 edge Marker -> Diff "base heads"
 edge Spec -> Diff
 edge Diff -> Export "local edits"
-edge Export -> Commit "parent = head"
+edge Export -> Commit "write tip + read head"
 ```
 
 ## Extension point
@@ -272,13 +272,13 @@ export const fetchTree: (owner: string, repo: string, sha: string) =>
 /** GET /repos/{o}/{r}/git/blobs/{sha}, decoded to UTF-8. */
 export const fetchBlob: (owner: string, repo: string, sha: string) => GitHubEffect<string>;
 
-/** Blob → tree (on `baseTree`) → commit (on `parent`) → ref update, never forced. */
+/** Blob → tree (on `baseTree`) → commit (on `parents`, in order) → ref update, never forced. */
 export const commitFiles: (
   owner: string,
   repo: string,
   input: {
     branch: string;
-    parent: string;
+    parents: readonly string[];   // the write branch's tip, then the read head when it is merged in
     baseTree: string;
     message: string;
     files: readonly { path: string; content: string | null }[];   // null deletes
@@ -301,7 +301,7 @@ service GitHubApi
     compareCommits(owner: string, repo: string, base: string, head: string) → { files: CompareFile[], truncated: boolean }
     fetchTree(owner: string, repo: string, sha: string) → TreeEntry[]
     fetchBlob(owner: string, repo: string, sha: string) → string
-    commitFiles(owner: string, repo: string, branch: string, parent: string, baseTree: string, message: string, files: FileChange[]) → { commit: string, blobs: Record<string, string> }
+    commitFiles(owner: string, repo: string, branch: string, parents: string[], baseTree: string, message: string, files: FileChange[]) → { commit: string, blobs: Record<string, string> }
     ensurePullRequest(owner: string, repo: string, head: string, base: string, title: string, body: string) → { number: number, url: string }
   errors:
     RefMovedError: the branch moved after it was read; pull again and retry
@@ -412,15 +412,19 @@ feat F-4: Push
     when: a bound object's content differs from its content at marker.heads
     then: export renders it, after this pass's pulls, so the pushed content contains both sides
 
-  req F-4.2: Every changed file in a pass goes into one commit on options.writeBranch. Its first parent is the write branch's tip; when the head just pulled from options.branch is not in the write branch's history, that head is the second parent, so the commit both fast-forwards the write branch and merges the read branch into it. A missing write branch is created at the pulled head. The ref update is never forced.
+  req F-4.2: Every changed file in a pass goes into one commit on options.writeBranch. Its first parent is the write branch's tip; when the head just pulled from options.branch is not in the write branch's history, that head is the second parent, so the commit both fast-forwards the write branch and merges the read branch into it. A missing write branch is created at the pulled head. The commit's tree is the read head's tree with the current export of every bound object whose content differs from its blob there, so it carries both the read branch's changes and every Composer edit not yet merged; the two cannot conflict, because the pull has already merged them in each object. The ref update is never forced.
 
   req F-4.3:
     when: the ref update fails with RefMovedError
-    then: the pass reads the write branch's tip again, re-exports and retries, at most three times; the write branch's own commits are not pulled, since they carry edits this space already holds
+    then: the pass reads the write branch's tip again, re-exports and retries, at most three times
 
   req F-4.4: The write branch has one open pull request into options.branch; the pass opens it or reuses it. Nothing is written to options.branch.
 
   req F-4.5: Pushed edits are attributed to the connection's GitHub account; the commit message names the space and the Composer users whose edits it carries.
+
+  req F-4.6:
+    when: the write branch's tip is not a commit this space wrote (the newest push VersionLink)
+    then: the paths changed since that commit are pulled as in F-3.2, with base = the blob this space last pushed, before anything is exported; a person's commit on the pull request is merged, never overwritten. The space's own commits are never pulled, since they carry edits it already holds
 ```
 
 ```mdl
@@ -561,4 +565,13 @@ decision D-7: When compareCommits is truncated and two trees are diffed instead,
   for: user:dmaretskyi
   affects: [F-2.3, F-3.3]
   why: A tree diff carries no rename information, and without pairing F-3.3 would duplicate a renamed file as a new object.
+```
+
+```mdl
+decision D-8: A push commit's tree is the read head's tree plus the export of every bound object that differs from it; `commitFiles` takes ordered parents. Commits on the write branch that this space did not write are pulled before export. Fills in [D-6].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [commitFiles, F-4.2, F-4.6]
+  why: Two parents alone do not combine trees, and a tree built from either side alone dropped the other's changes; exporting from ECHO, where the pull has already merged both sides, gives one tree with no conflicts. A reviewer's commit on the pull request is the one write-branch change ECHO does not already hold, so it is pulled rather than overwritten.
 ```

@@ -9,8 +9,8 @@ of per-provider switches, an `event` trigger kind, routing on EDGE, and grants d
 state. GitHub is the first provider.
 
 This is part 3 of the GitHub sync design (see
-[plugin-github/spec/SYNC.mdl](../../plugin-github/spec/SYNC.mdl)). It needs part 1's sync operation
-to run; with it, part 1's poll becomes a slow backstop for missed deliveries. Nothing here is
+[plugin-github/spec/SYNC.mdl](../../plugin-github/spec/SYNC.mdl)). It runs `op:SyncGitHubRepositories`;
+with events flowing, that operation's poll becomes a slow backstop for missed deliveries. Nothing here is
 GitHub-specific except `github.ts`.
 
 It spans two repositories: `@dxos/compute` (the trigger kind) and plugin-connector live in
@@ -89,7 +89,7 @@ export type ResourceUri = string & { readonly _ResourceUri: unique symbol };
 /** One external service: how to authorize against it, check access on it, and receive its webhooks. */
 export interface Provider {
   readonly id: OAuthProvider;
-  /** Token-endpoint details; today's `AuthProviderData`, moved here unchanged. */
+  /** Token-endpoint details for the provider's OAuth flow. */
   readonly oauth: AuthProviderData;
   /** kms keeps the refresh token and hands the client a placeholder; required for `checkAccess`. */
   readonly managed: boolean;
@@ -121,8 +121,8 @@ export type ProviderAccount = { readonly id: string; readonly login: string };
 export type AccessVerdict = {
   readonly allowed: boolean;
   readonly reason?: string;
-  /** Installation the resource is reached through; GitHub reports it for every repository it allows. */
-  readonly installation?: string;
+  /** Installations the resource is reached through; one for a repository, every covered one for an owner or `github.com`. */
+  readonly installations?: readonly string[];
 };
 
 export type ProviderEvent = {
@@ -140,7 +140,7 @@ export type Revocation =
   | { readonly kind: 'installation'; readonly installation: string }
   | { readonly kind: 'resource'; readonly resource: ResourceUri };
 
-/** Every provider, keyed by id. kms-service's `getProviderData` switch becomes `Providers[id]`. */
+/** Every provider, keyed by id; kms-service looks a provider up here. */
 export const Providers: Readonly<Partial<Record<OAuthProvider, Provider>>>;
 ```
 
@@ -256,7 +256,7 @@ type EventGrant = {
   /** Issued-at + 24 hours. */
   exp: number;
   /** Binds the grant to the trigger and the token it was checked with. */
-  fct: [{ spaceId: string; triggerId: string; accessTokenId: string; account: string; installation?: string }];
+  fct: [{ spaceId: string; triggerId: string; accessTokenId: string; account: string; installations?: readonly string[] }];
   prf: [];
 };
 ```
@@ -274,7 +274,7 @@ type EventGrant
     triggerId: string
     accessTokenId: string
     account: string                  # provider account the check ran as
-    installation?: string            # from AccessVerdict; present for every GitHub grant
+    installations?: string[]         # from AccessVerdict; present for every GitHub grant
 ```
 
 ### Routing (compute-service)
@@ -288,7 +288,7 @@ type Route = {
   provider: OAuthProvider;
   accessTokenId: string;           // for token deletion; copied from the grant
   account: string;                 // for account revocations
-  installation?: string;           // for installation revocations; copied from the grant, so set on every GitHub route
+  installations?: readonly string[]; // for installation revocations; copied from the grant, so set on every GitHub route
   events?: readonly string[];
   grantExp: number;
 };
@@ -310,7 +310,7 @@ type EventPoke = {
 service EventRouter
   desc: Global index of event triggers in compute-service, keyed by resource.
   ops:
-    register(trigger: EventSpec, spaceId: SpaceId, triggerId: ObjectId) → Route   # account, accessTokenId and installation come from trigger.grant
+    register(trigger: EventSpec, spaceId: SpaceId, triggerId: ObjectId) → Route   # account, accessTokenId and installations come from trigger.grant
     unregister(spaceId: SpaceId, triggerId: ObjectId) → void
     match(resources: ResourceUri[], event: ProviderEvent) → Route[]
     revoke(revocation: Revocation) → number
@@ -336,7 +336,7 @@ feat F-1: Provider registry
 
   req F-1.1: Every provider is one module implementing Provider, registered in kms-service; kms-service looks providers up in Providers and contains no per-provider branch, and compute-service contains no provider code at all.
 
-  req F-1.2: kms-service's OAuth flow reads `Providers[id].oauth`; today's AuthProviderData moves without change.
+  req F-1.2: kms-service's OAuth flow reads `Providers[id].oauth`.
 
   req F-1.3: GitHub is a managed provider: kms keeps its refresh token, and the client's AccessToken holds the placeholder, as Google's does today.
 ```
@@ -346,7 +346,7 @@ feat F-2: Event trigger and grant
 
   req F-2.1:
     when: a connector with `events` binds a target
-    then: plugin-connector creates an event trigger with source = events.resource(binding), credential = the connection's AccessToken, and remote = true, running the connector's sync operation scoped to that binding
+    then: plugin-connector creates an event trigger with source = events.resource(binding, target), credential = the connection's AccessToken, and remote = true, running the connector's sync operation scoped to that binding
 
   req F-2.2:
     when: compute-service loads an event trigger without a valid grant
@@ -438,7 +438,7 @@ scenario T-4: App uninstalled
   given: routes registered for installation 42
   when: GitHub delivers installation.deleted for installation 42
   then:
-    - every route with installation 42 is removed
+    - every route whose installations include 42 is removed
     - the affected bindings fall back to part 1's poll interval
 ```
 
@@ -592,4 +592,13 @@ decision D-16: An event trigger runs the connector's sync for its own binding on
   for: user:dmaretskyi
   affects: [F-2.1, EventPoke]
   why: The sync operation polled every binding of a connection, so several event triggers on one connection turned one burst into several full polls.
+```
+
+```mdl
+decision D-17: A grant and its route carry every installation the source reaches, not one: a repository has one, an owner or `github.com` source can have several, and an installation revocation removes each route that lists it. Narrows [D-13].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [AccessVerdict, EventGrant, Route, F-5.1]
+  why: One account can see the GitHub App installed on several owners, so a single installation id could not find every route a broad grant covers.
 ```

@@ -35,11 +35,15 @@ void (async () => {
     let reachedBottom = false;
     // A diagram scrolled past is unmounted, so its error is collected while it is on screen.
     const renderErrors = new Set();
+    // With the selection outside every fence, a fence's opening line is visible only when its preview did not mount.
+    let unrendered = 0;
     for (let step = 0; step < 400; step++) {
       diagrams = Math.max(diagrams, await page.locator('.cm-diagram-preview').count());
       for (const text of await page.locator('.cm-diagram-preview-error').allTextContents()) {
         renderErrors.add(text);
       }
+      const lines = await page.locator('.cm-line').allTextContents();
+      unrendered = Math.max(unrendered, lines.filter((line) => /^```(diagram|dxd)\s*$/.test(line)).length);
       const done = await page.evaluate(() => {
         const scroller = document.querySelector('.cm-scroller');
         scroller.scrollTop += 500;
@@ -57,10 +61,11 @@ void (async () => {
     }
     const label = await page.locator('#spec-tabs button').nth(tab).textContent();
     console.log(
-      `tab ${tab + 1} (${label}): diagrams seen ${diagrams}, render errors ${renderErrors.size}` +
+      `tab ${tab + 1} (${label}): diagrams seen ${diagrams}, render errors ${renderErrors.size}, ` +
+        `fences without a preview ${unrendered}` +
         (reachedBottom ? '' : ', stopped before the end of the spec'),
     );
-    failed ||= renderErrors.size > 0 || !reachedBottom;
+    failed ||= renderErrors.size > 0 || unrendered > 0 || !reachedBottom;
   }
 
   const files = {};

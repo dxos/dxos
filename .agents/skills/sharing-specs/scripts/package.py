@@ -36,9 +36,9 @@ args = parser.parse_args()
 
 tabs = [tab.split('=', 1) for tab in args.tab]
 build, out = os.path.realpath(args.build), os.path.realpath(args.out)
-# The output directory is replaced, so it must not hold the build it is made from.
-if build == out or build.startswith(out + os.sep):
-    raise SystemExit(f'{args.out}: output directory contains the build; choose another')
+# The output directory is replaced by a copy of the build, so neither may contain the other.
+if os.path.commonpath([build, out]) in (build, out):
+    raise SystemExit(f'{args.out}: output and build directories overlap; choose another')
 shutil.rmtree(args.out, ignore_errors=True)
 shutil.copytree(args.build, args.out)
 os.chdir(args.out)

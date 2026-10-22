@@ -253,8 +253,9 @@ export type Conditional<A> =
   | { readonly status: 'ok'; readonly value: A; readonly etag: string | undefined };
 
 /**
- * GET /repos/{o}/{r}/issues?state=all&sort=updated&direction=asc&since=…&per_page=100, following `Link`
- * pages. If-None-Match goes on the first page only; a 304 there means no page changed.
+ * GET /repos/{o}/{r}/issues?state=all&sort=updated&direction=desc&since=…&per_page=100, following `Link`
+ * pages. Newest first, so any change reaches page one: If-None-Match goes on that page only, and a 304
+ * there means no page changed.
  */
 export const listIssuesSince: (
   owner: string,
@@ -431,6 +432,15 @@ scenario T-5: Migrate pull-request Tasks
     - references to the Task now point at the PullRequest
 ```
 
+```mdl
+scenario T-6: A change beyond the first page
+  given: a binding whose delta since Cursor.max spans three pages
+  when: one issue is edited on GitHub and SyncGitHubRepositories runs
+  then:
+    - the first page no longer matches its ETag, because the edited issue is now its newest item
+    - every page is read, and Cursor.max advances only after the last one is applied
+```
+
 ## Changelog
 
 ```mdl
@@ -577,4 +587,13 @@ decision D-16: SyncGitHubRepositories takes an optional `binding` and then polls
   for: user:dmaretskyi
   affects: [SyncGitHubRepositories]
   why: An event trigger is per binding (plugin-connector EVENTS.mdl D-16), so its run should cost one repository's poll, not the whole connection's.
+```
+
+```mdl
+decision D-17: The delta is read newest first (`direction=desc`). Narrows [D-11], which read oldest first.
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [listIssuesSince, T-6]
+  why: Oldest first, a change made after the watermark lands on the last page, so page one could answer 304 while a later page changed; newest first, every change moves page one and its ETag.
 ```

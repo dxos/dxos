@@ -22,4 +22,4 @@ edge Import -> Marker "blob, commit, heads"
 edge Marker -> Diff "base heads"
 edge Spec -> Diff
 edge Diff -> Export "local edits"
-edge Export -> Commit "parent = head"
+edge Export -> Commit "write tip + read head"
