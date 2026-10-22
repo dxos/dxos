@@ -61,7 +61,7 @@ export const TimelineCompanion = ({
 }: TimelineCompanionProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [editing, setEditing] = useState(false);
-  const { spine = 'center', scale = 'linear', hidden = [], dates = true } = timeline ?? {};
+  const { spine = 'center', scale = 'linear', hidden = [], dates = true, fontSize = 'md' } = timeline ?? {};
 
   const data = useMemo(() => {
     const values = timeline && getValues(timeline.range);
@@ -153,6 +153,32 @@ export const TimelineCompanion = ({
                       ),
                     ),
                 )),
+        )
+        .subgraph(
+          !!timeline &&
+            ((builder) =>
+              builder.group(
+                'font-size',
+                {
+                  label: ['timeline-font-size.label', { ns: meta.profile.key }],
+                  icon: 'ph--text-aa--regular',
+                  iconOnly: true,
+                  variant: 'dropdownMenu',
+                  selectCardinality: 'single',
+                  value: fontSize,
+                },
+                (group) =>
+                  Sheet.TimelineFontSize.literals.forEach((value) =>
+                    group.action(
+                      value,
+                      {
+                        label: [`timeline-font-size.${value}.label`, { ns: meta.profile.key }],
+                        checked: fontSize === value,
+                      },
+                      () => handleUpdate({ fontSize: value }),
+                    ),
+                  ),
+              )),
         )
         .subgraph(
           !!timeline &&

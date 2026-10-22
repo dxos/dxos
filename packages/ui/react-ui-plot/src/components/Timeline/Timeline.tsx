@@ -20,7 +20,13 @@ import * as Tag from '@dxos/react-ui/Tag';
 import { mx } from '@dxos/ui-theme';
 import { type ChromaticPalette, type ThemedClassName } from '@dxos/ui-types';
 
-import { type PlotData, type TimelineEvent, type TimelineOptions, type TimelineSpine } from '../../types.ts';
+import {
+  type PlotData,
+  type TimelineEvent,
+  type TimelineFontSize,
+  type TimelineOptions,
+  type TimelineSpine,
+} from '../../types.ts';
 import {
   type MeasureText,
   categoryLabel,
@@ -99,6 +105,35 @@ const LABEL_MARGIN = 8;
 // Dates sit in a fixed-width column beside the spine, smaller than the titles.
 const DATE_FONT_SIZE = 11;
 const DATE_GAP = 6;
+
+// Text and spacing grow together, so a larger font also spreads the timeline out.
+const FONT_SCALES: Record<TimelineFontSize, number> = { xs: 0.7, sm: 0.85, md: 1, lg: 1.25, xl: 1.5 };
+
+/** Sizes that follow the font size. */
+type Metrics = {
+  font: number;
+  lineHeight: number;
+  maxDrift: number;
+  minLabel: number;
+  maxLabel: number;
+  dateFont: number;
+  dateGap: number;
+  evenStep: number;
+};
+
+const metricsFor = (fontSize: TimelineFontSize = 'md'): Metrics => {
+  const scale = FONT_SCALES[fontSize];
+  return {
+    font: FONT_SIZE * scale,
+    lineHeight: LINE_HEIGHT * scale,
+    maxDrift: MAX_DRIFT * scale,
+    minLabel: MIN_LABEL_SIZE * scale,
+    maxLabel: MAX_LABEL_SIZE * scale,
+    dateFont: DATE_FONT_SIZE * scale,
+    dateGap: DATE_GAP * scale,
+    evenStep: EVEN_STEP * scale,
+  };
+};
 
 // Grace period for the pointer to move from an event onto its card.
 const CLOSE_DELAY = 200;
@@ -244,7 +279,8 @@ export const Timeline = ({
   filter,
   onHiddenChange,
 }: TimelineProps) => {
-  const { spine = 'center', scale = 'linear', hidden, today = true, dates = true, order, colors } = options;
+  const { spine = 'center', scale = 'linear', hidden, today = true, dates = true, order, colors, fontSize } = options;
+  const metrics = useMemo(() => metricsFor(fontSize), [fontSize]);
   const { ref: scrollRef, width = 0, height = 0 } = useResizeDetector<HTMLDivElement>({ refreshRate: 100 });
   const [zoom, setZoom] = useState(initialZoom);
 
@@ -262,8 +298,8 @@ export const Timeline = ({
   const columns = useMemo(() => orderCategories(dataColumns, order), [dataColumns, order]);
   // Every date takes the width of the widest, so titles line up.
   const dateWidth = useMemo(
-    () => Math.ceil(Math.max(0, ...events.map((event) => measure(event.date))) * DATE_FONT_SIZE) + LABEL_MARGIN,
-    [events, measure],
+    () => Math.ceil(Math.max(0, ...events.map((event) => measure(event.date))) * metrics.dateFont) + LABEL_MARGIN,
+    [events, measure, metrics],
   );
   const range = useMemo(
     () => timelineRange(events, { start: options.start, end: options.end }),
@@ -335,14 +371,14 @@ export const Timeline = ({
   // Crowded lanes grow the content past the viewport, so labels stay near their events.
   const targetHeight = useMemo(() => {
     const times = new Set(laneEvents.flatMap((events) => events.map((event) => event.time)));
-    const evenHeight = scale === 'even' ? Math.max(0, times.size - 1) * EVEN_STEP + MARGIN * 2 : 0;
+    const evenHeight = scale === 'even' ? Math.max(0, times.size - 1) * metrics.evenStep + MARGIN * 2 : 0;
     return range
       ? fitTimelineHeight(
           laneEvents.map((events) => events.map((event) => fraction(event.time))),
           {
             minHeight: Math.max(height * zoom, evenHeight, MARGIN * 2),
-            gap: LINE_HEIGHT,
-            maxDrift: MAX_DRIFT,
+            gap: metrics.lineHeight,
+            maxDrift: metrics.maxDrift,
             padding: MARGIN,
           },
         )
@@ -363,7 +399,7 @@ export const Timeline = ({
     }
 
     const axis = d3.scaleUtc().domain(range);
-    const count = Math.max(2, Math.floor((bottom - top) / LINE_HEIGHT));
+    const count = Math.max(2, Math.floor((bottom - top) / metrics.lineHeight));
     // Spans of a few years or more tick on years only, however tall the timeline grows.
     const yearly = range[1] - range[0] >= MIN_YEARLY_SPAN;
     const format = yearly ? d3.utcFormat('%Y') : axis.tickFormat(count);
@@ -563,7 +599,7 @@ export const Timeline = ({
         onKeyDown={handleKeyDown}
       >
         {width > 0 && range && (
-          <svg width={width} height={contentHeight} fontSize={FONT_SIZE} className='block'>
+          <svg width={width} height={contentHeight} fontSize={metrics.font} className='block'>
             {/* Alternate bands between ticks. */}
             {ticks.map((tick, index) =>
               index % 2 === 0 ? (
@@ -627,6 +663,7 @@ export const Timeline = ({
                 measure={measure}
                 dates={dates}
                 dateWidth={dateWidth}
+                metrics={metrics}
                 optionId={optionId}
                 current={current}
                 hovered={hovered}
@@ -678,6 +715,7 @@ type LaneEventsProps = {
   dates: boolean;
   /** Width of the date column beside the spine. */
   dateWidth: number;
+  metrics: Metrics;
   /** Prefix of each option's DOM id, for the listbox's `aria-activedescendant`. */
   optionId: string;
   current?: TimelineEvent;
@@ -699,6 +737,7 @@ const LaneEvents = ({
   measure,
   dates,
   dateWidth,
+  metrics,
   optionId,
   current,
   hovered,
@@ -707,7 +746,7 @@ const LaneEvents = ({
   onLeave,
 }: LaneEventsProps) => {
   const ys = events.map((event) => yOf(event.time));
-  const labelYs = spreadLabels(ys, LINE_HEIGHT, top, bottom);
+  const labelYs = spreadLabels(ys, metrics.lineHeight, top, bottom);
   const direction = lane.side === 'start' ? -1 : 1;
 
   return (
@@ -726,12 +765,12 @@ const LaneEvents = ({
           `H ${lane.x - direction * 4}`,
         ].join(' ');
         // The date column sits next to the leader; the title takes the rest of the lane.
-        const titleOffset = dates ? dateWidth + DATE_GAP : 0;
+        const titleOffset = dates ? dateWidth + metrics.dateGap : 0;
         const { text: label, fontSize } = fitLabel(
           { prefix: '', text: event.label },
           lane.width - titleOffset - LABEL_MARGIN,
           measure,
-          { min: MIN_LABEL_SIZE, max: MAX_LABEL_SIZE },
+          { min: metrics.minLabel, max: metrics.maxLabel },
         );
 
         return (
@@ -757,14 +796,14 @@ const LaneEvents = ({
               strokeWidth={isCurrent ? 2 : undefined}
             />
             {dates && (
-              // Aligned to the column's outer edge, so dates line up against their titles on both sides.
+              // Aligned toward the spine, so each date sits against its leader.
               <text
-                x={lane.x + direction * dateWidth}
+                x={lane.x}
                 y={labelY}
                 dominantBaseline='middle'
-                textAnchor={lane.side === 'start' ? 'start' : 'end'}
+                textAnchor={lane.side === 'start' ? 'end' : 'start'}
                 fill={fill}
-                fontSize={DATE_FONT_SIZE}
+                fontSize={metrics.dateFont}
                 fontWeight={700}
                 style={{ fontVariantNumeric: 'tabular-nums' }}
               >

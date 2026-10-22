@@ -63,6 +63,12 @@ export type TimelineScale = Schema.Schema.Type<typeof TimelineScale>;
 
 export const TIMELINE_SCALES: readonly TimelineScale[] = TimelineScale.literals;
 
+/** Text size; spacing scales with it. */
+export const TimelineFontSize = Schema.Literals(['xs', 'sm', 'md', 'lg', 'xl']);
+export type TimelineFontSize = Schema.Schema.Type<typeof TimelineFontSize>;
+
+export const TIMELINE_FONT_SIZES: readonly TimelineFontSize[] = TimelineFontSize.literals;
+
 /** Presentation options for a timeline; persisted alongside the data source by the host. */
 export const TimelineOptions = Schema.Struct({
   variant: Schema.optional(TimelineVariant.annotate({ title: 'Variant' })),
@@ -84,6 +90,7 @@ export const TimelineOptions = Schema.Struct({
   today: Schema.optional(Schema.Boolean.annotate({ title: 'Show today' })),
   /** Show each event's date beside its title; on by default. */
   dates: Schema.optional(Schema.Boolean.annotate({ title: 'Show dates' })),
+  fontSize: Schema.optional(TimelineFontSize.annotate({ title: 'Font size' })),
 });
 
 export type TimelineOptions = Schema.Schema.Type<typeof TimelineOptions>;

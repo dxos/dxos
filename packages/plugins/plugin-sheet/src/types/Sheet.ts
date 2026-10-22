@@ -68,6 +68,9 @@ export type TimelineSpine = Schema.Schema.Type<typeof TimelineSpine>;
 export const TimelineScale = Schema.Literals(['linear', 'log', 'even']);
 export type TimelineScale = Schema.Schema.Type<typeof TimelineScale>;
 
+export const TimelineFontSize = Schema.Literals(['xs', 'sm', 'md', 'lg', 'xl']);
+export type TimelineFontSize = Schema.Schema.Type<typeof TimelineFontSize>;
+
 /**
  * A timeline of a 2D range with one event per row: its time (a year or date), category, title and an
  * optional description shown when the event is hovered. Each category is drawn as a column.
@@ -84,6 +87,7 @@ export const Timeline = Schema.Struct({
   today: Schema.optional(Schema.Boolean.annotate({ title: 'Show today' })),
   /** Show each event's date beside its title; on by default. */
   dates: Schema.optional(Schema.Boolean.annotate({ title: 'Show dates' })),
+  fontSize: Schema.optional(TimelineFontSize.annotate({ title: 'Font size' })),
   /** Categories that are not drawn. */
   hidden: Schema.optional(Schema.Array(Schema.String).pipe(Annotation.FormInputAnnotation.set(false))),
   /** Categories in the order they are listed and laid out; unlisted ones follow in data order. */
