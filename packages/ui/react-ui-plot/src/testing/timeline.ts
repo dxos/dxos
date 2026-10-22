@@ -802,6 +802,13 @@ export const technologyTimeline: PlotValue[][] = [
     'https://upload.wikimedia.org/wikipedia/commons/1/12/P20260929DT-1655_%2855561811540%29_%28cropped_2%29.jpg',
   ],
   [
+    '2018-05',
+    'Macro/TIC',
+    'GDPR takes effect',
+    'The EU’s General Data Protection Regulation sets strict rules on personal data, with fines of up to 4% of global revenue.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Flag_of_Europe.svg/500px-Flag_of_Europe.svg.png',
+  ],
+  [
     '2018-06',
     'Macro/MIC',
     'Google drops Maven',
@@ -816,6 +823,13 @@ export const technologyTimeline: PlotValue[][] = [
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/51/Full_GPT_architecture.svg/500px-Full_GPT_architecture.svg.png',
   ],
   ['2018-07', 'Macro', 'US–China trade war', 'Tariffs escalate between the two largest economies.', null],
+  [
+    '2018-07',
+    'Macro/TIC',
+    'EU fines Google over Android',
+    'The European Commission fines Google €4.34 billion for tying its apps to Android, the largest EU antitrust fine.',
+    null,
+  ],
   ['2019', 'Personal', 'Wireline', 'Wireline, 2019.', null],
   [
     '2019-02',
