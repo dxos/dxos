@@ -485,7 +485,6 @@ export const Timeline = ({
   const [currentId, setCurrentId] = useState<string>();
   const current = ordered.find((event) => event.id === currentId);
 
-  // A hovered event's card takes precedence over the current one's.
   const [hovered, setHovered] = useState<TimelineEvent>();
   const closeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const handleHover = useCallback((event: TimelineEvent) => {
@@ -561,7 +560,8 @@ export const Timeline = ({
     [ordered, current, currentId, select],
   );
 
-  const card = hovered ?? current;
+  // While an event is selected its card stays put; hovering others shows no card.
+  const card = current ?? hovered;
 
   const now = Date.now();
   const showToday = today && range && now >= range[0] && now <= range[1];
