@@ -53,6 +53,9 @@ export type PushRegistration = {
 
 const isNotConfigured = (error: unknown) => error instanceof EdgeCallFailedError && error.status === 404;
 
+/** EDGE's answer when the sample showed the push service no longer knows the subscription. */
+const isGone = (error: unknown) => error instanceof EdgeCallFailedError && error.status === 410;
+
 /** A browser's `DOMException` names the failure (`AbortError`, `NotAllowedError`) apart from its message. */
 const describeError = (error: unknown): string =>
   error instanceof Error
@@ -87,7 +90,17 @@ export const makePushRegistration = ({
     const { endpoint, keys } = await provider.subscribe({ applicationServerKey: publicKey });
     // EDGE pushes the sample before it answers, so listening has to start first.
     const sample = welcome ? provider.waitForSample(sampleTimeout) : undefined;
-    await edge.putPushSubscription({ endpoint, keys, welcome });
+    try {
+      await edge.putPushSubscription({ endpoint, keys, welcome });
+    } catch (error) {
+      if (!isGone(error)) {
+        throw error;
+      }
+      // The browser kept a subscription its push service has dropped; only a fresh one reaches this device.
+      await provider.unsubscribe();
+      const fresh = await provider.subscribe({ applicationServerKey: publicKey });
+      await edge.putPushSubscription({ endpoint: fresh.endpoint, keys: fresh.keys, welcome });
+    }
     if (sample && !(await sample)) {
       return settle('unconfirmed');
     }
@@ -128,12 +141,13 @@ export const makePushRegistration = ({
         }
         const subscription = await provider.current();
         if (subscription) {
-          // Unsubscribing alone would also stop delivery, but EDGE would keep pushing to a dead endpoint until the
-          // push service answered 410.
-          await edge.deletePushSubscription(subscription.endpoint).catch((error) => {
+          // The browser subscription is kept: dropping it and subscribing again seconds later left Chrome holding one
+          // its push service had already forgotten. With EDGE's copy gone, nothing pushes to it.
+          await edge.deletePushSubscription(subscription.endpoint).catch(async (error) => {
             log.warn('failed to unregister push subscription', { error });
+            // EDGE still has it, so unsubscribing is the only way to stop the pushes.
+            await provider.unsubscribe();
           });
-          await provider.unsubscribe();
         }
         return settle('off');
       }),

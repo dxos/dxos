@@ -164,14 +164,36 @@ describe('makePushRegistration', () => {
     expect(await registration.enable()).toBe('on');
   });
 
-  test('disable unregisters from EDGE before dropping the subscription', async () => {
+  test('disable unregisters from EDGE and keeps the browser subscription for a quick re-enable', async () => {
     const { provider, edge, registration } = setup();
     await registration.enable();
 
     expect(await registration.disable()).toBe('off');
 
     expect(edge.deletePushSubscription).toHaveBeenCalledWith(SUBSCRIPTION.endpoint);
+    expect(provider.unsubscribe).not.toHaveBeenCalled();
+  });
+
+  test('disable unsubscribes the browser when EDGE cannot be told', async () => {
+    const { provider, edge, registration } = setup();
+    await registration.enable();
+    edge.deletePushSubscription.mockRejectedValueOnce(new Error('offline'));
+
+    expect(await registration.disable()).toBe('off');
     expect(provider.unsubscribe).toHaveBeenCalledOnce();
+  });
+
+  test('a subscription the push service has dropped is replaced once', async () => {
+    const { provider, edge, registration } = setup();
+    edge.putPushSubscription.mockRejectedValueOnce(
+      new EdgeCallFailedError({ message: 'The push service no longer knows this subscription.', status: 410 }),
+    );
+
+    expect(await registration.enable()).toBe('on');
+
+    expect(provider.unsubscribe).toHaveBeenCalledOnce();
+    expect(provider.subscribe).toHaveBeenCalledTimes(2);
+    expect(edge.putPushSubscription).toHaveBeenCalledTimes(2);
   });
 
   test('refresh re-registers without prompting when permission was granted', async () => {
