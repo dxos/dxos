@@ -16,6 +16,7 @@ import React, {
 import { useResizeDetector } from 'react-resize-detector';
 
 import * as Popover from '@dxos/react-ui/Popover';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Tag from '@dxos/react-ui/Tag';
 import { mx } from '@dxos/ui-theme';
 import { type ChromaticPalette, type ThemedClassName } from '@dxos/ui-types';
@@ -659,99 +660,108 @@ export const Timeline = ({
         </div>
       )}
 
-      <div
-        ref={scrollRef}
-        role='listbox'
-        tabIndex={0}
-        aria-label='Events'
-        aria-activedescendant={current && `${optionId}-${current.id}`}
-        className='overflow-y-auto overflow-x-hidden outline-none'
-        onKeyDown={handleKeyDown}
-      >
-        {width > 0 && range && (
-          <svg
-            width={width}
-            height={contentHeight}
-            fontSize={metrics.font}
-            className='block'
-            // A click on the background, not on an event, clears the selection.
-            onClick={() => setCurrentId(undefined)}
+      <ScrollArea.Root orientation='vertical' width='regular'>
+        <ScrollArea.Viewport asChild ref={scrollRef}>
+          <div
+            role='listbox'
+            tabIndex={0}
+            aria-label='Events'
+            aria-activedescendant={current && `${optionId}-${current.id}`}
+            className='outline-none'
+            onKeyDown={handleKeyDown}
           >
-            {/* Alternate bands between ticks. */}
-            {ticks.map((tick, index) =>
-              index % 2 === 0 ? (
-                <rect
-                  key={`band-${tick.time}`}
-                  x={0}
-                  y={tick.y}
-                  width={width}
-                  height={(ticks[index + 1]?.y ?? bottom) - tick.y}
-                  fill='currentColor'
-                  fillOpacity={0.04}
-                />
-              ) : null,
+            {width > 0 && range && (
+              <svg
+                width={width}
+                height={contentHeight}
+                fontSize={metrics.font}
+                className='block'
+                // A click on the background, not on an event, clears the selection.
+                onClick={() => setCurrentId(undefined)}
+              >
+                {/* Alternate bands between ticks. */}
+                {ticks.map((tick, index) =>
+                  index % 2 === 0 ? (
+                    <rect
+                      key={`band-${tick.time}`}
+                      x={0}
+                      y={tick.y}
+                      width={width}
+                      height={(ticks[index + 1]?.y ?? bottom) - tick.y}
+                      fill='currentColor'
+                      fillOpacity={0.04}
+                    />
+                  ) : null,
+                )}
+
+                {ticks.map((tick) => (
+                  <g key={tick.time}>
+                    <text
+                      x={PADDING / 2}
+                      y={tick.y}
+                      dominantBaseline='middle'
+                      fill='currentColor'
+                      fillOpacity={0.5}
+                      fontWeight={600}
+                    >
+                      {tick.label}
+                    </text>
+                    <line x1={spineX - 6} x2={spineX + 6} y1={tick.y} y2={tick.y} stroke='currentColor' />
+                  </g>
+                ))}
+
+                <line x1={spineX} x2={spineX} y1={top} y2={bottom} stroke='currentColor' strokeWidth={1.5} />
+
+                {showToday && (
+                  <g>
+                    <line
+                      x1={0}
+                      x2={width}
+                      y1={yOf(now)}
+                      y2={yOf(now)}
+                      stroke='currentColor'
+                      strokeOpacity={0.6}
+                      strokeDasharray='6,4'
+                    />
+                    <text
+                      x={width - PADDING / 2}
+                      y={yOf(now) - 6}
+                      textAnchor='end'
+                      fill='currentColor'
+                      fontWeight={600}
+                    >
+                      Today
+                    </text>
+                  </g>
+                )}
+
+                {lanes.map((lane, index) => (
+                  <LaneEvents
+                    key={lane.side}
+                    lane={lane}
+                    events={laneEvents[index]}
+                    spineX={spineX}
+                    yOf={yOf}
+                    top={top}
+                    bottom={bottom}
+                    color={color}
+                    measure={measure}
+                    dates={dates}
+                    dateWidth={dateWidth}
+                    metrics={metrics}
+                    optionId={optionId}
+                    current={current}
+                    hovered={hovered}
+                    onSelect={handleSelect}
+                    onHover={handleHover}
+                    onLeave={handleLeave}
+                  />
+                ))}
+              </svg>
             )}
-
-            {ticks.map((tick) => (
-              <g key={tick.time}>
-                <text
-                  x={PADDING / 2}
-                  y={tick.y}
-                  dominantBaseline='middle'
-                  fill='currentColor'
-                  fillOpacity={0.5}
-                  fontWeight={600}
-                >
-                  {tick.label}
-                </text>
-                <line x1={spineX - 6} x2={spineX + 6} y1={tick.y} y2={tick.y} stroke='currentColor' />
-              </g>
-            ))}
-
-            <line x1={spineX} x2={spineX} y1={top} y2={bottom} stroke='currentColor' strokeWidth={1.5} />
-
-            {showToday && (
-              <g>
-                <line
-                  x1={0}
-                  x2={width}
-                  y1={yOf(now)}
-                  y2={yOf(now)}
-                  stroke='currentColor'
-                  strokeOpacity={0.6}
-                  strokeDasharray='6,4'
-                />
-                <text x={width - PADDING / 2} y={yOf(now) - 6} textAnchor='end' fill='currentColor' fontWeight={600}>
-                  Today
-                </text>
-              </g>
-            )}
-
-            {lanes.map((lane, index) => (
-              <LaneEvents
-                key={lane.side}
-                lane={lane}
-                events={laneEvents[index]}
-                spineX={spineX}
-                yOf={yOf}
-                top={top}
-                bottom={bottom}
-                color={color}
-                measure={measure}
-                dates={dates}
-                dateWidth={dateWidth}
-                metrics={metrics}
-                optionId={optionId}
-                current={current}
-                hovered={hovered}
-                onSelect={handleSelect}
-                onHover={handleHover}
-                onLeave={handleLeave}
-              />
-            ))}
-          </svg>
-        )}
-      </div>
+          </div>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
 
       {card && (
         <EventCard
