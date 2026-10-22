@@ -10,11 +10,17 @@ import { inboxResearch } from './inbox-research.ts';
 export {
   GUIDE,
   IDS,
+  NPMRC,
   PARENT_INSTRUCTIONS,
+  type PluginPackage,
+  PluginToolchain,
   type Variant,
+  cliSpec,
   composerPlugin,
   makeComposerPlugin,
+  packageJson,
   readGuide,
+  readToolchain,
   writePlugin,
 } from './composer-plugin.ts';
 export * from './inbox-research.ts';

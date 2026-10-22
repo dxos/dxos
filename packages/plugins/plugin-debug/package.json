@@ -123,6 +123,11 @@
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
     },
+    "./ShogiSpace": {
+      "source": "./src/samples/shogi/ShogiSpace.ts",
+      "types": "./dist/types/src/samples/shogi/ShogiSpace.d.ts",
+      "import": "./dist/lib/ShogiSpace.mjs"
+    },
     "./StockfishSpace": {
       "source": "./src/samples/stockfish/StockfishSpace.ts",
       "types": "./dist/types/src/samples/stockfish/StockfishSpace.d.ts",

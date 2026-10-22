@@ -7,6 +7,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 
 import { meta } from '#meta';
@@ -57,6 +58,17 @@ export const MarkdownMenu = Capability.lazyModule(
   () => import('./markdown-menu.ts'),
 );
 export const SpaceTemplates = AppCapability.spaceTemplates(() => import('./space-templates.ts'));
+/** On its own because it is built from the client's EDGE and the toolchain the app was built from, not a static list. */
+export const ShogiTemplate = Capability.lazyModule(
+  'ShogiTemplate',
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [AppCapabilities.SpaceTemplate],
+    activatesOn: ActivationEvents.SpaceTemplatesRequested,
+    environments: ['browser'],
+  },
+  () => import('./shogi-template.ts'),
+);
 export const LogRecording = Capability.lazyModule(
   'LogRecording',
   { provides: [], activatesOn: DebugEvents.Start },

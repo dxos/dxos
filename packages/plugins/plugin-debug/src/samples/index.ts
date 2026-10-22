@@ -6,6 +6,7 @@ export * as FieldstoneSpace from './fieldstone/FieldstoneSpace.ts';
 export * as IncidentSpace from './incident/IncidentSpace.ts';
 export * as PipelineSpace from './crm/PipelineSpace.ts';
 export * as ReviewSpace from './review/ReviewSpace.ts';
+export * as ShogiSpace from './shogi/ShogiSpace.ts';
 export * as StockfishSpace from './stockfish/StockfishSpace.ts';
 export * as TidepoolSpace from './tidepool/TidepoolSpace.ts';
 export * as WeatherSpace from './weather/WeatherSpace.ts';
