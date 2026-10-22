@@ -1,5 +1,5 @@
 diff --git a/dist/combobox.machine.js b/dist/combobox.machine.js
-index 754a6313f52a07ec3531e70b5cbc9495a092c756..4de5115fa0e781dc58ef554522f789d8898b99aa 100644
+index 754a6313f52a07ec3531e70b5cbc9495a092c756..2ea022362973209efa2a25db066e75ca7fb8ed5d 100644
 --- a/dist/combobox.machine.js
 +++ b/dist/combobox.machine.js
 @@ -45,6 +45,7 @@ var import_combobox = require("./combobox.collection.js");
@@ -18,7 +18,7 @@ index 754a6313f52a07ec3531e70b5cbc9495a092c756..4de5115fa0e781dc58ef554522f789d8
 +        const value = context.get("inputValue");
 +        const typed = typedValues.get(inputEl) ?? [];
 +        typedValues.delete(inputEl);
-+        const index = typed.lastIndexOf(value);
++        const index = typed.indexOf(value);
 +        if (index !== -1 && index < typed.length - 1 && inputEl.value === typed[typed.length - 1]) {
 +          typedValues.set(inputEl, typed.slice(index + 1));
 +          return;
@@ -39,7 +39,7 @@ index 754a6313f52a07ec3531e70b5cbc9495a092c756..4de5115fa0e781dc58ef554522f789d8
        },
        clearInputValue({ context }) {
 diff --git a/dist/combobox.machine.mjs b/dist/combobox.machine.mjs
-index f3d8d0b4922094e13d4f4cb945b3f2b564f6081f..d874f26664de90c39386ecf34c63e6e61a7c21f9 100644
+index f3d8d0b4922094e13d4f4cb945b3f2b564f6081f..5ec5af2ca6b88af51e35056ec41418b38a9a700e 100644
 --- a/dist/combobox.machine.mjs
 +++ b/dist/combobox.machine.mjs
 @@ -23,6 +23,7 @@ import { collection } from "./combobox.collection.mjs";
@@ -58,7 +58,7 @@ index f3d8d0b4922094e13d4f4cb945b3f2b564f6081f..d874f26664de90c39386ecf34c63e6e6
 +        const value = context.get("inputValue");
 +        const typed = typedValues.get(inputEl) ?? [];
 +        typedValues.delete(inputEl);
-+        const index = typed.lastIndexOf(value);
++        const index = typed.indexOf(value);
 +        if (index !== -1 && index < typed.length - 1 && inputEl.value === typed[typed.length - 1]) {
 +          typedValues.set(inputEl, typed.slice(index + 1));
 +          return;

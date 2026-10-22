@@ -1730,7 +1730,7 @@ patchedDependencies:
     hash: a986f87598d00b4753574afb9fcad1a84d9b0145eaf80189a0b49d32b7af569a
     path: patches/@vitest__browser@4.1.10.patch
   '@zag-js/combobox@1.43.3':
-    hash: 63b58adb395d262f9f60a4d4cbc80ffc10a2312fddd11d91935b70f7202d4814
+    hash: 4ccbf617d5f103328400ac8e06fb4f2595ead7ac83b8b2e29cb4bcd84505f3f7
     path: patches/@zag-js__combobox@1.43.3.patch
   '@zag-js/presence@1.43.3':
     hash: 724f6c5627fd9aad233fda4bfddc2accd0c9751bd1395affac5beee6b05e9f58
@@ -46689,7 +46689,7 @@ snapshots:
       '@zag-js/collection': 1.43.3
       '@zag-js/color-picker': 1.43.3
       '@zag-js/color-utils': 1.43.3
-      '@zag-js/combobox': 1.43.3(patch_hash=63b58adb395d262f9f60a4d4cbc80ffc10a2312fddd11d91935b70f7202d4814)
+      '@zag-js/combobox': 1.43.3(patch_hash=4ccbf617d5f103328400ac8e06fb4f2595ead7ac83b8b2e29cb4bcd84505f3f7)
       '@zag-js/core': 1.43.3
       '@zag-js/date-input': 1.43.3(@internationalized/date@3.12.3)
       '@zag-js/date-picker': 1.43.3(@internationalized/date@3.12.3)
@@ -58711,7 +58711,7 @@ snapshots:
     dependencies:
       '@zag-js/utils': 1.43.3
 
-  '@zag-js/combobox@1.43.3(patch_hash=63b58adb395d262f9f60a4d4cbc80ffc10a2312fddd11d91935b70f7202d4814)':
+  '@zag-js/combobox@1.43.3(patch_hash=4ccbf617d5f103328400ac8e06fb4f2595ead7ac83b8b2e29cb4bcd84505f3f7)':
     dependencies:
       '@zag-js/anatomy': 1.43.3
       '@zag-js/collection': 1.43.3
