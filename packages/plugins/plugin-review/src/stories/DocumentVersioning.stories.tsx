@@ -180,8 +180,7 @@ const getDoc = (storyId: string): Markdown.Document => {
 };
 
 /** The story's document, once its client has initialized. */
-const waitForDoc = (storyId: string): Promise<Markdown.Document> =>
-  waitFor(() => getDoc(storyId), { timeout: 20_000 });
+const waitForDoc = (storyId: string): Promise<Markdown.Document> => waitFor(() => getDoc(storyId), { timeout: 20_000 });
 
 // Splice-based edits (as the editor produces) so concurrent branch/parent changes CRDT-merge;
 // whole-string assignment would be a scalar PUT that merges last-writer-wins.
