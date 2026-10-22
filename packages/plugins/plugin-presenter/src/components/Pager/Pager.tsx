@@ -21,9 +21,8 @@ export const Pager = ({ index = 0, count = 0, onChange }: PagerProps) => {
     }
   };
 
-  if (index === undefined || !count) {
-    return null;
-  }
+  const atStart = count === 0 || index <= 0;
+  const atEnd = count === 0 || index >= count - 1;
 
   return (
     <Layout.Flex align='center' classNames='text-neutral-500'>
@@ -31,6 +30,7 @@ export const Pager = ({ index = 0, count = 0, onChange }: PagerProps) => {
         icon='ph--caret-double-left--regular'
         iconSize='xl'
         label='Jump to first'
+        disabled={atStart}
         iconOnly
         showTooltip={false}
         variant='ghost'
@@ -41,6 +41,7 @@ export const Pager = ({ index = 0, count = 0, onChange }: PagerProps) => {
         icon='ph--caret-left--regular'
         iconSize='xl'
         label='Previous'
+        disabled={atStart}
         iconOnly
         showTooltip={false}
         variant='ghost'
@@ -51,6 +52,7 @@ export const Pager = ({ index = 0, count = 0, onChange }: PagerProps) => {
         icon='ph--caret-right--regular'
         iconSize='xl'
         label='Next'
+        disabled={atEnd}
         iconOnly
         showTooltip={false}
         variant='ghost'
@@ -61,6 +63,7 @@ export const Pager = ({ index = 0, count = 0, onChange }: PagerProps) => {
         icon='ph--caret-double-right--regular'
         iconSize='xl'
         label='Jump to last'
+        disabled={atEnd}
         iconOnly
         showTooltip={false}
         variant='ghost'

@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useMemo, useState } from 'react';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -43,7 +43,10 @@ const DefaultStory = ({ count = 5, ...props }: Partial<DeckProps> & { count?: nu
       index={index}
       onIndexChange={setIndex}
       fullscreen={fullscreen}
-      onFullscreenChange={setFullscreen}
+      onFullscreenChange={(next) => {
+        setFullscreen(next);
+        props.onFullscreenChange?.(next);
+      }}
     />
   );
 };
@@ -69,7 +72,12 @@ const StaleIndexStory = () => {
   return <Deck slides={slides} index={9} onIndexChange={setIndex} />;
 };
 
-const InputSlide = () => <input data-testid='slide-input' />;
+const InputSlide = () => (
+  <>
+    <input data-testid='slide-input' />
+    <div data-testid='slide-editable' contentEditable suppressContentEditableWarning tabIndex={0} />
+  </>
+);
 
 const createInputPlugin = () =>
   Plugin.define(
@@ -135,6 +143,9 @@ export const Empty: Story = {
     const canvas = within(canvasElement);
     await waitFor(() => expect(canvas.getByText('Add slide')).toBeVisible());
     await expect(await canvas.findByText('0 / 0')).toBeVisible();
+    for (const label of ['Jump to first', 'Previous', 'Next', 'Jump to last']) {
+      await expect(canvas.getByLabelText(label)).toBeDisabled();
+    }
   },
 };
 
@@ -146,7 +157,15 @@ export const EditableSlide: Story = {
     const input = await canvas.findByTestId('slide-input', undefined, { timeout: 10_000 });
     await userEvent.click(input);
     await userEvent.keyboard('{ArrowRight}');
+    await new Promise((resolve) => setTimeout(resolve, 300));
     await expect(await canvas.findByText('1 / 2')).toBeVisible();
+    await expect(canvas.queryByText('2 / 2')).toBeNull();
+
+    const editable = await canvas.findByTestId('slide-editable');
+    editable.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    await expect(canvas.queryByText('2 / 2')).toBeNull();
   },
 };
 
@@ -155,13 +174,29 @@ export const Fullscreen: Story = {
   args: { fullscreen: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByTestId('presenter.overlay')).toBeInTheDocument();
+    const overlay = await canvas.findByTestId('presenter.overlay');
     await expect(canvas.queryByTestId('presenter.fullscreen')).toBeNull();
-    await waitFor(() => expect(canvas.getByTestId('presenter.overlay')).toHaveAttribute('data-visible', 'false'), {
-      timeout: 5_000,
-    });
+    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    await sleep(1500);
     window.dispatchEvent(new PointerEvent('pointermove'));
-    await waitFor(() => expect(canvas.getByTestId('presenter.overlay')).toHaveAttribute('data-visible', 'true'));
+    await sleep(1000);
+    await expect(overlay).toHaveAttribute('data-visible', 'true');
+    await waitFor(() => expect(overlay).toHaveAttribute('data-visible', 'false'), { timeout: 3_000 });
+    window.dispatchEvent(new PointerEvent('pointermove'));
+    await waitFor(() => expect(overlay).toHaveAttribute('data-visible', 'true'));
+  },
+};
+
+export const FullscreenKey: Story = {
+  decorators: [withEmptyPlugins],
+  args: { onFullscreenChange: fn() },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const deck = await canvas.findByTestId('presenter.deck');
+    deck.focus();
+    await userEvent.keyboard('f');
+    await expect(await canvas.findByTestId('presenter.overlay')).toBeInTheDocument();
+    await expect(args.onFullscreenChange).toHaveBeenCalledWith(true);
   },
 };
 

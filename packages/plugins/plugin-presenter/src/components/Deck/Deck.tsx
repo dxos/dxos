@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type KeyboardEvent, type ReactNode, useCallback, useEffect, useState } from 'react';
+import React, { type KeyboardEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -36,7 +36,8 @@ export type DeckProps = {
 
 /** Keys typed into slide content (inputs, editors) must not turn the page. */
 const isEditable = (target: EventTarget) =>
-  target instanceof Element && target.closest('input, textarea, [contenteditable]') !== null;
+  target instanceof Element &&
+  target.closest('input, textarea, [contenteditable]:not([contenteditable="false"])') !== null;
 
 /**
  * Paged slide deck: a toolbar pager, or in fullscreen an auto-hiding overlay pager. Keys are scoped
@@ -64,7 +65,7 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
 
     const handleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLDivElement>) => {
-        if (isEditable(event.target)) {
+        if (isEditable(event.target) || event.metaKey || event.ctrlKey || event.altKey) {
           return;
         }
 
@@ -73,6 +74,10 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
           onIndexChange(SlideViewState.clamp(next, count));
         };
         switch (event.key) {
+          case 'f':
+            event.preventDefault();
+            onFullscreenChange?.(!fullscreen);
+            return;
           case 'ArrowLeft':
             return go(event.shiftKey ? 0 : index - 1);
           case 'ArrowRight':
@@ -85,8 +90,10 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
             return go(count - 1);
         }
       },
-      [index, count, onIndexChange],
+      [index, count, onIndexChange, fullscreen, onFullscreenChange],
     );
+
+    const handleExit = useCallback(() => onFullscreenChange?.(false), [onFullscreenChange]);
 
     const body =
       count === 0 ? (
@@ -99,9 +106,11 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
 
     const shell = (
       <PresentationShell
+        // Remount on toggle because the shell's exiting state must reset after an ESC exit.
+        key={fullscreen ? 'fullscreen' : 'inline'}
         data-testid='presenter.deck'
         fullscreen={fullscreen}
-        onExit={() => onFullscreenChange?.(false)}
+        onExit={handleExit}
         onKeyDown={handleKeyDown}
       >
         <div className='dx-cover flex flex-col'>{body}</div>
@@ -149,19 +158,24 @@ type OverlayPagerProps = { index: number; count: number; onChange: (index: numbe
 const OverlayPager = ({ index, count, onChange }: OverlayPagerProps) => {
   const [visible, setVisible] = useState(true);
 
-  useEffect(() => {
-    if (!visible) {
-      return;
-    }
-    const timer = setTimeout(() => setVisible(false), OVERLAY_IDLE_DURATION);
-    return () => clearTimeout(timer);
-  }, [visible]);
+  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  // Window-level so movement over the slide (not just the overlay) wakes it.
+  // Window-level so movement over the slide (not just the overlay) wakes it; each move restarts the idle timer.
   useEffect(() => {
-    const show = () => setVisible(true);
+    const schedule = () => {
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => setVisible(false), OVERLAY_IDLE_DURATION);
+    };
+    const show = () => {
+      setVisible(true);
+      schedule();
+    };
+    schedule();
     window.addEventListener('pointermove', show);
-    return () => window.removeEventListener('pointermove', show);
+    return () => {
+      window.removeEventListener('pointermove', show);
+      clearTimeout(timer.current);
+    };
   }, []);
 
   return (
