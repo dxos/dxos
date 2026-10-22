@@ -7,8 +7,9 @@ import React, { type KeyboardEvent, useCallback, useEffect, useId, useMemo, useR
 import { useResizeDetector } from 'react-resize-detector';
 
 import * as Popover from '@dxos/react-ui/Popover';
+import * as Tag from '@dxos/react-ui/Tag';
 import { mx } from '@dxos/ui-theme';
-import { type ThemedClassName } from '@dxos/ui-types';
+import { type ChromaticPalette, type ThemedClassName } from '@dxos/ui-types';
 
 import { type PlotData, type TimelineEvent, type TimelineOptions, type TimelineSpine } from '../../types.ts';
 import {
@@ -40,8 +41,25 @@ const MAX_DRIFT = LINE_HEIGHT * 2;
 // Horizontal run of a leader from the spine to its label.
 const LEADER_WIDTH = 40;
 
+// Ranges at least this long (in ms, about two years) tick on years.
+const MIN_YEARLY_SPAN = 2 * 365 * 24 * 60 * 60 * 1000;
+
 // Minimum distance between axis ticks.
 const TICK_SPACING = 48;
+
+// Distinct hues in the order categories take them.
+const CATEGORY_HUES: ChromaticPalette[] = [
+  'blue',
+  'orange',
+  'red',
+  'teal',
+  'green',
+  'amber',
+  'purple',
+  'pink',
+  'cyan',
+  'lime',
+];
 
 const DOT_RADIUS = 3.5;
 const CURRENT_DOT_RADIUS = 7;
@@ -51,8 +69,12 @@ const FONT_SIZE = 13;
 const MIN_LABEL_SIZE = 10;
 const MAX_LABEL_SIZE = 15;
 
-// Room kept for the date's bold weight, which the measurement does not apply.
+// Room kept beyond the measured width, which does not apply the bold weight.
 const LABEL_MARGIN = 8;
+
+// Dates sit in a fixed-width column beside the spine, smaller than the titles.
+const DATE_FONT_SIZE = 11;
+const DATE_GAP = 6;
 
 // Grace period for the pointer to move from an event onto its card.
 const CLOSE_DELAY = 200;
@@ -128,10 +150,19 @@ export type TimelineProps = ThemedClassName<{
   zoom?: number;
   /** Only events whose title, description, category or date contain this text are drawn. */
   filter?: string;
+  /** With this, the top row lists every category as a tag that shows or hides it. */
+  onHiddenChange?: (hidden: string[]) => void;
 }>;
 
 /** Events from tabular data plotted along a vertical, scrollable time axis. */
-export const Timeline = ({ classNames, data, options = {}, zoom: initialZoom = MIN_ZOOM, filter }: TimelineProps) => {
+export const Timeline = ({
+  classNames,
+  data,
+  options = {},
+  zoom: initialZoom = MIN_ZOOM,
+  filter,
+  onHiddenChange,
+}: TimelineProps) => {
   const { spine = 'center', scale = 'linear', hidden, today = true, dates = true } = options;
   const { ref: scrollRef, width = 0, height = 0 } = useResizeDetector<HTMLDivElement>({ refreshRate: 100 });
   const [zoom, setZoom] = useState(initialZoom);
@@ -147,12 +178,19 @@ export const Timeline = ({ classNames, data, options = {}, zoom: initialZoom = M
   useEffect(() => setZoom(initialZoom), [initialZoom]);
 
   const { columns, events } = useMemo(() => toTimelineEvents(data), [data]);
+  // Every date takes the width of the widest, so titles line up.
+  const dateWidth = useMemo(
+    () => Math.ceil(Math.max(0, ...events.map((event) => measure(event.date))) * DATE_FONT_SIZE) + LABEL_MARGIN,
+    [events, measure],
+  );
   const range = useMemo(
     () => timelineRange(events, { start: options.start, end: options.end }),
     [events, options.start, options.end],
   );
   const visible = useMemo(() => columns.filter((column) => !hidden?.includes(column)), [columns, hidden]);
-  const color = useMemo(() => d3.scaleOrdinal<string, string>(d3.schemeTableau10).domain(columns), [columns]);
+  // Categories take theme hues, so the dots, labels and header tags share one palette in light and dark themes.
+  const hueOf = useMemo(() => d3.scaleOrdinal<string, ChromaticPalette>(CATEGORY_HUES).domain(columns), [columns]);
+  const color = useCallback((column: string) => `var(--color-${hueOf(column)}-500)`, [hueOf]);
   const { spineX, lanes } = useMemo(() => layoutLanes(spine, visible, width), [spine, visible, width]);
 
   const laneEvents = useMemo(
@@ -200,9 +238,14 @@ export const Timeline = ({ classNames, data, options = {}, zoom: initialZoom = M
 
     const axis = d3.scaleUtc().domain(range);
     const count = Math.max(2, Math.floor((bottom - top) / LINE_HEIGHT));
-    const format = axis.tickFormat(count);
+    // Spans of a few years or more tick on years only, however tall the timeline grows.
+    const yearly = range[1] - range[0] >= MIN_YEARLY_SPAN;
+    const format = yearly ? d3.utcFormat('%Y') : axis.tickFormat(count);
+    const dates = yearly
+      ? (d3.utcYear.every(1)?.range(new Date(range[0]), new Date(range[1] + 1)) ?? [])
+      : axis.ticks(count);
     const result: { time: number; y: number; label: string }[] = [];
-    for (const date of axis.ticks(count)) {
+    for (const date of dates) {
       const y = yOf(date.getTime());
       if (result.length === 0 || y - result[result.length - 1].y >= TICK_SPACING) {
         result.push({ time: date.getTime(), y, label: format(date) });
@@ -324,22 +367,41 @@ export const Timeline = ({ classNames, data, options = {}, zoom: initialZoom = M
 
   return (
     <div className={mx('dx-fill grid grid-rows-[min-content_1fr] overflow-hidden', classNames)}>
-      {/* Clipped, so long category names cannot make the timeline scroll sideways. */}
-      <div className='relative h-8 overflow-hidden text-sm font-medium uppercase tracking-wider'>
-        {lanes.map((lane) => (
-          <div
-            key={lane.side}
-            className={mx('absolute inset-y-0 flex items-center gap-4', lane.side === 'start' && 'flex-row-reverse')}
-            style={lane.side === 'start' ? { right: width - lane.x } : { left: lane.x }}
-          >
-            {lane.columns.map((column) => (
-              <span key={column} style={{ color: color(column) }}>
-                {column}
-              </span>
-            ))}
-          </div>
-        ))}
-      </div>
+      {onHiddenChange ? (
+        <div className='flex flex-wrap items-center justify-center gap-2 px-2 py-1'>
+          {columns.map((column) => (
+            <Tag.Tag
+              key={column}
+              hue={hidden?.includes(column) ? 'neutral' : hueOf(column)}
+              aria-pressed={!hidden?.includes(column)}
+              onClick={() =>
+                onHiddenChange(
+                  hidden?.includes(column) ? hidden.filter((name) => name !== column) : [...(hidden ?? []), column],
+                )
+              }
+            >
+              {column}
+            </Tag.Tag>
+          ))}
+        </div>
+      ) : (
+        // Clipped, so long category names cannot make the timeline scroll sideways.
+        <div className='relative h-8 overflow-hidden text-sm font-medium uppercase tracking-wider'>
+          {lanes.map((lane) => (
+            <div
+              key={lane.side}
+              className={mx('absolute inset-y-0 flex items-center gap-4', lane.side === 'start' && 'flex-row-reverse')}
+              style={lane.side === 'start' ? { right: width - lane.x } : { left: lane.x }}
+            >
+              {lane.columns.map((column) => (
+                <span key={column} style={{ color: color(column) }}>
+                  {column}
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
 
       <div
         ref={scrollRef}
@@ -414,6 +476,7 @@ export const Timeline = ({ classNames, data, options = {}, zoom: initialZoom = M
                 color={color}
                 measure={measure}
                 dates={dates}
+                dateWidth={dateWidth}
                 optionId={optionId}
                 current={current}
                 hovered={hovered}
@@ -432,7 +495,11 @@ export const Timeline = ({ classNames, data, options = {}, zoom: initialZoom = M
           key={card.id}
           event={card}
           side={sideOf.get(card.column) ?? 'end'}
-          getAnchorRect={() => dotOf(card)?.getBoundingClientRect() ?? null}
+          // The dot is the context element, so its scroll ancestors (the timeline's scroller among them) move the card.
+          getAnchorElement={() => ({
+            getBoundingClientRect: () => dotOf(card)?.getBoundingClientRect() ?? new DOMRect(),
+            contextElement: dotOf(card) ?? undefined,
+          })}
           color={color(card.column)}
           onClose={() => {
             setHovered(undefined);
@@ -459,6 +526,8 @@ type LaneEventsProps = {
   measure: MeasureText;
   /** Show the date beside the title. */
   dates: boolean;
+  /** Width of the date column beside the spine. */
+  dateWidth: number;
   /** Prefix of each option's DOM id, for the listbox's `aria-activedescendant`. */
   optionId: string;
   current?: TimelineEvent;
@@ -479,6 +548,7 @@ const LaneEvents = ({
   color,
   measure,
   dates,
+  dateWidth,
   optionId,
   current,
   hovered,
@@ -505,16 +575,13 @@ const LaneEvents = ({
           `L ${lane.x - direction * 12} ${labelY}`,
           `H ${lane.x - direction * 4}`,
         ].join(' ');
+        // The date column sits next to the leader; the title takes the rest of the lane.
+        const titleOffset = dates ? dateWidth + DATE_GAP : 0;
         const { text: label, fontSize } = fitLabel(
-          { prefix: dates ? event.date : '', text: event.label },
-          lane.width - LABEL_MARGIN,
+          { prefix: '', text: event.label },
+          lane.width - titleOffset - LABEL_MARGIN,
           measure,
           { min: MIN_LABEL_SIZE, max: MAX_LABEL_SIZE },
-        );
-        const date = dates && (
-          <tspan fill={fill} fontWeight={700}>
-            {event.date}
-          </tspan>
         );
 
         return (
@@ -539,8 +606,23 @@ const LaneEvents = ({
               stroke={isCurrent ? 'currentColor' : undefined}
               strokeWidth={isCurrent ? 2 : undefined}
             />
+            {dates && (
+              // Aligned to the column's outer edge, so dates line up against their titles on both sides.
+              <text
+                x={lane.x + direction * dateWidth}
+                y={labelY}
+                dominantBaseline='middle'
+                textAnchor={lane.side === 'start' ? 'start' : 'end'}
+                fill={fill}
+                fontSize={DATE_FONT_SIZE}
+                fontWeight={700}
+                className='tabular-nums'
+              >
+                {event.date}
+              </text>
+            )}
             <text
-              x={lane.x}
+              x={lane.x + direction * titleOffset}
               y={labelY}
               dominantBaseline='middle'
               textAnchor={lane.side === 'start' ? 'end' : 'start'}
@@ -548,17 +630,7 @@ const LaneEvents = ({
               fontSize={fontSize}
               fontWeight={emphasis ? 600 : undefined}
             >
-              {!date ? (
-                label
-              ) : lane.side === 'start' ? (
-                <>
-                  {label} {date}
-                </>
-              ) : (
-                <>
-                  {date} {label}
-                </>
-              )}
+              {label}
             </text>
           </g>
         );
@@ -570,7 +642,7 @@ const LaneEvents = ({
 type EventCardProps = {
   event: TimelineEvent;
   side: Side;
-  getAnchorRect: () => DOMRect | null;
+  getAnchorElement: () => { getBoundingClientRect: () => DOMRect; contextElement?: Element };
   color: string;
   onClose: () => void;
   onHover: () => void;
@@ -578,7 +650,7 @@ type EventCardProps = {
 };
 
 /** An event's title, date, category and description, pointing at its dot from across the spine. */
-const EventCard = ({ event, side, getAnchorRect, color, onClose, onHover, onLeave }: EventCardProps) => (
+const EventCard = ({ event, side, getAnchorElement, color, onClose, onHover, onLeave }: EventCardProps) => (
   <Popover.Root
     open
     autoFocus={false}
@@ -588,7 +660,7 @@ const EventCard = ({ event, side, getAnchorRect, color, onClose, onHover, onLeav
     positioning={{
       // Across the spine from the label, so the label stays visible.
       placement: side === 'start' ? 'right' : 'left',
-      getAnchorRect,
+      getAnchorElement,
     }}
   >
     <Popover.Content classNames='max-w-80 p-3 flex flex-col gap-1' onPointerEnter={onHover} onPointerLeave={onLeave}>

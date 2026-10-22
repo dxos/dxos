@@ -66,7 +66,7 @@ export const TimelineCompanion = ({
     const values = timeline && getValues(timeline.range);
     return values && toPlotData(values, { header: timeline.header });
   }, [getValues, timeline?.range, timeline?.header]);
-  const { columns, events } = useMemo(() => (data ? toTimelineEvents(data) : { columns: [], events: [] }), [data]);
+  const events = useMemo(() => (data ? toTimelineEvents(data).events : []), [data]);
 
   // The filter is a view of the moment, not a setting of the timeline, so it is not saved.
   const [filter, setFilter] = useState('');
@@ -89,14 +89,6 @@ export const TimelineCompanion = ({
         ? handleUpdate({ range: selection ?? timeline.range })
         : onChange({ range: selection ?? DEFAULT_RANGE, header: true }),
     [timeline, selection, handleUpdate, onChange],
-  );
-
-  const handleToggleColumn = useCallback(
-    (column: string) =>
-      handleUpdate({
-        hidden: hidden.includes(column) ? hidden.filter((name) => name !== column) : [...hidden, column],
-      }),
-    [hidden, handleUpdate],
   );
 
   const menuActions = useMenuBuilder(
@@ -159,23 +151,6 @@ export const TimelineCompanion = ({
                         () => handleUpdate({ scale: value }),
                       ),
                     ),
-                )
-                .group(
-                  'columns',
-                  {
-                    label: ['timeline-columns.label', { ns: meta.profile.key }],
-                    icon: 'ph--columns--regular',
-                    iconOnly: true,
-                    variant: 'dropdownMenu',
-                    selectCardinality: 'multiple',
-                    value: columns.filter((column) => !hidden.includes(column)),
-                  },
-                  (group) =>
-                    columns.forEach((column) =>
-                      group.action(`column-${column}`, { label: column, checked: !hidden.includes(column) }, () =>
-                        handleToggleColumn(column),
-                      ),
-                    ),
                 )),
         )
         .subgraph(
@@ -218,20 +193,7 @@ export const TimelineCompanion = ({
           ),
         )
         .build(),
-    [
-      timeline,
-      selection,
-      spine,
-      scale,
-      hidden,
-      columns,
-      editing,
-      dates,
-      handleUseSelection,
-      handleUpdate,
-      handleToggleColumn,
-      onChange,
-    ],
+    [timeline, selection, spine, scale, hidden, editing, dates, handleUseSelection, handleUpdate, onChange],
   );
 
   return (
@@ -260,7 +222,13 @@ export const TimelineCompanion = ({
             </Form.Viewport>
           </Form.Root>
         ) : data ? (
-          <Timeline data={data} options={timeline} filter={filter} classNames='p-2' />
+          <Timeline
+            data={data}
+            options={timeline}
+            filter={filter}
+            onHiddenChange={(hidden) => handleUpdate({ hidden })}
+            classNames='p-2'
+          />
         ) : (
           <Typography.Text classNames='p-2 text-fg-subtle'>{t('invalid-range.message')}</Typography.Text>
         )}

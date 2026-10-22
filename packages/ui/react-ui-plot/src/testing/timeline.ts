@@ -5,8 +5,8 @@
 import { type PlotValue } from '../types.ts';
 
 /**
- * Technology, macro, robotics and industrial-complex events, 1980–2026: a header row, then one event per row,
- * dated by month (or by year where the month is uncertain).
+ * Technology, macro, robotics, industrial-complex and career (Resume) events, 1980–2026: a header row, then one
+ * event per row, dated by month (or by year where the month is uncertain).
  * MIC, FIC and TIC are the military-, financial- and tech-industrial complexes.
  */
 export const technologyTimeline: PlotValue[][] = [
@@ -38,9 +38,11 @@ export const technologyTimeline: PlotValue[][] = [
   ['1989-12', 'Macro', 'Japan’s bubble peaks', 'The Nikkei peaks before decades of stagnation.'],
   ['1990', 'Tech', 'Unix / SQL client-server', 'Workloads move off mainframes to Unix servers and SQL databases.'],
   ['1991-01', 'MIC', 'Gulf War', 'Precision-guided munitions are shown on live television.'],
+  ['1991-04', 'Resume', 'Sony', 'Research Engineer, Apr 1991 – Mar 1993.'],
   ['1991-08', 'Tech', 'World Wide Web', 'Tim Berners-Lee publishes the first website at CERN.'],
   ['1991-09', 'Tech', 'Linux', 'Linus Torvalds releases the Linux kernel.'],
   ['1992', 'Robotics', 'Boston Dynamics founded', 'Spun out of MIT to build dynamically balanced legged robots.'],
+  ['1993-04', 'Resume', 'Goldman Sachs', 'Senior Programmer Analyst, Apr 1993 – Apr 1996.'],
   ['1993-07', 'MIC', '“Last Supper”', 'The Pentagon urges contractors to consolidate after the Cold War.'],
   ['1994-10', 'Tech', 'Netscape', 'The Netscape Navigator browser brings the web to the mainstream.'],
   ['1994-12', 'Tech', 'PlayStation', 'Sony’s PlayStation launches in Japan, bringing 3D games to the living room.'],
@@ -48,6 +50,7 @@ export const technologyTimeline: PlotValue[][] = [
   ['1995-12', 'Tech', 'JavaScript', 'Netscape ships JavaScript, making web pages programmable.'],
   ['1996-02', 'TIC', 'Telecommunications Act', 'Deregulates US telecom and broadcasting.'],
   ['1996-02', 'TIC', 'Section 230', 'Shields online platforms from liability for what their users post.'],
+  ['1996-03', 'Resume', 'D. E. Shaw', 'Senior Engineer, Advanced Development Group, Mar 1996 – May 1997.'],
   [
     '1997-07',
     'Macro',
@@ -56,15 +59,19 @@ export const technologyTimeline: PlotValue[][] = [
   ],
   ['1997-08', 'MIC', 'Boeing–McDonnell Douglas merger', 'Consolidation leaves a handful of prime defense contractors.'],
   ['1998-02', 'Tech', '“Open source”', 'The term is coined and Netscape releases its browser’s source code.'],
+  ['1998-03', 'Resume', 'Industrial Light & Magic', 'Senior FX Engineer, Mar 1998 – May 1999.'],
   ['1998-05', 'TIC', 'US v. Microsoft', 'Antitrust case over bundling Internet Explorer with Windows.'],
   ['1998-06', 'Tech', 'Colo (Equinix)', 'Equinix is founded to run neutral data centers where networks interconnect.'],
+  ['1998-09', 'Tech', 'Google', 'Google incorporates and launches its PageRank search engine.'],
   ['1998-09', 'FIC', 'LTCM bailout', 'The Fed brokers a rescue of the hedge fund Long-Term Capital Management.'],
   ['1999-01', 'Tech', 'BlackBerry', 'RIM’s BlackBerry brings push email to mobile devices.'],
   ['1999-03', 'Tech', 'Salesforce (SaaS)', 'Salesforce launches, selling software as a hosted subscription.'],
+  ['1999-04', 'Resume', 'TheBrain', 'Vice President, Engineering, Apr 1999 – Sep 2000.'],
   ['1999-11', 'FIC', 'Glass–Steagall repealed', 'Gramm–Leach–Bliley lets commercial and investment banks combine.'],
   ['2000-03', 'Macro', 'Dot-com crash', 'The Nasdaq falls almost 80% from its peak by 2002.'],
   ['2000-11', 'Robotics', 'Honda ASIMO', 'Honda unveils ASIMO, a walking humanoid robot.'],
   ['2000-12', 'FIC', 'Commodity Futures Modernization Act', 'Leaves credit default swaps largely unregulated.'],
+  ['2001-01', 'Resume', 'Silicongo', 'CEO and founder, Jan 2001 – Feb 2003; acquired by BEA Systems in 2004.'],
   ['2001-09', 'Macro', '9/11', 'Terrorist attacks on New York and Washington.'],
   ['2001-10', 'Macro', 'Patriot Act', 'Expands US government surveillance powers.'],
   ['2001-10', 'MIC', 'Afghanistan war', 'The US invades Afghanistan; armed Predator drones see combat.'],
@@ -75,6 +82,7 @@ export const technologyTimeline: PlotValue[][] = [
   ['2004-04', 'Tech', 'Gmail', 'Google launches Gmail with a gigabyte of free storage.'],
   ['2004-08', 'TIC', 'Google IPO', 'Google goes public.'],
   ['2004-10', 'Tech', 'Web 2.0', 'The term names a web of platforms and user-generated content.'],
+  ['2004-11', 'Resume', 'Google', 'Firestarter, Nov 2004 – Jan 2014.'],
   ['2004-12', 'Tech', 'MapReduce', 'Google publishes MapReduce for processing data across clusters.'],
   ['2005', 'Robotics', 'BigDog', 'Boston Dynamics’ DARPA-funded quadruped walks over rough terrain.'],
   ['2005-02', 'Tech', 'YouTube', 'YouTube launches video sharing for anyone.'],
@@ -131,7 +139,19 @@ export const technologyTimeline: PlotValue[][] = [
   ],
   ['2018-04', 'TIC', 'Zuckerberg testifies', 'Mark Zuckerberg testifies to Congress after Cambridge Analytica.'],
   ['2018-06', 'MIC', 'Google drops Maven', 'Google declines to renew the contract after employee protests.'],
+  [
+    '2018-06',
+    'Tech',
+    'GPT-1',
+    'OpenAI shows that generative pre-training of a transformer transfers to many language tasks.',
+  ],
   ['2018-07', 'Macro', 'US–China trade war', 'Tariffs escalate between the two largest economies.'],
+  [
+    '2019-02',
+    'Tech',
+    'GPT-2',
+    'OpenAI’s 1.5B-parameter model writes fluent text; its release is staged over misuse concerns.',
+  ],
   ['2019-10', 'TIC', 'JEDI contract', 'The Pentagon awards a $10B cloud contract to Microsoft; it is later canceled.'],
   [
     '2019-11',
@@ -142,9 +162,12 @@ export const technologyTimeline: PlotValue[][] = [
   ['2020-03', 'Macro', 'COVID', 'A global pandemic shuts down economies and accelerates remote work.'],
   ['2020-03', 'FIC', 'Fed backstops corporate bonds', 'The Fed buys corporate debt for the first time.'],
   ['2020-06', 'Robotics', 'Spot on sale', 'Boston Dynamics’ Spot quadruped goes on sale.'],
+  ['2020-06', 'Tech', 'GPT-3', 'A 175B-parameter model, offered through an API, does new tasks from a few examples.'],
   ['2020-10', 'TIC', 'DOJ sues Google', 'Antitrust suit over Google’s search monopoly.'],
   ['2020-12', 'TIC', 'FTC sues Facebook', 'Antitrust suit over the Instagram and WhatsApp acquisitions.'],
   ['2021-01', 'FIC', 'GameStop squeeze', 'Retail traders squeeze hedge funds shorting GameStop.'],
+  ['2021-04', 'Resume', 'DXOS', 'Founder, Apr 2021 – present.'],
+  ['2021-04', 'Resume', 'Braneframe', 'CEO and founder, Apr 2021 – present.'],
   ['2021-08', 'Robotics', 'Tesla Optimus announced', 'Tesla announces a humanoid robot at its AI Day.'],
   ['2022-02', 'Macro', 'Russia invades Ukraine', 'The largest war in Europe since 1945.'],
   ['2022-06', 'MIC', 'Arms to Ukraine', 'Western weapons such as HIMARS and Javelin flow to Ukraine.'],
@@ -157,9 +180,17 @@ export const technologyTimeline: PlotValue[][] = [
   ],
   ['2023-01', 'TIC', 'Microsoft invests $10B in OpenAI', 'Extends Microsoft’s partnership with OpenAI.'],
   ['2023-03', 'FIC', 'SVB collapse', 'Silicon Valley Bank fails in a fast, phone-driven bank run.'],
+  ['2023-03', 'Tech', 'Claude', 'Anthropic releases its Claude assistant.'],
   ['2023-07', 'Tech', 'Twitter becomes X', 'Twitter is rebranded as X.'],
   ['2023-08', 'MIC', 'Replicator', 'A Pentagon plan to field thousands of autonomous drones.'],
   ['2023-10', 'Macro', 'Gaza war', 'War follows the October 7 Hamas attack on Israel.'],
+  [
+    '2023-11',
+    'Tech',
+    'OpenAI ousts Sam Altman',
+    'The board fires its CEO; staff and Microsoft push back and he is reinstated five days later.',
+  ],
+  ['2023-11', 'Tech', 'Grok', 'xAI releases its Grok chatbot to X subscribers.'],
   ['2024-01', 'FIC', 'Spot bitcoin ETFs approved', 'Bitcoin enters mainstream brokerage accounts.'],
   ['2024-04', 'Robotics', 'Electric Atlas', 'Boston Dynamics retires the hydraulic Atlas for an all-electric version.'],
   [
