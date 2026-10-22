@@ -138,7 +138,7 @@ const LOG_BASE = 10;
 export const timelineFraction = (
   time: number,
   [start, end]: [number, number],
-  scale: Exclude<TimelineScale, 'even'> = 'linear',
+  scale: Exclude<TimelineScale, 'compact'> = 'linear',
 ) => {
   const fraction = (time - start) / (end - start || 1);
   if (scale === 'linear') {
@@ -169,13 +169,13 @@ export const evenFraction = (time: number, times: readonly number[]): number => 
   return (index + step) / (times.length - 1);
 };
 
-/** The fraction function for a scale; the even scale spaces the given event times equally. */
+/** The fraction function for a scale; the compact scale spaces the given event times equally. */
 export const createTimelineFraction = (
   scale: TimelineScale,
   range: [number, number],
   times: readonly number[],
 ): ((time: number) => number) => {
-  if (scale === 'even') {
+  if (scale === 'compact') {
     const sorted = [...new Set(times)].sort((a, b) => a - b);
     return (time) => evenFraction(time, sorted);
   }

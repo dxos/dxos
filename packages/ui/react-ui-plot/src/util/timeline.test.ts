@@ -187,8 +187,8 @@ describe('evenFraction', () => {
     expect(evenFraction(2000, times)).to.eq(1);
   });
 
-  test('the even scale ignores duplicate times', ({ expect }) => {
-    const fraction = createTimelineFraction('even', [0, 1000], [10, 0, 10, 1000]);
+  test('the compact scale ignores duplicate times', ({ expect }) => {
+    const fraction = createTimelineFraction('compact', [0, 1000], [10, 0, 10, 1000]);
     expect(fraction(10)).to.eq(0.5);
   });
 });

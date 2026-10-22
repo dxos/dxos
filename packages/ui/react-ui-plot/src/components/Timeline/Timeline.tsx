@@ -85,7 +85,7 @@ const CATEGORY_HUES: ChromaticPalette[] = [
   'lime',
 ];
 
-// Vertical step between events on the even scale.
+// Vertical step between events on the compact scale.
 const EVEN_STEP = 28;
 
 // Duration of the transition between scales.
@@ -401,7 +401,7 @@ export const Timeline = ({
     [lanes, events, range, filter],
   );
 
-  // The scale's fraction function; the even scale spaces the visible events' distinct times equally.
+  // The scale's fraction function; the compact scale spaces the visible events' distinct times equally.
   const fraction = useMemo(
     () =>
       range
@@ -417,7 +417,7 @@ export const Timeline = ({
   // Crowded lanes grow the content past the viewport, so labels stay near their events.
   const targetHeight = useMemo(() => {
     const times = new Set(laneEvents.flatMap((events) => events.map((event) => event.time)));
-    const evenHeight = scale === 'even' ? Math.max(0, times.size - 1) * metrics.evenStep + MARGIN * 2 : 0;
+    const evenHeight = scale === 'compact' ? Math.max(0, times.size - 1) * metrics.evenStep + MARGIN * 2 : 0;
     return range
       ? fitTimelineHeight(
           laneEvents.map((events) => events.map((event) => fraction(event.time))),

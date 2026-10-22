@@ -83,7 +83,7 @@ export const translations = [
         'timeline-scale.label': 'Scale',
         'timeline-scale.linear.label': 'Linear scale',
         'timeline-scale.log.label': 'Log scale (recent events get more room)',
-        'timeline-scale.even.label': 'Even spacing (one step per event)',
+        'timeline-scale.compact.label': 'Compact (one step per event)',
         'timeline-settings.label': 'Timeline settings',
         'delete-timeline.label': 'Delete timeline',
         'timeline-dates.label': 'Show dates in labels',

@@ -35,7 +35,7 @@ export const technologyTimeline: PlotValue[][] = [
   [
     '1952-03',
     'Tech/Hardware',
-    'MANIAC I',
+    'MANIAC',
     'The Los Alamos computer runs calculations for the hydrogen bomb.',
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/The_MANIAC%E2%80%99s_arithmetic_unit_nearing_completion_in_1952.jpg/500px-The_MANIAC%E2%80%99s_arithmetic_unit_nearing_completion_in_1952.jpg',
   ],
@@ -1215,7 +1215,7 @@ export const technologyTimelineOrder = [
   'Personal',
 ];
 
-/** Colors for `technologyTimeline`: Tech in shades of blue, the complexes in their own hues. */
+/** Colors for `technologyTimeline`: Tech in shades of blue, the complexes and Personal in their own hues. */
 export const technologyTimelineColors: Record<string, string> = {
   'Tech/Hardware': 'blue-300',
   'Tech/Software': 'blue-400',
@@ -1223,4 +1223,5 @@ export const technologyTimelineColors: Record<string, string> = {
   'Macro/FIC': 'green',
   'Macro/TIC': 'blue',
   'Macro/MIC': 'rose',
+  'Personal': 'indigo',
 };

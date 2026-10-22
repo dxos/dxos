@@ -110,3 +110,9 @@ export const Macro: Story = {
     hidden: ['Tech/Hardware', 'Tech/Software', 'Tech/AI', 'Personal'],
   },
 };
+
+export const Tech: Story = {
+  args: {
+    hidden: ['Macro', 'Macro/FIC', 'Macro/TIC', 'Macro/MIC', 'Personal'],
+  },
+};
