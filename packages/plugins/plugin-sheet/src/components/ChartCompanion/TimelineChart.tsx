@@ -41,7 +41,7 @@ export type TimelineChartProps = {
 /** A timeline chart: its own toolbar for how it is drawn, the timeline, and a status bar that filters events by text. */
 export const TimelineChart = ({ data, settings = {}, onChange, chrome = true }: TimelineChartProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { spine = 'center', scale = 'linear', hidden = [], dates = true, future = true, fontSize = 'auto' } = settings;
+  const { spine = 'center', scale = 'linear', hidden = [], dates = true, future = false, fontSize = 'auto' } = settings;
   const events = useMemo(() => toTimelineEvents(data).events, [data]);
 
   // The filter is a view of the moment, not a setting of the chart, so it is not saved.
@@ -132,7 +132,7 @@ export const TimelineChart = ({ data, settings = {}, onChange, chrome = true }: 
           },
           () => onChange({ future: !future }),
         )
-        // The scale is the main view choice, so it sits apart in the middle of the toolbar.
+        // The scale is the main view choice, so it sits apart at the end of the toolbar.
         .separator('gap')
         .group(
           'scale',
@@ -156,7 +156,6 @@ export const TimelineChart = ({ data, settings = {}, onChange, chrome = true }: 
               ),
             ),
         )
-        .separator('gap')
         .build(),
     [spine, scale, fontSize, dates, future, onChange],
   );

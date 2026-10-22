@@ -58,7 +58,7 @@ export const TimelineSettings = Schema.Struct({
   today: Schema.optional(Schema.Boolean.annotate({ title: 'Show today' })),
   /** Show each event's date beside its title; on by default. */
   dates: Schema.optional(Schema.Boolean.annotate({ title: 'Show dates' })),
-  /** Show events after today; on by default. */
+  /** Show events after today; off by default. */
   future: Schema.optional(Schema.Boolean.annotate({ title: 'Show future' })),
   fontSize: Schema.optional(TimelineFontSize.annotate({ title: 'Font size' })),
   /** Categories that are not drawn. */

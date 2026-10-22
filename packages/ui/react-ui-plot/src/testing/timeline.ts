@@ -139,13 +139,6 @@ export const technologyTimeline: PlotValue[][] = [
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/32/Googleplex_HQ_%28cropped%29.jpg/500px-Googleplex_HQ_%28cropped%29.jpg',
   ],
   [
-    '2004-11',
-    'Personal',
-    'Google',
-    'Firestarter, Nov 2004 – Jan 2014.',
-    'https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2f/Google_2015_logo.svg/500px-Google_2015_logo.svg.png',
-  ],
-  [
     '2006-03',
     'Tech/Software',
     'AWS',

@@ -318,7 +318,7 @@ export const Timeline = ({
     hidden,
     today = true,
     dates = true,
-    future = true,
+    future = false,
     order,
     colors,
     fontSize,
@@ -569,12 +569,15 @@ export const Timeline = ({
             return events[events.length - 1];
         }
       })();
+      // Handled keys stop here, so a host listening on the document (e.g., a slide deck) does not also act on them.
       if (target) {
         event.preventDefault();
+        event.stopPropagation();
         setHovered(undefined);
         select(target);
       } else if (event.key === 'Escape' && currentId) {
         event.preventDefault();
+        event.stopPropagation();
         select(undefined);
       }
     },
