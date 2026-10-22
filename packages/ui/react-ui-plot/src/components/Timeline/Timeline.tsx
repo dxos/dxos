@@ -497,17 +497,23 @@ export const Timeline = ({
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
-      const index = ordered.findIndex((candidate) => candidate.id === currentId);
+      // With Shift, the keys step through the current event's category only.
+      const events = event.shiftKey && current ? ordered.filter(({ column }) => column === current.column) : ordered;
+      const index = events.findIndex((candidate) => candidate.id === currentId);
+      // With ⌘ (Ctrl elsewhere), the arrows jump to the first or last event.
+      const toEnd = event.metaKey || event.ctrlKey;
       const target = (() => {
         switch (event.key) {
           case 'ArrowDown':
-            return ordered[index < 0 ? 0 : Math.min(index + 1, ordered.length - 1)];
+            return events[
+              toEnd || index < 0 ? (toEnd ? events.length - 1 : 0) : Math.min(index + 1, events.length - 1)
+            ];
           case 'ArrowUp':
-            return ordered[index < 0 ? ordered.length - 1 : Math.max(index - 1, 0)];
+            return events[toEnd ? 0 : index < 0 ? events.length - 1 : Math.max(index - 1, 0)];
           case 'Home':
-            return ordered[0];
+            return events[0];
           case 'End':
-            return ordered[ordered.length - 1];
+            return events[events.length - 1];
         }
       })();
       if (target) {
@@ -519,7 +525,7 @@ export const Timeline = ({
         select(undefined);
       }
     },
-    [ordered, currentId, select],
+    [ordered, current, currentId, select],
   );
 
   const card = hovered ?? current;
