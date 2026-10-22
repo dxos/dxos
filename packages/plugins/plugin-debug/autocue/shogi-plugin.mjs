@@ -235,6 +235,29 @@ export const steps = [
         await notice.first().click();
       }
 
+      // Publishing and the sandbox's token need an account bound to this identity; a fresh profile has none, and the
+      // `test+*@dxos.org` hatch (open on dev and preview, as the assistant evals use it) binds one.
+      const bound = await page.evaluate(async () => {
+        const identity = dxos.client.halo.identity.get();
+        const key = Array.from(identity.identityKey.data, (byte) => byte.toString(16).padStart(2, '0')).join('');
+        const response = await fetch(
+          new URL('/hub/account/login', dxos.client.config.values.runtime.services.edge.url),
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: `test+autocue-${key.slice(0, 12)}@dxos.org`,
+              identityDid: identity.did,
+              identityKey: key,
+            }),
+          },
+        );
+        return response.ok && (await response.json()).admitted === true;
+      });
+      if (!bound) {
+        throw new Error('the test-account hatch did not admit this identity; it is open on dev and preview only');
+      }
+
       // A delegated chat runs on the settings' default model, not the chat picker's.
       await demo.click({ selector: '[data-testid="treeView.appSettings"]', hud: false });
       await page.waitForURL(/dxos:settings/, { timeout: 10_000 });
@@ -270,10 +293,19 @@ export const steps = [
       await caption(demo, 'Create a space from the Shogi Plugin template');
       await demo.click({ selector: '[data-testid="spacePlugin.addSpace"]', label: 'Add space' });
       await demo.click({ selector: 'role=menuitem[name="Create space"]', label: 'Create space' });
-      await demo.click({
-        selector: `[data-testid="create-space-dialog"] [role="option"]:has-text("${TEMPLATE}")`,
-        label: TEMPLATE,
-      });
+      // The first click can land while the dialog is still settling and select nothing; selecting a template names
+      // the space after it, so the name field is the proof the click took.
+      const name = page.locator('[data-testid="create-space-dialog"] input').first();
+      for (let attempt = 0; (await name.inputValue()) !== TEMPLATE; attempt++) {
+        if (attempt === 3) {
+          throw new Error(`the "${TEMPLATE}" template did not select`);
+        }
+        await demo.click({
+          selector: `[data-testid="create-space-dialog"] [role="option"]:has-text("${TEMPLATE}")`,
+          label: TEMPLATE,
+        });
+        await page.waitForTimeout(BEAT / 2);
+      }
       await page.waitForTimeout(BEAT);
       const before = await page.evaluate(() => dxos.spaces().map((space) => space.id));
       await demo.click({ selector: '[data-testid="create-space-dialog"] button:has-text("Create")', label: 'Create' });
