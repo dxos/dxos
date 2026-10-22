@@ -1005,7 +1005,7 @@ export const technologyTimeline: PlotValue[][] = [
   ],
   [
     '2023-11',
-    'Tech/AI',
+    'Macro/TIC',
     'OpenAI ousts Sam Altman',
     'The board fires its CEO; staff and Microsoft push back and he is reinstated five days later.',
     null,
