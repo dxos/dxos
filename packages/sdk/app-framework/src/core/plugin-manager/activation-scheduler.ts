@@ -341,9 +341,31 @@ export class ActivationScheduler {
         }
       }
 
-      // Unscoped follow-up rounds: a retried module's consumers never activated while it was
-      // broken, so they are not in the candidate set but become runnable once it contributes.
-      return yield* this.runDependencyPass({ candidateModules: [...modules, ...dependents] });
+      // The edited modules run first, alone; their dependents then go through the ordinary pass,
+      // which admits a module only once its requires are satisfied. Running both as one candidate
+      // set would leave a dependent of a failed edit waiting out the activation timeout, holding
+      // up the next edit. Consumers that never activated while a module was broken are admitted
+      // by the same pass.
+      const reloaded = [...modules, ...dependents];
+      reloaded.forEach((module) => this.#state.reloading.add(module.id));
+      dependents.forEach((module) => this.#state.reactivateOnNextPass.add(module.id));
+      return yield* Effect.gen({ self: this }, function* () {
+        const ran = yield* this.runDependencyPass({ candidateModules: modules, scopedToCandidates: true });
+        yield* this.runDependencyPass();
+        const active = this.#state.getActiveIds();
+        return ran && reloaded.every((module) => active.includes(module.id));
+      }).pipe(
+        // Failed ids stay flagged: the supervisor reads the error message asynchronously, and the
+        // module remains an edit in progress until a later reload activates it.
+        Effect.ensuring(
+          Effect.sync(() => {
+            const active = this.#state.getActiveIds();
+            reloaded
+              .filter((module) => active.includes(module.id))
+              .forEach((module) => this.#state.reloading.delete(module.id));
+          }),
+        ),
+      );
     });
   }
 

@@ -54,6 +54,7 @@ import { log } from '@dxos/log';
 
 import type * as ActivationEvent from '../activation-event.ts';
 import * as CapabilityManager from '../capability-manager.ts';
+import * as HotModules from '../hot-modules.ts';
 import * as Plugin from '../plugin.ts';
 // Imported with a `PluginRegistry` alias because the unrelated `@effect/atom-react`
 // `Registry` is already imported above; from outside this file the namespace is
@@ -361,6 +362,7 @@ class ManagerImpl implements PluginManager {
       onRemove,
     });
     this._superviseFailures();
+    HotModules.register(this);
 
     // The initialization flag lets event dispatch wait for the constructor-launched
     // core/enabled `enable()` calls to finish registering modules. Lazy plugins make
@@ -420,7 +422,7 @@ class ManagerImpl implements PluginManager {
    * module id (structural failures, lazy plugin loads) are handled by their own paths.
    */
   private _autoDisableOnModuleError(message: ActivationMessage): void {
-    if (message.state !== 'error' || message.module === undefined) {
+    if (message.state !== 'error' || message.module === undefined || this._state.reloading.has(message.module)) {
       return;
     }
     const pluginId = this._state.pluginIdOfModule(message.module);
