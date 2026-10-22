@@ -23,6 +23,7 @@ export const technologyTimeline: PlotValue[][] = [
   ['1981-03', 'Macro/MIC', 'Reagan defense buildup', 'Peacetime defense spending rises sharply through the decade.'],
   ['1981-06', 'Macro/FIC', 'Volcker shock', 'The Fed raises rates to about 20% to break inflation.'],
   ['1981-08', 'Tech/Hardware', 'IBM PC', 'IBM’s open-architecture PC makes the personal computer a business standard.'],
+  ['1982', 'Personal', 'ZX Spectrum', 'ZX Spectrum, 1982.'],
   [
     '1982-02',
     'Tech/Software',
@@ -60,6 +61,7 @@ export const technologyTimeline: PlotValue[][] = [
     'Honda starts humanoid research',
     'Honda begins the walking-robot program that leads to ASIMO.',
   ],
+  ['1987', 'Personal', 'Amiga', 'Amiga, 1987.'],
   ['1987-10', 'Macro/FIC', 'Black Monday', 'The Dow falls 22.6% in a single day.'],
   ['1989-11', 'Macro', 'Berlin Wall falls', 'The border opens and the Cold War division of Europe ends.'],
   ['1989-12', 'Tech/Software', 'Lotus Notes', 'Groupware for email and shared documents, replicated across offices.'],
