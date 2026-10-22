@@ -12,7 +12,7 @@ import * as TimelineSpace from './TimelineSpace.ts';
 describe('Timeline project template', () => {
   test('builds the project, its feature map and its tasks', { timeout: 120_000 }, async ({ expect }) => {
     const { result, json } = await EffectEx.runPromise(buildArchive(TimelineSpace.make()));
-    const { project, features, tasks, fixture } = result.timeline;
+    const { project, features, tasks, fixture, spec } = result.timeline;
 
     expect(project.name).toBe('Timeline');
     expect(features.map((feature) => feature.name)).toEqual([
@@ -37,6 +37,12 @@ describe('Timeline project template', () => {
     expect(fixtureTask.status).toBe('done');
     expect(fixtureTask.artifacts?.map((ref) => ref.uri.endsWith(fixture.id))).toEqual([true]);
     expect(project.artifacts.some((ref) => ref.uri.endsWith(fixture.id))).toBe(true);
+
+    // The spec is filed on the project, and every feature cites one of its blocks.
+    expect(project.artifacts.some((ref) => ref.uri.endsWith(spec.id))).toBe(true);
+    expect(features.map((feature) => feature.specs)).toEqual(
+      [1, 2, 3, 4, 5].map((index) => [`timeline/SPEC.mdl#F-${index}`]),
+    );
     expect(planned.every((task) => task.status === 'todo')).toBe(true);
     expect(planned[2].dependsOn?.map((ref) => ref.uri.endsWith(planned[1].id))).toEqual([true]);
 

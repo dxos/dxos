@@ -12,8 +12,9 @@ import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import * as Feature from '@dxos/plugin-projects/Feature';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import { Text } from '@dxos/schema';
-import { Outline, Task, TaskSet } from '@dxos/types';
+import { Outline, Spec, Task, TaskSet } from '@dxos/types';
 
+import specContent from '../../../assets/timeline/SPEC.mdl?raw';
 import { makeEvents } from '../presenter/partial.ts';
 
 //
@@ -26,9 +27,11 @@ import { makeEvents } from '../presenter/partial.ts';
 const PROJECT_SKILL_KEY = 'org.dxos.skill.project';
 const DRAWING_SKILL_KEY = 'org.dxos.skill.drawing';
 
-const SHEET_SPEC = 'packages/plugins/plugin-sheet/PLUGIN.mdl';
-const PRESENTER_SPEC = 'packages/plugins/plugin-presenter/PLUGIN.mdl';
-const DEBUG_SPEC = 'packages/plugins/plugin-debug/PLUGIN.mdl';
+/**
+ * The spec's repo-style path. Features cite `<path>#F-n`, and the spec carries the path as its foreign key, so a
+ * feature card opens this object rather than a GitHub URL that does not exist for a template.
+ */
+const SPEC_PATH = 'timeline/SPEC.mdl';
 
 const INSTRUCTIONS = `This project tracks the timeline chart: a sheet range with one event per row, drawn along a \
 vertical spine, and the work around it. Keep the feature map current: each feature's status, its parts as \
@@ -52,7 +55,7 @@ const FEATURES: readonly FeatureSeed[] = [
     name: 'Chart objects',
     description: 'Each chart is its own object, owned by its sheet, so a document can embed it.',
     status: 'operational',
-    spec: `${SHEET_SPEC}#F-8`,
+    spec: `${SPEC_PATH}#F-1`,
     subfeatures: [
       { name: 'Chart type', status: 'operational' },
       { name: 'Sheet migration', status: 'operational' },
@@ -64,7 +67,7 @@ const FEATURES: readonly FeatureSeed[] = [
     name: 'Timeline chart',
     description: 'Events along a vertical spine: spine side, log, linear or compact spacing, and an event card.',
     status: 'prototype',
-    spec: `${SHEET_SPEC}#F-9`,
+    spec: `${SPEC_PATH}#F-2`,
     subfeatures: [
       { name: 'Spines and scales', status: 'operational' },
       { name: 'Category hierarchy and colors', status: 'operational' },
@@ -79,7 +82,7 @@ const FEATURES: readonly FeatureSeed[] = [
     name: 'Slide embeds',
     description: 'A presented deck shows an embedded object over the whole viewport, keeping its keys.',
     status: 'prototype',
-    spec: PRESENTER_SPEC,
+    spec: `${SPEC_PATH}#F-3`,
     subfeatures: [
       { name: 'Full-viewport embeds', status: 'operational' },
       { name: 'Keyboard isolation', status: 'operational' },
@@ -91,7 +94,7 @@ const FEATURES: readonly FeatureSeed[] = [
     name: 'Presenter space',
     description: 'A space template with the events sheet, its timeline chart and a deck built from markdown.',
     status: 'prototype',
-    spec: DEBUG_SPEC,
+    spec: `${SPEC_PATH}#F-4`,
     subfeatures: [
       { name: 'Deck from a markdown template', status: 'operational' },
       { name: 'Events dataset', status: 'operational' },
@@ -103,7 +106,7 @@ const FEATURES: readonly FeatureSeed[] = [
     name: 'Timeline research skill',
     description: 'Researches the events for a range of years and a set of categories, and fills a sheet with them.',
     status: 'planned',
-    spec: `${SHEET_SPEC}#F-10`,
+    spec: `${SPEC_PATH}#F-5`,
     needs: ['timeline'],
   },
 ];
@@ -128,7 +131,8 @@ const TASKS: readonly TaskSeed[] = [
   },
   {
     title: 'Complete the spec',
-    description: `Write feat blocks for chart objects (F-8), the timeline chart (F-9) and the research skill (F-10) in ${SHEET_SPEC}, with scenarios, and divide the work into phases.`,
+    description:
+      'The Timeline spec in this space writes F-1 to F-4 and only names F-5, the research skill. Write its feat block, add scenarios for F-3 and F-4, and append a decision to the Changelog.',
     feature: 'timeline',
   },
   {
@@ -139,7 +143,8 @@ const TASKS: readonly TaskSeed[] = [
   },
   {
     title: 'Implement phase 1 of the spec',
-    description: `Build what the spec's first phase states, against the test fixture, and check each requirement as it is met (${SHEET_SPEC}).`,
+    description:
+      "Build what the spec's first phase states (F-1 and F-2), against the test fixture, and check each requirement as it is met.",
     feature: 'timeline',
   },
   {
@@ -163,6 +168,7 @@ export type Provides = {
   tasks: Task.Task[];
   /** The events sheet the fixture task produced. */
   fixture: Sheet.Sheet;
+  spec: Spec.Spec;
 };
 
 export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timeline', {
@@ -179,11 +185,19 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
     Feature.Implements,
     Sheet.Sheet,
     Sheet.Chart,
+    Spec.Spec,
   ],
   run: () =>
     Effect.gen(function* () {
       const { sheet: events } = makeEvents();
       const fixture = yield* Database.add(events);
+      const spec = yield* Database.add(
+        Obj.make(Spec.Spec, {
+          name: 'Timeline',
+          content: Ref.make(Text.make({ content: specContent })),
+          [Obj.Meta]: { keys: [{ source: Feature.SPEC_KEY_SOURCE, id: SPEC_PATH }] },
+        }),
+      );
 
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Timeline' }));
       const tasks = TASKS.map(({ title, description, fixture: isFixture }) =>
@@ -220,7 +234,7 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
           status: 'active',
           instructions: Ref.make(instructions),
           taskSet: Ref.make(taskSet),
-          artifacts: [Ref.make(fixture)],
+          artifacts: [Ref.make(spec), Ref.make(fixture)],
         }),
       );
 
@@ -261,6 +275,6 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
         );
       }
 
-      return { project, features: [...byKey.values()], tasks, fixture };
+      return { project, features: [...byKey.values()], tasks, fixture, spec };
     }),
 });
