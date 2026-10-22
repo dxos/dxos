@@ -3,14 +3,21 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Operation from '@dxos/compute/Operation';
 
 import { StoryRole } from '../modules/index.ts';
-import { Calculate, CalculatorSkill, ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
+import {
+  Calculate,
+  CalculatorSkill,
+  ModuleContainer,
+  createDecorators,
+  storyParameters,
+  submitPrompt,
+} from '../testing/index.ts';
 
 const { text, reasoning, toolCall } = ScriptedLanguageModel;
 
@@ -176,19 +183,6 @@ const script: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
   return { parts: [text('Done.')] };
 };
 
-/** Types a prompt into the chat editor and submits it. */
-const submitPrompt = async (canvasElement: HTMLElement, value: string) => {
-  const canvas = within(canvasElement);
-  const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
-  const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
-  if (!editor) {
-    throw new Error('Chat editor not found.');
-  }
-  await userEvent.click(editor);
-  await userEvent.type(editor, value, { delay: 15 });
-  await userEvent.keyboard('{Enter}');
-};
-
 const decorators = createDecorators({
   skills: [CalculatorSkill.key],
   scripted: script,
@@ -212,8 +206,8 @@ export const Scripted: Story = {
       timeout: 30_000,
     });
     await submitPrompt(canvasElement, PROMPTS.quick);
-    await canvas.findByText(/17 × 23 = 391/, {}, { timeout: 30_000 });
-    await canvas.findByText(/two extra points a year/, {}, { timeout: 120_000 });
+    await canvas.findAllByText(/17 × 23 = 391/, {}, { timeout: 30_000 });
+    await canvas.findAllByText(/two extra points a year/, {}, { timeout: 120_000 });
   },
 };
 

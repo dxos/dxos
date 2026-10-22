@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/reactivity/Atom';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, within } from 'storybook/test';
 
 import { Model } from '@dxos/ai';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
@@ -30,6 +30,7 @@ import {
   addToRootCollection,
   createDecorators,
   storyParameters,
+  submitPrompt,
 } from '../testing/index.ts';
 
 const { text, reasoning, toolCall } = ScriptedLanguageModel;
@@ -52,7 +53,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** The prompts the demo sends, in order. */
-export const PROMPTS = {
+const PROMPTS = {
   plan: 'Draft a three-step plan for migrating the chat store to events.',
   claude: '@claude Find where TrajectoryStore folds the prompt and list the files.',
   quick: 'Meanwhile, how many events does a turn write at least?',
@@ -186,19 +187,6 @@ const decorators = () =>
       });
     },
   });
-
-/** Types a prompt into the chat editor and submits it. */
-const submitPrompt = async (canvasElement: HTMLElement, value: string) => {
-  const canvas = within(canvasElement);
-  const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
-  const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
-  if (!editor) {
-    throw new Error('Chat editor not found.');
-  }
-  await userEvent.click(editor);
-  await userEvent.type(editor, value, { delay: 10 });
-  await userEvent.keyboard('{Enter}');
-};
 
 /** Scripted: the plan runs on DeepSeek while Claude Code answers a request addressed to it, and a quick one lands. */
 export const Scripted: Story = {
