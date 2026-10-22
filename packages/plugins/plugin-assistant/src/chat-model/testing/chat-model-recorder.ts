@@ -7,6 +7,7 @@ import type * as Atom from 'effect/reactivity/Atom';
 import type * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 
 import type * as Trace from '@dxos/compute/Trace';
+import { type LaneCardData } from '@dxos/react-ui-assistant/types';
 import { type ContentBlock, type Message } from '@dxos/types';
 
 import { type ChatModel } from '../chat-model.ts';
@@ -231,7 +232,25 @@ const formatBlock = (block: ContentBlock.Any): string => {
 /** Blocks that carry bookkeeping rather than anything the reader sees in the turn. */
 const HIDDEN_BLOCKS = new Set(['stats']);
 
+/** A lane as the log names it: the first word of its title. */
+const laneName = (title: string | undefined): string => title?.split(/\s+/)[0] ?? '?';
+
+/** A background lane's card, as `card<Name:status>`; undefined for any other row. */
+const formatCard = (message: Message.Message): string | undefined => {
+  const [block] = message.blocks;
+  const card = block?._tag === 'text' ? /^<lane>(.*)<\/lane>$/s.exec(block.text)?.[1] : undefined;
+  if (card === undefined) {
+    return undefined;
+  }
+  const data: LaneCardData = JSON.parse(card.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'));
+  return `card<${laneName(data.lane.title)}:${data.lane.status}>`;
+};
+
 const formatMessage = (message: Message.Message, thread: ThreadProjection): string | undefined => {
+  const card = formatCard(message);
+  if (card !== undefined) {
+    return card;
+  }
   const blocks = message.blocks.filter((block) => !HIDDEN_BLOCKS.has(block._tag));
   if (blocks.length === 0) {
     return undefined;
@@ -239,7 +258,10 @@ const formatMessage = (message: Message.Message, thread: ThreadProjection): stri
   const delivery = thread.delivery.get(message.id);
   const role = message.sender.role ?? '?';
   const status = delivery ? `[${delivery.status}]` : '';
-  return `${role}${status}:${blocks.map(formatBlock).join('+')}`;
+  // A row shown in a lane's gutter names its lane, so the log shows which lane each row sits in.
+  const lane = thread.lanes?.get(message.id);
+  const inLane = lane ? `<${laneName(lane.title)}>` : '';
+  return `${role}${status}${inLane}:${blocks.map(formatBlock).join('+')}`;
 };
 
 /** One entry per visible row: the role, the delivery status of a prompt row, and its blocks. */

@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import type * as acp from '@agentclientprotocol/sdk';
+import { createWebSocketStream } from '@agentclientprotocol/sdk/experimental/ws-client';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import type * as Exit from 'effect/Exit';
@@ -161,6 +162,19 @@ export type AgentOptions = {
   device?: () => string | undefined;
 };
 
+/**
+ * Connects to an agent helper the host started itself (a demo, a test harness) rather than the one Composer launches:
+ * its `port` and `token` are known up front.
+ */
+export const connectTo =
+  ({ port, token, agent }: { port: number; token: string; agent: string }): AgentOptions['connect'] =>
+  (cwd, toolsToken) =>
+    Effect.succeed(
+      createWebSocketStream(Protocol.acpUrl({ port, agent, cwd, ...(toolsToken ? { mcpToken: toolsToken } : {}) }), {
+        protocols: [Protocol.SUBPROTOCOL, Protocol.tokenProtocol(token)],
+      }),
+    );
+
 type TurnEvent =
   | { _tag: 'update'; update: acp.SessionUpdate }
   | { _tag: 'permission'; request: acp.RequestPermissionRequest }
@@ -209,7 +223,7 @@ export const runTurn = (
     const resume = sessionIdOf(chat, options.id);
     const produced: Message.Message[] = [];
     const resumed = yield* TrajectoryStore.resumeInterrupted(feed, request.source);
-    const turn = yield* TrajectoryStore.beginTurn(feed, { model: request.model });
+    const turn = yield* TrajectoryStore.beginTurn(feed, { model: request.model, thread: request.thread });
     const append = (messages: Message.Message[]) =>
       Effect.gen(function* () {
         if (messages.length === 0) {

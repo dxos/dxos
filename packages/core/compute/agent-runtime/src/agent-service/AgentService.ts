@@ -24,6 +24,7 @@ import type { ContentBlock } from '@dxos/types';
 
 import { AGENT_PROCESS_KEY, type AgentInput, AgentProcess, type AgentProcessDefinition } from './agent-process.ts';
 import { type DelegationStrategy } from './delegation-strategy.ts';
+import { type ThreadingOptions } from './thread-scheduler.ts';
 import { type MakeTurnProducer } from './turn-producer.ts';
 
 /** Live handle to a spawned agent process, carrying its `HarnessControl` RPC surface. */
@@ -116,6 +117,8 @@ export interface Options {
   processes?: () => readonly AgentProcessDefinition[];
   /** Keep each session's process resident between turns (see `AgentProcessOptions.resident`). */
   resident?: boolean;
+  /** Light threads for processes spawned from now on (see `AgentProcessOptions.threading`). */
+  threading?: () => ThreadingOptions | undefined;
 }
 
 /**
@@ -196,6 +199,7 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
           enableToolBackgrounding: opts?.enableToolBackgrounding,
           delegationStrategy: opts?.delegationStrategy,
           resident: opts?.resident,
+          threading: opts?.threading,
         });
 
       /**

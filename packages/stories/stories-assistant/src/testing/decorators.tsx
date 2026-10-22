@@ -11,7 +11,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import React, { type ReactNode } from 'react';
+import React, { type ReactNode, useEffect, useState } from 'react';
 
 import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
@@ -44,6 +44,8 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { AccessToken } from '@dxos/link';
+import type * as Assistant from '@dxos/plugin-assistant/Assistant';
+import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import { translations as assistantTranslations } from '@dxos/plugin-assistant/translations';
@@ -150,6 +152,8 @@ type DecoratorsProps = Merge<
      * (supervisor + sub-agents).
      */
     scripted?: ScriptedLanguageModel.Script;
+    /** Assistant settings the story starts with (e.g. parallel threads), applied before the chat renders. */
+    assistantSettings?: Partial<Assistant.Settings>;
   },
   Omit<StoryDecoratorsProps, 'Wrapper' | 'setupEvents'>,
   Pick<StoryPluginOptions, 'onChatCreated' | 'createAgent' | 'onReady'>
@@ -209,6 +213,21 @@ const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: R
   return <>{children}</>;
 };
 
+/**
+ * Applies story assistant settings before rendering its children, so an agent spawned by the first prompt already
+ * reads them.
+ */
+const SettingsApplier = ({ settings, children }: { settings: Partial<Assistant.Settings>; children: ReactNode }) => {
+  const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
+  const atom = Hooks.useCapability(AssistantCapabilities.Settings);
+  const [applied, setApplied] = useState(false);
+  useEffect(() => {
+    atomRegistry.set(atom, { ...atomRegistry.get(atom), ...settings });
+    setApplied(true);
+  }, [atomRegistry, atom, settings]);
+  return applied ? <>{children}</> : null;
+};
+
 /** Maps the assistant-domain props onto the shared harness props. */
 const toStoryDecoratorsProps = ({
   config: configProp = config.remote,
@@ -219,6 +238,7 @@ const toStoryDecoratorsProps = ({
   plugins = [],
   onChatCreated,
   onReady,
+  assistantSettings,
   ...props
 }: DecoratorsProps): StoryDecoratorsProps => ({
   ...props,
@@ -252,7 +272,13 @@ const toStoryDecoratorsProps = ({
     StoryPlugin({ onChatCreated, createAgent, onReady }),
     ...plugins,
   ],
-  Wrapper: skills?.length ? ({ children }) => <SkillBinder skills={skills}>{children}</SkillBinder> : undefined,
+  Wrapper:
+    skills?.length || assistantSettings
+      ? ({ children }) => {
+          const bound = skills?.length ? <SkillBinder skills={skills}>{children}</SkillBinder> : children;
+          return assistantSettings ? <SettingsApplier settings={assistantSettings}>{bound}</SettingsApplier> : bound;
+        }
+      : undefined,
 });
 
 /**

@@ -21,13 +21,13 @@ import {
 } from '@dxos/react-ui-feed';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import { type Actor } from '@dxos/types';
+import { type Actor, type Message } from '@dxos/types';
 import { type ObjectLinkProps, type WidgetDef, type XmlWidgetRegistry } from '@dxos/ui-editor';
 
 import { assistantRegistry } from '../../registry.tsx';
 import { type CreateRendererOptions, createRenderer, estimateRow } from '../../renderer.ts';
 import { translationKey } from '../../translations.ts';
-import { type ChatThreadEvent, type ChatView } from '../../types.ts';
+import { type ChatThreadEvent, type ChatView, type ThreadLane } from '../../types.ts';
 import { type MessageAuthor, MessageChrome, MessageChromeProvider, hasOtherAuthors } from '../MessageChrome/index.ts';
 
 //
@@ -74,6 +74,8 @@ type ChatThreadRootProps = PropsWithChildren<
     userDid?: string;
     /** Resolves a prompt's sender to the profile its avatar shows. */
     getAuthor?: (sender: Actor.Actor) => MessageAuthor | undefined;
+    /** The lane each message belongs to, in a chat that ran several requests at once (light threads). */
+    getLane?: (message: Message.Message) => ThreadLane | undefined;
     /** Blank lines kept below the tail at rest — breathing room above the host's composer. */
     tailLines?: number;
     debug?: boolean;
@@ -105,6 +107,7 @@ const ChatThreadRoot = ({
   userHue,
   userDid,
   getAuthor,
+  getLane,
   tailLines,
   debug,
   rewind = true,
@@ -146,6 +149,7 @@ const ChatThreadRoot = ({
         userDid={userDid}
         showAuthors={showAuthors}
         getAuthor={getAuthor}
+        getLane={getLane}
       >
         <MessageList.Root
           model={model}

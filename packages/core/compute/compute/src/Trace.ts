@@ -21,8 +21,25 @@ import * as Trigger from './types/Trigger.ts';
  * Exposed to processes and operations to record events to the trace.
  */
 export interface Writer {
-  write<T>(eventType: EventType<T>, payload: NoInfer<T>): void;
+  /** `meta` carries what only the writing fiber knows, such as its {@link CurrentThread}. */
+  write<T>(eventType: EventType<T>, payload: NoInfer<T>, meta?: FiberMeta): void;
 }
+
+/**
+ * Meta a {@link Writer} cannot know from its process alone.
+ */
+export type FiberMeta = Pick<Meta, 'thread'>;
+
+/**
+ * Lane of the agent turn the current fiber runs (its light thread, or the prompt a turn on main answers), stamped
+ * on its events as {@link Meta.thread}
+ * and on the processes it spawns as {@link Meta.parentThread}: one process runs several turns at once,
+ * and the pid alone cannot tell their events apart.
+ */
+export const CurrentThread: Context.Reference<string | undefined> = Context.Reference<string | undefined>(
+  '@dxos/compute/Trace/CurrentThread',
+  { defaultValue: () => undefined },
+);
 
 /**
  * Service that writes events to the trace.
@@ -37,7 +54,8 @@ export function write<T>(eventType: EventType<T>, payload: NoInfer<T>): Effect.E
   return Effect.gen(function* () {
     log('trace write', { key: eventType.key, isEphemeral: eventType.isEphemeral });
     const writer = yield* TraceService;
-    writer.write(eventType, payload);
+    const thread = yield* CurrentThread;
+    writer.write(eventType, payload, thread === undefined ? undefined : { thread });
   });
 }
 
@@ -133,6 +151,16 @@ export const Meta = Schema.Struct({
    * Extensible name informing which runtime executed the code that produced the event.
    */
   runtimeName: Schema.optional(RuntimeName),
+
+  /**
+   * Lane of the process's turn that produced the event (see {@link CurrentThread}).
+   */
+  thread: Schema.optional(Schema.String),
+
+  /**
+   * Light thread of the parent process's turn that spawned this process.
+   */
+  parentThread: Schema.optional(Schema.String),
 });
 export type Meta = Schema.Schema.Type<typeof Meta>;
 
@@ -312,6 +340,8 @@ const encodeMetaForWire = (meta: Meta): Meta => ({
   space: meta.space,
   toolCallId: meta.toolCallId,
   runtimeName: meta.runtimeName,
+  thread: meta.thread,
+  parentThread: meta.parentThread,
 });
 
 /**
@@ -437,10 +467,10 @@ export const testTraceService = (
       const sink = yield* TraceSink;
       const clock = opts.clock ?? Date.now;
       return {
-        write: (event, data) => {
+        write: (event, data, fiberMeta) => {
           sink.write(
             Obj.make(Message, {
-              meta: opts.meta ?? {},
+              meta: { ...opts.meta, ...fiberMeta },
               isEphemeral: event.isEphemeral,
               events: [{ type: event.key, timestamp: clock(), data }],
             }),

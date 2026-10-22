@@ -15,3 +15,4 @@ export {
 } from './agent-process.ts';
 export { type Delegation, type DelegationStrategy } from './delegation-strategy.ts';
 export * from './turn-producer.ts';
+export * from './thread-scheduler.ts';

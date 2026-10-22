@@ -213,6 +213,8 @@ export const Compact = Schema.TaggedStruct('compact', {
   from: EventId,
   to: EventId,
   summary: Schema.Array(ContentBlock.Any),
+  /** Threads whose merged entries the range holds; a thread still running is never in it. */
+  closure: Schema.optional(Schema.Array(EventId)),
 });
 export type Compact = Schema.Schema.Type<typeof Compact>;
 
@@ -250,17 +252,23 @@ export type Fork = Schema.Schema.Type<typeof Fork>;
 // Threads
 //
 
-export const ThreadMode = Schema.Literals(['fork', 'fresh']);
+/**
+ * `light` is a fork of main that also starts with a transcript of each thread still running beside it (its
+ * `siblings`), so a prompt sent while the agent works runs in parallel with that work.
+ */
+export const ThreadMode = Schema.Literals(['fork', 'fresh', 'light']);
 export type ThreadMode = Schema.Schema.Type<typeof ThreadMode>;
 
 /**
- * Opens a thread whose id is this event's id.
+ * Opens a thread whose id is this event's id; the event's `sender` owns the thread.
  */
 export const ThreadOpen = Schema.TaggedStruct('threadOpen', {
   mode: ThreadMode,
-  /** Where a `fork` branches from; a `fresh` thread starts with no history. */
+  /** Where a `fork` or `light` thread branches from; a `fresh` thread starts with no history. */
   from: Schema.optional(ThreadOrigin),
   purpose: Schema.optional(Schema.String),
+  /** `light` only: threads (or turns on main) still running when it opened, whose work it starts with. */
+  siblings: Schema.optional(Schema.Array(EventId)),
 });
 export type ThreadOpen = Schema.Schema.Type<typeof ThreadOpen>;
 
@@ -273,6 +281,14 @@ export const ThreadMerge = Schema.TaggedStruct('threadMerge', {
   summary: Schema.optional(Schema.Array(ContentBlock.Any)),
 });
 export type ThreadMerge = Schema.Schema.Type<typeof ThreadMerge>;
+
+/**
+ * A turn waits for another thread to end before it continues; written in the waiting turn's thread.
+ */
+export const ThreadWait = Schema.TaggedStruct('threadWait', {
+  on: EventId,
+});
+export type ThreadWait = Schema.Schema.Type<typeof ThreadWait>;
 
 export const ThreadStatus = Schema.Literals(['completed', 'failed', 'cancelled']);
 export type ThreadStatus = Schema.Schema.Type<typeof ThreadStatus>;
@@ -329,6 +345,7 @@ export const Payload = Schema.Union([
   Fork,
   ThreadOpen,
   ThreadMerge,
+  ThreadWait,
   ThreadClose,
   ModelChange,
   Custom,

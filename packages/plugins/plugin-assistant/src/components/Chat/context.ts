@@ -7,7 +7,7 @@ import type * as Chat from '@dxos/assistant/Chat';
 import { type Event } from '@dxos/async';
 import { type Database } from '@dxos/echo';
 import { createContext } from '@dxos/react-hooks';
-import { type ChatThreadController } from '@dxos/react-ui-assistant';
+import { type ChatThreadController, type ThreadLane } from '@dxos/react-ui-assistant';
 import { type MessageRange } from '@dxos/react-ui-feed';
 import { type Message } from '@dxos/types';
 
@@ -51,6 +51,8 @@ export type ChatThreadContextValue = {
   messages: Message.Message[];
   /** How many rows at the end of `messages` are prompts the agent has not taken up yet. */
   tail: number;
+  /** The lane of each row shown in a lane's gutter, when the chat ran several requests at once. */
+  lanes?: ReadonlyMap<string, ThreadLane>;
   /** Alarms still waiting to fire, earliest first. */
   alarms: Alarm.Alarm[];
   /** Alarms that have woken the agent since the last user prompt. */

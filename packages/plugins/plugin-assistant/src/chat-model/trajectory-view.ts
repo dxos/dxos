@@ -20,9 +20,20 @@ export type TrajectoryView = {
   readonly selfWakes: number;
   /** Messages a rewind discarded: a prompt or streamed message among these was shown, and is now gone. */
   readonly discarded: readonly Message.Message[];
+  /** Lanes (light threads, and turns on main) in the order they opened. */
+  readonly lanes: readonly Reducer.Lane[];
+  /** The lane of each message that belongs to one, by message id. */
+  readonly laneOf: ReadonlyMap<string, string>;
 };
 
-export const EMPTY_VIEW: TrajectoryView = { messages: [], alarms: [], selfWakes: 0, discarded: [] };
+export const EMPTY_VIEW: TrajectoryView = {
+  messages: [],
+  alarms: [],
+  selfWakes: 0,
+  discarded: [],
+  lanes: [],
+  laneOf: new Map(),
+};
 
 type Fold = {
   readonly items: readonly unknown[];
@@ -56,6 +67,8 @@ export const makeTrajectoryView = (items: Atom.Atom<readonly Obj.Unknown[]>): At
         .sort((left, right) => left.wakeAt - right.wakeAt)
         .map((alarm) => alarmView(alarm, alarmViews)),
       selfWakes: last.selfWakes,
+      lanes: last.thread.state.lanes,
+      laneOf: new Map(last.thread.state.items.flatMap((item) => (item.lane ? [[item.id, item.lane]] : []))),
     };
   });
 };
