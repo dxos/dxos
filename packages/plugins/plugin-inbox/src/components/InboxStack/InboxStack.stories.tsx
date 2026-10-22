@@ -10,6 +10,7 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { log } from '@dxos/log';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAttentionAttributes, useSelection } from '@dxos/react-ui-attention';
@@ -92,8 +93,9 @@ const DefaultStory = ({ count = 0, options, groupByThread, knownSenders, ...prop
       .forEach((sender) => {
         space.db.add(Obj.make(Person.Person, { fullName: sender?.name, emails: [{ value: sender?.email ?? '' }] }));
       });
-    // The lookup reads an indexed query, so the seeds have to land before it can resolve them.
-    void space.db.flush({ indexes: true });
+    // The lookup reads an indexed query, so the seeds have to land before it can resolve them. The story can
+    // unmount first, closing the client under the flush.
+    space.db.flush({ indexes: true }).catch((error) => log.warn('seed flush interrupted', { error }));
   }, [space, items, knownSenders]);
 
   return <InboxStack {...props} items={items} db={space?.db} onContactCreate={onContactCreate} />;
