@@ -62,8 +62,28 @@ type Deck = { slides: SlideSource[] };
 - Both feed one `Deck` runtime component. The two containers collapse into one `PresentationArticle` that picks
   the hook by subject type.
 
-_Agent call:_ no new ECHO `Presentation` type in the first cut. The companion stays the entry point; deck options
-live in document frontmatter (document decks) or plugin settings (collection decks). See Q1.
+**Decided (Q1, user):** a `Presentation` ECHO type that owns an ordered list of sections. The user creates a
+Presentation explicitly. Each section is either an owned markdown `Text` (written inline in the presentation)
+or a link to another ECHO object (markdown document, canvas, sheet, …). The app graph shows the Presentation as
+a folder whose children are its slides. This replaces collection decks.
+
+Schema sketch (_agent call_ on shape; open to change):
+
+```ts
+const Presentation = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  // Owned `Text` sections are parented to the presentation; linked objects keep their own parent.
+  sections: Schema.Array(Ref.Ref(Obj.Unknown)),
+}).pipe(Type.object({ typename: 'org.dxos.type.presentation', version: '0.1.0' }));
+```
+
+- Owned vs linked is read from the target's parent (`Obj.getParent(target) === presentation`), so one array keeps
+  the order and no wrapper struct is needed. Deleting an owned section deletes its `Text`; unlinking a linked one
+  leaves the object.
+- App graph: `Presentation` node → one child per section, labelled by the first heading (owned `Text`) or the
+  object's own label (linked). Reorder by drag in the navtree writes `sections`.
+- The `Deck` runtime above maps `sections` to `SlideSource[]`; owned `Text` and linked `Markdown.Document`
+  both render with the markdown slide renderer, everything else through `Surface role=slide`.
 
 ### 2. Slide surface contract
 
