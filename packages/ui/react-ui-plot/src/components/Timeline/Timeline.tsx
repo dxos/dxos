@@ -249,10 +249,9 @@ export const Timeline = ({ classNames, data, options = {}, zoom: initialZoom = M
     [lanes],
   );
 
-  // The current event is chosen by click or the arrow keys; the card shows it while the timeline has focus.
+  // The current event is chosen by click or the arrow keys and shown in a card until Escape unselects it.
   const [currentId, setCurrentId] = useState<string>();
   const current = ordered.find((event) => event.id === currentId);
-  const [focused, setFocused] = useState(false);
 
   // A hovered event's card takes precedence over the current one's.
   const [hovered, setHovered] = useState<TimelineEvent>();
@@ -318,14 +317,15 @@ export const Timeline = ({ classNames, data, options = {}, zoom: initialZoom = M
     [ordered, currentId, select],
   );
 
-  const card = hovered ?? (focused ? current : undefined);
+  const card = hovered ?? current;
 
   const now = Date.now();
   const showToday = today && range && now >= range[0] && now <= range[1];
 
   return (
     <div className={mx('dx-fill grid grid-rows-[min-content_1fr] overflow-hidden', classNames)}>
-      <div className='relative h-8 text-sm font-medium uppercase tracking-wider'>
+      {/* Clipped, so long category names cannot make the timeline scroll sideways. */}
+      <div className='relative h-8 overflow-hidden text-sm font-medium uppercase tracking-wider'>
         {lanes.map((lane) => (
           <div
             key={lane.side}
@@ -349,8 +349,6 @@ export const Timeline = ({ classNames, data, options = {}, zoom: initialZoom = M
         aria-activedescendant={current && `${optionId}-${current.id}`}
         className='overflow-y-auto overflow-x-hidden outline-none'
         onKeyDown={handleKeyDown}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
       >
         {width > 0 && range && (
           <svg width={width} height={contentHeight} fontSize={FONT_SIZE} className='block'>
@@ -438,7 +436,7 @@ export const Timeline = ({ classNames, data, options = {}, zoom: initialZoom = M
           color={color(card.column)}
           onClose={() => {
             setHovered(undefined);
-            setFocused(false);
+            setCurrentId(undefined);
           }}
           onHover={() => clearTimeout(closeTimer.current)}
           onLeave={handleLeave}
@@ -584,6 +582,8 @@ const EventCard = ({ event, side, getAnchorRect, color, onClose, onHover, onLeav
   <Popover.Root
     open
     autoFocus={false}
+    // Only Escape dismisses the card, so working elsewhere keeps the selection.
+    closeOnInteractOutside={false}
     onOpenChange={({ open }) => !open && onClose()}
     positioning={{
       // Across the spine from the label, so the label stays visible.

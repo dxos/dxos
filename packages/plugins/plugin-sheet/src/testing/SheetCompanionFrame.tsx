@@ -91,11 +91,11 @@ export const SheetCompanionFrame = ({
           minSize={16}
           resizable
         >
-          <Splitter.Panel position='start' classNames='grid min-h-0'>
+          <Splitter.Panel position='start' classNames='grid overflow-hidden'>
             <SheetContent />
           </Splitter.Panel>
           <Splitter.ResizeTrigger aria-label={`Resize ${label.toLowerCase()}`} />
-          <Splitter.Panel position='end' classNames='grid min-h-0 border-l border-separator'>
+          <Splitter.Panel position='end' classNames='grid overflow-hidden border-l border-separator'>
             {companion}
           </Splitter.Panel>
         </Splitter.Root>

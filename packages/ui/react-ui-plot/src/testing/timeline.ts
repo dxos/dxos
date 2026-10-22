@@ -43,6 +43,7 @@ export const technologyTimeline: PlotValue[][] = [
   ['1992', 'Robotics', 'Boston Dynamics founded', 'Spun out of MIT to build dynamically balanced legged robots.'],
   ['1993-07', 'MIC', '“Last Supper”', 'The Pentagon urges contractors to consolidate after the Cold War.'],
   ['1994-10', 'Tech', 'Netscape', 'The Netscape Navigator browser brings the web to the mainstream.'],
+  ['1994-12', 'Tech', 'PlayStation', 'Sony’s PlayStation launches in Japan, bringing 3D games to the living room.'],
   ['1995-04', 'Macro', 'Dot-com boom', 'The internet opens to commerce and investment pours into web companies.'],
   ['1995-12', 'Tech', 'JavaScript', 'Netscape ships JavaScript, making web pages programmable.'],
   ['1996-02', 'TIC', 'Telecommunications Act', 'Deregulates US telecom and broadcasting.'],
