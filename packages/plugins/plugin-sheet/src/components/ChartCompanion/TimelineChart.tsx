@@ -164,7 +164,7 @@ export const TimelineChart = ({ data, settings = {}, onChange, chrome = true }: 
   if (!chrome) {
     return (
       <div className='dx-fill grid overflow-hidden'>
-        <Timeline data={data} options={settings} classNames='p-2' />
+        <Timeline data={data} options={settings} onHiddenChange={handleHiddenChange} classNames='p-2' />
       </div>
     );
   }

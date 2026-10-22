@@ -68,6 +68,9 @@ const styles = `
     letter-spacing: 0.05em;
     opacity: 0.6;
   }
+  .reveal table th, .reveal table td:not(:last-child) {
+    white-space: nowrap;
+  }
   .reveal table th, .reveal table td {
     padding: 12px 16px;
     vertical-align: top;
