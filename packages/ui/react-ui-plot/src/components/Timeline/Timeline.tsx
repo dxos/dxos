@@ -18,7 +18,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import * as Popover from '@dxos/react-ui/Popover';
 import * as Tag from '@dxos/react-ui/Tag';
 import { mx } from '@dxos/ui-theme';
-import { type ChromaticPalette, type ThemedClassName, hues } from '@dxos/ui-types';
+import { type ChromaticPalette, type ThemedClassName } from '@dxos/ui-types';
 
 import { type PlotData, type TimelineEvent, type TimelineOptions, type TimelineSpine } from '../../types.ts';
 import {
@@ -59,8 +59,8 @@ const MIN_YEARLY_SPAN = 2 * 365 * 24 * 60 * 60 * 1000;
 // Minimum distance between axis ticks.
 const TICK_SPACING = 48;
 
-// Hues a tag can take: the neutral grey and every chromatic hue.
-const TAG_HUES: Tag.TagHue[] = ['neutral', ...hues];
+// Shades at or below this are light enough to take dark text.
+const LIGHT_SHADE = 400;
 
 // Distinct hues in the order categories take them.
 const CATEGORY_HUES: ChromaticPalette[] = [
@@ -281,10 +281,14 @@ export const Timeline = ({
       return { hue, shade };
     };
   }, [columns, colors]);
-  const hueOf = useCallback(
-    (column: string): Tag.TagHue => {
-      const { hue } = paletteOf(column);
-      return TAG_HUES.find((candidate) => candidate === hue) ?? 'neutral';
+  // A tag is filled with its category's exact color, with dark text on light shades and light text on dark ones.
+  const tagStyle = useCallback(
+    (column: string) => {
+      const { hue, shade } = paletteOf(column);
+      return {
+        backgroundColor: `var(--color-${hue}-${shade})`,
+        color: Number(shade) <= LIGHT_SHADE ? 'var(--color-neutral-950)' : 'var(--color-neutral-50)',
+      };
     },
     [paletteOf],
   );
@@ -499,7 +503,7 @@ export const Timeline = ({
             const tag = (column: string) => (
               <Tag.Tag
                 key={column}
-                hue={hueOf(column)}
+                style={tagStyle(column)}
                 aria-pressed={!hidden?.includes(column)}
                 classNames={hidden?.includes(column) ? 'opacity-40' : undefined}
                 onClick={() => toggle([column], !!hidden?.includes(column))}
@@ -514,7 +518,8 @@ export const Timeline = ({
               // A parent toggles its own events and all its children: off while any is shown, on when all are hidden.
               <div key={group.name} role='group' aria-label={group.name} className='flex items-center gap-1'>
                 <Tag.Tag
-                  hue={hueOf(group.categories[0])}
+                  // The parent takes its own color where it has events of its own, else its first child's.
+                  style={tagStyle(group.categories.includes(group.name) ? group.name : group.categories[0])}
                   aria-pressed={shown.length > 0}
                   onClick={() => toggle(group.categories, shown.length === 0)}
                   classNames={mx('font-semibold', shown.length === 0 && 'opacity-40')}
