@@ -2,8 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Fragment, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
+import { type Contact } from '@dxos/client/halo';
+import { type PublicKey } from '@dxos/keys';
+import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { Listbox } from '@dxos/react-ui-list';
 import * as Avatar from '@dxos/react-ui/Avatar';
 import * as Button from '@dxos/react-ui/Button';
@@ -11,143 +14,129 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
-import * as Typography from '@dxos/react-ui/Typography';
+import type * as Util from '@dxos/react-ui/Util';
 import { getHashStyles } from '@dxos/ui-theme';
-import { hexToFallback } from '@dxos/util';
+import { keyToFallback } from '@dxos/util';
 
 import { meta } from '#meta';
 
-export type AgentListAdmin = {
-  /** Hex identity key. */
-  identityKey: string;
-  name: string;
-  /** Whether the admin is the viewer. */
-  you?: boolean;
+// TODO(mykola): Factor out with `ContactList` in @dxos/shell and reconcile the two; until then this copies its rows.
+
+/** A space an agent shares with the viewer. */
+export type AgentListSpace = { id: string; key: PublicKey; name?: string };
+
+const agentKeyHex = (agent: Pick<Contact, 'identityKey'>): string => requirePublicKey(agent.identityKey).toHex();
+
+const profileString = (agent: Pick<Contact, 'profile'>, key: string): string | undefined => {
+  const value = agent.profile?.data?.[key];
+  return typeof value === 'string' ? value : undefined;
 };
 
-/** A space the agent is a member of. */
-export type AgentListSpace = { id: string; name?: string };
-
-export type AgentListEntry = {
-  /** The agent's own space, whose members are its admins. */
-  spaceId: string;
-  /** The spaces the agent is a member of that the viewer is too, its own space first. */
-  spaces: AgentListSpace[];
-  name: string;
-  /** Hex key of the agent's own identity. */
-  identityKey?: string;
-  /** The agent's identity DID. */
-  did?: string;
-  admins: AgentListAdmin[];
-};
-
-/** The agents whose name or DID contains the filter, ignoring case. */
-export const filterAgents = (agents: readonly AgentListEntry[], filter: string): AgentListEntry[] => {
+/** The agents whose name, identity key or DID contains the filter, ignoring case. */
+export const filterAgents = (agents: Contact[], filter: string): Contact[] => {
   const query = filter.trim().toLowerCase();
-  return query
-    ? agents.filter(
-        (agent) => agent.name.toLowerCase().includes(query) || (agent.did?.toLowerCase().includes(query) ?? false),
-      )
-    : [...agents];
+  if (!query) {
+    return agents;
+  }
+  return agents.filter(
+    (agent) =>
+      (agent.profile?.displayName?.toLowerCase().includes(query) ?? false) ||
+      agentKeyHex(agent).includes(query) ||
+      (agent.did?.toLowerCase().includes(query) ?? false),
+  );
 };
 
-export type AgentListProps = {
-  agents: AgentListEntry[];
+export type AgentListProps = Util.ThemedClassName<{
+  /** The agents, as the contacts they are. */
+  agents: Contact[];
+  spaces: AgentListSpace[];
   filter?: string;
-  onOpen?: (spaceId: string) => void;
-};
+  onSelectSpace?: (space: AgentListSpace) => void;
+}>;
 
-/** The agents the viewer administers, laid out as the contacts book lays out people. */
-export const AgentList = ({ agents, filter = '', onOpen }: AgentListProps) => {
+/** The agents the viewer administers, in the contacts book's rows. */
+export const AgentList = ({ classNames, agents, spaces, filter = '', onSelectSpace }: AgentListProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const visible = useMemo(
-    () => filterAgents(agents, filter).toSorted((left, right) => left.name.localeCompare(right.name)),
+    () =>
+      filterAgents(agents, filter).toSorted((left, right) =>
+        (left.profile?.displayName ?? '').localeCompare(right.profile?.displayName ?? ''),
+      ),
     [agents, filter],
   );
 
   if (visible.length === 0) {
     return (
-      <Typography.Text tone='muted'>
+      <p className='text-fg-muted text-center my-2'>
         {t(agents.length === 0 ? 'agents-panel-empty.message' : 'agents-panel-no-match.message')}
-      </Typography.Text>
+      </p>
     );
   }
 
   return (
-    <Listbox.Root items={visible.map((agent) => ({ value: agent.spaceId, label: agent.name }))}>
-      <Listbox.Viewport>
-        <Listbox.Content aria-label={t('agents-panel.label')} data-testid='agent-list'>
-          {visible.map((agent) => (
-            <AgentListItem key={agent.spaceId} agent={agent} onOpen={onOpen} />
-          ))}
-        </Listbox.Content>
-      </Listbox.Viewport>
+    <Listbox.Root
+      items={visible.map((agent) => ({
+        value: agentKeyHex(agent),
+        label: agent.profile?.displayName ?? t('agent-unnamed.label'),
+      }))}
+    >
+      <Listbox.Content classNames={classNames} aria-label={t('agents-panel.label')} data-testid='agent-list'>
+        {visible.map((agent) => (
+          <AgentListItem key={agentKeyHex(agent)} agent={agent} spaces={spaces} onSelectSpace={onSelectSpace} />
+        ))}
+      </Listbox.Content>
     </Listbox.Root>
   );
 };
 
-type AgentListItemProps = Pick<AgentListProps, 'onOpen'> & { agent: AgentListEntry };
+type AgentListItemProps = Pick<AgentListProps, 'spaces' | 'onSelectSpace'> & { agent: Contact };
 
-/**
- * The avatar in the icon rail, the name over its space and its admins, and the DID with its copy button at the end:
- * a contact's row, with the agent's own space where a contact's shared spaces go.
- */
-const AgentListItem = ({ agent, onOpen }: AgentListItemProps) => {
+/** The avatar in the icon rail, the name over its shared-space chips, and the DID with its copy button at the end. */
+const AgentListItem = ({ agent, spaces, onSelectSpace }: AgentListItemProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const labelId = Hooks.useId('agentListItem__label');
-  const fallback = agent.identityKey ? hexToFallback(agent.identityKey) : undefined;
-  const name = agent.name || t('agent-unnamed.label');
-  const admins = agent.admins
-    .map((admin) => (admin.you ? t('agent-admin-you.label', { name: admin.name }) : admin.name))
-    .join(', ');
-  const identifier = agent.did ?? agent.identityKey;
+  const identityKey = requirePublicKey(agent.identityKey);
+  const fallback = keyToFallback(identityKey);
+  const common = (agent.commonSpaces ?? [])
+    .map((key) => spaces.find((space) => toPublicKey(key)?.equals(space.key)))
+    .filter((space): space is AgentListSpace => space !== undefined);
 
   return (
-    <Listbox.Item id={agent.spaceId} data-testid='agent-list.item'>
+    <Listbox.Item id={identityKey.toHex()} data-testid='agent-list.item'>
       <Listbox.ItemIcon>
         <Avatar.Root
-          aria-labelledby={labelId}
           size='md'
-          hue={fallback && Avatar.toAvatarHue(fallback.hue)}
-          icon='ph--robot--regular'
+          hue={Avatar.toAvatarHue(profileString(agent, 'hue') ?? fallback.hue)}
+          fallback={profileString(agent, 'emoji') ?? fallback.emoji}
         />
       </Listbox.ItemIcon>
-      <Listbox.ItemText id={labelId}>{name}</Listbox.ItemText>
-      <Listbox.ItemDescription>
-        {agent.spaces.map((space) => {
-          const spaceName = space.name || t('agent-space-unnamed.label');
-          return (
-            <Fragment key={space.id}>
-              <Button.Root
-                size='sm'
-                hue={getHashStyles(space.id).hue}
-                aria-label={t('agent-open-space.label', { name: spaceName })}
-                onClick={() => onOpen?.(space.id)}
-                data-testid='agent-list.space'
-              >
-                {spaceName}
-              </Button.Root>{' '}
-            </Fragment>
-          );
-        })}
-        {t('agent-admins.label', { admins })}
-      </Listbox.ItemDescription>
-      {identifier && (
-        <Layout.Flex align='center' gap='xs'>
-          <Tooltip.Trigger asChild content={t(agent.did ? 'agent-did.label' : 'agent-key.label')}>
-            <Typography.Text mono truncate tone='muted'>
-              {identifier}
-            </Typography.Text>
-          </Tooltip.Trigger>
-          <SystemButton.Clipboard
-            iconOnly
-            size='sm'
-            variant='ghost'
-            value={identifier}
-            label={t(agent.did ? 'agent-copy-did.label' : 'agent-copy-key.label')}
-          />
-        </Layout.Flex>
+      <Listbox.ItemText>{agent.profile?.displayName ?? t('agent-unnamed.label')}</Listbox.ItemText>
+      {common.length > 0 && (
+        <Listbox.ItemDescription classNames='flex flex-wrap gap-1 pt-2'>
+          {common.map((space) => (
+            <Button.Root
+              key={space.id}
+              size='sm'
+              hue={getHashStyles(space.id).hue}
+              onClick={() => onSelectSpace?.(space)}
+              data-testid='agent-list.space'
+            >
+              {space.name ?? t('agent-space-unnamed.label')}
+            </Button.Root>
+          ))}
+        </Listbox.ItemDescription>
       )}
+      <Layout.Flex align='center' gap='xs' classNames='text-sm text-fg-muted'>
+        <Tooltip.Trigger asChild content={t(agent.did ? 'agent-did.label' : 'agent-key.label')}>
+          <span className='font-mono truncate max-w-48'>{agent.did ?? identityKey.truncate()}</span>
+        </Tooltip.Trigger>
+        <SystemButton.Clipboard
+          iconOnly
+          size='sm'
+          variant='ghost'
+          value={agent.did ?? identityKey.toHex()}
+          label={t(agent.did ? 'agent-copy-did.label' : 'agent-copy-key.label')}
+        />
+      </Layout.Flex>
     </Listbox.Item>
   );
 };
