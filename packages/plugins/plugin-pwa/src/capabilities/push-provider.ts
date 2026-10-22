@@ -41,7 +41,7 @@ export type PushProviderOptions = {
   supported: boolean;
   /** Undefined where there is no service worker; a sample is then never confirmed. */
   messages: WorkerMessagesLike | undefined;
-  /** Resolves once the service worker is active, which push needs; `undefined` when registration failed. */
+  /** Resolves once the push worker is active, which subscribing needs; `undefined` when registration failed. */
   pushManager: Promise<PushManagerLike | undefined>;
   permission: () => AppPush.Permission;
   requestPermission: () => Promise<AppPush.Permission>;
@@ -51,8 +51,8 @@ export type PushProviderOptions = {
   serviceTimeout?: Duration.Input;
 };
 
-/** A first install precaches the whole build before the worker activates, which takes a while on a slow link. */
-const DEFAULT_ACTIVATION_TIMEOUT = Duration.minutes(1);
+/** The push worker precaches nothing, so it activates almost at once; this only catches one that never does. */
+const DEFAULT_ACTIVATION_TIMEOUT = Duration.seconds(15);
 
 /** Firefox leaves a subscribe pending while it cannot reach its push service, which would leave the toggle on forever. */
 const DEFAULT_SERVICE_TIMEOUT = Duration.seconds(30);
@@ -95,7 +95,7 @@ export const makePushProvider = ({
     const manager = await within(
       () => (supported ? whenRegistered : Promise.resolve(undefined)),
       activationTimeout,
-      'Composer is still installing for offline use. Try again shortly.',
+      "Composer's notification worker did not start. Reload and try again.",
     );
     if (!manager) {
       throw new Error('Push is not available on this device.');

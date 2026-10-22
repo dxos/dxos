@@ -7,7 +7,7 @@ import { describe, expect, test, vi } from 'vitest';
 import type * as AppPush from '@dxos/app-toolkit/AppPush';
 import { EdgeCallFailedError } from '@dxos/protocols';
 
-import { type PushEdge, type PushStatus, makePushRegistration } from './push-registration.ts';
+import { type PushEdge, makePushRegistration } from './push-registration.ts';
 
 const PUBLIC_KEY = 'B'.repeat(87);
 
@@ -66,17 +66,19 @@ const makeEdge = ({ configured = true } = {}) =>
 const setup = (providerOptions?: FakeProviderOptions, edgeOptions?: { configured?: boolean }) => {
   const provider = makeProvider(providerOptions);
   const edge = makeEdge(edgeOptions);
-  const statuses: PushStatus[] = [];
+  const statuses: AppPush.Status[] = [];
+  const enabled: boolean[] = [];
   const registration = makePushRegistration({
     provider: () => provider,
     edge,
     setStatus: (status) => statuses.push(status),
+    setEnabled: (next) => enabled.push(next),
   });
-  return { provider, edge, registration, statuses };
+  return { provider, edge, registration, statuses, enabled };
 };
 
 describe('makePushRegistration', () => {
-  test('enable asks first, then subscribes with the VAPID key and registers the subscription', async () => {
+  test('enable asks first, then subscribes with the VAPID key and registers without waiting for a sample', async () => {
     const { provider, edge, registration } = setup();
 
     expect(await registration.enable()).toBe('on');
@@ -88,35 +90,39 @@ describe('makePushRegistration', () => {
     expect(edge.putPushSubscription).toHaveBeenCalledWith({
       endpoint: SUBSCRIPTION.endpoint,
       keys: SUBSCRIPTION.keys,
-      welcome: true,
+      welcome: false,
     });
+    expect(provider.waitForSample).not.toHaveBeenCalled();
   });
 
-  test('enable reads on only once the sample reaches the device, listening before asking for it', async () => {
-    const { provider, edge, registration } = setup();
+  test('the choice is saved once permission is granted, before registering', async () => {
+    const { edge, registration, enabled } = setup();
+    let savedBeforeRegistering: boolean | undefined;
+    edge.putPushSubscription.mockImplementationOnce(async () => {
+      savedBeforeRegistering = enabled.at(-1);
+    });
 
-    expect(await registration.enable()).toBe('on');
-
-    expect(provider.waitForSample.mock.invocationCallOrder[0]).toBeLessThan(
-      edge.putPushSubscription.mock.invocationCallOrder[0],
-    );
+    await registration.enable();
+    expect(savedBeforeRegistering).toBe(true);
   });
 
-  test('a sample that never arrives leaves the device registered but unconfirmed', async () => {
-    const { edge, registration } = setup({ sampleShown: false });
-
-    expect(await registration.enable()).toBe('unconfirmed');
-    expect(edge.putPushSubscription).toHaveBeenCalledOnce();
-  });
-
-  test('a refused or dismissed prompt registers nothing', async () => {
+  test('a refused or dismissed prompt registers nothing and saves the device as off', async () => {
     const refused = setup({ answer: 'denied' });
     expect(await refused.registration.enable()).toBe('denied');
     expect(refused.edge.putPushSubscription).not.toHaveBeenCalled();
+    expect(refused.enabled).toEqual([false]);
 
     const dismissed = setup({ answer: 'default' });
     expect(await dismissed.registration.enable()).toBe('off');
     expect(dismissed.provider.subscribe).not.toHaveBeenCalled();
+  });
+
+  test('a failed attempt keeps the choice, so the next start retries', async () => {
+    const { edge, registration, enabled } = setup();
+    edge.putPushSubscription.mockRejectedValueOnce(new Error('offline'));
+
+    expect(await registration.enable()).toBe('failed');
+    expect(enabled).toEqual([true]);
   });
 
   test('EDGE without push configured reads as unsupported', async () => {
@@ -126,14 +132,15 @@ describe('makePushRegistration', () => {
   });
 
   test('a device without a provider is unsupported', async () => {
-    const statuses: PushStatus[] = [];
     const registration = makePushRegistration({
       provider: () => undefined,
       edge: makeEdge(),
-      setStatus: (status) => statuses.push(status),
+      setStatus: () => {},
+      setEnabled: () => {},
     });
     expect(await registration.enable()).toBe('unsupported');
     expect(await registration.refresh()).toBe('unsupported');
+    expect(await registration.sendTest()).toBe('failed');
   });
 
   test('enable reads pending while it works, and a failure carries the browser error', async () => {
@@ -141,11 +148,12 @@ describe('makePushRegistration', () => {
     provider.subscribe.mockRejectedValueOnce(
       new DOMException('Registration failed - push service error', 'AbortError'),
     );
-    const updates: Array<[PushStatus, string | undefined]> = [];
+    const updates: Array<[AppPush.Status, string | undefined]> = [];
     const registration = makePushRegistration({
       provider: () => provider,
       edge: makeEdge(),
       setStatus: (status, error) => updates.push([status, error]),
+      setEnabled: () => {},
     });
 
     expect(await registration.enable()).toBe('failed');
@@ -157,21 +165,45 @@ describe('makePushRegistration', () => {
 
   test('a provider contributed after registration was created is used', async () => {
     let provider: AppPush.Provider | undefined;
-    const registration = makePushRegistration({ provider: () => provider, edge: makeEdge(), setStatus: () => {} });
+    const registration = makePushRegistration({
+      provider: () => provider,
+      edge: makeEdge(),
+      setStatus: () => {},
+      setEnabled: () => {},
+    });
     expect(await registration.enable()).toBe('unsupported');
 
     provider = makeProvider();
     expect(await registration.enable()).toBe('on');
   });
 
-  test('disable unregisters from EDGE and keeps the browser subscription for a quick re-enable', async () => {
-    const { provider, edge, registration } = setup();
+  test('a test asks EDGE for a sample, listening first, and reports whether it was shown', async () => {
+    const shown = setup({ permission: 'granted' });
+    expect(await shown.registration.sendTest()).toBe('shown');
+    expect(shown.edge.putPushSubscription).toHaveBeenCalledWith(expect.objectContaining({ welcome: true }));
+    expect(shown.provider.waitForSample.mock.invocationCallOrder[0]).toBeLessThan(
+      shown.edge.putPushSubscription.mock.invocationCallOrder[0],
+    );
+
+    const missed = setup({ permission: 'granted', sampleShown: false });
+    expect(await missed.registration.sendTest()).toBe('not-shown');
+  });
+
+  test('a test never prompts', async () => {
+    const { provider, registration } = setup({ permission: 'default' });
+    expect(await registration.sendTest()).toBe('failed');
+    expect(provider.requestPermission).not.toHaveBeenCalled();
+  });
+
+  test('disable unregisters from EDGE, saves the device as off and keeps the browser subscription', async () => {
+    const { provider, edge, registration, enabled } = setup();
     await registration.enable();
 
     expect(await registration.disable()).toBe('off');
 
     expect(edge.deletePushSubscription).toHaveBeenCalledWith(SUBSCRIPTION.endpoint);
     expect(provider.unsubscribe).not.toHaveBeenCalled();
+    expect(enabled.at(-1)).toBe(false);
   });
 
   test('disable unsubscribes the browser when EDGE cannot be told', async () => {
@@ -184,12 +216,12 @@ describe('makePushRegistration', () => {
   });
 
   test('a subscription the push service has dropped is replaced once', async () => {
-    const { provider, edge, registration } = setup();
+    const { provider, edge, registration } = setup({ permission: 'granted' });
     edge.putPushSubscription.mockRejectedValueOnce(
       new EdgeCallFailedError({ message: 'The push service no longer knows this subscription.', status: 410 }),
     );
 
-    expect(await registration.enable()).toBe('on');
+    expect(await registration.sendTest()).toBe('shown');
 
     expect(provider.unsubscribe).toHaveBeenCalledOnce();
     expect(provider.subscribe).toHaveBeenCalledTimes(2);
@@ -203,7 +235,6 @@ describe('makePushRegistration', () => {
 
     expect(provider.requestPermission).not.toHaveBeenCalled();
     expect(provider.waitForSample).not.toHaveBeenCalled();
-    // A sample notification on every start would be noise; only the user's opt-in asks for one.
     expect(edge.putPushSubscription).toHaveBeenCalledWith(expect.objectContaining({ welcome: false }));
   });
 

@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import type * as Duration from 'effect/Duration';
+import type * as Atom from 'effect/reactivity/Atom';
 
 /**
  * Whether the user lets this app show notifications on this device, as the OS or browser reports it.
@@ -47,4 +48,32 @@ export type Provider = {
    * on the call, so call it before asking for the sample: the push can arrive before the request returns.
    */
   waitForSample: (timeout: Duration.Input) => Promise<boolean>;
+};
+
+/**
+ * Where this device stands on push.
+ * - `unsupported`: no push provider here, or the deployment has push turned off.
+ * - `pending`: turning on is in progress.
+ * - `denied`: the user blocked notifications in the browser or OS.
+ */
+export type Status = 'unsupported' | 'off' | 'pending' | 'denied' | 'on' | 'failed';
+
+/** Whether a test notification reached this device; `failed` means it could not be sent. */
+export type TestResult = 'shown' | 'not-shown' | 'failed';
+
+/**
+ * Push notifications for this device, kept registered with the server that sends them. Contributed by the plugin
+ * that owns that registration; any platform's settings can drive it.
+ */
+export type Notifications = {
+  status: Atom.Atom<Status>;
+  /** Why the last attempt failed, as the browser or the server put it. */
+  error: Atom.Atom<string | undefined>;
+  /** Whether the user turned notifications on for this device; kept across restarts, which finish registering. */
+  enabled: Atom.Atom<boolean>;
+  /** Turns notifications on; call it from the user's click, since it may show the permission prompt. */
+  enable: () => Promise<Status>;
+  disable: () => Promise<Status>;
+  /** Asks the server for a test notification and waits for it to reach this device. */
+  sendTest: () => Promise<TestResult>;
 };

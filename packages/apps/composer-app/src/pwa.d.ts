@@ -25,3 +25,9 @@ declare module '*/wasm?url' {
   const url: string;
   export default url;
 }
+
+// Support for Vite bundled-worker URL imports (the push service worker).
+declare module '*?worker&url' {
+  const url: string;
+  export default url;
+}

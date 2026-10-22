@@ -12,7 +12,6 @@ export default defineConfig({
     MessengerError: 'src/types/MessengerError.ts',
     MessengerOperation: 'src/types/MessengerOperation.ts',
     Notifications: 'src/types/Notifications.ts',
-    Settings: 'src/types/Settings.ts',
     capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',

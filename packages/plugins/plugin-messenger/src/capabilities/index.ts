@@ -5,6 +5,7 @@
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
@@ -45,8 +46,8 @@ export const PluginAsset = AppCapability.pluginAsset({
 export const PushNotifications = Capability.lazyModule(
   'PushNotifications',
   {
-    requires: [Capabilities.AtomRegistry, ClientCapabilities.Client, MessengerCapabilities.Settings],
-    provides: [MessengerCapabilities.PushNotifications],
+    requires: [Capabilities.AtomRegistry, ClientCapabilities.Client],
+    provides: [AppCapabilities.PushNotifications],
     activatesOn: ClientEvents.SpacesAvailable,
     environments: ['browser'],
   },
@@ -58,10 +59,6 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
 });
 
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
-
-export const Settings = AppCapability.settings(() => import('./settings.ts'), {
-  provides: [MessengerCapabilities.Settings],
-});
 
 export const Sender = Capability.lazyModule(
   'Sender',

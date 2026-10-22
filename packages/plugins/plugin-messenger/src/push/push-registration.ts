@@ -8,14 +8,6 @@ import type * as AppPush from '@dxos/app-toolkit/AppPush';
 import { log } from '@dxos/log';
 import { EdgeCallFailedError, type PushSubscribeRequest, type VapidPublicKeyResponse } from '@dxos/protocols';
 
-import { type MessengerCapabilities } from '#types';
-
-/**
- * - `unsupported`: no push provider here, or EDGE has push turned off.
- * - `denied`: the user blocked notifications for Composer in the browser or OS.
- */
-export type PushStatus = MessengerCapabilities.PushStatus;
-
 /** The EDGE routes push registration uses (`EdgeHttpClient`), bound to a context by the caller. */
 export type PushEdge = {
   getVapidPublicKey: () => Promise<VapidPublicKeyResponse>;
@@ -28,8 +20,10 @@ export type PushRegistrationOptions = {
   provider: () => AppPush.Provider | undefined;
   edge: PushEdge;
   /** `error` describes a `failed` attempt. */
-  setStatus: (status: PushStatus, error?: string) => void;
-  /** How long `enable` waits for the sample push before calling the device unconfirmed. */
+  setStatus: (status: AppPush.Status, error?: string) => void;
+  /** Records the user's choice; written before registering, so a restart can finish what a quit cut short. */
+  setEnabled: (enabled: boolean) => void;
+  /** How long `sendTest` waits for the test notification to reach this device. */
   sampleTimeout?: Duration.Input;
 };
 
@@ -41,14 +35,16 @@ export type PushRegistration = {
    * Asks for permission, subscribes this device and registers it with EDGE; resolves to the resulting status.
    * Call it straight from the user's click: the permission prompt is the first thing it awaits.
    */
-  enable: () => Promise<PushStatus>;
-  /** Unregisters and unsubscribes this device. */
-  disable: () => Promise<PushStatus>;
+  enable: () => Promise<AppPush.Status>;
+  /** Unregisters this device from EDGE. */
+  disable: () => Promise<AppPush.Status>;
   /**
    * Re-registers without asking, for a device the user already opted in on: covers a subscription the browser
-   * replaced or dropped, and a key rotation on EDGE. Never prompts.
+   * replaced or dropped, a key rotation on EDGE, and a registration a quit cut short. Never prompts.
    */
-  refresh: () => Promise<PushStatus>;
+  refresh: () => Promise<AppPush.Status>;
+  /** Re-registers asking EDGE for a sample push, and resolves whether it reached this device. */
+  sendTest: () => Promise<AppPush.TestResult>;
 };
 
 const isNotConfigured = (error: unknown) => error instanceof EdgeCallFailedError && error.status === 404;
@@ -69,27 +65,31 @@ export const makePushRegistration = ({
   provider: currentProvider,
   edge,
   setStatus,
+  setEnabled,
   sampleTimeout = DEFAULT_SAMPLE_TIMEOUT,
 }: PushRegistrationOptions): PushRegistration => {
-  const settle = (status: PushStatus): PushStatus => {
+  const settle = (status: AppPush.Status): AppPush.Status => {
     setStatus(status);
     return status;
   };
 
-  /** `welcome` asks EDGE for a sample notification, which only the user's own opt-in should trigger. */
-  const register = async (provider: AppPush.Provider, welcome: boolean): Promise<PushStatus> => {
+  /** Subscribes and registers with EDGE; with `welcome`, `shown` says whether the sample reached this device. */
+  const register = async (
+    provider: AppPush.Provider,
+    welcome: boolean,
+  ): Promise<{ status: AppPush.Status; shown?: Promise<boolean> }> => {
     let publicKey: string;
     try {
       ({ publicKey } = await edge.getVapidPublicKey());
     } catch (error) {
       if (isNotConfigured(error)) {
-        return settle('unsupported');
+        return { status: settle('unsupported') };
       }
       throw error;
     }
     const { endpoint, keys } = await provider.subscribe({ applicationServerKey: publicKey });
     // EDGE pushes the sample before it answers, so listening has to start first.
-    const sample = welcome ? provider.waitForSample(sampleTimeout) : undefined;
+    const shown = welcome ? provider.waitForSample(sampleTimeout) : undefined;
     try {
       await edge.putPushSubscription({ endpoint, keys, welcome });
     } catch (error) {
@@ -101,19 +101,20 @@ export const makePushRegistration = ({
       const fresh = await provider.subscribe({ applicationServerKey: publicKey });
       await edge.putPushSubscription({ endpoint: fresh.endpoint, keys: fresh.keys, welcome });
     }
-    if (sample && !(await sample)) {
-      return settle('unconfirmed');
-    }
-    return settle('on');
+    return { status: settle('on'), shown };
   };
 
-  const run = async (task: () => Promise<PushStatus>): Promise<PushStatus> => {
+  const fail = (error: unknown): AppPush.Status => {
+    log.warn('push registration failed', { error });
+    setStatus('failed', describeError(error));
+    return 'failed';
+  };
+
+  const run = async (task: () => Promise<AppPush.Status>): Promise<AppPush.Status> => {
     try {
       return await task();
     } catch (error) {
-      log.warn('push registration failed', { error });
-      setStatus('failed', describeError(error));
-      return 'failed';
+      return fail(error);
     }
   };
 
@@ -124,17 +125,19 @@ export const makePushRegistration = ({
         if (!provider?.supported) {
           return settle('unsupported');
         }
-        // The browser's push service can take a while to answer, and the toggle already reads on.
         setStatus('pending');
         const permission = await provider.requestPermission();
         if (permission !== 'granted') {
+          setEnabled(false);
           return settle(permission === 'denied' ? 'denied' : 'off');
         }
-        return register(provider, true);
+        setEnabled(true);
+        return (await register(provider, false)).status;
       }),
 
     disable: () =>
       run(async () => {
+        setEnabled(false);
         const provider = currentProvider();
         if (!provider?.supported) {
           return settle('unsupported');
@@ -160,12 +163,29 @@ export const makePushRegistration = ({
         }
         switch (provider.permission()) {
           case 'granted':
-            return register(provider, false);
+            return (await register(provider, false)).status;
           case 'denied':
             return settle('denied');
           default:
             return settle('off');
         }
       }),
+
+    sendTest: async () => {
+      const provider = currentProvider();
+      if (!provider?.supported || provider.permission() !== 'granted') {
+        return 'failed';
+      }
+      try {
+        const { status, shown } = await register(provider, true);
+        if (status !== 'on' || !shown) {
+          return 'failed';
+        }
+        return (await shown) ? 'shown' : 'not-shown';
+      } catch (error) {
+        fail(error);
+        return 'failed';
+      }
+    },
   };
 };

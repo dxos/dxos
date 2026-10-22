@@ -39,14 +39,6 @@ export const translations = [
         'space-invitation-toast.description': 'A contact invited you to join a space.',
         'join-space-invitation.label': 'Join',
         'dismiss-space-invitation.label': 'Dismiss',
-        'push-status-unsupported.message':
-          'This device or deployment cannot show notifications while Composer is closed.',
-        'push-status-pending.message': 'Turning on notifications…',
-        'push-status-unconfirmed.message':
-          'This device is registered, but the test notification has not arrived. Check that your system allows notifications from this browser.',
-        'push-status-denied.message':
-          'Notifications are blocked for Composer. Allow them in your browser settings, then turn this on again.',
-        'push-status-failed.message': 'Notifications could not be turned on. Try again.',
       },
     },
   },

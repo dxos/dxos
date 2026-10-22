@@ -534,6 +534,15 @@ export const PushProvider = Capability$.makeSingleton<AppPush$.Provider>()(
   'org.dxos.app-toolkit.capability.pushProvider',
 );
 
+/**
+ * Push notifications for this device, registered with the server that sends them (plugin-messenger, for EDGE).
+ * Settings use it to show the toggle; absent where nothing registers.
+ * @category Capability
+ */
+export const PushNotifications = Capability$.makeSingleton<AppPush$.Notifications>()(
+  'org.dxos.app-toolkit.capability.pushNotifications',
+);
+
 export type ObservabilityMapping = ObservabilityMapping$.ObservabilityMapping;
 
 /**

@@ -105,11 +105,6 @@
       "types": "./dist/types/src/types/Notifications.d.ts",
       "import": "./dist/lib/Notifications.mjs"
     },
-    "./Settings": {
-      "source": "./src/types/Settings.ts",
-      "types": "./dist/types/src/types/Settings.d.ts",
-      "import": "./dist/lib/Settings.mjs"
-    },
     "./package.json": "./package.json",
     "./translations": {
       "source": "./src/translations.ts",
@@ -158,7 +153,6 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-card": "workspace:*",
-    "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/types": "workspace:*",

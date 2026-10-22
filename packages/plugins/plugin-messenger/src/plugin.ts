@@ -13,7 +13,6 @@ import {
   ReactSurface,
   Schema,
   Sender,
-  Settings,
   Translations,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -27,7 +26,6 @@ export const MessengerPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(ReactSurface),
   Plugin.addModule(Schema),
   Plugin.addModule(Sender),
-  Plugin.addModule(Settings),
   Plugin.addModule(Translations),
   Plugin.make,
 );
