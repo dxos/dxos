@@ -715,6 +715,13 @@ export const technologyTimeline: PlotValue[][] = [
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/Great_Seal_of_the_United_States_%28obverse%29.svg/500px-Great_Seal_of_the_United_States_%28obverse%29.svg.png',
   ],
   [
+    '2010-08',
+    'Macro/FIC',
+    'China becomes the second-largest economy',
+    'China overtakes Japan as the world’s second-largest economy by nominal GDP.',
+    null,
+  ],
+  [
     '2010-09',
     'Tech/Software',
     'Cloudflare',
