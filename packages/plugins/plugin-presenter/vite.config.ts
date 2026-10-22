@@ -21,6 +21,8 @@ export default defineConfig({
     PresenterEvents: 'src/types/PresenterEvents.ts',
     PresenterOperation: 'src/types/PresenterOperation.ts',
     Settings: 'src/types/Settings.ts',
+    SlideViewState: 'src/types/SlideViewState.ts',
+    hooks: 'src/hooks/index.ts',
     types: 'src/types/index.ts',
   },
   jsx: 'react',
