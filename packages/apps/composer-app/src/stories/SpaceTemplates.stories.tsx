@@ -64,7 +64,7 @@ const TEMPLATES = {
   architecture: 'org.dxos.plugin.canvas.template.architecture',
   fieldstone: 'org.dxos.plugin-debug.template.fieldstone',
   incident: 'org.dxos.plugin-debug.template.incident',
-  macro: 'org.dxos.plugin-debug.template.macro',
+  presenter: 'org.dxos.plugin-debug.template.presenter',
   sales: 'org.dxos.plugin.sheet.template.sales',
   pipeline: 'org.dxos.plugin-debug.template.pipeline',
   review: 'org.dxos.plugin-debug.template.review',
@@ -324,8 +324,8 @@ export const HelloWorker: Story = { args: { template: TEMPLATES.worker }, play }
 
 export const Incident: Story = { args: { template: TEMPLATES.incident }, play };
 
-/** The Macro events sheet, its timeline chart and a deck whose second slide presents the chart. */
-export const Macro: Story = { args: { template: TEMPLATES.macro }, play };
+/** The Macro events sheet, its timeline chart and a deck that presents the chart. */
+export const Presenter: Story = { args: { template: TEMPLATES.presenter }, play };
 
 export const Sales: Story = { args: { template: TEMPLATES.sales }, play };
 

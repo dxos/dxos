@@ -16,6 +16,7 @@ export default defineConfig({
     operations: 'src/operations/index.ts',
     FieldstoneSpace: 'src/samples/fieldstone/FieldstoneSpace.ts',
     IncidentSpace: 'src/samples/incident/IncidentSpace.ts',
+    PresenterSpace: 'src/samples/presenter/PresenterSpace.ts',
     PipelineSpace: 'src/samples/crm/PipelineSpace.ts',
     ReviewSpace: 'src/samples/review/ReviewSpace.ts',
     StockfishSpace: 'src/samples/stockfish/StockfishSpace.ts',

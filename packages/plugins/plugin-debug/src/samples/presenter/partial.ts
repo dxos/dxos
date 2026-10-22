@@ -11,8 +11,8 @@ import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import * as SheetRange from '@dxos/plugin-sheet/SheetRange';
 import * as SheetUtil from '@dxos/plugin-sheet/SheetUtil';
 
-import presentation from '../../../assets/macro/presentation.md?raw';
-import timelineJson from '../../../assets/macro/timeline.json?raw';
+import presentation from '../../../assets/presenter/presentation.md?raw';
+import timelineJson from '../../../assets/presenter/timeline.json?raw';
 
 /** Technology, macro and personal events, one per row under a header: date, category, title, description, image. */
 type Timeline = {
@@ -66,7 +66,7 @@ const makeEvents = (): { sheet: Sheet.Sheet; chart: Sheet.Chart } => {
   return { sheet, chart };
 };
 
-/** The deck from `assets/macro/presentation.md`, with the timeline chart's EID in place of its placeholder. */
+/** The deck from `assets/presenter/presentation.md`, with the timeline chart's EID in place of its placeholder. */
 const makeDeck = (chart: Sheet.Chart): Markdown.Document =>
   Markdown.make({
     name: 'Macro',

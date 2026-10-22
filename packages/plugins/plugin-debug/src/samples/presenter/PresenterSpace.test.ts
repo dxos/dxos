@@ -7,11 +7,11 @@ import { describe, test } from 'vitest';
 import { buildArchive } from '@dxos/app-toolkit/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import * as MacroSpace from './MacroSpace.ts';
+import * as PresenterSpace from './PresenterSpace.ts';
 
-describe('Macro template', () => {
+describe('Presenter template', () => {
   test('builds the events sheet, its timeline chart and the deck', { timeout: 120_000 }, async ({ expect }) => {
-    const { result, json } = await EffectEx.runPromise(buildArchive(MacroSpace.make()));
+    const { result, json } = await EffectEx.runPromise(buildArchive(PresenterSpace.make()));
     const archive: { objects: Array<{ '@type'?: string; 'type'?: string; 'content'?: string }> } = JSON.parse(json);
 
     const charts = archive.objects.filter((object) => object['@type']?.includes('org.dxos.type.chart'));

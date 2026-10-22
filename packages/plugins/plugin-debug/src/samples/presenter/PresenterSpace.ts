@@ -16,14 +16,14 @@ const partials = { macro: Partial };
 /** The financial, military and technology complexes: an events sheet, its timeline chart and a slide deck. */
 export const make = (): SampleSpace.Definition<typeof partials, { macro: Provides }> =>
   SampleSpace.make({
-    space: { name: 'Macro', icon: 'piggy-bank', hue: 'green' },
+    space: { name: 'Presenter', icon: 'piggy-bank', hue: 'green' },
     partials,
     build: (partials) => Effect.map(partials.macro(), (macro) => ({ macro })),
   });
 
 export const makeTemplate = (): AppCapabilities.SpaceTemplate =>
   SampleSpace.makeTemplate({
-    id: 'org.dxos.plugin-debug.template.macro',
+    id: 'org.dxos.plugin-debug.template.presenter',
     description:
       'The financial, military and technology complexes: a sheet of events, its timeline chart and a slide deck.',
     definition: make(),
