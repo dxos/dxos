@@ -438,6 +438,12 @@ export const createEchoReferenceSchema = (
               }
 
               const uri = EncodedReference.toURI(candidate);
+              // Rejected here, at the input boundary, because once stored such a ref throws on every resolve.
+              if (EID.isEID(uri) && EID.tryParse(uri) === undefined) {
+                return yield* Effect.fail(
+                  new SchemaIssue.InvalidValue({ message: `Malformed ECHO URI: ${uri}` }, candidate),
+                );
+              }
               return Option.isSome(dbService) ? dbService.value.db.makeRef(uri) : Ref.fromURI(uri);
             }),
           encode: (value) => {

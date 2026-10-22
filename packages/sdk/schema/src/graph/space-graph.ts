@@ -50,6 +50,7 @@ export class SpaceGraphModel extends GraphModel.AbstractGraphModel<SpaceGraphNod
   private _schemaSubscription?: CleanupFn;
   private _objectSubscription?: CleanupFn;
   private _timeout?: NodeJS.Timeout;
+  #unresolvableRefs = new Set<string>();
 
   override copy(graph?: Partial<GraphModel.Data<SpaceGraphNode, SpaceGraphEdge>>): SpaceGraphModel {
     // No shared registry: a copy is a detached snapshot, and its keepAlive version atom would pin an
@@ -263,7 +264,8 @@ export class SpaceGraphModel extends GraphModel.AbstractGraphModel<SpaceGraphNod
           // Link to refs.
           const refs = getOutgoingReferences(object);
           for (const { ref, property } of refs) {
-            if (!Obj.isObject(ref.target)) {
+            const target = this.#resolveTarget(ref);
+            if (!Obj.isObject(target)) {
               continue;
             }
 
@@ -271,7 +273,7 @@ export class SpaceGraphModel extends GraphModel.AbstractGraphModel<SpaceGraphNod
               id: `${object.id}-${ref.uri}`,
               type: 'ref',
               source: object.id,
-              target: ref.target.id,
+              target: target.id,
               data: {
                 force: true,
                 // Originating top-level property name (when known) — used by the plexus
@@ -286,6 +288,22 @@ export class SpaceGraphModel extends GraphModel.AbstractGraphModel<SpaceGraphNod
 
     // Set the entire graph at once to trigger a single notification.
     this.setGraph({ nodes: newNodes, edges: newEdges });
+  }
+
+  /**
+   * Resolves a ref's target, skipping a stored ref whose URI throws on resolve so it costs one edge
+   * rather than the whole update.
+   */
+  #resolveTarget(ref: Ref.Unknown): unknown {
+    try {
+      return ref.target;
+    } catch (err) {
+      if (!this.#unresolvableRefs.has(ref.uri)) {
+        this.#unresolvableRefs.add(ref.uri);
+        log.warn('skipping unresolvable ref', { uri: ref.uri, err });
+      }
+      return undefined;
+    }
   }
 }
 
