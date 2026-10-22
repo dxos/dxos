@@ -11,7 +11,6 @@ import 'highlight.js/styles/tokyo-night-dark.css';
 import hljs from 'highlight.js';
 import typescript from 'highlight.js/lib/languages/typescript';
 import React, { type ReactNode, useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 import Reveal from 'reveal.js';
 import RevealHighlight from 'reveal.js/plugin/highlight/highlight';
 import RevealMarkdown, { type MarkdownPlugin } from 'reveal.js/plugin/markdown/plugin.js';
@@ -21,7 +20,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { type EmbedTarget, type SlideEmbed, findEmbeds, markEmbeds } from './embeds.ts';
+import { type SlideEmbed, findEmbeds, markEmbeds } from './embeds.ts';
 
 const styles = `
 <style type="text/css">
@@ -55,12 +54,28 @@ const styles = `
   .reveal pre {
     margin-left: 0;
   }
-  .reveal .dx-slide-embed {
+  .reveal table {
     width: 100%;
-    height: 520px;
-    font-size: 1rem;
-    line-height: normal;
+    font-family: "Raleway", sans-serif;
+    font-size: 24px;
+    font-weight: 300;
+    line-height: 1.4;
+  }
+  .reveal table th {
+    font-size: 18px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.6;
+  }
+  .reveal table th, .reveal table td {
+    padding: 12px 16px;
+    vertical-align: top;
     text-align: left;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+  .reveal .dx-slide-embed {
+    display: none;
   }
   .reveal code {
     font-size: 20px;
@@ -73,7 +88,7 @@ const styles = `
 
 export type RevealProps = {
   content: string;
-  /** Renders an embedded object in place of its image; without one, embeds render as images. */
+  /** Renders an object embedded in the current slide over the whole viewport; without one, embeds render as images. */
   renderEmbed?: (embed: SlideEmbed) => ReactNode;
   slide?: number;
   fullscreen?: boolean;
@@ -191,18 +206,24 @@ const createPlayer = async (element: HTMLElement, slides: HTMLElement, content: 
   return { deck, markdown, highlight, slides, renderedContent: content };
 };
 
+const currentEmbeds = (deck: Reveal.Api): SlideEmbed[] => {
+  const current = deck.getCurrentSlide();
+  return current ? findEmbeds(current).map(({ uri, label }) => ({ uri, label })) : [];
+};
+
 export const RevealPlayer = Util.composable<HTMLDivElement, RevealProps>(
   ({ content: contentProp, slide, fullscreen = true, onExit, renderEmbed, children, ...props }, forwardedRef) => {
     const deckDivRef = useRef<HTMLDivElement>(null);
     const slidesRef = useRef<HTMLDivElement>(null);
     const [player, setPlayer] = useState<Player>();
-    const [embeds, setEmbeds] = useState<EmbedTarget[]>([]);
+    // The objects embedded in the current slide.
+    const [embeds, setEmbeds] = useState<SlideEmbed[]>([]);
     const content = renderEmbed ? markEmbeds(contentProp) : contentProp;
 
     useEffect(() => {
       if (player && player.renderedContent !== content) {
-        // Rebuilding the slides replaces the embeds' blocks, so they are found again once it is done.
-        void updateSlides(player, content).then(() => setEmbeds(findEmbeds(player.slides)));
+        // Rebuilding the slides replaces the current slide, so its embeds are found again once it is done.
+        void updateSlides(player, content).then(() => setEmbeds(currentEmbeds(player.deck)));
       }
     }, [player, content]);
 
@@ -229,7 +250,8 @@ export const RevealPlayer = Util.composable<HTMLDivElement, RevealProps>(
       });
 
       setPlayer(player);
-      setEmbeds(findEmbeds(slides));
+      setEmbeds(currentEmbeds(deck));
+      deck.on('slidechanged', () => setEmbeds(currentEmbeds(deck)));
 
       // Reveal re-lays out only on window resize; a plank or companion resizes without one.
       const resizeObserver = new ResizeObserver(() => deck.layout());
@@ -266,11 +288,18 @@ export const RevealPlayer = Util.composable<HTMLDivElement, RevealProps>(
             />
             <div ref={slidesRef} className={mx('slides', !fullscreen && 'dx-base-surface p-8')} />
           </div>
-        </div>
-        {renderEmbed &&
-          embeds.map(({ element, ...embed }, index) =>
-            createPortal(renderEmbed(embed), element, `${index}:${embed.uri}`),
+          {/* Outside the deck, so an embed fills the viewport at its own resolution rather than scaled with the slide;
+              above reveal's slides (z-index 1) and below its controls (z-index 11). */}
+          {renderEmbed && embeds.length > 0 && (
+            <div className='dx-cover z-[2] grid auto-rows-fr dx-base-surface'>
+              {embeds.map((embed, index) => (
+                <div key={`${index}:${embed.uri}`} className='grid overflow-hidden'>
+                  {renderEmbed(embed)}
+                </div>
+              ))}
+            </div>
           )}
+        </div>
       </Layout.Grid>
     );
   },

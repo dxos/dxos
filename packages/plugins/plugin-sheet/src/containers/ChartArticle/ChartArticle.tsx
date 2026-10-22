@@ -60,7 +60,12 @@ const ChartContent = ({ role, chart: chartProp, model }: { role?: string; chart:
   return (
     <Panel.Root classNames={role === AppSurface.Section.role && 'aspect-video w-full max-h-full min-h-0'}>
       <Panel.Body>
-        <ChartView chart={props} getValues={getValues} onUpdate={handleUpdate} />
+        <ChartView
+          chart={props}
+          getValues={getValues}
+          onUpdate={handleUpdate}
+          chrome={role !== AppSurface.Slide.role}
+        />
       </Panel.Body>
     </Panel.Root>
   );

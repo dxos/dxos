@@ -34,10 +34,12 @@ export type TimelineChartProps = {
   data: PlotData;
   settings?: Sheet.TimelineSettings;
   onChange: (settings: Partial<Sheet.TimelineSettings>) => void;
+  /** Shows the toolbar and the filter status bar; a slide shows the timeline alone. */
+  chrome?: boolean;
 };
 
 /** A timeline chart: its own toolbar for how it is drawn, the timeline, and a status bar that filters events by text. */
-export const TimelineChart = ({ data, settings = {}, onChange }: TimelineChartProps) => {
+export const TimelineChart = ({ data, settings = {}, onChange, chrome = true }: TimelineChartProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const { spine = 'center', scale = 'linear', hidden = [], dates = true, future = true, fontSize = 'auto' } = settings;
   const events = useMemo(() => toTimelineEvents(data).events, [data]);
@@ -158,6 +160,14 @@ export const TimelineChart = ({ data, settings = {}, onChange }: TimelineChartPr
         .build(),
     [spine, scale, fontSize, dates, future, onChange],
   );
+
+  if (!chrome) {
+    return (
+      <div className='dx-fill grid overflow-hidden'>
+        <Timeline data={data} options={settings} classNames='p-2' />
+      </div>
+    );
+  }
 
   return (
     <div className='dx-fill grid grid-rows-[min-content_1fr_min-content] overflow-hidden'>

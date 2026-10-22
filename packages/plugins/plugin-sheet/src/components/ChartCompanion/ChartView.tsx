@@ -19,10 +19,12 @@ export type ChartViewProps = {
   getValues: (range: string) => PlotValue[][] | undefined;
   /** Saves view settings changed from the chart's own toolbar (timeline); read-only without one. */
   onUpdate?: (props: Partial<Sheet.ChartProperties>) => void;
+  /** Shows a chart's own toolbars (timeline); off in a slide. */
+  chrome?: boolean;
 };
 
 /** A chart of a range: a plot, or a timeline with its own toolbar. */
-export const ChartView = ({ chart, getValues, onUpdate }: ChartViewProps) => {
+export const ChartView = ({ chart, getValues, onUpdate, chrome }: ChartViewProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const data = useMemo(() => {
     const values = getValues(chart.range);
@@ -37,6 +39,7 @@ export const ChartView = ({ chart, getValues, onUpdate }: ChartViewProps) => {
     <TimelineChart
       data={data}
       settings={chart.timeline}
+      chrome={chrome}
       onChange={(settings) => onUpdate?.({ timeline: { ...chart.timeline, ...settings } })}
     />
   ) : (
