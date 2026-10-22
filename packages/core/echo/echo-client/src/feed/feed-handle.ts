@@ -68,8 +68,11 @@ export class FeedHandle {
 
   public readonly updated = new Event();
 
-  /** Fires inside every local write to an object of this feed, before it is appended. */
-  public readonly localWrite = new Event();
+  /**
+   * Fires inside every local write with the objects it appended, edited or deleted here, so a query re-evaluates
+   * only those rather than every object in {@link localWrites}.
+   */
+  public readonly localWrite = new Event<readonly Entity.Unknown[]>();
 
   /**
    * Debounces `Obj.update` mutations on live feed objects into a single background append per
@@ -100,8 +103,6 @@ export class FeedHandle {
 
   /** Cores of the objects appended or edited through this handle, in the order they were first written. */
   readonly #writtenHere = new Set<FeedObjectCore>();
-
-  #writesRevision = 0;
 
   /**
    * Settles when the last send does: each send starts after the one before it, because the store orders
@@ -301,6 +302,7 @@ export class FeedHandle {
     if (added) {
       this.updated.emit();
     }
+    this.localWrite.emit(cores.map((core) => core.entity));
   }
 
   /** Enqueue a core for the next background append and wake the scheduler. */
@@ -308,7 +310,7 @@ export class FeedHandle {
     this.#markWritten(core);
     this.#dirtyCores.add(core);
     this.#appendScheduler.trigger();
-    this.localWrite.emit();
+    this.localWrite.emit([core.entity]);
   }
 
   /**
@@ -319,19 +321,8 @@ export class FeedHandle {
     return [...this.#writtenHere].filter((core) => !core.deleted).map((core) => core.entity);
   }
 
-  /**
-   * Moves when an object joins the written set or one in it is deleted, so a query can tell that an edit left the
-   * set as it was without re-reading every written object.
-   */
-  get writesRevision(): number {
-    return this.#writesRevision;
-  }
-
   #markWritten(core: FeedObjectCore): void {
-    if (!this.#writtenHere.has(core)) {
-      this.#writtenHere.add(core);
-      this.#writesRevision++;
-    }
+    this.#writtenHere.add(core);
   }
 
   /** The object written through this handle under `id`, if there is one. */
@@ -342,6 +333,7 @@ export class FeedHandle {
 
   async delete(ids: string[]): Promise<void> {
     // Optimistic update.
+    const deleted: Entity.Unknown[] = [];
     for (const id of ids) {
       if (!EntityId.isValid(id)) {
         continue;
@@ -349,13 +341,16 @@ export class FeedHandle {
       const core = this.#cores.get(id);
       if (core) {
         core.markDeleted();
-        this.#writesRevision++;
+        deleted.push(core.entity);
         this.#cores.delete(id);
         this.#dirtyCores.delete(core);
       }
       this.#objects.delete(id);
     }
     this.updated.emit();
+    if (deleted.length > 0) {
+      this.localWrite.emit(deleted);
+    }
 
     try {
       await runServiceCall(this._runtime, this._service, 'FeedService.deleteFromFeed', {

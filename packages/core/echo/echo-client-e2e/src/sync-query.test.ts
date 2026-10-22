@@ -548,6 +548,37 @@ describe('synchronous query propagation', () => {
       await expect.poll(() => query.completeness).toBe('complete');
       expect(query.results.map((person) => person.name).sort()).toEqual(['jane', 'john']);
     });
+
+    test('an edit or delete of an unacknowledged write moves it in or out of a property query at once', async () => {
+      const peer = await builder.createPeer({ types: [TestSchema.Person, Feed.Feed] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+      await db.flush({ indexes: true });
+      const query = db.query(Query.select(Filter.type(TestSchema.Person, { name: 'jane' })).from(feed));
+      recordUpdates(query);
+
+      const written = db.add(person({ name: 'john' }), { to: feed });
+      expect(query.results).toEqual([]);
+
+      Obj.update(written, (written) => {
+        written.name = 'jane';
+      });
+      expect(ids(query.results)).toEqual([written.id]);
+
+      Obj.update(written, (written) => {
+        written.name = 'janet';
+      });
+      expect(query.results).toEqual([]);
+
+      Obj.update(written, (written) => {
+        written.name = 'jane';
+      });
+      expect(ids(query.results)).toEqual([written.id]);
+
+      const deleted = db.deleteFromFeed(feed, [written]);
+      expect(query.results).toEqual([]);
+      await deleted;
+    });
   });
 
   describe('subscriber writes', () => {

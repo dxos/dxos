@@ -50,10 +50,8 @@ export class WorkingSetView {
   #delta?: { filter: QueryAST.Filter; options: QueryAST.QueryOptions | undefined } = undefined;
   /** Present when the query selects from feeds: their unacknowledged writes, which no index has seen yet. */
   #feedTail?: FeedTail = undefined;
-  /** The ids of the feed tail's entries as last signalled. */
-  #tailSignature = '';
-  /** The handles' written-set revisions the signature was last computed at. */
-  #tailRevisions = '';
+  /** Which of the feed tail's writes match, kept current one write at a time. */
+  #tailMatches?: FeedTailMatches = undefined;
   private readonly _executor: WorkingSetQueryExecutor;
   private readonly _planner: QueryPlanner;
 
@@ -177,6 +175,7 @@ export class WorkingSetView {
   close(): void {
     this._query = undefined;
     this.#feedTail = undefined;
+    this.#tailMatches = undefined;
     this._results = undefined;
     void this._ctx.dispose().catch((err) => log.catch(err));
   }
@@ -187,13 +186,14 @@ export class WorkingSetView {
     this._results = undefined;
     // The handles were watched through the context just disposed, so each one is subscribed again.
     this.#feedTail = undefined;
+    this.#tailMatches = undefined;
     this.#watchFeedTail(query);
     if (this.#feedTail || isFeedSelection(query)) {
       // A feed the query reaches can be first opened after it starts, by the write that should show up in it.
       this._database._feedHandleCreated.on(this._ctx, () => {
-        const before = this.#tailSignature;
+        const before = this.#tailMatches?.signature() ?? '';
         this.#watchFeedTail(query);
-        if (this.#tailSignature !== before) {
+        if ((this.#tailMatches?.signature() ?? '') !== before) {
           this.changed.emit();
         }
       });
@@ -214,7 +214,7 @@ export class WorkingSetView {
 
   getResults(): SourceEntry[] {
     const space = this._query ? (this._results ??= this._compute(this._query)) : [];
-    return this.#feedTail ? [...space, ...feedEntries(this.#feedTail)] : space;
+    return this.#tailMatches ? [...space, ...this.#tailMatches.entries()] : space;
   }
 
   /** A one-shot answer from what the working set holds now; nothing is loaded. */
@@ -227,31 +227,17 @@ export class WorkingSetView {
   #watchFeedTail(query: QueryAST.Query): void {
     const watched = new Set(this.#feedTail?.handles);
     this.#feedTail = this.#feedTailFor(query);
+    this.#tailMatches = this.#feedTail ? new FeedTailMatches(this.#feedTail) : undefined;
     for (const handle of this.#feedTail?.handles ?? []) {
       if (watched.has(handle)) {
         continue;
       }
-      // Both fire inside the write, so a feed write reaches the query before the writing call returns.
-      handle.localWrite.on(this._ctx, () => this.#onFeedTailChanged());
-      handle.updated.on(this._ctx, () => this.#onFeedTailChanged());
-    }
-    this.#tailSignature = this.#feedTail ? tailSignature(this.#feedTail) : '';
-    this.#tailRevisions = this.#feedTail ? this.#feedTail.handles.map((handle) => handle.writesRevision).join(',') : '';
-  }
-
-  /** Signals only when the tail's entries change: a streamed edit to a message already shown changes no entry. */
-  #onFeedTailChanged(): void {
-    const tail = this.#feedTail;
-    // With the written set unchanged, only an edit that flips the filter can change the entries.
-    const revisions = tail ? tail.handles.map((handle) => handle.writesRevision).join(',') : '';
-    if (revisions === this.#tailRevisions && tail && !readsProperties(tail.filter)) {
-      return;
-    }
-    this.#tailRevisions = revisions;
-    const signature = tail ? tailSignature(tail) : '';
-    if (signature !== this.#tailSignature) {
-      this.#tailSignature = signature;
-      this.changed.emit();
+      // Fires inside the write, so a feed write reaches the query before the writing call returns.
+      handle.localWrite.on(this._ctx, (objects) => {
+        if (this.#tailMatches?.apply(handle, objects)) {
+          this.changed.emit();
+        }
+      });
     }
   }
 
@@ -488,27 +474,77 @@ const feedEntries = ({ filter, options, handles }: FeedTail): SourceEntry[] =>
   handles.flatMap((handle) =>
     handle
       .localWrites()
-      .flatMap((object): SourceEntry[] =>
-        matchesFeedSelection(filter, options, object)
-          ? [{ id: object.id, result: object, match: { rank: 1 }, resolution: { source: 'local', time: 0 } }]
-          : [],
-      ),
+      .flatMap((object) => (matchesFeedSelection(filter, options, object) ? [tailEntry(object)] : [])),
   );
 
-/** Whether a filter reads anything an edit can change: everything but a bare type or wildcard selection. */
-const readsProperties = (filter: QueryAST.Filter): boolean =>
-  !(
-    filter.type === 'object' &&
-    Object.keys(filter.props).length === 0 &&
-    filter.id === undefined &&
-    (filter.foreignKeys === undefined || filter.foreignKeys.length === 0) &&
-    filter.metaKey === undefined
-  );
+const tailEntry = (object: Entity.Unknown): SourceEntry => ({
+  id: object.id,
+  result: object,
+  match: { rank: 1 },
+  resolution: { source: 'local', time: 0 },
+});
 
-const tailSignature = (tail: FeedTail): string =>
-  feedEntries(tail)
-    .map((entry) => entry.id)
-    .join(',');
+/**
+ * Whether each of a feed tail's writes matches, per handle in write order. A write re-evaluates only the objects
+ * it names: rescanning every unacknowledged write on each append made a streamed agent turn quadratic.
+ */
+class FeedTailMatches {
+  readonly #matches = new Map<FeedHandle, Map<string, { object: Entity.Unknown; matched: boolean }>>();
+  #entries?: SourceEntry[] = undefined;
+
+  constructor(private readonly _tail: FeedTail) {
+    for (const handle of _tail.handles) {
+      const matches = new Map<string, { object: Entity.Unknown; matched: boolean }>();
+      for (const object of handle.localWrites()) {
+        matches.set(object.id, { object, matched: this.#matchesFilter(object) });
+      }
+      this.#matches.set(handle, matches);
+    }
+  }
+
+  /** Re-evaluates the objects a write named; true when the tail's entries changed. */
+  apply(handle: FeedHandle, objects: readonly Entity.Unknown[]): boolean {
+    const matches = this.#matches.get(handle);
+    if (!matches) {
+      return false;
+    }
+    let changed = false;
+    for (const object of objects) {
+      const before = matches.get(object.id);
+      const written = EntityId.isValid(object.id) ? handle.getLocalWrite(EntityId.make(object.id)) : undefined;
+      if (!written) {
+        changed ||= before?.matched === true;
+        matches.delete(object.id);
+        continue;
+      }
+      const matched = this.#matchesFilter(written);
+      // Setting an existing key keeps its place, so the entries stay in write order.
+      matches.set(object.id, { object: written, matched });
+      changed ||= matched !== (before?.matched ?? false);
+    }
+    if (changed) {
+      this.#entries = undefined;
+    }
+    return changed;
+  }
+
+  entries(): SourceEntry[] {
+    return (this.#entries ??= [...this.#matches.values()].flatMap((matches) =>
+      [...matches.values()].flatMap(({ object, matched }) => (matched ? [tailEntry(object)] : [])),
+    ));
+  }
+
+  /** The matching ids, to compare two tails of the same query. */
+  signature(): string {
+    return this.entries()
+      .map((entry) => entry.id)
+      .join(',');
+  }
+
+  #matchesFilter(object: Entity.Unknown): boolean {
+    return matchesFeedSelection(this._tail.filter, this._tail.options, object);
+  }
+}
 
 /** Natural order: code units, as the host and the working-set executor sort ids. */
 export const compareIds = (left: string, right: string): number => (left < right ? -1 : left > right ? 1 : 0);
