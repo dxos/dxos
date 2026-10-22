@@ -2,13 +2,7 @@ layer: tool
 language: typescript
 tags:
   - ts-compile
-  - ts-test
-
-# Renamed out of the `:test` sweep, which must not reach a Rust compile; Check's `native` job runs it.
-workspace:
-  inheritedTasks:
-    rename:
-      test: test-native
+  - ts-test-native
 
 tasks:
   test-native:
