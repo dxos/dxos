@@ -25,6 +25,13 @@ export const technologyTimeline: PlotValue[][] = [
     'Trade liberalization and freer capital flows expand worldwide.',
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8b/Early_migrations_mercator.svg/500px-Early_migrations_mercator.svg.png',
   ],
+  [
+    '1980',
+    'Personal',
+    'Curta Type 2',
+    'Curta Type 2 mechanical calculator, 1980.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/Curta_-_National_Museum_of_Computing.jpg/500px-Curta_-_National_Museum_of_Computing.jpg',
+  ],
   ['1980-05', 'Tech/Software', 'Pac-Man', 'Namco’s maze game becomes the best-known arcade game of all time.', null],
   ['1980-11', 'Personal', 'Sinclair Scientific Calculator', 'Sinclair Scientific Calculator, November 1980.', null],
   [
