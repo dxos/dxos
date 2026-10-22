@@ -47,6 +47,13 @@ export const technologyTimeline: PlotValue[][] = [
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/Curta_-_National_Museum_of_Computing.jpg/500px-Curta_-_National_Museum_of_Computing.jpg',
   ],
   [
+    '1970-01',
+    'Tech/Software',
+    'Unix epoch',
+    'Unix time counts seconds from 00:00:00 UTC on 1 January 1970.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fb/1000000000_seconds_since_Unix_time_epoch.jpg/500px-1000000000_seconds_since_Unix_time_epoch.jpg',
+  ],
+  [
     '1977-09',
     'Tech/Hardware',
     'Atari 2600',

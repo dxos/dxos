@@ -33,7 +33,7 @@ const meta = {
   title: 'ui/react-ui-plot/Timeline',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ classNames: 'w-[60rem]' })],
-  args: { spine: 'center', scale: 'linear', start: '1977', end: '2030', today: true, zoom: 1 },
+  args: { spine: 'center', scale: 'linear', start: '1920', end: '2030', today: true, zoom: 1 },
   argTypes: {
     spine: { control: 'inline-radio', options: TIMELINE_SPINES },
     scale: { control: 'inline-radio', options: TIMELINE_SCALES },

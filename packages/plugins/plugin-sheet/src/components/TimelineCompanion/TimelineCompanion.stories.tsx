@@ -37,7 +37,7 @@ import { TimelineCompanion } from './TimelineCompanion.tsx';
 const initialTimeline: Sheet.Timeline = {
   range: timelineTestRange,
   header: true,
-  start: '1977',
+  start: '1920',
   end: '2030',
   order: technologyTimelineOrder,
   colors: technologyTimelineColors,
