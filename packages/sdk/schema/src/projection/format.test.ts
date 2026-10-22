@@ -98,6 +98,11 @@ describe('format', () => {
     expect(Schema.decodeUnknownSync(PropertySchema)(prop)).to.include({ format: Format.TypeFormat.GeoPoint });
   });
 
+  test('geo point format rejects an array without a tuple shape', ({ expect }) => {
+    const prop = { property: 'location', type: TypeEnum.Array, format: Format.TypeFormat.GeoPoint, minItems: 2 };
+    expect(() => Schema.decodeUnknownSync(PropertySchema)(prop)).to.throw();
+  });
+
   test('get properties', ({ expect }) => {
     const prop: Partial<PropertyType> = {
       property: 'org' as SchemaEx.JsonProp,
