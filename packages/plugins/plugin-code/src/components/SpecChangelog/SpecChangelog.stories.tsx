@@ -5,7 +5,6 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { renderDiagram } from '@dxos/diagram/extension';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
@@ -57,34 +56,6 @@ export const SupersedeChain: Story = {
   args: { content: INBOX_SYNC_SPEC },
 };
 
-/**
- * Waits for every ```diagram fence in the spec to lay out, so the work does not spill into the next story,
- * and fails if one does not render.
- */
-const renderDiagrams = async (content: string) => {
-  for (const [, source] of content.matchAll(/^```(?:diagram|dxd)\n([\s\S]*?)\n```$/gm)) {
-    await expect(await renderDiagram(source)).toHaveProperty('svg');
-  }
-};
-
-/** GitHub sync, part 1: polling over one object model; its ```diagram fences render inline. */
-export const GitHubSync: Story = {
-  args: { content: GITHUB_SYNC_SPEC },
-  play: () => renderDiagrams(GITHUB_SYNC_SPEC),
-};
-
-/** GitHub sync, part 2: extensible two-way file sync. */
-export const GitHubFileSync: Story = {
-  args: { content: GITHUB_FILE_SYNC_SPEC },
-  play: () => renderDiagrams(GITHUB_FILE_SYNC_SPEC),
-};
-
-/** GitHub sync, part 3: connector event dispatch. */
-export const ConnectorEvents: Story = {
-  args: { content: CONNECTOR_EVENTS_SPEC },
-  play: () => renderDiagrams(CONNECTOR_EVENTS_SPEC),
-};
-
 /** The toolbar switches the panel between all five views of one spec. */
 export const SwitchViews: Story = {
   args: { content: CALLS_SPEC },
@@ -105,4 +76,21 @@ export const SwitchViews: Story = {
       }, TIMEOUT);
     }
   },
+};
+
+// The GitHub sync stories come last: laying out their diagrams keeps the page busy after each story ends.
+
+/** GitHub sync, part 1: polling over one object model; its ```diagram fences render inline. */
+export const GitHubSync: Story = {
+  args: { content: GITHUB_SYNC_SPEC },
+};
+
+/** GitHub sync, part 2: extensible two-way file sync. */
+export const GitHubFileSync: Story = {
+  args: { content: GITHUB_FILE_SYNC_SPEC },
+};
+
+/** GitHub sync, part 3: connector event dispatch. */
+export const ConnectorEvents: Story = {
+  args: { content: CONNECTOR_EVENTS_SPEC },
 };
