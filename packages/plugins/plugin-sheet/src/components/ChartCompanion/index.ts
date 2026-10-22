@@ -3,4 +3,5 @@
 //
 
 export * from './ChartCompanion.tsx';
+export * from './TimelineChart.tsx';
 export * from './useRangeValues.ts';

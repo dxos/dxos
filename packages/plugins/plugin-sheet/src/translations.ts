@@ -72,9 +72,9 @@ export const translations = [
         'chart-type.heatmap.label': 'Heatmap',
         'chart-type.radar.label': 'Radar',
         'chart-type.map.label': 'Map',
+        'chart-type.timeline.label': 'Timeline',
         'invalid-range.message': 'Invalid range',
 
-        'timeline-companion.label': 'Timeline',
         'timeline-actions.label': 'Timeline actions',
         'timeline-spine.label': 'Spine',
         'timeline-spine.left.label': 'Spine on the left',
@@ -84,8 +84,6 @@ export const translations = [
         'timeline-scale.linear.label': 'Linear scale',
         'timeline-scale.log.label': 'Log scale (recent events get more room)',
         'timeline-scale.compact.label': 'Compact (one step per event)',
-        'timeline-settings.label': 'Timeline settings',
-        'delete-timeline.label': 'Delete timeline',
         'timeline-dates.label': 'Show dates in labels',
         'timeline-future.label': 'Show the future',
         'timeline-font-size.label': 'Font size',
@@ -100,8 +98,6 @@ export const translations = [
         'timeline-filter.matches.label': '{{matched}} of {{total}}',
         'timeline-filter.total.label_one': '{{count}} event',
         'timeline-filter.total.label_other': '{{count}} events',
-        'no-timeline.message':
-          'Select a range of rows (a time column, then a column per category) and choose “Use sheet selection”.',
       },
     },
   },

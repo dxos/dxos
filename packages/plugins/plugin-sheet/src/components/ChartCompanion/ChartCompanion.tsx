@@ -19,6 +19,8 @@ import * as Typography from '@dxos/react-ui/Typography';
 import { meta } from '#meta';
 import { Sheet } from '#types';
 
+import { TimelineChart } from './TimelineChart.tsx';
+
 const DEFAULT_RANGE = 'A1:B5';
 
 // The list opens showing whole rows; a two-line row is 3.5rem.
@@ -223,7 +225,15 @@ const ChartDetail = ({ chart, editing, getValues, onUpdate, onCancel }: ChartDet
   }
 
   return data ? (
-    <Plot data={data} options={chart} classNames='p-2' />
+    chart.type === 'timeline' ? (
+      <TimelineChart
+        data={data}
+        settings={chart.timeline}
+        onChange={(settings) => onUpdate({ timeline: { ...chart.timeline, ...settings } })}
+      />
+    ) : (
+      <Plot data={data} options={{ ...chart, type: chart.type }} classNames='p-2' />
+    )
   ) : (
     <Typography.Text classNames='p-2 text-fg-subtle'>{t('invalid-range.message')}</Typography.Text>
   );
@@ -243,6 +253,8 @@ const chartIcon = (type?: Sheet.ChartType) => {
       return 'ph--chart-polar--regular';
     case 'map':
       return 'ph--globe-hemisphere-west--regular';
+    case 'timeline':
+      return 'ph--line-segments--regular';
     case 'bar':
     default:
       return 'ph--chart-bar--regular';

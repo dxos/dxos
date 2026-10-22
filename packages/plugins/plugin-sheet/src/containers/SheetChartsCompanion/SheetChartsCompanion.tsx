@@ -53,7 +53,18 @@ const SheetCharts = ({ sheet: sheetProp, model }: { sheet: Sheet.Sheet; model: S
   const handleChange = useCallback(
     (charts: Sheet.Chart[]) =>
       updateSheet((sheet) => {
-        sheet.charts = charts;
+        // The schema type's arrays are read-only; the object takes mutable copies of a timeline's lists.
+        sheet.charts = charts.map(({ timeline, ...chart }) => ({
+          ...chart,
+          ...(timeline && {
+            timeline: {
+              ...timeline,
+              hidden: timeline.hidden && [...timeline.hidden],
+              order: timeline.order && [...timeline.order],
+              colors: timeline.colors && { ...timeline.colors },
+            },
+          }),
+        }));
       }),
     [updateSheet],
   );

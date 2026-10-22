@@ -3,14 +3,14 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { testFunctionPlugins } from '@dxos/compute-hyperformula/testing';
 import { Obj } from '@dxos/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { useSelection } from '@dxos/react-ui-attention';
+import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { technologyTimelineColors, technologyTimelineOrder } from '@dxos/react-ui-plot/testing';
@@ -30,37 +30,47 @@ import {
 import { translations } from '#translations';
 import { Sheet } from '#types';
 
-import { useRangeValues } from '../ChartCompanion/index.ts';
 import { useSheetContext } from '../SheetRoot/index.ts';
-import { TimelineCompanion } from './TimelineCompanion.tsx';
+import { ChartCompanion } from './ChartCompanion.tsx';
+import { useRangeValues } from './useRangeValues.ts';
 
-const initialTimeline: Sheet.Timeline = {
+const timelineChart = (hidden?: string[]): Sheet.Chart => ({
+  id: 'technology',
+  name: 'Technology and macro',
   range: timelineTestRange,
+  type: 'timeline',
   header: true,
-  start: '1920',
-  end: '2030',
-  order: technologyTimelineOrder,
-  colors: technologyTimelineColors,
-};
+  timeline: { start: '1920', end: '2030', order: technologyTimelineOrder, colors: technologyTimelineColors, hidden },
+});
 
-/** The companion reads the sheet's selection through the `Selection` view state, as an app container would. */
-const Companion = ({ hidden }: Pick<Sheet.Timeline, 'hidden'>) => {
+/** The charts companion over the timeline test data, sharing the sheet's selection as an app container would. */
+const Companion = ({ hidden }: { hidden?: string[] }) => {
   const { model } = useSheetContext();
   const getValues = useRangeValues(model);
-  const [timeline, setTimeline] = useState<Sheet.Timeline | undefined>({ ...initialTimeline, hidden });
-  const selection = useSelection(Obj.getURI(model.sheet), 'range');
+  const [charts, setCharts] = useState<Sheet.Chart[]>(() => [timelineChart(hidden)]);
+  const contextId = Obj.getURI(model.sheet);
+  const selection = useSelection(contextId, 'range');
+  const { range: setSelection } = useSelectionActions(contextId);
+  const handleSelectRange = useCallback(
+    (range: string) => {
+      const [from, to = from] = range.toUpperCase().split(':');
+      setSelection(from, to);
+    },
+    [setSelection],
+  );
 
   return (
-    <TimelineCompanion
-      timeline={timeline}
-      onChange={setTimeline}
+    <ChartCompanion
+      charts={charts}
+      onChange={setCharts}
       getValues={getValues}
       selection={selection && (selection.from === selection.to ? selection.from : `${selection.from}:${selection.to}`)}
+      onSelectRange={handleSelectRange}
     />
   );
 };
 
-type StoryArgs = { mode?: SheetCompanionFrameMode } & Pick<Sheet.Timeline, 'hidden'>;
+type StoryArgs = { mode?: SheetCompanionFrameMode; hidden?: string[] };
 
 const DefaultStory = ({ mode, hidden }: StoryArgs) => (
   <SheetCompanionFrame
@@ -71,14 +81,14 @@ const DefaultStory = ({ mode, hidden }: StoryArgs) => (
       columnSizes: timelineTestColumnSizes,
     }}
     companion={<Companion hidden={hidden} />}
-    label='Timeline'
-    icon='ph--line-segments--regular'
+    label='Charts'
+    icon='ph--chart-bar--regular'
     mode={mode}
   />
 );
 
 const meta = {
-  title: 'plugins/plugin-sheet/components/TimelineCompanion',
+  title: 'plugins/plugin-sheet/components/TimelineChart',
   render: (args) => <DefaultStory {...args} />,
   decorators: [
     withTheme(),

@@ -37,31 +37,6 @@ export const Range = Schema.Struct({
 
 export type Range = Schema.Schema.Type<typeof Range>;
 
-export const ChartType = Schema.Literals(['bar', 'pie', 'xy', 'scatter', 'heatmap', 'radar', 'map']);
-export type ChartType = Schema.Schema.Type<typeof ChartType>;
-
-/**
- * A chart of a 2D range. The first column is the category (bar, pie), x axis (xy, scatter), row (heatmap),
- * spoke (radar) or country (map); each other column is a series.
- */
-export const Chart = Schema.Struct({
-  id: Schema.String.pipe(Annotation.FormInputAnnotation.set(false)),
-  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
-  // TODO(burdon): Store as an indexed range (see `SheetUtil.rangeToIndex`) so it tracks row/column edits.
-  range: Schema.String.annotate({ title: 'Range', description: 'A1 notation (e.g., B1:C5).' }),
-  type: ChartType.annotate({ title: 'Chart type' }),
-  /** The first row holds the series names. */
-  header: Schema.optional(Schema.Boolean.annotate({ title: 'Header row' })),
-  grid: Schema.optional(Schema.Boolean.annotate({ title: 'Grid lines' })),
-  /** Bars run along the x axis, categories down the y axis (bar). */
-  horizontal: Schema.optional(Schema.Boolean.annotate({ title: 'Horizontal bars' })),
-  stacked: Schema.optional(Schema.Boolean.annotate({ title: 'Stacked bars' })),
-  /** A least-squares line per series, plus one across all series (scatter). */
-  regression: Schema.optional(Schema.Boolean.annotate({ title: 'Regression lines' })),
-});
-
-export type Chart = Schema.Schema.Type<typeof Chart>;
-
 export const TimelineSpine = Schema.Literals(['left', 'center', 'right']);
 export type TimelineSpine = Schema.Schema.Type<typeof TimelineSpine>;
 
@@ -72,14 +47,10 @@ export const TimelineFontSize = Schema.Literals(['auto', 'xs', 'sm', 'md', 'lg',
 export type TimelineFontSize = Schema.Schema.Type<typeof TimelineFontSize>;
 
 /**
- * A timeline of a 2D range with one event per row: its time (a year or date), category, title, and an
- * optional description and image URL shown in the event's card. Each category is drawn as a column.
+ * How a timeline chart is drawn. Its range has one event per row: its time (a year or date), category, title, and
+ * an optional description and image URL shown in the event's card. Each category is drawn as a column.
  */
-export const Timeline = Schema.Struct({
-  // TODO(burdon): Store as an indexed range (see `SheetUtil.rangeToIndex`) so it tracks row/column edits.
-  range: Schema.String.annotate({ title: 'Range', description: 'A1 notation (e.g., A1:E30).' }),
-  /** The first row holds column names rather than an event. */
-  header: Schema.optional(Schema.Boolean.annotate({ title: 'Header row' })),
+export const TimelineSettings = Schema.Struct({
   spine: Schema.optional(TimelineSpine.annotate({ title: 'Spine' })),
   scale: Schema.optional(TimelineScale.annotate({ title: 'Scale' })),
   start: Schema.optional(Schema.String.annotate({ title: 'Start', description: 'Year or date (e.g., 1980).' })),
@@ -98,7 +69,34 @@ export const Timeline = Schema.Struct({
   colors: Schema.optional(Schema.Record(Schema.String, Schema.String).pipe(Annotation.FormInputAnnotation.set(false))),
 });
 
-export type Timeline = Schema.Schema.Type<typeof Timeline>;
+export type TimelineSettings = Schema.Schema.Type<typeof TimelineSettings>;
+
+export const ChartType = Schema.Literals(['bar', 'pie', 'xy', 'scatter', 'heatmap', 'radar', 'map', 'timeline']);
+export type ChartType = Schema.Schema.Type<typeof ChartType>;
+
+/**
+ * A chart of a 2D range. The first column is the category (bar, pie), x axis (xy, scatter), row (heatmap),
+ * spoke (radar) or country (map); each other column is a series. A timeline instead has one event per row.
+ */
+export const Chart = Schema.Struct({
+  id: Schema.String.pipe(Annotation.FormInputAnnotation.set(false)),
+  name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
+  // TODO(burdon): Store as an indexed range (see `SheetUtil.rangeToIndex`) so it tracks row/column edits.
+  range: Schema.String.annotate({ title: 'Range', description: 'A1 notation (e.g., B1:C5).' }),
+  type: ChartType.annotate({ title: 'Chart type' }),
+  /** The first row holds the series names. */
+  header: Schema.optional(Schema.Boolean.annotate({ title: 'Header row' })),
+  grid: Schema.optional(Schema.Boolean.annotate({ title: 'Grid lines' })),
+  /** Bars run along the x axis, categories down the y axis (bar). */
+  horizontal: Schema.optional(Schema.Boolean.annotate({ title: 'Horizontal bars' })),
+  stacked: Schema.optional(Schema.Boolean.annotate({ title: 'Stacked bars' })),
+  /** A least-squares line per series, plus one across all series (scatter). */
+  regression: Schema.optional(Schema.Boolean.annotate({ title: 'Regression lines' })),
+  /** How a timeline is drawn (timeline). */
+  timeline: Schema.optional(TimelineSettings.annotate({ title: 'Timeline' })),
+});
+
+export type Chart = Schema.Schema.Type<typeof Chart>;
 
 // TODO(burdon): Visibility, locked, frozen, etc.
 export const RowColumnMeta = Schema.Struct({
@@ -131,9 +129,6 @@ export class Sheet extends Type.makeObject<Sheet>(DXN.make('org.dxos.type.sheet'
 
     // Charts of ranges, shown in the charts companion.
     charts: Schema.optional(Schema.Array(Chart).pipe(Annotation.FormInputAnnotation.set(false))),
-
-    // Timeline of a range, shown in the timeline companion.
-    timeline: Schema.optional(Timeline.pipe(Annotation.FormInputAnnotation.set(false))),
   }).pipe(
     Annotation.IconAnnotation.set({ icon: 'ph--grid-nine--regular', hue: 'indigo' }),
     Skill.SkillsAnnotation.set([SKILL_KEY]),
@@ -147,10 +142,9 @@ export type SheetProps = {
   /** Formatting ranges, with `range` in A1 notation. */
   ranges?: Range[];
   charts?: Chart[];
-  timeline?: Timeline;
 } & Partial<SheetSize>;
 
-export const make = ({ name, cells = {}, ranges, charts, timeline, ...size }: SheetProps = {}) => {
+export const make = ({ name, cells = {}, ranges, charts, ...size }: SheetProps = {}) => {
   const sheet = Obj.make(Sheet, {
     name,
     cells: {},
@@ -160,7 +154,6 @@ export const make = ({ name, cells = {}, ranges, charts, timeline, ...size }: Sh
     columnMeta: {},
     ranges: [],
     ...(charts && { charts }),
-    ...(timeline && { timeline }),
   });
 
   // Initialize and set cells within Obj.update to satisfy change context requirements.
