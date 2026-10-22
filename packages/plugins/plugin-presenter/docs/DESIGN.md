@@ -82,6 +82,8 @@ const Presentation = Schema.Struct({
   leaves the object.
 - App graph: `Presentation` node → one child per section, labelled by the first heading (owned `Text`) or the
   object's own label (linked). Reorder by drag in the navtree writes `sections`.
+- **Decided (Q2, user):** one section is exactly one slide. `---` inside a section's text is a horizontal rule,
+  not a slide break. The navtree, the pager count and `sections` always agree.
 - The `Deck` runtime above maps `sections` to `SlideSource[]`; owned `Text` and linked `Markdown.Document`
   both render with the markdown slide renderer, everything else through `Surface role=slide`.
 
