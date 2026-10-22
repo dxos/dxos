@@ -19,4 +19,14 @@ describe('PresenterPlugin', () => {
 
     expect(harness.manager.getActive()).toContain(moduleId('AppGraphBuilder'));
   });
+
+  test('registers the Presentation schema and create entry', async ({ expect }) => {
+    await using harness = await Harness.createComposerTestApp({
+      plugins: [PresenterPlugin()],
+    });
+
+    const registered = harness.manager.getModules().map((module) => module.id);
+    expect(registered).toContain(moduleId('schema'));
+    expect(registered).toContain(moduleId('CreateObject'));
+  });
 });

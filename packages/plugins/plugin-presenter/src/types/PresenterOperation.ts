@@ -11,6 +11,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { Collection, DXN, Type } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
+import * as Presentation from './Presentation.ts';
+
 export const SetPresenting = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.presenter.setPresenting'),
@@ -19,7 +21,11 @@ export const SetPresenting = Operation.make({
   },
   services: [Capability.Service],
   input: Schema.Struct({
-    object: Schema.Union([Type.getSchema(Markdown.Document), Type.getSchema(Collection.Collection)]),
+    object: Schema.Union([
+      Type.getSchema(Markdown.Document),
+      Type.getSchema(Collection.Collection),
+      Type.getSchema(Presentation.Presentation),
+    ]),
     // Required: absent used to mean "flip".
     state: Schema.Boolean,
   }),
