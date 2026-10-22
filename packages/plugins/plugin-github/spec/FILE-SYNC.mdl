@@ -375,8 +375,8 @@ feat F-2: Change detection
     then: the first request is fetchBranchHead with the stored ETag
 
   req F-2.2:
-    when: the branch head equals Cursor.spec.token and no bound object changed since its marker's heads
-    then: the pass ends after one request
+    when: the branch head equals Cursor.spec.token, no bound object changed since its marker's heads, and the write branch (when it exists) is still at the commit this space last wrote
+    then: the pass ends; that is one request, or two while a write branch exists
 
   req F-2.3:
     when: the head moved
@@ -424,7 +424,7 @@ feat F-4: Push
 
   req F-4.6:
     when: the write branch's tip is not a commit this space wrote (the newest push VersionLink)
-    then: the paths changed since that commit are pulled as in F-3.2, with base = the blob this space last pushed, before anything is exported; a person's commit on the pull request is merged, never overwritten. The space's own commits are never pulled, since they carry edits it already holds
+    then: the paths changed since that commit are pulled before anything is exported: a modified path as in F-3.2 with base = the blob this space last pushed, an added path as in F-3.1, and a removed path as in F-3.4, which also removes it from the push tree so F-4.2 does not restore it from the read head; a person's commit on the pull request is merged, never overwritten. The space's own commits are never pulled, since they carry edits it already holds
 ```
 
 ```mdl
@@ -449,7 +449,7 @@ feat F-6: Deus specs
 
 ```mdl
 scenario T-1: Nothing changed
-  given: a file binding whose token equals the branch head; no Spec changed locally
+  given: a file binding whose token equals the branch head; no Spec changed locally; no write branch exists
   when: SyncGitHubFiles runs
   then:
     - one request is made and GitHub answers 304
@@ -574,4 +574,13 @@ decision D-8: A push commit's tree is the read head's tree plus the export of ev
   for: user:dmaretskyi
   affects: [commitFiles, F-4.2, F-4.6]
   why: Two parents alone do not combine trees, and a tree built from either side alone dropped the other's changes; exporting from ECHO, where the pull has already merged both sides, gives one tree with no conflicts. A reviewer's commit on the pull request is the one write-branch change ECHO does not already hold, so it is pulled rather than overwritten.
+```
+
+```mdl
+decision D-9: The quiet-pass check also reads the write branch's head, and F-4.6 routes a person's added, modified and removed paths through F-3.1, F-3.2 and F-3.4. Fills in [D-8].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.2, F-4.6]
+  why: Without the second read a reviewer's commit waited for some unrelated change to be noticed, and treating every path as a modification left added files without an object and let removed files come back from the read head's tree.
 ```

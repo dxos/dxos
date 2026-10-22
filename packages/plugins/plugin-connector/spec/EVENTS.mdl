@@ -386,7 +386,7 @@ feat F-5: Revocation
 
   req F-5.1:
     when: Provider.webhook.revokes returns revocations
-    then: EventRouter.revoke removes every matching route
+    then: EventRouter.revoke removes every matching route and clears its trigger's grant, so the next load issues a fresh grant (F-2.2) for whatever the token still reaches, and the timer falls back to its default schedule until then (F-6.1)
 
   req F-5.2:
     when: kms deletes a managed token
@@ -438,8 +438,9 @@ scenario T-4: App uninstalled
   given: routes registered for installation 42
   when: GitHub delivers installation.deleted for installation 42
   then:
-    - every route whose installations include 42 is removed
-    - the affected bindings fall back to part 1's poll interval
+    - every route whose installations include 42 is removed and its trigger's grant is cleared
+    - the affected bindings fall back to the timer's default schedule
+    - a trigger whose source still reaches installation 43 gets a fresh grant and route on its next load
 ```
 
 ## Open questions
@@ -601,4 +602,13 @@ decision D-17: A grant and its route carry every installation the source reaches
   for: user:dmaretskyi
   affects: [AccessVerdict, EventGrant, Route, F-5.1]
   why: One account can see the GitHub App installed on several owners, so a single installation id could not find every route a broad grant covers.
+```
+
+```mdl
+decision D-18: An installation revocation clears the grant of every trigger whose route it removed, rather than editing the route; the trigger's next load re-checks access and registers whatever remains.
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.1, T-4]
+  why: A broad route can list several installations; dropping it while the grant stayed valid cut off the installations still reachable and kept the timer on its slow schedule. Re-issuing on load reuses F-2.2 instead of a second path that edits routes in place.
 ```
