@@ -139,7 +139,9 @@ decision model that returns calibrated probabilities for typed questions. It is
 orders of magnitude cheaper than a subagent (input tokens only, $0.042 per
 million) but cannot explore, so each rule's `context` field decides what it is
 shown. Needs `TYPESAFE_API_KEY`: use it from the shell when it is already exported, otherwise
-it is `op://CI/Typesafe AI Test Key/credential` in 1Password (see the `1password` skill).
+it is `op://CI/Typesafe AI Test Key/credential` in 1Password (see the `1password` skill). The agents'
+service account reads only `eng-dev`, which has no Typesafe key yet (`ai.typesafe/local/credential`), so
+an agent session without the exported variable cannot run it.
 
 ```sh
 bun .agents/skills/agentic-review/scripts/prepare.ts --pr-only

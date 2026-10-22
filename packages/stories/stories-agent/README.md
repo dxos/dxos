@@ -27,8 +27,9 @@ Two kinds of Discord app take part, and each EDGE environment has its own Kai:
 | production | Kai | `1555777706459660288` |
 
 Composer picks the Kai of the EDGE it talks to (`KAI_APPLICATION_IDS` in plugin-discord's `src/constants.ts`), so a
-space records no bot; staging has no entry there, since `EDGE_URLS` names no staging EDGE. Each Kai's bot token is the `DISCORD_KAI_BOT_TOKEN` field of `op://CI/hub.dxos.network/discord-service-<env>` (the
-unprefixed `discord-service` section for local).
+space records no bot; staging has no entry there, since `EDGE_URLS` names no staging EDGE. Each Kai's bot token is the `credential` field of the `com.discord.bot.kai` record, in that environment's
+section: `op://eng-dev/com.discord.bot.kai/<local|dev>/credential` or
+`op://eng-ops/com.discord.bot.kai/<preview|staging|production>/credential`.
 
 In each Kai app's portal, once:
 
@@ -117,7 +118,7 @@ crawl state while the trigger is on, `installFakeBrain` answers the fact feed ro
 ### 5. Check the bot
 
 With Kai Local's bot token in your shell
-(`export DISCORD_BOT_TOKEN="$(op read -n op://CI/hub.dxos.network/discord-service/DISCORD_KAI_BOT_TOKEN)"`), each of
+(`export DISCORD_BOT_TOKEN="$(op read -n op://eng-dev/com.discord.bot.kai/local/credential)"`), each of
 these prints without revealing the token:
 
 ```bash
