@@ -308,3 +308,25 @@ node.data)`; connector maps `sections` (reactive, as in plugin-space `collection
       Capture screenshots.
 - [ ] **Step 3:** `pnpm format`; full package `test`, `test-storybook`, `lint`, typecheck.
 - [ ] **Step 4:** Commit `plugin-presenter: Phase 1 spec and ledger`.
+
+### Task 10: Demo presentation story _(user request, 2026-10-22)_
+
+**Files:**
+
+- Create: `src/containers/PresentationArticle/PresentationArticle.demo.stories.tsx` (title
+  `plugins/plugin-presenter/Demo`), `src/testing/demo-presentation.ts` (exported from `#testing`)
+
+**Interfaces:**
+
+- Consumes: `Presentation.make`, `Presentation.link`, `PresentationArticle` (Task 7), the story decorators used in
+  Task 7.
+- Produces: `createDemoPresentation(db): Presentation.Presentation` — a ~8-slide deck that exercises Phase 1: a
+  title slide, bullet slides, a code slide, the existing `Slide` frontmatter layouts (`image` with `layout:
+fullscreen`, `columns`, `rows`), and two linked objects (a `Markdown.Document`, plus one object from another
+  plugin whose slide surface is available in the story, e.g. a `Table` or `Drawing`; otherwise a second document).
+  Content describes the presenter itself (what a Presentation is, how to add slides, keys).
+
+- [ ] **Step 1:** Story `Demo` renders `PresentationArticle` for the demo deck in a fullscreen layout;
+      `play` asserts `1 / N`, steps with `ArrowRight` to the linked-document slide and asserts its heading.
+- [ ] **Step 2:** `moon run plugin-presenter:test-storybook` → FAIL. **Step 3:** Implement. **Step 4:** PASS.
+- [ ] **Step 5:** Commit `plugin-presenter: demo presentation story`.

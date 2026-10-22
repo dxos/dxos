@@ -21,6 +21,7 @@ Design: [DESIGN.md](./DESIGN.md).
 - [ ] **Fullscreen toggle, toolbar + overlay pager, focus-scoped keys**.
 - [ ] **Slide index view state** — `presenter-slide` aspect, `local` backend.
 - [ ] **Delete** `PresenterContext`, `StartButton`, `Layout`, `CollectionArticle`, `presentCollections`.
+- [ ] **Demo presentation story** — `plugins/plugin-presenter/Demo` (plan Task 10).
 
 ## Phase 2: Pager primitive
 
