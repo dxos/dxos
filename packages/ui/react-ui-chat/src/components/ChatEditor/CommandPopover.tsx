@@ -64,8 +64,7 @@ export const CommandPopover = ({ completion, getView, anchorRef, rows = 8 }: Com
       // Focus never leaves the editor, so there is nothing to move or restore.
       autoFocus={false}
       restoreFocus={false}
-      // CodeMirror's completion keymap owns Escape while focus stays in the editor.
-      closeOnEscape={false}
+      // The popover's dismiss layer takes Escape before CodeMirror sees it, so the close is routed back here.
       onOpenChange={({ open }) => {
         const view = getView();
         if (!open && view) {
