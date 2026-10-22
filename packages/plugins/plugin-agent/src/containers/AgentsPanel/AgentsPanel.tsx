@@ -17,14 +17,14 @@ import { Form } from '@dxos/react-ui-form';
 import * as Field from '@dxos/react-ui/Field';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
-import { ContactList, type ContactSpace } from '@dxos/shell/react';
 
+import { AgentList, type AgentListSpace } from '#components';
 import { meta } from '#meta';
 import { AgentSpace } from '#types';
 
 /**
  * The agents the identity administers, read from its own agent spaces (nothing is asked of EDGE), in the contacts
- * book's own list: an agent is a contact, so its row is a contact's row.
+ * book's rows: an agent is a contact.
  */
 export const AgentsPanel = () => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
@@ -33,7 +33,7 @@ export const AgentsPanel = () => {
   const [filter, setFilter] = useState('');
 
   const handleSelectSpace = useCallback(
-    (selected: ContactSpace) =>
+    (selected: AgentListSpace) =>
       void invokePromise(LayoutOperation.SwitchWorkspace, { subject: GraphPath.getSpacePath(selected.id) }),
     [invokePromise],
   );
@@ -53,13 +53,11 @@ export const AgentsPanel = () => {
                 />
               </Field.Root>
             )}
-            <ContactList
+            <AgentList
               classNames='mt-3'
-              contacts={agents}
+              agents={agents}
               spaces={spaces}
               filter={filter}
-              label={t('agents-panel.label')}
-              emptyMessage={t(agents.length === 0 ? 'agents-panel-empty.message' : 'agents-panel-no-match.message')}
               onSelectSpace={handleSelectSpace}
             />
           </Form.FieldSet>
@@ -69,7 +67,7 @@ export const AgentsPanel = () => {
   );
 };
 
-type AdministeredAgents = { agents: Contact[]; spaces: ContactSpace[] };
+type AdministeredAgents = { agents: Contact[]; spaces: AgentListSpace[] };
 
 /** Re-read whenever the client's spaces, its identity, its contacts, or the members of one of its spaces change. */
 const useAdministeredAgents = (): AdministeredAgents => {
@@ -118,7 +116,7 @@ const useAdministeredAgents = (): AdministeredAgents => {
       const commonSpaces = contact.commonSpaces.filter((spaceKey) => isMember(all, toPublicKey(spaceKey), identityKey));
       return [{ ...contact, commonSpaces }];
     });
-    const spaces = all.map((space): ContactSpace => ({
+    const spaces = all.map((space): AgentListSpace => ({
       id: space.id,
       key: space.key,
       name: space.isOpen ? space.properties.name : undefined,

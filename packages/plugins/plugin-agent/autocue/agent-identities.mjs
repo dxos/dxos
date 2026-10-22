@@ -261,7 +261,7 @@ const listsAgentAsMember = (page) =>
   );
 
 /** Kai's row in the account's Agents panel. */
-const agentRow = (page) => page.getByTestId('contact-list.item').filter({ hasText: AGENT }).first();
+const agentRow = (page) => page.getByTestId('agent-list.item').filter({ hasText: AGENT }).first();
 
 /** Opens the profile from the rail, then its Agents panel, and waits for Kai's row. */
 const openAgentsPanel = async (peer) => {
@@ -389,7 +389,7 @@ export const steps = [
     run: async ({ peers: { alice } }) => {
       await openAgentsPanel(alice);
       // QA-5 expects a chip for the agent's own space and one for Alice's.
-      const chips = agentRow(alice.page).getByTestId('contact-list.space');
+      const chips = agentRow(alice.page).getByTestId('agent-list.space');
       for (const space of [AGENT, HOME]) {
         await chips.getByText(space, { exact: true }).waitFor({ timeout: TIMEOUT });
       }
@@ -401,7 +401,7 @@ export const steps = [
     run: async ({ peers: { alice } }) => {
       const { page } = alice;
       // The agent's own space is named after it.
-      await alice.click(agentRow(page).getByTestId('contact-list.space').getByText(AGENT, { exact: true }));
+      await alice.click(agentRow(page).getByTestId('agent-list.space').getByText(AGENT, { exact: true }));
       await waitFor(
         async () =>
           (await currentWorkspace(page)

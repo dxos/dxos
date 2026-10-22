@@ -512,13 +512,28 @@ component AgentActivityContainer
 ```
 
 ```mdl
+component AgentList
+  desc: |
+    The agents the viewer administers (components/AgentList), in the contacts book's rows: per agent, its avatar, its
+    name ("Unnamed agent" when it has none), a chip per space the agent is a member of that the viewer is too, each
+    opening that space and coloured by the hash of the space's id, and its DID with a copy button. A filter keeps the
+    agents whose name, identity key or DID contains it. With none, a line saying how to get one. It copies the rows of
+    `ContactList` in `@dxos/shell` until the two are factored into one.
+  props:
+    agents: Contact[]
+    spaces: { id: string, key: PublicKey, name?: string }[]
+    filter?: string
+  emits:
+    onSelectSpace(space)
+```
+
+```mdl
 component AgentsPanel
   desc: |
-    Container (containers/AgentsPanel) laid out as the contacts book's container, rendering its own list (`ContactList`
-    from `@dxos/shell`): a search field once there is more than one agent, then a contact row per agent the identity
-    administers (`AgentSpace.administeredAgents` over the client's spaces), with a chip per space the agent is a
-    member of that the viewer is too, none where the agent was removed. Re-read whenever the spaces, the identity,
-    the contacts or a space's members change.
+    Container (containers/AgentsPanel) wiring AgentList to the client, as the contacts book's container does: a search
+    field once there is more than one agent, then the contacts the identity administers as agents
+    (`AgentSpace.administeredAgents` over the client's spaces), each with the spaces it shares with the viewer, none
+    where the agent was removed. Re-read whenever the spaces, the identity, the contacts or a space's members change.
   actions:
     open(spaceId) → org.dxos.operation.appToolkit.switchWorkspace
 ```
@@ -1219,12 +1234,20 @@ decision D-8: The account's Agents panel lists agents the way the contacts book 
 ```
 
 ```mdl
-decision D-9: The Agents panel renders the shell's `ContactList`, so an agent's row is the contacts book's own row, and the panel's `AgentList` component is removed. Its space chips take the colour `ContactList` hashes from each space's id, as the contacts book's chips do. Fills in [D-8].
-  date: 2026-10-21
+decision D-9: The Agents panel builds its own list in the contacts book's style rather than reusing `ContactList` directly, with a TODO to factor the two out and reconcile them. Fills in [D-8].
+  date: 2026-10-22
+  by: user:mykola-vrmchk
+  affects: [AgentList, AgentsPanel]
+  source: https://github.com/dxos/dxos/pull/14076
+```
+
+```mdl
+decision D-10: `AgentList` takes the agents as the contacts they are and copies `ContactList`'s rows, its markup and styles included, so the two panels look the same until they are factored out. Its space chips take the colour hashed from each space's id, as the contacts book's chips do. Fills in [D-9].
+  date: 2026-10-22
   by: agent:claude-code
   for: user:mykola-vrmchk
-  affects: [AgentsPanel, F-7.7]
-  why: `AgentList` copied the contacts layout by hand and had drifted from it, and one component keeps the two panels identical.
+  affects: [AgentList, F-7.7]
+  why: A copy of the rows keeps the panels identical without widening `@dxos/shell`'s API for one caller.
   rejected:
     - Passing each space's own colour to the chips: the space colour fix (dxos/dxos#14075) keeps every chip and the sidebar on the hash of the space id instead.
   source: https://github.com/dxos/dxos/pull/14076
