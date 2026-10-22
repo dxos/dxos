@@ -553,7 +553,6 @@ export const lazyModule = <
   spec: ModuleSpec<Provides, Requires, Props, Options>,
   loader: LoadModule<Props, Requires, Provides>,
 ): Module<Options> => {
-  const load = HotModules.hotLoader(loader);
   const lazyFn = (options: Options): Effect.Effect<any, Error, any> =>
     Effect.gen(function* () {
       // Chunk import measured separately from the body: on deferral the import moves to the
@@ -561,7 +560,9 @@ export const lazyModule = <
       const currentModuleId = yield* CurrentModuleId;
       const moduleId = currentModuleId ?? name;
       performance.mark(`module-import:${moduleId}:start`);
-      const { default: getModule } = yield* Effect.promise(() => load(currentModuleId));
+      const loaded = yield* Effect.promise(() => loader());
+      HotModules.track(loaded, currentModuleId);
+      const getModule = loaded.default;
       performance.mark(`module-import:${moduleId}:end`);
       performance.measure(
         `module-import:${moduleId}`,

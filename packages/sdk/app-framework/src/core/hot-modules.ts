@@ -19,8 +19,8 @@ type Reloadable = {
 };
 
 type FileEntry = {
-  readonly replacers: Set<(namespace: unknown) => void>;
   readonly moduleIds: Set<string>;
+  latest?: unknown;
 };
 
 type State = {
@@ -30,13 +30,15 @@ type State = {
 };
 
 /**
- * Runtime half of plugin-module hot replacement, called by the accept handler the dev transform
- * injects into each module body with the file's key and its freshly evaluated namespace.
+ * Runtime half of plugin-module hot replacement, called by the code the dev transform injects:
+ * module bodies hand over each new version, and loaders ask for the newest one.
  */
 export type HotRuntime = {
   /** Whether any module has loaded the file; the handler propagates the update otherwise. */
   has(key: string): boolean;
   update(key: string, namespace: unknown): Promise<void>;
+  /** The newest version of the file a loader just imported, or undefined when it has not changed. */
+  latest(namespace: unknown): unknown;
 };
 
 declare global {
@@ -51,6 +53,14 @@ const state: State = globalThis.__DX_HOT_MODULES__?.state ?? {
   queue: Promise.resolve(),
 };
 
+const keyOf = (namespace: unknown): string | undefined => {
+  if (typeof namespace !== 'object' || namespace === null || !(HOT_KEY_EXPORT in namespace)) {
+    return undefined;
+  }
+  const key = namespace[HOT_KEY_EXPORT];
+  return typeof key === 'string' ? key : undefined;
+};
+
 const update = (key: string, namespace: unknown): Promise<void> => {
   // Serialized: a second save must not tear down modules the first is still re-activating.
   state.queue = state.queue.then(async () => {
@@ -58,7 +68,7 @@ const update = (key: string, namespace: unknown): Promise<void> => {
     if (!entry) {
       return;
     }
-    entry.replacers.forEach((replace) => replace(namespace));
+    entry.latest = namespace;
     const moduleIds = [...entry.moduleIds];
     log.info('hot update', { file: key, modules: moduleIds });
     for (const ref of state.managers) {
@@ -75,7 +85,12 @@ const update = (key: string, namespace: unknown): Promise<void> => {
   return state.queue;
 };
 
-globalThis.__DX_HOT_MODULES__ = { has: (key) => state.files.has(key), update, state };
+const latest = (namespace: unknown): unknown => {
+  const key = keyOf(namespace);
+  return key === undefined ? undefined : state.files.get(key)?.latest;
+};
+
+globalThis.__DX_HOT_MODULES__ = { has: (key) => state.files.has(key), update, latest, state };
 
 /** Registers a manager to receive hot updates; held weakly so a disposed manager is collected. */
 export const register = (manager: Reloadable): void => {
@@ -83,39 +98,19 @@ export const register = (manager: Reloadable): void => {
 };
 
 /**
- * A new version of the same file has the same exports, which is the only thing the update path
- * can know about it; checking for `default` keeps a malformed update from replacing a good body.
+ * Records that a module loaded a body, so an update of that file re-runs the module. Bodies the dev
+ * transform did not touch carry no key, so production builds pay one property check. A loader wrapper
+ * that rebuilds the namespace must spread it, or the key is lost and its module never hot-reloads.
  */
-const isSameModule = <T extends { readonly default: unknown }>(value: unknown): value is T =>
-  typeof value === 'object' && value !== null && 'default' in value;
-
-/**
- * Wraps a lazy module's loader so it returns the newest hot-updated version of its file. After an
- * update the browser keeps serving the original URL's stale instance, so the new namespace has to
- * be carried here. Bodies the dev transform did not touch carry no key and are never tracked.
- */
-export const hotLoader = <T extends { readonly default: unknown }>(
-  loader: () => Promise<T>,
-): ((moduleId: string | undefined) => Promise<T>) => {
-  let latest: T | undefined;
-  const replace = (namespace: unknown) => {
-    if (isSameModule<T>(namespace)) {
-      latest = namespace;
-    }
-  };
-
-  return async (moduleId) => {
-    const namespace = latest ?? (await loader());
-    const key = HOT_KEY_EXPORT in namespace ? namespace[HOT_KEY_EXPORT] : undefined;
-    if (typeof key === 'string' && moduleId !== undefined) {
-      let entry = state.files.get(key);
-      if (!entry) {
-        entry = { replacers: new Set(), moduleIds: new Set() };
-        state.files.set(key, entry);
-      }
-      entry.replacers.add(replace);
-      entry.moduleIds.add(moduleId);
-    }
-    return namespace;
-  };
+export const track = (namespace: unknown, moduleId: string | undefined): void => {
+  const key = keyOf(namespace);
+  if (key === undefined || moduleId === undefined) {
+    return;
+  }
+  let entry = state.files.get(key);
+  if (!entry) {
+    entry = { moduleIds: new Set() };
+    state.files.set(key, entry);
+  }
+  entry.moduleIds.add(moduleId);
 };

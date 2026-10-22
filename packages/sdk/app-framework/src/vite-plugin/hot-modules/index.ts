@@ -24,13 +24,16 @@ const calleeName = (callee: ESTree.Expression | ESTree.Super): string | undefine
   return undefined;
 };
 
+/** A `() => import('./x')` loader found in a file: the specifier and the span of its `import(...)`. */
+export type ModuleLoader = { specifier: string; start: number; end: number };
+
 /**
- * Finds the specifiers of `() => import('./x')` loaders passed to a call — the shape of
- * `Capability.lazyModule` and every maker built on it. Specifiers with a query are assets.
+ * Finds the `() => import('./x')` loaders passed to a call — the shape of `Capability.lazyModule` and
+ * every maker built on it. Specifiers with a query are assets.
  */
-export const findModuleLoaders = (filename: string, code: string): string[] => {
+export const findModuleLoaders = (filename: string, code: string): ModuleLoader[] => {
   const { program } = parseSync(filename, code);
-  const specifiers: string[] = [];
+  const loaders: ModuleLoader[] = [];
   new Visitor({
     CallExpression: (node) => {
       const name = calleeName(node.callee);
@@ -47,39 +50,45 @@ export const findModuleLoaders = (filename: string, code: string): string[] => {
           argument.body.source.value.startsWith('.') &&
           !argument.body.source.value.includes('?')
         ) {
-          specifiers.push(argument.body.source.value);
+          loaders.push({ specifier: argument.body.source.value, start: argument.body.start, end: argument.body.end });
         }
       }
     },
   }).visit(program);
-  return specifiers;
+  return loaders;
 };
+
+/**
+ * Makes each loader resolve to the newest version of its body. After a hot update the browser keeps
+ * serving the original URL's stale instance, so the swap has to happen where the import resolves —
+ * innermost, so wrappers around a loader re-run against the new version.
+ */
+export const rewriteLoaders = (code: string, loaders: readonly ModuleLoader[]): string =>
+  [...loaders]
+    .sort((a, b) => b.start - a.start)
+    .reduce(
+      (result, { start, end }) =>
+        `${result.slice(0, end)}.then((module) => globalThis.${HOT_RUNTIME_GLOBAL}?.latest(module) ?? module)${result.slice(end)}`,
+      code,
+    );
 
 /**
  * Wraps a module body so it is its own HMR boundary: the new version is handed to the
  * app-framework runtime, which re-runs every plugin module that loaded the file. A file no module
  * has loaded propagates the update instead, so a misidentified body behaves as if untouched.
  *
- * The accept is prepended so it registers even when the edited body throws while evaluating;
- * otherwise the next, fixed, save would find no handler and be dropped.
+ * The accept goes first so it registers even when the edited body throws while evaluating;
+ * otherwise the next, fixed, save would find no handler and be dropped. It shares the body's first
+ * line so the body's line numbers, and so its source map, stay as they were.
  */
 export const wrapModuleBody = (code: string, key: string): string => {
   const literal = JSON.stringify(key);
-  return [
-    'if (import.meta.hot) {',
-    '  import.meta.hot.accept((next) => {',
-    `    const runtime = globalThis.${HOT_RUNTIME_GLOBAL};`,
-    `    if (next && runtime?.has(${literal})) {`,
-    `      void runtime.update(${literal}, next);`,
-    '    } else {',
-    `      import.meta.hot.invalidate('no plugin module loaded ' + ${literal});`,
-    '    }',
-    '  });',
-    '}',
-    code,
-    `export const ${HOT_KEY_EXPORT} = ${literal};`,
-    '',
-  ].join('\n');
+  const accept =
+    'if (import.meta.hot) { import.meta.hot.accept((next) => { ' +
+    `const runtime = globalThis.${HOT_RUNTIME_GLOBAL}; ` +
+    `if (next && runtime?.has(${literal})) { void runtime.update(${literal}, next); } ` +
+    `else { import.meta.hot.invalidate('no plugin module loaded ' + ${literal}); } }); } `;
+  return `${accept}${code}\nexport const ${HOT_KEY_EXPORT} = ${literal};\n`;
 };
 
 /**
@@ -108,24 +117,31 @@ export const hotModulesPlugin = (): Plugin => {
       }
 
       // Bodies are always requested after their importer runs, so recording them here comes first.
+      let result = code;
       if (code.includes('import(')) {
-        for (const specifier of findModuleLoaders(file, code)) {
-          const resolved = await this.resolve(specifier, file);
+        const loaders: ModuleLoader[] = [];
+        for (const loader of findModuleLoaders(file, code)) {
+          const resolved = await this.resolve(loader.specifier, file);
           const target = resolved?.id.split('?')[0];
-          if (target === undefined || bodies.has(target) || !SOURCE_FILE.test(target)) {
+          if (target === undefined || !SOURCE_FILE.test(target) || target.includes('/node_modules/')) {
             continue;
           }
-          bodies.add(target);
-          // Already transformed through another importer: drop the cached result so it is wrapped.
-          const graph = this.environment.mode === 'dev' ? this.environment.moduleGraph : undefined;
-          graph?.getModulesByFile(target)?.forEach((module) => graph.invalidateModule(module));
+          loaders.push(loader);
+          if (!bodies.has(target)) {
+            bodies.add(target);
+            // Already transformed through another importer: drop the cached result so it is wrapped.
+            const graph = this.environment.mode === 'dev' ? this.environment.moduleGraph : undefined;
+            graph?.getModulesByFile(target)?.forEach((module) => graph.invalidateModule(module));
+          }
         }
+        result = rewriteLoaders(result, loaders);
       }
 
-      if (!bodies.has(file) || code.includes('$RefreshReg$')) {
-        return null;
+      if (bodies.has(file) && !code.includes('$RefreshReg$')) {
+        result = wrapModuleBody(result, `/${path.relative(root, file)}`);
       }
-      return { code: wrapModuleBody(code, `/${path.relative(root, file)}`), map: null };
+      // Every insertion is on an existing line, so the incoming mappings stay correct line by line.
+      return result === code ? null : { code: result, map: null };
     },
   };
 };

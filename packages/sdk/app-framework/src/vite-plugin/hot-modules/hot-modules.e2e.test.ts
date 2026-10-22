@@ -29,7 +29,9 @@ const files: Record<string, string> = {
     import * as Capability from '#core/capability.ts';
     export const Value = Capability.makeSingleton()('org.dxos.test.hot.value');
     export const Derived = Capability.makeSingleton()('org.dxos.test.hot.derived');
-    export const ValueModule = Capability.lazyModule('Value', { provides: [Value] }, () => import('./value.ts'));
+    // Rebuilds the namespace, as app-toolkit's makers do; the update must still reach the body inside.
+    const checked = (loader) => () => loader().then((module) => ({ ...module, default: module.default }));
+    export const ValueModule = Capability.lazyModule('Value', { provides: [Value] }, checked(() => import('./value.ts')));
     export const DerivedModule = Capability.lazyModule(
       'Derived',
       { requires: [Value], provides: [Derived] },
