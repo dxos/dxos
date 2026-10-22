@@ -5,12 +5,13 @@
 import { type PlotValue } from '../types.ts';
 
 /**
- * Events from 1980 to 2026, a header row then one per row, dated by month (or by year where the month is uncertain).
+ * Events from 1977 to 2026, a header row then one per row, dated by month (or by year where the month is uncertain).
  * Categories nest by path: `Tech/` (Hardware, Software, AI), `Macro` and its military- (MIC), financial- (FIC) and
  * tech-industrial (TIC) complexes, and `Personal` (a resume).
  */
 export const technologyTimeline: PlotValue[][] = [
   ['Date', 'Category', 'Event', 'Description'],
+  ['1977-09', 'Tech/Hardware', 'Atari 2600', 'Atari’s cartridge console brings arcade games home.'],
   ['1980', 'Macro', 'Globalization era begins', 'Trade liberalization and freer capital flows expand worldwide.'],
   [
     '1980-05',
@@ -18,9 +19,16 @@ export const technologyTimeline: PlotValue[][] = [
     'Arcade & home games',
     'Atari consoles and arcade cabinets bring computing into homes and malls.',
   ],
+  ['1980-05', 'Tech/Software', 'Pac-Man', 'Namco’s maze game becomes the best-known arcade game of all time.'],
   ['1981-03', 'Macro/MIC', 'Reagan defense buildup', 'Peacetime defense spending rises sharply through the decade.'],
   ['1981-06', 'Macro/FIC', 'Volcker shock', 'The Fed raises rates to about 20% to break inflation.'],
   ['1981-08', 'Tech/Hardware', 'IBM PC', 'IBM’s open-architecture PC makes the personal computer a business standard.'],
+  [
+    '1982-02',
+    'Tech/Software',
+    'Ms. Pac-Man',
+    'The sequel, first built as an unauthorized enhancement, outsells the original in the US.',
+  ],
   ['1983', 'Tech/Software', 'Bulletin boards (BBS)', 'Dial-up bulletin boards form the first online communities.'],
   [
     '1983-03',
