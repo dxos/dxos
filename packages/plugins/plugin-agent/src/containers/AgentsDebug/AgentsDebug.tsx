@@ -7,7 +7,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { Context } from '@dxos/context';
 import { ControlledSelector, CredentialsTable, JsonView } from '@dxos/devtools';
-import { type BrainHalo } from '@dxos/edge-client';
+import { type AgentHalo } from '@dxos/edge-client';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { buf, toPublicKey } from '@dxos/protocols/buf';
 import { CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
@@ -33,7 +33,7 @@ export const AgentsDebug = ({ role }: AgentsDebugProps) => {
   const agents = useAdministeredAgents();
   const [selected, setSelected] = useState<string>();
   const [view, setView] = useState<View>('identity');
-  const [halo, setHalo] = useState<BrainHalo>();
+  const [halo, setHalo] = useState<AgentHalo>();
   const [error, setError] = useState<string>();
 
   const labels = useMemo(
@@ -49,7 +49,7 @@ export const AgentsDebug = ({ role }: AgentsDebugProps) => {
       return;
     }
     let current = true;
-    edge.getBrainHalo(Context.default(), agent.did).then(
+    edge.getAgentHalo(Context.default(), agent.did).then(
       (result) => current && setHalo(result),
       (err) => current && setError(err instanceof Error ? err.message : String(err)),
     );
@@ -126,6 +126,13 @@ const useAdministeredAgents = (): AgentSpace.Summary[] => {
     const changed = () => setRevision((value) => value + 1);
     const members = new Map<string, { unsubscribe: () => void }>();
     const spaces = client.spaces.subscribe((all) => {
+      // A space that left and came back is subscribed to afresh, not through its stale entry.
+      for (const [spaceId, subscription] of members) {
+        if (!all.some((space) => space.id === spaceId)) {
+          subscription.unsubscribe();
+          members.delete(spaceId);
+        }
+      }
       for (const space of all) {
         if (!members.has(space.id)) {
           members.set(space.id, space.members.subscribe(changed));

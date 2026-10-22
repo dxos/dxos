@@ -169,7 +169,7 @@ export const BrainAdmins = Schema.Struct({ adminKeys: Schema.Array(Schema.String
 export type BrainAdmins = Schema.Schema.Type<typeof BrainAdmins>;
 
 /** What EDGE answers `GET /compute/brain/:agent/halo` with: what an admin inspects of an agent's identity. */
-export const BrainHalo = Schema.Struct({
+export const AgentHalo = Schema.Struct({
   identity: Schema.Struct({
     identityDid: Schema.String,
     identityKey: Schema.String,
@@ -189,7 +189,7 @@ export const BrainHalo = Schema.Struct({
   /** Every credential in the agent's HALO, each a base64 `Credential`. */
   credentials: Schema.Array(Schema.String),
 });
-export type BrainHalo = Schema.Schema.Type<typeof BrainHalo>;
+export type AgentHalo = Schema.Schema.Type<typeof AgentHalo>;
 
 /**
  * Validates the finalize response rather than asserting its shape.
@@ -791,10 +791,10 @@ export class EdgeHttpClient extends BaseHttpClient {
   }
 
   /** The agent's HALO, its admins and its spaces, which only its admins may read; EDGE answers anyone else 404. */
-  public async getBrainHalo(ctx: Context, agent: string, args?: EdgeHttpCallArgs): Promise<BrainHalo> {
+  public async getAgentHalo(ctx: Context, agent: string, args?: EdgeHttpCallArgs): Promise<AgentHalo> {
     const url = new URL(`/compute/brain/${encodeURIComponent(agent)}/halo`, this.baseUrl);
     const response = await this._call(ctx, url, { ...args, method: 'GET', auth: true });
-    return Schema.decodeUnknownSync(BrainHalo)(response);
+    return Schema.decodeUnknownSync(AgentHalo)(response);
   }
 
   //

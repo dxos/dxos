@@ -555,7 +555,7 @@ component AgentsDebug
   desc: |
     Container (containers/AgentsDebug) for the debug panel's Agents page. A selector lists the agents the identity
     administers (`AgentSpace.administeredAgents`, by name and DID); for the one picked it reads EDGE's
-    `GET /compute/brain/:did/halo` (`EdgeHttpClient.getBrainHalo`). A second selector shows either its identity, as
+    `GET /compute/brain/:did/halo` (`EdgeHttpClient.getAgentHalo`). A second selector shows either its identity, as
     JSON (the agent as its space records it, EDGE's identity, HALO space, admins, the spaces its admins put it in and
     the spaces it holds a feed in, each named where the viewer is in it too), or every credential in its HALO, in
     devtools' `CredentialsTable` as HALO › Credentials shows the viewer's own. EDGE's refusal shows as `error`.
