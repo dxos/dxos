@@ -115,6 +115,7 @@ export const technologyTimeline: PlotValue[][] = [
   ['1996-02', 'Macro/TIC', 'Telecommunications Act', 'Deregulates US telecom and broadcasting.'],
   ['1996-02', 'Macro/TIC', 'Section 230', 'Shields online platforms from liability for what their users post.'],
   ['1996-03', 'Personal', 'D. E. Shaw', 'Senior Engineer, Advanced Development Group, Mar 1996 – May 1997.'],
+  ['1997', 'Personal', 'Industrial Light & Magic', 'Senior FX Engineer, 1997 – May 1999.'],
   ['1997-05', 'Tech/AI', 'Deep Blue beats Kasparov', 'IBM’s chess computer defeats the world champion in a match.'],
   [
     '1997-06',
@@ -141,7 +142,6 @@ export const technologyTimeline: PlotValue[][] = [
     'Fiction: in Terminator 2, Skynet becomes self-aware on August 29, 1997.',
   ],
   ['1998-02', 'Tech/Software', '“Open source”', 'The term is coined and Netscape releases its browser’s source code.'],
-  ['1998-03', 'Personal', 'Industrial Light & Magic', 'Senior FX Engineer, Mar 1998 – May 1999.'],
   ['1998-05', 'Macro/TIC', 'US v. Microsoft', 'Antitrust case over bundling Internet Explorer with Windows.'],
   [
     '1998-06',
