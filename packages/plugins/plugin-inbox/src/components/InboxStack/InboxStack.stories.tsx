@@ -10,7 +10,6 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { log } from '@dxos/log';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import { useAttentionAttributes, useSelection } from '@dxos/react-ui-attention';
@@ -75,6 +74,13 @@ const DefaultStory = ({ count = 0, options, groupByThread, knownSenders, ...prop
   // Seeded once the space exists: every other distinct sender becomes a Person, so half the rows
   // resolve to a contact and half offer to create one.
   const seeded = useRef(false);
+  const unmounted = useRef(false);
+  useEffect(() => {
+    unmounted.current = false;
+    return () => {
+      unmounted.current = true;
+    };
+  }, []);
   useEffect(() => {
     if (!space?.db || seeded.current || !items || !knownSenders) {
       return;
@@ -93,7 +99,13 @@ const DefaultStory = ({ count = 0, options, groupByThread, knownSenders, ...prop
       .forEach((sender) => {
         space.db.add(Obj.make(Person.Person, { fullName: sender?.name, emails: [{ value: sender?.email ?? '' }] }));
       });
-    space.db.flush({ indexes: true }).catch((error) => log.warn('seed flush interrupted', { error }));
+    // The lookup reads an indexed query, so the seeds have to land before it can resolve them. Unmounting closes
+    // the client under a pending flush; any other failure still surfaces.
+    void space.db.flush({ indexes: true }).catch((error) => {
+      if (!unmounted.current) {
+        throw error;
+      }
+    });
   }, [space, items, knownSenders]);
 
   return <InboxStack {...props} items={items} db={space?.db} onContactCreate={onContactCreate} />;

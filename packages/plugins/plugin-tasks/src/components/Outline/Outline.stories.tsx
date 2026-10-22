@@ -104,13 +104,17 @@ export const TestLinkActivation: Story = {
   play: async ({ canvasElement, args }) => {
     const { page } = await import('@vitest/browser/context');
     const canvas = within(canvasElement);
-    const anchor = await waitFor(() => {
-      const element = canvasElement.querySelector<HTMLElement>(`dx-anchor[eid="${LINK_DXN}"]`);
-      if (!element) {
-        throw new Error('No anchor chip');
-      }
-      return element;
-    });
+    // The chip renders once the editor has mounted and decorated the document.
+    const anchor = await waitFor(
+      () => {
+        const element = canvasElement.querySelector<HTMLElement>(`dx-anchor[eid="${LINK_DXN}"]`);
+        if (!element) {
+          throw new Error('No anchor chip');
+        }
+        return element;
+      },
+      { timeout: 10_000 },
+    );
 
     // The chip's own activation still reaches the window, where the app's preview popover listens.
     const activations: string[] = [];

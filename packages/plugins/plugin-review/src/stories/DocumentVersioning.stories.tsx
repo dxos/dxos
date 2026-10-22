@@ -169,27 +169,31 @@ const PROSE_SUGGESTION_ALICE = [
 ].join('\n');
 
 // Play functions drive document edits through the data layer (exercising the editor's live
-// automerge binding) and all versioning actions through the UI. Captured per story run.
-let currentDoc: Markdown.Document | undefined;
-let currentStory: string | undefined;
+// automerge binding) and all versioning actions through the UI. Keyed by story id: a story's client can finish
+// initializing after the next story has started.
+const storyDocs = new Map<string, Markdown.Document>();
 
-const getDoc = (): Markdown.Document => {
-  invariant(currentDoc, 'story document not initialized');
-  return currentDoc;
+const getDoc = (storyId: string): Markdown.Document => {
+  const doc = storyDocs.get(storyId);
+  invariant(doc, 'story document not initialized');
+  return doc;
 };
+
+/** The story's document, once its client has initialized. */
+const waitForDoc = (storyId: string): Promise<Markdown.Document> =>
+  waitFor(() => getDoc(storyId), { timeout: 20_000 });
 
 // Splice-based edits (as the editor produces) so concurrent branch/parent changes CRDT-merge;
 // whole-string assignment would be a scalar PUT that merges last-writer-wins.
-const setRootContent = (content: string) => {
-  const root = getDoc().content.target;
+const setRootContent = (doc: Markdown.Document, content: string) => {
+  const root = doc.content.target;
   invariant(root, 'root text not loaded');
   Obj.update(root, (root) => {
     EchoText.update(root, 'content', content);
   });
 };
 
-const setBranchContent = async (branchName: string, content: string) => {
-  const doc = getDoc();
+const setBranchContent = async (doc: Markdown.Document, branchName: string, content: string) => {
   const branch = doc.history?.branches.find((branch) => branch.name === branchName);
   invariant(branch, 'branch not found');
   const binding = await Branch.bind(doc, branch);
@@ -209,8 +213,7 @@ type SuggestionSpec = { creator: string; content: string };
 
 // Find-or-create a per-author suggestion branch and set its content (splice, as the editor would),
 // so the ambient overlay diffs it against main into an attributable suggestion.
-const seedSuggestion = async (creator: string, content: string) => {
-  const doc = getDoc();
+const seedSuggestion = async (doc: Markdown.Document, creator: string, content: string) => {
   // Seeding runs both from plays (root already resolved) and from the decorator right after the doc
   // is created, where the ref still needs loading.
   const parent = doc.content.target ?? (await doc.content.load());
@@ -276,7 +279,6 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>((context) => {
-      currentStory = context.id;
       return {
         plugins: [
           ...CorePlugins.make(),
@@ -292,21 +294,17 @@ const meta = {
                 const doc = defaultSpace.db.add(
                   Markdown.make({ name: 'Versioning', content: context.args.content ?? '' }),
                 );
-                if (currentStory !== context.id) {
-                  return;
-                }
-
-                currentDoc = doc;
+                storyDocs.set(context.id, doc);
                 yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
 
                 // Seeded before mount so a manual story opens already reviewable — the same state the
                 // play-driven stories build up step by step, without a play mutating it first.
                 for (const { creator, content } of context.args.suggestions ?? []) {
-                  yield* Effect.promise(() => seedSuggestion(creator, content));
+                  yield* Effect.promise(() => seedSuggestion(doc, creator, content));
                 }
                 if (context.parameters?.ambientReview) {
-                  const text = yield* Effect.promise(() => currentDoc!.content.load());
-                  seedComments(defaultSpace, currentDoc!, text, [COMMENT_ANCHOR]);
+                  const text = yield* Effect.promise(() => doc.content.load());
+                  seedComments(defaultSpace, doc, text, [COMMENT_ANCHOR]);
                 }
                 yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
               }),
@@ -421,7 +419,8 @@ export const TimeTravel: Story = {
   args: {
     content: '1',
   },
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, id }) => {
+    const doc = await waitForDoc(id);
     const canvas = within(canvasElement);
 
     // Wait for initial content then create revision 1.
@@ -429,12 +428,12 @@ export const TimeTravel: Story = {
     await createRevisionViaUi(canvasElement, 'v1');
 
     // Edit + revision 2.
-    setRootContent('1 2');
+    setRootContent(doc, '1 2');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('1 2'));
     await createRevisionViaUi(canvasElement, 'v2');
 
     // Edit + revision 3.
-    setRootContent('1 2 3');
+    setRootContent(doc, '1 2 3');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('1 2 3'));
     await createRevisionViaUi(canvasElement, 'v3');
 
@@ -471,7 +470,8 @@ export const BranchRevisions: Story = {
   args: {
     content: 'alpha\nbravo\n',
   },
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, id }) => {
+    const doc = await waitForDoc(id);
     const canvas = within(canvasElement);
 
     await waitFor(() => expect(editorContent(canvasElement)).toContain('alpha'), { timeout: 20_000 });
@@ -485,11 +485,11 @@ export const BranchRevisions: Story = {
     await waitFor(() => expect(canvas.getByRole('button', { name: 'New branch' })).toBeDisabled());
 
     // Two edit→revision cycles ON the branch (each checkpoints the branch's heads, laned on the branch).
-    await setBranchContent('draft', 'alpha\nbravo\ncharlie\n');
+    await setBranchContent(doc, 'draft', 'alpha\nbravo\ncharlie\n');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('charlie'));
     await createRevisionViaUi(canvasElement, 'draft-r1');
 
-    await setBranchContent('draft', 'alpha\nbravo\ncharlie\ndelta\n');
+    await setBranchContent(doc, 'draft', 'alpha\nbravo\ncharlie\ndelta\n');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('delta'));
     await createRevisionViaUi(canvasElement, 'draft-r2');
 
@@ -537,7 +537,8 @@ export const BranchMerge: Story = {
   args: {
     content: 'alpha\nbravo\n',
   },
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, id }) => {
+    const doc = await waitForDoc(id);
     const canvas = within(canvasElement);
 
     await waitFor(() => expect(editorContent(canvasElement)).toContain('alpha'), { timeout: 20_000 });
@@ -550,15 +551,15 @@ export const BranchMerge: Story = {
     // branch is selected, so it checkpoints the BRANCH (records the branch's heads, tagged with the
     // branch key) and appears on the branch lane. A later edit only builds on the earlier ones if
     // the branch document truly accumulates them.
-    await setBranchContent('draft', 'alpha\nbravo\ncharlie\n');
+    await setBranchContent(doc, 'draft', 'alpha\nbravo\ncharlie\n');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('charlie'));
     await createRevisionViaUi(canvasElement, 'draft-r1');
 
-    await setBranchContent('draft', 'alpha\nbravo\ncharlie\ndelta\n');
+    await setBranchContent(doc, 'draft', 'alpha\nbravo\ncharlie\ndelta\n');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('delta'));
     await createRevisionViaUi(canvasElement, 'draft-r2');
 
-    await setBranchContent('draft', 'alpha\nbravo\ncharlie\ndelta\nepsilon\n');
+    await setBranchContent(doc, 'draft', 'alpha\nbravo\ncharlie\ndelta\nepsilon\n');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('epsilon'));
     await createRevisionViaUi(canvasElement, 'draft-r3');
 
@@ -573,7 +574,7 @@ export const BranchMerge: Story = {
     );
 
     // Concurrent edit on the parent, isolated from the branch view (main's first line only).
-    setRootContent('alpha edited\nbravo\n');
+    setRootContent(doc, 'alpha edited\nbravo\n');
     await waitFor(() => expect(editorContent(canvasElement)).not.toContain('alpha edited'));
 
     // Merge via the banner; the concurrent parent edit AND every branch edit land on main, and the
@@ -611,7 +612,8 @@ export const ChainedBranches: Story = {
   args: {
     content: 'a\n',
   },
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, id }) => {
+    const doc = await waitForDoc(id);
     const canvas = within(canvasElement);
 
     await waitFor(() => expect(editorContent(canvasElement)).toContain('a'), { timeout: 20_000 });
@@ -619,7 +621,7 @@ export const ChainedBranches: Story = {
     // First branch: add a line, merge back to main.
     await createBranchViaUi(canvasElement, 'first');
     await canvas.findByTestId('version-banner-branch');
-    await setBranchContent('first', 'a\nb\n');
+    await setBranchContent(doc, 'first', 'a\nb\n');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('b'));
     await mergeViaPanel(canvasElement);
     await waitFor(() => expect(canvas.queryByTestId('version-banner-branch')).toBeNull());
@@ -629,7 +631,7 @@ export const ChainedBranches: Story = {
     // Second branch forks off the updated main (which now contains the first merge) and merges too.
     await createBranchViaUi(canvasElement, 'second');
     await canvas.findByTestId('version-banner-branch');
-    await setBranchContent('second', 'a\nb\nc\n');
+    await setBranchContent(doc, 'second', 'a\nb\nc\n');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('c'));
     await mergeViaPanel(canvasElement);
     await waitFor(() => expect(canvas.queryByTestId('version-banner-branch')).toBeNull());
@@ -651,7 +653,8 @@ export const ConflictAutoResolve: Story = {
   args: {
     content: 'alpha\nbravo\n',
   },
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, id }) => {
+    const doc = await waitForDoc(id);
     const canvas = within(canvasElement);
 
     await waitFor(() => expect(editorContent(canvasElement)).toContain('alpha'), { timeout: 20_000 });
@@ -660,9 +663,9 @@ export const ConflictAutoResolve: Story = {
     await canvas.findByTestId('version-banner-branch');
 
     // Branch edits the first line; parent edits the SAME line concurrently (isolated from the view).
-    await setBranchContent('draft', 'alpha theirs\nbravo\n');
+    await setBranchContent(doc, 'draft', 'alpha theirs\nbravo\n');
     await waitFor(() => expect(editorContent(canvasElement)).toContain('theirs'));
-    setRootContent('alpha ours\nbravo\n');
+    setRootContent(doc, 'alpha ours\nbravo\n');
 
     // Merge: both edits interleave via the CRDT — no markers, both words present.
     await mergeViaPanel(canvasElement);
@@ -685,13 +688,14 @@ export const ConflictResolution: Story = {
   args: {
     content: 'alpha\nbravo\n',
   },
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, id }) => {
+    const doc = await waitForDoc(id);
     const canvas = within(canvasElement);
 
     await waitFor(() => expect(editorContent(canvasElement)).toContain('alpha'), { timeout: 20_000 });
 
     // Seed a git-style conflict block (as a legacy textual merge or an external import would).
-    setRootContent('<<<<<<< branch\nalpha theirs\n=======\nalpha ours\n>>>>>>> current\nbravo\n');
+    setRootContent(doc, '<<<<<<< branch\nalpha theirs\n=======\nalpha ours\n>>>>>>> current\nbravo\n');
 
     // The conflict block renders with markers and both sides.
     await waitFor(() => expect(editorContent(canvasElement)).toContain('<<<<<<< branch'), { timeout: 10_000 });
@@ -729,16 +733,15 @@ const trackInserts = (canvasElement: HTMLElement): string =>
     .join('');
 
 /** The live root (main) content. */
-const rootContent = (): string => {
-  const root = getDoc().content.target;
+const rootContent = (doc: Markdown.Document): string => {
+  const root = doc.content.target;
   invariant(root, 'root text not loaded');
   return root.content;
 };
 
 // Read a suggestion branch's live content by binding it (as a second surface would); `excludeCreator`
 // skips a seeded foreign author so this resolves the current user's own suggestion branch.
-const suggestionBranchContent = async (excludeCreator: string): Promise<string> => {
-  const doc = getDoc();
+const suggestionBranchContent = async (doc: Markdown.Document, excludeCreator: string): Promise<string> => {
   const branch = doc.history?.branches.find(
     (branch) => branch.status === 'active' && branch.kind === 'suggestion' && branch.creator !== excludeCreator,
   );
@@ -776,14 +779,15 @@ export const AmbientReviewTest: Story = {
   parameters: {
     ambientReview: true,
   },
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, id }) => {
+    const doc = await waitForDoc(id);
     // Wait for the editor and the seeded comment highlight (mode defaults to editing).
     await waitFor(() => expect(editorContent(canvasElement)).toContain('Hello World'), { timeout: 20_000 });
     await waitFor(() => expect(canvasElement.querySelector('.cm-comment')).not.toBeNull(), { timeout: 15_000 });
 
     // Seed two authors' suggestion branches on main; each appends a distinct line.
-    await seedSuggestion('did:alice', '# Hello World\n\nAlice: nice intro.\n');
-    await seedSuggestion('did:bob', '# Hello World\n\nBob: add an example.\n');
+    await seedSuggestion(doc, 'did:alice', '# Hello World\n\nAlice: nice intro.\n');
+    await seedSuggestion(doc, 'did:bob', '# Hello World\n\nBob: add an example.\n');
 
     // Editing mode: both authors' suggestions overlay the editor AND the comment highlight remains.
     await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Alice'), { timeout: 15_000 });
@@ -831,7 +835,8 @@ export const EditingTypingTest: Story = {
   parameters: {
     ambientReview: true,
   },
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, id }) => {
+    const doc = await waitForDoc(id);
     await waitFor(() => expect(editorContent(canvasElement)).toContain('Body paragraph'), { timeout: 20_000 });
 
     // Type at the end of the body paragraph — default mode is Editing, editor bound to main. Position
@@ -849,10 +854,10 @@ export const EditingTypingTest: Story = {
     // suggestion branch was spawned (per keypress or otherwise); nothing renders as a tracked change.
     await waitFor(
       async () => {
-        await expect(rootContent()).toContain('edited');
+        await expect(rootContent(doc)).toContain('edited');
         // Require history to be initialized — otherwise a not-yet-loaded `history` would collapse to an
         // empty branch list and pass before the regression scenario has settled.
-        const history = getDoc().history;
+        const history = doc.history;
         invariant(history, 'history not initialized');
         const suggestionBranches = history.branches.filter(
           (branch) => branch.status === 'active' && branch.kind === 'suggestion',
@@ -872,12 +877,13 @@ export const SuggestingTest: Story = {
   parameters: {
     ambientReview: true,
   },
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, id }) => {
+    const doc = await waitForDoc(id);
     // Wait for the editor (mode defaults to editing, editor bound to main).
     await waitFor(() => expect(editorContent(canvasElement)).toContain('Hello World'), { timeout: 20_000 });
 
     // Seed a second author's suggestion branch on main (a pure append Bob proposes).
-    await seedSuggestion('did:bob', '# Hello World\n\nBob: add an example.\n');
+    await seedSuggestion(doc, 'did:bob', '# Hello World\n\nBob: add an example.\n');
     await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'), { timeout: 15_000 });
 
     // Switch to Suggesting: the editor rebinds to the user's own suggestion branch (starts == main).
@@ -896,8 +902,8 @@ export const SuggestingTest: Story = {
     await waitFor(() => expect(trackInserts(canvasElement)).toContain('really'), { timeout: 15_000 });
 
     // (b) The edit landed on the user's suggestion branch — main (root) is unchanged, the branch has it.
-    await waitFor(() => expect(rootContent()).not.toContain('really'));
-    await waitFor(async () => expect(await suggestionBranchContent('did:bob')).toContain('really'), {
+    await waitFor(() => expect(rootContent(doc)).not.toContain('really'));
+    await waitFor(async () => expect(await suggestionBranchContent(doc, 'did:bob')).toContain('really'), {
       timeout: 15_000,
     });
 
@@ -959,7 +965,8 @@ export const SuggestingSwapTest: Story = {
   parameters: {
     ambientReview: true,
   },
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, id }) => {
+    const doc = await waitForDoc(id);
     await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'), { timeout: 20_000 });
     const contentEl = () => canvasElement.querySelector<HTMLElement>('.cm-content');
     const before = contentEl();
@@ -986,7 +993,7 @@ export const SuggestingSwapTest: Story = {
       userEvent: 'input.type',
     });
     await waitFor(() => expect(trackInserts(canvasElement)).toContain('SWAP'), { timeout: 15_000 });
-    await expect(rootContent()).not.toContain('SWAP');
+    await expect(rootContent(doc)).not.toContain('SWAP');
 
     // Leave Suggesting: still the same view and DOM.
     await selectViewMode(canvasElement, 'Markdown');
@@ -1010,49 +1017,53 @@ const scenarioArgs = (scenario: ReviewScenario): StoryArgs => ({
 export const ScenarioEditingTest: Story = {
   args: scenarioArgs(editingScenario),
   parameters: { ambientReview: true },
-  play: ({ canvasElement }) => runScenarioStorybook(editingScenario, { canvasElement, doc: getDoc }),
+  play: ({ canvasElement, id }) => runScenarioStorybook(editingScenario, { canvasElement, doc: () => getDoc(id) }),
 };
 
 export const ScenarioSuggestingTest: Story = {
   args: scenarioArgs(suggestingScenario),
   parameters: { ambientReview: true },
-  play: ({ canvasElement }) => runScenarioStorybook(suggestingScenario, { canvasElement, doc: getDoc }),
+  play: ({ canvasElement, id }) => runScenarioStorybook(suggestingScenario, { canvasElement, doc: () => getDoc(id) }),
 };
 
 export const ScenarioSuggestingDeleteTest: Story = {
   args: scenarioArgs(suggestingDeleteScenario),
   parameters: { ambientReview: true },
-  play: ({ canvasElement }) => runScenarioStorybook(suggestingDeleteScenario, { canvasElement, doc: getDoc }),
+  play: ({ canvasElement, id }) =>
+    runScenarioStorybook(suggestingDeleteScenario, { canvasElement, doc: () => getDoc(id) }),
 };
 
 export const ScenarioModeRoundTripTest: Story = {
   args: scenarioArgs(modeRoundTripScenario),
   parameters: { ambientReview: true },
-  play: ({ canvasElement }) => runScenarioStorybook(modeRoundTripScenario, { canvasElement, doc: getDoc }),
+  play: ({ canvasElement, id }) =>
+    runScenarioStorybook(modeRoundTripScenario, { canvasElement, doc: () => getDoc(id) }),
 };
 
 export const ScenarioOverlapRoundTripTest: Story = {
   args: scenarioArgs(overlapRoundTripScenario),
   parameters: { ambientReview: true },
-  play: ({ canvasElement }) => runScenarioStorybook(overlapRoundTripScenario, { canvasElement, doc: getDoc }),
+  play: ({ canvasElement, id }) =>
+    runScenarioStorybook(overlapRoundTripScenario, { canvasElement, doc: () => getDoc(id) }),
 };
 
 export const ScenarioBoldWrapTest: Story = {
   args: scenarioArgs(boldWrapScenario),
   parameters: { ambientReview: true },
-  play: ({ canvasElement }) => runScenarioStorybook(boldWrapScenario, { canvasElement, doc: getDoc }),
+  play: ({ canvasElement, id }) => runScenarioStorybook(boldWrapScenario, { canvasElement, doc: () => getDoc(id) }),
 };
 
 export const ScenarioTableSuggestTest: Story = {
   args: scenarioArgs(tableSuggestScenario),
   parameters: { ambientReview: true },
-  play: ({ canvasElement }) => runScenarioStorybook(tableSuggestScenario, { canvasElement, doc: getDoc }),
+  play: ({ canvasElement, id }) => runScenarioStorybook(tableSuggestScenario, { canvasElement, doc: () => getDoc(id) }),
 };
 
 export const ScenarioTableCellEditTest: Story = {
   args: scenarioArgs(tableCellEditScenario),
   parameters: { ambientReview: true },
-  play: ({ canvasElement }) => runScenarioStorybook(tableCellEditScenario, { canvasElement, doc: getDoc }),
+  play: ({ canvasElement, id }) =>
+    runScenarioStorybook(tableCellEditScenario, { canvasElement, doc: () => getDoc(id) }),
 };
 
 /**
@@ -1071,7 +1082,8 @@ export const AuthorVisibilityTest: Story = {
   parameters: {
     ambientReview: true,
   },
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, id }) => {
+    const doc = await waitForDoc(id);
     const canvas = within(canvasElement);
     // Both authors overlay in the editor and the companion lists both cards.
     await waitFor(() => expect(suggestInserts(canvasElement)).toContain('Bob'), { timeout: 20_000 });
@@ -1097,7 +1109,7 @@ export const AuthorVisibilityTest: Story = {
     await waitFor(() => expect(suggestionCards()).not.toContain('Bob'));
     await expect(suggestionCards()).toContain('point of the whole');
     await expect(
-      getDoc().history?.branches.some(
+      doc.history?.branches.some(
         (branch) => branch.status === 'active' && branch.kind === 'suggestion' && branch.creator === 'did:bob',
       ),
     ).toBe(true);

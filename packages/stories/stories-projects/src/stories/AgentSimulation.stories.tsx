@@ -237,11 +237,12 @@ const makePlay =
       { timeout: 180_000, interval: 500 },
     );
 
-    // Every sub-task's history records the agent starting and finishing it.
+    // Every sub-task's history records the agent starting and finishing it; a finish with reviewers lands in review.
     for (const task of subtasks) {
       const log = (task.history ?? []).flatMap((entry) => (Task.isChangeEntry(entry) ? [entry.description ?? ''] : []));
+      const finished = (task.reviewers?.length ?? 0) > 0 ? /to review/i : /to done/i;
       await expect(log.some((line) => /started/i.test(line))).toBe(true);
-      await expect(log.some((line) => /to (done|review)/i.test(line))).toBe(true);
+      await expect(log.some((line) => finished.test(line))).toBe(true);
     }
     // The exchange stays in the blocked task's history: the question and the answer it resumed on.
     if (answer !== undefined) {
