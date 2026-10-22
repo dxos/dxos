@@ -8,6 +8,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { DXN, Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
@@ -87,4 +88,5 @@ export const SyncSlackChannel = Operation.make({
       added: Schema.Number,
     }),
   }),
+  services: [Trace.TraceService],
 }).pipe(Operation.visible);

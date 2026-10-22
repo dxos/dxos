@@ -23197,6 +23197,9 @@ importers:
       '@dxos/react-ui-editor':
         specifier: workspace:*
         version: link:../react-ui-editor
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../react-ui-list
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../ui-editor
