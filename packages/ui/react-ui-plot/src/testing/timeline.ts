@@ -788,6 +788,13 @@ export const technologyTimeline: PlotValue[][] = [
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/34/Transformer%2C_full_architecture.png/500px-Transformer%2C_full_architecture.png',
   ],
   [
+    '2017-12',
+    'Tech/AI',
+    'AlphaZero',
+    'DeepMind’s program masters chess, shogi and Go from self-play alone, with no human games.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/52/Chess_Programming.svg/500px-Chess_Programming.svg.png',
+  ],
+  [
     '2018-03',
     'Macro',
     'Cambridge Analytica',
@@ -865,6 +872,13 @@ export const technologyTimeline: PlotValue[][] = [
     'Fed backstops corporate bonds',
     'The Fed buys corporate debt for the first time.',
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/Seal_of_the_United_States_Federal_Reserve_System.svg/500px-Seal_of_the_United_States_Federal_Reserve_System.svg.png',
+  ],
+  [
+    '2020-03',
+    'Tech/AI',
+    'Agent57',
+    'DeepMind’s agent is the first to beat the human benchmark on all 57 Atari games.',
+    null,
   ],
   ['2020-06', 'Tech/Hardware', 'Spot on sale', 'Boston Dynamics’ Spot quadruped goes on sale.', null],
   [
