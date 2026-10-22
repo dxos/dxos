@@ -36,9 +36,11 @@ as a deck directly. An assistant can turn a markdown outline into a presentation
 - A slide surface that requires the presenter to know about its schema.
 - Slide position shared between collaborators.
 
-## Current state
+## Baseline (before Phase 1)
 
-| Area            | Today                                                                                                                              | Problem                                                                                                                        |
+What the plugin did before this design; kept as context, not current guidance.
+
+| Area            | Before Phase 1                                                                                                                     | Problem                                                                                                                        |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | Entry           | `~presenter` companion on `Markdown.Document` and (behind `presentCollections`) `Collection`; action `SetPresenting` (Shift+Mod+P) | Collections experimental; no first-class deck object.                                                                          |
 | Fullscreen      | `SetPresenting` → `DeckOperation.Adjust({type:'fullscreen'})`; containers read `layout.mode === 'solo--fullscreen'`                | No in-article toggle; exit only via ESC or the action.                                                                         |

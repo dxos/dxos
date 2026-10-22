@@ -36,10 +36,19 @@ export type DeckProps = {
   autoFocus?: boolean;
 };
 
-/** Keys typed into slide content (inputs, editors) must not turn the page. */
-const isEditable = (target: EventTarget) =>
-  target instanceof Element &&
-  target.closest('input, textarea, [contenteditable]:not([contenteditable="false"])') !== null;
+/** Controls inside a slide that own the navigation keys: text entry, and widgets that use arrows themselves. */
+const KEY_OWNERS = [
+  'input',
+  'textarea',
+  'select',
+  '[contenteditable]:not([contenteditable="false"])',
+  ...['slider', 'spinbutton', 'listbox', 'combobox', 'menu', 'menubar', 'radiogroup', 'tablist', 'tree', 'grid'].map(
+    (role) => `[role="${role}"]`,
+  ),
+].join(', ');
+
+/** Keys typed into slide content (inputs, editors, arrow-driven widgets) must not turn the page. */
+const isEditable = (target: EventTarget) => target instanceof Element && target.closest(KEY_OWNERS) !== null;
 
 /**
  * Paged slide deck: a centered status-bar pager, or in fullscreen an auto-hiding overlay pager. Keys are scoped

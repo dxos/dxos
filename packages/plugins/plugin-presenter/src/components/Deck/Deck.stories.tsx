@@ -76,6 +76,11 @@ const InputSlide = () => (
   <>
     <input data-testid='slide-input' />
     <div data-testid='slide-editable' contentEditable suppressContentEditableWarning tabIndex={0} />
+    <select data-testid='slide-select'>
+      <option>a</option>
+      <option>b</option>
+    </select>
+    <div data-testid='slide-slider' role='slider' aria-valuenow={0} tabIndex={0} />
   </>
 );
 
@@ -172,11 +177,12 @@ export const EditableSlide: Story = {
     await expect(await canvas.findByText('1 / 2')).toBeVisible();
     await expect(canvas.queryByText('2 / 2')).toBeNull();
 
-    const editable = await canvas.findByTestId('slide-editable');
-    editable.focus();
-    await userEvent.keyboard('{ArrowRight}');
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    await expect(canvas.queryByText('2 / 2')).toBeNull();
+    for (const testId of ['slide-editable', 'slide-select', 'slide-slider']) {
+      (await canvas.findByTestId(testId)).focus();
+      await userEvent.keyboard('{ArrowRight}');
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      await expect(canvas.queryByText('2 / 2')).toBeNull();
+    }
   },
 };
 

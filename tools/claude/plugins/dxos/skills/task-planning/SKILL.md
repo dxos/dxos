@@ -103,8 +103,10 @@ ask which (list them numbered) — never a guess.
 
 One file per unit of work: `<root>/docs/TASKS.md`, where `<root>` is the package
 root when there is one (e.g. `packages/plugins/plugin-magazine/docs/TASKS.md`,
-with its `DESIGN.md` beside it), or otherwise the directory you're working in
-(e.g. `tools/claude/plugins/dxos/skills/task-planning/TASKS.md`). An existing
+with its `DESIGN.md` beside it). A registered project that spans packages or has
+none uses `<registry-dir>/<name>/TASKS.md`, the path its registry entry records.
+Unregistered work with no package uses the directory you're working in (e.g.
+`tools/claude/plugins/dxos/skills/task-planning/TASKS.md`). An existing
 package-root `TASKS.md` stays where it is. Match the existing convention:
 
 ```markdown

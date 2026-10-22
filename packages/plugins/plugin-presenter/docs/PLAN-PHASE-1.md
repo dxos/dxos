@@ -70,8 +70,8 @@ presentation`. The `Text` check guards against `SetParent({ override: false })` 
 
 - Produces (namespace `Presentation`):
   - `class Presentation extends Type.makeObject<Presentation>(DXN.make('org.dxos.type.presentation', '0.1.0'))`
-    with `name?: string`, `sections: Ref<Obj.Unknown>[]` (`Annotation.SetParent.set({ override: false })`,
-    `FormInputAnnotation.set(false)`), `LabelAnnotation(['name'])`, `IconAnnotation({ icon:
+    with `name?: string`, `sections: Ref<Obj.Unknown>[]` (`FormInputAnnotation.set(false)`; no `SetParent` annotation — owned
+    slides are parented explicitly, see decision 2), `LabelAnnotation(['name'])`, `IconAnnotation({ icon:
 'ph--presentation--regular', hue: 'orange' })`, `Annotation.UserType.set({})`.
   - `make(props?: { name?: string; slides?: string[] }): Presentation` — one owned `Text` per slide string.
   - `isOwned(presentation: Presentation, target: Obj.Unknown): boolean` — decision 2.
@@ -162,13 +162,14 @@ SpaceCapability.createObject(…, { environments: ['browser', 'node', 'tauri'] }
 Obj.Unknown } | { kind: 'pending'; id: string }` — `id` is the ref's target id (stable React key).
   - `toSlideSources(presentation: Presentation.Presentation, targets: ReadonlyArray<Obj.Unknown | undefined>):
 SlideSource[]` — pure; `targets[i]` is `sections[i].target`; owned → `text`, resolved linked → `object`,
-    `undefined` → `pending`. Length always equals `sections.length`.
+    a deleted target is omitted, a not-yet-loaded one (`undefined`) → `pending`. Length equals `sections.length`
+    minus deleted targets.
   - `usePresentationDeck(presentation: Presentation.Presentation): SlideSource[]` — reactive: an `Atom.make((get)
 => get(Obj.atomReactive(get(Obj.atomProperty(presentation, 'sections')))))` read with `useAtomValue`, mapped
     through `toSlideSources` in a `useMemo`.
 
-- [ ] **Step 1:** Tests for `toSlideSources`: owned Text → `text`; linked doc → `object`; unresolved → `pending` and
-      length preserved; empty presentation → `[]`.
+- [ ] **Step 1:** Tests for `toSlideSources`: owned Text → `text`; linked doc → `object`; not-yet-loaded → `pending` and
+      length preserved; deleted target omitted; empty presentation → `[]`.
 - [ ] **Step 2:** FAIL. **Step 3:** Implement. **Step 4:** PASS; typecheck.
 - [ ] **Step 5:** Commit `plugin-presenter: slide sources from presentation sections`.
 
@@ -246,7 +247,7 @@ toolbar?: ReactNode; attendableId?: string }`; `Deck` (composable, `forwardedRef
 - Consumes: `usePresentationDeck`, `useSlideIndex`, `Deck`, `Presentation.addSlide/link`, `SetPresenting`.
 - Produces:
   - `PresentationArticle({ role, subject: Presentation.Presentation })`: `contextId = Obj.getURI(subject)`;
-    `fullscreen = Hooks.useLayout().mode === 'solo--fullscreen'`; `onFullscreenChange(next)` invokes
+    `fullscreen = useIsPresenting(subject)` (per object, not the global layout mode); `onFullscreenChange(next)` invokes
     `SetPresenting { object: subject, state: next }`; toolbar slot holds `SectionPicker` and an "Add slide"
     `IconButton` (`Presentation.addSlide(subject, '# New slide')`).
   - `SectionPicker({ presentation })`: `ObjectPicker` from `@dxos/react-ui-form` over

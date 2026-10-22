@@ -22,7 +22,7 @@ import { slideSourcesAtom } from '#deck';
 import { meta } from '#meta';
 import { Presentation } from '#types';
 
-import { createSectionsExtension } from './app-graph-builder.ts';
+import { createSectionsExtension, firstHeading } from './app-graph-builder.ts';
 
 const ROOT_ID = 'root';
 
@@ -132,5 +132,19 @@ describe('presentation sections', () => {
     await expect.poll(() => deck().map((source) => source.kind)).toEqual(['text', 'text']);
     await AppGraphBuilder.flush(graphBuilder);
     expect(children().map((child) => child.data.id)).toEqual(deck().map((source) => source.id));
+  });
+});
+
+describe('firstHeading', () => {
+  test('ignores headings inside fenced code blocks', ({ expect }) => {
+    expect(firstHeading('```sh\n# install\n```\n\n## Setup\n')).toBe('Setup');
+    expect(firstHeading('~~~\n# a\n~~~\n# Title')).toBe('Title');
+    expect(firstHeading('````\n```\n# nested\n```\n````\n# Outer')).toBe('Outer');
+  });
+
+  test('returns the first heading, or nothing', ({ expect }) => {
+    expect(firstHeading('text\n# One\n# Two')).toBe('One');
+    expect(firstHeading('### Spaced ###')).toBe('Spaced');
+    expect(firstHeading('no headings')).toBeUndefined();
   });
 });
