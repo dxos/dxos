@@ -1224,28 +1224,35 @@ export class SqlPlanCompiler {
     const groupColumns = ws.grouped
       ? sql`w.groupKey AS groupKey, w.groupCount AS groupCount, ${aggregates} AS aggregates`
       : sql`NULL AS groupKey, NULL AS groupCount, NULL AS aggregates`;
-    const manifest = ws.grouped?.manifest
-      ? sql`(SELECT json_group_array(json_object('id', k.objectId, 'documentId', m.documentId, 'heads', json(COALESCE(d.version, d.heads)), 'position', m.queuePosition, 'contribution', ${ws.grouped.manifest.contribution}))
-          FROM ${this.#ref(ws.grouped.manifest.keyed)} k JOIN objectMeta m NOT INDEXED ON m.recordId = k.recordId JOIN objectSnapshot d ON d.recordId = k.recordId
-          WHERE k.groupKey = w.groupKey)`
-      : sql`NULL`;
+    // Grouped once over the members, not per final row, so a set of many groups costs one pass.
+    const manifests = ws.grouped?.manifest
+      ? this.#define(
+          'manifests',
+          sql`SELECT k.groupKey, json_group_array(json_object('id', k.objectId, 'documentId', m.documentId, 'heads', json(COALESCE(d.version, d.heads)), 'position', m.queuePosition, 'contribution', ${ws.grouped.manifest.contribution})) AS manifest
+            FROM ${this.#ref(ws.grouped.manifest.keyed)} k JOIN objectMeta m NOT INDEXED ON m.recordId = k.recordId JOIN objectSnapshot d ON d.recordId = k.recordId
+            GROUP BY k.groupKey`,
+        )
+      : undefined;
+    const rowEdges = this.#rowEdges(ws);
     return sql`SELECT w.recordId, w.objectId, w.spaceId, m.documentId, m.queueId, m.queueNamespace, w.rank AS rank,
       m.createdAt, m.updatedAt, d.heads AS heads, COALESCE(d.version, d.heads) AS versionHeads, m.queuePosition AS queuePosition,
       CASE WHEN m.queueId != '' THEN json(d.snapshot) END AS documentJson,
-      ${groupColumns}, ${this.#edgesColumn(ws)} AS edges, ${manifest} AS manifest
+      ${groupColumns}, ${rowEdges ? sql`re.edges` : sql`NULL`} AS edges, ${manifests ? sql`mf.manifest` : sql`NULL`} AS manifest
       FROM ${this.#ref(ws)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId LEFT JOIN objectSnapshot d ON d.recordId = w.recordId
+      ${rowEdges ? sql`LEFT JOIN ${this.#ref(rowEdges)} re ON re.root = w.recordId` : sql``}
+      ${manifests ? sql`LEFT JOIN ${this.#ref(manifests)} mf ON mf.groupKey = w.groupKey` : sql``}
       ORDER BY w.ord`;
   }
 
   /**
-   * The edges that derive each final row, for a linear traversal chain: a recursive walk back from the row
-   * through each hop's edges into the objects that reached it, bounded by {@link MAX_EDGES_PER_ROW} (one
-   * over, so the executor can tell the bound was hit).
+   * The edges that derive each final row of a linear traversal chain, as one JSON array per row: a recursive walk
+   * back from the row through each hop's edges into the objects that reached it, grouped in one pass. A row past
+   * {@link MAX_EDGES_PER_ROW} edges gets JSON `null`, which the executor reads as an unknown derivation.
    */
-  #edgesColumn(ws: Relation): Fragment {
+  #rowEdges(ws: Relation): Relation | undefined {
     const sql = this.#sql;
     if (this.#hops.length === 0 || this.#nestedTraversal || ws.grouped) {
-      return sql`NULL`;
+      return undefined;
     }
     const all = this.#define(
       'alledges',
@@ -1262,12 +1269,14 @@ export class SqlPlanCompiler {
         SELECT r.root, r.hop - 1, e.fromRecordId FROM ${sql.literal(reach)} r JOIN ${this.#ref(all)} e ON e.hop = r.hop AND e.recordId = r.recordId WHERE r.hop > 1
       )`,
     );
-    return sql`(SELECT json_group_array(json(edge)) FROM (
-        SELECT json_object('hop', e.hop, 'from', e.fromObjectId, 'to', e.objectId, 'kind', e.kind, 'property', e.property,
-          'holder', e.holderObjectId, 'holderHeads', json(COALESCE(hd.version, hd.heads))) AS edge
+    return this.#define(
+      'rowedges',
+      sql`SELECT r.root, CASE WHEN COUNT(*) > ${MAX_EDGES_PER_ROW} THEN 'null' ELSE json_group_array(json_object('hop', e.hop, 'from', e.fromObjectId, 'to', e.objectId, 'kind', e.kind, 'property', e.property,
+          'holder', e.holderObjectId, 'holderHeads', json(COALESCE(hd.version, hd.heads)))) END AS edges
         FROM ${sql.literal(reach)} r JOIN ${this.#ref(all)} e ON e.hop = r.hop AND e.recordId = r.recordId
         LEFT JOIN objectSnapshot hd ON hd.recordId = e.holderRecordId
-        WHERE r.root = w.recordId LIMIT ${MAX_EDGES_PER_ROW + 1}))`;
+        GROUP BY r.root`,
+    );
   }
 }
 

@@ -52,6 +52,8 @@ export class WorkingSetView {
   #feedTail?: FeedTail = undefined;
   /** The ids of the feed tail's entries as last signalled. */
   #tailSignature = '';
+  /** The handles' written-set revisions the signature was last computed at. */
+  #tailRevisions = '';
   private readonly _executor: WorkingSetQueryExecutor;
   private readonly _planner: QueryPlanner;
 
@@ -234,11 +236,19 @@ export class WorkingSetView {
       handle.updated.on(this._ctx, () => this.#onFeedTailChanged());
     }
     this.#tailSignature = this.#feedTail ? tailSignature(this.#feedTail) : '';
+    this.#tailRevisions = this.#feedTail ? this.#feedTail.handles.map((handle) => handle.writesRevision).join(',') : '';
   }
 
   /** Signals only when the tail's entries change: a streamed edit to a message already shown changes no entry. */
   #onFeedTailChanged(): void {
-    const signature = this.#feedTail ? tailSignature(this.#feedTail) : '';
+    const tail = this.#feedTail;
+    // With the written set unchanged, only an edit that flips the filter can change the entries.
+    const revisions = tail ? tail.handles.map((handle) => handle.writesRevision).join(',') : '';
+    if (revisions === this.#tailRevisions && tail && !readsProperties(tail.filter)) {
+      return;
+    }
+    this.#tailRevisions = revisions;
+    const signature = tail ? tailSignature(tail) : '';
     if (signature !== this.#tailSignature) {
       this.#tailSignature = signature;
       this.changed.emit();
@@ -483,6 +493,16 @@ const feedEntries = ({ filter, options, handles }: FeedTail): SourceEntry[] =>
           ? [{ id: object.id, result: object, match: { rank: 1 }, resolution: { source: 'local', time: 0 } }]
           : [],
       ),
+  );
+
+/** Whether a filter reads anything an edit can change: everything but a bare type or wildcard selection. */
+const readsProperties = (filter: QueryAST.Filter): boolean =>
+  !(
+    filter.type === 'object' &&
+    Object.keys(filter.props).length === 0 &&
+    filter.id === undefined &&
+    (filter.foreignKeys === undefined || filter.foreignKeys.length === 0) &&
+    filter.metaKey === undefined
   );
 
 const tailSignature = (tail: FeedTail): string =>

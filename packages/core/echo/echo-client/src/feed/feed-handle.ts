@@ -101,6 +101,8 @@ export class FeedHandle {
   /** Cores of the objects appended or edited through this handle, in the order they were first written. */
   readonly #writtenHere = new Set<FeedObjectCore>();
 
+  #writesRevision = 0;
+
   /**
    * Settles when the last send does: each send starts after the one before it, because the store orders
    * blocks as they arrive and two writes of one object racing would let the older one land last.
@@ -279,7 +281,7 @@ export class FeedHandle {
       const id = EntityId.make(item.id);
       const existingCore = this.#cores.get(id);
       const core = existingCore ?? this.#registerCore(item);
-      this.#writtenHere.add(core);
+      this.#markWritten(core);
       if (existingCore && existingCore.entity !== item) {
         existingCore.applyLocalUpdate(item);
       }
@@ -303,7 +305,7 @@ export class FeedHandle {
 
   /** Enqueue a core for the next background append and wake the scheduler. */
   #onCoreDirty(core: FeedObjectCore): void {
-    this.#writtenHere.add(core);
+    this.#markWritten(core);
     this.#dirtyCores.add(core);
     this.#appendScheduler.trigger();
     this.localWrite.emit();
@@ -315,6 +317,21 @@ export class FeedHandle {
    */
   localWrites(): Entity.Unknown[] {
     return [...this.#writtenHere].filter((core) => !core.deleted).map((core) => core.entity);
+  }
+
+  /**
+   * Moves when an object joins the written set or one in it is deleted, so a query can tell that an edit left the
+   * set as it was without re-reading every written object.
+   */
+  get writesRevision(): number {
+    return this.#writesRevision;
+  }
+
+  #markWritten(core: FeedObjectCore): void {
+    if (!this.#writtenHere.has(core)) {
+      this.#writtenHere.add(core);
+      this.#writesRevision++;
+    }
   }
 
   /** The object written through this handle under `id`, if there is one. */
@@ -332,6 +349,7 @@ export class FeedHandle {
       const core = this.#cores.get(id);
       if (core) {
         core.markDeleted();
+        this.#writesRevision++;
         this.#cores.delete(id);
         this.#dirtyCores.delete(core);
       }
