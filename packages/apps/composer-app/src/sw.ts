@@ -323,6 +323,9 @@ self.addEventListener('fetch', (event) => {
 // Push: EDGE pushes each notice put into the identity's inbox (see `@dxos/plugin-messenger` for registration).
 //
 
+/** TypeScript's lib leaves out `renotify` because only Chromium implements it; other browsers ignore it. */
+type ChromiumNotificationOptions = NotificationOptions & { renotify?: boolean };
+
 /**
  * Safari revokes a subscription whose pushes do not each show a notification, so on Apple's push service one is
  * shown even while Composer has focus. Elsewhere a focused window already toasts the notice itself.
@@ -349,7 +352,15 @@ self.addEventListener('push', (event) => {
       }
 
       const { title, body, tag, url } = describePushMessage(message);
-      await self.registration.showNotification(title, { body, tag, icon: '/pwa-192x192.png', data: { url } });
+      const options: ChromiumNotificationOptions = {
+        body,
+        tag,
+        // Without it a notification reusing a tag (a second invitation to the same space) replaces the first silently.
+        renotify: true,
+        icon: '/pwa-192x192.png',
+        data: { url },
+      };
+      await self.registration.showNotification(title, options);
     })(),
   );
 });
