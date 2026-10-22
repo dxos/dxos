@@ -1,24 +1,80 @@
 diff --git a/dist/combobox.machine.js b/dist/combobox.machine.js
-index 754a6313f52a07ec3531e70b5cbc9495a092c756..c9e5f66f56d94ee1224990d7bb2761dfe2f46f78 100644
+index 754a6313f52a07ec3531e70b5cbc9495a092c756..4de5115fa0e781dc58ef554522f789d8898b99aa 100644
 --- a/dist/combobox.machine.js
 +++ b/dist/combobox.machine.js
-@@ -839,6 +839,7 @@ var machine = createMachine({
+@@ -45,6 +45,7 @@ var import_combobox = require("./combobox.collection.js");
+ var dom = __toESM(require("./combobox.dom.js"));
+ var { guards, createMachine, choose } = (0, import_core.setup)();
+ var { and, not } = guards;
++var typedValues = /* @__PURE__ */ new WeakMap();
+ var machine = createMachine({
+   props({ props }) {
+     return {
+@@ -839,13 +840,25 @@ var machine = createMachine({
        syncInputValue({ context, scope, event }) {
          const inputEl = dom.getInputEl(scope);
          if (!inputEl) return;
-+        if (event.current().type === "INPUT.CHANGE") return;
-         inputEl.value = context.get("inputValue");
+-        inputEl.value = context.get("inputValue");
++        const value = context.get("inputValue");
++        const typed = typedValues.get(inputEl) ?? [];
++        typedValues.delete(inputEl);
++        const index = typed.lastIndexOf(value);
++        if (index !== -1 && index < typed.length - 1 && inputEl.value === typed[typed.length - 1]) {
++          typedValues.set(inputEl, typed.slice(index + 1));
++          return;
++        }
++        inputEl.value = value;
          queueMicrotask(() => {
            if (event.current().type === "INPUT.CHANGE") return;
+           (0, import_dom_query.setCaretToEnd)(inputEl);
+         });
+       },
+-      setInputValue({ context, event }) {
++      setInputValue({ context, event, scope }) {
++        if (event.type === "INPUT.CHANGE") {
++          const inputEl = dom.getInputEl(scope);
++          if (inputEl) typedValues.set(inputEl, [...(typedValues.get(inputEl) ?? []), event.value].slice(-20));
++        }
+         context.set("inputValue", event.value);
+       },
+       clearInputValue({ context }) {
 diff --git a/dist/combobox.machine.mjs b/dist/combobox.machine.mjs
-index f3d8d0b4922094e13d4f4cb945b3f2b564f6081f..e9c4d695ace7ca18b41406d7659cbf072e160d21 100644
+index f3d8d0b4922094e13d4f4cb945b3f2b564f6081f..d874f26664de90c39386ecf34c63e6e61a7c21f9 100644
 --- a/dist/combobox.machine.mjs
 +++ b/dist/combobox.machine.mjs
-@@ -817,6 +817,7 @@ var machine = createMachine({
+@@ -23,6 +23,7 @@ import { collection } from "./combobox.collection.mjs";
+ import * as dom from "./combobox.dom.mjs";
+ var { guards, createMachine, choose } = setup();
+ var { and, not } = guards;
++var typedValues = /* @__PURE__ */ new WeakMap();
+ var machine = createMachine({
+   props({ props }) {
+     return {
+@@ -817,13 +818,25 @@ var machine = createMachine({
        syncInputValue({ context, scope, event }) {
          const inputEl = dom.getInputEl(scope);
          if (!inputEl) return;
-+        if (event.current().type === "INPUT.CHANGE") return;
-         inputEl.value = context.get("inputValue");
+-        inputEl.value = context.get("inputValue");
++        const value = context.get("inputValue");
++        const typed = typedValues.get(inputEl) ?? [];
++        typedValues.delete(inputEl);
++        const index = typed.lastIndexOf(value);
++        if (index !== -1 && index < typed.length - 1 && inputEl.value === typed[typed.length - 1]) {
++          typedValues.set(inputEl, typed.slice(index + 1));
++          return;
++        }
++        inputEl.value = value;
          queueMicrotask(() => {
            if (event.current().type === "INPUT.CHANGE") return;
+           setCaretToEnd(inputEl);
+         });
+       },
+-      setInputValue({ context, event }) {
++      setInputValue({ context, event, scope }) {
++        if (event.type === "INPUT.CHANGE") {
++          const inputEl = dom.getInputEl(scope);
++          if (inputEl) typedValues.set(inputEl, [...(typedValues.get(inputEl) ?? []), event.value].slice(-20));
++        }
+         context.set("inputValue", event.value);
+       },
+       clearInputValue({ context }) {

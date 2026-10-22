@@ -29,13 +29,16 @@ patch means the upgrade carries the fix, and the patch and this section can go.
 
 ## `@zag-js/combobox@1.43.3`
 
-**What.** `syncInputValue` leaves the field alone when the last event was the user typing in it.
+**What.** `syncInputValue` skips writing a value the user typed earlier once the field already holds a
+later keystroke.
 
 **Why.** Zag handles each event in a microtask, so the state a keystroke sets renders at default
 priority, and the effect that copies that state into the field can run after the next keystroke has
 already landed. It then writes the older value back and the newer key is gone: on a slow device,
-typing "Offline mode" into a picker could leave "Offlie mode". After a keystroke the field already
-holds the value zag would write, so skipping the write loses nothing. Unchanged in zag 1.46.0.
+typing "Offline mode" into a picker could leave "Offlie mode". The patch records the values each
+`INPUT.CHANGE` reported and skips only a write of one of those that is older than what the field
+shows, so an `inputValue` the caller sets (a cleared or transformed query) is still written.
+Unchanged in zag 1.46.0.
 
 **Retesting after a zag upgrade.** `CreateFeature` in
 [`ProjectFeatures.stories.tsx`](../packages/plugins/plugin-projects/src/containers/ProjectFeatures/ProjectFeatures.stories.tsx)
