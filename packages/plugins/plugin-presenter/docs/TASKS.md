@@ -6,7 +6,7 @@ Design: [DESIGN.md](./DESIGN.md).
 
 - [x] **Reorganize `src/components`** — one folder and story per component.
 - [x] **Agree the design** — Q1–Q7 decided (DESIGN.md decisions log).
-- [ ] **Settle the slide DSL** — Slidev subset or own syntax.
+- [x] **Settle the slide DSL** — strict Slidev-compatible subset (Q8).
 - [ ] **Approve DESIGN.md**, then write the Phase 1 implementation plan.
 - [ ] **Register the project** — blocked: Composer MCP server needs `/mcp` authorization.
 
@@ -28,7 +28,8 @@ Design: [DESIGN.md](./DESIGN.md).
 
 ## Phase 3: Markdown renderer
 
-- [ ] **unified pipeline** → React; layouts, fragments, notes.
+- [ ] **unified pipeline** → React for the Slidev subset; layouts, `::slot::`, `<v-click*>`, notes.
+- [ ] **Evaluate `@slidev/parser`** for the preview `---` split (browser-safe?).
 - [ ] **Migrate** reveal syntax in test decks; reveal behind a setting until parity, then delete.
 - [ ] **Print stylesheet**.
 

@@ -1,6 +1,6 @@
 # plugin-presenter — Design
 
-Status: **decisions agreed, awaiting approval** (2026-10-22). Items marked _agent call_ were settled by the agent
+Status: **decisions agreed, awaiting approval** (2026-10-22; Q8 slide syntax added). Items marked _agent call_ were settled by the agent
 and are open to review; everything marked _user_ was decided in discussion.
 
 ## Intent
@@ -142,41 +142,67 @@ Research (Oct 2026): no embeddable library beats building our own. Slidev has th
 Vue/Vite build tool; Marp renders HTML strings with no navigation; Spectacle brings its own styling and global
 keys; reveal.js 6 still parses markdown only at init and ships global theme CSS.
 
-Pipeline: `remark-parse` + `remark-gfm` + `remark-frontmatter` + `remark-directive` → `remark-rehype` →
-`hast-util-to-jsx-runtime` (React elements, no `innerHTML`) → the existing code highlighter. The preview companion
-splits on `---` before this pipeline; inside a Presentation each section is one run of it.
+**Syntax: a strict subset of Slidev** _(user)_. We render Slidev's markdown dialect ourselves, without Vue,
+UnoCSS or Vite. Any slide written in the subset renders the same way in Slidev; anything outside it is rejected
+by validation (assistant) or rendered as plain markdown (user edits), never silently reinterpreted. Why: models
+already write Slidev fluently, so the assistant skill needs little teaching, and Slidev decks paste in.
 
-DSL for one slide (Slidev/Quarto/Presenterm conventions; frontmatter is optional):
+Example slide (one Presentation section):
 
 ```text
 ---
 layout: two-cols
-background: ./image.png
+class: text-center
 ---
 
-## Results
+# Results
+
+<v-clicks>
 
 - one
-- two <!-- pause -->
+- two
 - three
 
-:::right
-![](chart.png)
-:::
+</v-clicks>
 
-:::notes
-Speaker notes (parsed and hidden now; shown by the presenter view later).
-:::
+::right::
+
+![](chart.png)
+
+<!--
+Speaker notes: the last comment in a slide (parsed and hidden now; shown by the presenter view later).
+-->
 ```
 
-- Layouts: `title`, `section`, `default`, `two-cols`, `image-left`, `image-right`, `fullscreen-image` (subsumes
-  today's `slideLayout` `fullscreen`/`columns`/`rows`).
-- Fragments: `<!-- pause -->`. Notes: `:::notes`.
-- Deck-level options (theme, aspect) live on the Presentation (_agent call_: add fields when the first one is
-  needed; not in v0.1.0).
-- Migration: map reveal's `<!-- .slide: -->` / `<!-- .element: class="fragment" -->` in `testing/*.md` to the DSL;
-  `RevealPlayer` stays behind a setting until parity, then is deleted with its dependency.
-- Print: a print stylesheet, one slide per page.
+Supported subset (v1):
+
+| Slidev feature                                                             | Supported                                                                                                                                                                  | Notes                                                                                                                                         |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Slide separator `---`                                                      | Preview companion only                                                                                                                                                     | Inside a Presentation each section is one slide (Q2).                                                                                         |
+| Per-slide frontmatter                                                      | `layout`, `image`, `background`, `class`, `title`                                                                                                                          | Other keys (`transition`, `clicks`, `level`, …) ignored.                                                                                      |
+| Headmatter (first slide's frontmatter)                                     | `title`, `aspectRatio`                                                                                                                                                     | Preview companion only; a Presentation stores these as fields (_agent call_: added when first needed).                                        |
+| Layouts                                                                    | `default`, `cover`, `center`, `section`, `intro`, `end`, `fact`, `statement`, `quote`, `two-cols`, `two-cols-header`, `image`, `image-left`, `image-right`, `full`, `none` | Ours, styled with our tokens; same names and slots as Slidev's built-ins. Excluded: `iframe*` (_agent call_: revisit with a sandboxed embed). |
+| Slots                                                                      | `::right::`, `::left::`, `::default::`                                                                                                                                     | Per the layouts that define them.                                                                                                             |
+| Clicks                                                                     | `<v-click>`, `<v-clicks>` (`depth`, `every`), `<v-after>`                                                                                                                  | Parsed as plain tags; no `v-click` attribute directive, no `$clicks` expressions.                                                             |
+| Speaker notes                                                              | Last `<!-- … -->` comment of the slide                                                                                                                                     | Markdown inside notes.                                                                                                                        |
+| Code blocks                                                                | Language + static line highlight `{2,4-5}`                                                                                                                                 | Click-stepped highlights `{1\|2-3}` render the first step only (_agent call_).                                                                |
+| Vue components, `<style>` blocks, UnoCSS utilities, Monaco, LaTeX, Mermaid | No                                                                                                                                                                         | Raw HTML other than the click tags is escaped.                                                                                                |
+
+Pipeline: `remark-parse` + `remark-gfm` + `remark-frontmatter` → a small remark plugin that (1) takes the trailing
+HTML comment as notes, (2) splits the tree on `::slot::` paragraphs, (3) turns `<v-click*>` html nodes into
+click-group nodes → `remark-rehype` → `hast-util-to-jsx-runtime` (React elements, no `innerHTML`) → the existing
+code highlighter. Layouts are React components receiving `{ frontmatter, slots, clickStep }`.
+
+- The preview companion splits a document on `---` using Slidev's rule (a `---` followed by a YAML block and a
+  closing `---` is that slide's frontmatter). _Agent call:_ evaluate `@slidev/parser`'s pure string parser for
+  this split before writing our own; use it only if it runs in the browser without Node built-ins.
+- Clicks drive the pager: → advances the click step before moving to the next slide; the pager count stays in
+  slides.
+- Migration: rewrite reveal syntax in `testing/*.md` (`<!-- .slide: -->`, `<!-- .element: class="fragment" -->`,
+  `notes:`) to the subset; `RevealPlayer` stays behind a setting until parity, then is deleted with its
+  dependency. Today's `Slide.tsx` frontmatter (`layout: fullscreen|columns|rows` + `image`) maps to `image`,
+  `image-left`/`image-right` and `default`.
+- Print: a print stylesheet, one slide per page, all clicks revealed.
 
 ### 7. Assistant skill _(user)_
 
@@ -188,7 +214,8 @@ Speaker notes (parsed and hidden now; shown by the presenter view later).
     string per slide; the operation validates each (unknown layout, empty slide) and creates a Presentation
     with one owned `Text` per slide.
   - `AddSection({ presentation, object | content, index? })` — link an object or add an owned slide.
-  - `ListLayouts()` — the DSL reference, so the instructions don't embed it.
+  - `ListLayouts()` — the supported Slidev subset (layouts, slots, frontmatter keys), so the instructions
+    don't embed it. Instructions tell the model to write Slidev markdown within that subset.
   - `PresentObject({ object })` — wraps `SetPresenting`.
 - Input: any markdown outline (headings, bullets); `Outline` (`org.dxos.type.outline`) checklists accepted too.
 - Eval: one `assistant-evals` eval with memoized fixtures (outline → presentation; checks slide count and
@@ -203,7 +230,8 @@ Speaker notes (parsed and hidden now; shown by the presenter view later).
    still renders markdown slides.
 2. **`Pager` primitive** in `@dxos/react-ui`; presenter adopts it; `Carousel` styles and autocue `TakeStory`
    follow.
-3. **Markdown renderer + DSL**; reveal behind a setting; migrate test decks; print stylesheet.
+3. **Markdown renderer** for the Slidev subset (layouts, slots, clicks, notes); reveal behind a setting; migrate
+   test decks; print stylesheet.
 4. **Slide surfaces** for sheet, canvas, tldraw, outline; fallback chain; surface-lookup helper and picker
    filter.
 5. **Assistant skill** + eval.
@@ -224,6 +252,7 @@ Each phase updates `PLUGIN.mdl` (features, scenarios, QA, `## Changelog`) and sh
 | Q5  | Pager vs Carousel?           | Separate `Pager`; Carousel shares styles                                               | user |
 | Q6  | Skill trigger?               | Annotate `Presentation` only; `agentCanEnable`                                         | user |
 | Q7  | Presenter view now?          | Later (Phase 6); notes parsed now                                                      | user |
+| Q8  | Slide syntax?                | Strict Slidev-compatible subset, rendered by our own pipeline                          | user |
 
 ## References
 
@@ -232,6 +261,6 @@ Each phase updates `PLUGIN.mdl` (features, scenarios, QA, `## Changelog`) and sh
 - `packages/ui/react-ui/src/components/Carousel/Carousel.tsx` — Carousel.
 - `packages/ui/react-ui-attention/src/types/ViewState.ts` — view-state aspects.
 - `packages/plugins/plugin-markdown/src/skills/MarkdownSkill.ts` — skill pattern.
-- Slidev https://sli.dev · Marp https://github.com/marp-team/marp-core · Quarto revealjs
+- Slidev https://sli.dev (syntax https://sli.dev/guide/syntax, layouts https://sli.dev/builtin/layouts) · Marp https://github.com/marp-team/marp-core · Quarto revealjs
   https://quarto.org/docs/presentations/revealjs/ · Presenterm https://github.com/mfontanini/presenterm ·
   hast-util-to-jsx-runtime https://github.com/syntax-tree/hast-util-to-jsx-runtime
