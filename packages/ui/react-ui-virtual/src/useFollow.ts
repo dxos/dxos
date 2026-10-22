@@ -14,7 +14,7 @@ const STICKY_THRESHOLD = 32;
 const GESTURE_WINDOW = 300;
 
 /** How long after a model change growth still counts as content arriving. */
-const FOLLOW_WINDOW = 1_000;
+export const FOLLOW_WINDOW = 1_000;
 
 /** Frames an instant arrival re-checks itself against the paint before trusting it. */
 const SETTLE_FRAMES = 12;
@@ -201,7 +201,6 @@ export const useFollow = ({
   // the tail, by any means, opts back in.
   const lastOffset = useRef(0);
   const gestureAt = useRef(0);
-  /** A backwards move since the last offset seen, within a gesture: the reader leaving. */
   const readerLeft = useCallback(
     (current: number) => current < lastOffset.current - 1 && performance.now() - gestureAt.current < GESTURE_WINDOW,
     [],
@@ -266,6 +265,9 @@ export const useFollow = ({
   // arrival, and an opening still settling (the reserve lands a beat after the first write) would
   // otherwise be glided as if the reader had watched it.
   const positioned = useRef(false);
+  const arriveAgain = useCallback(() => {
+    positioned.current = false;
+  }, []);
 
   useLayoutEffect(() => {
     const scroller = scrollerRef.current;
@@ -361,14 +363,12 @@ export const useFollow = ({
       const wants = index >= countRef.current - 1;
       setFollowing(!!enabled && wants);
       if (wants) {
-        // A jump to the tail lands on estimates, and the rest of the way is arrival, not growth: the
-        // reader was no more watching it than an opening, so it is not held to the model-change gate.
-        positioned.current = false;
+        arriveAgain();
       } else {
         follower?.cancel();
       }
     },
-    [enabled, follower, setFollowing],
+    [enabled, follower, setFollowing, arriveAgain],
   );
 
   // Stable across appends, so controllers built over it do not churn per model change; `atEnd` and

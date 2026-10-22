@@ -7,6 +7,7 @@ import React, {
   type KeyboardEvent,
   type MouseEvent,
   type PointerEvent,
+  type RefObject,
   useEffect,
   useRef,
 } from 'react';
@@ -131,8 +132,33 @@ export const StatusIcon = ({ status, onChange, muted, testId }: StatusIconProps)
   );
 };
 
-/** Frames an auto-focused field keeps trying to take focus (about a second): long enough for a masonry to reveal it. */
-const AUTO_FOCUS_ATTEMPTS = 60;
+const REVEAL_FOCUS_FRAMES = 60;
+
+/** Focuses `ref` on mount, or once it becomes focusable, unless focus has moved elsewhere first. */
+const useFocusWhenRevealed = (ref: RefObject<HTMLElement | null>, enabled: boolean) => {
+  useEffect(() => {
+    const element = ref.current;
+    if (!enabled || !element) {
+      return;
+    }
+
+    const origin = document.activeElement;
+    let frame = 0;
+    let frames = REVEAL_FOCUS_FRAMES;
+    const attempt = () => {
+      if (document.activeElement === element || document.activeElement !== origin || frames-- <= 0) {
+        return;
+      }
+
+      element.focus();
+      if (document.activeElement !== element) {
+        frame = requestAnimationFrame(attempt);
+      }
+    };
+    attempt();
+    return () => cancelAnimationFrame(frame);
+  }, [enabled]);
+};
 
 /**
  * A field of a card in edit mode, committed when it loses focus (Enter does that). Keys and presses stay in the field:
@@ -160,30 +186,7 @@ export const EditField = ({
     shownRef.current = value;
   }, [value]);
 
-  // Not the `autoFocus` attribute, which focuses once at mount: a masonry tile mounts hidden until it is measured, and
-  // focusing a hidden field does nothing. Retried until the field can take focus, unless focus has moved since.
-  useEffect(() => {
-    const field = fieldRef.current;
-    if (!autoFocus || !field) {
-      return;
-    }
-
-    const origin = document.activeElement;
-    let frame = 0;
-    let attempts = AUTO_FOCUS_ATTEMPTS;
-    const attempt = () => {
-      if (document.activeElement === field || document.activeElement !== origin || attempts-- <= 0) {
-        return;
-      }
-
-      field.focus();
-      if (document.activeElement !== field) {
-        frame = requestAnimationFrame(attempt);
-      }
-    };
-    attempt();
-    return () => cancelAnimationFrame(frame);
-  }, [autoFocus]);
+  useFocusWhenRevealed(fieldRef, !!autoFocus);
 
   const handleBlur = (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const next = event.currentTarget.value.trim();
