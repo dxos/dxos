@@ -17,7 +17,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
-import * as AcpAgent from '@dxos/plugin-code/AcpAgent';
+import * as AcpAgent from '@dxos/plugin-claude/AcpAgent';
 import * as DrawingSkill from '@dxos/plugin-illustrator/DrawingSkill';
 import { Cell } from '@dxos/storybook-testing';
 import { Message } from '@dxos/types';

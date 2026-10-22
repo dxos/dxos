@@ -99,6 +99,7 @@ export const translations: Theme.Resource[] = [
         'history.status.success.label': 'Success',
         'history.status.failure.label': 'Failed',
         'history.status.pending.label': 'Running',
+        'history.status.incomplete.label': 'Continuing',
         'disabled.label': 'Disabled',
         'delete.label': 'Delete',
         'continue.label': 'Continue',

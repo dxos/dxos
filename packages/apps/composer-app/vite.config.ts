@@ -53,7 +53,7 @@ const PLUGIN_SETS: Record<string, string> = {
   mobile: 'src/plugin-defs.mobile.tsx',
 };
 const pluginSetFile = PLUGIN_SETS[process.env.DX_PLUGIN_SET ?? ''] ?? 'src/plugin-defs.tsx';
-// Non-empty only when a dev server is launched with the debug-port flag; see `src/vite/debug-port.ts`.
+// Non-empty unless `DX_DEBUG_PORT=false`; only `serve` uses it. See `src/vite/debug-port.ts`.
 const debugPortSession = resolveDebugPortSession();
 const isReducedPluginSet = pluginSetFile !== 'src/plugin-defs.tsx';
 // The Tauri CLI sets `TAURI_ENV_PLATFORM` for `beforeDevCommand`.
@@ -584,9 +584,9 @@ export default defineConfig((env) => ({
       },
     },
 
-    // Hosts the computer harness's shell route against the vite process cwd. Imported dynamically
+    // Hosts the dev shell's shell route against the vite process cwd. Imported dynamically
     // because this config's static imports are bundled as CJS `require` and the package is ESM-only.
-    import('@dxos/plugin-computer/vite-plugin').then(({ ComputerShellPlugin }) => ComputerShellPlugin()),
+    import('@dxos/plugin-dev-shell/vite-plugin').then(({ DevShellVitePlugin }) => DevShellVitePlugin()),
 
     // RSS proxy middleware for CORS-free feed fetching.
     {

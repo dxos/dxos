@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
-import * as CodeAgent from '@dxos/plugin-code/CodeAgent';
 
+import * as CodeAgent from '../agents/CodeAgent.ts';
 import { CLAUDE_CODE_AGENT } from '../constants.ts';
 import { ClaudeCodeProcess } from '../process/index.ts';
 
@@ -27,7 +27,7 @@ export default Capability.makeModule(
       }),
     });
     return [
-      Capability.contribute(AssistantCapabilities.Agent, agent),
+      Capability.contribute(AssistantCapabilities.Agent, { ...agent, ownModel: true }),
       Capability.contribute(AssistantCapabilities.AgentProcess, ClaudeCodeProcess.make(options)),
     ];
   }),

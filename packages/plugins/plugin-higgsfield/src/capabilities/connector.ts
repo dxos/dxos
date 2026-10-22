@@ -36,36 +36,38 @@ export class HiggsfieldCredentialError extends BaseError.extend(
  * `CredentialsService` lookup yields a single string, which the provider splits back into the header.
  * Validation failures are `Effect.fail`, never a throw: a defect bypasses the dialog's failure handler.
  */
-export const createHiggsfieldConnectorEntry = () => ({
-  id: HIGGSFIELD_CONNECTOR_ID,
-  source: HIGGSFIELD_SOURCE,
-  label: 'Higgsfield',
-  credentialForm: {
-    schema: HiggsfieldCredentialForm,
-    defaultValues: { keyId: '', keySecret: '' } satisfies Partial<HiggsfieldCredentialFormValues>,
-    onValidate: ({ values }: { values: HiggsfieldCredentialFormValues; connector: ConnectorRef }) =>
-      joinCredential(values.keyId, values.keySecret) ? Effect.void : Effect.fail(new HiggsfieldCredentialError()),
-    onSubmit: ({ values, connector }: { values: HiggsfieldCredentialFormValues; connector: ConnectorRef }) =>
-      Effect.gen(function* () {
-        // Re-check here: `onValidate` is optional for callers and bypassed in tests.
-        const token = joinCredential(values.keyId, values.keySecret);
-        if (!token) {
-          return yield* Effect.fail(new HiggsfieldCredentialError());
-        }
+export const createHiggsfieldConnectorEntry = () =>
+  ({
+    id: HIGGSFIELD_CONNECTOR_ID,
+    source: HIGGSFIELD_SOURCE,
+    label: 'Higgsfield',
+    kind: 'custom',
+    credentialForm: {
+      schema: HiggsfieldCredentialForm,
+      defaultValues: { keyId: '', keySecret: '' } satisfies Partial<HiggsfieldCredentialFormValues>,
+      onValidate: ({ values }: { values: HiggsfieldCredentialFormValues; connector: ConnectorRef }) =>
+        joinCredential(values.keyId, values.keySecret) ? Effect.void : Effect.fail(new HiggsfieldCredentialError()),
+      onSubmit: ({ values, connector }: { values: HiggsfieldCredentialFormValues; connector: ConnectorRef }) =>
+        Effect.gen(function* () {
+          // Re-check here: `onValidate` is optional for callers and bypassed in tests.
+          const token = joinCredential(values.keyId, values.keySecret);
+          if (!token) {
+            return yield* Effect.fail(new HiggsfieldCredentialError());
+          }
 
-        const accessToken = Obj.make(AccessToken.AccessToken, {
-          source: HIGGSFIELD_SOURCE,
-          token,
-        });
-        const connection = Obj.make(Connection.Connection, {
-          name: connector.label ?? 'Higgsfield',
-          connectorId: connector.id,
-          accessToken: Ref.make(accessToken),
-        });
-        return { kind: 'complete' as const, accessToken, connection };
-      }),
-  },
-});
+          const accessToken = Obj.make(AccessToken.AccessToken, {
+            source: HIGGSFIELD_SOURCE,
+            token,
+          });
+          const connection = Obj.make(Connection.Connection, {
+            name: connector.label ?? 'Higgsfield',
+            connectorId: connector.id,
+            accessToken: Ref.make(accessToken),
+          });
+          return { kind: 'complete' as const, accessToken, connection };
+        }),
+    },
+  }) satisfies ConnectorSpec.ConnectorEntry;
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

@@ -46,9 +46,20 @@ export const Default: Story = {
     await expect(card(canvasElement, 'delegate').dataset.relation).toBe('dependent');
     await expect(card(canvasElement, 'feature-map').dataset.relation).toBeUndefined();
 
-    // Clicking the selected card again clears the selection.
-    await userEvent.click(title());
-    await waitFor(async () => expect(card(canvasElement, 'tokens').dataset.relation).toBeUndefined());
+    // Selection follows the arrow keys, as in any single-select list; from the first card, there is always one below.
+    const tile = (id: string) => card(canvasElement, id).closest('[role="option"]');
+    await expect(tile('sync')).toHaveAttribute('aria-selected', 'true');
+    await userEvent.click(within(card(canvasElement, 'accounts')).getByRole('heading', { name: 'Accounts' }));
+    await waitFor(async () => expect(tile('accounts')).toHaveAttribute('aria-selected', 'true'));
+    await userEvent.keyboard('{ArrowDown}');
+    await waitFor(async () => expect(tile('accounts')).toHaveAttribute('aria-selected', 'false'));
+    await expect(canvasElement.querySelectorAll('[role="option"][aria-selected="true"]')).toHaveLength(1);
+
+    // Escape clears it.
+    await userEvent.keyboard('{Escape}');
+    await waitFor(async () =>
+      expect(canvasElement.querySelectorAll('[role="option"][aria-selected="true"]')).toHaveLength(0),
+    );
   },
 };
 
@@ -56,12 +67,30 @@ export const Default: Story = {
 export const Selected: Story = {
   args: { defaultSelectedId: 'triage' },
   play: async ({ canvasElement }) => {
-    const tile = (id: string) => card(canvasElement, id).closest('[role="listitem"]');
+    const tile = (id: string) => card(canvasElement, id).closest('[role="option"]');
     await waitFor(async () => expect(tile('triage')).toHaveAttribute('aria-selected', 'true'));
     // Masonry reveals the tiles once measured; until then they are hidden from the accessibility tree.
     const title = await within(card(canvasElement, 'sync')).findByRole('heading', { name: 'Provider sync' });
     await userEvent.click(title);
     await waitFor(async () => expect(tile('sync')).toHaveAttribute('aria-selected', 'true'));
     await expect(tile('triage')).toHaveAttribute('aria-selected', 'false');
+  },
+};
+
+/** The text filter matches names and descriptions; a pressed status shows only that status, and pressing none shows all. */
+export const Filter: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const cards = () => canvasElement.querySelectorAll('[data-testid="feature-card"]');
+    await waitFor(async () => expect(cards()).toHaveLength(SAMPLE_FEATURES.length));
+    await userEvent.type(canvas.getByTestId('feature-board.filter'), 'sync');
+    await waitFor(async () => expect(cards().length).toBeLessThan(SAMPLE_FEATURES.length));
+    await expect(card(canvasElement, 'sync')).toBeInTheDocument();
+    await userEvent.clear(canvas.getByTestId('feature-board.filter'));
+    await userEvent.click(canvas.getByTestId('feature-board.status.operational'));
+    const operational = SAMPLE_FEATURES.filter((feature) => feature.status === 'operational').length;
+    await waitFor(async () => expect(cards()).toHaveLength(operational));
+    await userEvent.click(canvas.getByTestId('feature-board.status.operational'));
+    await waitFor(async () => expect(cards()).toHaveLength(SAMPLE_FEATURES.length));
   },
 };
