@@ -1251,7 +1251,7 @@ export const technologyTimeline: PlotValue[][] = [
     null,
   ],
   [
-    '2028-08',
+    '2028-12',
     'Macro/TIC',
     'US bails out BigAI',
     'Speculative: the US government rescues the largest AI companies.',
