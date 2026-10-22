@@ -356,7 +356,13 @@ export const technologyTimeline: PlotValue[][] = [
     'Senior Engineer, Advanced Development Group, Mar 1996 – May 1997.',
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/62/D._E._Shaw_%26_Co._Logo.svg/500px-D._E._Shaw_%26_Co._Logo.svg.png',
   ],
-  ['1997', 'Personal', 'Industrial Light & Magic', 'Senior FX Engineer, 1997 – May 1999.', null],
+  [
+    '1997',
+    'Personal',
+    'Industrial Light & Magic',
+    'Senior FX Engineer, 1997 – May 1999.',
+    'https://hoodzpahdesign.com/wp-content/uploads/2023/05/ILM_Legacy_in_Logo.jpg',
+  ],
   [
     '1997-05',
     'Tech/AI',
