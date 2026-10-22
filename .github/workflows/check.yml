@@ -469,7 +469,7 @@ jobs:
   # addon compiles RocksDB from source, and on the scheduled run's forced rebuild two such compiles took 25
   # minutes of a node cell's 4 vCPU. On a PR moon's remote cache skips both unless the crate changed.
   native:
-    if: ${{ inputs.only != 'e2e' }}
+    if: ${{ inputs.only != 'check' && inputs.only != 'e2e' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 75
     steps:
