@@ -14,7 +14,7 @@ import * as Schema from 'effect/Schema';
 import { type Context } from '@dxos/context';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
-import { type SpaceId } from '@dxos/keys';
+import { IdentityDid, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ProcessProtocol } from '@dxos/protocols';
 import {
@@ -168,6 +168,24 @@ export type BrainInfo = Schema.Schema.Type<typeof BrainInfo>;
 export const BrainAdmins = Schema.Struct({ adminKeys: Schema.Array(Schema.String) });
 export type BrainAdmins = Schema.Schema.Type<typeof BrainAdmins>;
 
+/** What a client asks `POST /compute/brain` for: an identity for the agent with this entity id. */
+export type ProvisionBrainRequest = { agent: string; homeSpaceId: SpaceId; label: string };
+
+/** What EDGE answers `POST /compute/brain` with: the brain's identity and the caller's membership of its space. */
+export const ProvisionedBrain = Schema.Struct({
+  identity: Schema.Struct({
+    identityDid: IdentityDid,
+    identityKey: Schema.String,
+    defaultSpaceId: Schema.optional(SpaceId),
+  }),
+  /** The caller's `SpaceMember` credential for the agent's default space, base64 protobuf. */
+  membership: Schema.String,
+});
+export type ProvisionedBrain = Schema.Schema.Type<typeof ProvisionedBrain>;
+
+/** EDGE route of an agent's mailbox. */
+const mailboxPath = (handle: string): string => `/compute/email/mailboxes/${encodeURIComponent(handle)}`;
+
 /**
  * Validates the finalize response rather than asserting its shape.
  *
@@ -238,6 +256,37 @@ export class EdgeHttpClient extends BaseHttpClient {
   public async request(ctx: Context, path: string, args: EdgeRequestArgs): Promise<unknown> {
     const { method, body, ...rest } = args;
     return this._call<unknown>(ctx, new URL(path, this.baseUrl), { auth: true, ...rest, method, body });
+  }
+
+  //
+  // Agent mailboxes
+  //
+  // The mailbox answers are plugin-agent's to decode (`AgentMailbox.MailboxStatus`, `AgentMailbox.SendResult`).
+  //
+
+  /** Claims the agent's mailbox `handle`, or updates the claim; answers its status. */
+  public async claimMailbox(ctx: Context, handle: string, body: unknown, args?: EdgeHttpCallArgs): Promise<unknown> {
+    return this.request(ctx, mailboxPath(handle), { ...args, method: 'PUT', body });
+  }
+
+  /** Releases the mailbox `handle`; answers its status. */
+  public async releaseMailbox(ctx: Context, handle: string, args?: EdgeHttpCallArgs): Promise<unknown> {
+    return this.request(ctx, mailboxPath(handle), { ...args, method: 'DELETE' });
+  }
+
+  /** The status of the mailbox `handle`. */
+  public async getMailbox(ctx: Context, handle: string, args?: EdgeHttpCallArgs): Promise<unknown> {
+    return this.request(ctx, mailboxPath(handle), { ...args, method: 'GET' });
+  }
+
+  /** Sends an email from the mailbox `handle`; answers what EDGE sent. */
+  public async sendMailboxEmail(
+    ctx: Context,
+    handle: string,
+    body: unknown,
+    args?: EdgeHttpCallArgs,
+  ): Promise<unknown> {
+    return this.request(ctx, `${mailboxPath(handle)}/send`, { ...args, method: 'POST', body });
   }
 
   //
@@ -753,6 +802,25 @@ export class EdgeHttpClient extends BaseHttpClient {
     const url = new URL(`/compute/brain/${encodeURIComponent(agent)}`, this.baseUrl);
     const response = await this._call(ctx, url, { ...args, method: 'GET', auth: true });
     return Schema.decodeUnknownSync(BrainInfo)(response);
+  }
+
+  /** Gives the agent's brain an identity, for a caller who may write to its space; its creator asking again gets the same answer. */
+  public async provisionBrain(
+    ctx: Context,
+    body: ProvisionBrainRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<ProvisionedBrain> {
+    const response = await this.request(ctx, '/compute/brain', { ...args, method: 'POST', body });
+    return Schema.decodeUnknownSync(ProvisionedBrain)(response);
+  }
+
+  /** Puts the agent's brain in a space, which only its admins may do. `agent` is the agent's DID. */
+  public async addBrainSpace(ctx: Context, agent: string, spaceId: SpaceId, args?: EdgeHttpCallArgs): Promise<void> {
+    await this.request(ctx, `/compute/brain/${encodeURIComponent(agent)}/spaces`, {
+      ...args,
+      method: 'POST',
+      body: { spaceId },
+    });
   }
 
   /** Makes an identity an admin of an agent, which only an admin may do; nothing takes it away. Answers every admin. */
