@@ -4,14 +4,13 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useEffect, useMemo } from 'react';
-import { expect, waitFor, within } from 'storybook/test';
+import React, { useMemo } from 'react';
+import { expect, within } from 'storybook/test';
 
-import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
@@ -33,24 +32,13 @@ const DocumentSlide = ({ subject }: { subject: Markdown.Document }) => {
   return <Slide content={content} />;
 };
 
-const LATE_EVENT = ActivationEvent.make('org.dxos.plugin.test.presenterSlideLate');
-
-/** Fires the late event after mount, standing in for a lazily gated role module loading. */
-const LateActivator = ({ delayMs }: { delayMs: number }) => {
-  const manager = PluginManagerProvider.usePluginManager();
-  useEffect(() => {
-    Effect.runFork(Effect.sleep(delayMs).pipe(Effect.andThen(manager.activate(LATE_EVENT))));
-  }, [manager, delayMs]);
-  return null;
-};
-
-const createSlidePlugin = (activatesOn?: ActivationEvent.ActivationEvent) =>
+const createSlidePlugin = (options: { gated?: boolean } = {}) =>
   Plugin.define(
     Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test.presenterSlide'), name: 'PresenterSlideStory' }),
   ).pipe(
     Plugin.addModule({
       id: 'surfaces',
-      ...(activatesOn ? { activatesOn } : {}),
+      ...(options.gated ? { activatesOn: ActivationEvents.SurfacesRequested(AppSurface.Slide.role) } : {}),
       provides: [Capabilities.ReactSurface],
       activate: () =>
         Effect.succeed(
@@ -67,7 +55,7 @@ const createSlidePlugin = (activatesOn?: ActivationEvent.ActivationEvent) =>
     Plugin.make,
   );
 
-type StoryProps = { kind: SlideSource['kind'] | 'unmatched' | 'late' };
+type StoryProps = { kind: SlideSource['kind'] | 'unmatched' };
 
 const DefaultStory = ({ kind }: StoryProps) => {
   const source = useMemo((): SlideSource => {
@@ -75,7 +63,6 @@ const DefaultStory = ({ kind }: StoryProps) => {
       case 'text':
         return { kind, id: 'text', text: Text.make({ content: '# Owned slide' }) };
       case 'object':
-      case 'late':
         return {
           kind: 'object',
           id: 'object',
@@ -90,7 +77,6 @@ const DefaultStory = ({ kind }: StoryProps) => {
 
   return (
     <>
-      {kind === 'late' && <LateActivator delayMs={1_500} />}
       <SlideRenderer source={source} />
     </>
   );
@@ -151,14 +137,13 @@ export const ObjectFallback: Story = {
   },
 };
 
-/** The slide surface registers after mount; the title slide is replaced once it does. */
-export const LateSurface: Story = {
-  args: { kind: 'late' },
-  decorators: [withPluginManager({ plugins: [createSlidePlugin(LATE_EVENT)()] })],
+/** The slide surface module is gated on its role's demand, as in production; mounting the slide requests it. */
+export const GatedSurface: Story = {
+  args: { kind: 'object' },
+  decorators: [withPluginManager({ plugins: [createSlidePlugin({ gated: true })()] })],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByText('Linked')).toBeVisible();
-    await waitFor(async () => expect(await canvas.findByText('Linked document')).toBeVisible(), { timeout: 10_000 });
+    await expect(await canvas.findByText('Linked document', undefined, { timeout: 10_000 })).toBeVisible();
     await expect(canvas.queryByText('Linked', { exact: true })).toBeNull();
   },
 };
