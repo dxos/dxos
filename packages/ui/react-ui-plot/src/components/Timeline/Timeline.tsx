@@ -796,7 +796,18 @@ export const Timeline = ({
           side={sideOf.get(card.column) ?? 'end'}
           // The dot is the context element, so its scroll ancestors (the timeline's scroller among them) move the card.
           getAnchorElement={() => ({
-            getBoundingClientRect: () => dotOf(card)?.getBoundingClientRect() ?? new DOMRect(),
+            // A fixed box around the dot's center, so the card stays put as the dot grows from hovered to selected.
+            getBoundingClientRect: () => {
+              const rect = dotOf(card)?.getBoundingClientRect();
+              return rect
+                ? new DOMRect(
+                    rect.x + rect.width / 2 - CURRENT_DOT_RADIUS,
+                    rect.y + rect.height / 2 - CURRENT_DOT_RADIUS,
+                    CURRENT_DOT_RADIUS * 2,
+                    CURRENT_DOT_RADIUS * 2,
+                  )
+                : new DOMRect();
+            },
             contextElement: dotOf(card) ?? undefined,
           })}
           color={color(card.column)}

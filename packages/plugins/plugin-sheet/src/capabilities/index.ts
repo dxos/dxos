@@ -81,6 +81,7 @@ export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mapp
   activatesOn: SheetEvents.Start,
   environments: ['browser', 'node', 'tauri'],
 });
+export const SpaceTemplates = AppCapability.spaceTemplates(() => import('./space-templates.ts'));
 export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,

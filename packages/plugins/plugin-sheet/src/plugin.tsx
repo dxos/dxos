@@ -18,6 +18,7 @@ import {
   Schema,
   SheetState,
   SkillDefinition,
+  SpaceTemplates,
   Translations,
   UndoMappings,
 } from '#capabilities';
@@ -37,6 +38,7 @@ export const SheetPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(Schema),
   Plugin.addModule(SheetState),
   Plugin.addModule(SkillDefinition),
+  Plugin.addModule(SpaceTemplates),
   Plugin.addModule(Translations),
   Plugin.addModule(UndoMappings),
   Plugin.make,

@@ -7,6 +7,8 @@ import { technologyTimeline } from '@dxos/react-ui-plot/testing';
 
 import { Sheet, SheetRange } from '#types';
 
+import { toCells } from '../samples/macro/data.ts';
+
 export const createTestCells = (testSheetName = 'test'): Record<string, Sheet.CellValue> => ({
   B1: { value: 'Qty2' },
   B3: { value: 1 },
@@ -74,21 +76,8 @@ export const createChartTestRanges = (): Sheet.Range[] => [
   ...['B1:C1', 'F1', 'H1:I1'].map((range) => ({ range, key: SheetRange.alignKey, value: 'end' })),
 ];
 
-/** A leading apostrophe keeps digits as text, so a bare year reads as a date label rather than a number. */
-const asText = (value: string | number | boolean) =>
-  typeof value === 'string' && /^\d+$/.test(value) ? `'${value}` : value;
-
 /** Technology, macro, robotics and industrial-complex events (A1:E{n}), one per row, for timelines. */
-export const createTimelineTestCells = (): Record<string, Sheet.CellValue> =>
-  Object.fromEntries(
-    technologyTimeline.flatMap((row, index) =>
-      row.flatMap((value, col) =>
-        value == null
-          ? []
-          : [[`${String.fromCharCode('A'.charCodeAt(0) + col)}${index + 1}`, { value: asText(value) }]],
-      ),
-    ),
-  );
+export const createTimelineTestCells = (): Record<string, Sheet.CellValue> => toCells(technologyTimeline);
 
 /** The A1 range of the timeline test cells. */
 export const timelineTestRange = `A1:E${technologyTimeline.length}`;
