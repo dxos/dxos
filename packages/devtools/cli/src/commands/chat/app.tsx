@@ -4,7 +4,7 @@
 
 import type * as Effect from 'effect/Effect';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
-import { type Accessor } from 'solid-js';
+import { type Accessor, Show } from 'solid-js';
 
 import { type AiSession } from '@dxos/assistant';
 
@@ -31,7 +31,9 @@ export const renderChatApp = ({
   render({
     app: () => (
       <App debug={debug} focusElements={['input', 'messages']} logBuffer={logBuffer} registry={registry} theme={theme}>
-        {conversation() && <Chat {...chat} conversation={conversation()!} />}
+        <Show when={conversation()} keyed>
+          {(session) => <Chat {...chat} conversation={session} />}
+        </Show>
       </App>
     ),
     focusElements: ['input', 'messages'],
