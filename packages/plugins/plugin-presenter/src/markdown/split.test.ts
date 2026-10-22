@@ -31,6 +31,21 @@ describe('splitSlides', () => {
     expect(splitSlides(`${fenced}\n---\nnext`)).toEqual([fenced, 'next']);
   });
 
+  test('keeps a body-less frontmatter-only slide', () => {
+    expect(splitSlides('---\nlayout: a\n---\n---\nlayout: b\n---\nbody')).toEqual([
+      '---\nlayout: a\n---',
+      '---\nlayout: b\n---\nbody',
+    ]);
+  });
+
+  test('a single-line yaml block after a separator is frontmatter', () => {
+    expect(splitSlides('one\n---\nNote: x\n---\ntwo')).toEqual(['one', '---\nNote: x\n---\ntwo']);
+  });
+
+  test('a key line followed by prose is body, not frontmatter', () => {
+    expect(splitSlides('one\n---\nNote: x\nsome prose\n---\ntwo')).toEqual(['one', 'Note: x\nsome prose', 'two']);
+  });
+
   test('empty document', () => {
     expect(splitSlides('')).toEqual(['']);
   });

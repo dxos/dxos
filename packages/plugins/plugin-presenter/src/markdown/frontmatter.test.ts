@@ -35,6 +35,12 @@ describe('parseFrontmatter', () => {
     expect(issues.map((issue) => issue.kind)).toEqual(['frontmatter']);
   });
 
+  test('keeps valid fields beside an invalid one', () => {
+    const { frontmatter, issues } = parseFrontmatter('layout: cover\nbackgroundOpacity: 2');
+    expect(frontmatter).toEqual({ layout: 'cover' });
+    expect(issues).toHaveLength(1);
+  });
+
   test('empty input is valid', () => {
     expect(parseFrontmatter('')).toEqual({ frontmatter: {}, issues: [] });
   });

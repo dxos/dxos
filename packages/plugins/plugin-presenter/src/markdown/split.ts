@@ -43,7 +43,9 @@ export const splitSlides = (markdown: string): string[] => {
   const separators = findSeparators(lines);
   const slides: string[] = [];
   let start = 0;
+  // Index of the first line after the current slide's frontmatter, or after the last separator.
   let bodyStart = 0;
+  let hasFrontmatter = false;
 
   const flush = (end: number) => {
     slides.push(lines.slice(start, end).join('\n').trim());
@@ -55,13 +57,15 @@ export const splitSlides = (markdown: string): string[] => {
     const closing = separators[cursor + 1];
     const opensFrontmatter = closing !== undefined && isFrontmatter(lines.slice(separator + 1, closing));
     if (opensFrontmatter) {
-      if (separator > bodyStart || slides.length > 0) {
+      if (hasFrontmatter || separator > bodyStart || slides.length > 0) {
         flush(separator);
       }
+      hasFrontmatter = true;
       start = separator;
       bodyStart = closing + 1;
       cursor += 2;
     } else {
+      hasFrontmatter = false;
       if (separator === 0) {
         start = 1;
       } else {
