@@ -23,3 +23,15 @@ tasks:
       - dist/types/
     options:
       timeout: 60
+  # `.moon/tasks/source-hash.yml` comes with the build tags, which this project has none of.
+  source-hash:
+    command: noop
+    deps:
+      - target: ^:source-hash
+        cacheStrategy: hash
+    inputs:
+      - src/**/*
+      - '!src/**/*.test.ts'
+      - '!src/**/*.test.tsx'
+      - '!src/**/*.spec.ts'
+      - tsconfig.json
