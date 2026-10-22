@@ -5,6 +5,7 @@
 import * as d3 from 'd3';
 import React, {
   type KeyboardEvent,
+  type MouseEvent,
   useCallback,
   useEffect,
   useId,
@@ -624,13 +625,22 @@ export const Timeline = ({
                   ? (hidden ?? []).filter((name) => !categories.includes(name))
                   : [...(hidden ?? []), ...categories.filter((name) => !hidden?.includes(name))],
               );
+            // With ⌘ (Ctrl elsewhere) a tag shows only its categories; doing it again shows everything.
+            const solo = (categories: string[]) => {
+              const others = columns.filter((name) => !categories.includes(name));
+              const isSolo =
+                others.every((name) => hidden?.includes(name)) && categories.every((name) => !hidden?.includes(name));
+              onHiddenChange(isSolo ? [] : others);
+            };
+            const handleClick = (categories: string[], show: boolean) => (event: MouseEvent) =>
+              event.metaKey || event.ctrlKey ? solo(categories) : toggle(categories, show);
             const tag = (column: string) => (
               <Tag.Tag
                 key={column}
                 style={tagStyle(column)}
                 aria-pressed={!hidden?.includes(column)}
                 classNames={hidden?.includes(column) ? 'opacity-40' : undefined}
-                onClick={() => toggle([column], !!hidden?.includes(column))}
+                onClick={handleClick([column], !!hidden?.includes(column))}
               >
                 {categoryLabel(column)}
               </Tag.Tag>
@@ -645,7 +655,7 @@ export const Timeline = ({
                   // The parent takes its own color where it has events of its own, else its first child's.
                   style={tagStyle(group.categories.includes(group.name) ? group.name : group.categories[0])}
                   aria-pressed={shown.length > 0}
-                  onClick={() => toggle(group.categories, shown.length === 0)}
+                  onClick={handleClick(group.categories, shown.length === 0)}
                   classNames={mx('font-semibold', shown.length === 0 && 'opacity-40')}
                 >
                   {group.name}
