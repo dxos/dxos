@@ -102,9 +102,18 @@ const commandDecorations = (getCommands: () => CommandData[]) => {
 /** Present when `commands()` is installed, so the host (`ChatEditor`) renders the completion list itself. */
 export const commandCompletionHost = Facet.define<boolean, boolean>({ combine: (values) => values.some(Boolean) });
 
-// The host renders the list in a portalled popover, which the prompt's container cannot clip.
+// The host draws the list in a portalled popover, which the prompt's container cannot clip; CodeMirror's own list stays
+// in the accessibility tree (visually hidden) because the editor's `aria-activedescendant` points into it.
 const hiddenTooltipTheme = EditorView.theme({
-  '.cm-tooltip.cm-tooltip-autocomplete': { display: 'none' },
+  '.cm-tooltip.cm-tooltip-autocomplete': {
+    position: 'fixed',
+    width: '1px',
+    height: '1px',
+    overflow: 'hidden',
+    clipPath: 'inset(50%)',
+    whiteSpace: 'nowrap',
+    pointerEvents: 'none',
+  },
 });
 
 export type CommandCompletionOption = { label: string; detail?: string };
@@ -133,10 +142,20 @@ export const selectCommandCompletion = (view: EditorView, index: number): void =
   }
 };
 
+/** CodeMirror's default `interactionDelay`, during which `acceptCompletion` refuses so a fast Enter cannot pick. */
+const INTERACTION_DELAY = 75;
+
 /** Accepts the completion at `index` (e.g., on click). */
 export const acceptCommandCompletion = (view: EditorView, index: number): void => {
   selectCommandCompletion(view, index);
-  acceptCompletion(view);
+  if (!acceptCompletion(view)) {
+    // A click is deliberate, so one inside the delay is accepted once it ends rather than dropped.
+    setTimeout(() => {
+      if (completionStatus(view.state) === 'active' && selectedCompletionIndex(view.state) === index) {
+        acceptCompletion(view);
+      }
+    }, INTERACTION_DELAY);
+  }
 };
 
 export const closeCommandCompletion = (view: EditorView): void => {

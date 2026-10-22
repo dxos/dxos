@@ -806,6 +806,14 @@ const ChatPrompt = ({ classNames, ...props }: ChatPromptProps) => {
     setVisible(visible && open ? undefined : open);
   }
 
+  // With animations off no `animationend` fires, so a switch with no close animation running completes at once.
+  const drawerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!visible && open && (drawerRef.current?.getAnimations().length ?? 0) === 0) {
+      setVisible(open);
+    }
+  }, [visible, open]);
+
   const shownRef = useRef(visible);
   if (visible) {
     shownRef.current = visible;
@@ -826,6 +834,7 @@ const ChatPrompt = ({ classNames, ...props }: ChatPromptProps) => {
       {/* The height the machine measures is what the ramp animates against, so the region clips. */}
       {available.length > 0 && (
         <Collapsible.Content
+          ref={drawerRef}
           className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'
           onAnimationEnd={(event) => event.target === event.currentTarget && !visible && open && setVisible(open)}
         >

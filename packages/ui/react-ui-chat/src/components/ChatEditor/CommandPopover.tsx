@@ -73,7 +73,8 @@ export const CommandPopover = ({ completion, getView, anchorRef, rows = 8 }: Com
       }}
     >
       {/* As wide as the editor, so the list lines up with both of its edges. */}
-      <Popover.Content arrow={false} classNames='w-(--reference-width) max-w-(--reference-width)'>
+      {/* Hidden from assistive tech: the editor's `aria-activedescendant` follows CodeMirror's own (visually hidden) list. */}
+      <Popover.Content arrow={false} aria-hidden classNames='w-(--reference-width) max-w-(--reference-width)'>
         <Listbox.Root items={items} columns={COLUMNS} style={{ maxBlockSize: `calc(var(--dx-block-size) * ${rows})` }}>
           <Listbox.Viewport>
             <Listbox.Content
