@@ -13,7 +13,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Repo } from '@dxos/types';
 
 import { CreateProjectPanel } from '#components';
-import { Feature, FeatureMap, ProjectOperation, Showcase } from '#types';
+import { Feature, ProjectOperation, Showcase } from '#types';
 
 type CreateOptions = Parameters<SpaceCapabilities.CreateObjectEntry['createObject']>[1];
 
@@ -61,15 +61,6 @@ export default Capability.makeModule(
           Operation.invoke(
             SpaceOperation.AddObject,
             { object: Feature.make({ name: props.name ?? '', status: 'planned' }), target: options.target },
-            { spaceId: options.db.spaceId },
-          ),
-      },
-      {
-        id: Type.getTypename(FeatureMap.FeatureMap),
-        createObject: (props: { name?: string }, options: CreateOptions) =>
-          Operation.invoke(
-            SpaceOperation.AddObject,
-            { object: FeatureMap.make({ name: props.name }), target: options.target },
             { spaceId: options.db.spaceId },
           ),
       },

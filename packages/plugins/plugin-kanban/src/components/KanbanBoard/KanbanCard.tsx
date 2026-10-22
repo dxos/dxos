@@ -71,7 +71,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
           <Card.Root
             grid
             // A board card sits on a column panel of the same tone, so it needs an edge where a lone card relies on its shadow.
-            classNames='not-data-selected:border-separator-subtle'
+            classNames='border-separator-subtle'
             ref={forwardedRef}
             data-testid='board-item'
           >

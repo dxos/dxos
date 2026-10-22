@@ -3,28 +3,107 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
-import { type Point } from '@dxos/react-ui-canvas/scene';
+import { type Arrangement, DEFAULT_FORCE, type ForceOptions, type Point } from '@dxos/react-ui-canvas/scene';
+import * as Button from '@dxos/react-ui/Button';
+import * as Input from '@dxos/react-ui/Input';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
 import { translations } from '#translations';
 
-import { SAMPLE_FEATURES } from '../FeatureCard/testing.ts';
+import { type FeatureChanges, type FeatureModel } from '../FeatureCard/index.ts';
+import { LAYERED_FEATURES, SAMPLE_FEATURES } from '../FeatureCard/testing.ts';
 import { FeatureCanvas } from './FeatureCanvas.tsx';
 
-const DefaultStory = () => {
+type StoryArgs = {
+  arrange?: Arrangement;
+  features?: FeatureModel[];
+  force?: ForceOptions;
+  lattice?: boolean;
+  snap?: boolean;
+  /** Changing it drops the dragged positions, so the layout runs again from the arrangement alone. */
+  layoutKey?: number;
+};
+
+const DefaultStory = ({ arrange, features: initial = SAMPLE_FEATURES, force, lattice, layoutKey }: StoryArgs) => {
+  const [features, setFeatures] = useState(initial);
   const [positions, setPositions] = useState<Record<string, Point>>({});
+  useEffect(() => setPositions({}), [layoutKey]);
+  const handleChange = (id: string, changes: FeatureChanges) =>
+    setFeatures((current) => current.map((feature) => (feature.id === id ? { ...feature, ...changes } : feature)));
   return (
     <div className='dx-fill relative'>
-      <FeatureCanvas features={SAMPLE_FEATURES} positions={positions} onPositionsChange={setPositions} />
+      <FeatureCanvas
+        features={features}
+        positions={positions}
+        onPositionsChange={setPositions}
+        arrange={arrange}
+        force={force}
+        lattice={lattice}
+        onChange={handleChange}
+      />
     </div>
   );
 };
 
-const meta: Meta = {
+/** The force layout with its strengths on sliders; Snap puts it on the lattice, and off it lays out freely. */
+const ForceStory = ({ features = LAYERED_FEATURES, snap: initialSnap = false }: StoryArgs) => {
+  const [attraction, setAttraction] = useState(DEFAULT_FORCE.attraction);
+  const [repulsion, setRepulsion] = useState(DEFAULT_FORCE.repulsion);
+  const [range, setRange] = useState(DEFAULT_FORCE.range);
+  const [snap, setSnap] = useState(initialSnap);
+  const [layoutKey, setLayoutKey] = useState(0);
+  return (
+    <div className='dx-fill relative'>
+      <DefaultStory
+        arrange={snap ? 'force' : 'force-free'}
+        features={features}
+        force={{ attraction, repulsion, range }}
+        lattice={snap}
+        layoutKey={layoutKey}
+      />
+      <div className='absolute top-2 right-2 w-64 p-3 flex flex-col gap-3 rounded-md bg-base-surface border border-separator'>
+        <Input.Slider
+          label={`Attraction ${attraction.toFixed(2)}`}
+          value={[attraction]}
+          min={0}
+          max={2}
+          step={0.05}
+          onValueChange={([value]) => setAttraction(value)}
+        />
+        <Input.Slider
+          label={`Repulsion ${repulsion.toFixed(2)}`}
+          value={[repulsion]}
+          min={0}
+          max={2}
+          step={0.05}
+          onValueChange={([value]) => setRepulsion(value)}
+        />
+        <Input.Slider
+          label={`Repulsion range ${range.toFixed(1)} cells`}
+          value={[range]}
+          min={0.5}
+          max={10}
+          step={0.5}
+          onValueChange={([value]) => setRange(value)}
+        />
+        <div className='flex gap-2'>
+          <Button.Toggle pressed={snap} onPressedChange={setSnap} icon='ph--magnet--regular' label='Snap' />
+          <Button.Root
+            icon='ph--arrows-clockwise--regular'
+            label='Re-layout'
+            onClick={() => setLayoutKey((key) => key + 1)}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const meta: Meta<StoryArgs> = {
   title: 'plugins/plugin-projects/components/FeatureCanvas',
   render: DefaultStory,
   decorators: [withRegistry, withTheme(), withLayout({ layout: 'fullscreen' })],
@@ -33,7 +112,7 @@ const meta: Meta = {
 
 export default meta;
 
-/** Cards in boxes, ranked from dependents down to foundations, with a straight arrow per dependency. Drag a box. */
+/** Cards on the lattice, ranked from dependents down to foundations, with a smart arrow per dependency. Drag a box; a pencil edits a title. */
 export const Default: StoryObj<typeof meta> = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -41,4 +120,28 @@ export const Default: StoryObj<typeof meta> = {
       timeout: 10_000,
     });
   },
+};
+
+/** Each rank in id order: arrows cross wherever the ids happen to sort against the dependencies. */
+export const RankOrder: StoryObj<typeof meta> = {
+  args: { arrange: 'rank', features: LAYERED_FEATURES },
+};
+
+/** Each rank ordered by its neighbours' mean column over several sweeps, keeping the order with fewest crossings. */
+export const FewestCrossings: StoryObj<typeof meta> = {
+  args: { arrange: 'crossings', features: LAYERED_FEATURES },
+};
+
+/**
+ * Fewest crossings, then improved card by card: each moves to a nearby free cell or swaps with a nearby card when that
+ * lowers the cost of the links as the canvas routes them (crossings, then bends, then length).
+ */
+export const Routed: StoryObj<typeof meta> = {
+  args: { arrange: 'routed', features: LAYERED_FEATURES },
+};
+
+/** A force layout run to rest and laid out freely; Snap puts it on the lattice's nearest free cells. */
+export const Force: StoryObj<typeof meta> = {
+  render: ForceStory,
+  args: { snap: false },
 };

@@ -4,7 +4,6 @@
 
 import { type Decorator } from '@storybook/react-vite';
 import React from 'react';
-import { I18nProvider } from 'react-aria-components';
 
 import { type ThemeMode } from '@dxos/ui-types';
 
@@ -13,10 +12,6 @@ import { defaultTx } from '../../theme/defaultTheme.ts';
 
 /**
  * Adds theme decorator.
- *
- * `I18nProvider` is included so react-aria-components-backed widgets (DateField, Calendar, …)
- * have a guaranteed locale in headless test environments where `navigator.language` may be
- * empty.
  */
 export const withTheme =
   ({ tx = defaultTx, platform }: Partial<Theme.ThemeContextValue> = {}): Decorator =>
@@ -27,15 +22,13 @@ export const withTheme =
     } = context;
 
     return (
-      <I18nProvider locale='en-US'>
-        <Theme.Provider
-          tx={tx}
-          themeMode={(theme as ThemeMode) || 'dark'}
-          resourceExtensions={translations}
-          platform={platform}
-        >
-          <Story />
-        </Theme.Provider>
-      </I18nProvider>
+      <Theme.Provider
+        tx={tx}
+        themeMode={(theme as ThemeMode) || 'dark'}
+        resourceExtensions={translations}
+        platform={platform}
+      >
+        <Story />
+      </Theme.Provider>
     );
   };

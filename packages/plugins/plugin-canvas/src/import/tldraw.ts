@@ -270,7 +270,7 @@ export const tldrawToViews = (
             : geo === 'cloud'
               ? ({ ...base, type: 'cloud' } satisfies CloudNode)
               : sides !== undefined
-                ? ({ ...base, type: 'polygon', sides } satisfies PolygonNode)
+                ? ({ ...base, type: 'polygon', params: { sides } } satisfies PolygonNode)
                 : ({ ...base, type: 'rect' } satisfies RectNode),
         );
         break;

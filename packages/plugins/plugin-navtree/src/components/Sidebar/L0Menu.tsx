@@ -25,6 +25,7 @@ import React, {
 } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
@@ -276,9 +277,15 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
 const isWorkspaceTab = (item: L0ItemProps['item']): boolean =>
   l0ItemType(item) === 'tab' && item.properties.disposition !== 'pin-end';
 
-/** The item's own hue; a workspace without one takes a stable hue from its id, so every space avatar is coloured. */
+/**
+ * The item's own hue; a workspace without one takes a stable hue hashed from its workspace token (a space's id), the
+ * same hash as the space's pills in the contact list.
+ */
 const itemHue = (item: L0ItemProps['item']): string | undefined =>
-  item.properties.hue ?? (isWorkspaceTab(item) && item.properties.pending !== true ? getHashHue(item.id) : undefined);
+  item.properties.hue ??
+  (isWorkspaceTab(item) && item.properties.pending !== true
+    ? getHashHue(GraphPath.getWorkspaceToken(item.id))
+    : undefined);
 
 const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   const { t } = Hooks.useTranslation(meta.profile.key);

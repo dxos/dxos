@@ -24,6 +24,7 @@ import {
   type Size,
 } from '../model/index.ts';
 import { type PartField } from './parts.ts';
+import { DEFAULT_POLYLINE_POINTS } from './polyline.ts';
 import { DEFAULT_CLOUD_BUMPS, DEFAULT_POLYGON_SIDES } from './silhouette.ts';
 
 /** Axis-aligned frame of a node: its size centred on its centre. */
@@ -61,6 +62,7 @@ export const NOMINAL_SIZES: Record<BuiltinNodeType, Size> = {
   ellipse: { width: 2, height: 2 },
   cloud: { width: 3, height: 2 },
   polygon: { width: 2, height: 2 },
+  polyline: { width: 2, height: 2 },
   note: { width: 4, height: 2 },
   view: { width: 4, height: 2 },
   instance: { width: 4, height: 2 },
@@ -75,6 +77,7 @@ export const DEFAULT_SIZES: Record<BuiltinNodeType, Size> = {
   ellipse: { width: 256, height: 256 },
   cloud: { width: 384, height: 256 },
   polygon: { width: 256, height: 256 },
+  polyline: { width: 256, height: 256 },
   note: { width: 256, height: 128 },
   view: { width: 512, height: 256 },
   instance: { width: 512, height: 256 },
@@ -113,9 +116,11 @@ export const createNode = ({
       return { type, id, z, center, size };
     // The count is set, so the panel shows the shape's own value rather than an empty field.
     case 'cloud':
-      return { type, id, z, center, size, bumps: DEFAULT_CLOUD_BUMPS };
+      return { type, id, z, center, size, params: { bumps: DEFAULT_CLOUD_BUMPS } };
     case 'polygon':
-      return { type, id, z, center, size, sides: DEFAULT_POLYGON_SIDES };
+      return { type, id, z, center, size, params: { sides: DEFAULT_POLYGON_SIDES } };
+    case 'polyline':
+      return { type, id, z, center, size, points: [...DEFAULT_POLYLINE_POINTS] };
     case 'note':
       return { type, id, z, center, size, text: 'Note' };
     case 'view':

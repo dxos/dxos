@@ -61,6 +61,8 @@ export type EvalToolkitOptions = {
   /** Services the sandbox's code runs against — the database, and `Operation.invoke`'s handler. */
   readonly runtime: Context.Context<Database.Service | Operation.Service>;
   readonly operations: readonly SandboxOperation[];
+  /** Keys of the skills the conversation has bound; see `BindingsContext.skills`. */
+  readonly skills?: readonly string[];
   readonly maxOutput?: number;
   readonly timeout?: Duration.Input;
 };
@@ -82,6 +84,7 @@ export const evaluate = Effect.fnUntraced(function* ({
   sandbox,
   runtime,
   operations,
+  skills,
   maxOutput = DEFAULT_MAX_OUTPUT,
   timeout,
 }: EvaluateOptions) {
@@ -90,7 +93,7 @@ export const evaluate = Effect.fnUntraced(function* ({
     .evaluate({
       code: dialect.wrap(code),
       dialect,
-      context: { runtime, operations, print: printer.print },
+      context: { runtime, operations, skills, print: printer.print },
       timeout,
     })
     .pipe(Effect.result);

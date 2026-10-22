@@ -97,11 +97,12 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
         result,
         current: Obj.getURI(result) === currentId,
         starred: starredOf(result),
-        onSelect: handleSelect,
         onToggleStar: handleToggleStar,
       })),
-    [visibleResults, currentId, handleSelect, starredOf, handleToggleStar],
+    [visibleResults, currentId, starredOf, handleToggleStar],
   );
+  // The masonry item is the tile's focusable unit, so it selects the result on click and on Enter.
+  const itemProps = useCallback((id: string) => ({ onActivate: () => handleSelect(id) }), [handleSelect]);
 
   const selectedResult = useMemo(
     () => results.find((result) => Obj.getURI(result) === currentId),
@@ -163,7 +164,7 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
           ) : (
             <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
               <Masonry.Content padding>
-                <Masonry.Viewport getId={(data) => Obj.getURI(data.result)} items={tileItems} />
+                <Masonry.Viewport getId={(data) => Obj.getURI(data.result)} items={tileItems} itemProps={itemProps} />
               </Masonry.Content>
             </Masonry.Root>
           ))}
@@ -176,7 +177,6 @@ type TileData = {
   result: Result.Result;
   current: boolean;
   starred: boolean;
-  onSelect: (id: string) => void;
   onToggleStar: (result: Result.Result) => void;
 };
 
@@ -186,13 +186,7 @@ const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) =>
   }
 
   return (
-    <ResultTile
-      result={data.result}
-      current={data.current}
-      starred={data.starred}
-      onSelect={data.onSelect}
-      onToggleStar={data.onToggleStar}
-    />
+    <ResultTile result={data.result} current={data.current} starred={data.starred} onToggleStar={data.onToggleStar} />
   );
 };
 

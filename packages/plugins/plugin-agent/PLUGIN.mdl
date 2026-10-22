@@ -24,7 +24,8 @@ EDGE's operation service can host the agent and knowledge operations.
 The following extension dialects are used in this document. `op@1.1`, `test@1.0` and `step@1.0`
 are defined in [`packages/reflect/deus/lang/qa.mdl`](../../reflect/deus/lang/qa.mdl); `node`,
 `companion` and `surface` in [`packages/reflect/deus/lang/app.mdl`](../../reflect/deus/lang/app.mdl); `skill@1.0` in
-[`packages/plugins/plugin-crm/PLUGIN.mdl`](../plugin-crm/PLUGIN.mdl); the rest in the Appendix.
+[`packages/plugins/plugin-crm/PLUGIN.mdl`](../plugin-crm/PLUGIN.mdl); `decision@1.0` in
+[`packages/reflect/deus/lang/changelog.mdl`](../../reflect/deus/lang/changelog.mdl); the rest in the Appendix.
 
 | Term        | URI                            |
 |-------------|--------------------------------|
@@ -39,6 +40,7 @@ are defined in [`packages/reflect/deus/lang/qa.mdl`](../../reflect/deus/lang/qa.
 | `surface`   | `org.dxos.mdl.surface@1.0`     |
 | `test`      | `org.dxos.mdl.test@1.0`        |
 | `step`      | `org.dxos.mdl.step@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
 
 ## External types
 
@@ -166,9 +168,11 @@ op ensureIdentity
   note: |
     `POST /compute/brain { agent, homeSpaceId, label }`: EDGE mints the brain's self-owned HALO identity and its
     default space (owned by that identity, named after the agent, tagged `org.dxos.space.agent`), and admits the
-    caller to that space as ADMIN. The members who may write to the default space are the agent's admins (a reader
-    is not one); the caller, its creator, is an ADMIN, while the agent's identity owns the space. Admins come and go
-    through the space's Members panel like any space's members. The caller must be able to write to `homeSpaceId`.
+    caller to that space as ADMIN. The members who may write to the default space become the agent's admins (a
+    reader does not); the caller, its creator, is an ADMIN, while the agent's identity owns the space, and the agent
+    issues the creator its first `IdentityAdmin` credential. Members join through the space's Members panel like any
+    space's members, and their clients ask EDGE to make them admins (F-7.9); admins are only added. The caller must
+    be able to write to `homeSpaceId`.
     The agent takes the DID as soon as EDGE answers, since the DID names its brain and must exist before its first
     turn, and records its creator's DID and its own space (`Obj.Meta` keys `org.dxos.agent/creator` and
     `org.dxos.agent/space`). Then, in the background and retried for about two minutes, the caller's `SpaceMember`
@@ -598,6 +602,7 @@ feat F-1: Agents
     then: an Agent exists with Instructions holding the Interview skill and a first chat bound to the Agent conversation skill
   req F-1.3: op:listAgents reports each Agent with the number of chats parented to it.
   req F-1.4: A space's agents are added, opened and deleted in Settings › Agents; "Add to space" does not offer them.
+  req F-1.5: A member has one private chat with an agent in a space. Opening the agent again while the first open is still making that chat waits for it, and when two opens each made one (two devices at once), the article opens the one with the latest message.
 ```
 
 ```mdl
@@ -665,7 +670,7 @@ feat F-6: One brain per agent
 ```mdl
 feat F-7: An agent's own space
 
-  req F-7.1: An agent with an identity has a default space its identity owns, minted with it by op:ensureIdentity and tagged `AppSpace.AGENT_SPACE_TAG`; the identity is its owner, named after the agent, and every other current member who may write to it (an admin or an editor, not a reader) is one of the agent's admins, as EDGE decides it.
+  req F-7.1: An agent with an identity has a default space its identity owns, minted with it by op:ensureIdentity and tagged `AppSpace.AGENT_SPACE_TAG`; the identity is its owner, named after the agent, and every other member who may write to it (an admin or an editor, not a reader) becomes one of the agent's admins. EDGE checks the admin role against the `IdentityAdmin` credentials the agent's identity issues, one per admin and kept in its HALO (`dxos.halo.credentials.IdentityAdmin { identity_key, admin_key }`), not against the space, and the admins' clients ask EDGE for one for each member who may write (F-7.9). Admins are only added: a member made a reader or removed stays an admin, since space membership has no revocation yet.
   req F-7.2: An agent with an identity is a member of the shared spaces it is in. op:ensureIdentity admits its identity to the space the agent is created in, as an editor named after the agent, and the members panel admits it to the spaces it is added to, as any contact (F-8.1). Only a space's admins can admit members, and a locked space (a personal or private one, `MembershipPolicy.LOCKED`) admits no one after its genesis, an agent no more than a person: an agent created there, or by anyone but an admin, works without the membership, and no one can add one to such a space.
   req F-7.3: With the setting on (F-7.4), creating an agent waits for op:ensureIdentity's answer from EDGE, about a second, so the agent opens with its DID and its brain is named by it from the first turn. EDGE names the identity and the agent's space after the agent's name at that moment, and renaming the agent later renames neither. Joining its own space and admitting it to the space it was created in follow in the background. When EDGE cannot provision it within 15 seconds, the agent opens without an identity. When those background steps fail every retry, opening the agent finishes them for its creator, and asks EDGE nothing when nothing is missing.
   req F-7.4: Agent identities are switched on by the plugin's "Create identities for agents" setting (`AgentSettings.Settings.identities`), which is off by default. Off, creating an agent asks EDGE nothing: the agent is an object in its space whose brain is named by its id, as agents always were. On, creating an agent gives it its identity (F-7.3). An agent keeps the identity it was given when the setting is turned off.
@@ -673,6 +678,7 @@ feat F-7: An agent's own space
   req F-7.6: `AgentSpace.admins` lists an agent's admins, the admins and editors of its space, and `AgentSpace.agentOf` is the agent as its space shows it. Anything acting on the agent's identity, such as its DID on a presence, takes it from EDGE instead (op:inviteAgent).
   req F-7.7: While the plugin's setting creates agents with identities (F-7.4), the account's Agents panel, listed after the account's other panels, lists the agents the identity administers (F-7.5): each one's name, its admins with the viewer marked, and a chip per space it is a member of that the viewer is too, its own space first, each switching to that space. It stays current as spaces and their members change.
   req F-7.8: EDGE keys an agent space's properties to the agent's URI (`AgentPresence.HOME_SOURCE`) when it mints the space. `AgentSpace.administeredAgents` reads each administered agent's name, DID and home from its space, so an admin who is not a member of the agent's home space can still add the agent to other spaces (F-8.1).
+  req F-7.9: An admin's client asks EDGE to make each member who may write to an agent's space (its admins and editors) the agent's admin (`AgentAdminSync`, `POST /compute/brain/:did/admins { identityKey }`), and the agent issues each one an `IdentityAdmin` in its HALO. It never asks EDGE to take an admin off: a member made a reader or removed keeps the role. It acts only on a space EDGE names as the agent's own and only while EDGE counts the identity as the agent's admin, so a space that merely claims to be an agent's adds no one. Each add is sent once a session, and again after a failure; a client whose services reconnect starts over, since they may hold another identity. Sending an add again is harmless: EDGE appends an admin's credential when the agent's HALO lacks it, and never a second one. EDGE's 404 (an EDGE without the admins route, or a caller with no role on the agent) settles an add for the session, and another refusal (a 4xx) is sent again on the next pass. When EDGE could not be reached or failed (no answer, or a 5xx), the sync runs again 30 seconds later even if nothing changes, so an add reaches EDGE without waiting for another change; a space EDGE could not be asked about is asked again the same way.
 ```
 
 ```mdl
@@ -684,8 +690,8 @@ feat F-8: An agent in several spaces
     then: that agent is returned and nothing is created
   req F-8.3: A presence carries its home's name, DID and instructions, keyed to the home agent's URI; inviting a presence keys the new one to the same home. An admin who cannot reach the home invites from the agent's own space instead (F-7.8), and the presence starts from the base instructions for its name.
   req F-8.4:
-    when: a member opens an agent invited from another space
-    then: its article is the member's one private chat with the agent, the same as at home, and its companions show the home agent's knowledge and activity, when the member can reach the home space; otherwise the presence's own
+    when: a member opens an agent in a space it was invited to
+    then: its article is the member's private chat with the agent in that space, a conversation of its own that the agent's other spaces do not show, and its companions show that space's goals, watches and channels; what the agent knows comes from its one brain (F-6.1), whichever space the member talks to it in
   req F-8.5: Inviting writes no conversation: nothing is quoted from any chat into the space.
   req F-8.6: Only an agent's admins can add it to another space. The picker offers only the agents the member administers, and op:inviteAgent registers the space with EDGE, which EDGE refuses anyone else, before it makes the presence; EDGE's brain serves only its home and the spaces registered so, so a presence made any other way reads and writes nothing of the brain, and EDGE runs no turn of its chats.
 ```
@@ -825,6 +831,20 @@ scenario T-13: An invited agent keeps one brain   # invite-agent.test.ts
     - an admin who cannot reach Kai's home invites it from what Kai's space records: a presence keyed to Kai's URI with its name, its DID and the base instructions; inviting again returns it
 ```
 
+```mdl
+scenario T-14: An admin's client adds the agent's admins on EDGE   # agent-admin-sync.test.ts
+  # covers [F-7.9]
+  given: Kai's space with Kai as its owner, the identity as an admin, an editor and a reader; an EDGE that minted Kai
+  when: the sync runs, again unchanged, then after the editor is removed and another member joins as an editor
+  then:
+    - the first run adds the admin and the editor, not the reader, after EDGE names the space as Kai's
+    - an unchanged space sends nothing; the change adds the newcomer and sends nothing for the removed editor
+    - a space EDGE names as another, or where EDGE counts the identity a contact, sends nothing but the check
+    - an add EDGE answered with 404 is not sent again; one that failed with 503 is, and the pass asks to run again
+    - EDGE answering 503 when the space is to be confirmed asks for a retry; a 403, or an agent EDGE does not know, does not
+    - a pass that asked for a retry runs again 30 seconds later without a wake; one that did not waits for a wake
+```
+
 ## Not built
 
 Design items from `docs/DESIGN.md` and `docs/FACTS.md` that this package does not implement:
@@ -832,15 +852,12 @@ Design items from `docs/DESIGN.md` and `docs/FACTS.md` that this package does no
 - The EDGE gateway Durable Object and the agent turn on EDGE live outside this package (EDGE repo).
   Until edge step 4 the gateway still reads a `DiscordBinding` and calls `ensureThreadChat`, neither of
   which exists any more, so Discord conversations do not reach the agent.
-- The intended shape: an agent is a member of the spaces it is invited to, people talk to it there as a
-  bot in their chats, and each person has one conversation with it at the top level (L0), not one per space.
-  As built, an agent with an identity is a member of each shared space it is in (F-7.2), but people talk to it
-  through a presence (an `Agent` keyed to its home); the member's one conversation is their private chat in
-  the agent's home space, which the presence's article opens; its messages carry no identity (`sender` is
-  `{ role: 'assistant' }`); and chats in a space do not wake the agent.
+- The intended shape: an agent is a member of the spaces it is invited to, and people talk to it there as a
+  bot in their chats. As built, an agent with an identity is a member of each shared space it is in (F-7.2), but
+  people talk to it through a presence (an `Agent` keyed to its home), in a private chat of their own in each
+  space (F-8.4); its messages carry no identity (`sender` is `{ role: 'assistant' }`); and chats in a space do
+  not wake the agent.
 - Removing an agent from a space's members leaves its presence there and the space registered with its brain.
-- A member who cannot reach the agent's home space talks to the presence in a chat of its own, which reads
-  the home's brain but not the home conversation.
 - Goals are objects in the space they were recorded in; only facts are shared through the brain.
 - Runtime-assembled knowledge context at the start of each turn; consolidation (dedupe, promotion of
   inferred facts); editing or retracting single facts in the UI (Reset wipes the brain).
@@ -1132,6 +1149,82 @@ test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own sp
     - name: Remove Kai from Offsite team and Bob from Kai's space
       do: In Offsite team's Settings › Agents delete Kai; in Kai's space open Settings › Members and remove Bob.
       expect: Offsite team no longer lists Kai, and Bob's Agents panel no longer lists Kai
+      note: Bob stays Kai's admin on EDGE, since admins are only added (F-7.9); his panel lists the agent spaces he is in.
+```
+
+## Changelog
+
+```mdl
+decision D-1: A member has one private chat with an agent in a space. An open that starts while another is still making that chat waits for it, and of two chats made at once the article opens the one with the latest message.
+  date: 2026-10-19
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-1.5]
+  why: Reopening an agent within the two seconds its first open takes made a second chat, and after a reload the article opened the empty one, so the member's conversation looked lost.
+  rejected:
+    - A lock inside `ensureParticipantChat`: the second open starts in the article, and a lock would leave chats already duplicated opening the empty one.
+  source: https://github.com/dxos/dxos/pull/14082
+```
+
+```mdl
+decision D-2: A member who sees the same conversation with an agent in each space the agent is in has hit a bug, which is to be reproduced and fixed.
+  date: 2026-10-19
+  by: user:mykola-vrmchk
+  affects: [F-8.4]
+```
+
+```mdl
+decision D-3: Opening an agent in a space opens the member's private chat with it in that space, a conversation the agent's other spaces do not show, and what the agent knows stays shared through its one brain. Fills in [D-2].
+  date: 2026-10-19
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-8.4]
+  why: The article opened the private chat of the agent's home whichever space it was opened from. A chat per space removes the shared conversation, and the brain every presence names keeps the agent's knowledge whole across spaces (F-6.1).
+  rejected:
+    - One conversation per member, shown in every space the agent is in: the behaviour reported as the bug.
+  source: https://github.com/dxos/dxos/pull/14074
+```
+
+```mdl
+decision D-4: An agent's admins are credentials in the agent's own HALO, one admin per credential, added one at a time. No credential lists the admins, and none supersedes another.
+  date: 2026-10-20
+  by: user:mykola-vrmchk
+  affects: [ensureIdentity, F-7.1, F-7.9]
+  why: Superseding a list is not how the HALO records facts.
+  source: https://github.com/dxos/dxos/pull/14084
+```
+
+```mdl
+decision D-5: No credential revokes an agent's admin for now.
+  date: 2026-10-20
+  by: user:mykola-vrmchk
+  affects: [F-7.1, F-7.9]
+  why: Space membership has no revocation yet either.
+  source: https://github.com/dxos/dxos/pull/14084
+```
+
+```mdl
+decision D-6: The credential is `dxos.halo.credentials.IdentityAdmin { identity_key, admin_key }`: the agent's identity issues it, and the admin is its subject. Fills in [D-4].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [ensureIdentity, F-7.1, F-7.9]
+  why: The product, EDGE and Composer already call these identities admins, and the shape matches `IdentityRecovery { identity_key, recovery_key }`, which an identity also issues into its own HALO.
+  rejected:
+    - `IdentityController`: the W3C DID term, but no DXOS DID document has a `controller` field, and in this codebase the word means UI and stream controllers.
+  source: https://github.com/dxos/dxos/pull/14084
+```
+
+```mdl
+decision D-7: An admin's client only asks EDGE to add admins, never to take one off, so a member made a reader or removed stays the agent's admin. It sends each add once a session and again after a failure, since EDGE appends no second credential for an admin. Fills in [D-5].
+  date: 2026-10-20
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-7.9, T-14]
+  why: Without revocation there is nothing to send for a removal, and resending an add repairs a credential that never reached the agent's HALO.
+  rejected:
+    - Delisting readers and removed members (`DELETE /compute/brain/:did/admins/:identityKey`): EDGE no longer has the route, since an admin's credential cannot be revoked.
+  source: https://github.com/dxos/dxos/pull/14084
 ```
 
 ---

@@ -11,7 +11,7 @@ import { FeatureOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof FeatureOperation.Update> = FeatureOperation.Update.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ feature: featureRef, name, description, status, specs, subfeatures }) {
+    Effect.fn(function* ({ feature: featureRef, name, description, status, specs, subfeatures, project }) {
       const feature = yield* Database.load(featureRef);
       Obj.update(feature, (feature) => {
         if (name !== undefined) {
@@ -28,6 +28,14 @@ const handler: Operation.WithHandler<typeof FeatureOperation.Update> = FeatureOp
         }
         if (subfeatures !== undefined) {
           feature.subfeatures = subfeatures.map((subfeature) => ({ ...subfeature }));
+        }
+        if (project === null) {
+          delete feature.project;
+          delete feature.position;
+        } else if (project !== undefined) {
+          feature.project = project;
+          // A position belongs to one project's canvas.
+          delete feature.position;
         }
       });
       yield* Database.flush();

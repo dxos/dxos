@@ -26,6 +26,7 @@ import { countWork } from '@dxos/util';
 import { type AutomergeHost } from '../automerge/index.ts';
 import { type ExecutionTrace, QueryExecutor, type QueryExecutorMode } from '../query/index.ts';
 import { SLOW_WORK_MS } from '../util.ts';
+import { IndexPassFailedError } from './index-scheduler.ts';
 import { type InvalidationHint, mergeHints } from './invalidation-hint.ts';
 import type { SpaceStateManager } from './space-state-manager.ts';
 
@@ -265,7 +266,12 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         await queryEntry.executor.open();
         const readsSnapshotStore = queryEntry.executor.compiled;
         if (queryEntry.feedScoped || (readsSnapshotStore && !(await this.#snapshotsComplete(queryEntry.executor)))) {
-          await this._params.updateIndexes();
+          // A failed pass is logged and retried by the scheduler; the query answers from the index as it stands.
+          await this._params.updateIndexes().catch((error) => {
+            if (!(error instanceof IndexPassFailedError)) {
+              throw error;
+            }
+          });
         }
         if (!this._queries.has(queryEntry)) {
           return;
