@@ -100,7 +100,9 @@ const Presentation = Schema.Struct({
   Data: `{ subject, attendableId }`.
 - Markdown slides are a slide surface like any other: the presenter contributes `role=slide` for
   `Markdown.Document`, and the document deck renders its sections with the same component.
-- Fallback when no plugin matches: render the object's `Card` surface centred in the frame (_agent call_; Q3).
+- **Decided (Q3, user):** fallback chain when no `Slide` surface matches: `Slide` → `Section` → `CardContent` →
+  a title slide (object icon + label). `Section` surfaces may be editable; the frame passes the `Slide` role so
+  plugins that honour it render read-only, and the frame blocks pointer edits otherwise (_agent call_).
 - Follow-up contributions: sheet, canvas, tldraw (reads the role but registers no filter), outline.
 
 ### 3. Presentation article: fullscreen toggle and pager
