@@ -144,7 +144,7 @@ const sharedArgs = {
  */
 const submitPrompt = async (canvasElement: HTMLElement, text: string) => {
   const canvas = within(canvasElement);
-  const placeholder = await canvas.findByText(/ask anything/i, {}, { timeout: 60_000 });
+  const placeholder = await canvas.findByText(/@ for content/i, {}, { timeout: 60_000 });
   const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
   if (!editor) {
     throw new Error('Chat editor not found.');

@@ -514,25 +514,26 @@ component AgentActivityContainer
 ```mdl
 component AgentList
   desc: |
-    The agents the viewer administers (components/AgentList), laid out as the contacts book lays out people: per
-    agent, a robot avatar in the agent's hue, its name ("Unnamed agent" when it has none), a chip per space the agent
-    is a member of that the viewer is too, its own space first, each opening that space, "Admins: …" with the viewer
-    marked "(you)", and its DID with a copy button. A filter keeps the agents whose name or DID contains it. With none,
-    a line saying how to get one.
+    The agents the viewer administers (components/AgentList), in the contacts book's rows: per agent, its avatar, its
+    name ("Unnamed agent" when it has none), a chip per space the agent is a member of that the viewer is too, each
+    opening that space and coloured by the hash of the space's id, and its DID with a copy button. A filter keeps the
+    agents whose name, identity key or DID contains it. With none, a line saying how to get one. It copies the rows of
+    `ContactList` in `@dxos/shell` until the two are factored into one.
   props:
-    agents: { spaceId: string, spaces: { id: string, name?: string }[], name: string, identityKey?: string, did?: string, admins: { identityKey: string, name: string, you?: boolean }[] }[]
+    agents: Contact[]
+    spaces: { id: string, key: PublicKey, name?: string }[]
     filter?: string
   emits:
-    onOpen(spaceId: string)
+    onSelectSpace(space)
 ```
 
 ```mdl
 component AgentsPanel
   desc: |
     Container (containers/AgentsPanel) wiring AgentList to the client, as the contacts book's container does: a search
-    field once there is more than one agent, then `AgentSpace.administeredBy` over the client's spaces, re-read
-    whenever the spaces, the identity or an agent space's members change. Each row's name and DID are the agent's own
-    member's, which its genesis names after the agent.
+    field once there is more than one agent, then the contacts the identity administers as agents
+    (`AgentSpace.administeredAgents` over the client's spaces), each with the spaces it shares with the viewer, none
+    where the agent was removed. Re-read whenever the spaces, the identity, the contacts or a space's members change.
   actions:
     open(spaceId) → org.dxos.operation.appToolkit.switchWorkspace
 ```
@@ -676,7 +677,7 @@ feat F-7: An agent's own space
   req F-7.4: Agent identities are switched on by the plugin's "Create identities for agents" setting (`AgentSettings.Settings.identities`), which is off by default. Off, creating an agent asks EDGE nothing: the agent is an object in its space whose brain is named by its id, as agents always were. On, creating an agent gives it its identity (F-7.3). An agent keeps the identity it was given when the setting is turned off.
   req F-7.5: `AgentSpace.administeredBy` lists the agents an identity administers: the agent spaces among the client's own spaces, which its HALO holds memberships of, that the identity is an admin of. It asks nothing of EDGE.
   req F-7.6: `AgentSpace.admins` lists an agent's admins, the admins and editors of its space, and `AgentSpace.agentOf` is the agent as its space shows it. Anything acting on the agent's identity, such as its DID on a presence, takes it from EDGE instead (op:inviteAgent).
-  req F-7.7: While the plugin's setting creates agents with identities (F-7.4), the account's Agents panel, listed after the account's other panels, lists the agents the identity administers (F-7.5): each one's name, its admins with the viewer marked, and a chip per space it is a member of that the viewer is too, its own space first, each switching to that space. It stays current as spaces and their members change.
+  req F-7.7: While the plugin's setting creates agents with identities (F-7.4), the account's Agents panel, listed after the account's other panels, lists the agents the identity administers (F-7.5) in the rows the contacts book gives people: each one's avatar, name and DID, and a chip per space it is a member of that the viewer is too, each switching to that space. It stays current as spaces and their members change.
   req F-7.8: EDGE keys an agent space's properties to the agent's URI (`AgentPresence.HOME_SOURCE`) when it mints the space. `AgentSpace.administeredAgents` reads each administered agent's name, DID and home from its space, so an admin who is not a member of the agent's home space can still add the agent to other spaces (F-8.1).
   req F-7.9: An admin's client asks EDGE to make each member who may write to an agent's space (its admins and editors) the agent's admin (`AgentAdminSync`, `POST /compute/brain/:did/admins { identityKey }`), and the agent issues each one an `IdentityAdmin` in its HALO. It never asks EDGE to take an admin off: a member made a reader or removed keeps the role. It acts only on a space EDGE names as the agent's own and only while EDGE counts the identity as the agent's admin, so a space that merely claims to be an agent's adds no one. Each add is sent once a session, and again after a failure; a client whose services reconnect starts over, since they may hold another identity. Sending an add again is harmless: EDGE appends an admin's credential when the agent's HALO lacks it, and never a second one. EDGE's 404 (an EDGE without the admins route, or a caller with no role on the agent) settles an add for the session, and another refusal (a 4xx) is sent again on the next pass. When EDGE could not be reached or failed (no answer, or a 5xx), the sync runs again 30 seconds later even if nothing changes, so an add reaches EDGE without waiting for another change; a space EDGE could not be asked about is asked again the same way.
 ```
@@ -1086,7 +1087,7 @@ test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own sp
     from its brain. The autocue flow `autocue/agent-identities.mjs` walks it side by side, one browser per person.
   actors: human
   covers: [F-1.4, F-6.1, F-7.1, F-7.2, F-7.3, F-7.4, F-7.5, F-7.7, F-7.8, F-8.1, F-8.4, F-8.6]
-  status: passing             # 2026-10-15, recorded by autocue/agent-identities.mjs against local EDGE (dxos/edge#1313)
+  status: passing             # 2026-10-15, recorded by autocue/agent-identities.mjs against local EDGE (dxos/edge#1313); steps 4 and 7 changed on 2026-10-19 and have not been re-recorded
   given:
     - alice: an identity with the display name "Alice", on one device
     - bob: an identity with the display name "Bob", on another device
@@ -1110,7 +1111,7 @@ test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own sp
       note: Kai is admitted once EDGE has minted its identity (op:ensureIdentity), so the row can follow its space by a few seconds.
     - name: Alice finds Kai in Profile › Agents
       do: Open Alice's profile and its Agents panel, listed after the account's other panels.
-      expect: Kai is listed with "Admins: Alice (you)"
+      expect: Kai is listed as the contacts book lists people, with a chip for its own space and one for Alice's space
     - name: Alice invites Bob into Kai's space
       do: Click Kai's space chip on its row; in Kai's space open Settings › Members and invite one person.
       expect: an invitation code is ready to share
@@ -1119,10 +1120,7 @@ test QA-5: Two admins — Bob, made Kai's admin by Alice, adds Kai to his own sp
       expect: Bob's space list shows Kai
     - name: Bob finds Kai in Profile › Agents
       do: Open Bob's profile and its Agents panel.
-      expect: Kai is listed with "Admins: Alice, Bob (you)"
-    - name: Alice sees Bob among Kai's admins
-      do: Open Alice's Agents panel again.
-      expect: Kai is listed with "Admins: Alice (you), Bob"
+      expect: Kai is listed, so Bob administers it
     - name: Alice tells Kai about the team offsite
       do: In Alice's space open Kai and send "Hi Kai, I'm Alice. Our team offsite is in Lisbon on November 14, for 12 people, and Dima is booking the venue."
       expect: Kai acknowledges the place, the date and the headcount in a short reply
@@ -1225,6 +1223,34 @@ decision D-7: An admin's client only asks EDGE to add admins, never to take one 
   rejected:
     - Delisting readers and removed members (`DELETE /compute/brain/:did/admins/:identityKey`): EDGE no longer has the route, since an admin's credential cannot be revoked.
   source: https://github.com/dxos/dxos/pull/14084
+```
+
+```mdl
+decision D-8: The account's Agents panel lists agents the way the contacts book lists people, and no longer lists each agent's admins.
+  date: 2026-10-19
+  by: user:mykola-vrmchk
+  affects: [AgentsPanel, F-7.7, QA-5]
+  source: https://github.com/dxos/dxos/pull/14076
+```
+
+```mdl
+decision D-9: The Agents panel builds its own list in the contacts book's style rather than reusing `ContactList` directly, with a TODO to factor the two out and reconcile them. Fills in [D-8].
+  date: 2026-10-22
+  by: user:mykola-vrmchk
+  affects: [AgentList, AgentsPanel]
+  source: https://github.com/dxos/dxos/pull/14076
+```
+
+```mdl
+decision D-10: `AgentList` takes the agents as the contacts they are and copies `ContactList`'s rows, its markup and styles included, so the two panels look the same until they are factored out. Its space chips take the colour hashed from each space's id, as the contacts book's chips do. Fills in [D-9].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [AgentList, F-7.7]
+  why: A copy of the rows keeps the panels identical without widening `@dxos/shell`'s API for one caller.
+  rejected:
+    - Passing each space's own colour to the chips: the space colour fix (dxos/dxos#14075) keeps every chip and the sidebar on the hash of the space id instead.
+  source: https://github.com/dxos/dxos/pull/14076
 ```
 
 ---

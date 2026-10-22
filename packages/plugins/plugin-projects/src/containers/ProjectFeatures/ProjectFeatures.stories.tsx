@@ -229,11 +229,13 @@ export const NewFeature: Story = {
   },
 };
 
-/** The header's edit button puts a card in edit mode, where its name and description are fields. */
+/** The menu's Edit puts a card in edit mode, where its name and description are fields. */
 export const EditInline: Story = {
   play: async ({ canvasElement }) => {
-    const card = within(await findCard(canvasElement, 'Smart triage'));
-    await userEvent.click(card.getByTestId('feature-card.edit'));
+    const element = await findCard(canvasElement, 'Smart triage');
+    const card = within(element);
+    await openCardMenu(element);
+    await userEvent.click(await screen.findByTestId('feature-card.edit'));
     const name = card.getByTestId('feature-card.name.input');
     await userEvent.clear(name);
     await userEvent.type(name, 'Smart inbox{Enter}');
@@ -249,7 +251,7 @@ export const EditInline: Story = {
   },
 };
 
-/** On the canvas a box's edit button opens its fields, since a double-click on the box opens the feature. */
+/** On the canvas a box's menu opens its fields, since a double-click on the box opens the feature. */
 export const CanvasRename: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -261,7 +263,8 @@ export const CanvasRename: Story = {
     if (!node) {
       throw new Error('No box for Smart triage');
     }
-    await userEvent.click(within(node).getByTestId('feature-card.edit'));
+    await openCardMenu(node);
+    await userEvent.click(await screen.findByTestId('feature-card.edit'));
     const name = within(node).getByTestId('feature-card.name.input');
     await userEvent.clear(name);
     // Backspace inside the field must edit the text, not delete the selected box.

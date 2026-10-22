@@ -21,9 +21,9 @@ import { Task } from '@dxos/types';
 import { meta } from '#meta';
 import { Feature } from '#types';
 
-import { FeatureCardBody, SubfeatureEditor, getDependents } from '../../components/FeatureCard/index.ts';
+import { FeatureCard, SubfeatureEditor, getDependents } from '../../components/FeatureCard/index.ts';
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
-import { useFeatureEditing, useFeatureGraph, useOpenObject, useOpenSpec } from '../../hooks/index.ts';
+import { useFeatureEditing, useFeatureGraph, useOpenFeatureTarget } from '../../hooks/index.ts';
 
 // The editable fields, picked from the schema on the AST as ProjectArticle does: `Type.getSchema` erases to
 // `Codec`, so the field types are re-attached here.
@@ -59,8 +59,7 @@ export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticlePr
     () => getDependents(subject.id, graph.features).flatMap((id) => graph.lookup(id) ?? []),
     [subject.id, graph],
   );
-  const openObject = useOpenObject(db, attendableId);
-  const openSpec = useOpenSpec();
+  const handleOpen = useOpenFeatureTarget(db, attendableId);
   const editing = useFeatureEditing(db);
   // A feature cannot depend on itself; the operation refuses longer cycles with their path.
   const excludedDependencies = useMemo(() => [subject.id, ...(feature?.dependsOn ?? [])], [subject.id, feature]);
@@ -118,20 +117,20 @@ export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticlePr
               <Form.Fields />
               {feature && (
                 <Form.FieldSet label={t('feature-article.relations.label')}>
-                  <Card.Root grid border={false} data-testid='feature-article.relations'>
-                    <FeatureCardBody
-                      feature={feature}
-                      lookup={graph.lookup}
-                      expanded
-                      showFields={false}
-                      showSubfeatures={false}
-                      dependents={dependents}
-                      onSelectDependency={(id) => void openObject(id)}
-                      onRemoveDependency={(id) => editing.removeDependency(subject.id, id)}
-                      onOpenObject={(id) => void openObject(id)}
-                      openSpec={openSpec}
-                    />
-                  </Card.Root>
+                  {/* The form edits the description, specs and subfeatures, so the card shows only relations. */}
+                  <FeatureCard.Provider feature={feature} lookup={graph.lookup} onOpen={handleOpen}>
+                    <Card.Root grid border={false} data-testid='feature-article.relations'>
+                      <FeatureCard.Body>
+                        <FeatureCard.Tags all />
+                        <FeatureCard.TaskCount />
+                        <FeatureCard.Dependencies onRemove={(id) => editing.removeDependency(subject.id, id)} />
+                        <FeatureCard.Dependents dependents={dependents} />
+                        <FeatureCard.Tasks />
+                        <FeatureCard.Showcases />
+                        <FeatureCard.Specs />
+                      </FeatureCard.Body>
+                    </Card.Root>
+                  </FeatureCard.Provider>
                   {canFileTask && (
                     <Input.Root
                       placeholder={t('feature-article.file-task.placeholder')}
