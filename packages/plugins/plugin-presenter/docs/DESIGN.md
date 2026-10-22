@@ -84,6 +84,10 @@ const Presentation = Schema.Struct({
   object's own label (linked). Reorder by drag in the navtree writes `sections`.
 - **Decided (Q2, user):** one section is exactly one slide. `---` inside a section's text is a horizontal rule,
   not a slide break. The navtree, the pager count and `sections` always agree.
+- **Decided (Q2b, user):** the `~presenter` companion on `Markdown.Document` stays as a quick preview. It
+  splits the document on `---` at render time into transient `SlideSource`s and runs the same `Deck` runtime and
+  markdown renderer. Nothing is persisted; reveal.js is no longer needed once the renderer reaches parity.
+  The one-section-one-slide rule applies inside a `Presentation` only.
 - The `Deck` runtime above maps `sections` to `SlideSource[]`; owned `Text` and linked `Markdown.Document`
   both render with the markdown slide renderer, everything else through `Surface role=slide`.
 
