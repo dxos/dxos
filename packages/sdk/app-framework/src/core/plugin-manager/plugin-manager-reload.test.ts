@@ -3,6 +3,7 @@
 //
 
 import { assert, describe, it } from '@effect/vitest';
+import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 
 import { DXN } from '@dxos/keys';
@@ -22,7 +23,9 @@ const LateEvent = ActivationEvent.make('org.dxos.test.reload.late');
 const meta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.reload'), name: 'Reload' });
 const moduleId = (name: string) => `org.dxos.plugin.reload.module.${name}`;
 
-const pluginLoader = (id: string) => Effect.fail(new Error(`no loader for ${id}`));
+class FixtureError extends Data.TaggedError('FixtureError')<{ message: string }> {}
+
+const pluginLoader = (id: string) => Effect.fail(new FixtureError({ message: `no loader for ${id}` }));
 
 /** Mutable stand-in for the module body a hot update swaps. */
 const makeBody = <T>(initial: T) => {
@@ -138,7 +141,7 @@ describe('PluginManager.reload', () => {
 
   it.effect('recovers a module whose reloaded body failed once the body is fixed', () =>
     Effect.gen(function* () {
-      const body = makeBody<string | Error>('v1');
+      const body = makeBody<string | FixtureError>('v1');
       const manager = yield* startManager(
         Plugin.make(
           Plugin.define(meta).pipe(
@@ -148,7 +151,7 @@ describe('PluginManager.reload', () => {
               activate: () =>
                 Effect.suspend(() => {
                   const current = body.get();
-                  return current instanceof Error
+                  return current instanceof FixtureError
                     ? Effect.fail(current)
                     : Effect.succeed([Capability.contribute(Value, { value: current })]);
                 }),
@@ -166,7 +169,7 @@ describe('PluginManager.reload', () => {
         )(),
       );
 
-      body.set(new Error('syntax error in edit'));
+      body.set(new FixtureError({ message: 'syntax error in edit' }));
       assert.isFalse(yield* manager.reload([moduleId('value')]));
       assert.notInclude(manager.getActive(), moduleId('value'));
       assert.notInclude(manager.getActive(), moduleId('derived'));
