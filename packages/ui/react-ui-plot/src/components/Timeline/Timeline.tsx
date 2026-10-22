@@ -898,15 +898,20 @@ const EventCard = ({ event, side, getAnchorElement, color, onClose, onHover, onL
       getAnchorElement,
     }}
   >
-    <Popover.Content classNames='max-w-80 p-3 flex flex-col gap-1' onPointerEnter={onHover} onPointerLeave={onLeave}>
-      {event.image && (
-        <img src={event.image} alt='' loading='lazy' className='mb-1 max-h-40 w-full rounded-sm object-cover' />
-      )}
-      <Popover.Title>{event.label}</Popover.Title>
-      <div className='text-sm font-medium' style={{ color }}>
-        <span style={{ fontVariantNumeric: 'tabular-nums' }}>{event.date}</span> · {event.column}
+    <Popover.Content
+      // No padding on the card itself, so the image runs to its edges; the text is padded below it.
+      classNames='max-w-80 p-0 gap-0 overflow-hidden flex flex-col'
+      onPointerEnter={onHover}
+      onPointerLeave={onLeave}
+    >
+      {event.image && <img src={event.image} alt='' loading='lazy' className='max-h-48 w-full object-cover' />}
+      <div className='flex flex-col gap-1 p-3'>
+        <Popover.Title>{event.label}</Popover.Title>
+        <div className='text-sm font-medium' style={{ color }}>
+          <span style={{ fontVariantNumeric: 'tabular-nums' }}>{event.date}</span> · {event.column}
+        </div>
+        {event.description && <Popover.Description>{event.description}</Popover.Description>}
       </div>
-      {event.description && <Popover.Description>{event.description}</Popover.Description>}
     </Popover.Content>
   </Popover.Root>
 );
