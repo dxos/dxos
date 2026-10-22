@@ -131,6 +131,9 @@ export const StatusIcon = ({ status, onChange, muted, testId }: StatusIconProps)
   );
 };
 
+/** Frames an auto-focused field keeps trying to take focus (about a second): long enough for a masonry to reveal it. */
+const AUTO_FOCUS_ATTEMPTS = 60;
+
 /**
  * A field of a card in edit mode, committed when it loses focus (Enter does that). Keys and presses stay in the field:
  * the card would toggle its selection, and a canvas would delete the box on Backspace.
@@ -157,6 +160,31 @@ export const EditField = ({
     shownRef.current = value;
   }, [value]);
 
+  // Not the `autoFocus` attribute, which focuses once at mount: a masonry tile mounts hidden until it is measured, and
+  // focusing a hidden field does nothing. Retried until the field can take focus, unless focus has moved since.
+  useEffect(() => {
+    const field = fieldRef.current;
+    if (!autoFocus || !field) {
+      return;
+    }
+
+    const origin = document.activeElement;
+    let frame = 0;
+    let attempts = AUTO_FOCUS_ATTEMPTS;
+    const attempt = () => {
+      if (document.activeElement === field || document.activeElement !== origin || attempts-- <= 0) {
+        return;
+      }
+
+      field.focus();
+      if (document.activeElement !== field) {
+        frame = requestAnimationFrame(attempt);
+      }
+    };
+    attempt();
+    return () => cancelAnimationFrame(frame);
+  }, [autoFocus]);
+
   const handleBlur = (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const next = event.currentTarget.value.trim();
     if (next !== value) {
@@ -180,7 +208,6 @@ export const EditField = ({
     placeholder,
     'aria-label': label,
     'data-testid': testId,
-    autoFocus,
     'onBlur': handleBlur,
     'onKeyDown': handleKeyDown,
     'onPointerDown': stopPropagation,

@@ -234,7 +234,8 @@ export const EditInline: Story = {
     const card = within(element);
     await openCardMenu(element);
     await userEvent.click(await screen.findByTestId('feature-card.edit'));
-    const name = card.getByTestId('feature-card.name.input');
+    // The menu reports its selection after the click returns, so edit mode renders a beat later.
+    const name = await card.findByTestId('feature-card.name.input');
     await userEvent.clear(name);
     await userEvent.type(name, 'Smart inbox{Enter}');
     const description = card.getByTestId('feature-card.description.input');
@@ -263,7 +264,7 @@ export const CanvasRename: Story = {
     }
     await openCardMenu(node);
     await userEvent.click(await screen.findByTestId('feature-card.edit'));
-    const name = within(node).getByTestId('feature-card.name.input');
+    const name = await within(node).findByTestId('feature-card.name.input');
     await userEvent.clear(name);
     // Backspace inside the field must edit the text, not delete the selected box.
     await userEvent.type(name, 'Smart inbox{Backspace}x{Enter}');
