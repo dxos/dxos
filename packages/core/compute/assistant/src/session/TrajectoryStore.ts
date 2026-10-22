@@ -168,16 +168,16 @@ export const SUBAGENT: Trajectory.Sender = { role: 'assistant', name: 'subagent'
  */
 export const delegate = Effect.fnUntraced(function* (
   feed: Feed.Feed,
-  { task, purpose, by }: { task: string; purpose?: string; by?: Trajectory.Sender },
+  { task, purpose }: { task: string; purpose?: string },
 ): Effect.fn.Return<Trajectory.EventId, never, Database.Service> {
   const open = Trajectory.make({
     payload: { _tag: 'threadOpen', mode: 'fresh', ...(purpose !== undefined ? { purpose } : {}) },
     sender: SUBAGENT,
   });
-  // A queued prompt is a user message; the delegating agent is the subagent's user.
+  // A queued prompt is a user message; named `task`, it reads as the subagent's brief rather than a person's words.
   const prompt = Trajectory.make({
     payload: { _tag: 'message', blocks: [{ _tag: 'text', text: task }] },
-    sender: { role: 'user', name: by?.name ?? 'assistant' },
+    sender: { role: 'user', name: 'task' },
     thread: open.id,
   });
   yield* append(feed, [open, prompt]);

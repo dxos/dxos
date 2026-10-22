@@ -224,7 +224,7 @@ const delegation = () => {
     { _tag: 'threadOpen', mode: 'fresh', purpose: 'Research effect' },
     { role: 'assistant', name: 'subagent' },
   );
-  const task = message('Research effect.', { role: 'user', name: 'composer' }, subagent.id);
+  const task = message('Research effect.', { role: 'user', name: 'task' }, subagent.id);
   const turnS = event({ _tag: 'turnBegin', from: { thread: subagent.id, event: task.id } });
   const consumeS = event({ _tag: 'promptConsume', message: task.id }, assistant, turnS.id);
   const workS = message('Reading the docs.', assistant, turnS.id);
