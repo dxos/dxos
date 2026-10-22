@@ -523,20 +523,23 @@ export const loadReplicated = <T>(
   ref: Ref.Ref<T>,
   { retries = REPLICATION_RETRIES, maxAge = REPLICATION_MAX_AGE, ...options }: LoadReplicatedOptions = {},
 ): Effect.Effect<T, EchoError.EntityNotFoundError> =>
-  Database.load(ref, options).pipe(
-    Effect.retry({ schedule: retries }),
-    Effect.catchTag('EntityNotFoundError', (error) => {
-      const eid = EID.tryParse(ref.uri);
-      const entityId = eid && EID.getEntityId(eid);
-      const age = entityId ? Date.now() - Key.EntityId.getTimestamp(entityId) : Infinity;
-      if (age < Duration.toMillis(maxAge)) {
+  Effect.suspend(() => {
+    const eid = EID.tryParse(ref.uri);
+    const entityId = eid && EID.getEntityId(eid);
+    const age = entityId ? Date.now() - Key.EntityId.getTimestamp(entityId) : Infinity;
+    // An object already past `maxAge` is not coming, so its miss is final without waiting.
+    if (age >= Duration.toMillis(maxAge)) {
+      return Database.load(ref, options);
+    }
+    return Database.load(ref, options).pipe(
+      Effect.retry({ schedule: retries }),
+      Effect.catchTag('EntityNotFoundError', () => {
         log.info('object not replicated yet; running again', { uri: ref.uri, age });
         // `runAgain` raises a defect; `orDie` collapses its phantom `void` error type.
         return Operation.runAgain().pipe(Effect.orDie);
-      }
-      return Effect.fail(error);
-    }),
-  );
+      }),
+    );
+  });
 
 /**
  * The binding a sync was fired for (`priority`), once it and its target have replicated: a target
