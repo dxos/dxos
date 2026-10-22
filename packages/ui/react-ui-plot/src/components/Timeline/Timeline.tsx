@@ -91,6 +91,12 @@ const EVEN_STEP = 28;
 // Duration of the transition between scales.
 const TRANSITION_MS = 400;
 
+// Duration of the scroll that brings a selected event to the middle of the view.
+const SCROLL_MS = 700;
+
+// Opacity of the other events while one is selected.
+const DIMMED_OPACITY = 0.3;
+
 const DOT_RADIUS = 3.5;
 const CURRENT_DOT_RADIUS = 7;
 const FONT_SIZE = 13;
@@ -205,13 +211,28 @@ const createMeasure = (fontFamily: string): MeasureText => {
   };
 };
 
+const easeInOut = (progress: number) => (progress < 0.5 ? 2 * progress * progress : 1 - (-2 * progress + 2) ** 2 / 2);
+
+/** Scrolls `element` to `top` over SCROLL_MS, eased, and returns a function that stops it. */
+const animateScroll = (element: HTMLElement, top: number): (() => void) => {
+  const from = element.scrollTop;
+  const to = Math.max(0, Math.min(top, element.scrollHeight - element.clientHeight));
+  const start = performance.now();
+  let frame = requestAnimationFrame(function step(time) {
+    const progress = Math.min(1, (time - start) / SCROLL_MS);
+    element.scrollTop = from + (to - from) * easeInOut(progress);
+    if (progress < 1) {
+      frame = requestAnimationFrame(step);
+    }
+  });
+  return () => cancelAnimationFrame(frame);
+};
+
 type Layout = {
   /** Maps a time to its fraction [0, 1] of the way down the content. */
   fraction: (time: number) => number;
   height: number;
 };
-
-const easeInOut = (progress: number) => (progress < 0.5 ? 2 * progress * progress : 1 - (-2 * progress + 2) ** 2 / 2);
 
 /**
  * The layout to draw: the target, or while `key` has just changed, a blend from the previous layout to the target over
@@ -477,13 +498,17 @@ export const Timeline = ({
     [scrollRef],
   );
 
+  const cancelScroll = useRef<() => void>(undefined);
+  useEffect(() => () => cancelScroll.current?.(), []);
+
   const select = useCallback(
     (event: TimelineEvent | undefined) => {
       setCurrentId(event?.id);
       // Scroll only the timeline (not its ancestors) so the event sits in the middle of the view.
       const scroller = scrollRef.current;
       if (event && scroller) {
-        scroller.scrollTo({ top: yOf(event.time) - scroller.clientHeight / 2, behavior: 'smooth' });
+        cancelScroll.current?.();
+        cancelScroll.current = animateScroll(scroller, yOf(event.time) - scroller.clientHeight / 2);
       }
     },
     [scrollRef, yOf],
@@ -607,7 +632,14 @@ export const Timeline = ({
         onKeyDown={handleKeyDown}
       >
         {width > 0 && range && (
-          <svg width={width} height={contentHeight} fontSize={metrics.font} className='block'>
+          <svg
+            width={width}
+            height={contentHeight}
+            fontSize={metrics.font}
+            className='block'
+            // A click on the background, not on an event, clears the selection.
+            onClick={() => setCurrentId(undefined)}
+          >
             {/* Alternate bands between ticks. */}
             {ticks.map((tick, index) =>
               index % 2 === 0 ? (
@@ -790,7 +822,13 @@ const LaneEvents = ({
             aria-selected={isCurrent}
             aria-label={`${event.date} ${event.label}`}
             className='cursor-pointer'
-            onClick={() => onSelect(event)}
+            // While an event is selected the others fade, so it and its neighbours in time stand out.
+            opacity={current && !isCurrent && event.id !== hovered?.id ? DIMMED_OPACITY : 1}
+            style={{ transition: 'opacity 200ms' }}
+            onClick={(clickEvent) => {
+              clickEvent.stopPropagation();
+              onSelect(event);
+            }}
             onPointerEnter={() => onHover(event)}
             onPointerLeave={onLeave}
           >
