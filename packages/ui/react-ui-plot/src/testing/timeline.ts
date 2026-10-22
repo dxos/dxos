@@ -29,6 +29,7 @@ export const technologyTimeline: PlotValue[][] = [
     'ZX Spectrum',
     'Sinclair’s low-cost home computer brings programming to a generation in the UK.',
   ],
+  ['1982', 'Personal', 'West Midlands Ms. Pac-Man champion', 'West Midlands Ms. Pac-Man champion, 1982.'],
   [
     '1982-02',
     'Tech/Software',
