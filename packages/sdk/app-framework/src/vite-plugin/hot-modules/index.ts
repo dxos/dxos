@@ -3,7 +3,7 @@
 //
 
 import path from 'node:path';
-import { type ESTree, type Plugin, Visitor, parseSync } from 'vite';
+import type { ESTree, Plugin } from 'vite';
 
 // Mirrors `core/hot-modules.ts`; duplicated because this file runs in node and must not pull in the runtime.
 const HOT_KEY_EXPORT = '__dxHotKey';
@@ -31,7 +31,10 @@ export type ModuleLoader = { specifier: string; start: number; end: number };
  * Finds the `() => import('./x')` loaders passed to a call — the shape of `Capability.lazyModule` and
  * every maker built on it. Specifiers with a query are assets.
  */
-export const findModuleLoaders = (filename: string, code: string): ModuleLoader[] => {
+export const findModuleLoaders = async (filename: string, code: string): Promise<ModuleLoader[]> => {
+  // Imported on use: this file is re-exported by the `vite-plugin` barrel, which non-Vite hosts (the CLI
+  // under Bun) import for its config helpers, and evaluating Vite there throws.
+  const { parseSync, Visitor } = await import('vite');
   const { program } = parseSync(filename, code);
   const loaders: ModuleLoader[] = [];
   new Visitor({
@@ -120,7 +123,7 @@ export const hotModulesPlugin = (): Plugin => {
       let result = code;
       if (code.includes('import(')) {
         const loaders: ModuleLoader[] = [];
-        for (const loader of findModuleLoaders(file, code)) {
+        for (const loader of await findModuleLoaders(file, code)) {
           const resolved = await this.resolve(loader.specifier, file);
           const target = resolved?.id.split('?')[0];
           if (target === undefined || !SOURCE_FILE.test(target) || target.includes('/node_modules/')) {
