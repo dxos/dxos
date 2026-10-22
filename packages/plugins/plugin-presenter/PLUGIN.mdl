@@ -29,8 +29,10 @@ type Presentation
   desc: |
     An ordered deck of sections. Typename `org.dxos.type.presentation@0.1.0`. A section is either an owned
     markdown `Text` (parented to the presentation) or a link to any other ECHO object, which keeps its own parent.
-    Ownership is set explicitly when a slide is created, never by a schema annotation. Its navtree node lists
-    `sections`; removing an owned slide there deletes its `Text`, removing a linked one only unlinks it.
+    Ownership is set explicitly when a slide is created, never by a schema annotation. It is tagged as a
+    collection item, so it is filed into the space's Collections. Its navtree node lists `sections`; an owned
+    slide has no remove action there (the space's undoable Delete deletes it), a linked one is only unlinked.
+    Deleting the Presentation deletes its owned slides, even ones linked elsewhere; linked objects stay.
   fields:
     name?: string
     sections: Ref<Obj>[]        # slide order; one section is exactly one slide
@@ -47,10 +49,11 @@ type SlideViewState
 
 ```mdl
 type SlideSource
-  literals: markdown | object
+  literals: text | object | pending
   desc: |
-    One resolved slide of a deck: `markdown` (owned Text, linked Markdown.Document or a preview section) carries
-    content; `object` (any other linked object) carries a ref rendered through the slide surface fallback.
+    One slide of a deck: `text` is an owned Text rendered as markdown; `object` is any linked object (a
+    Markdown.Document included) rendered through the slide surface fallback; `pending` is a section whose
+    target has not loaded yet. A section whose target was deleted yields no slide.
 ```
 
 ## Components
@@ -94,14 +97,19 @@ component PresentationArticle
 
 ```mdl
 component SlideEditorArticle
-  desc: Article for an owned slide: a markdown editor, opened by clicking the slide's child node in the navtree.
+  desc: |
+    Article for an owned slide: a 16:9 live preview above a markdown editor, opened by clicking the slide's
+    child node in the navtree.
   props:
     subject: Text
 ```
 
 ```mdl
 component SectionPicker
-  desc: Toolbar picker over the space's objects that links the chosen object into the presentation as a section.
+  desc: |
+    Toolbar picker ("Add to presentation") over the space's objects that links the chosen object into the
+    presentation as a section. It queries the space only while open; an unnamed object is listed as
+    "Untitled <type>".
   props:
     presentation: Presentation
 ```
@@ -119,7 +127,8 @@ component SlideFrame
 ```mdl
 component SlideRenderer
   desc: |
-    Renders one SlideSource. Markdown sources render markdown; object sources render through the
+    Renders one SlideSource. Text sources render markdown; pending sources show a loading slide; object sources
+    render through the
     AppSurface.Slide surface, falling back to a title slide while no surface matches, and request gated slide
     surfaces on demand.
   props:
@@ -202,7 +211,7 @@ feat F-2: Document Preview (Reveal.js)
 ```mdl
 feat F-3: Presentation Object
 
-  req F-3.1: A Presentation is created from the space's create-object menu and holds an ordered `sections` array.
+  req F-3.1: A Presentation is created from the space's create-object menu, is filed into the space's Collections, and holds an ordered `sections` array.
   req F-3.2: One section is exactly one slide; `---` inside a section is a horizontal rule, not a slide break.
   req F-3.3: A section is an owned markdown Text (parented to the presentation) or a link to any object.
   req F-3.4:
@@ -212,8 +221,8 @@ feat F-3: Presentation Object
     when: user links an object through SectionPicker
     then: the object becomes a section and keeps its own parent
   req F-3.6:
-    when: an owned slide is removed from the presentation
-    then: its Text is deleted
+    when: an owned slide is deleted with the space's Delete
+    then: it leaves the deck and the navtree, and the delete can be undone
   req F-3.7:
     when: a linked section is removed from the presentation
     then: only the link is removed; the object remains
@@ -240,6 +249,7 @@ feat F-4: Presentation Deck
   req F-4.7: The current slide index is per-user view state, kept across navigation and reloads, and never shared with collaborators.
   req F-4.8: Only an attended deck takes focus on mount.
   req F-4.9: A linked object with no slide surface renders as a title slide rather than failing.
+  req F-4.10: A section whose target was deleted is omitted from the deck; one whose target has not loaded shows a pending slide.
 ```
 
 ```mdl
@@ -253,9 +263,8 @@ feat F-5: Navtree Folder
   req F-5.4:
     when: user clicks a slide child
     then: the slide's own article opens (SlideEditorArticle for an owned slide)
-  req F-5.5:
-    when: user removes an owned slide from the navtree
-    then: the action is labelled "Remove from presentation" and deletes the slide's Text
+  req F-5.5: An owned slide offers no remove action, only the space's Delete; a linked section's remove action is labelled "Remove from presentation".
+  req F-5.6: The children are the deck's slides in deck order, so a deleted section leaves both.
 ```
 
 ## Acceptance
@@ -418,7 +427,7 @@ test QA-2: Showcase clip
 test QA-3: Build and present a Presentation
   desc: Create a Presentation, add a slide, link a markdown document, reorder in the navtree, present it fullscreen, step, exit and reload.
   actors: human
-  covers: [F-3.1, F-3.4, F-3.5, F-4.1, F-4.4, F-4.6, F-4.7, F-5.1, F-5.3, T-4, T-5, T-6, T-8, T-9]
+  covers: [F-3.1, F-3.2, F-3.4, F-3.5, F-3.6, F-3.7, F-4.1, F-4.4, F-4.5, F-4.6, F-4.7, F-4.8, F-4.9, F-5.1, F-5.2, F-5.3, F-5.5, T-4, T-5, T-6, T-8, T-9, T-10]
   status: unverified
   given:
     - an identity exists
@@ -443,6 +452,12 @@ test QA-3: Build and present a Presentation
     - name: Exit and reload
       do: Press Escape, then reload the app and reopen "QA Deck".
       expect: the deck is inline again and shows the slide that was current before the reload
+    - name: Remove the linked document
+      do: In the navtree, open the linked document's menu under "QA Deck" and choose "Remove from presentation".
+      expect: the child leaves the folder, the pager shows "1 / 1", and the document is still in Collections
+    - name: Delete the owned slide
+      do: Open the owned slide's menu under "QA Deck"; it has no "Remove from presentation". Choose Delete.
+      expect: the child leaves the folder and the pager shows "0 / 0"; undo brings the slide back
 ```
 
 ## Changelog
@@ -585,6 +600,45 @@ decision D-16: Removing an owned slide from the navtree is labelled "Remove from
   for: user:richburdon
   affects: [F-5.5]
   why: The generic label "Remove from collection" misdescribes a delete of the owned Text.
+```
+
+```mdl
+decision D-17: An owned slide has no navtree remove action; the space's undoable Delete is the only way to delete it, and a linked section keeps "Remove from presentation", which only unlinks. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-16
+  affects: [Presentation, F-3.6, F-5.5]
+  why: A container remove that deletes cannot be undone, and an owned slide would show both remove and Delete.
+  rejected: Routing an owned remove through the space delete operation under a "Delete slide" label.
+```
+
+```mdl
+decision D-18: A section whose target was deleted is omitted from the deck and from the navtree folder; a target that has not loaded stays a pending slide. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [SlideSource, F-4.10, F-5.6]
+  why: A deleted target never loads, so a pending placeholder would wait forever, and the pager and navtree must agree.
+  rejected: A placeholder slide for a deleted target.
+```
+
+```mdl
+decision D-19: A Presentation is tagged as a collection item, so it is filed into the space's Collections when created. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Presentation, F-3.1]
+  why: Without the tag a new Presentation is filed nowhere and cannot be found in the navtree.
+```
+
+```mdl
+decision D-20: The Phase 1 fixes are applied in one wave after the running-app verification. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Presentation]
+  why: Bugs found in the running app then land with the review fixes in one set of commits.
 ```
 
 ---

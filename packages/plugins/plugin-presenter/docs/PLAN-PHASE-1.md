@@ -314,13 +314,14 @@ node.data)`; connector maps `sections` (reactive, as in plugin-space `collection
 **Files:**
 
 - Create: `src/containers/PresentationArticle/PresentationArticle.demo.stories.tsx` (title
-  `plugins/plugin-presenter/Demo`), `src/testing/demo-presentation.ts` (exported from `#testing`)
+  `plugins/plugin-presenter/Demo`), `src/testing/demoPresentation.ts` (imported directly by the story, not
+  exported from `#testing`, which stays light)
 
 **Interfaces:**
 
 - Consumes: `Presentation.make`, `Presentation.link`, `PresentationArticle` (Task 7), the story decorators used in
   Task 7.
-- Produces: `createDemoPresentation(db): Presentation.Presentation` — a ~8-slide deck that exercises Phase 1: a
+- Produces: `createDemoPresentation(db): Presentation.Presentation` — a 10-slide deck that exercises Phase 1: a
   title slide, bullet slides, a code slide, the existing `Slide` frontmatter layouts (`image` with `layout:
 fullscreen`, `columns`, `rows`), and two linked objects (a `Markdown.Document`, plus one object from another
   plugin whose slide surface is available in the story, e.g. a `Table` or `Drawing`; otherwise a second document).

@@ -16,15 +16,18 @@ Design: [DESIGN.md](./DESIGN.md).
 - [x] **`Presentation` schema** — `org.dxos.type.presentation@0.1.0`, `sections: Ref[]`; create action.
 - [x] **App graph** — folder node, one child per section, drag-reorder writes `sections`.
 - [x] **"Add to presentation"** picker — link object or add owned `Text`.
-- [x] **`Deck` runtime** — `usePresentationDeck`, `useDocumentDeck` (preview) → `SlideSource[]`.
-- [x] **`PresentationArticle` + `SlideFrame`** — replaces Document/Collection/SlideArticle.
+- [x] **`Deck` runtime** — `slideSourcesAtom` / `usePresentationDeck` → `SlideSource[]` (`text | object | pending`;
+      deleted targets omitted). The document preview stays on `DocumentArticle` → `RevealPlayer` until Phase 3.
+- [x] **`PresentationArticle` + `SlideFrame`** — replaces `CollectionArticle`; `DocumentArticle` (preview
+      companion) and `SlideArticle` (markdown slide surface) remain; `SlideEditorArticle` edits owned slides.
 - [x] **Fullscreen toggle, toolbar + overlay pager, focus-scoped keys**.
 - [x] **Slide index view state** — `presenter-slide` aspect, `local` backend.
 - [x] **Delete** `PresenterContext`, `StartButton`, `Layout`, `CollectionArticle`, `presentCollections`.
-- [ ] **Demo presentation story** — `plugins/plugin-presenter/Demo` (plan Task 10).
-- [ ] **Verify in the running app** — create a Presentation, add a slide, link a markdown doc, reorder in the navtree,
-      press `f`, step with arrows, ESC, reload (same slide); generic delete of an owned slide leaves no dead ref
-      in `sections`; Presentation fullscreen on its own plank.
+- [x] **Demo presentation story** — `plugins/plugin-presenter/Demo` (plan Task 10), 10 slides, every layout.
+- [x] **Verify in the running app** — 10/11 steps passed. The failure (a new Presentation was not filed into
+      Collections, so it was invisible in the navtree) is fixed by tagging it `Collection.ItemTag`. Cosmetic
+      findings fixed in the same wave: typename label for unnamed decks, picker labels and tooltip, owned slides
+      offering both Remove and Delete, the slide editor's tiny preview.
 
 ### Phase 1 follow-ups
 
@@ -33,9 +36,20 @@ Design: [DESIGN.md](./DESIGN.md).
 - [ ] Key duplicate links as `${id}:${index}` at render if duplicates become reachable.
 - [ ] Reuse the real lazy `SlideArticle` in the `SlideRenderer` Object story instead of a story-local surface.
 - [ ] Assert the fallback → surface transition in a gated-surface story.
-- [ ] Focus the shell on mount or pager click; Shift+F is not handled.
+- [ ] Focus the shell on mount or pager click. ~~Shift+F is not handled.~~ (`Deck` handles `F`.)
 - [ ] Add-slide button as a Toolbar item (roving focus); `SlideEditorArticle` ignores `attendableId`.
-- [ ] `SectionPicker` fallback label is the raw object id.
+- [ ] `Presentation.addSlide` / `link` / `remove` / `move`: the `Obj.update` callback parameter shadows `presentation`.
+- [ ] `toSlideSources`: drop the raw-uri fallback when `EID.tryParse` fails, or test the case.
+- [ ] Test a `pending` source turning into `text`/`object` once its target loads.
+- [ ] `SlideRenderer` defaults `attendableId` to `object.id`; pass the deck's real attendable id.
+- [ ] `TitleSlide` uses literal sizes (`text-8xl`, `size-48`); derive from the frame.
+- [ ] ArrowUp/ArrowDown jump to first/last (carried from the legacy pager, never requested); reconsider.
+- [ ] `Panel.Header` + `Toolbar.Root` stand in for a `Panel.Toolbar` that does not exist; adopt one if it lands.
+- [ ] `Button.Root iconOnly` stands in for `IconButton` (not exported where needed); switch when available.
+- [ ] Opening an owned slide warns "equally specific URL bindings address one node": plugin-space's
+      `collections` and `objects` app-graph extensions share the `object` URL key and path, and both claim the
+      nested node `…/collections/<presentation>/<slide>`. Not presenter's binding; fix in plugin-space (and teach
+      `resolveCollectionObjectPath` about container-annotated objects so slide deep links resolve).
 - [ ] Navtree connector rebuilds children on every owned-slide keystroke; derive a heading-only atom.
 - [ ] Tighten the "no settings module" test (checks a substring).
 

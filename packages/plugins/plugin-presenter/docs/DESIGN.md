@@ -60,13 +60,21 @@ const Presentation = Schema.Struct({
 }).pipe(Type.object({ typename: 'org.dxos.type.presentation', version: '0.1.0' }));
 ```
 
-- The user creates a Presentation explicitly (space "create object" menu). It replaces collection decks; the
-  `presentCollections` setting and `CollectionArticle` are removed.
+- The user creates a Presentation explicitly (space "create object" menu). It is tagged as a collection item
+  (`Collection.ItemTag`), so it is filed into the space's Collections like a document, and an unnamed one shows
+  "New presentation". It replaces collection decks; the `presentCollections` setting and `CollectionArticle`
+  are removed.
 - A section is either an **owned markdown `Text`** or a **link** to any ECHO object. Owned vs linked is read from
   the target's parent (`Obj.getParent(target) === presentation`) so one array keeps the order (_agent call_).
-  Removing an owned section deletes its `Text`; removing a linked one only unlinks. Ownership is set explicitly
+  `Presentation.remove` deletes an owned `Text` and only unlinks a linked object. In the navtree an owned slide
+  has **no** remove action: the space's undoable Delete is the only way to delete it; a linked section keeps
+  "Remove from presentation", which only unlinks (_agent call_). Ownership is set explicitly
   when a slide is created (`Obj.setParent` after the ref exists), not by a `SetParent` annotation on `sections`,
   which would also adopt linked parentless objects (_agent call_).
+- **Ownership wins** _(agent call)_: deleting a Presentation deletes its owned slides, even an owned slide that
+  another Presentation or collection also links; linked objects owned elsewhere (or parentless) survive.
+  `Presentation.isOwned` (a `Text` whose parent is the presentation) and the navtree's ownership rule (a `text`
+  slide source) are the same test, so the deck, the folder and deletion agree.
 - **One section is exactly one slide** _(user)_. `---` inside a section is a horizontal rule, not a slide break,
   so the navtree, the pager count and `sections` always agree.
 - App graph: the Presentation is a folder node; each section is a child, labelled by its first heading (owned) or
@@ -82,18 +90,20 @@ const Presentation = Schema.Struct({
 
 ```ts
 type SlideSource =
-  | { kind: 'markdown'; id: string; content: string } // owned Text, linked Markdown.Document, or a preview section
-  | { kind: 'object'; id: string; object: Ref<Obj.Unknown> }; // any other linked object
+  | { kind: 'text'; id: string; text: Text.Text } // owned slide, rendered as markdown
+  | { kind: 'object'; id: string; object: Obj.Unknown } // any linked object, Markdown.Document included
+  | { kind: 'pending'; id: string }; // a section whose target has not loaded yet
 ```
 
-- `usePresentationDeck(presentation)` maps `sections` to `SlideSource[]`, resolving refs lazily.
-- `useDocumentDeck(document)` — the **quick-preview companion** _(user)_: the existing `~presenter` companion on
-  `Markdown.Document` splits the document on `---` at render time into transient sources. Nothing is persisted.
-  The one-section-one-slide rule applies only inside a Presentation.
-- Both feed one `Deck` component rendered by one `PresentationArticle`. `DocumentArticle`, `CollectionArticle`
-  and `SlideArticle` go away; the markdown `role=slide` surface stays (it is what a linked `Markdown.Document`
-  renders through).
-- Per-slide memoization keyed by content, so an edit re-renders only the slide that changed.
+- `slideSourcesAtom(presentation)` (an atom family; `usePresentationDeck` reads it) maps `sections` to
+  `SlideSource[]`, resolving each ref on its own so the order holds while targets load. A section whose target
+  was **deleted** is omitted; one not yet loaded stays `pending` (_agent call_). The navtree folder reads the
+  same atom, so its children are the deck's slides in deck order.
+- `Deck` is rendered by `PresentationArticle`. The **quick-preview companion** _(user)_ is still
+  `DocumentArticle` → `RevealPlayer`, splitting the document on `---`; nothing is persisted, and it moves to the
+  deck runtime with the Phase 3 renderer. The one-section-one-slide rule applies only inside a Presentation.
+- `CollectionArticle` is gone. `SlideArticle` stays: it is the markdown `role=slide` surface a linked
+  `Markdown.Document` renders through. `SlideEditorArticle` edits an owned slide under a 16:9 live preview.
 
 ### 3. Slide surfaces
 
