@@ -12,6 +12,7 @@ export default defineConfig({
     capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
+    deck: 'src/deck/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
     translations: 'src/translations.ts',
