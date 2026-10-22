@@ -23,6 +23,7 @@ export default defineConfig({
     TidepoolSpace: 'src/samples/tidepool/TidepoolSpace.ts',
     WeatherSpace: 'src/samples/weather/WeatherSpace.ts',
     WorkerSpace: 'src/samples/worker/WorkerSpace.ts',
+    WorldClockSpace: 'src/samples/world-clock/WorldClockSpace.ts',
     translations: 'src/translations.ts',
     Debug: 'src/types/Debug.ts',
     DebugEvents: 'src/types/DebugEvents.ts',

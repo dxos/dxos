@@ -148,6 +148,11 @@
       "types": "./dist/types/src/samples/worker/WorkerSpace.d.ts",
       "import": "./dist/lib/WorkerSpace.mjs"
     },
+    "./WorldClockSpace": {
+      "source": "./src/samples/world-clock/WorldClockSpace.ts",
+      "types": "./dist/types/src/samples/world-clock/WorldClockSpace.d.ts",
+      "import": "./dist/lib/WorldClockSpace.mjs"
+    },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./package.json": "./package.json",
     "./translations": {

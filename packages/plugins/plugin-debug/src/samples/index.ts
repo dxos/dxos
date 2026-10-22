@@ -11,3 +11,4 @@ export * as StockfishSpace from './stockfish/StockfishSpace.ts';
 export * as TidepoolSpace from './tidepool/TidepoolSpace.ts';
 export * as WeatherSpace from './weather/WeatherSpace.ts';
 export * as WorkerSpace from './worker/WorkerSpace.ts';
+export * as WorldClockSpace from './world-clock/WorldClockSpace.ts';

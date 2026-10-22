@@ -58,16 +58,16 @@ export const MarkdownMenu = Capability.lazyModule(
   () => import('./markdown-menu.ts'),
 );
 export const SpaceTemplates = AppCapability.spaceTemplates(() => import('./space-templates.ts'));
-/** On its own because it is built from the client's EDGE and the toolchain the app was built from, not a static list. */
-export const ShogiTemplate = Capability.lazyModule(
-  'ShogiTemplate',
+/** On their own because they are built from the client's EDGE and the toolchain the app was built from, not a static list. */
+export const PluginTemplates = Capability.lazyModule(
+  'PluginTemplates',
   {
     requires: [ClientCapabilities.Client],
     provides: [AppCapabilities.SpaceTemplate],
     activatesOn: ActivationEvents.SpaceTemplatesRequested,
     environments: ['browser'],
   },
-  () => import('./shogi-template.ts'),
+  () => import('./plugin-templates.ts'),
 );
 export const LogRecording = Capability.lazyModule(
   'LogRecording',

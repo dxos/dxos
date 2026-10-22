@@ -9,12 +9,12 @@ import { Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Feature from '@dxos/plugin-projects/Feature';
 
-import { instructions } from './project.ts';
-import * as ShogiSpace from './ShogiSpace.ts';
-import { SPEC_PATH } from './spec.ts';
+import * as ShogiSpace from '../shogi/ShogiSpace.ts';
+import * as WorldClockSpace from '../world-clock/WorldClockSpace.ts';
+import * as PluginSpace from './PluginSpace.ts';
 
 /** A stand-in for what composer-app's build stamps. */
-const TOOLCHAIN: ShogiSpace.Toolchain = {
+const TOOLCHAIN: PluginSpace.Toolchain = {
   toolchain: {
     commit: '0123abcd',
     versions: {
@@ -46,11 +46,6 @@ type Archived = {
   '@meta'?: { keys?: Array<{ source: string; id: string }> };
 };
 
-const archive = async (): Promise<Archived[]> => {
-  const { json } = await EffectEx.runPromise(buildArchive(ShogiSpace.make(TOOLCHAIN)));
-  return JSON.parse(json).objects;
-};
-
 const ofType = (objects: Archived[], typename: string) =>
   objects.filter((object) => object['@type']?.includes(typename));
 
@@ -58,12 +53,15 @@ const ofType = (objects: Archived[], typename: string) =>
  * Built on demand rather than committed, so this asserts the shape in place of a fixture: if a
  * schema it seeds changes incompatibly, the build fails here.
  */
-describe('Shogi template', () => {
+describe.each([ShogiSpace.CONFIG, WorldClockSpace.CONFIG])('$space.name template', (config) => {
+  const build = () => EffectEx.runPromise(buildArchive(PluginSpace.make(config, TOOLCHAIN)));
+  const archive = async (): Promise<Archived[]> => JSON.parse((await build()).json).objects;
+
   test(
     'builds the project, its three planning steps, the spec and the feature map, and nothing else',
     { timeout: 120_000 },
     async ({ expect }) => {
-      const { json, objectCount } = await EffectEx.runPromise(buildArchive(ShogiSpace.make(TOOLCHAIN)));
+      const { json, objectCount } = await build();
       const counts = histogram(json);
       const countOf = (typename: string) =>
         Object.entries(counts)
@@ -91,16 +89,11 @@ describe('Shogi template', () => {
       const features = ofType(objects, 'type.feature:');
       const tasks = ofType(objects, 'type.task:');
 
-      expect(features.map((feature) => feature.name)).toEqual([
-        'Board',
-        'Moves',
-        'Captures and promotion',
-        'Published to the registry',
-      ]);
+      expect(features.map((feature) => feature.name)).toEqual(config.features.map((feature) => feature.name));
       expect(features.every((feature) => feature.status === 'planned')).toBe(true);
       expect(features.every((feature) => feature.project?.['/'] === `echo:///${project.id}`)).toBe(true);
       expect(features.map((feature) => feature.specs)).toEqual(
-        ['F-1', 'F-2', 'F-3', 'F-4'].map((feat) => [`${SPEC_PATH}#${feat}`]),
+        ['F-1', 'F-2', 'F-3', 'F-4'].map((feat) => [`${config.spec.path}#${feat}`]),
       );
 
       // Each feature needs the one before it.
@@ -109,8 +102,8 @@ describe('Shogi template', () => {
         features.slice(1).map((feature, index) => [`echo:///${feature.id}`, `echo:///${features[index].id}`]),
       );
 
-      // Only the diagram is seeded against a feature, the board it draws; the agent links the tasks it files.
-      const diagram = tasks.find((task) => task.title === ShogiSpace.ARCHITECTURE.title);
+      // Only the diagram is seeded against a feature, the first it draws; the agent links the tasks it files.
+      const diagram = tasks.find((task) => task.title === PluginSpace.architecture(config).title);
       expect(
         ofType(objects, 'relation.implements').map((relation) => [
           relation['@relationSource'],
@@ -120,26 +113,30 @@ describe('Shogi template', () => {
 
       // The spec is the space's copy of the path the features cite, so their cards open it instead of GitHub.
       const [spec] = ofType(objects, 'type.spec:');
-      expect(spec['@meta']?.keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: SPEC_PATH }]);
+      expect(spec['@meta']?.keys).toEqual([{ source: Feature.SPEC_KEY_SOURCE, id: config.spec.path }]);
     },
   );
 
   // The brief is the only place the agent learns what this build of Composer was made from, so a wrong pin
   // compiles the plugin against an API the app does not run.
   test('the instructions pin the plugin to the toolchain and publish to the given EDGE', ({ expect }) => {
-    const text = instructions(TOOLCHAIN);
-    expect(text).toContain(`https://raw.githubusercontent.com/dxos/dxos/${TOOLCHAIN.toolchain.commit}/`);
-    expect(text).toContain(`"@dxos/react-ui": "https://pkg.pr.new/@dxos/react-ui@${TOOLCHAIN.toolchain.commit}"`);
-    expect(text).toContain('"name": "shogi"');
-    expect(text).toContain(`--package=https://pkg.pr.new/@dxos/cli@${TOOLCHAIN.toolchain.commit}`);
+    const text = PluginSpace.instructions(config, TOOLCHAIN);
+    const { commit } = TOOLCHAIN.toolchain;
+    expect(text).toContain(`https://raw.githubusercontent.com/dxos/dxos/${commit}/`);
+    for (const dxosPackage of config.packages) {
+      expect(text).toContain(`"@dxos/${dxosPackage}": "https://pkg.pr.new/@dxos/${dxosPackage}@${commit}"`);
+    }
+    expect(text).toContain(`"name": "${config.npmName}"`);
+    expect(text).toContain(`named "${config.name}" in \`dx.config.ts\``);
+    expect(text).toContain(`--package=https://pkg.pr.new/@dxos/cli@${commit}`);
     expect(text).toContain(`dx registry publish --private --no-build --edge-url ${TOOLCHAIN.edgeUrl}`);
   });
 
   // Falsifiable without hardcoding the archive's contents: every typename in the archive must be one
   // the definition DECLARED.
   test('every schema the content persists is declared', { timeout: 120_000 }, async ({ expect }) => {
-    const { json } = await EffectEx.runPromise(buildArchive(ShogiSpace.make(TOOLCHAIN)));
-    const declared = new Set(ShogiSpace.make(TOOLCHAIN).schemas.map((schema) => Type.getTypename(schema)));
+    const { json } = await build();
+    const declared = new Set(PluginSpace.make(config, TOOLCHAIN).schemas.map((schema) => Type.getTypename(schema)));
 
     for (const type of Object.keys(histogram(json))) {
       const typename = type.match(/(?:[\w-]+\.)+type\.[\w.]+/)?.[0];
@@ -154,9 +151,9 @@ describe('Shogi template', () => {
     const tasks = ofType(await archive(), 'type.task:');
 
     expect(tasks.map((task) => task.title)).toEqual([
-      ShogiSpace.COMPLETE_SPEC.title,
-      ShogiSpace.ARCHITECTURE.title,
-      ShogiSpace.PLAN.title,
+      'Complete the spec',
+      'Draw the proposed architecture',
+      'Plan the implementation as tasks',
     ]);
     expect(tasks.every((task) => task.status === 'todo')).toBe(true);
     // The agent files the implementation tasks, the reader's install among them, so no seeded task is assigned.

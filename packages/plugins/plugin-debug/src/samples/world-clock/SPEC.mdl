@@ -1,0 +1,121 @@
+---
+id: com.example.world-clock
+name: World Clock
+version: 0.1.0
+---
+
+A Composer plugin that adds a world clock to every space — a map with a row of clocks — built in a sandbox on EDGE
+and published to its reader's private plugin registry, where they install it.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term       | URI                          |
+| ---------- | ---------------------------- |
+| `type`     | `org.dxos.mdl.type@1.0`      |
+| `feat`     | `org.dxos.mdl.feat@1.0`      |
+| `scenario` | `org.dxos.mdl.scenario@1.0`  |
+| `decision` | `org.dxos.mdl.decision@1.0`  |
+
+## Types
+
+```mdl
+type City
+  desc: One clock: a timezone and where it is, from `timezones` in `@dxos/react-ui-geo/data`.
+  fields:
+    timezone: string       # an IANA name, `Asia/Tokyo`
+    position: [number, number]
+```
+
+```mdl
+type Clock
+  desc: A space's clocks, one object per space, stored on its first change.
+  fields:
+    cities: City[]
+```
+
+## Features
+
+```mdl
+feat F-1: Clocks page
+  desc: A "World Clock" group in each space's navtree with a "Clocks" page under it, showing a single row of clock cards.
+
+  req F-1.1: The row is sorted west to east, and each card shows the date, the time (24-hour, zero-padded, no AM/PM, ticking every second) and its timezone.
+  req F-1.2: Until the space's `type:Clock` is first changed, the page shows one card for the reader's own timezone.
+  req F-1.3: Each clock card carries `data-testid="worldClock.clock"`, the empty card after the row `data-testid="worldClock.new"`, its plus button `data-testid="worldClock.add"` and each card's delete button `data-testid="worldClock.delete"`.
+  req F-1.4: The plugin adds to the navtree and never replaces it: no workspace, no rail tab.
+```
+
+F-2 to F-4 are named on the project's feature map — Map, Add and remove clocks, Published to the registry — and are
+not written yet. Each gets a `feat` block here, with its requirements, before the implementation is planned.
+
+## Acceptance
+
+```mdl
+scenario T-1: The Clocks page opens on the reader's own time
+  when: a reader opens Clocks under the World Clock group of a space with no clocks yet
+  then: the page shows one clock card, for the reader's own timezone, and its seconds tick
+```
+
+## Changelog
+
+Every change to this spec adds a decision, newest last. See `lang/changelog.mdl` for the attribution rules.
+
+```mdl
+decision D-1: The World Clock Plugin template seeds this spec partly written, with the project's features filed against it and a partial task list; the assistant completes the spec, plans the implementation as tasks and works them until the plugin is in my private plugin registry.
+  date: 2026-10-22
+  by: user:dmaretskyi
+```
+
+```mdl
+decision D-2: The seeded spec states the types and [F-1] in full and only names F-2 to F-4, which the assistant writes from the feature map; it is the plugin the Composer Plugin project template builds. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1]
+  why: The page is the part a reader can state up front; the map, the form and the publish are where the agent's plan has to meet another plugin's surface and the plugin toolchain.
+  rejected: A different plugin, which would lose the comparison with the World Clock runs the Composer Plugin template already records.
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using
+the core `ext` primitive — the only construct the base language provides.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+`decision` is defined in [`changelog.mdl`](https://github.com/dxos/dxos/blob/main/packages/reflect/deus/lang/changelog.mdl).
