@@ -38,6 +38,10 @@ export const trace = Command.make(
       const { db } = yield* Database.Service;
       log.info('Starting invocation trace...');
 
+      // Loaded on demand so other commands skip the TUI's JSX transform, and before any session or
+      // runtime exists so a failed import leaves nothing to clean up.
+      const { renderTraceApp } = yield* Effect.promise(() => import('./app.tsx'));
+
       const logBuffer = createLogBuffer();
       log.config({ filter: process.env.DX_DEBUG ?? 'info' });
       log.runtimeConfig.processors = [logBuffer.processor];
@@ -64,8 +68,7 @@ export const trace = Command.make(
       const triggerRuntime = triggerRuntimeResult?.runtime;
       const triggerRuntimeFiber = triggerRuntimeResult?.fiber;
 
-      // Render. The TUI is imported here so that other commands start without its JSX transform.
-      const { renderTraceApp } = yield* Effect.promise(() => import('./app.tsx'));
+      // Render.
       yield* renderTraceApp({
         db,
         feed: traceFeed ? Option.some(traceFeed) : Option.none(),

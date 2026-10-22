@@ -168,6 +168,10 @@ export const chat = Command.make(
         return;
       }
 
+      // Loaded on demand so other commands skip the TUI's JSX transform, and before any session or
+      // runtime exists so a failed import leaves nothing to clean up.
+      const { renderChatApp } = yield* Effect.promise(() => import('./app.tsx'));
+
       yield* Effect.promise(async () => {
         log.info('initializing', { skills: options.skills.length });
         if (options.skills.length) {
@@ -177,8 +181,7 @@ export const chat = Command.make(
         }
       });
 
-      // Render. The TUI is imported here so that other commands start without its JSX transform.
-      const { renderChatApp } = yield* Effect.promise(() => import('./app.tsx'));
+      // Render.
       yield* renderChatApp({
         conversation,
         debug: options.debug,
