@@ -157,6 +157,17 @@ export type FinalizedUpload = { key: string; size: number; contentType?: string 
 export const BrainFactFeeds = Schema.Struct({ feeds: Schema.Array(Schema.String) });
 export type BrainFactFeeds = Schema.Schema.Type<typeof BrainFactFeeds>;
 
+/** What EDGE answers `GET /compute/brain/:agent` with, as far as clients read it. */
+export const BrainInfo = Schema.Struct({
+  identity: Schema.Struct({ identityDid: Schema.String, label: Schema.String, defaultSpaceId: Schema.String }),
+  role: Schema.String,
+});
+export type BrainInfo = Schema.Schema.Type<typeof BrainInfo>;
+
+/** What EDGE answers an added admin with: the identity keys of every admin of the agent. */
+export const BrainAdmins = Schema.Struct({ adminKeys: Schema.Array(Schema.String) });
+export type BrainAdmins = Schema.Schema.Type<typeof BrainAdmins>;
+
 /**
  * Validates the finalize response rather than asserting its shape.
  *
@@ -728,6 +739,32 @@ export class EdgeHttpClient extends BaseHttpClient {
       method: 'GET',
       auth: true,
     });
+  }
+
+  //
+  // Brains
+  //
+
+  /**
+   * The identity EDGE minted for an agent's brain, and the caller's role on it. `agent` is the agent's DID; EDGE answers
+   * 404 to a caller with no role, as for a brain that does not exist.
+   */
+  public async getBrain(ctx: Context, agent: string, args?: EdgeHttpCallArgs): Promise<BrainInfo> {
+    const url = new URL(`/compute/brain/${encodeURIComponent(agent)}`, this.baseUrl);
+    const response = await this._call(ctx, url, { ...args, method: 'GET', auth: true });
+    return Schema.decodeUnknownSync(BrainInfo)(response);
+  }
+
+  /** Makes an identity an admin of an agent, which only an admin may do; nothing takes it away. Answers every admin. */
+  public async addBrainAdmin(
+    ctx: Context,
+    agent: string,
+    identityKey: string,
+    args?: EdgeHttpCallArgs,
+  ): Promise<BrainAdmins> {
+    const url = new URL(`/compute/brain/${encodeURIComponent(agent)}/admins`, this.baseUrl);
+    const response = await this._call(ctx, url, { ...args, method: 'POST', body: { identityKey }, auth: true });
+    return Schema.decodeUnknownSync(BrainAdmins)(response);
   }
 
   //

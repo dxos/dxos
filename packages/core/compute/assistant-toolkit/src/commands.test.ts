@@ -60,4 +60,8 @@ describe('resolveSlashCommand', () => {
   test('a command with no arguments resolves with empty args', ({ expect }) => {
     expect(resolveSlashCommand('/task:create', commands)?.args).to.eq('');
   });
+
+  test('args keep their line breaks and inner spacing', ({ expect }) => {
+    expect(resolveSlashCommand('/task:create first line\n\n  - item', commands)?.args).to.eq('first line\n\n  - item');
+  });
 });

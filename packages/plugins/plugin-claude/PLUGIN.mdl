@@ -290,8 +290,9 @@ feat F-9: Claude Code (cloud)
   req F-9.1:
     when: the plugin is enabled
     then: |
-      "Claude Code (cloud)" is offered as a chat's agent and in a task's menu,
-      and runs Claude Code in an EDGE sandbox rather than on this computer
+      Claude Code is offered on EDGE in a chat's agent picker and as
+      "Assign to Claude Code (EDGE)" in a task's menu, and runs Claude Code in
+      an EDGE sandbox rather than on this computer
 
   req F-9.2:
     when: a turn runs on Claude Code (cloud)
@@ -505,7 +506,7 @@ test QA-4: A standalone chat on Claude Code (cloud) opens a pull request
     `packages/plugins/plugin-claude/autocue/claude-code-cloud-pr.mjs`.
   actors: human
   covers: [F-9.1, F-9.2, F-9.4]
-  status: verified
+  status: unverified        # 2026-10-21, the chat's options became the agent picker; re-run its flow
   given:
     - Composer against an EDGE that runs the coding agent
     - space: holds a Claude subscription token and a GitHub token that can push to dxos/dxos
@@ -514,8 +515,8 @@ test QA-4: A standalone chat on Claude Code (cloud) opens a pull request
       do: Click + on the space and choose Chat.
       expect: an empty chat opens
     - name: Run the chat on Claude Code (cloud)
-      do: Open the chat's options, choose the agent "Claude Code (cloud)", and close the options.
-      expect: the prompt is labelled Claude Code (cloud)
+      do: Open the prompt's agent picker and choose Claude Code, then open it again and choose EDGE.
+      expect: the picker reads Claude Code with the EDGE (cloud) icon
     - name: Ask it to clone dxos/dxos and open a pull request
       do: |
         Ask it to clone dxos/dxos, commit a one-line file on a new branch, push
@@ -540,7 +541,7 @@ test QA-5: A project task on Claude Code (cloud) opens a pull request
     autocue flow `packages/plugins/plugin-claude/autocue/claude-code-cloud-task.mjs`.
   actors: human
   covers: [F-9.1, F-9.2, F-9.3]
-  status: verified
+  status: unverified        # 2026-10-21, the task menu now reads "Assign to Claude Code (EDGE)"; re-run its flow
   given:
     - as QA-4
   steps:
@@ -556,7 +557,7 @@ test QA-5: A project task on Claude Code (cloud) opens a pull request
         pushed, with a draft pull request opened by `gh pr create --draft`.
       expect: the task is listed
     - name: Assign the task to Claude Code (cloud)
-      do: Open the task's menu and choose "Assign to Claude Code (cloud)".
+      do: Open the task's menu and choose "Assign to Claude Code (EDGE)".
       expect: the task is started and the project's chat opens on Claude Code (cloud)
     - name: Watch it open the pull request
       do: Open the Assistant companion.
@@ -596,6 +597,22 @@ decision D-3: The local coding-agent runtime lives in this plugin, not plugin-co
   why: Only Claude Code uses the runtime, and plugin-code is the plugin-authoring workbench; a dev server should run the same agent without the desktop app.
   rejected:
     - The host interface in plugin-assistant or a shared types package: the runtime is Claude-specific, so dev-shell depends on this plugin instead.
+```
+
+```mdl
+decision D-4: A chat's agent, where it runs and its model are chosen in one picker in the prompt, which replaces the chat's options popover; Claude Code and Claude Code (cloud) are one agent that runs on this device or on EDGE.
+  date: 2026-10-21
+  by: user:wittjosiah
+  affects: [F-9.1]
+```
+
+```mdl
+decision D-5: QA-4 and QA-5 describe the agent picker and the "Assign to Claude Code (EDGE)" task action, and are unverified until their flows run again. Fills in [D-4].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-9.1, QA-4, QA-5]
+  why: The steps used the removed options popover and the old "(cloud)" label of the task action.
 ```
 
 ---

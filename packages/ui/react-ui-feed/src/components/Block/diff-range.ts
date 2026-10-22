@@ -27,3 +27,12 @@ export const diffRange = (before: string, after: string): RangeChange => {
 
   return { from: prefix, to: before.length - suffix, insert: after.slice(prefix, after.length - suffix) };
 };
+
+export type DocLike = { toString: () => string };
+
+export const syncChange = (doc: DocLike, text: string): RangeChange => {
+  const current = doc.toString();
+  return text.startsWith(current)
+    ? { from: current.length, to: current.length, insert: text.slice(current.length) }
+    : diffRange(current, text);
+};

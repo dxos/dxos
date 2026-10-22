@@ -139,7 +139,7 @@ export const RefusedCycle: Story = {
   },
 };
 
-/** A spec a bundled plugin carries opens in the app; other specs keep their GitHub link. */
+/** Each listed spec is a row that opens it: in the app when a bundled plugin carries it, otherwise on GitHub. */
 export const OpenSpec: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

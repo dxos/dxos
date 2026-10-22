@@ -4,7 +4,14 @@
 
 import { describe, test } from 'vitest';
 
-import { MISSING_DECISION, checkChangelogChange, isTrivialEdit, lintMdl, parseChangelog } from './check.ts';
+import {
+  MISSING_DECISION,
+  checkChangelogChange,
+  isTrivialEdit,
+  lintMdl,
+  parseChangelog,
+  parseMdlBlocks,
+} from './check.ts';
 
 const block = (body: string) => ['```mdl', body, '```', ''].join('\n');
 
@@ -239,5 +246,30 @@ describe('mdl lint', () => {
         rejected: ['Fixed padding: clips large nodes.', 'Minor grid: re-lays on every drag.'],
       });
     });
+  });
+});
+
+describe('parseMdlBlocks', () => {
+  test('reads type, id, title and body of every block', ({ expect }) => {
+    const text = [
+      '# Spec',
+      '',
+      '```mdl',
+      'type Call',
+      '  fields:',
+      '    name?: string',
+      '```',
+      '',
+      '```mdl',
+      'feat F-1: Start a call',
+      '  req F-1.1: A Channel shows a call action.',
+      '```',
+    ].join('\n');
+    const blocks = parseMdlBlocks(text);
+    expect(blocks.map(({ type, id, title }) => ({ type, id, title }))).toEqual([
+      { type: 'type', id: 'Call', title: undefined },
+      { type: 'feat', id: 'F-1', title: 'Start a call' },
+    ]);
+    expect(blocks[0].body).toBe('  fields:\n    name?: string\n');
   });
 });

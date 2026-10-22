@@ -85,6 +85,28 @@ const lintDecision = (body: string): string[] => {
   return errors;
 };
 
+/** One fenced `mdl` block: its type, identifier and title from the header line, and the body below it. */
+export type MdlBlock = {
+  type: string;
+  /** Empty for a block with no identifier. */
+  id: string;
+  /** The prose after the header's colon, if any. */
+  title?: string;
+  /** The block's lines after the header. */
+  body: string;
+  /** Offset of the opening fence in the text. */
+  from: number;
+};
+
+/** Every fenced `mdl` block of a spec, in document order. */
+export const parseMdlBlocks = (text: string): MdlBlock[] =>
+  parseBlockHeaders(text).map(({ type, id, from, body }) => {
+    const newline = body.indexOf('\n');
+    const header = newline === -1 ? body : body.slice(0, newline);
+    const title = header.match(/^\s*\w+\s+[^\s:][^\n:]*?:\s*(.+?)\s*$/)?.[1];
+    return { type, id, ...(title && { title }), body: newline === -1 ? '' : body.slice(newline + 1), from };
+  });
+
 /**
  * Lints the text of a Spec .mdl document.
  *
