@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { forwardRef, useMemo } from 'react';
+import React, { forwardRef, useMemo, useState } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
@@ -13,7 +13,9 @@ import { useIdentity } from '@dxos/halo-react';
 import { getSpace } from '@dxos/react-client/echo';
 import { Editor } from '@dxos/react-ui-editor';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
+import { Spec } from '@dxos/types';
 import {
   createBasicExtensions,
   createDataExtensions,
@@ -25,7 +27,7 @@ import {
 } from '@dxos/ui-editor';
 import { isTruthy } from '@dxos/util';
 
-import { Spec } from '#types';
+import { ChangelogGraph, type DecisionModel, buildChangelogGraph, decisionGutter } from '#components';
 
 export type SpecArticleProps = Omit<AppSurface.ObjectArticleProps<Spec.Spec>, 'subject'> & {
   /** ECHO Spec to live-edit; omit to render a static `content` string (e.g. a bundled plugin spec). */
@@ -49,8 +51,17 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     const space = spec ? getSpace(spec) : undefined;
 
     // Trigger re-render when the bound content ref resolves (no-op when there is no spec).
-    useObject(spec?.content);
+    const [snapshot] = useObject(spec?.content);
     const target = spec?.content.target;
+    const text = (spec ? snapshot?.content : content) ?? '';
+
+    // Keyed on the changelog alone, so typing in the spec body does not rebuild the editor's extensions.
+    const changelog = text.slice(Math.max(0, text.search(/^## Changelog/m)));
+    const decisions = useMemo(
+      () => buildChangelogGraph(changelog).nodes.filter((node): node is DecisionModel => node.kind === 'decision'),
+      [changelog],
+    );
+    const [selected, setSelected] = useState<string>();
 
     const extensions = useMemo(
       () =>
@@ -61,6 +72,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
           decorateMarkdown(),
           mdl(),
           diagramPreview(),
+          decisions.length > 0 && decisionGutter(decisions, setSelected),
           // Live two-way binding only when editing an ECHO Spec; static content is rendered via `value`.
           spec &&
             target &&
@@ -71,7 +83,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
               identity,
             }),
         ].filter(isTruthy),
-      [identity, space, spec?.id, target, themeMode, readOnly],
+      [identity, space, spec?.id, target, themeMode, readOnly, decisions],
     );
 
     return (
@@ -83,7 +95,17 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
             </Panel.Header>
           )}
           <Panel.Body>
-            <Editor.View classNames={editorClassNames(role)} value={spec ? undefined : content} />
+            {decisions.length > 0 ? (
+              <Layout.Grid cols={['fill', 'fill']} grow classNames='divide-x divide-separator'>
+                {/* Scrolls the editor, which sizes to its content. */}
+                <div className='relative overflow-auto' data-testid='spec-article.spec'>
+                  <Editor.View classNames={editorClassNames(role)} value={spec ? undefined : content} />
+                </div>
+                <ChangelogGraph content={changelog} selected={selected} />
+              </Layout.Grid>
+            ) : (
+              <Editor.View classNames={editorClassNames(role)} value={spec ? undefined : content} />
+            )}
           </Panel.Body>
         </Panel.Root>
       </Editor.Root>

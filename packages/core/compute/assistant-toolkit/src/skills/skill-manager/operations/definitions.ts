@@ -14,10 +14,17 @@ export const QuerySkills = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.assistantToolkit.querySkills'),
     name: 'Query skills',
-    description: 'Queries available skills.',
+    description:
+      'Queries available skills, each with the tools (operations) it provides. ' +
+      'Pass `query` to find the skill that provides a tool you lack: the words are matched against skill names, ' +
+      'descriptions and tool names, best match first.',
     icon: 'ph--student--regular',
   },
-  input: Schema.Struct({}),
+  input: Schema.Struct({
+    query: Schema.optional(Schema.String).annotate({
+      description: 'Words describing the tool or capability you need, e.g. "link task to feature".',
+    }),
+  }),
   output: Schema.Array(Type.getSchema(Skill.Skill)),
   services: [Registry.Service],
 });

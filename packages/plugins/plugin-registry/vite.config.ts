@@ -9,6 +9,7 @@ export default defineConfig({
     'ns/PluginStorage': 'src/PluginStorage.ts',
     'ns/PluginLoader': 'src/PluginLoader.ts',
     'ns/Operations': 'src/Operations.ts',
+    'ns/RegistryPaths': 'src/RegistryPaths.ts',
     'index': 'src/index.ts',
     'RegistryPlugin': 'src/RegistryPlugin.ts',
     'plugin': 'src/plugin.tsx',

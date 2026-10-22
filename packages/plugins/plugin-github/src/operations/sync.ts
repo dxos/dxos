@@ -622,9 +622,9 @@ const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: Cursor.
       // resolve its remote `GitHubRepo`. The binding stores the numeric
       // repo id as `externalId` (a stringified integer).
       // TODO(wittjosiah): Switch to `fetchRepo(owner, name)` once the
-      //   binding carries `owner`/`name`. `fetchUserRepos()` walks every
+      //   binding carries `owner`/`name`. `fetchReachableRepos()` walks every
       //   repo the token can see and dominates large-account syncs.
-      const allRepos = yield* GitHubApi.fetchUserRepos();
+      const allRepos = yield* GitHubApi.fetchReachableRepos();
       const remoteRepo = allRepos.find((repo) => String(repo.id) === externalId);
       if (!remoteRepo) {
         return yield* Effect.fail(new GitHubRepoInaccessibleError());

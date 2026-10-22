@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { GitHubConnectionUnavailableError } from '../../errors.ts';
 import { GitHubApi } from '../../services/index.ts';
 
 /**
@@ -13,4 +14,6 @@ import { GitHubApi } from '../../services/index.ts';
  * distinction `ImportPullRequestDialog` already draws on `tokenStatus`.
  */
 export const pullRequestFailureKey = (error: unknown, fallbackKey: string): string =>
-  GitHubApi.responseStatus(error) === 401 ? 'github-token-rejected.title' : fallbackKey;
+  GitHubApi.responseStatus(error) === 401 || GitHubConnectionUnavailableError.is(error)
+    ? 'github-token-rejected.title'
+    : fallbackKey;

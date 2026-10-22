@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type MouseEvent, useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
@@ -110,8 +110,6 @@ export const GalleryArticle = ({ role, subject: collection, attendableId }: Gall
     setSelectedIds(new Set());
   }, [db, collection, selectedIds]);
 
-  const handleSelect = useCallback((id: string, _event: MouseEvent) => bind(id).toggle(), [bind]);
-
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()
@@ -155,8 +153,7 @@ export const GalleryArticle = ({ role, subject: collection, attendableId }: Gall
               <Masonry.Viewport
                 items={items}
                 getId={(data?: TileData) => data?.artifact.id ?? String(data?.index ?? '')}
-                selectedIds={selectedIds}
-                onSelect={handleSelect}
+                itemProps={(id) => bind(id).rowProps}
               />
             </Masonry.Content>
           </Masonry.Root>

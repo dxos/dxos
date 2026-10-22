@@ -44,6 +44,7 @@ class Target extends Type.makeObject<Target>(DXN.make('org.dxos.test.connectorAu
 const provider: ConnectorSpec.ConnectorEntry = {
   id: 'test-mail',
   source: 'mail.test',
+  kind: 'user',
   label: 'Test Mail',
   oauth: { provider: OAuthProvider.GOOGLE, scopes: [] },
   sync: { operation: TestSync, targetTypename: Type.getTypename(Target) },

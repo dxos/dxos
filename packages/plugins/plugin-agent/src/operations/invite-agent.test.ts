@@ -23,13 +23,23 @@ import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
-import { AgentPresence, type AgentSpace, BrainService, Goal, MemoryOperation, Mode, TriggerOperation } from '#types';
+import {
+  AgentPresence,
+  type AgentSpace,
+  BrainService,
+  ChatParticipant,
+  Goal,
+  MemoryOperation,
+  Mode,
+  TriggerOperation,
+} from '#types';
 
 import { makeTestBrain, testSpaceLayer } from '../brain/testing.ts';
 import { admittedHomes } from '../capabilities/agent-admission.ts';
 import { baseInstructions } from '../instructions.ts';
 import { makeAgent } from './create-agent.ts';
 import { pushFacts } from './deliver.ts';
+import { ensureParticipantChat } from './ensure-participant-chat.ts';
 import { inviteAgent, inviteeOf } from './invite-agent.ts';
 
 const TYPES = [
@@ -147,6 +157,32 @@ describe('Inviting an agent into another space', () => {
     expect(presence.did).toBe(did);
     expect(AgentPresence.brainId(agent)).toBe(did);
     expect(AgentPresence.brainId(presence)).toBe(did);
+  });
+
+  test('a member has a conversation of their own with the agent in each space it is in', async ({ expect }) => {
+    const home = await peer.createDatabase();
+    const other = await peer.createDatabase();
+    const agent = await inSpace(home)(makeAgent({ name: 'Kai', did: IdentityDid.random() }));
+    const { agent: presence } = await invite(other, agent);
+    const member = 'did:halo:alice';
+    /** What opening the agent in `db`'s space gives the member (`OpenPrivateChat`). */
+    const privateChat = (db: Database.Database, opened: Agent.Agent) =>
+      inSpace(db)(
+        Effect.gen(function* () {
+          const person = yield* Database.add(
+            Person.make({ identities: [{ label: ChatParticipant.IDENTITY_LABEL, value: member }] }),
+          );
+          return yield* ensureParticipantChat(opened, person, { owner: member });
+        }),
+      );
+
+    const atHome = await privateChat(home, agent);
+    const there = await privateChat(other, presence);
+    expect(there.id).not.toBe(atHome.id);
+    expect(Obj.getDatabase(there)?.spaceId).toBe(other.spaceId);
+    expect(Obj.getParent(there)?.id).toBe(presence.id);
+    // What the agent knows is shared: both conversations reach the one brain.
+    expect(AgentPresence.brainId(presence)).toBe(AgentPresence.brainId(agent));
   });
 
   test('only an admitted agent the member administers is put to work, and not in its own space', ({ expect }) => {

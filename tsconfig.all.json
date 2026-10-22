@@ -436,9 +436,6 @@
       "path": "packages/plugins/plugin-commerce/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-computer/tsconfig.json"
-    },
-    {
       "path": "packages/plugins/plugin-conductor/tsconfig.json"
     },
     {
@@ -458,6 +455,9 @@
     },
     {
       "path": "packages/plugins/plugin-deepseek/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-dev-shell/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-devtools/tsconfig.json"

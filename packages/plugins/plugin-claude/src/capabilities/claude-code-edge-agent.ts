@@ -10,12 +10,13 @@ import { Database, Query } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
-import * as CodeCapabilities from '@dxos/plugin-code/CodeCapabilities';
-import * as EdgeAgent from '@dxos/plugin-code/EdgeAgent';
 import { isManagedAccessToken } from '@dxos/protocols';
 
+import { ClaudeCapabilities } from '#types';
+
+import * as EdgeAgent from '../agents/EdgeAgent.ts';
 import { claudeCodeToken } from '../claude-code-token.ts';
-import { ANTHROPIC_SOURCE, CLAUDE_CODE_EDGE_AGENT, OAUTH_TOKEN_PREFIX } from '../constants.ts';
+import { ANTHROPIC_SOURCE, CLAUDE_CODE_AGENT, CLAUDE_CODE_EDGE_AGENT, OAUTH_TOKEN_PREFIX } from '../constants.ts';
 
 /**
  * Claude Code run by EDGE in a sandbox container. Each turn lends it the space's Claude subscription
@@ -26,20 +27,23 @@ export default Capability.makeModule(
     const manager = yield* Capability.Service;
     // The Code plugin's permission setting governs both coding agents; a chat keeps the mode it was spawned with.
     const mode = (): string | undefined => {
-      const [settings] = manager.getAll(CodeCapabilities.Settings);
+      const [settings] = manager.getAll(ClaudeCapabilities.Settings);
       const [registry] = manager.getAll(Capabilities.AtomRegistry);
       return settings && registry ? registry.get(settings).agentPermissionMode : undefined;
     };
-    return Capability.contribute(
-      AssistantCapabilities.Agent,
-      yield* EdgeAgent.make({
-        id: CLAUDE_CODE_EDGE_AGENT,
-        label: 'Claude Code (cloud)',
-        icon: 'px--anthropic--regular',
-        credentials,
-        mode,
-      }),
-    );
+    const agent = yield* EdgeAgent.make({
+      id: CLAUDE_CODE_EDGE_AGENT,
+      label: 'Claude Code',
+      icon: 'px--anthropic--regular',
+      credentials,
+      mode,
+    });
+    return Capability.contribute(AssistantCapabilities.Agent, {
+      ...agent,
+      locations: ['edge'],
+      variantOf: CLAUDE_CODE_AGENT,
+      ownModel: true,
+    });
   }),
 );
 

@@ -11,6 +11,7 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 import { translations } from '#translations';
 
 import DEUS_SPEC from '../../../../../reflect/deus/SPEC.mdl?raw';
+import CALLS_SPEC from '../../../../plugin-calls/PLUGIN.mdl?raw';
 import CONNECTOR_EVENTS_SPEC from '../../../../plugin-connector/spec/EVENTS.mdl?raw';
 import GITHUB_FILE_SYNC_SPEC from '../../../../plugin-github/spec/FILE-SYNC.mdl?raw';
 import GITHUB_SYNC_SPEC from '../../../../plugin-github/spec/SYNC.mdl?raw';
@@ -29,12 +30,14 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const TIMEOUT = { timeout: 10_000 };
+
 /** The Deus spec beside its decisions; clicking a gutter chip selects that decision's card. */
 export const Deus: Story = {
   args: { content: DEUS_SPEC },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const chips = await waitFor(() => canvas.getAllByTestId('spec-changelog.gutter-chip'), { timeout: 10_000 });
+    const chips = await waitFor(() => canvas.getAllByTestId('spec-changelog.gutter-chip'), TIMEOUT);
     await expect(chips.length).toBeGreaterThan(0);
     await userEvent.click(chips[0]);
     await waitFor(() =>
@@ -66,4 +69,26 @@ export const GitHubFileSync: Story = {
 /** GitHub sync, part 3: connector event dispatch. */
 export const ConnectorEvents: Story = {
   args: { content: CONNECTOR_EVENTS_SPEC },
+};
+
+/** The toolbar switches the panel between all five views of one spec. */
+export const SwitchViews: Story = {
+  args: { content: CALLS_SPEC },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const panel = await waitFor(() => canvas.getByTestId('spec-changelog.panel'), TIMEOUT);
+    for (const [view, child] of [
+      ['log', 'decision-log.decision'],
+      ['definitions', 'definition-graph.definition'],
+      ['data', 'data-model.type'],
+      ['api', 'api-surface.op'],
+      ['decisions', 'changelog-graph.decision'],
+    ] as const) {
+      await userEvent.click(canvas.getByTestId(`spec-changelog.view.${view}`));
+      await waitFor(async () => {
+        await expect(panel.dataset.view).toBe(view);
+        await expect(canvas.getAllByTestId(child).length).toBeGreaterThan(0);
+      }, TIMEOUT);
+    }
+  },
 };

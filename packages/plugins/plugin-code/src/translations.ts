@@ -4,9 +4,10 @@
 
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
+import { Spec } from '@dxos/types';
 
 import { meta } from '#meta';
-import { CodeProject, SourceFile, Spec } from '#types';
+import { CodeProject, SourceFile } from '#types';
 
 export const translations = [
   {
@@ -69,12 +70,6 @@ export const translations = [
         'build.failed.label': 'Build failed',
         'build.clean.label': 'Build clean',
         'run.failed.label': 'Runtime error',
-        'project-folder.label': 'Code folder on this device',
-        'project-folder.description':
-          'Where Claude Code on this computer works; each delegated task gets its own git worktree of it. Cloud sessions check out the repositories above instead.',
-        'project-folder.empty.label': 'Not set',
-        'project-folder.choose.label': 'Choose folder…',
-        'project-folder.clear.label': 'Clear',
         'changelog-graph.actor.user.label': 'Person',
         'changelog-graph.actor.agent.label': 'Agent',
         'changelog-graph.unknown-actor.label': 'Unattributed',
@@ -85,6 +80,37 @@ export const translations = [
         'changelog-graph.edge.supersedes.label': 'Supersedes',
         'changelog-graph.edge.approves.label': 'Approves',
         'changelog-graph.edge.affects.label': 'Affects',
+        'spec-view.label': 'View',
+        'spec-view.decisions.label': 'Decision graph',
+        'spec-view.log.label': 'Decisions by person',
+        'spec-view.definitions.label': 'Definitions',
+        'spec-view.data.label': 'Data model',
+        'spec-view.api.label': 'API',
+        'decision-log.count.label_one': '{{count}} decision',
+        'decision-log.count.label_other': '{{count}} decisions',
+        'decision-log.empty.message': 'This spec has no changelog.',
+        'definition-graph.acceptance.label': 'Scenarios & tests',
+        'definition-graph.uses.label_one': 'Uses {{count}}',
+        'definition-graph.uses.label_other': 'Uses {{count}}',
+        'definition-graph.used-by.label_one': 'Used by {{count}}',
+        'definition-graph.used-by.label_other': 'Used by {{count}}',
+        'data-model.stored.typename.label': 'Stored · typename',
+        'data-model.stored.ref.label': 'Stored · holds refs',
+        'data-model.stored.described.label': 'Stored · per desc',
+        'data-model.embedded.label': 'Embedded',
+        'data-model.legend.stored.label': 'Stored object',
+        'data-model.edge.embeds.label': 'Embeds',
+        'data-model.edge.references.label': 'References',
+        'data-model.edge.variant.label': 'Variant',
+        'data-model.edge.extends.label': 'Extends',
+        'data-model.empty.message':
+          'No stored types: none declares a typename, holds a Ref, or is described as persisted.',
+        'api-surface.signature.label': 'Signature',
+        'api-surface.needs.label': 'Requires · errors',
+        'api-surface.requires.label': 'Requires',
+        'api-surface.operations.label': 'Operations',
+        'api-surface.services.label': 'Services',
+        'api-surface.empty.message': 'This spec declares no operations or services.',
       },
     },
   },
