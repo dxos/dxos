@@ -148,11 +148,12 @@ export const makeSteps = ({ template: TEMPLATE, project: PROJECT, plugin: PLUGIN
       }, TAKE_SPACE)
       .catch(() => []);
 
-  /** Whether the agent has filed its implementation tasks and finished every one that is not the reader's. */
-  const published = async (page) => {
-    const tasks = await allTasks(page);
-    return tasks.length > PLANNING_TASKS.length && tasks.every((task) => task.reader || FINISHED.includes(task.status));
-  };
+  /**
+   * Whether the agent has finished a publish task it filed. Keyed on the publish rather than on every task: the
+   * reader's install stays open by design, however the agent assigns it, and a chat can file working notes as tasks.
+   */
+  const published = async (page) =>
+    (await allTasks(page)).some((task) => /publish/i.test(task.title) && FINISHED.includes(task.status));
 
   /** The spec's text in the take's space, read from ECHO. */
   const specText = (page) =>
