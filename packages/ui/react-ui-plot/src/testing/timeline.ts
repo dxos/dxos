@@ -20,6 +20,7 @@ export const technologyTimeline: PlotValue[][] = [
     'Atari consoles and arcade cabinets bring computing into homes and malls.',
   ],
   ['1980-05', 'Tech/Software', 'Pac-Man', 'Namco’s maze game becomes the best-known arcade game of all time.'],
+  ['1980-11', 'Personal', 'Sinclair Scientific Calculator', 'Sinclair Scientific Calculator, November 1980.'],
   ['1981-03', 'Macro/MIC', 'Reagan defense buildup', 'Peacetime defense spending rises sharply through the decade.'],
   ['1981-06', 'Macro/FIC', 'Volcker shock', 'The Fed raises rates to about 20% to break inflation.'],
   ['1981-08', 'Tech/Hardware', 'IBM PC', 'IBM’s open-architecture PC makes the personal computer a business standard.'],
