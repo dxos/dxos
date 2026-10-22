@@ -1,5 +1,5 @@
 diff --git a/dist/esm/bundler.js b/dist/esm/bundler.js
-index 51142c6..6635349 100644
+index 51142c6ef7ec47ac9aeab5514917be84d1c8896a..6635349ce977ec96510521cbf2b3af8c91edde7e 100644
 --- a/dist/esm/bundler.js
 +++ b/dist/esm/bundler.js
 @@ -1,5 +1 @@

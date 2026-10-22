@@ -793,7 +793,7 @@ index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..ea01cae216eb538380f6468be3b33f5d
       */
      resync(documentId: DocumentId): void;
 diff --git a/dist/subduction/source.js b/dist/subduction/source.js
-index 4692619444edfae0ef5f111cef6ce29499507afa..b25acb3baaf0f6248fb977aa6a93524d65bc6a94 100644
+index 2934f2cf253ac9da4dadf856c3d942cacc992e32..4a0fc43650cbbcfa5b4cb7be405ff1669aa377ab 100644
 --- a/dist/subduction/source.js
 +++ b/dist/subduction/source.js
 @@ -13,8 +13,8 @@ import { WebSocketEndpoint, } from "./websocket-endpoint.js";
@@ -1023,27 +1023,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..b25acb3baaf0f6248fb977aa6a93524d
                  if (!entry)
                      return;
                  const [commitIds, fragmentIds] = await Promise.all([
-@@ -424,10 +522,17 @@ export class SubductionSource {
-                     this.#storage.listFragmentIds(sid),
-                 ]);
-                 for (const c of commitIds) {
--                    entry.persistedCommitHashes.add(c.toHexString());
-+                    const hex = c.toHexString();
-+                    entry.persistedCommitHashes.add(hex);
-+                    // DXOS patch: mirror into knownHashes so a reload attach does
-+                    // not re-persist commits already on disk (same hex as
-+                    // Automerge fragment metadata) — see automerge/automerge-repo#712.
-+                    entry.knownHashes.add(hex);
-                 }
-                 for (const f of fragmentIds) {
--                    entry.persistedFragmentHashes.add(f.toHexString());
-+                    const hex = f.toHexString();
-+                    entry.persistedFragmentHashes.add(hex);
-+                    entry.knownHashes.add(hex);
-                 }
-                 if (entry.persistedCommitHashes.size > 0 ||
-                     entry.persistedFragmentHashes.size > 0) {
-@@ -440,6 +545,13 @@ export class SubductionSource {
+@@ -446,6 +544,13 @@ export class SubductionSource {
              catch (e) {
                  this.#log.debug(`failed to seed persistedHashes for ${sidStr.slice(0, 8)}: %O`, e);
              }
@@ -1057,7 +1037,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..b25acb3baaf0f6248fb977aa6a93524d
          })();
          // Replay the last-known remote heads for this sedimentree so the
          // DocHandle reflects the last sync state immediately on (re)attach,
-@@ -457,7 +569,21 @@ export class SubductionSource {
+@@ -463,7 +568,21 @@ export class SubductionSource {
          })();
          this.#scheduleRecompute(this.#entries.get(sidStr));
      }
@@ -1080,7 +1060,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..b25acb3baaf0f6248fb977aa6a93524d
      shareConfigChanged() {
          for (const entry of this.#entries.values()) {
              // A share-config change can flip a previously-denied fetch to
-@@ -589,32 +715,55 @@ export class SubductionSource {
+@@ -595,32 +714,55 @@ export class SubductionSource {
       * True when `entry` should open a sync round now: never synced, or it
       * previously synced / found no peers and the connection generation has since
       * advanced (a reconnect — server subscriptions are per-connection, so a
@@ -1141,7 +1121,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..b25acb3baaf0f6248fb977aa6a93524d
                  if (!entry.syncInFlight && !entry.blobLoadInFlight) {
                      if (this.#needsOutboundSync(entry)) {
                          // Sync when we haven't tried yet (null) or when the last
-@@ -626,7 +775,8 @@ export class SubductionSource {
+@@ -632,7 +774,8 @@ export class SubductionSource {
                          void this.#doSync(entry);
                      }
                      else if (Automerge.getHeads(entry.handle.fullDoc()).length === 0 &&
@@ -1151,7 +1131,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..b25acb3baaf0f6248fb977aa6a93524d
                          // All connections settled and sync failed — give up.
                          this.#log.debug("marking as unavailable");
                          entry.query.sourceUnavailable("subduction");
-@@ -647,12 +797,27 @@ export class SubductionSource {
+@@ -653,12 +796,27 @@ export class SubductionSource {
      async #doSync(entry, timeoutMs) {
          const { sedimentreeId } = entry;
          const sid = sedimentreeId.toString().slice(0, 8);
@@ -1180,7 +1160,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..b25acb3baaf0f6248fb977aa6a93524d
              const subduction = await this.#subduction;
              // Flush any pending throttled save and wait for in-progress saves
              // to complete. This ensures that all locally-known commits have
-@@ -662,8 +827,28 @@ export class SubductionSource {
+@@ -668,8 +826,28 @@ export class SubductionSource {
              entry.flushSave.flush();
              await entry.saveSettled;
              this.#log.debug(`doSync ${sid} (state=${entry.syncState})`);
@@ -1211,7 +1191,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..b25acb3baaf0f6248fb977aa6a93524d
              const anySuccess = results.some(r => r.success);
              this.#log.debug(`doSync ${sid}: ${results.length} peer(s), success=${anySuccess}`);
              // Check if any data was received from peers
-@@ -671,6 +856,9 @@ export class SubductionSource {
+@@ -677,6 +855,9 @@ export class SubductionSource {
                  const s = r.stats;
                  return s && (s.commitsReceived > 0 || s.fragmentsReceived > 0);
              });
@@ -1221,7 +1201,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..b25acb3baaf0f6248fb977aa6a93524d
              // If new data was received, immediately load it into the handle.
              // This makes sync reactive — the handle updates as soon as data
              // arrives, without waiting for further state transitions.
-@@ -702,6 +890,7 @@ export class SubductionSource {
+@@ -708,6 +889,7 @@ export class SubductionSource {
                  entry.lastSyncResult = "succeeded";
                  this.#scheduler.resetHealState(sedimentreeId.toString());
              }
@@ -1229,7 +1209,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..b25acb3baaf0f6248fb977aa6a93524d
          }
          catch (e) {
              this.#log.error(`doSync THREW for ${sid}:`, e);
-@@ -709,6 +898,10 @@ export class SubductionSource {
+@@ -715,6 +897,10 @@ export class SubductionSource {
              this.#scheduler.scheduleHealSync(sedimentreeId);
          }
          finally {
@@ -1240,7 +1220,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..b25acb3baaf0f6248fb977aa6a93524d
              entry.syncInFlight = false;
              resolveSyncSettled();
              if (entry.retryTransformAfterSync) {
-@@ -730,6 +923,216 @@ export class SubductionSource {
+@@ -736,6 +922,216 @@ export class SubductionSource {
              this.#scheduleRecompute(entry);
          }
      }
@@ -1457,7 +1437,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..b25acb3baaf0f6248fb977aa6a93524d
      /**
       * Pair each stored blob with the commit or fragment id it belongs to.
       */
-@@ -758,9 +1161,18 @@ export class SubductionSource {
+@@ -764,9 +1160,18 @@ export class SubductionSource {
       * handle via `Automerge.loadIncremental`. If new data was loaded, signal
       * the query so it can transition to "ready".
       *
@@ -1477,7 +1457,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..b25acb3baaf0f6248fb977aa6a93524d
      async #loadBlobsIntoHandle(entry, subduction) {
          const sid = entry.sedimentreeId.toString().slice(0, 8);
          const headCount = () => Automerge.getHeads(entry.handle.fullDoc()).length;
-@@ -824,9 +1236,21 @@ export class SubductionSource {
+@@ -830,9 +1235,21 @@ export class SubductionSource {
          // Apply all blobs in a single `loadIncremental`: one `handle.update()`,
          // so one `A.diff`/patch materialization and one listener-dispatch round
          // (the same reason `#flushInbound` coalesces inbound bursts).
@@ -1500,7 +1480,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..b25acb3baaf0f6248fb977aa6a93524d
          }
          // The bulk-loaded blobs may include fragments that absorb loose
          // commits also persisted on disk, or earlier fragments superseded
-@@ -875,6 +1299,40 @@ export class SubductionSource {
+@@ -881,6 +1298,40 @@ export class SubductionSource {
          }
          finally {
              entry.blobLoadInFlight = false;
@@ -1541,7 +1521,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..b25acb3baaf0f6248fb977aa6a93524d
              this.#scheduleRecompute(entry);
          }
      }
-@@ -1026,7 +1484,10 @@ export class SubductionSource {
+@@ -1032,7 +1483,10 @@ export class SubductionSource {
                  .slice(0, 8)}: setting needsResync=true (sync in flight)`);
              entry.needsResync = true;
          }
@@ -1553,7 +1533,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..b25acb3baaf0f6248fb977aa6a93524d
              entry.lastSyncResult = null;
          }
          this.#scheduleRecompute(entry);
-@@ -1297,6 +1758,27 @@ export class SubductionSource {
+@@ -1303,6 +1757,27 @@ export class SubductionSource {
      isHealing(sedimentreeId) {
          return this.#scheduler.isHealing(sedimentreeId);
      }
@@ -1581,7 +1561,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..b25acb3baaf0f6248fb977aa6a93524d
      /**
       * Force a fresh outbound sync round for a document, re-arming the
       * self-healing retry loop.
-@@ -1321,6 +1803,11 @@ export class SubductionSource {
+@@ -1327,6 +1802,11 @@ export class SubductionSource {
              return;
          this.#scheduler.resetHealState(sid);
          entry.lastSyncResult = null;
@@ -1593,7 +1573,7 @@ index 4692619444edfae0ef5f111cef6ce29499507afa..b25acb3baaf0f6248fb977aa6a93524d
          this.#scheduleRecompute(entry);
      }
      // ── Flush ───────────────────────────────────────────────────────────
-@@ -1478,12 +1965,28 @@ export class SubductionSource {
+@@ -1484,12 +1964,28 @@ export class SubductionSource {
          catch (e) {
              this.#log.debug("error disconnecting subduction transports: %O", e);
          }
