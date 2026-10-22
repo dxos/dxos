@@ -415,8 +415,8 @@ jobs:
       packages: read
       statuses: write
     runs-on: ubuntu-24.04
-    # The scheduled run bypasses the cache and rebuilds every dependency per shard; a cell ran past 60 minutes.
-    timeout-minutes: ${{ github.event_name == 'schedule' && 120 || 60 }}
+    # The scheduled run bypasses the cache and rebuilds every dependency per shard; a cell took 58 minutes.
+    timeout-minutes: ${{ github.event_name == 'schedule' && 75 || 60 }}
     env:
       NODE_VERSION: '24.11.1'
       # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
