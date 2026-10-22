@@ -22,7 +22,7 @@ export const Layout = Util.composable<HTMLDivElement, LayoutProps>(
       >
         <div className='flex flex-col grow overflow-hidden'>{children}</div>
 
-        <div className='z-[200]'>
+        <div className='z-200'>
           <div className='absolute top-4 left-4'>{topLeft}</div>
           <div className='absolute top-4 right-4'>{topRight}</div>
           <div className='absolute bottom-4 left-4'>{bottomLeft}</div>
