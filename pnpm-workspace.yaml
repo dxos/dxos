@@ -823,6 +823,12 @@ strictPeerDependencies: true
 trustPolicy: no-downgrade
 
 trustPolicyExclude:
+  # The subduction prerelease line is still published by hand (same maintainer as .48), while the
+  # alpha line moved to trusted publishing, so the publish-date check reads it as a downgrade.
+  - '@automerge/automerge-repo@2.6.0-subduction.49'
+  - '@automerge/automerge-repo-network-broadcastchannel@2.6.0-subduction.49'
+  - '@automerge/automerge-repo-network-websocket@2.6.0-subduction.49'
+  - '@automerge/automerge-repo-storage-indexeddb@2.6.0-subduction.49'
   - rollup@3.30.0
   - mermaid@10.9.4
   - undici-types@6.20.0
