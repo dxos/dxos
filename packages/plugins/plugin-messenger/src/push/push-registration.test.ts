@@ -56,7 +56,11 @@ const setup = (providerOptions?: FakeProviderOptions, edgeOptions?: { configured
   const provider = makeProvider(providerOptions);
   const edge = makeEdge(edgeOptions);
   const statuses: PushStatus[] = [];
-  const registration = makePushRegistration({ provider, edge, setStatus: (status) => statuses.push(status) });
+  const registration = makePushRegistration({
+    provider: () => provider,
+    edge,
+    setStatus: (status) => statuses.push(status),
+  });
   return { provider, edge, registration, statuses };
 };
 
@@ -96,12 +100,21 @@ describe('makePushRegistration', () => {
   test('a device without a provider is unsupported', async () => {
     const statuses: PushStatus[] = [];
     const registration = makePushRegistration({
-      provider: undefined,
+      provider: () => undefined,
       edge: makeEdge(),
       setStatus: (status) => statuses.push(status),
     });
     expect(await registration.enable()).toBe('unsupported');
     expect(await registration.refresh()).toBe('unsupported');
+  });
+
+  test('a provider contributed after registration was created is used', async () => {
+    let provider: AppPush.Provider | undefined;
+    const registration = makePushRegistration({ provider: () => provider, edge: makeEdge(), setStatus: () => {} });
+    expect(await registration.enable()).toBe('unsupported');
+
+    provider = makeProvider();
+    expect(await registration.enable()).toBe('on');
   });
 
   test('disable unregisters from EDGE before dropping the subscription', async () => {

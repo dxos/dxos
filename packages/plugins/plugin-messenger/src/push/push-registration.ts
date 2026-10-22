@@ -22,7 +22,8 @@ export type PushEdge = {
 };
 
 export type PushRegistrationOptions = {
-  provider: AppPush.Provider | undefined;
+  /** Read on every call: the platform plugin may contribute its provider after registration is created. */
+  provider: () => AppPush.Provider | undefined;
   edge: PushEdge;
   setStatus: (status: PushStatus) => void;
 };
@@ -45,7 +46,11 @@ export type PushRegistration = {
 const isNotConfigured = (error: unknown) => error instanceof EdgeCallFailedError && error.status === 404;
 
 /** Push registration for one device, shared by every platform: the provider differs, the EDGE routes do not. */
-export const makePushRegistration = ({ provider, edge, setStatus }: PushRegistrationOptions): PushRegistration => {
+export const makePushRegistration = ({
+  provider: currentProvider,
+  edge,
+  setStatus,
+}: PushRegistrationOptions): PushRegistration => {
   const settle = (status: PushStatus): PushStatus => {
     setStatus(status);
     return status;
@@ -79,6 +84,7 @@ export const makePushRegistration = ({ provider, edge, setStatus }: PushRegistra
   return {
     enable: () =>
       run(async () => {
+        const provider = currentProvider();
         if (!provider?.supported) {
           return settle('unsupported');
         }
@@ -91,6 +97,7 @@ export const makePushRegistration = ({ provider, edge, setStatus }: PushRegistra
 
     disable: () =>
       run(async () => {
+        const provider = currentProvider();
         if (!provider?.supported) {
           return settle('unsupported');
         }
@@ -108,6 +115,7 @@ export const makePushRegistration = ({ provider, edge, setStatus }: PushRegistra
 
     refresh: () =>
       run(async () => {
+        const provider = currentProvider();
         if (!provider?.supported) {
           return settle('unsupported');
         }
