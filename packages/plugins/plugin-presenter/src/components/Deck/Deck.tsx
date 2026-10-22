@@ -71,6 +71,11 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
         if (isEditable(event.target) || event.metaKey || event.ctrlKey || event.altKey) {
           return;
         }
+        // Arrow keys inside a toolbar move between its buttons (roving focus), so only `f` applies there.
+        const inToolbar = event.target instanceof Element && event.target.closest('[role="toolbar"]') !== null;
+        if (inToolbar && event.key !== 'f' && event.key !== 'F') {
+          return;
+        }
 
         const go = (next: number) => {
           event.preventDefault();
@@ -132,7 +137,6 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
         data-testid='presenter.deck'
         fullscreen={fullscreen}
         onExit={handleExit}
-        onKeyDown={handleKeyDown}
       >
         <div className='dx-cover flex flex-col'>{body}</div>
         {fullscreen && <OverlayPager index={index} count={count} onChange={onIndexChange} />}
@@ -141,35 +145,40 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
 
     if (fullscreen) {
       return (
-        <Panel.Root {...props} ref={forwardedRef}>
-          <Panel.Body asChild>{shell}</Panel.Body>
+        <Panel.Root {...props} asChild ref={forwardedRef}>
+          <div onKeyDown={handleKeyDown}>
+            <Panel.Body asChild>{shell}</Panel.Body>
+          </div>
         </Panel.Root>
       );
     }
 
     return (
-      <Panel.Root {...props} ref={forwardedRef}>
-        <Panel.Header>
-          <Toolbar.Root>
-            {toolbar}
-            <div className='grow' />
-            <Button.Root
-              data-testid='presenter.fullscreen'
-              icon='ph--arrows-out--regular'
-              iconOnly
-              variant='ghost'
-              label={t('fullscreen.label')}
-              onClick={() => onFullscreenChange?.(true)}
-            />
-          </Toolbar.Root>
-        </Panel.Header>
-        <Panel.Body asChild>{shell}</Panel.Body>
-        <Panel.Footer>
-          <div className='flex items-center justify-center gap-4'>
-            <Pager index={index} count={count} onChange={onIndexChange} />
-            <PageNumber index={index} count={count} />
-          </div>
-        </Panel.Footer>
+      // Keys are handled on the whole panel so the toolbar and status bar keep them working after a click.
+      <Panel.Root {...props} asChild ref={forwardedRef}>
+        <div onKeyDown={handleKeyDown}>
+          <Panel.Header>
+            <Toolbar.Root>
+              {toolbar}
+              <div className='grow' />
+              <Button.Root
+                data-testid='presenter.fullscreen'
+                icon='ph--arrows-out--regular'
+                iconOnly
+                variant='ghost'
+                label={t('fullscreen.label')}
+                onClick={() => onFullscreenChange?.(true)}
+              />
+            </Toolbar.Root>
+          </Panel.Header>
+          <Panel.Body asChild>{shell}</Panel.Body>
+          <Panel.Footer>
+            <div className='flex items-center justify-center gap-4'>
+              <Pager index={index} count={count} onChange={onIndexChange} />
+              <PageNumber index={index} count={count} />
+            </div>
+          </Panel.Footer>
+        </div>
       </Panel.Root>
     );
   },

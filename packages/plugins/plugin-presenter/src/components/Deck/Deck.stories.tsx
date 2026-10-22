@@ -211,6 +211,23 @@ export const FullscreenKey: Story = {
   },
 };
 
+/** After a click on the status-bar pager, `f` and the arrow keys still reach the deck. */
+export const KeysAfterPagerClick: Story = {
+  decorators: [withEmptyPlugins],
+  args: { onFullscreenChange: fn() },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByTestId('presenter.deck');
+    const [next] = canvas.getAllByRole('button', { name: /next/i });
+    await userEvent.click(next);
+    await expect(await canvas.findByText('2 / 5')).toBeInTheDocument();
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(await canvas.findByText('3 / 5')).toBeInTheDocument();
+    await userEvent.keyboard('f');
+    await expect(args.onFullscreenChange).toHaveBeenCalledWith(true);
+  },
+};
+
 /** Shift or Caps Lock still toggles fullscreen. */
 export const FullscreenShiftKey: Story = {
   decorators: [withEmptyPlugins],

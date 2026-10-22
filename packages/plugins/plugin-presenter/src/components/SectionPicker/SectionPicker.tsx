@@ -41,11 +41,13 @@ export const SectionPicker = ({ presentation }: SectionPickerProps) => {
           const typename = Obj.getTypename(object) ?? '';
           return {
             id: object.id,
+            // Same fallback as the navtree, so an unnamed object reads the same in both places.
             label:
-              Obj.getLabel(object) ??
+              Obj.getLabel(object) ||
+              t('object-name.placeholder', { ns: typename, defaultValue: '' }) ||
               t('untitled-object.label', {
                 type: t('typename.label', { ns: typename, defaultValue: typename }) ?? typename,
-              }) ??
+              }) ||
               object.id,
           };
         })
