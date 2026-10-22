@@ -8,12 +8,12 @@ import { useResizeDetector } from 'react-resize-detector';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-export type PanelProps = Util.ThemedClassName<PropsWithChildren<{}>>;
+export type SlideFrameProps = Util.ThemedClassName<PropsWithChildren<{}>>;
 
 /**
- * Scaled markdown panel.
+ * Scaled 16:9 slide canvas.
  */
-export const Panel = ({ children, classNames }: PanelProps) => {
+export const SlideFrame = ({ children, classNames }: SlideFrameProps) => {
   const [props, setProps] = useState({});
   const {
     ref: containerRef,

@@ -12,6 +12,7 @@ export const translations = [
       [meta.profile.key]: {
         'plugin.name': 'Presenter',
         'toggle-presentation.label': 'Present',
+        'slide-pending.label': 'Loading…',
       },
     },
   },

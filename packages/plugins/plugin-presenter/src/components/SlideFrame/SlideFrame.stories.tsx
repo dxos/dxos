@@ -10,18 +10,18 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { createSlide } from '#testing';
 
 import { Slide, type SlideProps } from '../Slide/index.ts';
-import { Panel } from './Panel.tsx';
+import { SlideFrame } from './SlideFrame.tsx';
 
 const DefaultStory = ({ content = '' }: SlideProps) => {
   return (
-    <Panel classNames='bg-scrim-surface'>
+    <SlideFrame classNames='bg-scrim-surface'>
       <Slide content={content} />
-    </Panel>
+    </SlideFrame>
   );
 };
 
 const meta = {
-  title: 'plugins/plugin-presenter/components/Panel',
+  title: 'plugins/plugin-presenter/components/SlideFrame',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
