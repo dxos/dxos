@@ -310,7 +310,17 @@ export const Timeline = ({
   filter,
   onHiddenChange,
 }: TimelineProps) => {
-  const { spine = 'center', scale = 'linear', hidden, today = true, dates = true, order, colors, fontSize } = options;
+  const {
+    spine = 'center',
+    scale = 'linear',
+    hidden,
+    today = true,
+    dates = true,
+    future = true,
+    order,
+    colors,
+    fontSize,
+  } = options;
   const { ref: scrollRef, width = 0, height = 0 } = useResizeDetector<HTMLDivElement>({ refreshRate: 100 });
   const metrics = useMemo(() => metricsFor(fontSize, width), [fontSize, width]);
   const [zoom, setZoom] = useState(initialZoom);
@@ -332,10 +342,15 @@ export const Timeline = ({
     () => Math.ceil(Math.max(0, ...events.map((event) => measure(event.date))) * metrics.dateFont) + LABEL_MARGIN,
     [events, measure, metrics],
   );
-  const range = useMemo(
-    () => timelineRange(events, { start: options.start, end: options.end }),
-    [events, options.start, options.end],
-  );
+  // Without the future, the timeline ends today and later events drop out.
+  const range = useMemo((): [number, number] | undefined => {
+    const full = timelineRange(events, { start: options.start, end: options.end });
+    if (!full || future) {
+      return full;
+    }
+    const now = Date.now();
+    return [full[0], Math.max(full[0], Math.min(full[1], now))];
+  }, [events, options.start, options.end, future]);
   const visible = useMemo(() => columns.filter((column) => !hidden?.includes(column)), [columns, hidden]);
   // Categories take theme hues, so the dots, labels and header tags share one palette in light and dark themes.
   // A category's color is its `colors` entry (a palette hue, with an optional shade), else the next unused hue.

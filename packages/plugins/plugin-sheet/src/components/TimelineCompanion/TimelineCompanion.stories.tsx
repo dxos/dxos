@@ -112,3 +112,9 @@ export const Resume: Story = {
     hidden: ['Macro', 'Macro/MIC', 'Macro/FIC', 'Macro/TIC'],
   },
 };
+
+export const Macro: Story = {
+  args: {
+    hidden: ['Tech/Hardware', 'Tech/Software', 'Tech/AI', 'Personal'],
+  },
+};

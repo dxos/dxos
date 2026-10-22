@@ -104,3 +104,9 @@ export const Dates: Story = {
     ),
   },
 };
+
+export const Macro: Story = {
+  args: {
+    hidden: ['Tech/Hardware', 'Tech/Software', 'Tech/AI', 'Personal'],
+  },
+};

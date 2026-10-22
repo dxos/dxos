@@ -90,6 +90,8 @@ export const TimelineOptions = Schema.Struct({
   today: Schema.optional(Schema.Boolean.annotate({ title: 'Show today' })),
   /** Show each event's date beside its title; on by default. */
   dates: Schema.optional(Schema.Boolean.annotate({ title: 'Show dates' })),
+  /** Show events after today; on by default. */
+  future: Schema.optional(Schema.Boolean.annotate({ title: 'Show future' })),
   fontSize: Schema.optional(TimelineFontSize.annotate({ title: 'Font size' })),
 });
 

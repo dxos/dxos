@@ -1153,8 +1153,15 @@ export const technologyTimeline: PlotValue[][] = [
   ],
   ['2026-07', 'Tech/AI', 'ChatGPT attack on Hugging Face', 'Reported in July 2026.', null],
   [
+    '2027-06',
+    'Macro/MIC',
+    'Major internet disruption from a bot attack',
+    'Speculative: an automated attack takes down large parts of the internet.',
+    null,
+  ],
+  [
     '2028-08',
-    'Macro/FIC',
+    'Macro/TIC',
     'US bails out BigAI',
     'Speculative: the US government rescues the largest AI companies.',
     null,

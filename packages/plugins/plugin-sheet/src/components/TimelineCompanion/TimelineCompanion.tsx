@@ -61,7 +61,14 @@ export const TimelineCompanion = ({
 }: TimelineCompanionProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [editing, setEditing] = useState(false);
-  const { spine = 'center', scale = 'linear', hidden = [], dates = true, fontSize = 'auto' } = timeline ?? {};
+  const {
+    spine = 'center',
+    scale = 'linear',
+    hidden = [],
+    dates = true,
+    future = true,
+    fontSize = 'auto',
+  } = timeline ?? {};
 
   const data = useMemo(() => {
     const values = timeline && getValues(timeline.range);
@@ -73,11 +80,17 @@ export const TimelineCompanion = ({
   const [filter, setFilter] = useState('');
   const counts = useMemo(() => {
     const range = timelineRange(events, { start: timeline?.start, end: timeline?.end });
+    const now = Date.now();
     const shown = events.filter(
-      (event) => !hidden.includes(event.column) && range && event.time >= range[0] && event.time <= range[1],
+      (event) =>
+        !hidden.includes(event.column) &&
+        range &&
+        event.time >= range[0] &&
+        event.time <= range[1] &&
+        (future || event.time <= now),
     );
     return { total: shown.length, matched: shown.filter((event) => matchesTimelineFilter(event, filter)).length };
-  }, [events, hidden, timeline?.start, timeline?.end, filter]);
+  }, [events, hidden, timeline?.start, timeline?.end, future, filter]);
 
   const handleUpdate = useCallback(
     (values: Partial<Sheet.Timeline>) => timeline && onChange({ ...timeline, ...values }),
@@ -132,67 +145,76 @@ export const TimelineCompanion = ({
                     ),
                 )
                 .group(
-                  'scale',
+                  'font-size',
                   {
-                    label: ['timeline-scale.label', { ns: meta.profile.key }],
+                    label: ['timeline-font-size.label', { ns: meta.profile.key }],
+                    icon: 'ph--text-aa--regular',
                     iconOnly: true,
-                    variant: 'toggleGroup',
+                    variant: 'dropdownMenu',
                     selectCardinality: 'single',
-                    value: scale,
+                    value: fontSize,
                   },
                   (group) =>
-                    Sheet.TimelineScale.literals.forEach((value) =>
+                    Sheet.TimelineFontSize.literals.forEach((value) =>
                       group.action(
                         value,
                         {
-                          label: [`timeline-scale.${value}.label`, { ns: meta.profile.key }],
-                          icon: SCALE_ICONS[value],
-                          checked: scale === value,
+                          label: [`timeline-font-size.${value}.label`, { ns: meta.profile.key }],
+                          checked: fontSize === value,
                         },
-                        () => handleUpdate({ scale: value }),
+                        () => handleUpdate({ fontSize: value }),
                       ),
                     ),
+                )
+                .action(
+                  'dates',
+                  {
+                    label: ['timeline-dates.label', { ns: meta.profile.key }],
+                    icon: 'ph--calendar-dots--regular',
+                    iconOnly: true,
+                    variant: 'toggle',
+                    checked: dates,
+                  },
+                  () => handleUpdate({ dates: !dates }),
+                )
+                .action(
+                  'future',
+                  {
+                    label: ['timeline-future.label', { ns: meta.profile.key }],
+                    icon: 'ph--hourglass-high--regular',
+                    iconOnly: true,
+                    variant: 'toggle',
+                    checked: future,
+                  },
+                  () => handleUpdate({ future: !future }),
                 )),
         )
+        // The scale is the main view choice, so it sits apart in the middle of the toolbar.
+        .separator('gap')
         .subgraph(
           !!timeline &&
             ((builder) =>
               builder.group(
-                'font-size',
+                'scale',
                 {
-                  label: ['timeline-font-size.label', { ns: meta.profile.key }],
-                  icon: 'ph--text-aa--regular',
+                  label: ['timeline-scale.label', { ns: meta.profile.key }],
                   iconOnly: true,
-                  variant: 'dropdownMenu',
+                  variant: 'toggleGroup',
                   selectCardinality: 'single',
-                  value: fontSize,
+                  value: scale,
                 },
                 (group) =>
-                  Sheet.TimelineFontSize.literals.forEach((value) =>
+                  Sheet.TimelineScale.literals.forEach((value) =>
                     group.action(
                       value,
                       {
-                        label: [`timeline-font-size.${value}.label`, { ns: meta.profile.key }],
-                        checked: fontSize === value,
+                        label: [`timeline-scale.${value}.label`, { ns: meta.profile.key }],
+                        icon: SCALE_ICONS[value],
+                        checked: scale === value,
                       },
-                      () => handleUpdate({ fontSize: value }),
+                      () => handleUpdate({ scale: value }),
                     ),
                   ),
-              )),
-        )
-        .subgraph(
-          !!timeline &&
-            ((builder) =>
-              builder.action(
-                'dates',
-                {
-                  label: ['timeline-dates.label', { ns: meta.profile.key }],
-                  icon: 'ph--calendar-dots--regular',
-                  iconOnly: true,
-                  variant: 'toggle',
-                  checked: dates,
-                },
-                () => handleUpdate({ dates: !dates }),
               )),
         )
         .separator('gap')
@@ -220,7 +242,7 @@ export const TimelineCompanion = ({
           ),
         )
         .build(),
-    [timeline, selection, spine, scale, hidden, editing, dates, handleUseSelection, handleUpdate, onChange],
+    [timeline, selection, spine, scale, fontSize, dates, future, editing, handleUseSelection, handleUpdate, onChange],
   );
 
   return (
