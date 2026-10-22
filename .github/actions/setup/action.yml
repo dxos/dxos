@@ -22,8 +22,8 @@ inputs:
     default: 'true'
   rust:
     description: >
-      Set "true" to install the Rust toolchain and restore the cargo registry. Only the Rust crates' tests, in
-      the node test cells, compile Rust; every other job skips the ~12 s install.
+      Set "true" to install the Rust toolchain and restore the cargo registry. Only Check's `native` job compiles
+      Rust; every other job skips the ~12 s install.
     default: 'false'
 
 runs:
@@ -181,7 +181,7 @@ runs:
       shell: bash
 
     # Only a job whose crate inputs changed compiles, since moon's remote cache restores the addon and
-    # skips `cargo-test` otherwise; the registry is cached because that compile would refetch every crate.
+    # skips `test-native` otherwise; the registry is cached because that compile would refetch every crate.
     - name: Cache cargo registry
       if: ${{ inputs.rust == 'true' }}
       uses: actions/cache@v4
@@ -194,8 +194,8 @@ runs:
         restore-keys: |
           ${{ inputs.cache-scope }}-${{ runner.os }}-cargo-registry-
 
-    # `code-index`'s store is a Rust addon (`tools/code-index-native`) that `code-index:test` builds. The
-    # toolchain is the one the crate's `rust-toolchain.toml` pins, from rustup's minimal profile; RocksDB is
+    # `code-index`'s store is a Rust addon (`tools/code-index-native`) that `code-index:test-native` builds.
+    # The toolchain is the one the crate's `rust-toolchain.toml` pins, from rustup's minimal profile; RocksDB is
     # compiled from source and its bindgen step loads libclang, which the CI image does not ship.
     - name: Install Rust
       if: ${{ inputs.rust == 'true' }}

@@ -486,6 +486,7 @@ for (const manifest of globSync(
     browser = {},
     dependencies = {},
     devDependencies = {},
+    peerDependencies = {},
   } = JSON.parse(readFileSync(manifest, 'utf8'));
 
   // Self-referencing subpath imports (`#meta`, `#plugin`) are otherwise unresolvable: knip follows
@@ -544,7 +545,7 @@ for (const manifest of globSync(
       ...configuredDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
       ...moonInvokedDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
       ...peerSatisfyingDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
-      ...typeOnlyDependencies(dir, Object.keys(dependencies)),
+      ...typeOnlyDependencies(dir, Object.keys({ ...dependencies, ...peerDependencies })),
       ...bundledDependencies(dir),
       ...(DECLARED_IN_TYPES[dir] ?? []),
       ...(TESTING_ENTRY_ONLY[dir] ?? []),
