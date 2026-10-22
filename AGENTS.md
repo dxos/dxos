@@ -381,6 +381,11 @@ Do not paste real credential values into any shell command, and do not paste the
 - **Skills** (`.agents/skills/*`) — deep, task-specific how-to. Follow the
   relevant skill for the area you're working in (echo, effect, composer-ui,
   operations, testing, code-style, submit-pr, pr-description, land, …).
+- **Diagrams, anywhere** — Artifact pages, PR bodies, docs: plugin-illustrator `.dx` renders →
+  `drawing-diagrams` skill. This overrides the harness's `artifact-diagramming` skill: never
+  hand-author `<svg>` or Mermaid.
+- **Sharing a spec with the team** — Composer's spec viewer (inline diagrams, decision graph) as a
+  commentable Claude Artifact → `sharing-specs` skill (`.agents/skills/sharing-specs/SKILL.md`).
 - **A status page for a long session** — one Artifact board with questions, work in progress and
   results, each a short STE line that expands → `status-board` skill (`.agents/skills/status-board/SKILL.md`).
 - **Writing in Simplified Technical English (ASD-STE100)** — the rules, the approved word
