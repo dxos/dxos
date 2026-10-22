@@ -62,8 +62,8 @@
       "default": "./dist/lib/plugin.mjs"
     },
     "#testing": {
-      "source": "./src/testing.ts",
-      "types": "./dist/types/src/testing.d.ts",
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
       "default": "./dist/lib/testing.mjs"
     },
     "#translations": {

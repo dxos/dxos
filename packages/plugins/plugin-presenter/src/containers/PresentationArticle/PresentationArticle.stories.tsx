@@ -3,22 +3,12 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/reactivity/Atom';
 import React from 'react';
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
-import * as Capabilities from '@dxos/app-framework/Capabilities';
-import * as Capability from '@dxos/app-framework/Capability';
-import * as Plugin from '@dxos/app-framework/Plugin';
 import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import * as Operation from '@dxos/compute/Operation';
-import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Filter } from '@dxos/echo';
-import { DXN } from '@dxos/keys';
-import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
-import type * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -29,48 +19,11 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { Text } from '@dxos/schema';
 
+import { createPresenterStoryPlugin } from '#testing';
 import { translations } from '#translations';
-import { Presentation, PresenterOperation } from '#types';
+import { Presentation } from '#types';
 
 import { PresentationArticle } from './PresentationArticle.tsx';
-
-/**
- * Stands in for the deck plugin: `SetPresenting` sets the deck's fullscreen plank to the presentation,
- * which is all the article reads.
- */
-const createPresenterStoryPlugin = () => {
-  const ephemeralAtom = Atom.make<DeckSchema.EphemeralDeckState>({
-    open: {},
-    dialogOpen: false,
-    dialogContent: null,
-    popoverOpen: false,
-    popoverContent: null,
-    toasts: [],
-  }).pipe(Atom.keepAlive);
-  const setPresenting = PresenterOperation.SetPresenting.pipe(
-    Operation.withHandler(({ object, state }) =>
-      Effect.gen(function* () {
-        const registry = yield* Capability.get(Capabilities.AtomRegistry);
-        registry.update(ephemeralAtom, (ephemeral) => ({ ...ephemeral, fullscreen: state ? object.id : undefined }));
-      }),
-    ),
-  );
-
-  return Plugin.define(
-    Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test.presentationArticle'), name: 'PresentationArticleStory' }),
-  ).pipe(
-    Plugin.addModule({
-      id: 'deck',
-      provides: [DeckCapabilities.EphemeralState, Capabilities.OperationHandler],
-      activate: () =>
-        Effect.succeed([
-          Capability.contribute(DeckCapabilities.EphemeralState, ephemeralAtom),
-          Capability.contribute(Capabilities.OperationHandler, OperationHandlerSet.make(setPresenting)),
-        ]),
-    }),
-    Plugin.make,
-  );
-};
 
 /** Attended from the start (see `withAttention` below), as a plank the user just opened. */
 const ATTENDED_ID = 'story';
