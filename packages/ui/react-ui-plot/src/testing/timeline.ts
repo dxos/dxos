@@ -43,7 +43,9 @@ export const technologyTimeline: PlotValue[][] = [
     'Strategic Defense Initiative',
     'Reagan proposes a space-based missile shield, nicknamed “Star Wars”.',
   ],
+  ['1983-04', 'Personal', 'Published Tornado', 'Published Tornado, April 1983.'],
   ['1983-09', 'Tech/Software', 'GNU Project', 'Richard Stallman announces a free Unix-like operating system.'],
+  ['1983-09', 'Personal', 'Published Python', 'Published Python, September 1983.'],
   ['1984-01', 'Macro/TIC', 'AT&T breakup', 'The Bell System is split into regional operating companies.'],
   [
     '1984-01',
@@ -92,6 +94,7 @@ export const technologyTimeline: PlotValue[][] = [
   ['1993-03', 'Tech/Hardware', 'Pentium', 'Intel’s superscalar x86 processor.'],
   ['1993-04', 'Personal', 'Goldman Sachs', 'Senior Programmer Analyst, Apr 1993 – Apr 1996.'],
   ['1993-07', 'Macro/MIC', '“Last Supper”', 'The Pentagon urges contractors to consolidate after the Cold War.'],
+  ['1994-09', 'Personal', 'Published Music Box', 'Published Music Box, September 1994.'],
   ['1994-10', 'Tech/Software', 'Netscape', 'The Netscape Navigator browser brings the web to the mainstream.'],
   [
     '1994-12',
