@@ -72,32 +72,6 @@ test QA-5: Showcase clip
     - name: Zoom into the drawing
       do: Click the inline drawing's zoom-in button a few times.
       expect: the drawing zooms in
-
-test QA-6: Hot-reload a plugin module
-  desc: |
-    Dev-server demo of plugin-module hot replacement: edits to the markdown surface module, made from a
-    terminal floated over the app, re-run that module in place; an edit to the plugin definition still
-    reloads the page, for contrast. Recorded by `autocue/hot-reload.mjs` against `composer-app:serve`.
-  actors: human
-  status: unverified        # driven by autocue/hot-reload.mjs
-  given:
-    - the composer-app dev server is running
-    - the document surface carries a banner reading "Edited live · v1", added for the take
-    - space: a space is open
-  steps:
-    - name: Show the running module
-      do: Open a markdown document.
-      expect: the banner shows above the editor
-    - name: Edit the surface module
-      do: In the terminal, replace v1 with v2 in src/capabilities/react-surface.ts.
-      expect: the banner reads v2 within a second, and the page does not reload
-    - name: Edit it again
-      do: Replace v2 with v3.
-      expect: the banner reads v3, and the page does not reload
-    - name: Edit the plugin definition
-      do: Append a comment to src/plugin.tsx.
-      expect: the page reloads, and the document opens again after the boot
-      note: plugin.tsx is not a hot boundary; reloading a whole plugin in place is not built yet.
 ```
 
 ## Changelog
@@ -116,13 +90,4 @@ decision D-2: QA-4's writing step names "Links between pages" as the list's last
   for: user:richburdon
   affects: [QA-4]
   why: Without it a tester can type a list the comment step then cannot select; the recorded flow already types this item.
-```
-
-```mdl
-decision D-3: QA-6 records plugin-module hot replacement in the dev server, with a plugin-definition edit as the full-reload contrast.
-  date: 2026-10-22
-  by: agent:claude-code
-  for: user:dmytro
-  affects: [QA-6]
-  why: The user asked for a recording that shows how fast plugin-module reloads are now.
 ```
