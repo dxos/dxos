@@ -68,6 +68,13 @@
       "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/02/Atari-2600-Wood-4Sw-Set.png/500px-Atari-2600-Wood-4Sw-Set.png"
     ],
     [
+      "1978-07",
+      "Personal",
+      "Sinclair Enterprise",
+      "99 step programmable calculator.",
+      "https://upload.wikimedia.org/wikipedia/commons/8/89/Sinclair_Enterprise_Calculators.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=original"
+    ],
+    [
       "1980",
       "Macro",
       "Globalization era begins",
@@ -75,13 +82,6 @@
       "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8b/Early_migrations_mercator.svg/500px-Early_migrations_mercator.svg.png"
     ],
     ["1980-05", "Tech/Software", "Pac-Man", "Namco’s maze game becomes the best-known arcade game of all time.", null],
-    [
-      "1978-07",
-      "Personal",
-      "Sinclair Enterprise",
-      "99 step programmable calculator.",
-      "https://upload.wikimedia.org/wikipedia/commons/8/89/Sinclair_Enterprise_Calculators.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=original"
-    ],
     [
       "1981-03",
       "Macro/MIC",
@@ -491,7 +491,7 @@
     ],
     [
       "2001-10",
-      "Macro",
+      "Macro/MIC",
       "Patriot Act",
       "Expands US government surveillance powers.",
       "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/Great_Seal_of_the_United_States_%28obverse%29.svg/500px-Great_Seal_of_the_United_States_%28obverse%29.svg.png"
@@ -1253,7 +1253,35 @@
       "The Pentagon labels Anthropic a supply chain risk after the company refuses to drop limits on surveillance and autonomous weapons.",
       null
     ],
+    [
+      "2026-06",
+      "Tech/AI",
+      "SpaceX acquires Cursor",
+      "SpaceX agrees to buy Anysphere, the maker of the Cursor coding editor, for $60B in stock; the deal closes in August.",
+      null
+    ],
     ["2026-07", "Tech/AI", "ChatGPT attack on Hugging Face", "Reported in July 2026.", null],
+    [
+      "2026-08",
+      "Tech/AI",
+      "Grok Bot",
+      "xAI launches Grok Bot in beta: always-on AI teammates, each with its own cloud computer.",
+      null
+    ],
+    [
+      "2026-09",
+      "Tech/AI",
+      "Meta Muse",
+      "Meta releases Muse, a personal agent that works on long-running tasks on a user’s behalf.",
+      null
+    ],
+    [
+      "2026-09",
+      "Tech/AI",
+      "OpenAI Dots",
+      "OpenAI launches Dots at DevDay: personal agents that pursue goals in the background, an answer to Muse.",
+      null
+    ],
     [
       "2026-10",
       "Macro/MIC",

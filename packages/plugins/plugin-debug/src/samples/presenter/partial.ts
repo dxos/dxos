@@ -39,7 +39,7 @@ export type Provides = {
 };
 
 /** The events sheet with its macro timeline chart. */
-const makeEvents = (): { sheet: Sheet.Sheet; chart: Sheet.Chart } => {
+export const makeEvents = (): { sheet: Sheet.Sheet; chart: Sheet.Chart } => {
   const sheet = Sheet.make({
     name: 'Macro events',
     rows: timeline.rows.length + 20,

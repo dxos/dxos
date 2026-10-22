@@ -12,7 +12,7 @@ import * as TimelineSpace from './TimelineSpace.ts';
 describe('Timeline project template', () => {
   test('builds the project, its feature map and its tasks', { timeout: 120_000 }, async ({ expect }) => {
     const { result, json } = await EffectEx.runPromise(buildArchive(TimelineSpace.make()));
-    const { project, features, tasks } = result.timeline;
+    const { project, features, tasks, fixture } = result.timeline;
 
     expect(project.name).toBe('Timeline');
     expect(features.map((feature) => feature.name)).toEqual([
@@ -23,12 +23,27 @@ describe('Timeline project template', () => {
       'Timeline research skill',
     ]);
     expect(features.every((feature) => feature.project?.uri.endsWith(project.id))).toBe(true);
-    expect(tasks).toHaveLength(5);
+    expect(tasks.map((task) => task.title)).toEqual([
+      'Create a test fixture',
+      'Complete the spec',
+      'Draw the proposed architecture',
+      'Implement phase 1 of the spec',
+      'Decide where the research skill lives',
+      'Check Escape with an embed showing',
+    ]);
+
+    // The fixture is done and files the events sheet, which the project lists too.
+    const [fixtureTask, ...planned] = tasks;
+    expect(fixtureTask.status).toBe('done');
+    expect(fixtureTask.artifacts?.map((ref) => ref.uri.endsWith(fixture.id))).toEqual([true]);
+    expect(project.artifacts.some((ref) => ref.uri.endsWith(fixture.id))).toBe(true);
+    expect(planned.every((task) => task.status === 'todo')).toBe(true);
+    expect(planned[2].dependsOn?.map((ref) => ref.uri.endsWith(planned[1].id))).toEqual([true]);
 
     // Every task is linked to a feature, and the features' needs are drawn as edges.
     const archive: { objects: Array<{ '@type'?: string }> } = JSON.parse(json);
     const count = (type: string) => archive.objects.filter((object) => object['@type']?.includes(type)).length;
-    expect(count('org.dxos.relation.implements')).toBe(5);
+    expect(count('org.dxos.relation.implements')).toBe(6);
     expect(count('org.dxos.relation.dependsOn')).toBe(5);
   });
 });

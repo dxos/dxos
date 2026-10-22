@@ -8,18 +8,23 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Ref, Relation } from '@dxos/echo';
+import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import * as Feature from '@dxos/plugin-projects/Feature';
+import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import { Text } from '@dxos/schema';
 import { Outline, Task, TaskSet } from '@dxos/types';
 
+import { makeEvents } from '../presenter/partial.ts';
+
 //
 // The timeline chart's own feature map: what has been built (charts as objects, the timeline, slide embeds, the
-// Presenter space), what is left (the research skill, the spec blocks), and the follow-up tasks that move it.
+// Presenter space), what is left (the research skill), and the plan that moves it: a test fixture (done), the spec,
+// a drawing of the architecture, and the spec's first phase.
 //
 
 /** The project skill carries the feature operations; a plain key, as in the `SkillsAnnotation` idiom. */
 const PROJECT_SKILL_KEY = 'org.dxos.skill.project';
+const DRAWING_SKILL_KEY = 'org.dxos.skill.drawing';
 
 const SHEET_SPEC = 'packages/plugins/plugin-sheet/PLUGIN.mdl';
 const PRESENTER_SPEC = 'packages/plugins/plugin-presenter/PLUGIN.mdl';
@@ -108,13 +113,33 @@ type TaskSeed = {
   readonly description: string;
   /** Key of the feature it moves. */
   readonly feature: string;
+  /** Done, with the events sheet filed on it. */
+  readonly fixture?: boolean;
 };
 
+/** The planned work in order, each step needing the one before it; the fixture is already done. */
 const TASKS: readonly TaskSeed[] = [
   {
-    title: 'Write the chart and timeline spec blocks',
+    title: 'Create a test fixture',
     description:
-      'Add feat blocks F-8 (chart objects) and F-9 (timeline chart) to the plugin-sheet spec, with scenarios.',
+      'A sheet of events, one per row (date, category, title, description, image), with a timeline chart of its range: the same sheet the Presenter space uses.',
+    feature: 'timeline',
+    fixture: true,
+  },
+  {
+    title: 'Complete the spec',
+    description: `Write feat blocks for chart objects (F-8), the timeline chart (F-9) and the research skill (F-10) in ${SHEET_SPEC}, with scenarios, and divide the work into phases.`,
+    feature: 'timeline',
+  },
+  {
+    title: 'Draw the proposed architecture',
+    description:
+      "A diagram on the canvas, filed on this project, before any code: the sheet and its chart objects, the compute graph that evaluates a chart's range, the timeline component, and the article, section and slide surfaces that show a chart. Write it in the Drawing skill's diagram language and let the layout engine place it.",
+    feature: 'timeline',
+  },
+  {
+    title: 'Implement phase 1 of the spec',
+    description: `Build what the spec's first phase states, against the test fixture, and check each requirement as it is met (${SHEET_SPEC}).`,
     feature: 'timeline',
   },
   {
@@ -123,23 +148,22 @@ const TASKS: readonly TaskSeed[] = [
     feature: 'research',
   },
   {
-    title: 'Add Muse, Dots, Grokbot and the Cursor acquisition',
-    description: 'Find their dates and add them to the AI events of the Presenter dataset.',
-    feature: 'presenter',
-  },
-  {
-    title: 'Categorize the Patriot Act',
-    description: 'Decide whether it stays under Macro or moves to MIC or TIC.',
-    feature: 'presenter',
-  },
-  {
     title: 'Check Escape with an embed showing',
     description: 'Escape should leave the presentation while a slide shows an embedded object.',
     feature: 'embeds',
   },
 ];
 
-export type Provides = { project: Project.Project; features: Feature.Feature[]; tasks: Task.Task[] };
+/** Steps that follow one another: the spec, the drawing of it, then its first phase. */
+const SEQUENCE = ['Complete the spec', 'Draw the proposed architecture', 'Implement phase 1 of the spec'];
+
+export type Provides = {
+  project: Project.Project;
+  features: Feature.Feature[];
+  tasks: Task.Task[];
+  /** The events sheet the fixture task produced. */
+  fixture: Sheet.Sheet;
+};
 
 export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timeline', {
   // `Project.make` builds the project's outline and the instructions keep their prose as a Text.
@@ -153,20 +177,40 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
     Feature.Feature,
     Feature.DependsOn,
     Feature.Implements,
+    Sheet.Sheet,
+    Sheet.Chart,
   ],
   run: () =>
     Effect.gen(function* () {
+      const { sheet: events } = makeEvents();
+      const fixture = yield* Database.add(events);
+
       const taskSet = yield* Database.add(TaskSet.make({ name: 'Timeline' }));
-      const tasks = TASKS.map(({ title, description }) => Task.make({ title, description, status: 'todo' }));
+      const tasks = TASKS.map(({ title, description, fixture: isFixture }) =>
+        Task.make({
+          title,
+          description,
+          status: isFixture ? 'done' : 'todo',
+          ...(isFixture && { artifacts: [Ref.make(fixture)] }),
+        }),
+      );
       yield* SampleSpace.children(taskSet, tasks, (taskSet, refs) => {
         taskSet.tasks = refs;
       });
+      const taskOf = (title: string) => tasks[TASKS.findIndex((seed) => seed.title === title)];
+      for (const [index, title] of SEQUENCE.entries()) {
+        if (index > 0) {
+          Obj.update(taskOf(title), (task) => {
+            task.dependsOn = [Ref.make(taskOf(SEQUENCE[index - 1]))];
+          });
+        }
+      }
 
       const instructions = yield* Database.add(
         Instructions.make({
           name: 'Timeline',
           text: INSTRUCTIONS,
-          skills: [Ref.fromURI(Skill.registryURI(PROJECT_SKILL_KEY))],
+          skills: [PROJECT_SKILL_KEY, DRAWING_SKILL_KEY].map((key) => Ref.fromURI(Skill.registryURI(key))),
         }),
       );
       const project = yield* Database.add(
@@ -176,6 +220,7 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
           status: 'active',
           instructions: Ref.make(instructions),
           taskSet: Ref.make(taskSet),
+          artifacts: [Ref.make(fixture)],
         }),
       );
 
@@ -216,6 +261,6 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
         );
       }
 
-      return { project, features: [...byKey.values()], tasks };
+      return { project, features: [...byKey.values()], tasks, fixture };
     }),
 });
