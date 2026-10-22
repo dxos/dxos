@@ -224,8 +224,8 @@ code highlighter. Layouts are React components receiving `{ frontmatter, slots, 
 ## Phases
 
 1. **Presentation type + runtime** — schema, create action, app-graph folder and children, "Add to presentation"
-   picker (toggle off until Phase 4); `Deck`, `PresentationArticle`, `SlideFrame`, preview companion on the same
-   runtime; fullscreen toggle, toolbar and overlay pager (existing `Pager`), focus-scoped keys, view-state slide
+   picker (toggle off until Phase 4); `Deck`, `PresentationArticle`, `SlideFrame`; the preview companion keeps
+   `RevealPlayer` until Phase 3; fullscreen toggle, toolbar and overlay pager (existing `Pager`), focus-scoped keys, view-state slide
    index; delete `PresenterContext`, `StartButton`, `Layout`, `CollectionArticle`, `presentCollections`. Reveal
    still renders markdown slides.
 2. **`Pager` primitive** in `@dxos/react-ui`; presenter adopts it; `Carousel` styles and autocue `TakeStory`

@@ -7,7 +7,8 @@ Design: [DESIGN.md](./DESIGN.md).
 - [x] **Reorganize `src/components`** — one folder and story per component.
 - [x] **Agree the design** — Q1–Q7 decided (DESIGN.md decisions log).
 - [x] **Settle the slide DSL** — strict Slidev-compatible subset (Q8).
-- [ ] **Approve DESIGN.md**, then write the Phase 1 implementation plan.
+- [x] **Approve DESIGN.md** — approved 2026-10-22.
+- [ ] **Review [PLAN-PHASE-1.md](./PLAN-PHASE-1.md)** and pick an execution mode.
 - [ ] **Register the project** — blocked: Composer MCP server needs `/mcp` authorization.
 
 ## Phase 1: Presentation type + runtime
