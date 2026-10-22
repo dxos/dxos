@@ -450,7 +450,7 @@ test QA-3: Build and present a Presentation
 ```mdl
 decision D-1: A dedicated `Presentation` object owns an ordered list of sections, each an owned markdown `Text` or a link to any object, and is shown in the navtree as a folder of slides.
   date: 2026-10-22
-  by: user:rich@braneframe.com
+  by: user:richburdon
   affects: [Presentation, F-3, F-5]
   source: docs/DESIGN.md Q1
 ```
@@ -458,7 +458,7 @@ decision D-1: A dedicated `Presentation` object owns an ordered list of sections
 ```mdl
 decision D-2: One section is exactly one slide.
   date: 2026-10-22
-  by: user:rich@braneframe.com
+  by: user:richburdon
   affects: [F-3.2]
   source: docs/DESIGN.md Q2
 ```
@@ -466,7 +466,7 @@ decision D-2: One section is exactly one slide.
 ```mdl
 decision D-3: The markdown document companion stays as a quick preview split on `---`.
   date: 2026-10-22
-  by: user:rich@braneframe.com
+  by: user:richburdon
   affects: [DocumentArticle, F-2]
   source: docs/DESIGN.md Q2b
 ```
@@ -474,7 +474,7 @@ decision D-3: The markdown document companion stays as a quick preview split on 
 ```mdl
 decision D-4: An object without a slide surface still renders through a fallback chain ending in a title slide; the picker toggle filters to objects with a dedicated slide surface.
   date: 2026-10-22
-  by: user:rich@braneframe.com
+  by: user:richburdon
   affects: [SlideRenderer, F-4.9]
   source: docs/DESIGN.md Q3
 ```
@@ -482,7 +482,7 @@ decision D-4: An object without a slide surface still renders through a fallback
 ```mdl
 decision D-5: The current slide index is per-user, per-deck view state in `react-ui-attention` with the local backend.
   date: 2026-10-22
-  by: user:rich@braneframe.com
+  by: user:richburdon
   affects: [SlideViewState, F-4.7]
   source: docs/DESIGN.md Q4
 ```
@@ -490,7 +490,7 @@ decision D-5: The current slide index is per-user, per-deck view state in `react
 ```mdl
 decision D-6: The pager is a separate `Pager` primitive; `Carousel` shares its styles.
   date: 2026-10-22
-  by: user:rich@braneframe.com
+  by: user:richburdon
   affects: [Deck]
   source: docs/DESIGN.md Q5
 ```
@@ -498,7 +498,7 @@ decision D-6: The pager is a separate `Pager` primitive; `Carousel` shares its s
 ```mdl
 decision D-7: The assistant skill is annotated on `Presentation` only and `agentCanEnable`.
   date: 2026-10-22
-  by: user:rich@braneframe.com
+  by: user:richburdon
   affects: [Presentation]
   source: docs/DESIGN.md Q6
 ```
@@ -506,7 +506,7 @@ decision D-7: The assistant skill is annotated on `Presentation` only and `agent
 ```mdl
 decision D-8: A presenter view is deferred to a later phase; speaker notes are parsed now.
   date: 2026-10-22
-  by: user:rich@braneframe.com
+  by: user:richburdon
   affects: [Deck]
   source: docs/DESIGN.md Q7
 ```
@@ -514,7 +514,7 @@ decision D-8: A presenter view is deferred to a later phase; speaker notes are p
 ```mdl
 decision D-9: Slide syntax is a strict Slidev-compatible subset rendered by the plugin's own pipeline.
   date: 2026-10-22
-  by: user:rich@braneframe.com
+  by: user:richburdon
   affects: [F-2]
   source: docs/DESIGN.md Q8
 ```
@@ -523,7 +523,7 @@ decision D-9: Slide syntax is a strict Slidev-compatible subset rendered by the 
 decision D-10: Collection decks, the `presentCollections` setting and the Settings module are removed; a Presentation replaces them. Fills in [D-1].
   date: 2026-10-22
   by: agent:claude-code
-  for: user:rich@braneframe.com
+  for: user:richburdon
   affects: [Presentation, F-1, F-3]
   why: A first-class deck object makes the experimental collection mode redundant.
   rejected: Keeping collection decks behind the setting.
@@ -533,7 +533,7 @@ decision D-10: Collection decks, the `presentCollections` setting and the Settin
 decision D-11: Owned slides are parented to the presentation explicitly when created, not by a schema annotation. Fills in [D-1].
   date: 2026-10-22
   by: agent:claude-code
-  for: user:rich@braneframe.com
+  for: user:richburdon
   affects: [Presentation, F-3.8]
   why: A parent annotation would also adopt linked parentless objects, so deleting a Presentation could delete them.
   rejected: `Annotation.SetParent` on `sections`.
@@ -543,7 +543,7 @@ decision D-11: Owned slides are parented to the presentation explicitly when cre
 decision D-12: A Presentation presents fullscreen on its own plank. Fills in [D-4].
   date: 2026-10-22
   by: agent:claude-code
-  for: user:rich@braneframe.com
+  for: user:richburdon
   affects: [TogglePresentation, F-1.4, T-8]
   why: A Presentation has no presenter companion; its article is the deck.
   rejected: Giving Presentation a presenter companion.
@@ -553,7 +553,7 @@ decision D-12: A Presentation presents fullscreen on its own plank. Fills in [D-
 decision D-13: Fullscreen state is read per object, so a fullscreen change for one deck does not remount or refocus another. Fills in [D-12].
   date: 2026-10-22
   by: agent:claude-code
-  for: user:rich@braneframe.com
+  for: user:richburdon
   affects: [PresentationArticle, DocumentArticle]
   why: The global layout mode changes for every deck when any one toggles.
   rejected: Reading the global layout mode.
@@ -563,7 +563,7 @@ decision D-13: Fullscreen state is read per object, so a fullscreen change for o
 decision D-14: Clicking a slide child in the navtree opens that slide's own article, the markdown editor for an owned slide. Fills in [D-1].
   date: 2026-10-22
   by: agent:claude-code
-  for: user:rich@braneframe.com
+  for: user:richburdon
   affects: [F-5.4, SlideEditorArticle]
   why: Slides need an editing surface, and the navtree is where a slide is selected.
   rejected: Opening the presentation at that slide.
@@ -573,7 +573,7 @@ decision D-14: Clicking a slide child in the navtree opens that slide's own arti
 decision D-15: An owned slide's navtree label is its name, else its first heading, else "Slide N". Fills in [D-1].
   date: 2026-10-22
   by: agent:claude-code
-  for: user:rich@braneframe.com
+  for: user:richburdon
   affects: [F-5.2]
   why: The Text type carries a name field that a person sets deliberately, so it takes precedence.
 ```
@@ -582,7 +582,7 @@ decision D-15: An owned slide's navtree label is its name, else its first headin
 decision D-16: Removing an owned slide from the navtree is labelled "Remove from presentation". Fills in [D-1].
   date: 2026-10-22
   by: agent:claude-code
-  for: user:rich@braneframe.com
+  for: user:richburdon
   affects: [F-5.5]
   why: The generic label "Remove from collection" misdescribes a delete of the owned Text.
 ```
