@@ -771,6 +771,7 @@ export const AmbientReviewTest: Story = {
   args: {
     content: '# Hello World\n',
   },
+  // TODO(wittjosiah): Fails headless on every run: the seeded comment's `.cm-comment` highlight never renders.
   tags: ['!test'],
   parameters: {
     ambientReview: true,
@@ -824,6 +825,8 @@ export const EditingTypingTest: Story = {
   args: {
     content: '# Hello World\n\nBody paragraph.\n',
   },
+  // TODO(wittjosiah): Fails headless on every run: typing reaches the editor, but `doc.history` is never
+  //   initialized, which the play requires before it asserts no suggestion branch was spawned.
   tags: ['!test'],
   parameters: {
     ambientReview: true,

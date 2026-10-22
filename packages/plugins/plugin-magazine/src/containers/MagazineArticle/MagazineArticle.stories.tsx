@@ -180,6 +180,8 @@ const seedSpaceWithQueueItems = ({ client }: { client: Client }) =>
     yield* Effect.promise(() => space.db.flush());
   });
 
+// TODO(wittjosiah): Curation runs an agent, so this needs an AiService and cannot run in CI without a scripted
+//   model. `curate-magazine.test.ts` covers the deterministic path.
 export const CurateFlow: Story = {
   tags: ['!test'],
   decorators: [
