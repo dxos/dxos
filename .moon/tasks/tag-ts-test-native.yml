@@ -1,0 +1,49 @@
+$schema: https://moonrepo.dev/schemas/tasks.json
+tasks:
+  test-native:
+    # The node suite of a package that builds or loads native code. Named apart from `test` so the
+    # `:test` sweep never reaches a native compile; Check's `native` job runs every `:test-native`. The
+    # package adds its own `build-native` dependency.
+    # Otherwise the same as `tag-ts-test.yml`'s `test`, whose comments explain the command and inputs.
+    command: bash -c 'pnpm exec dx-killorphans vitest run --passWithNoTests --project=node --tagsFilter="${VITEST_TAGS_FILTER:-!flaky && !sync && !sync-e2e && !functions-e2e}" "$@"' --
+    deps:
+      - esbuild-plugins:build
+      - node-std:build
+      - vite-plugin-import-source:build
+      - vite-plugin-module-url:build
+      - ^:build
+      # Dependency packages' generated sources (e.g. the plugin capability barrels) must exist
+      # before tests resolve them under the source condition. Addressed by the `prebuild` task tag
+      # rather than a task name, since the generating task is named per what it generates.
+      - '^:#prebuild'
+    inputs:
+      - '@group(sources)'
+      - /vite.base.config.ts
+      - /vitest.base.config.ts
+      - /vitest.tags.ts # Ensure cache is invalidated when tag definitions change.
+      - vite.config.ts # Combined build + test config; most packages use this rather than `vitest.config.ts`.
+      - vitest.config.ts
+      - $NODE_VERSION # Ensure cache isn't shared between node versions in CI.
+      - $VITEST_COVERAGE
+      - $VITEST_DEBUG
+      - $VITEST_ENV
+      - $VITEST_XML_REPORT
+      - $VITEST_TAGS_FILTER
+      # Tag gating lives in `/vitest.tags.ts` and is read from the environment, so a cached result
+      # would otherwise replay a run in which the tagged suites were skipped.
+      - $DX_RUN_MANUAL_TESTS
+      - $DX_RUN_MODEL_FIXTURE_TESTS
+      - $DX_UPDATE_MODEL_FIXTURES
+      # Env-gated CPU-profile / leak-detect instrumentation (vite.base.config.ts); listed so toggling
+      # a var busts the cached test result instead of replaying an un-instrumented run.
+      - $DX_PROFILE_TESTS
+      - $DX_DEBUG_LEAKS
+      - $DX_DEBUG_LEAKS_DIR
+    outputs:
+      - /coverage/$project/node/**
+      - /test-results/$project/node/**
+    options:
+      timeout: 600
+
+inheritedBy:
+  tags: ts-test-native

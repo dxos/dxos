@@ -53,7 +53,7 @@ const PLUGIN_SETS: Record<string, string> = {
   mobile: 'src/plugin-defs.mobile.tsx',
 };
 const pluginSetFile = PLUGIN_SETS[process.env.DX_PLUGIN_SET ?? ''] ?? 'src/plugin-defs.tsx';
-// Non-empty only when a dev server is launched with the debug-port flag; see `src/vite/debug-port.ts`.
+// Non-empty unless `DX_DEBUG_PORT=false`; only `serve` uses it. See `src/vite/debug-port.ts`.
 const debugPortSession = resolveDebugPortSession();
 const isReducedPluginSet = pluginSetFile !== 'src/plugin-defs.tsx';
 // The Tauri CLI sets `TAURI_ENV_PLATFORM` for `beforeDevCommand`.
