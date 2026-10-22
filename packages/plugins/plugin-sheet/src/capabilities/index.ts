@@ -56,11 +56,17 @@ export const Markdown = Capability.lazyModule(
   },
   () => import('./markdown-extension.ts'),
 );
+// Migration providers stay eager: a migration missing when a space opens is a data hazard.
+export const Migrations = Capability.lazyModule(
+  'SheetMigrations',
+  { provides: [ClientCapabilities.Migration] },
+  () => import('./migrations.ts'),
+);
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
-  roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties', 'org.dxos.role.section'],
+  roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties', 'org.dxos.role.section', 'org.dxos.role.slide'],
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SheetState = Capability.lazyModule(

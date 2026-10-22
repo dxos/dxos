@@ -1222,6 +1222,13 @@ export const technologyTimeline: PlotValue[][] = [
     null,
   ],
   [
+    '2025-07',
+    'Macro/FIC',
+    'GENIUS Act',
+    'The first US federal law regulating stablecoins, requiring them to be fully backed by dollars or short-term Treasuries.',
+    null,
+  ],
+  [
     '2025-08',
     'Macro/TIC',
     'US takes stake in Intel',
@@ -1244,7 +1251,7 @@ export const technologyTimeline: PlotValue[][] = [
     null,
   ],
   [
-    '2027-06',
+    '2027-02',
     'Macro/MIC',
     'Major internet disruption from bot attack',
     'Speculative: an automated attack takes down large parts of the internet.',

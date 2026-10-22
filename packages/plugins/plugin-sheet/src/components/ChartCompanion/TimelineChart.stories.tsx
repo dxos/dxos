@@ -3,14 +3,12 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useState } from 'react';
+import React from 'react';
 
 import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { testFunctionPlugins } from '@dxos/compute-hyperformula/testing';
-import { Obj } from '@dxos/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { technologyTimelineColors, technologyTimelineOrder } from '@dxos/react-ui-plot/testing';
@@ -31,11 +29,9 @@ import { translations } from '#translations';
 import { Sheet } from '#types';
 
 import { useSheetContext } from '../SheetRoot/index.ts';
-import { ChartCompanion } from './ChartCompanion.tsx';
-import { useRangeValues } from './useRangeValues.ts';
+import { SheetCharts } from './SheetCharts.tsx';
 
-const timelineChart = (hidden?: string[]): Sheet.Chart => ({
-  id: 'technology',
+const timelineChart = (hidden?: string[]): Sheet.ChartProperties => ({
   name: 'Technology and macro',
   range: timelineTestRange,
   type: 'timeline',
@@ -43,31 +39,10 @@ const timelineChart = (hidden?: string[]): Sheet.Chart => ({
   timeline: { start: '1920', end: '2030', order: technologyTimelineOrder, colors: technologyTimelineColors, hidden },
 });
 
-/** The charts companion over the timeline test data, sharing the sheet's selection as an app container would. */
-const Companion = ({ hidden }: { hidden?: string[] }) => {
+/** The sheet's charts, as the app's charts companion shows them. */
+const Companion = () => {
   const { model } = useSheetContext();
-  const getValues = useRangeValues(model);
-  const [charts, setCharts] = useState<Sheet.Chart[]>(() => [timelineChart(hidden)]);
-  const contextId = Obj.getURI(model.sheet);
-  const selection = useSelection(contextId, 'range');
-  const { range: setSelection } = useSelectionActions(contextId);
-  const handleSelectRange = useCallback(
-    (range: string) => {
-      const [from, to = from] = range.toUpperCase().split(':');
-      setSelection(from, to);
-    },
-    [setSelection],
-  );
-
-  return (
-    <ChartCompanion
-      charts={charts}
-      onChange={setCharts}
-      getValues={getValues}
-      selection={selection && (selection.from === selection.to ? selection.from : `${selection.from}:${selection.to}`)}
-      onSelectRange={handleSelectRange}
-    />
-  );
+  return <SheetCharts sheet={model.sheet} model={model} />;
 };
 
 type StoryArgs = { mode?: SheetCompanionFrameMode; hidden?: string[] };
@@ -79,8 +54,9 @@ const DefaultStory = ({ mode, hidden }: StoryArgs) => (
       ranges: createTimelineTestRanges(),
       rows: timelineTestRows,
       columnSizes: timelineTestColumnSizes,
+      charts: [timelineChart(hidden)],
     }}
-    companion={<Companion hidden={hidden} />}
+    companion={<Companion />}
     label='Charts'
     icon='ph--chart-bar--regular'
     mode={mode}
@@ -93,7 +69,7 @@ const meta = {
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
-    withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
+    withClientProvider({ types: [Sheet.Sheet, Sheet.Chart], createSpace: true }),
     withComputeGraphDecorator({ plugins: testFunctionPlugins }),
     withPluginManager({ plugins: [ProcessManagerPlugin.make()] }),
     // Outermost, so the plugin manager's atom registry is not replaced by the decorator's own.
