@@ -26,6 +26,12 @@ const precacheTotal = new Set(precacheManifest.map((entry) => (typeof entry === 
  */
 const PRECACHE_PROGRESS = 'dxos:precache-progress';
 
+/**
+ * Posted to every window once a sample (`test`) push is shown, so the page that asked for one knows push works end to
+ * end. Mirrored in `@dxos/plugin-pwa`'s push provider — keep in sync.
+ */
+const PUSH_SAMPLE_SHOWN = 'dxos:push-sample-shown';
+
 /** Batches the per-entry ticks: a full manifest is thousands of entries, one message each is noise. */
 const PROGRESS_POST_INTERVAL = 25;
 
@@ -362,6 +368,11 @@ self.addEventListener('push', (event) => {
         data: { url },
       };
       await self.registration.showNotification(title, options);
+      if (message.test) {
+        for (const client of windows) {
+          client.postMessage({ type: PUSH_SAMPLE_SHOWN });
+        }
+      }
     })(),
   );
 });

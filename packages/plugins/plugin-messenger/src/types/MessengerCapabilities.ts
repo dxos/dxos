@@ -42,7 +42,8 @@ export const Settings = Capability.makeSingleton<Atom.Writable<Settings$.Setting
 );
 
 /** Where this device stands on push; see `PushRegistration` in `#push`. */
-export type PushStatus = 'unsupported' | 'off' | 'pending' | 'denied' | 'on' | 'failed';
+/** `unconfirmed`: registered with EDGE, but the sample push never reached this device. */
+export type PushStatus = 'unsupported' | 'off' | 'pending' | 'denied' | 'on' | 'unconfirmed' | 'failed';
 
 export interface PushNotifications {
   status: Atom.Atom<PushStatus>;

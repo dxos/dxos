@@ -6,7 +6,12 @@ import { describe, expect, test, vi } from 'vitest';
 
 import type * as AppPush from '@dxos/app-toolkit/AppPush';
 
-import { type PushManagerLike, type PushSubscriptionLike, makePushProvider } from './push-provider.ts';
+import {
+  type PushManagerLike,
+  type PushSubscriptionLike,
+  type WorkerMessagesLike,
+  makePushProvider,
+} from './push-provider.ts';
 
 /** Base64url of 65 bytes, the shape of a VAPID public key. */
 const KEY_A = 'B'.repeat(87);
@@ -45,18 +50,38 @@ class FakePushManager implements PushManagerLike {
   });
 }
 
+class FakeWorkerMessages implements WorkerMessagesLike {
+  readonly #listeners = new Set<(event: MessageEvent) => void>();
+
+  addEventListener = (_type: 'message', listener: (event: MessageEvent) => void) => {
+    this.#listeners.add(listener);
+  };
+
+  removeEventListener = (_type: 'message', listener: (event: MessageEvent) => void) => {
+    this.#listeners.delete(listener);
+  };
+
+  /** Delivers `data` as the service worker would post it. */
+  post(data: unknown) {
+    const event = new MessageEvent('message', { data });
+    this.#listeners.forEach((listener) => listener(event));
+  }
+}
+
 type SetupOptions = { supported?: boolean; permission?: AppPush.Permission; answer?: AppPush.Permission };
 
 const setup = ({ supported = true, permission = 'granted', answer = 'granted' }: SetupOptions = {}) => {
   const manager = new FakePushManager();
   const requestPermission = vi.fn(async () => answer);
+  const messages = new FakeWorkerMessages();
   const provider = makePushProvider({
     supported,
+    messages,
     pushManager: Promise.resolve(manager),
     permission: () => permission,
     requestPermission,
   });
-  return { provider, manager, requestPermission };
+  return { provider, manager, messages, requestPermission };
 };
 
 describe('makePushProvider', () => {
@@ -117,6 +142,7 @@ describe('makePushProvider', () => {
   test('a worker that never activates fails instead of hanging', async () => {
     const provider = makePushProvider({
       supported: true,
+      messages: undefined,
       pushManager: new Promise(() => {}),
       permission: () => 'granted',
       requestPermission: async () => 'granted',
@@ -131,6 +157,7 @@ describe('makePushProvider', () => {
     manager.subscribe.mockImplementation(() => new Promise<FakeSubscription>(() => {}));
     const provider = makePushProvider({
       supported: true,
+      messages: undefined,
       pushManager: Promise.resolve(manager),
       permission: () => 'granted',
       requestPermission: async () => 'granted',
@@ -140,11 +167,23 @@ describe('makePushProvider', () => {
     await expect(provider.subscribe({ applicationServerKey: KEY_A })).rejects.toThrow(/did not answer/);
   });
 
+  test('a sample shown by the worker is confirmed, and one that never comes is not', async () => {
+    const { provider, messages } = setup();
+
+    const confirmed = provider.waitForSample('1 second');
+    messages.post({ type: 'dxos:precache-progress' });
+    messages.post({ type: 'dxos:push-sample-shown' });
+    expect(await confirmed).toBe(true);
+
+    expect(await provider.waitForSample('10 millis')).toBe(false);
+  });
+
   test('an unsupported device has no subscription and refuses to subscribe', async () => {
     const { provider } = setup({ supported: false });
 
     expect(provider.supported).toBe(false);
     expect(await provider.current()).toBeUndefined();
+    expect(await provider.waitForSample('1 second')).toBe(false);
     await expect(provider.subscribe({ applicationServerKey: KEY_A })).rejects.toThrow();
   });
 });

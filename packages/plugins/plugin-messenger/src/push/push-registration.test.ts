@@ -17,9 +17,19 @@ const SUBSCRIPTION: AppPush.WebPushSubscription = {
   keys: { p256dh: 'p256dh', auth: 'auth' },
 };
 
-type FakeProviderOptions = { supported?: boolean; permission?: AppPush.Permission; answer?: AppPush.Permission };
+type FakeProviderOptions = {
+  supported?: boolean;
+  permission?: AppPush.Permission;
+  answer?: AppPush.Permission;
+  sampleShown?: boolean;
+};
 
-const makeProvider = ({ supported = true, permission = 'default', answer = 'granted' }: FakeProviderOptions = {}) => {
+const makeProvider = ({
+  supported = true,
+  permission = 'default',
+  answer = 'granted',
+  sampleShown = true,
+}: FakeProviderOptions = {}) => {
   let current: AppPush.DeviceSubscription | undefined;
   let state = permission;
   return {
@@ -37,6 +47,7 @@ const makeProvider = ({ supported = true, permission = 'default', answer = 'gran
     unsubscribe: vi.fn(async () => {
       current = undefined;
     }),
+    waitForSample: vi.fn(async () => sampleShown),
   } satisfies AppPush.Provider;
 };
 
@@ -79,6 +90,23 @@ describe('makePushRegistration', () => {
       keys: SUBSCRIPTION.keys,
       welcome: true,
     });
+  });
+
+  test('enable reads on only once the sample reaches the device, listening before asking for it', async () => {
+    const { provider, edge, registration } = setup();
+
+    expect(await registration.enable()).toBe('on');
+
+    expect(provider.waitForSample.mock.invocationCallOrder[0]).toBeLessThan(
+      edge.putPushSubscription.mock.invocationCallOrder[0],
+    );
+  });
+
+  test('a sample that never arrives leaves the device registered but unconfirmed', async () => {
+    const { edge, registration } = setup({ sampleShown: false });
+
+    expect(await registration.enable()).toBe('unconfirmed');
+    expect(edge.putPushSubscription).toHaveBeenCalledOnce();
   });
 
   test('a refused or dismissed prompt registers nothing', async () => {
@@ -152,6 +180,7 @@ describe('makePushRegistration', () => {
     expect(await registration.refresh()).toBe('on');
 
     expect(provider.requestPermission).not.toHaveBeenCalled();
+    expect(provider.waitForSample).not.toHaveBeenCalled();
     // A sample notification on every start would be noise; only the user's opt-in asks for one.
     expect(edge.putPushSubscription).toHaveBeenCalledWith(expect.objectContaining({ welcome: false }));
   });

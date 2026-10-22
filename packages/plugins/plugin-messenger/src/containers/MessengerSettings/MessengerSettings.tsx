@@ -55,7 +55,7 @@ export const MessengerSettings = ({ subject }: MessengerSettingsProps) => {
             actions={<SettingsScope.Root prefix={meta.profile.key} />}
           >
             {status !== 'on' && status !== 'off' && (
-              <Banner.Root valence={status === 'failed' ? 'error' : 'info'}>
+              <Banner.Root valence={status === 'failed' ? 'error' : status === 'unconfirmed' ? 'warning' : 'info'}>
                 <Banner.Body>
                   {t(`push-status-${status}.message`)}
                   {status === 'failed' && error && <span className='block'>{error}</span>}

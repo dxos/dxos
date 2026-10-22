@@ -63,7 +63,8 @@ export default Capability.makeModule(
       error,
       enable: async () => {
         const outcome = await registration.enable();
-        setOptedIn(outcome === 'on');
+        // An unconfirmed device is still registered: the fault is usually the OS hiding the browser's notifications.
+        setOptedIn(outcome === 'on' || outcome === 'unconfirmed');
         return outcome;
       },
       disable: async () => {

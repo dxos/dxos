@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Duration from 'effect/Duration';
+
 import type * as AppPush from '@dxos/app-toolkit/AppPush';
 import { log } from '@dxos/log';
 import { EdgeCallFailedError, type PushSubscribeRequest, type VapidPublicKeyResponse } from '@dxos/protocols';
@@ -27,7 +29,12 @@ export type PushRegistrationOptions = {
   edge: PushEdge;
   /** `error` describes a `failed` attempt. */
   setStatus: (status: PushStatus, error?: string) => void;
+  /** How long `enable` waits for the sample push before calling the device unconfirmed. */
+  sampleTimeout?: Duration.Input;
 };
+
+/** A sample normally arrives well under a second after EDGE sends it; this leaves room for a slow push service. */
+const DEFAULT_SAMPLE_TIMEOUT = Duration.seconds(10);
 
 export type PushRegistration = {
   /**
@@ -59,6 +66,7 @@ export const makePushRegistration = ({
   provider: currentProvider,
   edge,
   setStatus,
+  sampleTimeout = DEFAULT_SAMPLE_TIMEOUT,
 }: PushRegistrationOptions): PushRegistration => {
   const settle = (status: PushStatus): PushStatus => {
     setStatus(status);
@@ -77,7 +85,12 @@ export const makePushRegistration = ({
       throw error;
     }
     const { endpoint, keys } = await provider.subscribe({ applicationServerKey: publicKey });
+    // EDGE pushes the sample before it answers, so listening has to start first.
+    const sample = welcome ? provider.waitForSample(sampleTimeout) : undefined;
     await edge.putPushSubscription({ endpoint, keys, welcome });
+    if (sample && !(await sample)) {
+      return settle('unconfirmed');
+    }
     return settle('on');
   };
 

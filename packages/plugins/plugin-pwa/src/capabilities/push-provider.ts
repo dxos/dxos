@@ -5,6 +5,7 @@
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Predicate from 'effect/Predicate';
 
 import type * as AppPush from '@dxos/app-toolkit/AppPush';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -25,8 +26,21 @@ export type PushManagerLike = {
   }) => Promise<PushSubscriptionLike>;
 };
 
+/** Where the service worker's messages arrive (`navigator.serviceWorker`). */
+export type WorkerMessagesLike = {
+  addEventListener: (type: 'message', listener: (event: MessageEvent) => void) => void;
+  removeEventListener: (type: 'message', listener: (event: MessageEvent) => void) => void;
+};
+
+/** Posted by the host's service worker once it shows a sample push; mirrors `composer-app/src/sw.ts`. */
+const PUSH_SAMPLE_SHOWN = 'dxos:push-sample-shown';
+
+const isSampleShown = (data: unknown): boolean => Predicate.isObject(data) && data.type === PUSH_SAMPLE_SHOWN;
+
 export type PushProviderOptions = {
   supported: boolean;
+  /** Undefined where there is no service worker; a sample is then never confirmed. */
+  messages: WorkerMessagesLike | undefined;
   /** Resolves once the service worker is active, which push needs; `undefined` when registration failed. */
   pushManager: Promise<PushManagerLike | undefined>;
   permission: () => AppPush.Permission;
@@ -69,6 +83,7 @@ const toDeviceSubscription = (subscription: PushSubscriptionLike): AppPush.WebPu
 /** The web's push provider: the browser's push service, reached through the service worker registration. */
 export const makePushProvider = ({
   supported,
+  messages,
   pushManager: whenRegistered,
   permission,
   requestPermission,
@@ -123,6 +138,30 @@ export const makePushProvider = ({
         return;
       }
       await (await (await pushManager()).getSubscription())?.unsubscribe();
+    },
+    waitForSample: async (timeout) => {
+      if (!supported || !messages) {
+        return false;
+      }
+      let listener: ((event: MessageEvent) => void) | undefined;
+      // The executor runs now, so the listener is attached before the caller asks for the sample.
+      const shown = new Promise<void>((resolve) => {
+        listener = (event) => {
+          if (isSampleShown(event.data)) {
+            resolve();
+          }
+        };
+        messages.addEventListener('message', listener);
+      });
+      try {
+        return Option.isSome(
+          await EffectEx.runPromise(Effect.promise(() => shown).pipe(Effect.timeoutOption(timeout))),
+        );
+      } finally {
+        if (listener) {
+          messages.removeEventListener('message', listener);
+        }
+      }
     },
   };
 };

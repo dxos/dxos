@@ -4,6 +4,8 @@
 
 // @import-as-namespace
 
+import type * as Duration from 'effect/Duration';
+
 /**
  * Whether the user lets this app show notifications on this device, as the OS or browser reports it.
  * `default` means not asked yet.
@@ -40,4 +42,9 @@ export type Provider = {
   current: () => Promise<DeviceSubscription | undefined>;
   /** Drops this device's subscription; a no-op without one. */
   unsubscribe: () => Promise<void>;
+  /**
+   * Resolves true once this device shows a sample push, or false when `timeout` passes first. It starts listening
+   * on the call, so call it before asking for the sample: the push can arrive before the request returns.
+   */
+  waitForSample: (timeout: Duration.Input) => Promise<boolean>;
 };
