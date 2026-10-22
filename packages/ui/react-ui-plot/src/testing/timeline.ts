@@ -1146,7 +1146,7 @@ export const technologyTimeline: PlotValue[][] = [
   ],
   [
     '2025-08',
-    'Macro/FIC',
+    'Macro/TIC',
     'US takes a stake in Intel',
     'The US government takes about a 10% stake in Intel, converting CHIPS Act grants into equity.',
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/Intel_logo_2023.svg/500px-Intel_logo_2023.svg.png',
