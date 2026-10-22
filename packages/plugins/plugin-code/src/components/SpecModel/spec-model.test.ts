@@ -89,6 +89,7 @@ describe('spec model', () => {
     const ids = new Set(definitions.map(({ id }) => id));
     expect(edges.every(({ from, to }) => ids.has(from) && ids.has(to))).toBe(true);
     expect(dependents.get('CallTransport')).toBe(edges.filter(({ to }) => to === 'CallTransport').length);
+    expect(definitions.every(({ dependsOn }) => dependsOn.every((id) => ids.has(id)))).toBe(true);
   });
 
   test('keeps generic and compound parameter types whole', ({ expect }) => {

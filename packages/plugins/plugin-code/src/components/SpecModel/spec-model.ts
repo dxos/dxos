@@ -251,7 +251,11 @@ export const selectDefinitions = (
   exclude: Iterable<string>,
 ): DefinitionSelection => {
   const excluded = new Set(exclude);
-  const kept = definitions.filter(({ kind }) => !excluded.has(kind));
+  const keptIds = new Set(definitions.filter(({ kind }) => !excluded.has(kind)).map(({ id }) => id));
+  // Narrowed too, so a card's "uses" count matches the arrows drawn.
+  const kept = definitions
+    .filter(({ id }) => keptIds.has(id))
+    .map((definition) => ({ ...definition, dependsOn: definition.dependsOn.filter((id) => keptIds.has(id)) }));
   const byId = new Map(kept.map((definition) => [definition.id, definition]));
   const keptEdges = edges.filter(({ from, to }) => byId.has(from) && byId.has(to));
   const dependents = new Map<string, number>();

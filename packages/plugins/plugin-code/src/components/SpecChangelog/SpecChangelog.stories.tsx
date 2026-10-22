@@ -59,9 +59,18 @@ export const SwitchViews: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const panel = await waitFor(() => canvas.getByTestId('spec-changelog.panel'), TIMEOUT);
-    for (const view of ['log', 'definitions', 'data', 'api', 'decisions']) {
+    for (const [view, child] of [
+      ['log', 'decision-log.decision'],
+      ['definitions', 'definition-graph.definition'],
+      ['data', 'data-model.type'],
+      ['api', 'api-surface.op'],
+      ['decisions', 'changelog-graph.decision'],
+    ] as const) {
       await userEvent.click(canvas.getByTestId(`spec-changelog.view.${view}`));
-      await waitFor(() => expect(panel.dataset.view).toBe(view));
+      await waitFor(async () => {
+        await expect(panel.dataset.view).toBe(view);
+        await expect(canvas.getAllByTestId(child).length).toBeGreaterThan(0);
+      }, TIMEOUT);
     }
   },
 };
