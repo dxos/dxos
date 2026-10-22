@@ -28,7 +28,10 @@ import { FocusContext, type FocusState } from './FocusContext.ts';
 //
 
 type FocusGroupProps = {
-  orientation?: Axis;
+  /** `grid` moves to the member on screen in the arrow's direction; `grid-linear` does so for up and down only. */
+  orientation?: Axis | 'grid' | 'grid-linear';
+  /** Names the members at any depth, instead of the group's top-level focusables (e.g. a board's cards). */
+  itemSelector?: string;
   /** A separator-coloured border while unfocused (e.g. a grid cell's edge). */
   border?: boolean;
   onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void;
@@ -39,14 +42,14 @@ type FocusGroupProps = {
  * leaves it. Members report a state (`useFocus().setFocus`) that colours the group's ring.
  */
 const FocusGroup = slottable<HTMLDivElement, FocusGroupProps>(
-  ({ children, asChild, orientation = 'vertical', border, onKeyDown, ...props }, forwardedRef) => {
+  ({ children, asChild, orientation = 'vertical', itemSelector, border, onKeyDown, ...props }, forwardedRef) => {
     const rootRef = useRef<HTMLDivElement>(null);
     const {
       ref: focusGroupRef,
       onKeyDown: onFocusGroupKeyDown,
       onFocus: onFocusGroupFocus,
       ...focusGroupAttrs
-    } = useFocusGroup({ axis: orientation, tabBehavior: 'limited-trap-focus', memorizeCurrent: true });
+    } = useFocusGroup({ axis: orientation, itemSelector, tabBehavior: 'limited-trap-focus', memorizeCurrent: true });
     const [state, setState] = useState<FocusState | undefined>();
     const [groupHasFocus, setGroupHasFocus] = useState(false);
     const context = useMemo(() => ({ setFocus: setState, groupHasFocus }), [groupHasFocus]);
@@ -107,8 +110,14 @@ FocusGroup.displayName = 'Focus.Group';
 //
 
 type FocusItemProps = {
-  /** Controlled `aria-current`; otherwise the item is current while it has focus. */
+  /** `aria-current`: the item is where the user is ("you are here"), set by the caller; focus alone does not set it. */
   current?: boolean;
+  /**
+   * `aria-selected`: the item is selected in its collection, drawn by the shared selected edge (`focus.css`). A selectable
+   * item is an `option` unless it names its own role (e.g. `gridcell`); its collection must be the matching `listbox` or
+   * `grid`.
+   */
+  selected?: boolean;
   /** A separator-coloured border while unfocused. */
   border?: boolean;
   /** Called on click and on `Enter`. */
@@ -120,14 +129,16 @@ type FocusItemProps = {
  * rather than moving into it, and `Escape` returns focus to it.
  */
 const FocusItem = slottable<HTMLDivElement, FocusItemProps>(
-  ({ children, asChild, current, border, onCurrentChange, onClick, onFocus, onBlur, ...props }, forwardedRef) => {
+  (
+    { children, asChild, current, selected, border, onCurrentChange, onClick, onFocus, onBlur, ...props },
+    forwardedRef,
+  ) => {
     const {
       ref: focusGroupRef,
       onKeyDown: onFocusGroupKeyDown,
       onFocus: _onFocusGroupFocus,
       ...focusGroupAttrs
     } = useFocusGroup({ tabBehavior: 'unlimited', ignoreKeys: ['Enter'] });
-    const [focused, setFocused] = useState(false);
 
     const handleClick = useCallback(
       (event: MouseEvent<HTMLDivElement>) => {
@@ -147,25 +158,6 @@ const FocusItem = slottable<HTMLDivElement, FocusItemProps>(
       [onFocusGroupKeyDown, onCurrentChange],
     );
 
-    const handleFocus = useCallback(
-      (event: FocusEvent<HTMLDivElement>) => {
-        setFocused(true);
-        onFocus?.(event);
-      },
-      [onFocus],
-    );
-
-    const handleBlur = useCallback(
-      (event: FocusEvent<HTMLDivElement>) => {
-        setFocused(false);
-        onBlur?.(event);
-      },
-      [onBlur],
-    );
-
-    // A controlled `current` wins, so a virtualized item scrolled back into view keeps its state.
-    const isCurrent = current ?? focused;
-
     const { className, ...rest } = composableProps(props, { classNames: recipes.focusItem() });
     return (
       <ark.div
@@ -176,12 +168,16 @@ const FocusItem = slottable<HTMLDivElement, FocusItemProps>(
         data-scope='focus'
         data-part='item'
         data-border={border ? '' : undefined}
-        aria-current={isCurrent || undefined}
+        // Focus is drawn by the focus ring; `current` and `selected` are the caller's states, never inferred from it.
+        aria-current={current || undefined}
+        // `aria-selected` is only valid on a selectable role, so a selectable item without one is an option.
+        role={rest.role ?? (selected === undefined ? undefined : 'option')}
+        aria-selected={selected}
         className={className}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
+        onFocus={onFocus}
+        onBlur={onBlur}
         ref={useComposedRefs<HTMLDivElement>(forwardedRef, focusGroupRef)}
       >
         {children}
@@ -191,7 +187,39 @@ const FocusItem = slottable<HTMLDivElement, FocusItemProps>(
 );
 
 FocusItem.displayName = 'Focus.Item';
-export type { FocusGroupProps as GroupProps, FocusItemProps as ItemProps };
 
-export { FocusGroup as Group, FocusItem as Item };
+//
+// ItemBinding
+//
+
+/**
+ * A collection item's selection and activation, as a selection hook (`useListSelection`) gives it. Every collection
+ * (a list, a masonry, a mosaic stack or board) takes one per item as `itemProps(id)`, so they select alike.
+ */
+type FocusItemBinding = {
+  'aria-selected'?: boolean;
+  'onClick'?: (event: MouseEvent) => void;
+  'onFocus'?: (event: FocusEvent) => void;
+  /** Clicked, or Enter pressed while the item itself has focus (e.g. to open it). */
+  'onActivate'?: (event: MouseEvent | KeyboardEvent) => void;
+};
+
+/** The item element's props for a binding: activation fires on click and on the item's own Enter, not a control's. */
+const bindItem = (binding: FocusItemBinding | undefined) => ({
+  'aria-selected': binding?.['aria-selected'],
+  'onClick': (event: MouseEvent) => {
+    binding?.onClick?.(event);
+    binding?.onActivate?.(event);
+  },
+  'onFocus': binding?.onFocus,
+  'onKeyDown': (event: KeyboardEvent) => {
+    if (event.key === 'Enter' && event.target === event.currentTarget) {
+      binding?.onActivate?.(event);
+    }
+  },
+});
+
+export type { FocusGroupProps as GroupProps, FocusItemBinding as ItemBinding, FocusItemProps as ItemProps };
+
+export { FocusGroup as Group, FocusItem as Item, bindItem };
 export { type FocusContextValue, type FocusState, useFocus } from './FocusContext.ts';
