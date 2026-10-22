@@ -357,7 +357,11 @@ export class Session extends Resource {
   }
 }
 
-const connectMcpServers = (
+/**
+ * Opens the MCP servers for one iteration of a turn, closed with the scope. A server that cannot be
+ * reached is reported in the trace and left out, so it never fails the turn.
+ */
+export const connectMcpServers = (
   servers: readonly McpToolkit.Options[],
 ): Effect.Effect<OpaqueToolkit.OpaqueToolkit[], never, Trace.TraceService | Scope.Scope> => {
   if (servers.length === 0) {
