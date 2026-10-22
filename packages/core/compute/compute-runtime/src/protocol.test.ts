@@ -124,7 +124,8 @@ describe('ECHO flush on exit', () => {
       );
 
     expect(Process.RunAgainError.is(error)).toBe(true);
-    await expect.poll(() => db.getObjectById(id), { timeout: 2_000 }).toBeDefined();
+    const reopened = await peer.openDatabase(db.spaceKey, db.rootUrl, { client: await peer.createClient() });
+    expect(await reopened.query(Filter.id(id)).run()).toHaveLength(1);
   });
 });
 
