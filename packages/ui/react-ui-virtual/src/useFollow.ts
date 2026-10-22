@@ -43,6 +43,8 @@ export type FollowHandle = {
    * near the top of a sticky feed moved the list a few pixels and no further.
    */
   onNavigate: (index: number) => void;
+  /** Follows from where the reader rests at the tail, without the re-arrival a jump makes. */
+  pin: () => void;
 };
 
 export type UseFollowOptions = {
@@ -265,9 +267,6 @@ export const useFollow = ({
   // arrival, and an opening still settling (the reserve lands a beat after the first write) would
   // otherwise be glided as if the reader had watched it.
   const positioned = useRef(false);
-  const arriveAgain = useCallback(() => {
-    positioned.current = false;
-  }, []);
 
   useLayoutEffect(() => {
     const scroller = scrollerRef.current;
@@ -363,15 +362,21 @@ export const useFollow = ({
       const wants = index >= countRef.current - 1;
       setFollowing(!!enabled && wants);
       if (wants) {
-        arriveAgain();
+        // A jump to the tail lands on estimates, so it arrives afresh and settles against the paint.
+        positioned.current = false;
       } else {
         follower?.cancel();
       }
     },
-    [enabled, follower, setFollowing, arriveAgain],
+    [enabled, follower, setFollowing],
   );
+
+  const pin = useCallback(() => setFollowing(!!enabled), [enabled, setFollowing]);
 
   // Stable across appends, so controllers built over it do not churn per model change; `atEnd` and
   // `following` change only when the reader crosses the threshold or turns back, which is not an append.
-  return useMemo(() => ({ atEnd, following: followingState, onNavigate }), [atEnd, followingState, onNavigate]);
+  return useMemo(
+    () => ({ atEnd, following: followingState, onNavigate, pin }),
+    [atEnd, followingState, onNavigate, pin],
+  );
 };
