@@ -5,12 +5,19 @@
 import { type PlotValue } from '../types.ts';
 
 /**
- * Events from 1977 to 2026, a header row then one per row (with a Wikipedia image where one is free to use), dated by month (or by year where the month is uncertain).
+ * Events from 1954 to 2028, a header row then one per row (with a Wikipedia image where one is free to use), dated by month (or by year where the month is uncertain).
  * Categories nest by path: `Tech/` (Hardware, Software, AI), `Macro` and its military- (MIC), financial- (FIC) and
  * tech-industrial (TIC) complexes, and `Personal` (a resume).
  */
 export const technologyTimeline: PlotValue[][] = [
   ['Date', 'Category', 'Event', 'Description', 'Image'],
+  [
+    '1954',
+    'Tech/Hardware',
+    'Curta Type 2',
+    'The larger model of Curt Herzstark’s handheld mechanical calculator.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/Curta_-_National_Museum_of_Computing.jpg/500px-Curta_-_National_Museum_of_Computing.jpg',
+  ],
   [
     '1977-09',
     'Tech/Hardware',
@@ -24,13 +31,6 @@ export const technologyTimeline: PlotValue[][] = [
     'Globalization era begins',
     'Trade liberalization and freer capital flows expand worldwide.',
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8b/Early_migrations_mercator.svg/500px-Early_migrations_mercator.svg.png',
-  ],
-  [
-    '1980',
-    'Personal',
-    'Curta Type 2',
-    'Curta Type 2 mechanical calculator, 1980.',
-    'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/Curta_-_National_Museum_of_Computing.jpg/500px-Curta_-_National_Museum_of_Computing.jpg',
   ],
   ['1980-05', 'Tech/Software', 'Pac-Man', 'Namco’s maze game becomes the best-known arcade game of all time.', null],
   ['1980-11', 'Personal', 'Sinclair Scientific Calculator', 'Sinclair Scientific Calculator, November 1980.', null],
