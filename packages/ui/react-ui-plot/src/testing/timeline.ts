@@ -97,6 +97,12 @@ export const technologyTimeline: PlotValue[][] = [
     'Boeing–McDonnell Douglas merger',
     'Consolidation leaves a handful of prime defense contractors.',
   ],
+  [
+    '1997-08',
+    'Tech/AI',
+    'Skynet becomes self-aware',
+    'Fiction: in Terminator 2, Skynet becomes self-aware on August 29, 1997.',
+  ],
   ['1998-02', 'Tech/Software', '“Open source”', 'The term is coined and Netscape releases its browser’s source code.'],
   ['1998-03', 'Personal', 'Industrial Light & Magic', 'Senior FX Engineer, Mar 1998 – May 1999.'],
   ['1998-05', 'Macro/TIC', 'US v. Microsoft', 'Antitrust case over bundling Internet Explorer with Windows.'],
