@@ -31,7 +31,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** The prompts the demo sends, in order. */
-export const PROMPTS = {
+const PROMPTS = {
   compare: 'Compare three savings plans for $10,000 at 4%, 6% and 8% a year over 30 years.',
   quick: 'Meanwhile, what is 17 × 23?',
 } as const;

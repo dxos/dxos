@@ -31,7 +31,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** The prompts the demo sends, in order: a long job, then requests that arrive while it runs. */
-export const PROMPTS = {
+const PROMPTS = {
   research: 'Research the factorials of 5 to 9 and summarise them.',
   quick: 'Meanwhile, what is 17 × 23?',
   capital: 'And what is the capital of Australia?',
