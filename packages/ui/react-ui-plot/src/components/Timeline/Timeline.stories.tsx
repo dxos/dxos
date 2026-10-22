@@ -53,7 +53,13 @@ export const Log: Story = {
 
 export const TwoColumns: Story = {
   args: {
-    hidden: ['Robotics', 'MIC', 'FIC', 'TIC'],
+    hidden: ['Robotics', 'MIC', 'FIC', 'TIC', 'Resume'],
+  },
+};
+
+export const TechAndResume: Story = {
+  args: {
+    hidden: ['Macro', 'Robotics', 'MIC', 'FIC', 'TIC'],
   },
 };
 

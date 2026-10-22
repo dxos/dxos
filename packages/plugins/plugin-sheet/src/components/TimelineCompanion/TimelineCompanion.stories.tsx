@@ -36,10 +36,10 @@ import { TimelineCompanion } from './TimelineCompanion.tsx';
 const initialTimeline: Sheet.Timeline = { range: timelineTestRange, header: true, start: '1980', end: '2030' };
 
 /** The companion reads the sheet's selection through the `Selection` view state, as an app container would. */
-const Companion = () => {
+const Companion = ({ hidden }: Pick<Sheet.Timeline, 'hidden'>) => {
   const { model } = useSheetContext();
   const getValues = useRangeValues(model);
-  const [timeline, setTimeline] = useState<Sheet.Timeline | undefined>(initialTimeline);
+  const [timeline, setTimeline] = useState<Sheet.Timeline | undefined>({ ...initialTimeline, hidden });
   const selection = useSelection(Obj.getURI(model.sheet), 'range');
 
   return (
@@ -52,9 +52,9 @@ const Companion = () => {
   );
 };
 
-type StoryArgs = { mode?: SheetCompanionFrameMode };
+type StoryArgs = { mode?: SheetCompanionFrameMode } & Pick<Sheet.Timeline, 'hidden'>;
 
-const DefaultStory = ({ mode }: StoryArgs) => (
+const DefaultStory = ({ mode, hidden }: StoryArgs) => (
   <SheetCompanionFrame
     sheet={{
       cells: createTimelineTestCells(),
@@ -62,7 +62,7 @@ const DefaultStory = ({ mode }: StoryArgs) => (
       rows: timelineTestRows,
       columnSizes: timelineTestColumnSizes,
     }}
-    companion={<Companion />}
+    companion={<Companion hidden={hidden} />}
     label='Timeline'
     icon='ph--line-segments--regular'
     mode={mode}
@@ -96,5 +96,11 @@ export const Default: Story = {};
 export const Timeline: Story = {
   args: {
     mode: 'end',
+  },
+};
+
+export const TechAndResume: Story = {
+  args: {
+    hidden: ['Macro', 'Robotics', 'MIC', 'FIC', 'TIC'],
   },
 };
