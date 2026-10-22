@@ -84,9 +84,11 @@ A block may name something outside its document by **source key**:
 | A code symbol       | `github:dxos/dxos/packages/sdk/types/src/types/Spec.ts#make`   | Symbol (`A.b` ok)   |
 | A whole file        | `github:dxos/dxos/packages/apps/composer-app/vite.config.ts`   | none                |
 
-Keys are written inline in any field or prose. Tools resolve them against a local checkout of the
-repository: the spec viewer draws the named blocks and symbols beside the document's own and opens
-them on Ctrl/⌘-click. A key is a location, not a version: it names whatever the checkout holds.
+A spec writes keys inline to name blocks of other specs. It does not name the code that implements
+it: those links are annotations kept outside the spec (a review's `evidence:`, see `review.mdl`),
+and the spec viewer renders them as decorations beside the items they annotate. Tools resolve keys
+against a local checkout of the repository. A key is a location, not a version: it names whatever
+the checkout holds.
 
 ---
 

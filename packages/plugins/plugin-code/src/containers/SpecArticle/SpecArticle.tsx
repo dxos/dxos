@@ -47,7 +47,9 @@ import {
   ReviewPanel,
   buildChangelogGraph,
   decisionGutter,
+  implementationChips,
   parseReview,
+  reviewAnnotations,
   reviewGutter,
   sourceLinks,
 } from '#components';
@@ -253,6 +255,8 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
               setSelectedVerdict(id);
               setView('review');
             }),
+          // Links to the implementing code are annotations from the review, not spec text.
+          review && implementationChips(reviewAnnotations(review), (target) => void open(target)),
           // Live two-way binding only when editing an ECHO Spec; static content is rendered via `value`.
           spec &&
             target &&
@@ -331,7 +335,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
                       reviewKey={reviewKey}
                       selected={selectedVerdict}
                       onSelect={selectVerdict}
-                      onOpen={(evidence) => void open(evidence)}
+                      onOpenCode={(target) => void open(target)}
                     />
                   )}
                   {view === 'code' &&

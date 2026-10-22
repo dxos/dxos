@@ -15,4 +15,5 @@ export * from './CodeView/index.ts';
 export * from './ReviewPanel/index.ts';
 export * from './SpecChangelog/index.ts';
 export * from './SpecEditor/index.ts';
+export * from './VerdictCard/index.ts';
 export * from './SpecModel/index.ts';

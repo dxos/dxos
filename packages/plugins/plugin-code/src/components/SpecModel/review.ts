@@ -5,7 +5,16 @@
 import { parseMdlBlocks } from '@dxos/deus/extension';
 import type * as Tag from '@dxos/react-ui/Tag';
 
-import { parseFields } from './spec-model.ts';
+import { parseSourceKey } from '#sync';
+
+import { type Annotation, parseFields } from './spec-model.ts';
+
+/** A review's evidence as annotations: the spec's links to the code that implements each item. */
+export const reviewAnnotations = (review: ReviewModel | undefined): Annotation[] =>
+  (review?.verdicts ?? []).flatMap(({ id, evidence }) => {
+    const keys = evidence.map(parseSourceKey).filter((key) => key !== undefined);
+    return keys.length > 0 ? [{ id, keys }] : [];
+  });
 
 /**
  * How far the code meets one spec item, least severe first: `done` as specified, `untested` present but with no test

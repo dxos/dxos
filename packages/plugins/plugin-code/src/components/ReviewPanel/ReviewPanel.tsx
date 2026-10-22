@@ -2,36 +2,51 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useEffect, useRef } from 'react';
+import React, { createContext, forwardRef, useCallback, useContext, useMemo } from 'react';
 
+import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import * as Focus from '@dxos/react-ui/Focus';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Tag from '@dxos/react-ui/Tag';
-import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
-import { type SourceKey, parseSourceKey } from '#sync';
+import { type SourceKey } from '#sync';
 
-import { type ReviewModel, STATUS_STYLE, VERDICT_STATUSES, summarizeReview } from '../SpecModel/index.ts';
+import { type ReviewModel, STATUS_STYLE, type Verdict, VERDICT_STATUSES, summarizeReview } from '../SpecModel/index.ts';
+import { VerdictCard } from '../VerdictCard/index.ts';
 
 export type ReviewPanelProps = {
   review?: ReviewModel;
   /** Where the review was looked for, shown when there is none yet. */
   reviewKey?: string;
+  /** The current verdict; kept in step with the item selected in the spec. */
   selected?: string;
-  /** A verdict's id: reveal the item in the spec. */
+  /** A verdict became current, or its menu asked to show the item: reveal it in the spec. */
   onSelect?: (id: string) => void;
-  /** An evidence key: open the code. */
-  onOpen?: (key: SourceKey) => void;
+  onOpenCode?: (key: SourceKey) => void;
 };
 
-/** The latest compliance review of a spec: counts per status, then every verdict, worst first, with its evidence. */
-export const ReviewPanel = ({ review, reviewKey, selected, onSelect, onOpen }: ReviewPanelProps) => {
+/** Mosaic tiles get only their item, so the panel's handlers reach them through context. */
+const ReviewPanelContext = createContext<Pick<ReviewPanelProps, 'onSelect' | 'onOpenCode'>>({});
+
+/**
+ * The latest compliance review of a spec: counts per status, then every verdict, worst first, as a list of cards.
+ * The list is the shared card container: arrow keys move the current card, and the current card follows the spec.
+ */
+export const ReviewPanel = ({ review, reviewKey, selected, onSelect, onOpenCode }: ReviewPanelProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const selectedRef = useRef<HTMLDivElement>(null);
-  useEffect(() => selectedRef.current?.scrollIntoView({ block: 'nearest' }), [selected]);
+  const verdicts = useMemo(
+    () =>
+      [...(review?.verdicts ?? [])].sort(
+        (a, b) => VERDICT_STATUSES.indexOf(b.status) - VERDICT_STATUSES.indexOf(a.status),
+      ),
+    [review],
+  );
+  const handlers = useMemo(() => ({ onSelect, onOpenCode }), [onSelect, onOpenCode]);
+  const handleCurrentChange = useCallback((id: string | undefined) => id && onSelect?.(id), [onSelect]);
 
   if (!review) {
     return (
@@ -42,70 +57,50 @@ export const ReviewPanel = ({ review, reviewKey, selected, onSelect, onOpen }: R
     );
   }
 
-  const verdicts = [...review.verdicts].sort(
-    (a, b) => VERDICT_STATUSES.indexOf(b.status) - VERDICT_STATUSES.indexOf(a.status),
-  );
-
   return (
-    <ScrollArea.Root orientation='vertical' data-testid='review-panel'>
-      <ScrollArea.Viewport>
-        <Layout.Flex column gap='sm' classNames='p-3'>
-          <Layout.Flex wrap gap='xs' classNames='items-center text-xs text-description'>
-            {review.by && <span>{review.by}</span>}
-            {review.date && <span>· {review.date}</span>}
-            {review.commit && <code>· {review.commit.slice(0, 10)}</code>}
-          </Layout.Flex>
-          <Layout.Flex wrap gap='xs'>
-            {summarizeReview(review).map(({ status, count }) => (
-              <Tag.Tag key={status} hue={STATUS_STYLE[status].hue} data-testid={`review-panel.count.${status}`}>
-                <Icon.Icon icon={STATUS_STYLE[status].icon} size='xs' />
-                {count} {STATUS_STYLE[status].label}
-              </Tag.Tag>
-            ))}
-          </Layout.Flex>
-          {verdicts.map((verdict) => (
-            <div
-              key={verdict.id}
-              ref={verdict.id === selected ? selectedRef : undefined}
-              className={mx(
-                'flex flex-col gap-1 p-2 rounded-sm border border-separator',
-                verdict.id === selected && 'ring-2 ring-accent-focus-indicator',
-              )}
-              data-testid='review-panel.verdict'
-              data-verdict={verdict.id}
-              data-status={verdict.status}
-            >
-              <Layout.Flex gap='xs' classNames='items-center'>
-                <Tag.Tag hue={STATUS_STYLE[verdict.status].hue}>{STATUS_STYLE[verdict.status].label}</Tag.Tag>
-                <button
-                  type='button'
-                  className='font-mono text-sm hover:underline whitespace-nowrap shrink-0'
-                  onClick={() => onSelect?.(verdict.id)}
-                >
-                  {verdict.id}
-                </button>
-                {verdict.summary && <span className='text-sm truncate'>{verdict.summary}</span>}
-              </Layout.Flex>
-              {verdict.note && <p className='text-sm text-description'>{verdict.note}</p>}
-              {verdict.evidence.map((raw) => {
-                const key = parseSourceKey(raw);
-                return (
-                  <button
-                    key={raw}
-                    type='button'
-                    disabled={!key}
-                    className='text-start font-mono text-xs text-accent-text hover:underline truncate'
-                    title={raw}
-                    onClick={() => key && onOpen?.(key)}
-                  >
-                    {key ? `${key.path.split('/').pop()}${key.fragment ? `#${key.fragment}` : ''}` : raw}
-                  </button>
-                );
-              })}
-            </div>
+    <ReviewPanelContext.Provider value={handlers}>
+      <Layout.Flex column classNames='h-full min-h-0' data-testid='review-panel'>
+        <Layout.Flex wrap gap='xs' classNames='p-2 items-center text-xs text-description'>
+          {summarizeReview(review).map(({ status, count }) => (
+            <Tag.Tag key={status} hue={STATUS_STYLE[status].hue} data-testid={`review-panel.count.${status}`}>
+              <Icon.Icon icon={STATUS_STYLE[status].icon} size='xs' />
+              {count} {STATUS_STYLE[status].label}
+            </Tag.Tag>
           ))}
+          <span>{[review.by, review.date, review.commit?.slice(0, 10)].filter(Boolean).join(' · ')}</span>
         </Layout.Flex>
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
+        <Focus.Group asChild>
+          <Mosaic.Container asChild currentId={selected} onCurrentChange={handleCurrentChange}>
+            <ScrollArea.Root orientation='vertical' classNames='grow'>
+              <ScrollArea.Viewport>
+                <Mosaic.Stack
+                  Tile={VerdictTile}
+                  items={verdicts}
+                  getId={(verdict: Verdict) => verdict.id}
+                  draggable={false}
+                />
+              </ScrollArea.Viewport>
+            </ScrollArea.Root>
+          </Mosaic.Container>
+        </Focus.Group>
+      </Layout.Flex>
+    </ReviewPanelContext.Provider>
   );
 };
+
+type VerdictTileProps = Pick<MosaicTileProps<Verdict>, 'location' | 'data' | 'current'>;
+
+const VerdictTile = forwardRef<HTMLDivElement, VerdictTileProps>(({ data, location, current }, forwardedRef) => {
+  const { onSelect, onOpenCode } = useContext(ReviewPanelContext);
+  const { setCurrentId } = useMosaicContainer('VerdictTile');
+  const handleCurrentChange = useCallback(() => setCurrentId(data.id), [data.id, setCurrentId]);
+  return (
+    <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={data.id} data={data} location={location}>
+      <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+        <VerdictCard verdict={data} onReveal={onSelect} onOpenCode={onOpenCode} ref={forwardedRef} />
+      </Focus.Item>
+    </Mosaic.Tile>
+  );
+});
+
+VerdictTile.displayName = 'VerdictTile';

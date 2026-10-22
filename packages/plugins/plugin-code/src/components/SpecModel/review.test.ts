@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { findSymbolLine } from '../CodeView/symbol.ts';
-import { parseReview, statusOf, summarizeReview } from './review.ts';
+import { parseReview, reviewAnnotations, statusOf, summarizeReview } from './review.ts';
 import { buildDefinitionGraph } from './spec-model.ts';
 
 const fence = (body: string) => ['```mdl', body, '```'].join('\n');
@@ -107,6 +107,31 @@ describe('external definitions', () => {
       kind: 'spec',
       external: { resolved: false },
     });
+  });
+});
+
+describe('implementation annotations', () => {
+  test('a review links items to code outside the spec text; a req hangs off its feature', ({ expect }) => {
+    const spec = [
+      fence(['feat F-1: Open things', '  req F-1.1: The action is registered.'].join('\n')),
+      fence('type Thing'),
+    ].join('\n\n');
+    const annotations = reviewAnnotations(parseReview(REVIEW));
+    expect(annotations).toEqual([
+      {
+        id: 'F-1.1',
+        keys: [{ owner: 'dxos', repo: 'dxos', path: 'packages/plugins/plugin-x/src/a.ts', fragment: 'openThing' }],
+      },
+    ]);
+    const graph = buildDefinitionGraph(spec, new Map(), annotations);
+    const code = 'github:dxos/dxos/packages/plugins/plugin-x/src/a.ts#openThing';
+    expect(graph.definitions.find(({ id }) => id === 'F-1')?.dependsOn).toEqual([code]);
+    expect(graph.definitions.find(({ id }) => id === code)).toMatchObject({
+      kind: 'code',
+      external: { target: 'code' },
+    });
+    // Without annotations the spec text names no code, so there is no code box.
+    expect(buildDefinitionGraph(spec).definitions.some(({ kind }) => kind === 'code')).toBe(false);
   });
 });
 

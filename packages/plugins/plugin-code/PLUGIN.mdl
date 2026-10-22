@@ -138,9 +138,8 @@ component SpecArticle
     Article surface for a Spec, laid out as an IDE page: the MDL editor beside a
     panel of views (definitions graph, review, code, decisions, data model, API).
     Uses `react-ui-editor`'s Editor primitives with the `mdl()` extensions.
-    Source keys in the text are links (F-15); the latest review marks each
-    reviewed item (F-16). Implemented by
-    github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx#SpecArticle.
+    Source keys to other specs are links (F-15); the latest review marks each
+    reviewed item and links it to its code (F-16).
   props:
     role: string
     subject?: Spec
@@ -154,9 +153,9 @@ component SpecArticle
     ┌──────────────────────────┬──────────────────────────────┐
     │ key · sync status        │ [Defs|Review|Code|…]         │
     ├──────────────────────────┼──────────────────────────────┤
-    │ ```mdl          [Done]   │  ┌─────┐   ┌ ─ ─ ─ ┐         │
+    │ ```mdl   [</> make][Done]│  ┌─────┐   ┌ ─ ─ ─ ┐         │
     │ feat F-1: …   [Missing]  │  │ F-1 │──▶  Obj (echo)      │
-    │   github:…#make  ← link  │  └─────┘   └ ─ ─ ─ ┘         │
+    │   github:…SPEC.mdl#Obj   │  └─────┘   └ ─ ─ ─ ┘         │
     └──────────────────────────┴──────────────────────────────┘
 ```
 
@@ -683,10 +682,8 @@ feat F-14: Two-way spec sync with a local checkout
   req F-14.3: Every 2 seconds each linked Spec is reconciled three-way against the
               last text both sides agreed on: a change on one side flows to the
               other; with no base, or when both changed, the file wins.
-              Implemented by github:dxos/dxos/packages/plugins/plugin-code/src/sync/spec-sync.ts#reconcile.
-  req F-14.4: A pull applies a minimal text diff
-              (github:dxos/dxos/packages/core/echo/echo-doc/src/Doc.ts#updateText),
-              so open editors keep their cursors.
+  req F-14.4: A pull applies a minimal text diff, so open editors keep their
+              cursors.
   req F-14.5: The dev route reads files only inside its roots (the workspace and
               `DX_SPEC_ROOTS`) and writes only `.mdl` files.
   req F-14.6: op:importSpec links a file to a new Spec, or returns the Spec that
@@ -694,20 +691,19 @@ feat F-14: Two-way spec sync with a local checkout
 ```
 
 ```mdl
-feat F-15: Source-key references to other specs and code
+feat F-15: Source-key references to other specs
   desc: |
-    A spec names a block of another spec or a code symbol by source key with a
-    fragment, e.g. github:dxos/dxos/packages/core/echo/echo/SPEC.mdl#Database or
-    github:dxos/dxos/packages/sdk/types/src/types/Spec.ts#make.
+    A spec names a block of another spec by source key with a fragment, e.g.
+    github:dxos/dxos/packages/core/echo/echo/SPEC.mdl#Database. Links to the code
+    that implements a spec are not spec text; they are annotations (F-16.5).
 
-  req F-15.1: The definitions graph draws each named external block or symbol as a
-              dashed box with an edge from the block that names it; another spec's
-              block is described from that spec's text when its checkout is known.
+  req F-15.1: The definitions graph draws each named external block as a dashed
+              box with an edge from the block that names it, described from the
+              other spec's text when its checkout is known.
   req F-15.2: Ctrl/⌘-click on a key in the editor, or double-click on an external
-              box, opens it: a code key in the Code view at its symbol, another
-              spec's key as its own synced Spec.
-  req F-15.3: The Code view reveals the symbol's declaration line, and opens the
-              file in VS Code where the host knows its local path.
+              box, opens the other spec as its own synced Spec.
+  req F-15.3: The Code view shows a source file at a symbol's declaration line,
+              and opens the file in VS Code where the host knows its local path.
 ```
 
 ```mdl
@@ -722,8 +718,15 @@ feat F-16: Compliance review annotations
               the margin; a chip opens the verdict in the Review view.
   req F-16.3: Each definitions-graph box gets a status badge; a feature shows the
               worst status of its requirements.
-  req F-16.4: The Review view lists verdicts worst first; an evidence key opens
-              the code at its symbol.
+  req F-16.4: The Review view lists verdicts worst first as cards in a list: each
+              card shows its status icon and item id, with a menu top right that
+              shows the item in the spec or opens its code; the current card
+              follows the item selected in the spec.
+  req F-16.5: A verdict's evidence keys are the spec's links to its code: each
+              reviewed item's declaration line gets a chip per symbol in the
+              margin, beside the decision chips, and the definitions graph draws
+              the symbols as dashed code boxes. A chip click or a box double-click
+              opens the Code view at the symbol.
 ```
 
 ## Acceptance
@@ -1083,6 +1086,41 @@ decision D-10: A review is a `<SPEC>.review.mdl` beside the spec with one `verdi
   affects: [F-16]
   why: An `.mdl` file reuses the parser, syncs through the same file service, and diffs in review like the spec.
   rejected: A JSON sidecar; a section inside the spec, which would make every review a spec change.
+```
+
+```mdl
+decision D-11: Links from a spec to the code that implements it are not part of the spec. They are annotations from another source, rendered as decorations in the editor, the same as the decision chips.
+  date: 2026-10-22
+  by: user:dmaretskyi
+  supersedes: D-5
+  affects: [SpecArticle, F-15, F-16.5]
+```
+
+```mdl
+decision D-12: The annotation source is the latest review: each verdict's evidence keys become chips on the item's declaration line and dashed code boxes on the definitions graph, and both open the Code view at the symbol. Fills in [D-11].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-16.5, F-15.3]
+  why: A review already maps each item to its code with checked evidence keys, so no second index is needed and the links stay current with each review.
+  rejected: A separate code-map sidecar file; a symbol index built from the code.
+```
+
+```mdl
+decision D-13: Every leaf node is a card or an article, so users meet the same anatomy everywhere (an icon, a menu top right); cards are hosted by one of four containers (masonry, canvas, kanban, list) that share navigation, selection, highlighting, reactivity and scrolling, and each container has a storybook with fixtures. A review verdict is such a card.
+  date: 2026-10-22
+  by: user:dmaretskyi
+  affects: [F-16.4]
+```
+
+```mdl
+decision D-14: A verdict is a VerdictCard (status icon, item id, menu: show in spec, open code) in the list container (Mosaic stack); its stories use the real plugin-file-system review as their fixture. Fills in [D-13].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-16.4]
+  why: The list container already provides keyboard navigation and a current item that can follow the spec; a real review exercises every status.
+  rejected: One read-only form per verdict, which gave every verdict three labelled rows and no menu.
 ```
 
 ---

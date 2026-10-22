@@ -24,6 +24,7 @@ import {
   type VerdictStatus,
   buildDefinitionGraph,
   kindStyle,
+  reviewAnnotations,
   selectDefinitions,
   statusOf,
 } from '../SpecModel/index.ts';
@@ -109,9 +110,16 @@ const STATUS_TEXT: Record<VerdictStatus, string> = {
   missing: 'text-error-text',
 };
 
-type KindLegendProps = { kinds: string[]; acceptance: boolean; onAcceptanceChange: (acceptance: boolean) => void };
+type KindLegendProps = {
+  kinds: string[];
+  acceptance: boolean;
+  onAcceptanceChange: (acceptance: boolean) => void;
+  /** Absent when no annotation links the spec to code, so the switch is not offered. */
+  code?: boolean;
+  onCodeChange: (code: boolean) => void;
+};
 
-const KindLegend = ({ kinds, acceptance, onAcceptanceChange }: KindLegendProps) => {
+const KindLegend = ({ kinds, acceptance, onAcceptanceChange, code, onCodeChange }: KindLegendProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <Layout.Flex
@@ -132,6 +140,14 @@ const KindLegend = ({ kinds, acceptance, onAcceptanceChange }: KindLegendProps) 
         label={t('definition-graph.acceptance.label')}
         data-testid='definition-graph.acceptance'
       />
+      {code !== undefined && (
+        <Input.Switch
+          checked={code}
+          onCheckedChange={({ checked }) => onCodeChange(checked)}
+          label={t('definition-graph.code.label')}
+          data-testid='definition-graph.code'
+        />
+      )}
     </Layout.Flex>
   );
 };
@@ -141,7 +157,7 @@ export type DefinitionGraphProps = {
   content: string;
   /** Other specs this one names by `github:` key, so their blocks can be described. */
   specs?: SpecTexts;
-  /** The latest compliance review; its verdicts badge the cards. */
+  /** The latest compliance review; its verdicts badge the cards and its evidence adds the code boxes. */
   review?: ReviewModel;
   /** Block kinds to leave out. */
   exclude?: string[];
@@ -153,8 +169,8 @@ export type DefinitionGraphProps = {
 
 /**
  * Every definition of a spec on a lattice, with an arrow from each to the definitions it names, so the
- * spec reads top-down from features to the types they rest on. Blocks of other specs and code symbols the spec
- * names by `github:` key are drawn as dashed boxes.
+ * spec reads top-down from features to the types they rest on. Blocks of other specs the spec names by `github:` key,
+ * and the code symbols the review links its items to, are drawn as dashed boxes.
  */
 export const DefinitionGraph = ({
   content,
@@ -165,11 +181,13 @@ export const DefinitionGraph = ({
   onActivate,
 }: DefinitionGraphProps) => {
   const [acceptance, setAcceptance] = useState(defaultAcceptance);
+  const [code, setCode] = useState(true);
+  const annotations = useMemo(() => reviewAnnotations(review), [review]);
   // A key rather than the array, so a caller passing a fresh literal each render does not re-lay out the graph.
-  const excludeKey = [...exclude, ...(acceptance ? [] : ACCEPTANCE_KINDS)].join(',');
+  const excludeKey = [...exclude, ...(acceptance ? [] : ACCEPTANCE_KINDS), ...(code ? [] : ['code'])].join(',');
   const model = useMemo(
-    () => selectDefinitions(buildDefinitionGraph(content, specs), excludeKey.split(',')),
-    [content, specs, excludeKey],
+    () => selectDefinitions(buildDefinitionGraph(content, specs, annotations), excludeKey.split(',')),
+    [content, specs, annotations, excludeKey],
   );
   const graph = useMemo<GraphModel>(
     () => ({
@@ -207,7 +225,13 @@ export const DefinitionGraph = ({
   return (
     <div className='contents' onDoubleClick={handleDoubleClick}>
       <LatticeGraph graph={graph} renderNode={renderNode} lattice={LATTICE} arrange='force'>
-        <KindLegend kinds={model.kinds} acceptance={acceptance} onAcceptanceChange={setAcceptance} />
+        <KindLegend
+          kinds={model.kinds}
+          acceptance={acceptance}
+          onAcceptanceChange={setAcceptance}
+          code={annotations.length > 0 ? code : undefined}
+          onCodeChange={setCode}
+        />
       </LatticeGraph>
     </div>
   );

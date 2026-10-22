@@ -265,21 +265,38 @@ const externalDefinition = (key: SourceKey, specs: SpecTexts): DefinitionModel =
   };
 };
 
+/** Keys attached to a spec item from outside its text, e.g. a review's evidence; `id` may name a nested req (`F-1.2`). */
+export type Annotation = { id: string; keys: readonly SourceKey[] };
+
 /**
  * Every definition of a spec with an edge to each other definition its title or body names, plus a node for each
- * block of another spec or code symbol it names by `github:` key, so a spec's graph shows what it rests on elsewhere.
+ * block of another spec it names by `github:` key and for each code symbol an annotation links to one of its items,
+ * so a spec's graph shows what it rests on elsewhere and where it is implemented.
  */
-export const buildDefinitionGraph = (text: string, specs: SpecTexts = new Map()): DefinitionGraphModel => {
+export const buildDefinitionGraph = (
+  text: string,
+  specs: SpecTexts = new Map(),
+  annotations: readonly Annotation[] = [],
+): DefinitionGraphModel => {
   const blocks = definitionBlocks(text);
   const ids = new Set(blocks.map(({ id }) => id));
   const externals = new Map<string, DefinitionModel>();
+  const link = (key: SourceKey): string => {
+    const external = externals.get(formatSourceKey(key)) ?? externalDefinition(key, specs);
+    externals.set(external.id, external);
+    return external.id;
+  };
+  // A requirement's annotation hangs off its feature, the box the graph draws.
+  const annotated = new Map<string, SourceKey[]>();
+  for (const { id, keys } of annotations) {
+    const owner = resolveToken(id, ids);
+    if (owner) {
+      annotated.set(owner, [...(annotated.get(owner) ?? []), ...keys]);
+    }
+  }
   const definitions = blocks.map(({ type, id, title, body }): DefinitionModel => {
     const prose = `${title ?? ''}\n${body}`;
-    const linked = findSourceKeys(prose).map(({ key }) => {
-      const external = externals.get(formatSourceKey(key)) ?? externalDefinition(key, specs);
-      externals.set(external.id, external);
-      return external.id;
-    });
+    const linked = [...findSourceKeys(prose).map(({ key }) => key), ...(annotated.get(id) ?? [])].map(link);
     return {
       id,
       kind: type,
