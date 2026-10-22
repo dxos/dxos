@@ -747,10 +747,11 @@ export const Timeline = ({
                       strokeOpacity={0.6}
                       strokeDasharray='6,4'
                     />
+                    {/* In the axis gutter, below the line, where no event label is drawn. */}
                     <text
-                      x={width - PADDING / 2}
-                      y={yOf(now) - 6}
-                      textAnchor='end'
+                      x={PADDING / 2}
+                      y={yOf(now) + 6}
+                      dominantBaseline='hanging'
                       fill='currentColor'
                       fontWeight={600}
                     >

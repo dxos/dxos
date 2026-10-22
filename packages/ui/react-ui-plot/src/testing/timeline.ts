@@ -47,6 +47,13 @@ export const technologyTimeline: PlotValue[][] = [
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/Curta_-_National_Museum_of_Computing.jpg/500px-Curta_-_National_Museum_of_Computing.jpg',
   ],
   [
+    '1961-01',
+    'Macro/MIC',
+    'Military–industrial complex named',
+    'In his farewell address, Eisenhower warns against the unwarranted influence of the military–industrial complex.',
+    'https://upload.wikimedia.org/wikipedia/commons/1/15/Eisenhower_farewell.jpg',
+  ],
+  [
     '1970-01',
     'Tech/Software',
     'Unix epoch',
