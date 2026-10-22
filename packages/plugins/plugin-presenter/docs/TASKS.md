@@ -31,6 +31,9 @@ Design: [DESIGN.md](./DESIGN.md).
 
 ### Phase 1 follow-ups
 
+- [ ] Picker shows "Untitled Presentation" while the navtree shows "New presentation" for unnamed presentations; use one fallback.
+- [ ] Slide editor preview: slide text renders very small in the preview column (running-app check 2).
+- [ ] `f` only toggles fullscreen when the deck has focus; consider an article-level binding.
 - [ ] Add index-clamp tests for `addSlide` / `link` / `move`, and verify `move`'s `Ref.fromURI` resolves in a live db.
 - [ ] Unit-check that `schema.ts` lists `Presentation` and the create entry id equals the typename.
 - [ ] Key duplicate links as `${id}:${index}` at render if duplicates become reachable.
