@@ -165,6 +165,13 @@ export const technologyTimeline: PlotValue[][] = [
     'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/S%26P_500_index_around_the_time_of_the_crash.png/500px-S%26P_500_index_around_the_time_of_the_crash.png',
   ],
   [
+    '1988',
+    'Tech/Hardware',
+    'Zenith SupersPort',
+    'Zenith Data Systems’ line of IBM PC compatible laptops, sold from 1988 to 1993.',
+    'https://thumb.wikimedia.org/wikipedia/commons/thumb/5/58/Zenith_supersPORT_%281%29.jpg/500px-Zenith_supersPORT_%281%29.jpg',
+  ],
+  [
     '1989-11',
     'Macro',
     'Berlin Wall falls',
