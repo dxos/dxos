@@ -26,7 +26,7 @@ const TWENTY_MIN = 20 * 60_000;
 const SIXTY_MIN = 60 * 60_000;
 
 /** A plugin card in the registry list, by its display name. */
-export const card = (name) => `li[data-testid^="pluginList."]:has(span:text-is("${name}"))`;
+export const card = (name) => `[role="listitem"][data-testid^="pluginList."]:has(h3:text-is("${name}"))`;
 
 /** Agent stretches play at this factor, with the trimmer's fast-forward badge on screen. */
 const FAST = 10;
@@ -461,6 +461,12 @@ export const makeSteps = ({ template: TEMPLATE, project: PROJECT, plugin: PLUGIN
           timeout: 60_000,
         });
         await page.waitForTimeout(BEAT);
+        // The finale starts in the space's navtree, where the plugin adds its group; the registry leaves Plugins open.
+        const spaceId = await page.evaluate((key) => globalThis[key], TAKE_SPACE);
+        await demo.click({
+          selector: `[data-testid="spacePlugin.space"][data-object-id="root/${spaceId}"]`,
+          label: TEMPLATE,
+        });
       },
     },
     ...finale,
