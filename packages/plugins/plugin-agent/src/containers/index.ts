@@ -7,6 +7,7 @@ import { type ComponentType, lazy } from 'react';
 export const AgentActivity: ComponentType<any> = lazy(() => import('./AgentActivity/index.ts'));
 export const AgentEmailSetup: ComponentType<any> = lazy(() => import('./AgentEmailSetup/index.ts'));
 export const AgentKnowledge: ComponentType<any> = lazy(() => import('./AgentKnowledge/index.ts'));
+export const AgentsDebug: ComponentType<any> = lazy(() => import('./AgentsDebug/index.ts'));
 export const AgentPrivateChat: ComponentType<any> = lazy(() => import('./AgentPrivateChat/index.ts'));
 export const AgentsPanel: ComponentType<any> = lazy(() => import('./AgentsPanel/index.ts'));
 export const AgentsSettings: ComponentType<any> = lazy(() => import('./AgentsSettings/index.ts'));

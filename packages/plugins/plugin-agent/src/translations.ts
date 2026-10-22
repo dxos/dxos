@@ -80,6 +80,7 @@ export const translations = [
         'activity-stop.label': 'Disconnect channels',
         'create-agent.label': 'Add agent',
         'agents-panel.label': 'Agents',
+        'agents-debug.label': 'Agents',
         'agents-panel.description':
           'The agents you administer. Every agent has a space of its own, and the members who can edit it are its admins.',
         'agents-panel-empty.message':
