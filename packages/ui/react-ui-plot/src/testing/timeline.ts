@@ -123,6 +123,7 @@ export const technologyTimeline: PlotValue[][] = [
   ['2013-12', 'Robotics', 'Google buys Boston Dynamics', 'One of a string of robotics acquisitions by Google.'],
   ['2014-02', 'Tech', 'Slack', 'Slack launches team messaging.'],
   ['2014-11', 'MIC', 'Third Offset strategy', 'The Pentagon bets on AI and autonomy to keep its edge.'],
+  ['2015', 'Resume', 'X-Google', 'X-Google, 2015.'],
   ['2015-05', 'Tech', 'Discord', 'Discord launches voice and chat communities.'],
   ['2015-07', 'Tech', 'Ethereum', 'Ethereum launches programmable smart contracts.'],
   ['2016-06', 'Macro', 'Brexit vote', 'The UK votes to leave the European Union.'],
@@ -146,6 +147,7 @@ export const technologyTimeline: PlotValue[][] = [
     'OpenAI shows that generative pre-training of a transformer transfers to many language tasks.',
   ],
   ['2018-07', 'Macro', 'US–China trade war', 'Tariffs escalate between the two largest economies.'],
+  ['2019', 'Resume', 'Wireline', 'Wireline, 2019.'],
   [
     '2019-02',
     'Tech',
