@@ -754,6 +754,24 @@ feat F-16: Compliance review annotations
               exercised, with a chip per test file that opens the test's code.
 ```
 
+```mdl
+feat F-17: Diff mode
+  desc: |
+    Reviewing a spec on a branch means reading what changed since the branch's base, in the text
+    and in the definitions graph.
+
+  req F-17.1: SpecArticle shows the checkout's branch, or its open pull request as a
+              link, and offers diff mode against the pull request's base (else the
+              default branch) at the commit the branch forked from, or against HEAD.
+  req F-17.2: In diff mode the editor shows removed lines in place, faded and struck
+              through, and new lines tinted; unchanged runs can be folded.
+  req F-17.3: In diff mode the definitions graph also draws what the base had: new
+              definitions and arrows green, changed definitions amber, removed ones
+              faded and dashed, with counts in the legend.
+  req F-17.4: Git is read through the FileSystem service's read-only `git` queries
+              (status, file at a commit), which the dev route answers.
+```
+
 ## Acceptance
 
 ```mdl
@@ -1204,6 +1222,41 @@ decision D-20: Reviews judge `scenario` and `test` blocks by whether automation 
 decision D-21: The Coder skill's introspect-mcp server is the built-in DXOS Introspect MCP server, from plugin code with no object in the space and off in a chat by default; the skill no longer declares it, and its instructions tell the agent to turn it on when it needs the tools.
   date: 2026-10-21
   by: user:wittjosiah
+```
+
+```mdl
+decision D-22: The spec viewer has a diff mode based on git: on a branch it diffs against the base quickly and detects the branch's pull request; it shows what was added and removed since the base, in the text and in the visualizations.
+  date: 2026-10-23
+  by: user:dmaretskyi
+  affects: [F-17]
+```
+
+```mdl
+decision D-23: The base is the commit where the branch forked from the pull request's base branch, else the remote's default branch; a second choice diffs against HEAD to show only uncommitted changes. Fills in [D-22].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-17.1]
+  why: Diffing against the tip of the base branch would show changes landed there since the fork as reversals on this branch.
+```
+
+```mdl
+decision D-24: Diff mode marks the definitions graph only, not the data model, API or decision views. Fills in [D-22].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-17.3]
+  why: The definitions graph covers every block, so it shows what the other views would.
+```
+
+```mdl
+decision D-25: Git is reached through new read-only `git` queries on the FileSystem service, answered by the dev route; the desktop app does not offer them yet. Fills in [D-22].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-17.4]
+  why: The dev route already runs git, while the desktop app would need a new shell scope for git.
+  rejected: Reading `.git` objects directly, which needs packfile and zlib decoding in the page.
 ```
 
 ---

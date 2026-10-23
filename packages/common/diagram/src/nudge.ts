@@ -56,7 +56,7 @@ const simplify = (points: readonly Point[]): Point[] => {
   });
 };
 
-const runsOf = (points: readonly Point[], owner: number): Run[] =>
+const computeRuns = (points: readonly Point[], owner: number): Run[] =>
   points.slice(0, -1).flatMap((from, start): Run[] => {
     const to = points[start + 1];
     const axis: Axis | undefined =
@@ -67,6 +67,48 @@ const runsOf = (points: readonly Point[], owner: number): Run[] =>
     const [a, b] = [along(axis, from), along(axis, to)];
     return [{ owner, start, axis, coord: across(axis, from), lo: Math.min(a, b), hi: Math.max(a, b) }];
   });
+
+/**
+ * Runs by line, reused while the line is unchanged: scoring a candidate rereads every line, but a candidate replaces
+ * only the lines it moves, so the rest keep their arrays and their runs.
+ */
+const runsCache = new WeakMap<readonly Point[], Run[]>();
+
+const runsOf = (points: readonly Point[], owner: number): Run[] => {
+  const cached = runsCache.get(points);
+  if (cached && (cached.length === 0 || cached[0].owner === owner)) {
+    return cached;
+  }
+  const runs = computeRuns(points, owner);
+  runsCache.set(points, runs);
+  return runs;
+};
+
+type Box = { minX: number; minY: number; maxX: number; maxY: number };
+
+const boxCache = new WeakMap<readonly Point[], Box>();
+
+/** A line's bounding box; two lines whose boxes are apart can neither share a run nor cross. */
+const boxOf = (points: readonly Point[]): Box => {
+  let box = boxCache.get(points);
+  if (!box) {
+    box = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+    for (const { x, y } of points) {
+      box.minX = Math.min(box.minX, x);
+      box.minY = Math.min(box.minY, y);
+      box.maxX = Math.max(box.maxX, x);
+      box.maxY = Math.max(box.maxY, y);
+    }
+    boxCache.set(points, box);
+  }
+  return box;
+};
+
+const apart = (left: Box, right: Box): boolean =>
+  left.maxX < right.minX - EPSILON ||
+  right.maxX < left.minX - EPSILON ||
+  left.maxY < right.minY - EPSILON ||
+  right.maxY < left.minY - EPSILON;
 
 const shared = (left: Run, right: Run): boolean =>
   left.axis === right.axis &&
@@ -106,22 +148,26 @@ const pairCount = (
   changed: ReadonlySet<number>,
   related: (a: Run, b: Run) => boolean,
   perRun = false,
+  scope?: readonly number[],
 ) => {
-  const runs = lines.map((points, owner) => runsOf(points, owner));
   let count = 0;
   for (const owner of changed) {
-    runs.forEach((others, other) => {
-      if (other === owner || (changed.has(other) && other < owner)) {
-        return;
+    const box = boxOf(lines[owner]);
+    const own = runsOf(lines[owner], owner);
+    for (const other of scope ?? lines.keys()) {
+      const points = lines[other];
+      if (other === owner || (changed.has(other) && other < owner) || apart(box, boxOf(points))) {
+        continue;
       }
+      const others = runsOf(points, other);
       if (perRun) {
-        for (const run of runs[owner]) {
+        for (const run of own) {
           count += others.filter((candidate) => related(run, candidate)).length;
         }
-      } else if (runs[owner].some((run) => others.some((candidate) => related(run, candidate)))) {
+      } else if (own.some((run) => others.some((candidate) => related(run, candidate)))) {
         count++;
       }
-    });
+    }
   }
   return count;
 };
@@ -297,14 +343,51 @@ const separate = (
 
   const changedOf = (offsets: Map<Run, number>) =>
     new Set([...offsets].filter(([, offset]) => offset !== 0).map(([run]) => run.owner));
+  // Every candidate moves only this channel's lines, and by at most the largest offset, so only the lines and boxes
+  // near them can change a count; the rest are left out of the scoring.
+  const reach =
+    Math.max(...assignments.flatMap(({ offsets }) => [...offsets.values()].map((offset) => Math.abs(offset))), 0) +
+    EPSILON;
+  const region = channel
+    .map((run) => boxOf(lines[run.owner]))
+    .reduce(
+      (union, box) => ({
+        minX: Math.min(union.minX, box.minX - reach),
+        minY: Math.min(union.minY, box.minY - reach),
+        maxX: Math.max(union.maxX, box.maxX + reach),
+        maxY: Math.max(union.maxY, box.maxY + reach),
+      }),
+      { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity },
+    );
+  const scope = [...lines.keys()].filter((index) => !apart(region, boxOf(lines[index])));
+  const nearObstacles = obstacles.filter(
+    (rect) => !apart(region, { minX: rect.x, minY: rect.y, maxX: rect.x + rect.w, maxY: rect.y + rect.h }),
+  );
+
   const obstructed = (candidate: readonly Point[][], owners: ReadonlySet<number>) =>
     [...owners].reduce(
       (total, owner) =>
         total +
-        runsOf(candidate[owner], owner).filter((run) => obstacles.some((rect) => interiorRun(run, rect) > EPSILON))
+        runsOf(candidate[owner], owner).filter((run) => nearObstacles.some((rect) => interiorRun(run, rect) > EPSILON))
           .length,
       0,
     );
+
+  // The current lines' counts depend only on which lines a candidate moves, and many candidates move the same ones.
+  const before = new Map<string, { overlaps: number; crossings: number; obstructed: number }>();
+  const beforeOf = (changed: ReadonlySet<number>) => {
+    const key = [...changed].sort((a, b) => a - b).join(',');
+    let counts = before.get(key);
+    if (!counts) {
+      counts = {
+        overlaps: pairCount(lines, changed, shared, true, scope),
+        crossings: pairCount(lines, changed, crosses, false, scope),
+        obstructed: obstructed(lines, changed),
+      };
+      before.set(key, counts);
+    }
+    return counts;
+  };
 
   let best: Candidate | undefined;
   for (const { offsets, reversed } of assignments) {
@@ -328,15 +411,14 @@ const separate = (
     if (!valid) {
       continue;
     }
-    const overlaps = pairCount(candidate, changed, shared, true);
-    const crossings = pairCount(candidate, changed, crosses);
-    const overlapsBefore = pairCount(lines, changed, shared, true);
+    const overlaps = pairCount(candidate, changed, shared, true, scope);
+    const { overlaps: overlapsBefore, crossings: crossingsBefore, obstructed: obstructedBefore } = beforeOf(changed);
+    if (overlaps >= overlapsBefore) {
+      continue;
+    }
+    const crossings = pairCount(candidate, changed, crosses, false, scope);
     // A crossing still reads as two lines and a shared run does not, so each overlap resolved may cost one crossing.
-    if (
-      overlaps >= overlapsBefore ||
-      crossings - pairCount(lines, changed, crosses) > overlapsBefore - overlaps ||
-      obstructed(candidate, changed) > obstructed(lines, changed)
-    ) {
+    if (crossings - crossingsBefore > overlapsBefore - overlaps || obstructed(candidate, changed) > obstructedBefore) {
       continue;
     }
     const travel = [...offsets.values()].reduce((total, offset) => total + Math.abs(offset), 0);

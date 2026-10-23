@@ -110,13 +110,8 @@ export const DYNAMIC_VIEW_ID = 'dynamic';
 /** Rank rows top-down along the edges; columns are the order within a row. Overrides win. */
 export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: DynamicOptions): View => {
   const { pitch, size } = options.lattice ? latticeSlots(options.lattice) : { ...DEFAULTS, ...options };
-  const ids = graph.nodes.map(({ id }) => id);
-  const known = new Set(ids);
-  const edges = graph.edges.filter(({ from, to }) => known.has(from) && known.has(to));
-  const ranks = Layout.rank(ids, edges);
-  const seed = arrange(new Map(ids.map((id) => [id, ranks.get(id) ?? 0])), edges, options.arrange, options.force);
-  const slots =
-    options.arrange === 'routed' && options.lattice ? routedSlots(graph, edges, seed, options, options.lattice) : seed;
+  const known = new Set(graph.nodes.map(({ id }) => id));
+  const slots = slotsOf(graph, options);
 
   // Taken from the slots rather than from the placed nodes, so dragging a node (which only writes an
   // override) leaves the rest of the graph where it is.
@@ -156,6 +151,30 @@ export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: Dynami
     }
   });
   return { id: DYNAMIC_VIEW_ID, name: 'Dynamic', nodes, links };
+};
+
+/**
+ * Each graph's slots, by the options they were arranged with: a drag re-runs the layout with a new overlay but the
+ * same graph, and arranging (a force simulation, a routed search) is the costly part.
+ */
+const slotsCache = new WeakMap<GraphModel, WeakMap<DynamicOptions, Map<string, Slot>>>();
+
+const slotsOf = (graph: GraphModel, options: DynamicOptions): Map<string, Slot> => {
+  const cached = slotsCache.get(graph)?.get(options);
+  if (cached) {
+    return cached;
+  }
+  const ids = graph.nodes.map(({ id }) => id);
+  const known = new Set(ids);
+  const edges = graph.edges.filter(({ from, to }) => known.has(from) && known.has(to));
+  const ranks = Layout.rank(ids, edges);
+  const seed = arrange(new Map(ids.map((id) => [id, ranks.get(id) ?? 0])), edges, options.arrange, options.force);
+  const slots =
+    options.arrange === 'routed' && options.lattice ? routedSlots(graph, edges, seed, options, options.lattice) : seed;
+  const byOptions = slotsCache.get(graph) ?? new WeakMap<DynamicOptions, Map<string, Slot>>();
+  byOptions.set(options, slots);
+  slotsCache.set(graph, byOptions);
+  return slots;
 };
 
 /** Weights of a routed arrangement's score: a crossing outweighs any number of bends, a bend any detour. */

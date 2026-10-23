@@ -1,0 +1,183 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { execFile } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
+import { promisify } from 'node:util';
+
+const run = promisify(execFile);
+
+/** Bounds every git call so a hung repository (a lock, a network credential prompt) cannot stall the dev server. */
+const TIMEOUT = 5_000;
+
+/** How long a pull-request lookup is reused; it costs a `gh` call or a GitHub API request. */
+const PR_TTL = 5 * 60_000;
+
+/** The open pull request a branch heads. */
+export type GitPullRequest = { number: number; url: string; title: string; base: string };
+
+/** Where a checkout stands against the branch it will merge into; must match `GitStatus` in `@dxos/plugin-file-system/FileSystem`. */
+export type GitStatus = {
+  /** Current branch; absent on a detached HEAD. */
+  branch?: string;
+  /** Commit HEAD points at. */
+  head: string;
+  /** The ref the branch is compared with: the pull request's base, else the remote's default branch. */
+  base: string;
+  /** Where the branch forked from `base`; absent when they share no history. */
+  mergeBase?: string;
+  pullRequest?: GitPullRequest;
+};
+
+const git = async (dir: string, args: string[]): Promise<string | undefined> => {
+  try {
+    const { stdout } = await run('git', ['-C', dir, ...args], { timeout: TIMEOUT, maxBuffer: 16 * 1024 * 1024 });
+    return stdout;
+  } catch {
+    return undefined;
+  }
+};
+
+/** The nearest existing directory at or above `file`, so a file that is new on this branch still finds its repository. */
+const existingDir = (file: string): string => {
+  let dir = path.dirname(file);
+  while (!existsSync(dir) && path.dirname(dir) !== dir) {
+    dir = path.dirname(dir);
+  }
+  return dir;
+};
+
+/** A full or abbreviated commit id; anything else (an option, a ref expression) is refused. */
+export const isCommit = (rev: string): boolean => /^[0-9a-f]{7,64}$/.test(rev);
+
+/** The remote's default branch (`origin/main`), else the first of the usual names that exists. */
+const defaultBranch = async (dir: string): Promise<string | undefined> => {
+  const symbolic = (await git(dir, ['symbolic-ref', '--short', 'refs/remotes/origin/HEAD']))?.trim();
+  if (symbolic) {
+    return symbolic;
+  }
+  for (const ref of ['origin/main', 'origin/master', 'main', 'master']) {
+    if (await git(dir, ['rev-parse', '--verify', '--quiet', `${ref}^{commit}`])) {
+      return ref;
+    }
+  }
+  return undefined;
+};
+
+const pullRequests = new Map<string, { at: number; value?: GitPullRequest }>();
+
+/** `owner/repo` of the checkout's origin on GitHub. */
+const githubRepo = async (dir: string): Promise<string | undefined> =>
+  (await git(dir, ['remote', 'get-url', 'origin']))
+    ?.trim()
+    .match(/github\.com[:/]([\w.-]+)\/([\w.-]+?)(?:\.git)?\/?$/)
+    ?.slice(1, 3)
+    .join('/');
+
+/**
+ * The open pull request `branch` heads: from `gh` when it is installed and signed in, else from GitHub's REST API
+ * (unauthenticated unless `GITHUB_TOKEN` is set, which is enough for a public repository).
+ */
+const findPullRequest = async (
+  dir: string,
+  branch: string,
+  env: NodeJS.ProcessEnv,
+): Promise<GitPullRequest | undefined> => {
+  try {
+    const { stdout } = await run('gh', ['pr', 'view', branch, '--json', 'number,url,title,baseRefName,state'], {
+      cwd: dir,
+      timeout: TIMEOUT,
+    });
+    const pr = JSON.parse(stdout);
+    if (pr.state === 'OPEN') {
+      return { number: pr.number, url: pr.url, title: pr.title, base: pr.baseRefName };
+    }
+    return undefined;
+  } catch {
+    // No gh, not signed in, or no pull request: ask the API instead.
+  }
+  const repo = await githubRepo(dir);
+  if (!repo) {
+    return undefined;
+  }
+  try {
+    const owner = repo.split('/')[0];
+    const response = await fetch(
+      `https://api.github.com/repos/${repo}/pulls?state=open&per_page=1&head=${encodeURIComponent(`${owner}:${branch}`)}`,
+      {
+        headers: {
+          accept: 'application/vnd.github+json',
+          ...(env.GITHUB_TOKEN && { authorization: `Bearer ${env.GITHUB_TOKEN}` }),
+        },
+        signal: AbortSignal.timeout(TIMEOUT),
+      },
+    );
+    if (!response.ok) {
+      return undefined;
+    }
+    const [pr] = await response.json();
+    return pr ? { number: pr.number, url: pr.html_url, title: pr.title, base: pr.base.ref } : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+const cachedPullRequest = async (
+  dir: string,
+  branch: string,
+  env: NodeJS.ProcessEnv,
+): Promise<GitPullRequest | undefined> => {
+  const key = `${dir}\n${branch}`;
+  const cached = pullRequests.get(key);
+  if (cached && Date.now() - cached.at < PR_TTL) {
+    return cached.value;
+  }
+  const value = await findPullRequest(dir, branch, env);
+  pullRequests.set(key, { at: Date.now(), value });
+  return value;
+};
+
+/** The status of the repository holding `file`, or undefined when it is not in a git working tree. */
+export const gitStatus = async (file: string, env: NodeJS.ProcessEnv = process.env): Promise<GitStatus | undefined> => {
+  const dir = existingDir(file);
+  const head = (await git(dir, ['rev-parse', 'HEAD']))?.trim();
+  if (!head) {
+    return undefined;
+  }
+  const branch = (await git(dir, ['symbolic-ref', '--short', '-q', 'HEAD']))?.trim() || undefined;
+  const fallback = await defaultBranch(dir);
+  const pullRequest =
+    branch && branch !== fallback?.replace(/^origin\//, '') ? await cachedPullRequest(dir, branch, env) : undefined;
+  // The pull request's base as the remote has it, since the local branch of that name may be stale or absent.
+  const prBase =
+    pullRequest &&
+    (
+      await Promise.all(
+        [`origin/${pullRequest.base}`, pullRequest.base].map(async (ref) => ({
+          ref,
+          ok: Boolean(await git(dir, ['rev-parse', '--verify', '--quiet', `${ref}^{commit}`])),
+        })),
+      )
+    ).find(({ ok }) => ok)?.ref;
+  const base = prBase ?? fallback ?? 'HEAD';
+  const mergeBase = (await git(dir, ['merge-base', 'HEAD', base]))?.trim() || undefined;
+  return {
+    ...(branch && { branch }),
+    head,
+    base,
+    ...(mergeBase && { mergeBase }),
+    ...(pullRequest && { pullRequest }),
+  };
+};
+
+/** `file`'s text at commit `rev`, or undefined when it did not exist there. */
+export const gitShow = async (file: string, rev: string): Promise<string | undefined> => {
+  if (!isCommit(rev)) {
+    throw new Error(`Not a commit id: ${rev}`);
+  }
+  const dir = existingDir(file);
+  // `./` makes the path relative to `dir` rather than to the repository's top level.
+  return git(dir, ['show', `${rev}:./${path.relative(dir, file)}`]);
+};
