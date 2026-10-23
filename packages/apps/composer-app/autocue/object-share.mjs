@@ -185,6 +185,7 @@ export const steps = [
       });
       await bob.page.setContent(START_PAGE);
 
+      const previousWorkspace = workspaceOf(page);
       await alice.click(page.getByTestId('spacePlugin.addSpace'));
       await alice.click(page.getByTestId('spacePlugin.createSpace'));
       const save = page.getByTestId('create-space-dialog').getByTestId('save-button');
@@ -192,8 +193,13 @@ export const steps = [
       await page.getByTestId('create-space-form').getByTestId('name').fill(SPACE);
       await save.click();
       await page.getByTestId('create-space-form').waitFor({ state: 'detached', timeout: TIMEOUT });
-      await waitFor(() => workspaceOf(page) !== undefined, { what: 'the new space to open' });
+      // The old workspace stays in the URL for a moment after the dialog closes.
+      await waitFor(() => ![undefined, previousWorkspace].includes(workspaceOf(page)), {
+        what: 'the new space to open',
+      });
       const spaceId = workspaceOf(page);
+      await page.waitForTimeout(2_000);
+      await clearChrome(alice);
 
       // Off camera through the debug port: ten documents, the shared one linking the next.
       await page.evaluate(
