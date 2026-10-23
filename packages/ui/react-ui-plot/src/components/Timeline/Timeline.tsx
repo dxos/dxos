@@ -439,7 +439,7 @@ export const Timeline = ({
           },
         )
       : height;
-  }, [laneEvents, range, scale, fraction, height, zoom]);
+  }, [laneEvents, range, scale, fraction, height, zoom, metrics]);
 
   // Switching scale eases every position and the height from the old layout to the new one.
   const target = useMemo(() => ({ fraction, height: targetHeight }), [fraction, targetHeight]);
@@ -483,7 +483,7 @@ export const Timeline = ({
       add(date.getTime(), format(date));
     }
     return result;
-  }, [range, yOf, top, bottom]);
+  }, [range, yOf, top, bottom, metrics]);
 
   // Zoom about the pointer: the time under it stays put.
   useEffect(() => {

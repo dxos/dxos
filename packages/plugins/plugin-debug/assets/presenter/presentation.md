@@ -125,7 +125,7 @@ Notes
 
 ---
 
-# The Molloch
+# The Moloch
 
 The Coordination Trap Behind the Metacrisis
 
