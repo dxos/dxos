@@ -12,6 +12,7 @@ import { unified } from 'unified';
 
 import { type LayoutName, LAYOUTS, type SlideFrontmatter, type SlideIssue, parseFrontmatter } from './frontmatter.ts';
 import { type SlotName, remarkSlidev } from './remark-slidev.ts';
+import { isolateSlotMarkers } from './split.ts';
 
 /** A single slide parsed into renderable slots plus its metadata. */
 export type ParsedSlide = {
@@ -38,7 +39,7 @@ const isLayout = (value: string): value is LayoutName => LAYOUTS.some((layout) =
  * click count; problems are reported as issues and never prevent the slide from rendering.
  */
 export const parseSlide = (content: string): ParsedSlide => {
-  const tree = markdownProcessor.runSync(markdownProcessor.parse(content));
+  const tree = markdownProcessor.runSync(markdownProcessor.parse(isolateSlotMarkers(content)));
   const slidev = isMdastRoot(tree) ? tree.data?.slidev : undefined;
   const issues: SlideIssue[] = [];
 

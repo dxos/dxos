@@ -160,7 +160,7 @@ MarkdownSlide.stories.tsx}`, `src/components/MarkdownSlide/MarkdownSlide.test.ts
 - Modify: `src/components/SlideRenderer/SlideRenderer.tsx` (text slides use `MarkdownSlide`),
   `src/containers/SlideArticle/SlideArticle.tsx` (linked `Markdown.Document` slide), `src/testing/demoPresentation.ts`
   (frontmatter `columns|rows|fullscreen` → `image-left|image-right|image`/`two-cols` per DESIGN §6 mapping),
-  `PresentationArticle.demo.stories.tsx` assertions.
+  `stories/Demo.stories.tsx` assertions.
 - Delete: `src/components/Slide/` (and its stories), `styles.css`; deps `react-markdown`, `rehype-add-classes`,
   `rehype-highlight`, `remark-parse-frontmatter`, `hastscript` if unused.
 

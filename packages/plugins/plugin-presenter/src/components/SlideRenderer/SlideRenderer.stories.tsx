@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
@@ -14,9 +14,12 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { MermaidEngine, type Scene } from '@dxos/diagram';
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { DXN, EID, EntityId } from '@dxos/keys';
+import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import * as SceneSvg from '@dxos/plugin-illustrator/SceneSvg';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -35,6 +38,22 @@ const DocumentSlide = ({ subject }: { subject: Markdown.Document }) => {
   return <MarkdownSlide content={content ?? ''} />;
 };
 
+const DIAGRAM = ['flowchart LR', '  Client --> Echo', '  Echo --> Edge'].join('\n');
+
+/**
+ * Slide surface for a Drawing. The illustrator plugin's own surface delegates to a canvas variant (tldraw,
+ * excalidraw), so this draws a fixed diagram with its SceneSvg renderer instead of loading a variant.
+ */
+const DrawingSlide = (_props: { subject: Drawing.Drawing }) => {
+  const [objects, setObjects] = useState<Scene.WorldObject[]>([]);
+  useEffect(() => {
+    void MermaidEngine.compile(DIAGRAM).then((commands) =>
+      setObjects(commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []))),
+    );
+  }, []);
+  return <SceneSvg.SceneSvg classNames='grow' objects={objects} />;
+};
+
 const createSlidePlugin = (options: { gated?: boolean } = {}) =>
   Plugin.define(
     Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test.presenterSlide'), name: 'PresenterSlideStory' }),
@@ -50,6 +69,12 @@ const createSlidePlugin = (options: { gated?: boolean } = {}) =>
               id: 'slide',
               filter: AppSurface.object(AppSurface.Slide, Markdown.Document),
               component: DocumentSlide,
+              props: ({ data }) => ({ ...data }),
+            }),
+            Surface.create({
+              id: 'drawing',
+              filter: AppSurface.object(AppSurface.Slide, Drawing.Drawing),
+              component: DrawingSlide,
               props: ({ data }) => ({ ...data }),
             }),
           ]),
@@ -91,7 +116,9 @@ const surfaceTag = (eid: string) => `<Surface ref="${eid}" />`;
 
 /** Slide content per story, built from objects the space creates so refs carry their real ids. */
 const createSpaceSlides = async ({ space }: { space: Space }) => {
-  const embedded = space.db.add(Markdown.make({ name: 'Embedded', content: '# Embedded document' }));
+  const embedded = space.db.add(
+    Drawing.make({ name: 'Embedded', canvas: Drawing.makeCanvas({ schema: 'dxos.org/scene/1' }) }),
+  );
   const deleted = space.db.add(Markdown.make({ name: 'Deleted', content: '# Deleted document' }));
   space.db.remove(deleted);
   space.db.add(
@@ -162,7 +189,7 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withClientProvider({
-      types: [Markdown.Document, Text.Text, Presentation.Presentation],
+      types: [Markdown.Document, Drawing.Drawing, Drawing.Canvas, Text.Text, Presentation.Presentation],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: createSpaceSlides,
@@ -239,7 +266,7 @@ export const GatedSurface: Story = {
   },
 };
 
-/** A `<Surface ref>` in a layout slot renders the referenced object through the app's slide surface. */
+/** A `<Surface ref>` in a layout slot renders a Drawing through its slide surface, not the title-slide fallback. */
 export const EmbeddedSurface: Story = {
   render: () => <SpaceSlideStory name='embedded' />,
   decorators: [withSlideSurface],
@@ -247,7 +274,8 @@ export const EmbeddedSurface: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByRole('heading', { name: 'Beside the document' }, LOAD_TIMEOUT)).toBeVisible();
-    await expect(await canvas.findByRole('heading', { name: 'Embedded document' }, LOAD_TIMEOUT)).toBeVisible();
+    await waitFor(() => expect(canvasElement.querySelector('[data-surface] svg')).not.toBeNull(), LOAD_TIMEOUT);
+    await expect(await canvas.findByText('Client', undefined, LOAD_TIMEOUT)).toBeInTheDocument();
   },
 };
 

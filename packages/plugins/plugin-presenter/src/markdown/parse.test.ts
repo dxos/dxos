@@ -260,4 +260,17 @@ describe('parseSlide', () => {
     expect(slide.layout).toBe('default');
     expect(slide.issues).toEqual([{ kind: 'layout', message: expect.stringContaining('nope') }]);
   });
+
+  test('slot markers are line-based, with or without blank lines', () => {
+    const slide = parseSlide('# A\n::right::\nB');
+    expect(textOf(slide.slots.default)).toBe('A');
+    expect(textOf(slide.slots.right)).toBe('B');
+    expect(textOf(slide.slots.default)).not.toContain('::');
+  });
+
+  test('a slot marker inside a fenced code block is code', () => {
+    const slide = parseSlide('```\n::right::\n```');
+    expect(textOf(slide.slots.default)).toContain('::right::');
+    expect(textOf(slide.slots.right)).toBe('');
+  });
 });

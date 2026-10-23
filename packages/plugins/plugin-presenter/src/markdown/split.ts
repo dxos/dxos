@@ -29,6 +29,37 @@ const findSeparators = (lines: string[]): number[] => {
   return separators;
 };
 
+const SLOT_LINE = /^::[a-z]+::$/;
+
+/**
+ * Puts a blank line around every `::name::` line outside fenced code, so a marker written without blank lines
+ * (as Slidev allows) becomes a paragraph of its own instead of joining its neighbours.
+ */
+export const isolateSlotMarkers = (markdown: string): string => {
+  const out: string[] = [];
+  let fence: { char: string; length: number } | undefined;
+  for (const line of markdown.split('\n')) {
+    if (fence) {
+      const close = line.match(/^ {0,3}(`{3,}|~{3,})\s*$/);
+      if (close && close[1][0] === fence.char && close[1].length >= fence.length) {
+        fence = undefined;
+      }
+      out.push(line);
+      continue;
+    }
+    const open = line.match(FENCE_OPEN);
+    if (open) {
+      fence = { char: open[1][0], length: open[1].length };
+    }
+    if (SLOT_LINE.test(line.trim())) {
+      out.push('', line.trim(), '');
+    } else {
+      out.push(line);
+    }
+  }
+  return out.join('\n');
+};
+
 /** True when the lines between two separators read as a YAML mapping. */
 const isFrontmatter = (lines: string[]): boolean => {
   // Markdown formatters insert a blank line after the opening `---`.

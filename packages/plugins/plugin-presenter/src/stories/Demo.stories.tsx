@@ -5,15 +5,15 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { createDemoPresentation } from '../../testing/demoPresentation.ts';
+import { createDemoPresentation } from '../testing/demoPresentation.ts';
 import {
   PresentationStory,
   presentationStoryDecorators,
   presentationStoryParameters,
-} from '../../testing/presenterStory.tsx';
+} from '../testing/presenterStory.tsx';
 
 const meta = {
-  title: 'plugins/plugin-presenter/Demo',
+  title: 'plugins/plugin-presenter/stories/Demo',
   render: PresentationStory,
   decorators: presentationStoryDecorators({
     slideSurface: true,

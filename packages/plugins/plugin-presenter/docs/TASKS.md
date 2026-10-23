@@ -23,7 +23,7 @@ Design: [DESIGN.md](./DESIGN.md).
 - [x] **Fullscreen toggle, toolbar + overlay pager, focus-scoped keys**.
 - [x] **Slide index view state** — `presenter-slide` aspect, `local` backend.
 - [x] **Delete** `PresenterContext`, `StartButton`, `Layout`, `CollectionArticle`, `presentCollections`.
-- [x] **Demo presentation story** — `plugins/plugin-presenter/Demo` (plan Task 10), 10 slides, every layout.
+- [x] **Demo presentation story** — `plugins/plugin-presenter/stories/Demo` (`src/stories/Demo.stories.tsx`) (plan Task 10), 10 slides, every layout.
 - [x] **Verify in the running app** — 10/11 steps passed. The failure (a new Presentation was not filed into
       Collections, so it was invisible in the navtree) is fixed by tagging it `Collection.ItemTag`. Cosmetic
       findings fixed in the same wave: typename label for unnamed decks, picker labels and tooltip, owned slides

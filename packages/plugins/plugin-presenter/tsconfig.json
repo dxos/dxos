@@ -19,6 +19,9 @@
   ],
   "references": [
     {
+      "path": "../../common/diagram"
+    },
+    {
       "path": "../../common/keys"
     },
     {
@@ -83,6 +86,9 @@
     },
     {
       "path": "../plugin-deck"
+    },
+    {
+      "path": "../plugin-illustrator"
     },
     {
       "path": "../plugin-markdown"
