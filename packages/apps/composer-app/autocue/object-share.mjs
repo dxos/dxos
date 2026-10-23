@@ -109,6 +109,68 @@ const clearChrome = async ({ page }) => {
 };
 
 let shareLink;
+let openedAt;
+
+/** `SpaceState.SPACE_READY` in the client's space proto. */
+const SPACE_READY = 3;
+
+/**
+ * Milestones of opening the link on a fresh browser, in ms from pressing Enter: the app shell, the identity
+ * onboarding creates, the space appearing in the client (the join landed), the space ready, and the shared
+ * document's text on screen. Polled every 100 ms, so each is accurate to about that.
+ */
+const timeOpening = async (page, spaceId) => {
+  const timing = {};
+  const mark = (name) => {
+    timing[name] ??= Date.now() - openedAt;
+  };
+  const deadline = Date.now() + JOIN_TIMEOUT;
+  while (timing.documentRendered === undefined) {
+    if (Date.now() > deadline) {
+      throw new Error(`timed out waiting for the shared document on Bob's side: ${JSON.stringify(timing)}`);
+    }
+    const state = await page
+      .evaluate((spaceId) => {
+        const client = globalThis.dxos?.client;
+        const space = client?.spaces.get().find((space) => space.id === spaceId);
+        return {
+          identity: !!client?.halo.identity.get(),
+          joined: !!space,
+          state: space?.state.get(),
+        };
+      }, spaceId)
+      .catch(() => ({}));
+    if (
+      await page
+        .getByTestId('deck.plank')
+        .first()
+        .isVisible()
+        .catch(() => false)
+    ) {
+      mark('appBooted');
+    }
+    if (state.identity) {
+      mark('identity');
+    }
+    if (state.joined) {
+      mark('joined');
+    }
+    if (state.state === SPACE_READY) {
+      mark('spaceReady');
+    }
+    if (
+      (
+        await textbox(page)
+          .innerText()
+          .catch(() => '')
+      ).includes(SHARED_TEXT)
+    ) {
+      mark('documentRendered');
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  return timing;
+};
 
 export const steps = [
   {
@@ -208,29 +270,26 @@ export const steps = [
       await bob.click(address);
       await address.fill(shareLink);
       await bob.page.waitForTimeout(800);
+      openedAt = Date.now();
       await bob.page.keyboard.press('Enter');
-      await bob.page.waitForURL((url) => url.origin !== 'null' && url.protocol.startsWith('http'), {
-        timeout: TIMEOUT,
-      });
     },
   },
   {
     name: `Bob gets an identity, joins in the background, and sees "${SHARED}"`,
     subtitle: 'QA-3 step 3: only the shared documents replicate',
-    run: async ({ peers: { bob } }) => {
-      await waitFor(
-        async () =>
-          (
-            await textbox(bob.page)
-              .innerText()
-              .catch(() => '')
-          ).includes(SHARED_TEXT),
-        {
-          timeout: JOIN_TIMEOUT,
-          what: "the shared document on Bob's side",
-        },
-      );
+    caption: false,
+    run: async ({ peers: { bob }, caption }) => {
+      caption(`Bob gets an identity, joins in the background, and sees "${SHARED}"`, 'QA-3 step 3');
+      const timing = await timeOpening(bob.page, new URL(shareLink).pathname.split('/')[2]);
+      // Read by whoever runs the flow; the video shows the same numbers in the caption below.
+      console.log(JSON.stringify({ objectShareTiming: timing }));
       await clearChrome(bob);
+      const seconds = (ms) => (ms === undefined ? '–' : `${(ms / 1000).toFixed(1)} s`);
+      caption(
+        `Shared document open in ${seconds(timing.documentRendered)} after pasting the link`,
+        `app ${seconds(timing.appBooted)} · identity ${seconds(timing.identity)} · joined ${seconds(timing.joined)} · space ready ${seconds(timing.spaceReady)}`,
+      );
+      await bob.page.waitForTimeout(4_000);
     },
   },
 ];
