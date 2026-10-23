@@ -46,6 +46,8 @@
     /* Important: container.css gives a Content without a Viewport one track through a long selector chain. */
     grid-template-columns: repeat(var(--column-count), minmax(0, 1fr)) !important;
     padding-inline: var(--dx-gutter, 0px);
+    /* Room above the first row and below the last for the tiles' outline, which is drawn outside them. */
+    padding-block: var(--dx-gap-size);
     gap: var(--dx-gap-size);
   }
   .dx-listbox-content[data-tiles] > * {
