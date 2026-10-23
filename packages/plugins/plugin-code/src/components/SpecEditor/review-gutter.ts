@@ -79,7 +79,7 @@ class HoverController {
         'shadow-sm',
       );
       card.dom.addEventListener('mouseenter', () => this.#cancel());
-      card.dom.addEventListener('mouseleave', () => this.#hide());
+      card.dom.addEventListener('mouseleave', () => chip.ownerDocument.activeElement !== chip && this.#hide());
       chip.ownerDocument.body.appendChild(card.dom);
       this.#card = card;
       this.#chip = chip;
@@ -89,7 +89,8 @@ class HoverController {
     // Focus as well as hover, so keyboard users get the card; the chips are buttons and already focusable.
     chip.addEventListener('mouseenter', show);
     chip.addEventListener('focus', show);
-    chip.addEventListener('mouseleave', () => this.#hide());
+    // A focused chip keeps its card when the pointer leaves; blur closes it.
+    chip.addEventListener('mouseleave', () => chip.ownerDocument.activeElement !== chip && this.#hide());
     chip.addEventListener('blur', () => this.#hide());
   }
 

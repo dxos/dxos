@@ -4,7 +4,7 @@
 
 import { EditorSelection } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
-import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
@@ -155,7 +155,9 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     const read = useCallback((target: SourceKey) => texts.get(fileKey(target)), [texts]);
     // Cards render on hover, so the gutter reads through a ref instead of rebuilding the editor on each file change.
     const textsRef = useRef(texts);
-    textsRef.current = texts;
+    useLayoutEffect(() => {
+      textsRef.current = texts;
+    }, [texts]);
     const readLatest = useCallback((target: SourceKey) => textsRef.current.get(fileKey(target)), []);
     const specs = useMemo(
       () => new Map([...texts].filter(([raw]) => raw.endsWith('.mdl') && raw !== reviewKey)),
