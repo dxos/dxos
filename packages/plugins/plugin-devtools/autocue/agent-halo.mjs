@@ -3,18 +3,18 @@
 //
 
 /**
- * The debug panel's Agents page reads an agent's HALO from EDGE, which no client replicates. Alice, who created Kai,
- * opens Debug › Agents and picks Kai: its identity, HALO space, admins and spaces, then every credential in its HALO,
- * one `IdentityAdmin` among them for her. She invites Bob into Kai's space, which makes her client ask EDGE to add him
- * as an admin; when she picks Kai again, the page shows two admins and a second `IdentityAdmin`, for Bob.
+ * Devtools' Agent › HALO page reads an agent's HALO from EDGE, which no client replicates. Alice, who created Kai,
+ * opens DevTools › Agent › HALO and picks Kai: its identity, HALO space, admins and spaces, then every credential in its
+ * HALO, one `IdentityAdmin` among them for her. She invites Bob into Kai's space, which makes her client ask EDGE to add
+ * him as an admin; when she picks Kai again, the page shows two admins and a second `IdentityAdmin`, for Bob.
  *
- * @mdl packages/plugins/plugin-agent/PLUGIN.mdl requirement F-7.10
+ * @mdl packages/plugins/plugin-devtools/PLUGIN.mdl test QA-3
  * @app composer-app dev server on 127.0.0.1:4173 against a local EDGE with the halo route (dxos/edge#1374):
  *
  *   DX_EDGE_BASE_URL=http://localhost:8787 DX_STRICT=false DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true \
  *     moon run composer-app:serve -- --port 4173 --host 127.0.0.1
  *   node .agents/skills/autocue/scripts/pair.mjs \
- *     --flow packages/plugins/plugin-agent/autocue/agents-debug.mjs --out /tmp/pair --mp4 on
+ *     --flow packages/plugins/plugin-devtools/autocue/agent-halo.mjs --out /tmp/pair --mp4 on
  *
  * No step talks to Kai, so EDGE needs no model key. Keep the file free of imports, since it is loaded from outside
  * the workspace.
@@ -30,6 +30,7 @@ const PROVISION_TIMEOUT = 120_000;
 const ORIGIN = 'http://127.0.0.1:4173';
 const AGENT_PLUGIN = 'org.dxos.plugin.agent';
 const DEBUG_PLUGIN = 'org.dxos.plugin.debug';
+const DEVTOOLS_PLUGIN = 'org.dxos.plugin.devtools';
 
 /** How far, in CSS pixels, the debug drawer is dragged taller. */
 const DRAWER_GROWTH = 360;
@@ -170,9 +171,11 @@ const listsAgentAsMember = (page) =>
     AGENT,
   );
 
-/** Opens the debug panel from the status bar unless it is open, then its Agents page. */
-/** Opens Debug › Agents; `remount` passes through Console first, so the page reads EDGE afresh. */
-const openAgentsDebug = async (peer, { remount = false } = {}) => {
+/**
+ * Opens DevTools › Agent › HALO from the status bar's debug panel; `remount` passes through Console first, so the page
+ * reads EDGE afresh.
+ */
+const openAgentHalo = async (peer, { remount = false } = {}) => {
   const { page } = peer;
   // The debug panel's tree, told apart from the navtree by its Console page.
   const tree = page
@@ -200,11 +203,20 @@ const openAgentsDebug = async (peer, { remount = false } = {}) => {
         .first(),
     );
   }
+  // Selecting a branch toggles it, so only a closed one is clicked.
+  for (const branch of [/^DevTools$/, /^Agent$/]) {
+    const item = tree.locator('[role="treeitem"]').filter({ hasText: branch }).first();
+    await item.waitFor({ timeout: TIMEOUT });
+    if ((await item.getAttribute('aria-expanded')) !== 'true') {
+      await peer.click(item);
+    }
+  }
+  // DevTools › HALO is a closed branch above Agent, so the last HALO row is the agent's page.
   await peer.click(
     tree
       .locator('[role="treeitem"]')
-      .filter({ hasText: /^Agents$/ })
-      .first(),
+      .filter({ hasText: /^HALO$/ })
+      .last(),
   );
   await agentSelect(page).waitFor({ timeout: TIMEOUT });
 };
@@ -267,10 +279,10 @@ export const steps = [
         [peers.bob, 'Bob'],
       ]) {
         const { page } = peer;
-        // plugin-agent and plugin-debug are tagged labs, so they are off until enabled in the registry.
+        // plugin-agent, plugin-debug and plugin-devtools are tagged labs, so they are off until enabled in the registry.
         await page.goto(`${ORIGIN}/w/dxos:registry`);
         await page.getByTestId('pluginRegistry.labs').click();
-        for (const plugin of displayName === 'Alice' ? [AGENT_PLUGIN, DEBUG_PLUGIN] : [AGENT_PLUGIN]) {
+        for (const plugin of displayName === 'Alice' ? [AGENT_PLUGIN, DEBUG_PLUGIN, DEVTOOLS_PLUGIN] : [AGENT_PLUGIN]) {
           const row = page.getByTestId(`pluginList.${plugin}`);
           await row.waitFor({ timeout: TIMEOUT });
           if (!(await row.locator('input[type="checkbox"]').isChecked())) {
@@ -310,11 +322,11 @@ export const steps = [
     },
   },
   {
-    name: 'Alice opens Debug › Agents and picks Kai',
+    name: 'Alice opens DevTools › Agent › HALO and picks Kai',
     subtitle: "Its identity, HALO space, admins and spaces, read from EDGE: no client replicates an agent's HALO",
     run: async ({ peers: { alice } }) => {
       const { page } = alice;
-      await openAgentsDebug(alice);
+      await openAgentHalo(alice);
       await choose(alice, agentSelect(page), AGENT);
       await haloJson(page).waitFor({ timeout: TIMEOUT });
       await waitFor(async () => (await adminCount(page)) === 1, { what: 'one admin, Alice' });
@@ -372,7 +384,7 @@ export const steps = [
       // The page reads EDGE when an agent is picked, so it is reopened to pick Kai afresh.
       await waitFor(
         async () => {
-          await openAgentsDebug(alice, { remount: true });
+          await openAgentHalo(alice, { remount: true });
           await choose(alice, agentSelect(page), AGENT);
           await haloJson(page).waitFor({ timeout: TIMEOUT });
           if ((await adminCount(page)) === 2) {

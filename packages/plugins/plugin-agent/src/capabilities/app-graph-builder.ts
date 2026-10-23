@@ -21,7 +21,7 @@ import { Position } from '@dxos/util';
 import { meta } from '#meta';
 import { AgentCapabilities, AgentCompanion } from '#types';
 
-import { AGENTS_DEBUG_PAGE, AGENTS_SECTION_ID, AGENTS_SECTION_TYPE } from '../constants.ts';
+import { AGENTS_SECTION_ID, AGENTS_SECTION_TYPE } from '../constants.ts';
 import { AGENTS_PANEL, AGENTS_PANEL_PATH } from './agents-panel.ts';
 
 export default Capability.makeModule(
@@ -130,24 +130,6 @@ export default Capability.makeModule(
             }),
           ]);
         },
-      }),
-      // The debug panel's page inspecting the agents the identity administers, whose HALOs only EDGE holds.
-      AppGraphBuilder.createExtension({
-        id: 'agentsDebug',
-        match: AppNodeMatcher.whenDebugGroup,
-        connector: () =>
-          Effect.succeed([
-            AppGraphNode.make({
-              id: 'agents',
-              type: AGENTS_DEBUG_PAGE,
-              data: AGENTS_DEBUG_PAGE,
-              properties: {
-                label: ['agents-debug.label', { ns: meta.profile.key }],
-                icon: 'ph--robot--regular',
-                position: 20,
-              },
-            }),
-          ]),
       }),
     ]);
 

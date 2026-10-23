@@ -4,40 +4,40 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { Context } from '@dxos/context';
-import { ControlledSelector, CredentialsTable, JsonView } from '@dxos/devtools';
 import { type AgentHalo } from '@dxos/edge-client';
-import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { buf, toPublicKey } from '@dxos/protocols/buf';
-import { CredentialSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { IdentityDid } from '@dxos/keys';
+import { buf } from '@dxos/protocols/buf';
+import { CredentialSchema, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
+import { useClient } from '@dxos/react-client';
+import { type Space } from '@dxos/react-client/echo';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { AgentSpace } from '#types';
+import { ControlledSelector, CredentialsTable, JsonView } from '../../../../components/index.ts';
+import { type ArticleProps } from '../../types.ts';
 
 const VIEWS = ['identity', 'credentials'] as const;
 type View = (typeof VIEWS)[number];
 
-export type AgentsDebugProps = {
-  role?: string;
-};
+type Agent = { spaceId: string; name?: string; did: IdentityDid };
 
 /**
- * The debug panel's page for the agents the identity administers: pick one to read from EDGE its identity, admins, the
- * spaces it is in, and every credential in its HALO, which no client replicates.
+ * An agent's HALO, which no client replicates, read from EDGE (`GET /compute/brain/:did/halo`): pick one of the agents
+ * whose spaces the client holds to see its identity, admins and spaces, or every credential in its HALO. EDGE answers
+ * the agent's admins only, and its refusal shows as `error`.
  */
-export const AgentsDebug = ({ role }: AgentsDebugProps) => {
-  const client = Hooks.useCapability(ClientCapabilities.Client);
-  const edge = Hooks.useOptionalCapability(ClientCapabilities.EdgeHttpClient);
-  const agents = useAdministeredAgents();
+export const AgentsArticle = ({ role }: ArticleProps) => {
+  const client = useClient();
+  const agents = useAgents();
   const [selected, setSelected] = useState<string>();
   const [view, setView] = useState<View>('identity');
   const [halo, setHalo] = useState<AgentHalo>();
   const [error, setError] = useState<string>();
 
   const labels = useMemo(
-    () => new Map(agents.flatMap((agent) => (agent.did ? [[`${agent.name ?? 'Unnamed'} (${agent.did})`, agent]] : []))),
+    () => new Map(agents.map((agent) => [`${agent.name ?? 'Unnamed'} (${agent.did})`, agent])),
     [agents],
   );
   const agent = selected ? labels.get(selected) : undefined;
@@ -45,18 +45,21 @@ export const AgentsDebug = ({ role }: AgentsDebugProps) => {
   useEffect(() => {
     setHalo(undefined);
     setError(undefined);
-    if (!edge || !agent?.did) {
+    if (!agent) {
       return;
     }
     let current = true;
-    edge.getAgentHalo(Context.default(), agent.did).then(
-      (result) => current && setHalo(result),
-      (err) => current && setError(err instanceof Error ? err.message : String(err)),
-    );
+    // `client.edge` throws when EDGE is not configured, which shows as `error` rather than failing the page.
+    Promise.resolve()
+      .then(() => client.edge.http.getAgentHalo(Context.default(), agent.did))
+      .then(
+        (result) => current && setHalo(result),
+        (err) => current && setError(err instanceof Error ? err.message : String(err)),
+      );
     return () => {
       current = false;
     };
-  }, [edge, agent?.did]);
+  }, [client, agent?.did]);
 
   const credentials = useMemo(
     () =>
@@ -118,9 +121,17 @@ export const AgentsDebug = ({ role }: AgentsDebugProps) => {
   );
 };
 
-/** The agents the identity administers, re-read whenever the client's spaces, its identity or a space's members change. */
-const useAdministeredAgents = (): AgentSpace.Summary[] => {
-  const client = Hooks.useCapability(ClientCapabilities.Client);
+/** The agent owns its default space, which the agent's admins hold a membership of. */
+const agentOf = (space: Space): Agent | undefined => {
+  const owner = space.members.get().find((member) => member.role === SpaceMember_Role.OWNER)?.identity;
+  return IdentityDid.isValid(owner?.did)
+    ? { spaceId: space.id, name: space.isOpen ? space.properties?.name : undefined, did: owner.did }
+    : undefined;
+};
+
+/** The agents whose default spaces the client holds, re-read whenever its spaces or their members change. */
+const useAgents = (): Agent[] => {
+  const client = useClient();
   const [revision, setRevision] = useState(0);
   useEffect(() => {
     const changed = () => setRevision((value) => value + 1);
@@ -140,16 +151,18 @@ const useAdministeredAgents = (): AgentSpace.Summary[] => {
       }
       changed();
     });
-    const identity = client.halo.identity.subscribe(changed);
     return () => {
       spaces.unsubscribe();
-      identity.unsubscribe();
       members.forEach((subscription) => subscription.unsubscribe());
     };
   }, [client]);
 
-  return useMemo(() => {
-    const viewer = toPublicKey(client.halo.identity.get()?.identityKey);
-    return viewer ? AgentSpace.administeredAgents(client.spaces.get(), viewer) : [];
-  }, [client, revision]);
+  return useMemo(
+    () =>
+      client.spaces
+        .get()
+        .filter((space) => space.tags.includes(AppSpace.AGENT_SPACE_TAG))
+        .flatMap((space) => agentOf(space) ?? []),
+    [client, revision],
+  );
 };

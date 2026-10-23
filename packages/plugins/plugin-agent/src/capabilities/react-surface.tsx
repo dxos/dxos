@@ -9,7 +9,6 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Agent from '@dxos/assistant/Agent';
-import * as DebugSurface from '@dxos/plugin-debug/DebugSurface';
 import { Channel, Organization, Person } from '@dxos/types';
 import { Position } from '@dxos/util';
 
@@ -18,7 +17,6 @@ import {
   AgentEmailSetup,
   AgentKnowledge,
   AgentPrivateChat,
-  AgentsDebug,
   AgentsPanel,
   AgentsSettings,
   BrainStore,
@@ -27,7 +25,7 @@ import {
 } from '#containers';
 import { AgentCompanion, AgentEmail } from '#types';
 
-import { AGENTS_DEBUG_PAGE, AGENTS_SECTION_TYPE } from '../constants.ts';
+import { AGENTS_SECTION_TYPE } from '../constants.ts';
 import { AGENTS_PANEL_PATH } from './agents-panel.ts';
 
 export default Capability.makeModule(() =>
@@ -118,13 +116,6 @@ export default Capability.makeModule(() =>
         position: Position.last,
         component: ProfileProperties,
         props: ({ data: { subject } }) => ({ subject }),
-      }),
-      // The debug panel's page inspecting the agents the identity administers.
-      Surface.create({
-        id: 'agentsDebug',
-        filter: AppSurface.literal(DebugSurface.Page, AGENTS_DEBUG_PAGE),
-        component: AgentsDebug,
-        props: ({ role }) => ({ role }),
       }),
     ]),
   ),

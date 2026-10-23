@@ -453,18 +453,6 @@ node AccountAgents
   article: surface:AccountAgents
 ```
 
-```mdl
-node AgentsDebug
-  desc: |
-    The debug panel's Agents page (`root/debug/agents`), a page of its own beside devtools' tree, inspecting the agents
-    the identity administers (F-7.10). It is always listed, whatever the plugin's setting.
-  source: root/debug
-  properties:
-    label: Agents
-    icon: ph--robot--regular
-  article: surface:AgentsDebug
-```
-
 ## Components
 
 ```mdl
@@ -551,17 +539,6 @@ component AgentsPanel
 ```
 
 ```mdl
-component AgentsDebug
-  desc: |
-    Container (containers/AgentsDebug) for the debug panel's Agents page. A selector lists the agents the identity
-    administers (`AgentSpace.administeredAgents`, by name and DID); for the one picked it reads EDGE's
-    `GET /compute/brain/:did/halo` (`EdgeHttpClient.getAgentHalo`). A second selector shows either its identity, as
-    JSON (the agent as its space records it, EDGE's identity, HALO space, admins, the spaces its admins put it in and
-    the spaces it holds a feed in, each named where the viewer is in it too), or every credential in its HALO, in
-    devtools' `CredentialsTable` as HALO › Credentials shows the viewer's own. EDGE's refusal shows as `error`.
-```
-
-```mdl
 component ProfileProperties
   desc: |
     ProfileGraph over the subject's live goals (owner refers to the subject; not dropped) and the current
@@ -606,13 +583,6 @@ surface OrganizationProfileGraph
   subject: type:Organization
   component: component:ProfileProperties
   position: last
-```
-
-```mdl
-surface AgentsDebug
-  desc: Matched on the page's node data literal, `org.dxos.plugin.agent.debug.agents`, on plugin-debug's page role.
-  role: debugPage
-  component: component:AgentsDebug
 ```
 
 ```mdl
@@ -710,7 +680,6 @@ feat F-7: An agent's own space
   req F-7.7: While the plugin's setting creates agents with identities (F-7.4), the account's Agents panel, listed after the account's other panels, lists the agents the identity administers (F-7.5) in the rows the contacts book gives people: each one's avatar, name and DID, and a chip per space it is a member of that the viewer is too, each switching to that space. It stays current as spaces and their members change.
   req F-7.8: EDGE keys an agent space's properties to the agent's URI (`AgentPresence.HOME_SOURCE`) when it mints the space. `AgentSpace.administeredAgents` reads each administered agent's name, DID and home from its space, so an admin who is not a member of the agent's home space can still add the agent to other spaces (F-8.1).
   req F-7.9: An admin's client asks EDGE to make each member who may write to an agent's space (its admins and editors) the agent's admin (`AgentAdminSync`, `POST /compute/brain/:did/admins { identityKey }`), and the agent issues each one an `IdentityAdmin` in its HALO. It never asks EDGE to take an admin off: a member made a reader or removed keeps the role. It acts only on a space EDGE names as the agent's own and only while EDGE counts the identity as the agent's admin, so a space that merely claims to be an agent's adds no one. Each add is sent once a session, and again after a failure; a client whose services reconnect starts over, since they may hold another identity. Sending an add again is harmless: EDGE appends an admin's credential when the agent's HALO lacks it, and never a second one. EDGE's 404 (an EDGE without the admins route, or a caller with no role on the agent) settles an add for the session, and another refusal (a 4xx) is sent again on the next pass. When EDGE could not be reached or failed (no answer, or a 5xx), the sync runs again 30 seconds later even if nothing changes, so an add reaches EDGE without waiting for another change; a space EDGE could not be asked about is asked again the same way.
-  req F-7.10: An admin inspects an agent's identity in the debug panel's Agents page (node:AgentsDebug): the agents the identity administers (F-7.5), and for each its HALO's credentials, its admins and the spaces it is in. A client holds no agent's HALO, which only EDGE replicates, so the page reads it from EDGE (`GET /compute/brain/:did/halo`), which answers the agent's admins and no one else.
 ```
 
 ```mdl
@@ -1282,27 +1251,6 @@ decision D-10: `AgentList` takes the agents as the contacts they are and copies 
   rejected:
     - Passing each space's own colour to the chips: the space colour fix (dxos/dxos#14075) keeps every chip and the sidebar on the hash of the space id instead.
   source: https://github.com/dxos/dxos/pull/14076
-```
-
-```mdl
-decision D-11: The agent's HALO feed can be inspected in devtools. Where it cannot, a panel lists the agents the viewer administers and shows each one's HALO credentials, the spaces it is a member of and its other metadata.
-  date: 2026-10-22
-  by: user:mykola-vrmchk
-  affects: [AgentsDebug, F-7.10]
-  source: https://github.com/dxos/dxos/pull/14147
-```
-
-```mdl
-decision D-12: Devtools could not read an agent's HALO, which only EDGE holds, so EDGE serves it to the agent's admins (`GET /compute/brain/:did/halo`) and plugin-agent adds an Agents page to the debug panel, showing it in devtools' credentials table. Fills in [D-11].
-  date: 2026-10-22
-  by: agent:claude-code
-  for: user:mykola-vrmchk
-  affects: [AgentsDebug, F-7.10]
-  why: The page needs the agents the viewer administers, which plugin-agent knows, and plugin-debug lets any plugin add a page.
-  rejected:
-    - A devtools panel in plugin-devtools: it would depend on plugin-agent for the agents the viewer administers.
-    - Replicating the agent's HALO to its admins' clients: a HALO replicates to its own devices, and an admin is not one.
-  source: https://github.com/dxos/dxos/pull/14147
 ```
 
 ---
