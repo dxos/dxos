@@ -33,6 +33,7 @@ import { startWorkerSpecServer } from './worker-spec-server.ts';
 await Harness.preload({
   plugins: [
     ClientPlugin.make({ types: [...WeatherSpace.make().schemas, Collection.Collection] }),
+    AssistantPlugin.make(),
     RoutinePlugin.make(),
     SpacePlugin.make({}),
   ],

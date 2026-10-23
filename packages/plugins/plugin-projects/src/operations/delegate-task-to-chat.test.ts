@@ -31,7 +31,14 @@ import { ProjectsPlugin } from '#plugin';
 import { ProjectOperation } from '#types';
 
 await Harness.preload({
-  plugins: [ClientPlugin.make({}), SpacePlugin.make({}), TasksPlugin.make(), RoutinePlugin.make(), ProjectsPlugin()],
+  plugins: [
+    ClientPlugin.make({}),
+    SpacePlugin.make({}),
+    TasksPlugin.make(),
+    AssistantPlugin.make(),
+    RoutinePlugin.make(),
+    ProjectsPlugin(),
+  ],
 });
 
 describe('ProjectOperation.DelegateTaskToChat', () => {
