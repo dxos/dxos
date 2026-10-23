@@ -203,7 +203,7 @@ moon run assistant-evals:evals
 moon run assistant-evals:evals -- src/evals/database.eval.ts
 ```
 
-In this repo, pull the key from the 1Password `CI` vault rather than exporting it manually:
+In this repo, pull the key from the 1Password `eng-dev` vault rather than exporting it manually:
 
 ```bash
 eval "$(pnpm -ws 1p-credentials)"
