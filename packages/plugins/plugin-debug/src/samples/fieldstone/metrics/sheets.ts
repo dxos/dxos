@@ -42,7 +42,7 @@ const makeChartSheet = ({
   name: string;
   header: ReadonlyArray<string>;
   rows: ReadonlyArray<ReadonlyArray<Value>>;
-  chart: Pick<Sheet.Chart, 'type' | 'regression'>;
+  chart: Pick<Sheet.ChartProperties, 'type' | 'regression'>;
   firstColumnSize?: number;
 }): Sheet.Sheet => {
   const cells = Object.fromEntries(
@@ -57,7 +57,7 @@ const makeChartSheet = ({
     columns: header.length,
     cells,
     ranges: SheetRange.headerRanges(cells, `A1:${last}1`),
-    charts: [{ id: key, name, range: `A1:${last}${rows.length + 1}`, header: true, grid: true, ...chart }],
+    charts: [{ name, range: `A1:${last}${rows.length + 1}`, header: true, grid: true, ...chart }],
   });
   if (firstColumnSize) {
     Obj.update(sheet, (sheet) => {

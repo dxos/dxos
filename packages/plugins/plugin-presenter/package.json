@@ -36,6 +36,16 @@
       "types": "./dist/types/src/containers/index.d.ts",
       "default": "./dist/lib/containers.mjs"
     },
+    "#deck": {
+      "source": "./src/deck/index.ts",
+      "types": "./dist/types/src/deck/index.d.ts",
+      "default": "./dist/lib/deck.mjs"
+    },
+    "#hooks": {
+      "source": "./src/hooks/index.ts",
+      "types": "./dist/types/src/hooks/index.d.ts",
+      "default": "./dist/lib/hooks.mjs"
+    },
     "#meta": {
       "source": "./src/meta.ts",
       "types": "./dist/types/src/meta.d.ts",
@@ -52,8 +62,8 @@
       "default": "./dist/lib/plugin.mjs"
     },
     "#testing": {
-      "source": "./src/testing.ts",
-      "types": "./dist/types/src/testing.d.ts",
+      "source": "./src/testing/index.ts",
+      "types": "./dist/types/src/testing/index.d.ts",
       "default": "./dist/lib/testing.mjs"
     },
     "#translations": {
@@ -80,11 +90,6 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
-    "./PresenterCapabilities": {
-      "source": "./src/types/PresenterCapabilities.ts",
-      "types": "./dist/types/src/types/PresenterCapabilities.d.ts",
-      "import": "./dist/lib/PresenterCapabilities.mjs"
-    },
     "./PresenterEvents": {
       "source": "./src/types/PresenterEvents.ts",
       "types": "./dist/types/src/types/PresenterEvents.d.ts",
@@ -100,20 +105,22 @@
       "types": "./dist/types/src/PresenterPlugin.d.ts",
       "import": "./dist/lib/PresenterPlugin.mjs"
     },
-    "./Settings": {
-      "source": "./src/types/Settings.ts",
-      "types": "./dist/types/src/types/Settings.d.ts",
-      "import": "./dist/lib/Settings.mjs"
+    "./Presentation": {
+      "source": "./src/types/Presentation.ts",
+      "types": "./dist/types/src/types/Presentation.d.ts",
+      "import": "./dist/lib/Presentation.mjs"
+    },
+    "./SlideViewState": {
+      "source": "./src/types/SlideViewState.ts",
+      "types": "./dist/types/src/types/SlideViewState.d.ts",
+      "import": "./dist/lib/SlideViewState.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "Presenter": [
-        "dist/types/src/types/Presenter.d.ts"
-      ],
-      "PresenterCapabilities": [
-        "dist/types/src/types/PresenterCapabilities.d.ts"
+      "Presentation": [
+        "dist/types/src/types/Presentation.d.ts"
       ],
       "PresenterEvents": [
         "dist/types/src/types/PresenterEvents.d.ts"
@@ -121,8 +128,8 @@
       "PresenterOperation": [
         "dist/types/src/types/PresenterOperation.d.ts"
       ],
-      "Settings": [
-        "dist/types/src/types/Settings.d.ts"
+      "SlideViewState": [
+        "dist/types/src/types/SlideViewState.d.ts"
       ]
     }
   },
@@ -139,13 +146,17 @@
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-react": "workspace:*",
-    "@dxos/effect": "workspace:*",
+    "@dxos/keys": "workspace:*",
     "@dxos/plugin-deck": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
-    "@dxos/random": "workspace:*",
+    "@dxos/plugin-space": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/react-ui-form": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "hastscript": "catalog:",
@@ -160,9 +171,11 @@
     "reveal.js": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/random": "workspace:*",
+    "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
