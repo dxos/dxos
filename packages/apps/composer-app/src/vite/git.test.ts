@@ -54,6 +54,23 @@ describe('git route', () => {
     await expect(reader.show(spec, '--help')).rejects.toThrow();
   });
 
+  test('a checkout with no base branch offers no fork point', async ({ expect }) => {
+    const lone = mkdtempSync(path.join(tmpdir(), 'dx-git-lone-'));
+    try {
+      const run = (...args: string[]) =>
+        execFileSync('git', ['-C', lone, '-c', 'user.name=test', '-c', 'user.email=test@example.com', ...args]);
+      run('init', '-q', '-b', 'topic');
+      writeFileSync(path.join(lone, 'SPEC.mdl'), 'spec\n');
+      run('add', '.');
+      run('commit', '-q', '-m', 'only');
+      const status = await reader.status(path.join(lone, 'SPEC.mdl'));
+      expect(status?.branch).toBe('topic');
+      expect(status?.mergeBase).toBeUndefined();
+    } finally {
+      rmSync(lone, { recursive: true, force: true });
+    }
+  });
+
   test('a file outside any repository has no status', async ({ expect }) => {
     const outside = mkdtempSync(path.join(tmpdir(), 'dx-nogit-'));
     try {

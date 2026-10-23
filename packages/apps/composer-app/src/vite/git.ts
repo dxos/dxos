@@ -179,8 +179,10 @@ export const createGitReader = (env: NodeJS.ProcessEnv = process.env): GitReader
           })),
         )
       ).find(({ ok }) => ok)?.ref;
-    const base = prBase ?? fallback ?? 'HEAD';
-    const mergeBase = (await git(dir, ['merge-base', 'HEAD', base]))?.trim() || undefined;
+    const resolved = prBase ?? fallback;
+    const base = resolved ?? 'HEAD';
+    // With no base branch to compare against there is no fork point, so diffing against the base is not offered.
+    const mergeBase = resolved && ((await git(dir, ['merge-base', 'HEAD', resolved]))?.trim() || undefined);
     return {
       ...(branch && { branch }),
       head,
