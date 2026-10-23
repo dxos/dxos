@@ -250,7 +250,7 @@ type Story = StoryObj<typeof meta>;
 export const Microphone: Story = {
   args: {
     language: 'en',
-    minPassMs: 500,
+    minPassMs: 200,
   },
   argTypes: {
     minPassMs: { control: { type: 'range', min: 100, max: 1000, step: 100 } },

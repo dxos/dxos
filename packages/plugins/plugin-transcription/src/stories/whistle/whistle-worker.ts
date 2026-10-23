@@ -44,8 +44,12 @@ type StreamOutput = {
 
 const OUT_CAPACITY = 64 * 1024;
 
-/** Default smallest batch worth a pass; anything queued while a pass runs joins the next one. */
-const DEFAULT_MIN_PASS_MS = 500;
+/**
+ * Default smallest batch worth a pass; anything queued while a pass runs joins the next one. Two capture
+ * flushes: a word commits after two agreeing passes, so this sets the commit floor (≈2×), while passes far
+ * closer together see nearly the same audio and agree on a half-heard word.
+ */
+const DEFAULT_MIN_PASS_MS = 200;
 
 /**
  * Every pass re-decodes the whole stream buffer, so pass time grows with it until it falls behind
