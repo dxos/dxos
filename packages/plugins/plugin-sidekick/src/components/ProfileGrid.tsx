@@ -7,6 +7,8 @@ import React, { useCallback } from 'react';
 import { Masonry } from '@dxos/react-ui-masonry';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 
@@ -49,6 +51,9 @@ export const ProfileGrid = ({ profiles, onSelect }: ProfileGridProps) => {
 const ProfileTile = ({ data: profile }: { data: ProfileCardData }) => (
   <Card.Root>
     <Card.Header>
+      <Layout.Block>
+        <Icon.Icon icon='ph--user--regular' />
+      </Layout.Block>
       <Card.Title truncate>{profile.name}</Card.Title>
     </Card.Header>
     {profile.tag && <Card.Row icon='ph--tag--regular'>{profile.tag}</Card.Row>}

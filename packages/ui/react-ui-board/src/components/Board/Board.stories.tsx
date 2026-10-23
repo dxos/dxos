@@ -8,6 +8,7 @@ import React, { useCallback, useRef, useState } from 'react';
 import { Dnd } from '@dxos/react-ui-dnd';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
+import * as UiLayout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -87,14 +88,14 @@ const defaultBounds = { columns: 12, rows: 12 };
 
 /** Card content for a tile's body; the cell itself supplies the `Card.Root` and header. */
 const TileContent = ({ item }: { item: TestItem }) => (
-  <div className='flex flex-col gap-1 px-2 pb-2 min-w-0'>
+  <UiLayout.Flex column gap='xs' classNames='px-2 pb-2 min-w-0'>
     {item.subtitle && <Card.Text truncate>{item.subtitle}</Card.Text>}
     {item.description && (
       <Card.Text variant='muted' lines={3}>
         {item.description}
       </Card.Text>
     )}
-  </div>
+  </UiLayout.Flex>
 );
 
 type StoryArgs = BoardRootProps & { items: TestItem[] };
