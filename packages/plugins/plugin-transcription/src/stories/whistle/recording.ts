@@ -84,11 +84,27 @@ export class Recording {
     return () => void this.#listeners.delete(listener);
   }
 
-  /** The capture, or the part between `start` and `end` seconds, as a 16-bit PCM WAV file. */
-  toWav(start = 0, end = this.duration): Blob {
+  /** The samples between `start` and `end` seconds (the whole capture by default). */
+  samples(start = 0, end = this.duration): Float32Array<ArrayBuffer> {
     const from = Math.max(0, Math.floor(start * WHISTLE_SAMPLE_RATE));
     const to = Math.min(this.#length, Math.ceil(end * WHISTLE_SAMPLE_RATE));
-    const length = Math.max(0, to - from);
+    const output = new Float32Array(Math.max(0, to - from));
+    let position = 0;
+    for (const chunk of this.#chunks) {
+      const chunkEnd = position + chunk.length;
+      if (chunkEnd > from && position < to) {
+        const head = Math.max(from, position);
+        output.set(chunk.subarray(head - position, Math.min(to, chunkEnd) - position), head - from);
+      }
+      position = chunkEnd;
+    }
+    return output;
+  }
+
+  /** The capture, or the part between `start` and `end` seconds, as a 16-bit PCM WAV file. */
+  toWav(start = 0, end = this.duration): Blob {
+    const samples = this.samples(start, end);
+    const length = samples.length;
     const header = new DataView(new ArrayBuffer(44));
     const dataBytes = length * 2;
     const writeTag = (offset: number, tag: string) =>
@@ -107,15 +123,7 @@ export class Recording {
     writeTag(36, 'data');
     header.setUint32(40, dataBytes, true);
 
-    const data = new Int16Array(length);
-    let position = 0;
-    for (const chunk of this.#chunks) {
-      const chunkEnd = position + chunk.length;
-      for (let index = Math.max(from, position); index < Math.min(to, chunkEnd); index++) {
-        data[index - from] = Math.max(-1, Math.min(1, chunk[index - position])) * 0x7fff;
-      }
-      position = chunkEnd;
-    }
+    const data = Int16Array.from(samples, (sample) => Math.max(-1, Math.min(1, sample)) * 0x7fff);
     return new Blob([header, data], { type: 'audio/wav' });
   }
 }

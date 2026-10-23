@@ -11,8 +11,8 @@
  *
  * - The toolbar's Low latency switch makes it a pass every 200 ms: words commit sooner,
  *   but passes that close together agree on half-heard words more often.
- * - A pause (0.8 s of silence or more) between words, or Stop, starts a new paragraph; each paragraph's audio can be
- *   saved on its own.
+ * - A pause (1.5 s of silence or more) between words, or Stop, starts a new paragraph; each paragraph's audio can be
+ *   played or saved on its own.
  * - `Microphone` streams the default input; `File` plays the same hosted m4a as `Transcription`.
  * - The model downloads on the first press and is cached by the browser afterwards.
  * - The waveform shows everything captured; the raw recording stays in the tab and can be saved as WAV.
@@ -32,6 +32,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { WHISTLE_AUDIO_CONSTRAINTS } from './whistle/capture.ts';
 import { type WhistleWord } from './whistle/protocol.ts';
 import { Recording } from './whistle/recording.ts';
+import { usePlayback } from './whistle/usePlayback.ts';
 import { type UseWhistleResult, useWhistle } from './whistle/useWhistle.ts';
 import { Waveform } from './whistle/Waveform.tsx';
 
@@ -40,10 +41,10 @@ const ACCURATE_PASS_MS = 1_000;
 const LOW_LATENCY_PASS_MS = 200;
 
 /**
- * A pause at least this long between two committed words starts a new paragraph: either the gap between their
- * timestamps, or silence in the audio around them, since the model's word times can blur a pause away.
+ * Silence at least this long starts a new paragraph. It is measured in the audio, not between the model's word
+ * times, which stretch or open gaps around a word; breaths and hesitations stay inside a paragraph.
  */
-const PARAGRAPH_PAUSE_SECONDS = 0.8;
+const PARAGRAPH_PAUSE_SECONDS = 1.5;
 
 /** Without a pause, a paragraph closes at the first sentence end after this many words. */
 const PARAGRAPH_MIN_WORDS = 30;
@@ -68,7 +69,7 @@ type OpenParagraph = Omit<Paragraph, 'text'> & { words: string[] };
  * long enough closes the open one. The unconfirmed tail is kept apart and shown after the last paragraph.
  */
 const useStreamingTranscript = (recording: Recording) => {
-  const [snapshot, setSnapshot] = useState<{ paragraphs: Paragraph[]; pending: string }>({
+  const [snapshot, setSnapshot] = useState<{ paragraphs: Paragraph[]; openId?: number; pending: string }>({
     paragraphs: [],
     pending: '',
   });
@@ -97,11 +98,7 @@ const useStreamingTranscript = (recording: Recording) => {
         const { last } = current;
         // Silence anywhere from the previous word's start to this word's end lies between them, wherever the
         // model put the boundary.
-        if (
-          last &&
-          (start - last.end >= PARAGRAPH_PAUSE_SECONDS ||
-            recording.longestSilence(last.start, end) >= PARAGRAPH_PAUSE_SECONDS)
-        ) {
+        if (last && recording.longestSilence(last.start, end) >= PARAGRAPH_PAUSE_SECONDS) {
           close();
         }
         current.open ??= { id: current.nextId++, start, end, words: [] };
@@ -115,11 +112,18 @@ const useStreamingTranscript = (recording: Recording) => {
       if (ended) {
         close();
         current.last = undefined;
+      } else if (
+        current.last &&
+        recording.longestSilence(current.last.start, recording.duration) >= PARAGRAPH_PAUSE_SECONDS
+      ) {
+        // Already a pause since the last committed word: whatever is heard next belongs to a new paragraph.
+        close();
       }
 
       const { open } = current;
       setSnapshot({
         paragraphs: open ? [...current.closed, { ...open, text: open.words.join(' ') }] : [...current.closed],
+        openId: open?.id,
         pending: ended ? '' : pending.trim(),
       });
     },
@@ -176,7 +180,8 @@ type WhistlePanelProps = {
 
 const WhistlePanel = ({ track, active, language, keywords, lowLatency = false, actions }: WhistlePanelProps) => {
   const [recording] = useState(() => new Recording());
-  const { paragraphs, pending, commit } = useStreamingTranscript(recording);
+  const { paragraphs, openId, pending, commit } = useStreamingTranscript(recording);
+  const playback = usePlayback(recording);
   const [fast, setFast] = useState(lowLatency);
   useEffect(() => setFast(lowLatency), [lowLatency]);
   const whistle = useWhistle({
@@ -211,30 +216,38 @@ const WhistlePanel = ({ track, active, language, keywords, lowLatency = false, a
           <ScrollContainer.Content>
             <ScrollContainer.Viewport>
               <div className='flex flex-col gap-2 p-2'>
-                {paragraphs.map((paragraph, index) => (
-                  <div key={paragraph.id} className='flex items-start gap-3'>
-                    <span className='shrink-0 w-10 pt-1 text-sm text-description font-mono tabular-nums'>
-                      {formatClock(paragraph.start)}
-                    </span>
-                    <p className='grow pt-0.5'>
-                      {paragraph.text}
-                      {index === paragraphs.length - 1 && pending && <em className='text-description'> {pending}</em>}
-                    </p>
-                    <Button.Root
-                      iconOnly
-                      variant='ghost'
-                      icon='ph--download-simple--regular'
-                      label='Save this paragraph'
-                      onClick={() =>
-                        saveRecording(whistle.recording, {
-                          start: paragraph.start - PARAGRAPH_PADDING_SECONDS,
-                          end: paragraph.end + PARAGRAPH_PADDING_SECONDS,
-                        })
-                      }
-                    />
-                  </div>
-                ))}
-                {paragraphs.length === 0 && pending && <em className='ps-13 text-description'>{pending}</em>}
+                {paragraphs.map((paragraph) => {
+                  const id = String(paragraph.id);
+                  const start = paragraph.start - PARAGRAPH_PADDING_SECONDS;
+                  const end = paragraph.end + PARAGRAPH_PADDING_SECONDS;
+                  const isPlaying = playback.playing === id;
+                  return (
+                    <div key={paragraph.id} className='flex items-start gap-3'>
+                      <span className='shrink-0 w-10 pt-1 text-sm text-description font-mono tabular-nums'>
+                        {formatClock(paragraph.start)}
+                      </span>
+                      <p className='grow pt-0.5'>
+                        {paragraph.text}
+                        {paragraph.id === openId && pending && <em className='text-description'> {pending}</em>}
+                      </p>
+                      <Button.Root
+                        iconOnly
+                        variant='ghost'
+                        icon={isPlaying ? 'ph--stop--regular' : 'ph--play--regular'}
+                        label={isPlaying ? 'Stop' : 'Play this paragraph'}
+                        onClick={() => (isPlaying ? playback.stop() : playback.play(id, start, end))}
+                      />
+                      <Button.Root
+                        iconOnly
+                        variant='ghost'
+                        icon='ph--download-simple--regular'
+                        label='Save this paragraph'
+                        onClick={() => saveRecording(recording, { start, end })}
+                      />
+                    </div>
+                  );
+                })}
+                {openId === undefined && pending && <em className='ps-13 text-description'>{pending}</em>}
               </div>
             </ScrollContainer.Viewport>
           </ScrollContainer.Content>
