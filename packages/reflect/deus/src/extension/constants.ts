@@ -19,4 +19,6 @@ export const BLOCK_TYPES = [
   'module',
   'suite',
   'decision',
+  'verdict',
+  'plugin',
 ] as const;

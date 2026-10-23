@@ -73,6 +73,23 @@ feat F-1: Start Game
 Any declared block identifier may be referenced elsewhere in the document as `[<id>]`.
 The linter verifies that all references resolve to a declared block.
 
+### External References
+
+A block may name something outside its document by **source key**:
+`github:<owner>/<repo>/<path>[#<fragment>]`, with the path relative to the repository root.
+
+| Key names           | Example                                                        | Fragment            |
+| ------------------- | -------------------------------------------------------------- | ------------------- |
+| A block of a spec   | `github:dxos/dxos/packages/core/echo/echo/SPEC.mdl#Database`   | Block or req id     |
+| A code symbol       | `github:dxos/dxos/packages/sdk/types/src/types/Spec.ts#make`   | Symbol (`A.b` ok)   |
+| A whole file        | `github:dxos/dxos/packages/apps/composer-app/vite.config.ts`   | none                |
+
+A spec writes keys inline to name blocks of other specs. It does not name the code that implements
+it: those links are annotations kept outside the spec (a review's `evidence:`, see `review.mdl`),
+and the spec viewer renders them as decorations beside the items they annotate. Tools resolve keys
+against a local checkout of the repository. A key is a location, not a version: it names whatever
+the checkout holds.
+
 ---
 
 ## Extensions Section
