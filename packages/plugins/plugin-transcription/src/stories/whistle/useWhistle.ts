@@ -30,6 +30,8 @@ export type UseWhistleProps = {
   keywords?: string[];
   /** Smallest batch of new audio, in milliseconds, worth a pass; lower commits sooner but less accurately. */
   minPassMs?: number;
+  /** Where captured audio is kept; one is made when omitted. */
+  recording?: Recording;
   /**
    * Called after every pass with the words it committed (seconds into the {@link Recording}), the unconfirmed
    * tail, and whether the stream ended with it.
@@ -59,6 +61,7 @@ export const useWhistle = ({
   language,
   keywords,
   minPassMs,
+  recording: recordingProp,
   onResult,
 }: UseWhistleProps): UseWhistleResult => {
   const [status, setStatus] = useState<WhistleStatus>('idle');
@@ -66,7 +69,8 @@ export const useWhistle = ({
   const [progress, setProgress] = useState(0);
   const [stats, setStats] = useState<WhistleStats>({});
   const [worker, setWorker] = useState<Worker>();
-  const [recording] = useState(() => new Recording());
+  const [ownRecording] = useState(() => new Recording());
+  const recording = recordingProp ?? ownRecording;
 
   const onResultRef = useRef(onResult);
   onResultRef.current = onResult;

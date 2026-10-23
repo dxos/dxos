@@ -7,6 +7,17 @@ import { WHISTLE_SAMPLE_RATE } from './protocol.ts';
 /** Waveform resolution: one bar per 50 ms. */
 export const BAR_SAMPLES = WHISTLE_SAMPLE_RATE / 20;
 
+/** Bars the noise floor is estimated over: the last 30 s. */
+const FLOOR_WINDOW_BARS = 600;
+
+/** A bar this far above the noise floor is sound rather than silence. */
+const SILENCE_MARGIN_DB = 15;
+
+/** Never call a bar louder than this silent, however loud the room. */
+const SILENCE_CEILING_DB = -35;
+
+const toDb = (peak: number) => 20 * Math.log10(peak + 1e-10);
+
 /** One waveform bar: the loudest sample in its window. */
 export type WaveformBar = {
   peak: number;
@@ -43,6 +54,29 @@ export class Recording {
       }
     }
     this.#listeners.forEach((listener) => listener());
+  }
+
+  /**
+   * The longest run of silence, in seconds, between `start` and `end` seconds. Silence is measured against the
+   * noise floor (a low percentile of recent bars), since the browser's noise suppression leaves a varying hiss.
+   */
+  longestSilence(start: number, end: number): number {
+    const recent = this.#bars.slice(-FLOOR_WINDOW_BARS).map(({ peak }) => toDb(peak));
+    if (recent.length === 0) {
+      return 0;
+    }
+    const floorDb = recent.toSorted((left, right) => left - right)[Math.floor(recent.length * 0.1)];
+    const thresholdDb = Math.min(floorDb + SILENCE_MARGIN_DB, SILENCE_CEILING_DB);
+    const barSeconds = BAR_SAMPLES / WHISTLE_SAMPLE_RATE;
+    const from = Math.max(0, Math.floor(start / barSeconds));
+    const to = Math.min(this.#bars.length, Math.ceil(end / barSeconds));
+    let longest = 0;
+    let run = 0;
+    for (let index = from; index < to; index++) {
+      run = toDb(this.#bars[index].peak) < thresholdDb ? run + 1 : 0;
+      longest = Math.max(longest, run);
+    }
+    return longest * barSeconds;
   }
 
   subscribe(listener: () => void): () => void {

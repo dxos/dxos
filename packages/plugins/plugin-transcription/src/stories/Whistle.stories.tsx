@@ -11,7 +11,7 @@
  *
  * - The toolbar's Low latency switch makes it a pass every 200 ms: words commit sooner,
  *   but passes that close together agree on half-heard words more often.
- * - A pause of a second or more between words, or Stop, starts a new paragraph; each paragraph's audio can be
+ * - A pause (0.8 s of silence or more) between words, or Stop, starts a new paragraph; each paragraph's audio can be
  *   saved on its own.
  * - `Microphone` streams the default input; `File` plays the same hosted m4a as `Transcription`.
  * - The model downloads on the first press and is cached by the browser afterwards.
@@ -31,7 +31,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { WHISTLE_AUDIO_CONSTRAINTS } from './whistle/capture.ts';
 import { type WhistleWord } from './whistle/protocol.ts';
-import { type Recording } from './whistle/recording.ts';
+import { Recording } from './whistle/recording.ts';
 import { type UseWhistleResult, useWhistle } from './whistle/useWhistle.ts';
 import { Waveform } from './whistle/Waveform.tsx';
 
@@ -39,8 +39,11 @@ import { Waveform } from './whistle/Waveform.tsx';
 const ACCURATE_PASS_MS = 1_000;
 const LOW_LATENCY_PASS_MS = 200;
 
-/** A pause at least this long (seconds between committed words) starts a new paragraph. */
-const PARAGRAPH_PAUSE_SECONDS = 1;
+/**
+ * A pause at least this long between two committed words starts a new paragraph: either the gap between their
+ * timestamps, or silence in the audio around them, since the model's word times can blur a pause away.
+ */
+const PARAGRAPH_PAUSE_SECONDS = 0.8;
 
 /** Without a pause, a paragraph closes at the first sentence end after this many words. */
 const PARAGRAPH_MIN_WORDS = 30;
@@ -64,49 +67,64 @@ type OpenParagraph = Omit<Paragraph, 'text'> & { words: string[] };
  * Groups committed words into paragraphs: a pause, a stopped stream, or a sentence end once a paragraph is
  * long enough closes the open one. The unconfirmed tail is kept apart and shown after the last paragraph.
  */
-const useStreamingTranscript = () => {
+const useStreamingTranscript = (recording: Recording) => {
   const [snapshot, setSnapshot] = useState<{ paragraphs: Paragraph[]; pending: string }>({
     paragraphs: [],
     pending: '',
   });
-  const state = useRef<{ closed: Paragraph[]; open?: OpenParagraph; lastEnd?: number; nextId: number }>({
+  const state = useRef<{
+    closed: Paragraph[];
+    open?: OpenParagraph;
+    last?: { start: number; end: number };
+    nextId: number;
+  }>({
     closed: [],
     nextId: 0,
   });
 
-  const commit = useCallback((words: WhistleWord[], pending: string, ended: boolean) => {
-    const current = state.current;
-    const close = () => {
-      if (current.open) {
-        const { words, ...paragraph } = current.open;
-        current.closed.push({ ...paragraph, text: words.join(' ') });
-        current.open = undefined;
-      }
-    };
+  const commit = useCallback(
+    (words: WhistleWord[], pending: string, ended: boolean) => {
+      const current = state.current;
+      const close = () => {
+        if (current.open) {
+          const { words, ...paragraph } = current.open;
+          current.closed.push({ ...paragraph, text: words.join(' ') });
+          current.open = undefined;
+        }
+      };
 
-    for (const { word, start, end } of words) {
-      if (current.lastEnd !== undefined && start - current.lastEnd >= PARAGRAPH_PAUSE_SECONDS) {
-        close();
+      for (const { word, start, end } of words) {
+        const { last } = current;
+        // Silence anywhere from the previous word's start to this word's end lies between them, wherever the
+        // model put the boundary.
+        if (
+          last &&
+          (start - last.end >= PARAGRAPH_PAUSE_SECONDS ||
+            recording.longestSilence(last.start, end) >= PARAGRAPH_PAUSE_SECONDS)
+        ) {
+          close();
+        }
+        current.open ??= { id: current.nextId++, start, end, words: [] };
+        current.open.words.push(word);
+        current.open.end = end;
+        current.last = { start, end };
+        if (current.open.words.length >= PARAGRAPH_MIN_WORDS && SENTENCE_END.test(word)) {
+          close();
+        }
       }
-      current.open ??= { id: current.nextId++, start, end, words: [] };
-      current.open.words.push(word);
-      current.open.end = end;
-      current.lastEnd = end;
-      if (current.open.words.length >= PARAGRAPH_MIN_WORDS && SENTENCE_END.test(word)) {
+      if (ended) {
         close();
+        current.last = undefined;
       }
-    }
-    if (ended) {
-      close();
-      current.lastEnd = undefined;
-    }
 
-    const { open } = current;
-    setSnapshot({
-      paragraphs: open ? [...current.closed, { ...open, text: open.words.join(' ') }] : [...current.closed],
-      pending: ended ? '' : pending.trim(),
-    });
-  }, []);
+      const { open } = current;
+      setSnapshot({
+        paragraphs: open ? [...current.closed, { ...open, text: open.words.join(' ') }] : [...current.closed],
+        pending: ended ? '' : pending.trim(),
+      });
+    },
+    [recording],
+  );
 
   return { ...snapshot, commit };
 };
@@ -157,7 +175,8 @@ type WhistlePanelProps = {
 };
 
 const WhistlePanel = ({ track, active, language, keywords, lowLatency = false, actions }: WhistlePanelProps) => {
-  const { paragraphs, pending, commit } = useStreamingTranscript();
+  const [recording] = useState(() => new Recording());
+  const { paragraphs, pending, commit } = useStreamingTranscript(recording);
   const [fast, setFast] = useState(lowLatency);
   useEffect(() => setFast(lowLatency), [lowLatency]);
   const whistle = useWhistle({
@@ -166,6 +185,7 @@ const WhistlePanel = ({ track, active, language, keywords, lowLatency = false, a
     language,
     keywords,
     minPassMs: fast ? LOW_LATENCY_PASS_MS : ACCURATE_PASS_MS,
+    recording,
     onResult: commit,
   });
 
