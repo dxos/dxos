@@ -2,17 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-// Helpers for the spec-review skill. Imports nothing beyond node:*, so it runs with plain `node`.
-//
-//   node .agents/skills/spec-review/scripts/review.mts items <spec.mdl>
-//     Lists every item a review must judge, one per line: `<id>\t<kind>\t<line>\t<title>`.
-//
-//   node .agents/skills/spec-review/scripts/review.mts check <spec.review.mdl>
-//     Validates a review against its spec and the checkout: frontmatter, statuses, notes,
-//     coverage of every item, and that each evidence key names an existing file and symbol.
-import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, realpathSync } from 'node:fs';
-import path from 'node:path';
+import * as Argument from 'effect/cli/Argument';
+import * as Command from 'effect/cli/Command';
+import * as Console from 'effect/Console';
+import * as Effect from 'effect/Effect';
+import * as FileSystem from 'effect/FileSystem';
+import * as Option from 'effect/Option';
+import * as Path from 'effect/Path';
+
+import { ReviewCheckError } from './errors.ts';
+import { git } from './git.ts';
 
 const STATUSES = new Set(['done', 'untested', 'partial', 'diverged', 'missing']);
 
@@ -42,7 +41,7 @@ const keyList = (value: string | undefined): string[] =>
     .map((item) => item.replace(/^[\s[-]+|[\s\]]+$/g, ''))
     .filter(Boolean);
 
-type Item = { id: string; kind: string; line: number; title: string };
+export type ReviewItem = { id: string; kind: string; line: number; title: string };
 
 const blocks = (text: string): { body: string; line: number }[] =>
   [...text.matchAll(/^```mdl\s*\n([\s\S]*?)^```/gm)].map((match) => ({
@@ -51,7 +50,7 @@ const blocks = (text: string): { body: string; line: number }[] =>
   }));
 
 /** Top-level blocks, plus `req` items nested in a `feat`; a feat with reqs is judged through them. */
-const reviewItems = (text: string): Item[] =>
+export const reviewItems = (text: string): ReviewItem[] =>
   blocks(text).flatMap(({ body, line }) => {
     const lines = body.split('\n');
     const header = lines[0].match(/^(\w+)\s+([A-Za-z][\w.-]*)\s*(?::\s*(.*))?$/);
@@ -91,22 +90,18 @@ const declares = (source: string, name: string): boolean => {
   ].some((pattern) => pattern.test(source));
 };
 
-const repoRoot = (from: string): string =>
-  execFileSync('git', ['-C', from, 'rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
+type ResolvedKey = { file?: string; symbol?: string; error?: string };
 
-const repoId = (root: string): string | undefined => {
-  try {
-    const url = execFileSync('git', ['-C', root, 'remote', 'get-url', 'origin'], { encoding: 'utf8' }).trim();
-    return url.match(/github\.com[:/]([\w.-]+\/[\w.-]+?)(?:\.git)?\/?$/)?.[1];
-  } catch {
-    return undefined;
-  }
-};
-
-const check = (reviewPath: string): number => {
+/**
+ * Validates a `.review.mdl` against its spec and the checkout: frontmatter, statuses, notes, coverage of every item,
+ * and that each evidence key names an existing file and symbol.
+ */
+export const checkReview = Effect.fnUntraced(function* (reviewPath: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
   const errors: string[] = [];
   const warnings: string[] = [];
-  const text = readFileSync(reviewPath, 'utf8');
+  const text = yield* fs.readFileString(reviewPath);
   const meta = frontmatter(text);
   for (const key of ['spec', 'commit', 'date', 'by']) {
     if (!meta[key]) {
@@ -120,34 +115,38 @@ const check = (reviewPath: string): number => {
     errors.push('frontmatter: `by` must be `user:<handle>` or `agent:<name>`');
   }
 
-  const root = repoRoot(path.dirname(path.resolve(reviewPath)));
-  const repo = repoId(root);
-  if (meta.commit) {
-    try {
-      execFileSync('git', ['-C', root, 'cat-file', '-e', `${meta.commit}^{commit}`], { stdio: 'ignore' });
-    } catch {
-      warnings.push(`frontmatter: commit ${meta.commit} is not in this clone (shallow, or not fetched)`);
-    }
+  const root = yield* git(path.dirname(path.resolve(reviewPath)), 'rev-parse', '--show-toplevel');
+  const realRoot = yield* fs.realPath(root);
+  const repo = Option.getOrUndefined(
+    yield* git(root, 'remote', 'get-url', 'origin').pipe(
+      Effect.option,
+      Effect.map(Option.flatMapNullishOr((url) => url.match(/github\.com[:/]([\w.-]+\/[\w.-]+?)(?:\.git)?\/?$/)?.[1])),
+    ),
+  );
+  if (meta.commit && Option.isNone(yield* git(root, 'cat-file', '-e', `${meta.commit}^{commit}`).pipe(Effect.option))) {
+    warnings.push(`frontmatter: commit ${meta.commit} is not in this clone (shallow, or not fetched)`);
   }
-  const resolveKey = (key: string): { file?: string; symbol?: string; error?: string } => {
+
+  const exists = (file: string) => fs.exists(file).pipe(Effect.orElseSucceed(() => false));
+  const resolveKey = Effect.fnUntraced(function* (key: string) {
     const match = key.match(/^github:([\w.-]+\/[\w.-]+)\/([^#\s]+)(?:#([\w$.-]+))?$/);
     if (!match) {
-      return { error: `not a github: key: ${key}` };
+      return { error: `not a github: key: ${key}` } satisfies ResolvedKey;
     }
     if (repo && match[1].toLowerCase() !== repo.toLowerCase()) {
-      return {};
+      return {} satisfies ResolvedKey;
     }
     const file = path.resolve(root, match[2]);
     // A key names a file inside the checkout; neither `..` nor a symlink may reach outside it.
-    const real = existsSync(file) ? realpathSync(file) : file;
-    if (match[2].split('/').includes('..') || !real.startsWith(`${realpathSync(root)}${path.sep}`)) {
-      return { error: `key leaves the checkout: ${key}` };
+    const real = (yield* exists(file)) ? yield* fs.realPath(file) : file;
+    if (match[2].split('/').includes('..') || !real.startsWith(`${realRoot}${path.sep}`)) {
+      return { error: `key leaves the checkout: ${key}` } satisfies ResolvedKey;
     }
-    return { file, symbol: match[3] };
-  };
+    return { file, symbol: match[3] } satisfies ResolvedKey;
+  });
 
-  const specFile = meta.spec && resolveKey(meta.spec).file;
-  const specText = specFile && existsSync(specFile) ? readFileSync(specFile, 'utf8') : undefined;
+  const specFile = meta.spec ? (yield* resolveKey(meta.spec)).file : undefined;
+  const specText = specFile && (yield* exists(specFile)) ? yield* fs.readFileString(specFile) : undefined;
   if (meta.spec && !specText) {
     errors.push(`frontmatter: spec not found in this checkout: ${meta.spec}`);
   }
@@ -182,13 +181,13 @@ const check = (reviewPath: string): number => {
       warnings.push(`${at}: ${id} is ${status} with no evidence`);
     }
     for (const key of evidence) {
-      const { file, symbol, error } = resolveKey(key);
+      const { file, symbol, error } = yield* resolveKey(key);
       if (error) {
         errors.push(`${at}: ${error}`);
-      } else if (file && !existsSync(file)) {
+      } else if (file && !(yield* exists(file))) {
         errors.push(`${at}: evidence file not found: ${key}`);
       } else if (file && symbol) {
-        if (!declares(readFileSync(file, 'utf8'), symbol.split('.').pop() ?? symbol)) {
+        if (!declares(yield* fs.readFileString(file), symbol.split('.').pop() ?? symbol)) {
           errors.push(`${at}: no declaration of ${symbol} in ${key.split('#')[0]} (a mention is not evidence)`);
         }
       }
@@ -207,12 +206,12 @@ const check = (reviewPath: string): number => {
       warnings.push(`${at}: ${id} is done with no tests; cite them or make it untested`);
     }
     for (const key of tests) {
-      const { file, symbol, error } = resolveKey(key);
+      const { file, symbol, error } = yield* resolveKey(key);
       if (error) {
         errors.push(`${at}: ${error}`);
       } else if (symbol) {
         errors.push(`${at}: a test key names the test file only, without #: ${key}`);
-      } else if (file && !existsSync(file)) {
+      } else if (file && !(yield* exists(file))) {
         errors.push(`${at}: test file not found: ${key}`);
       }
     }
@@ -223,22 +222,38 @@ const check = (reviewPath: string): number => {
     }
   }
 
-  warnings.forEach((warning) => console.log(`warning: ${warning}`));
-  errors.forEach((error) => console.log(`error: ${error}`));
-  console.log(
+  for (const warning of warnings) {
+    yield* Console.log(`warning: ${warning}`);
+  }
+  for (const error of errors) {
+    yield* Console.log(`error: ${error}`);
+  }
+  yield* Console.log(
     `${verdicts.length} verdicts for ${items.length} items; ${errors.length} errors, ${warnings.length} warnings.`,
   );
-  return errors.length > 0 ? 1 : 0;
-};
-
-const [command, file] = process.argv.slice(2);
-if (command === 'items' && file) {
-  for (const { id, kind, line, title } of reviewItems(readFileSync(file, 'utf8'))) {
-    console.log(`${id}\t${kind}\t${line}\t${title}`);
+  if (errors.length > 0) {
+    return yield* Effect.fail(new ReviewCheckError({ context: { errors: errors.length } }));
   }
-} else if (command === 'check' && file) {
-  process.exit(check(file));
-} else {
-  console.error('usage: review.mts items <spec.mdl> | check <spec.review.mdl>');
-  process.exit(2);
-}
+});
+
+const items = Command.make(
+  'items',
+  { spec: Argument.String('spec').pipe(Argument.withDescription('The spec (.mdl) to list.')) },
+  Effect.fnUntraced(function* ({ spec }) {
+    const fs = yield* FileSystem.FileSystem;
+    for (const { id, kind, line, title } of reviewItems(yield* fs.readFileString(spec))) {
+      yield* Console.log(`${id}\t${kind}\t${line}\t${title}`);
+    }
+  }),
+).pipe(Command.withDescription('List every item a spec review must judge: `<id>\\t<kind>\\t<line>\\t<title>`.'));
+
+const check = Command.make(
+  'check',
+  { review: Argument.String('review').pipe(Argument.withDescription('The review (.review.mdl) to validate.')) },
+  ({ review }) => checkReview(review),
+).pipe(Command.withDescription('Validate a spec review against its spec and the checkout.'));
+
+export const review = Command.make('review').pipe(
+  Command.withDescription('Spec review tools.'),
+  Command.withSubcommands([items, check]),
+);
