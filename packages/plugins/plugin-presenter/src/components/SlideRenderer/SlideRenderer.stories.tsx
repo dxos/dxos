@@ -14,15 +14,18 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useObject } from '@dxos/echo-react';
-import { DXN } from '@dxos/keys';
+import { Filter, Obj } from '@dxos/echo';
+import { useObject, useResolveRef } from '@dxos/echo-react';
+import { DXN, EID } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { type Space, useQuery } from '@dxos/react-client/echo';
+import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { type SlideSource } from '#deck';
 import { translations } from '#translations';
+import { Presentation } from '#types';
 
 import { MarkdownSlide } from '../MarkdownSlide/index.ts';
 import { SlideRenderer } from './SlideRenderer.tsx';
@@ -82,13 +85,71 @@ const DefaultStory = ({ kind, content }: StoryProps) => {
   );
 };
 
+const surfaceTag = (eid: string) => `<Surface ref="${eid}" />`;
+
+/** Slide content per story, built from objects the space creates so refs carry their real ids. */
+const createSpaceSlides = async ({ space }: { space: Space }) => {
+  const embedded = space.db.add(Markdown.make({ name: 'Embedded', content: '# Embedded document' }));
+  const deleted = space.db.add(Markdown.make({ name: 'Deleted', content: '# Deleted document' }));
+  space.db.remove(deleted);
+  space.db.add(
+    Presentation.make({
+      name: 'embedded',
+      slides: [
+        [
+          '---',
+          'layout: two-cols',
+          '---',
+          '# Beside the document',
+          '::right::',
+          surfaceTag(EID.make({ entityId: embedded.id })),
+        ].join('\n'),
+      ],
+    }),
+  );
+  space.db.add(
+    Presentation.make({
+      name: 'missing',
+      slides: [
+        [
+          '---',
+          'layout: two-cols',
+          '---',
+          surfaceTag(EID.make({ entityId: deleted.id })),
+          '::right::',
+          surfaceTag('javascript:alert(1)'),
+        ].join('\n'),
+      ],
+    }),
+  );
+  await space.db.flush({ indexes: true });
+};
+
+/** Renders the first slide of the named presentation from the story space, so the slide has an owning database. */
+const SpaceSlideStory = ({ name }: { name: string }) => {
+  const { space } = useClientStory();
+  const [presentation] = useQuery(space?.db, Filter.type(Presentation.Presentation, { name }));
+  const target = useResolveRef(presentation?.sections[0]);
+  const text = target && Obj.instanceOf(Text.Text, target) ? target : undefined;
+  if (!text) {
+    return <Loading />;
+  }
+
+  return <SlideRenderer source={{ kind: 'text', id: text.id, text }} />;
+};
+
 const meta = {
   title: 'plugins/plugin-presenter/components/SlideRenderer',
   render: DefaultStory,
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
-    withClientProvider({ types: [Markdown.Document, Text.Text], createIdentity: true }),
+    withClientProvider({
+      types: [Markdown.Document, Text.Text, Presentation.Presentation],
+      createIdentity: true,
+      createSpace: true,
+      onCreateSpace: createSpaceSlides,
+    }),
   ],
   parameters: {
     layout: 'fullscreen',
@@ -99,6 +160,8 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+
+const LOAD_TIMEOUT = { timeout: 10_000 };
 
 const withSlideSurface = withPluginManager({ plugins: [createSlidePlugin()()] });
 
@@ -156,5 +219,29 @@ export const GatedSurface: Story = {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText('Linked document', undefined, { timeout: 10_000 })).toBeVisible();
     await expect(canvas.queryByText('Linked', { exact: true })).toBeNull();
+  },
+};
+
+/** A `<Surface ref>` in a layout slot renders the referenced object through the app's slide surface. */
+export const EmbeddedSurface: Story = {
+  render: () => <SpaceSlideStory name='embedded' />,
+  decorators: [withSlideSurface],
+  args: { kind: 'text' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByRole('heading', { name: 'Beside the document' }, LOAD_TIMEOUT)).toBeVisible();
+    await expect(await canvas.findByRole('heading', { name: 'Embedded document' }, LOAD_TIMEOUT)).toBeVisible();
+  },
+};
+
+/** A ref to a deleted object and a malformed ref each settle on the placeholder rather than spinning. */
+export const EmbeddedSurfaceMissing: Story = {
+  render: () => <SpaceSlideStory name='missing' />,
+  decorators: [withSlideSurface],
+  args: { kind: 'text' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getAllByText('Missing object')).toHaveLength(2), LOAD_TIMEOUT);
+    await expect(canvasElement.querySelector('[data-testid="presenter.embedded-surface.loading"]')).toBeNull();
   },
 };

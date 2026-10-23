@@ -2,11 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
-import * as Surface from '@dxos/app-framework/Surface';
-import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -16,8 +13,10 @@ import { type Text } from '@dxos/schema';
 import { type SlideSource } from '#deck';
 import { meta } from '#meta';
 
-import { MarkdownSlide } from '../MarkdownSlide/index.ts';
+import { MarkdownSlide, type MarkdownSlideProps } from '../MarkdownSlide/index.ts';
 import { SlideFrame } from '../SlideFrame/index.ts';
+import { EmbeddedSurface } from './EmbeddedSurface.tsx';
+import { ObjectSurface } from './ObjectSurface.tsx';
 
 export type SlideRendererProps = {
   source: SlideSource;
@@ -40,45 +39,24 @@ export const SlideRenderer = ({ source, attendableId }: SlideRendererProps) => {
 
 const TextSlide = ({ text }: { text: Text.Text }) => {
   const [content] = useObject(text, 'content');
+  // Refs resolve against the owner's database so space-relative `echo:///<id>` refs find their target.
+  const db = Obj.getDatabase(text);
+  const renderSurface = useMemo<MarkdownSlideProps['renderSurface']>(
+    () => (db ? ({ uri, role }) => <EmbeddedSurface uri={uri} role={role} db={db} /> : undefined),
+    [db],
+  );
   return (
     <SlideFrame>
-      <MarkdownSlide content={content} />
+      <MarkdownSlide content={content} renderSurface={renderSurface} />
     </SlideFrame>
   );
 };
 
-const ObjectSlide = ({ object, attendableId }: { object: Obj.Unknown; attendableId?: string }) => {
-  // Subscribed so the slide swaps in when a lazily gated surface registers.
-  const surfaceManager = Surface.useSurfaceManager();
-  const candidates = useAtomValue(surfaceManager.candidatesAtom(AppSurface.Slide.role));
-  const data = useMemo(() => ({ subject: object, attendableId: attendableId ?? object.id }), [object, attendableId]);
-  const available = Surface.matchCandidates(candidates, AppSurface.Slide.role, data).length > 0;
-
-  // The availability check fires the role's demand on a miss, which loads gated surface modules.
-  const isAvailable = Surface.useIsAvailable();
-  useEffect(() => {
-    if (!available) {
-      isAvailable({ type: AppSurface.Slide, data });
-    }
-  }, [available, isAvailable, data]);
-
-  return (
-    <SlideFrame>
-      {available ? <Surface.Surface type={AppSurface.Slide} data={data} limit={1} /> : <TitleSlide object={object} />}
-    </SlideFrame>
-  );
-};
-
-/** Shown when no surface renders the object as a slide. */
-const TitleSlide = ({ object }: { object: Obj.Unknown }) => {
-  const icon = Obj.getIcon(object)?.icon ?? 'ph--cube--regular';
-  return (
-    <div className='flex flex-col grow h-full items-center justify-center gap-8 text-8xl'>
-      <Icon.Icon icon={icon} classNames='size-48' />
-      <span>{Obj.getLabel(object)}</span>
-    </div>
-  );
-};
+const ObjectSlide = ({ object, attendableId }: { object: Obj.Unknown; attendableId?: string }) => (
+  <SlideFrame>
+    <ObjectSurface object={object} role='slide' attendableId={attendableId} />
+  </SlideFrame>
+);
 
 const PendingSlide = () => {
   const { t } = Hooks.useTranslation(meta.profile.key);

@@ -32,6 +32,7 @@ export const translations = [
         'untitled-object.label': 'Untitled {{type}}',
         'slide-fallback.label': 'Slide {{count}}',
         'remove-section.label': 'Remove from presentation',
+        'missing-object.label': 'Missing object',
       },
     },
   },
