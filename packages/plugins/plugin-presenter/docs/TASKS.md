@@ -69,6 +69,7 @@ Design: [DESIGN.md](./DESIGN.md).
 - [x] **Evaluate `@slidev/parser`** for the preview `---` split — rejected (Node-targeted, not in the repo); the splitter is owned in `src/markdown`.
 - [x] **Migrate** reveal syntax in test decks; reveal.js deleted (no setting).
 - [x] **Print stylesheet** — `Deck/print.css`, imported by `Deck`; scoped by `html[data-printing-deck]`, prints every slide.
+- [x] **Object image embeds** — `![label](echo:///<id>)` renders the object like `<Surface ref>`, keeping main's reveal-era syntax (#14152) and plugin-debug's presenter sample working.
 - [x] **Themes** — `default`, `light`, `dark`, `serif` via `--slide-*` variables; `theme:` headmatter, Presentation `theme` setting with color/font overrides; story `plugins/plugin-presenter/components/SlideTheme`.
 - [ ] Theme-driven Tailwind utilities for plugin-contributed themes (a `SlideTheme` capability) if a second source of themes appears.
 - [ ] `class:` frontmatter only works with Tailwind utilities that are already generated (the markdown is not scanned); consider a safelist.

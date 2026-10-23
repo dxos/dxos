@@ -35,3 +35,20 @@ describe('formatted frontmatter', () => {
     expect(parsed.layout).toBe('center');
   });
 });
+
+describe('plugin-debug presenter sample', () => {
+  const content = readFileSync(
+    new URL('../../../plugin-debug/assets/presenter/presentation.md', import.meta.url),
+    'utf8',
+  ).replaceAll('{{timeline}}', 'echo:///01J00000000000000000000000');
+  const parts = splitSlides(content);
+
+  test('embeds the timeline chart as a surface', () => {
+    const embedded = parts.map(parseSlide).filter((slide) => JSON.stringify(slide.slots).includes('slide-surface'));
+    expect(embedded).toHaveLength(1);
+  });
+
+  test('parses without issues', () => {
+    expect(parts.flatMap((part) => parseSlide(part).issues)).toEqual([]);
+  });
+});

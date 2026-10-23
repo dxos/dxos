@@ -121,6 +121,24 @@ describe('parseSlide', () => {
     expect(slide.issues).toEqual([]);
   });
 
+  test('an image alone in its paragraph with an object URL becomes a block slide-surface', () => {
+    const slide = parseSlide('![Timeline|480](echo:///A)');
+    const [surface] = slide.slots.default.children;
+    expect(surface).toMatchObject({ type: 'element', tagName: 'slide-surface' });
+    expect(elements(slide.slots.default, 'slide-surface')[0].properties).toMatchObject({
+      ref: 'echo:///A',
+      role: 'slide',
+    });
+    expect(elements(slide.slots.default, 'p')).toHaveLength(0);
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('an inline object image becomes a slide-surface; other images stay images', () => {
+    const slide = parseSlide('See ![chart](echo:///A) and ![photo](a.png)');
+    expect(elements(slide.slots.default, 'slide-surface')).toHaveLength(1);
+    expect(elements(slide.slots.default, 'img')[0].properties.src).toBe('a.png');
+  });
+
   test('<Surface> with an invalid role defaults to slide', () => {
     const slide = parseSlide('<Surface ref="echo:///A" role="banner" />');
     expect(elements(slide.slots.default, 'slide-surface')[0].properties.role).toBe('slide');

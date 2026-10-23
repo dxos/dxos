@@ -184,8 +184,26 @@ const slotMarker = (node: RootContent): SlotName | undefined => {
   return name !== undefined && isSlotName(name) ? name : undefined;
 };
 
+const OBJECT_URI = /^(echo|eid):/i;
+
+/**
+ * `![label](echo:///<id>)` embeds the object like `<Surface ref>`; an image alone in its paragraph replaces the
+ * paragraph, so the surface can fill its slot.
+ */
+const objectEmbed = (node: RootContent): SlideElement | undefined => {
+  if (node.type === 'image' && OBJECT_URI.test(node.url)) {
+    return slideElement('slide-surface', { ref: node.url, role: SURFACE_ROLES[0] });
+  }
+  if (node.type === 'paragraph') {
+    const content = node.children.filter((child) => child.type !== 'text' || child.value.trim().length > 0);
+    return content.length === 1 ? objectEmbed(content[0]) : undefined;
+  }
+  return undefined;
+};
+
 /** Rewrites raw HTML in `parent` (bottom-up) into allowlisted elements or escaped text. */
 const transformChildren = (parent: Parent, issues: SlideIssue[]) => {
+  parent.children = parent.children.map((child) => objectEmbed(child) ?? child);
   for (const child of parent.children) {
     sanitizeUrl(child, issues);
     if ('children' in child) {

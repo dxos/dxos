@@ -1007,6 +1007,15 @@ decision D-42: `light` and `dark` force their mode by setting `color-scheme` on 
   rejected: Toggling the `.dark` class on the slide, which cannot switch a dark app's slide to light.
 ```
 
+```mdl
+decision D-43: An image whose URL is an object URI (`![label](echo:///<id>)`) embeds the object like `<Surface ref>` with the `slide` role; alone in its paragraph it fills its slot, and the label is ignored. Fills in [D-25].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [MarkdownSlide, F-8.2]
+  why: Main's reveal player gained this syntax (#14152) and plugin-debug's presenter sample uses it to show a timeline chart; deleting reveal must not drop it.
+```
+
 ---
 
 ## Appendix: Extension Definitions
