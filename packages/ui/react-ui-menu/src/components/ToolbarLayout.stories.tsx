@@ -138,9 +138,9 @@ const contributions: Record<Contributor, (log: Log) => ActionGraphProps[]> = {
   ],
 };
 
-type StoryProps = { contributors?: Contributor[]; width?: number; asMenu?: boolean };
+type StoryProps = { contributors?: Contributor[]; narrow?: boolean; asMenu?: boolean };
 
-const DefaultStory = ({ contributors = [], width, asMenu }: StoryProps) => {
+const DefaultStory = ({ contributors = [], narrow, asMenu }: StoryProps) => {
   const menu = useMenuBuilder(
     () =>
       contributors
@@ -151,7 +151,7 @@ const DefaultStory = ({ contributors = [], width, asMenu }: StoryProps) => {
   );
 
   return (
-    <div className='p-4'>
+    <div className='p-8'>
       {asMenu ? (
         // The same graph as a menu: named groups become submenus, the overflow group one more.
         <ActionMenu {...menu}>
@@ -159,13 +159,7 @@ const DefaultStory = ({ contributors = [], width, asMenu }: StoryProps) => {
         </ActionMenu>
       ) : (
         // Fills the story frame; resize the window and groups move into ⋮ by collapse rank, coming back as it widens.
-        <div
-          data-testid='toolbar.frame'
-          className='overflow-hidden border border-separator rounded-sm'
-          style={width ? { maxWidth: width } : undefined}
-        >
-          <ActionToolbar {...menu} alwaysActive />
-        </div>
+        <ActionToolbar {...menu} alwaysActive classNames={narrow ? 'max-w-[20rem]' : undefined} />
       )}
     </div>
   );
@@ -238,7 +232,7 @@ export const Extended: Story = {
 
 /** At a narrow width whole groups move into ⋮ by collapse rank, each as a submenu; unranked groups stay. */
 export const Narrow: Story = {
-  args: { contributors: ['review', 'transcription', 'presenter'], width: 320 },
+  args: { contributors: ['review', 'transcription', 'presenter'], narrow: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(() => expect(labels(canvasElement)).not.toContain('List'));
