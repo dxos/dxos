@@ -19,7 +19,7 @@ import { type Question, errorMessage, makeClient } from '../../agentic-review/li
 /** A decision at or above this probability of being process is reported. */
 const DEFAULT_THRESHOLD = 0.8;
 
-// Same exemptions as check-changelog.ts: language definitions, review rules and test fixtures are not specs.
+// Same exemptions as `deus changelog check`: language definitions, review rules and test fixtures are not specs.
 const EXEMPT = [/^packages\/reflect\/deus\/lang\//, /\/__fixtures__\//, /(^|\/)rules\//];
 
 /** The question System One answers for each decision; `true` means the decision does not belong in a spec. */

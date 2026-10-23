@@ -20,8 +20,10 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Cli from '@dxos/app-framework/Cli';
 import * as AppMigrations from '@dxos/app-toolkit/AppMigrations';
 import { unrefTimeout } from '@dxos/async';
+import { CommandConfig } from '@dxos/cli-util';
 import { ClientService, ConfigService, DXOS_VERSION, fromConfig } from '@dxos/client';
 import { DEFAULT_PROFILE, DXEnv } from '@dxos/client-protocol';
+import { JsonOutput, deus } from '@dxos/deus/cli';
 import { LogLevel, LogProcessorType, levels, log } from '@dxos/log';
 import * as Observability from '@dxos/observability/Observability';
 import * as PluginLoader from '@dxos/plugin-registry/PluginLoader';
@@ -202,6 +204,7 @@ const program = Effect.gen(function* () {
       // TODO(burdon): Admin-only. Where should these commands live?
       admin,
       debug,
+      deus,
       hub,
       reflect,
     ],
@@ -221,7 +224,16 @@ const program = Effect.gen(function* () {
   // Built once in the program scope, so each `Effect.provide(layer)` — both the top-level command
   // and every REPL dispatch — reuses the already-constructed services (ClientPlugin, Config, etc.)
   // instead of rebuilding them per invocation.
-  const context = yield* Layer.build(Layer.mergeAll(pluginLayer, fromConfig(config), commandConfigLayer(argv)));
+  // `dx deus` reads the root `--json` through its own reference, since the shared flag consumes the subcommand's.
+  const deusJsonLayer = Layer.effect(
+    JsonOutput,
+    Effect.gen(function* () {
+      return (yield* CommandConfig).json;
+    }),
+  ).pipe(Layer.provide(commandConfigLayer(argv)));
+  const context = yield* Layer.build(
+    Layer.mergeAll(pluginLayer, fromConfig(config), commandConfigLayer(argv), deusJsonLayer),
+  );
   const layer = Layer.succeedContext(context);
 
   const manager = yield* Capability.get(Capabilities.PluginManager).pipe(Effect.provide(layer));
