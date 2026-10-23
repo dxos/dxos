@@ -51,9 +51,11 @@ reworded requirements and spec-sync reconciliation. CI rejects a changed spec wi
   1–2 letters each (`recieved` → `received`). The check decides this, not you. A changed word that
   contains a digit (an id such as `F-1.2`, a number) or is a normative word (`must`, `not`,
   `never`, `only`, …) is never trivial.
-- **Escape hatch: the `Spec-Changelog-Skip` commit trailer.** Use it only for a bulk mechanical
-  edit that changes no requirement, such as a rename across many specs or a reformat. Do not use
-  it for a change that is real but small, and do not use it to avoid asking who made a decision.
+- **Escape hatch: the `Spec-Changelog-Skip` commit trailer.** Use it only for an edit that changes
+  no requirement: a bulk mechanical edit, such as a rename across many specs or a reformat, or a
+  change with no spec decision behind it, such as a new diagram or reorganized sections (see
+  "Record spec decisions, never process"). Do not use it for a change that is real but small, and
+  do not use it to avoid asking who made a decision.
   Add the trailer, with a reason, to a commit on the branch:
 
   ```

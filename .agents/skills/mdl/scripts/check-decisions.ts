@@ -135,7 +135,10 @@ await Promise.all(
     try {
       const { answers } = await client.evaluate(state, { process: PROCESS_QUESTION });
       const answer = answers.process;
-      const probability = answer?.type === 'noul' ? answer.noul : 0;
+      if (answer?.type !== 'noul') {
+        throw new Error('System One returned no process classification');
+      }
+      const probability = answer.noul;
       if (probability >= threshold) {
         failures++;
         console.log(
