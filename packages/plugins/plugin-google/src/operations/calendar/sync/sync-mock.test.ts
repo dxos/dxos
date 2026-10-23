@@ -184,7 +184,9 @@ const seedCalendarBinding = async (builder: EchoTestBuilder, { max }: { max?: st
   const connection = db.add(
     Connection.make({ connectorId: GOOGLE_CALENDAR_CONNECTOR_ID, accessToken: Ref.make(accessToken) }),
   );
-  const binding = db.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(calendar), max }));
+  const binding = db.add(
+    Cursor.makeExternal({ source: Connection.getAccessToken(connection), target: Ref.make(calendar), max }),
+  );
   await db.flush({ indexes: true });
   return { db, calendar, connection, binding };
 };

@@ -21,10 +21,10 @@ import * as MemorySkill from '@dxos/assistant-toolkit/MemorySkill';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import * as Chat from '@dxos/assistant/Chat';
-import * as McpServer from '@dxos/compute/McpServer';
 import * as Skill from '@dxos/compute/Skill';
 import { Blob, Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import { Connection } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as FilePlugin from '@dxos/plugin-file/FilePlugin';
@@ -156,7 +156,7 @@ const seedWorkspace = (db: Database.Database): Obj.Unknown[] => {
     ['Linear', 'https://mcp.linear.app/mcp'],
     ['GitHub', 'https://api.githubcopilot.com/mcp/'],
   ]) {
-    db.add(Obj.make(McpServer.McpServer, { name, url, protocol: 'http', enabled: false }));
+    db.add(Connection.make({ name, connectorId: 'mcp', mcp: { url, protocol: 'http' } }));
   }
   return [spec];
 };
@@ -194,10 +194,10 @@ const meta = {
             types: [
               Blob.Blob,
               Chat.Chat,
+              Connection.Connection,
               Feed.Feed,
               File.File,
               Markdown.Document,
-              McpServer.McpServer,
               Message.Message,
               Organization.Organization,
               Outline.Outline,
