@@ -25,6 +25,11 @@ inputs:
       Set "true" to install the Rust toolchain and restore the cargo registry. Only Check's `native` job compiles
       Rust; every other job skips the ~12 s install.
     default: 'false'
+  pnpm-store-cache:
+    description: >
+      Set "false" to skip restoring the pnpm store, for a job whose workspace already holds node_modules (a
+      mounted workspace image), where the install links only the lockfile delta.
+    default: 'true'
 
 runs:
   using: 'composite'
@@ -257,6 +262,7 @@ runs:
       shell: bash
 
     - name: Cache pnpm store
+      if: ${{ inputs.pnpm-store-cache == 'true' }}
       uses: actions/cache@v4
       with:
         path: ${{ steps.pnpm-store.outputs.pnpm-store }}
