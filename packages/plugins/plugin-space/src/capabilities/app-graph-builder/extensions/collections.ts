@@ -43,6 +43,7 @@ import {
   CREATE_OBJECT_IN_COLLECTION_LABEL,
   EXPOSE_OBJECT_LABEL,
   REMOVE_FROM_COLLECTION_LABEL,
+  SHARE_OBJECT_LABEL,
   SHOW_ORIGINAL_LABEL,
   UNARCHIVE_OBJECT_LABEL,
 } from './shared.ts';
@@ -489,6 +490,16 @@ const constructObjectActions = ({
               icon: 'ph--link--regular',
               disposition: 'list-item',
               testId: 'spacePlugin.copyLink',
+            },
+          }),
+          AppGraphNode.makeAction({
+            id: SpaceOperation.OpenShareObject.meta.key,
+            data: () => Operation.invoke(SpaceOperation.OpenShareObject, { object }),
+            properties: {
+              label: SHARE_OBJECT_LABEL,
+              icon: 'ph--share-network--regular',
+              disposition: 'list-item',
+              testId: 'spacePlugin.shareObject',
             },
           }),
         ]

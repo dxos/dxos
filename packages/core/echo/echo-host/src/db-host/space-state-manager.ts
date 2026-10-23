@@ -25,6 +25,7 @@ import { log } from '@dxos/log';
 import { type DocumentLease } from '../automerge/document-lease.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/space-state/index.ts';
 import { DatabaseRoot } from './database-root.ts';
+import { partitionBySyncScope } from './sync-scope.ts';
 
 export type SpaceStateManagerProps = {
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
@@ -37,7 +38,12 @@ export class SpaceStateManager extends Resource {
   private readonly _rootBySpace = new Map<SpaceId, DocumentId>();
   /** Keyed by space, not by root document: two spaces can share one root and must tear down apart. */
   private readonly _perSpaceContext = new Map<SpaceId, Context>();
-  private readonly _lastSpaceDocumentList = new Map<SpaceId, DocumentId[]>();
+  private readonly _lastSpaceDocumentList = new Map<
+    SpaceId,
+    { documentIds: DocumentId[]; outOfScope: Record<DocumentId, string[]> }
+  >();
+  /** Object ids each partially replicated space is limited to; a space absent here replicates in full. */
+  private readonly _syncScopes = new Map<SpaceId, ReadonlySet<string>>();
   private readonly _spaceRootRefs = new Map<SpaceId, SpaceRootRefs>();
   /** Re-runs a space's document-list check; the anchor documents enter the list only once refs exist. */
   private readonly _documentListCheck = new Map<SpaceId, () => void>();
@@ -81,6 +87,7 @@ export class SpaceStateManager extends Resource {
     this._perSpaceContext.clear();
     this._lastSpaceDocumentList.clear();
     this._spaceRootRefs.clear();
+    this._syncScopes.clear();
   }
 
   get roots(): ReadonlyMap<DocumentId, DatabaseRoot> {
@@ -147,6 +154,23 @@ export class SpaceStateManager extends Resource {
   }
 
   /**
+   * Limits the space to the documents of `objectIds` (plus its directory, space root and credentials); `undefined`
+   * lifts the limit. Re-runs the document-list check, which reports the change to listeners.
+   */
+  setSyncScope(spaceId: SpaceId, objectIds: readonly string[] | undefined): void {
+    if (objectIds) {
+      this._syncScopes.set(spaceId, new Set(objectIds));
+    } else {
+      this._syncScopes.delete(spaceId);
+    }
+    this._documentListCheck.get(spaceId)?.();
+  }
+
+  getSyncScope(spaceId: SpaceId): ReadonlySet<string> | undefined {
+    return this._syncScopes.get(spaceId);
+  }
+
+  /**
    * Get all persisted spaces.
    */
   getPersistedSpaces(): Array<{ spaceId: SpaceId; rootDocUrl: AutomergeUrl }> {
@@ -171,6 +195,7 @@ export class SpaceStateManager extends Resource {
     this._rootBySpace.delete(spaceId);
     this._lastSpaceDocumentList.delete(spaceId);
     this._spaceRootRefs.delete(spaceId);
+    this._syncScopes.delete(spaceId);
 
     const spaceCtx = this._perSpaceContext.get(spaceId);
     if (spaceCtx) {
@@ -249,14 +274,23 @@ export class SpaceStateManager extends Resource {
         const anchorIds = Object.values(this._spaceRootRefs.get(spaceId) ?? {})
           .filter((url): url is AutomergeUrl => typeof url === 'string')
           .map((url) => interpretAsDocumentId(url));
-        const documentIds = [
-          root.documentId,
-          ...anchorIds,
-          ...root.getAllLinkedDocuments().map((url) => interpretAsDocumentId(url)),
-        ];
-        if (!isEqual(documentIds, this._lastSpaceDocumentList.get(spaceId))) {
-          this._lastSpaceDocumentList.set(spaceId, documentIds);
-          const event = new SpaceDocumentListUpdatedEvent(spaceId, root.documentId, retiredRootId, documentIds);
+        const scope = this._syncScopes.get(spaceId);
+        const directory = root.doc();
+        const { inScope, outOfScope } =
+          scope && directory
+            ? partitionBySyncScope(directory, scope)
+            : { inScope: root.getAllLinkedDocuments().map((url) => interpretAsDocumentId(url)), outOfScope: {} };
+        const documentIds = [root.documentId, ...anchorIds, ...inScope];
+        const list = { documentIds, outOfScope };
+        if (!isEqual(list, this._lastSpaceDocumentList.get(spaceId))) {
+          this._lastSpaceDocumentList.set(spaceId, list);
+          const event = new SpaceDocumentListUpdatedEvent(
+            spaceId,
+            root.documentId,
+            retiredRootId,
+            documentIds,
+            outOfScope,
+          );
           // Reported once: listeners tear down the retired root's sync state, which must not repeat per list change.
           retiredRootId = undefined;
           this.spaceDocumentListUpdated.emit(event);
@@ -350,5 +384,10 @@ export class SpaceDocumentListUpdatedEvent {
     /** The directory `spaceRootId` replaced; set only on the first update after the swap. */
     public readonly previousRootId: DocumentId | undefined,
     public readonly documentIds: DocumentId[],
+    /**
+     * Linked documents left out of `documentIds` by the space's sync scope, with the objects each holds; empty for a
+     * space replicated in full.
+     */
+    public readonly outOfScope: Record<DocumentId, string[]> = {},
   ) {}
 }

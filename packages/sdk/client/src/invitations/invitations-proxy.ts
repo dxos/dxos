@@ -11,6 +11,7 @@ import {
   ClientTraceEvents,
   InvitationEncoder,
   type Invitations,
+  type JoinSpaceOptions,
   invitationEventAttributes,
 } from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
@@ -231,7 +232,11 @@ export class InvitationsProxy implements Invitations {
     return observable;
   }
 
-  join(invitation: Invitation | string, deviceProfile?: DeviceProfileDocument): AuthenticatingInvitation {
+  join(
+    invitation: Invitation | string,
+    deviceProfile?: DeviceProfileDocument,
+    options?: JoinSpaceOptions,
+  ): AuthenticatingInvitation {
     if (typeof invitation === 'string') {
       invitation = InvitationEncoder.decode(invitation);
     }
@@ -250,9 +255,11 @@ export class InvitationsProxy implements Invitations {
       // drive the optional protobuf codec, which dereferences the missing message and throws,
       // silently stalling the accept RPC.
       subscriber: createObservable(
-        this._invitationsService.acceptInvitation(
-          deviceProfile ? { invitation, deviceProfile: deviceProfile } : { invitation },
-        ),
+        this._invitationsService.acceptInvitation({
+          invitation,
+          ...(deviceProfile ? { deviceProfile } : {}),
+          ...(options?.syncScope ? { syncScope: { objectIds: [...options.syncScope.objectIds] } } : {}),
+        }),
       ),
       onCancel: async () => {
         const invitationId = observable.get().invitationId;

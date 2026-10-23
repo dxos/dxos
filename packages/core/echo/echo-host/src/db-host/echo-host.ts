@@ -17,7 +17,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/sql/SqlClient';
 
-import { Mutex, scheduleTask, sleep, yieldBehindQueuedTasks } from '@dxos/async';
+import { Event, Mutex, scheduleTask, sleep, yieldBehindQueuedTasks } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import {
@@ -201,6 +201,9 @@ export class EchoHost extends Resource {
 
   /** What the index is doing, for boot screens and progress indicators; see {@link DataService.IndexStatus}. */
   readonly indexStatus: IndexStatusTracker;
+
+  /** A partially replicated space's scope grew to take in objects this host created; the payload is what was added. */
+  readonly syncScopeExtended = new Event<{ spaceId: SpaceId; objectIds: string[] }>();
 
   private _feedService: FeedService.Handlers;
 
@@ -455,16 +458,19 @@ export class EchoHost extends Resource {
     await this.indexStatus.opened(() =>
       RuntimeProvider.runPromise(this._runtime)(countIndexBacklog({ pin, spaceIds: this._spaceStateManager.spaceIds })),
     );
+    // A released document's bytes may already be stored, and a pass skipped it while it was quarantined.
+    this._automergeHost.documentReleased.on(this._ctx, () => this._indexScheduler.schedule('document-released'));
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
+      const documentIds = this.#applySyncScope(e);
       const previous = this._spaceDocumentIds.get(e.spaceId);
-      this._spaceDocumentIds.set(e.spaceId, new Set(e.documentIds));
+      this._spaceDocumentIds.set(e.spaceId, new Set(documentIds));
 
       if (e.previousRootId) {
         void this._automergeHost.clearLocalCollectionState(deriveCollectionIdFromSpaceId(e.spaceId, e.previousRootId));
       }
       void this._automergeHost.updateLocalCollectionState(
         deriveCollectionIdFromSpaceId(e.spaceId, e.spaceRootId),
-        e.documentIds,
+        documentIds,
       );
 
       // TODO(dmaretskyi): Current algortithm is too expensive.
@@ -478,7 +484,7 @@ export class EchoHost extends Resource {
         // link removal is never observed before the create it depends on, and the sole writer of a
         // `links` key (object creation) always writes a freshly created document url. Registering
         // the new collection state first also means no fetch can race the wipe.
-        const departed = previous ? this.#departedDocuments(previous, e) : [];
+        const departed = previous ? this.#departedDocuments(previous, documentIds) : [];
         if (departed.length > 0 || e.previousRootId) {
           this.#scheduleReclaim(e.spaceId, departed, e.previousRootId);
         }
@@ -791,6 +797,21 @@ export class EchoHost extends Resource {
     await this._automergeHost.flush(ctx, { documentIds: [rootHandle.documentId] });
     await this._spaceStateManager.setSpaceRootRefs(spaceId, { ...refs, credentialsDocUrl });
     return credentialsDocUrl;
+  }
+
+  /**
+   * Limits a space to the documents of `objectIds` (plus its directory, space root and credentials documents) for a
+   * peer that joined through an object share link; `undefined` replicates the whole space. Set before the space's
+   * root is opened so the first sync round is already limited. Enforced by this host only: other members and EDGE
+   * serve the whole space to any member.
+   */
+  setSpaceSyncScope(spaceId: SpaceId, objectIds: readonly string[] | undefined): void {
+    this._spaceStateManager.setSyncScope(spaceId, objectIds);
+  }
+
+  /** Object ids a partially replicated space is limited to; undefined for a space replicated in full. */
+  getSpaceSyncScope(spaceId: SpaceId): ReadonlySet<string> | undefined {
+    return this._spaceStateManager.getSyncScope(spaceId);
   }
 
   /** References carried by the space root document, or undefined for a space that predates it. */
@@ -1242,9 +1263,44 @@ export class EchoHost extends Resource {
   }
 
   /** Document ids present in the space's previous directory listing but not the current one. */
-  #departedDocuments(previous: ReadonlySet<DocumentId>, event: SpaceDocumentListUpdatedEvent): DocumentId[] {
-    const current = new Set(event.documentIds);
+  #departedDocuments(previous: ReadonlySet<DocumentId>, documentIds: readonly DocumentId[]): DocumentId[] {
+    const current = new Set(documentIds);
     return [...previous].filter((documentId) => !current.has(documentId));
+  }
+
+  /**
+   * Applies a partially replicated space's scope: quarantines its out-of-scope documents and releases any that came
+   * into scope. Runs before the collection is published, so no sync round can request a document before it is
+   * refused. Documents this host created stay in the collection, since the scope it joined with cannot name them.
+   *
+   * @returns The documents the space's collection holds.
+   */
+  #applySyncScope(event: SpaceDocumentListUpdatedEvent): DocumentId[] {
+    const outOfScope = Object.entries(event.outOfScope).flatMap(([documentId, objectIds]) =>
+      isValidDocumentId(documentId) ? [{ documentId, objectIds }] : [],
+    );
+    const created = outOfScope.filter(({ documentId }) => this._automergeHost.isCreatedInSession(documentId));
+    const excluded = outOfScope
+      .filter(({ documentId }) => !this._automergeHost.isCreatedInSession(documentId))
+      .map(({ documentId }) => documentId);
+    const scope = this._spaceStateManager.getSyncScope(event.spaceId);
+    if (created.length > 0 && scope) {
+      // The guest's own objects join the scope; the space manager persists the extension so a restart keeps them.
+      const objectIds = created.flatMap(({ objectIds }) => objectIds);
+      this._spaceStateManager.setSyncScope(event.spaceId, [...scope, ...objectIds]);
+      this.syncScopeExtended.emit({ spaceId: event.spaceId, objectIds });
+    }
+    const documentIds = [...event.documentIds, ...created.map(({ documentId }) => documentId)];
+    for (const documentId of documentIds) {
+      this._automergeHost.releaseOutOfScopeDocument(documentId);
+    }
+    for (const documentId of excluded) {
+      // The quarantine is recorded synchronously; only its cache eviction is awaited.
+      void this._automergeHost
+        .quarantineDocument(documentId, { reason: 'out-of-scope' })
+        .catch((err) => log.warn('failed to quarantine out-of-scope document', { documentId, err }));
+    }
+    return documentIds;
   }
 
   /**

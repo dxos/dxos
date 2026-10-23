@@ -76,6 +76,15 @@ export class DocumentsSynchronizer extends Resource {
   private readonly _pendingRequesting = new Set<DocumentId>();
 
   /**
+   * Quarantined documents the client asked for, answered with a mutation-less `unavailable: true` update so its load
+   * fails at once rather than waiting on a document this host will never produce.
+   */
+  private readonly _pendingUnavailable = new Set<DocumentId>();
+
+  /** Quarantined documents the client still subscribes to, sent once a quarantine on them is lifted. */
+  private readonly _awaitingRelease = new Set<DocumentId>();
+
+  /**
    * Job that schedules if there are pending updates.
    */
   private _sendUpdatesJob?: UpdateScheduler = undefined;
@@ -118,6 +127,11 @@ export class DocumentsSynchronizer extends Resource {
     const waiting: { documentId: DocumentId; heads: Heads; syncState: DocSyncState }[] = [];
     for (const { documentId, heads, passive = false } of documents) {
       if (this._lifecycleState === LifecycleState.CLOSED) {
+        continue;
+      }
+      // Leasing a quarantined document throws, which would drop every document after it in this batch.
+      if (this._params.automergeHost.isQuarantined(documentId)) {
+        this._markUnavailable(documentId);
         continue;
       }
       const existing = this._syncStates.get(documentId);
@@ -232,12 +246,29 @@ export class DocumentsSynchronizer extends Resource {
       this._syncStates.delete(documentId);
       this._pendingUpdates.delete(documentId);
       this._pendingRequesting.delete(documentId);
+      this._awaitingRelease.delete(documentId);
     }
+  }
+
+  /** Tells the client the document is unavailable, and remembers the request in case the quarantine is lifted. */
+  private _markUnavailable(documentId: DocumentId): void {
+    this._syncStates.get(documentId)?.initialLease?.[Symbol.dispose]();
+    this._syncStates.delete(documentId);
+    this._pendingUpdates.delete(documentId);
+    this._pendingRequesting.delete(documentId);
+    this._pendingUnavailable.add(documentId);
+    this._awaitingRelease.add(documentId);
+    this._sendUpdatesJob?.trigger();
   }
 
   protected override async _open(): Promise<void> {
     this._sendUpdatesJob = new UpdateScheduler(this._ctx, this._checkAndSendUpdates.bind(this), {
       maxFrequency: MAX_UPDATE_FREQ,
+    });
+    this._params.automergeHost.documentReleased.on(this._ctx, (documentId) => {
+      if (this._awaitingRelease.delete(documentId)) {
+        void this.addDocuments([{ documentId }]);
+      }
     });
     // Every save the host makes, whatever wrote it: this client's own mutation, another client's,
     // or a peer's replicated change.
@@ -316,6 +347,10 @@ export class DocumentsSynchronizer extends Resource {
         updates.push({ documentId, requesting: true });
       }
     }
+    for (const documentId of this._pendingUnavailable) {
+      updates.push({ documentId, unavailable: true });
+    }
+    this._pendingUnavailable.clear();
 
     if (updates.length > 0) {
       this._params.sendUpdates({ updates });
@@ -326,6 +361,10 @@ export class DocumentsSynchronizer extends Resource {
     const syncState = this._syncStates.get(documentId);
     // Still loading for its initial send, which queues the document again once it is ready.
     if (!syncState || syncState.initialLease) {
+      return;
+    }
+    if (this._params.automergeHost.isQuarantined(documentId)) {
+      this._markUnavailable(documentId);
       return;
     }
     using lease = this._params.automergeHost.acquireDoc<DatabaseDirectory>(documentId);
@@ -364,6 +403,11 @@ export class DocumentsSynchronizer extends Resource {
 
   private async _writeMutation(ctx: Context, documentId: DocumentId, mutation: Uint8Array): Promise<void> {
     if (this._lifecycleState === LifecycleState.CLOSED) {
+      return;
+    }
+    // A write to a document that left the client's scope cannot land; failing it would reject the client's batch.
+    if (this._params.automergeHost.isQuarantined(documentId)) {
+      log.warn('dropped a write to a quarantined document', { documentId });
       return;
     }
     log('write mutation', { documentId });

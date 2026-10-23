@@ -56,6 +56,8 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
     private readonly _signingContext: SigningContext,
     private readonly _keyring: KeyringApi,
     private readonly _spaceKey?: PublicKey,
+    /** Guest side: object ids to replicate when the space is joined through an object share link. */
+    private readonly _syncScope?: readonly string[],
   ) {}
 
   toJSON(): object {
@@ -225,6 +227,7 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       controlTimeframe: controlTimeframe && toTimeframe(controlTimeframe),
       dataTimeframe: dataTimeframe && toTimeframe(dataTimeframe),
       tags: assertion.tags,
+      syncScope: this._syncScope,
     });
 
     await this._signingContext.recordCredential(credential);

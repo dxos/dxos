@@ -11,6 +11,8 @@ import { SpaceCapabilities } from '#types';
 export type SpaceOperationConfig = {
   createInvitationUrl: (invitationCode: string) => string;
   createJoinUrl: (spaceKey: PublicKey) => string;
+  /** Origin that shareable object links point at. */
+  shareableLinkOrigin: string;
 };
 
 export const SpaceOperationConfig = Capability.makeSingleton<SpaceOperationConfig>()(

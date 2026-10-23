@@ -272,6 +272,9 @@ export class AutomergeHost extends Resource {
    */
   readonly #quarantined = new Map<DocumentId, QuarantineRecord>();
 
+  /** Fired when an out-of-scope quarantine is lifted, so a client that asked for the document can have it after all. */
+  public readonly documentReleased = new Event<DocumentId>();
+
   /** Fired when a document is quarantined, so waits on it end and the space that links it can retire it. */
   public readonly documentQuarantined = new Event<QuarantineRecord>();
 
@@ -416,6 +419,7 @@ export class AutomergeHost extends Resource {
       onCollectionStateQueried: this._onCollectionStateQueried.bind(this),
       onCollectionStateReceived: this._onCollectionStateReceived.bind(this),
       onConnectionOpen: () => this._sharePolicyChangedTask?.schedule(),
+      isDocumentBlocked: (documentId) => this.#quarantined.has(documentId),
       // Re-announcing under Subduction binds a second connection to the peer, stranding the rounds pending on the first.
       onConnectionAuthScopeChanged: useSubduction ? () => this._sharePolicyChangedTask?.schedule() : 'reannounce-peer',
       monitor: dataMonitor,
@@ -867,6 +871,11 @@ export class AutomergeHost extends Resource {
     return this._leases.acquire<T>(id);
   }
 
+  /** Whether this host created the document in the current session. */
+  isCreatedInSession(documentId: DocumentId): boolean {
+    return this._createdDocuments.has(documentId);
+  }
+
   /** Whether the host refuses to load the document; see {@link quarantineDocument}. */
   isQuarantined(documentId: AnyDocumentId): boolean {
     return this.#quarantined.has(interpretAsDocumentId(documentId));
@@ -934,6 +943,20 @@ export class AutomergeHost extends Resource {
     // Debug level: every open re-applies the `retired` entries, and a load failure already warned where it was caught.
     log('quarantined document', { documentId, reason });
     this.documentQuarantined.emit(record);
+  }
+
+  /**
+   * Lifts an `'out-of-scope'` quarantine once the document enters its space's sync scope, so the next sync round
+   * fetches it. Any other quarantine stays: it records a document that must not be loaded.
+   */
+  releaseOutOfScopeDocument(documentId: DocumentId): void {
+    if (this.#quarantined.get(documentId)?.reason !== 'out-of-scope') {
+      return;
+    }
+    this.#quarantined.delete(documentId);
+    log('released out-of-scope document', { documentId });
+    this._sharePolicyChangedTask?.schedule();
+    this.documentReleased.emit(documentId);
   }
 
   /** Documents currently leased — what the host holds because something is using it. */

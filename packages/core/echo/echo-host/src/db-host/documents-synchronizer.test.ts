@@ -104,6 +104,36 @@ describe('DocumentsSynchronizer', () => {
     expect(batches.filter((size) => size > 0).length).toBeGreaterThanOrEqual(3);
   });
 
+  test('a quarantined document is answered unavailable, and sent once its out-of-scope quarantine is lifted', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime });
+    await openAndClose(host);
+    const scoped = await host.createDoc<{ text: string }>({ text: 'scoped' });
+    const scopedId = scoped.documentId;
+    using kept = await host.createDoc<{ text: string }>({ text: 'kept' });
+    await host.flush(Context.default(), { documentIds: [scopedId, kept.documentId] });
+    scoped[Symbol.dispose]();
+    await host.quarantineDocument(scopedId, { reason: 'out-of-scope' });
+
+    const updates: DataService.DocumentUpdate[] = [];
+    const synchronizer = new DocumentsSynchronizer({
+      automergeHost: host,
+      sendUpdates: (batch) => updates.push(...(batch.updates ?? [])),
+    });
+    await openAndClose(synchronizer);
+    const sent = (documentId: string, field: 'mutation' | 'unavailable') =>
+      updates.some((update) => update.documentId === documentId && update[field]);
+
+    // The quarantined document comes first, so a throw would also have dropped the one after it.
+    await synchronizer.addDocuments([{ documentId: scopedId }, { documentId: kept.documentId }]);
+    await expect.poll(() => sent(kept.documentId, 'mutation')).toBe(true);
+    expect(sent(scopedId, 'unavailable')).toBe(true);
+
+    host.releaseOutOfScopeDocument(scopedId);
+    await expect.poll(() => sent(scopedId, 'mutation')).toBe(true);
+  });
+
   test('a subscription from heads the client holds sends only what came after them', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());

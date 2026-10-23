@@ -494,6 +494,57 @@ export const RenameObject = Operation.make({
   output: Schema.Void,
 });
 
+/**
+ * Opens the share dialog for one object.
+ */
+export const OpenShareObject = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.space.openShareObject'),
+    name: 'Open Share Object',
+    description: 'Open the share dialog for an object.',
+    icon: 'ph--share-network--regular',
+  },
+  input: Schema.Struct({
+    object: Obj.Unknown,
+  }),
+  output: Schema.Void,
+});
+
+/** Query parameter carrying an object share link's payload; onboarding reads it to create an identity in place. */
+export const SHARE_PARAM = 'share';
+
+/** Who a share link admits: only the space's members, or anyone who has the link. */
+export const ShareAccess = Schema.Literals(['restricted', 'anyone']);
+export type ShareAccess = Schema.Schema.Type<typeof ShareAccess>;
+
+/** The role a share link admits its recipients as. */
+export const ShareRole = Schema.Literals(['editor', 'viewer']);
+export type ShareRole = Schema.Schema.Type<typeof ShareRole>;
+
+/**
+ * Makes a link to one object. With `anyone` access the link carries a delegated, multi-use invitation, the objects the
+ * recipient replicates and the plugins that render them, so a non-member joins in the background and sees only them.
+ */
+export const ShareObject = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.space.shareObject'),
+    name: 'Share Object',
+    description: 'Make a link that opens an object, joining its space if needed.',
+    icon: 'ph--link--regular',
+  },
+  services: [Capability.Service],
+  input: Schema.Struct({
+    object: Obj.Unknown,
+    access: ShareAccess,
+    role: Schema.optional(ShareRole),
+  }),
+  output: Schema.Struct({
+    url: Schema.String,
+    objects: Schema.Array(Schema.String).annotate({ description: 'Objects the link lets a non-member replicate.' }),
+    plugins: Schema.Array(Schema.String).annotate({ description: 'Plugins the link turns on.' }),
+  }),
+});
+
 export const OpenMembers = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.space.openMembers'),
