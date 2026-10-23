@@ -15281,6 +15281,9 @@ importers:
       '@codemirror/state':
         specifier: 'catalog:'
         version: 6.7.6
+      '@codemirror/view':
+        specifier: 'catalog:'
+        version: 6.43.13
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework

@@ -4,17 +4,25 @@
 
 import type { Element, ElementContent, Properties, Root } from 'hast';
 import { type Components, toJsxRuntime } from 'hast-util-to-jsx-runtime';
-import React, { type ComponentType, type ReactNode, createContext, useContext, useMemo } from 'react';
+import React, {
+  type ComponentType,
+  type MouseEvent,
+  type ReactNode,
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+} from 'react';
 import { Fragment, jsx, jsxs } from 'react/jsx-runtime';
 
 import { SyntaxHighlighter, type SyntaxHighlighterProps, renderRows } from '@dxos/react-ui-syntax-highlighter';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { type SlotName, SURFACE_ROLES, type SurfaceRole, parseSlide } from '#markdown';
+import { type SlotName, SURFACE_ROLES, type SurfaceRole, parseSlide, parseSourceRange } from '#markdown';
 
 import { slideThemeClasses, useSlideColorScheme, useSlideThemeStyle } from '../SlideTheme/index.ts';
-import { layouts } from './layouts.tsx';
+import { ActiveSlotContext, layouts } from './layouts.tsx';
 import { SlideBackground } from './SlideBackground.tsx';
 import { theme } from './theme.ts';
 
@@ -27,12 +35,23 @@ export type MarkdownSlideProps = Util.ThemedClassName<{
   step?: number;
   /** Renders an embedded `<Surface>`; without it a labelled placeholder is shown. */
   renderSurface?: (props: { uri: string; role: SlideSurfaceRole }) => ReactNode;
+  /** Slot to outline, e.g. the one holding the editor's cursor. */
+  activeSlot?: SlotName;
+  /** Called with the `[start, end]` source offsets of the clicked element. */
+  onSourceClick?: (range: [start: number, end: number]) => void;
 }>;
 
 /**
  * Renders one slide of the Slidev markdown subset on the 2560×1440 canvas (wrap it in `SlideFrame` to scale).
  */
-export const MarkdownSlide = ({ classNames, content, step, renderSurface }: MarkdownSlideProps) => {
+export const MarkdownSlide = ({
+  classNames,
+  content,
+  step,
+  renderSurface,
+  activeSlot,
+  onSourceClick,
+}: MarkdownSlideProps) => {
   const parsed = useMemo(() => parseSlide(content), [content]);
 
   const slots = useMemo((): Record<SlotName, ReactNode> => {
@@ -47,6 +66,20 @@ export const MarkdownSlide = ({ classNames, content, step, renderSurface }: Mark
 
   const themeStyle = useSlideThemeStyle();
   const Layout = layouts[parsed.layout];
+  // `two-cols` renders its `::left::` content inside the default column.
+  const outlinedSlot = parsed.layout === 'two-cols' && activeSlot === 'left' ? 'default' : activeSlot;
+
+  const handleClick = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      const element = event.target instanceof Element ? event.target.closest('[data-source]') : null;
+      const range = parseSourceRange(element?.getAttribute('data-source'));
+      if (range) {
+        onSourceClick?.(range);
+      }
+    },
+    [onSourceClick],
+  );
+
   return (
     <div
       data-slide
@@ -55,14 +88,18 @@ export const MarkdownSlide = ({ classNames, content, step, renderSurface }: Mark
         slideThemeClasses,
         theme.root,
         parsed.frontmatter.class,
+        onSourceClick && 'cursor-text',
         classNames,
       )}
       style={themeStyle}
+      onClick={onSourceClick ? handleClick : undefined}
     >
       <SlideBackground frontmatter={parsed.frontmatter} layout={parsed.layout} />
       <div className='relative size-full'>
         <RenderSurfaceContext.Provider value={renderSurface}>
-          <Layout slots={slots} frontmatter={parsed.frontmatter} />
+          <ActiveSlotContext.Provider value={outlinedSlot}>
+            <Layout slots={slots} frontmatter={parsed.frontmatter} />
+          </ActiveSlotContext.Provider>
         </RenderSurfaceContext.Provider>
       </div>
     </div>
@@ -73,7 +110,7 @@ export const MarkdownSlide = ({ classNames, content, step, renderSurface }: Mark
 // Components for the elements `prepareRoot` emits beyond HTML.
 //
 
-type SlideCodeProps = { language?: string; meta?: string; source?: string };
+type SlideCodeProps = { 'language'?: string; 'meta'?: string; 'source'?: string; 'data-source'?: string };
 
 // `className` and `data-step` carry click-step visibility from `prepareElement`.
 type SlideSurfaceProps = { 'uri'?: string; 'role'?: string; 'className'?: string; 'data-step'?: string };
@@ -122,24 +159,26 @@ const lineHighlightRenderer =
       })),
     });
 
-const CodeBlock = ({ language, meta, source = '' }: SlideCodeProps) => {
+const CodeBlock = ({ language, meta, source = '', 'data-source': dataSource }: SlideCodeProps) => {
   const themeMode = useSlideColorScheme();
   const renderer = useMemo(() => {
     const lines = parseLineHighlights(meta, source.replace(/\n$/, '').split('\n').length);
     return lines && lineHighlightRenderer(lines);
   }, [meta, source]);
   return (
-    <SyntaxHighlighter
-      language={language}
-      themeMode={themeMode}
-      scroll={false}
-      classNames={mx(theme.nodes.pre, theme.nodes.code)}
-      PreTag='pre'
-      renderer={renderer}
-      wrapLines={renderer !== undefined}
-    >
-      {source.replace(/\n$/, '')}
-    </SyntaxHighlighter>
+    <div data-source={dataSource} className='contents'>
+      <SyntaxHighlighter
+        language={language}
+        themeMode={themeMode}
+        scroll={false}
+        classNames={mx(theme.nodes.pre, theme.nodes.code)}
+        PreTag='pre'
+        renderer={renderer}
+        wrapLines={renderer !== undefined}
+      >
+        {source.replace(/\n$/, '')}
+      </SyntaxHighlighter>
+    </div>
   );
 };
 
@@ -229,7 +268,7 @@ const prepareElement = (element: Element, step: number, inPre: boolean): Element
 
   const [code] = element.children;
   if (element.tagName === 'pre' && element.children.length === 1 && code.type === 'element') {
-    const block = codeElement(code);
+    const block = codeElement(code, element.properties.dataSource);
     return ownStep === undefined
       ? block
       : { type: 'element', tagName: 'div', properties: withStep({}), children: [block] };
@@ -282,14 +321,19 @@ const stepProperties = (properties: Properties, ownStep: Properties[string], ste
 };
 
 // Fenced code becomes one element carrying its source, so the highlighter receives plain text.
-const codeElement = (code: Element): Element => {
+const codeElement = (code: Element, dataSource: Properties[string]): Element => {
   const language = classList(code.properties.className)
     .find((name) => name.startsWith('language-'))
     ?.slice('language-'.length);
   return {
     type: 'element',
     tagName: 'slide-code',
-    properties: { language, meta: code.data?.meta ?? undefined, source: code.children.map(textOf).join('') },
+    properties: {
+      language,
+      meta: code.data?.meta ?? undefined,
+      source: code.children.map(textOf).join(''),
+      dataSource,
+    },
     children: [],
   };
 };

@@ -17,7 +17,7 @@ const clicks = ['<v-clicks>', '', '- one', '- two', '- three', '', '</v-clicks>'
 
 describe('MarkdownSlide', () => {
   test('heading uses the theme accent', ({ expect }) => {
-    expect(render('# Title')).toMatch(/<h1 class="[^"]*text-\(color:--slide-accent\)[^"]*">Title<\/h1>/);
+    expect(render('# Title')).toMatch(/<h1 [^>]*class="[^"]*text-\(color:--slide-accent\)[^"]*"[^>]*>Title<\/h1>/);
   });
 
   test('root carries the default theme variables', ({ expect }) => {
@@ -43,7 +43,7 @@ describe('MarkdownSlide', () => {
     const markup = render(clicks, 2);
     expect(markup.match(/<li[^>]*data-step="\d"/g)).toHaveLength(3);
     expect(markup.match(/<li[^>]*class="[^"]*invisible/g)).toHaveLength(1);
-    expect(markup).toMatch(/<li class="[^"]*invisible"[^>]*data-step="3"/);
+    expect(markup).toMatch(/<li\b(?=[^>]*invisible)(?=[^>]*data-step="3")[^>]*>/);
   });
 
   test('surfaces in v-clicks carry their step and stay hidden until it', ({ expect }) => {

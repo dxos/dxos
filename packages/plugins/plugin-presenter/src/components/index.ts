@@ -10,3 +10,4 @@ export * from './SectionPicker/index.ts';
 export * from './SlideFrame/index.ts';
 export * from './SlideRenderer/index.ts';
 export * from './SlideTheme/index.ts';
+export * from './SlideToolbar/index.ts';

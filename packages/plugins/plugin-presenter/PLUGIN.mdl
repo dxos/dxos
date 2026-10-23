@@ -164,7 +164,8 @@ component SlideRenderer
 component MarkdownSlide
   desc: |
     Renders one slide of the Slidev markdown subset on the 2560x1440 canvas: per-slide frontmatter
-    (`layout`, `image`, `background`, `class`; `title` is parsed and reserved, not rendered),
+    (`layout`, `image`, `background`, `class`, `backgroundVideo`, `backgroundOpacity`, `backgroundPosition`, and
+    `theme` on the first slide; `title` is parsed and reserved, not rendered),
     `::left::` / `::right::` / `::default::` slots,
     `<v-click>`, `<v-clicks>` (`depth`, `every`) and `<v-after>` click steps, highlighted code blocks with
     static line ranges, and notes. All other raw HTML is escaped, never rendered. Elements with a later click
@@ -333,7 +334,7 @@ feat F-4: Presentation Deck
 ```mdl
 feat F-6: Markdown Slides
 
-  req F-6.1: A slide is written in a strict Slidev subset: per-slide frontmatter `layout`, `image`, `background`, `class`, `title`; slots `::left::`, `::right::`, `::default::`; notes as the slide's last HTML comment.
+  req F-6.1: A slide is written in a strict Slidev subset: per-slide frontmatter `layout`, `image`, `background`, `class`, `title` (and the DXOS keys of F-8.1 and the `theme` headmatter of F-6.8); slots `::left::`, `::right::`, `::default::`; notes as the slide's last HTML comment.
   req F-6.2: The layouts are default, cover, center, section, intro, end, fact, statement, quote, two-cols, two-cols-header, image, image-left, image-right, full and none.
   req F-6.3:
     when: a slide names an unknown layout

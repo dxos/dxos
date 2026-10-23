@@ -263,7 +263,8 @@ read.
 `SlideEditorArticle` edits one owned slide of a Presentation. Markdown documents keep plugin-markdown's editor
 and the deck preview in their companion (Q11); the slide tools may move into that toolbar later.
 
-- **Toolbar** (Q10), one `Toolbar.Root` row in the panel header:
+- **Toolbar** (Q10), in the panel header. _Agent call:_ two rows, slide tools above formatting, since each
+  `Toolbar.Root` is a full-width scroll container and two cannot share a row:
   - _Formatting:_ the shared `EditorToolbar` from `@dxos/react-ui-editor` (headings, emphasis, lists, code, link).
   - _Slide:_ a layout picker that writes the `layout:` frontmatter (thumbnails of the 16 layouts); insert a click
     step (`<v-click>` / `<v-clicks>`); insert a column break (`::right::`, offered only for layouts with slots);

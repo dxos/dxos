@@ -5,7 +5,7 @@
 import type { Element, Root, RootContent } from 'hast';
 import { describe, expect, test } from 'vitest';
 
-import { parseHeadmatterTheme, parseSlide } from './parse.ts';
+import { parseHeadmatterTheme, parseSlide, parseSourceRange, slotAtOffset, stepAtOffset } from './parse.ts';
 
 type HastNode = Root | RootContent;
 
@@ -332,5 +332,52 @@ describe('parseHeadmatterTheme', () => {
 
   test('a slide without headmatter has no theme', () => {
     expect(parseHeadmatterTheme('# Title')).toBeUndefined();
+  });
+});
+
+describe('source ranges', () => {
+  const sourceOf = (content: string, element: Element) => {
+    const range = parseSourceRange(element.properties.dataSource);
+    return range && content.slice(range[0], range[1]);
+  };
+
+  test('elements carry their offsets in the slide markdown, frontmatter included', () => {
+    const content = '---\nlayout: center\n---\n\n# Title\n\nSome **bold** text.';
+    const slide = parseSlide(content);
+    expect(sourceOf(content, elements(slide.slots.default, 'h1')[0])).toBe('# Title');
+    expect(sourceOf(content, elements(slide.slots.default, 'strong')[0])).toBe('**bold**');
+  });
+
+  test('offsets after a slot marker written without blank lines map back to the original text', () => {
+    const content = '---\nlayout: two-cols\n---\n# Left\n::right::\n# Right';
+    const slide = parseSlide(content);
+    expect(sourceOf(content, elements(slide.slots.default, 'h1')[0])).toBe('# Left');
+    expect(sourceOf(content, elements(slide.slots.right, 'h1')[0])).toBe('# Right');
+  });
+
+  test('a click group spans its children', () => {
+    const content = '<v-click>\n\nLater\n\n</v-click>';
+    const slide = parseSlide(content);
+    const [group] = elements(slide.slots.default, 'slide-click');
+    expect(sourceOf(content, group)).toBe('Later');
+  });
+});
+
+describe('cursor lookups', () => {
+  const content = ['# Title', '', '<v-clicks>', '', '- one', '- two', '', '</v-clicks>'].join('\n');
+  const slide = parseSlide(content);
+
+  test('stepAtOffset is the step that reveals the text at the offset', () => {
+    expect(stepAtOffset(slide, content.indexOf('Title'))).toBe(0);
+    expect(stepAtOffset(slide, content.indexOf('one'))).toBe(1);
+    expect(stepAtOffset(slide, content.indexOf('two'))).toBe(2);
+  });
+
+  test('slotAtOffset names the slot holding the offset', () => {
+    const cols = '---\nlayout: two-cols\n---\n# Left\n\n::right::\n\n# Right';
+    const parsed = parseSlide(cols);
+    expect(slotAtOffset(parsed, cols.indexOf('Left'))).toBe('default');
+    expect(slotAtOffset(parsed, cols.indexOf('Right'))).toBe('right');
+    expect(slotAtOffset(parsed, 0)).toBeUndefined();
   });
 });

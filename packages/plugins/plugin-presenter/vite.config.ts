@@ -21,6 +21,7 @@ export default defineConfig({
     Presentation: 'src/types/Presentation.ts',
     PresenterEvents: 'src/types/PresenterEvents.ts',
     PresenterOperation: 'src/types/PresenterOperation.ts',
+    SlideEditorViewState: 'src/types/SlideEditorViewState.ts',
     SlideTheme: 'src/types/SlideTheme.ts',
     SlideViewState: 'src/types/SlideViewState.ts',
     hooks: 'src/hooks/index.ts',

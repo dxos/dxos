@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { Root as HastRoot } from 'hast';
+import type { RootContent as HastContent, Root as HastRoot } from 'hast';
 import type { Root as MdastRoot } from 'mdast';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkGfm from 'remark-gfm';
@@ -13,7 +13,7 @@ import { unified } from 'unified';
 import { SlideTheme } from '#types';
 
 import { type LayoutName, LAYOUTS, type SlideFrontmatter, type SlideIssue, parseFrontmatter } from './frontmatter.ts';
-import { type SlotName, remarkSlidev } from './remark-slidev.ts';
+import { type SlotName, SLOTS, remarkSlidev } from './remark-slidev.ts';
 import { isolateSlotMarkers } from './split.ts';
 
 /** A single slide parsed into renderable slots plus its metadata. */
@@ -41,7 +41,8 @@ const isLayout = (value: string): value is LayoutName => LAYOUTS.some((layout) =
  * click count; problems are reported as issues and never prevent the slide from rendering.
  */
 export const parseSlide = (content: string): ParsedSlide => {
-  const tree = markdownProcessor.runSync(markdownProcessor.parse(isolateSlotMarkers(content)));
+  const isolated = isolateSlotMarkers(content);
+  const tree = markdownProcessor.runSync(markdownProcessor.parse(isolated.text));
   const slidev = isMdastRoot(tree) ? tree.data?.slidev : undefined;
   const issues: SlideIssue[] = [];
 
@@ -62,8 +63,11 @@ export const parseSlide = (content: string): ParsedSlide => {
     issues.push({ kind: 'theme', message: `Unknown theme "${frontmatter.theme}"; using "default".` });
   }
 
-  const toHast = (slot: SlotName): HastRoot =>
-    hastProcessor.runSync(slidev?.slots[slot] ?? { type: 'root', children: [] });
+  const toHast = (slot: SlotName): HastRoot => {
+    const root = hastProcessor.runSync(slidev?.slots[slot] ?? { type: 'root', children: [] });
+    root.children.forEach((child) => markSource(child, isolated.toSource));
+    return root;
+  };
 
   return {
     frontmatter,
@@ -74,6 +78,72 @@ export const parseSlide = (content: string): ParsedSlide => {
     issues,
   };
 };
+
+type Range = [start: number, end: number];
+
+const union = (ranges: Array<Range | undefined>): Range | undefined =>
+  ranges.reduce<Range | undefined>(
+    (all, range) => (range ? (all ? [Math.min(all[0], range[0]), Math.max(all[1], range[1])] : range) : all),
+    undefined,
+  );
+
+/**
+ * Stamps each element with `dataSource="start:end"`, its offsets in the slide's own markdown; an element
+ * synthesized by the parser (a click group) spans its children.
+ */
+const markSource = (node: HastContent, toSource: (offset: number) => number): Range | undefined => {
+  const own: Range | undefined =
+    node.position?.start.offset !== undefined && node.position.end.offset !== undefined
+      ? [toSource(node.position.start.offset), toSource(node.position.end.offset)]
+      : undefined;
+  if (node.type !== 'element') {
+    return own;
+  }
+  const range = union([own, ...node.children.map((child) => markSource(child, toSource))]);
+  if (range) {
+    node.properties.dataSource = `${range[0]}:${range[1]}`;
+  }
+  return range;
+};
+
+/** The `start:end` source range stamped on a rendered element, if any. */
+export const parseSourceRange = (value: unknown): Range | undefined => {
+  const match = typeof value === 'string' ? /^(\d+):(\d+)$/.exec(value) : null;
+  return match ? [Number(match[1]), Number(match[2])] : undefined;
+};
+
+const contains = (range: Range | undefined, offset: number) =>
+  range !== undefined && offset >= range[0] && offset <= range[1];
+
+/**
+ * The click step that reveals the source at `offset`: the largest step among the elements around it (0 when
+ * none is stepped).
+ */
+export const stepAtOffset = (slide: ParsedSlide, offset: number): number => {
+  const visit = (node: HastContent): number => {
+    if (node.type !== 'element' || !contains(parseSourceRange(node.properties.dataSource), offset)) {
+      return 0;
+    }
+    const own = node.properties.step === undefined ? 0 : Number(node.properties.step);
+    return Math.max(own, ...node.children.map(visit));
+  };
+  return Math.max(0, ...Object.values(slide.slots).flatMap((root) => root.children.map(visit)));
+};
+
+/**
+ * The slot whose content holds `offset`, for layouts with more than one slot.
+ */
+export const slotAtOffset = (slide: ParsedSlide, offset: number): SlotName | undefined =>
+  SLOTS.find((slot) =>
+    contains(
+      union(
+        slide.slots[slot].children.map((child) =>
+          child.type === 'element' ? parseSourceRange(child.properties.dataSource) : undefined,
+        ),
+      ),
+      offset,
+    ),
+  );
 
 /**
  * The deck theme named by a first slide's headmatter, if it is a built-in theme.

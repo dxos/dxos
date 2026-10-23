@@ -90,12 +90,14 @@ Design: [DESIGN.md](./DESIGN.md).
 
 ## Phase 6: Slide editor
 
-- [ ] **Toolbar** — `EditorToolbar` formatting; layout picker (writes `layout:`); insert click step, column break, object, background, notes; view controls.
-- [ ] **Preview modes** — vertical split (editor above, slide below) and companion; mode and split position in view state.
-- [ ] **Editor → preview** — cursor inside a click group reveals up to its step; the cursor's slot is outlined.
-- [ ] **Preview → editor** — rendered elements carry `data-source` ranges from mdast positions; a click selects the source.
-- [ ] **Present from here** and previous/next slide from the editor.
-- [ ] Stories with play tests for each mode, toolbar action and sync direction; spec QA.
+- [x] **Toolbar** — `EditorToolbar` formatting; layout picker (writes `layout:`); insert click step, column break, object, background, notes; view controls.
+- [x] **Preview modes** — vertical split (editor above, slide below) and companion; mode and split position in view state.
+- [x] **Editor → preview** — cursor inside a click group reveals up to its step; the cursor's slot is outlined.
+- [x] **Preview → editor** — rendered elements carry `data-source` ranges from mdast positions; a click selects the source.
+- [x] **Present from here** and previous/next slide from the editor.
+- [x] Stories with play tests for typing, layout, insert, cursor step and preview click (`containers/SlideEditorArticle`).
+- [ ] Stories for the companion mode, background and object insert; spec QA entries.
+- [ ] Layout picker grid on a shared collection primitive (pending: react-ui-list has no tile layout; collections use `react-ui-masonry`).
 
 ## Phase 7: Later
 

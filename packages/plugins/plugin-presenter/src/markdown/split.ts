@@ -40,10 +40,33 @@ const SLOT_LINE = /^ {0,3}::(left|right|default)::\s*$/;
  * Puts a blank line around every `::name::` line outside fenced code, so a marker written without blank lines
  * (as Slidev allows) becomes a paragraph of its own instead of joining its neighbours.
  */
-export const isolateSlotMarkers = (markdown: string): string => {
+export const isolateSlotMarkers = (markdown: string): { text: string; toSource: (offset: number) => number } => {
   const lines = markdown.split('\n');
   const fenced = fencedLines(lines);
-  return lines.flatMap((line, index) => (!fenced[index] && SLOT_LINE.test(line) ? ['', line, ''] : [line])).join('\n');
+  const output: string[] = [];
+  // Offsets in `text` of the newline each inserted blank line adds.
+  const inserted: number[] = [];
+  let offset = 0;
+  const push = (line: string, blank = false) => {
+    if (blank) {
+      inserted.push(offset);
+    }
+    output.push(line);
+    offset += line.length + 1;
+  };
+  lines.forEach((line, index) => {
+    if (!fenced[index] && SLOT_LINE.test(line)) {
+      push('', true);
+      push(line);
+      push('', true);
+    } else {
+      push(line);
+    }
+  });
+  return {
+    text: output.join('\n'),
+    toSource: (position) => position - inserted.filter((insertedAt) => insertedAt < position).length,
+  };
 };
 
 /** True when the lines between two separators read as a YAML mapping. */

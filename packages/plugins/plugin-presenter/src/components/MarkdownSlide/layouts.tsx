@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PropsWithChildren, type ReactNode } from 'react';
+import React, { type PropsWithChildren, type ReactNode, createContext, useContext } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
@@ -28,11 +28,25 @@ const Frame = ({ name, className, children }: FrameProps) => (
 
 type SlotProps = PropsWithChildren<{ name: SlotName; className?: string }>;
 
-const Slot = ({ name, className, children }: SlotProps) => (
-  <div data-slot={name} className={mx('flex flex-col gap-8 min-w-0 min-h-0', className)}>
-    {children}
-  </div>
-);
+/** The slot to outline (the editor's cursor slot); only layouts with more than one slot outline it. */
+export const ActiveSlotContext = createContext<SlotName | undefined>(undefined);
+
+const Slot = ({ name, className, children }: SlotProps) => {
+  const active = useContext(ActiveSlotContext) === name;
+  return (
+    <div
+      data-slot={name}
+      data-active={active || undefined}
+      className={mx(
+        'flex flex-col gap-8 min-w-0 min-h-0',
+        active && 'outline-dashed outline-4 outline-offset-[16px] outline-focus',
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+};
 
 const ImagePane = ({ frontmatter }: { frontmatter: SlideFrontmatter }) => (
   <div data-image className='size-full' style={imageStyle(frontmatter.image, frontmatter.backgroundPosition)} />
