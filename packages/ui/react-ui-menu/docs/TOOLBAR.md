@@ -27,7 +27,7 @@ Toolbars and menus share one model, built with `MenuBuilder`; a toolbar is one r
   into the owner's graph; it may also add its own group with a placement. The owner needs no knowledge of review,
   transcription or presenter.
 - **Overflow.** Every toolbar ends with an overflow menu (⋮), the named group `TOOLBAR_OVERFLOW_ID`, which others
-  extend like any group.
+  extend like any group. It renders only when it has items (its own, contributed or collapsed).
 - **Narrow.** While a row is too narrow, whole groups move into the overflow menu as submenus, by collapse rank; each
   comes back once the toolbar is wider than when it collapsed.
 

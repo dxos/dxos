@@ -39,6 +39,15 @@ export default meta;
 
 type Story = StoryObj;
 
+export const Default: Story = {
+  render: () => {
+    const registry = useContext(RegistryContext);
+    const menu = useMemo(() => createNestedActionsResolver({ registry }), [registry]);
+
+    return <ActionToolbar {...menu} alwaysActive />;
+  },
+};
+
 export const DropdownMenu: Story = {
   render: () => {
     const actions = useMemo(() => {
@@ -57,15 +66,6 @@ export const DropdownMenu: Story = {
         <Button.Root icon='ph--list-checks--regular' label='Options' iconOnly />
       </ActionMenu>
     );
-  },
-};
-
-export const Default: Story = {
-  render: () => {
-    const registry = useContext(RegistryContext);
-    const menu = useMemo(() => createNestedActionsResolver({ registry }), [registry]);
-
-    return <ActionToolbar {...menu} alwaysActive />;
   },
 };
 
