@@ -187,7 +187,9 @@ component EmbeddedSurface
     ObjectSurface (fallback `slide`, `section`, `card`, then a title slide). A malformed, missing or deleted
     ref settles on a "Missing object" placeholder, never a spinner left running; a space-qualified ref
     resolves only while that space is open in the client. A ref to a `Text` (such as another deck's owned
-    slide) renders that markdown as a scaled slide, whose own `<Surface>`s stay placeholders.
+    slide) renders that markdown as a scaled slide, whose own `<Surface>`s stay placeholders. An embed of an
+    object that already encloses it (the slide's own subject, or a cycle), or one nested more than 3 levels
+    deep, renders an "Embedded in itself" placeholder instead.
   props:
     uri: string
     role: slide | section | card
@@ -937,6 +939,16 @@ decision D-37: A link whose URL is removed as unsafe renders without `href` or a
   for: user:richburdon
   affects: [MarkdownSlide]
   why: An empty `href` with `target="_blank"` opens the app itself in a new tab.
+```
+
+```mdl
+decision D-38: An embed whose target already encloses it (the slide's subject or an embedding ancestor), or one nested more than 3 levels deep, renders an "Embedded in itself" placeholder. Fills in [D-25].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [EmbeddedSurface, F-8.2]
+  why: An author-controlled document must not hang the app; a document that embeds itself, or two that embed each other, otherwise render without limit.
+  rejected: Dropping `renderSurface` below the first embed, which would leave every nested surface a placeholder.
 ```
 
 ---
