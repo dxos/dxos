@@ -412,7 +412,8 @@ const ListboxItem = forwardRef<HTMLDivElement, ListboxItemProps>(
             )}
             onMouseDown={(event) => {
               onMouseDown?.(event);
-              if (!isFromControl(event.currentTarget, event.target)) {
+              // Zag cancels the press to keep focus on the list, which would also stop a draggable row's native drag.
+              if (!isFromControl(event.currentTarget, event.target) && !event.currentTarget.draggable) {
                 itemProps.onMouseDown?.(event);
               }
             }}

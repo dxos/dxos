@@ -100,6 +100,21 @@
   [data-drop-target='bottom']::after {
     bottom: calc(var(--dx-drop-indicator-width) / -2);
   }
+  /* A horizontal list or a grid of tiles lands beside the target, so its indicator is vertical. */
+  :is([data-drop-target='left'], [data-drop-target='right'])::after {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    width: var(--dx-drop-indicator-width);
+    background: var(--dx-drop-indicator-color);
+    pointer-events: none;
+  }
+  [data-drop-target='left']::after {
+    left: calc((var(--dx-drop-indicator-width) + var(--dx-gap-size, 0px)) / -2);
+  }
+  [data-drop-target='right']::after {
+    right: calc((var(--dx-drop-indicator-width) + var(--dx-gap-size, 0px)) / -2);
+  }
 
   /* `virtual='variable'`: every row mounts, and the browser skips the layout of rows out of view. */
   [data-virtual='variable'] > :not([data-virtual-spacer]) {

@@ -22,7 +22,7 @@ const NEW_SLIDE_CONTENT = '# New slide';
 export type PresentationArticleProps = AppSurface.ObjectArticleProps<Presentation.Presentation>;
 
 /**
- * A presentation's deck, toggled in and out of fullscreen in place; the current slide is per-viewer view state.
+ * A presentation's slides as a grid, presented fullscreen in place; the current slide is per-viewer view state.
  */
 export const PresentationArticle = ({ role, subject, attendableId }: PresentationArticleProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
@@ -45,6 +45,13 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
     Presentation.addSlide(subject, NEW_SLIDE_CONTENT);
   }, [subject]);
 
+  const handleMoveSlide = useCallback(
+    (from: number, to: number) => {
+      Presentation.move(subject, from, to);
+    },
+    [subject],
+  );
+
   return (
     <Deck
       role={role}
@@ -54,9 +61,11 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
       fullscreen={fullscreen}
       onFullscreenChange={handleFullscreenChange}
       onAddSlide={handleAddSlide}
+      onMoveSlide={handleMoveSlide}
       attendableId={attendableId}
       autoFocus={hasAttention}
       theme={theme}
+      view='grid'
       toolbar={
         <>
           <SectionPicker presentation={subject} />

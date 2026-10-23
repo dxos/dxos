@@ -31,17 +31,22 @@ type Story = StoryObj<typeof meta>;
 
 const DATA_URI_IMAGE = '[style*="data:image/svg+xml"]';
 
-/** Steps through every owned layout (image-right, image over text, full-bleed image) to the linked documents. */
+/** Presents and steps through every owned layout (image-right, image over text, full-bleed image) to the linked documents. */
 export const Demo: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const next = async (position: number) => {
       await userEvent.keyboard('{ArrowRight}');
-      await expect(await canvas.findByText(`${position} / 10`)).toBeVisible();
+      // The fullscreen pager fades in and out, so it is checked for presence, not visibility.
+      await expect(await canvas.findByText(`${position} / 10`)).toBeInTheDocument();
     };
 
-    await expect(await canvas.findByText('1 / 10', undefined, { timeout: 10_000 })).toBeVisible();
+    await canvas.findByTestId('presenter.slide-grid.9', undefined, { timeout: 10_000 });
     await waitFor(() => expect(canvas.getByTestId('presenter.deck')).toHaveFocus());
+    // The article shows every slide as a thumbnail, so each one is checked alone by presenting.
+    await userEvent.keyboard('f');
+    await expect(await canvas.findByTestId('presenter.overlay')).toBeInTheDocument();
+    await expect(await canvas.findByText('1 / 10')).toBeInTheDocument();
     await next(2);
     await next(3);
     await next(4);

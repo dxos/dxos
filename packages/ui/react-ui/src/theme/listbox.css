@@ -58,6 +58,17 @@
     min-width: 0;
     padding: var(--dx-gap-size);
   }
+  /* A tile is a card, so it is outlined rather than filled: neutral under the pointer, the focus colour when selected. */
+  .dx-listbox-tile:hover {
+    outline: 2px solid var(--color-neutral-border);
+  }
+  .dx-listbox-tile:is([aria-selected='true'], [data-selected]) {
+    outline: 2px solid var(--color-focus);
+  }
+  /* A drag preview is a picture of the tile, which the snapshot would clip its outline to. */
+  [data-drag-preview] .dx-listbox-tile {
+    outline: none;
+  }
 
   /*
    * Rows place their parts by part, so a composed row lays out like the default one: block-sized leading cells (an

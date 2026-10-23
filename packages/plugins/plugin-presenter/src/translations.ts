@@ -28,6 +28,7 @@ export const translations = [
         'slide-pending.label': 'Loading…',
         'add-slide.label': 'Add slide',
         'fullscreen.label': 'Fullscreen',
+        'slide-grid.label': 'Slides',
         'add-section.label': 'Add to presentation',
         'untitled-object.label': 'Untitled {{type}}',
         'slide-fallback.label': 'Slide {{count}}',

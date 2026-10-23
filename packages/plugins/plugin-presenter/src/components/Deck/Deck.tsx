@@ -20,6 +20,7 @@ import { type SlideTheme, SlideViewState } from '#types';
 
 import { PageNumber, Pager } from '../Pager/index.ts';
 import { PresentationShell } from '../PresentationShell/index.ts';
+import { SlideGrid } from '../SlideGrid/index.ts';
 import { SlideRenderer } from '../SlideRenderer/index.ts';
 import { SlideThemeProvider } from '../SlideTheme/index.ts';
 
@@ -37,11 +38,15 @@ export type DeckProps = {
   fullscreen?: boolean;
   onFullscreenChange?: (fullscreen: boolean) => void;
   onAddSlide?: () => void;
+  /** Moves a slide in the grid view; without it the thumbnails cannot be dragged. */
+  onMoveSlide?: (from: number, to: number) => void;
   /** Extra toolbar content, shown at the start of the toolbar. */
   toolbar?: ReactNode;
   attendableId?: string;
   /** Deck theme; without a name, the first slide's `theme:` headmatter applies. */
   theme?: SlideTheme.Settings;
+  /** Inline, show one slide at a time or a grid of every slide; fullscreen always shows one. */
+  view?: 'slide' | 'grid';
   /** Focus the deck on mount, so keys work without a click; it is refocused after every fullscreen toggle regardless. */
   autoFocus?: boolean;
 };
@@ -77,10 +82,12 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
       fullscreen = false,
       onFullscreenChange,
       onAddSlide,
+      onMoveSlide,
       toolbar,
       attendableId,
       autoFocus = false,
       theme,
+      view = 'slide',
       ...props
     },
     forwardedRef,
@@ -301,13 +308,35 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
               />
             </Toolbar.Root>
           </Panel.Header>
-          <Panel.Body asChild>{shell}</Panel.Body>
-          <Panel.Footer>
-            <div className='flex items-center justify-center gap-4'>
-              <Pager index={index} count={count} onChange={onIndexChange} />
-              <PageNumber index={index} count={count} />
-            </div>
-          </Panel.Footer>
+          <Panel.Body asChild>
+            {view === 'grid' && count > 0 ? (
+              <div ref={shellRef} tabIndex={-1} data-testid='presenter.deck' className='flex grow outline-none'>
+                <SlideThemeProvider settings={themeSettings}>
+                  <SlideGrid
+                    slides={slides}
+                    index={index}
+                    onIndexChange={onIndexChange}
+                    onMove={onMoveSlide}
+                    onPresent={(slideIndex) => {
+                      onIndexChange(slideIndex);
+                      onFullscreenChange?.(true);
+                    }}
+                  />
+                </SlideThemeProvider>
+              </div>
+            ) : (
+              shell
+            )}
+          </Panel.Body>
+          {/* The grid shows every slide, so it has no pager. */}
+          {view === 'slide' && (
+            <Panel.Footer>
+              <div className='flex items-center justify-center gap-4'>
+                <Pager index={index} count={count} onChange={onIndexChange} />
+                <PageNumber index={index} count={count} />
+              </div>
+            </Panel.Footer>
+          )}
         </div>
       </Panel.Root>
     );

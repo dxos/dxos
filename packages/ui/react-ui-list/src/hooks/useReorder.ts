@@ -245,6 +245,8 @@ export const useReorderList = <T>({
                     getOffset: ({ container }) => ({ x: 20, y: container.getBoundingClientRect().height / 2 }),
                     render: ({ container }) => {
                       container.style.width = `${rect.width}px`;
+                      // Lets the theme drop a cloned row's live states (selection, hover) from the snapshot.
+                      container.setAttribute('data-drag-preview', '');
                       const current = lookup();
                       const preview = dragPreviewRef.current;
                       // Filled synchronously: the browser snapshots the preview when `dragstart`

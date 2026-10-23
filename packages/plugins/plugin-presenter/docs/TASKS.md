@@ -71,6 +71,7 @@ Design: [DESIGN.md](./DESIGN.md).
 - [x] **Print stylesheet** — `Deck/print.css`, imported by `Deck`; scoped by `html[data-printing-deck]`, prints every slide.
 - [x] **Object image embeds** — `![label](echo:///<id>)` renders the object like `<Surface ref>`, keeping main's reveal-era syntax (#14152) and plugin-debug's presenter sample working.
 - [x] **Themes** — `default`, `light`, `dark`, `serif` via `--slide-*` variables; `theme:` headmatter, Presentation `theme` setting with color/font overrides; story `plugins/plugin-presenter/components/SlideTheme`.
+- [x] **Slide grid** — the Presentation article shows every slide as a thumbnail (`SlideGrid`, react-ui-list `Listbox` tiles in a `Viewport`), no pager; drag a thumbnail to reorder sections, double-click to present from it (D-51).
 - [ ] Theme-driven Tailwind utilities for plugin-contributed themes (a `SlideTheme` capability) if a second source of themes appears.
 - [ ] `class:` frontmatter only works with Tailwind utilities that are already generated (the markdown is not scanned); consider a safelist.
 - [ ] Known deck conversion losses: per-colour tints behind the ECHO/HALO/MESH/EDGE images (needs a tint layer separate from `backgroundOpacity`), fixed image heights, and the dropped hidden FADE slide.
@@ -102,6 +103,7 @@ Design: [DESIGN.md](./DESIGN.md).
 
 - [ ] **Reconcile the toolbars** (user TODO, 2026-10-23): editing actions such as "start next column" and "insert object" belong in the formatting toolbar, not the slide toolbar; keep only slide-level controls (layout, background, notes, view) separate.
 - [ ] **Extending another component's toolbar** (user TODO, 2026-10-23): design a generic way for a consumer to add items to a toolbar it does not own (here, slide actions in `react-ui-editor`'s `EditorToolbar`). Starting points: `EditorToolbar`'s `customActions` atom (menu actions only, no custom React items such as pickers) and app-graph toolbar actions (`graphActions` with `isToolbarAction`, as MarkdownArticle uses). Draft design and prototype: `react-ui-menu/docs/TOOLBAR.md`, story `ui/react-ui-menu/ToolbarLayout (prototype)` (zones, rows, overflow menu, contributor placement).
+- [ ] **SlideToolbar on the toolbar builder** (user TODO, 2026-10-23): `SlideToolbar` hand-assembles `Toolbar.Root` children instead of using `MenuBuilder` + `ActionToolbar`; migrate it as part of the toolbar-mechanism review (`react-ui-menu/docs/TOOLBAR.md`).
 
 ## Phase 7: Later
 

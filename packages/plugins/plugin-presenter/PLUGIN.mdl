@@ -90,10 +90,12 @@ component Deck
     fullscreen: boolean
     toolbar?: ReactNode
     theme?: SlideTheme          # without a name, the first slide's `theme:` headmatter applies
+    view?: 'slide' | 'grid'     # inline view; fullscreen always shows one slide
   actions:
     onIndexChange(index: number)
     onFullscreenChange(fullscreen: boolean)
     onAddSlide()
+    onMoveSlide(from: number, to: number)   # grid only; enables dragging thumbnails
   layout: |
     ┌─────────────────────────────┐
     │ [toolbar]              [⛶] │  ← hidden in fullscreen
@@ -102,14 +104,26 @@ component Deck
     │     SlideFrame (slide N)    │
     │   (overlay pager, idle)     │
     ├─────────────────────────────┤
-    │      ◀◀ ◀  3 / 12  ▶ ▶▶     │  ← status bar; hidden in fullscreen
+    │      ◀◀ ◀  3 / 12  ▶ ▶▶     │  ← status bar; hidden in fullscreen and in the grid view
+    └─────────────────────────────┘
+  grid: |
+    ┌─────────────────────────────┐
+    │ [toolbar]              [⛶] │
+    ├─────────────────────────────┤
+    │ ┌────┐ ┌────┐ ┌────┐ ┌────┐ │  ← SlideGrid: thumbnails, current one outlined;
+    │ │ 1  │ │ 2  │ │[3] │ │ 4  │ │    scrolls vertically; columns follow the width
+    │ └────┘ └────┘ └────┘ └────┘ │
+    │ ┌────┐                      │
+    │ │ 5  │                      │
+    │ └────┘                      │
     └─────────────────────────────┘
 ```
 
 ```mdl
 component PresentationArticle
   desc: |
-    A Presentation's article is its deck. Fullscreen is read per object (is this Presentation on the
+    A Presentation's article is a grid of its slides (`Deck` `view='grid'`); presenting shows the deck one slide
+    at a time. Fullscreen is read per object (is this Presentation on the
     fullscreen plank) and toggles in place on the Presentation's own plank; the current slide is per-viewer
     view state. The toolbar adds slides and links objects through SectionPicker.
   props:
@@ -329,6 +343,13 @@ feat F-4: Presentation Deck
   req F-4.8: Only an attended deck takes focus on mount.
   req F-4.9: A linked object with no slide surface renders as a title slide rather than failing.
   req F-4.10: A section whose target was deleted is omitted from the deck; one whose target has not loaded shows a pending slide.
+  req F-4.11: Inline, a Presentation shows every slide as a fully revealed thumbnail in a vertically scrolling grid with no pager; the current slide is selected, and arrow keys or a click move it.
+  req F-4.12:
+    when: user drags a thumbnail before or after another
+    then: the section moves there, and the moved slide stays current
+  req F-4.13:
+    when: user double-clicks a thumbnail
+    then: the deck presents fullscreen from that slide
 ```
 
 ```mdl
@@ -451,8 +472,8 @@ scenario T-4: Presentation renders one slide per section
   given: a Presentation with one owned slide and one linked Markdown document
   when: PresentationArticle mounts
   then:
-    - slide 0 shows the owned slide
-    - the pager shows count = 2
+    - the grid shows two thumbnails, the owned slide first
+    - the first thumbnail is selected
 ```
 
 ```mdl
@@ -461,7 +482,7 @@ scenario T-5: Slide advance
   when: user presses the right arrow
   then:
     - slide index advances to 1
-    - the pager shows "2 / 3"
+    - the second thumbnail is selected
 ```
 
 ```mdl
@@ -1094,6 +1115,15 @@ decision D-50: Frontmatter edits go through the YAML document API, keeping the b
   affects: [SlideEditorArticle, F-10.2]
   why: The frontmatter is hand-written text; a picker must not reformat what the author wrote around the one key it sets.
   rejected: Re-serialising the parsed frontmatter object, which drops comments and reorders keys.
+```
+
+```mdl
+decision D-51: A Presentation's article shows its slides as a grid of thumbnails without a pager; dragging a thumbnail reorders the sections and double-clicking presents from it. Supersedes the inline single-slide deck of [F-4.1].
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [PresentationArticle, Deck, F-4.11, F-4.12, F-4.13]
+  why: The article is where a deck is arranged; one slide at a time hides the order, and the slide editor already edits a single slide.
+  rejected: A toggle between grid and single slide inline; presenting already shows one slide at a time.
 ```
 
 ---

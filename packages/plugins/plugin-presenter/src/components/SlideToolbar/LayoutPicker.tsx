@@ -87,7 +87,7 @@ export const LayoutPicker = ({ value, onChange }: LayoutPickerProps) => {
                   key={layout}
                   id={layout}
                   data-testid={`presenter.slide-toolbar.layout.${layout}`}
-                  classNames='text-xs aria-selected:outline-2 aria-selected:outline-focus'
+                  classNames='text-xs'
                 >
                   <div className='relative flex aspect-video pointer-events-none border border-separator'>
                     <SlideFrame>
