@@ -425,21 +425,24 @@ const OverflowMenuTrigger = ({ menu, actions, testId }: ItemProps<{ actions: Men
 const frameOf = (row: HTMLElement): HTMLElement =>
   row.parentElement?.classList.contains('dx-toolbar-scroll') ? row.parentElement : row;
 
+/** A menu cannot show a control the contributor renders itself, so such an item never leaves the row. */
+const isMenuable = (item: MenuItem): boolean => !isSeparator(item) && item.properties.variant !== 'custom';
+
 /**
- * Moves collapsible items into the overflow menu, highest rank first, while any row is too narrow; each comes back once
- * the toolbar is wider than when it collapsed, so hidden items are never measured. With nothing left to collapse, each
- * row is held at its content width, so the toolbar never scrolls and the overflow menu stays in view.
+ * Moves items into the overflow menu while any row is too narrow, so the toolbar fills its container without
+ * overflowing it: ranked items first (highest rank first), then the rest, last first. Each comes back once the toolbar
+ * is wider than when it collapsed, so hidden items are never measured.
  */
 const useCollapse = (units: MenuItem[], rows: RefObject<(HTMLElement | null)[]>): MenuItem[] => {
-  const collapsible = useMemo(
-    () =>
-      units
-        .map((item, index) => ({ item, rank: placementOf(item).collapse, index }))
-        .filter(({ rank }) => rank !== undefined)
-        .sort((a, b) => (b.rank ?? 0) - (a.rank ?? 0) || b.index - a.index)
-        .map(({ item }) => item),
-    [units],
-  );
+  const collapsible = useMemo(() => {
+    const ranked = units
+      .map((item, index) => ({ item, rank: placementOf(item).collapse, index }))
+      .filter(({ rank }) => rank !== undefined)
+      .sort((a, b) => (b.rank ?? 0) - (a.rank ?? 0) || b.index - a.index)
+      .map(({ item }) => item);
+    const rest = units.filter((item) => placementOf(item).collapse === undefined && isMenuable(item)).reverse();
+    return [...ranked, ...rest];
+  }, [units]);
 
   const [count, setCount] = useState(0);
   const thresholds = useRef<number[]>([]);
@@ -450,25 +453,17 @@ const useCollapse = (units: MenuItem[], rows: RefObject<(HTMLElement | null)[]>)
     if (elements.length === 0) {
       return;
     }
-    // Released first, so the rows measure the width their container gives them.
-    elements.forEach((row) => (frameOf(row).style.minWidth = ''));
-    const overflows = (row: HTMLElement) => row.scrollWidth > row.clientWidth + 1;
-    const overflowing = elements.some(overflows);
+    const overflowing = elements.some((row) => row.scrollWidth > row.clientWidth + 1);
     const width = frameOf(elements[0]).clientWidth;
     if (overflowing && count < collapsible.length) {
       thresholds.current[count] = width;
       setCount(count + 1);
     } else if (!overflowing && count > 0 && width > (thresholds.current[count - 1] ?? Infinity)) {
       setCount(count - 1);
-    } else {
-      elements.filter(overflows).forEach((row) => {
-        const frame = frameOf(row);
-        frame.style.minWidth = `${row.scrollWidth + frame.offsetWidth - row.clientWidth}px`;
-      });
     }
   });
 
-  // Re-render on resize only when something can collapse, since every toolbar in the app would otherwise observe.
+  // Re-render on resize only when something can collapse.
   const observed = collapsible.length > 0;
   useLayoutEffect(() => {
     const element = rows.current[0];
@@ -586,7 +581,7 @@ export const ActionToolbar = Util.composable<HTMLDivElement, ActionToolbarProps>
     return rowCount === 1 ? (
       renderRow(0)
     ) : (
-      <div role='none' className='flex flex-col min-w-0'>
+      <div role='none' className='flex flex-col w-full min-w-0 min-h-fit'>
         {Array.from({ length: rowCount }, (_, row) => renderRow(row))}
       </div>
     );
