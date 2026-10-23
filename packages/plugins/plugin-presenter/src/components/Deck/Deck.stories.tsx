@@ -275,8 +275,6 @@ export const ClickSteps: Story = {
     const deck = await canvas.findByTestId('presenter.deck');
     const hidden = () => canvasElement.querySelectorAll('li.invisible').length;
     await waitFor(() => expect(hidden()).toBe(3));
-    // The click count arrives from the slide's effect after first paint.
-    await new Promise((resolve) => setTimeout(resolve, 300));
     deck.focus();
     for (const remaining of [2, 1, 0]) {
       await userEvent.keyboard('{ArrowRight}');
@@ -289,5 +287,23 @@ export const ClickSteps: Story = {
     await expect(await canvas.findByText('1 / 2')).toBeVisible();
     await waitFor(() => expect(hidden()).toBe(0));
     await expect(canvasElement.querySelectorAll('li')).toHaveLength(3);
+    await userEvent.keyboard('{End}{Home}{ArrowRight}');
+    await waitFor(() => expect(hidden()).toBe(2));
+    await expect(canvas.getByText('1 / 2')).toBeVisible();
+  },
+};
+
+/** Space activates a focused pager button natively and does not also advance the deck. */
+export const SpaceOnButton: Story = {
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByTestId('presenter.deck');
+    const [next] = canvas.getAllByRole('button', { name: /next/i });
+    next.focus();
+    await userEvent.keyboard(' ');
+    await expect(await canvas.findByText('2 / 5')).toBeVisible();
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    await expect(canvas.queryByText('3 / 5')).toBeNull();
   },
 };

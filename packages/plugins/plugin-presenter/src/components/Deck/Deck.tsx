@@ -11,6 +11,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Util from '@dxos/react-ui/Util';
 
 import { type SlideSource } from '#deck';
+import { useSlideClicks } from '#hooks';
 import { meta } from '#meta';
 import { SlideViewState } from '#types';
 
@@ -47,6 +48,10 @@ const KEY_OWNERS = [
   ),
 ].join(', ');
 
+/** Controls that Space activates natively. */
+const ACTIVATABLE =
+  'button, a[href], summary, [role="button"], [role="checkbox"], [role="switch"], [role="menuitem"], [role="tab"], [role="option"]';
+
 /** Keys typed into slide content (inputs, editors, arrow-driven widgets) must not turn the page. */
 const isEditable = (target: EventTarget) => target instanceof Element && target.closest(KEY_OWNERS) !== null;
 
@@ -77,14 +82,8 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
 
     // Click state is tied to the slide it belongs to, so any index change (pager, jump, controlled) resets it.
     const [stepState, setStepState] = useState({ index: 0, step: 0 });
-    const [clickState, setClickState] = useState({ index: 0, clicks: 0 });
-    const clicks = clickState.index === index ? clickState.clicks : 0;
+    const clicks = useSlideClicks(slide);
     const step = stepState.index === index ? Math.min(stepState.step, clicks) : 0;
-    const handleClicks = useCallback(
-      (next: number) =>
-        setClickState((state) => (state.index === index && state.clicks === next ? state : { index, clicks: next })),
-      [index],
-    );
 
     const handleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLDivElement>) => {
@@ -99,7 +98,9 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
 
         const go = (next: number) => {
           event.preventDefault();
-          onIndexChange(SlideViewState.clamp(next, count));
+          const clamped = SlideViewState.clamp(next, count);
+          setStepState({ index: clamped, step: 0 });
+          onIndexChange(clamped);
         };
         const forward = () => {
           if (step < clicks) {
@@ -111,6 +112,10 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
         };
         switch (event.key) {
           case ' ':
+            // Space activates a focused control, so it only advances from non-interactive targets.
+            if (event.target instanceof Element && event.target.closest(ACTIVATABLE)) {
+              return;
+            }
             return forward();
           case 'f':
           case 'F':
@@ -126,8 +131,8 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
               setStepState({ index, step: step - 1 });
               return;
             }
+            event.preventDefault();
             if (index > 0) {
-              event.preventDefault();
               setStepState({ index: index - 1, step: Number.POSITIVE_INFINITY });
               onIndexChange(index - 1);
             }
@@ -169,15 +174,7 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
           {onAddSlide && <Button.Root label={t('add-slide.label')} onClick={onAddSlide} />}
         </div>
       ) : (
-        slide && (
-          <SlideRenderer
-            key={slide.id}
-            source={slide}
-            attendableId={attendableId}
-            step={step}
-            onClicks={handleClicks}
-          />
-        )
+        slide && <SlideRenderer key={slide.id} source={slide} attendableId={attendableId} step={step} />
       );
 
     const shell = (
