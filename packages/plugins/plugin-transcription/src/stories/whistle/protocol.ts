@@ -30,14 +30,12 @@ export type WhistleRequest =
       assets: WhistleAssets;
       language?: string;
       keywords?: string[];
-      /** Smallest batch of new audio, in milliseconds, worth a pass. */
-      minPassMs?: number;
     }
+  /** Smallest batch of new audio, in milliseconds, worth a pass; changes take effect on the next pass. */
+  | { type: 'config'; minPassMs: number }
   /** 16 kHz mono samples; transferred. */
   | { type: 'audio'; samples: Float32Array }
-  /** End of an utterance: commit the unconfirmed tail and start a fresh stream buffer. */
-  | { type: 'flush' }
-  /** Flush and end the stream; word times restart from zero. */
+  /** Commit the unconfirmed tail and end the stream; word times restart from zero. */
   | { type: 'stop' };
 
 export type WhistleResponse =

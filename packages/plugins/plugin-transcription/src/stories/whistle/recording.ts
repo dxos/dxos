@@ -7,23 +7,18 @@ import { WHISTLE_SAMPLE_RATE } from './protocol.ts';
 /** Waveform resolution: one bar per 50 ms. */
 export const BAR_SAMPLES = WHISTLE_SAMPLE_RATE / 20;
 
-/** One waveform bar: the loudest sample in its window and whether the noise gate let it through. */
+/** One waveform bar: the loudest sample in its window. */
 export type WaveformBar = {
   peak: number;
-  speech: boolean;
 };
 
-/**
- * The whole capture as 16 kHz mono samples, kept so it can be drawn and saved; the model only ever
- * sees the gated part of it.
- */
+/** The whole capture as 16 kHz mono samples, kept so it can be drawn and saved. */
 export class Recording {
   readonly #chunks: Float32Array[] = [];
   readonly #bars: WaveformBar[] = [];
   readonly #listeners = new Set<() => void>();
   #length = 0;
   #peak = 0;
-  #speech = false;
   #filled = 0;
 
   get bars(): readonly WaveformBar[] {
@@ -35,17 +30,15 @@ export class Recording {
     return this.#length / WHISTLE_SAMPLE_RATE;
   }
 
-  /** Appends a chunk heard with the gate `open` or closed; the chunk is copied. */
-  append(samples: Float32Array, open: boolean): void {
+  /** Appends a chunk; the chunk is copied. */
+  append(samples: Float32Array): void {
     this.#chunks.push(samples.slice());
     this.#length += samples.length;
     for (const sample of samples) {
       this.#peak = Math.max(this.#peak, Math.abs(sample));
-      this.#speech ||= open;
       if (++this.#filled === BAR_SAMPLES) {
-        this.#bars.push({ peak: this.#peak, speech: this.#speech });
+        this.#bars.push({ peak: this.#peak });
         this.#peak = 0;
-        this.#speech = false;
         this.#filled = 0;
       }
     }

@@ -3,16 +3,18 @@
 //
 
 /**
- * Lowest-latency streaming transcription with Whistle (https://cactuscompute.com/blog/whistle), a
- * 17 MB on-device speech model run as WASM in a worker. Unlike the `Transcription` story, nothing
- * is sent to a service: each pass re-decodes the buffered audio, words two consecutive passes agree
- * on are committed, and the unconfirmed tail is shown (italic) as soon as the first pass returns. A
- * noise gate passes only speech, since the model decodes silence and room noise into phantom phrases.
+ * Streaming transcription with Whistle (https://cactuscompute.com/blog/whistle), a 17 MB on-device
+ * speech model run as WASM in a worker, set up as Cactus's own live demo: one continuous stream with the
+ * browser's noise suppression, re-decoded every second of new audio. Unlike the `Transcription` story,
+ * nothing is sent to a service: words two consecutive passes agree on are committed, and the unconfirmed
+ * tail is shown (italic) as soon as the first pass returns.
+ *
+ * - The toolbar's lightning toggle re-decodes every 200 ms instead: words commit sooner, but passes that
+ *   close together agree on half-heard words more often.
  *
  * - `Microphone` streams the default input; `File` plays the same hosted m4a as `Transcription`.
  * - The model downloads on the first press and is cached by the browser afterwards.
- * - The waveform shows everything captured, with the speech the gate passed highlighted; the raw
- *   recording stays in the tab and can be saved as WAV.
+ * - The waveform shows everything captured; the raw recording stays in the tab and can be saved as WAV.
  */
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
@@ -27,10 +29,15 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Message } from '@dxos/types';
 
+import { WHISTLE_AUDIO_CONSTRAINTS } from './whistle/capture.ts';
 import { type WhistleWord } from './whistle/protocol.ts';
 import { type Recording } from './whistle/recording.ts';
 import { type UseWhistleResult, useWhistle } from './whistle/useWhistle.ts';
 import { Waveform } from './whistle/Waveform.tsx';
+
+/** New audio per pass: as Cactus's demo for accuracy, or a fifth of it for latency. */
+const ACCURATE_PASS_MS = 1_000;
+const LOW_LATENCY_PASS_MS = 200;
 
 /** A paragraph closes at the first sentence end after this many words. */
 const PARAGRAPH_MIN_WORDS = 30;
@@ -98,7 +105,7 @@ const formatMs = (value?: number) => (value === undefined ? '–' : `${Math.roun
 
 const formatSeconds = (value?: number) => (value === undefined ? '–' : `${value.toFixed(2)} s`);
 
-const Stats = ({ status, error, progress, speaking, stats }: UseWhistleResult) => {
+const Stats = ({ status, error, progress, stats }: UseWhistleResult) => {
   if (status === 'error') {
     return <span className='text-error-text text-sm truncate'>{error}</span>;
   }
@@ -107,9 +114,6 @@ const Stats = ({ status, error, progress, speaking, stats }: UseWhistleResult) =
   }
   return (
     <span className='text-description text-sm font-mono tabular-nums whitespace-nowrap'>
-      <span className={speaking ? 'text-success-text' : undefined} title={speaking ? 'Speech' : 'Gated'}>
-        ●
-      </span>{' '}
       load {formatMs(stats.loadMs)} · pass {formatMs(stats.passMs)} · lag {formatSeconds(stats.commitLag)} · backlog{' '}
       {formatSeconds(stats.backlog)}
     </span>
@@ -130,19 +134,39 @@ type WhistlePanelProps = {
   active: boolean;
   language?: string;
   keywords?: string[];
-  minPassMs?: number;
+  lowLatency?: boolean;
   actions: ReactNode;
 };
 
-const WhistlePanel = ({ track, active, language, keywords, minPassMs, actions }: WhistlePanelProps) => {
+const WhistlePanel = ({ track, active, language, keywords, lowLatency = false, actions }: WhistlePanelProps) => {
   const { model, commit } = useStreamingTranscript();
-  const whistle = useWhistle({ track, active, language, keywords, minPassMs, onResult: commit });
+  const [fast, setFast] = useState(lowLatency);
+  useEffect(() => setFast(lowLatency), [lowLatency]);
+  const whistle = useWhistle({
+    track,
+    active,
+    language,
+    keywords,
+    minPassMs: fast ? LOW_LATENCY_PASS_MS : ACCURATE_PASS_MS,
+    onResult: commit,
+  });
 
   return (
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
           {actions}
+          <Button.Root
+            iconOnly
+            variant={fast ? 'primary' : 'ghost'}
+            icon='ph--lightning--regular'
+            label={
+              fast
+                ? `Low latency: a pass every ${LOW_LATENCY_PASS_MS} ms`
+                : `Accurate: a pass every ${ACCURATE_PASS_MS} ms`
+            }
+            onClick={() => setFast((value) => !value)}
+          />
           <Button.Root
             iconOnly
             icon='ph--download-simple--regular'
@@ -170,20 +194,20 @@ const WhistlePanel = ({ track, active, language, keywords, minPassMs, actions }:
 type StoryArgs = {
   language?: string;
   keywords?: string[];
-  /** Smallest batch of new audio, in milliseconds, worth a pass. */
-  minPassMs?: number;
+  /** Start in low-latency mode (a pass every 200 ms of new audio instead of every second). */
+  lowLatency?: boolean;
 };
 
-const MicrophoneStory = ({ language, keywords, minPassMs }: StoryArgs) => {
+const MicrophoneStory = ({ language, keywords, lowLatency }: StoryArgs) => {
   const [active, setActive] = useState(false);
-  const track = useAudioTrack(active);
+  const track = useAudioTrack(active, WHISTLE_AUDIO_CONSTRAINTS);
   return (
     <WhistlePanel
       track={track}
       active={active}
       language={language}
       keywords={keywords}
-      minPassMs={minPassMs}
+      lowLatency={lowLatency}
       actions={
         <Button.Root
           iconOnly
@@ -196,7 +220,7 @@ const MicrophoneStory = ({ language, keywords, minPassMs }: StoryArgs) => {
   );
 };
 
-const FileStory = ({ audioUrl, language, keywords }: StoryArgs & { audioUrl: string }) => {
+const FileStory = ({ audioUrl, language, keywords, lowLatency }: StoryArgs & { audioUrl: string }) => {
   const [active, setActive] = useState(false);
   const { audio, stream, track } = useAudioFile(audioUrl);
 
@@ -223,6 +247,7 @@ const FileStory = ({ audioUrl, language, keywords }: StoryArgs & { audioUrl: str
         active={active}
         language={language}
         keywords={keywords}
+        lowLatency={lowLatency}
         actions={
           <Button.Root
             iconOnly
@@ -250,10 +275,7 @@ type Story = StoryObj<typeof meta>;
 export const Microphone: Story = {
   args: {
     language: 'en',
-    minPassMs: 200,
-  },
-  argTypes: {
-    minPassMs: { control: { type: 'range', min: 100, max: 1000, step: 100 } },
+    lowLatency: false,
   },
 };
 

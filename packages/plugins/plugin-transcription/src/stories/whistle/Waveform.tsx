@@ -24,10 +24,7 @@ export type WaveformProps = {
   classNames?: string;
 };
 
-/**
- * Scrolling peak waveform of the recording, newest on the right; bars the noise gate passed to the
- * model are highlighted.
- */
+/** Scrolling peak waveform of the recording, newest on the right. */
 export const Waveform = ({ recording, classNames }: WaveformProps) => {
   const subscribe = useCallback((listener: () => void) => recording.subscribe(listener), [recording]);
   const count = useSyncExternalStore(subscribe, () => recording.bars.length);
@@ -39,10 +36,10 @@ export const Waveform = ({ recording, classNames }: WaveformProps) => {
       aria-label={`Recording waveform, ${recording.duration.toFixed(1)} seconds`}
       className={mx('flex items-center justify-end gap-px h-16 px-2 overflow-hidden', classNames)}
     >
-      {bars.map(({ peak, speech }, index) => (
+      {bars.map(({ peak }, index) => (
         <div
           key={count - bars.length + index}
-          className={mx('shrink-0 w-0.5 rounded-full bg-current', speech ? 'text-success-text' : 'text-description')}
+          className='shrink-0 w-0.5 rounded-full bg-current text-success-text'
           style={{ height: `${barHeight(peak) * 100}%` }}
         />
       ))}

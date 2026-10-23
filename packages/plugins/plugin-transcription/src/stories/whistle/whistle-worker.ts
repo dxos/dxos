@@ -45,37 +45,27 @@ type StreamOutput = {
 const OUT_CAPACITY = 64 * 1024;
 
 /**
- * Default smallest batch worth a pass; anything queued while a pass runs joins the next one. Two capture
- * flushes: a word commits after two agreeing passes, so this sets the commit floor (≈2×), while passes far
- * closer together see nearly the same audio and agree on a half-heard word.
+ * Default smallest batch of new audio worth a pass, as in Cactus's own live demo; anything queued while a
+ * pass runs joins the next one. A word commits after two agreeing passes, so this sets the commit floor
+ * (≈2×), and passes closer together see nearly the same audio and agree on half-heard words.
  */
-const DEFAULT_MIN_PASS_MS = 200;
-
-/**
- * Every pass re-decodes the whole stream buffer, so pass time grows with it until it falls behind
- * real time. Ending the stream bounds the buffer: preferably once the tail is confirmed (a clean
- * break), unconditionally once it gets long.
- */
-const SOFT_SEGMENT_SECONDS = 3;
-const HARD_SEGMENT_SECONDS = 6;
+const DEFAULT_MIN_PASS_MS = 1_000;
 
 let engine: NeedleModule | undefined;
-let minPassSamples = (WHISTLE_SAMPLE_RATE * DEFAULT_MIN_PASS_MS) / 1000;
+let minPassSamples = (WHISTLE_SAMPLE_RATE * DEFAULT_MIN_PASS_MS) / 1_000;
 let outPtr = 0;
 let languagePtr = 0;
 let keywordsPtr = 0;
 let pcmPtr = 0;
 let pcmCapacity = 0;
 
-/** Audio in arrival order, with markers where the caller ended an utterance or the stream. */
-let queue: Array<Float32Array | 'flush' | 'stop'> = [];
+/** Audio in arrival order, with a marker where the caller ended the stream. */
+let queue: Array<Float32Array | 'stop'> = [];
 let queued = 0;
 let draining = false;
 
-/** Seconds of audio in streams already ended, so word times stay absolute across segments. */
-let segmentOffset = 0;
 /** Seconds of audio in the current stream. */
-let segmentReceived = 0;
+let streamReceived = 0;
 
 const post = (message: WhistleResponse) => globalThis.postMessage(message);
 
@@ -140,8 +130,7 @@ const readString = (module: NeedleModule, ptr: number): string => {
   return new TextDecoder().decode(heap.subarray(ptr, end));
 };
 
-const init = async (assets: WhistleAssets, language?: string, keywords?: string[], minPassMs = DEFAULT_MIN_PASS_MS) => {
-  minPassSamples = Math.round((WHISTLE_SAMPLE_RATE * minPassMs) / 1000);
+const init = async (assets: WhistleAssets, language?: string, keywords?: string[]) => {
   const started = performance.now();
   const [createNeedle, wasmBinary, model] = await Promise.all([
     loadEngineFactory(assets.engineUrl),
@@ -165,7 +154,7 @@ const init = async (assets: WhistleAssets, language?: string, keywords?: string[
 };
 
 /** Takes the audio up to the next marker, and the marker itself. */
-const takeQueued = (): { samples: Float32Array; marker?: 'flush' | 'stop' } => {
+const takeQueued = (): { samples: Float32Array; stop: boolean } => {
   const end = queue.findIndex((item) => typeof item === 'string');
   const chunks = (end < 0 ? queue : queue.slice(0, end)).filter(
     (item): item is Float32Array => typeof item !== 'string',
@@ -180,7 +169,7 @@ const takeQueued = (): { samples: Float32Array; marker?: 'flush' | 'stop' } => {
     offset += chunk.length;
   }
   queued -= samples.length;
-  return { samples, marker: typeof marker === 'string' ? marker : undefined };
+  return { samples, stop: marker === 'stop' };
 };
 
 const hasWork = () => queued >= minPassSamples || queue.some((item) => typeof item === 'string');
@@ -189,19 +178,14 @@ const parseOutput = (module: NeedleModule): StreamOutput => JSON.parse(readStrin
 
 type PassResult = Omit<Extract<WhistleResponse, { type: 'result' }>, 'type' | 'backlog'>;
 
-const offsetWords = (words: WhistleWord[] = []): WhistleWord[] =>
-  words.map((word) => ({ ...word, start: word.start + segmentOffset, end: word.end + segmentOffset }));
-
-/** Ends the current stream; its unconfirmed tail becomes committed words. */
-const endSegment = (module: NeedleModule): WhistleWord[] => {
-  if (segmentReceived === 0) {
+/** Ends the stream; its unconfirmed tail becomes committed words. */
+const endStream = (module: NeedleModule): WhistleWord[] => {
+  if (streamReceived === 0) {
     return [];
   }
   module._needle_stream_transcribe_stop(outPtr, OUT_CAPACITY);
-  const words = offsetWords(parseOutput(module).words);
-  segmentOffset += segmentReceived;
-  segmentReceived = 0;
-  return words;
+  streamReceived = 0;
+  return parseOutput(module).words ?? [];
 };
 
 const runPass = (module: NeedleModule, samples: Float32Array): PassResult => {
@@ -217,16 +201,13 @@ const runPass = (module: NeedleModule, samples: Float32Array): PassResult => {
   const started = performance.now();
   module._needle_stream_transcribe_process(pcmPtr, samples.length, languagePtr, keywordsPtr, outPtr, OUT_CAPACITY);
   const output = parseOutput(module);
-  const words = offsetWords(output.words);
-  const received = segmentOffset + (output.received ?? 0);
-  let pending = output.pending ?? '';
-  segmentReceived = output.received ?? 0;
-  if (segmentReceived >= HARD_SEGMENT_SECONDS || (segmentReceived >= SOFT_SEGMENT_SECONDS && pending.trim() === '')) {
-    words.push(...endSegment(module));
-    pending = '';
-  }
-
-  return { words, pending, passMs: performance.now() - started, received };
+  streamReceived = output.received ?? 0;
+  return {
+    words: output.words ?? [],
+    pending: output.pending ?? '',
+    passMs: performance.now() - started,
+    received: streamReceived,
+  };
 };
 
 /** Lets queued `audio` messages land between passes; the WASM call itself blocks the event loop. */
@@ -239,16 +220,12 @@ const drain = async () => {
   draining = true;
   try {
     while (engine && hasWork()) {
-      const { samples, marker } = takeQueued();
-      const received = segmentOffset + segmentReceived;
+      const { samples, stop } = takeQueued();
       const result: PassResult =
-        samples.length > 0 ? runPass(engine, samples) : { words: [], pending: '', passMs: 0, received };
-      if (marker) {
-        result.words.push(...endSegment(engine));
+        samples.length > 0 ? runPass(engine, samples) : { words: [], pending: '', passMs: 0, received: streamReceived };
+      if (stop) {
+        result.words.push(...endStream(engine));
         result.pending = '';
-        if (marker === 'stop') {
-          segmentOffset = 0;
-        }
       }
       // Posted after the yield so the backlog counts the audio that arrived during the pass.
       await yieldToMessages();
@@ -265,7 +242,7 @@ globalThis.addEventListener('message', (event: MessageEvent<WhistleRequest>) => 
   const request = event.data;
   switch (request.type) {
     case 'init': {
-      init(request.assets, request.language, request.keywords, request.minPassMs).catch((err) =>
+      init(request.assets, request.language, request.keywords).catch((err) =>
         post({ type: 'error', message: err instanceof Error ? err.message : String(err) }),
       );
       break;
@@ -276,7 +253,11 @@ globalThis.addEventListener('message', (event: MessageEvent<WhistleRequest>) => 
       void drain();
       break;
     }
-    case 'flush':
+    case 'config': {
+      minPassSamples = Math.round((WHISTLE_SAMPLE_RATE * request.minPassMs) / 1_000);
+      void drain();
+      break;
+    }
     case 'stop': {
       queue.push(request.type);
       void drain();
