@@ -14,12 +14,19 @@ export type SpecFile = { readonly path: string; readonly text: string };
  * The published copy of a spec, served beside a static build at `specs/<path>`, else its bundled text.
  * `no-store` because the copy is replaced in place by a spec-only republish.
  */
-export const fetchSpecText = (file: SpecFile): Effect.Effect<string> =>
+const fetchSpecText = (file: SpecFile): Effect.Effect<string> =>
   Effect.tryPromise(() => fetch(new URL(`specs/${file.path}`, document.baseURI), { cache: 'no-store' })).pipe(
     Effect.filterOrFail((response) => response.ok),
     Effect.flatMap((response) => Effect.tryPromise(() => response.text())),
     Effect.orElseSucceed(() => file.text),
   );
+
+/**
+ * The text a story renders for a spec, resolved the way `useSpecTexts` does; a play function compares
+ * against it because Storybook runs play functions in a static build too.
+ */
+export const resolveSpecText = (file: SpecFile): Effect.Effect<string> =>
+  import.meta.env.DEV ? Effect.succeed(file.text) : fetchSpecText(file);
 
 /**
  * Spec texts for a story: the bundled text under the dev server (which hot-reloads it), and in a static

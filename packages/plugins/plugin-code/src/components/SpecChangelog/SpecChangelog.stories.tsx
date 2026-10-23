@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
@@ -23,7 +24,7 @@ import FILE_SYSTEM_SPEC from '../../../../plugin-file-system/PLUGIN.mdl?spec';
 import FILE_SYSTEM_REVIEW from '../../../../plugin-file-system/PLUGIN.review.mdl?spec';
 import GITHUB_FILE_SYNC_SPEC from '../../../../plugin-github/spec/FILE-SYNC.mdl?spec';
 import GITHUB_SYNC_SPEC from '../../../../plugin-github/spec/SYNC.mdl?spec';
-import { type SpecFile, useSpecTexts } from '../../testing/index.ts';
+import { type SpecFile, resolveSpecText, useSpecTexts } from '../../testing/index.ts';
 import CANVAS_AUTOGROW_SPEC from '../ChangelogGraph/__fixtures__/canvas-autogrow.mdl?spec';
 import INBOX_SYNC_SPEC from '../ChangelogGraph/__fixtures__/inbox-sync.mdl?spec';
 import { parseReview } from '../SpecModel/index.ts';
@@ -123,11 +124,8 @@ export const FileSystemReview: Story = {
   args: { content: FILE_SYSTEM_SPEC, review: FILE_SYSTEM_REVIEW, onOpenCode: openOnGitHub, defaultView: 'review' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await waitFor(
-      () =>
-        expect(canvas.getAllByTestId('verdict-card').length).toBe(parseReview(FILE_SYSTEM_REVIEW.text).verdicts.length),
-      TIMEOUT,
-    );
+    const review = parseReview(await EffectEx.runPromise(resolveSpecText(FILE_SYSTEM_REVIEW)));
+    await waitFor(() => expect(canvas.getAllByTestId('verdict-card').length).toBe(review.verdicts.length), TIMEOUT);
   },
 };
 
