@@ -200,7 +200,12 @@ export const createGitReader = (env: NodeJS.ProcessEnv = process.env): GitReader
     // Git reports a commit it does not have the same way as a missing path, so the commit is checked first; this throws.
     await run('git', ['-C', dir, 'cat-file', '-e', `${rev}^{commit}`], { timeout: TIMEOUT });
     try {
-      const { stdout } = await run('git', ['-C', dir, 'show', object], { timeout: TIMEOUT, maxBuffer: MAX_BUFFER });
+      // The C locale keeps git's message in English, so `MISSING_PATH` matches whatever language the machine uses.
+      const { stdout } = await run('git', ['-C', dir, 'show', object], {
+        timeout: TIMEOUT,
+        maxBuffer: MAX_BUFFER,
+        env: { ...process.env, LC_ALL: 'C' },
+      });
       return stdout;
     } catch (error) {
       // Only a path missing at `rev` means the file did not exist; any other failure must not read as an empty base.
