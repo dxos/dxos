@@ -70,8 +70,15 @@ export const resolveRoots = (
     return [...configured.filter((root) => root !== undefined), ...host];
   });
 
-/** The absolute path a key names, when its repository is checked out locally. */
+/**
+ * The absolute path a key names, when its repository is checked out locally. A key whose path is absolute or climbs
+ * with `..` resolves to nothing, since a key comes from document text and must stay inside its checkout.
+ */
 export const resolvePath = (roots: readonly FileSystem.RepoRoot[], key: SourceKey): string | undefined => {
+  const segments = key.path.split('/');
+  if (key.path.startsWith('/') || segments.includes('..') || segments.includes('.')) {
+    return undefined;
+  }
   const root = roots.find(({ repo }) => repo.toLowerCase() === repoId(key).toLowerCase());
   return root && `${root.path}/${key.path}`;
 };

@@ -9,6 +9,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Filter } from '@dxos/echo';
+import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
 import { Spec } from '@dxos/types';
@@ -69,7 +70,10 @@ export default Capability.makeModule(
     yield* Effect.forkScoped(
       Effect.gen(function* () {
         while (true) {
-          yield* pass;
+          // A failed pass (a space closing mid-query) is logged so the next pass still runs.
+          yield* pass.pipe(
+            Effect.catchCause((cause) => Effect.sync(() => log.warn('spec sync pass failed', { cause }))),
+          );
           yield* Queue.take(wake).pipe(Effect.timeoutOption(SYNC_INTERVAL));
         }
       }),

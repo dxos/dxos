@@ -46,7 +46,9 @@ export const Default: Story = {
     await expect(cards).toHaveLength(REVIEW.verdicts.length);
     await expect(cards[0].dataset.status).toBe('missing');
     await userEvent.click(cards[2]);
-    await waitFor(() => expect(cards[2].closest('[aria-current], .dx-current')).not.toBeNull());
+    // Re-queried after the click, since selection re-renders the tiles; the `dx-current` class is on every tile.
+    await waitFor(() => expect(canvas.getAllByTestId('verdict-card')[2].getAttribute('aria-current')).toBe('true'));
+    await expect(canvas.getAllByTestId('verdict-card')[0].getAttribute('aria-current')).toBeNull();
   },
 };
 

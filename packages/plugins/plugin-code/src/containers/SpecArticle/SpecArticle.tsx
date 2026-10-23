@@ -165,7 +165,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     const decisions = useMemo(() => parsedDecisions, [decisionsKey]);
 
     const viewRef = useRef<EditorView | undefined>(undefined);
-    const reveal = useCallback((id: string) => {
+    const reveal = useCallback((id: string, focus = true) => {
       const editor = viewRef.current;
       if (!editor) {
         return;
@@ -178,7 +178,9 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
             selection: EditorSelection.cursor(line.from),
             effects: EditorView.scrollIntoView(line.from, { y: 'center' }),
           });
-          editor.focus();
+          if (focus) {
+            editor.focus();
+          }
           return;
         }
       }
@@ -227,7 +229,8 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     const selectVerdict = useCallback(
       (id: string) => {
         setSelectedVerdict(id);
-        reveal(id);
+        // The card list keeps focus, so the arrow keys keep moving through the verdicts.
+        reveal(id, false);
       },
       [reveal],
     );

@@ -138,5 +138,9 @@ describe('repo roots', () => {
     ]);
     expect(resolvePath(roots, { owner: 'dxos', repo: 'dxos', path: 'a/SPEC.mdl' })).toBe('/host/a/SPEC.mdl');
     expect(resolvePath(roots, { owner: 'other', repo: 'x', path: 'a' })).toBeUndefined();
+    // A key from document text cannot climb out of its checkout.
+    expect(resolvePath(roots, { owner: 'dxos', repo: 'dxos', path: '../etc/passwd' })).toBeUndefined();
+    expect(resolvePath(roots, { owner: 'dxos', repo: 'dxos', path: 'a/../../b.mdl' })).toBeUndefined();
+    expect(resolvePath(roots, { owner: 'dxos', repo: 'dxos', path: '/etc/passwd' })).toBeUndefined();
   });
 });

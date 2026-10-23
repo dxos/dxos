@@ -3,7 +3,7 @@
 //
 
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import path from 'node:path';
 import { type Plugin } from 'vite';
@@ -16,9 +16,22 @@ const SKIP_DIRS = new Set(['node_modules', 'dist', 'target']);
 /** Bounds a listing so a mistaken root (a home directory) cannot stall the server. */
 const MAX_LISTED = 5_000;
 
+const remotes = new Map<string, string | undefined>();
+
+/** The `owner/repo` of a checkout's origin, looked up once per root so polling `/roots` does not spawn git. */
 const remoteOf = (dir: string): string | undefined => {
+  if (!remotes.has(dir)) {
+    remotes.set(dir, readRemote(dir));
+  }
+  return remotes.get(dir);
+};
+
+const readRemote = (dir: string): string | undefined => {
   try {
-    const url = execFileSync('git', ['-C', dir, 'remote', 'get-url', 'origin'], { encoding: 'utf8' }).trim();
+    const url = execFileSync('git', ['-C', dir, 'remote', 'get-url', 'origin'], {
+      encoding: 'utf8',
+      timeout: 5_000,
+    }).trim();
     return url
       .match(/github\.com[:/]([\w.-]+)\/([\w.-]+?)(?:\.git)?\/?$/)
       ?.slice(1, 3)
@@ -69,6 +82,33 @@ const send = (res: ServerResponse, status: number, body: unknown) => {
 /** Writes and removals are limited to these suffixes, so a page cannot rewrite source code through the dev server. */
 const WRITABLE = ['.mdl'];
 
+/** Whether the route may write or remove `file`. */
+export const isWritable = (file: string): boolean => WRITABLE.some((suffix) => file.endsWith(suffix));
+
+/** The real path of the nearest existing ancestor, with the missing tail re-appended, so a new file can be checked. */
+const realpathOf = (file: string): string => {
+  try {
+    return realpathSync(file);
+  } catch {
+    const parent = path.dirname(file);
+    return parent === file ? file : path.join(realpathOf(parent), path.basename(file));
+  }
+};
+
+/**
+ * The resolved path when `file` lies inside one of `roots`, else undefined. Symlinks are followed before the check,
+ * since a link inside a checkout can point anywhere.
+ */
+export const withinRoots = (roots: readonly string[], file: string): string | undefined => {
+  const resolved = path.resolve(file);
+  const real = realpathOf(resolved);
+  return roots
+    .map((root) => realpathOf(path.resolve(root)))
+    .some((root) => real === root || real.startsWith(`${root}${path.sep}`))
+    ? resolved
+    : undefined;
+};
+
 /**
  * Dev-only backend of plugin-file-system's FileSystem service, the browser counterpart of the desktop app's Tauri fs
  * plugin. Reads any file inside an allowed root and writes or removes only `WRITABLE` files. The roots are the
@@ -76,10 +116,7 @@ const WRITABLE = ['.mdl'];
  */
 export const fileSystemPlugin = (rootDir: string, env = process.env): Plugin => {
   const roots = [rootDir, ...(env.DX_FS_ROOTS?.split(':').filter(Boolean) ?? [])].map((root) => path.resolve(root));
-  const within = (file: string): string | undefined => {
-    const resolved = path.resolve(file);
-    return roots.some((root) => resolved === root || resolved.startsWith(`${root}${path.sep}`)) ? resolved : undefined;
-  };
+  const within = (file: string): string | undefined => withinRoots(roots, file);
 
   return {
     name: 'dxos:file-system',
@@ -113,7 +150,7 @@ export const fileSystemPlugin = (rootDir: string, env = process.env): Plugin => 
               return send(res, 403, 'File is outside the allowed roots.');
             }
             if (req.method === 'PUT' || req.method === 'DELETE') {
-              if (!WRITABLE.some((suffix) => file.endsWith(suffix))) {
+              if (!isWritable(file)) {
                 return send(res, 403, `Only ${WRITABLE.join(', ')} files are written.`);
               }
               if (req.method === 'DELETE') {

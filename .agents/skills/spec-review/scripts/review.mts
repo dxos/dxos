@@ -35,6 +35,13 @@ const REVIEWED_KINDS = new Set([
 /** Kinds judged on whether automation exercises them rather than on whether code implements them. */
 const EXERCISE_KINDS = new Set(['scenario', 'test']);
 
+/** A key list written inline (`[a, b]`), wrapped over lines, or as `- a` items, as `parseReview` reads it. */
+const keyList = (value: string | undefined): string[] =>
+  (value ?? '')
+    .split(/[,\n]/)
+    .map((item) => item.replace(/^[\s[-]+|[\s\]]+$/g, ''))
+    .filter(Boolean);
+
 type Item = { id: string; kind: string; line: number; title: string };
 
 const blocks = (text: string): { body: string; line: number }[] =>
@@ -130,7 +137,12 @@ const check = (reviewPath: string): number => {
     if (repo && match[1].toLowerCase() !== repo.toLowerCase()) {
       return {};
     }
-    return { file: path.join(root, match[2]), symbol: match[3] };
+    const file = path.resolve(root, match[2]);
+    // A key names a file inside the checkout; `..` must not reach outside it.
+    if (match[2].split('/').includes('..') || !file.startsWith(`${path.resolve(root)}${path.sep}`)) {
+      return { error: `key leaves the checkout: ${key}` };
+    }
+    return { file, symbol: match[3] };
   };
 
   const specFile = meta.spec && resolveKey(meta.spec).file;
@@ -164,10 +176,7 @@ const check = (reviewPath: string): number => {
       errors.push(`${at}: ${id} is ${status} but has no note saying what is missing or different`);
     }
     const exercise = EXERCISE_KINDS.has(kindOf.get(id) ?? '');
-    const evidence = (field(body, 'evidence') ?? '')
-      .replace(/^\[|\]$/g, '')
-      .split(/[,\s]+/)
-      .filter(Boolean);
+    const evidence = keyList(field(body, 'evidence'));
     if (!exercise && (status === 'done' || status === 'untested' || status === 'partial') && evidence.length === 0) {
       warnings.push(`${at}: ${id} is ${status} with no evidence`);
     }
@@ -183,10 +192,7 @@ const check = (reviewPath: string): number => {
         }
       }
     }
-    const tests = (field(body, 'tests') ?? '')
-      .replace(/^\[|\]$/g, '')
-      .split(/[,\s]+/)
-      .filter(Boolean);
+    const tests = keyList(field(body, 'tests'));
     if (exercise && status === 'untested') {
       errors.push(`${at}: ${id} is a ${kindOf.get(id)}; use done, partial, diverged or missing (see lang/review.mdl)`);
     }

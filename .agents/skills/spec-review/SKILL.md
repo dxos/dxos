@@ -44,8 +44,9 @@ decides whether the code or the spec changes.
 
    Use `untested` rather than `done` when the item states behaviour a test could check and no test
    does. A test against a stand-in (a mock file system, a fake service) counts if it exercises the
-   item's behaviour. Types and components are `done` when their fields and shape match. Any status
-   may carry a note; `done` needs none.
+   item's behaviour. A type or component whose fields and shape match is still `untested` until a
+   test exercises it, since the viewer shows every `done` as tested. Any status may carry a note;
+   `done` needs none.
 
 4. **Cite evidence as source keys** — `github:<owner>/<repo>/<path>#<Symbol>`, the symbol being the
    declaration that carries the behaviour (`openDirectoryPicker`, `Class.method`). The viewer opens

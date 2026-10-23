@@ -88,7 +88,11 @@ const tauriFileSystem = (): FileSystem => {
           await remove(path);
         }
       }),
-    list: (dir, suffix = '') => attempt(`List failed: ${dir}`, () => list(dir, suffix)),
+    list: (dir, suffix = '') =>
+      attempt(`List failed: ${dir}`, async () => {
+        const { exists } = await fs();
+        return (await exists(dir)) ? list(dir, suffix) : [];
+      }),
     // The desktop app has no working tree of its own; checkouts come from settings.
     roots: () => Effect.succeed([]),
   };
@@ -97,6 +101,10 @@ const tauriFileSystem = (): FileSystem => {
 const devFileSystem = (): FileSystem => {
   const request = async (path: string, init?: RequestInit): Promise<Response> => {
     const response = await fetch(`${ROUTE}${path}`, init);
+    // A deployed app answers unknown routes with its HTML shell, which means there is no dev server here.
+    if (response.headers.get('content-type')?.includes('text/html')) {
+      throw new Error(`No ${ROUTE} route on this server`);
+    }
     if (!response.ok && response.status !== 404) {
       throw new Error(`${response.status} ${await response.text()}`);
     }
@@ -107,7 +115,6 @@ const devFileSystem = (): FileSystem => {
   const roots = () =>
     attempt(`No ${ROUTE} route on this server`, async () => {
       const response = await request('/roots');
-      // A deployed app answers unknown routes with its HTML shell, which means there is no dev server here.
       if (!response.headers.get('content-type')?.includes('application/json')) {
         throw new Error(`Unexpected response from ${ROUTE}`);
       }

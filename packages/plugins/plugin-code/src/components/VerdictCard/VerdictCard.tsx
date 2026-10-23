@@ -32,6 +32,8 @@ export type VerdictCardProps = {
   onReveal?: (id: string) => void;
   /** Opens one of the verdict's evidence keys. */
   onOpenCode?: (key: SourceKey) => void;
+  /** The verdict the host has made current; Card.Root owns `aria-current`, so the host's attribute would be lost. */
+  current?: boolean;
 };
 
 /**
@@ -40,13 +42,20 @@ export type VerdictCardProps = {
  * host's tile, so the card is `asChild`-friendly.
  */
 export const VerdictCard = Util.composable<HTMLDivElement, VerdictCardProps>(
-  ({ verdict, onReveal, onOpenCode, ...props }, forwardedRef) => {
+  ({ verdict, onReveal, onOpenCode, current, ...props }, forwardedRef) => {
     const { t } = Hooks.useTranslation(meta.profile.key);
     const { id, status, summary, note, evidence } = verdict;
     const keys = evidence.map(parseSourceKey).filter((key) => key !== undefined);
     const style = STATUS_STYLE[status];
     return (
-      <Card.Root {...props} data-testid='verdict-card' data-verdict={id} data-status={status} ref={forwardedRef}>
+      <Card.Root
+        {...props}
+        selected={current}
+        data-testid='verdict-card'
+        data-verdict={id}
+        data-status={status}
+        ref={forwardedRef}
+      >
         <Card.Header>
           <Layout.Block rail='start'>
             <Icon.Icon icon={style.icon} classNames={STATUS_TEXT[status]} />

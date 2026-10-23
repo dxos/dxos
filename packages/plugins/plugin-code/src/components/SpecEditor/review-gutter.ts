@@ -56,9 +56,11 @@ class ReviewWidget extends WidgetType {
 
   override eq(other: ReviewWidget): boolean {
     return (
+      other.callbacks === this.callbacks &&
       other.exercise === this.exercise &&
       other.verdict.id === this.verdict.id &&
       other.verdict.status === this.verdict.status &&
+      other.verdict.summary === this.verdict.summary &&
       other.verdict.note === this.verdict.note &&
       other.annotation?.testing === this.annotation?.testing &&
       keysEqual(other.annotation?.keys, this.annotation?.keys) &&

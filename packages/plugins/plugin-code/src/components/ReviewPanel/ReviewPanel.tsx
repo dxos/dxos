@@ -95,9 +95,16 @@ const VerdictTile = forwardRef<HTMLDivElement, VerdictTileProps>(({ data, locati
   const { setCurrentId } = useMosaicContainer('VerdictTile');
   const handleCurrentChange = useCallback(() => setCurrentId(data.id), [data.id, setCurrentId]);
   return (
-    <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={data.id} data={data} location={location}>
+    <Mosaic.Tile
+      asChild
+      classNames='dx-hover dx-current dx-selected'
+      id={data.id}
+      data={data}
+      location={location}
+      current={current}
+    >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <VerdictCard verdict={data} onReveal={onSelect} onOpenCode={onOpenCode} ref={forwardedRef} />
+        <VerdictCard verdict={data} current={current} onReveal={onSelect} onOpenCode={onOpenCode} ref={forwardedRef} />
       </Focus.Item>
     </Mosaic.Tile>
   );

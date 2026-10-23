@@ -361,11 +361,10 @@ test QA-1: Open, refresh and close a workspace
 ## Changelog
 
 ```mdl
-decision D-1: Local file access is one generic `service FileSystem` (available, read, write, remove, list, roots) owned by this plugin, with a Tauri backend and a dev-server route; other plugins (plugin-code's spec sync) require it rather than reaching files themselves.
+decision D-1: Make the spec-sync file access a generic file-system service, and move it to this plugin.
   date: 2026-10-23
   by: user:dmaretskyi
   affects: [FileSystem]
-  why: plugin-code had grown its own SpecFs for the same job; one service gives every plugin, and general dev work, the same file access on both hosts.
 ```
 
 ```mdl
@@ -373,6 +372,16 @@ decision D-2: This spec opens with a `plugin FileSystemPlugin` block listing the
   date: 2026-10-23
   by: user:dmaretskyi
   affects: [FileSystemPlugin]
+```
+
+```mdl
+decision D-3: `service FileSystem` offers available, read, write, remove, list and roots, with a Tauri backend and a dev route `/__dx/fs` that reads inside the workspace and `DX_FS_ROOTS` (symlinks followed) and writes or removes only `.mdl` files; it has no watch, callers poll; the desktop backend's roots() is empty, so checkouts there come from settings.
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [FileSystem]
+  why: These are the operations spec sync needs, and a dev route that writes arbitrary files would let any page in the dev server rewrite source code.
+  rejected: A watch stream, which neither backend needed yet; unrestricted dev-route writes.
 ```
 
 ---
