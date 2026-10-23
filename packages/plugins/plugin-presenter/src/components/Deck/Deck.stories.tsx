@@ -307,3 +307,47 @@ export const SpaceOnButton: Story = {
     await expect(canvas.queryByText('3 / 5')).toBeNull();
   },
 };
+
+/** Printing renders every slide, fully revealed, into a container scoped by an attribute that clears afterwards. */
+export const Print: Story = {
+  render: ClickStepsStory,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const deck = await canvas.findByTestId('presenter.deck');
+    await waitFor(() => expect(canvasElement.querySelectorAll('li.invisible')).toHaveLength(3));
+    await expect(document.querySelector('[data-print-deck]')).toBeNull();
+    await expect(document.documentElement.hasAttribute('data-printing-deck')).toBe(false);
+
+    deck.focus();
+    window.dispatchEvent(new Event('beforeprint'));
+    await waitFor(() => expect(document.querySelector('[data-print-deck]')).not.toBeNull());
+    const container = document.querySelector('[data-print-deck]');
+    if (!container) {
+      throw new Error('print container missing');
+    }
+    await expect(document.documentElement.hasAttribute('data-printing-deck')).toBe(true);
+    await waitFor(() => expect(container.querySelectorAll('[data-print-slide]')).toHaveLength(2));
+    await waitFor(() => expect(container.querySelectorAll('li')).toHaveLength(3));
+    await expect(container.querySelectorAll('.invisible')).toHaveLength(0);
+
+    window.dispatchEvent(new Event('afterprint'));
+    await waitFor(() => expect(document.querySelector('[data-print-deck]')).toBeNull());
+    await expect(document.documentElement.hasAttribute('data-printing-deck')).toBe(false);
+  },
+};
+
+/** A deck without focus does not claim a print. */
+export const PrintUnfocused: Story = {
+  render: ClickStepsStory,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    await within(canvasElement).findByTestId('presenter.deck');
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    window.dispatchEvent(new Event('beforeprint'));
+    await expect(document.querySelector('[data-print-deck]')).toBeNull();
+    await expect(document.documentElement.hasAttribute('data-printing-deck')).toBe(false);
+  },
+};

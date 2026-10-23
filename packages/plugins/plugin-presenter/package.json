@@ -180,6 +180,7 @@
   "devDependencies": {
     "@dxos/diagram": "workspace:*",
     "@dxos/echo-client": "workspace:*",
+    "@dxos/log": "workspace:*",
     "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/random": "workspace:*",

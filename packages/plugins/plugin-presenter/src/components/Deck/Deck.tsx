@@ -5,6 +5,7 @@
 import '../MarkdownSlide/print.css';
 
 import React, { type KeyboardEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal, flushSync } from 'react-dom';
 
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -20,6 +21,9 @@ import { SlideViewState } from '#types';
 import { PageNumber, Pager } from '../Pager/index.ts';
 import { PresentationShell } from '../PresentationShell/index.ts';
 import { SlideRenderer } from '../SlideRenderer/index.ts';
+
+/** Set on `<html>` while a deck prints; every print rule is keyed on it so other prints are unaffected. */
+const PRINTING_ATTRIBUTE = 'data-printing-deck';
 
 /** Time without pointer movement before the fullscreen pager hides (ms). */
 const OVERLAY_IDLE_DURATION = 2000;
@@ -86,6 +90,55 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
     const [stepState, setStepState] = useState({ index: 0, step: 0 });
     const clicks = useSlideClicks(slide);
     const step = stepState.index === index ? Math.min(stepState.step, clicks) : 0;
+
+    // Only the deck holding focus (or the fullscreen one) prints; the print container holds every slide.
+    const rootRef = useRef<HTMLDivElement>(null);
+    const [printing, setPrinting] = useState(false);
+    useEffect(() => {
+      let owner = false;
+      const handleBeforePrint = () => {
+        if (fullscreen || rootRef.current?.contains(document.activeElement)) {
+          owner = true;
+          // Print layout is taken straight after this event, so the container must be in the DOM synchronously.
+          flushSync(() => setPrinting(true));
+          document.documentElement.setAttribute(PRINTING_ATTRIBUTE, '');
+        }
+      };
+      const handleAfterPrint = () => {
+        if (owner) {
+          owner = false;
+          document.documentElement.removeAttribute(PRINTING_ATTRIBUTE);
+          setPrinting(false);
+        }
+      };
+      window.addEventListener('beforeprint', handleBeforePrint);
+      window.addEventListener('afterprint', handleAfterPrint);
+      return () => {
+        window.removeEventListener('beforeprint', handleBeforePrint);
+        window.removeEventListener('afterprint', handleAfterPrint);
+        if (owner) {
+          document.documentElement.removeAttribute(PRINTING_ATTRIBUTE);
+        }
+      };
+    }, [fullscreen]);
+
+    const printContainer =
+      printing &&
+      createPortal(
+        <div data-print-deck=''>
+          {slides.map((source) => (
+            <div key={source.id} data-print-slide=''>
+              <SlideRenderer
+                source={source}
+                attendableId={attendableId}
+                step={Number.POSITIVE_INFINITY}
+                framed={false}
+              />
+            </div>
+          ))}
+        </div>,
+        document.body,
+      );
 
     const handleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLDivElement>) => {
@@ -196,8 +249,9 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
     if (fullscreen) {
       return (
         <Panel.Root {...props} asChild ref={forwardedRef}>
-          <div onKeyDown={handleKeyDown}>
+          <div ref={rootRef} onKeyDown={handleKeyDown}>
             <Panel.Body asChild>{shell}</Panel.Body>
+            {printContainer}
           </div>
         </Panel.Root>
       );
@@ -206,7 +260,8 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
     return (
       // Keys are handled on the whole panel so the toolbar and status bar keep them working after a click.
       <Panel.Root {...props} asChild ref={forwardedRef}>
-        <div onKeyDown={handleKeyDown}>
+        <div ref={rootRef} onKeyDown={handleKeyDown}>
+          {printContainer}
           <Panel.Header>
             <Toolbar.Root>
               {toolbar}

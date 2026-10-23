@@ -273,4 +273,23 @@ describe('parseSlide', () => {
     expect(textOf(slide.slots.default)).toContain('::right::');
     expect(textOf(slide.slots.right)).toBe('');
   });
+
+  test('only known slot names are markers', () => {
+    const slide = parseSlide('# A\n::note::\nB');
+    expect(textOf(slide.slots.default)).toContain('::note::');
+    expect(textOf(slide.slots.right)).toBe('');
+  });
+
+  test('a marker inside a list item does not end the list', () => {
+    const slide = parseSlide('- one\n  ::right::\n  two\n- three');
+    expect(elements(slide.slots.default, 'ul')).toHaveLength(1);
+    expect(elements(slide.slots.default, 'li')).toHaveLength(2);
+    expect(textOf(slide.slots.right)).toBe('');
+  });
+
+  test('a marker indented four spaces is code, not a marker', () => {
+    const slide = parseSlide('# A\n\n    ::right::\n\nB');
+    expect(textOf(slide.slots.right)).toBe('');
+    expect(textOf(slide.slots.default)).toContain('::right::');
+  });
 });

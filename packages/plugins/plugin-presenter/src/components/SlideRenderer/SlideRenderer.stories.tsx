@@ -18,6 +18,7 @@ import { MermaidEngine, type Scene } from '@dxos/diagram';
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { DXN, EID, EntityId } from '@dxos/keys';
+import { log } from '@dxos/log';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as SceneSvg from '@dxos/plugin-illustrator/SceneSvg';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
@@ -47,9 +48,16 @@ const DIAGRAM = ['flowchart LR', '  Client --> Echo', '  Echo --> Edge'].join('\
 const DrawingSlide = (_props: { subject: Drawing.Drawing }) => {
   const [objects, setObjects] = useState<Scene.WorldObject[]>([]);
   useEffect(() => {
-    void MermaidEngine.compile(DIAGRAM).then((commands) =>
-      setObjects(commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []))),
+    let cancelled = false;
+    MermaidEngine.compile(DIAGRAM).then(
+      (commands) =>
+        !cancelled &&
+        setObjects(commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []))),
+      (error: unknown) => log.catch(error),
     );
+    return () => {
+      cancelled = true;
+    };
   }, []);
   return <SceneSvg.SceneSvg classNames='grow' objects={objects} />;
 };

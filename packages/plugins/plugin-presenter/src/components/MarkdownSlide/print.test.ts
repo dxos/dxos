@@ -3,32 +3,39 @@
 //
 
 import { readFileSync } from 'node:fs';
-import React from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
-
-import { MarkdownSlide } from './MarkdownSlide.tsx';
 
 const css = readFileSync(new URL('./print.css', import.meta.url), 'utf8');
 
+/** Selectors of the rules inside the `@media print` block. */
+const printSelectors = (): string[] => {
+  const start = css.indexOf('@media print');
+  const block = css.slice(css.indexOf('{', start) + 1);
+  return [...block.matchAll(/([^{}]+)\{[^{}]*\}/g)].flatMap(([, selectors]) =>
+    selectors
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .split(',')
+      .map((selector) => selector.trim()),
+  );
+};
+
 describe('print stylesheet', () => {
-  test('reveals every stepped element on paper', () => {
-    const printBlock = css.slice(css.indexOf('@media print'));
-    expect(printBlock).toMatch(/\[data-slide\] \[data-step\]\s*\{\s*visibility: visible !important/);
+  test('every print rule is scoped to the deck being printed', () => {
+    const selectors = printSelectors();
+    expect(selectors.length).toBeGreaterThan(0);
+    for (const selector of selectors) {
+      expect(selector).toMatch(/^html\[data-printing-deck\]/);
+    }
   });
 
-  test('targets the attribute that hidden click steps carry', () => {
-    const markup = renderToStaticMarkup(
-      React.createElement(MarkdownSlide, { content: '<v-clicks>\n\n- one\n- two\n\n</v-clicks>', step: 0 }),
-    );
-    expect(markup).toMatch(
-      /<li[^>]*class="[^"]*invisible[^"]*"[^>]*data-step="1"|<li[^>]*data-step="1"[^>]*class="[^"]*invisible/,
-    );
+  test('has no global page rule and keeps the print container hidden on screen', () => {
+    expect(css).not.toMatch(/@page\s*\{/);
+    expect(css).toMatch(/@page slide\s*\{[^}]*size: 2560px 1440px/);
+    expect(css).toMatch(/^\[data-print-deck\]\s*\{\s*display: none/m);
   });
 
-  test('sizes the page to the slide canvas and hides the app chrome', () => {
-    expect(css).toContain('size: 2560px 1440px');
-    expect(css).toMatch(/body \*\s*\{\s*visibility: hidden/);
-    expect(css).toContain("[data-testid='presenter.deck']");
+  test('prints one slide per page with every click step shown', () => {
+    expect(css).toMatch(/\[data-print-slide\]\s*\{[^}]*page: slide[^}]*break-after: page/);
+    expect(css).toMatch(/\[data-step\]\s*\{\s*visibility: visible !important/);
   });
 });

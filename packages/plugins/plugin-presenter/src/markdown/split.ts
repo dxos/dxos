@@ -7,57 +7,43 @@ const SEPARATOR = /^---\s*$/;
 const YAML_LINE = /^([A-Za-z_][\w-]*\s*:|\s+\S|-\s|#)/;
 const YAML_KEY = /^[A-Za-z_][\w-]*\s*:/;
 
-/** Indexes of `---` lines outside fenced code. */
-const findSeparators = (lines: string[]): number[] => {
-  const separators: number[] = [];
+/** Per line: whether it is part of a fenced code block (opening fence, content or closing fence). */
+const fencedLines = (lines: string[]): boolean[] => {
   let fence: { char: string; length: number } | undefined;
-  lines.forEach((line, index) => {
+  return lines.map((line) => {
     if (fence) {
       const close = line.match(/^ {0,3}(`{3,}|~{3,})\s*$/);
       if (close && close[1][0] === fence.char && close[1].length >= fence.length) {
         fence = undefined;
       }
-      return;
+      return true;
     }
     const open = line.match(FENCE_OPEN);
     if (open) {
       fence = { char: open[1][0], length: open[1].length };
-    } else if (SEPARATOR.test(line)) {
-      separators.push(index);
+      return true;
     }
+    return false;
   });
-  return separators;
 };
 
-const SLOT_LINE = /^::[a-z]+::$/;
+/** Indexes of `---` lines outside fenced code. */
+const findSeparators = (lines: string[]): number[] => {
+  const fenced = fencedLines(lines);
+  return lines.flatMap((line, index) => (!fenced[index] && SEPARATOR.test(line) ? [index] : []));
+};
+
+// Only the slot names the renderer knows, indented at most as far as markdown allows before it becomes code.
+const SLOT_LINE = /^ {0,3}::(left|right|default)::\s*$/;
 
 /**
  * Puts a blank line around every `::name::` line outside fenced code, so a marker written without blank lines
  * (as Slidev allows) becomes a paragraph of its own instead of joining its neighbours.
  */
 export const isolateSlotMarkers = (markdown: string): string => {
-  const out: string[] = [];
-  let fence: { char: string; length: number } | undefined;
-  for (const line of markdown.split('\n')) {
-    if (fence) {
-      const close = line.match(/^ {0,3}(`{3,}|~{3,})\s*$/);
-      if (close && close[1][0] === fence.char && close[1].length >= fence.length) {
-        fence = undefined;
-      }
-      out.push(line);
-      continue;
-    }
-    const open = line.match(FENCE_OPEN);
-    if (open) {
-      fence = { char: open[1][0], length: open[1].length };
-    }
-    if (SLOT_LINE.test(line.trim())) {
-      out.push('', line.trim(), '');
-    } else {
-      out.push(line);
-    }
-  }
-  return out.join('\n');
+  const lines = markdown.split('\n');
+  const fenced = fencedLines(lines);
+  return lines.flatMap((line, index) => (!fenced[index] && SLOT_LINE.test(line) ? ['', line, ''] : [line])).join('\n');
 };
 
 /** True when the lines between two separators read as a YAML mapping. */

@@ -2,51 +2,50 @@
  * Copyright 2026 DXOS.org
  */
 
-/* The page is the slide canvas (2560x1440, 16:9) so the slide prints at its nominal scale. */
-@page {
+/* Every rule that affects printing is keyed on `html[data-printing-deck]`, which only the deck being printed sets. */
+@page slide {
   size: 2560px 1440px;
   margin: 0;
 }
 
+[data-print-deck] {
+  display: none;
+}
+
 @media print {
-  /* Visibility, not display, so the deck keeps its place in the tree while the app chrome disappears. */
-  body * {
-    visibility: hidden !important;
+  /* The deck prints through its own container, so the rest of the app (chrome, overlays, other decks) is dropped. */
+  html[data-printing-deck] body > :not([data-print-deck]) {
+    display: none !important;
   }
 
-  [data-testid='presenter.deck'],
-  [data-testid='presenter.deck'] * {
-    visibility: visible !important;
-  }
-
-  [data-testid='presenter.deck'] {
-    position: absolute !important;
-    inset: 0 auto auto 0 !important;
-    width: 2560px !important;
-    height: 1440px !important;
+  html[data-printing-deck],
+  html[data-printing-deck] body {
+    height: auto !important;
     overflow: visible !important;
+    background: none !important;
   }
 
-  /* SlideFrame scales the canvas to its container on screen; on paper it is already full size. */
-  [data-slide-canvas] {
-    left: 0 !important;
-    top: 0 !important;
-    transform: none !important;
+  html[data-printing-deck] [data-print-deck] {
+    display: block !important;
   }
 
-  /* Click steps are a live-presentation device: on paper every step is shown. */
-  [data-slide] [data-step] {
-    visibility: visible !important;
-  }
-
-  [data-slide] {
+  /* One slide per page, at the nominal 2560x1440 canvas size. */
+  html[data-printing-deck] [data-print-deck] > [data-print-slide] {
+    page: slide;
+    position: relative;
+    width: 2560px;
+    height: 1440px;
+    overflow: hidden;
     break-after: page;
     break-inside: avoid;
   }
 
-  html,
-  body {
-    background: none !important;
-    overflow: visible !important;
+  html[data-printing-deck] [data-print-deck] > [data-print-slide]:last-child {
+    break-after: auto;
+  }
+
+  /* Click steps are a live-presentation device: on paper every step is shown. */
+  html[data-printing-deck] [data-print-deck] [data-step] {
+    visibility: visible !important;
   }
 }

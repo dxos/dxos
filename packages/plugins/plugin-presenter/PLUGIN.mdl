@@ -66,8 +66,9 @@ component Deck
     step, Shift+left and Shift+right (or Home and End) jump to first and last, `f` toggles fullscreen,
     Escape exits fullscreen. Space and right advance a click step, else the slide; left retreats a click step,
     else lands on the previous slide fully revealed. Click steps are ephemeral and reset on slide change; Space
-    does not act on a focused button or link. A print stylesheet (imported by Deck) prints the slide on a
-    16:9 page with every click step shown and the app chrome hidden.
+    does not act on a focused button or link. While the focused (or fullscreen) deck prints, it renders every
+    slide into a print-only container, one 16:9 page each with every click step shown, and drops the rest of the
+    app from the printout.
   props:
     slides: SlideSource[]
     index: number
@@ -353,8 +354,9 @@ feat F-8: Backgrounds and Embedded Surfaces
 feat F-9: Printing
 
   req F-9.1:
-    when: the deck is printed
-    then: the slide prints on one 16:9 page at full size with every click step shown and the app chrome hidden
+    when: the focused or fullscreen deck is printed
+    then: every slide of the deck prints, one per 16:9 page at full size, with every click step shown and the app chrome, overlay and other decks left out
+  req F-9.2: Print rules apply only while a deck is printing, so printing anything else in the app is unaffected.
 ```
 
 ```mdl
@@ -489,8 +491,8 @@ test QA-4: Slidev subset and click steps
       do: Change the embedded ref to `echo:///not-an-id`.
       expect: a "Missing object" placeholder shows, with no spinner
     - name: Print preview
-      do: Open the browser's print preview with the deck showing.
-      expect: one landscape page with the slide, every list item visible and no toolbar or status bar
+      do: Click the deck, then open the browser's print preview.
+      expect: one landscape page per slide of the deck, every list item visible and no toolbar or status bar
 
 ```
 
@@ -873,6 +875,16 @@ decision D-31: A `---` / blank line / `key: value` / `---` block at the head of 
   affects: [MarkdownSlide, F-6.7]
   why: A formatter-touched document would otherwise silently drop its layout and background.
   rejected: Excluding the decks from the formatter, which protects only those files.
+```
+
+```mdl
+decision D-32: Printing is scoped to the focused or fullscreen deck: it sets `data-printing-deck` on `<html>` between `beforeprint` and `afterprint`, renders every slide into a print-only container, and every print rule is keyed on that attribute. Fills in [D-23].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Deck, F-9.1, F-9.2]
+  why: Unscoped print rules blank every other print in the app and overlap when two decks are open, and printing only the current slide drops the rest of the deck.
+  rejected: A global `@media print` stylesheet that hides everything outside the deck.
 ```
 
 ---

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { type ComponentType, type PropsWithChildren, useMemo } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -23,60 +23,69 @@ export type SlideRendererProps = {
   attendableId?: string;
   /** Click step for text slides (default: all revealed). */
   step?: number;
+  /** Wrap the slide in the scaled `SlideFrame` (default); print renders it unscaled at canvas size. */
+  framed?: boolean;
 };
+
+type FrameProps = { Frame: ComponentType<PropsWithChildren> };
+
+/** Frame for print: the slide at its nominal canvas size, with no scaling to measure. */
+const PrintFrame = ({ children }: PropsWithChildren) => <div className='flex relative size-full'>{children}</div>;
 
 /**
  * Renders one deck slide inside its scaled frame, whatever the slide's source.
  */
-export const SlideRenderer = ({ source, attendableId, step }: SlideRendererProps) => {
+export const SlideRenderer = ({ source, attendableId, step, framed = true }: SlideRendererProps) => {
+  const Frame = framed ? SlideFrame : PrintFrame;
   switch (source.kind) {
     case 'text':
-      return <TextSlide text={source.text} step={step} />;
+      return <TextSlide Frame={Frame} text={source.text} step={step} />;
     case 'markdown':
-      return <MarkdownContentSlide content={source.content} db={source.db} step={step} />;
+      return <MarkdownContentSlide Frame={Frame} content={source.content} db={source.db} step={step} />;
     case 'object':
-      return <ObjectSlide object={source.object} attendableId={attendableId} />;
+      return <ObjectSlide Frame={Frame} object={source.object} attendableId={attendableId} />;
     case 'pending':
-      return <PendingSlide />;
+      return <PendingSlide Frame={Frame} />;
   }
 };
 
-const TextSlide = ({ text, step }: { text: Text.Text } & Pick<SlideRendererProps, 'step'>) => {
+const TextSlide = ({ Frame, text, step }: FrameProps & { text: Text.Text } & Pick<SlideRendererProps, 'step'>) => {
   const [content] = useObject(text, 'content');
   // Refs resolve against the owner's database so space-relative `echo:///<id>` refs find their target.
-  return <MarkdownContentSlide content={content} db={Obj.getDatabase(text)} step={step} />;
+  return <MarkdownContentSlide Frame={Frame} content={content} db={Obj.getDatabase(text)} step={step} />;
 };
 
 const MarkdownContentSlide = ({
+  Frame,
   content,
   db,
   step,
-}: { content: string | undefined; db?: Database.Database } & Pick<SlideRendererProps, 'step'>) => {
+}: FrameProps & { content: string | undefined; db?: Database.Database } & Pick<SlideRendererProps, 'step'>) => {
   const renderSurface = useMemo<MarkdownSlideProps['renderSurface']>(
     () => (db ? ({ uri, role }) => <EmbeddedSurface uri={uri} role={role} db={db} /> : undefined),
     [db],
   );
   return (
-    <SlideFrame>
+    <Frame>
       <MarkdownSlide content={content ?? ''} step={step} renderSurface={renderSurface} />
-    </SlideFrame>
+    </Frame>
   );
 };
 
-const ObjectSlide = ({ object, attendableId }: { object: Obj.Unknown; attendableId?: string }) => (
-  <SlideFrame>
+const ObjectSlide = ({ Frame, object, attendableId }: FrameProps & { object: Obj.Unknown; attendableId?: string }) => (
+  <Frame>
     <ObjectSurface object={object} role='slide' attendableId={attendableId} />
-  </SlideFrame>
+  </Frame>
 );
 
-const PendingSlide = () => {
+const PendingSlide = ({ Frame }: FrameProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
-    <SlideFrame>
+    <Frame>
       <div className='flex grow h-full items-center justify-center gap-6 text-6xl'>
         <Icon.Icon icon='ph--circle-notch--regular' spin classNames='size-16' />
         <span>{t('slide-pending.label')}</span>
       </div>
-    </SlideFrame>
+    </Frame>
   );
 };
