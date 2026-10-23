@@ -43,6 +43,30 @@ const ClickStepsStory = () => {
   return <Deck slides={slides} index={index} onIndexChange={setIndex} />;
 };
 
+/** The click slide comes last, so advancing past it has no next slide to go to. */
+const ClickStepsLastStory = () => {
+  const slides = useMemo(() => createClickSlides().reverse(), []);
+  const [index, setIndex] = useState(0);
+  return <Deck slides={slides} index={index} onIndexChange={setIndex} />;
+};
+
+const CLICKS_MARKDOWN = ['<v-clicks>', '', '- one', '- two', '- three', '', '</v-clicks>'].join('\n');
+
+/** A previewed document whose current slide is replaced in place, as a live edit does; ids stay positional. */
+const EditedSlideStory = () => {
+  const [content, setContent] = useState(`# Before\n\n${CLICKS_MARKDOWN}`);
+  const slides = useMemo((): SlideSource[] => [{ kind: 'markdown', id: 'doc:0', content }], [content]);
+  const [index, setIndex] = useState(0);
+  return (
+    <div className='contents'>
+      <button data-testid='replace-slide' onClick={() => setContent(`# After\n\n${CLICKS_MARKDOWN}`)}>
+        Replace
+      </button>
+      <Deck slides={slides} index={index} onIndexChange={setIndex} />
+    </div>
+  );
+};
+
 const DefaultStory = ({ count = 5, ...props }: Partial<DeckProps> & { count?: number }) => {
   const slides = useMemo(() => createTextSlides(count), [count]);
   const [index, setIndex] = useState(0);
@@ -305,6 +329,43 @@ export const ClickSteps: Story = {
     await userEvent.keyboard('{End}{Home}{ArrowRight}');
     await waitFor(() => expect(hidden()).toBe(2));
     await expect(canvas.getByText('1 / 2')).toBeVisible();
+  },
+};
+
+/** Advancing past the last slide keeps its revealed steps. */
+export const ClickStepsAtEnd: Story = {
+  render: ClickStepsLastStory,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const deck = await canvas.findByTestId('presenter.deck');
+    const hidden = () => canvasElement.querySelectorAll('li.invisible').length;
+    deck.focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(await canvas.findByText('2 / 2')).toBeVisible();
+    await userEvent.keyboard('{ArrowRight}{ArrowRight}{ArrowRight}');
+    await waitFor(() => expect(hidden()).toBe(0));
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(canvas.getByText('2 / 2')).toBeVisible();
+    await expect(hidden()).toBe(0);
+  },
+};
+
+/** Replacing the current slide's content in place starts it again at step 0. */
+export const ClickStepsEdited: Story = {
+  render: EditedSlideStory,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const deck = await canvas.findByTestId('presenter.deck');
+    const hidden = () => canvasElement.querySelectorAll('li.invisible').length;
+    await waitFor(() => expect(hidden()).toBe(3));
+    deck.focus();
+    await userEvent.keyboard('{ArrowRight}{ArrowRight}');
+    await waitFor(() => expect(hidden()).toBe(1));
+    await userEvent.click(canvas.getByTestId('replace-slide'));
+    await expect(await canvas.findByRole('heading', { name: 'After' })).toBeVisible();
+    await waitFor(() => expect(hidden()).toBe(3));
   },
 };
 

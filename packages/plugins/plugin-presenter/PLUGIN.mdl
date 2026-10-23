@@ -63,10 +63,11 @@ type SlideTheme
 
 ```mdl
 type SlideSource
-  literals: text | object | pending
+  literals: text | object | markdown | pending
   desc: |
     One slide of a deck: `text` is an owned Text rendered as markdown; `object` is any linked object (a
-    Markdown.Document included) rendered through the slide surface fallback; `pending` is a section whose
+    Markdown.Document included) rendered through the slide surface fallback; `markdown` is one `---`-separated
+    slide of a previewed document (its id is positional); `pending` is a section whose
     target has not loaded yet. A section whose target was deleted yields no slide.
 ```
 

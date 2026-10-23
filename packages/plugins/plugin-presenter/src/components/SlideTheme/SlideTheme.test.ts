@@ -55,6 +55,11 @@ describe('SlideTheme.Settings', () => {
     expect(Result.isSuccess(decode({ name: 'dark', accent: '#f80' }))).toBe(true);
   });
 
+  test('accepts only 3-, 4-, 6- and 8-digit hex colors', () => {
+    expect(['#abc', '#abcd', '#aabbcc', '#aabbccdd'].every(SlideTheme.isColor)).toBe(true);
+    expect(['#ab', '#abcde', '#abcdefa', '#abcdefabc'].some(SlideTheme.isColor)).toBe(false);
+  });
+
   test('rejects unknown names and unsafe values', () => {
     expect(Result.isSuccess(decode({ name: 'neon' }))).toBe(false);
     expect(Result.isSuccess(decode({ background: 'url(x)' }))).toBe(false);

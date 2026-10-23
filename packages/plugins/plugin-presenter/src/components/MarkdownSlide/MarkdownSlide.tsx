@@ -75,7 +75,8 @@ export const MarkdownSlide = ({ classNames, content, step, renderSurface }: Mark
 
 type SlideCodeProps = { language?: string; meta?: string; source?: string };
 
-type SlideSurfaceProps = { uri?: string; role?: string };
+// `className` and `data-step` carry click-step visibility from `prepareElement`.
+type SlideSurfaceProps = { 'uri'?: string; 'role'?: string; 'className'?: string; 'data-step'?: string };
 
 type SlideComponents = Partial<Components> & {
   [tag: `slide-${string}`]: ComponentType<SlideCodeProps> | ComponentType<SlideSurfaceProps>;
@@ -87,11 +88,11 @@ const isSurfaceRole = (role: string | undefined): role is SlideSurfaceRole =>
 // Read through context so the component map stays constant and an inline `renderSurface` never remounts surfaces.
 const RenderSurfaceContext = createContext<MarkdownSlideProps['renderSurface']>(undefined);
 
-const SlideSurface = ({ uri = '', role }: SlideSurfaceProps) => {
+const SlideSurface = ({ uri = '', role, className, 'data-step': dataStep }: SlideSurfaceProps) => {
   const renderSurface = useContext(RenderSurfaceContext);
   const surfaceRole: SlideSurfaceRole = isSurfaceRole(role) ? role : 'slide';
   return (
-    <div data-surface={uri} data-role={surfaceRole} className='flex dx-grow'>
+    <div data-surface={uri} data-role={surfaceRole} data-step={dataStep} className={mx('flex dx-grow', className)}>
       {renderSurface?.({ uri, role: surfaceRole }) ?? (
         <div className='flex grow items-center justify-center p-8 border-4 border-dashed border-separator text-[32px]'>
           {`${surfaceRole}: ${uri}`}

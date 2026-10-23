@@ -22,17 +22,56 @@ describe('Semantic', () => {
     expect(ids.get('n1')).toBe(pkg('log'));
   });
 
-  test('frames boxes by package when there are a few packages', ({ expect }) => {
-    const { source } = Semantic.toDsl({
+  test('frames boxes by package only when grouped, however many packages', ({ expect }) => {
+    const graph: Model.Patch = {
       nodes: [
         Model.makeNode(file('packages/common/log/src/index.ts')),
         Model.makeNode(file('packages/common/log/src/log.ts')),
         Model.makeNode(file('packages/common/util/src/index.ts')),
       ],
       edges: [],
-    });
-    expect(source).toMatch(/group g0 "log" \{\n {2}node n0/);
-    expect(source).toMatch(/group g1 "util" \{/);
+    };
+    expect(Semantic.toDsl(graph).source).not.toContain('group ');
+
+    const { source, groups } = Semantic.toDsl(graph, { grouped: true });
+    expect(source).toMatch(/group g0 "log" color=[a-z-]+ \{\n {2}node n0/);
+    expect(source).toMatch(/group g1 "util" color=[a-z-]+ \{/);
+    expect(groups.get('g1')).toBe('packages/common/util');
+
+    const many = Array.from({ length: 8 }, (_, index) => Model.makeNode(file(`packages/p${index}/src/index.ts`)));
+    expect(Semantic.toDsl({ nodes: many, edges: [] }, { grouped: true }).groups.size).toBe(8);
+  });
+
+  test("layout returns a frame per package around its boxes, on the boxes' origin", ({ expect }) => {
+    const nodes = [
+      Model.makeNode(file('packages/common/log/src/index.ts')),
+      Model.makeNode(file('packages/common/log/src/log.ts')),
+      Model.makeNode(file('packages/common/util/src/index.ts')),
+    ];
+    const { positions, frames } = Semantic.layout({ nodes, edges: [] }, { grouped: true });
+    expect(frames.map(({ group }) => group).sort()).toEqual(['packages/common/log', 'packages/common/util']);
+    for (const node of nodes) {
+      const frame = frames.find(({ group }) => group === node.group);
+      const point = positions[node.id];
+      expect(frame).toBeDefined();
+      if (frame) {
+        expect(Math.abs(point.x - frame.center.x)).toBeLessThanOrEqual(frame.size.width / 2);
+        expect(Math.abs(point.y - frame.center.y)).toBeLessThanOrEqual(frame.size.height / 2);
+      }
+    }
+    expect(Semantic.layout({ nodes, edges: [] }).frames).toEqual([]);
+    // Frames keep clear of each other.
+    const [left, right] = frames;
+    const apartX = Math.abs(left.center.x - right.center.x) - (left.size.width + right.size.width) / 2;
+    const apartY = Math.abs(left.center.y - right.center.y) - (left.size.height + right.size.height) / 2;
+    expect(Math.max(apartX, apartY)).toBeGreaterThan(0);
+  });
+
+  test('a package keeps its colour whatever else is on the graph', ({ expect }) => {
+    expect(Semantic.groupColor('packages/core/echo/echo')).toBe(Semantic.groupColor('packages/core/echo/echo'));
+    expect(
+      new Set(['a', 'b', 'c', 'd', 'e'].map((name) => Semantic.groupColor(`packages/${name}`))).size,
+    ).toBeGreaterThan(1);
   });
 
   test('layout places every box, apart, on the canvas scale', ({ expect }) => {

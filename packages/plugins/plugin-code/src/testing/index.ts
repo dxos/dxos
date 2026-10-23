@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './McpServers.tsx';
+export * from './spec-files.ts';

@@ -30,7 +30,7 @@ import { DataModelGraph } from '../DataModelGraph/index.ts';
 import { DecisionLog } from '../DecisionLog/index.ts';
 import { DefinitionGraph } from '../DefinitionGraph/index.ts';
 import { ReviewPanel } from '../ReviewPanel/index.ts';
-import { reviewGutter } from '../SpecEditor/index.ts';
+import { type SourceReader, reviewGutter } from '../SpecEditor/index.ts';
 import { parseReview } from '../SpecModel/index.ts';
 import { decisionGutter } from './decision-gutter.ts';
 
@@ -59,6 +59,8 @@ export type SpecChangelogProps = {
   review?: string;
   /** Opens a code key from an implementation chip; without it the chips only name the code. */
   onOpenCode?: (key: SourceKey) => void;
+  /** The text of a file a key names, for the declarations hover cards and walkthroughs show. */
+  read?: SourceReader;
 };
 
 /**
@@ -71,6 +73,7 @@ export const SpecChangelog = ({
   defaultView = 'decisions',
   review: reviewText,
   onOpenCode,
+  read,
 }: SpecChangelogProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const themeMode = Hooks.useThemeMode();
@@ -102,10 +105,11 @@ export const SpecChangelog = ({
               setView('review');
             },
             onOpen: (key) => onOpenCode?.(key),
+            read,
           })
         : [],
     ],
-    [themeMode, decisions, review, onOpenCode],
+    [themeMode, decisions, review, onOpenCode, read],
   );
 
   return (
@@ -149,6 +153,7 @@ export const SpecChangelog = ({
           )}
           {view === 'review' && (
             <ReviewPanel
+              read={read}
               review={review}
               selected={selectedVerdict}
               onSelect={setSelectedVerdict}

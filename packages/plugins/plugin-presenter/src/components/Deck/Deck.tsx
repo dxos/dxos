@@ -92,11 +92,13 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
 
     // Click state is tied to the slide it belongs to, so any index change (pager, jump, controlled) resets it.
     const [stepState, setStepState] = useState({ index: 0, step: 0 });
+    // Document slide ids are positional, so an edit that replaces the current slide is detected by its content.
+    const slideKey = slide?.kind === 'markdown' ? slide.content : slide?.id;
     // A pager, navtree or controlled index change bypasses the key handler, so stale steps are dropped on any move.
-    const [previousIndex, setPreviousIndex] = useState(index);
-    if (previousIndex !== index) {
-      setPreviousIndex(index);
-      if (stepState.index !== index) {
+    const [previous, setPrevious] = useState({ index, slideKey });
+    if (previous.index !== index || previous.slideKey !== slideKey) {
+      setPrevious({ index, slideKey });
+      if (previous.index === index || stepState.index !== index) {
         setStepState({ index, step: 0 });
       }
     }
@@ -179,8 +181,11 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
           if (step < clicks) {
             event.preventDefault();
             setStepState({ index, step: step + 1 });
-          } else {
+          } else if (index < count - 1) {
             go(index + 1);
+          } else {
+            // Past the last slide there is nowhere to go, and its revealed steps must stay revealed.
+            event.preventDefault();
           }
         };
         switch (event.key) {

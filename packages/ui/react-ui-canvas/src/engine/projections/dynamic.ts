@@ -19,6 +19,8 @@ import {
   type Capabilities,
   type CreateProps,
   type Intent,
+  type Layer,
+  type LayerId,
   type LineStyle,
   type Link,
   type LinkEnds,
@@ -96,7 +98,17 @@ export type DynamicOptions = {
    */
   createNode?: (node: GraphNode, props: CreateProps) => Node;
   /** How edges draw; by default a `curve` with no markers. Not `spline`, whose control points the layout does not make. */
-  link?: { type?: Exclude<LinkType, 'spline'>; ends?: LinkEnds };
+  link?: {
+    type?: Exclude<LinkType, 'spline'>;
+    ends?: LinkEnds;
+    /** The layer the links go on; the bottom one when unset. */
+    layer?: LayerId;
+  };
+  /**
+   * The scene's layers, bottom first by `z`, e.g. a backdrop under the graph; `createNode` puts each node on one and
+   * `link.layer` the links. A layer's links paint under its nodes, so a backdrop needs a layer of its own below them.
+   */
+  layers?: readonly Layer[];
 };
 
 /** Multiples of the major grid, so a laid-out graph is already snapped. */
@@ -152,10 +164,17 @@ export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: Dynami
         ...((edge.ends ?? options.link?.ends) && { ends: edge.ends ?? options.link?.ends }),
         ...(edge.text !== undefined && { text: edge.text }),
         ...(edge.style && { style: edge.style }),
+        ...(options.link?.layer && { layer: options.link.layer }),
       };
     }
   });
-  return { id: DYNAMIC_VIEW_ID, name: 'Dynamic', nodes, links };
+  return {
+    id: DYNAMIC_VIEW_ID,
+    name: 'Dynamic',
+    nodes,
+    links,
+    ...(options.layers && { layers: Object.fromEntries(options.layers.map((layer) => [layer.id, layer])) }),
+  };
 };
 
 /** Weights of a routed arrangement's score: a crossing outweighs any number of bends, a bend any detour. */

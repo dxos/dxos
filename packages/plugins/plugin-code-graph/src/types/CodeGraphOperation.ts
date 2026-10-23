@@ -168,9 +168,10 @@ export const SetLayout = Operation.make({
     name: 'Set Code Graph Layout',
     description: [
       'Chooses how the canvas places the boxes:',
-      '`illustrator` (the semantic engine: boxes on a grid, framed by package, arrows routed through the gutters),',
+      '`illustrator` (the semantic engine: boxes on a grid, arrows routed through the gutters),',
       '`force` (a force-directed layout snapped to slots), `rank` (rows by dependency rank, fewest crossings),',
       'or `diagram` (the illustrator’s full drawing, read-only).',
+      'With `grouped`, the illustrator layout and drawing frame each package’s boxes together.',
     ].join(' '),
     icon: 'ph--layout--regular',
   },
@@ -179,6 +180,9 @@ export const SetLayout = Operation.make({
     layout: CodeGraph.Layout,
     resetPositions: Schema.optional(Schema.Boolean).annotate({
       description: 'Forget where the user dragged boxes, so the layout places every box.',
+    }),
+    grouped: Schema.optional(Schema.Boolean).annotate({
+      description: 'Frame boxes by package (illustrator and diagram layouts); unchanged when omitted.',
     }),
   }),
   output: Schema.Void,

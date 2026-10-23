@@ -4,7 +4,8 @@
 
 // Serve the packaged directory, then: node check.cjs http://localhost:<port>/page.html <tab count> <files.json>
 // Loads the page in headless Chromium, clicks every tab, waits for the spec editor and for every ```diagram
-// fence it reaches to render, and writes the Artifact `files` map of exactly the files the page requested.
+// fence it reaches to render, fails on a spec under specs/ that did not load, and writes the Artifact `files` map
+// of exactly the files the page requested.
 
 const fs = require('node:fs');
 const { chromium } = require('@playwright/test');
@@ -23,6 +24,23 @@ void (async () => {
     }
   });
   page.on('pageerror', (error) => errors.push(error.message));
+  // A spec that fails to load falls back to the bundled text silently, so the check has to fail it.
+  const specs = new Map();
+  const specPath = (requestUrl) =>
+    requestUrl.startsWith(origin + '/specs/') ? decodeURIComponent(new URL(requestUrl).pathname.slice(1)) : undefined;
+  page.on('response', (response) => {
+    const path = specPath(response.url());
+    if (path) {
+      specs.set(path, response.status());
+    }
+  });
+  // A request that never gets a response (refused, aborted) fires no `response` event.
+  page.on('requestfailed', (request) => {
+    const path = specPath(request.url());
+    if (path) {
+      specs.set(path, request.failure()?.errorText ?? 'failed');
+    }
+  });
   await page.goto(url);
   await page.waitForSelector('.cm-editor', { timeout: 60_000 });
 
@@ -71,10 +89,17 @@ void (async () => {
   const files = {};
   for (const path of [...used].sort()) {
     if (path !== 'page.html') {
-      files[path] = path.endsWith('.wasm') ? { from: path, contentType: 'application/wasm' } : path;
+      files[path] = path.endsWith('.wasm')
+        ? { from: path, contentType: 'application/wasm' }
+        : path.endsWith('.mdl')
+          ? { from: path, contentType: 'text/plain' }
+          : path;
     }
   }
   fs.writeFileSync(filesOut, JSON.stringify(files, null, 2));
+  const missing = [...specs].filter(([, status]) => status !== 200).map(([path, status]) => `${path} (${status})`);
+  console.log(`specs fetched: ${specs.size}${missing.length ? `, failed: ${missing.join(', ')}` : ''}`);
+  failed ||= missing.length > 0;
   console.log(`page errors: ${errors.length ? errors.join(' | ') : 'none'}`);
   console.log(`wrote ${Object.keys(files).length} files to ${filesOut}`);
   await browser.close();

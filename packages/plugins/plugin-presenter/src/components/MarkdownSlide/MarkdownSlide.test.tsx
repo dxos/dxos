@@ -46,6 +46,23 @@ describe('MarkdownSlide', () => {
     expect(markup).toMatch(/<li class="[^"]*invisible"[^>]*data-step="3"/);
   });
 
+  test('surfaces in v-clicks carry their step and stay hidden until it', ({ expect }) => {
+    const content = [
+      '<v-clicks>',
+      '',
+      '<Surface ref="echo:///A" />',
+      '',
+      '<Surface ref="echo:///B" />',
+      '',
+      '</v-clicks>',
+    ].join('\n');
+    const markup = render(content, 1);
+    expect(markup.match(/<div data-surface="echo:\/\/\/[AB]"[^>]*>/g)).toEqual([
+      expect.stringMatching(/data-step="1"(?![^>]*invisible)/),
+      expect.stringMatching(/data-step="2"[^>]*class="[^"]*invisible/),
+    ]);
+  });
+
   test('v-click wrapper is hidden until its step', ({ expect }) => {
     const content = ['<v-click>', '', 'Later', '', '</v-click>'].join('\n');
     expect(render(content, 0)).toMatch(/data-step="1"[^>]*class="[^"]*invisible[^"]*"><p/);

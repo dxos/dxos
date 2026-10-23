@@ -4,34 +4,40 @@
 
 import React, { useCallback, useRef } from 'react';
 
-import * as McpServer from '@dxos/compute/McpServer';
-import { type Database, Filter } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/echo-react';
+import { AiContext } from '@dxos/assistant';
+import { type Database } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
+import { type Connection } from '@dxos/link';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Menu from '@dxos/react-ui/Menu';
 
+import { useConnectionStates, useMcpConnections } from '#hooks';
 import { meta } from '#meta';
 
 export type ChatAddMenuProps = {
   db: Database.Database;
+  /** The conversation the connector switches apply to; without one they show but cannot change. */
+  context?: AiContext.Binder;
   disabled?: boolean;
   onAddFiles?: () => void;
   onAddObject: () => void;
   onCommands: () => void;
-  onManageMcpServers: () => void;
+  onManageConnections: () => void;
 };
 
 export const ChatAddMenu = ({
   db,
+  context,
   disabled,
   onAddFiles,
   onAddObject,
   onCommands,
-  onManageMcpServers,
+  onManageConnections,
 }: ChatAddMenuProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
-  const servers = useQuery(db, Filter.type(McpServer.McpServer));
+  const mcpConnections = useMcpConnections(db);
+  const connectionStates = useConnectionStates(context);
 
   // Run once the menu has closed: Ark's menu returns focus to its trigger on close, which would take it
   // from an action that moves focus (the editor's completion list, a dialog).
@@ -48,12 +54,12 @@ export const ChatAddMenu = ({
         case 'commands':
           pending.current = onCommands;
           break;
-        case 'manage-mcp-servers':
-          pending.current = onManageMcpServers;
+        case 'manage-connections':
+          pending.current = onManageConnections;
           break;
       }
     },
-    [onAddFiles, onAddObject, onCommands, onManageMcpServers],
+    [onAddFiles, onAddObject, onCommands, onManageConnections],
   );
   const handleExitComplete = useCallback(() => {
     const action = pending.current;
@@ -91,20 +97,29 @@ export const ChatAddMenu = ({
         />
         <Menu.Sub>
           <Menu.TriggerItem
-            item={{ label: t('mcp-servers.label'), icon: 'ph--plugs-connected--regular' }}
-            data-testid='assistant.add-menu.mcp-servers'
+            item={{ label: t('connectors.label'), icon: 'ph--plugs-connected--regular' }}
+            data-testid='assistant.add-menu.connectors'
           />
           <Menu.Content>
-            {servers.length === 0 && (
-              <Menu.Item item={{ value: 'no-mcp-servers', label: t('mcp-servers-empty.label'), disabled: true }} />
+            {mcpConnections.length === 0 && (
+              <Menu.Item item={{ value: 'no-connectors', label: t('connectors-empty.label'), disabled: true }} />
             )}
-            {servers.map((server) => (
-              <McpServerItem key={server.id} server={server} />
+            {mcpConnections.map(({ connection }) => (
+              <ConnectionItem
+                key={connection.id}
+                connection={connection}
+                checked={AiContext.isConnectionOn(connectionStates, connection)}
+                onCheckedChange={
+                  context
+                    ? (enabled) => void context.setConnection(AiContext.connectionRef(connection), enabled)
+                    : undefined
+                }
+              />
             ))}
             <Menu.Separator />
             <Menu.Item
-              item={{ value: 'manage-mcp-servers', label: t('mcp-servers-manage.label'), icon: 'ph--gear--regular' }}
-              data-testid='assistant.add-menu.manage-mcp-servers'
+              item={{ value: 'manage-connections', label: t('connections-manage.label'), icon: 'ph--gear--regular' }}
+              data-testid='assistant.add-menu.manage-connections'
             />
           </Menu.Content>
         </Menu.Sub>
@@ -113,16 +128,22 @@ export const ChatAddMenu = ({
   );
 };
 
-const McpServerItem = ({ server }: { server: McpServer.McpServer }) => {
-  const [enabled, setEnabled] = useObject(server, 'enabled');
-  const [name] = useObject(server, 'name');
+type ConnectionItemProps = {
+  connection: Connection.Connection;
+  checked: boolean;
+  onCheckedChange?: (checked: boolean) => void;
+};
+
+/** A connection's MCP server, switched on or off for this chat only. */
+const ConnectionItem = ({ connection, checked, onCheckedChange }: ConnectionItemProps) => {
+  const [name] = useObject(connection, 'name');
   return (
     <Menu.CheckboxItem
-      item={{ value: `mcp-server-${server.id}`, label: name ?? server.id }}
-      checked={enabled !== false}
-      onCheckedChange={(checked) => setEnabled(!!checked)}
+      item={{ value: `connection-${connection.id}`, label: name ?? connection.id, disabled: !onCheckedChange }}
+      checked={checked}
+      onCheckedChange={(checked) => onCheckedChange?.(!!checked)}
       closeOnSelect={false}
-      data-testid='assistant.add-menu.mcp-server'
+      data-testid='assistant.add-menu.connection'
     />
   );
 };

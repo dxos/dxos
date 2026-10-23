@@ -54,6 +54,36 @@ describe('McpToolkit tools', () => {
       ),
     );
   });
+
+  test('a named server’s tools are offered under its prefix, and still run', async ({ expect }) => {
+    await EffectEx.runPromise(
+      withServer((url) =>
+        Effect.gen(function* () {
+          const toolkit = yield* McpToolkit.make({ url, protocol: 'http', name: 'echo-server' });
+          expect(Object.keys(toolkit.toolkit.tools)).toEqual(['mcp__echo-server__echo']);
+
+          const handlers = yield* toolkit.toolkit.pipe(Effect.provide(toolkit.layer));
+          const [outcome] = yield* handlers
+            .handle('mcp__echo-server__echo', { text: 'hi' })
+            .pipe(Effect.provide(toolkit.layer), Effect.flatMap(Stream.runCollect));
+          expect(outcome?.result).toBe('{"text":"hi"}');
+        }),
+      ),
+    );
+  });
+
+  test('a prefixed name stays within the providers’ limit and unique', ({ expect }) => {
+    const label = McpToolkit.label('My Work Account at Some Company');
+    expect(label.length).toBeLessThanOrEqual(16);
+
+    const long = 'add_pull_request_review_comment_to_pending_review';
+    const first = McpToolkit.toolName(label, `${long}_first`);
+    const second = McpToolkit.toolName(label, `${long}_second`);
+    expect(first.length).toBeLessThanOrEqual(64);
+    expect(second.length).toBeLessThanOrEqual(64);
+    expect(first).not.toEqual(second);
+    expect(McpToolkit.toolName('github', 'list_issues')).toBe('mcp__github__list_issues');
+  });
 });
 
 /** An in-process Streamable HTTP server serving `ECHO_TOOL`, one stateless transport per request. */
