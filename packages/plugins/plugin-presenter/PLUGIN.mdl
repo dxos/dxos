@@ -4,7 +4,7 @@ name: PresenterPlugin
 version: 0.1.0
 ---
 
-A presentation plugin for DXOS Composer. A Presentation is an ordered deck of sections, each an owned markdown slide or a link to any workspace object, shown in the navtree as a folder of slides and presented with fullscreen mode and keyboard navigation. A markdown document can still be previewed as a deck through its Presenter companion.
+A presentation plugin for DXOS Composer. A Presentation is an ordered deck of sections, each an owned markdown slide or a link to any workspace object, shown in the navtree as a folder of slides and presented with fullscreen mode and keyboard navigation. A markdown document can still be previewed as a deck through its Presenter companion. Slides are written in a strict Slidev subset (layouts, slots, click steps, notes) with DXOS extensions (video backgrounds, embedded object surfaces).
 
 ## Extensions
 
@@ -64,7 +64,10 @@ component Deck
     Paged slide deck. Inline it shows the pager centered in a status bar below the slide; in fullscreen an overlay pager that auto-hides when idle
     and wakes on pointer movement. Keys are scoped to the deck's focus scope, never `window`: left and right
     step, Shift+left and Shift+right (or Home and End) jump to first and last, `f` toggles fullscreen,
-    Escape exits fullscreen.
+    Escape exits fullscreen. Space and right advance a click step, else the slide; left retreats a click step,
+    else lands on the previous slide fully revealed. Click steps are ephemeral and reset on slide change; Space
+    does not act on a focused button or link. A print stylesheet (imported by Deck) prints the slide on a
+    16:9 page with every click step shown and the app chrome hidden.
   props:
     slides: SlideSource[]
     index: number
@@ -129,19 +132,70 @@ component SlideFrame
 ```mdl
 component SlideRenderer
   desc: |
-    Renders one SlideSource. Text sources render markdown; pending sources show a loading slide; object sources
-    render through the
-    AppSurface.Slide surface, falling back to a title slide while no surface matches, and request gated slide
-    surfaces on demand.
+    Renders one SlideSource. Text sources render markdown through MarkdownSlide; markdown sources (the
+    preview companion's raw slides) do the same; pending sources show a loading slide; object sources
+    render through the AppSurface.Slide surface, falling back to a title slide while no surface matches, and
+    request gated slide surfaces on demand. It supplies MarkdownSlide's embedded surfaces from the database of
+    the slide's owner.
   props:
     source: SlideSource
+    step?: number
+```
+
+```mdl
+component MarkdownSlide
+  desc: |
+    Renders one slide of the Slidev markdown subset on the 2560x1440 canvas: per-slide frontmatter
+    (`layout`, `image`, `background`, `class`, `title`), `::left::` / `::right::` / `::default::` slots,
+    `<v-click>`, `<v-clicks>` (`depth`, `every`) and `<v-after>` click steps, highlighted code blocks with
+    static line ranges, and notes. All other raw HTML is escaped, never rendered. Elements with a later click
+    step stay laid out but invisible. `class:` accepts only Tailwind utilities already generated.
+  props:
+    content: string
+    step?: number               # undefined reveals everything
+    renderSurface?: (uri, role) => ReactNode
+```
+
+```mdl
+component SlideLayouts
+  desc: |
+    The layouts a slide's `layout` names: default, cover, center, section, intro, end, fact, statement, quote,
+    two-cols, two-cols-header, image, image-left, image-right, full, none. An unknown name renders with
+    default and is reported as a validation issue.
+  props:
+    slots: { default, left, right }
+    frontmatter: SlideFrontmatter
+```
+
+```mdl
+component SlideBackground
+  desc: |
+    The slide's background: a colour, an `image`, or a looping, muted, autoplaying `backgroundVideo`, with
+    `backgroundOpacity` and `backgroundPosition`, behind a theme scrim so text over a photo stays legible.
+  props:
+    frontmatter: SlideFrontmatter
+    layout: string
+```
+
+```mdl
+component EmbeddedSurface
+  desc: |
+    Renders the object a slide's `<Surface ref="echo:///<id>" role="slide|section|card" />` names, through
+    ObjectSurface (fallback `slide`, `section`, `card`, then a title slide). A malformed, missing or deleted
+    ref settles on a "Missing object" placeholder, never a spinner left running; a space-qualified ref
+    resolves only while that space is open in the client.
+  props:
+    uri: string
+    role: slide | section | card
+    db: Database
 ```
 
 ```mdl
 component DocumentArticle
   desc: |
     Presenter companion of a Markdown document: the shared Deck over the document content, split into slides
-    on horizontal `---` separators. Vertical slides are not configured. Nothing is persisted. Fullscreen is read
+    on horizontal `---` separators outside fenced code, honouring leading headmatter and per-slide frontmatter
+    (markdown sources). Vertical slides are not configured. Nothing is persisted. RevealPlayer is gone. Fullscreen is read
     per object from the deck's fullscreen plank (is this document presented), not from the global layout mode.
   props:
     document: Markdown.Document
@@ -254,6 +308,56 @@ feat F-4: Presentation Deck
 ```
 
 ```mdl
+feat F-6: Markdown Slides
+
+  req F-6.1: A slide is written in a strict Slidev subset: per-slide frontmatter `layout`, `image`, `background`, `class`, `title`; slots `::left::`, `::right::`, `::default::`; notes as the slide's last HTML comment.
+  req F-6.2: The layouts are default, cover, center, section, intro, end, fact, statement, quote, two-cols, two-cols-header, image, image-left, image-right, full and none.
+  req F-6.3:
+    when: a slide names an unknown layout
+    then: it renders with default, no error is shown, and a validation issue is reported
+  req F-6.4:
+    when: a slide's frontmatter YAML is malformed
+    then: the body still renders, the frontmatter is ignored and a validation issue is reported
+  req F-6.5: Raw HTML other than `v-click`, `v-clicks`, `v-after`, `Surface` and `br` is escaped, never rendered or executed; URLs with unsafe schemes are not followed.
+  req F-6.6: A fenced code block renders highlighted; a `{2,4-5}` meta marks the lines that stay emphasised.
+  req F-6.7: In the preview companion `---` splits slides except inside a fenced code block, and a leading frontmatter block is slide metadata.
+```
+
+```mdl
+feat F-7: Click Steps
+
+  req F-7.1: `<v-click>`, `<v-clicks>` (`depth`, `every`) and `<v-after>` reveal their content one click at a time; a hidden element keeps its layout.
+  req F-7.2:
+    when: user presses Space or right with steps remaining
+    then: the next step reveals, and only after the last step does the deck advance
+  req F-7.3:
+    when: user presses left with steps revealed
+    then: the last step hides; at step 0 the previous slide shows fully revealed
+  req F-7.4: Click steps reset on any slide change and are never persisted; only the slide index is view state.
+  req F-7.5: Space on a focused button or link activates it and does not advance.
+```
+
+```mdl
+feat F-8: Backgrounds and Embedded Surfaces
+
+  req F-8.1: Frontmatter `backgroundVideo` plays as a looping, muted, autoplaying background, with `backgroundOpacity` and `backgroundPosition`.
+  req F-8.2:
+    when: a slide contains `<Surface ref="echo:///<id>" role="slide|section|card" />` in any slot
+    then: the referenced object renders there through its slide surface, falling back to section, card and a title slide
+  req F-8.3:
+    when: the ref is malformed, never existed, or its target is deleted
+    then: a "Missing object" placeholder shows in its place, with no spinner left
+```
+
+```mdl
+feat F-9: Printing
+
+  req F-9.1:
+    when: the deck is printed
+    then: the slide prints on one 16:9 page at full size with every click step shown and the app chrome hidden
+```
+
+```mdl
 feat F-5: Navtree Folder
 
   req F-5.1: A Presentation node lists its sections as children.
@@ -360,6 +464,35 @@ scenario T-10: Removing a linked section keeps the object
 
 Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
 invocable operation, an agent binding (`invoke`). Report failures by test and step number.
+
+```mdl
+test QA-4: Slidev subset and click steps
+  desc: Preview a document that uses layouts, click steps, a video background and an embedded surface, then step through it.
+  actors: human
+  covers: [F-6.1, F-6.2, F-6.3, F-7.1, F-7.2, F-7.3, F-7.4, F-8.1, F-8.2, F-8.3, F-9.1]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-markdown, plugin-presenter enabled
+  steps:
+    - name: Write the slides
+      do: Create a document with a `two-cols` slide containing `::right::` and `<Surface ref="echo:///<id of another document>" />`, followed by a slide with `<v-clicks>` over a three-item list, and a slide with an unknown `layout`.
+      expect: the Presenter companion shows the two-cols slide with the other document embedded on the right
+    - name: Step clicks
+      do: Open the list slide and press right three times, then once more.
+      expect: each press reveals one item, the fourth moves to the next slide, and left from there lands on the list slide fully revealed
+    - name: Unknown layout
+      do: Go to the slide with the unknown layout.
+      expect: it renders as a default slide without an error
+    - name: Missing surface
+      do: Change the embedded ref to `echo:///not-an-id`.
+      expect: a "Missing object" placeholder shows, with no spinner
+    - name: Print preview
+      do: Open the browser's print preview with the deck showing.
+      expect: one landscape page with the slide, every list item visible and no toolbar or status bar
+
+```
 
 ```mdl
 test QA-1: Preview a document in the companion, then present it
@@ -652,10 +785,94 @@ decision D-21: Inline, the Deck pager sits centered in a status bar below the sl
 
 ```mdl
 decision D-22: Reveal.js and RevealPlayer are deleted; the document preview renders on the shared Deck with no setting. Fills in [D-3].
-  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
   by: agent:claude-code
   affects: [DocumentArticle, F-2]
   why: One renderer for decks and previews; the Settings module is gone, so there is nothing to put reveal behind.
+```
+
+```mdl
+decision D-23: Slides are written in a strict Slidev-compatible subset (layouts, slots, click steps, notes, static line highlights); anything outside it is not rendered. Fills in [D-3].
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [MarkdownSlide, SlideLayouts, F-6, F-7]
+  source: docs/DESIGN.md Q8
+```
+
+```mdl
+decision D-24: Frontmatter gains `backgroundVideo` (looping, muted, autoplaying), `backgroundOpacity` and `backgroundPosition` as DXOS extensions to the Slidev subset. Fills in [D-23].
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [SlideBackground, F-8.1]
+  source: docs/DESIGN.md section 6
+```
+
+```mdl
+decision D-25: A slide embeds an object with `<Surface ref="echo:///<id>" role="slide|section|card" />`, resolved through the same fallback chain as a linked section. Fills in [D-4].
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [EmbeddedSurface, F-8.2, F-8.3]
+  source: docs/DESIGN.md section 6
+```
+
+```mdl
+decision D-26: No `@slidev/parser`; the slide splitter and frontmatter reader are owned in `src/markdown`. Fills in [D-23].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [MarkdownSlide, F-6.7]
+  why: The parser is not in the repo and targets Node, while the splitter is about sixty lines and must run in the browser.
+  rejected: Adding `@slidev/parser` as a dependency.
+```
+
+```mdl
+decision D-27: Going back with left lands on the previous slide fully revealed, as Slidev does. Fills in [D-23].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Deck, F-7.3]
+  why: Returning to a slide to review it should show everything that was on it.
+  rejected: Restarting the previous slide at step 0.
+```
+
+```mdl
+decision D-28: Click steps are ephemeral and reset on slide change; only the slide index is view state. Fills in [D-5].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Deck, F-7.4]
+  why: A step count persisted across reloads would reopen a slide half-revealed with no cue why.
+```
+
+```mdl
+decision D-29: Code blocks render with `SyntaxHighlighter` from `@dxos/react-ui-syntax-highlighter`, whose styles are inline, and the global highlight.js stylesheets are dropped. Fills in [D-22].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [MarkdownSlide, F-6.6]
+  why: One highlighter across Composer, with no global CSS that leaks into the host app.
+  rejected: Keeping highlight.js with its stylesheets.
+```
+
+```mdl
+decision D-30: Embedded surfaces are rendered with the database of the slide's owner: an owned slide uses its Text's database and a preview slide the document's. Fills in [D-25].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [SlideRenderer, EmbeddedSurface, F-8.2]
+  why: A ref to an object in the same space has to resolve without the slide naming the space.
+  rejected: Threading the database through Deck for every slide source.
+```
+
+```mdl
+decision D-31: A `---` / blank line / `key: value` / `---` block at the head of a slide reads as frontmatter, so a formatter that inserts a blank line does not lose it. Fills in [D-23].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [MarkdownSlide, F-6.7]
+  why: A formatter-touched document would otherwise silently drop its layout and background.
+  rejected: Excluding the decks from the formatter, which protects only those files.
 ```
 
 ---

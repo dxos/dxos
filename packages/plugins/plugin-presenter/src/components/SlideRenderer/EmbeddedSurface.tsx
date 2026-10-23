@@ -19,7 +19,7 @@ export type EmbeddedSurfaceProps = {
   /** The object's ECHO URI from `<Surface ref>`; anything else renders the missing placeholder. */
   uri: string;
   role: SlideSurfaceRole;
-  /** The slide owner's database, against which space-relative refs resolve. */
+  /** The slide owner's database; a space-qualified ref (`echo://<space>/<id>`) resolves only while that space is open in the client, else the missing placeholder. */
   db: Database.Database;
 };
 

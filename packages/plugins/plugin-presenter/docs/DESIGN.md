@@ -1,6 +1,6 @@
 # plugin-presenter — Design
 
-Status: **Phase 1 implemented; code is the truth, spec in PLUGIN.mdl** (2026-10-22; Q8 slide syntax added). Items marked _agent call_ were settled by the agent
+Status: **Phases 1 and 3 implemented; code is the truth, spec in PLUGIN.mdl** (2026-10-22; Q8 slide syntax added). Items marked _agent call_ were settled by the agent
 and are open to review; everything marked _user_ was decided in discussion.
 
 ## Intent
@@ -94,6 +94,7 @@ const Presentation = Schema.Struct({
 type SlideSource =
   | { kind: 'text'; id: string; text: Text.Text } // owned slide, rendered as markdown
   | { kind: 'object'; id: string; object: Obj.Unknown } // any linked object, Markdown.Document included
+  | { kind: 'markdown'; id: string; content: string; db?: Database.Database } // a raw slide of the preview companion
   | { kind: 'pending'; id: string }; // a section whose target has not loaded yet
 ```
 
@@ -101,9 +102,9 @@ type SlideSource =
   `SlideSource[]`, resolving each ref on its own so the order holds while targets load. A section whose target
   was **deleted** is omitted; one not yet loaded stays `pending` (_agent call_). The navtree folder reads the
   same atom, so its children are the deck's slides in deck order.
-- `Deck` is rendered by `PresentationArticle`. The **quick-preview companion** _(user)_ is still
-  `DocumentArticle` → `RevealPlayer`, splitting the document on `---`; nothing is persisted, and it moves to the
-  deck runtime with the Phase 3 renderer. The one-section-one-slide rule applies only inside a Presentation.
+- `Deck` is rendered by `PresentationArticle`. The **quick-preview companion** _(user)_ is
+  `DocumentArticle` on the shared `Deck` (reveal.js is gone), splitting the document on `---` into `markdown`
+  sources that carry the document's database for embedded surfaces; nothing is persisted. The one-section-one-slide rule applies only inside a Presentation.
 - `CollectionArticle` is gone. `SlideArticle` stays: it is the markdown `role=slide` surface a linked
   `Markdown.Document` renders through. `SlideEditorArticle` edits an owned slide under a 16:9 live preview.
 
@@ -252,8 +253,12 @@ code highlighter. Layouts are React components receiving `{ frontmatter, slots, 
    still renders markdown slides.
 2. **`Pager` primitive** in `@dxos/react-ui`; presenter adopts it; `Carousel` styles and autocue `TakeStory`
    follow.
-3. **Markdown renderer** for the Slidev subset (layouts, slots, clicks, notes); reveal behind a setting; migrate
-   test decks; print stylesheet.
+3. **Markdown renderer** for the Slidev subset (layouts, slots, clicks, notes) — **done**; reveal.js deleted (no
+   setting); test decks converted; print stylesheet; embedded `<Surface>`s addressed by ECHO URI
+   (`echo:///<id>`, or `echo://<space>/<id>` while that space is open) resolve through the slide's owning
+   database and settle on a "Missing object" placeholder when malformed, missing or deleted.
+   Known limit: `class:` frontmatter only takes Tailwind utilities that are already generated, since the
+   markdown is not scanned; a safelist is a follow-up.
 4. **Slide surfaces** for sheet, canvas, tldraw, outline; fallback chain; surface-lookup helper and picker
    filter.
 5. **Assistant skill** + eval.

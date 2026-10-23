@@ -16,7 +16,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
-import { DXN, EID } from '@dxos/keys';
+import { DXN, EID, EntityId } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -120,6 +120,21 @@ const createSpaceSlides = async ({ space }: { space: Space }) => {
           surfaceTag(EID.make({ entityId: deleted.id })),
           '::right::',
           surfaceTag('javascript:alert(1)'),
+        ].join('\n'),
+      ],
+    }),
+  );
+  space.db.add(
+    Presentation.make({
+      name: 'unresolvable',
+      slides: [
+        [
+          '---',
+          'layout: two-cols',
+          '---',
+          surfaceTag('echo:///not-an-id'),
+          '::right::',
+          surfaceTag(EID.make({ entityId: EntityId.random() })),
         ].join('\n'),
       ],
     }),
@@ -239,6 +254,18 @@ export const EmbeddedSurface: Story = {
 /** A ref to a deleted object and a malformed ref each settle on the placeholder rather than spinning. */
 export const EmbeddedSurfaceMissing: Story = {
   render: () => <SpaceSlideStory name='missing' />,
+  decorators: [withSlideSurface],
+  args: { kind: 'text' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getAllByText('Missing object')).toHaveLength(2), LOAD_TIMEOUT);
+    await expect(canvasElement.querySelector('[data-testid="presenter.embedded-surface.loading"]')).toBeNull();
+  },
+};
+
+/** An ECHO-shaped but invalid ref and a well-formed ref to an id that never existed each settle on the placeholder. */
+export const EmbeddedSurfaceUnresolvable: Story = {
+  render: () => <SpaceSlideStory name='unresolvable' />,
   decorators: [withSlideSurface],
   args: { kind: 'text' },
   play: async ({ canvasElement }) => {

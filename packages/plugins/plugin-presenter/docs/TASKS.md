@@ -63,14 +63,15 @@ Design: [DESIGN.md](./DESIGN.md).
 
 ## Phase 3: Markdown renderer
 
-- [ ] **Embedded surfaces** — `<Surface ref="echo:///<id>" role="slide" />` inside a slide (any slot), with the linked-section fallback chain; story `plugins/plugin-presenter/components/SlideRenderer` → `EmbeddedSurface` (text + a live object in `two-cols`).
+- [x] **Embedded surfaces** — `<Surface ref="echo:///<id>" role="slide" />` inside a slide (any slot), with the linked-section fallback chain; story `plugins/plugin-presenter/components/SlideRenderer` → `EmbeddedSurface` (text + a live object in `two-cols`); missing, malformed and never-existed refs settle on the placeholder.
 - [x] **DXOS frontmatter extension** — `backgroundVideo` (loop, muted, autoplay), `backgroundOpacity`, `backgroundPosition`; convert `testing/deck.md` and `testing/2025-05-20-effect.md` from reveal syntax.
-- [ ] **unified pipeline** → React for the Slidev subset; layouts, `::slot::`, `<v-click*>`, notes.
-- [ ] **Evaluate `@slidev/parser`** for the preview `---` split (browser-safe?).
-- [x] **Migrate** reveal syntax in test decks (done: `deck.md`, `2025-05-20-effect.md`); reveal behind a setting until parity, then delete.
-- [ ] **Print stylesheet**.
+- [x] **unified pipeline** → React for the Slidev subset; layouts, `::slot::`, `<v-click*>`, notes.
+- [x] **Evaluate `@slidev/parser`** for the preview `---` split — rejected (Node-targeted, not in the repo); the splitter is owned in `src/markdown`.
+- [x] **Migrate** reveal syntax in test decks; reveal.js deleted (no setting).
+- [x] **Print stylesheet** — `MarkdownSlide/print.css`, imported by `Deck`.
 - [ ] `class:` frontmatter only works with Tailwind utilities that are already generated (the markdown is not scanned); consider a safelist.
 - [ ] Known deck conversion losses: per-colour tints behind the ECHO/HALO/MESH/EDGE images (needs a tint layer separate from `backgroundOpacity`), fixed image heights, and the dropped hidden FADE slide.
+- [ ] **Print/export operation**: an operation that prints a document or presentation to PDF (uses the print stylesheet; Save as PDF). Printing the deck today prints the slide on screen only. (User TODO, 2026-10-22.)
 
 ## Phase 4: Slide surfaces
 

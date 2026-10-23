@@ -4,7 +4,7 @@
 
 import type { Element, ElementContent, Properties, Root } from 'hast';
 import { type Components, toJsxRuntime } from 'hast-util-to-jsx-runtime';
-import React, { type ComponentType, type ReactNode, createContext, useContext, useEffect, useMemo } from 'react';
+import React, { type ComponentType, type ReactNode, createContext, useContext, useMemo } from 'react';
 import { Fragment, jsx, jsxs } from 'react/jsx-runtime';
 
 import { SyntaxHighlighter, type SyntaxHighlighterProps, renderRows } from '@dxos/react-ui-syntax-highlighter';
@@ -24,8 +24,6 @@ export type MarkdownSlideProps = Util.ThemedClassName<{
   content: string;
   /** Click step; elements with a later step stay laid out but invisible (default: all revealed). */
   step?: number;
-  /** Called with the slide's click count whenever it changes. */
-  onClicks?: (count: number) => void;
   /** Renders an embedded `<Surface>`; without it a labelled placeholder is shown. */
   renderSurface?: (props: { uri: string; role: SlideSurfaceRole }) => ReactNode;
 }>;
@@ -33,11 +31,8 @@ export type MarkdownSlideProps = Util.ThemedClassName<{
 /**
  * Renders one slide of the Slidev markdown subset on the 2560×1440 canvas (wrap it in `SlideFrame` to scale).
  */
-export const MarkdownSlide = ({ classNames, content, step, onClicks, renderSurface }: MarkdownSlideProps) => {
+export const MarkdownSlide = ({ classNames, content, step, renderSurface }: MarkdownSlideProps) => {
   const parsed = useMemo(() => parseSlide(content), [content]);
-  useEffect(() => {
-    onClicks?.(parsed.clicks);
-  }, [parsed.clicks, onClicks]);
 
   const slots = useMemo((): Record<SlotName, ReactNode> => {
     const current = step ?? Number.POSITIVE_INFINITY;

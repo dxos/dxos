@@ -1,0 +1,52 @@
+/*
+ * Copyright 2026 DXOS.org
+ */
+
+/* The page is the slide canvas (2560x1440, 16:9) so the slide prints at its nominal scale. */
+@page {
+  size: 2560px 1440px;
+  margin: 0;
+}
+
+@media print {
+  /* Visibility, not display, so the deck keeps its place in the tree while the app chrome disappears. */
+  body * {
+    visibility: hidden !important;
+  }
+
+  [data-testid='presenter.deck'],
+  [data-testid='presenter.deck'] * {
+    visibility: visible !important;
+  }
+
+  [data-testid='presenter.deck'] {
+    position: absolute !important;
+    inset: 0 auto auto 0 !important;
+    width: 2560px !important;
+    height: 1440px !important;
+    overflow: visible !important;
+  }
+
+  /* SlideFrame scales the canvas to its container on screen; on paper it is already full size. */
+  [data-slide-canvas] {
+    left: 0 !important;
+    top: 0 !important;
+    transform: none !important;
+  }
+
+  /* Click steps are a live-presentation device: on paper every step is shown. */
+  [data-slide] [data-step] {
+    visibility: visible !important;
+  }
+
+  [data-slide] {
+    break-after: page;
+    break-inside: avoid;
+  }
+
+  html,
+  body {
+    background: none !important;
+    overflow: visible !important;
+  }
+}

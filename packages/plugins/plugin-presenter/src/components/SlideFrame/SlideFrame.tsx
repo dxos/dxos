@@ -35,7 +35,7 @@ export const SlideFrame = ({ children, classNames }: SlideFrameProps) => {
   // TODO(burdon): Reconcile highlight colors with markdown editor.
   return (
     <div ref={containerRef} className={mx('flex grow relative overflow-hidden dx-attention-surface', classNames)}>
-      <div className={mx('dx-expand absolute')} style={props}>
+      <div data-slide-canvas className={mx('dx-expand absolute')} style={props}>
         {!!width && !!height && children}
       </div>
     </div>

@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import '../MarkdownSlide/print.css';
+
 import React, { type KeyboardEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
