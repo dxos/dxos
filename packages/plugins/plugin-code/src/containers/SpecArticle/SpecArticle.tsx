@@ -153,6 +153,10 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     const citedKey = useMemo(() => (review ? citedFiles(review).join('\n') : ''), [review]);
     useEffect(() => setCodeKeys(citedKey ? citedKey.split('\n') : []), [citedKey]);
     const read = useCallback((target: SourceKey) => texts.get(fileKey(target)), [texts]);
+    // Cards render on hover, so the gutter reads through a ref instead of rebuilding the editor on each file change.
+    const textsRef = useRef(texts);
+    textsRef.current = texts;
+    const readLatest = useCallback((target: SourceKey) => textsRef.current.get(fileKey(target)), []);
     const specs = useMemo(
       () => new Map([...texts].filter(([raw]) => raw.endsWith('.mdl') && raw !== reviewKey)),
       [texts, reviewKey],
@@ -266,7 +270,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
                 setView('review');
               },
               onOpen: (target) => void open(target),
-              read,
+              read: readLatest,
             }),
           diagramPreview(),
           // Live two-way binding only when editing an ECHO Spec; static content is rendered via `value`.
@@ -279,7 +283,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
               identity,
             }),
         ].filter(isTruthy),
-      [identity, space, spec?.id, target, themeMode, readOnly, decisions, review, open, read],
+      [identity, space, spec?.id, target, themeMode, readOnly, decisions, review, open, readLatest],
     );
 
     const syncEntry = spec ? sync.specs[spec.id] : undefined;

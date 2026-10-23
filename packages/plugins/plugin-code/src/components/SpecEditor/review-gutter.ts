@@ -62,8 +62,10 @@ class HoverController {
   #chip: HTMLElement | undefined;
   readonly #reposition = () => this.#place();
 
-  attach(view: EditorView, chip: HTMLElement, render: (dark: boolean) => SnippetCard): void {
-    chip.addEventListener('mouseenter', () => {
+  /** `description` carries the card's content to assistive tech, since the card itself is never focused. */
+  attach(view: EditorView, chip: HTMLElement, render: (dark: boolean) => SnippetCard, description: string): void {
+    chip.setAttribute('aria-description', description);
+    const show = () => {
       this.#cancel();
       this.close();
       const card = render(view.state.facet(EditorView.darkTheme));
@@ -83,8 +85,12 @@ class HoverController {
       this.#chip = chip;
       this.#place();
       window.addEventListener('scroll', this.#reposition, true);
-    });
+    };
+    // Focus as well as hover, so keyboard users get the card; the chips are buttons and already focusable.
+    chip.addEventListener('mouseenter', show);
+    chip.addEventListener('focus', show);
     chip.addEventListener('mouseleave', () => this.#hide());
+    chip.addEventListener('blur', () => this.#hide());
   }
 
   /** Removes the open card, if any. */
@@ -189,14 +195,21 @@ class ReviewWidget extends WidgetType {
     );
     statusTag.dataset.status = status;
     if (steps) {
-      this.hover.attach(view, statusTag, (dark) => walkthroughCard(steps, { read, onOpen, dark }));
+      this.hover.attach(
+        view,
+        statusTag,
+        (dark) => walkthroughCard(steps, { read, onOpen, dark }),
+        [`${STATUS_STYLE[status].label}: ${summary ?? id}`, ...steps.map((step) => `${step.text} ${step.key}`)].join(
+          '. ',
+        ),
+      );
     }
 
     const codeChips = (keys: readonly SourceKey[], hue: string, testId: string) => {
       keys.slice(0, MAX_CODE_CHIPS).forEach((key) => {
         const chip = tag(`</> ${labelOf(key)}`, hue, undefined, testId, () => onOpen?.(key));
         chip.dataset.key = formatSourceKey(key);
-        this.hover.attach(view, chip, (dark) => snippetCard(key, { read, onOpen, dark }));
+        this.hover.attach(view, chip, (dark) => snippetCard(key, { read, onOpen, dark }), formatSourceKey(key));
       });
       const rest = keys.slice(MAX_CODE_CHIPS);
       if (rest.length > 0) {
@@ -241,11 +254,15 @@ class ReviewWidget extends WidgetType {
       );
       chip.dataset.testing = testing;
       if (tests.length > 0) {
-        this.hover.attach(view, chip, (dark) =>
-          walkthroughCard(
-            tests.map((key) => ({ text: '', key: formatSourceKey(key) })),
-            { read, onOpen, dark },
-          ),
+        this.hover.attach(
+          view,
+          chip,
+          (dark) =>
+            walkthroughCard(
+              tests.map((key) => ({ text: '', key: formatSourceKey(key) })),
+              { read, onOpen, dark },
+            ),
+          `Tested by ${tests.map((key) => formatSourceKey(key)).join(', ')}`,
         );
       }
     }

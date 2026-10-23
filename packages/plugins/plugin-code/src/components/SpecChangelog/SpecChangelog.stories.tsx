@@ -139,6 +139,16 @@ export const SpecIde: Story = {
       return expect(box.top >= 0 && (box.top >= chip.bottom || box.bottom <= chip.top)).toBe(true);
     });
 
+    // Keyboard focus opens the same card, and the chip describes it for screen readers.
+    await expect(local.getAttribute('aria-description')).toBe(local.dataset.key);
+    await userEvent.unhover(local);
+    await waitFor(() =>
+      expect(within(canvasElement.ownerDocument.body).queryByTestId('spec-review.snippet-card')).toBeNull(),
+    );
+    local.focus();
+    await waitFor(() => within(canvasElement.ownerDocument.body).getByTestId('spec-review.snippet-card'));
+    local.blur();
+
     // The current Review card of an op expands to its walkthrough, each step with its code.
     await userEvent.click(canvas.getByTestId('spec-changelog.view.review'));
     const importSpec = await waitFor(
