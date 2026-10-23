@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 
 import * as CodeAgent from '../agents/CodeAgent.ts';
 import { CLAUDE_CODE_AGENT } from '../constants.ts';
@@ -26,9 +27,17 @@ export default Capability.makeModule(
         claudeCode: { options: { allowedTools: readOnlyTools.map((tool) => `mcp__${server}__${tool}`) } },
       }),
     });
+    const manager = yield* Capability.Service;
     return [
       Capability.contribute(AssistantCapabilities.Agent, { ...agent, ownModel: true }),
-      Capability.contribute(AssistantCapabilities.AgentProcess, ClaudeCodeProcess.make(options)),
+      Capability.contribute(
+        AssistantCapabilities.AgentProcess,
+        ClaudeCodeProcess.make({
+          ...options,
+          mcpEndpoint: (connection) =>
+            ConnectorSpec.mcpEndpoint(manager.getAll(ConnectorSpec.Connector).flat(), connection),
+        }),
+      ),
     ];
   }),
 );

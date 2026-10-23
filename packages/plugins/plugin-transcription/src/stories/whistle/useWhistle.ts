@@ -5,24 +5,19 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { MediaStreamRecorder } from '@dxos/react-ui-transcription';
 
-import { NoiseGate } from './noise-gate.ts';
+import { startCapture } from './capture.ts';
 import {
+  type AssistantConfig,
+  type NeedleAnswer,
   WHISTLE_ASSETS,
-  WHISTLE_SAMPLE_RATE,
   type WhistleRequest,
   type WhistleResponse,
   type WhistleWord,
 } from './protocol.ts';
+import { Recording } from './recording.ts';
 
-/** Capture flush interval; short so audio reaches the engine as soon as a pass can take it. */
-const CAPTURE_INTERVAL_MS = 100;
-
-/** Full-scale value of the 16-bit samples {@link MediaStreamRecorder} emits. */
-const INT16_SCALE = 0x7fff;
-
-export type WhistleStatus = 'idle' | 'loading' | 'ready' | 'error';
+export type WhistleStatus = 'idle' | 'loading' | 'preparing' | 'ready' | 'error';
 
 export type WhistleStats = {
   /** Milliseconds from worker start to model loaded. */
@@ -33,6 +28,20 @@ export type WhistleStats = {
   backlog?: number;
   /** Seconds between the end of the latest committed word and the moment it was committed. */
   commitLag?: number;
+  /** Milliseconds from the end of a request (a stop, or the end of its pause) to its answer. */
+  answerLatency?: number;
+  /** Milliseconds the assistant's model took to answer. */
+  answerMs?: number;
+};
+
+/** An answered request, as delivered to `onAnswer`. */
+export type WhistleAnswer = {
+  text: string;
+  answer: NeedleAnswer;
+  answerMs: number;
+  maxTokens: number;
+  /** Milliseconds from the end of the request (a stop, or the end of its pause) to the answer. */
+  latencyMs: number;
 };
 
 export type UseWhistleProps = {
@@ -40,8 +49,22 @@ export type UseWhistleProps = {
   active?: boolean;
   language?: string;
   keywords?: string[];
-  /** Called after every pass with the words it committed (seconds from stream start) and the unconfirmed tail. */
-  onResult?: (words: WhistleWord[], pending: string) => void;
+  /** Smallest batch of new audio, in milliseconds, worth a pass; lower commits sooner but less accurately. */
+  minPassMs?: number;
+  /** Where captured audio is kept; one is made when omitted. */
+  recording?: Recording;
+  /**
+   * Called after every pass with the words it committed (seconds into the {@link Recording}), the unconfirmed
+   * tail, and whether the stream ended with it.
+   */
+  onResult?: (words: WhistleWord[], pending: string, ended: boolean) => void;
+  /** Loads Needle beside Whistle to answer every ended stream against these tools; read once, at load. */
+  assistant?: AssistantConfig;
+  /** The assistant's token budget for a single request (see the worker). */
+  maxTokens?: number;
+  onAnswer?: (answer: WhistleAnswer) => void;
+  /** Silence handling in the worker (see the `config` request); `pauseSeconds` ends requests at a pause. */
+  endpoint?: { pauseSeconds?: number };
 };
 
 export type UseWhistleResult = {
@@ -49,55 +72,44 @@ export type UseWhistleResult = {
   error?: string;
   /** Model download progress in [0, 1]. */
   progress: number;
-  /** Whether the noise gate currently hears speech. */
-  speaking: boolean;
   stats: WhistleStats;
+  /** Everything captured since mount. */
+  recording: Recording;
 };
 
 /**
- * Box-filter downsampler from the capture context's rate to 16 kHz; carries the fractional
- * remainder across chunks so chunk boundaries do not drift the timeline.
+ * Streams a track through the Whistle on-device speech model in a worker, the way Cactus's own live
+ * demo does: one continuous stream per activation, re-decoded every `minPassMs` of new audio, with the
+ * browser's noise suppression as the only filtering. The model loads on first activation (≈17 MB,
+ * cached by the browser afterwards); audio never leaves the tab.
  */
-class Downsampler {
-  #carry = new Float64Array(0);
-
-  constructor(private readonly _ratio: number) {}
-
-  process(input: Float64Array): Float32Array {
-    const samples = new Float64Array(this.#carry.length + input.length);
-    samples.set(this.#carry);
-    samples.set(input, this.#carry.length);
-    const outputLength = Math.floor(samples.length / this._ratio);
-    const output = new Float32Array(outputLength);
-    for (let index = 0; index < outputLength; index++) {
-      const from = Math.floor(index * this._ratio);
-      const to = Math.max(from + 1, Math.floor((index + 1) * this._ratio));
-      let sum = 0;
-      for (let position = from; position < to; position++) {
-        sum += samples[position];
-      }
-      output[index] = sum / (to - from) / INT16_SCALE;
-    }
-    this.#carry = samples.slice(Math.floor(outputLength * this._ratio));
-    return output;
-  }
-}
-
-/**
- * Streams a track through the Whistle on-device speech model in a worker. Only gated speech reaches
- * the model. The model loads on first activation (≈17 MB, cached by the browser afterwards); audio
- * never leaves the tab.
- */
-export const useWhistle = ({ track, active, language, keywords, onResult }: UseWhistleProps): UseWhistleResult => {
+export const useWhistle = ({
+  track,
+  active,
+  language,
+  keywords,
+  minPassMs,
+  recording: recordingProp,
+  onResult,
+  assistant,
+  maxTokens,
+  onAnswer,
+  endpoint,
+}: UseWhistleProps): UseWhistleResult => {
   const [status, setStatus] = useState<WhistleStatus>('idle');
   const [error, setError] = useState<string>();
   const [progress, setProgress] = useState(0);
   const [stats, setStats] = useState<WhistleStats>({});
-  const [speaking, setSpeaking] = useState(false);
   const [worker, setWorker] = useState<Worker>();
+  const [ownRecording] = useState(() => new Recording());
+  const recording = recordingProp ?? ownRecording;
 
   const onResultRef = useRef(onResult);
   onResultRef.current = onResult;
+  const onAnswerRef = useRef(onAnswer);
+  onAnswerRef.current = onAnswer;
+  const assistantRef = useRef(assistant);
+  assistantRef.current = assistant;
 
   // Model loading is deferred to first activation so mounting the story downloads nothing.
   const [requested, setRequested] = useState(false);
@@ -114,12 +126,16 @@ export const useWhistle = ({ track, active, language, keywords, onResult }: UseW
     }
 
     const instance = new Worker(new URL('./whistle-worker.ts', import.meta.url), { type: 'module' });
-    const send = (request: WhistleRequest, transfer: Transferable[] = []) => instance.postMessage(request, transfer);
     instance.onmessage = (event: MessageEvent<WhistleResponse>) => {
       const response = event.data;
       switch (response.type) {
         case 'progress': {
           setProgress(response.total > 0 ? response.loaded / response.total : 0);
+          break;
+        }
+        case 'preparing': {
+          setStatus('preparing');
+          setProgress(1);
           break;
         }
         case 'ready': {
@@ -132,11 +148,18 @@ export const useWhistle = ({ track, active, language, keywords, onResult }: UseW
           const lastWord = response.words.at(-1);
           setStats((previous) => ({
             ...previous,
-            passMs: response.passMs,
+            // A result with no pass (a stream ended in silence it had already heard) keeps the last timing.
+            passMs: response.passMs > 0 ? response.passMs : previous.passMs,
             backlog: response.backlog,
             commitLag: lastWord ? response.received - lastWord.end : previous.commitLag,
           }));
-          onResultRef.current?.(response.words, response.pending);
+          onResultRef.current?.(response.words, response.pending, response.ended);
+          break;
+        }
+        case 'answer': {
+          const { text, answer, answerMs, maxTokens, latencyMs } = response;
+          setStats((previous) => ({ ...previous, answerLatency: latencyMs, answerMs }));
+          onAnswerRef.current?.({ text, answer, answerMs, maxTokens, latencyMs });
           break;
         }
         case 'error': {
@@ -149,16 +172,50 @@ export const useWhistle = ({ track, active, language, keywords, onResult }: UseW
     };
 
     setStatus('loading');
-    send({ type: 'init', assets: WHISTLE_ASSETS, language, keywords: keywordsKey ? keywordsKey.split('\n') : [] });
+    instance.postMessage({
+      type: 'init',
+      assets: WHISTLE_ASSETS,
+      language,
+      offset: recording.duration,
+      assistant: assistantRef.current,
+    } satisfies WhistleRequest);
     setWorker(instance);
     return () => {
       instance.terminate();
       setWorker(undefined);
       setStatus('idle');
     };
-    // `keywords` is read via the serialized `keywordsKey`.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [requested, language, keywordsKey]);
+  }, [requested, language, recording]);
+
+  // Sent separately from `init` so changing latency or keywords mid-stream keeps the loaded model and the stream.
+  useEffect(() => {
+    if (worker && minPassMs !== undefined) {
+      worker.postMessage({ type: 'config', minPassMs } satisfies WhistleRequest);
+    }
+  }, [worker, minPassMs]);
+  useEffect(() => {
+    if (worker && maxTokens !== undefined) {
+      worker.postMessage({ type: 'config', maxTokens } satisfies WhistleRequest);
+    }
+  }, [worker, maxTokens]);
+  const endpointOn = endpoint !== undefined;
+  const pauseSeconds = endpoint?.pauseSeconds;
+  useEffect(() => {
+    if (worker) {
+      worker.postMessage({
+        type: 'config',
+        endpoint: endpointOn ? { pauseSeconds } : false,
+      } satisfies WhistleRequest);
+    }
+  }, [worker, endpointOn, pauseSeconds]);
+  useEffect(() => {
+    if (worker) {
+      worker.postMessage({
+        type: 'config',
+        keywords: keywordsKey ? keywordsKey.split('\n') : [],
+      } satisfies WhistleRequest);
+    }
+  }, [worker, keywordsKey]);
 
   // Capture runs only while active; the worker queues audio that arrives before the model is ready.
   useEffect(() => {
@@ -166,29 +223,26 @@ export const useWhistle = ({ track, active, language, keywords, onResult }: UseW
       return;
     }
 
-    const recorder = new MediaStreamRecorder({ mediaStreamTrack: track, config: { interval: CAPTURE_INTERVAL_MS } });
-    let downsampler: Downsampler | undefined;
-    const gate = new NoiseGate();
-    recorder.setOnChunk((chunk) => {
-      downsampler ??= new Downsampler(recorder.wavConfig.sampleRate / WHISTLE_SAMPLE_RATE);
-      const { samples, closed, open } = gate.process(downsampler.process(chunk.data));
-      if (samples.length > 0) {
-        worker.postMessage({ type: 'audio', samples } satisfies WhistleRequest, [samples.buffer]);
+    let stopped = false;
+    const capture = startCapture(track, (samples) => {
+      recording.append(samples);
+      const copy = samples.slice();
+      worker.postMessage({ type: 'audio', samples: copy } satisfies WhistleRequest, [copy.buffer]);
+    }).catch((err) => {
+      if (!stopped) {
+        setStatus('error');
+        setError(err instanceof Error ? err.message : String(err));
       }
-      // A fresh stream per utterance keeps every pass short and stops the decoder carrying words
-      // across the silence.
-      if (closed) {
-        worker.postMessage({ type: 'flush' } satisfies WhistleRequest);
-      }
-      setSpeaking(open);
+      return undefined;
     });
 
-    void recorder.start();
     return () => {
-      setSpeaking(false);
-      void recorder.stop().then(() => worker.postMessage({ type: 'stop' } satisfies WhistleRequest));
+      stopped = true;
+      void capture
+        .then((handle) => handle?.stop())
+        .then(() => worker.postMessage({ type: 'stop' } satisfies WhistleRequest));
     };
-  }, [worker, track, active]);
+  }, [worker, track, active, recording]);
 
-  return { status, error, progress, speaking, stats };
+  return { status, error, progress, stats, recording };
 };

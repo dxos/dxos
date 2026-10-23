@@ -71,6 +71,16 @@ export const skillDefinition: Maker<typeof AppCapabilities.SkillDefinition> = Ca
 );
 
 /**
+ * Module maker contributing the MCP servers a plugin ships. Gated, like skill definitions, on the
+ * assistant plugin's start: the servers exist for its chats.
+ */
+export const mcpServer: Maker<typeof AppCapabilities.McpServer> = Capability$.moduleMaker(
+  'McpServer',
+  AppCapabilities.McpServer,
+  { activatesOn: AppActivationEvents.AssistantStart, environments: ['browser', 'node', 'tauri', 'workerd'] },
+);
+
+/**
  * Module maker contributing operation handlers. Handler sets register eagerly by default: a
  * keyed set is a definition→loader map with a thin closure (definitions carry no
  * implementations), so the operation registry is complete at boot while each handler's BODY

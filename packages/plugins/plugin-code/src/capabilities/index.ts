@@ -20,6 +20,7 @@ export const PluginAsset = AppCapability.pluginAsset({
   content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });
+export const McpServer = AppCapability.mcpServer(() => import('./mcp-server.ts'));
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 export const BuildRunState = Capability.lazyModule(
