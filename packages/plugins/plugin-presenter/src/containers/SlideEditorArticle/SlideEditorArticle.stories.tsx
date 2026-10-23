@@ -12,6 +12,7 @@ import { Filter, Ref } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
@@ -50,7 +51,11 @@ const COLUMNS = ['# Plan', '', '- Design', '- Build', '', '::right::', '', '# Sh
 const CLICKS = ['# Clicks', '', '<v-clicks>', '', '- one', '- two', '- three', '', '</v-clicks>'].join('\n');
 
 /** Edits the presentation's slide at `slide` (default: the first, a two-column slide). */
+/** Attended from the start, as a plank the user just opened. */
+const ATTENDED_ID = 'story';
+
 const DefaultStory = ({ slide: index = 0 }: { slide?: number }) => {
+  const attentionAttributes = useAttentionAttributes(ATTENDED_ID);
   const { space } = useClientStory();
   const [presentation] = useQuery(space?.db, Filter.type(Presentation.Presentation));
   const texts = useQuery(space?.db, Filter.type(Text.Text));
@@ -60,7 +65,12 @@ const DefaultStory = ({ slide: index = 0 }: { slide?: number }) => {
     return <Loading />;
   }
 
-  return <SlideEditorArticle role='article' attendableId='story' subject={slide} />;
+  return (
+    // The article's attention region, as a plank provides it: the formatting toolbar is enabled only while attended.
+    <div className='contents' {...attentionAttributes}>
+      <SlideEditorArticle role='article' attendableId={ATTENDED_ID} subject={slide} />
+    </div>
+  );
 };
 
 const meta = {
@@ -84,7 +94,7 @@ const meta = {
     // The process manager provides the operation invoker the toolbar's navigation uses.
     withPluginManager({ plugins: [ProcessManagerPlugin.make()] }),
     // Outermost, so the plugin manager's atom registry is not replaced by the decorator's own.
-    withAttention(),
+    withAttention(ATTENDED_ID),
   ],
   parameters: {
     layout: 'fullscreen',
