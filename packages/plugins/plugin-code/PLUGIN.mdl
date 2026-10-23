@@ -200,6 +200,24 @@ service BuildAgent
     build(project: CodeProject) → { runId: string, status: string }
 ```
 
+```mdl
+service SpecFs
+  desc: |
+    Local files for spec sync, by absolute path. One interface, two backends:
+    the Tauri fs plugin in the desktop app, and the dev-only route
+    `/__dx/spec-fs` in a Composer dev server, which reads only inside the
+    workspace root and `DX_SPEC_ROOTS` and writes only `.mdl` files. A
+    deployed web app has neither; the sync then reports it unavailable.
+  loading: lazy
+  ops:
+    read(path: string) → string | undefined     # undefined when the file does not exist
+    write(path: string, content: string) → void
+    list(dir: string, suffix: string) → string[] # relative paths; dot-dirs and node_modules skipped
+    roots() → { repo: string, path: string }[]  # the host's own checkouts (none on the desktop)
+  errors:
+    - SpecSyncError: the backend refused the path or the request failed
+```
+
 ## Operations
 
 Phase-1 ops (`verifySpec`, `runBuildAgent`) are stubs until the EDGE build
@@ -387,6 +405,7 @@ op importSpec
   errors:
     - CodeOperationError: not a spec key, no checkout of the repository, or no such file
   effects: [fs, echo:write]
+  requires: [SpecFs]
 ```
 
 ```mdl
@@ -397,6 +416,7 @@ op listLocalSpecs
     (none)
   output: { roots: { repo: string, path: string }[], keys: string[] }
   effects: [fs]
+  requires: [SpecFs]
 ```
 
 ## Skills
@@ -671,7 +691,7 @@ feat F-14: Two-way spec sync with a local checkout
     Linked specs sync both ways while the app runs, so Composer is the viewer
     for specs that live in the repository.
 
-  req F-14.1: One file service, SpecFs, reaches local files on both hosts: the
+  req F-14.1: One file service, service:SpecFs, reaches local files on both hosts: the
               Tauri fs plugin in the desktop app, and a dev-only vite route
               (`/__dx/spec-fs`) in a Composer dev server, the same pattern as
               github:dxos/dxos/packages/plugins/plugin-dev-shell/PLUGIN.mdl#bash.
@@ -1121,6 +1141,22 @@ decision D-14: A verdict is a VerdictCard (status icon, item id, menu: show in s
   affects: [F-16.4]
   why: The list container already provides keyboard navigation and a current item that can follow the spec; a real review exercises every status.
   rejected: One read-only form per verdict, which gave every verdict three labelled rows and no menu.
+```
+
+```mdl
+decision D-15: Local file access is the `service SpecFs` (read, write, list, roots) with its two backends; the operations that touch local files, op:importSpec and op:listLocalSpecs, sit on top of it and declare `requires: [SpecFs]`.
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [SpecFs, importSpec, listLocalSpecs, F-14.1]
+  why: The code already has one SpecFs with a Tauri and a dev-route backend; a service block states that contract once instead of in each operation.
+  rejected: Separate read/write/list operations, which would expose raw file access as agent tools.
+```
+
+```mdl
+decision D-16: Approve [D-15].
+  date: 2026-10-23
+  by: user:dmaretskyi
 ```
 
 ---

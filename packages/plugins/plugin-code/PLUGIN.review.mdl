@@ -122,6 +122,18 @@ verdict BuildAgent: There is no EDGE BuildAgent client; the spec puts it out of 
 ```
 
 ```mdl
+verdict SpecFs: One interface with a Tauri and a dev-route backend; ops, errors and the route's limits match.
+  status: untested
+  evidence:
+    [github:dxos/dxos/packages/plugins/plugin-code/src/sync/spec-fs.ts#getSpecFs,
+     github:dxos/dxos/packages/plugins/plugin-code/src/sync/spec-fs.ts#tauriSpecFs,
+     github:dxos/dxos/packages/apps/composer-app/src/vite/spec-fs.ts#specFsPlugin]
+  note: |
+    The sync tests use an in-memory SpecFs, so neither backend is exercised by a test; the dev
+    route was only checked by hand against a running dev server.
+```
+
+```mdl
 verdict verifySpec: Defined, but the handler is the phase-1 stub with no lint or checks.
   status: partial
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/types/CodeOperation.ts#VerifySpec, github:dxos/dxos/packages/plugins/plugin-code/src/operations/verify-spec.ts]
