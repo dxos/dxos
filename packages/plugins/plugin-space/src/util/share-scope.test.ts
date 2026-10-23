@@ -54,6 +54,18 @@ describe('collectShareScope', () => {
     expect(scope.map((object) => object.id)).toEqual([shared.id, body.id, linked.id]);
   });
 
+  test('carries the parent the object cannot surface without, but not what the parent holds', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Collection.Collection, Text.Text] });
+    const sibling = db.add(Text.make({ content: 'A sibling in the same collection.' }));
+    const shared = db.add(Text.make({ content: 'The shared document.' }));
+    const folder = db.add(Collection.make({ objects: [Ref.make(sibling), Ref.make(shared)] }));
+    Obj.setParent(shared, folder);
+    await db.flush({ indexes: true });
+
+    const scope = await EffectEx.runPromise(collectShareScope(shared));
+    expect(scope.map((object) => object.id)).toEqual([shared.id, folder.id]);
+  });
+
   test('stops at the object cap', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [Collection.Collection, Text.Text] });
     const items = Array.from({ length: 5 }, (_, index) => db.add(Text.make({ content: `Item ${index}` })));

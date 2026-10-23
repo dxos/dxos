@@ -35,6 +35,7 @@ const OTHERS = [
 ];
 const TIMEOUT = 60_000;
 const JOIN_TIMEOUT = 180_000;
+const PROBE_TIMEOUT = 500;
 
 /** A start page standing in for the browser's own: an address field where the link is pasted. */
 const START_PAGE = `<!doctype html>
@@ -117,7 +118,8 @@ const SPACE_READY = 3;
 /**
  * Milestones of opening the link on a fresh browser, in ms from pressing Enter: the app shell, the identity
  * onboarding creates, the space appearing in the client (the join landed), the space ready, and the shared
- * document's text on screen. Polled every 100 ms, so each is accurate to about that.
+ * document's text on screen. Polled every 100 ms, but no probe runs while the page boots, so every stage reached
+ * during the boot reads as the moment it ended.
  */
 const timeOpening = async (page, spaceId) => {
   const timing = {};
@@ -129,17 +131,21 @@ const timeOpening = async (page, spaceId) => {
     if (Date.now() > deadline) {
       throw new Error(`timed out waiting for the shared document on Bob's side: ${JSON.stringify(timing)}`);
     }
-    const state = await page
-      .evaluate((spaceId) => {
-        const client = globalThis.dxos?.client;
-        const space = client?.spaces.get().find((space) => space.id === spaceId);
-        return {
-          identity: !!client?.halo.identity.get(),
-          joined: !!space,
-          state: space?.state.get(),
-        };
-      }, spaceId)
-      .catch(() => ({}));
+    // Bounded: an evaluate issued while the page boots is held until it finishes, which would mark every milestone at once.
+    const state = await Promise.race([
+      page
+        .evaluate((spaceId) => {
+          const client = globalThis.dxos?.client;
+          const space = client?.spaces.get().find((space) => space.id === spaceId);
+          return {
+            identity: !!client?.halo.identity.get(),
+            joined: !!space,
+            state: space?.state.get(),
+          };
+        }, spaceId)
+        .catch(() => ({})),
+      new Promise((resolve) => setTimeout(() => resolve({}), PROBE_TIMEOUT)),
+    ]);
     if (
       await page
         .getByTestId('deck.plank')
@@ -287,13 +293,15 @@ export const steps = [
     run: async ({ peers: { bob }, caption }) => {
       caption(`Bob gets an identity, joins in the background, and sees "${SHARED}"`, 'QA-3 step 3');
       const timing = await timeOpening(bob.page, new URL(shareLink).pathname.split('/')[2]);
-      // Read by whoever runs the flow; the video shows the same numbers in the caption below.
+      // Read by whoever runs the flow.
       console.log(JSON.stringify({ objectShareTiming: timing }));
       await clearChrome(bob);
-      const seconds = (ms) => (ms === undefined ? '–' : `${(ms / 1000).toFixed(1)} s`);
+      // Off the companion toggle `clearChrome` clicked, whose tooltip would otherwise stay over the plank.
+      await bob.page.mouse.move(600, 400);
+      // The stages are not shown: a probe cannot run while the page boots, so they all land when it finishes.
       caption(
-        `Shared document open in ${seconds(timing.documentRendered)} after pasting the link`,
-        `app ${seconds(timing.appBooted)} · identity ${seconds(timing.identity)} · joined ${seconds(timing.joined)} · space ready ${seconds(timing.spaceReady)}`,
+        `Shared document open in ${(timing.documentRendered / 1000).toFixed(1)} s after pasting the link`,
+        `New identity, background join; the other ${OTHERS.length} documents never sync to Bob`,
       );
       await bob.page.waitForTimeout(4_000);
     },

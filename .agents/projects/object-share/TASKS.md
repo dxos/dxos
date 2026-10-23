@@ -38,7 +38,9 @@ ledger is the "Object share" project in the DXOS Composer space._
 ## M5: Demo and landing
 
 - [x] plugin-space `PLUGIN.mdl` QA test for the flow.
-- [ ] Autocue two-peer flow + recorded side-by-side video.
+- [x] Autocue two-peer flow + recorded side-by-side video.
+- [x] Share scope carries each object's strong dependencies (parent, stored type): without its parent collection a
+      guest's index hid the shared document, so the link opened on a plank stuck loading.
 - [ ] Format, lint, typecheck, tests; push.
 
 ## Follow-ups (not v1)

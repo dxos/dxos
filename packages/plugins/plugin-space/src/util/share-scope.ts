@@ -50,9 +50,22 @@ export const findReferencedObjectIds = (value: unknown, spaceId: SpaceId): Entit
 };
 
 /**
+ * Ids of the objects `object` strongly depends on inside `spaceId`: its parent and a type stored in the space. Neither
+ * the host's index nor the client surfaces an object whose strong dependencies are missing, so these must replicate
+ * with it.
+ */
+const findDependencyIds = (object: Obj.Unknown, spaceId: SpaceId): EntityId[] => {
+  const parent = Obj.getParent(object);
+  return [...(parent ? [parent.id] : []), ...findReferencedObjectIds(Obj.getTypeURI(object), spaceId)];
+};
+
+/**
  * The objects a share link for `object` carries: the object first, then everything reachable from it through
- * {@link findReferencedObjectIds}, breadth-first and inside its space, up to `maxObjects`. A reference that does not
- * load in time is left out rather than stalling the link.
+ * {@link findReferencedObjectIds}, breadth-first and inside its space, up to `maxObjects`, together with each one's
+ * strong dependencies ({@link findDependencyIds}). A dependency's own references are not followed: a document's parent
+ * collection would otherwise pull in every sibling. Dependencies come before references, so the cap never leaves an
+ * object without the ones it cannot render without. A reference that does not load in time is left out rather than
+ * stalling the link.
  */
 export const collectShareScope = (
   object: Obj.Unknown,
@@ -65,19 +78,32 @@ export const collectShareScope = (
       return [...scope.values()];
     }
 
-    const queue: Obj.Unknown[] = [object];
+    const load = (id: EntityId) =>
+      Database.load(db.makeRef(EID.make({ spaceId: db.spaceId, entityId: id }))).pipe(
+        Effect.timeout(LOAD_TIMEOUT),
+        Effect.option,
+        Effect.map((target) => (Option.isSome(target) && Obj.isObject(target.value) ? target.value : undefined)),
+      );
+
+    const queue: { object: Obj.Unknown; followReferences: boolean }[] = [{ object, followReferences: true }];
     for (let current = queue.shift(); current && scope.size < maxObjects; current = queue.shift()) {
-      for (const id of findReferencedObjectIds(Obj.toJSON(current), db.spaceId)) {
+      const candidates = [
+        ...findDependencyIds(current.object, db.spaceId).map((id) => ({ id, followReferences: false })),
+        ...(current.followReferences
+          ? findReferencedObjectIds(Obj.toJSON(current.object), db.spaceId).map((id) => ({
+              id,
+              followReferences: true,
+            }))
+          : []),
+      ];
+      for (const { id, followReferences } of candidates) {
         if (scope.has(id) || scope.size >= maxObjects) {
           continue;
         }
-        const target = yield* Database.load(db.makeRef(EID.make({ spaceId: db.spaceId, entityId: id }))).pipe(
-          Effect.timeout(LOAD_TIMEOUT),
-          Effect.option,
-        );
-        if (Option.isSome(target) && Obj.isObject(target.value)) {
-          scope.set(id, target.value);
-          queue.push(target.value);
+        const target = yield* load(id);
+        if (target) {
+          scope.set(id, target);
+          queue.push({ object: target, followReferences });
         }
       }
     }
