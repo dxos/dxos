@@ -45,11 +45,22 @@ const replacer =
     //   }
     // }
 
+    // Buf timestamps carry `seconds` as a bigint, which `JSON.stringify` refuses.
+    if (typeof value === 'bigint') {
+      return value.toString();
+    }
+
     if (typeof value === 'object') {
       if (truncate) {
         if (value instanceof PublicKey) {
           return value.truncate();
         }
+      }
+
+      // Buf keys are messages around bytes, which the viewer would otherwise print without them.
+      if (value?.$typeName === 'dxos.keys.PublicKey' && value.data instanceof Uint8Array) {
+        const key = PublicKey.from(value.data);
+        return truncate ? key.truncate() : key.toHex();
       }
 
       if (value instanceof Uint8Array) {

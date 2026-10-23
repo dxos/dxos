@@ -168,6 +168,29 @@ export type BrainInfo = Schema.Schema.Type<typeof BrainInfo>;
 export const BrainAdmins = Schema.Struct({ adminKeys: Schema.Array(Schema.String) });
 export type BrainAdmins = Schema.Schema.Type<typeof BrainAdmins>;
 
+/** What EDGE answers `GET /compute/brain/:agent/halo` with: what an admin inspects of an agent's identity. */
+export const AgentHalo = Schema.Struct({
+  identity: Schema.Struct({
+    identityDid: Schema.String,
+    identityKey: Schema.String,
+    agentKey: Schema.String,
+    defaultSpaceId: Schema.String,
+    homeSpaceId: Schema.String,
+    agent: Schema.String,
+    label: Schema.String,
+  }),
+  haloSpaceId: Schema.optional(Schema.String),
+  /** `null` for an agent provisioned before EDGE kept its admins. */
+  adminKeys: Schema.NullOr(Schema.Array(Schema.String)),
+  /** The spaces the agent's admins put it in. */
+  joinedSpaceIds: Schema.Array(Schema.String),
+  /** The spaces the agent holds a feed in, its HALO and default space included. */
+  memberSpaceIds: Schema.Array(Schema.String),
+  /** Every credential in the agent's HALO, each a base64 `Credential`. */
+  credentials: Schema.Array(Schema.String),
+});
+export type AgentHalo = Schema.Schema.Type<typeof AgentHalo>;
+
 /**
  * Validates the finalize response rather than asserting its shape.
  *
@@ -765,6 +788,13 @@ export class EdgeHttpClient extends BaseHttpClient {
     const url = new URL(`/compute/brain/${encodeURIComponent(agent)}/admins`, this.baseUrl);
     const response = await this._call(ctx, url, { ...args, method: 'POST', body: { identityKey }, auth: true });
     return Schema.decodeUnknownSync(BrainAdmins)(response);
+  }
+
+  /** The agent's HALO, its admins and its spaces, which only its admins may read; EDGE answers anyone else 404. */
+  public async getAgentHalo(ctx: Context, agent: string, args?: EdgeHttpCallArgs): Promise<AgentHalo> {
+    const url = new URL(`/compute/brain/${encodeURIComponent(agent)}/halo`, this.baseUrl);
+    const response = await this._call(ctx, url, { ...args, method: 'GET', auth: true });
+    return Schema.decodeUnknownSync(AgentHalo)(response);
   }
 
   //
