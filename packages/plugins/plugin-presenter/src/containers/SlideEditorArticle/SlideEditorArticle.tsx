@@ -29,6 +29,7 @@ import {
   documentSlots,
   formattingListener,
 } from '@dxos/ui-editor';
+import { mx } from '@dxos/ui-theme';
 
 import { type BackgroundSettings, type SlideInsert, SlideToolbar } from '#components';
 import { slideEditorSyncAtom, useObjectOptions } from '#hooks';
@@ -108,8 +109,12 @@ const SlideEditorContent = ({ subject }: SlideEditorContentProps) => {
   const extensions = useMemo(
     () => [
       createBasicExtensions({ lineWrapping: true }),
-      // Document margins, as the markdown editor has, so the slide reads at the same measure.
-      createThemeExtensions({ themeMode, slots: documentSlots }),
+      // Document margins, as the markdown editor has, so the slide reads at the same measure; the inline inset
+      // matches the toolbars' (their inset plus a button's padding), so text starts under the first icon.
+      createThemeExtensions({
+        themeMode,
+        slots: { content: { className: mx(documentSlots?.content?.className, 'px-2!') } },
+      }),
       createMarkdownExtensions(),
       slideHighlight(),
       // The scrollbar's space is always reserved (on both edges, so the document column stays centred under the

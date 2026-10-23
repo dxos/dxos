@@ -51,6 +51,10 @@ export const slideHighlight = (): Extension => [
     { decorations: (plugin) => plugin.decorations },
   ),
   EditorView.baseTheme({
+    // DSL markup is code, not prose, so it reads in the code font (the notes stay prose); descendants too, since the
+    // markdown highlighter wraps the same text in spans that set their own font.
+    '.cm-slide-frontmatter, .cm-slide-frontmatter *, .cm-slide-slot, .cm-slide-slot *, .cm-slide-tag, .cm-slide-tag *, .cm-slide-embed, .cm-slide-embed *':
+      { fontFamily: 'var(--font-mono)' },
     '.cm-slide-frontmatter': { color: 'var(--color-fg-muted)' },
     '.cm-slide-frontmatter-delimiter': { color: 'var(--color-fg-subtle)' },
     '.cm-slide-frontmatter-key': { color: 'var(--color-accent-text)' },
