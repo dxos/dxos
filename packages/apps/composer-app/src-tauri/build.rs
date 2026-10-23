@@ -48,6 +48,8 @@ fn main() {
             "defer_exit",
             "confirm_exit",
             "cancel_exit",
+            "fs_canonicalize",
+            "fs_read_link",
             "list_audio_inputs",
             "set_preferred_audio_input",
             "start_microphone_bridge",

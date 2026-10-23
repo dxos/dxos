@@ -90,6 +90,8 @@
     "allow-defer-exit",
     "allow-confirm-exit",
     "allow-cancel-exit",
+    "allow-fs-canonicalize",
+    "allow-fs-read-link",
     {
       "identifier": "http:default",
       "allow": [

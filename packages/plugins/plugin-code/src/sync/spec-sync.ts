@@ -92,6 +92,10 @@ export const syncSpec = Effect.fnUntraced(
   ) {
     const key = getSpecKey(spec);
     const path = key && resolvePath(roots, key);
+    const confined = FileSystem.within(
+      fs,
+      roots.map((root) => root.path),
+    );
     if (!path) {
       return { status: 'unresolved' } satisfies SyncResult;
     }
@@ -99,7 +103,7 @@ export const syncSpec = Effect.fnUntraced(
     if (!text) {
       return { status: 'synced', path } satisfies SyncResult;
     }
-    const disk = yield* fs.read(path);
+    const disk = yield* confined.read(path);
     if (disk === undefined) {
       return { status: 'missing', path } satisfies SyncResult;
     }
@@ -109,7 +113,7 @@ export const syncSpec = Effect.fnUntraced(
     if (action === 'pull') {
       Doc.updateText(text, ['content'], disk);
     } else if (action === 'push') {
-      yield* fs.write(path, local);
+      yield* confined.write(path, local);
     }
     if (status === 'conflict') {
       log.warn('spec changed in Composer and on disk; disk wins', { path });

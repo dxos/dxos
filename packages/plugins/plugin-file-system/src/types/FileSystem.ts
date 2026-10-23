@@ -8,6 +8,7 @@ import * as Effect from 'effect/Effect';
 
 import { BaseError } from '@dxos/errors';
 import { isTauri } from '@dxos/util';
+import * as RealPath from '@dxos/util/RealPath';
 
 /** The dev server's route; must match `fileSystemPlugin` in composer-app's vite config. */
 export const ROUTE = '/__dx/fs';
@@ -148,6 +149,50 @@ const devFileSystem = (): FileSystem => {
         return response.status === 404 ? [] : (await response.json()).files;
       }),
     roots,
+  };
+};
+
+/** Real-path lookups through the desktop app's `fs_canonicalize` and `fs_read_link` commands (`src-tauri/src/real_path.rs`). */
+const tauriResolver: RealPath.Resolver = {
+  canonicalize: async (path) => {
+    const { invoke } = await import('@tauri-apps/api/core');
+    return (await invoke<string | null>('fs_canonicalize', { path })) ?? undefined;
+  },
+  readLink: async (path) => {
+    const { invoke } = await import('@tauri-apps/api/core');
+    return (await invoke<string | null>('fs_read_link', { path })) ?? undefined;
+  },
+};
+
+/**
+ * `fs` confined to `roots`: every read, write, removal and listing goes to the path's real path (symlinks followed),
+ * and fails when that lies outside the roots. Callers apply it to paths that come from document text, since a
+ * symlink in a checkout can alias a file outside it. Without a `resolver` the dev backend is returned unchanged,
+ * because its route already applies the same check with the server's roots; the Tauri backend has no such guard.
+ */
+export const within = (
+  fs: FileSystem,
+  roots: readonly string[],
+  resolver: RealPath.Resolver | undefined = fs.kind === 'tauri' ? tauriResolver : undefined,
+): FileSystem => {
+  if (!resolver) {
+    return fs;
+  }
+  const confine = (path: string): Effect.Effect<string, FileSystemError> =>
+    attempt(`Resolve failed: ${path}`, () => RealPath.contain(resolver, roots, path)).pipe(
+      Effect.flatMap((real) =>
+        real === undefined
+          ? Effect.fail(new FileSystemError({ message: `Path is outside the allowed roots: ${path}` }))
+          : Effect.succeed(real),
+      ),
+    );
+
+  return {
+    ...fs,
+    read: (path) => confine(path).pipe(Effect.flatMap((real) => fs.read(real))),
+    write: (path, content) => confine(path).pipe(Effect.flatMap((real) => fs.write(real, content))),
+    remove: (path) => confine(path).pipe(Effect.flatMap((real) => fs.remove(real))),
+    list: (dir, suffix) => confine(dir).pipe(Effect.flatMap((real) => fs.list(real, suffix))),
   };
 };
 

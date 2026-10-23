@@ -1,0 +1,11 @@
+# Automatically generated - DO NOT EDIT!
+
+[[permission]]
+identifier = "allow-fs-canonicalize"
+description = "Enables the fs_canonicalize command without any pre-configured scope."
+commands.allow = ["fs_canonicalize"]
+
+[[permission]]
+identifier = "deny-fs-canonicalize"
+description = "Denies the fs_canonicalize command without any pre-configured scope."
+commands.deny = ["fs_canonicalize"]

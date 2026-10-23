@@ -43,7 +43,10 @@ export const useLocalTexts = (keys: readonly string[]): ReadonlyMap<string, stri
       setTexts(new Map());
       return;
     }
-    const fs = FileSystem.get();
+    const fs = FileSystem.within(
+      FileSystem.get(),
+      roots.map(({ path }) => path),
+    );
     const targets = keysKey.split('\n').flatMap((raw) => {
       const key = parseSourceKey(raw);
       const path = key && resolvePath(roots, key);

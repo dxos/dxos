@@ -18,8 +18,12 @@ const handler: Operation.WithHandler<typeof CodeOperation.ListLocalSpecs> = Code
     Effect.fn(function* () {
       const fs = FileSystem.get();
       const roots = yield* resolveRoots(fs, yield* configuredRepos);
+      const confined = FileSystem.within(
+        fs,
+        roots.map((root) => root.path),
+      );
       const keys = yield* Effect.forEach(roots, (root) =>
-        fs.list(root.path, '.mdl').pipe(
+        confined.list(root.path, '.mdl').pipe(
           Effect.mapError((cause) => new CodeOperationError({ cause })),
           Effect.map((paths) =>
             paths

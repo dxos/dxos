@@ -51,7 +51,11 @@ const handler: Operation.WithHandler<typeof CodeOperation.ImportSpec> = CodeOper
           }),
         );
       }
-      const content = yield* fs.read(path).pipe(Effect.mapError((cause) => new CodeOperationError({ cause })));
+      const confined = FileSystem.within(
+        fs,
+        roots.map((root) => root.path),
+      );
+      const content = yield* confined.read(path).pipe(Effect.mapError((cause) => new CodeOperationError({ cause })));
       if (content === undefined) {
         return yield* Effect.fail(new CodeOperationError({ message: `File not found: ${path}` }));
       }
