@@ -64,10 +64,10 @@ Design: [DESIGN.md](./DESIGN.md).
 ## Phase 3: Markdown renderer
 
 - [ ] **Embedded surfaces** — `<Surface ref="echo:///<id>" role="slide" />` inside a slide (any slot), with the linked-section fallback chain; story `plugins/plugin-presenter/components/SlideRenderer` → `EmbeddedSurface` (text + a live object in `two-cols`).
-- [ ] **DXOS frontmatter extension** — `backgroundVideo` (loop, muted, autoplay), `backgroundOpacity`, `backgroundPosition`; convert `testing/deck.md` and `testing/2025-05-20-effect.md` from reveal syntax.
+- [x] **DXOS frontmatter extension** — `backgroundVideo` (loop, muted, autoplay), `backgroundOpacity`, `backgroundPosition`; convert `testing/deck.md` and `testing/2025-05-20-effect.md` from reveal syntax.
 - [ ] **unified pipeline** → React for the Slidev subset; layouts, `::slot::`, `<v-click*>`, notes.
 - [ ] **Evaluate `@slidev/parser`** for the preview `---` split (browser-safe?).
-- [ ] **Migrate** reveal syntax in test decks; reveal behind a setting until parity, then delete.
+- [x] **Migrate** reveal syntax in test decks (done: `deck.md`, `2025-05-20-effect.md`); reveal behind a setting until parity, then delete.
 - [ ] **Print stylesheet**.
 
 ## Phase 4: Slide surfaces

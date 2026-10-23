@@ -150,6 +150,22 @@ export const TwoColsHeader = layoutStory(
 
 export const Image = layoutStory('image', slide({ layout: 'image', image: IMAGE }, '# Over image'), 'h1', 'Over image');
 
+/** Text over a photo gets a scrim; a content-free image slide does not. */
+export const ImageScrim: Story = {
+  args: { content: slide({ layout: 'image', image: IMAGE }, '# Over image') },
+  play: async ({ canvasElement }) => {
+    await query(canvasElement, '[data-layout="image"] [data-scrim]');
+  },
+};
+
+export const ImageNoScrim: Story = {
+  args: { content: slide({ layout: 'image', image: IMAGE }) },
+  play: async ({ canvasElement }) => {
+    await query(canvasElement, '[data-layout="image"]');
+    await expect(canvasElement.querySelector('[data-scrim]')).toBeNull();
+  },
+};
+
 export const ImageLeft = layoutStory(
   'image-left',
   slide({ layout: 'image-left', image: IMAGE }, '# Image left', '', 'Content on the right.'),

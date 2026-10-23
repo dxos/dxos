@@ -13,6 +13,8 @@ import { useClientStory } from '@dxos/react-client/testing';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Loading } from '@dxos/react-ui/testing';
 
+import EFFECT_TALK from '../../../testing/2025-05-20-effect.md?raw';
+import DXOS_DECK from '../../../testing/deck.md?raw';
 import {
   ATTENDED_ID,
   presentationStoryDecorators,
@@ -37,15 +39,17 @@ const DocumentStory = () => {
   );
 };
 
+const withDocument = (name: string, content: string) =>
+  presentationStoryDecorators({
+    onCreateSpace: async ({ space }) => {
+      space.db.add(Markdown.make({ name, content }));
+      await space.db.flush({ indexes: true });
+    },
+  });
+
 const meta = {
   title: 'plugins/plugin-presenter/containers/DocumentArticle',
   render: DocumentStory,
-  decorators: presentationStoryDecorators({
-    onCreateSpace: async ({ space }) => {
-      space.db.add(Markdown.make({ name: 'Deck', content: DECK }));
-      await space.db.flush({ indexes: true });
-    },
-  }),
   parameters: presentationStoryParameters,
 } satisfies Meta<typeof DocumentStory>;
 
@@ -57,6 +61,7 @@ const LOAD_TIMEOUT = { timeout: 10_000 };
 
 /** The document's `---`-separated slides page and step in place; `f` requests presenting. */
 export const Default: Story = {
+  decorators: withDocument('Deck', DECK),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText('1 / 3', undefined, LOAD_TIMEOUT)).toBeVisible();
@@ -69,5 +74,44 @@ export const Default: Story = {
     await userEvent.keyboard('f');
     // The overlay pager shows only on pointer movement, so fullscreen is read from the shell's fixed frame.
     await waitFor(() => expect(canvasElement.querySelector('.fixed.inset-0')).not.toBeNull());
+  },
+};
+
+const nextSlide = async (canvas: ReturnType<typeof within>, position: string) => {
+  await userEvent.keyboard('{ArrowRight}');
+  await expect(await canvas.findByText(position)).toBeVisible();
+};
+
+/** The DXOS deck: a video-backed opener, then the logotype slide. */
+export const DXOSDeck: Story = {
+  decorators: withDocument('DXOS', DXOS_DECK),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByText('1 / 11', undefined, LOAD_TIMEOUT)).toBeVisible();
+    await waitFor(() => expect(canvas.getByTestId('presenter.deck')).toHaveFocus());
+    const video = await waitFor(() => {
+      const element = canvasElement.querySelector('[data-slide-background] video');
+      if (!(element instanceof HTMLVideoElement)) {
+        throw new Error('Missing background video');
+      }
+      return element;
+    });
+    await expect(video.getAttribute('src')).toBe('https://media.dxos.network/DXOS.mp4');
+    await nextSlide(canvas, '2 / 11');
+    await expect(canvasElement.querySelector('img[src$="dxos-logotype-blue.png"]')).not.toBeNull();
+  },
+};
+
+/** The Effect talk: 17 slides, including a code slide. */
+export const EffectTalk: Story = {
+  decorators: withDocument('Effect', EFFECT_TALK),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByText('1 / 17', undefined, LOAD_TIMEOUT)).toBeVisible();
+    await waitFor(() => expect(canvas.getByTestId('presenter.deck')).toHaveFocus());
+    for (let slide = 2; slide <= 12; slide++) {
+      await nextSlide(canvas, `${slide} / 17`);
+    }
+    await waitFor(() => expect(canvasElement.querySelector('[data-slide] pre')).not.toBeNull());
   },
 };

@@ -89,10 +89,13 @@ const TwoColsHeaderLayout = ({ slots }: LayoutProps) => (
   </Frame>
 );
 
-// The picture itself is painted by `SlideBackground`; any content sits on top of it.
+// The picture itself is painted by `SlideBackground`; a scrim keeps any content on top of it readable.
 const ImageLayout = ({ slots }: LayoutProps) => (
   <Frame name='image' className={mx('flex flex-col', theme.padding)}>
-    <Slot name='default'>{slots.default}</Slot>
+    {slots.default && <div data-scrim aria-hidden className='dx-cover pointer-events-none bg-black/50' />}
+    <Slot name='default' className='relative'>
+      {slots.default}
+    </Slot>
   </Frame>
 );
 

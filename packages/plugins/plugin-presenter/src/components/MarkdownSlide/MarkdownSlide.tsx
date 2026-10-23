@@ -41,8 +41,11 @@ export const MarkdownSlide = ({ classNames, content, step, onClicks, renderSurfa
 
   const slots = useMemo((): Record<SlotName, ReactNode> => {
     const current = step ?? Number.POSITIVE_INFINITY;
+    // An empty slot is null so layouts can tell content from nothing.
     const render = (slot: SlotName) =>
-      toJsxRuntime(prepareRoot(parsed.slots[slot], current), { Fragment, jsx, jsxs, components });
+      hasContent(parsed.slots[slot])
+        ? toJsxRuntime(prepareRoot(parsed.slots[slot], current), { Fragment, jsx, jsxs, components })
+        : null;
     return { default: render('default'), left: render('left'), right: render('right') };
   }, [parsed, step]);
 
@@ -201,6 +204,9 @@ const classList = (value: Properties[string]): string[] =>
 
 const textOf = (node: ElementContent): string =>
   node.type === 'text' ? node.value : node.type === 'element' ? node.children.map(textOf).join('') : '';
+
+const hasContent = (root: Root): boolean =>
+  root.children.some((child) => child.type !== 'text' || child.value.trim().length > 0);
 
 const prepareRoot = (root: Root, step: number): Root => ({
   ...root,
