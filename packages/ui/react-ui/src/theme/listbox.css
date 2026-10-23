@@ -58,8 +58,14 @@
     min-width: 0;
     padding: var(--dx-gap-size);
   }
-  /* A tile is a card, so it is outlined rather than filled: neutral under the pointer, the focus colour when selected. */
-  .dx-listbox-tile:hover {
+  /*
+   * A tile is a card, so its states are one outline around it rather than a fill or the rows' inset ring: neutral when
+   * current (the keys' tile) or under the pointer, the focus colour when selected.
+   */
+  .dx-row.dx-listbox-tile {
+    --dx-row-ring-color: transparent;
+  }
+  .dx-listbox-tile:is(:hover, [data-highlighted]) {
     outline: 2px solid var(--color-neutral-border);
   }
   .dx-listbox-tile:is([aria-selected='true'], [data-selected]) {
