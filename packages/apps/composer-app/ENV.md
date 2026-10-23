@@ -32,6 +32,7 @@ preview; override with `DX_EDGE_BASE_URL` to reach EDGE dev or a local EDGE.
   `production`, `staging` and `preview`, `op://eng-dev/com.posthog/PROJECT_TOKEN` for `dev`.
   `secrets.required` makes `wrangler deploy` and `versions upload` refuse a Worker without it. Push it with
   `op read -n <ref> | wrangler secret put POSTHOG_PROJECT_TOKEN --env <env>`; for `dev` use
-  `wrangler versions secret put`, since per-PR deploys upload versions to that Worker.
+  `wrangler versions secret put POSTHOG_PROJECT_TOKEN --env dev`, since per-PR deploys upload versions to
+  that Worker.
   [`scripts/secrets.mjs`](../../../scripts/secrets.mjs) (`pnpm secrets`) does not push it: it reads only
   the legacy "dxos app worker secrets" item.
