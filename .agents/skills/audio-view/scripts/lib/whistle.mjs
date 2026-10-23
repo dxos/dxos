@@ -13,11 +13,11 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runInThisContext } from 'node:vm';
 
-import { Endpointer } from '../../../../../packages/plugins/plugin-transcription/src/stories/whistle/endpoint.ts';
+import { Endpointer } from '../../../../../packages/plugins/plugin-transcription/src/whistle/endpoint.ts';
 import { SAMPLE_RATE } from './audio.mjs';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../../../..');
-const PROTOCOL = join(REPO_ROOT, 'packages/plugins/plugin-transcription/src/stories/whistle/protocol.ts');
+const PROTOCOL = join(REPO_ROOT, 'packages/plugins/plugin-transcription/src/whistle/protocol.ts');
 const CACHE_DIR = join(homedir(), '.cache/dxos/whistle');
 const OUT_CAPACITY = 256 * 1024;
 
