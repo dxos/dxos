@@ -458,6 +458,8 @@ export class EchoHost extends Resource {
     await this.indexStatus.opened(() =>
       RuntimeProvider.runPromise(this._runtime)(countIndexBacklog({ pin, spaceIds: this._spaceStateManager.spaceIds })),
     );
+    // A released document's bytes may already be stored, and a pass skipped it while it was quarantined.
+    this._automergeHost.documentReleased.on(this._ctx, () => this._indexScheduler.schedule('document-released'));
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
       const documentIds = this.#applySyncScope(e);
       const previous = this._spaceDocumentIds.get(e.spaceId);

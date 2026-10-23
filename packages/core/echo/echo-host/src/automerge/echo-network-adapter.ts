@@ -49,6 +49,8 @@ export type EchoNetworkAdapterProps = {
   onCollectionStateReceived: (collectionId: string, peerId: PeerId, state: unknown) => void;
   /** Invoked when a replicator connection opens (including after reconnect). */
   onConnectionOpen?: () => void;
+  /** Documents whose inbound changes are dropped, so a quarantined document is never stored. */
+  isDocumentBlocked?: (documentId: DocumentId) => boolean;
   /** What a connected peer gaining access to more spaces does: re-announce it, or run this handler instead. */
   onConnectionAuthScopeChanged: 'reannounce-peer' | ((peerId: PeerId) => void);
   monitor?: NetworkDataMonitor;
@@ -291,6 +293,12 @@ export class EchoNetworkAdapter extends NetworkAdapter {
         documentId: amMessage.documentId as DocumentId,
         peerId: connectionEntry.connection.peerId as PeerId,
       });
+    }
+
+    // Mirrors Subduction's `authorizePut`: under classical sync a pushed change would otherwise be stored.
+    if (amMessage.type === 'sync' && this._params.isDocumentBlocked?.(amMessage.documentId as DocumentId)) {
+      log('dropped sync message for a blocked document', { documentId: amMessage.documentId });
+      return;
     }
 
     if (isCollectionQueryMessage(message)) {
