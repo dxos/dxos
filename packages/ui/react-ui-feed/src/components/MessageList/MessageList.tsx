@@ -73,6 +73,11 @@ export type MessageListController = {
 type MessageListContextValue = {
   /** The feed's model: messages, identity, stops, streaming, iteration. The one source (SPEC F-7). */
   model: FeedModel;
+  /**
+   * The model's rows as of this render: a reorder keeps the model, the count and the mounted range, so without it the
+   * viewport would keep rows the window no longer places and its measurement would never settle.
+   */
+  items: readonly Message.Message[];
   renderer: MessageRenderer;
   registry?: XmlWidgetRegistry;
   /** The block widget for an object embedded as a card (`![label](echo://…)`); the host supplies one that can render a card. */
@@ -537,6 +542,7 @@ const MessageListRoot = ({
       <WidgetStateProvider store={widgetStore}>
         <MessageListProvider
           model={model}
+          items={model.items}
           renderer={renderer}
           registry={registry}
           objectImage={objectImage}

@@ -18,6 +18,7 @@ import * as Tracer from 'effect/Tracer';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
+import * as Trace from '@dxos/compute/Trace';
 import { Context as DxosContext } from '@dxos/context';
 import { Database } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -95,11 +96,12 @@ export const make = ({
       if (options?.on === 'edge' && options.spaceId === undefined) {
         return yield* Effect.die(new Error(`Operation '${op.meta.key}' requested edge execution without a spaceId.`));
       }
+      const parentThread = yield* Trace.CurrentThread;
       const handle = yield* Process.spawn(OperationProcess.make(op), input, {
         ...(detached ? { parentProcessId: undefined } : {}),
         // Spread only when set: an explicit `undefined` would override the origin a parent passes down.
         ...(origin !== undefined ? { origin } : {}),
-        traceMeta: options?.tracing,
+        traceMeta: parentThread === undefined ? options?.tracing : { ...options?.tracing, parentThread },
         // Notifications ride the process manager: forward `notify` onto the spawned process's params.
         notify: options?.notify,
         environment: {

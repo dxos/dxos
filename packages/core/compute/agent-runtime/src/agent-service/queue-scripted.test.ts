@@ -10,17 +10,18 @@ import * as Schema from 'effect/Schema';
 import { expect } from 'vitest';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import { Alarm, SessionStore, isConsumed, isQueued } from '@dxos/assistant';
+import { Alarm, SessionStore, TrajectoryStore } from '@dxos/assistant';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as ComputeAgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
-import { type Database, Feed, Filter, Obj } from '@dxos/echo';
+import { type Database, Feed, Obj } from '@dxos/echo';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
+import { type Trajectory } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
 
 import { AssistantTestLayer } from '../testing/index.ts';
@@ -134,14 +135,27 @@ const waitForAlarmAcked = (feed: Feed.Feed, alarmId: string) =>
     });
   });
 
+/**
+ * The feed as the assertions read it: the conversation the model sees, the prompts people wrote (each a queued user
+ * message), and which prompts and alarms a turn consumed or fired.
+ */
 const readFeed = (feed: Feed.Feed) =>
   Effect.gen(function* () {
-    const store = new SessionStore();
-    const items = yield* Feed.query(feed, Filter.everything()).run;
-    const messages = items.filter(Obj.instanceOf(Message.Message));
-    const pending = yield* store.loadPending(feed);
-    return { items, messages, ...pending };
+    const events = yield* TrajectoryStore.read(feed);
+    const messages = yield* TrajectoryStore.history(feed);
+    const pending = yield* new SessionStore().loadPending(feed);
+    const prompts = events.filter((event) => event.payload._tag === 'message' && event.sender.role === 'user');
+    const consumed = new Set(
+      events.flatMap((event) => (event.payload._tag === 'promptConsume' ? [event.payload.message] : [])),
+    );
+    const fired = new Set(events.flatMap((event) => (event.payload._tag === 'alarmFire' ? [event.payload.alarm] : [])));
+    return { events, messages, prompts, consumed, fired, ...pending };
   });
+
+const promptText = (event: Trajectory.Event) =>
+  event.payload._tag === 'message'
+    ? event.payload.blocks.flatMap((block) => (block._tag === 'text' ? [block.text] : [])).join('\n')
+    : '';
 
 describe('AgentProcess residency (scripted)', () => {
   it.effect(
@@ -180,25 +194,24 @@ describe('AgentProcess residency (scripted)', () => {
 
 describe('AgentProcess input queue (scripted)', () => {
   it.effect(
-    'a submitted prompt is queued on the feed, then acked by the turn that consumes it',
+    'a submitted prompt is queued on the feed, then consumed by its turn',
     Effect.fnUntraced(
       function* (_) {
         const session = yield* AgentService.createSession();
         yield* session.submitPrompt('What is a feed?');
         yield* session.waitForCompletion();
 
-        const { messages, pendingMessages } = yield* readFeed(session.feed);
+        const { messages, pendingMessages, prompts, consumed } = yield* readFeed(session.feed);
 
-        // Nothing left waiting, and every queue entry is marked consumed.
+        // Nothing left waiting, and every prompt was consumed by a turn.
         expect(pendingMessages).toEqual([]);
-        const entries = messages.filter(isQueued);
-        expect(entries.length).toBeGreaterThan(0);
-        for (const entry of entries) {
-          expect(isConsumed(entry)).toBe(true);
+        expect(prompts.length).toBeGreaterThan(0);
+        for (const prompt of prompts) {
+          expect(consumed.has(prompt.id)).toBe(true);
         }
 
-        // The prompt reached the model, carried by the turn's own user message.
-        expect(promptTexts(messages)).toContain('What is a feed?');
+        // The prompt reached the model once, where the turn consumed it.
+        expect(promptTexts(messages).filter((text) => text === 'What is a feed?')).toHaveLength(1);
       },
       Effect.provide(replyLayer()),
       TestHelpers.provideTestContext,
@@ -207,7 +220,7 @@ describe('AgentProcess input queue (scripted)', () => {
   );
 
   it.effect(
-    "a prompt's sender is carried onto the turn's user message",
+    "a prompt's sender reaches the model with it",
     Effect.fnUntraced(
       function* (_) {
         const session = yield* AgentService.createSession();
@@ -215,11 +228,8 @@ describe('AgentProcess input queue (scripted)', () => {
         yield* session.waitForCompletion();
 
         const { messages } = yield* readFeed(session.feed);
-        const turn = messages.find(
-          (message) =>
-            message.sender.role === 'user' && !isQueued(message) && Message.extractText(message) === 'The fix landed.',
-        );
-        expect(turn?.sender.name).toBe('Dima');
+        const prompt = messages.find((message) => Message.extractText(message) === 'The fix landed.');
+        expect(prompt?.sender.name).toBe('Dima');
       },
       Effect.provide(replyLayer()),
       TestHelpers.provideTestContext,
@@ -237,16 +247,16 @@ describe('AgentProcess input queue (scripted)', () => {
         yield* session.submitPrompt('third');
         yield* session.waitForCompletion();
 
-        const { messages, pendingMessages, pendingAlarms } = yield* readFeed(session.feed);
+        const { messages, pendingMessages, pendingAlarms, prompts, consumed } = yield* readFeed(session.feed);
 
         expect(pendingMessages).toEqual([]);
         expect(pendingAlarms).toEqual([]);
-        // Each queue entry is consumed, and the queue drained in submission order.
-        const queuedOrder = messages.filter(isQueued).map((message) => Message.extractText(message));
-        expect(Array.from(new Set(queuedOrder))).toEqual(['first', 'second', 'third']);
-        for (const entry of messages.filter(isQueued)) {
-          expect(isConsumed(entry)).toBe(true);
+        // Each prompt is consumed, and the conversation took them in submission order.
+        expect(prompts.map(promptText)).toEqual(['first', 'second', 'third']);
+        for (const prompt of prompts) {
+          expect(consumed.has(prompt.id)).toBe(true);
         }
+        expect(promptTexts(messages)).toEqual(['first', 'second', 'third']);
       },
       Effect.provide(replyLayer()),
       TestHelpers.provideTestContext,
@@ -300,11 +310,11 @@ describe('AgentProcess input queue (scripted)', () => {
         yield* Deferred.await(gateStarted);
         yield* session.submitPrompt('cancel me');
 
-        // Cancel is a plain feed removal, which takes the item out of the queue projection.
+        // Cancelling appends a `promptCancel`, which takes the prompt out of the queue.
         const during = yield* readFeed(session.feed);
         const cancelling = during.pendingMessages.filter((message) => Message.extractText(message) === 'cancel me');
         expect(cancelling.length).toBeGreaterThan(0);
-        yield* Feed.remove(session.feed, cancelling);
+        yield* Effect.forEach(cancelling, (message) => new SessionStore().ack(session.feed, message));
 
         yield* Deferred.succeed(gateRelease, undefined);
         yield* session.waitForCompletion();
@@ -349,7 +359,7 @@ describe('AgentProcess input queue (scripted)', () => {
 
 describe('AgentProcess alarms (scripted)', () => {
   it.effect(
-    'a due alarm wakes the agent, is acked, and leaves nothing pending',
+    'a due alarm wakes the agent, is fired, and leaves nothing pending',
     Effect.fnUntraced(
       function* (_) {
         const session = yield* AgentService.createSession();
@@ -363,9 +373,9 @@ describe('AgentProcess alarms (scripted)', () => {
         yield* session.submitPrompt('starting work');
         yield* session.waitForCompletion();
 
-        const { messages, pendingAlarms } = yield* readFeed(session.feed);
+        const { messages, pendingAlarms, fired } = yield* readFeed(session.feed);
         expect(pendingAlarms).toEqual([]);
-        expect(isConsumed(alarm)).toBe(true);
+        expect(fired.has(alarm.id)).toBe(true);
         // The reminder reached the model in the wake-up prompt.
         expect(promptTexts(messages).join('\n')).toContain('check the build');
       },
@@ -391,9 +401,9 @@ describe('AgentProcess alarms (scripted)', () => {
         // alive to fire it and never settles. Wait for the turn's reply instead.
         yield* waitForQueueDrained(session.feed);
 
-        const { messages, pendingAlarms } = yield* readFeed(session.feed);
+        const { messages, pendingAlarms, fired } = yield* readFeed(session.feed);
         expect(pendingAlarms.map((entry) => entry.id)).toEqual([alarm.id]);
-        expect(isConsumed(alarm)).toBe(false);
+        expect(fired.has(alarm.id)).toBe(false);
         expect(promptTexts(messages).join('\n')).not.toContain('much later');
       },
       Effect.provide(replyLayer()),
@@ -421,10 +431,10 @@ describe('AgentProcess alarms (scripted)', () => {
         // The `later` alarm keeps the process alive, so poll for the due one being consumed.
         yield* waitForAlarmAcked(session.feed, due.id);
 
-        const { messages, pendingAlarms } = yield* readFeed(session.feed);
+        const { pendingAlarms, fired } = yield* readFeed(session.feed);
         // Setting the second alarm did not replace the first (the old single-cell behaviour).
         expect(pendingAlarms.map((entry) => entry.id)).toEqual([later.id]);
-        expect(isConsumed(due)).toBe(true);
+        expect(fired.has(due.id)).toBe(true);
       },
       Effect.provide(replyLayer()),
       TestHelpers.provideTestContext,
@@ -448,9 +458,9 @@ describe('AgentProcess alarms (scripted)', () => {
         yield* session.submitPrompt('go');
         yield* session.waitForCompletion();
 
-        const { messages, pendingAlarms } = yield* readFeed(session.feed);
+        const { messages, pendingAlarms, fired } = yield* readFeed(session.feed);
         expect(pendingAlarms).toEqual([]);
-        expect(isConsumed(alarm)).toBe(false);
+        expect(fired.has(alarm.id)).toBe(false);
         expect(promptTexts(messages).join('\n')).not.toContain('cancelled');
       },
       Effect.provide(replyLayer()),

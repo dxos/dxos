@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import type * as acp from '@agentclientprotocol/sdk';
+import { createWebSocketStream } from '@agentclientprotocol/sdk/experimental/ws-client';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import type * as Exit from 'effect/Exit';
@@ -14,9 +15,10 @@ import * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 
 import { type MakeTurnProducer, type TurnRequest } from '@dxos/agent-runtime';
-import { AiAssistantError, type Chat } from '@dxos/assistant';
+import { AiAssistantError, type Chat, TrajectoryStore } from '@dxos/assistant';
 import * as Trace from '@dxos/compute/Trace';
-import { type Database, Feed, Obj } from '@dxos/echo';
+import { type Database, type Feed, Obj } from '@dxos/echo';
+import { Reducer, Trajectory } from '@dxos/trajectory';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { AGENT_KEY_PREFIX } from '../constants.ts';
@@ -159,6 +161,19 @@ export type AgentOptions = {
   device?: () => string | undefined;
 };
 
+/**
+ * Connects to an agent helper the host started itself (a demo, a test harness) rather than the one Composer launches:
+ * its `port` and `token` are known up front.
+ */
+export const connectTo =
+  ({ port, token, agent }: { port: number; token: string; agent: string }): AgentOptions['connect'] =>
+  (cwd, toolsToken) =>
+    Effect.succeed(
+      createWebSocketStream(Protocol.acpUrl({ port, agent, cwd, ...(toolsToken ? { mcpToken: toolsToken } : {}) }), {
+        protocols: [Protocol.SUBPROTOCOL, Protocol.tokenProtocol(token)],
+      }),
+    );
+
 type TurnEvent =
   | { _tag: 'update'; update: acp.SessionUpdate }
   | { _tag: 'permission'; request: acp.RequestPermissionRequest }
@@ -206,6 +221,8 @@ export const runTurn = (
     const cwd = yield* options.workspace(chat);
     const resume = sessionIdOf(chat, options.id);
     const produced: Message.Message[] = [];
+    const resumed = yield* TrajectoryStore.resumeInterrupted(feed, request.source);
+    const turn = yield* TrajectoryStore.beginTurn(feed, { model: request.model, thread: request.thread });
     const append = (messages: Message.Message[]) =>
       Effect.gen(function* () {
         if (messages.length === 0) {
@@ -221,7 +238,7 @@ export const runTurn = (
           }
         }
         produced.push(...messages);
-        yield* Feed.append(feed, messages);
+        yield* TrajectoryStore.appendMessages(feed, messages, { thread: turn });
       });
 
     return yield* Effect.gen(function* () {
@@ -245,7 +262,10 @@ export const runTurn = (
         });
       }
 
-      yield* append([Message.make({ sender: 'user', blocks: promptBlocks(request.prompt) })]);
+      // The turn consumes a queued prompt rather than copying it; a direct one is recorded and consumed.
+      const prompt = Message.make({ sender: 'user', blocks: promptBlocks(request.prompt) });
+      produced.push(prompt);
+      yield* TrajectoryStore.append(feed, TrajectoryStore.promptEvents(prompt, turn, request.source, { resumed }));
 
       const events = yield* Queue.unbounded<TurnEvent>();
       const projection = new Projection.TurnProjection();
@@ -316,8 +336,9 @@ export const runTurn = (
       );
       return produced;
     }).pipe(
-      // However the turn ends, its questions can no longer be answered.
+      // However the turn ends, its questions can no longer be answered, and the turn closes into the conversation.
       Effect.ensuring(Effect.suspend(() => cancelOpenRequests(feed, produced))),
+      Effect.onExit((exit) => TrajectoryStore.endTurn(feed, turn, exit, { source: request.source })),
       Effect.ensuring(options.sessions.release(chat.id)),
     );
   });
@@ -342,36 +363,35 @@ export const respond = (
 ): Effect.Effect<boolean, never, Database.Service> =>
   Effect.gen(function* () {
     const answered = sessions.respond(chat.id, requestId, optionId);
-    Obj.update(message, (message) => {
-      for (const block of message.blocks) {
-        if (block._tag === 'request' && block.requestId === requestId && block.resolution === undefined) {
-          block.resolution = answered ? { outcome: 'selected', optionId } : { outcome: 'cancelled' };
-        }
-      }
-    });
-    yield* Feed.append(feed, [message]);
+    yield* TrajectoryStore.append(feed, [
+      resolution(message.id, requestId, answered ? { outcome: 'selected', optionId } : { outcome: 'cancelled' }),
+    ]);
     return answered;
   });
 
 /** Marks requests nobody answered as cancelled: the turn that asked them is over. */
 const cancelOpenRequests = (feed: Feed.Feed, produced: Message.Message[]) =>
   Effect.gen(function* () {
-    const open = produced.filter((message) =>
-      message.blocks.some((block) => block._tag === 'request' && block.resolution === undefined),
+    const { state } = yield* TrajectoryStore.load(feed, Reducer.thread);
+    const items = new Map(state.items.map((item) => [item.id, item]));
+    // Answered requests are settled in the thread, not in the message the agent wrote, so that is where to look.
+    const open = produced.flatMap((message) =>
+      (items.get(message.id)?.blocks ?? message.blocks).flatMap((block) =>
+        block._tag === 'request' && block.resolution === undefined ? [{ message, block }] : [],
+      ),
     );
-    for (const message of open) {
-      Obj.update(message, (message) => {
-        for (const block of message.blocks) {
-          if (block._tag === 'request' && block.resolution === undefined) {
-            block.resolution = { outcome: 'cancelled' };
-          }
-        }
-      });
-    }
-    if (open.length > 0) {
-      yield* Feed.append(feed, open);
-    }
+    yield* TrajectoryStore.append(
+      feed,
+      open.map(({ message, block }) => resolution(message.id, block.requestId, { outcome: 'cancelled' })),
+    );
   });
+
+const resolution = (
+  message: string,
+  requestId: string,
+  resolution: Trajectory.RequestResolve['resolution'],
+): Trajectory.Event =>
+  Trajectory.make({ payload: { _tag: 'requestResolve', message, requestId, resolution }, sender: { role: 'user' } });
 
 const promptBlocks = (prompt: TurnRequest['prompt']): ContentBlock.Any[] =>
   typeof prompt === 'string' ? [{ _tag: 'text', text: prompt }] : [...prompt];

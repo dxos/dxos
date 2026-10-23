@@ -12,6 +12,7 @@ import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { callTool } from '@dxos/ai';
 import { LanguageModelFixture } from '@dxos/ai/testing';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
@@ -117,7 +118,7 @@ const seedTasks = Effect.fnUntraced(function* () {
 });
 
 const feedText = Effect.fnUntraced(function* (feed: Feed.Feed) {
-  const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+  const messages = yield* TrajectoryStore.messages(feed);
   return messages.map(Message.extractText).join('\n');
 });
 
@@ -482,7 +483,7 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
           expect(yield* feedText(session.feed)).toContain('Write the docs');
 
           // The call reaches the feed labelled after the operation its code invoked, still an eval.
-          const messages = yield* Feed.query(session.feed, Filter.type(Message.Message)).run;
+          const messages = yield* TrajectoryStore.messages(session.feed);
           const calls = messages.flatMap((message) =>
             message.blocks.filter((block) => block._tag === 'toolCall' && block.name === EVAL_TOOL_NAME),
           );

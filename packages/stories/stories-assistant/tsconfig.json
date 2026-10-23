@@ -86,6 +86,9 @@
       "path": "../../plugins/plugin-chess"
     },
     {
+      "path": "../../plugins/plugin-claude"
+    },
+    {
       "path": "../../plugins/plugin-client"
     },
     {

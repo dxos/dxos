@@ -290,6 +290,54 @@ describe('buildExecutionGraph (span-tree based)', () => {
     expect(commits[2].parents?.length).toBe(2);
   });
 
+  test('light threads of one agent fork lanes of their own and merge back as each ends', ({ expect }) => {
+    const write = <T>(thread: string, eventType: Trace.EventType<T>, payload: T) =>
+      withMeta(
+        { pid: 'agent-1' },
+        Trace.write(eventType, payload).pipe(Effect.provideService(Trace.CurrentThread, thread)),
+      );
+    const text = (thread: string, role: 'user' | 'assistant', value: string) =>
+      write(thread, Trace.CompleteBlock, {
+        messageId: MESSAGE_ID,
+        role,
+        block: { _tag: 'text', text: value, pending: false },
+      });
+    const messages = collectTraceEvents(
+      Effect.gen(function* () {
+        yield* write('A', Trace.AgentRequestBegin, {});
+        yield* text('A', 'user', 'Research the sea');
+        yield* write('B', Trace.AgentRequestBegin, {});
+        yield* text('B', 'user', 'What is 17 × 23?');
+        yield* withMeta(
+          { pid: 'op-1', parentPid: 'agent-1', parentThread: 'A' },
+          Effect.gen(function* () {
+            yield* Trace.write(Trace.OperationStart, { key: 'research', name: 'Research' });
+            yield* Trace.write(Trace.OperationEnd, { key: 'research', name: 'Research', outcome: 'success' });
+          }),
+        );
+        yield* text('B', 'assistant', '391');
+        yield* write('B', Trace.AgentRequestEnd, { status: 'success' });
+        yield* text('A', 'assistant', 'The sea is wide');
+        yield* write('A', Trace.AgentRequestEnd, { status: 'success' });
+      }),
+    );
+    const { commits, branches } = buildExecutionGraph({ traceMessages: messages });
+    expect(branches).toEqual(['main', 'agent-1/A', 'agent-1/B']);
+    // Finished threads stay expanded when completed spans collapse, so the lanes remain visible.
+    expect(buildExecutionGraph({ traceMessages: messages, collapseCompletedSpans: true }).branches).toEqual(branches);
+    expect(`\n${renderTimelineAscii(commits, branches)}\n`).toMatchInlineSnapshot(`
+      "
+      ●        [atom] Agent processing request...
+      ├──●     [user] Research the sea
+      ●  │     [atom] Agent processing request...
+      ├──┼──●  [user] What is 17 × 23?
+      │  ●  │  [function] Research
+      ◆──┼──╯  [atom] Agent completed request
+      ◆──╯     [atom] Agent completed request
+      "
+    `);
+  });
+
   test('child process (sub-agent) forks onto its own branch from its first event', ({ expect }) => {
     const messages = collectTraceEvents(
       Effect.gen(function* () {

@@ -6,13 +6,13 @@ import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
-import * as AiContext from '@dxos/assistant/AiContext';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
@@ -127,8 +127,10 @@ describe('EnsureChannelChat', () => {
         });
         yield* Database.flush();
 
-        const bindings = yield* Feed.query(yield* Database.load(feed), Filter.type(AiContext.Binding)).run;
-        const skills = bindings.flatMap(({ skills }) => skills.added.map(({ uri }) => uri));
+        const events = yield* TrajectoryStore.read(yield* Database.load(feed));
+        const skills = events.flatMap(({ payload }) =>
+          payload._tag === 'contextBind' ? payload.skills.map(({ uri }) => uri) : [],
+        );
         expect(skills.filter((uri) => uri === Skill.registryURI(AgentEmail.SKILL_KEY))).toHaveLength(1);
       },
       Effect.provide(TestLayer),

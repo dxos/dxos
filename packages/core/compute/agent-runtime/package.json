@@ -57,6 +57,7 @@
   "devDependencies": {
     "@dxos/assistant": "workspace:*",
     "@dxos/errors": "workspace:*",
+    "@dxos/trajectory": "workspace:*",
     "@effect/vitest": "catalog:",
     "vitest": "catalog:"
   },

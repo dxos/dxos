@@ -293,6 +293,7 @@
     "@dxos/react-ui-trace": "workspace:*",
     "@dxos/react-ui-transcription": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/trajectory": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
