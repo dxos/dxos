@@ -73,7 +73,7 @@ const handler: Operation.WithHandler<typeof TurnReviewSkill.AnalyzeTurn> = TurnR
         const header: TrajectoryHeader = {
           sessionId: Obj.getURI(feed, { prefer: 'absolute' }),
           model: chat.session?.model,
-          codeMode: settings.codeMode ?? false,
+          codeMode: !settings.disableCodeMode,
           skills: binder
             .getSkills()
             .filter((skill) => Obj.getMeta(skill).key !== TurnReviewSkill.key)

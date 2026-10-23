@@ -96,7 +96,7 @@ manager.contribute({
 });
 
 const setup = ({ reportStruggles, telemetry }: { reportStruggles: boolean; telemetry: boolean }) => {
-  registry.set(settingsAtom, { reportStruggles, codeMode: true });
+  registry.set(settingsAtom, { reportStruggles });
   telemetryEnabled = telemetry;
 };
 
