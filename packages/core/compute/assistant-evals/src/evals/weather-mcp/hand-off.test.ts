@@ -10,7 +10,7 @@ import { WORKER_URL, evaluateHandOff } from './scenario.ts';
 // The eval's headline dimension is an ordering fact inside one transcript, pinned here on synthetic
 // transcripts rather than only on a run that takes half an hour to produce one.
 describe('evaluateHandOff', () => {
-  test('a forecast after the configuring write is a hand-off', ({ expect }) => {
+  test('a forecast after the add is a hand-off', ({ expect }) => {
     expect(evaluateHandOff([configure(SERVER, 10), forecast(20)], { server: WORKER_URL })).toEqual({
       configured: true,
       called: true,
@@ -18,7 +18,7 @@ describe('evaluateHandOff', () => {
     });
   });
 
-  test('a forecast before the write counts as a call but not as a hand-off', ({ expect }) => {
+  test('a forecast before the add counts as a call but not as a hand-off', ({ expect }) => {
     expect(evaluateHandOff([forecast(5), configure(SERVER, 10)], { server: WORKER_URL })).toEqual({
       configured: true,
       called: true,
@@ -34,7 +34,7 @@ describe('evaluateHandOff', () => {
     });
   });
 
-  test('a write that failed, or that named some other server, did not configure this one', ({ expect }) => {
+  test('an add that failed, or that named some other server, did not configure this one', ({ expect }) => {
     const failed = evaluateHandOff([configure(SERVER, 10, 'boom'), forecast(20)], { server: WORKER_URL });
     expect(failed.configured).toBe(false);
     expect(failed.calledAfterConfiguring).toBe(false);
@@ -44,8 +44,11 @@ describe('evaluateHandOff', () => {
     });
     expect(elsewhere.configured).toBe(false);
 
-    // A tool that merely mentions the servers (a query, a read) is not the write that configures them.
-    const read = { ...configure(SERVER, 10), operationKey: 'dxn:org.dxos.operation.space.getObjects' };
+    // A tool that merely mentions the server (a query, a read) is not the add.
+    const read = {
+      ...configure(SERVER, 10),
+      operationKey: 'dxn:org.dxos.operation.assistantToolkit.queryMcpConnections',
+    };
     expect(evaluateHandOff([read, forecast(20)], { server: WORKER_URL }).configured).toBe(false);
   });
 
@@ -77,11 +80,11 @@ describe('evaluateHandOff', () => {
 
 const SERVER = 'https://weather-mcp.example.workers.dev';
 
-/** A configuring write, as the transcript records the Database skill's update tool. */
+/** The add, as the transcript records the Skill Manager's add-mcp-connection tool. */
 const configure = (url: string, at: number, error?: string): ToolInvocation => ({
-  name: 'update_object',
-  operationKey: 'dxn:org.dxos.operation.space.updateObject',
-  input: JSON.stringify({ properties: { mcpServers: [{ name: 'weather', url, protocol: 'http' }] } }),
+  name: 'add-mcp-connection',
+  operationKey: 'dxn:org.dxos.operation.assistantToolkit.addMcpConnection',
+  input: JSON.stringify({ url, name: 'weather' }),
   result: {},
   error,
   calledAt: at,

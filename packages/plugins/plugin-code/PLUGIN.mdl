@@ -443,10 +443,9 @@ type CoderSkill
       - op:resetProject
       - op:buildProject
       - op:runBuild
-    mcpServers:
-      - introspect-mcp        # remote MCP, http; tools: list_packages,
-                              # get_package, list_symbols, find_symbol,
-                              # get_symbol
+    # The introspect-mcp tools (list_packages, get_package, list_symbols,
+    # find_symbol, get_symbol) come from the built-in DXOS Introspect MCP
+    # server (org.dxos.mcp.introspect), off in a chat until turned on.
     instructions: prose
 ```
 
@@ -1209,9 +1208,14 @@ decision D-20: Reviews judge `scenario` and `test` blocks by whether automation 
   why: Acceptance scenarios and QA tests were outside the review, so nothing showed whether the behaviour they describe is checked.
 ```
 
+```mdl
+decision D-21: The Coder skill's introspect-mcp server is the built-in DXOS Introspect MCP server, from plugin code with no object in the space and off in a chat by default; the skill no longer declares it, and its instructions tell the agent to turn it on when it needs the tools.
+  date: 2026-10-21
+  by: user:wittjosiah
+```
 
 ```mdl
-decision D-21: Code and test chips show the file name and the declaration on hover. An item with more than one implementation gets a walkthrough of 1 to 5 segments of prose and code, written by the reviewer, shown inline in its Review card and on hover of its status chip. Scenarios and tests read tested, partly tested or not tested.
+decision D-22: Code and test chips show the file name and the declaration on hover. An item with more than one implementation gets a walkthrough of 1 to 5 segments of prose and code, written by the reviewer, shown inline in its Review card and on hover of its status chip. Scenarios and tests read tested, partly tested or not tested.
   date: 2026-10-23
   by: user:dmaretskyi
   affects: [F-16.6, F-16.7, F-16.8]

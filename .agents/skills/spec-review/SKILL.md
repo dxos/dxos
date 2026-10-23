@@ -21,11 +21,11 @@ decides whether the code or the spec changes.
 
 ## Procedure
 
-1. **List the items.** The script prints every item the review must judge (a `feat` with `req`
+1. **List the items.** `deus review items` prints every item the review must judge (a `feat` with `req`
    items is judged through its requirements):
 
    ```bash
-   node .agents/skills/spec-review/scripts/review.mts items <path/to/PLUGIN.mdl>
+   pnpm deus review items <path/to/PLUGIN.mdl>
    ```
 
 2. **Map the package.** Read the package's `src/` layout, its `index.ts` exports, capabilities,
@@ -115,7 +115,7 @@ decides whether the code or the spec changes.
 6. **Check it.** Fix every error before you report:
 
    ```bash
-   node .agents/skills/spec-review/scripts/review.mts check <path/to/PLUGIN.review.mdl>
+   pnpm deus review check <path/to/PLUGIN.review.mdl>
    ```
 
    It fails on a missing or malformed frontmatter field, an unknown status, a non-`done` verdict

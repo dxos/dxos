@@ -694,10 +694,10 @@ verdict F-9.6: An empty project shows "No files yet. Ask the Coder to scaffold a
 ```
 
 ```mdl
-verdict F-10.1: The skill declares an HTTP MCP server at the introspect URL.
-  status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/skills/coder.ts#INTROSPECT_MCP_URL]
-  note: The URL is hard-coded, with a TODO to make it a setting. No test.
+verdict F-10.1: The skill no longer declares an MCP server; its instructions point at the built-in Introspect server.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/skills/coder.ts#make]
+  note: Per D-21 the Coder skill declares no MCP server and tells the agent to turn on the built-in `org.dxos.mcp.introspect` connection; the req still says the skill declares one.
 ```
 
 ```mdl
@@ -1060,7 +1060,7 @@ verdict F-16.6: Scenario and test lines show their test-file chips and tested, p
 ```mdl
 verdict F-16.7: Hovering a code or test chip shows the file name and the declaration, read from the checkout; a click still opens the code.
   status: done
-  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.ts#citedFiles, github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx#SpecArticle, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/review-gutter.ts#HoverController, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/review-gutter.ts#hoverCardField, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/snippet-card.ts#snippetCard, github:dxos/dxos/packages/plugins/plugin-code/src/components/CodeView/symbol.ts#declarationSnippet]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.ts#citedFiles, github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx#SpecArticle, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/review-gutter.ts#HoverController, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/snippet-card.ts#snippetCard, github:dxos/dxos/packages/plugins/plugin-code/src/components/CodeView/symbol.ts#declarationSnippet]
   tests: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.test.ts, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecChangelog/SpecChangelog.stories.tsx]
   walkthrough:
     - citedFiles lists every file the review cites, so the spec page loads their text from the checkout. github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.ts#citedFiles
