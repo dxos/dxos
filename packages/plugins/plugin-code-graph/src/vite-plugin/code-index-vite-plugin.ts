@@ -4,7 +4,7 @@
 
 import type { Connect, Plugin } from 'vite';
 
-import * as CodeIndexMiddleware from './code-index-middleware.ts';
+import * as CodeIndexMiddleware from './CodeIndexMiddleware.ts';
 
 export type CodeIndexVitePluginOptions = Omit<CodeIndexMiddleware.MakeOptions, 'root'> & {
   /** The repository whose index is served; defaults to the directory the vite process was started in. */

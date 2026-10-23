@@ -8,7 +8,6 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { CodeGraphOperation } from '#types';
 
 export const CodeGraphOperationHandlerSet = OperationHandlerSet.lazy([
-  CodeGraphOperation.Create.pipe(Operation.lazyHandler(() => import('./create.ts'))),
   CodeGraphOperation.Query.pipe(Operation.lazyHandler(() => import('./query.ts'))),
   CodeGraphOperation.Inspect.pipe(Operation.lazyHandler(() => import('./inspect.ts'))),
   CodeGraphOperation.Read.pipe(Operation.lazyHandler(() => import('./read.ts'))),

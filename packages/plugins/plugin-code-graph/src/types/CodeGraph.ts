@@ -8,8 +8,18 @@ import * as Schema from 'effect/Schema';
 
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
+import { BaseError } from '@dxos/errors';
 
 export const SKILL_KEY = 'org.dxos.skill.codeGraph';
+
+/**
+ * Most boxes one graph holds. Protects the document and the layouts, which slow sharply past a few hundred
+ * boxes, from an assistant expanding without end; a graph that size is unreadable anyway.
+ */
+export const MAX_NODES = 300;
+
+/** Adding would take a graph past {@link MAX_NODES}. */
+export class LimitError extends BaseError.extend('LimitError', `A code graph holds at most ${MAX_NODES} boxes.`) {}
 
 /** What a box depicts, derived from its IRI's namespace in the code-index ontology. */
 export const NodeKind = Schema.Literals(['package', 'file', 'symbol', 'module', 'spec', 'other']);
@@ -48,7 +58,9 @@ export type Edge = Schema.Schema.Type<typeof Edge>;
  * A curated view of the code index: the boxes and arrows the user or the assistant chose to show. Held
  * inline rather than as objects per box, since every box stands for a resource that lives in the index.
  */
-export class CodeGraph extends Type.makeObject<CodeGraph>(DXN.make('org.dxos.type.codeGraph', '0.1.0'))(
+export const TYPENAME = 'org.dxos.type.codeGraph';
+
+export class CodeGraph extends Type.makeObject<CodeGraph>(DXN.make(TYPENAME, '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String.annotate({ title: 'Name' })),
     layout: Schema.optional(Layout.pipe(Annotation.FormInputAnnotation.set(false))),

@@ -24,6 +24,7 @@ export const translations = [
       },
       [meta.profile.key]: {
         'plugin.name': 'Code Graph',
+        'layout.label': 'Layout',
         'layout-illustrator.label': 'Illustrator layout',
         'layout-force.label': 'Force-directed layout',
         'layout-rank.label': 'Rank layout',
@@ -34,7 +35,6 @@ export const translations = [
         'expand-in.label': 'Expand dependents',
         'remove-node.label': 'Remove',
         'close-details.label': 'Close',
-        'layout-running.label': 'Laying out…',
       },
     },
   },

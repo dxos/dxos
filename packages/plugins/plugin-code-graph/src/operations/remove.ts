@@ -15,7 +15,7 @@ const handler: Operation.WithHandler<typeof CodeGraphOperation.Remove> = CodeGra
   Operation.withHandler(
     Effect.fn(function* ({ graph: ref, nodes, all }) {
       const graph = yield* Database.load(ref);
-      return removeNodes(graph, all ? undefined : (nodes ?? []));
+      return yield* removeNodes(graph, all ? undefined : (nodes ?? []));
     }),
   ),
 );

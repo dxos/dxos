@@ -7,6 +7,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
+import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { trim } from '@dxos/util';
 
 import { CodeGraph, CodeGraphOperation } from '#types';
@@ -14,7 +15,7 @@ import { CodeGraph, CodeGraphOperation } from '#types';
 export const key = CodeGraph.SKILL_KEY;
 
 const operations = [
-  CodeGraphOperation.Create,
+  SpaceOperation.AddObject,
   CodeGraphOperation.Read,
   CodeGraphOperation.Query,
   CodeGraphOperation.Inspect,
@@ -71,7 +72,8 @@ export const make = (): Skill.Skill =>
 
         ## Drawing
 
-        1. If no code graph is in context, create one with ${tool(CodeGraphOperation.Create)}.
+        1. If no code graph is in context, create one with ${tool(SpaceOperation.AddObject)}:
+           \`{ "object": { "@type": "${CodeGraph.TYPENAME}", "name": "…", "nodes": [], "edges": [] } }\`.
         2. Before changing an existing graph, call ${tool(CodeGraphOperation.Read)}.
         3. Fill it with ${tool(CodeGraphOperation.AddFromQuery)}: SELECT \`?from ?to\` for arrows, or \`?node\`
            for lone boxes. Check a query with ${tool(CodeGraphOperation.Query)} first when you are unsure of it.

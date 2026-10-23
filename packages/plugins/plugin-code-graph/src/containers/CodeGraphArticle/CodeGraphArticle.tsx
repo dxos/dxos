@@ -10,13 +10,11 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import * as Button from '@dxos/react-ui/Button';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
-import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { CodeIndexClient } from '#client';
 import { type Fact, NodeDetails } from '#components';
 import { Semantic } from '#graph';
 import { meta } from '#meta';
@@ -34,8 +32,6 @@ const LAYOUTS: { value: CodeGraph.Layout; icon: string }[] = [
   { value: 'rank', icon: 'ph--tree-structure--regular' },
   { value: 'diagram', icon: 'ph--pencil-simple--regular' },
 ];
-
-const isLayout = (value: string): value is CodeGraph.Layout => LAYOUTS.some((layout) => layout.value === value);
 
 const EMPTY: Semantic.Layout = { positions: {}, objects: [], problems: [] };
 
@@ -75,7 +71,7 @@ const useSemanticLayout = (
 
 export type CodeGraphArticleProps = AppSurface.ObjectArticleProps<CodeGraph.CodeGraph>;
 
-export const CodeGraphArticle = ({ role, subject }: CodeGraphArticleProps) => {
+export const CodeGraphArticle = ({ role, subject, attendableId }: CodeGraphArticleProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const [graph] = useObject(subject);
   const { invokePromise } = Hooks.useOperationInvoker();
@@ -120,13 +116,10 @@ export const CodeGraphArticle = ({ role, subject }: CodeGraphArticleProps) => {
   );
 
   const handleLayoutChange = useCallback(
-    (value: string) => {
-      if (isLayout(value)) {
-        Obj.update(subject, (subject) => {
-          subject.layout = value;
-        });
-      }
-    },
+    (value: CodeGraph.Layout) =>
+      Obj.update(subject, (subject) => {
+        subject.layout = value;
+      }),
     [subject],
   );
 
@@ -159,31 +152,27 @@ export const CodeGraphArticle = ({ role, subject }: CodeGraphArticleProps) => {
 
   const [selected, setSelected] = useState<string>();
   const selectedNode = useMemo(() => nodes.find(({ id }) => id === selected), [nodes, selected]);
-  const details = useInspect(selected);
+  const details = useInspect(selected, invokePromise);
+  const actions = useToolbarActions({
+    layout,
+    pending: semantic.pending,
+    hasDragged: Object.keys(dragged).length > 0,
+    onLayoutChange: handleLayoutChange,
+    onResetPositions: handleResetPositions,
+  });
 
   return (
     <Panel.Root role={role}>
       <Panel.Header>
-        <Toolbar.Root>
-          <Toolbar.ToggleGroup type='single' value={layout} onValueChange={handleLayoutChange}>
-            {LAYOUTS.map(({ value, icon }) => (
-              <ToggleGroup.Item key={value} value={value} icon={icon} iconOnly label={t(`layout-${value}.label`)} />
-            ))}
-          </Toolbar.ToggleGroup>
-          <Button.Root
-            icon='ph--arrow-counter-clockwise--regular'
-            iconOnly
-            label={t('reset-positions.label')}
-            disabled={Object.keys(dragged).length === 0}
-            onClick={handleResetPositions}
-          />
-          {semantic.pending && <span className='text-sm text-description'>{t('layout-running.label')}</span>}
-        </Toolbar.Root>
+        <ActionToolbar {...actions} attendableId={attendableId} />
       </Panel.Header>
       <Panel.Body asChild>
+        {/* Positioned rather than a layout box: the details panel floats over the canvas, anchored to this frame. */}
         <div className='relative dx-cover' data-testid='code-graph-article'>
           {nodes.length === 0 ? (
-            <div className='dx-cover grid place-items-center text-description'>{t('empty.message')}</div>
+            <Layout.Flex center classNames='dx-cover text-description'>
+              {t('empty.message')}
+            </Layout.Flex>
           ) : layout === 'diagram' ? (
             <CodeGraphDiagram objects={semantic.layout.objects} selected={selected} onSelect={setSelected} />
           ) : (
@@ -224,8 +213,61 @@ export const CodeGraphArticle = ({ role, subject }: CodeGraphArticleProps) => {
 
 export default CodeGraphArticle;
 
-/** The selected resource's facts from the index. */
-const useInspect = (iri: string | undefined) => {
+type Invoke = ReturnType<typeof Hooks.useOperationInvoker>['invokePromise'];
+
+/** The layout toggle and the reset action, as menu actions so plugins and shortcuts compose with them. */
+const useToolbarActions = ({
+  layout,
+  pending,
+  hasDragged,
+  onLayoutChange,
+  onResetPositions,
+}: {
+  layout: CodeGraph.Layout;
+  pending: boolean;
+  hasDragged: boolean;
+  onLayoutChange: (layout: CodeGraph.Layout) => void;
+  onResetPositions: () => void;
+}) =>
+  useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .group(
+          'layout',
+          {
+            label: ['layout.label', { ns: meta.profile.key }],
+            variant: 'toggleGroup',
+            selectCardinality: 'single',
+            value: layout,
+          },
+          (group) => {
+            for (const { value, icon } of LAYOUTS) {
+              group.action(
+                value,
+                { label: [`layout-${value}.label`, { ns: meta.profile.key }], icon, iconOnly: true },
+                () => onLayoutChange(value),
+              );
+            }
+          },
+        )
+        .action(
+          'reset-positions',
+          {
+            label: ['reset-positions.label', { ns: meta.profile.key }],
+            // Spins while the illustrator lays the graph out, the one wait this view has.
+            icon: pending ? 'ph--spinner--regular' : 'ph--arrow-counter-clockwise--regular',
+            spin: pending,
+            iconOnly: true,
+            disabled: !hasDragged,
+          },
+          onResetPositions,
+        )
+        .build(),
+    [layout, pending, hasDragged, onLayoutChange, onResetPositions],
+  );
+
+/** The selected resource's facts from the index, through the Inspect operation. */
+const useInspect = (iri: string | undefined, invokePromise: Invoke) => {
   const [state, setState] = useState<{
     facts?: Fact[];
     incoming?: { predicate: string; count: number }[];
@@ -236,19 +278,15 @@ const useInspect = (iri: string | undefined) => {
     if (!iri) {
       return;
     }
-    const fiber = Effect.runFork(
-      CodeIndexClient.describe(iri, 40).pipe(
-        Effect.match({
-          onSuccess: (result) => ({
-            facts: [...(result.outgoing ?? [])],
-            incoming: [...(result.incomingCounts ?? [])],
-          }),
-          onFailure: (error) => ({ error: error.message }),
-        }),
-        Effect.tap((next) => Effect.sync(() => setState(next))),
-      ),
-    );
-    return () => void Effect.runFork(Fiber.interrupt(fiber));
-  }, [iri]);
+    let cancelled = false;
+    void invokePromise(CodeGraphOperation.Inspect, { target: iri, limit: 40 }).then(({ data, error }) => {
+      if (!cancelled) {
+        setState(data ? { facts: [...data.outgoing], incoming: [...data.incomingCounts] } : { error: error?.message });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [iri, invokePromise]);
   return state;
 };

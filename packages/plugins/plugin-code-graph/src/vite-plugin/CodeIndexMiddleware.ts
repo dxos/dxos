@@ -2,12 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 import { log } from '@dxos/log';
 
 import * as Protocol from '../client/Protocol.ts';
-import * as McpClient from './mcp-client.ts';
+import * as McpClient from './McpClient.ts';
 
 export type MakeOptions = {
   /** The repository whose index is served; `code-index` runs here and finds its store under `node_modules`. */

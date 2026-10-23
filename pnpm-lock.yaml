@@ -10180,6 +10180,9 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -10195,6 +10198,9 @@ importers:
       '@dxos/react-ui-canvas':
         specifier: workspace:*
         version: link:../../ui/react-ui-canvas
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util

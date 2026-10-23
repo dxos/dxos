@@ -20,7 +20,7 @@ const handler: Operation.WithHandler<typeof CodeGraphOperation.AddNodes> = CodeG
       const edges = connect
         ? yield* connecting([...new Set([...graph.nodes.map(({ id }) => id), ...iris])])
         : undefined;
-      return addPatch(graph, { nodes: iris.map((iri) => Model.makeNode(iri)), edges: edges?.edges ?? [] });
+      return yield* addPatch(graph, { nodes: iris.map((iri) => Model.makeNode(iri)), edges: edges?.edges ?? [] });
     }),
   ),
 );

@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
 
@@ -32,7 +34,7 @@ type JsonRpcResponse = { id?: number; result?: unknown; error?: { message?: stri
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null;
 
 /** A tool result's payload: its structured content when the server sends it, else its text parsed as JSON. */
-export const payloadOf = (result: unknown): unknown => {
+export const payloadOf = (result: unknown, tool: string): unknown => {
   if (!isRecord(result)) {
     return result;
   }
@@ -40,7 +42,7 @@ export const payloadOf = (result: unknown): unknown => {
     ? result.content.flatMap((part) => (isRecord(part) && typeof part.text === 'string' ? [part.text] : [])).join('\n')
     : undefined;
   if (result.isError === true) {
-    throw new Error(text || 'tool failed');
+    throw new Error(`code-index tool "${tool}" failed: ${text || 'no message'}`);
   }
   if (result.structuredContent !== undefined) {
     return result.structuredContent;
@@ -146,7 +148,7 @@ export const make = ({ command, args, cwd, timeout = 60_000 }: McpClientOptions)
         throw error;
       });
       await ready;
-      return payloadOf(await request('tools/call', { name, arguments: args }));
+      return payloadOf(await request('tools/call', { name, arguments: args }), name);
     },
     close: () => {
       failAll(new Error('code-index client closed'));

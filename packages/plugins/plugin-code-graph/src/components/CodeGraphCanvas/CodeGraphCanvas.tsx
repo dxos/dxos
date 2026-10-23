@@ -28,6 +28,7 @@ import {
   nodeBase,
 } from '@dxos/react-ui-canvas/scene';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { Model, Semantic } from '#graph';
 import { type CodeGraph } from '#types';
@@ -50,20 +51,23 @@ const CodeNodeView = ({ node }: NodeViewProps) => {
   const { lookup, selected } = useContext(CodeNodeContext);
   const resource = lookup(node.id);
   return (
-    <div
-      className={[
-        'dx-cover flex flex-col justify-center gap-0.5 overflow-hidden rounded-md border bg-base-surface px-3',
+    <Layout.Flex
+      asChild
+      column
+      justify='center'
+      classNames={[
+        'dx-cover overflow-hidden rounded-md border bg-base-surface px-3',
         selected === node.id ? 'border-accent-text' : 'border-separator',
-      ].join(' ')}
-      data-testid='code-graph-node'
-      title={node.id}
+      ]}
     >
-      <div className='flex items-center gap-2 min-w-0'>
-        <Icon.Icon icon={KIND_ICONS[resource?.kind ?? 'other']} size='md' />
-        <span className='truncate font-medium'>{resource?.label ?? node.id}</span>
+      <div data-testid='code-graph-node' title={node.id}>
+        <Layout.Flex align='center' gap='sm' classNames='min-w-0'>
+          <Icon.Icon icon={KIND_ICONS[resource?.kind ?? 'other']} size='md' />
+          <span className='truncate font-medium'>{resource?.label ?? node.id}</span>
+        </Layout.Flex>
+        {resource?.group && <span className='truncate text-xs text-description'>{resource.group}</span>}
       </div>
-      {resource?.group && <span className='truncate text-xs text-description'>{resource.group}</span>}
-    </div>
+    </Layout.Flex>
   );
 };
 

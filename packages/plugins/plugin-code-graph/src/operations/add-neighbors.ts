@@ -29,7 +29,7 @@ const handler: Operation.WithHandler<typeof CodeGraphOperation.AddNeighbors> = C
         nodes: patches.flatMap(({ nodes }) => nodes),
         edges: patches.flatMap(({ edges }) => edges),
       };
-      return addPatch(graph, patch);
+      return yield* addPatch(graph, patch);
     }),
   ),
 );

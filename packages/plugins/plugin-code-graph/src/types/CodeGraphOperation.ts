@@ -7,12 +7,10 @@
 import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Ref, Type } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
 import * as CodeGraph from './CodeGraph.ts';
-
-const GraphInput = Ref.Ref(CodeGraph.CodeGraph).annotate({ description: 'The code graph to change.' });
 
 const NodeIds = Schema.Array(Schema.String).annotate({
   description:
@@ -28,22 +26,6 @@ const Summary = Schema.Struct({
   edges: Schema.Number,
 });
 export type Summary = Schema.Schema.Type<typeof Summary>;
-
-export const Create = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.codeGraph.create'),
-    name: 'Create Code Graph',
-    description:
-      'Creates an empty code graph in the space and returns it; fill it with AddFromQuery, AddNodes or AddNeighbors.',
-    icon: 'ph--graph--regular',
-  },
-  input: Schema.Struct({
-    name: Schema.optional(Schema.String),
-    layout: Schema.optional(CodeGraph.Layout),
-  }),
-  output: Schema.Struct({ object: Type.getSchema(CodeGraph.CodeGraph) }),
-  services: [Database.Service],
-});
 
 export const Query = Operation.make({
   meta: {
@@ -92,7 +74,9 @@ export const Read = Operation.make({
     description: 'Returns the boxes and arrows currently on a code graph, and its layout.',
     icon: 'ph--eye--regular',
   },
-  input: Schema.Struct({ graph: GraphInput }),
+  input: Schema.Struct({
+    graph: Ref.Ref(CodeGraph.CodeGraph).annotate({ description: 'The code graph to read.' }),
+  }),
   output: Schema.Struct({
     layout: CodeGraph.Layout,
     nodes: Schema.Array(Schema.Struct({ id: Schema.String, label: Schema.String, kind: CodeGraph.NodeKind })),
@@ -110,7 +94,7 @@ export const AddNodes = Operation.make({
     icon: 'ph--plus--regular',
   },
   input: Schema.Struct({
-    graph: GraphInput,
+    graph: Ref.Ref(CodeGraph.CodeGraph).annotate({ description: 'The code graph to change.' }),
     nodes: NodeIds,
     connect: Schema.optional(Schema.Boolean).annotate({
       description: 'Draw the arrows between the boxes (default true).',
@@ -132,7 +116,7 @@ export const AddFromQuery = Operation.make({
     icon: 'ph--tree-structure--regular',
   },
   input: Schema.Struct({
-    graph: GraphInput,
+    graph: Ref.Ref(CodeGraph.CodeGraph).annotate({ description: 'The code graph to change.' }),
     sparql: Schema.String,
     limit: Schema.optional(Schema.Number).annotate({ description: 'Row cap (default 200).' }),
   }),
@@ -149,7 +133,7 @@ export const AddNeighbors = Operation.make({
     icon: 'ph--arrows-out-simple--regular',
   },
   input: Schema.Struct({
-    graph: GraphInput,
+    graph: Ref.Ref(CodeGraph.CodeGraph).annotate({ description: 'The code graph to change.' }),
     nodes: NodeIds,
     direction: Schema.optional(Schema.Literals(['out', 'in', 'both'])).annotate({ description: 'Default `out`.' }),
     predicate: Schema.optional(Schema.String).annotate({
@@ -170,7 +154,7 @@ export const Remove = Operation.make({
     icon: 'ph--minus--regular',
   },
   input: Schema.Struct({
-    graph: GraphInput,
+    graph: Ref.Ref(CodeGraph.CodeGraph).annotate({ description: 'The code graph to change.' }),
     nodes: Schema.optional(NodeIds),
     all: Schema.optional(Schema.Boolean),
   }),
@@ -191,7 +175,7 @@ export const SetLayout = Operation.make({
     icon: 'ph--layout--regular',
   },
   input: Schema.Struct({
-    graph: GraphInput,
+    graph: Ref.Ref(CodeGraph.CodeGraph).annotate({ description: 'The code graph to change.' }),
     layout: CodeGraph.Layout,
     resetPositions: Schema.optional(Schema.Boolean).annotate({
       description: 'Forget where the user dragged boxes, so the layout places every box.',

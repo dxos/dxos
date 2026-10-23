@@ -73,10 +73,6 @@ op inspect
   key: org.dxos.operation.codeGraph.inspect
   desc: Returns one resource's outgoing facts and incoming counts.
 
-op create
-  key: org.dxos.operation.codeGraph.create
-  desc: Creates an empty code graph in the space.
-
 op read
   key: org.dxos.operation.codeGraph.read
   desc: Returns a graph's boxes, arrows and layout.
@@ -129,7 +125,7 @@ feat F-1: Read the index from the app
   req F-1.3: Without the route (a deployed build), every operation fails with an error that names the missing route.
 
 feat F-2: The assistant shapes the graph
-  req F-2.1: The Code Graph skill offers query, inspect, create, read, addFromQuery, addNodes, addNeighbors, remove and setLayout.
+  req F-2.1: The Code Graph skill offers query, inspect, read, addFromQuery, addNodes, addNeighbors, remove and setLayout, and the space's addObject to create a graph.
   req F-2.2: A chat about a CodeGraph object carries the skill (SkillsAnnotation).
   req F-2.3: Adding never duplicates a box or an arrow, and a box an arrow needs is added with it.
 
@@ -174,7 +170,7 @@ test QA-1: Draw and reshape a package graph
   steps:
     - name: Create the graph
       do: In the navtree, click + and choose Code Graph. Name it "QA Code Graph".
-      invoke: [op:create] { name: "QA Code Graph" }
+      invoke: org.dxos.operation.space.addObject { object: { "@type": "org.dxos.type.codeGraph", name: "QA Code Graph", nodes: [], edges: [] } }
       capture: graph
       expect: an empty Code Graph article opens with the message asking the assistant to draw here
     - name: Draw a package's dependencies

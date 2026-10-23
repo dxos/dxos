@@ -3,24 +3,13 @@
 //
 
 import { createServer } from 'node:http';
+import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import * as CodeIndexMiddleware from './code-index-middleware.ts';
+import * as CodeIndexMiddleware from './CodeIndexMiddleware.ts';
 
 /** Speaks just enough MCP on stdio: answers `initialize`, and `tools/call` with the call echoed back. */
-const FAKE_SERVER = `
-const rl = require('node:readline').createInterface({ input: process.stdin });
-rl.on('line', (line) => {
-  const message = JSON.parse(line);
-  if (message.id === undefined) return;
-  const reply = (result) => process.stdout.write(JSON.stringify({ jsonrpc: '2.0', id: message.id, result }) + '\\n');
-  if (message.method === 'initialize') return reply({ protocolVersion: '2025-06-18', capabilities: {} });
-  const { name, arguments: args } = message.params;
-  if (name === 'ask') return reply({ isError: true, content: [{ type: 'text', text: 'bad sparql' }] });
-  if (name === 'files') return reply({ content: [{ type: 'text', text: JSON.stringify({ files: [], total: 0 }) }] });
-  reply({ content: [], structuredContent: { tool: name, args } });
-});
-`;
+const FAKE_SERVER = fileURLToPath(new URL('../__fixtures__/fake-mcp-server.mjs', import.meta.url));
 
 describe('CodeIndexMiddleware', () => {
   let url: string;
@@ -30,7 +19,7 @@ describe('CodeIndexMiddleware', () => {
     const middleware = CodeIndexMiddleware.make({
       root: process.cwd(),
       command: process.execPath,
-      args: ['-e', FAKE_SERVER],
+      args: [FAKE_SERVER],
     });
     const server = createServer((req, res) =>
       middleware(req, res, () => {
@@ -68,7 +57,7 @@ describe('CodeIndexMiddleware', () => {
   test('reports a tool error without failing the route', async ({ expect }) => {
     const response = await post({ tool: 'ask', args: {} });
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ ok: false, error: 'bad sparql' });
+    expect(await response.json()).toEqual({ ok: false, error: 'code-index tool "ask" failed: bad sparql' });
   });
 
   test('refuses unknown tools and non-JSON requests', async ({ expect }) => {

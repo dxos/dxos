@@ -5,8 +5,10 @@
 import React from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
@@ -40,19 +42,21 @@ const unique = (facts: readonly Fact[] = []): Fact[] => {
   });
 };
 
-/** One resource's facts from the index, with the moves the canvas offers on it. */
+/**
+ * One resource's facts from the index, with the moves the canvas offers on it. The host floats it over the canvas,
+ * so it is absolutely positioned against the host's frame.
+ */
 export const NodeDetails = ({ node, facts, incoming, error, onExpand, onRemove, onClose }: NodeDetailsProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   return (
-    <div
-      className='absolute top-2 right-2 bottom-2 w-80 flex flex-col rounded-md border border-separator bg-base-surface'
-      data-testid='code-graph-details'
-    >
-      <div className='flex items-center gap-2 p-2 border-b border-separator min-w-0'>
-        <Icon.Icon icon={KIND_ICONS[node.kind]} size='md' />
-        <span className='grow truncate font-medium' title={node.id}>
+    <Card.Root classNames='absolute top-2 right-2 bottom-2 w-80 flex flex-col' data-testid='code-graph-details'>
+      <Card.Header>
+        <Layout.Block rail='start'>
+          <Icon.Icon icon={KIND_ICONS[node.kind]} />
+        </Layout.Block>
+        <Card.Title truncate title={node.id}>
           {node.label}
-        </span>
+        </Card.Title>
         <Button.Root
           icon='ph--x--regular'
           iconOnly
@@ -60,8 +64,8 @@ export const NodeDetails = ({ node, facts, incoming, error, onExpand, onRemove, 
           label={t('close-details.label')}
           onClick={onClose}
         />
-      </div>
-      <Toolbar.Root classNames='px-1'>
+      </Card.Header>
+      <Toolbar.Root>
         <Button.Root
           icon='ph--arrow-down-right--regular'
           iconOnly
@@ -78,27 +82,29 @@ export const NodeDetails = ({ node, facts, incoming, error, onExpand, onRemove, 
       </Toolbar.Root>
       <ScrollArea.Root classNames='grow'>
         <ScrollArea.Viewport>
-          <dl className='grid grid-cols-[max-content_1fr] gap-x-3 gap-y-1 p-2 text-sm'>
-            {error && <dd className='col-span-2 text-error-text'>{error}</dd>}
-            {unique(facts)
-              .slice(0, FACTS)
-              .map(({ predicate, object }, index) => (
-                <React.Fragment key={index}>
-                  <dt className='text-description'>{Iri.localName(predicate)}</dt>
-                  <dd className='truncate' title={object}>
-                    {Iri.isIri(object) ? Iri.labelOf(object) : object}
-                  </dd>
+          <Layout.Grid asChild cols={['max', 'fill']} gap='sm' classNames='p-2 text-sm'>
+            <dl>
+              {error && <dd className='col-span-2 text-error-text'>{error}</dd>}
+              {unique(facts)
+                .slice(0, FACTS)
+                .map(({ predicate, object }, index) => (
+                  <React.Fragment key={index}>
+                    <dt className='text-description'>{Iri.localName(predicate)}</dt>
+                    <dd className='truncate' title={object}>
+                      {Iri.isIri(object) ? Iri.labelOf(object) : object}
+                    </dd>
+                  </React.Fragment>
+                ))}
+              {incoming?.map(({ predicate, count }) => (
+                <React.Fragment key={predicate}>
+                  <dt className='text-description'>← {Iri.localName(predicate)}</dt>
+                  <dd>{count}</dd>
                 </React.Fragment>
               ))}
-            {incoming?.map(({ predicate, count }) => (
-              <React.Fragment key={predicate}>
-                <dt className='text-description'>← {Iri.localName(predicate)}</dt>
-                <dd>{count}</dd>
-              </React.Fragment>
-            ))}
-          </dl>
+            </dl>
+          </Layout.Grid>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-    </div>
+    </Card.Root>
   );
 };

@@ -9,15 +9,15 @@ feature maps do.
 
 ## Pieces
 
-| Piece              | Where                                                               | Job                                                                                                                                        |
-| ------------------ | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `CodeGraph`        | `src/types/CodeGraph.ts`                                            | ECHO object: `nodes` (IRI, label, kind, package group, dragged position), `edges` (from, to, predicate), `layout`.                         |
-| Operations + skill | `src/types/CodeGraphOperation.ts`, `src/operations/`, `src/skills/` | `Query`, `Inspect` (read the index); `Create`, `Read`, `AddFromQuery`, `AddNodes`, `AddNeighbors`, `Remove`, `SetLayout` (change a graph). |
-| Client             | `src/client/`                                                       | `fetch` to the same-origin `/api/code-index` route; responses decoded with Effect Schema.                                                  |
-| Vite plugin        | `src/vite-plugin/` (`./vite-plugin` export)                         | Dev-server middleware that spawns `code-index mcp` and calls its read-only tools over stdio JSON-RPC.                                      |
-| Layouts            | `src/graph/Semantic.ts`                                             | Writes the graph as illustrator DSL and solves it with `SemanticEngine` (one restart).                                                     |
-| Canvas             | `src/components/CodeGraphCanvas/`                                   | `react-ui-canvas/scene`'s dynamic projection, as in `plugin-projects`' `FeatureCanvas`.                                                    |
-| Drawing            | `src/components/CodeGraphDiagram/`                                  | The illustrator's `SceneSvg` for the full drawing (frames and routed arrows).                                                              |
+| Piece              | Where                                                               | Job                                                                                                                                                                                     |
+| ------------------ | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CodeGraph`        | `src/types/CodeGraph.ts`                                            | ECHO object: `nodes` (IRI, label, kind, package group, dragged position), `edges` (from, to, predicate), `layout`.                                                                      |
+| Operations + skill | `src/types/CodeGraphOperation.ts`, `src/operations/`, `src/skills/` | `Query`, `Inspect` (read the index); `Read`, `AddFromQuery`, `AddNodes`, `AddNeighbors`, `Remove`, `SetLayout` (change a graph). The skill creates graphs with the space's `AddObject`. |
+| Client             | `src/client/`                                                       | `fetch` to the same-origin `/api/code-index` route; responses decoded with Effect Schema.                                                                                               |
+| Vite plugin        | `src/vite-plugin/` (`./vite-plugin` export)                         | Dev-server middleware that spawns `code-index mcp` and calls its read-only tools over stdio JSON-RPC.                                                                                   |
+| Layouts            | `src/graph/Semantic.ts`                                             | Writes the graph as illustrator DSL and solves it with `SemanticEngine` (one restart).                                                                                                  |
+| Canvas             | `src/components/CodeGraphCanvas/`                                   | `react-ui-canvas/scene`'s dynamic projection, as in `plugin-projects`' `FeatureCanvas`.                                                                                                 |
+| Drawing            | `src/components/CodeGraphDiagram/`                                  | The illustrator's `SceneSvg` for the full drawing (frames and routed arrows).                                                                                                           |
 
 ## Why a vite route, and why MCP
 

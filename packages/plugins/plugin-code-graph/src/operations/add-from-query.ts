@@ -18,7 +18,7 @@ const handler: Operation.WithHandler<typeof CodeGraphOperation.AddFromQuery> = C
     Effect.fn(function* ({ graph: ref, sparql, limit }) {
       const graph = yield* Database.load(ref);
       const { rows } = yield* CodeIndexClient.query(sparql, limit);
-      return { ...addPatch(graph, Model.fromRows(rows)), rows: rows.length };
+      return { ...(yield* addPatch(graph, Model.fromRows(rows))), rows: rows.length };
     }),
   ),
 );
