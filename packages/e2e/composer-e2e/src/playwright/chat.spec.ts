@@ -22,7 +22,7 @@ if (process.env.DX_PWA !== 'false') {
  */
 /**
  * The cheapest chat model. The default model re-sends the whole agent prompt to a frontier model on
- * every run, which made this one-word round trip the largest AI cost on production EDGE.
+ * every run, which made this one-word round trip the largest AI cost on EDGE.
  */
 const MODEL = 'dxn:com.anthropic.model.claude-haiku-4-5.default';
 

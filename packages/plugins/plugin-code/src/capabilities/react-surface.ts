@@ -23,7 +23,7 @@ export default Capability.makeModule(() =>
         id: 'pluginSpec',
         filter: AppSurface.subject(AppSurface.Article, isPluginSpecSubject),
         component: SpecArticle,
-        props: ({ role, data: { subject } }) => ({ role, content: subject.content }),
+        props: ({ role, data: { subject } }) => ({ role, content: subject.content, sourceKey: subject.sourceKey }),
       }),
       Surface.create({
         id: 'specArticle',

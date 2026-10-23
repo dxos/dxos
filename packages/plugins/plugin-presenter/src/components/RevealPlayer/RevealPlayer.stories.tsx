@@ -106,8 +106,6 @@ export const WithEditor: Story = {
 };
 
 export const TestEditor: Story = {
-  // TODO(wittjosiah): Flaky in CI (passes only on retry); fix and re-enable.
-  tags: ['!test'],
   render: EditorStory,
   args: {
     content: [
@@ -140,8 +138,6 @@ export const TestEditor: Story = {
 };
 
 export const TestEditorNarrow: Story = {
-  // TODO(wittjosiah): Flaky in CI (passes only on retry); fix and re-enable.
-  tags: ['!test'],
   render: (args) => <EditorStory {...args} columnWidth={`${NARROW_COLUMN_WIDTH}px`} />,
   args: {
     content: ['# Alpha', '# Beta\n\n- step <!-- .element: class="fragment" -->'].join('\n\n---\n\n'),

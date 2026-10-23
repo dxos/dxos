@@ -5,20 +5,16 @@ language: rust
 
 tasks:
   # Rebuilds the committed plugin; run it after changing the crate (README.md).
-  cargo-build:
+  build-native:
     command: bash scripts/build.sh
     options:
       cache: false
       runInCI: false
-  cargo-test:
+  # `test-native`, not `test`: Check's `native` job runs it, outside the `:test` sweep.
+  test-native:
     command: cargo test
     inputs:
       - src/**/*.rs
       - Cargo.toml
       - Cargo.lock
       - rust-toolchain.toml
-  # What CI's `:test` sweep selects.
-  test:
-    command: noop
-    deps:
-      - cargo-test

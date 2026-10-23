@@ -4,9 +4,10 @@ name: Check
 # storybook and e2e suites (`plan` holds them back on a draft) and `cli`. Converting a PR to a draft, by
 # hand or by `draft-on-open.yml`, starts a draft run, and the concurrency group cancels the run in flight.
 #
-# Where suites run: a ready PR and the merge queue run every job; e2e reports without gating. Pushes to
-# main run nothing: main moves to the exact commit the queue tested, so the queue's results are the ones
-# GitHub shows on it. No `labeled` trigger: its run would post
+# Where suites run: a ready PR runs every job. The merge queue runs only what can block a merge: `check`
+# and the jobs behind the required `test` gate. A push to main runs only e2e, which reports without gating:
+# main moves to the exact commit the queue tested, so the queue's results are the ones GitHub shows on it,
+# and e2e there covers whatever landed since the last run. No `labeled` trigger: its run would post
 # skipped check runs over the PR's real results, and branch protection reads skipped as passing.
 on:
   pull_request:
@@ -15,6 +16,7 @@ on:
 
   push:
     branches:
+      - main
       - ci/*
 
   schedule:
@@ -62,23 +64,31 @@ env:
 #
 # A merge group never cancels: its ref is unique, so only a duplicate run for the same commit shares
 # the group, and cancelling one posts `cancelled` on required checks, which dequeues the PR.
+#
+# Neither does a push to main. GitHub keeps one pending run per group and replaces it with each newer push,
+# so the run in flight finishes and the next one tests the newest commit, covering the ones it skipped.
+# Cancelling instead would never finish a run while merges land faster than e2e takes.
 concurrency:
   group: >-
     ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref
     }}-${{ github.event_name == 'workflow_dispatch' && github.run_id || '' }}
-  cancel-in-progress: ${{ github.event_name != 'merge_group' }}
+  cancel-in-progress: >-
+    ${{ github.event_name != 'merge_group' && !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
 
 # https://moonrepo.dev/docs/guides/ci
 jobs:
   check:
     # `inputs.only` is empty outside a dispatch, so every job-group condition passes there.
-    if: ${{ inputs.only != 'test' && inputs.only != 'e2e' }}
+    if: >-
+      ${{ inputs.only != 'test' && inputs.only != 'e2e' &&
+      !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
     permissions:
       contents: read
       packages: read
     runs-on: ubuntu-24.04
-    # The scheduled run bypasses the cache and compiles everything here, in about 24 minutes.
-    timeout-minutes: 40
+    # The scheduled run bypasses the cache: the compile gate takes about 24 minutes, then module structure
+    # rebuilds every package again (another 12), before knip and the docs bundle.
+    timeout-minutes: 75
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -132,6 +142,14 @@ jobs:
         env:
           MDL_BASE_REF: ${{ github.event.pull_request.base.sha }}
         run: node packages/reflect/deus/scripts/check-changelog.ts
+
+      # Passes with a notice until the repository has a TYPESAFE_API_KEY secret.
+      - name: Check spec decisions
+        if: ${{ !cancelled() && steps.affected.outcome == 'success' }}
+        env:
+          MDL_BASE_REF: ${{ github.event.pull_request.base.sha }}
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+        run: node .agents/skills/mdl/scripts/check-decisions.ts
 
       - name: Check version files in sync
         if: ${{ !cancelled() && steps.affected.outcome == 'success' }}
@@ -214,10 +232,12 @@ jobs:
   # regression.
   # Split out of `check`, where its ~41s of bundling (nothing else in the workflow builds `bundle`) sat
   # behind that job's whole stage 1+2 sequence; the library builds it needs come from the remote cache
-  # instead. A PR or merge group confined to `docs/` skips it: the docs site is a separate Astro project
+  # instead. A PR confined to `docs/` skips it: the docs site is a separate Astro project
   # that nothing in Composer imports.
   boot-budget:
-    if: ${{ inputs.only != 'test' && inputs.only != 'e2e' }}
+    if: >-
+      ${{ inputs.only != 'test' && inputs.only != 'e2e' && github.event_name != 'merge_group' &&
+      !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
     permissions:
       contents: read
       packages: read
@@ -242,9 +262,9 @@ jobs:
       # A diff that will not resolve counts as touching code, so the budget runs.
       - name: Scope
         id: scope
-        if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
+        if: github.event_name == 'pull_request'
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           if changed=$(git diff --name-only "$BASE_SHA"...HEAD) && ! printf '%s\n' "$changed" | grep -qv '^docs/'; then
             echo 'docs-only=true' >> "$GITHUB_OUTPUT"
@@ -390,6 +410,8 @@ jobs:
       - id: plan
         env:
           DRAFT: ${{ github.event.pull_request.draft == true }}
+          MERGE_QUEUE: ${{ github.event_name == 'merge_group' }}
+          MAIN_PUSH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         run: node .github/actions/plan/plan.mjs
 
   # Vitest, split by runtime. `node` (`:test`, `:test-workerd`) runs four targets at a time, split by moon's
@@ -414,8 +436,8 @@ jobs:
       packages: read
       statuses: write
     runs-on: ubuntu-24.04
-    # The scheduled run bypasses the cache and rebuilds every dependency per shard.
-    timeout-minutes: 60
+    # The scheduled run bypasses the cache and rebuilds every dependency per shard; a cell took 58 minutes.
+    timeout-minutes: 75
     env:
       NODE_VERSION: '24.11.1'
       # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
@@ -441,8 +463,6 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
-        with:
-          rust: 'true'
 
       - name: Resolve affected scope
         uses: ./.github/actions/affected
@@ -465,6 +485,36 @@ jobs:
       - name: Advisory suites
         if: ${{ !cancelled() && strategy.job-index == 1 && github.event_name != 'merge_group' }}
         uses: ./.github/actions/advisory
+
+  # Every `:test-native`: suites that compile native code or load it, kept out of the `:test` sweep. The Rust
+  # addon compiles RocksDB from source, and on the scheduled run's forced rebuild two such compiles took 25
+  # minutes of a node cell's 4 vCPU. On a PR moon's remote cache skips both unless the crate changed.
+  native:
+    if: >-
+      ${{ inputs.only != 'check' && inputs.only != 'e2e' &&
+      !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          rust: 'true'
+
+      - name: Resolve affected scope
+        uses: ./.github/actions/affected
+
+      - name: Test
+        run: >-
+          moon exec --on-failure continue :test-native
 
   test-browser:
     name: test browser
@@ -533,8 +583,8 @@ jobs:
   # failed or was cancelled, or `plan` failed. Skipped passes: a suite the change does not affect, or a
   # draft's browser cells.
   test:
-    needs: [plan, test-node, test-browser]
-    if: always()
+    needs: [plan, test-node, test-browser, native]
+    if: ${{ always() && !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     # The worst result, for `report`: a cancelled cell proved nothing, so it must not read as a failure.
@@ -754,7 +804,7 @@ jobs:
   # gating.
   e2e:
     needs: [plan, e2e-composer, e2e-rest]
-    if: always()
+    if: ${{ always() && github.event_name != 'merge_group' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     # The worst result, for `report`: a cancelled cell proved nothing, so it must not read as a failure.
@@ -778,7 +828,8 @@ jobs:
   cli:
     if: >-
       ${{ (inputs.only == '' || inputs.only == 'all') && (
-      github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+      github.event_name != 'pull_request' || !github.event.pull_request.draft) &&
+      github.event_name != 'merge_group' && !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:

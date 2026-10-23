@@ -12,6 +12,8 @@ import { Filter, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
+import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import * as AttentionPlugin from '@dxos/plugin-attention/AttentionPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -20,7 +22,9 @@ import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as TestingHarness from '@dxos/plugin-testing/Harness';
 
 import { ProjectsPlugin } from '#plugin';
-import { ProjectCapabilities, ProjectOperation } from '#types';
+import { FeatureMapView, ProjectCapabilities, ProjectOperation } from '#types';
+
+import { featureSpec } from '../templates/feature-spec.ts';
 
 describe('ProjectOperation.Create', () => {
   test('scaffolds the owned graph and files it with one cascading add', async ({ expect }) => {
@@ -95,6 +99,26 @@ describe('ProjectOperation.Create', () => {
     const projects = await space.db.query(Filter.type(Project.Project)).run();
     expect(projects.map((project) => project.name)).toEqual(['Voyage']);
   });
+
+  test("opens the Features tab in the template's view", async ({ expect }) => {
+    await using harness = await setup();
+    const viewState = harness.get(AttentionCapabilities.ViewState);
+
+    const { project } = await harness.runPromise(
+      Operation.invoke(
+        ProjectOperation.Create,
+        { name: 'Spec', templateId: featureSpec.id },
+        { spaceId: spaceId(harness) },
+      ),
+    );
+    expect(viewState.get(FeatureMapView.aspect, project.id).mode).toBe('canvas');
+
+    // A template without one leaves the default.
+    const { project: plain } = await harness.runPromise(
+      Operation.invoke(ProjectOperation.Create, { name: 'Plain' }, { spaceId: spaceId(harness) }),
+    );
+    expect(viewState.get(FeatureMapView.aspect, plain.id).mode).toBe('cards');
+  });
 });
 
 type Harness = Awaited<ReturnType<typeof TestingHarness.createComposerTestApp>>;
@@ -107,6 +131,8 @@ const setup = async (): Promise<Harness> => {
     plugins: [
       ClientPlugin.make({}),
       SpacePlugin.make({}),
+      // Holds the view state a template's initial Features view is written to.
+      AttentionPlugin.make(),
       AssistantPlugin.make(),
       TasksPlugin.make(),
       ProjectsPlugin(),

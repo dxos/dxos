@@ -8,6 +8,7 @@ import {
   type CompletionResult,
   acceptCompletion,
   autocompletion,
+  closeCompletion,
   completionStatus,
   currentCompletions,
   pickedCompletion,
@@ -15,7 +16,7 @@ import {
   setSelectedCompletion,
   startCompletion,
 } from '@codemirror/autocomplete';
-import { type Extension, Prec } from '@codemirror/state';
+import { type EditorState, type Extension, Facet, Prec } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate, keymap } from '@codemirror/view';
 
 export type CommandData = { sentinel: string; description?: string };
@@ -98,35 +99,118 @@ const commandDecorations = (getCommands: () => CommandData[]) => {
   );
 };
 
-/** Two-column command/description layout; shared column widths via subgrid. */
-const commandTooltipTheme = EditorView.theme({
-  '.cm-tooltip-autocomplete > ul': {
-    display: 'grid',
-    gridTemplateColumns: 'max-content 1fr',
-    columnGap: '0.75rem',
-  },
-  '.cm-tooltip-autocomplete > ul > li': {
-    display: 'grid',
-    gridTemplateColumns: 'subgrid',
-    gridColumn: 'span 2',
-    alignItems: 'center',
-  },
-  '.cm-tooltip-autocomplete .cm-completionLabel': {
-    fontFamily: 'var(--dx-font-mono, monospace)',
-  },
-  '.cm-tooltip-autocomplete .cm-completionDetail': {
-    fontStyle: 'normal',
-    fontSize: '0.875rem',
-    marginInlineStart: '0',
+/** Present when `commands()` is installed, so the host (`ChatEditor`) renders the completion list itself. */
+export const commandCompletionHost = Facet.define<boolean, boolean>({ combine: (values) => values.some(Boolean) });
+
+// The host draws the list in a portalled popover, which the prompt's container cannot clip; CodeMirror's own list stays
+// in the accessibility tree (visually hidden) because the editor's `aria-activedescendant` points into it.
+const hiddenTooltipTheme = EditorView.theme({
+  '.cm-tooltip.cm-tooltip-autocomplete': {
+    position: 'fixed',
+    width: '1px',
+    height: '1px',
+    overflow: 'hidden',
+    clipPath: 'inset(50%)',
+    whiteSpace: 'nowrap',
+    pointerEvents: 'none',
   },
 });
 
+export type CommandCompletionOption = { label: string; detail?: string };
+
+export type CommandCompletionState = {
+  open: boolean;
+  options: readonly CommandCompletionOption[];
+  selected: number | null;
+};
+
+export const closedCommandCompletion: CommandCompletionState = { open: false, options: [], selected: null };
+
+/** The open completion list, read through this module's `@codemirror/autocomplete` (see the Enter binding below). */
+export const getCommandCompletion = (state: EditorState): CommandCompletionState => {
+  if (!state.facet(commandCompletionHost) || completionStatus(state) !== 'active') {
+    return closedCommandCompletion;
+  }
+  const options = currentCompletions(state);
+  return { open: options.length > 0, options, selected: selectedCompletionIndex(state) };
+};
+
+/** Moves the completion selection (e.g., on pointer hover). */
+export const selectCommandCompletion = (view: EditorView, index: number): void => {
+  if (selectedCompletionIndex(view.state) !== index) {
+    view.dispatch({ effects: setSelectedCompletion(index) });
+  }
+};
+
+/** CodeMirror's default `interactionDelay`, during which `acceptCompletion` refuses so a fast Enter cannot pick. */
+const INTERACTION_DELAY = 75;
+
+/** Accepts the completion at `index` (e.g., on click). */
+export const acceptCommandCompletion = (view: EditorView, index: number): void => {
+  selectCommandCompletion(view, index);
+  const clicked = currentCompletions(view.state)[index];
+  if (!acceptCompletion(view)) {
+    // A click is deliberate, so one inside the delay is accepted once it ends rather than dropped — but only the
+    // option clicked: a list reopened meanwhile builds new options, which may sit at the same index.
+    setTimeout(() => {
+      if (
+        completionStatus(view.state) === 'active' &&
+        selectedCompletionIndex(view.state) === index &&
+        currentCompletions(view.state)[index] === clicked
+      ) {
+        acceptCompletion(view);
+      }
+    }, INTERACTION_DELAY);
+  }
+};
+
+export const closeCommandCompletion = (view: EditorView): void => {
+  closeCompletion(view);
+};
+
 export const commands = ({ getCommands }: CommandsOptions): Extension => [
-  commandTooltipTheme,
+  commandCompletionHost.of(true),
+  hiddenTooltipTheme,
   commandDecorations(getCommands),
+  // Arrow navigation stops at the ends of the list rather than cycling; it precedes `autocompletion()`, whose own
+  // `Prec.highest` keymap cycles and would otherwise win the precedence tie by extension order.
+  Prec.highest(
+    keymap.of([
+      {
+        key: 'ArrowDown',
+        run: (view) => {
+          if (completionStatus(view.state) !== 'active') {
+            return false;
+          }
+          const index = selectedCompletionIndex(view.state);
+          if (index === null) {
+            return false;
+          }
+          if (index < currentCompletions(view.state).length - 1) {
+            view.dispatch({ effects: setSelectedCompletion(index + 1) });
+          }
+          return true;
+        },
+      },
+      {
+        key: 'ArrowUp',
+        run: (view) => {
+          if (completionStatus(view.state) !== 'active') {
+            return false;
+          }
+          const index = selectedCompletionIndex(view.state);
+          if (index === null) {
+            return false;
+          }
+          if (index > 0) {
+            view.dispatch({ effects: setSelectedCompletion(index - 1) });
+          }
+          return true;
+        },
+      },
+    ]),
+  ),
   autocompletion({
-    // The prompt sits at the bottom of its panel, so the list opens upward.
-    aboveCursor: true,
     override: [
       (context: CompletionContext): CompletionResult | null => {
         const toOption = ({ sentinel, description }: CommandData) => ({
@@ -169,43 +253,6 @@ export const commands = ({ getCommands }: CommandsOptions): Extension => [
       },
     ],
   }),
-  // Arrow navigation stops at the ends of the list rather than cycling.
-  Prec.highest(
-    keymap.of([
-      {
-        key: 'ArrowDown',
-        run: (view) => {
-          if (completionStatus(view.state) !== 'active') {
-            return false;
-          }
-          const index = selectedCompletionIndex(view.state);
-          if (index === null) {
-            return false;
-          }
-          if (index < currentCompletions(view.state).length - 1) {
-            view.dispatch({ effects: setSelectedCompletion(index + 1) });
-          }
-          return true;
-        },
-      },
-      {
-        key: 'ArrowUp',
-        run: (view) => {
-          if (completionStatus(view.state) !== 'active') {
-            return false;
-          }
-          const index = selectedCompletionIndex(view.state);
-          if (index === null) {
-            return false;
-          }
-          if (index > 0) {
-            view.dispatch({ effects: setSelectedCompletion(index - 1) });
-          }
-          return true;
-        },
-      },
-    ]),
-  ),
   // The host editor's `submit()` extension also binds Enter at `Prec.highest`; ties between equal
   // precedences break by extension order, so the caller must place this extension ahead of `submit()`.
   // `completionStatus`/`acceptCompletion` are imported from the same module as `autocompletion()` above
