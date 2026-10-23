@@ -76,6 +76,11 @@
       "import": "./dist/lib/translations.mjs"
     },
     "./package.json": "./package.json",
+    "./FileSystem": {
+      "source": "./src/types/FileSystem.ts",
+      "types": "./dist/types/src/types/FileSystem.d.ts",
+      "import": "./dist/lib/FileSystem.mjs"
+    },
     "./FileSystemCapabilities": {
       "source": "./src/types/FileSystemCapabilities.ts",
       "types": "./dist/types/src/types/FileSystemCapabilities.d.ts",
@@ -127,6 +132,7 @@
     "@dxos/echo": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/graph": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
