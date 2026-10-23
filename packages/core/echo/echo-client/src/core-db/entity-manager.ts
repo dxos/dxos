@@ -24,7 +24,7 @@ import {
 import { Context, ContextDisposedError, cancelWithContext } from '@dxos/context';
 import { raise, warnAfterTimeout } from '@dxos/debug';
 import { type Database, type Entity, Lens, Ref } from '@dxos/echo';
-import { imageHeads } from '@dxos/echo-host/versions';
+import { imageHeads } from '@dxos/echo-host/version-history';
 import {
   BACKED_OBJECT_LIMIT,
   type BranchRecord,

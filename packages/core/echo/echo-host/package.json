@@ -28,10 +28,10 @@
       "types": "./dist/types/src/filter/index.d.ts",
       "import": "./dist/lib/filter.mjs"
     },
-    "./versions": {
-      "source": "./src/versions/index.ts",
-      "types": "./dist/types/src/versions/index.d.ts",
-      "import": "./dist/lib/versions.mjs"
+    "./version-history": {
+      "source": "./src/versions/version-history.ts",
+      "types": "./dist/types/src/versions/version-history.d.ts",
+      "import": "./dist/lib/version-history.mjs"
     },
     "./query": {
       "source": "./src/query/planner.ts",

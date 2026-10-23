@@ -10,7 +10,7 @@ export default defineConfig({
     'index': 'src/index.ts',
     'query/planner': 'src/query/planner.ts',
     'testing': 'src/testing/index.ts',
-    'versions': 'src/versions/index.ts',
+    'version-history': 'src/versions/version-history.ts',
   },
   test: { node: true },
 });
