@@ -38,7 +38,7 @@ type TimelineSettings
   desc: How a timeline chart is drawn.
   fields:
     spine?: string             # left | center | right
-    scale?: string             # log | linear | compact
+    scale?: string             # log | linear | compact; compact by default
     start?: string             # year or date
     end?: string               # year or date
     dates?: boolean            # show each event's date beside its title

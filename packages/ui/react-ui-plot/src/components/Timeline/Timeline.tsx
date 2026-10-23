@@ -322,7 +322,7 @@ export const Timeline = ({
 }: TimelineProps) => {
   const {
     spine = 'center',
-    scale = 'linear',
+    scale = 'compact',
     hidden,
     today = true,
     dates = true,
