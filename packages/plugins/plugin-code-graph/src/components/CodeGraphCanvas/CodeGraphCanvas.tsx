@@ -5,7 +5,16 @@
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import React, {
+  type ReactNode,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+} from 'react';
 
 import {
   type Arrangement,
@@ -27,10 +36,11 @@ import {
   defaultNodeTypes,
   nodeBase,
 } from '@dxos/react-ui-canvas/scene';
+import * as HoverCard from '@dxos/react-ui/HoverCard';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { Model, Semantic } from '#graph';
+import { Kind, Model, Semantic } from '#graph';
 import { type CodeGraph } from '#types';
 
 import { KIND_ICONS } from '../icons.ts';
@@ -43,14 +53,20 @@ const CodeNode = Schema.Struct({ type: Schema.Literal(CODE_NODE_TYPE), ...nodeBa
 const createCodeNode = (props: CreateProps): Node => ({ type: CODE_NODE_TYPE, ...props });
 
 /** Node views get no host props, so the boxes' data reaches them through context. */
-const CodeNodeContext = createContext<{ lookup: (id: string) => CodeGraph.Node | undefined; selected?: string }>({
+const CodeNodeContext = createContext<{
+  lookup: (id: string) => CodeGraph.Node | undefined;
+  kinds: Record<string, string>;
+  selected?: string;
+  renderPreview?: (id: string) => ReactNode;
+}>({
   lookup: () => undefined,
+  kinds: {},
 });
 
 const CodeNodeView = ({ node }: NodeViewProps) => {
-  const { lookup, selected } = useContext(CodeNodeContext);
+  const { lookup, kinds, selected, renderPreview } = useContext(CodeNodeContext);
   const resource = lookup(node.id);
-  return (
+  const box = (
     <Layout.Flex
       asChild
       column
@@ -60,14 +76,27 @@ const CodeNodeView = ({ node }: NodeViewProps) => {
         selected === node.id ? 'border-accent-text' : 'border-separator',
       ]}
     >
-      <div data-testid='code-graph-node' title={node.id}>
+      <div data-testid='code-graph-node'>
         <Layout.Flex align='center' gap='sm' classNames='min-w-0'>
           <Icon.Icon icon={KIND_ICONS[resource?.kind ?? 'other']} size='md' />
-          <span className='truncate font-medium'>{resource?.label ?? node.id}</span>
+          <span className='truncate font-medium'>{resource ? Kind.titleOf(resource) : node.id}</span>
         </Layout.Flex>
-        {resource?.group && <span className='truncate text-xs text-description'>{resource.group}</span>}
+        <span className='truncate text-xs text-description'>
+          {kinds[node.id] ?? Kind.describe({ coarse: resource?.kind ?? 'other' })}
+        </span>
       </div>
     </Layout.Flex>
+  );
+  if (!renderPreview) {
+    return box;
+  }
+  return (
+    <HoverCard.Root positioning={{ placement: 'right-start' }}>
+      <HoverCard.Trigger asChild>{box}</HoverCard.Trigger>
+      <HoverCard.Content arrow={false} classNames='p-0'>
+        {renderPreview(node.id)}
+      </HoverCard.Content>
+    </HoverCard.Root>
   );
 };
 
@@ -119,6 +148,8 @@ const toGraph = (nodes: readonly CodeGraph.Node[], edges: readonly CodeGraph.Edg
   };
 };
 
+const EMPTY_KINDS: Record<string, string> = {};
+
 const samePositions = (left: Record<string, Point>, right: Record<string, Point>) =>
   JSON.stringify(left) === JSON.stringify(right);
 
@@ -130,8 +161,12 @@ export type CodeGraphCanvasProps = {
   onPositionsChange?: (positions: Record<string, Point>) => void;
   /** How boxes take their slots when no position is given for them. */
   arrange?: Arrangement;
+  /** What each box is (`capability`, `file`), by IRI; boxes not listed show their coarse kind. */
+  kinds?: Record<string, string>;
   /** The box shown highlighted, e.g. the one whose details are open. */
   selected?: string;
+  /** The card shown while the pointer rests on a box; mounted only while it is open. */
+  renderPreview?: (id: string) => ReactNode;
   /** Double-clicking a box. */
   onOpen?: (id: string) => void;
   /** Boxes deleted on the canvas; without it they cannot be. */
@@ -150,7 +185,9 @@ export const CodeGraphCanvas = ({
   positions = {},
   onPositionsChange,
   arrange = 'crossings',
+  kinds = EMPTY_KINDS,
   selected,
+  renderPreview,
   onOpen,
   onRemove,
   refitKey,
@@ -160,7 +197,10 @@ export const CodeGraphCanvas = ({
     const byId = new Map(nodes.map((node) => [node.id, node]));
     return (id: string) => byId.get(id);
   }, [nodes]);
-  const nodeContext = useMemo(() => ({ lookup, selected }), [lookup, selected]);
+  const nodeContext = useMemo(
+    () => ({ lookup, kinds, selected, renderPreview }),
+    [lookup, kinds, selected, renderPreview],
+  );
 
   // Owned by this component: the projection's scene atom reads both, so they live while the canvas is mounted.
   const graph = useMemo(() => Atom.make<GraphModel>(toGraph(nodes, edges)), []);

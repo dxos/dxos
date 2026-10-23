@@ -16,7 +16,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { type Fact, NodeDetails } from '#components';
-import { Semantic } from '#graph';
+import { Kind, Semantic } from '#graph';
 import { meta } from '#meta';
 import { CodeGraph, CodeGraphOperation } from '#types';
 
@@ -150,9 +150,29 @@ export const CodeGraphArticle = ({ role, subject, attendableId }: CodeGraphArtic
     [invokePromise, subject, spaceId],
   );
 
+  const kinds = useKinds(nodes, invokePromise);
   const [selected, setSelected] = useState<string>();
   const selectedNode = useMemo(() => nodes.find(({ id }) => id === selected), [nodes, selected]);
   const details = useInspect(selected, invokePromise);
+
+  // The same panel as a hover card; it fetches its facts only once the card opens.
+  const renderPreview = useCallback(
+    (id: string) => {
+      const node = nodes.find((candidate) => candidate.id === id);
+      return (
+        node && (
+          <NodePreview
+            node={node}
+            kind={kinds[id]}
+            invokePromise={invokePromise}
+            onExpand={(direction) => handleExpand(id, direction)}
+            onRemove={() => handleRemove([id])}
+          />
+        )
+      );
+    },
+    [nodes, kinds, invokePromise, handleExpand, handleRemove],
+  );
   const actions = useToolbarActions({
     layout,
     pending: semantic.pending,
@@ -184,7 +204,9 @@ export const CodeGraphArticle = ({ role, subject, attendableId }: CodeGraphArtic
               arrange={layout === 'force' ? 'force' : 'crossings'}
               positions={positions}
               onPositionsChange={handlePositionsChange}
+              kinds={kinds}
               selected={selected}
+              renderPreview={renderPreview}
               onOpen={setSelected}
               onRemove={handleRemove}
               // Reframe when boxes come or go, and when the illustrator's positions land after the first frame.
@@ -193,7 +215,9 @@ export const CodeGraphArticle = ({ role, subject, attendableId }: CodeGraphArtic
           )}
           {selectedNode && (
             <NodeDetails
+              classNames='absolute top-2 right-2 bottom-2 w-96'
               node={selectedNode}
+              kind={kinds[selectedNode.id]}
               facts={details.facts}
               incoming={details.incoming}
               error={details.error}
@@ -289,4 +313,65 @@ const useInspect = (iri: string | undefined, invokePromise: Invoke) => {
     };
   }, [iri, invokePromise]);
   return state;
+};
+
+/** The details panel inside a hover card, with its own facts. */
+const NodePreview = ({
+  node,
+  kind,
+  invokePromise,
+  onExpand,
+  onRemove,
+}: {
+  node: CodeGraph.Node;
+  kind?: string;
+  invokePromise: Invoke;
+  onExpand: (direction: 'out' | 'in') => void;
+  onRemove: () => void;
+}) => {
+  const details = useInspect(node.id, invokePromise);
+  return (
+    <NodeDetails
+      classNames='w-96 max-h-[32rem]'
+      node={node}
+      kind={kind}
+      facts={details.facts}
+      incoming={details.incoming}
+      error={details.error}
+      onExpand={onExpand}
+      onRemove={onRemove}
+    />
+  );
+};
+
+/**
+ * What each box is, from one index query over the whole graph: re-run only when the set of boxes changes, and
+ * empty when the index cannot answer, so boxes fall back to their coarse kind.
+ */
+const useKinds = (nodes: readonly CodeGraph.Node[], invokePromise: Invoke): Record<string, string> => {
+  const ids = useMemo(
+    () =>
+      nodes
+        .map(({ id }) => id)
+        .sort()
+        .join('\n'),
+    [nodes],
+  );
+  const [kinds, setKinds] = useState<Record<string, string>>({});
+  useEffect(() => {
+    const sparql = Kind.query(nodes.map(({ id }) => id));
+    if (!sparql) {
+      return;
+    }
+    let cancelled = false;
+    void invokePromise(CodeGraphOperation.Query, { sparql, limit: 2000 }).then(({ data }) => {
+      if (!cancelled && data) {
+        setKinds(Kind.fromRows(nodes, data.rows));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [ids, invokePromise]);
+  return kinds;
 };

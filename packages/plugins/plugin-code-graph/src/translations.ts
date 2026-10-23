@@ -35,6 +35,7 @@ export const translations = [
         'expand-in.label': 'Expand dependents',
         'remove-node.label': 'Remove',
         'close-details.label': 'Close',
+        'incoming.label': 'Referenced by',
       },
     },
   },

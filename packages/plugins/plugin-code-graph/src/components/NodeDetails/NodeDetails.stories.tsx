@@ -20,7 +20,7 @@ const meta: Meta<NodeDetailsProps> = {
   component: NodeDetails,
   render: (args) => (
     <div className='relative dx-fill'>
-      <NodeDetails {...args} />
+      <NodeDetails classNames='absolute top-2 right-2 bottom-2 w-96' {...args} />
     </div>
   ),
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
@@ -45,6 +45,33 @@ export const Default: StoryObj<typeof meta> = {
       { predicate: 'deus:usesPackage', count: 186 },
       { predicate: 'deus:declaresDep', count: 181 },
     ],
+  },
+};
+
+const symbol = `${Iri.FILE}packages/plugins/plugin-code/src/types/CodeCapabilities.ts#SpecSync`;
+
+/** A symbol: its name as the title, its class as the kind, and its definition highlighted above the facts. */
+export const SymbolNode: StoryObj<typeof meta> = {
+  args: {
+    node: Model.makeNode(symbol, { label: 'CodeCapabilities.ts#SpecSync' }),
+    kind: 'capability',
+    facts: [
+      { predicate: 'rdf:type', object: 'deus:Capability' },
+      { predicate: 'rdf:type', object: 'deus:Symbol' },
+      { predicate: 'deus:kind', object: 'variable' },
+      {
+        predicate: 'deus:snippet',
+        object: [
+          'export const SpecSync = Capability.makeSingleton<{',
+          '  readonly state: Atom.Writable<SpecSyncState>;',
+          '',
+          '  readonly syncNow: () => void;',
+          '}>()(`${meta.profile.key}.capability.specSync`);',
+        ].join('\n'),
+      },
+      { predicate: 'deus:line', object: '89' },
+    ],
+    incoming: [{ predicate: 'deus:implDependsOn', count: 3 }],
   },
 };
 
