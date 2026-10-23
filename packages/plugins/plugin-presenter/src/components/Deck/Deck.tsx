@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import '../MarkdownSlide/print.css';
+import './print.css';
 
 import React, { type KeyboardEvent, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal, flushSync } from 'react-dom';
@@ -88,6 +88,14 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
 
     // Click state is tied to the slide it belongs to, so any index change (pager, jump, controlled) resets it.
     const [stepState, setStepState] = useState({ index: 0, step: 0 });
+    // A pager, navtree or controlled index change bypasses the key handler, so stale steps are dropped on any move.
+    const [previousIndex, setPreviousIndex] = useState(index);
+    if (previousIndex !== index) {
+      setPreviousIndex(index);
+      if (stepState.index !== index) {
+        setStepState({ index, step: 0 });
+      }
+    }
     const clicks = useSlideClicks(slide);
     const step = stepState.index === index ? Math.min(stepState.step, clicks) : 0;
 
@@ -118,6 +126,8 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
         window.removeEventListener('afterprint', handleAfterPrint);
         if (owner) {
           document.documentElement.removeAttribute(PRINTING_ATTRIBUTE);
+          // A fullscreen toggle mid-print re-runs this effect, which must not leave the print container mounted.
+          setPrinting(false);
         }
       };
     }, [fullscreen]);
@@ -126,8 +136,9 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
       printing &&
       createPortal(
         <div data-print-deck=''>
-          {slides.map((source) => (
-            <div key={source.id} data-print-slide=''>
+          {slides.map((source, slideIndex) => (
+            // An object linked twice yields two slides with one id.
+            <div key={`${source.id}:${slideIndex}`} data-print-slide=''>
               <SlideRenderer
                 source={source}
                 attendableId={attendableId}

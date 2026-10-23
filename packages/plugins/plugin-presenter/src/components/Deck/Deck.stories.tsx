@@ -141,7 +141,8 @@ export const Default: Story = {
   decorators: [withEmptyPlugins],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const deck = await canvas.findByTestId('presenter.deck');
+    // The client identity is created before the first story renders, which can outlast the default timeout.
+    const deck = await canvas.findByTestId('presenter.deck', undefined, { timeout: 10_000 });
     deck.focus();
     await userEvent.keyboard('{ArrowRight}{ArrowRight}');
     await expect(await canvas.findByText('3 / 5')).toBeVisible();
@@ -290,6 +291,26 @@ export const ClickSteps: Story = {
     await userEvent.keyboard('{End}{Home}{ArrowRight}');
     await waitFor(() => expect(hidden()).toBe(2));
     await expect(canvas.getByText('1 / 2')).toBeVisible();
+  },
+};
+
+/** Leaving a slide through the pager drops its revealed steps, so coming back starts it at step 0. */
+export const ClickStepsPager: Story = {
+  render: ClickStepsStory,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const deck = await canvas.findByTestId('presenter.deck');
+    const hidden = () => canvasElement.querySelectorAll('li.invisible').length;
+    await waitFor(() => expect(hidden()).toBe(3));
+    deck.focus();
+    await userEvent.keyboard('{ArrowRight}{ArrowRight}');
+    await waitFor(() => expect(hidden()).toBe(1));
+    await userEvent.click(canvas.getByRole('button', { name: 'Next' }));
+    await expect(await canvas.findByText('2 / 2')).toBeVisible();
+    await userEvent.click(canvas.getByRole('button', { name: 'Previous' }));
+    await expect(await canvas.findByText('1 / 2')).toBeVisible();
+    await waitFor(() => expect(hidden()).toBe(3));
   },
 };
 
