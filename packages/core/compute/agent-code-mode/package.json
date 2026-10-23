@@ -60,6 +60,8 @@
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "catalog:",
     "@dxos/assistant": "workspace:*",
+    "@dxos/link": "workspace:*",
+    "@dxos/mcp-client": "workspace:*",
     "@effect/vitest": "catalog:",
     "vitest": "catalog:"
   },

@@ -15,7 +15,9 @@ import * as Util from '@dxos/react-ui/Util';
 import { meta } from '#meta';
 import { type SourceKey, formatSourceKey, parseSourceKey } from '#sync';
 
-import { STATUS_STYLE, type Verdict, type VerdictStatus } from '../SpecModel/index.ts';
+import { type SourceReader } from '../SpecEditor/snippet-card.ts';
+import { STATUS_STYLE, type Verdict, type VerdictStatus, walkthroughOf } from '../SpecModel/index.ts';
+import { Walkthrough } from './Walkthrough.tsx';
 
 /** Status icon colours, matching the review chips in the editor's margin. */
 const STATUS_TEXT: Record<VerdictStatus, string> = {
@@ -34,6 +36,8 @@ export type VerdictCardProps = {
   onOpenCode?: (key: SourceKey) => void;
   /** The verdict the host has made current; Card.Root owns `aria-current`, so the host's attribute would be lost. */
   current?: boolean;
+  /** The checkout's text of a file, for the walkthrough the current card expands to. */
+  read?: SourceReader;
 };
 
 /**
@@ -42,11 +46,13 @@ export type VerdictCardProps = {
  * host's tile, so the card is `asChild`-friendly.
  */
 export const VerdictCard = Util.composable<HTMLDivElement, VerdictCardProps>(
-  ({ verdict, onReveal, onOpenCode, current, ...props }, forwardedRef) => {
+  ({ verdict, onReveal, onOpenCode, current, read, ...props }, forwardedRef) => {
     const { t } = Hooks.useTranslation(meta.profile.key);
     const { id, status, summary, note, evidence } = verdict;
     const keys = evidence.map(parseSourceKey).filter((key) => key !== undefined);
     const style = STATUS_STYLE[status];
+    // Expanded only on the current card, so the list stays scannable.
+    const steps = current ? walkthroughOf(verdict) : undefined;
     return (
       <Card.Root
         {...props}
@@ -102,6 +108,11 @@ export const VerdictCard = Util.composable<HTMLDivElement, VerdictCardProps>(
               <Card.Text lines={4} variant='muted'>
                 {note}
               </Card.Text>
+            </Card.Row>
+          )}
+          {steps && (
+            <Card.Row>
+              <Walkthrough steps={steps} read={read} onOpenCode={onOpenCode} />
             </Card.Row>
           )}
           <Card.Row>

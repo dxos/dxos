@@ -108,6 +108,15 @@ const FileOperation: SandboxOperation = {
   invoke: () => Effect.die(new Error('not used')),
 };
 
+/** Stands in for an MCP server's tool: no operation backs it, so the worker must not resolve one for it. */
+const WeatherTool: SandboxOperation = {
+  name: 'get_weather',
+  description: 'Returns the current weather for a city.',
+  parameters: { type: 'object', properties: { city: { type: 'string' } } },
+  invoke: (input: unknown) =>
+    Effect.sync(() => `Sunny in ${Schema.decodeUnknownSync(Schema.Struct({ city: Schema.String }))(input).city}`),
+};
+
 /**
  * The turn's `Operation.Service`, which `Operation.invoke` from the worker runs through on the host
  * just as the Effect dialect's calls do in-process. Like the real invoker it hands values through
@@ -319,6 +328,16 @@ describe('worker sandbox', () => {
       expect(scored).toEqual(['Review the PR']);
     }, 60_000);
 
+    test('calls a tool no operation backs through Tools, and never resolves it as an operation', async () => {
+      const { runWith } = await setup();
+
+      const output = await runWith(
+        EffectDialect,
+        `yield* print(yield* Tools.get_weather({ city: 'Paris' }), Object.keys(Tools).join(', '));`,
+      );
+      expect(output).toEqual('Sunny in Paris get_weather');
+    }, 60_000);
+
     test('passes a stored object to an operation as that same object', async () => {
       const { db, runWith } = await setup();
 
@@ -429,7 +448,7 @@ const setup = async () => {
           dialect,
           sandbox,
           runtime,
-          operations: [ScoreOperation, FileOperation],
+          operations: [ScoreOperation, FileOperation, WeatherTool],
           timeout,
         });
         const result = yield* callTool(yield* toolkit.handlers, {

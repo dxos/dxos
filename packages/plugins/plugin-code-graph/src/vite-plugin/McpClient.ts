@@ -5,6 +5,8 @@
 // @import-as-namespace
 
 import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
+import { closeSync, openSync } from 'node:fs';
+import { devNull } from 'node:os';
 import { createInterface } from 'node:readline';
 
 import { log } from '@dxos/log';
@@ -60,6 +62,36 @@ export const payloadOf = (result: unknown, tool: string): unknown => {
 /** Keeps the last lines a server wrote to stderr, which say why it failed to start (a locked or missing store). */
 const STDERR_LINES = 20;
 
+/** Enough for the three stdio pipes, both ends each. */
+const RESERVED_FDS = 8;
+
+/**
+ * Holds low-numbered descriptors for the child's stdio pipes. macOS's `posix_spawn` refuses descriptors at or above
+ * `OPEN_MAX` (10240), and by the first request a dev server watching the monorepo holds every number below that, so
+ * the pipes are numbered from slots taken while the table was still small and released just before the spawn.
+ */
+const reserveDescriptors = () => {
+  const take = () => Array.from({ length: RESERVED_FDS }, () => openSync(devNull, 'r'));
+  const release = (fds: number[]) => fds.forEach((fd) => closeSync(fd));
+  let fds = take();
+  return {
+    /** Runs `spawn` with the reserved slots free, then takes the lowest free slots again for the next spawn. */
+    around: <T>(spawn: () => T): T => {
+      release(fds);
+      fds = [];
+      try {
+        return spawn();
+      } finally {
+        fds = take();
+      }
+    },
+    close: () => {
+      release(fds);
+      fds = [];
+    },
+  };
+};
+
 /**
  * A minimal MCP client over stdio: newline-delimited JSON-RPC, `initialize` once, then `tools/call`. Just enough for
  * `code-index mcp`, so the dev server needs neither the MCP SDK nor the index's native addon in its own process.
@@ -70,6 +102,7 @@ export const make = ({ command, args, cwd, timeout = 60_000 }: McpClientOptions)
   let nextId = 1;
   const pending = new Map<number, Pending>();
   const stderr: string[] = [];
+  const descriptors = reserveDescriptors();
 
   const failAll = (error: Error) => {
     for (const { reject, timer } of pending.values()) {
@@ -94,7 +127,7 @@ export const make = ({ command, args, cwd, timeout = 60_000 }: McpClientOptions)
 
   const start = (): Promise<void> => {
     stderr.length = 0;
-    const process = spawn(command, [...args], { cwd, stdio: ['pipe', 'pipe', 'pipe'] });
+    const process = descriptors.around(() => spawn(command, [...args], { cwd, stdio: ['pipe', 'pipe', 'pipe'] }));
     child = process;
     // A write racing the child's death fails with EPIPE; unheard, it would throw in the dev server, and the exit
     // handler already fails the pending calls.
@@ -161,6 +194,7 @@ export const make = ({ command, args, cwd, timeout = 60_000 }: McpClientOptions)
     },
     close: () => {
       failAll(new Error('code-index client closed'));
+      descriptors.close();
       child?.kill();
       child = undefined;
       ready = undefined;
