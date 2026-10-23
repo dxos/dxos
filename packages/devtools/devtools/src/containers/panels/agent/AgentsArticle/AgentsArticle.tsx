@@ -7,11 +7,12 @@ import React, { useEffect, useMemo, useState } from 'react';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { Context } from '@dxos/context';
 import { type AgentHalo } from '@dxos/edge-client';
-import { IdentityDid } from '@dxos/keys';
-import { buf } from '@dxos/protocols/buf';
+import { IdentityDid, type PublicKey } from '@dxos/keys';
+import { buf, toPublicKey } from '@dxos/protocols/buf';
 import { CredentialSchema, SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
@@ -25,8 +26,8 @@ type Agent = { spaceId: string; name?: string; did: IdentityDid };
 
 /**
  * An agent's HALO, which no client replicates, read from EDGE (`GET /compute/brain/:did/halo`): pick one of the agents
- * whose spaces the client holds to see its identity, admins and spaces, or every credential in its HALO. EDGE answers
- * the agent's admins only, and its refusal shows as `error`.
+ * the viewer administers to see its identity, admins and spaces, or every credential in its HALO. EDGE answers the
+ * agent's admins only, and its refusal shows as `error`.
  */
 export const AgentsArticle = ({ role }: ArticleProps) => {
   const client = useClient();
@@ -121,17 +122,24 @@ export const AgentsArticle = ({ role }: ArticleProps) => {
   );
 };
 
-/** The agent owns its default space, which the agent's admins hold a membership of. */
-const agentOf = (space: Space): Agent | undefined => {
-  const owner = space.members.get().find((member) => member.role === SpaceMember_Role.OWNER)?.identity;
-  return IdentityDid.isValid(owner?.did)
+/** The agent owns its default space, in which its admins are the members who may write. */
+const agentOf = (space: Space, viewer: PublicKey): Agent | undefined => {
+  const members = space.members.get();
+  const owner = members.find((member) => member.role === SpaceMember_Role.OWNER)?.identity;
+  const administers = members.some(
+    (member) =>
+      (toPublicKey(member.identity?.identityKey)?.equals(viewer) ?? false) &&
+      (member.role === SpaceMember_Role.ADMIN || member.role === SpaceMember_Role.EDITOR),
+  );
+  return administers && IdentityDid.isValid(owner?.did)
     ? { spaceId: space.id, name: space.isOpen ? space.properties?.name : undefined, did: owner.did }
     : undefined;
 };
 
-/** The agents whose default spaces the client holds, re-read whenever its spaces or their members change. */
+/** The agents the viewer administers, re-read whenever the client's spaces or their members change. */
 const useAgents = (): Agent[] => {
   const client = useClient();
+  const viewer = toPublicKey(useIdentity()?.identityKey);
   const [revision, setRevision] = useState(0);
   useEffect(() => {
     const changed = () => setRevision((value) => value + 1);
@@ -159,10 +167,12 @@ const useAgents = (): Agent[] => {
 
   return useMemo(
     () =>
-      client.spaces
-        .get()
-        .filter((space) => space.tags.includes(AppSpace.AGENT_SPACE_TAG))
-        .flatMap((space) => agentOf(space) ?? []),
-    [client, revision],
+      viewer
+        ? client.spaces
+            .get()
+            .filter((space) => space.tags.includes(AppSpace.AGENT_SPACE_TAG))
+            .flatMap((space) => agentOf(space, viewer) ?? [])
+        : [],
+    [client, viewer?.toHex(), revision],
   );
 };
