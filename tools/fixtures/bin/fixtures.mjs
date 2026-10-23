@@ -32,7 +32,11 @@
 //
 // `--scope agents` is the one shared exception: such fixtures (e.g. voice recordings for transcription evals) live
 // under `agents/` rather than a user's prefix and are encrypted to the team's agents key as well as the pusher's own,
-// so any agent holding that key — a cloud session reads it from 1Password — can pull them, and nobody else can.
+// so cloud agents can pull what a person pushed, and nobody else can.
+//
+// Each machine has ONE identity, `DX_FIXTURES_AGE_KEY`: a person's own key locally (agents running locally act as
+// that person), and the agents key in the cloud sandbox, where it defaults to the 1Password reference below. A
+// cloud agent's pushes are therefore readable by cloud agents only, unless it adds `--recipient <age1...>`.
 //
 // A fixture is any file: JSON archives are checked as such, anything else (a `.wav`) is carried as-is with its
 // extension.
@@ -47,9 +51,8 @@
 //   moon run fixtures:info          # local fixtures + config (the remote has no listing API)
 //
 // Environment:
-//   DX_FIXTURES_AGE_KEY   Path to your age identity file. May be an `op://` reference.
-//   DX_FIXTURES_AGENTS_KEY  The agents identity, for pulling `--scope agents` fixtures pushed by someone else; usually
-//                         `op://eng-dev/network.dxos.fixtures/credential`.
+//   DX_FIXTURES_AGE_KEY   Path to your age identity file. May be an `op://` reference. In the cloud sandbox
+//                         (`CLAUDE_CODE_REMOTE`) it defaults to the agents key.
 //   DX_FIXTURES_BUCKET    Overrides the bucket name (default `test-fixtures`).
 //   DX_FIXTURES_DIR       Overrides the local directory (default `<repo>/testing/fixtures`).
 //   CLOUDFLARE_ACCOUNT_ID Required by wrangler when the token spans several accounts.
@@ -89,6 +92,9 @@ const EXTENSION_RE = /^[a-z0-9]{1,8}$/;
 const AGENTS_RECIPIENT = 'age197g2gqngxhg9vj3f627hyz8qjcduklz2a048dft29jg4zfwguavqygsjkw';
 
 const SCOPES = ['user', 'agents'];
+
+// Where the agents key's secret is; a cloud agent's identity unless DX_FIXTURES_AGE_KEY says otherwise.
+const AGENTS_IDENTITY = 'op://eng-dev/network.dxos.fixtures/credential';
 
 const main = () => {
   const [command, ...rest] = process.argv.slice(2);
@@ -172,9 +178,7 @@ const pull = (args) => {
   const scope = validScope(flags.scope);
 
   requireBinary('age', 'brew install age');
-  // An agents fixture someone else pushed opens only with the agents key; one's own opens with one's own key too.
-  const identity =
-    scope === 'agents' && process.env.DX_FIXTURES_AGENTS_KEY ? identityFile('DX_FIXTURES_AGENTS_KEY') : identityFile();
+  const identity = identityFile();
 
   // An explicit `--at` pins a version (with `--ext` for a non-JSON one); otherwise the pointer names the newest.
   const { version, extension } = flags.at
@@ -221,8 +225,7 @@ const readPointer = (location) => {
  * get/put/delete), so browse the Cloudflare dashboard for the full history.
  */
 const info = () => {
-  console.log(`identity:   ${process.env.DX_FIXTURES_AGE_KEY ?? '(unset — DX_FIXTURES_AGE_KEY)'}`);
-  console.log(`agents:     ${process.env.DX_FIXTURES_AGENTS_KEY ?? '(unset — DX_FIXTURES_AGENTS_KEY)'}`);
+  console.log(`identity:   ${configuredIdentity() ?? '(unset — DX_FIXTURES_AGE_KEY)'}`);
   console.log(`directory:  ${FIXTURES_DIR}`);
   console.log(`bucket:     ${BUCKET}`);
   console.log(`user:       ${userInfo().username}`);
@@ -325,11 +328,15 @@ const validName = (name) => {
  */
 const ownRecipient = () => execFileSync('age-keygen', ['-y', identityFile()], { encoding: 'utf8' }).trim();
 
-/** Path to the age identity file named by `variable`, resolving an `op://` reference to a temporary file. */
-const identityFile = (variable = 'DX_FIXTURES_AGE_KEY') => {
-  const configured = process.env[variable];
+/** This machine's identity: `DX_FIXTURES_AGE_KEY`, else the agents key in the cloud sandbox. */
+const configuredIdentity = () =>
+  process.env.DX_FIXTURES_AGE_KEY || (process.env.CLAUDE_CODE_REMOTE ? AGENTS_IDENTITY : undefined);
+
+/** Path to the age identity file, resolving an `op://` reference to a temporary file. */
+const identityFile = () => {
+  const configured = configuredIdentity();
   if (!configured) {
-    fail(`${variable} is required. Create one: age-keygen -o ~/.config/dxos/fixtures.key`);
+    fail('DX_FIXTURES_AGE_KEY is required. Create one: age-keygen -o ~/.config/dxos/fixtures.key');
   }
   if (!configured.startsWith('op://')) {
     const path = resolve(configured.replace(/^~(?=\/)/, homedir()));

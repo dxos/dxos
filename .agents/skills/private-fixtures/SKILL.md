@@ -27,19 +27,27 @@ transcription evals). Everything else stays per-user.
 
 ## Keys
 
-- **Your own key:** `age-keygen -o ~/.config/dxos/fixtures.key`, then
-  `export DX_FIXTURES_AGE_KEY=~/.config/dxos/fixtures.key` (an `op://` reference also works).
-- **Agents key:** the secret is in 1Password, vault `eng-dev`, item `network.dxos.fixtures`,
-  field `credential`. Its public half is committed as `AGENTS_RECIPIENT` in `bin/fixtures.mjs`.
-  To pull agents fixtures someone else pushed:
-  `export DX_FIXTURES_AGENTS_KEY='op://eng-dev/network.dxos.fixtures/credential'`.
-- **Cloud sandbox:** `op` reads that reference through the service account, so the pull works as-is
-  provided the service account can see `eng-dev` (see the `1password` skill).
-- **Local session:** never run `op` (it pops a desktop prompt). Point `DX_FIXTURES_AGENTS_KEY` at a
-  file the user exported, or ask the user to run the command.
+Each machine has **one** identity, `DX_FIXTURES_AGE_KEY`, used both to encrypt (as yourself) and to decrypt:
 
-Rotating the agents key: generate a new one, update the 1Password item and `AGENTS_RECIPIENT`, and
-push the agents fixtures again; old objects stay readable only with the old key.
+| Where                                              | Identity              | Set by                                                                                         |
+| -------------------------------------------------- | --------------------- | ---------------------------------------------------------------------------------------------- |
+| A person's machine, including agents running there | that person's own key | `DX_FIXTURES_AGE_KEY` in their shell profile, e.g. `op://Personal/fixtures age key/credential` |
+| Cloud sandbox (`CLAUDE_CODE_REMOTE`)               | the agents key        | default when `DX_FIXTURES_AGE_KEY` is unset: `op://eng-dev/network.dxos.fixtures/credential`   |
+
+- **The agents key:** 1Password vault `eng-dev`, item `network.dxos.fixtures`, field `credential`. Its public
+  half is committed as `AGENTS_RECIPIENT` in `bin/fixtures.mjs`; `--scope agents` always encrypts to it.
+- **What each side can read:** a person's `--scope agents` push opens with their key and the agents key, so cloud
+  agents can pull it. A cloud agent's push opens with the agents key only, so people cannot pull it unless the agent
+  adds `--recipient <their age1… public key>`.
+- **A new person:** `age-keygen -o ~/.config/dxos/fixtures.key`, store it in 1Password, and set
+  `DX_FIXTURES_AGE_KEY` to the file or its `op://` reference.
+- **Locally, an `op://` identity means a 1Password approval prompt** on every fixtures command. That is the
+  person's own configuration, so running `moon run fixtures:*` is fine, but say so before running it; never run
+  `op` directly in a local session (see the `1password` skill).
+- **Cloud:** the service account must see `eng-dev`, and wrangler needs a Cloudflare token to reach the bucket.
+
+Rotating the agents key: generate a new one, update the 1Password item and `AGENTS_RECIPIENT`, and push the agents
+fixtures again; old objects stay readable only with the old key.
 
 ## Push and pull
 
