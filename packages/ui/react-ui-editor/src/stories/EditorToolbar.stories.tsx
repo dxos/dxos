@@ -22,7 +22,7 @@ import { type EditorViewMode } from '@dxos/ui-editor/types';
 
 import { translations } from '#translations';
 
-import { EDITOR_TOOLBAR_INSERT_GROUP, Editor } from '../components/index.ts';
+import { Editor, EDITOR_TOOLBAR_INSERT_GROUP } from '../components/index.ts';
 import { type UseTextEditorProps } from '../hooks/index.ts';
 
 type StoryArgs = { placeholder?: string; viewMode?: EditorViewMode; extended?: boolean } & UseTextEditorProps;

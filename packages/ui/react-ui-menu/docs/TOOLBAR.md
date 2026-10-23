@@ -2,20 +2,20 @@
 
 A toolbar that another component owns (the markdown editor's) must take items from other components (review's
 comment button, transcription's microphone, presenter's slide actions), place them sensibly, and degrade on narrow
-screens. This draft records what exists, what is missing, and a proposal; the prototype is the story
-`ui/react-ui-menu/ToolbarLayout (prototype)` (`src/components/ToolbarLayout.stories.tsx`).
+screens. This records what exists and the design; the story is
+`ui/react-ui-menu/ToolbarLayout` (`src/components/ToolbarLayout.stories.tsx`).
 
 ## What exists
 
 - **Model:** `MenuBuilder` builds an action graph (`ActionGraphProps`): actions, groups (`dropdownMenu`,
   `toggleGroup`), `line`/`gap` separators, and a hand-built overflow dropdown (`.menu('more', …)`).
-- **Rendering:** `ActionToolbar` renders the root items flat, in insertion order, inside one `Toolbar.Root` (a
-  full-width horizontal scroll container). `variant: 'custom'` renders a contributor's own element.
+- **Rendering:** `ActionToolbar` renders each row as a `Toolbar.Root` (a horizontal scroll container) of start, middle
+  and end zones, then the overflow menu. `variant: 'custom'` renders a contributor's own element.
 - **Extension:** a plugin contributes an app-graph extension whose actions carry `disposition: 'toolbar'`; the owner
   merges them with `graphActions(graph, get, id, { filter: isToolbarAction })` (MarkdownArticle passes them to
   `EditorToolbar` as `customActions`). `useMenuContribution` adds items to a menu by priority.
-- **Missing:** contributors cannot say _where_ an item goes (the editor drops every contribution after its gap), there
-  are no zones, no second row, and nothing collapses into the overflow menu when the toolbar is too narrow (it scrolls).
+- **Adopted:** `EditorToolbar` declares an insert group and an overflow menu; plugin-presenter's slide editor extends the
+  insert group and builds its own `SlideToolbar` with `MenuBuilder`.
 
 ## Proposal
 
@@ -41,7 +41,7 @@ An item or group carries an optional `placement` (`ToolbarPlacement` on `MenuIte
 | `collapse` | Rank for moving into the overflow menu when the row is too narrow; higher goes first; none = never. |
 
 Each row is one `Toolbar.Root` laid out as `start | gap | middle | gap | end`, with the overflow menu last in row 0.
-The prototype story covers `Groups`, `Extended` (contributions and two rows), `Narrow` and `AsMenu`.
+The story `ui/react-ui-menu/ToolbarLayout` covers `Groups`, `Extended` (contributions and two rows), `Narrow` and `AsMenu`.
 
 ## Open questions
 
