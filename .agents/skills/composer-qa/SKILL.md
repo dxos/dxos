@@ -31,10 +31,10 @@ drives the same tests for a video rather than a verdict.
 addressing scheme:
 
 ```bash
-node tools/claude/plugins/dxos/scripts/list-tests.mjs                 # every test, numbered
-node tools/claude/plugins/dxos/scripts/list-tests.mjs markdown QA-1   # exactly one
-node tools/claude/plugins/dxos/scripts/list-tests.mjs --suites        # every suite, with tags
-node tools/claude/plugins/dxos/scripts/list-tests.mjs --tag nightly   # the tests a tag selects
+pnpm deus qa list                  # every test, numbered
+pnpm deus qa list markdown QA-1    # exactly one
+pnpm deus qa list --suites         # every suite, with tags
+pnpm deus qa list --tag nightly    # the tests a tag selects
 ```
 
 Read each test in full before starting: `given`, all three stages, and every `note` — a `note` is
