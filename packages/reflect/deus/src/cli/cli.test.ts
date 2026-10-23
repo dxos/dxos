@@ -183,26 +183,28 @@ describe('deus changelog check', () => {
   ].join('\n');
 
   /** A scratch repository whose `main` holds the fixture spec, with `spec.mdl` then edited by `edit`. */
-  const repo = (edit: (text: string) => string) =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const dir = yield* fs.makeTempDirectoryScoped();
-      const spec = path.join(dir, 'spec.mdl');
-      const original = yield* fs.readFileString(SAMPLE_SPEC);
-      yield* fs.writeFileString(spec, original);
-      yield* git(dir, 'init', '-q', '-b', 'main');
-      yield* git(dir, 'add', '.');
-      yield* git(dir, '-c', 'user.name=test', '-c', 'user.email=test@example.com', 'commit', '-q', '-m', 'init');
-      yield* fs.writeFileString(spec, edit(original));
-      return dir;
-    });
+  const repo = Effect.fnUntraced(function* (edit: (text: string) => string) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const dir = yield* fs.makeTempDirectoryScoped();
+    const spec = path.join(dir, 'spec.mdl');
+    const original = yield* fs.readFileString(SAMPLE_SPEC);
+    yield* fs.writeFileString(spec, original);
+    yield* git(dir, 'init', '-q', '-b', 'main');
+    yield* git(dir, 'add', '.');
+    yield* git(dir, '-c', 'user.name=test', '-c', 'user.email=test@example.com', 'commit', '-q', '-m', 'init');
+    yield* fs.writeFileString(spec, edit(original));
+    return dir;
+  });
 
   const check = (edit: (text: string) => string) =>
-    Effect.gen(function* () {
-      const dir = yield* repo(edit);
-      return yield* checkChangelog({ base: 'main', cwd: dir, event: '' }).pipe(Effect.exit);
-    }).pipe(Effect.scoped, Effect.provide(NodeServices.layer), Effect.runPromise);
+    repo(edit).pipe(
+      Effect.flatMap((dir) => checkChangelog({ base: 'main', cwd: dir, event: '' })),
+      Effect.exit,
+      Effect.scoped,
+      Effect.provide(NodeServices.layer),
+      Effect.runPromise,
+    );
 
   test('a spec change without a decision fails', async ({ expect }) => {
     const exit = await check((text) => text.replace('shows a greeting.', 'shows a friendly greeting.'));
