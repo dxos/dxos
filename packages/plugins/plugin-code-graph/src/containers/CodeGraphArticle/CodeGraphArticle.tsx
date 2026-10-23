@@ -381,7 +381,7 @@ const NodePreview = ({
   const details = useInspect(node.id, invokePromise);
   return (
     <NodeDetails
-      classNames='w-96 max-h-[32rem]'
+      classNames='dx-card-popover'
       node={node}
       kind={kind}
       facts={details.facts}
