@@ -3,7 +3,6 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import { WebRTCStats, type WebRTCStatsEvent } from '@peermetrics/webrtc-stats';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useEffect, useMemo, useState } from 'react';
 
@@ -18,7 +17,7 @@ import type * as Util from '@dxos/react-ui/Util';
 import { meta } from '#meta';
 import { CallsCapabilities } from '#types';
 
-import { type EncodedTrackName, type GlobalState } from '../../calls/index.ts';
+import { type EncodedTrackName, type GlobalState, type MediaStats } from '../../calls/index.ts';
 
 // Stand-in so `useAtomValue` is always called with a real atom when no manager is contributed.
 const noCallState = Atom.make<GlobalState | undefined>(undefined).pipe(Atom.keepAlive);
@@ -36,34 +35,28 @@ export const CallDebugPanel = ({ state: stateOverride }: CallDebugPanelProps) =>
   const liveState = useAtomValue(manager?.stateAtom ?? noCallState);
   const state = stateOverride ?? liveState;
 
-  const [showServiceHistory, setShowServiceHistory] = useState(false);
-  const [showDetailedWebRTCStats, setShowDetailedWebRTCStats] = useState(false);
-
-  const webrtcStats = useMemo(() => new WebRTCStats({ getStatsInterval: 1000 }), []);
-  const [stats, setStats] = useState<WebRTCStatsEvent['data']>();
-
+  // Polls the transport's send-side stats only while the switch is on and a session is live.
+  const [showStats, setShowStats] = useState(false);
+  const [stats, setStats] = useState<MediaStats>();
+  const peer = state?.media.peer;
   useEffect(() => {
-    const pc = state?.media.peer?.session?.peerConnection;
-    const handleStats = (stats: WebRTCStatsEvent) => {
-      setStats(stats.data);
-    };
-    let added = false;
-    if (pc && showDetailedWebRTCStats) {
-      webrtcStats.addConnection({ pc, peerId: 1, connectionId: '1' });
-      webrtcStats.on('stats', handleStats as never);
-      added = true;
+    if (!showStats || !peer) {
+      setStats(undefined);
+      return;
     }
+    let active = true;
+    const poll = () =>
+      void peer.getStats?.().then(
+        (next) => active && setStats(next),
+        (error) => log.catch(error),
+      );
+    poll();
+    const interval = setInterval(poll, 1_000);
     return () => {
-      try {
-        if (pc && added) {
-          webrtcStats.removeConnection({ pc });
-          webrtcStats.removeListener('stats', handleStats as never);
-        }
-      } catch (error) {
-        log.error('error removing webrtc stats', { error, pc, peerId: 1, connectionId: '1' });
-      }
+      active = false;
+      clearInterval(interval);
     };
-  }, [state?.media.peer?.session?.peerConnection, showDetailedWebRTCStats]);
+  }, [showStats, peer]);
 
   const rows = useMemo(() => getCallStatusRows(state), [state?.call.users, state?.media.pulledAudioTracks]);
 
@@ -85,30 +78,11 @@ export const CallDebugPanel = ({ state: stateOverride }: CallDebugPanelProps) =>
       ))}
       <StatCard.Row
         label={t('show-webrtc-stats.title')}
-        action={
-          <Input.Switch
-            checked={showDetailedWebRTCStats}
-            onCheckedChange={({ checked }) => setShowDetailedWebRTCStats(checked)}
-          />
-        }
+        action={<Input.Switch checked={showStats} onCheckedChange={({ checked }) => setShowStats(checked)} />}
       />
-      <StatCard.Row
-        label={t('show-calls-history.title')}
-        action={
-          <Input.Switch
-            checked={showServiceHistory}
-            onCheckedChange={({ checked }) => setShowServiceHistory(checked)}
-          />
-        }
-      />
-      {showDetailedWebRTCStats && (
+      {showStats && (
         <StatCard.Content>
           <JsonView data={{ stats }} />
-        </StatCard.Content>
-      )}
-      {showServiceHistory && (
-        <StatCard.Content>
-          <JsonView data={{ history: state?.media.peer?.history.get() }} />
         </StatCard.Content>
       )}
     </StatCard.Root>
@@ -131,15 +105,11 @@ const getCallStatusRows = (state?: GlobalState): StatusRow[] => {
   const userRows = state.call.users
     .filter((user) => user.id !== self?.id)
     .map((user) => {
-      const audio =
-        user.tracks?.audio &&
-        state.media.pulledAudioTracks[user.tracks.audio as EncodedTrackName]?.ctx.disposed === false;
-      const video =
-        user.tracks?.video &&
-        state.media.pulledVideoStreams[user.tracks.video as EncodedTrackName]?.ctx.disposed === false;
+      // The cache holds only live remote tracks (dropped when the peer leaves), so presence means playable.
+      const audio = user.tracks?.audio && !!state.media.pulledAudioTracks[user.tracks.audio as EncodedTrackName];
+      const video = user.tracks?.video && !!state.media.pulledVideoStreams[user.tracks.video as EncodedTrackName];
       const screenshare =
-        user.tracks?.screenshare &&
-        state.media.pulledVideoStreams[user.tracks.screenshare as EncodedTrackName]?.ctx.disposed === false;
+        user.tracks?.screenshare && !!state.media.pulledVideoStreams[user.tracks.screenshare as EncodedTrackName];
       return {
         label: user.name ?? truncateKey(user.id, 8),
         value: [
@@ -173,6 +143,6 @@ const getCallStatusRows = (state?: GlobalState): StatusRow[] => {
         ]
       : []),
     ...userRows,
-    { label: 'ICE', value: state.media.peer?.session?.peerConnection.iceConnectionState ?? 'no connection' },
+    { label: 'Media', value: state.media.peer?.isOpen ? 'connected' : 'no connection' },
   ];
 };

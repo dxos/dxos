@@ -229,10 +229,10 @@ export class CallSimulation extends Resource {
     const pulledVideoStreams = { ...media.pulledVideoStreams };
     const pulledAudioTracks = { ...media.pulledAudioTracks };
     for (const { videoTrackName, audioTrackName, stream, audioTrack, screenshare } of this.#participants) {
-      pulledVideoStreams[videoTrackName] = { stream, ctx: this._ctx };
-      pulledAudioTracks[audioTrackName] = { track: audioTrack, ctx: this._ctx };
+      pulledVideoStreams[videoTrackName] = stream;
+      pulledAudioTracks[audioTrackName] = audioTrack;
       if (screenshare) {
-        pulledVideoStreams[screenshare.trackName] = { stream: screenshare.stream, ctx: this._ctx };
+        pulledVideoStreams[screenshare.trackName] = screenshare.stream;
       }
     }
 
