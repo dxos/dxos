@@ -215,19 +215,9 @@ jobs:
       # catch a property of an import edge, whose offending commit lands in a package neither project's
       # inputs name, so scoped they no-op on the PRs they exist to catch. Unset them, do not set
       # `MOON_AFFECTED=''`. Empty is not "off", moon reads it as an empty base and still filters.
-      # The two knip passes share nothing, so they run side by side (about 3.6 minutes back to back).
-      # Logs are printed whole, one pass after the other, so the output still reads in order.
       - name: Check dependencies
         if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
-        run: |
-          pnpm run knip:all > "$RUNNER_TEMP/knip-all.log" 2>&1 & all=$!
-          pnpm run knip:production > "$RUNNER_TEMP/knip-production.log" 2>&1 & production=$!
-          status=0
-          wait "$all" || status=1
-          cat "$RUNNER_TEMP/knip-all.log"
-          wait "$production" || status=1
-          cat "$RUNNER_TEMP/knip-production.log"
-          exit "$status"
+        run: pnpm run knip
 
       # `docs:bundle` IS the docs link check: `starlight-links-validator` runs as the last phase of
       # `astro build`.
