@@ -10,6 +10,7 @@ name: Workspace Image
 
 permissions:
   contents: read
+  packages: write
 
 on:
   schedule:
@@ -28,14 +29,11 @@ env:
   MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
   MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
   MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
-  AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-  AWS_DEFAULT_REGION: auto
-  # R2 rejects the CRC checksums newer AWS CLIs send by default.
-  AWS_REQUEST_CHECKSUM_CALCULATION: when_required
-  AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
-  R2_ENDPOINT: https://950816f3f59b079880a1ae33fb0ec320.r2.cloudflarestorage.com
-  R2_PREFIX: s3://agent-artifacts/ci-workspace
+  # TODO(dmaretskyi): R2 (`agent-artifacts`) once CI has a key that can write it; the `R2_*` secrets CI holds
+  # are denied there. Until then the images are OCI artifacts in the public `gh-actions` package, pulled
+  # anonymously over plain HTTPS, still without Docker.
+  ARTIFACT_REPO: ghcr.io/dxos/gh-actions
+  ORAS_VERSION: 1.2.3
 
 concurrency:
   group: workspace-image-${{ github.ref }}
@@ -101,18 +99,22 @@ jobs:
           ls -la /mnt/img
           df -h / /mnt
 
-      - name: Upload to R2
+      - name: Install oras
         run: |
-          aws configure set default.s3.max_concurrent_requests 32
-          aws configure set default.s3.multipart_chunksize 64MB
-          for file in /mnt/img/workspace.*; do
+          curl -fsSL "https://github.com/oras-project/oras/releases/download/v${ORAS_VERSION}/oras_${ORAS_VERSION}_linux_amd64.tar.gz" |
+            sudo tar -xz -C /usr/local/bin oras
+
+      - name: Upload images
+        env:
+          IMAGE_SHA: ${{ steps.shas.outputs.image }}
+        run: |
+          echo "${{ secrets.GH_DXOS_BOT_PAT }}" | oras login ghcr.io -u dxos-bot --password-stdin
+          cd /mnt/img
+          for ext in sqfs erofs tar.zst; do
             SECONDS=0
-            aws s3 cp --only-show-errors --endpoint-url "$R2_ENDPOINT" "$file" "$R2_PREFIX/${{ steps.shas.outputs.image }}/"
-            echo "$(basename "$file"): uploaded in ${SECONDS}s"
+            oras push --no-tty "$ARTIFACT_REPO:ws-${IMAGE_SHA:0:12}-${ext//./-}" "workspace.$ext:application/octet-stream" >/dev/null
+            echo "workspace.$ext: uploaded in ${SECONDS}s"
           done
-          if [ "$GITHUB_REF" = refs/heads/main ]; then
-            echo "${{ steps.shas.outputs.image }}" | aws s3 cp --endpoint-url "$R2_ENDPOINT" - "$R2_PREFIX/latest"
-          fi
 
   bench:
     needs: build
@@ -136,10 +138,10 @@ jobs:
           set -euo pipefail
           case "$VARIANT" in squashfs) ext=sqfs ;; erofs) ext=erofs ;; tar) ext=tar.zst ;; esac
           sudo mkdir -p /mnt/ws && sudo chown "$(id -u):$(id -g)" /mnt/ws
-          aws configure set default.s3.max_concurrent_requests 32
-          aws configure set default.s3.multipart_chunksize 64MB
+          curl -fsSL "https://github.com/oras-project/oras/releases/download/v${ORAS_VERSION}/oras_${ORAS_VERSION}_linux_amd64.tar.gz" |
+            sudo tar -xz -C /usr/local/bin oras
           SECONDS=0
-          aws s3 cp --only-show-errors --endpoint-url "$R2_ENDPOINT" "$R2_PREFIX/$IMAGE_SHA/workspace.$ext" /mnt/ws/
+          oras pull --no-tty -o /mnt/ws "$ARTIFACT_REPO:ws-${IMAGE_SHA:0:12}-${ext//./-}" >/dev/null
           echo "download: ${SECONDS}s, $(du -h /mnt/ws/workspace.$ext | cut -f1)"
           SECONDS=0
           if [ "$VARIANT" = tar ]; then
