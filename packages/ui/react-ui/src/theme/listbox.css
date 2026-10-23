@@ -64,6 +64,8 @@
    */
   .dx-row.dx-listbox-tile {
     --dx-row-ring-color: transparent;
+    /* Scrolling a tile into view stops at its box, which would clip the outline drawn outside it. */
+    scroll-margin: calc(2px + var(--dx-gap-size));
   }
   .dx-listbox-tile:is(:hover, [data-highlighted]) {
     outline: 2px solid var(--color-neutral-border);
