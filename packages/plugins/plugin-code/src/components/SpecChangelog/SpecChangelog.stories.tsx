@@ -87,12 +87,33 @@ export const SwitchViews: Story = {
 };
 
 /** Code keys open on GitHub, at the branch the reviews were written against. */
+/** This file's directory in the repo, which the glob's keys are relative to. */
+const STORY_DIR = 'packages/plugins/plugin-code/src/components/SpecChangelog/';
+
+/** The repo's own sources, keyed by repo path, so hover cards and walkthroughs show real declarations. */
+const SOURCES: Record<string, string> = Object.fromEntries(
+  Object.entries(
+    import.meta.glob<string>(
+      ['../../../../plugin-code/src/**/*.{ts,tsx}', '../../../../plugin-file-system/src/**/*.{ts,tsx}'],
+      { query: '?raw', import: 'default', eager: true },
+    ),
+  ).map(([file, text]) => [new URL(file, `file:///${STORY_DIR}`).pathname.slice(1), text]),
+);
+
+const readSource = ({ path }: SourceKey) => SOURCES[path];
+
 const openOnGitHub = ({ owner, repo, path }: SourceKey) =>
-  window.open(`https://github.com/${owner}/${repo}/blob/worktree-mdl-spec-ide/${path}`, '_blank', 'noopener');
+  window.open(`https://github.com/${owner}/${repo}/blob/main/${path}`, '_blank', 'noopener');
 
 /** plugin-code's own spec with its review: status and code chips in the margin, code boxes on the graph. */
 export const SpecIde: Story = {
-  args: { content: CODE_SPEC, review: CODE_REVIEW, onOpenCode: openOnGitHub, defaultView: 'decisions' },
+  args: {
+    content: CODE_SPEC,
+    review: CODE_REVIEW,
+    onOpenCode: openOnGitHub,
+    read: readSource,
+    defaultView: 'decisions',
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(() => expect(canvas.getAllByTestId('spec-review.gutter-chip').length).toBeGreaterThan(0), TIMEOUT);
@@ -100,12 +121,28 @@ export const SpecIde: Story = {
       () => expect(canvas.getAllByTestId('spec-editor.implementation-chip').length).toBeGreaterThan(0),
       TIMEOUT,
     );
+    // Hovering a code chip shows the file name and the declaration it names, read from the bundled sources.
+    const local = canvas
+      .getAllByTestId('spec-editor.implementation-chip')
+      .find((chip) => chip.dataset.key?.includes('/plugin-code/src/'));
+    if (!local) {
+      throw new Error('No code chip points into plugin-code.');
+    }
+    await userEvent.hover(local);
+    const card = await waitFor(() => within(canvasElement.ownerDocument.body).getByTestId('spec-review.snippet-card'));
+    await waitFor(() => expect(within(card).getByTestId('spec-review.snippet')).toBeTruthy());
   },
 };
 
 /** A real spec reviewed against its code by the spec-review skill, opened on the Review view. */
 export const FileSystemReview: Story = {
-  args: { content: FILE_SYSTEM_SPEC, review: FILE_SYSTEM_REVIEW, onOpenCode: openOnGitHub, defaultView: 'review' },
+  args: {
+    content: FILE_SYSTEM_SPEC,
+    review: FILE_SYSTEM_REVIEW,
+    onOpenCode: openOnGitHub,
+    read: readSource,
+    defaultView: 'review',
+  },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(

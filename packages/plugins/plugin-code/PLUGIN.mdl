@@ -751,8 +751,16 @@ feat F-16: Compliance review annotations
               the symbols as dashed code boxes. A chip click or a box double-click
               opens the Code view at the symbol.
   req F-16.6: Each `scenario` and `test` is reviewed for whether automation exercises
-              it: its declaration line shows exercised, partly exercised or not
-              exercised, with a chip per test file that opens the test's code.
+              it: its declaration line shows tested, partly tested or not tested,
+              with a chip per test file that opens the test's code.
+  req F-16.7: Hovering a code or test chip shows a card with the file name and the
+              declaration of the named symbol, read from the checkout; a key with no
+              symbol shows the file's first lines. A click still opens the Code view.
+  req F-16.8: An item with more than one implementation, or with a `walkthrough:` in its
+              verdict, has a walkthrough: 1 to 5 segments, each one sentence and a code
+              snippet that links to its file. It shows inline in the item's card in the
+              Review view, and in a card when the status chip is hovered. An item with
+              one implementation has no walkthrough; the chip's hover card is enough.
 ```
 
 ## Acceptance
@@ -1199,6 +1207,14 @@ decision D-20: Reviews judge `scenario` and `test` blocks by whether automation 
   by: user:dmaretskyi
   affects: [F-16.6]
   why: Acceptance scenarios and QA tests were outside the review, so nothing showed whether the behaviour they describe is checked.
+```
+
+
+```mdl
+decision D-21: Code and test chips show the file name and the declaration on hover. An item with more than one implementation gets a walkthrough of 1 to 5 segments of prose and code, written by the reviewer, shown inline in its Review card and on hover of its status chip. Scenarios and tests read tested, partly tested or not tested.
+  date: 2026-10-23
+  by: user:dmaretskyi
+  affects: [F-16.6, F-16.7, F-16.8]
 ```
 
 ---

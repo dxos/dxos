@@ -4,7 +4,7 @@
 
 import { EditorSelection } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
-import React, { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
@@ -47,6 +47,7 @@ import {
   type DefinitionModel,
   ReviewPanel,
   buildChangelogGraph,
+  citedFiles,
   decisionGutter,
   parseReview,
   reviewGutter,
@@ -143,10 +144,15 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
         ].filter(isTruthy),
       [reviewKey, spec, key, codeTarget, ownText],
     );
-    const texts = useLocalTexts(related);
+    // The code a review cites, for the declarations its chips and walkthroughs show.
+    const [codeKeys, setCodeKeys] = useState<readonly string[]>([]);
+    const texts = useLocalTexts(useMemo(() => [...related, ...codeKeys], [related, codeKeys]));
     const text = (!spec && key && texts.get(fileKey(key))) || ownText;
     const reviewText = reviewKey ? texts.get(reviewKey) : undefined;
     const review = useMemo(() => (reviewText ? parseReview(reviewText) : undefined), [reviewText]);
+    const citedKey = useMemo(() => (review ? citedFiles(review).join('\n') : ''), [review]);
+    useEffect(() => setCodeKeys(citedKey ? citedKey.split('\n') : []), [citedKey]);
+    const read = useCallback((target: SourceKey) => texts.get(fileKey(target)), [texts]);
     const specs = useMemo(
       () => new Map([...texts].filter(([raw]) => raw.endsWith('.mdl') && raw !== reviewKey)),
       [texts, reviewKey],
@@ -260,6 +266,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
                 setView('review');
               },
               onOpen: (target) => void open(target),
+              read,
             }),
           diagramPreview(),
           // Live two-way binding only when editing an ECHO Spec; static content is rendered via `value`.
@@ -272,7 +279,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
               identity,
             }),
         ].filter(isTruthy),
-      [identity, space, spec?.id, target, themeMode, readOnly, decisions, review, open],
+      [identity, space, spec?.id, target, themeMode, readOnly, decisions, review, open, read],
     );
 
     const syncEntry = spec ? sync.specs[spec.id] : undefined;
@@ -341,6 +348,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
                       selected={selectedVerdict}
                       onSelect={selectVerdict}
                       onOpenCode={(target) => void open(target)}
+                      read={read}
                     />
                   )}
                   {view === 'code' &&

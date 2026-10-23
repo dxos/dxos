@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type EditorState, type Extension, RangeSetBuilder } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
+import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
+import { Decoration, type DecorationSet, EditorView, type Tooltip, WidgetType, showTooltip } from '@codemirror/view';
 
 import { type SourceKey, formatSourceKey } from '#sync';
 
@@ -13,7 +13,9 @@ import {
   STATUS_STYLE,
   type Verdict,
   reviewAnnotations,
+  walkthroughOf,
 } from '../SpecModel/index.ts';
+import { type SourceReader, snippetCard, walkthroughCard } from './snippet-card.ts';
 
 /** A block declaration line, `feat F-1: …`, `  req F-1.2: …` or `type Scene`, captured as its kind and id. */
 const DECLARATION = /^\s*([a-z]+)\s+([A-Za-z][\w.-]*)\s*(?::|$)/;
@@ -22,12 +24,41 @@ const DECLARATION = /^\s*([a-z]+)\s+([A-Za-z][\w.-]*)\s*(?::|$)/;
 const EXERCISE_KINDS = new Set(['scenario', 'test']);
 
 const EXERCISE_LABEL: Record<Verdict['status'], { text: string; hue: string } | undefined> = {
-  done: { text: 'exercised', hue: 'success' },
-  partial: { text: 'partly exercised', hue: 'warning' },
-  diverged: { text: 'partly exercised', hue: 'warning' },
-  missing: { text: 'not exercised', hue: 'error' },
-  untested: { text: 'not exercised', hue: 'error' },
+  done: { text: 'tested', hue: 'success' },
+  partial: { text: 'partly tested', hue: 'warning' },
+  diverged: { text: 'partly tested', hue: 'warning' },
+  missing: { text: 'not tested', hue: 'error' },
+  untested: { text: 'not tested', hue: 'error' },
 };
+
+/** How long a hover card stays after the pointer leaves its chip, so the pointer can move onto the card. */
+const HIDE_DELAY = 200;
+
+type HoverCard = { rect: DOMRect; render: () => HTMLElement };
+
+const setHoverCard = StateEffect.define<HoverCard | null>();
+
+/** The one hover card a chip opens, anchored to the chip rather than to a document position. */
+const hoverCardField = StateField.define<Tooltip | null>({
+  create: () => null,
+  update: (value, transaction) => {
+    for (const effect of transaction.effects) {
+      if (effect.is(setHoverCard)) {
+        const card = effect.value;
+        return card
+          ? {
+              pos: 0,
+              above: true,
+              getCoords: () => card.rect,
+              create: () => ({ dom: card.render() }),
+            }
+          : null;
+      }
+    }
+    return value;
+  },
+  provide: (field) => showTooltip.from(field),
+});
 
 /** More code chips than this collapse into a `+n` chip whose tooltip lists the rest. */
 const MAX_CODE_CHIPS = 3;
@@ -39,7 +70,41 @@ export type ReviewGutterCallbacks = {
   onSelect?: (id: string) => void;
   /** A code or test chip opens the file at its symbol. */
   onOpen?: (key: SourceKey) => void;
+  /** The checkout's text of a file, for the declarations hover cards show. */
+  read?: SourceReader;
 };
+
+/** Shows a card while the pointer is on the chip or on the card itself. */
+class HoverController {
+  #timer: ReturnType<typeof setTimeout> | undefined;
+
+  attach(view: EditorView, chip: HTMLElement, render: () => HTMLElement): void {
+    chip.addEventListener('mouseenter', () => {
+      this.#cancel();
+      view.dispatch({
+        effects: setHoverCard.of({
+          rect: chip.getBoundingClientRect(),
+          render: () => {
+            const dom = render();
+            dom.addEventListener('mouseenter', () => this.#cancel());
+            dom.addEventListener('mouseleave', () => this.#hide(view));
+            return dom;
+          },
+        }),
+      });
+    });
+    chip.addEventListener('mouseleave', () => this.#hide(view));
+  }
+
+  #cancel(): void {
+    clearTimeout(this.#timer);
+  }
+
+  #hide(view: EditorView): void {
+    this.#cancel();
+    this.#timer = setTimeout(() => view.dispatch({ effects: setHoverCard.of(null) }), HIDE_DELAY);
+  }
+}
 
 const keysEqual = (left: readonly SourceKey[] = [], right: readonly SourceKey[] = []): boolean =>
   left.map((key) => formatSourceKey(key)).join() === right.map((key) => formatSourceKey(key)).join();
@@ -50,6 +115,7 @@ class ReviewWidget extends WidgetType {
     readonly annotation: Annotation | undefined,
     readonly exercise: boolean,
     readonly callbacks: ReviewGutterCallbacks,
+    readonly hover: HoverController,
   ) {
     super();
   }
@@ -62,27 +128,30 @@ class ReviewWidget extends WidgetType {
       other.verdict.status === this.verdict.status &&
       other.verdict.summary === this.verdict.summary &&
       other.verdict.note === this.verdict.note &&
+      other.verdict.walkthrough === this.verdict.walkthrough &&
       other.annotation?.testing === this.annotation?.testing &&
       keysEqual(other.annotation?.keys, this.annotation?.keys) &&
       keysEqual(other.annotation?.tests, this.annotation?.tests)
     );
   }
 
-  override toDOM(): HTMLElement {
+  override toDOM(view: EditorView): HTMLElement {
     const { id, status, summary, note } = this.verdict;
-    const { onSelect, onOpen } = this.callbacks;
+    const { onSelect, onOpen, read } = this.callbacks;
     // Floated into the right margin, beside the decision chips, so the annotated line's text does not move.
     const row = document.createElement('span');
     row.className = 'float-right flex flex-wrap justify-end gap-1 ms-2 select-none';
     row.dataset.testid = 'spec-review.chips';
     row.dataset.verdict = id;
 
-    const tag = (text: string, hue: string, title: string, testId: string, onClick?: () => void) => {
+    const tag = (text: string, hue: string, title: string | undefined, testId: string, onClick?: () => void) => {
       const element = document.createElement(onClick ? 'button' : 'span');
       element.className = `dx-tag dx-tag-inline${onClick ? ' cursor-pointer' : ''}`;
       element.dataset.hue = hue;
       element.dataset.testid = testId;
-      element.title = title;
+      if (title) {
+        element.title = title;
+      }
       element.textContent = text;
       if (onClick) {
         element.setAttribute('type', 'button');
@@ -92,19 +161,26 @@ class ReviewWidget extends WidgetType {
       return element;
     };
 
+    // An item implemented in several places shows its walkthrough on hover; the browser tooltip would cover it.
+    const steps = walkthroughOf(this.verdict);
     const statusTag = tag(
       STATUS_STYLE[status].label,
       STATUS_STYLE[status].hue,
-      [`${STATUS_STYLE[status].label}: ${summary ?? id}`, note].filter(Boolean).join('\n\n'),
+      steps ? undefined : [`${STATUS_STYLE[status].label}: ${summary ?? id}`, note].filter(Boolean).join('\n\n'),
       'spec-review.gutter-chip',
       () => onSelect?.(id),
     );
     statusTag.dataset.status = status;
+    if (steps) {
+      this.hover.attach(view, statusTag, () => walkthroughCard(steps, read, onOpen));
+    }
 
     const codeChips = (keys: readonly SourceKey[], hue: string, testId: string) => {
-      keys
-        .slice(0, MAX_CODE_CHIPS)
-        .forEach((key) => tag(`</> ${labelOf(key)}`, hue, formatSourceKey(key), testId, () => onOpen?.(key)));
+      keys.slice(0, MAX_CODE_CHIPS).forEach((key) => {
+        const chip = tag(`</> ${labelOf(key)}`, hue, undefined, testId, () => onOpen?.(key));
+        chip.dataset.key = formatSourceKey(key);
+        this.hover.attach(view, chip, () => snippetCard(key, read, onOpen));
+      });
       const rest = keys.slice(MAX_CODE_CHIPS);
       if (rest.length > 0) {
         tag(`+${rest.length}`, hue, rest.map((key) => formatSourceKey(key)).join('\n'), testId, () =>
@@ -135,17 +211,27 @@ class ReviewWidget extends WidgetType {
 
     const testing = this.annotation?.testing;
     if (testing) {
-      tag(
+      const chip = tag(
         testing,
         testing === 'tested' ? 'success' : 'warning',
         tests.length > 0
-          ? tests.map((key) => formatSourceKey(key)).join('\n')
+          ? undefined
           : testing === 'tested'
             ? 'Tested: the review judged the item done.'
             : 'No test exercises this item.',
         'spec-review.testing',
         tests.length > 0 ? () => onOpen?.(tests[0]) : undefined,
-      ).dataset.testing = testing;
+      );
+      chip.dataset.testing = testing;
+      if (tests.length > 0) {
+        this.hover.attach(view, chip, () =>
+          walkthroughCard(
+            tests.map((key) => ({ text: '', key: formatSourceKey(key) })),
+            read,
+            onOpen,
+          ),
+        );
+      }
     }
     return row;
   }
@@ -160,6 +246,7 @@ const buildDecorations = (
   verdicts: Map<string, Verdict>,
   annotations: Map<string, Annotation>,
   callbacks: ReviewGutterCallbacks,
+  hover: HoverController,
 ): DecorationSet => {
   const builder = new RangeSetBuilder<Decoration>();
   const seen = new Set<string>();
@@ -176,7 +263,7 @@ const buildDecorations = (
         line.from,
         line.from,
         Decoration.widget({
-          widget: new ReviewWidget(verdict, annotations.get(verdict.id), EXERCISE_KINDS.has(kind), callbacks),
+          widget: new ReviewWidget(verdict, annotations.get(verdict.id), EXERCISE_KINDS.has(kind), callbacks, hover),
           side: -1,
         }),
       );
@@ -192,8 +279,12 @@ const buildDecorations = (
 export const reviewGutter = (review: ReviewModel, callbacks: ReviewGutterCallbacks = {}): Extension => {
   const verdicts = new Map(review.verdicts.map((verdict) => [verdict.id, verdict]));
   const annotations = new Map(reviewAnnotations(review).map((annotation) => [annotation.id, annotation]));
+  const hover = new HoverController();
   return [
-    EditorView.decorations.compute(['doc'], (state) => buildDecorations(state, verdicts, annotations, callbacks)),
+    hoverCardField,
+    EditorView.decorations.compute(['doc'], (state) =>
+      buildDecorations(state, verdicts, annotations, callbacks, hover),
+    ),
     EditorView.theme({
       '.dx-review-done': { boxShadow: 'inset 3px 0 0 var(--color-success-text, #16a34a)' },
       '.dx-review-untested': { boxShadow: 'inset 3px 0 0 var(--color-info-text, #2563eb)' },
