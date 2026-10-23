@@ -119,6 +119,14 @@ scenario T-2: A chart in a slide
 Every change to this spec adds a decision, newest last.
 
 ```mdl
-decision D-1: The Timeline Project template seeds this spec with F-1 to F-4 written and F-5 named; the project's features are filed against it.
+decision D-1: The Timeline Project template files a spec for the timeline as a project artifact.
   date: 2026-10-22
+  by: user:richburdon
+```
+
+```mdl
+decision D-2: The spec writes F-1 to F-4 from what is built, names F-5 and divides the work into three phases; the project's features cite its blocks. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
 ```
