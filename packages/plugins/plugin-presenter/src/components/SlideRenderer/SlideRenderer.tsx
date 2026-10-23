@@ -61,16 +61,22 @@ const MarkdownContentSlide = ({
   db,
   step,
 }: FrameProps & { content: string | undefined; db?: Database.Database } & Pick<SlideRendererProps, 'step'>) => {
-  const renderSurface = useMemo<MarkdownSlideProps['renderSurface']>(
-    () => (db ? ({ uri, role }) => <EmbeddedSurface uri={uri} role={role} db={db} /> : undefined),
-    [db],
-  );
+  const renderSurface = useSurfaceRenderer(db);
   return (
     <Frame>
       <MarkdownSlide content={content ?? ''} step={step} renderSurface={renderSurface} />
     </Frame>
   );
 };
+
+/**
+ * Renders a slide's embedded `<Surface>`s against the owner's database; without one they stay placeholders.
+ */
+export const useSurfaceRenderer = (db: Database.Database | undefined): MarkdownSlideProps['renderSurface'] =>
+  useMemo<MarkdownSlideProps['renderSurface']>(
+    () => (db ? ({ uri, role }) => <EmbeddedSurface uri={uri} role={role} db={db} /> : undefined),
+    [db],
+  );
 
 const ObjectSlide = ({ Frame, object, attendableId }: FrameProps & { object: Obj.Unknown; attendableId?: string }) => (
   <Frame>

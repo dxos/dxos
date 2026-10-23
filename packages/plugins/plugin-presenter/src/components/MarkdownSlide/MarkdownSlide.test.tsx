@@ -63,6 +63,17 @@ describe('MarkdownSlide', () => {
     expect(markup).toContain('&lt;script&gt;');
   });
 
+  test('an unsafe link renders without href or a new-tab target', ({ expect }) => {
+    const markup = render('[x](javascript:alert(1))');
+    expect(markup).toMatch(/<a[^>]*>x<\/a>/);
+    expect(markup).not.toMatch(/<a[^>]*href/);
+    expect(markup).not.toMatch(/<a[^>]*target/);
+  });
+
+  test('a safe link opens in a new tab', ({ expect }) => {
+    expect(render('[x](https://dxos.org)')).toMatch(/<a[^>]*href="https:\/\/dxos.org"[^>]*target="_blank"/);
+  });
+
   test('surface renders a placeholder without a renderer', ({ expect }) => {
     const markup = render('<Surface ref="echo:///01J00000000000000000000000" role="card" />');
     expect(markup).toContain('data-surface="echo:///01J00000000000000000000000"');

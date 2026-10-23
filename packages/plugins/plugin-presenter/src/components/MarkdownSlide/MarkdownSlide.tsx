@@ -236,8 +236,13 @@ const prepareElement = (element: Element, step: number, inPre: boolean): Element
     properties.uri = properties.ref;
     delete properties.ref;
   } else if (tagName === 'a') {
-    properties.target = '_blank';
-    properties.rel = ['noopener', 'noreferrer'];
+    // A sanitized link has an empty href, which a new tab would resolve to the app itself.
+    if (typeof properties.href === 'string' && properties.href.length > 0) {
+      properties.target = '_blank';
+      properties.rel = ['noopener', 'noreferrer'];
+    } else {
+      delete properties.href;
+    }
   }
 
   const themed = tagName === 'code' && !inPre ? theme.nodes.inlineCode : NODE_CLASSES[tagName];

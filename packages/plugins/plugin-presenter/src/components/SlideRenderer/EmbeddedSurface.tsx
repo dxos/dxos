@@ -9,10 +9,12 @@ import { useObject, useResolveRef } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import { Text } from '@dxos/schema';
 
 import { meta } from '#meta';
 
-import { type SlideSurfaceRole } from '../MarkdownSlide/index.ts';
+import { MarkdownSlide, type SlideSurfaceRole } from '../MarkdownSlide/index.ts';
+import { SlideFrame } from '../SlideFrame/index.ts';
 import { ObjectSurface } from './ObjectSurface.tsx';
 
 export type EmbeddedSurfaceProps = {
@@ -53,12 +55,26 @@ export const EmbeddedSurface = ({ uri, role, db }: EmbeddedSurfaceProps) => {
   }, [ref]);
 
   if (object && !Obj.isDeleted(object)) {
+    // A Text is a slide's own markdown (e.g. another deck's owned slide); its surfaces are text editors, not slides.
+    if (Obj.instanceOf(Text.Text, object)) {
+      return <EmbeddedTextSlide text={object} />;
+    }
     return <ObjectSurface object={object} role={role} />;
   }
   if (!ref || missing || object) {
     return <MissingObject />;
   }
   return <Pending />;
+};
+
+/** Renders an embedded Text as a scaled slide; its own `<Surface>`s stay placeholders so a self-reference cannot recurse. */
+const EmbeddedTextSlide = ({ text }: { text: Text.Text }) => {
+  const [content] = useObject(text, 'content');
+  return (
+    <SlideFrame>
+      <MarkdownSlide content={content ?? ''} />
+    </SlideFrame>
+  );
 };
 
 const MissingObject = () => {

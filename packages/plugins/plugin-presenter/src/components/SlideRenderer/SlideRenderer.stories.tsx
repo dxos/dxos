@@ -174,6 +174,24 @@ const createSpaceSlides = async ({ space }: { space: Space }) => {
       ],
     }),
   );
+  space.db.add(Presentation.make({ name: 'no-ref', slides: ['# Without a ref\n\n<Surface />'] }));
+  const source = space.db.add(Presentation.make({ name: 'source' }));
+  const owned = Presentation.addSlide(source, '# Embedded slide\n\nOwned by another deck');
+  space.db.add(
+    Presentation.make({
+      name: 'embedded-text',
+      slides: [
+        [
+          '---',
+          'layout: two-cols',
+          '---',
+          '# Beside the slide',
+          '::right::',
+          surfaceTag(EID.make({ entityId: owned.id })),
+        ].join('\n'),
+      ],
+    }),
+  );
   await space.db.flush({ indexes: true });
 };
 
@@ -213,6 +231,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+// The story space and its fixture objects are created before every story renders.
 const LOAD_TIMEOUT = { timeout: 10_000 };
 
 const withSlideSurface = withPluginManager({ plugins: [createSlidePlugin()()] });
@@ -222,7 +241,7 @@ export const Text_: Story = {
   decorators: [withSlideSurface],
   args: { kind: 'text' },
   play: async ({ canvasElement }) => {
-    await expect(await within(canvasElement).findByText('Owned slide')).toBeVisible();
+    await expect(await within(canvasElement).findByText('Owned slide', undefined, LOAD_TIMEOUT)).toBeVisible();
   },
 };
 
@@ -231,7 +250,9 @@ export const UnknownLayout: Story = {
   decorators: [withSlideSurface],
   args: { kind: 'text', content: '---\nlayout: nope\n---\n# Fallback slide' },
   play: async ({ canvasElement }) => {
-    await expect(await within(canvasElement).findByRole('heading', { name: 'Fallback slide' })).toBeVisible();
+    await expect(
+      await within(canvasElement).findByRole('heading', { name: 'Fallback slide' }, LOAD_TIMEOUT),
+    ).toBeVisible();
     await waitFor(() => expect(canvasElement.querySelector('[data-layout="default"]')).not.toBeNull());
     await expect(canvasElement.querySelector('[data-layout="nope"]')).toBeNull();
   },
@@ -242,7 +263,7 @@ export const Object_: Story = {
   decorators: [withSlideSurface],
   args: { kind: 'object' },
   play: async ({ canvasElement }) => {
-    await expect(await within(canvasElement).findByText('Linked document')).toBeVisible();
+    await expect(await within(canvasElement).findByText('Linked document', undefined, LOAD_TIMEOUT)).toBeVisible();
   },
 };
 
@@ -250,7 +271,7 @@ export const Pending: Story = {
   decorators: [withSlideSurface],
   args: { kind: 'pending' },
   play: async ({ canvasElement }) => {
-    await expect(await within(canvasElement).findByText('Loading…')).toBeVisible();
+    await expect(await within(canvasElement).findByText('Loading…', undefined, LOAD_TIMEOUT)).toBeVisible();
   },
 };
 
@@ -259,7 +280,7 @@ export const ObjectFallback: Story = {
   args: { kind: 'unmatched' },
   decorators: [withPluginManager({ plugins: [] })],
   play: async ({ canvasElement }) => {
-    await expect(await within(canvasElement).findByText('Unmatched')).toBeVisible();
+    await expect(await within(canvasElement).findByText('Unmatched', undefined, LOAD_TIMEOUT)).toBeVisible();
   },
 };
 
@@ -308,5 +329,34 @@ export const EmbeddedSurfaceUnresolvable: Story = {
     const canvas = within(canvasElement);
     await waitFor(() => expect(canvas.getAllByText('Missing object')).toHaveLength(2), LOAD_TIMEOUT);
     await expect(canvasElement.querySelector('[data-testid="presenter.embedded-surface.loading"]')).toBeNull();
+  },
+};
+
+/** `<Surface />` with no ref settles on the placeholder. */
+export const EmbeddedSurfaceNoRef: Story = {
+  render: () => <SpaceSlideStory name='no-ref' />,
+  decorators: [withSlideSurface],
+  args: { kind: 'text' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByRole('heading', { name: 'Without a ref' }, LOAD_TIMEOUT)).toBeVisible();
+    await waitFor(() => expect(canvas.getAllByText('Missing object')).toHaveLength(1), LOAD_TIMEOUT);
+    await expect(canvasElement.querySelector('[data-testid="presenter.embedded-surface.loading"]')).toBeNull();
+  },
+};
+
+/** A ref to another deck's owned slide renders that slide's markdown, not a text editor. */
+export const EmbeddedTextSlide: Story = {
+  render: () => <SpaceSlideStory name='embedded-text' />,
+  decorators: [withSlideSurface],
+  args: { kind: 'text' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByRole('heading', { name: 'Beside the slide' }, LOAD_TIMEOUT)).toBeVisible();
+    await waitFor(
+      () => expect(canvasElement.querySelector('[data-surface] [data-slide] h1')?.textContent).toBe('Embedded slide'),
+      LOAD_TIMEOUT,
+    );
+    await expect(canvasElement.querySelector('[data-surface] .cm-editor')).toBeNull();
   },
 };

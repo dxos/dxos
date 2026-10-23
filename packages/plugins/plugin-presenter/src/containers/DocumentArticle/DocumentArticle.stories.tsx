@@ -72,8 +72,8 @@ export const Default: Story = {
     await expect(await canvas.findByText('alpha')).toBeVisible();
     await expect(canvas.getByText('2 / 3')).toBeVisible();
     await userEvent.keyboard('f');
-    // The overlay pager shows only on pointer movement, so fullscreen is read from the shell's fixed frame.
-    await waitFor(() => expect(canvasElement.querySelector('.fixed.inset-0')).not.toBeNull());
+    // The overlay pager mounts only in fullscreen (it fades, but stays in the DOM, while the pointer rests).
+    await expect(await canvas.findByTestId('presenter.overlay')).toBeInTheDocument();
   },
 };
 
@@ -98,7 +98,8 @@ export const DXOSDeck: Story = {
     });
     await expect(video.getAttribute('src')).toBe('https://media.dxos.network/DXOS.mp4');
     await nextSlide(canvas, '2 / 11');
-    await expect(canvasElement.querySelector('img[src$="dxos-logotype-blue.png"]')).not.toBeNull();
+    // SlideFrame renders its slide only once it has measured itself, a frame after the page number changes.
+    await waitFor(() => expect(canvasElement.querySelector('img[src$="dxos-logotype-blue.png"]')).not.toBeNull());
   },
 };
 

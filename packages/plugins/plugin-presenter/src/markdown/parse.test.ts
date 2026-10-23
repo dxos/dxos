@@ -181,6 +181,13 @@ describe('parseSlide', () => {
     expect(slide.issues).toEqual([{ kind: 'html', message: expect.stringContaining('invalid object reference') }]);
   });
 
+  test('<Surface /> without a ref keeps an empty-ref element and reports it', () => {
+    const slide = parseSlide('<Surface />');
+    const [surface] = elements(slide.slots.default, 'slide-surface');
+    expect(surface.properties.ref).toBe('');
+    expect(slide.issues).toEqual([{ kind: 'html', message: expect.stringContaining('requires a ref') }]);
+  });
+
   test('a non-trailing comment is dropped without an issue', () => {
     const slide = parseSlide('# Title\n\n<!-- hidden -->\n\nBody');
     expect(textOf(slide.slots.default)).not.toContain('hidden');
