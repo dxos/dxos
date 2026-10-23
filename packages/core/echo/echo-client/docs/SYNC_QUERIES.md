@@ -865,9 +865,11 @@ so `characteristics` no longer classes it as a window.
 
 ### 9.5 Feeds (phase 4)
 
-A feed write that the feed service has not acknowledged (`FeedObjectCore.hasLocalWrite`) joins the
-working set as the feed tail of a simple selection over that feed or over all feeds. It appears before
-the write returns. A feed opened after the query starts joins through `_feedHandleCreated`. A remote feed
+A feed write made through the handle (`FeedHandle.localWrites`) joins the working set as the feed tail
+of a simple selection over that feed or over all feeds. It appears before the write returns and stays
+past the feed service's acknowledgement, so it does not vanish before the index catches up. The handle's
+`localWrite` event names the objects each write appended, edited or deleted, and the tail re-checks only
+those. A feed opened after the query starts joins through `_feedHandleCreated`. A remote feed
 entry is dropped when a local write of the same id no longer matches. `characteristics` classes a simple
 feed selection as `local-partial`; a feed window stays remote-only.
 
