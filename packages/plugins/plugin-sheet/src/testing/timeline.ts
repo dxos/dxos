@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type PlotValue } from '../types.ts';
+import { type PlotValue } from '@dxos/react-ui-plot';
 
 /**
  * A short timeline for stories and tests: a header row, then one event per row from 1945 to 2028 (with a Wikipedia

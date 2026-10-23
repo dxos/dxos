@@ -32,16 +32,20 @@ import {
 } from '../../types.ts';
 import {
   type MeasureText,
+  MIN_DEEP_SPAN,
   categoryLabel,
   createTimelineFraction,
   fitLabel,
   fitTimelineHeight,
+  formatYearsAgo,
   groupCategories,
   matchesTimelineFilter,
   orderCategories,
   spreadLabels,
   timelineRange,
+  timeOfYearsAgo,
   toTimelineEvents,
+  yearsAgoOf,
 } from '../../util/index.ts';
 
 // Horizontal padding at the edges of the view.
@@ -450,20 +454,33 @@ export const Timeline = ({
       return [];
     }
 
-    const axis = d3.scaleUtc().domain(range);
     const count = Math.max(2, Math.floor((bottom - top) / metrics.lineHeight));
+    const result: { time: number; y: number; label: string }[] = [];
+    const add = (time: number, label: string) => {
+      const y = yOf(time);
+      if (result.length === 0 || y - result[result.length - 1].y >= TICK_SPACING) {
+        result.push({ time, y, label });
+      }
+    };
+
+    // Deep time ticks on round numbers of years ago, oldest first, since a calendar cannot count it.
+    if (range[1] - range[0] >= MIN_DEEP_SPAN) {
+      const years = d3.ticks(yearsAgoOf(range[1]), yearsAgoOf(range[0]), count).reverse();
+      for (const yearsAgo of years) {
+        add(timeOfYearsAgo(yearsAgo), formatYearsAgo(yearsAgo));
+      }
+      return result;
+    }
+
+    const axis = d3.scaleUtc().domain(range);
     // Spans of a few years or more tick on years only, however tall the timeline grows.
     const yearly = range[1] - range[0] >= MIN_YEARLY_SPAN;
     const format = yearly ? d3.utcFormat('%Y') : axis.tickFormat(count);
     const dates = yearly
       ? (d3.utcYear.every(1)?.range(new Date(range[0]), new Date(range[1] + 1)) ?? [])
       : axis.ticks(count);
-    const result: { time: number; y: number; label: string }[] = [];
     for (const date of dates) {
-      const y = yOf(date.getTime());
-      if (result.length === 0 || y - result[result.length - 1].y >= TICK_SPACING) {
-        result.push({ time: date.getTime(), y, label: format(date) });
-      }
+      add(date.getTime(), format(date));
     }
     return result;
   }, [range, yOf, top, bottom]);

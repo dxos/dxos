@@ -11,7 +11,6 @@ import { testFunctionPlugins } from '@dxos/compute-hyperformula/testing';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
-import { technologyTimelineColors, technologyTimelineOrder } from '@dxos/react-ui-plot/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 
@@ -20,6 +19,8 @@ import {
   type SheetCompanionFrameMode,
   createTimelineTestCells,
   createTimelineTestRanges,
+  technologyTimelineColors,
+  technologyTimelineOrder,
   timelineTestColumnSizes,
   timelineTestRange,
   timelineTestRows,

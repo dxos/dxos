@@ -20,17 +20,59 @@ const yearTime = (year: number) => {
   return date.getTime();
 };
 
+// Deep time is counted back from the start of 2000, close enough to "present" at the scale it is used.
+const YEAR = 365.2425 * DAY;
+const PRESENT = Date.UTC(2000, 0, 1);
+
+/** Years in a deep-time unit: giga-, mega- or kilo-annum. */
+const unitYears = (unit: string) => {
+  switch (unit.toLowerCase()) {
+    case 'g':
+      return 1e9;
+    case 'm':
+      return 1e6;
+    default:
+      return 1e3;
+  }
+};
+
+/** Spans at least this long (about ten thousand years) are deep time: counted in years ago, not on a calendar. */
+export const MIN_DEEP_SPAN = 10_000 * YEAR;
+
+/** The time `years` before the present; far beyond the range a `Date` can hold. */
+export const timeOfYearsAgo = (years: number): number => PRESENT - years * YEAR;
+
+/** How many years before the present a time is. */
+export const yearsAgoOf = (time: number): number => (PRESENT - time) / YEAR;
+
+const trimNumber = (value: number) => String(Number(value.toPrecision(3)));
+
+/** Years before the present in the largest unit that keeps the number at least 1: `13.8 Gya`, `66 Mya`, `12 kya`. */
+export const formatYearsAgo = (years: number): string => {
+  for (const [unit, scale] of [
+    ['G', 1e9],
+    ['M', 1e6],
+    ['k', 1e3],
+  ] as const) {
+    if (Math.abs(years) >= scale) {
+      return `${trimNumber(years / scale)} ${unit}ya`;
+    }
+  }
+  return `${trimNumber(years)} ya`;
+};
+
 const formatDate = d3.utcFormat('%b %-d, %Y');
 const formatMonth = d3.utcFormat('%b %Y');
 
 /**
  * A cell value as a time and how to label it: an integer below 10000 is a year, any other number a date serial;
- * strings may be a year, a year and month (`YYYY-MM`) or a date.
+ * strings may be a year, a year and month (`YYYY-MM`), a date, or deep time in years ago (`13.8 Gya`, `66 Mya`,
+ * `300 kya`; `Ga`, `Ma` and `ka` too).
  */
 export const toTime = (value: PlotValue): { time: number; date: string } | undefined => {
   if (typeof value === 'number' && Number.isFinite(value)) {
     if (Number.isInteger(value) && Math.abs(value) < MAX_YEAR) {
-      return { time: yearTime(value), date: String(value) };
+      return { time: yearTime(value), date: value < 0 ? `${-value} BCE` : String(value) };
     }
     const time = SERIAL_EPOCH + value * DAY;
     return { time, date: formatDate(new Date(time)) };
@@ -40,6 +82,11 @@ export const toTime = (value: PlotValue): { time: number; date: string } | undef
     const text = value.trim();
     if (/^-?\d{1,4}$/.test(text)) {
       return toTime(Number(text));
+    }
+    const deep = /^(\d+(?:\.\d+)?)\s*([gmk])(?:ya|a)$/i.exec(text);
+    if (deep) {
+      const years = Number(deep[1]) * unitYears(deep[2]);
+      return { time: timeOfYearsAgo(years), date: formatYearsAgo(years) };
     }
     const month = /^(\d{4})-(\d{2})$/.exec(text);
     if (month) {
@@ -193,6 +240,11 @@ export const timelineRange = (
   const [min, max] = d3.extent(events, (event) => event.time);
   if (min === undefined || max === undefined) {
     return explicitStart !== undefined && explicitEnd !== undefined ? [explicitStart, explicitEnd] : undefined;
+  }
+
+  // A calendar cannot round deep time, so it keeps the events' own extent.
+  if (max - min >= MIN_DEEP_SPAN) {
+    return [explicitStart ?? min, explicitEnd ?? max];
   }
 
   const [niceStart, niceEnd] = d3

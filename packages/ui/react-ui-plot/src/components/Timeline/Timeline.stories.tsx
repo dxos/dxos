@@ -7,12 +7,12 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { technologyTimeline, technologyTimelineColors, technologyTimelineOrder } from '../../testing/index.ts';
+import { universeTimeline, universeTimelineColors, universeTimelineOrder } from '../../testing/index.ts';
 import { type PlotData, TIMELINE_SCALES, TIMELINE_SPINES, type TimelineOptions } from '../../types.ts';
 import { toPlotData, toTimelineEvents } from '../../util/index.ts';
 import { Timeline } from './Timeline.tsx';
 
-const data = toPlotData(technologyTimeline, { header: true });
+const data = toPlotData(universeTimeline, { header: true });
 const categories = toTimelineEvents(data).columns;
 
 type StoryArgs = Pick<TimelineOptions, 'spine' | 'scale' | 'start' | 'end' | 'today' | 'hidden'> & {
@@ -25,7 +25,7 @@ const DefaultStory = ({ data: storyData = data, zoom, ...options }: StoryArgs) =
     classNames='h-[48rem]'
     data={storyData}
     zoom={zoom}
-    options={{ order: technologyTimelineOrder, colors: technologyTimelineColors, ...options }}
+    options={{ order: universeTimelineOrder, colors: universeTimelineColors, ...options }}
   />
 );
 
@@ -33,7 +33,8 @@ const meta = {
   title: 'ui/react-ui-plot/Timeline',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ classNames: 'w-[60rem]' })],
-  args: { spine: 'center', scale: 'linear', start: '1940', end: '2030', today: true, zoom: 1 },
+  // Compact, since on a linear or log scale all of human history sits in the last pixel of 13.8 billion years.
+  args: { spine: 'center', scale: 'compact', today: true, zoom: 1 },
   argTypes: {
     spine: { control: 'inline-radio', options: TIMELINE_SPINES },
     scale: { control: 'inline-radio', options: TIMELINE_SCALES },
@@ -50,15 +51,28 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+export const Linear: Story = {
+  args: {
+    scale: 'linear',
+  },
+};
+
 export const Log: Story = {
   args: {
     scale: 'log',
   },
 };
 
-export const TwoColumns: Story = {
+export const Humans: Story = {
   args: {
-    hidden: ['Macro/MIC', 'Macro/FIC', 'Macro/TIC'],
+    hidden: ['Physics', 'Biology'],
+  },
+};
+
+export const Recorded: Story = {
+  args: {
+    scale: 'linear',
+    start: '-3500',
   },
 };
 
@@ -82,8 +96,7 @@ export const Zoomed: Story = {
 
 export const Dates: Story = {
   args: {
-    start: undefined,
-    end: undefined,
+    scale: 'linear',
     data: toPlotData(
       [
         ['Date', 'Category', 'Event', 'Description'],
@@ -96,17 +109,5 @@ export const Dates: Story = {
       ],
       { header: true },
     ),
-  },
-};
-
-export const Macro: Story = {
-  args: {
-    hidden: ['Tech/Hardware', 'Tech/Software', 'Tech/AI'],
-  },
-};
-
-export const Tech: Story = {
-  args: {
-    hidden: ['Macro', 'Macro/FIC', 'Macro/TIC', 'Macro/MIC'],
   },
 };

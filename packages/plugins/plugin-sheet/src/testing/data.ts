@@ -3,9 +3,10 @@
 //
 
 import { defaultColSize } from '@dxos/lit-grid';
-import { technologyTimeline } from '@dxos/react-ui-plot/testing';
 
 import { Sheet, SheetRange, SheetUtil } from '#types';
+
+import { technologyTimeline } from './timeline.ts';
 
 export const createTestCells = (testSheetName = 'test'): Record<string, Sheet.CellValue> => ({
   B1: { value: 'Qty2' },

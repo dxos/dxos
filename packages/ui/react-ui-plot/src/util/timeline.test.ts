@@ -4,12 +4,14 @@
 
 import { describe, test } from 'vitest';
 
+import { toPlotData } from './data.ts';
 import {
   categoryLabel,
   createTimelineFraction,
   evenFraction,
   fitLabel,
   fitTimelineHeight,
+  formatYearsAgo,
   groupCategories,
   matchesTimelineFilter,
   orderCategories,
@@ -18,12 +20,14 @@ import {
   timelineRange,
   toTime,
   toTimelineEvents,
+  yearsAgoOf,
 } from './timeline.ts';
 
 describe('toTime', () => {
   test('small integers and digit strings are years', ({ expect }) => {
     expect(toTime(1980)).to.deep.eq({ time: Date.UTC(1980, 0, 1), date: '1980' });
     expect(toTime('2024')?.date).to.eq('2024');
+    expect(toTime('-3200')?.date).to.eq('3200 BCE');
   });
 
   test('large numbers are date serials', ({ expect }) => {
@@ -38,6 +42,39 @@ describe('toTime', () => {
     expect(toTime('2026-03-20')?.date).to.eq('Mar 20, 2026');
     expect(toTime('not a date')).to.be.undefined;
     expect(toTime(null)).to.be.undefined;
+  });
+
+  test('deep time is read in years ago, beyond what a date can hold', ({ expect }) => {
+    const bigBang = toTime('13.8 Gya');
+    expect(bigBang?.date).to.eq('13.8 Gya');
+    expect(yearsAgoOf(bigBang?.time ?? 0)).to.be.closeTo(13.8e9, 1);
+    expect(toTime('66 Ma')?.date).to.eq('66 Mya');
+    expect(toTime('300 kya')?.date).to.eq('300 kya');
+
+    // Deep time and calendar years share one axis, oldest first.
+    const times = ['13.8 Gya', '66 Mya', '300 kya', '-3200', '1969'].map((value) => toTime(value)?.time ?? 0);
+    expect([...times].sort((a, b) => a - b)).to.deep.eq(times);
+  });
+
+  test('years ago are labeled in the largest unit that keeps the number whole or above one', ({ expect }) => {
+    expect(formatYearsAgo(2.6e6)).to.eq('2.6 Mya');
+    expect(formatYearsAgo(4.54e9)).to.eq('4.54 Gya');
+    expect(formatYearsAgo(12_000)).to.eq('12 kya');
+    expect(formatYearsAgo(500)).to.eq('500 ya');
+  });
+
+  test('a deep-time range is the events’ own extent', ({ expect }) => {
+    const data = toPlotData(
+      [
+        ['Date', 'Category', 'Event'],
+        ['13.8 Gya', 'Physics', 'Big Bang'],
+        ['1969', 'Humans', 'Moon landing'],
+      ],
+      { header: true },
+    );
+    const range = timelineRange(toTimelineEvents(data).events);
+    expect(range?.every(Number.isFinite)).to.be.true;
+    expect(yearsAgoOf(range?.[0] ?? 0)).to.be.closeTo(13.8e9, 1);
   });
 });
 

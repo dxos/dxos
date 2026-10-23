@@ -5,3 +5,4 @@
 export * from './data.ts';
 export * from './SheetCompanionFrame.tsx';
 export * from './testing.tsx';
+export * from './timeline.ts';

@@ -190,7 +190,8 @@ const createPlayer = async (
     // width: 1600,
     // height: 900,
     margin: 0.1,
-    // center: false,
+    // Slides keep their titles at the top rather than centering their content.
+    center: false,
     // minScale: 0.1,
     // maxScale: 1.4,
 

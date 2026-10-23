@@ -6,19 +6,45 @@
 
 ---
 
-# History
+# Diffuse Innovation
+
+- Distributed computing (Unix) displaces Mainframe
+- Web 1.0 (The Web and the PC)
+- Web 2.0 (SaaS)
+- Decentralized (Crypto, Cloudflare, Mobile, Internet of Things)
+- Diffusion => CNN => Transformer + RLHF (post training)
+- Vibecoding (Claude, Codex, Cursor)
+- Harness, Tools & Skills: tools + hooks to stabilize (inference-time)
+- State machine (personal agents)
+
+<!--
+Technology pressure gradients
+Chat GPT4 RLHF (post training)
+Coherernce: RLHF; Coding is the killer app (test suites); the Human is the attractor (Google search)
+-->
 
 ---
 
-# Today
+# Inversion of Control
+
+- Agent OS (agents and services)
+- Retrospective => Prospective; Tasks => Outcomes
+- Universal Application (Finally, the SaaSPocalypse)
+- Agent-to-agent broker
+- Fleet: security model (away from all agents have everything); audit
+- Semantic models; human control structures (delegated authority)
 
 ---
 
-# Future
+# FSD
+
+- Embodied agents
+- neuralize vs. human boot mode
+- Hivemind
 
 ---
 
-# The Men Behing the Curtain
+# Behing the Curtain
 
 | Complex          | Currency               | Core actors                                               |
 | ---------------- | ---------------------- | --------------------------------------------------------- |
