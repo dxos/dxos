@@ -7,7 +7,8 @@ locally running EDGE stack. Design: [plugin-agent `docs/DISCORD.md`](../../plugi
 ## Setup
 
 You need a dxos checkout (this repo, `<dxos>` below), an edge checkout (`<edge>` below), Chrome, and access to the
-`eng` and `CI` 1Password vaults with the 1Password app's CLI integration on (Settings → Developer).
+`eng-dev` 1Password vault (and `eng-ops` for a deployed environment's Kai token) with the 1Password app's CLI
+integration on (Settings → Developer).
 
 ### 1. The Discord apps
 
