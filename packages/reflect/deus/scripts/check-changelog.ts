@@ -14,8 +14,8 @@ import { MISSING_DECISION, checkChangelogChange, lintMdl } from '../src/extensio
 // A commit trailer that waives the missing-decision rule for a bulk mechanical edit; append-only rules still apply.
 const WAIVER = 'Spec-Changelog-Skip';
 
-// Language definitions, review rules and test fixtures are .mdl files but not specs.
-const EXEMPT = [/^packages\/reflect\/deus\/lang\//, /\/__fixtures__\//, /(^|\/)rules\//];
+// Language definitions, review rules, spec reviews and test fixtures are .mdl files but not specs.
+const EXEMPT = [/^packages\/reflect\/deus\/lang\//, /\/__fixtures__\//, /(^|\/)rules\//, /\.review\.mdl$/];
 
 const git = (...args: string[]): string => execFileSync('git', args, { encoding: 'utf8' }).trim();
 const lines = (text: string): string[] => text.split('\n').filter(Boolean);

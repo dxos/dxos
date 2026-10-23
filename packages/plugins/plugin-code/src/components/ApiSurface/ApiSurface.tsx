@@ -181,7 +181,7 @@ export const ApiSurface = ({ content }: ApiSurfaceProps) => {
     );
 
   return (
-    <ScrollArea.Root orientation='vertical' data-testid='api-surface'>
+    <ScrollArea.Root orientation='vertical' classNames='dx-fill' data-testid='api-surface'>
       <ScrollArea.Viewport>
         <Layout.Grid
           role='table'
