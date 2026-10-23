@@ -24,7 +24,8 @@ runs:
   using: 'composite'
   steps:
     # `--on-failure continue` because moon's default bail drops a failing cell's remaining targets,
-    # hiding what they cost.
+    # hiding what they cost. Never forced: a forced run rebuilds every dependency beside the tests, and
+    # the nightly makes its tests execute through `DX_TEST_RUN_ID` instead.
     - name: Test
       if: ${{ env.TRUNK_TOKEN != '' }}
       uses: trunk-io/analytics-uploader@v1
@@ -34,14 +35,14 @@ runs:
         token: ${{ env.TRUNK_TOKEN }}
         quarantine: true
         run: >-
-          moon exec --on-failure continue ${{ inputs.targets }}
+          env -u MOON_FORCE moon exec --on-failure continue ${{ inputs.targets }}
           ${{ inputs.of != '' && format('--job {0} --job-total {1}', inputs.shard, inputs.of) || '' }} -- --no-file-parallelism
 
     - name: Test (no analytics)
       if: ${{ env.TRUNK_TOKEN == '' }}
       shell: bash
       run: >-
-        moon exec --on-failure continue ${{ inputs.targets }}
+        env -u MOON_FORCE moon exec --on-failure continue ${{ inputs.targets }}
         ${{ inputs.of != '' && format('--job {0} --job-total {1}', inputs.shard, inputs.of) || '' }} -- --no-file-parallelism
 
     - name: Upload Test Results
