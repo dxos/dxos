@@ -202,18 +202,50 @@ test QA-1: Draw and reshape a package graph
 Every change to this spec adds a decision, newest last. See `lang/changelog.mdl` for the attribution rules.
 
 ```mdl
-decision D-1: The page reaches code-index through a dev-server route that runs `code-index mcp`
+decision D-1: A Composer plugin integrates with code-index; it may work only under `vite dev` or in Tauri.
   date: 2026-10-23
-  by: agent:claude
-  why: the index's store is single-process behind a native addon, and the code-index web server has no SPARQL route; the user accepted a vite-dev or tauri-only plugin
+  by: user:dmaretskyi
+  affects: [F-1]
+```
 
-decision D-3: The illustrator layout is recentred on the origin and the canvas refits when it lands
+```mdl
+decision D-2: The plugin's article is a canvas of the code graph, and the assistant gets tools to query and change that graph.
   date: 2026-10-23
-  by: agent:claude
-  why: the engine's coordinates start at its own origin and arrive after the canvas's first fit, so the graph opened off-centre and tiny
+  by: user:dmaretskyi
+  affects: [CodeGraphArticle, F-2]
+```
 
-decision D-2: One canvas serves the illustrator, force and rank layouts; the illustrator supplies positions as the overlay
+```mdl
+decision D-3: The canvas lays the graph out both with the illustrator's layout and as a force-directed graph, sharing the canvas and illustrator code the way feature maps do.
   date: 2026-10-23
-  by: agent:claude
-  why: the user asked to reuse canvas and illustrator code as feature maps do, which use react-ui-canvas's dynamic projection
+  by: user:dmaretskyi
+  affects: [CodeGraphCanvas, F-3]
+```
+
+```mdl
+decision D-4: The page reaches code-index through a dev-server route that runs `code-index mcp` as a child process. Fills in [D-1].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.1, F-1.2]
+  why: The index's store is single-process behind a native addon, and the code-index web server has no SPARQL route; the MCP server already serves the read-only tools.
+  rejected: Opening the store in the vite process, which would hold its lock and load the addon there.
+```
+
+```mdl
+decision D-5: One canvas serves the illustrator, force and rank layouts; the illustrator's semantic engine supplies box positions as the canvas overlay, and a fourth view shows the illustrator's own drawing. Fills in [D-3].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [CodeGraphCanvas, CodeGraphDiagram, F-3.1, F-3.2, F-3.4]
+  why: Feature maps use react-ui-canvas's dynamic projection, which already has a force arrangement; feeding it illustrator positions compares both layouts on one component.
+```
+
+```mdl
+decision D-6: Illustrator positions are centred on the origin, and the canvas refits when they arrive. Fills in [D-5].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [CodeGraphCanvas, F-3.1]
+  why: The engine's coordinates start at its own origin and arrive after the canvas's first fit, so the graph opened off-centre and too small to read.
 ```
