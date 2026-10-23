@@ -12,30 +12,41 @@ export type Name = (typeof NAMES)[number];
 /** True for a built-in theme name. */
 export const isName = (value: unknown): value is Name => NAMES.some((name) => name === value);
 
-// Values reach inline styles, so only plain colors and font lists pass; `url(...)` and other functions are rejected.
+/** Fonts for a deck's text (body and headings). */
+export const FONTS = ['mono', 'sans', 'rounded', 'serif', 'display'] as const;
+
+export type Font = (typeof FONTS)[number];
+
+/** Fonts for a deck's code. */
+export const MONO_FONTS = ['jetbrains', 'fira', 'plex', 'system'] as const;
+
+export type MonoFont = (typeof MONO_FONTS)[number];
+
+/** True for a text font name. */
+export const isFont = (value: unknown): value is Font => FONTS.some((font) => font === value);
+
+/** True for a code font name. */
+export const isMonoFont = (value: unknown): value is MonoFont => MONO_FONTS.some((font) => font === value);
+
+// Values reach inline styles, so only plain colors pass; `url(...)` and other functions are rejected.
 const COLOR_PATTERN =
   /^(#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})|[a-z]+|(rgb|rgba|hsl|hsla|oklch|oklab|lab|lch)\([\d\s.,%/+-]*\))$/i;
-const FONT_PATTERN = /^[\w\s,'"-]+$/;
 
 /** True for a hex color (3, 4, 6 or 8 digits), a color name, or an `rgb`/`hsl`/`oklch`-style function of numbers. */
 export const isColor = (value: unknown): value is string => typeof value === 'string' && COLOR_PATTERN.test(value);
 
-/** True for a font-family list: names, quotes, commas, spaces and hyphens only. */
-export const isFont = (value: unknown): value is string => typeof value === 'string' && FONT_PATTERN.test(value);
-
 const Color = Schema.String.pipe(Schema.check(Schema.isPattern(COLOR_PATTERN)));
 
-const Font = Schema.String.pipe(Schema.check(Schema.isPattern(FONT_PATTERN)));
-
 /**
- * A deck's theme: a built-in name plus optional overrides of its colors and font.
+ * A deck's theme: a built-in name plus optional overrides of its colors and its text and code fonts.
  */
 export const Settings = Schema.Struct({
   name: Schema.optional(Schema.Literals(NAMES)).annotate({ title: 'Theme' }),
   accent: Schema.optional(Color).annotate({ title: 'Accent color' }),
   background: Schema.optional(Color).annotate({ title: 'Background color' }),
   foreground: Schema.optional(Color).annotate({ title: 'Text color' }),
-  font: Schema.optional(Font).annotate({ title: 'Font' }),
+  font: Schema.optional(Schema.Literals(FONTS)).annotate({ title: 'Font' }),
+  monoFont: Schema.optional(Schema.Literals(MONO_FONTS)).annotate({ title: 'Code font' }),
 });
 
 export type Settings = Schema.Schema.Type<typeof Settings>;

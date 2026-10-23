@@ -81,7 +81,19 @@ export const Overrides: Story = {
       { name: 'dark', accent: '#f97316' },
       { name: 'light', background: '#fef3c7', foreground: '#451a03', accent: '#b45309' },
       { name: 'serif', accent: 'oklch(65% 0.2 300)' },
-      { name: 'default', accent: 'url(https://example.com/x)', font: "'Inter Variable', sans-serif" },
+      { name: 'default', accent: 'url(https://example.com/x)', font: 'sans' },
+    ],
+  },
+};
+
+/** Each text font with a code font; web fonts load on first use. */
+export const Fonts: Story = {
+  args: {
+    themes: [
+      { name: 'default', font: 'sans', monoFont: 'fira' },
+      { name: 'default', font: 'rounded', monoFont: 'plex' },
+      { name: 'light', font: 'serif', monoFont: 'jetbrains' },
+      { name: 'dark', font: 'display', monoFont: 'system' },
     ],
   },
 };

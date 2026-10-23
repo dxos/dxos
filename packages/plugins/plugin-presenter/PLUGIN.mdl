@@ -367,7 +367,7 @@ feat F-6: Markdown Slides
   req F-6.6: A fenced code block renders highlighted; a `{2,4-5}` meta marks the lines that stay emphasised.
   req F-6.7: In the preview companion `---` splits slides except inside a fenced code block, and a leading frontmatter block is slide metadata.
   req F-6.8: A deck has one theme, `default`, `light`, `dark` or `serif`, named by the first slide's `theme:` headmatter; `default` follows the app's light/dark mode and `light`/`dark` force one, code highlighting included.
-  req F-6.9: A Presentation's `theme` setting names the theme and may override its accent, background and text colors and its font; it wins over headmatter, and linked object slides are painted with it too.
+  req F-6.9: A Presentation's `theme` setting names the theme and may override its accent, background and text colors, its text font (`mono`, `sans`, `rounded`, `serif`, `display`) and its code font (`jetbrains`, `fira`, `plex`, `system`); it wins over headmatter, and linked object slides are painted with it too.
   req F-6.10:
     when: a slide names an unknown theme, or an override is not a plain color or font list
     then: the default theme or value applies and, for an unknown name, a validation issue is reported
@@ -1124,6 +1124,15 @@ decision D-51: A Presentation's article shows its slides as a grid of thumbnails
   affects: [PresentationArticle, Deck, F-4.11, F-4.12, F-4.13]
   why: The article is where a deck is arranged; one slide at a time hides the order, and the slide editor already edits a single slide.
   rejected: A toggle between grid and single slide inline; presenting already shows one slide at a time.
+```
+
+```mdl
+decision D-52: A theme's fonts are picked by name, a text font and a code font, from a fixed set; web fonts among them (Inter, Nunito, Source Serif 4, Fira Code, IBM Plex Mono) are imported only when a deck uses them. Supersedes the free-text font list of [F-6.9].
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [SlideTheme, F-6.9]
+  why: A picker is easier than writing a CSS font list, and a deck pays only for the fonts it picks.
+  rejected: A free-text font-family list, which names fonts the app may not have; system font lists only, which look different on every machine.
 ```
 
 ---

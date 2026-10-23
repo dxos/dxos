@@ -27,7 +27,8 @@ export const theme = {
     th: 'px-6 py-2 border border-(--slide-separator) text-left',
     td: 'px-6 py-2 border border-(--slide-separator)',
 
-    pre: 'w-full mx-0 my-[32px] p-4 bg-(--slide-code) font-(family-name:--slide-font-mono)',
+    // Important: the highlighter's prism style sets `font-family` inline on the <pre> and its <code>.
+    pre: 'w-full mx-0 my-[32px] p-4 bg-(--slide-code) font-(family-name:--slide-font-mono)! [&_code]:font-(family-name:--slide-font-mono)!',
     code: 'p-0 text-[40px]',
     inlineCode: 'px-2 rounded-sm bg-(--slide-code) text-info-text font-(family-name:--slide-font-mono)',
   },

@@ -2,8 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type CSSProperties, type PropsWithChildren, createContext, useContext, useMemo } from 'react';
+import React, {
+  type CSSProperties,
+  type PropsWithChildren,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+} from 'react';
 
+import { log } from '@dxos/log';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
@@ -40,6 +48,48 @@ const BASE: ThemeDefinition['vars'] = {
 
 const SERIF = "'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, ui-serif, serif";
 
+type FontDefinition = {
+  family: string;
+  /** Loads the web font's faces; absent for fonts the app bundles (ui-theme) and system fonts. */
+  load?: () => Promise<unknown>;
+};
+
+// Web fonts are imported on first use, so a deck pays only for the fonts it picks.
+const FONTS: Record<SlideTheme.Font, FontDefinition> = {
+  mono: { family: 'var(--font-mono)' },
+  sans: {
+    family: "'Inter Variable', ui-sans-serif, system-ui, sans-serif",
+    load: () => import('@fontsource-variable/inter/index.css'),
+  },
+  rounded: {
+    family: "'Nunito Variable', ui-rounded, ui-sans-serif, sans-serif",
+    load: () => import('@fontsource-variable/nunito/index.css'),
+  },
+  serif: {
+    family: `'Source Serif 4 Variable', ${SERIF}`,
+    load: () => import('@fontsource-variable/source-serif-4/index.css'),
+  },
+  display: { family: "'Poiret One', ui-sans-serif, sans-serif" },
+};
+
+const MONO_FONTS: Record<SlideTheme.MonoFont, FontDefinition> = {
+  jetbrains: { family: 'var(--font-mono)' },
+  fira: {
+    family: "'Fira Code Variable', ui-monospace, monospace",
+    load: () => import('@fontsource-variable/fira-code/index.css'),
+  },
+  plex: {
+    family: "'IBM Plex Mono', ui-monospace, monospace",
+    load: () => import('@fontsource/ibm-plex-mono/index.css'),
+  },
+  system: { family: "ui-monospace, 'SF Mono', Menlo, Consolas, monospace" },
+};
+
+const fontsOf = (settings: SlideTheme.Settings) => ({
+  font: SlideTheme.isFont(settings.font) ? FONTS[settings.font] : undefined,
+  monoFont: SlideTheme.isMonoFont(settings.monoFont) ? MONO_FONTS[settings.monoFont] : undefined,
+});
+
 const THEMES: Record<SlideTheme.Name, ThemeDefinition> = {
   default: { vars: BASE },
   light: { colorScheme: 'light', vars: BASE },
@@ -54,6 +104,8 @@ export const slideThemeStyle = (settings: SlideTheme.Settings = {}): SlideThemeS
   const { colorScheme, vars } = THEMES[SlideTheme.isName(settings.name) ? settings.name : 'default'];
   const pick = (value: string | undefined, valid: (value: unknown) => value is string, fallback: string) =>
     valid(value) ? value : fallback;
+  // Stored settings are not re-validated on read, so an unknown name falls back to the theme's own font.
+  const { font, monoFont } = fontsOf(settings);
   return {
     colorScheme,
     '--slide-bg': pick(settings.background, SlideTheme.isColor, vars.background),
@@ -61,9 +113,9 @@ export const slideThemeStyle = (settings: SlideTheme.Settings = {}): SlideThemeS
     '--slide-accent': pick(settings.accent, SlideTheme.isColor, vars.accent),
     '--slide-code': vars.code,
     '--slide-separator': vars.separator,
-    '--slide-font-body': pick(settings.font, SlideTheme.isFont, vars.fontBody),
-    '--slide-font-heading': pick(settings.font, SlideTheme.isFont, vars.fontHeading),
-    '--slide-font-mono': vars.fontMono,
+    '--slide-font-body': font?.family ?? vars.fontBody,
+    '--slide-font-heading': font?.family ?? vars.fontHeading,
+    '--slide-font-mono': monoFont?.family ?? vars.fontMono,
   };
 };
 
@@ -77,9 +129,17 @@ export type SlideThemeProviderProps = PropsWithChildren<{ settings?: SlideTheme.
 /**
  * Sets the theme of every slide rendered below it.
  */
-export const SlideThemeProvider = ({ settings = {}, children }: SlideThemeProviderProps) => (
-  <SlideThemeContext.Provider value={settings}>{children}</SlideThemeContext.Provider>
-);
+export const SlideThemeProvider = ({ settings = {}, children }: SlideThemeProviderProps) => {
+  const { font, monoFont } = fontsOf(settings);
+  // Until a web font's faces load the slide shows its fallback list, then swaps; a failed load keeps the fallback.
+  useEffect(() => {
+    font?.load?.().catch((error) => log.warn('slide font failed to load', { font: settings.font, error }));
+  }, [font]);
+  useEffect(() => {
+    monoFont?.load?.().catch((error) => log.warn('slide font failed to load', { font: settings.monoFont, error }));
+  }, [monoFont]);
+  return <SlideThemeContext.Provider value={settings}>{children}</SlideThemeContext.Provider>;
+};
 
 /**
  * The current theme's style, from the nearest `SlideThemeProvider` (default theme without one).

@@ -30,21 +30,27 @@ describe('slideThemeStyle', () => {
   });
 
   test('valid overrides apply', () => {
-    const style = slideThemeStyle({ accent: 'oklch(70% 0.2 30)', background: '#101010', font: "'Inter', sans-serif" });
+    const style = slideThemeStyle({ accent: 'oklch(70% 0.2 30)', background: '#101010', font: 'serif' });
     expect(style['--slide-accent']).toBe('oklch(70% 0.2 30)');
     expect(style['--slide-bg']).toBe('#101010');
-    expect(style['--slide-font-body']).toBe("'Inter', sans-serif");
+    expect(style['--slide-font-body']).toMatch(/serif$/);
+    expect(style['--slide-font-heading']).toMatch(/serif$/);
+  });
+
+  test('the text and code fonts are picked separately', () => {
+    const style = slideThemeStyle({ name: 'serif', font: 'sans', monoFont: 'fira' });
+    expect(style['--slide-font-body']).toContain('Inter');
+    expect(style['--slide-font-heading']).toContain('Inter');
+    expect(style['--slide-font-mono']).toContain('Fira Code');
   });
 
   test('values that could load resources or escape the declaration are ignored', () => {
     const style = slideThemeStyle({
       accent: 'url(https://example.com/x)',
       background: 'red; background-image: url(x)',
-      font: 'x; color: red',
     });
     expect(style['--slide-accent']).toBe('var(--color-accent-text)');
     expect(style['--slide-bg']).toBe('var(--dx-surface-base)');
-    expect(style['--slide-font-body']).toBe('var(--font-mono)');
   });
 });
 
@@ -53,6 +59,12 @@ describe('SlideTheme.Settings', () => {
 
   test('accepts a name with overrides', () => {
     expect(Result.isSuccess(decode({ name: 'dark', accent: '#f80' }))).toBe(true);
+  });
+
+  test('accepts only the named fonts', () => {
+    expect(Result.isSuccess(decode({ font: 'serif', monoFont: 'plex' }))).toBe(true);
+    expect(Result.isSuccess(decode({ font: "'Inter', sans-serif" }))).toBe(false);
+    expect(Result.isSuccess(decode({ monoFont: 'x; color: red' }))).toBe(false);
   });
 
   test('accepts only 3-, 4-, 6- and 8-digit hex colors', () => {
