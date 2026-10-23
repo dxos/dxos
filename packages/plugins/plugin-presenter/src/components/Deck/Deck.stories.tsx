@@ -343,8 +343,11 @@ export const ClickStepsAtEnd: Story = {
     deck.focus();
     await userEvent.keyboard('{ArrowRight}');
     await expect(await canvas.findByText('2 / 2')).toBeVisible();
-    await userEvent.keyboard('{ArrowRight}{ArrowRight}{ArrowRight}');
-    await waitFor(() => expect(hidden()).toBe(0));
+    await waitFor(() => expect(hidden()).toBe(3));
+    for (const remaining of [2, 1, 0]) {
+      await userEvent.keyboard('{ArrowRight}');
+      await waitFor(() => expect(hidden()).toBe(remaining));
+    }
     await userEvent.keyboard('{ArrowRight}');
     await expect(canvas.getByText('2 / 2')).toBeVisible();
     await expect(hidden()).toBe(0);

@@ -217,7 +217,7 @@ component DocumentArticle
   desc: |
     Presenter companion of a Markdown document: the shared Deck over the document content, split into slides
     on horizontal `---` separators outside fenced code, honouring leading headmatter and per-slide frontmatter
-    (markdown sources). Vertical slides are not configured. Nothing is persisted. RevealPlayer is gone. Fullscreen is read
+    (markdown sources). Vertical slides are not configured. Nothing is persisted. Fullscreen is read
     per object from the deck's fullscreen plank (is this document presented), not from the global layout mode.
   props:
     document: Markdown.Document
@@ -374,6 +374,7 @@ feat F-8: Backgrounds and Embedded Surfaces
   req F-8.3:
     when: the ref is malformed, never existed, or its target is deleted
     then: a "Missing object" placeholder shows in its place, with no spinner left
+  req F-8.4: An image whose URL is an object URI (`![label](echo:///<id>)`) embeds that object as `<Surface ref>` with the `slide` role; alone in its paragraph it fills its slot, and the label is ignored.
 ```
 
 ```mdl
@@ -1013,7 +1014,7 @@ decision D-43: An image whose URL is an object URI (`![label](echo:///<id>)`) em
   date: 2026-10-23
   by: agent:claude-code
   for: user:richburdon
-  affects: [MarkdownSlide, F-8.2]
+  affects: [MarkdownSlide, F-8.2, F-8.4]
   why: Main's reveal player gained this syntax (#14152) and plugin-debug's presenter sample uses it to show a timeline chart; deleting reveal must not drop it.
 ```
 
