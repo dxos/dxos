@@ -4,14 +4,14 @@
 
 import type { Element, ElementContent, Properties, Root } from 'hast';
 import { type Components, toJsxRuntime } from 'hast-util-to-jsx-runtime';
-import React, { type ComponentType, type ReactNode, useEffect, useMemo } from 'react';
+import React, { type ComponentType, type ReactNode, createContext, useContext, useEffect, useMemo } from 'react';
 import { Fragment, jsx, jsxs } from 'react/jsx-runtime';
 
 import { SyntaxHighlighter, type SyntaxHighlighterProps, renderRows } from '@dxos/react-ui-syntax-highlighter';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { SURFACE_ROLES, type SlotName, type SurfaceRole, parseSlide } from '#markdown';
+import { type SlotName, SURFACE_ROLES, type SurfaceRole, parseSlide } from '#markdown';
 
 import { layouts } from './layouts.tsx';
 import { SlideBackground } from './SlideBackground.tsx';
@@ -39,13 +39,12 @@ export const MarkdownSlide = ({ classNames, content, step, onClicks, renderSurfa
     onClicks?.(parsed.clicks);
   }, [parsed.clicks, onClicks]);
 
-  const components = useMemo(() => createComponents(renderSurface), [renderSurface]);
   const slots = useMemo((): Record<SlotName, ReactNode> => {
     const current = step ?? Number.POSITIVE_INFINITY;
     const render = (slot: SlotName) =>
       toJsxRuntime(prepareRoot(parsed.slots[slot], current), { Fragment, jsx, jsxs, components });
     return { default: render('default'), left: render('left'), right: render('right') };
-  }, [parsed, step, components]);
+  }, [parsed, step]);
 
   const Layout = layouts[parsed.layout];
   return (
@@ -55,7 +54,9 @@ export const MarkdownSlide = ({ classNames, content, step, onClicks, renderSurfa
     >
       <SlideBackground frontmatter={parsed.frontmatter} layout={parsed.layout} />
       <div className='relative size-full'>
-        <Layout slots={slots} frontmatter={parsed.frontmatter} />
+        <RenderSurfaceContext.Provider value={renderSurface}>
+          <Layout slots={slots} frontmatter={parsed.frontmatter} />
+        </RenderSurfaceContext.Provider>
       </div>
     </div>
   );
@@ -76,21 +77,22 @@ type SlideComponents = Partial<Components> & {
 const isSurfaceRole = (role: string | undefined): role is SlideSurfaceRole =>
   SURFACE_ROLES.some((value) => value === role);
 
-const createComponents = (renderSurface: MarkdownSlideProps['renderSurface']): SlideComponents => ({
-  'slide-code': CodeBlock,
-  'slide-surface': ({ uri = '', role }: SlideSurfaceProps) => {
-    const surfaceRole: SlideSurfaceRole = isSurfaceRole(role) ? role : 'slide';
-    return (
-      <div data-surface={uri} data-role={surfaceRole} className='flex dx-grow'>
-        {renderSurface?.({ uri, role: surfaceRole }) ?? (
-          <div className='flex grow items-center justify-center p-8 border-4 border-dashed border-separator text-[32px]'>
-            {`${surfaceRole}: ${uri}`}
-          </div>
-        )}
-      </div>
-    );
-  },
-});
+// Read through context so the component map stays constant and an inline `renderSurface` never remounts surfaces.
+const RenderSurfaceContext = createContext<MarkdownSlideProps['renderSurface']>(undefined);
+
+const SlideSurface = ({ uri = '', role }: SlideSurfaceProps) => {
+  const renderSurface = useContext(RenderSurfaceContext);
+  const surfaceRole: SlideSurfaceRole = isSurfaceRole(role) ? role : 'slide';
+  return (
+    <div data-surface={uri} data-role={surfaceRole} className='flex dx-grow'>
+      {renderSurface?.({ uri, role: surfaceRole }) ?? (
+        <div className='flex grow items-center justify-center p-8 border-4 border-dashed border-separator text-[32px]'>
+          {`${surfaceRole}: ${uri}`}
+        </div>
+      )}
+    </div>
+  );
+};
 
 type Renderer = NonNullable<SyntaxHighlighterProps['renderer']>;
 
@@ -114,9 +116,9 @@ const lineHighlightRenderer =
 
 const CodeBlock = ({ language, meta, source = '' }: SlideCodeProps) => {
   const renderer = useMemo(() => {
-    const lines = parseLineHighlights(meta);
+    const lines = parseLineHighlights(meta, source.replace(/\n$/, '').split('\n').length);
     return lines && lineHighlightRenderer(lines);
-  }, [meta]);
+  }, [meta, source]);
   return (
     <SyntaxHighlighter
       language={language}
@@ -131,11 +133,23 @@ const CodeBlock = ({ language, meta, source = '' }: SlideCodeProps) => {
   );
 };
 
+const components: SlideComponents = {
+  'slide-code': CodeBlock,
+  'slide-surface': SlideSurface,
+};
+
+// Bounds a range like `{1-100000000}` so a fence cannot allocate an enormous set.
+const MAX_HIGHLIGHT_LINE = 10_000;
+
 /**
  * Lines named by a fence's `{2,4-5}` meta; for click-stepped `{1|2-3}` only the first step applies.
- * Returns undefined when every line is shown plainly.
+ * Ranges are clamped to `lineCount`; returns undefined when every line is shown plainly.
  */
-export const parseLineHighlights = (meta: string | undefined): Set<number> | undefined => {
+export const parseLineHighlights = (
+  meta: string | undefined,
+  lineCount = MAX_HIGHLIGHT_LINE,
+): Set<number> | undefined => {
+  const last = Math.min(lineCount, MAX_HIGHLIGHT_LINE);
   const ranges = meta && /\{([^}]*)\}/.exec(meta)?.[1].split('|')[0].trim();
   if (!ranges || ranges === '*' || ranges === 'all') {
     return undefined;
@@ -144,7 +158,7 @@ export const parseLineHighlights = (meta: string | undefined): Set<number> | und
   for (const range of ranges.split(',')) {
     const [start, end = start] = range.split('-').map((value) => Number(value.trim()));
     if (Number.isInteger(start) && Number.isInteger(end)) {
-      for (let line = start; line <= end; line++) {
+      for (let line = Math.max(start, 1); line <= Math.min(end, last); line++) {
         lines.add(line);
       }
     }
@@ -195,15 +209,17 @@ const prepareRoot = (root: Root, step: number): Root => ({
 
 const prepareElement = (element: Element, step: number, inPre: boolean): Element => {
   const properties: Properties = { ...element.properties };
-  const ownStep = properties.step;
+  const ownStep = properties.step ?? undefined;
   delete properties.step;
+  const withStep = (props: Properties): Properties =>
+    ownStep === undefined ? props : stepProperties(props, ownStep, step);
 
   const [code] = element.children;
   if (element.tagName === 'pre' && element.children.length === 1 && code.type === 'element') {
     const block = codeElement(code);
-    return ownStep === undefined || ownStep === null
+    return ownStep === undefined
       ? block
-      : { type: 'element', tagName: 'div', properties: stepProperties({}, ownStep, step), children: [block] };
+      : { type: 'element', tagName: 'div', properties: withStep({}), children: [block] };
   }
 
   let tagName = element.tagName;
@@ -231,7 +247,7 @@ const prepareElement = (element: Element, step: number, inPre: boolean): Element
   return {
     ...element,
     tagName,
-    properties: ownStep === undefined || ownStep === null ? properties : stepProperties(properties, ownStep, step),
+    properties: withStep(properties),
     children: element.children.map((child) =>
       child.type === 'element' ? prepareElement(child, step, inPre || tagName === 'pre') : child,
     ),

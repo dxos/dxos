@@ -7,8 +7,15 @@ import React, { type CSSProperties } from 'react';
 import { type LayoutName, type SlideFrontmatter, isSafeUrl } from '#markdown';
 
 // A function-call color (`rgb(…)`, `oklch(…)`, …), a hex color, or a bare keyword such as `teal`.
-const COLOR = /^(#[0-9a-f]{3,8}|(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(.*\)|[a-z]+)$/i;
+const COLOR = /^(#[0-9a-f]{3,8}|(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\([^;{}]*\)|[a-z]+)$/i;
 const DATA_VIDEO = /^data:video\//i;
+
+// A declaration terminator or block brace would let a value escape its property in server-rendered CSS.
+const UNSAFE_CSS = /[;{}]/;
+
+/** A CSS position value, or undefined when it could escape its declaration. */
+const safePosition = (position: string | undefined): string | undefined =>
+  position === undefined || UNSAFE_CSS.test(position) ? undefined : position;
 
 /** True when a `background` value is a CSS color rather than an image URL. */
 export const isColor = (value: string): boolean => COLOR.test(value.trim());
@@ -33,7 +40,7 @@ export const imageStyle = (url: string | undefined, position?: string): CSSPrope
     backgroundImage: `url(${JSON.stringify(safe)})`,
     backgroundSize: 'cover',
     backgroundRepeat: 'no-repeat',
-    backgroundPosition: position ?? 'center',
+    backgroundPosition: safePosition(position) ?? 'center',
   };
 };
 
@@ -84,7 +91,7 @@ export const SlideBackground = ({ frontmatter, layout }: SlideBackgroundProps) =
       {video && (
         <video
           className='dx-cover size-full object-cover'
-          style={{ objectPosition: frontmatter.backgroundPosition }}
+          style={{ objectPosition: safePosition(frontmatter.backgroundPosition) }}
           src={video}
           autoPlay
           muted

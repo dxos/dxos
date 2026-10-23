@@ -90,6 +90,35 @@ describe('backgroundStyle', () => {
     });
     expect(backgroundStyle({ background: 'javascript:alert(1)' })).toEqual({});
   });
+
+  test('values containing a declaration terminator are not used as raw CSS', () => {
+    expect(backgroundStyle({ background: 'rgb(1, 2, 3); color: red' })).not.toHaveProperty('backgroundColor');
+    expect(backgroundStyle({ background: 'red;color:blue' })).not.toHaveProperty('backgroundColor');
+    expect(
+      backgroundStyle({ background: 'https://example.com/a.png', backgroundPosition: 'top; color: red' }),
+    ).toMatchObject({ backgroundPosition: 'center' });
+  });
+
+  test('backgroundPosition with a semicolon is dropped from the video', () => {
+    const markup = renderToStaticMarkup(
+      <MarkdownSlide
+        content={['---', 'backgroundVideo: clip.mp4', 'backgroundPosition: "top; color: red"', '---'].join('\n')}
+      />,
+    );
+    expect(markup).not.toContain('color:red');
+    expect(markup).not.toContain('object-position');
+  });
+
+  test('unsafe image is not painted by image-left', () => {
+    const markup = renderToStaticMarkup(
+      <MarkdownSlide
+        content={['---', 'layout: image-left', 'image: javascript:alert(1)', '---', '', '# Hi'].join('\n')}
+      />,
+    );
+    expect(markup).toContain('data-image');
+    expect(markup).not.toContain('url(javascript');
+    expect(markup).not.toContain('javascript:');
+  });
 });
 
 describe('parseLineHighlights', () => {
@@ -98,5 +127,11 @@ describe('parseLineHighlights', () => {
     expect(parseLineHighlights('{1|2-3}')).toEqual(new Set([1]));
     expect(parseLineHighlights('{*}')).toBeUndefined();
     expect(parseLineHighlights(undefined)).toBeUndefined();
+  });
+
+  test('ranges are clamped to the line count', () => {
+    expect(parseLineHighlights('{2-100000000}', 3)).toEqual(new Set([2, 3]));
+    expect(parseLineHighlights('{1-100000000}')?.size).toBeLessThanOrEqual(10_000);
+    expect(parseLineHighlights('{5}', 3)).toBeUndefined();
   });
 });

@@ -191,6 +191,7 @@
     "@dxos/ui-theme": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
+    "@testing-library/react": "catalog:",
     "@types/hast": "catalog:",
     "@types/mdast": "catalog:",
     "@types/react": "catalog:",
