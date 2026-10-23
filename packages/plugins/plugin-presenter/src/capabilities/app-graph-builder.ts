@@ -68,7 +68,7 @@ export const createSectionsExtension = () =>
       return Effect.succeed(
         get(slideSourcesAtom(presentation))
           .map((source, position) => {
-            if (source.kind === 'pending') {
+            if (source.kind === 'pending' || source.kind === 'markdown') {
               return undefined;
             }
             const object = source.kind === 'text' ? source.text : source.object;

@@ -606,9 +606,6 @@ catalogs:
     '@types/readable-stream':
       specifier: ^2.3.9
       version: 2.3.14
-    '@types/reveal.js':
-      specifier: ^5.0.3
-      version: 5.0.3
     '@types/seedrandom':
       specifier: ^3.0.5
       version: 3.0.5
@@ -1020,9 +1017,6 @@ catalogs:
     hast-util-to-jsx-runtime:
       specifier: ^2.3.6
       version: 2.3.6
-    highlight.js:
-      specifier: ^11.9.0
-      version: 11.9.0
     html-to-image:
       specifier: ^1.11.13
       version: 1.11.13
@@ -1386,9 +1380,6 @@ catalogs:
     resize-observer-polyfill:
       specifier: ^1.5.1
       version: 1.5.1
-    reveal.js:
-      specifier: ^5.1.0
-      version: 5.1.0
     rolldown:
       specifier: ~1.2.14
       version: 1.2.14
@@ -15235,9 +15226,6 @@ importers:
       hast-util-to-jsx-runtime:
         specifier: 'catalog:'
         version: 2.3.6
-      highlight.js:
-        specifier: 'catalog:'
-        version: 11.9.0
       marked:
         specifier: 'catalog:'
         version: 12.0.2
@@ -15256,9 +15244,6 @@ importers:
       remark-rehype:
         specifier: 'catalog:'
         version: 11.1.2
-      reveal.js:
-        specifier: 'catalog:'
-        version: 5.1.0
       unified:
         specifier: 'catalog:'
         version: 11.0.5
@@ -15305,9 +15290,6 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
-      '@types/reveal.js':
-        specifier: 'catalog:'
-        version: 5.0.3
       effect:
         specifier: 4.0.4
         version: 4.0.4
@@ -35084,9 +35066,6 @@ packages:
   '@types/resolve@1.20.6':
     resolution: {integrity: sha512-A4STmOXPhMUtHH+S6ymgE2GiBSMqf4oTvcQZMcHzokuTLVYzXTB8ttjcgxOVaAp2lGwEdzZ0J+cRbbeevQj1UQ==}
 
-  '@types/reveal.js@5.0.3':
-    resolution: {integrity: sha512-gwnK8TR38IOBIORWFrV5/z9lRX4iLke2FBqNgRhXxehaWJFkrzVY2TVzfdX/SX94eugt+OI5l++zDBBSfdzruQ==}
-
   '@types/sarif@2.1.7':
     resolution: {integrity: sha512-kRz0VEkJqWLf1LLVN4pT1cg1Z9wAuvI6L97V3m2f5B76Tg8d413ddvLBPTEHAZJlnn4XSvu0FkZtViCQGVyrXQ==}
 
@@ -39724,10 +39703,6 @@ packages:
   highlight.js@10.7.3:
     resolution: {integrity: sha512-tzcUFauisWKNHaRkN4Wjl/ZA07gENAjFl3J/c480dprkGTg5EQstgaNFqBfUqCq54kZRIEcreTsAgF/m2quD7A==}
 
-  highlight.js@11.9.0:
-    resolution: {integrity: sha512-fJ7cW7fQGCYAkgv4CPfwFHrfd/cLS4Hau96JuJ+ZTOWhjnhoeN1ub1tFmALm/+lW5z4WCAuAV9bm05AP0mS6Gw==}
-    engines: {node: '>=12.0.0'}
-
   highlightjs-vue@1.0.0:
     resolution: {integrity: sha512-PDEfEF102G23vHmPhLyPboFCD+BkMGu+GuJe2d9/eH4FsCwvgBpnc9n0pGE+ffKdph38s6foEZiEjdgHdzp+IA==}
 
@@ -43704,10 +43679,6 @@ packages:
   reusify@1.0.4:
     resolution: {integrity: sha512-U9nH88a3fc/ekCF1l0/UP1IosiuIjyTh7hBvXVMHYgVcfGvt897Xguj2UOLDeI5BG2m7/uwyaLVT6fbtCwTyzw==}
     engines: {iojs: '>=1.0.0', node: '>=0.10.0'}
-
-  reveal.js@5.1.0:
-    resolution: {integrity: sha512-KDt7m0+xwKV6nAZt4CNPVFBf42sTKRQapg0bGGKB5PKO5XvChnMfwlZkybydHiQJ7p5+6LbHKRGrhXODdoNIaA==}
-    engines: {node: '>=18.0.0'}
 
   rfdc@1.4.1:
     resolution: {integrity: sha512-q1b3N5QkRUWUl7iyylaaj3kOpIT0N2i9MqIEQXP73GVsN9cw3fdx8X63cEmWhJGi2PPCF23Ijp7ktmd39rawIA==}
@@ -57504,8 +57475,6 @@ snapshots:
 
   '@types/resolve@1.20.6': {}
 
-  '@types/reveal.js@5.0.3': {}
-
   '@types/sarif@2.1.7': {}
 
   '@types/sax@1.2.4':
@@ -63311,8 +63280,6 @@ snapshots:
 
   highlight.js@10.7.3: {}
 
-  highlight.js@11.9.0: {}
-
   highlightjs-vue@1.0.0: {}
 
   hls.js@1.6.15: {}
@@ -68202,8 +68169,6 @@ snapshots:
       unist-util-visit: 5.1.0
 
   reusify@1.0.4: {}
-
-  reveal.js@5.1.0: {}
 
   rfdc@1.4.1: {}
 

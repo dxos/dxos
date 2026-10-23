@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Obj } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -32,6 +32,8 @@ export const SlideRenderer = ({ source, attendableId, step }: SlideRendererProps
   switch (source.kind) {
     case 'text':
       return <TextSlide text={source.text} step={step} />;
+    case 'markdown':
+      return <MarkdownContentSlide content={source.content} db={source.db} step={step} />;
     case 'object':
       return <ObjectSlide object={source.object} attendableId={attendableId} />;
     case 'pending':
@@ -42,14 +44,21 @@ export const SlideRenderer = ({ source, attendableId, step }: SlideRendererProps
 const TextSlide = ({ text, step }: { text: Text.Text } & Pick<SlideRendererProps, 'step'>) => {
   const [content] = useObject(text, 'content');
   // Refs resolve against the owner's database so space-relative `echo:///<id>` refs find their target.
-  const db = Obj.getDatabase(text);
+  return <MarkdownContentSlide content={content} db={Obj.getDatabase(text)} step={step} />;
+};
+
+const MarkdownContentSlide = ({
+  content,
+  db,
+  step,
+}: { content: string | undefined; db?: Database.Database } & Pick<SlideRendererProps, 'step'>) => {
   const renderSurface = useMemo<MarkdownSlideProps['renderSurface']>(
     () => (db ? ({ uri, role }) => <EmbeddedSurface uri={uri} role={role} db={db} /> : undefined),
     [db],
   );
   return (
     <SlideFrame>
-      <MarkdownSlide content={content} step={step} renderSurface={renderSurface} />
+      <MarkdownSlide content={content ?? ''} step={step} renderSurface={renderSurface} />
     </SlideFrame>
   );
 };

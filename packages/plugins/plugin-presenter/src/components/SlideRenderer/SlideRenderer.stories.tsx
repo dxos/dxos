@@ -73,6 +73,8 @@ const DefaultStory = ({ kind, content }: StoryProps) => {
         };
       case 'unmatched':
         return { kind: 'object', id: 'object', object: Markdown.make({ name: 'Unmatched', content: '# Hidden' }) };
+      case 'markdown':
+        return { kind, id: 'markdown', content: content ?? '# Raw slide' };
       case 'pending':
         return { kind, id: 'pending' };
     }

@@ -140,10 +140,9 @@ component SlideRenderer
 ```mdl
 component DocumentArticle
   desc: |
-    Presenter companion of a Markdown document: a Reveal.js player over the document content, split into slides
+    Presenter companion of a Markdown document: the shared Deck over the document content, split into slides
     on horizontal `---` separators. Vertical slides are not configured. Nothing is persisted. Fullscreen is read
     per object from the deck's fullscreen plank (is this document presented), not from the global layout mode.
-    The companion stays on Reveal.js until the markdown renderer replaces it.
   props:
     document: Markdown.Document
   actions:
@@ -199,11 +198,11 @@ feat F-1: Presentation Mode
 ```
 
 ```mdl
-feat F-2: Document Preview (Reveal.js)
+feat F-2: Document Preview
 
   req F-2.1:
     when: DocumentArticle mounts with a Markdown.Document
-    then: RevealPlayer parses the document content and renders slides
+    then: the Deck renders the document content as slides
   req F-2.2: Slides are separated by horizontal `---`; vertical slides are not configured.
   req F-2.3:
     when: user presses Escape or the exit action is triggered
@@ -277,7 +276,7 @@ scenario T-1: Document presenter opens in fullscreen
   when: user invokes TogglePresentation (keyboard or action menu)
   then:
     - the presenter companion fills the screen in the deck's fullscreen overlay
-    - RevealPlayer is visible with at least one slide
+    - the Deck is visible with at least one slide
     - the URL is unchanged
 ```
 
@@ -649,6 +648,14 @@ decision D-21: Inline, the Deck pager sits centered in a status bar below the sl
   by: user:richburdon
   affects: [Deck]
   why: The toolbar keeps the editing actions; navigation sits under the slide it controls.
+```
+
+```mdl
+decision D-22: Reveal.js and RevealPlayer are deleted; the document preview renders on the shared Deck with no setting. Fills in [D-3].
+  date: 2026-10-22
+  by: agent:claude-code
+  affects: [DocumentArticle, F-2]
+  why: One renderer for decks and previews; the Settings module is gone, so there is nothing to put reveal behind.
 ```
 
 ---

@@ -2,33 +2,47 @@
 // Copyright 2023 DXOS.org
 //
 
-import React from 'react';
+import React, { useCallback } from 'react';
 
-import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useObject } from '@dxos/echo-react';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { Obj } from '@dxos/echo';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
-import * as Panel from '@dxos/react-ui/Panel';
+import { useAttention } from '@dxos/react-ui-attention';
 
-import { PresentationShell, RevealPlayer } from '#components';
-import { useExitPresenter, useIsPresenting } from '#hooks';
+import { Deck } from '#components';
+import { useDocumentDeck, useIsPresenting, useSetPresenting, useSlideIndex } from '#hooks';
 
 export type DocumentArticleProps = AppSurface.ObjectArticleProps<Markdown.Document>;
 
-export const DocumentArticle = ({ role, subject: document }: DocumentArticleProps) => {
-  const handleExit = useExitPresenter(document);
+/**
+ * Preview companion of a markdown document: its `---`-separated slides on the deck runtime.
+ */
+export const DocumentArticle = ({ role, subject: document, attendableId }: DocumentArticleProps) => {
+  const slides = useDocumentDeck(document);
+  const [index, setIndex] = useSlideIndex(Obj.getURI(document), slides.length);
   const fullscreen = useIsPresenting(document);
-  const [content] = useObject(document.content, 'content');
+  const setPresenting = useSetPresenting(document);
+  // Only the attended article takes focus, so the editor beside the preview keeps its caret.
+  const { hasAttention } = useAttention(attendableId);
+
+  const handleFullscreenChange = useCallback(
+    (next: boolean) => {
+      void setPresenting(next);
+    },
+    [setPresenting],
+  );
 
   return (
-    <Panel.Root role={role} classNames='relative'>
-      <Panel.Body asChild>
-        <PresentationShell fullscreen={fullscreen} onExit={handleExit}>
-          {content !== undefined && (
-            <RevealPlayer data-testid='presenter.deck' fullscreen={fullscreen} content={content} />
-          )}
-        </PresentationShell>
-      </Panel.Body>
-    </Panel.Root>
+    <Deck
+      role={role}
+      slides={slides}
+      index={index}
+      onIndexChange={setIndex}
+      fullscreen={fullscreen}
+      onFullscreenChange={handleFullscreenChange}
+      attendableId={attendableId}
+      autoFocus={hasAttention}
+    />
   );
 };
 

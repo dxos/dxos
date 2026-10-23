@@ -6,3 +6,4 @@ export * from './usePresentationDeck.ts';
 export * from './usePresenting.ts';
 export * from './useSlideIndex.ts';
 export * from './useSlideClicks.ts';
+export * from './useDocumentDeck.ts';
