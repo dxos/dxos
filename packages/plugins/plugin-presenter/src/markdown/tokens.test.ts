@@ -47,6 +47,11 @@ describe('slideTokens', () => {
     expect(spans(content)).toEqual(['notes:<!--\n<v-click> in notes\n-->']);
   });
 
+  test('notes are only the last comment; tags after an earlier comment are tokens', () => {
+    const content = ['<!-- aside -->', '<v-click>', 'Text', '</v-click>', '', '<!--', 'Notes', '-->'].join('\n');
+    expect(spans(content)).toEqual(['tag:<v-click>', 'tag:</v-click>', 'notes:<!--\nNotes\n-->']);
+  });
+
   test('tokens are ordered for decoration: by start, a span before the parts inside it', () => {
     const tokens = slideTokens('---\nlayout: center\n---\n# T');
     expect(tokens.map((token) => token.kind)).toEqual([

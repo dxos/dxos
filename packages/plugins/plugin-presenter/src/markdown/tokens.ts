@@ -22,7 +22,8 @@ const YAML_KEY = /^([A-Za-z_][\w-]*)\s*:/;
 const TAG = /<\/?(?:v-clicks?|v-after|Surface)\b[^<>]*>/g;
 const ATTRIBUTE = /\s([A-Za-z_][\w-]*)(?==)/g;
 const EMBED = /!\[[^\]]*\]\((?:echo|eid):[^)\s]+\)/g;
-const NOTES = /<!--[\s\S]*?-->\s*$/;
+// The body may not contain `-->`, so an earlier comment cannot extend the match into the trailing notes.
+const NOTES = /<!--(?:(?!-->)[\s\S])*-->\s*$/;
 
 /**
  * The slide DSL's spans in one slide's markdown, in document order: the frontmatter block (with its delimiters and
