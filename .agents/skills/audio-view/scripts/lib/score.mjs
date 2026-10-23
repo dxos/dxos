@@ -4,13 +4,41 @@
 
 // Transcript scoring against a reference: word error rate and recall of named terms.
 
-/** Lowercase words with punctuation stripped; "data base" and "database" stay different words on purpose. */
+const NUMBER_WORDS = [
+  'zero',
+  'one',
+  'two',
+  'three',
+  'four',
+  'five',
+  'six',
+  'seven',
+  'eight',
+  'nine',
+  'ten',
+  'eleven',
+  'twelve',
+  'thirteen',
+  'fourteen',
+  'fifteen',
+  'sixteen',
+  'seventeen',
+  'eighteen',
+  'nineteen',
+  'twenty',
+];
+
+/**
+ * Lowercase words with punctuation stripped, and 0–20 spelled out since a model may write "3." for "three";
+ * "data base" and "database" stay different words on purpose.
+ */
 export const normalizeWords = (text) =>
   text
     .toLowerCase()
     .replace(/[^\p{L}\p{N}'\s]/gu, ' ')
     .split(/\s+/)
-    .filter(Boolean);
+    .filter(Boolean)
+    .map((word) => (/^\d+$/.test(word) ? (NUMBER_WORDS[Number(word)] ?? word) : word));
 
 /** Word error rate: (substitutions + deletions + insertions) / reference words, via edit distance over words. */
 export const wordErrorRate = (reference, hypothesis) => {

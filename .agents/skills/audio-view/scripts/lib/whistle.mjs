@@ -11,13 +11,21 @@ import { createRequire } from 'node:module';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { runInThisContext } from 'node:vm';
 
+import { Endpointer } from '../../../../../packages/plugins/plugin-transcription/src/stories/whistle/endpoint.ts';
 import { SAMPLE_RATE } from './audio.mjs';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../../../..');
 const PROTOCOL = join(REPO_ROOT, 'packages/plugins/plugin-transcription/src/stories/whistle/protocol.ts');
 const CACHE_DIR = join(homedir(), '.cache/dxos/whistle');
 const OUT_CAPACITY = 256 * 1024;
+
+/** Capture's render quantum: the story's endpointer sees audio in chunks this size. */
+const FRAME = 128;
+
+/** As the story's worker: audio kept from before the stream opens. */
+const PRE_ROLL_SECONDS = 0.5;
 
 /** The engine and model URLs, read from the story's pinned revisions so the two never drift apart. */
 const assetUrls = () => {
@@ -58,13 +66,11 @@ export const loadWhistle = async ({ language = 'en', keywords = [] } = {}) => {
     cached(urls.model, `whistle-${urls.key}.cact`),
   ]);
   const started = performance.now();
-  // `needle.js` is a classic script that reaches for CommonJS `require` under Node, so it runs as a function body
-  // given those bindings rather than as a module.
-  const createNeedle = new Function(
-    'require',
-    '__filename',
-    '__dirname',
-    `${source.toString('utf8')}\nreturn createNeedle;`,
+  // `needle.js` is a classic script that reaches for CommonJS `require` under Node, so it runs wrapped as a CommonJS
+  // function given those bindings rather than as a module.
+  const createNeedle = runInThisContext(
+    `(function (require, __filename, __dirname) {\n${source.toString('utf8')}\nreturn createNeedle;\n})`,
+    { filename: join(CACHE_DIR, 'needle.js') },
   )(createRequire(import.meta.url), join(CACHE_DIR, 'needle.js'), CACHE_DIR);
   const engine = await createNeedle({ wasmBinary: wasm });
   const modelPtr = engine._malloc(model.length);
@@ -93,32 +99,59 @@ export const loadWhistle = async ({ language = 'en', keywords = [] } = {}) => {
 
   /**
    * Replays `samples` as a live stream: a pass every `passMs` of audio, then the stop that commits the tail.
-   * Returns one event per pass, timed in audio seconds (`at`: how much audio had arrived when the pass ran).
+   * With `gate` (the story's default), the stream opens only once the story's endpointer hears sound, keeping
+   * the same pre-roll, so silence before speech is never decoded. Returns one event per pass, timed in audio
+   * seconds from the start of `samples` (`at`: how much audio had arrived when the pass ran).
    */
-  const replay = (samples, { passMs = 1_000 } = {}) => {
+  const replay = (samples, { passMs = 1_000, gate = true } = {}) => {
     const step = Math.max(1, Math.round((SAMPLE_RATE * passMs) / 1_000));
     const events = [];
-    let pcmPtr = 0;
-    for (let start = 0; start < samples.length; start += step) {
-      const chunk = samples.subarray(start, Math.min(samples.length, start + step));
-      pcmPtr = engine._malloc(chunk.length * 4);
+    const endpointer = gate ? new Endpointer() : undefined;
+    const preRollSamples = PRE_ROLL_SECONDS * SAMPLE_RATE;
+    let open = !gate;
+    // Where the stream's audio starts in `samples`, and how much of it is waiting for a pass.
+    let streamStart = 0;
+    let pendingFrom = 0;
+    const shift = (words = []) =>
+      words.map((word) => ({ ...word, start: word.start + streamStart, end: word.end + streamStart }));
+    const pass = (from, to) => {
+      const chunk = samples.subarray(from, to);
+      const pcmPtr = engine._malloc(chunk.length * 4);
       new Float32Array(engine.HEAPU8.buffer, pcmPtr, chunk.length).set(chunk);
       const passStarted = performance.now();
       engine._needle_stream_transcribe_process(pcmPtr, chunk.length, languagePtr, keywordsPtr, outPtr, OUT_CAPACITY);
-      const passMs = performance.now() - passStarted;
+      const ms = performance.now() - passStarted;
       engine._free(pcmPtr);
       const output = read();
       events.push({
         type: 'pass',
-        at: (start + chunk.length) / SAMPLE_RATE,
-        passMs: Math.round(passMs),
-        committed: output.words ?? [],
+        at: to / SAMPLE_RATE,
+        passMs: Math.round(ms),
+        committed: shift(output.words),
         pending: (output.pending ?? '').trim(),
       });
+    };
+    for (let frame = 0; frame < samples.length; frame += FRAME) {
+      const end = Math.min(samples.length, frame + FRAME);
+      if (!open) {
+        endpointer.push(samples.subarray(frame, end));
+        if (!endpointer.heard) {
+          continue;
+        }
+        open = true;
+        streamStart = Math.max(0, end - preRollSamples) / SAMPLE_RATE;
+        pendingFrom = Math.round(streamStart * SAMPLE_RATE);
+      }
+      if (end - pendingFrom >= step || end === samples.length) {
+        pass(pendingFrom, end);
+        pendingFrom = end;
+      }
     }
-    engine._needle_stream_transcribe_stop(outPtr, OUT_CAPACITY);
-    const tail = read();
-    events.push({ type: 'stop', at: samples.length / SAMPLE_RATE, committed: tail.words ?? [], pending: '' });
+    if (open) {
+      engine._needle_stream_transcribe_stop(outPtr, OUT_CAPACITY);
+    }
+    const tail = open ? read() : { words: [] };
+    events.push({ type: 'stop', at: samples.length / SAMPLE_RATE, committed: shift(tail.words), pending: '' });
     return events;
   };
 

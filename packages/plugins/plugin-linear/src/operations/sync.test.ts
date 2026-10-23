@@ -103,7 +103,7 @@ describe('plugin-linear sync', () => {
     const teamRoot = db.add(TaskSet.make({ name: 'TEAM · Example' }));
     const binding = db.add(
       Cursor.makeExternal({
-        source: connection.accessToken,
+        source: Connection.getAccessToken(connection),
         target: Ref.make(teamRoot),
         externalId: 'team-1',
       }),

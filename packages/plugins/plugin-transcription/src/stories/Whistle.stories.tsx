@@ -34,6 +34,7 @@ import { WHISTLE_AUDIO_CONSTRAINTS } from './whistle/capture.ts';
 import { type WhistleWord } from './whistle/protocol.ts';
 import { Recording } from './whistle/recording.ts';
 import { usePlayback } from './whistle/usePlayback.ts';
+import { usePushToTalk } from './whistle/usePushToTalk.ts';
 import { type UseWhistleResult, useWhistle } from './whistle/useWhistle.ts';
 import { Waveform } from './whistle/Waveform.tsx';
 
@@ -64,6 +65,12 @@ const parseKeywords = (text: string): string[] =>
     .split(/[,\n]/)
     .map((keyword) => keyword.trim())
     .filter(Boolean);
+
+/**
+ * Silence is never decoded: Whistle invents words in room tone ("Thank you."), so a stream opens only once it
+ * hears sound. No pause ends a stream here; Record and Space do.
+ */
+const SILENCE_GATE = {};
 
 /** New audio per pass: as Cactus's demo for accuracy, or a fifth of it for latency. */
 const ACCURATE_PASS_MS = 1_000;
@@ -241,6 +248,7 @@ const WhistlePanel = ({
     keywords: parsedKeywords,
     minPassMs: fast ? LOW_LATENCY_PASS_MS : ACCURATE_PASS_MS,
     recording,
+    endpoint: SILENCE_GATE,
     onResult: commit,
   });
 
@@ -333,41 +341,6 @@ type StoryArgs = {
   keywords?: string[];
   /** Start in low-latency mode (a pass every 200 ms of new audio instead of every second). */
   lowLatency?: boolean;
-};
-
-/** True while Space is held, outside text fields; a held key's repeats are ignored. */
-const usePushToTalk = (): boolean => {
-  const [held, setHeld] = useState(false);
-  useEffect(() => {
-    const isTyping = (event: KeyboardEvent) =>
-      event.target instanceof HTMLElement &&
-      (event.target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName));
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.code === 'Space' && !isTyping(event)) {
-        // Space would otherwise also click the focused button or scroll the page.
-        event.preventDefault();
-        if (!event.repeat) {
-          setHeld(true);
-        }
-      }
-    };
-    const onKeyUp = (event: KeyboardEvent) => {
-      if (event.code === 'Space' && !isTyping(event)) {
-        event.preventDefault();
-        setHeld(false);
-      }
-    };
-    const onBlur = () => setHeld(false);
-    window.addEventListener('keydown', onKeyDown, { capture: true });
-    window.addEventListener('keyup', onKeyUp, { capture: true });
-    window.addEventListener('blur', onBlur);
-    return () => {
-      window.removeEventListener('keydown', onKeyDown, { capture: true });
-      window.removeEventListener('keyup', onKeyUp, { capture: true });
-      window.removeEventListener('blur', onBlur);
-    };
-  }, []);
-  return held;
 };
 
 const MicrophoneStory = ({ language, keywords, lowLatency }: StoryArgs) => {

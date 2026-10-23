@@ -7,10 +7,17 @@ import { useEffect, useRef, useState } from 'react';
 import { log } from '@dxos/log';
 
 import { startCapture } from './capture.ts';
-import { WHISTLE_ASSETS, type WhistleRequest, type WhistleResponse, type WhistleWord } from './protocol.ts';
+import {
+  type AssistantConfig,
+  type NeedleAnswer,
+  WHISTLE_ASSETS,
+  type WhistleRequest,
+  type WhistleResponse,
+  type WhistleWord,
+} from './protocol.ts';
 import { Recording } from './recording.ts';
 
-export type WhistleStatus = 'idle' | 'loading' | 'ready' | 'error';
+export type WhistleStatus = 'idle' | 'loading' | 'preparing' | 'ready' | 'error';
 
 export type WhistleStats = {
   /** Milliseconds from worker start to model loaded. */
@@ -21,6 +28,20 @@ export type WhistleStats = {
   backlog?: number;
   /** Seconds between the end of the latest committed word and the moment it was committed. */
   commitLag?: number;
+  /** Milliseconds from the end of a request (a stop, or the end of its pause) to its answer. */
+  answerLatency?: number;
+  /** Milliseconds the assistant's model took to answer. */
+  answerMs?: number;
+};
+
+/** An answered request, as delivered to `onAnswer`. */
+export type WhistleAnswer = {
+  text: string;
+  answer: NeedleAnswer;
+  answerMs: number;
+  maxTokens: number;
+  /** Milliseconds from the end of the request (a stop, or the end of its pause) to the answer. */
+  latencyMs: number;
 };
 
 export type UseWhistleProps = {
@@ -37,6 +58,13 @@ export type UseWhistleProps = {
    * tail, and whether the stream ended with it.
    */
   onResult?: (words: WhistleWord[], pending: string, ended: boolean) => void;
+  /** Loads Needle beside Whistle to answer every ended stream against these tools; read once, at load. */
+  assistant?: AssistantConfig;
+  /** The assistant's token budget for a single request (see the worker). */
+  maxTokens?: number;
+  onAnswer?: (answer: WhistleAnswer) => void;
+  /** Silence handling in the worker (see the `config` request); `pauseSeconds` ends requests at a pause. */
+  endpoint?: { pauseSeconds?: number };
 };
 
 export type UseWhistleResult = {
@@ -63,6 +91,10 @@ export const useWhistle = ({
   minPassMs,
   recording: recordingProp,
   onResult,
+  assistant,
+  maxTokens,
+  onAnswer,
+  endpoint,
 }: UseWhistleProps): UseWhistleResult => {
   const [status, setStatus] = useState<WhistleStatus>('idle');
   const [error, setError] = useState<string>();
@@ -74,8 +106,10 @@ export const useWhistle = ({
 
   const onResultRef = useRef(onResult);
   onResultRef.current = onResult;
-  // The worker times words from the start of each stream; the recording keeps every stream back to back.
-  const streamOffsetRef = useRef(0);
+  const onAnswerRef = useRef(onAnswer);
+  onAnswerRef.current = onAnswer;
+  const assistantRef = useRef(assistant);
+  assistantRef.current = assistant;
 
   // Model loading is deferred to first activation so mounting the story downloads nothing.
   const [requested, setRequested] = useState(false);
@@ -99,6 +133,11 @@ export const useWhistle = ({
           setProgress(response.total > 0 ? response.loaded / response.total : 0);
           break;
         }
+        case 'preparing': {
+          setStatus('preparing');
+          setProgress(1);
+          break;
+        }
         case 'ready': {
           setStatus('ready');
           setProgress(1);
@@ -109,13 +148,18 @@ export const useWhistle = ({
           const lastWord = response.words.at(-1);
           setStats((previous) => ({
             ...previous,
-            passMs: response.passMs,
+            // A result with no pass (a stream ended in silence it had already heard) keeps the last timing.
+            passMs: response.passMs > 0 ? response.passMs : previous.passMs,
             backlog: response.backlog,
             commitLag: lastWord ? response.received - lastWord.end : previous.commitLag,
           }));
-          const offset = streamOffsetRef.current;
-          const words = response.words.map((word) => ({ ...word, start: word.start + offset, end: word.end + offset }));
-          onResultRef.current?.(words, response.pending, response.ended);
+          onResultRef.current?.(response.words, response.pending, response.ended);
+          break;
+        }
+        case 'answer': {
+          const { text, answer, answerMs, maxTokens, latencyMs } = response;
+          setStats((previous) => ({ ...previous, answerLatency: latencyMs, answerMs }));
+          onAnswerRef.current?.({ text, answer, answerMs, maxTokens, latencyMs });
           break;
         }
         case 'error': {
@@ -128,14 +172,20 @@ export const useWhistle = ({
     };
 
     setStatus('loading');
-    instance.postMessage({ type: 'init', assets: WHISTLE_ASSETS, language } satisfies WhistleRequest);
+    instance.postMessage({
+      type: 'init',
+      assets: WHISTLE_ASSETS,
+      language,
+      offset: recording.duration,
+      assistant: assistantRef.current,
+    } satisfies WhistleRequest);
     setWorker(instance);
     return () => {
       instance.terminate();
       setWorker(undefined);
       setStatus('idle');
     };
-  }, [requested, language]);
+  }, [requested, language, recording]);
 
   // Sent separately from `init` so changing latency or keywords mid-stream keeps the loaded model and the stream.
   useEffect(() => {
@@ -143,6 +193,21 @@ export const useWhistle = ({
       worker.postMessage({ type: 'config', minPassMs } satisfies WhistleRequest);
     }
   }, [worker, minPassMs]);
+  useEffect(() => {
+    if (worker && maxTokens !== undefined) {
+      worker.postMessage({ type: 'config', maxTokens } satisfies WhistleRequest);
+    }
+  }, [worker, maxTokens]);
+  const endpointOn = endpoint !== undefined;
+  const pauseSeconds = endpoint?.pauseSeconds;
+  useEffect(() => {
+    if (worker) {
+      worker.postMessage({
+        type: 'config',
+        endpoint: endpointOn ? { pauseSeconds } : false,
+      } satisfies WhistleRequest);
+    }
+  }, [worker, endpointOn, pauseSeconds]);
   useEffect(() => {
     if (worker) {
       worker.postMessage({
@@ -159,7 +224,6 @@ export const useWhistle = ({
     }
 
     let stopped = false;
-    streamOffsetRef.current = recording.duration;
     const capture = startCapture(track, (samples) => {
       recording.append(samples);
       const copy = samples.slice();
