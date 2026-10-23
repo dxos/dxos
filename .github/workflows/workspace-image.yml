@@ -183,6 +183,13 @@ jobs:
           echo "lockfile changed: $(git diff --quiet "$IMAGE_SHA" HEAD -- pnpm-lock.yaml && echo no || echo yes)"
           echo "snapshot age: $(( ($(date +%s) - $(git show -s --format=%ct "$IMAGE_SHA")) / 3600 ))h"
 
+      # The checkout above moved .github to main's; take this branch's setup action back so every variant runs
+      # the same one, with the `pnpm-store-cache` input.
+      - name: Use this branch's setup action
+        run: |
+          git fetch --no-tags --depth=1 origin "$GITHUB_SHA"
+          git checkout "$GITHUB_SHA" -- .github/actions/setup
+
       - name: Setup
         uses: ./.github/actions/setup
         with:
@@ -191,6 +198,14 @@ jobs:
       - name: Build
         run: moon exec --on-failure continue :build || true
 
-      # Reads a large share of node_modules, which is where a compressed image would cost.
-      - name: Typecheck (read-heavy)
-        run: pnpm exec tsc --noEmit -p packages/sdk/client/tsconfig.json || true
+      # Every dependency file once, cold: where a compressed image would cost.
+      - name: Read node_modules
+        run: |
+          SECONDS=0
+          bytes=$(find node_modules/.pnpm -type f -print0 | xargs -0 cat | wc -c)
+          echo "read $((bytes / 1000000)) MB in ${SECONDS}s"
+
+      # A real suite, run directly so moon's cache cannot skip it.
+      - name: Test (client)
+        working-directory: packages/sdk/client
+        run: pnpm exec vitest run --reporter=dot || true
