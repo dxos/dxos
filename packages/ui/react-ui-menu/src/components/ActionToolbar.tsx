@@ -390,17 +390,28 @@ const InlineGroup = ({ menu, group, separated }: ItemProps<{ group: MenuItemGrou
 };
 
 /** The ⋮ menu: groups collapsed out of the rows (as submenus), then the overflow group's own and contributed items. */
-const OverflowMenu = ({ menu, group, collapsed }: ItemProps<{ group?: MenuItemGroup; collapsed: MenuItem[] }>) => {
-  const { t } = Hooks.useTranslation(translationKey);
+const OverflowMenu = ({ menu, group, collapsed }: ItemProps<{ group?: MenuItemGroup; collapsed: MenuItem[] }>) =>
+  group ? (
+    <OverflowGroupMenu menu={menu} group={group} collapsed={collapsed} />
+  ) : (
+    <OverflowMenuTrigger menu={menu} actions={collapsed} />
+  );
+
+const OverflowGroupMenu = ({ menu, group, collapsed }: ItemProps<{ group: MenuItemGroup; collapsed: MenuItem[] }>) => {
   const items = useMenuItems(menu, group);
   const actions = useMemo(() => [...collapsed, ...byOrder(items ?? [])], [collapsed, items]);
+  return <OverflowMenuTrigger menu={menu} actions={actions} testId={group.properties.testId} />;
+};
+
+const OverflowMenuTrigger = ({ menu, actions, testId }: ItemProps<{ actions: MenuItem[]; testId?: string }>) => {
+  const { t } = Hooks.useTranslation(translationKey);
   if (actions.length === 0) {
     return null;
   }
   return (
     <ActionMenu {...menu} actions={actions}>
       <Button.Root
-        data-testid={group?.properties.testId ?? 'toolbar.overflow'}
+        data-testid={testId ?? 'toolbar.overflow'}
         icon='ph--dots-three-vertical--regular'
         iconOnly
         variant='ghost'

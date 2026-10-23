@@ -3,8 +3,11 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useMemo } from 'react';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { MenuBuilder, TOOLBAR_OVERFLOW_ID } from '@dxos/react-ui-menu';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import {
@@ -19,12 +22,32 @@ import { type EditorViewMode } from '@dxos/ui-editor/types';
 
 import { translations } from '#translations';
 
-import { Editor } from '../components/index.ts';
+import { EDITOR_TOOLBAR_INSERT_GROUP, Editor } from '../components/index.ts';
 import { type UseTextEditorProps } from '../hooks/index.ts';
 
-type StoryArgs = { placeholder?: string; viewMode?: EditorViewMode } & UseTextEditorProps;
+type StoryArgs = { placeholder?: string; viewMode?: EditorViewMode; extended?: boolean } & UseTextEditorProps;
 
-const DefaultStory = ({ autoFocus, initialValue, placeholder, viewMode = 'source' }: StoryArgs) => {
+/** What a consumer adds without owning the toolbar: an insert action in the editor's insert group, and a menu item. */
+const consumerActions = Atom.make(() =>
+  MenuBuilder.make()
+    .subgraph(
+      MenuBuilder.extend(EDITOR_TOOLBAR_INSERT_GROUP, (group) =>
+        group.action(
+          'column',
+          { label: 'Start next column', icon: 'ph--columns--regular', testId: 'editor.toolbar.column' },
+          () => {},
+        ),
+      ),
+    )
+    .subgraph(
+      MenuBuilder.extend(TOOLBAR_OVERFLOW_ID, (group) =>
+        group.action('export', { label: 'Export', icon: 'ph--export--regular' }, () => {}),
+      ),
+    )
+    .build(),
+);
+
+const DefaultStory = ({ autoFocus, initialValue, placeholder, viewMode = 'source', extended }: StoryArgs) => {
   const themeMode = Hooks.useThemeMode();
 
   const extensions = useMemo(
@@ -50,7 +73,7 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder, viewMode = 'source
   return (
     <Editor.Root extensions={extensions} viewMode={viewMode}>
       <Editor.Content>
-        <Editor.Toolbar classNames='dx-document' />
+        <Editor.Toolbar classNames='dx-document' customActions={extended ? consumerActions : undefined} />
         <div className='dx-expand dx-document dx-base-surface'>
           <Editor.View autoFocus={autoFocus} initialValue={initialValue} selectionEnd />
         </div>
@@ -78,5 +101,16 @@ export const Default: Story = {
     autoFocus: true,
     placeholder: 'Text...',
     initialValue: '# Demo\n\nThis is a **document**.\n\n',
+  },
+};
+
+/** A consumer extends the editor's insert group and the overflow menu. */
+export const Extended: Story = {
+  args: { ...Default.args, extended: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getByTestId('editor.toolbar.column')).toBeVisible());
+    await userEvent.click(canvas.getByTestId('toolbar.overflow'));
+    await expect(await within(document.body).findByRole('menuitem', { name: 'Export' })).toBeVisible();
   },
 };
