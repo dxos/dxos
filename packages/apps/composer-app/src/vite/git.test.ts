@@ -43,6 +43,10 @@ describe('git route', () => {
     expect(await reader.show(path.join(root, 'NEW.mdl'), head)).toBeUndefined();
   });
 
+  test('a commit the repository does not have fails rather than reading as an empty file', async ({ expect }) => {
+    await expect(reader.show(spec, '0'.repeat(40))).rejects.toThrow();
+  });
+
   test('only commit ids are accepted as revisions', async ({ expect }) => {
     expect(isCommit(head)).toBe(true);
     expect(isCommit('--output=/tmp/x')).toBe(false);

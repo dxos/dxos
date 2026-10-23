@@ -12,6 +12,12 @@ const run = promisify(execFile);
 /** Bounds every git call so a hung repository (a lock, a network credential prompt) cannot stall the dev server. */
 const TIMEOUT = 5_000;
 
+/** Bounds what one git call may print, so a huge blob cannot exhaust the dev server's memory. */
+const MAX_BUFFER = 16 * 1024 * 1024;
+
+/** What `git show` prints when the path is not in the commit. */
+const MISSING_PATH = /does not exist in|exists on disk, but not in/;
+
 /** How long a pull-request lookup is reused; it costs a `gh` call or a GitHub API request. */
 const PR_TTL = 5 * 60_000;
 
@@ -36,7 +42,7 @@ export type GitStatus = {
 
 const git = async (dir: string, args: string[]): Promise<string | undefined> => {
   try {
-    const { stdout } = await run('git', ['-C', dir, ...args], { timeout: TIMEOUT, maxBuffer: 16 * 1024 * 1024 });
+    const { stdout } = await run('git', ['-C', dir, ...args], { timeout: TIMEOUT, maxBuffer: MAX_BUFFER });
     return stdout;
   } catch {
     return undefined;
@@ -190,7 +196,20 @@ export const createGitReader = (env: NodeJS.ProcessEnv = process.env): GitReader
     }
     const dir = existingDir(file);
     // `./` makes the path relative to `dir` rather than to the repository's top level.
-    return git(dir, ['show', `${rev}:./${path.relative(dir, file)}`]);
+    const object = `${rev}:./${path.relative(dir, file)}`;
+    // Git reports a commit it does not have the same way as a missing path, so the commit is checked first; this throws.
+    await run('git', ['-C', dir, 'cat-file', '-e', `${rev}^{commit}`], { timeout: TIMEOUT });
+    try {
+      const { stdout } = await run('git', ['-C', dir, 'show', object], { timeout: TIMEOUT, maxBuffer: MAX_BUFFER });
+      return stdout;
+    } catch (error) {
+      // Only a path missing at `rev` means the file did not exist; any other failure must not read as an empty base.
+      const stderr = error instanceof Error && 'stderr' in error ? String(error.stderr) : '';
+      if (MISSING_PATH.test(stderr)) {
+        return undefined;
+      }
+      throw error;
+    }
   };
 
   return { status, show };

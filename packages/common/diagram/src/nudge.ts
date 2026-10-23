@@ -348,9 +348,12 @@ const separate = (
     new Set([...offsets].filter(([, offset]) => offset !== 0).map(([run]) => run.owner));
   // Every candidate moves only this channel's lines, and by at most the largest offset, so only the lines and boxes
   // near them can change a count; the rest are left out of the scoring.
-  const reach =
-    Math.max(...assignments.flatMap(({ offsets }) => [...offsets.values()].map((offset) => Math.abs(offset))), 0) +
-    EPSILON;
+  let reach = EPSILON;
+  for (const { offsets } of assignments) {
+    for (const offset of offsets.values()) {
+      reach = Math.max(reach, Math.abs(offset) + EPSILON);
+    }
+  }
   const region = channel
     .map((run) => cache.boxOf(lines[run.owner]))
     .reduce(
