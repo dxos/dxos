@@ -3,9 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useState } from 'react';
+import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { log } from '@dxos/log';
 import '@dxos/react-ui/theme.css';
 import * as Button from '@dxos/react-ui/Button';
 import { withRegistry, withTheme } from '@dxos/react-ui/testing';
@@ -22,6 +23,8 @@ import { ActionToolbar } from './ActionToolbar.tsx';
 //
 
 type Log = (id: string) => void;
+
+const record: Log = (id) => log.info('action', { id });
 
 /** The owner declares named groups and the overflow menu; it knows nothing of its contributors. */
 const ownerGraph = (log: Log): ActionGraphProps =>
@@ -138,19 +141,17 @@ const contributions: Record<Contributor, (log: Log) => ActionGraphProps[]> = {
 type StoryProps = { contributors?: Contributor[]; width?: number; asMenu?: boolean };
 
 const DefaultStory = ({ contributors = [], width, asMenu }: StoryProps) => {
-  const [log, setLog] = useState<string[]>([]);
-  const record = useCallback((id: string) => setLog((log) => [...log, id]), []);
   const menu = useMenuBuilder(
     () =>
       contributors
         .flatMap((contributor) => contributions[contributor](record))
         .reduce((builder, graph) => builder.subgraph(graph), MenuBuilder.make().subgraph(ownerGraph(record)))
         .build(),
-    [record, contributors],
+    [contributors],
   );
 
   return (
-    <div className='flex flex-col gap-4 p-4'>
+    <div className='p-4'>
       {asMenu ? (
         // The same graph as a menu: named groups become submenus, the overflow group one more.
         <ActionMenu {...menu}>
@@ -166,7 +167,6 @@ const DefaultStory = ({ contributors = [], width, asMenu }: StoryProps) => {
           <ActionToolbar {...menu} alwaysActive />
         </div>
       )}
-      <pre className='text-xs text-description'>log: {log.join(', ') || '—'}</pre>
     </div>
   );
 };
