@@ -168,7 +168,6 @@
     "@dxos/ui-editor": "workspace:*",
     "@dxos/util": "workspace:*",
     "hast-util-to-jsx-runtime": "catalog:",
-    "marked": "catalog:",
     "react-resize-detector": "catalog:",
     "remark-frontmatter": "catalog:",
     "remark-gfm": "catalog:",
