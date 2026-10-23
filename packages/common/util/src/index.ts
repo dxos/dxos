@@ -44,6 +44,7 @@ export * from './platform.ts';
 export * as Position from './Position.ts';
 export * from './random.ts';
 export * from './range.ts';
+export * as RealPath from './RealPath.ts';
 export * from './reducers.ts';
 export * from './remove-undefined-keys.ts';
 export * from './retry.ts';

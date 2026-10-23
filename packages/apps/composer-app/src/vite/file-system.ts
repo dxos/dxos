@@ -3,20 +3,13 @@
 //
 
 import { execFileSync } from 'node:child_process';
-import {
-  existsSync,
-  lstatSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-  readlinkSync,
-  realpathSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { lstat, readlink, realpath } from 'node:fs/promises';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import path from 'node:path';
 import { type Plugin } from 'vite';
+
+import * as RealPath from '@dxos/util/RealPath';
 
 /** Must match `ROUTE` in `@dxos/plugin-file-system/FileSystem`. */
 const ROUTE = '/__dx/fs';
@@ -86,34 +79,22 @@ const WRITABLE = ['.mdl'];
 /** Whether the route may write or remove `file`. */
 export const isWritable = (file: string): boolean => WRITABLE.some((suffix) => file.endsWith(suffix));
 
-/**
- * The real path of `file`, following every symlink: the nearest existing ancestor's real path with the missing tail
- * re-appended, and a dangling link resolved through its target, so a write cannot follow a link out of a root.
- */
-const realpathOf = (file: string, depth = 0): string => {
-  try {
-    return realpathSync(file);
-  } catch {
-    if (depth < 40 && lstatSync(file, { throwIfNoEntry: false })?.isSymbolicLink()) {
-      return realpathOf(path.resolve(path.dirname(file), readlinkSync(file)), depth + 1);
-    }
-    const parent = path.dirname(file);
-    return parent === file ? file : path.join(realpathOf(parent, depth), path.basename(file));
-  }
+/** Node's lookups for the resolution the desktop app runs through Tauri commands. */
+const nodeResolver: RealPath.Resolver = {
+  canonicalize: (file) => realpath(file).catch(() => undefined),
+  readLink: async (file) => ((await lstat(file).catch(() => undefined))?.isSymbolicLink() ? readlink(file) : undefined),
 };
 
 /**
  * The real path of `file` when it lies inside one of `roots`, else undefined. Callers read and write the returned
  * path, so the `.mdl` check and the write both apply to the link's target, not to the alias.
  */
-export const withinRoots = (roots: readonly string[], file: string): string | undefined => {
-  const real = realpathOf(path.resolve(file));
-  return roots
-    .map((root) => realpathOf(path.resolve(root)))
-    .some((root) => real === root || real.startsWith(`${root}${path.sep}`))
-    ? real
-    : undefined;
-};
+export const withinRoots = (roots: readonly string[], file: string): Promise<string | undefined> =>
+  RealPath.contain(
+    nodeResolver,
+    roots.map((root) => path.resolve(root)),
+    path.resolve(file),
+  );
 
 /**
  * Dev-only backend of plugin-file-system's FileSystem service, the browser counterpart of the desktop app's Tauri fs
@@ -122,7 +103,7 @@ export const withinRoots = (roots: readonly string[], file: string): string | un
  */
 export const fileSystemPlugin = (rootDir: string, env = process.env): Plugin => {
   const roots = [rootDir, ...(env.DX_FS_ROOTS?.split(':').filter(Boolean) ?? [])].map((root) => path.resolve(root));
-  const within = (file: string): string | undefined => withinRoots(roots, file);
+  const within = (file: string): Promise<string | undefined> => withinRoots(roots, file);
   // One entry per configured root, looked up once so polling `/roots` does not spawn git every time.
   const remotes = new Map(roots.map((root) => [root, readRemote(root)]));
 
@@ -143,7 +124,7 @@ export const fileSystemPlugin = (rootDir: string, env = process.env): Plugin => 
           }
 
           if (url.pathname === '/list') {
-            const dir = within(url.searchParams.get('dir') ?? '');
+            const dir = await within(url.searchParams.get('dir') ?? '');
             if (!dir) {
               return send(res, 403, 'Directory is outside the allowed roots.');
             }
@@ -153,7 +134,7 @@ export const fileSystemPlugin = (rootDir: string, env = process.env): Plugin => 
           }
 
           if (url.pathname === '/file') {
-            const file = within(url.searchParams.get('path') ?? '');
+            const file = await within(url.searchParams.get('path') ?? '');
             if (!file) {
               return send(res, 403, 'File is outside the allowed roots.');
             }

@@ -24,22 +24,22 @@ describe('file-system route', () => {
 
   afterAll(() => rmSync(base, { recursive: true, force: true }));
 
-  test('a file inside a root resolves, including one that does not exist yet', ({ expect }) => {
+  test('a file inside a root resolves, including one that does not exist yet', async ({ expect }) => {
     const real = realpathSync(root);
-    expect(withinRoots([root], path.join(root, 'docs/SPEC.mdl'))).toBe(path.join(real, 'docs/SPEC.mdl'));
-    expect(withinRoots([root], path.join(root, 'new/dir/SPEC.mdl'))).toBe(path.join(real, 'new/dir/SPEC.mdl'));
+    expect(await withinRoots([root], path.join(root, 'docs/SPEC.mdl'))).toBe(path.join(real, 'docs/SPEC.mdl'));
+    expect(await withinRoots([root], path.join(root, 'new/dir/SPEC.mdl'))).toBe(path.join(real, 'new/dir/SPEC.mdl'));
   });
 
-  test('`..`, absolute paths outside the roots and symlinks out of a root are refused', ({ expect }) => {
-    expect(withinRoots([root], path.join(root, '../outside/secret.mdl'))).toBeUndefined();
-    expect(withinRoots([root], path.join(outside, 'secret.mdl'))).toBeUndefined();
-    expect(withinRoots([root], path.join(root, 'escape/secret.mdl'))).toBeUndefined();
-    expect(withinRoots([root], path.join(root, 'escape/new.mdl'))).toBeUndefined();
-    expect(withinRoots([root], path.join(root, 'dangling.mdl'))).toBeUndefined();
+  test('`..`, absolute paths outside the roots and symlinks out of a root are refused', async ({ expect }) => {
+    expect(await withinRoots([root], path.join(root, '../outside/secret.mdl'))).toBeUndefined();
+    expect(await withinRoots([root], path.join(outside, 'secret.mdl'))).toBeUndefined();
+    expect(await withinRoots([root], path.join(root, 'escape/secret.mdl'))).toBeUndefined();
+    expect(await withinRoots([root], path.join(root, 'escape/new.mdl'))).toBeUndefined();
+    expect(await withinRoots([root], path.join(root, 'dangling.mdl'))).toBeUndefined();
   });
 
-  test('a link resolves to its target, so the .mdl rule applies to what is written', ({ expect }) => {
-    const target = withinRoots([root], path.join(root, 'alias.mdl'));
+  test('a link resolves to its target, so the .mdl rule applies to what is written', async ({ expect }) => {
+    const target = await withinRoots([root], path.join(root, 'alias.mdl'));
     expect(target).toBe(path.join(realpathSync(root), 'index.ts'));
     expect(target && isWritable(target)).toBe(false);
   });

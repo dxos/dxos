@@ -138,6 +138,12 @@ service FileSystem
     - FileSystemError: the backend refused the path or the request failed
   note: |
     Exported as `@dxos/plugin-file-system/FileSystem` (`FileSystem.get()`).
+    `FileSystem.within(fs, roots)` confines a backend to checkout roots: each
+    path is replaced by its real path (symlinks followed, dangling ones
+    included) and refused when that lies outside the roots. Callers apply it
+    to paths that come from document text. The resolution is shared
+    (`RealPath` in `@dxos/util`): the dev route runs it on Node's fs, the
+    desktop app on its `fs_canonicalize` and `fs_read_link` commands.
     This plugin's own workspace code still reads disk through its state
     module; moving it onto the service is a follow-up.
 ```
@@ -382,6 +388,16 @@ decision D-3: `service FileSystem` offers available, read, write, remove, list a
   affects: [FileSystem]
   why: These are the operations spec sync needs, and a dev route that writes arbitrary files would let any page in the dev server rewrite source code.
   rejected: A watch stream, which neither backend needed yet; unrestricted dev-route writes.
+```
+
+```mdl
+decision D-4: `FileSystem.within(fs, roots)` gives the Tauri backend the dev route's real-path containment: one resolver (`RealPath` in `@dxos/util`, which the dev server's vite config already loads) runs on two host lookups, Node's fs on the dev server and two desktop commands, `fs_canonicalize` and `fs_read_link`, in the Tauri app; plugin-code reads, writes and lists cited and synced files through it.
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [FileSystem]
+  why: A file a spec review cites could be, or pass through, a symlink out of the checkout, and the desktop backend read it unchecked; only the real path shows where a link leads.
+  rejected: Filtering cited keys, which cannot see a symlink alias; Tauri fs capability scopes, which are static while the roots come from settings, and which match the path as written rather than its real path; a `realPath` call in `@tauri-apps/plugin-fs`, which has none; confining every Tauri call, which would also block repo detection reading a linked worktree's git config outside the checkout.
 ```
 
 ---

@@ -23,6 +23,11 @@
       "source": "./src/Position.ts",
       "types": "./dist/types/src/Position.d.ts",
       "import": "./dist/lib/Position.mjs"
+    },
+    "./RealPath": {
+      "source": "./src/RealPath.ts",
+      "types": "./dist/types/src/RealPath.d.ts",
+      "import": "./dist/lib/RealPath.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

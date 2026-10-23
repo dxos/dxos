@@ -18,6 +18,8 @@ mod xattr_cmd;
 mod menubar;
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 mod passkey;
+#[cfg(desktop)]
+mod real_path;
 #[cfg(target_os = "macos")]
 mod spotlight;
 mod web_process;
@@ -252,6 +254,8 @@ pub fn run() {
         exit_guard::defer_exit,
         exit_guard::confirm_exit,
         exit_guard::cancel_exit,
+        real_path::fs_canonicalize,
+        real_path::fs_read_link,
     ]);
 
     #[cfg(mobile)]
