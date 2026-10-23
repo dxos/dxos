@@ -18876,6 +18876,9 @@ importers:
       '@dxos/echo-doc':
         specifier: workspace:*
         version: link:../../core/echo/echo-doc
+      '@dxos/fixtures':
+        specifier: workspace:*
+        version: link:../../../tools/fixtures
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../plugin-preview

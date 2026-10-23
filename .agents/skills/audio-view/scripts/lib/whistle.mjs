@@ -11,6 +11,7 @@ import { createRequire } from 'node:module';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { runInThisContext } from 'node:vm';
 
 import { SAMPLE_RATE } from './audio.mjs';
 
@@ -58,13 +59,11 @@ export const loadWhistle = async ({ language = 'en', keywords = [] } = {}) => {
     cached(urls.model, `whistle-${urls.key}.cact`),
   ]);
   const started = performance.now();
-  // `needle.js` is a classic script that reaches for CommonJS `require` under Node, so it runs as a function body
-  // given those bindings rather than as a module.
-  const createNeedle = new Function(
-    'require',
-    '__filename',
-    '__dirname',
-    `${source.toString('utf8')}\nreturn createNeedle;`,
+  // `needle.js` is a classic script that reaches for CommonJS `require` under Node, so it runs wrapped as a CommonJS
+  // function given those bindings rather than as a module.
+  const createNeedle = runInThisContext(
+    `(function (require, __filename, __dirname) {\n${source.toString('utf8')}\nreturn createNeedle;\n})`,
+    { filename: join(CACHE_DIR, 'needle.js') },
   )(createRequire(import.meta.url), join(CACHE_DIR, 'needle.js'), CACHE_DIR);
   const engine = await createNeedle({ wasmBinary: wasm });
   const modelPtr = engine._malloc(model.length);
