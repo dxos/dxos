@@ -10038,6 +10038,9 @@ importers:
       '@codemirror/lang-markdown':
         specifier: 'catalog:'
         version: 6.5.2
+      '@codemirror/language':
+        specifier: 'catalog:'
+        version: 6.12.4
       '@codemirror/state':
         specifier: 'catalog:'
         version: 6.7.6
