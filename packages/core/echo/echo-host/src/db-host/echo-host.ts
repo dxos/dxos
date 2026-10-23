@@ -1606,7 +1606,7 @@ export class EchoHost extends Resource {
   @trace.span({
     op: 'indexer',
     // Flattened to strings/numbers: OTel attribute values are primitives, so a histogram object
-    // would be dropped by the exporter rather than reaching SigNoz.
+    // would be dropped by the exporter rather than reaching PostHog.
     attributes: (_ctx: Context, reasons: Record<string, number>) => ({
       reasons: Object.entries(reasons)
         .map(([reason, count]) => `${reason}:${count}`)
