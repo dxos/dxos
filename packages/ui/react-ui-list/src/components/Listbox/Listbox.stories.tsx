@@ -258,7 +258,13 @@ export const Tiles: Story = {
     const listbox = canvas.getByRole('listbox', { name: 'Swatches' });
     await expect(canvas.getByRole('option', { name: 'Green' })).toHaveAttribute('aria-selected', 'true');
     await waitFor(() => expect(listbox.scrollHeight).toBeGreaterThan(listbox.clientHeight));
-    await expect(canvas.getByTestId('tile-red')).toHaveAttribute('draggable', 'true');
+    const red = canvas.getByTestId('tile-red');
+    await expect(red).toHaveAttribute('draggable', 'true');
+    // A tile is its own drag handle, so the list must not cancel the press that would start its native drag.
+    await expect(red).toHaveAttribute('data-drag-row');
+    const press = new MouseEvent('mousedown', { bubbles: true, cancelable: true });
+    red.dispatchEvent(press);
+    await expect(press.defaultPrevented).toBe(false);
 
     listbox.focus();
     await userEvent.keyboard('{Home}{ArrowRight}{ArrowDown}{Enter}');
