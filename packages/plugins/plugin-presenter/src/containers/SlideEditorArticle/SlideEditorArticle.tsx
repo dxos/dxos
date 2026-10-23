@@ -45,6 +45,7 @@ import {
 import { Presentation, PresenterOperation, SlideEditorViewState, SlideViewState } from '#types';
 
 import { SlidePreview } from '../SlidePreviewArticle/SlidePreview.tsx';
+import { slideHighlight } from './slide-highlight.ts';
 
 export type SlideEditorArticleProps = AppSurface.ObjectArticleProps<Text.Text>;
 
@@ -110,6 +111,7 @@ const SlideEditorContent = ({ subject }: SlideEditorContentProps) => {
       // Document margins, as the markdown editor has, so the slide reads at the same measure.
       createThemeExtensions({ themeMode, slots: documentSlots }),
       createMarkdownExtensions(),
+      slideHighlight(),
       // The scrollbar's space is always reserved (on both edges, so the document column stays centred under the
       // toolbars), and the text does not shift sideways once the slide overflows.
       NaturalEditorView.theme({ '.cm-scroller': { scrollbarGutter: 'stable both-edges' } }),

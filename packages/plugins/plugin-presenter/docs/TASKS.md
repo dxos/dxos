@@ -97,7 +97,8 @@ Design: [DESIGN.md](./DESIGN.md).
 - [x] **Present from here** and previous/next slide from the editor.
 - [x] Stories with play tests for typing, layout, insert, cursor step and preview click (`containers/SlideEditorArticle`).
 - [ ] Stories for the companion mode, background and object insert; spec QA entries.
-- [ ] Layout picker grid on a shared collection primitive (pending: react-ui-list has no tile layout; collections use `react-ui-masonry`).
+- [x] Layout picker on a tiled `Listbox` (react-ui `Listbox` gained `tiles`).
+- [x] **DSL highlighting** — `slideTokens` (frontmatter, keys, `::slot::`, click/`Surface` tags and attributes, object embeds, notes) and the `slideHighlight` CodeMirror extension.
 
 ## Phase 7: Later
 

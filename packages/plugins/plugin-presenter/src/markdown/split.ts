@@ -8,7 +8,7 @@ const YAML_LINE = /^([A-Za-z_][\w-]*\s*:|\s+\S|-\s|#)/;
 const YAML_KEY = /^[A-Za-z_][\w-]*\s*:/;
 
 /** Per line: whether it is part of a fenced code block (opening fence, content or closing fence). */
-const fencedLines = (lines: string[]): boolean[] => {
+export const fencedLines = (lines: string[]): boolean[] => {
   let fence: { char: string; length: number } | undefined;
   return lines.map((line) => {
     if (fence) {
@@ -34,7 +34,7 @@ const findSeparators = (lines: string[]): number[] => {
 };
 
 // Only the slot names the renderer knows, indented at most as far as markdown allows before it becomes code.
-const SLOT_LINE = /^ {0,3}::(left|right|default)::\s*$/;
+export const SLOT_LINE = /^ {0,3}::(left|right|default)::\s*$/;
 
 /**
  * Puts a blank line around every `::name::` line outside fenced code, so a marker written without blank lines
