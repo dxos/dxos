@@ -38,6 +38,7 @@ jobs:
     outputs:
       tag: ${{ steps.shas.outputs.tag }}
       bench-sha: ${{ steps.shas.outputs.bench }}
+      image-sha: ${{ steps.shas.outputs.image }}
     steps:
       # node_modules, the pnpm store, build outputs and BuildKit's copy of each outgrow the runner's default free space.
       - name: Free disk space
@@ -129,6 +130,11 @@ jobs:
   # The image's path: sync /repo to the same commit, install the lockfile delta, rebuild what changed.
   bench-prebuilt:
     needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        # 0 benches the image's own commit: whether the baked build outputs hit moon's local cache at all.
+        drift: [20, 0]
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     container:
@@ -139,7 +145,7 @@ jobs:
     steps:
       - name: Sync to commit
         env:
-          SHA: ${{ needs.build.outputs.bench-sha }}
+          SHA: ${{ matrix.drift == 0 && needs.build.outputs.image-sha || needs.build.outputs.bench-sha }}
         run: |
           before=$(git rev-parse HEAD)
           git fetch --no-tags origin "$SHA"
