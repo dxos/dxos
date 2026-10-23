@@ -49,7 +49,7 @@
 // Environment:
 //   DX_FIXTURES_AGE_KEY   Path to your age identity file. May be an `op://` reference.
 //   DX_FIXTURES_AGENTS_KEY  The agents identity, for pulling `--scope agents` fixtures pushed by someone else; usually
-//                         `op://eng-dev/Fixtures agents age key/credential`.
+//                         `op://eng-dev/network.dxos.fixtures/credential`.
 //   DX_FIXTURES_BUCKET    Overrides the bucket name (default `test-fixtures`).
 //   DX_FIXTURES_DIR       Overrides the local directory (default `<repo>/testing/fixtures`).
 //   CLOUDFLARE_ACCOUNT_ID Required by wrangler when the token spans several accounts.
