@@ -151,6 +151,7 @@ export const recipes = {
   listboxItemIndicator: () => 'dx-listbox-item-indicator',
   listboxItemText: () => 'dx-listbox-item-text',
   listboxScroll: () => 'dx-listbox-scroll',
+  listboxTile: () => 'dx-listbox-tile',
   mainContent: () => 'dx-main-content',
   mainDrawer: () => 'dx-main-drawer',
   mainDrawerHandle: () => 'dx-main-drawer-handle',

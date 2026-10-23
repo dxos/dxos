@@ -183,15 +183,17 @@ export const CursorStep: Story = {
   },
 };
 
-/** Clicking an element in the preview selects its source, so typing replaces it. */
+/** Clicking an element in the preview puts the caret at the start of its source. */
 export const SourceClick: Story = {
   args: { slide: 1 },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const editor = await canvas.findByRole('textbox', undefined, LOAD_TIMEOUT);
     await userEvent.click(await preview(canvasElement).findByRole('heading', { name: 'Two' }));
-    await userEvent.keyboard('Replaced');
-    await waitFor(() => expect(editor.textContent).toBe('Replaced'));
-    await expect(await preview(canvasElement).findByText('Replaced')).toBeVisible();
+    // The caret lands at the start of the heading's source, so typing inserts before it.
+    await userEvent.keyboard('# One{Enter}');
+    await waitFor(() => expect(editor.textContent).toBe('# One# Two'));
+    await expect(await preview(canvasElement).findByRole('heading', { name: 'One' })).toBeVisible();
+    await expect(preview(canvasElement).getByRole('heading', { name: 'Two' })).toBeVisible();
   },
 };

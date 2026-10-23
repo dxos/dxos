@@ -399,7 +399,7 @@ feat F-10: Slide Editor
     then: the preview reveals up to that group's step, and in a slotted layout the cursor's slot is outlined
   req F-10.5:
     when: user clicks an element in the preview
-    then: the editor selects that element's source and scrolls it into view
+    then: the editor's caret moves to the start of that element's source (no range is selected) and scrolls into view
   req F-10.6: "Present from here" opens the deck fullscreen at this slide.
 ```
 
@@ -1065,6 +1065,15 @@ decision D-47: Cursor and preview sync both ways: the cursor's click group sets 
   by: user:richburdon
   affects: [SlideEditorArticle, MarkdownSlide, F-10.4, F-10.5]
   source: chat 2026-10-23 (slide editor Q4 option 2)
+```
+
+```mdl
+decision D-48: Clicking the preview moves the editor's caret to the start of the element's source rather than selecting the source. Fills in [D-47].
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [SlideEditorArticle, F-10.5]
+  why: A selected range is replaced by the next keystroke, which a click meant only to navigate should not risk.
+  source: chat 2026-10-23
 ```
 
 ---

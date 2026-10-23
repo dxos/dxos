@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
+import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Popover from '@dxos/react-ui/Popover';
-import { mx } from '@dxos/ui-theme';
 
 import { type LayoutName, LAYOUTS } from '#markdown';
 import { meta } from '#meta';
@@ -49,6 +49,10 @@ export type LayoutPickerProps = {
 export const LayoutPicker = ({ value, onChange }: LayoutPickerProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [open, setOpen] = useState(false);
+  const options = useMemo(
+    () => LAYOUTS.map((layout) => ({ value: layout, label: t(`layout.${layout}.label`, { defaultValue: layout }) })),
+    [t],
+  );
   return (
     <Popover.Root open={open} onOpenChange={({ open }) => setOpen(open)}>
       <Popover.Trigger asChild>
@@ -65,35 +69,36 @@ export const LayoutPicker = ({ value, onChange }: LayoutPickerProps) => {
       <Popover.Content classNames='max-w-[calc(100vw-1rem)] overflow-auto'>
         {/* Thumbnails mount only while open, since each one renders a full slide. */}
         {open && (
-          <div
-            role='listbox'
-            aria-label={t('slide-layout.label')}
-            className='grid grid-cols-[repeat(4,9rem)] gap-2 p-1'
+          <Listbox.Root
+            items={options}
+            tiles={4}
+            value={value}
+            onValueChange={(next) => {
+              const layout = LAYOUTS.find((name) => name === next);
+              if (layout) {
+                onChange(layout);
+                setOpen(false);
+              }
+            }}
           >
-            {LAYOUTS.map((layout) => (
-              <button
-                key={layout}
-                role='option'
-                aria-selected={layout === value}
-                data-testid={`presenter.slide-toolbar.layout.${layout}`}
-                className={mx(
-                  'flex flex-col gap-1 p-1 rounded-sm text-xs dx-hover dx-selected dx-focus-ring',
-                  layout === value && 'outline-2 outline-focus',
-                )}
-                onClick={() => {
-                  onChange(layout);
-                  setOpen(false);
-                }}
-              >
-                <div className='relative flex aspect-video pointer-events-none border border-separator'>
-                  <SlideFrame>
-                    <MarkdownSlide content={sample(layout)} />
-                  </SlideFrame>
-                </div>
-                {t(`layout.${layout}.label`, { defaultValue: layout })}
-              </button>
-            ))}
-          </div>
+            <Listbox.Content aria-label={t('slide-layout.label')} classNames='w-[40rem]'>
+              {options.map(({ value: layout }) => (
+                <Listbox.Item
+                  key={layout}
+                  id={layout}
+                  data-testid={`presenter.slide-toolbar.layout.${layout}`}
+                  classNames='text-xs aria-selected:outline-2 aria-selected:outline-focus'
+                >
+                  <div className='relative flex aspect-video pointer-events-none border border-separator'>
+                    <SlideFrame>
+                      <MarkdownSlide content={sample(layout)} />
+                    </SlideFrame>
+                  </div>
+                  <Listbox.ItemText />
+                </Listbox.Item>
+              ))}
+            </Listbox.Content>
+          </Listbox.Root>
         )}
       </Popover.Content>
     </Popover.Root>

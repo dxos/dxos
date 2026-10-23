@@ -280,7 +280,7 @@ and the deck preview in their companion (Q11); the slide tools may move into tha
 - **Cursor sync** (Q12), both ways:
   - _Editor → preview:_ with the cursor inside a `<v-click>` or `<v-clicks>`, the preview reveals up to that step;
     in a slotted layout the slot holding the cursor is outlined.
-  - _Preview → editor:_ clicking an element in the preview moves the cursor to its source. The parser keeps each
+  - _Preview → editor:_ clicking an element in the preview moves the caret to the start of its source (no range). The parser keeps each
     node's source offsets (mdast `position`) as a `data-source` range on the rendered element; frontmatter
     offsets are added back so ranges index the whole slide.
 - _Agent call:_ toolbar edits are plain text changes through the editor view (one undo step each), and the

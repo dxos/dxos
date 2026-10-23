@@ -26,6 +26,7 @@ import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
+  documentSlots,
   formattingListener,
 } from '@dxos/ui-editor';
 
@@ -106,8 +107,12 @@ const SlideEditorContent = ({ subject }: SlideEditorContentProps) => {
   const extensions = useMemo(
     () => [
       createBasicExtensions({ lineWrapping: true }),
-      createThemeExtensions({ themeMode }),
+      // Document margins, as the markdown editor has, so the slide reads at the same measure.
+      createThemeExtensions({ themeMode, slots: documentSlots }),
       createMarkdownExtensions(),
+      // The scrollbar's space is always reserved (on both edges, so the document column stays centred under the
+      // toolbars), and the text does not shift sideways once the slide overflows.
+      NaturalEditorView.theme({ '.cm-scroller': { scrollbarGutter: 'stable both-edges' } }),
       automerge(Doc.createAccessor(subject, ['content'])),
       formattingListener((formatting: EditorToolbarState) =>
         registry.set(toolbarState, { ...registry.get(toolbarState), ...formatting }),
@@ -130,12 +135,13 @@ const SlideEditorContent = ({ subject }: SlideEditorContentProps) => {
       return;
     }
     handledSeq.current = select.seq;
-    const [anchor, head] = select.range.map((offset) => Math.min(offset, view.state.doc.length));
-    view.dispatch({ selection: { anchor, head }, scrollIntoView: true });
+    // A caret at the start of the source, not a range, so a click never sets up typing over the element.
+    const anchor = Math.min(select.range[0], view.state.doc.length);
+    view.dispatch({ selection: { anchor }, scrollIntoView: true });
     view.focus();
   }, [controller, select]);
 
-  return <Editor.View classNames='dx-expand p-4' extensions={extensions} />;
+  return <Editor.View classNames='dx-expand' extensions={extensions} />;
 };
 
 type SlideEditorToolbarsProps = Pick<SlideEditorArticleProps, 'subject' | 'attendableId'> & {
@@ -157,11 +163,12 @@ const SlideEditorToolbars = ({ subject, attendableId, previewMode }: SlideEditor
         layout={parsed.layout}
         columns={parsed.layout === 'two-cols' || parsed.layout === 'two-cols-header'}
         background={{ image: parsed.frontmatter.image, backgroundVideo: parsed.frontmatter.backgroundVideo }}
+        classNames='dx-document'
         previewMode={previewMode}
         {...actions}
       />
       {/* The formatting toolbar reads the editor view, which exists only after the editor mounts. */}
-      {view && <Editor.Toolbar attendableId={attendableId} showSearch={false} />}
+      {view && <Editor.Toolbar classNames='dx-document' attendableId={attendableId} showSearch={false} />}
     </div>
   );
 };

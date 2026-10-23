@@ -12,6 +12,7 @@ import * as Menu from '@dxos/react-ui/Menu';
 import * as Popover from '@dxos/react-ui/Popover';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { type ThemedClassName } from '@dxos/react-ui/Util';
 
 import { type LayoutName, type SlideFrontmatter } from '#markdown';
 import { meta } from '#meta';
@@ -25,7 +26,7 @@ export type SlideInsert = 'click' | 'clicks' | 'column' | 'notes';
 /** Frontmatter keys the background popover edits. */
 export type BackgroundSettings = Pick<SlideFrontmatter, 'image' | 'backgroundVideo'>;
 
-export type SlideToolbarProps = {
+export type SlideToolbarProps = ThemedClassName<{
   layout: LayoutName;
   onLayoutChange: (layout: LayoutName) => void;
   onInsert: (insert: SlideInsert) => void;
@@ -42,12 +43,13 @@ export type SlideToolbarProps = {
   onPrevious?: () => void;
   onNext?: () => void;
   onPresent?: () => void;
-};
+}>;
 
 /**
  * Slide tools and view controls for the slide editor; the markdown formatting toolbar sits beside it.
  */
 export const SlideToolbar = ({
+  classNames,
   layout,
   onLayoutChange,
   onInsert,
@@ -65,7 +67,7 @@ export const SlideToolbar = ({
 }: SlideToolbarProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
-    <Toolbar.Root data-testid='presenter.slide-toolbar'>
+    <Toolbar.Root data-testid='presenter.slide-toolbar' classNames={classNames}>
       <LayoutPicker value={layout} onChange={onLayoutChange} />
       <Menu.Root onSelect={({ value }) => onInsert(value === 'clicks' ? 'clicks' : 'click')}>
         <Menu.Trigger asChild>
@@ -122,7 +124,10 @@ export const SlideToolbar = ({
         type='single'
         value={previewMode}
         aria-label={t('preview-mode.label')}
-        onValueChange={(value) => (value === 'split' || value === 'companion') && onPreviewModeChange(value)}
+        // Only an actual change of mode is reported; the group can echo the current value back as focus moves.
+        onValueChange={(value) =>
+          (value === 'split' || value === 'companion') && value !== previewMode && onPreviewModeChange(value)
+        }
       >
         <ToggleGroup.Item
           value='split'
