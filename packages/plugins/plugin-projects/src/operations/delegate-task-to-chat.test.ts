@@ -30,6 +30,10 @@ import { Task } from '@dxos/types';
 import { ProjectsPlugin } from '#plugin';
 import { ProjectOperation } from '#types';
 
+await Harness.preload({
+  plugins: [ClientPlugin.make({}), SpacePlugin.make({}), TasksPlugin.make(), RoutinePlugin.make(), ProjectsPlugin()],
+});
+
 describe('ProjectOperation.DelegateTaskToChat', () => {
   test('opens a chat carrying the task in its checklist', async ({ expect }) => {
     await using harness = await setup();
