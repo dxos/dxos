@@ -3,3 +3,4 @@
 //
 
 export * from './push-registration.ts';
+export * from './push-senders.ts';
