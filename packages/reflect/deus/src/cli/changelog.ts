@@ -55,11 +55,17 @@ export const checkChangelog = Effect.fnUntraced(function* ({ base: baseRef, cwd,
 
   // Path in the working tree → path at the base (undefined for a new file).
   const changed = new Map<string, string | undefined>();
-  for (const line of lines(yield* git(root, 'diff', '--name-status', '-M', '--diff-filter=AMR', base, '--', '*.mdl'))) {
+  // Unquoted paths, so a non-ASCII file name reads back as the file it names.
+  const quotePath = ['-c', 'core.quotePath=false'];
+  for (const line of lines(
+    yield* git(root, ...quotePath, 'diff', '--name-status', '-M', '--diff-filter=AMR', base, '--', '*.mdl'),
+  )) {
     const [status, ...paths] = line.split('\t');
     changed.set(paths[paths.length - 1], status === 'A' ? undefined : paths[0]);
   }
-  for (const file of lines(yield* git(root, 'ls-files', '--others', '--exclude-standard', '--', '*.mdl'))) {
+  for (const file of lines(
+    yield* git(root, ...quotePath, 'ls-files', '--others', '--exclude-standard', '--', '*.mdl'),
+  )) {
     changed.set(file, undefined);
   }
 

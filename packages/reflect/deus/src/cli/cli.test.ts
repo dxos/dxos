@@ -58,7 +58,7 @@ describe('deus command parsing', () => {
     const { exit, output } = await run(['--help']);
     expect(Exit.isSuccess(exit)).toBe(true);
     const help = output.join('\n');
-    for (const name of ['changelog', 'lint', 'qa']) {
+    for (const name of ['changelog', 'lint', 'qa', 'review']) {
       expect(help).toContain(name);
     }
   });
@@ -192,7 +192,9 @@ describe('deus changelog check', () => {
     yield* fs.writeFileString(spec, original);
     yield* git(dir, 'init', '-q', '-b', 'main');
     yield* git(dir, 'add', '.');
-    yield* git(dir, '-c', 'user.name=test', '-c', 'user.email=test@example.com', 'commit', '-q', '-m', 'init');
+    // Pinned so a global identity or `commit.gpgsign` cannot change or block the scratch commit.
+    const identity = ['-c', 'user.name=test', '-c', 'user.email=test@example.com', '-c', 'commit.gpgsign=false'];
+    yield* git(dir, ...identity, 'commit', '-q', '-m', 'init');
     yield* fs.writeFileString(spec, edit(original));
     return dir;
   });
