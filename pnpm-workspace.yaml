@@ -276,7 +276,6 @@ catalog:
   '@types/react-test-renderer': ^19.1.0
   '@types/react-virtualized': ^9.22.3
   '@types/readable-stream': ^2.3.9
-  '@types/reveal.js': ^5.0.3
   '@types/seedrandom': ^3.0.5
   '@types/semver': ^7.7.1
   '@types/sharedworker': ^0.0.111
@@ -442,7 +441,6 @@ catalog:
   happy-dom: ^20.0.0
   hast-util-to-jsx-runtime: ^2.3.6
   hastscript: ^7.1.0
-  highlight.js: ^11.9.0
   html-to-image: ^1.11.13
   husky: ^8.0.0
   hyparquet: ^1.26.2
@@ -602,7 +600,6 @@ catalog:
   remark-rehype: ^11.1.2
   remotion: 4.0.534
   resize-observer-polyfill: ^1.5.1
-  reveal.js: ^5.1.0
   rmdir: ~1.2.0
   rolldown: ~1.2.14
   rollup: ^3.29.5

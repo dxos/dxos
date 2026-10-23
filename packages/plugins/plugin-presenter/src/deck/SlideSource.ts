@@ -8,7 +8,10 @@ import { Text } from '@dxos/schema';
 
 import { Presentation } from '#types';
 
-/** One slide of a deck: an owned Text, a linked object, raw markdown (with the database its embeds resolve in), or a ref not yet resolved. */
+/**
+ * One slide of a deck: an owned Text, a linked object, raw markdown (with the database its embeds resolve in),
+ * or a ref not yet resolved.
+ */
 export type SlideSource =
   | { kind: 'text'; id: string; text: Text.Text }
   | { kind: 'object'; id: string; object: Obj.Unknown }
