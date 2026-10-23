@@ -28,7 +28,7 @@ preview; override with `DX_EDGE_BASE_URL` to reach EDGE dev or a local EDGE.
   bind already exists — `preview` and `dev` deliberately share `composer-feedback-logs-dev`, while
   `production` and `staging` have their own. Note `staging`'s bucket is `composer-feedback-logs-preview`:
   it is bound by `env.staging` and has nothing to do with the `preview` environment. What each new Worker
-  does need is its own `SIGNOZ_INGESTION_KEY` secret (`pnpm secrets remote <env> composer`), matched by a
+  does need is its own `POSTHOG_PROJECT_TOKEN` secret (`pnpm secrets remote <env> composer`), matched by a
   1Password section named after the raw Worker name.
 - Secrets are managed via [`scripts/secrets.mjs`](../../../scripts/secrets.mjs) (`pnpm secrets`), sourced
   from 1Password.
