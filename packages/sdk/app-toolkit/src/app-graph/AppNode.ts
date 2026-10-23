@@ -13,6 +13,7 @@ import type * as Atom from 'effect/reactivity/Atom';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type Space } from '@dxos/client/echo';
 import { Annotation, Collection, type Database, Obj, Ref, Registry, Type } from '@dxos/echo';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { Attention } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
 import type * as Position from '@dxos/util/Position';
@@ -573,6 +574,37 @@ export const makeToolbarSeparator = (
   id,
   type: MENU_SEPARATOR_TYPE,
   properties: { variant, disposition: TOOLBAR_DISPOSITION },
+});
+
+//
+// Prompt helpers.
+//
+
+/** Type of the hidden node a text prompt reads its contributed actions from. */
+export const PROMPT_TYPE = 'org.dxos.type.prompt';
+
+/** Segment of a prompt node under its host. */
+export const PROMPT_SEGMENT = 'prompt';
+
+/**
+ * The prompt node of a host (a chat, a companion, a space's home).
+ * Keyed by the host rather than the chat it composes into, so it survives a draft chat being stored or replaced.
+ */
+export const getPromptId = (hostId: string): string => GraphNode.qualifyId(hostId, PROMPT_SEGMENT);
+
+/**
+ * Build the prompt node for a host. Contributors file actions on it with the `prompt` disposition, and
+ * its id is the key a prompt's controls share (e.g. the dictation session).
+ */
+export const makePrompt = (): AppGraphNode.NodeArg<null> => ({
+  id: PROMPT_SEGMENT,
+  type: PROMPT_TYPE,
+  data: null,
+  properties: {
+    label: ['prompt.label', { ns: 'org.dxos.i18n.os' }],
+    icon: 'ph--chat-text--regular',
+    disposition: 'hidden',
+  },
 });
 
 //

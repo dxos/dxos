@@ -9,14 +9,23 @@ import React, { useContext, useEffect } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
+import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Alarm, SessionStore } from '@dxos/assistant';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import * as AssistantChat from '@dxos/assistant/Chat';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
+import * as GraphNode from '@dxos/graph/GraphNode';
+import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Config } from '@dxos/react-client';
@@ -24,7 +33,7 @@ import { useRegistry, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Task } from '@dxos/types';
 
-import { useChatModel, useChatServices, usePresets } from '#hooks';
+import { useChatModel, useChatServices, usePresets, usePromptActions } from '#hooks';
 import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 import { AssistantCapabilities } from '#types';
@@ -45,9 +54,63 @@ type StoryArgs = {
   running?: boolean;
   /** Minutes from now to seed a pending alarm on the feed, which the status pill reports. */
   alarmInMinutes?: number;
+  /** Graph node hosting the prompt, whose prompt node the row reads contributed actions from. */
+  promptHost?: string;
 };
 
-const DefaultStory = ({ tasksVisible: initialTasksVisible, running }: StoryArgs) => {
+/** A prompt host that is not a chat, the way a space's home is. */
+const STORY_HOST_ID = GraphNode.qualifyId(GraphNode.RootId, 'story-home');
+
+/** Hosts a prompt and files a plain action on its prompt node, the way plugin-transcription files the mic. */
+const PromptActionStoryPlugin = Plugin.define({
+  profile: { key: 'org.dxos.test.promptAction', name: 'Prompt action story' },
+}).pipe(
+  Plugin.addModule(
+    Capability.inlineModule(
+      'prompt-action-story-graph',
+      { provides: [AppCapabilities.AppGraphBuilder] },
+      Effect.fnUntraced(function* () {
+        const extensions = yield* Effect.all([
+          AppGraphBuilder.createExtension({
+            id: 'storyHost',
+            match: GraphNodeMatcher.whenRoot,
+            connector: () =>
+              Effect.succeed([
+                {
+                  id: GraphNode.segmentId(STORY_HOST_ID),
+                  type: SpaceSchema.SPACE_HOME_NODE_TYPE,
+                  data: null,
+                  properties: { label: 'Home', disposition: 'hidden' },
+                },
+              ]),
+          }),
+          AppGraphBuilder.createExtension({
+            id: 'storyPromptAction',
+            match: GraphNodeMatcher.whenNodeType(AppNode.PROMPT_TYPE),
+            actions: () =>
+              Effect.succeed([
+                AppGraphNode.makeAction({
+                  id: 'story-prompt-action',
+                  data: () => Effect.void,
+                  properties: {
+                    label: 'Story action',
+                    icon: 'ph--chat-text--regular',
+                    disposition: 'prompt',
+                    testId: 'story.prompt-action',
+                  },
+                }),
+              ]),
+          }),
+        ]);
+
+        return [Capability.contribute(AppCapabilities.AppGraphBuilder, extensions.flat())];
+      }),
+    ),
+  ),
+  Plugin.make,
+);
+
+const DefaultStory = ({ tasksVisible: initialTasksVisible, running, promptHost }: StoryArgs) => {
   const [space] = useSpaces();
   const [chat] = useQuery(space?.db, Filter.type(AssistantChat.Chat));
   const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
@@ -56,6 +119,7 @@ const DefaultStory = ({ tasksVisible: initialTasksVisible, running }: StoryArgs)
   const db = space?.db;
   const runtime = useChatServices({ id: db?.spaceId });
   const chatModel = useChatModel({ db, chat, preset, runtime, registry, settings });
+  const prompt = usePromptActions(promptHost);
 
   // Drives the control's mode from the outside, so the assertion does not race a real turn. The
   // chat model reads its atoms from the ambient registry, which is what the story writes to.
@@ -76,10 +140,15 @@ const DefaultStory = ({ tasksVisible: initialTasksVisible, running }: StoryArgs)
       <div className='w-full max-w-document-width'>
         <Chat.Root chat={chat} db={db} chatModel={chatModel} defaultDrawer={initialTasksVisible ? 'tasks' : undefined}>
           <Chat.Status classNames='px-3 rounded-sm bg-group-surface' />
-          {/* `attendableId` is the graph node contributed actions are filed under; the story's chat
-              has no node, so the row shows only its own controls unless a plugin renders one. The
-              checklist is the prompt's own disclosed region now, not a sibling the story places. */}
-          <Chat.Prompt {...chatProps} outline preset={preset?.id} />
+          {/* Without a `promptHost` the row shows only its own controls. The checklist is the prompt's own
+              disclosed region, not a sibling the story places. */}
+          <Chat.Prompt
+            {...chatProps}
+            outline
+            preset={preset?.id}
+            customActions={prompt.actions}
+            nodeId={prompt.nodeId}
+          />
         </Chat.Root>
       </div>
     </div>
@@ -127,6 +196,7 @@ const meta = {
             }),
         }),
         AssistantPlugin({}),
+        PromptActionStoryPlugin(),
         StorybookPlugin.make({}),
       ],
       capabilities,
@@ -239,7 +309,7 @@ export const TestQueueFull: Story = {
 
 /**
  * The row's own controls, with nothing contributed to it. The microphone is deliberately absent:
- * it is not the prompt's, it is filed on the chat's graph node by plugin-transcription.
+ * it is not the prompt's, it is filed on the prompt's graph node by plugin-transcription.
  */
 export const TestBareRow: Story = {
   args: {},
@@ -248,5 +318,16 @@ export const TestBareRow: Story = {
     // Generous: the story boots a client and a space before the prompt exists at all.
     await canvas.findByTestId('assistant.send', {}, { timeout: 30_000 });
     await expect(canvas.queryByTestId('transcription.record')).toBeNull();
+  },
+};
+
+/** An action filed on the prompt node of a host that is not a chat renders in the row, before Send. */
+export const TestContributedAction: Story = {
+  args: { promptHost: STORY_HOST_ID },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const action = await canvas.findByTestId('story.prompt-action', {}, { timeout: 30_000 });
+    const send = canvas.getByTestId('assistant.send');
+    await expect(action.compareDocumentPosition(send) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   },
 };

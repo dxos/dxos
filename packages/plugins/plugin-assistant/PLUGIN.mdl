@@ -679,6 +679,17 @@ decision D-16: A connection's name in a tool prefix is its own name, or its endp
     - Keep the last set of servers read when a read fails: the agent process ends with each turn, so the set never outlived one.
 ```
 
+```mdl
+decision D-17: Every chat prompt reads the buttons other plugins add to it from a hidden prompt node under the node that hosts it: a chat, the assistant companion, or a space's home. The prompt node is keyed by its host, not its chat, so a draft chat that is stored or replaced keeps the same buttons and the same dictation session. Contributors file app-graph actions on it with the `prompt` disposition. Fills in [D-2].
+  date: 2026-10-23
+  by: user:wittjosiah
+  affects: [QA-3]
+  why: Most prompts have a draft chat with no graph node, so actions filed on the chat's node, the microphone among them, never reached them. Actions in the app graph are also what the command palette and the agent snapshot list.
+  rejected:
+    - A surface role for prompt buttons: a contribution would be a component, not an action other parts of the app can list.
+    - An `ObjectAction` capability: it has no custom render, which the microphone needs, and keeps actions out of the app graph. `ObjectAction` is deprecated in favour of graph actions.
+```
+
 ---
 
 ## Appendix: Extension Definitions
