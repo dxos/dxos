@@ -30,6 +30,7 @@
 - The newest layer is the harness: tools, hooks and skills that make models reliable at inference time.
 - Next come agents that hold state and act on a person’s behalf.
 
+Notes
 - Technology pressure gradients
 - Web from internet; BigTable/MapReduce (cf RDBMS)
 - Kanas => Gmail
@@ -48,7 +49,7 @@
 
 - Request/Response → P2P
   - Edge computing
-  - Local models
+  - Local, small, open models
 - Tasks → Workflows → Outcomes
   - Agent OS (agents and services)
   - The Everything App — Finally, The SaaSpocalypse
@@ -57,17 +58,17 @@
   - Swarms: Formal security models; audits; delegated authority
 
 <!--
-- Control moves from the server that answers requests to the people and devices at the edge.
 - Software stops being tasks a person performs and becomes outcomes an agent delivers.
-- An agent OS coordinates agents and services; separate apps collapse into one interface.
+- Separate apps collapse into one interface on a common substrate: WeChat (payment rail).
 - Systems look ahead rather than report the past: agents negotiate with each other through brokers and exchanges.
-- Swarms of agents need formal security: audits and explicit, delegated authority.
+- CRITICAL: Swarms of agents need formal security: audits and explicit, delegated authority.
 
-- Drivers
+Notes
+- Driversf
 - Edge = Network computing
 - Full decentralization: EDGE
 - Agent OS replaces device OS
-- No screen
+- No screens
 -->
 
 ---
@@ -81,12 +82,12 @@
 - Neuralize vs. biological narratives
 
 <!--
-- Full self-driving as a metaphor: organizations that run themselves while people supervise.
 - Virtual organizations of agents, governed by semantic models of who may do what.
-- Agents leave the screen and act in the physical world.
+- Agents leave the screen and act in the physical world. 100x information acredtion.
 - Shared knowledge across agents becomes a collective intelligence: the hivemind.
-- The open question is which narrative steers: machine optimization or human meaning.
+- Potential divergence: machine optimization vs. human understanding.
 
+Notes
 - Airplane mode: real time differential equations (no narrative)
 -->
 
@@ -104,11 +105,12 @@
 - Technology and institutions create the conditions that make particular leaders possible.
 - Applied to AI, a focus on founders and CEOs hides the incentives that drive the race.
 
-Attach undo weight to individuals.
-The central debate is about causation: Did Napoleon transform Europe because of his exceptional abilities,
-or did revolutionary France create conditions in which someone like Napoleon would rise?
-Other approaches emphasize institutions, economics, technology, social movements, and ordinary people.
-A balanced interpretation is that circumstances shape the opportunities available, while individual decisions can strongly influence what happens next.
+Notes
+- Attaches undo weight to individuals.
+- The central debate is about causation: Did Napoleon transform Europe because of his exceptional abilities,
+  or did revolutionary France create conditions in which someone like Napoleon would rise?
+- Other approaches emphasize institutions, economics, technology, social movements, and ordinary people.
+- A balanced interpretation is that circumstances shape the opportunities available, while individual decisions can strongly influence what happens next.
 -->
 
 ---
