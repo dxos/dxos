@@ -19,6 +19,11 @@
 
 <!--
 - Technology pressure gradients
+- Web from internet; BigTable/MapReduce (cf RDBMS)
+- Kanas => Gmail
+- Google Brain (RDF: Semantic Web; similar to 1960 AI Winter)
+- Transformer: evolution of NN from 90s; CNN to feed forward
+- Attention is all you need
 - Chat GPT4 RLHF (post training)
 - Coherernce: RLHF; Coding is the killer app (test suites); the Human is the attractor (Google search)
 - Vibe is a black box
@@ -57,9 +62,11 @@
 # The Great Man Fallacy
 
 > “The History of the world is but the Biography of great men.”
-> [Thomas Carlyle]
+
+[Thomas Carlyle]
 
 <!--
+Attach undo weight to individuals.
 The central debate is about causation: Did Napoleon transform Europe because of his exceptional abilities,
 or did revolutionary France create conditions in which someone like Napoleon would rise?
 Other approaches emphasize institutions, economics, technology, social movements, and ordinary people.

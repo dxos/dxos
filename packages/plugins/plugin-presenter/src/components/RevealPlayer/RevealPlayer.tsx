@@ -217,6 +217,27 @@ const createPlayer = async (
   return { deck, markdown, highlight, slides, renderedContent: content };
 };
 
+// The smallest body text a slide shrinks to; the theme's own size is the largest.
+const MIN_FONT_SIZE = 20;
+
+/**
+ * Shrinks the current slide's body text, a step at a time, until the slide fits the deck's height. Titles have fixed
+ * sizes, so they stay put; a slide that already fits keeps the theme's size.
+ */
+const fitSlide = (deck: Reveal.Api) => {
+  const slide = deck.getCurrentSlide();
+  if (!slide) {
+    return;
+  }
+  slide.style.fontSize = '';
+  const height = Number(deck.getConfig().height) || 700;
+  let size = Number.parseFloat(getComputedStyle(slide).fontSize);
+  while (slide.scrollHeight > height && size > MIN_FONT_SIZE) {
+    size -= 2;
+    slide.style.fontSize = `${size}px`;
+  }
+};
+
 const currentEmbeds = (deck: Reveal.Api): SlideEmbed[] => {
   const current = deck.getCurrentSlide();
   return current ? findEmbeds(current).map(({ uri, label }) => ({ uri, label })) : [];
@@ -237,7 +258,10 @@ export const RevealPlayer = Util.composable<HTMLDivElement, RevealProps>(
     useEffect(() => {
       if (player && player.renderedContent !== content) {
         // Rebuilding the slides replaces the current slide, so its embeds are found again once it is done.
-        void updateSlides(player, content).then(() => setEmbeds(currentEmbeds(player.deck)));
+        void updateSlides(player, content).then(() => {
+          fitSlide(player.deck);
+          setEmbeds(currentEmbeds(player.deck));
+        });
       }
     }, [player, content]);
 
@@ -269,8 +293,12 @@ export const RevealPlayer = Util.composable<HTMLDivElement, RevealProps>(
       });
 
       setPlayer(player);
+      fitSlide(deck);
       setEmbeds(currentEmbeds(deck));
-      deck.on('slidechanged', () => setEmbeds(currentEmbeds(deck)));
+      deck.on('slidechanged', () => {
+        fitSlide(deck);
+        setEmbeds(currentEmbeds(deck));
+      });
 
       // Reveal re-lays out only on window resize; a plank or companion resizes without one.
       const resizeObserver = new ResizeObserver(() => deck.layout());
