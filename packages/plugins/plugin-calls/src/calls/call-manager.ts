@@ -445,6 +445,12 @@ export class CallManager extends Resource {
     this.#transcriptFeedServiceLayer = Database.layer(db);
   }
 
+  /** Unbinds the transcript feed, so segments are dropped until another is bound. */
+  clearTranscriptFeed(): void {
+    this.#transcriptFeed = undefined;
+    this.#transcriptFeedServiceLayer = undefined;
+  }
+
   /** Toggles whether native transcript segments are persisted to the bound feed. */
   setTranscriptionEnabled(enabled: boolean): void {
     this._registry.set(this._transcriptionEnabledAtom, enabled);
@@ -458,7 +464,8 @@ export class CallManager extends Resource {
   async #writeTranscript(event: TranscriptEvent): Promise<void> {
     const feed = this.#transcriptFeed;
     const layer = this.#transcriptFeedServiceLayer;
-    if (!this._registry.get(this._transcriptionEnabledAtom) || !feed || !layer) {
+    // Interim revisions of a segment precede its final text, and the append-only feed cannot replace them.
+    if (event.pending || !this._registry.get(this._transcriptionEnabledAtom) || !feed || !layer) {
       return;
     }
 
@@ -466,7 +473,6 @@ export class CallManager extends Resource {
       _tag: 'transcript',
       started: event.started ?? new Date().toISOString(),
       text: event.text,
-      pending: event.pending,
     };
     let message = Obj.make(Message.Message, {
       created: new Date().toISOString(),

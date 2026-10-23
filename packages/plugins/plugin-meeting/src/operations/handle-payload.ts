@@ -28,6 +28,10 @@ const handler: Operation.WithHandler<typeof MeetingOperation.HandlePayload> = Me
         activeMeeting: meeting as Meeting.Meeting | undefined,
       }));
 
+      // A bare meeting selection must not leave the previous meeting's feed receiving segments.
+      if (!transcriptDxn) {
+        callManager.clearTranscriptFeed();
+      }
       if (space && transcriptDxn) {
         // Resolve the feed object from its queue/echo URI.
         const echoUri = EID.tryParse(transcriptDxn);

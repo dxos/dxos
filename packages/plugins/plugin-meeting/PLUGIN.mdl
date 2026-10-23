@@ -197,6 +197,10 @@ feat F-3: Real-Time Transcription
   req F-3.4:
     when: user leaves the call
     then: the transcript sink is unbound and plugin state is reset
+
+  req F-3.5:
+    when: HandlePayload is received without transcriptDxn
+    then: the call's transcript feed is unbound, so no segment reaches the previously active meeting
 ```
 
 ```mdl
@@ -498,6 +502,16 @@ decision D-6: A meeting payload without `transcriptionEnabled` leaves transcript
   affects: [F-2.2, F-3.3]
   why: The meeting activity is one last-write-wins value, so a bare meeting selection would otherwise switch transcription off for everyone.
   source: https://github.com/dxos/dxos/pull/12046
+```
+
+```mdl
+decision D-7: A meeting payload without `transcriptDxn` unbinds the call's transcript feed and leaves the transcription toggle as it is. Fills in [D-6].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-3.5]
+  why: Selecting another meeting mid-call publishes only its id, and the previous meeting's feed would otherwise keep receiving segments.
+  source: https://github.com/dxos/dxos/pull/14179
 ```
 
 ## Appendix: Extension Definitions

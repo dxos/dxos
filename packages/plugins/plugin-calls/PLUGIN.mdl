@@ -69,8 +69,8 @@ type Call
 type CallTransport
   desc: |
     Selects a CallTransportProvider and holds that provider's persistent config.
-    Mirrors `Channel.backend`. `config` is provider-owned (e.g. the Cloudflare
-    SFU room id) and is what makes a Call resumable.
+    Mirrors `Channel.backend`. `config` is provider-owned (e.g. the RealtimeKit
+    meeting id) and is what makes a Call resumable.
   fields:
     kind: string                     # provider id, e.g. org.dxos.call.transport.cloudflare
     config: Ref<Obj.Unknown>         # provider-owned reconnection state
@@ -156,7 +156,7 @@ type SessionId
 
 ```mdl
 type TrackId
-  desc: Identifier for a media track within the SFU.
+  desc: Identifier for a media track within the meeting.
   fields:
     value: string
 ```
@@ -190,7 +190,7 @@ type CallTransportProvider
   desc: |
     Contract implemented per live-transport, contributed via
     CallsCapabilities.CallTransportProvider. The built-in Cloudflare provider
-    wraps CallManager + CallsService. Methods (declared on the capability
+    wraps CallManager + MediaTransport (RealtimeKit). Methods (declared on the capability
     interface, not as schema fields):
       makeConfig(roomId: string) -> Obj.Unknown   # persisted into Call.transport.config
       join(call: Call)                            # establish live session
@@ -223,7 +223,7 @@ capability CallsCapabilities.CallTransportProvider
   desc: |
     Pluggable live-transport for a Call, keyed by `kind`. Mirrors
     plugin-thread's `ChannelBackendProvider`. The Cloudflare/WebRTC stack
-    (CallManager + CallsService) is the built-in provider
+    (CallManager + MediaTransport over RealtimeKit) is the built-in provider
     `org.dxos.call.transport.cloudflare`. A `Call.transport.kind` selects the
     provider; `makeConfig` produces the persisted reconnection config.
   type: CallTransportProvider
@@ -609,7 +609,7 @@ feat F-7: Devtools Surface
 
   req F-7.1: A `devtools-overview` surface is contributed showing CallState
              (joined, users, audio tracks) and the most recent MediaState.
-  req F-7.2: WebRTC stats from `@peermetrics/webrtc-stats` are surfaced for
+  req F-7.2: The media transport's send-side WebRTC stats are surfaced for
              diagnostic use.
 ```
 
@@ -782,7 +782,7 @@ scenario T-9: Devtools surface displays call diagnostics
   then:
     - CallState is displayed (joined, users, audio tracks)
     - MediaState is displayed (audio, video, screenshare info)
-    - WebRTC stats from @peermetrics/webrtc-stats are visible
+    - the media transport's send-side WebRTC stats are visible
 ```
 
 ```mdl
@@ -817,7 +817,7 @@ Apart from `SetSimulatedParticipants`, none of the `op` blocks above have a runt
 `provisionCall` are all plain async methods on `CallManager` (`packages/plugins/plugin-calls/src/calls/call-manager.ts`),
 called directly from UI handlers — there is no invoker key for any of them. Every test below is
 therefore `actors: human`. Joining a live call additionally needs a camera/microphone and a
-reachable Cloudflare Calls SFU, which the debug port cannot substitute for — this is a real device
+reachable EDGE that serves `/calls/rooms/join` and RealtimeKit, which the debug port cannot substitute for — this is a real device
 and network dependency, not a design gap, so it is declared in `given` rather than `blocked`.
 
 ```mdl
@@ -833,8 +833,8 @@ test QA-1: Start a video call from a Channel, toggle media, leave
     - channel: a Channel (chat) exists in that space, with plugin-thread active
     - plugin-calls is enabled — it defaults ON only in dev environments (isDev); elsewhere it must
       be enabled via the plugin registry
-    - camera and microphone permissions are available to the browser, and the Cloudflare Calls SFU
-      is reachable — this test cannot run headless or in an environment without real media devices
+    - camera and microphone permissions are available to the browser, and EDGE (`/calls/rooms/join`)
+      and RealtimeKit are reachable — this test cannot run headless or in an environment without real media devices
   steps:
     - name: Start the call
       do: Open the Channel article and click "Start video call" in its toolbar.
@@ -1017,6 +1017,16 @@ decision D-13: Native transcription reaches every participant, and each one appe
   affects: [service:MediaTransport]
   why: Writing by speaker stores each segment once with no writer to elect, so a participant leaving opens no gap.
   source: https://github.com/dxos/dxos/pull/12046
+```
+
+```mdl
+decision D-14: The devtools surface shows the media transport's own send-side WebRTC stats, and a live call's QA needs EDGE's room-join route and RealtimeKit rather than the Calls SFU. Fills in [D-12].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-7.2, QA-1]
+  why: RealtimeKit exposes no peer connection to attach an external stats collector to, only the stats of the tracks it publishes.
+  source: https://github.com/dxos/dxos/pull/14179
 ```
 
 ## Appendix: Extension Definitions
