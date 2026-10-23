@@ -258,6 +258,33 @@ read.
 - Eval: one `assistant-evals` eval with memoized fixtures (outline → presentation; checks slide count and
   layouts).
 
+### 8. Slide editor _(user, 2026-10-23)_
+
+`SlideEditorArticle` edits one owned slide of a Presentation. Markdown documents keep plugin-markdown's editor
+and the deck preview in their companion (Q11); the slide tools may move into that toolbar later.
+
+- **Toolbar** (Q10), one `Toolbar.Root` row in the panel header:
+  - _Formatting:_ the shared `EditorToolbar` from `@dxos/react-ui-editor` (headings, emphasis, lists, code, link).
+  - _Slide:_ a layout picker that writes the `layout:` frontmatter (thumbnails of the 16 layouts); insert a click
+    step (`<v-click>` / `<v-clicks>`); insert a column break (`::right::`, offered only for layouts with slots);
+    insert an object (`<Surface ref>` through the object picker); background image or video
+    (`image` / `backgroundVideo` frontmatter); speaker notes (the trailing HTML comment).
+  - _View:_ preview mode (split / companion); previous and next slide of the deck; "Present from here", which
+    opens the deck fullscreen at this slide.
+- **Preview modes** (Q9), chosen in the toolbar and kept per user in view state:
+  - _Split_ (default): the editor on top and the rendered slide below, in a vertical `Splitter` from
+    `@dxos/react-ui` whose position is kept with the mode.
+  - _Companion_: the rendered slide in the plank's companion, so a wide screen shows editor and slide side by
+    side at full height.
+- **Cursor sync** (Q12), both ways:
+  - _Editor → preview:_ with the cursor inside a `<v-click>` or `<v-clicks>`, the preview reveals up to that step;
+    in a slotted layout the slot holding the cursor is outlined.
+  - _Preview → editor:_ clicking an element in the preview moves the cursor to its source. The parser keeps each
+    node's source offsets (mdast `position`) as a `data-source` range on the rendered element; frontmatter
+    offsets are added back so ranges index the whole slide.
+- _Agent call:_ toolbar edits are plain text changes through the editor view (one undo step each), and the
+  frontmatter is rewritten through the YAML parser so comments and key order survive.
+
 ## Phases
 
 1. **Presentation type + runtime** — schema, create action, app-graph folder and children, "Add to presentation"
@@ -276,7 +303,8 @@ read.
 4. **Slide surfaces** for sheet, canvas, tldraw, outline; fallback chain; surface-lookup helper and picker
    filter.
 5. **Assistant skill** + eval.
-6. **Later:** presenter view (notes, next slide, timer; single window first, second window once view state is
+6. **Slide editor** — toolbar, split and companion preview, two-way cursor sync (§8).
+7. **Later:** presenter view (notes, next slide, timer; single window first, second window once view state is
    confirmed to sync across windows).
 
 Each phase updates `PLUGIN.mdl` (features, scenarios, QA, `## Changelog`) and ships with stories and tests.
@@ -294,6 +322,10 @@ Each phase updates `PLUGIN.mdl` (features, scenarios, QA, `## Changelog`) and sh
 | Q6  | Skill trigger?               | Annotate `Presentation` only; `agentCanEnable`                                         | user |
 | Q7  | Presenter view now?          | Later (Phase 6); notes parsed now                                                      | user |
 | Q8  | Slide syntax?                | Strict Slidev-compatible subset, rendered by our own pipeline                          | user |
+| Q9  | Slide editor preview?        | Split (editor above, slide below) and companion; no picture-in-picture                 | user |
+| Q10 | Slide editor toolbar?        | Formatting, slide tools (layout, clicks, slots, objects, background, notes), view      | user |
+| Q11 | Editor for markdown docs?    | No; Presentation slides only, slide tools may join plugin-markdown's toolbar later     | user |
+| Q12 | Cursor sync?                 | Both ways: cursor reveals click steps; clicking the slide moves the cursor             | user |
 
 ## References
 

@@ -120,8 +120,9 @@ component PresentationArticle
 ```mdl
 component SlideEditorArticle
   desc: |
-    Article for an owned slide: a 16:9 live preview above a markdown editor, opened by clicking the slide's
-    child node in the navtree.
+    Article for an owned slide, opened by clicking the slide's child node in the navtree. A toolbar (formatting,
+    slide tools, view controls) sits above the markdown editor; the rendered slide shows below it in a vertical
+    split, or in the plank's companion. Cursor and preview stay in sync both ways.
   props:
     subject: Text
 ```
@@ -384,6 +385,21 @@ feat F-9: Printing
     when: the focused or fullscreen deck is printed
     then: every slide of the deck prints, one per 16:9 page at full size, with every click step shown and the app chrome, overlay and other decks left out
   req F-9.2: Print rules apply only while a deck is printing, so printing anything else in the app is unaffected.
+```
+
+```mdl
+feat F-10: Slide Editor
+
+  req F-10.1: The slide editor has a toolbar with markdown formatting, slide tools (layout, click step, column break, object, background, notes) and view controls (preview mode, previous/next slide, present from here).
+  req F-10.2: Picking a layout writes the slide's `layout:` frontmatter, keeping its other keys; each toolbar edit is one undo step.
+  req F-10.3: The preview shows below the editor in a resizable vertical split, or in the plank's companion; the mode and split position are kept per user.
+  req F-10.4:
+    when: the cursor is inside a `<v-click>` or `<v-clicks>` group
+    then: the preview reveals up to that group's step, and in a slotted layout the cursor's slot is outlined
+  req F-10.5:
+    when: user clicks an element in the preview
+    then: the editor selects that element's source and scrolls it into view
+  req F-10.6: "Present from here" opens the deck fullscreen at this slide.
 ```
 
 ```mdl
@@ -1016,6 +1032,38 @@ decision D-43: An image whose URL is an object URI (`![label](echo:///<id>)`) em
   for: user:richburdon
   affects: [MarkdownSlide, F-8.2, F-8.4]
   why: Main's reveal player gained this syntax (#14152) and plugin-debug's presenter sample uses it to show a timeline chart; deleting reveal must not drop it.
+```
+
+```mdl
+decision D-44: The slide editor previews the slide either below the editor in a vertical split or in the plank's companion; there is no picture-in-picture mode.
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [SlideEditorArticle, F-10.3]
+  source: chat 2026-10-23 (slide editor Q1 option 2, renderer at the bottom)
+```
+
+```mdl
+decision D-45: The slide editor toolbar carries formatting, slide tools (layout, click step, column break, object, background, notes) and view controls.
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [SlideEditorArticle, F-10.1, F-10.2]
+  source: chat 2026-10-23 (slide editor Q2 option 1)
+```
+
+```mdl
+decision D-46: The new slide editor serves Presentation slides only; markdown documents keep plugin-markdown's editor and the companion deck preview.
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [SlideEditorArticle, DocumentArticle]
+  source: chat 2026-10-23 (slide editor Q3 option 1)
+```
+
+```mdl
+decision D-47: Cursor and preview sync both ways: the cursor's click group sets the preview step and outlines its slot, and clicking the preview selects the element's source through `data-source` ranges kept from mdast positions.
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [SlideEditorArticle, MarkdownSlide, F-10.4, F-10.5]
+  source: chat 2026-10-23 (slide editor Q4 option 2)
 ```
 
 ---

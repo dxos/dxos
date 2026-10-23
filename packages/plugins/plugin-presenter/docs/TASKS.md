@@ -88,6 +88,15 @@ Design: [DESIGN.md](./DESIGN.md).
 - [ ] **`PresenterSkill`** on `Presentation` — `CreatePresentation`, `AddSection`, `ListLayouts`, `PresentObject`.
 - [ ] **Eval** with memoized fixtures.
 
-## Phase 6: Later
+## Phase 6: Slide editor
+
+- [ ] **Toolbar** — `EditorToolbar` formatting; layout picker (writes `layout:`); insert click step, column break, object, background, notes; view controls.
+- [ ] **Preview modes** — vertical split (editor above, slide below) and companion; mode and split position in view state.
+- [ ] **Editor → preview** — cursor inside a click group reveals up to its step; the cursor's slot is outlined.
+- [ ] **Preview → editor** — rendered elements carry `data-source` ranges from mdast positions; a click selects the source.
+- [ ] **Present from here** and previous/next slide from the editor.
+- [ ] Stories with play tests for each mode, toolbar action and sync direction; spec QA.
+
+## Phase 7: Later
 
 - [ ] **Presenter view** — notes, next slide, timer.
