@@ -163,6 +163,7 @@ describe('EdgeWsConnection client version', () => {
     expect(FakeWebSocket.instances.at(-1)?.protocols).toEqual([
       EdgeWebsocketProtocol.V0,
       EdgeWebsocketProtocol.V1,
+      EdgeWebsocketProtocol.V2,
       `dxos-version.${version}`,
       'base64url.bearer.authorization.dxos.org.AAAA',
     ]);

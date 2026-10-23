@@ -68,7 +68,7 @@ const ACCOUNT_SEEDS = [
 ] as const;
 
 /** The accounts, each already at its pipeline stage. */
-export const Accounts: SampleSpace.Phase<AccountMap> = SampleSpace.phase('accounts', {
+export const Accounts: SampleSpace.Partial<AccountMap> = SampleSpace.partial('accounts', {
   schemas: [Organization.Organization],
   run: () =>
     SampleSpace.seed(ACCOUNT_SEEDS, (seed) =>
@@ -128,7 +128,7 @@ const CONTACT_SEEDS = [
 ] as const;
 
 /** One named contact per account — whoever the mail in this space is actually with. */
-export const Contacts: SampleSpace.Phase<ContactMap, AccountMap> = SampleSpace.phase('contacts', {
+export const Contacts: SampleSpace.Partial<ContactMap, AccountMap> = SampleSpace.partial('contacts', {
   schemas: [Person.Person],
   run: (accounts: AccountMap) =>
     SampleSpace.seed(CONTACT_SEEDS, (seed) =>
@@ -143,7 +143,7 @@ export const Contacts: SampleSpace.Phase<ContactMap, AccountMap> = SampleSpace.p
     ),
 });
 
-/** Contact seeds, for the phases that need a name and address rather than the object. */
+/** Contact seeds, for the partials that need a name and address rather than the object. */
 export const contactSeed = (key: ContactKey) => {
   const seed = CONTACT_SEEDS.find((seed) => seed.key === key);
   if (!seed) {

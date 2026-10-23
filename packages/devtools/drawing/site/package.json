@@ -1,0 +1,41 @@
+{
+  "name": "@dxos/drawing-site",
+  "version": "0.16.0",
+  "private": true,
+  "description": "drawing.sh: the landing page, with a live editor that draws as you type.",
+  "homepage": "https://drawing.sh",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "type": "module",
+  "dependencies": {
+    "@codemirror/language": "catalog:",
+    "@codemirror/state": "catalog:",
+    "@dxos/diagram": "workspace:*",
+    "@dxos/drawing": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "@dxos/react-ui-editor": "workspace:*",
+    "@dxos/ui-editor": "workspace:*",
+    "@lezer/highlight": "catalog:",
+    "codemirror-lang-mermaid": "catalog:",
+    "effect": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@dxos/node-std": "workspace:*",
+    "@dxos/vite-plugin-import-source": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-wasm": "catalog:",
+    "vitest": "catalog:",
+    "wrangler": "catalog:"
+  }
+}

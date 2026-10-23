@@ -22,7 +22,7 @@ export type DocsContent = {
 /** The two documents that explain the space to whoever just had it imported for them. */
 export type DocsResult = { tour: Markdown.Document; about: Markdown.Document };
 
-export const Docs: SampleSpace.Phase<DocsResult, DocsContent> = SampleSpace.phase('docs', {
+export const Docs: SampleSpace.Partial<DocsResult, DocsContent> = SampleSpace.partial('docs', {
   schemas: [Markdown.Document],
   run: ({ tourMd, aboutMd }: DocsContent) =>
     Effect.gen(function* () {

@@ -19,6 +19,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
 import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
+import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import { isSpace } from '@dxos/client/echo';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -41,10 +42,15 @@ import { currentChatRef } from '../util/current-chat.ts';
 /** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */
 const computeOperationsToImport = [AgentOperation.RunInstructions] as const;
 
-/** Match ECHO objects that are NOT chats. */
+/** Match ECHO objects that are neither chats nor agents, whose own article is already a conversation. */
 const whenNonChatObject = GraphNodeMatcher.whenAll(
   AppNodeMatcher.whenEchoObject,
-  GraphNodeMatcher.whenNot(AppNodeMatcher.whenEchoTypeMatches(Chat.Chat)),
+  GraphNodeMatcher.whenNot(
+    GraphNodeMatcher.whenAny(
+      AppNodeMatcher.whenEchoTypeMatches(Chat.Chat),
+      AppNodeMatcher.whenEchoTypeMatches(Agent.Agent),
+    ),
+  ),
 );
 
 export default Capability.makeModule(
@@ -148,7 +154,7 @@ export default Capability.makeModule(
           ]),
       }),
 
-      // Don't show assistant companion when a chat is already the primary object.
+      // Don't show assistant companion when a chat (or an agent's chat) is already the primary object.
       AppGraphBuilder.createExtension({
         id: 'companionChat',
         relation: AppNode.companion,

@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { scheduleTask, scheduleTaskInterval } from '@dxos/async';
+import { scheduleTask } from '@dxos/async';
 import { createEdgeIdentity } from '@dxos/client/edge';
 import { Context } from '@dxos/context';
 import { type SpaceId } from '@dxos/keys';
@@ -15,9 +15,12 @@ import { type Space, SpaceState, useSpaces } from '@dxos/react-client/echo';
 
 import { getSpaceDisplayName } from './getSpaceDisplayName.ts';
 import { countUnindexed } from './indexer-heads.ts';
+import { pollWithBackoff } from './poll.ts';
 
 /** Polled rather than subscribed: the indexer has no push channel to the client. */
-const POLL_INTERVAL = 5_000;
+const INITIAL_POLL_DELAY = 5_000;
+
+const MAX_POLL_DELAY = 60_000;
 
 export type IndexerRow = {
   spaceId: SpaceId;
@@ -85,9 +88,8 @@ export const useIndexerRows = (): { spaces: IndexerRow[]; refresh: () => void; c
     const ctx = new Context();
     scheduleTask(ctx, async () => {
       client.edge.http.setIdentity(createEdgeIdentity(client));
-      await fetchRows();
+      pollWithBackoff(ctx, fetchRows, { initialDelay: INITIAL_POLL_DELAY, maxDelay: MAX_POLL_DELAY });
     });
-    scheduleTaskInterval(ctx, fetchRows, POLL_INTERVAL);
     return () => {
       generationRef.current++;
       void ctx.dispose();

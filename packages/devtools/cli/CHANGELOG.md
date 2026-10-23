@@ -1,5 +1,170 @@
 # @dxos/cli
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [e26ed70]
+  - @dxos/plugin-inbox@0.16.0
+  - @dxos/plugin-google@0.16.0
+  - @dxos/plugin-jmap@0.16.0
+  - @dxos/plugin-projects@0.16.0
+  - @dxos/echo-client@0.16.0
+  - @dxos/assistant@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/halo-adapter-client@0.16.0
+  - @dxos/plugin-space@0.16.0
+  - @dxos/client@0.16.0
+  - @dxos/assistant-toolkit@0.16.0
+  - @dxos/plugin-assistant@0.16.0
+  - @dxos/plugin-chess@0.16.0
+  - @dxos/plugin-client@0.16.0
+  - @dxos/plugin-connector@0.16.0
+  - @dxos/plugin-file@0.16.0
+  - @dxos/plugin-game@0.16.0
+  - @dxos/plugin-illustrator@0.16.0
+  - @dxos/plugin-kanban@0.16.0
+  - @dxos/plugin-map@0.16.0
+  - @dxos/plugin-markdown@0.16.0
+  - @dxos/plugin-observability@0.16.0
+  - @dxos/plugin-registry@0.16.0
+  - @dxos/plugin-review@0.16.0
+  - @dxos/plugin-routine@0.16.0
+  - @dxos/plugin-sample@0.16.0
+  - @dxos/plugin-script@0.16.0
+  - @dxos/plugin-table@0.16.0
+  - @dxos/plugin-tasks@0.16.0
+  - @dxos/plugin-transcription@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/agent-code-mode@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/compute-runtime@0.16.0
+  - @dxos/edge-compute@0.16.0
+  - @dxos/mcp-server@0.16.0
+  - @dxos/client-protocol@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/observability@0.16.0
+  - @dxos/ai@0.16.0
+  - @dxos/cli-util@0.16.0
+  - @dxos/introspect@0.16.0
+  - @dxos/halo@0.16.0
+  - @dxos/async@0.16.0
+  - @dxos/context@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/effect-atom-solid@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/random@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/edge-client@0.16.0
+  - @dxos/protocols@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [5490cbc]
+- Updated dependencies [6488905]
+- Updated dependencies [3d151fc]
+- Updated dependencies [008b18c]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [647b4bd]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [b7d83c9]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [460bbc3]
+- Updated dependencies [d84f9b8]
+- Updated dependencies [b82150a]
+- Updated dependencies [0420f87]
+- Updated dependencies [cd70a43]
+- Updated dependencies [0d81167]
+- Updated dependencies [45ab961]
+- Updated dependencies [1e9c017]
+- Updated dependencies [16bde33]
+- Updated dependencies [417247b]
+- Updated dependencies [1bc475e]
+- Updated dependencies [5e3e00c]
+- Updated dependencies [d250ed2]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [ad4c7cf]
+- Updated dependencies [ed1039a]
+- Updated dependencies [b7fe13f]
+- Updated dependencies [afba7ce]
+- Updated dependencies [37edd53]
+- Updated dependencies [098a536]
+- Updated dependencies [6a02061]
+- Updated dependencies [1bddc93]
+- Updated dependencies [7b47951]
+- Updated dependencies [e398906]
+- Updated dependencies [2b6a93a]
+- Updated dependencies [743604d]
+  - @dxos/compute-runtime@0.15.0
+  - @dxos/assistant@0.15.0
+  - @dxos/plugin-space@0.15.0
+  - @dxos/plugin-registry@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/plugin-illustrator@0.15.0
+  - @dxos/echo-client@0.15.0
+  - @dxos/plugin-inbox@0.15.0
+  - @dxos/edge-client@0.15.0
+  - @dxos/edge-compute@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/plugin-routine@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/ai@0.15.0
+  - @dxos/observability@0.15.0
+  - @dxos/plugin-client@0.15.0
+  - @dxos/plugin-google@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/plugin-markdown@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/client@0.15.0
+  - @dxos/client-protocol@0.15.0
+  - @dxos/plugin-assistant@0.15.0
+  - @dxos/plugin-file@0.15.0
+  - @dxos/plugin-review@0.15.0
+  - @dxos/plugin-script@0.15.0
+  - @dxos/plugin-tasks@0.15.0
+  - @dxos/plugin-transcription@0.15.0
+  - @dxos/assistant-toolkit@0.15.0
+  - @dxos/plugin-jmap@0.15.0
+  - @dxos/plugin-projects@0.15.0
+  - @dxos/agent-code-mode@0.15.0
+  - @dxos/plugin-chess@0.15.0
+  - @dxos/plugin-connector@0.15.0
+  - @dxos/plugin-game@0.15.0
+  - @dxos/plugin-kanban@0.15.0
+  - @dxos/plugin-map@0.15.0
+  - @dxos/plugin-sample@0.15.0
+  - @dxos/plugin-table@0.15.0
+  - @dxos/plugin-observability@0.15.0
+  - @dxos/mcp-server@0.15.0
+  - @dxos/cli-util@0.15.0
+  - @dxos/introspect@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/halo-adapter-client@0.15.0
+  - @dxos/halo@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/effect-atom-solid@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/random@0.15.0
+
 ## 0.14.0
 
 ### Minor Changes

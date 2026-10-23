@@ -15,6 +15,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import { meta } from '#meta';
 
 import { useBrainClock } from '../useBrainClock.ts';
+import { useIdentityRepair } from '../useIdentityRepair.ts';
 import { usePrivateChat } from '../usePrivateChat.ts';
 
 export type AgentPrivateChatProps = {
@@ -26,12 +27,14 @@ export type AgentPrivateChatProps = {
 /**
  * The Agent's article: the viewing member's own chat with the agent, private to their identity and hosted
  * on EDGE, so a relay from another member's chat can wake it while the app is closed. Each member opening
- * the same agent sees only their own conversation.
+ * the same agent sees only their own conversation, and each space the agent is in has its own: what it
+ * knows is shared through its one brain (`AgentPresence.brainId`), not through the conversation.
  */
 export const AgentPrivateChat = ({ role, agent, attendableId }: AgentPrivateChatProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const { chat, failed, retry } = usePrivateChat(agent);
   useBrainClock(agent);
+  useIdentityRepair(agent);
 
   const data = useMemo(() => (chat ? { subject: chat, attendableId } : undefined), [chat, attendableId]);
   if (data) {

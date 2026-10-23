@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 import { BaseError } from '@dxos/errors';
 
 /**
- * Agent mailboxes on EDGE: a handle (`kai` for `kai@dx.pub`) bound to the agent that answers its mail. The email
+ * Agent mailboxes on EDGE: a handle (`kai` for `kai@dxos.ai`) bound to the agent that answers its mail. The email
  * channel backend works through {@link AgentMailboxService}; where it reaches EDGE is the layer's business.
  */
 
@@ -53,12 +53,37 @@ export type ClaimRequest = {
   readonly allowedSenders: readonly string[];
 };
 
+/** An email the agent sends from its mailbox. */
+export type SendRequest = {
+  readonly handle: string;
+  readonly spaceId: string;
+  readonly to: string;
+  readonly subject: string;
+  readonly text: string;
+  /** The thread token of a conversation it continues (its headers keep the mail in that thread). */
+  readonly thread?: string;
+  /**
+   * Refuse a recipient who never wrote to the mailbox. Set unless the space knows the recipient as a contact: EDGE
+   * keeps who wrote to it, the space keeps its contacts, so each checks its half.
+   */
+  readonly correspondentOnly: boolean;
+};
+
+export const SendResult = Schema.Struct({
+  messageId: Schema.String,
+  thread: Schema.String,
+});
+
+export interface SendResult extends Schema.Schema.Type<typeof SendResult> {}
+
 export interface Service {
   /** Binds the handle to the agent, or updates the binding the space already holds; fails when another space holds it. */
   readonly claim: (request: ClaimRequest) => Effect.Effect<MailboxStatus, AgentMailboxError>;
   /** Releases the handle; mail to it bounces from then on. */
   readonly release: (handle: string) => Effect.Effect<MailboxStatus, AgentMailboxError>;
   readonly status: (handle: string) => Effect.Effect<MailboxStatus, AgentMailboxError>;
+  /** Sends an email from the mailbox. */
+  readonly send: (request: SendRequest) => Effect.Effect<SendResult, AgentMailboxError>;
 }
 
 export class AgentMailboxService extends Context.Service<AgentMailboxService, Service>()(

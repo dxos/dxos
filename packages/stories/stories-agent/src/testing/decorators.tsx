@@ -60,26 +60,36 @@ const TYPES: Type.AnyEntity[] = [
 export type DecoratorsProps = {
   /** The client config; the live stories use {@link storyConfig}. */
   config?: Config;
-  /** Seeds the space through plugin operations once it is available. */
-  onReady: (props: { db: Database.Database; invoker: Capabilities.OperationInvoker }) => Promise<void>;
+  /** Seeds the space through plugin operations once it is available; a returned function runs on teardown. */
+  onReady: (props: {
+    db: Database.Database;
+    invoker: Capabilities.OperationInvoker;
+  }) => Promise<void | (() => Promise<void>)>;
 };
 
+/** Props, or a function of the story's args, so a story's config (e.g. `persistent`) can follow its Controls. */
+export type DecoratorsInput<Args> = DecoratorsProps | ((context: { args: Args }) => DecoratorsProps);
+
+const makeDecoratorProps = ({ config, onReady }: DecoratorsProps) => ({
+  ...(config ? { config } : {}),
+  // Skill definitions ride the assistant's start event; without it the agent's skill rows render blank labels.
+  setupEvents: [AppActivationEvents.AssistantStart],
+  types: TYPES,
+  plugins: [
+    AssistantPlugin.make(),
+    ThreadPlugin.make(),
+    AgentPlugin.make(),
+    ConnectorPlugin.make(),
+    // Copies the plugins' skill definitions into the client registry, which resolves an agent's bound skills.
+    RoutinePlugin.make(),
+    DiscordPlugin.make(),
+    makeModuleSurfacesPlugin('org.dxos.plugin.stories-agent.modules', moduleSurfaces),
+    StorySetupPlugin({ onReady }),
+  ],
+});
+
 /** The agent stack on Discord: assistant, threads, agents, connectors (Discord sign-in) and Discord itself. */
-export const createDecorators = ({ config, onReady }: DecoratorsProps) =>
-  createStoryDecorators({
-    ...(config ? { config } : {}),
-    // Skill definitions ride the assistant's start event; without it the agent's skill rows render blank labels.
-    setupEvents: [AppActivationEvents.AssistantStart],
-    types: TYPES,
-    plugins: [
-      AssistantPlugin.make(),
-      ThreadPlugin.make(),
-      AgentPlugin.make(),
-      ConnectorPlugin.make(),
-      // Copies the plugins' skill definitions into the client registry, which resolves an agent's bound skills.
-      RoutinePlugin.make(),
-      DiscordPlugin.make(),
-      makeModuleSurfacesPlugin('org.dxos.plugin.stories-agent.modules', moduleSurfaces),
-      StorySetupPlugin({ onReady }),
-    ],
-  });
+export const createDecorators = <Args,>(input: DecoratorsInput<Args>) =>
+  createStoryDecorators<Args>(
+    typeof input === 'function' ? (context) => makeDecoratorProps(input(context)) : makeDecoratorProps(input),
+  );

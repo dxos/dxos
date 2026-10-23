@@ -2,12 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
+
 import {
   EDGE_CLIENT_TOO_OLD,
   EDGE_CLIENT_VERSION_HEADER,
   EDGE_CLIENT_VERSION_PROTOCOL_PREFIX,
   EdgeClientTooOldError,
-  type EdgeFailure,
 } from '@dxos/protocols';
 
 import { version } from '../package.json';
@@ -26,19 +27,22 @@ export const clientVersionHeaders = (): Record<string, string> => ({
 /** The same advertisement for the WebSocket upgrade, where a browser can set no header but the subprotocol list. */
 export const clientVersionProtocol = (): string => `${EDGE_CLIENT_VERSION_PROTOCOL_PREFIX}${CLIENT_SDK_VERSION}`;
 
+const isClientTooOld = Schema.is(
+  Schema.Struct({
+    success: Schema.Literal(false),
+    message: Schema.String,
+    data: Schema.Struct({ type: Schema.Literal(EDGE_CLIENT_TOO_OLD) }),
+  }),
+);
+
+export const readJsonBody = (response: Response): Promise<unknown> => response.json().catch(() => undefined);
+
 /**
- * Throws {@link EdgeClientTooOldError} when `response` is EDGE's failure envelope refusing this SDK. Matched on the
- * envelope's `data.type`, as any WebSocket endpoint answers a plain GET with a bare 426 "Upgrade Required".
+ * Throws {@link EdgeClientTooOldError} when `body` is a failed `response`'s EDGE envelope refusing this SDK. Matched on
+ * the envelope's `data.type`, as any WebSocket endpoint answers a plain GET with a bare 426 "Upgrade Required".
  */
-export const assertClientSupported = async (response: Response): Promise<void> => {
-  if (response.ok || !response.headers.get('Content-Type')?.startsWith('application/json')) {
-    return;
-  }
-  const body: EdgeFailure | undefined = await response
-    .clone()
-    .json()
-    .catch(() => undefined);
-  if (body?.success === false && body.data?.type === EDGE_CLIENT_TOO_OLD) {
+export const assertClientSupported = (response: Response, body: unknown): void => {
+  if (!response.ok && isClientTooOld(body)) {
     throw new EdgeClientTooOldError(body, response.status);
   }
 };

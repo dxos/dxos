@@ -52,9 +52,12 @@ const SheetArticleInner = ({
   return (
     <SheetComponent.Root graph={graph} sheet={sheet} attendableId={attendableId!} ignoreAttention={ignoreAttention}>
       <Panel.Root classNames={role === AppSurface.Section.role && 'aspect-square w-full max-h-full min-h-0'}>
-        <Panel.Header>
-          <SheetComponent.Toolbar />
-        </Panel.Header>
+        {/* Editing chrome belongs to the main article; an embed or companion shows the bare grid. */}
+        {role === AppSurface.Article.role && (
+          <Panel.Header>
+            <SheetComponent.Toolbar />
+          </Panel.Header>
+        )}
         <Panel.Body asChild>
           <SheetComponent.Content />
         </Panel.Body>

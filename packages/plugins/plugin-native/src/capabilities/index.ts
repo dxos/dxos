@@ -13,6 +13,11 @@ import { meta } from '#meta';
 import { translations } from '#translations';
 import { NativeCapabilities, NativeEvents } from '#types';
 
+export const ExitGuard = Capability.lazyModule(
+  'ExitGuard',
+  { requires: [Capabilities.OperationInvoker], provides: [], activatesOn: NativeEvents.Start },
+  () => import('./exit-guard.ts'),
+);
 export const NativeSettings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
   provides: [NativeCapabilities.Settings],

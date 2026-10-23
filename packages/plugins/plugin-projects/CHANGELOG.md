@@ -1,5 +1,115 @@
 # @dxos/plugin-projects
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [e26ed70]
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/plugin-inbox@0.16.0
+  - @dxos/react-ui@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/plugin-space@0.16.0
+  - @dxos/react-client@0.16.0
+  - @dxos/assistant-toolkit@0.16.0
+  - @dxos/plugin-assistant@0.16.0
+  - @dxos/plugin-markdown@0.16.0
+  - @dxos/plugin-routine@0.16.0
+  - @dxos/plugin-tasks@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-graph@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-attention@0.16.0
+  - @dxos/react-ui-form@0.16.0
+  - @dxos/react-ui-masonry@0.16.0
+  - @dxos/react-ui-menu@0.16.0
+  - @dxos/react-ui-search@0.16.0
+  - @dxos/react-ui-task@0.16.0
+  - @dxos/react-ui-trace@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/extractor-lib@0.16.0
+  - @dxos/link@0.16.0
+  - @dxos/echo-react@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/ai@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/graph@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [b82150a]
+- Updated dependencies [cd70a43]
+- Updated dependencies [0d81167]
+- Updated dependencies [45ab961]
+- Updated dependencies [71fc002]
+- Updated dependencies [1b33a84]
+- Updated dependencies [16bde33]
+- Updated dependencies [417247b]
+- Updated dependencies [1bc475e]
+- Updated dependencies [d250ed2]
+- Updated dependencies [55bdf55]
+- Updated dependencies [9b9a4ca]
+- Updated dependencies [b7fe13f]
+- Updated dependencies [098a536]
+- Updated dependencies [6a02061]
+- Updated dependencies [1bddc93]
+- Updated dependencies [25af912]
+- Updated dependencies [7b47951]
+- Updated dependencies [8190cc5]
+- Updated dependencies [f1e7396]
+- Updated dependencies [60ef4ec]
+- Updated dependencies [2b6a93a]
+- Updated dependencies [743604d]
+  - @dxos/plugin-space@0.15.0
+  - @dxos/react-ui@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/plugin-inbox@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/plugin-routine@0.15.0
+  - @dxos/ai@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/plugin-markdown@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/echo-react@0.15.0
+  - @dxos/react-ui-task@0.15.0
+  - @dxos/plugin-assistant@0.15.0
+  - @dxos/plugin-tasks@0.15.0
+  - @dxos/react-ui-form@0.15.0
+  - @dxos/react-ui-trace@0.15.0
+  - @dxos/assistant-toolkit@0.15.0
+  - @dxos/app-graph@0.15.0
+  - @dxos/react-client@0.15.0
+  - @dxos/react-ui-attention@0.15.0
+  - @dxos/react-ui-masonry@0.15.0
+  - @dxos/react-ui-menu@0.15.0
+  - @dxos/react-ui-search@0.15.0
+  - @dxos/extractor-lib@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/graph@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+
 ## 0.14.0
 
 ### Minor Changes

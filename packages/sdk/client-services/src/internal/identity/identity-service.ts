@@ -10,6 +10,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { Context, Resource } from '@dxos/context';
 import { createCredential, signPresentation } from '@dxos/credentials';
+import { EchoHostService } from '@dxos/echo-host';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Hook from '@dxos/effect/Hook';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
@@ -243,12 +244,16 @@ export const IdentityServiceLayer = Layer.effect(
     // The stack's own SQLite runtime: the wipe runs under the live stack rather than the reset
     // chain, which tears it down.
     const sqlRuntime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
+    const echoHost = yield* EchoHostService;
     const service = new IdentityServiceImpl(
       identityManager,
       recoveryManager,
       keyring,
       dataSpaceManager,
-      () => RuntimeProvider.runPromise(sqlRuntime)(SqliteStorage.wipeSqliteStorage.pipe(Effect.orDie)),
+      () =>
+        echoHost.wipeStorage(() =>
+          RuntimeProvider.runPromise(sqlRuntime)(SqliteStorage.wipeSqliteStorage.pipe(Effect.orDie)),
+        ),
       (params, ctx) => identityLifecycle.createIdentity(params, ctx),
       (profile) =>
         profile

@@ -103,6 +103,18 @@ const routeAlongX = (from: Rect, to: Rect, shift: number, ports?: RoutedRelation
 };
 
 /**
+ * A connector between two boxes wherever they now are, routed as the layout routes one: around the `obstacles` (which
+ * include the two boxes) with the fewest bends, leaving along the axis that separates the boxes more. How an editor
+ * re-routes a laid-out connector once one of its ends has moved off the route the layout gave it.
+ */
+export const rerouteConnector = (from: Rect, to: Rect, obstacles: readonly Rect[]): Scene.Point[] => {
+  const gapX = Math.max(to.x - (from.x + from.w), from.x - (to.x + to.w));
+  const gapY = Math.max(to.y - (from.y + from.h), from.y - (to.y + to.h));
+  const router = makeAvoidingRouter([from, to, ...obstacles], zRouter, { step: GRID / 4 });
+  return router({ relation: { from: 'from', to: 'to' }, from, to, horizontal: gapX > gapY, offset: 0 });
+};
+
+/**
  * Default router: an orthogonal Z along the flow axis — rank-crossing edges route through the
  * inter-rank gutter (channel shifted per parallel edge); same-rank edges route out the side.
  */

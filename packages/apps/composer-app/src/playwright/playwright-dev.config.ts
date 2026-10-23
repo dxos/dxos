@@ -34,6 +34,8 @@ export default defineConfig({
     command: `pnpm vite --port ${PERF_PORT ?? 4173} --strictPort --configLoader native`,
     port: PERF_PORT ?? 4173,
     reuseExistingServer: false,
+    // The harness drives the page itself; a polling debug port would only add network noise.
+    env: { DX_DEBUG_PORT: 'false' },
     // Vite pre-bundling on a cold `.vite` cache for composer-app routinely
     // takes ~30 s; `webServer.timeout` is the cap on "wait for `port` to listen".
     timeout: 300_000,

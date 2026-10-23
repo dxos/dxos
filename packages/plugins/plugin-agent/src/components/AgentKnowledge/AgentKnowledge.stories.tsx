@@ -197,6 +197,9 @@ const PROFILE_FACTS: RDF.Fact[] = [
   rdfFact('p-4', [entity('david', 'David'), 'knows', entity('alice', 'Alice Chen')], PROFILE),
   rdfFact('p-5', [entity('emma', 'Emma'), 'knows', entity('alice', 'Alice Chen')], PROFILE),
   rdfFact('p-6', [entity('bob', 'Bob'), 'works at', entity('acme', 'Acme')], PROFILE),
+  // Literal objects are not entities: the card counts them and the browser opens them as statements.
+  rdfFact('p-7', [entity('alice', 'Alice Chen'), 'has role', { kind: 'literal', literal: 'indexing lead' }], PROFILE),
+  rdfFact('p-8', [entity('alice', 'Alice Chen'), 'prefers', { kind: 'literal', literal: 'async reviews' }], PROFILE),
 ];
 
 const CARD_OPTIONS = {
@@ -265,7 +268,13 @@ const SubgraphsStory = () => {
 const ENTITY_CARDS = toEntityCards([...PROFILE_FACTS, ...RDF_FACTS], { ...CARD_OPTIONS, objects: true });
 
 /** Finder-style columns over the same graph. */
-const BrowserStory = () => <EntityBrowser cards={ENTITY_CARDS} icons={CARD_ICONS} hues={CARD_HUES} />;
+const BrowserStory = () => (
+  <Panel.Root>
+    <Panel.Body asChild>
+      <EntityBrowser cards={ENTITY_CARDS} icons={CARD_ICONS} hues={CARD_HUES} />
+    </Panel.Body>
+  </Panel.Root>
+);
 
 type StoryProps = {
   /** Named rather than passed as objects, because storybook clones args and ECHO objects reject the writes. */
@@ -291,7 +300,6 @@ const DefaultStory = ({ scenario, defaultView, brain }: StoryProps) => {
   const { nodes, edges } = useMemo(() => toGraph(knowledge), [knowledge]);
   return (
     <AgentKnowledge.Root defaultView={defaultView} brain={brain}>
-      <AgentKnowledge.Memories memories={knowledge.memories.map(({ memory }) => memory)} now={NOW} />
       <AgentKnowledge.Facts facts={scenario === 'empty' ? [] : FACTS} now={NOW} />
       <AgentKnowledge.Entities cards={scenario === 'empty' ? [] : ENTITY_CARDS} />
       <AgentKnowledge.Predicates predicates={PREDICATES} trig={RDF.Graph.ontologyToTriG(SEED)} />

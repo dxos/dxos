@@ -3,8 +3,10 @@
 //
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 
 import { meta } from '#meta';
@@ -18,6 +20,7 @@ export const PluginAsset = AppCapability.pluginAsset({
   content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });
+export const McpServer = AppCapability.mcpServer(() => import('./mcp-server.ts'));
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 export const BuildRunState = Capability.lazyModule(
@@ -39,14 +42,14 @@ export const Settings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
   provides: [CodeCapabilities.Settings],
 });
-export const AgentLauncher = Capability.lazyModule(
-  'AgentLauncher',
-  { provides: [CodeCapabilities.AgentHelper], activatesOn: ActivationEvents.Startup, environments: ['tauri'] },
-  () => import('./agent-launcher.ts'),
-);
-export const State = Capability.lazyModule(
-  'State',
-  { provides: [CodeCapabilities.State], activatesOn: ActivationEvents.Startup },
-  () => import('./state.ts'),
-);
 export const Translations = AppCapability.translations(translations);
+// Local files are reachable only from the desktop app or a dev server; settings supply the configured checkouts.
+export const SpecSync = Capability.lazyModule(
+  'SpecSync',
+  {
+    requires: [ClientCapabilities.Client, CodeCapabilities.Settings, Capabilities.AtomRegistry],
+    provides: [CodeCapabilities.SpecSync],
+    environments: ['browser', 'tauri'],
+  },
+  () => import('./spec-sync.ts'),
+);

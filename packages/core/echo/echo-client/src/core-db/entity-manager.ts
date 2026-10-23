@@ -453,7 +453,8 @@ export class EntityManager implements IDatabaseBinding {
     }
   }
 
-  async close(): Promise<void> {
+  /** @param ctx Passed to the repo proxy's close, which reads the close reason from it. */
+  async close(ctx?: Context): Promise<void> {
     this.#rejectOpenedUntilReopen();
     // A closed manager can be reopened (the database re-runs `openWithSpaceState`), and that path
     // creates a core for every inline object in the directory — so cores and handles surviving the
@@ -475,7 +476,7 @@ export class EntityManager implements IDatabaseBinding {
     this.#unindexedWrites.clear();
     this._objectsForNextUpdate.clear();
     this.#pendingReroutes.clear();
-    await this._repoProxy.close();
+    await this._repoProxy.close(ctx);
   }
 
   /** Whether the lifetime a load started in has ended — closed, or already replaced by a reopen. */
@@ -514,11 +515,6 @@ export class EntityManager implements IDatabaseBinding {
    */
   unindexedWrites(): Iterable<string> {
     return this.#unindexedWrites.keys();
-  }
-
-  /** Where the object falls in {@link allObjectCores} order, comparable across ids; undefined when absent. */
-  objectSequence(id: string): number | undefined {
-    return this._objects.sequenceOf(id);
   }
 
   getObjectCoreById(id: string, { load = true }: GetObjectCoreByIdOptions = {}): ObjectCore | undefined {
@@ -1200,6 +1196,11 @@ export class EntityManager implements IDatabaseBinding {
     }
 
     core.setDecoded([], newStruct);
+  }
+
+  /** Whether a change or a new object exists only in this client, so losing the page would lose it. */
+  hasUnsavedChanges(): boolean {
+    return this._pendingDocumentCreations.size > 0 || this._repoProxy.hasUnsavedChanges();
   }
 
   async flush({

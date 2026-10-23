@@ -15,17 +15,23 @@ tasks:
       - node-std:build
       - vite-plugin-import-source:build
       - vite-plugin-module-url:build
-      - ^:build
+      # Run for their outputs, which some packages resolve from, but keyed through `^:source-hash`.
+      - target: ^:build
+        cacheStrategy: ignored
+      - target: ^:source-hash
+        cacheStrategy: hash
       # Dependency packages' generated sources (e.g. the plugin capability barrels) must exist
       # before tests resolve them under the source condition. Addressed by the `prebuild` task tag
       # rather than a task name, since the generating task is named per what it generates.
       - '^:#prebuild'
     inputs:
       - '@group(sources)'
+      - /tsconfig.base.json
       - /vite.base.config.ts
       - /vitest.base.config.ts
+      - /tools/vite-plugin-log/src/**/* # Imported by path from `vite.base.config.ts`.
+      - tsconfig.json
       - /vitest.tags.ts # Ensure cache is invalidated when tag definitions change.
-      - /pnpm-lock.yaml # Ensure cache is invalidated when dependencies change.
       - vite.config.ts # Combined build + test config; most packages use this rather than `vitest.config.ts`.
       - vitest.config.ts
       - $NODE_VERSION # Ensure cache isn't shared between node versions in CI.

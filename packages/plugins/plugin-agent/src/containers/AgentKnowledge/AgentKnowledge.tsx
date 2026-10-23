@@ -22,18 +22,17 @@ export type AgentKnowledgeProps = {
 };
 
 /**
- * What the agent knows: its active memories, the facts it read, its entities, the predicates its brain knows, the goals
- * it watches for and its knowledge graph.
+ * What the agent knows: the facts in its brain, its entities, the predicates its brain knows, the goals it watches for
+ * and its knowledge graph.
  */
 export const AgentKnowledge = ({ role, agent }: AgentKnowledgeProps) => {
-  const { memories, facts, cards, predicates, ontology, goals, nodes, edges, brain, refresh } =
-    useAgentKnowledge(agent);
+  const { facts, cards, predicates, ontology, goals, nodes, edges, brain, refresh } = useAgentKnowledge(agent);
   const { invokePromise } = Hooks.useOperationInvoker();
   const remote = useRemoteBrain(agent);
   // A reset on EDGE takes seconds, so the views say so rather than show the brain about to be wiped.
   const [resetting, setResetting] = useState(false);
 
-  // Wipes what the space has taught the agent: its whole brain (memories, facts, read cursors), and every goal.
+  // Wipes what the space has taught the agent: its whole brain (facts, read cursors), and every goal.
   const handleReset = useCallback(async () => {
     const db = Obj.getDatabase(agent);
     if (!db) {
@@ -64,7 +63,6 @@ export const AgentKnowledge = ({ role, agent }: AgentKnowledgeProps) => {
       brain={resetting ? RESETTING : brain}
       onReset={resetting ? undefined : () => void handleReset()}
     >
-      <AgentKnowledgeComponent.Memories memories={memories} />
       <AgentKnowledgeComponent.Facts facts={facts} />
       <AgentKnowledgeComponent.Entities cards={cards} />
       <AgentKnowledgeComponent.Predicates predicates={predicates} trig={ontology} />

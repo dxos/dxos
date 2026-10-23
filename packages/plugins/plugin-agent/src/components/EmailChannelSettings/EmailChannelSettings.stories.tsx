@@ -29,21 +29,21 @@ type Story = StoryObj<typeof meta>;
 export const Connected: Story = {
   args: {
     values: VALUES,
-    status: { running: true, state: 'ready', detail: 'kai@dx.pub · 2 threads · 5 received · 4 sent' },
+    status: { running: true, state: 'ready', detail: 'kai@dxos.ai · 2 threads · 5 received · 4 sent' },
   },
 };
 
 export const NotConnected: Story = {
   args: {
     values: VALUES,
-    status: { running: false, state: 'idle', detail: 'kai@dx.pub · 0 threads · 0 received · 0 sent' },
+    status: { running: false, state: 'idle', detail: 'kai@dxos.ai · 0 threads · 0 received · 0 sent' },
   },
 };
 
 export const Taken: Story = {
   args: {
     values: VALUES,
-    status: { running: false, state: 'taken', detail: 'kai@dx.pub · 3 threads', error: 'kai@dx.pub is taken.' },
+    status: { running: false, state: 'taken', detail: 'kai@dxos.ai · 3 threads', error: 'kai@dxos.ai is taken.' },
   },
 };
 

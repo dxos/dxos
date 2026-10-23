@@ -165,3 +165,15 @@ export const related = (card: EntityCardModel, selection: BrowseSelection): stri
   );
   return [...new Set(ids)];
 };
+
+/** The text values (a memory's claims) of the property a selection chose, which the next column shows as statements. */
+export const statements = (card: EntityCardModel, selection: BrowseSelection): string[] => {
+  if (!selection.property || selection.entity) {
+    return [];
+  }
+  const property = [
+    ...card.properties.map((property) => ({ key: propertyKey('out', property.predicate), property })),
+    ...card.inverse.map((property) => ({ key: propertyKey('in', property.predicate), property })),
+  ].find(({ key }) => key === selection.property)?.property;
+  return property?.values.flatMap((value) => (value.kind === 'literal' ? [value.label] : [])) ?? [];
+};

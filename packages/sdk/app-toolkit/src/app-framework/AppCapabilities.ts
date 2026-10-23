@@ -23,6 +23,7 @@ import type { Database, Obj, Type } from '@dxos/echo';
 import type * as Retention from '@dxos/graph/Retention';
 import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';
+import type { Connection } from '@dxos/link';
 import { Progress } from '@dxos/progress';
 import type { AnchoredTo } from '@dxos/types';
 import * as Position from '@dxos/util/Position';
@@ -204,7 +205,7 @@ export const Settings = Capability$.make<Settings>()('org.dxos.app-framework.cap
  * contribution (plus the plugin set) into the settings space so they follow the identity across
  * devices, with per-key device overrides.
  *
- * Contributed once the settings space is open, so consumers must tolerate its absence.
+ * Absent without an identity. Until the settings space opens, `unsynced` is empty and the actions do nothing.
  */
 export type SettingsSync = {
   /** Settings prefixes this device writes locally rather than sharing. */
@@ -253,6 +254,14 @@ export const SkillDefinition = Capability$.make<Skill.Definition>()(
 );
 
 /**
+ * An MCP server a plugin ships, needing no credential. It is synced into the registry, where every
+ * chat lists it off until the chat or its agent turns it on; nothing is written to a space.
+ *
+ * @category Capability
+ */
+export const McpServer = Capability$.make<Connection.Builtin>()('org.dxos.app-framework.capability.mcpServer');
+
+/**
  * A static asset bundled with a plugin's published package, exposed for
  * other plugins to read.
  *
@@ -295,8 +304,11 @@ export type SpaceTemplate = Readonly<{
   hue?: string;
   /** Omit from the create picker; reachable only by id. */
   hidden?: boolean;
-  /** Registers the content's types on the client, then writes it into the new space. */
-  apply: (options: { readonly client: Client; readonly space: Space }) => Promise<void>;
+  /** Registers the content's types on the client, then writes it into the space; `SpaceOperation.ApplyTemplate` runs it. */
+  apply: (options: {
+    readonly client: Client;
+    readonly space: Space;
+  }) => Effect$.Effect<void, Error, Operation.Service>;
 }>;
 
 /**
@@ -420,6 +432,20 @@ export type NavigationTargetResolver = (
 export const NavigationTargetResolver = Capability$.make<NavigationTargetResolver>()(
   'org.dxos.app-framework.capability.navigationTargetResolver',
 );
+
+/**
+ * Changes that exist only in this page, which leaving it would lose: consulted before the page or the
+ * app goes away.
+ * @category Capability
+ */
+export type UnsavedChanges = {
+  /** Synchronous, so a `beforeunload` handler can decide. */
+  has(): boolean;
+  /** Hands the changes on to where they are kept, resolving whether none is left. */
+  save(): Promise<boolean>;
+};
+
+export const UnsavedChanges = Capability$.make<UnsavedChanges>()('org.dxos.app-framework.capability.unsavedChanges');
 
 /**
  * What a {@link NavigationTargetLoader} was able to determine about a target.

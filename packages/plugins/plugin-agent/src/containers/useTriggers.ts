@@ -9,7 +9,7 @@ import type * as Agent from '@dxos/assistant/Agent';
 import { Obj, Ref } from '@dxos/echo';
 import { useMembers } from '@dxos/halo-react';
 
-import { Trigger, TriggerOperation } from '#types';
+import { AgentPresence, Trigger, TriggerOperation } from '#types';
 
 import { labelOf } from '../operations/members.ts';
 import { triggerRegistry } from '../triggers.ts';
@@ -45,10 +45,11 @@ export const useTriggers = (agent: Agent.Agent): Watch[] => {
   const label = useMemo(() => labelOf(members), [members]);
 
   const local = useSyncExternalStore(subscribe, getSnapshot);
+  const brain = AgentPresence.brainId(agent);
   const localWatches = useMemo(
     () =>
       local
-        .filter((trigger) => trigger.agent === agent.id)
+        .filter((trigger) => trigger.agent === brain)
         .map(({ id, goal, when, then }): Watch => ({
           id,
           ...(goal ? { goal } : {}),
@@ -56,7 +57,7 @@ export const useTriggers = (agent: Agent.Agent): Watch[] => {
           recipient: then.recipient,
           message: then.message,
         })),
-    [local, agent.id, label],
+    [local, brain, label],
   );
 
   const [remoteWatches, setRemoteWatches] = useState<Watch[]>([]);

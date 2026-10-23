@@ -384,6 +384,9 @@ const TRAVERSAL_MISSED: Record<string, string[]> = {
   // `debug/plugin.ts` reaches `Debug.tsx` only via `Capability.lazyModule(..., () => import('./Debug.tsx'))` —
   // an extensioned dynamic import, which knip's traversal does not follow.
   'packages/sdk/app-toolkit': ['@dxos/react-ui-syntax-highlighter'],
+  // `src/open.ts` is reached only from the `drawing` bin (`src/bin/cli.ts`), which the production pass
+  // does not count as an entry, and keeping it out of `src/index.ts` keeps `node:child_process` out of browsers.
+  'packages/devtools/drawing': ['@dxos/errors'],
 };
 
 /**
@@ -483,6 +486,7 @@ for (const manifest of globSync(
     browser = {},
     dependencies = {},
     devDependencies = {},
+    peerDependencies = {},
   } = JSON.parse(readFileSync(manifest, 'utf8'));
 
   // Self-referencing subpath imports (`#meta`, `#plugin`) are otherwise unresolvable: knip follows
@@ -541,7 +545,7 @@ for (const manifest of globSync(
       ...configuredDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
       ...moonInvokedDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
       ...peerSatisfyingDependencies(dir, Object.keys({ ...dependencies, ...devDependencies })),
-      ...typeOnlyDependencies(dir, Object.keys(dependencies)),
+      ...typeOnlyDependencies(dir, Object.keys({ ...dependencies, ...peerDependencies })),
       ...bundledDependencies(dir),
       ...(DECLARED_IN_TYPES[dir] ?? []),
       ...(TESTING_ENTRY_ONLY[dir] ?? []),
@@ -591,6 +595,8 @@ const config: KnipConfig = {
     // Shipped by @dxos/app-framework, a dependency of every plugin the `composer-plugin` tag
     // applies to; the tag file that invokes it lives at the root, which declares no such dep.
     'dx-plugin',
+    // moon's built-in no-op command (`.moon/tasks/source-hash.yml`), not a binary.
+    'noop',
   ],
   ignoreDependencies: [
     //

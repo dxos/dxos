@@ -89,6 +89,9 @@ export interface EchoDatabase extends Database.Database {
    */
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
 
+  /** Whether a change exists only in this client, so losing the page would lose it. Synchronous, for `beforeunload`. */
+  hasUnsavedChanges(): boolean;
+
   /** @deprecated */
   readonly pendingBatch: ReadOnlyEvent<unknown>;
 
@@ -327,6 +330,62 @@ const versionTypesOf = (lenses: readonly Lens.Any[]): Type.AnyObj[] =>
       Lens.compareVersions(Lens.versionOf(left), Lens.versionOf(right)),
   );
 
+/** Structural equality of plain JSON data, independent of key order. */
+const isJsonEqual = (left: unknown, right: unknown): boolean => {
+  if (left === right) {
+    return true;
+  }
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return (
+      Array.isArray(left) &&
+      Array.isArray(right) &&
+      left.length === right.length &&
+      left.every((value, index) => isJsonEqual(value, right[index]))
+    );
+  }
+  if (isPlainRecord(left) && isPlainRecord(right)) {
+    const keys = Object.keys(left);
+    return (
+      keys.length === Object.keys(right).length &&
+      keys.every((key) => key in right && isJsonEqual(left[key], right[key]))
+    );
+  }
+  return false;
+};
+
+const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/**
+ * Writes a migrated content field: a record field key by key, so concurrent edits to other records
+ * survive the merge; any other field whole, and only when it changed.
+ */
+const writeContentField = (target: object, field: string, before: unknown, after: unknown, record: boolean): void => {
+  if (after === undefined) {
+    if (before !== undefined) {
+      Reflect.deleteProperty(target, field);
+    }
+    return;
+  }
+  const current: unknown = Reflect.get(target, field);
+  if (!record || !isPlainRecord(after) || !isPlainRecord(before) || !isPlainRecord(current)) {
+    if (!isJsonEqual(before, after)) {
+      Reflect.set(target, field, after);
+    }
+    return;
+  }
+  for (const key of Object.keys(before)) {
+    if (!(key in after)) {
+      Reflect.deleteProperty(current, key);
+    }
+  }
+  for (const [key, value] of Object.entries(after)) {
+    if (!isJsonEqual(before[key], value)) {
+      Reflect.set(current, key, value);
+    }
+  }
+};
+
 /**
  * User-facing API for the space database.
  * Implements EchoDatabase interface; delegates all document and core-object
@@ -463,7 +522,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this._ctx.onDispose(this.graph.registry.changed.on(() => this.#adoptLenses()));
 
     if (this._preloadSchemaOnOpen) {
-      await this.query(Filter.type(PersistentSchema)).run();
+      await this.query(Filter.type(PersistentSchema))
+        .run()
+        .catch((err) => log.warn('schema preload failed', { spaceId: this.spaceId, err }));
     }
 
     if (this._reactiveSchemaQuery) {
@@ -473,7 +534,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   @synchronized
-  protected override async _close(): Promise<void> {
+  protected override async _close(ctx: Context): Promise<void> {
     const disposals = await Promise.allSettled([...this.#feeds.values()].map((feed) => feed.dispose()));
     for (const disposal of disposals) {
       if (disposal.status === 'rejected') {
@@ -484,7 +545,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     await Promise.allSettled([...this.#retiredFeeds]);
     this.#retiredFeeds.clear();
     await this.#adoption;
-    await this._entityManager.close();
+    await this._entityManager.close(ctx);
   }
 
   // ── Space state ─────────────────────────────────────────────────────────
@@ -899,6 +960,14 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this.graph.blobManager.getBlobUrl(this.spaceId, blob);
   }
 
+  hasUnsavedChanges(): boolean {
+    return (
+      this._entityManager.hasUnsavedChanges() ||
+      this.#retiredFeeds.size > 0 ||
+      [...this.#feeds.values()].some((handle) => handle.hasPendingWrites())
+    );
+  }
+
   async flush(opts?: Database.FlushOptions): Promise<void> {
     // Storing adopted lenses is a write this database started, so a flush covers it.
     await this.#adoption;
@@ -1017,14 +1086,58 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       }
     }
 
+    const contentTypes = new Set<URI.URI>();
     for (const migration of migrations) {
       if (Migration.isObjectMigration(migration)) {
         await this.#runObjectMigration(migration);
       } else if (Migration.isRenameMigration(migration)) {
         await this.#runRenameMigration(migration);
+      } else if (Migration.isContentMigration(migration)) {
+        contentTypes.add(migration.type);
       }
     }
+    // Content steps run per type, after object migrations have moved objects onto the types they name.
+    for (const type of contentTypes) {
+      await this.#runContentMigrations(type, Migration.getContentSteps(migrations, type));
+    }
     await this._entityManager.flush();
+  }
+
+  /**
+   * Upgrades the content of every object of `type` whose version starts a chain of `steps`, writing
+   * only the changed records and the new version in one change.
+   */
+  async #runContentMigrations(type: URI.URI, steps: ReadonlyMap<string, Migration.ContentMigration>): Promise<void> {
+    const [first] = steps.values();
+    if (!first) {
+      return;
+    }
+    const { versionField, fields, recordFields } = first;
+    const objects = await this._hypergraph.query(Query.select(Filter.type(type)).from(this)).run();
+    let migrated = 0;
+    for (const object of objects) {
+      const version: unknown = Reflect.get(object, versionField);
+      if (typeof version !== 'string' || !steps.has(version)) {
+        continue;
+      }
+      const before: Record<string, unknown> = {};
+      for (const field of fields) {
+        const value: unknown = Reflect.get(object, field);
+        if (value !== undefined) {
+          before[field] = JSON.parse(JSON.stringify(value));
+        }
+      }
+      // A separate copy, so a transform that edits its input in place still diffs against the stored data.
+      const upgraded = Migration.applyContentSteps(steps, version, JSON.parse(JSON.stringify(before)));
+      Obj.update(object, (object) => {
+        for (const field of fields) {
+          writeContentField(object, field, before[field], upgraded.content[field], recordFields.includes(field));
+        }
+        Reflect.set(object, versionField, upgraded.version);
+      });
+      migrated++;
+    }
+    log.verbose('migrate content', { type, objects: objects.length, migrated });
   }
 
   async #runObjectMigration(migration: Migration.ObjectMigration): Promise<void> {

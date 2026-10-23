@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-registry",
-  "version": "0.14.0",
+  "version": "0.16.0",
   "description": "Braneframe plugin gallery",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -101,6 +101,11 @@
       "source": "./src/types/RegistryOperation.ts",
       "types": "./dist/types/src/types/RegistryOperation.d.ts",
       "import": "./dist/lib/RegistryOperation.mjs"
+    },
+    "./RegistryPaths": {
+      "source": "./src/RegistryPaths.ts",
+      "types": "./dist/types/src/RegistryPaths.d.ts",
+      "import": "./dist/lib/ns/RegistryPaths.mjs"
     },
     "./RegistryPlugin": {
       "source": "./src/RegistryPlugin.ts",

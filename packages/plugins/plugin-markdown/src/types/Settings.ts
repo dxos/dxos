@@ -49,7 +49,7 @@ export const Settings = Schema.Struct({
     CommentAgentMode.annotate({
       title: 'Comment agent mode',
       description:
-        "How new comment threads on markdown documents are processed: 'off' (no AI), 'auto' (AI responds to every user message), or 'mention' (AI responds only on @mention).",
+        "How new comment threads on markdown documents are processed: 'off' (no AI), 'auto' (AI responds to every user message), or 'mention' (AI responds only on @mention, the default).",
     }),
   ),
   editorInputMode: Schema.optional(

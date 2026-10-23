@@ -16,6 +16,7 @@ import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { AgentIdentity, CommentCapabilities, CommentOperation } from '#types';
 
+import { commentAgentConfig } from '../comment-agent-config.ts';
 import { shouldTriggerAgent } from '../should-trigger-agent.ts';
 
 const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = CommentOperation.AddMessage.pipe(
@@ -109,7 +110,9 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
       // user's message commit returns immediately and the agent runs out-of-band.
       const identities = yield* Capability.getAll(AgentIdentity.AgentIdentity);
       const identity = identities[0];
-      if (identity && shouldTriggerAgent(thread, message, identity.name)) {
+      // A thread saved without an agent config (created before the setting was on) follows the current setting.
+      const agent = thread.agent ?? (yield* commentAgentConfig(subject));
+      if (identity && shouldTriggerAgent(thread, message, identity.name, agent)) {
         yield* Operation.schedule(CommentOperation.RespondToThread, {
           thread: Ref.make(thread),
           subject: Ref.make(subject),

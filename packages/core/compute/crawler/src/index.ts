@@ -6,6 +6,7 @@ export * as Type from './types.ts';
 export * from './errors.ts';
 export * from './Source.ts';
 export * as StateStore from './StateStore.ts';
+export * as CrawlState from './CrawlState.ts';
 export * as AgentRegistry from './AgentRegistry.ts';
 export * from './Stage.ts';
 export * as Crawler from './Crawler.ts';

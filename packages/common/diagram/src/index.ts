@@ -24,6 +24,7 @@ export * as SemanticPlace from './semantic-place.ts';
 export * as SemanticRoute from './semantic-route.ts';
 export * as Score from './score.ts';
 export * from './svg-handler.ts';
+export * as SvgFile from './svg-file.ts';
 export * as Ui from './ui.ts';
 export * as Uml from './uml.ts';
 export * as UmlEngine from './uml-engine.ts';

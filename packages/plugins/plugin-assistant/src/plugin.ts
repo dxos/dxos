@@ -19,6 +19,8 @@ import {
   EdgeModelResolver,
   LocalModelResolver,
   MarkdownExtension,
+  McpServer,
+  McpServerRegistry,
   OperationHandler,
   PluginAsset,
   QuestionResumer,
@@ -26,6 +28,7 @@ import {
   Schema,
   Settings,
   SkillDefinition,
+  SlashCommands,
   SubjectContext,
   Toolkit,
   Translations,
@@ -37,6 +40,8 @@ export const AssistantPlugin = Plugin.define<AssistantOptions.AssistantPluginOpt
   .pipe(
     Plugin.addModule(AppGraphBuilder),
     Plugin.addModule(SkillDefinition),
+    Plugin.addModule(McpServer),
+    Plugin.addModule(McpServerRegistry),
     Plugin.addModule(CreateObject),
     Plugin.addModule(OperationHandler),
     Plugin.addModule(Schema),
@@ -69,6 +74,7 @@ export const AssistantPlugin = Plugin.define<AssistantOptions.AssistantPluginOpt
     Plugin.addModule(SubjectContext),
     Plugin.addModule(Connector),
     Plugin.addModule(PluginAsset),
+    Plugin.addModule(SlashCommands),
     Plugin.make,
   );
 

@@ -20,6 +20,7 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
+import { formatSourceKey, keyFromTreeUrl } from '#sync';
 import { CodeProject } from '#types';
 
 import {
@@ -79,11 +80,13 @@ export default Capability.makeModule(
             requestPluginAssets();
             return Effect.succeed([]);
           }
+          const key = keyFromTreeUrl(plugin.meta.profile.source, spec);
+          const sourceKey = key && formatSourceKey(key);
           return Effect.succeed([
             AppGraphNode.make({
               id: 'spec',
               type: PLUGIN_SPEC_TYPE,
-              data: makePluginSpecSubject({ pluginId: slug, name, content }),
+              data: makePluginSpecSubject({ pluginId: slug, name, content, sourceKey }),
               properties: {
                 label: ['plugin-spec.label', { ns: meta.profile.key }],
                 icon: 'ph--file-code--regular',

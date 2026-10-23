@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-transcription",
-  "version": "0.14.0",
+  "version": "0.16.0",
   "description": "Voice transcription.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -187,6 +187,7 @@
   "devDependencies": {
     "@codemirror/state": "catalog:",
     "@dxos/echo-doc": "workspace:*",
+    "@dxos/fixtures": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",

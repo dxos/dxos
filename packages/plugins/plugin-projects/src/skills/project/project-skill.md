@@ -270,6 +270,34 @@ have something new to report: the hook cannot write the summary.
 - Chores with no single home — keep those in session scratch.
 - Duplicating a session todo list — pick one; don't mirror the same list in both.
 
+## Features and showcases
+
+A **feature** is a goal state the product should reach ("Compose & send works against Gmail"), with a
+status: `planned`, `in-progress`, `prototype`, `operational` or `failing`. Features break down into
+subfeatures and depend on each other. A feature belongs to at most one **project**, and the project's
+Features tab shows them as a board. Specs stay in the repo, so a feature lists spec paths rather than
+holding the text.
+
+- Read a project's features with `projects-get-features { project }` before changing them: it returns each
+  feature's status, dependencies, linked tasks and showcases.
+- Create a feature with `projects-create-feature { name, project? }`. A feature's parts are **subfeatures**:
+  records with a name and their own status, set as a whole list with
+  `projects-update-feature { feature, subfeatures: [{ name, status }] }`. They are one level deep and have
+  no specs, dependencies or tasks of their own — give those to the feature.
+  Record that one feature needs another with `projects-add-feature-dependency { feature, dependsOn }` — a
+  dependency that would close a cycle is refused, and the error names the cycle.
+  `projects-remove-feature-dependency` undoes one. Move a feature into a project with
+  `projects-update-feature { feature, project }`, and take it out with `project: null`.
+- **When you pick up a task that moves a feature**, link it with `projects-link-feature-task { task, feature }`.
+- **Set the status when you observe it**, with `projects-update-feature { feature, status }`: `in-progress`
+  when work starts, `prototype` when it works in a demo, `operational` when people can rely on it, and
+  `failing` when it worked before and does not now.
+- **When you finish work that shows a feature working**, make a showcase with
+  `projects-create-showcase { name, content, targets, artifacts? }`: markdown saying what you showed and
+  how to reproduce it, the screenshots and videos you uploaded as files and the PRs it landed in as
+  `artifacts`, and every feature and task it demonstrates in `targets`. An `operational` feature without a showcase
+  is flagged on the board.
+
 ## Verbs
 
 - **`/project setup [space]`** — bind this repo to a space; see "`/project setup`" above. The one

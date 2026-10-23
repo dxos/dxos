@@ -6,15 +6,23 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Operation from '@dxos/compute/Operation';
+import { Obj, Ref } from '@dxos/echo';
 
 import { meta } from '#meta';
-import { Drawing } from '#types';
+import { Drawing, DrawingOperation, IllustratorCapabilities } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const extension = yield* AppGraphBuilder.createTypeExtension({
+    // Read reactively so the actions appear once renderer plugins contribute their variants.
+    const variantsAtom = yield* Capability.atom(IllustratorCapabilities.VariantProvider);
+
+    const companion = yield* AppGraphBuilder.createTypeExtension({
       id: 'scores',
       relation: AppNode.companion,
       type: Drawing.Drawing,
@@ -28,6 +36,47 @@ export default Capability.makeModule(
           }),
         ]),
     });
-    return Capability.contribute(AppCapabilities.AppGraphBuilder, [extension]);
+
+    const convertActions = yield* AppGraphBuilder.createTypeExtension({
+      id: 'convertActions',
+      type: Drawing.Drawing,
+      actions: (drawing, get) => {
+        const canvas = get(Obj.atom(drawing.canvas));
+        if (!canvas) {
+          return Effect.succeed([]);
+        }
+        const targets = IllustratorCapabilities.editTargets(get(variantsAtom), canvas.schema);
+        return Effect.succeed(
+          targets.map((variant) => {
+            const slug = IllustratorCapabilities.variantSlug(variant);
+            return AppGraphNode.makeAction({
+              id: `convert-${slug}`,
+              // The handler runs against the drawing's own space, which the action context does not supply.
+              data: () =>
+                Effect.gen(function* () {
+                  // Always a copy beside the source, which is left as it is; the copy is opened, as it is new.
+                  const result = yield* Operation.invoke(
+                    DrawingOperation.Convert,
+                    { drawing: Ref.make(drawing), variant: variant.id },
+                    { spaceId: Obj.getDatabase(drawing)?.spaceId },
+                  );
+                  const copy = yield* Effect.promise(() => result.drawing.load());
+                  yield* Operation.invoke(LayoutOperation.Open, {
+                    subject: [GraphPath.getObjectPathFromObject(copy)],
+                  });
+                }),
+              properties: {
+                label: IllustratorCapabilities.copyLabel(variant),
+                icon: variant.icon ?? DrawingOperation.Convert.meta.icon,
+                disposition: 'list-item',
+                testId: `illustratorPlugin.convert.${slug}`,
+              },
+            });
+          }),
+        );
+      },
+    });
+
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, [companion, convertActions]);
   }),
 );

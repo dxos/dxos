@@ -19,7 +19,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 import { mx } from '@dxos/ui-theme';
 
-import { ROOT_SCENE_ID, createCanvas, nodeKey } from '#model';
+import { ROOT_VIEW_ID, createCanvas, nodeKey } from '#model';
 import { CanvasPlugin } from '#plugin';
 import { translations } from '#translations';
 import { CanvasCapabilities } from '#types';
@@ -86,17 +86,17 @@ const seed = (canvas: Drawing.Canvas) => {
   Obj.update(canvas, (canvas) => {
     canvas.content[nodeKey('r')] = {
       kind: 'node',
-      scene: ROOT_SCENE_ID,
+      scene: ROOT_VIEW_ID,
       node: { id: 'r', type: 'rect', z: 'a1', ...frame(-320), label: 'Rect' },
     };
     canvas.content[nodeKey('t1')] = {
       kind: 'node',
-      scene: ROOT_SCENE_ID,
+      scene: ROOT_VIEW_ID,
       node: { id: 't1', type: 'task', z: 'a2', ...frame(0), label: 'Write the spec', done: true },
     };
     canvas.content[nodeKey('t2')] = {
       kind: 'node',
-      scene: ROOT_SCENE_ID,
+      scene: ROOT_VIEW_ID,
       node: { id: 't2', type: 'task', z: 'a3', ...frame(320), label: 'Ship it' },
     };
   });
@@ -128,6 +128,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/** The tasks drawn with the plugin, to look at. */
+export const Default: Story = { decorators: decorators([TaskPlugin()]) };
+
 /** With the plugin: the tasks draw with their own view (a checkbox and the title). */
 export const WithPlugin: Story = {
   decorators: decorators([TaskPlugin()]),
@@ -143,8 +146,9 @@ export const WithoutPlugin: Story = {
   decorators: decorators([]),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
-    await expect(await canvas.findByText('Ship it')).toBeInTheDocument();
+    const view = await canvas.findByTestId('scene-view', undefined, { timeout: 30_000 });
+    // On the drawing itself: the Views panel lists the task by its label too.
+    await expect(await within(view).findByText('Ship it')).toBeInTheDocument();
     await expect(canvas.queryAllByTestId('task-node')).toHaveLength(0);
   },
 };

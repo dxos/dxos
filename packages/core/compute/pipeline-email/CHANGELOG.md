@@ -1,5 +1,61 @@
 # @dxos/pipeline-email
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/echo@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/extractor@0.16.0
+  - @dxos/extractor-lib@0.16.0
+  - @dxos/link@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/ai@0.16.0
+  - @dxos/pipeline-rdf@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/markdown@0.16.0
+  - @dxos/node-std@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/pipeline@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [278f49c]
+- Updated dependencies [bc72a37]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [cd70a43]
+- Updated dependencies [45ab961]
+- Updated dependencies [16bde33]
+- Updated dependencies [35030a7]
+- Updated dependencies [55bdf55]
+- Updated dependencies [2208806]
+- Updated dependencies [7b47951]
+- Updated dependencies [2b6a93a]
+  - @dxos/pipeline-rdf@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/ai@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/extractor@0.15.0
+  - @dxos/extractor-lib@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/pipeline@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/markdown@0.15.0
+  - @dxos/node-std@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

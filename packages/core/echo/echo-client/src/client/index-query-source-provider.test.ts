@@ -8,7 +8,7 @@ import * as Exit from 'effect/Exit';
 import * as EffectScope from 'effect/Scope';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Event } from '@dxos/async';
+import { Event, sleep } from '@dxos/async';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { type Entity, type Hypergraph, Scope } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
@@ -470,6 +470,39 @@ describe('IndexQuerySource', () => {
       await rehydrated;
       expect(source.getResults().map((entry) => entry.id)).toEqual([stalled]);
     });
+  });
+
+  test('index progress restarts the one-shot budget', async () => {
+    const spaceId = SpaceId$.random();
+    let answer: (() => void) | undefined;
+    const service = await makeQueryClient({
+      'QueryService.setConfig': () => Effect.void,
+      'QueryService.execQuery': (request) =>
+        EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
+          answer = () => void emit.single({ queryId: request.queryId, results: [] });
+        }),
+      'QueryService.reindex': () => Effect.void,
+    });
+
+    const indexProgress = new Event();
+    const source = new IndexQuerySource({
+      service,
+      runtime: EffectContext.empty(),
+      objectLoader: { loadObject: async () => undefined, updateEvent: noopUpdateEvent },
+      graph: mockGraph,
+      queryTimeout: 100,
+      indexProgress,
+    });
+    onTestFinished(() => source.close());
+
+    const result = source.run(Context.default(), makeQuery(spaceId));
+    for (let i = 0; i < 5; i++) {
+      await sleep(50);
+      indexProgress.emit();
+    }
+    await expect.poll(() => answer).toBeDefined();
+    answer?.();
+    await expect(result).resolves.toEqual([]);
   });
 });
 

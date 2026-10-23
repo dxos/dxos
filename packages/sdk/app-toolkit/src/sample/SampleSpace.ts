@@ -9,8 +9,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 
+import type * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Database, type Feed, Obj, Ref, Tag, type Type } from '@dxos/echo';
-import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { Tagging } from '@dxos/schema';
 import { iconValues } from '@dxos/ui-types';
@@ -19,7 +19,7 @@ import * as AppAnnotation from '../echo/AppAnnotation.ts';
 
 /**
  * Raised when a sample space cannot be built — a missing space root, an unresolvable tag, or a
- * phase whose prerequisites were not met.
+ * partial whose prerequisites were not met.
  */
 export class SampleSpaceError extends BaseError.extend('SampleSpaceError', 'Sample space build failed') {}
 
@@ -66,7 +66,7 @@ export const daysFromNow = (days: number, hours?: number): Effect.Effect<string,
 // Feeds
 //
 // Feed entities only get DXNs once the database has flushed, so appends cannot run inline with the
-// phase that authors them. Phases enqueue instead and the runner drains after the final flush,
+// partial that authors them. Partials enqueue instead and the runner drains after the final flush,
 // which makes the ordering structural rather than a comment a later edit can miss.
 //
 
@@ -289,7 +289,7 @@ export const children: <P extends Obj.Any, T extends Obj.Any>(
 //
 // Seeds
 //
-// Sample content is authored as a table of seed rows keyed by a short discriminant, so later phases
+// Sample content is authored as a table of seed rows keyed by a short discriminant, so later partials
 // reference an entity by key (`people.kai`) rather than by index into an anonymous array.
 //
 
@@ -308,35 +308,50 @@ export const seed = Effect.fnUntraced(function* <Key extends string, Props, T, R
 });
 
 //
-// Phases
+// Partials
 //
 
-/** Services every phase can rely on, whether it runs headless or against a live space. */
+/** Services every partial can rely on, whether it runs headless or against a live space. */
 export type Services = Database.Service | Clock | Feeds | Root | Tags;
 
 /**
- * A named, reusable unit of sample content. Phases declare the schemas their objects need so a
- * space's type registration is derived from its phase list rather than hand-maintained alongside it.
+ * A named, reusable unit of sample content: what one `CONTENT.md` spec describes. Partials declare
+ * the schemas their objects need, so a space's type registration is derived from the partials it
+ * applies rather than hand-maintained alongside them.
  */
-export interface Phase<A, In = void> {
+export interface Partial<A, In = void> {
   readonly name: string;
   readonly schemas: ReadonlyArray<Type.AnyEntity>;
   readonly run: (input: In) => Effect.Effect<A, SampleSpaceError, Services>;
 }
 
-/** Defines a phase. `In` is whatever earlier phases produced that this one needs. */
-export const phase = <A, In = void>(
+export type PartialMap = Record<string, Partial<any, any>>;
+
+/** The `run` functions of a partial map, as handed to a definition's `build` or a partial's `run`. */
+export type PartialRunners<Partials extends PartialMap> = { readonly [K in keyof Partials]: Partials[K]['run'] };
+
+/**
+ * Defines a partial. `In` is whatever other partials produced that this one needs. A partial may
+ * compose smaller ones, which stay internal to it; its schemas are theirs plus any it declares.
+ */
+export const partial = <A, In = void, Partials extends PartialMap = {}>(
   name: string,
   options: {
+    readonly partials?: Partials;
     readonly schemas?: ReadonlyArray<Type.AnyEntity>;
-    readonly run: (input: In) => Effect.Effect<A, SampleSpaceError, Services>;
+    readonly run: (input: In, partials: PartialRunners<Partials>) => Effect.Effect<A, SampleSpaceError, Services>;
   },
-): Phase<A, In> => ({ name, schemas: options.schemas ?? [], run: options.run });
+): Partial<A, In> => {
+  const partials = options.partials ?? ({} as Partials);
+  return {
+    name,
+    schemas: [...new Set([...(options.schemas ?? []), ...Object.values(partials).flatMap((part) => part.schemas)])],
+    run: (input) => options.run(input, runnersOf(partials)),
+  };
+};
 
-export type PhaseMap = Record<string, Phase<any, any>>;
-
-/** The `run` functions of a phase map, as handed to a definition's `build`. */
-export type PhaseRunners<Phases extends PhaseMap> = { readonly [K in keyof Phases]: Phases[K]['run'] };
+const runnersOf = <Partials extends PartialMap>(partials: Partials): PartialRunners<Partials> =>
+  Object.fromEntries(Object.entries(partials).map(([key, part]) => [key, part.run])) as PartialRunners<Partials>;
 
 export type SpaceOptions = {
   readonly name: string;
@@ -351,32 +366,36 @@ export type SpaceOptions = {
  */
 export const BASE_SCHEMAS: ReadonlyArray<Type.AnyEntity> = [Collection.Collection];
 
-export interface Definition<Phases extends PhaseMap, A> {
+/**
+ * `R` is what `build` needs beyond {@link Services}: a template applied by `SpaceOperation.ApplyTemplate`
+ * gets `Operation.Service` from the process it runs in.
+ */
+export interface Definition<Partials extends PartialMap, A, R = Services> {
   readonly space: SpaceOptions;
   readonly reference: Date | string;
-  readonly phases: Phases;
-  /** Every schema declared by the definition's phases, deduplicated. */
+  readonly partials: Partials;
+  /** Every schema declared by the definition's partials, deduplicated. */
   readonly schemas: ReadonlyArray<Type.AnyEntity>;
-  readonly build: (phases: PhaseRunners<Phases>) => Effect.Effect<A, SampleSpaceError, Services>;
+  readonly build: (partials: PartialRunners<Partials>) => Effect.Effect<A, SampleSpaceError, R>;
 }
 
 /**
  * Defines a sample space: which space to create, the reference date its content is authored
- * against, the phases it draws on, and the recipe that threads them together.
+ * against, the partials it applies, and the recipe that threads them together.
  *
- * The phase map is the single source of truth — `schemas` is derived from it, and `build` receives
- * the same phases as runners, so a phase cannot contribute content without its types registered.
+ * The partial map is the single source of truth: `schemas` is derived from it, and `build` receives
+ * the same partials as runners, so a partial cannot contribute content without its types registered.
  */
-export const make = <Phases extends PhaseMap, A>(definition: {
+export const make = <Partials extends PartialMap, A, R = Services>(definition: {
   readonly space: SpaceOptions;
   readonly reference?: Date | string;
-  readonly phases: Phases;
-  readonly build: (phases: PhaseRunners<Phases>) => Effect.Effect<A, SampleSpaceError, Services>;
-}): Definition<Phases, A> => ({
+  readonly partials: Partials;
+  readonly build: (partials: PartialRunners<Partials>) => Effect.Effect<A, SampleSpaceError, R>;
+}): Definition<Partials, A, R> => ({
   space: definition.space,
   reference: definition.reference ?? new Date(),
-  phases: definition.phases,
-  schemas: [...new Set([...BASE_SCHEMAS, ...Object.values(definition.phases).flatMap((phase) => phase.schemas)])],
+  partials: definition.partials,
+  schemas: [...new Set([...BASE_SCHEMAS, ...Object.values(definition.partials).flatMap((part) => part.schemas)])],
   build: definition.build,
 });
 
@@ -401,16 +420,12 @@ export const layer = (options: {
  * flushes. The same definition runs headless (into an exported archive) or against a live space,
  * which is what lets one sample space serve both a test and the app.
  */
-export const applyTo = <Phases extends PhaseMap, A>(
-  definition: Definition<Phases, A>,
+export const applyTo = <Partials extends PartialMap, A, R>(
+  definition: Definition<Partials, A, R>,
   space: { readonly db: Database.Database; readonly properties: Obj.Any },
-): Effect.Effect<A, SampleSpaceError> => {
-  const runners = Object.fromEntries(
-    Object.entries(definition.phases).map(([name, phase]) => [name, phase.run]),
-  ) as PhaseRunners<Phases>;
-
-  return Effect.gen(function* () {
-    const result = yield* definition.build(runners);
+): Effect.Effect<A, SampleSpaceError, Exclude<R, Services>> =>
+  Effect.gen(function* () {
+    const result = yield* definition.build(runnersOf(definition.partials));
     yield* Effect.flatMap(Feeds, ({ drain }) => drain);
     yield* Database.flush();
     return result;
@@ -424,7 +439,6 @@ export const applyTo = <Phases extends PhaseMap, A>(
       ),
     ),
   );
-};
 
 /**
  * Offers a sample space as a {@link AppCapabilities.SpaceTemplate}: registers its types on the
@@ -435,7 +449,11 @@ export const applyTo = <Phases extends PhaseMap, A>(
 const asIconValue = (icon: string | undefined): string | undefined =>
   icon && iconValues.includes(icon) ? icon : undefined;
 
-export const makeTemplate = <Phases extends PhaseMap, A>(options: {
+export const makeTemplate = <
+  Partials extends PartialMap,
+  A,
+  R extends Services | Operation.Service = Services,
+>(options: {
   readonly id: string;
   /** Defaults to the definition's space name, which is what the created space is called. */
   readonly label?: string;
@@ -444,7 +462,7 @@ export const makeTemplate = <Phases extends PhaseMap, A>(options: {
   readonly hue?: string;
   /** Omit from the create picker; reachable only by id. */
   readonly hidden?: boolean;
-  readonly definition: Definition<Phases, A>;
+  readonly definition: Definition<Partials, A, R>;
 }): {
   readonly id: string;
   readonly label: string;
@@ -455,7 +473,7 @@ export const makeTemplate = <Phases extends PhaseMap, A>(options: {
   readonly apply: (options: {
     readonly client: { addTypes: (types: Type.AnyEntity[]) => Promise<void> };
     readonly space: { readonly db: Database.Database; readonly properties: Obj.Any };
-  }) => Promise<void>;
+  }) => Effect.Effect<void, SampleSpaceError, Operation.Service>;
 } => ({
   id: options.id,
   label: options.label ?? options.definition.space.name,
@@ -465,8 +483,12 @@ export const makeTemplate = <Phases extends PhaseMap, A>(options: {
   icon: asIconValue(options.icon ?? options.definition.space.icon),
   hue: options.hue ?? options.definition.space.hue,
   hidden: options.hidden,
-  apply: async ({ client, space }) => {
-    await client.addTypes([...options.definition.schemas]);
-    await EffectEx.runPromise(applyTo(options.definition, space));
-  },
+  apply: ({ client, space }) =>
+    Effect.gen(function* () {
+      yield* Effect.tryPromise({
+        try: () => client.addTypes([...options.definition.schemas]),
+        catch: (cause) => new SampleSpaceError({ context: { reason: 'add-types' }, cause }),
+      });
+      yield* applyTo(options.definition, space);
+    }),
 });

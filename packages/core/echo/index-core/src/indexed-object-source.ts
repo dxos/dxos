@@ -27,6 +27,11 @@ const CURSOR: Omit<DataSourceCursor, 'cursor'> = { spaceId: null, resourceId: nu
  */
 const INDEX_BATCH_SIZE = 500;
 
+const readVersion = (cursors: DataSourceCursor[]): number => {
+  const cursor = cursors[0]?.cursor;
+  return typeof cursor === 'number' ? cursor : 0;
+};
+
 /**
  * The index read back as a data source, ordered by the `objectMeta.version` counter the primary
  * pass stamps on everything it writes.
@@ -46,6 +51,19 @@ export class IndexedObjectSource implements IndexDataSource {
     this.#sql = sql;
   }
 
+  /** How many objects {@link getChangedObjects} has yet to read past `cursors`. */
+  countChangedObjects(cursors: DataSourceCursor[]): Effect.Effect<number, SqlError.SqlError> {
+    return Effect.gen({ self: this }, function* () {
+      const [row] = yield* this.#sql<{ count: number }>`
+        SELECT COUNT(*) AS count
+        FROM objectMeta AS m
+        JOIN objectSnapshot AS s ON s.recordId = m.recordId
+        WHERE m.version > ${readVersion(cursors)}
+      `;
+      return row?.count ?? 0;
+    });
+  }
+
   getChangedObjects(
     _ctx: Context,
     cursors: DataSourceCursor[],
@@ -53,8 +71,7 @@ export class IndexedObjectSource implements IndexDataSource {
   ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[] }, SqlError.SqlError> {
     return Effect.gen({ self: this }, function* () {
       const sql = this.#sql;
-      const position = cursors[0]?.cursor;
-      const cursor = typeof position === 'number' ? position : 0;
+      const cursor = readVersion(cursors);
       const limit = Math.min(opts?.limit ?? INDEX_BATCH_SIZE, INDEX_BATCH_SIZE);
 
       // Inner join: a record's snapshot row is written in the same transaction that stamps its

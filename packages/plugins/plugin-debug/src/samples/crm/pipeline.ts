@@ -32,7 +32,7 @@ const FIELDS = ['name', 'status', 'website', 'description'];
 export type PipelineResult = { pipeline: Pipeline.Pipeline };
 
 /** The board, plus a Table over every account for the flat view of the same data. */
-export const PipelineBoard: SampleSpace.Phase<PipelineResult, AccountMap> = SampleSpace.phase('pipeline', {
+export const PipelineBoard: SampleSpace.Partial<PipelineResult, AccountMap> = SampleSpace.partial('pipeline', {
   schemas: [Pipeline.Pipeline, View.View],
   run: (accounts: AccountMap) =>
     Effect.gen(function* () {

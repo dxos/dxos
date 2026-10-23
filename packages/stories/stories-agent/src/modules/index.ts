@@ -9,7 +9,7 @@ import { AgentCompanionModule, type AgentCompanionModuleData } from './AgentComp
 import { AgentPropertiesModule } from './AgentPropertiesModule.tsx';
 import { ConversationModule } from './ConversationModule.tsx';
 import { DiscordBotModule } from './DiscordBotModule.tsx';
-import { EmailChannelModule } from './EmailChannelModule.tsx';
+import { PipelineDiscordModule } from './PipelineDiscordModule.tsx';
 
 export { StorySettingsToolbar } from './StorySettingsToolbar.tsx';
 
@@ -18,8 +18,8 @@ export const StoryRole = {
   AgentCompanion: Role.make<AgentCompanionModuleData>('org.dxos.storybook.role.agentCompanion'),
   AgentProperties: Role.make<Record<string, unknown>>('org.dxos.storybook.role.agentProperties'),
   DiscordBot: Role.make<Record<string, unknown>>('org.dxos.storybook.role.discordBot'),
-  EmailChannel: Role.make<Record<string, unknown>>('org.dxos.storybook.role.emailChannel'),
   Conversation: Role.make<Record<string, unknown>>('org.dxos.storybook.role.conversation'),
+  PipelineDiscord: Role.make<Record<string, unknown>>('org.dxos.storybook.role.pipelineDiscord'),
 };
 
 export const moduleSurfaces: Surface.Definition[] = [
@@ -39,13 +39,13 @@ export const moduleSurfaces: Surface.Definition[] = [
     component: DiscordBotModule,
   }),
   Surface.create({
-    id: 'role.emailChannel',
-    filter: Surface.makeFilter(StoryRole.EmailChannel),
-    component: EmailChannelModule,
-  }),
-  Surface.create({
     id: 'role.conversation',
     filter: Surface.makeFilter(StoryRole.Conversation),
     component: ConversationModule,
+  }),
+  Surface.create({
+    id: 'role.pipelineDiscord',
+    filter: Surface.makeFilter(StoryRole.PipelineDiscord),
+    component: PipelineDiscordModule,
   }),
 ];

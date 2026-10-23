@@ -171,7 +171,7 @@ const postToChannel = (
   Effect.gen(function* () {
     if (yield* ChannelBackend.isMirrored(channel)) {
       const chat = yield* ensureChannelChat({ agent, channel, thread, direct }).pipe(Effect.orDie);
-      yield* appendToChat(agent, chat, text);
+      yield* appendToChat(agent, chat, text, { [AgentChannels.OUTBOUND_PROPERTY]: true });
       return { delivered: true, chat } satisfies Posted;
     }
     const sent = yield* Operation.invoke(ThreadOperation.SendToChannel, { channel: Ref.make(channel), thread, text });

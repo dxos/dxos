@@ -20,27 +20,37 @@ const mailboxPath = (handle: string): string => `/compute/email/mailboxes/${enco
 /** {@link AgentMailbox.Service} over EDGE's `/compute/email/mailboxes/:handle`, signed with the user's identity. */
 export const makeEdgeAgentMailbox = (edge: EdgeHttpClient): AgentMailbox.Service => {
   // The EDGE client has no Effect form, so this is the one Promise boundary.
-  const call = Effect.fnUntraced(function* (handle: string, args: EdgeRequestArgs) {
+  const call = Effect.fnUntraced(function* <A, I>(
+    handle: string,
+    args: EdgeRequestArgs,
+    schema: Schema.Codec<A, I>,
+    route = '',
+  ) {
     const data = yield* Effect.tryPromise({
-      try: () => edge.request(Context.default(), mailboxPath(handle), args),
+      try: () => edge.request(Context.default(), `${mailboxPath(handle)}${route}`, args),
       catch: (cause) =>
         new AgentMailbox.AgentMailboxError({
           message: cause instanceof Error ? cause.message : 'EDGE mailbox request failed.',
           cause,
         }),
     });
-    return yield* Schema.decodeUnknownEffect(AgentMailbox.MailboxStatus)(data).pipe(
+    return yield* Schema.decodeUnknownEffect(schema)(data).pipe(
       Effect.mapError(
-        (cause) => new AgentMailbox.AgentMailboxError({ message: 'Unexpected mailbox status from EDGE.', cause }),
+        (cause) => new AgentMailbox.AgentMailboxError({ message: 'Unexpected mailbox answer from EDGE.', cause }),
       ),
     );
   });
 
   return {
     claim: ({ handle, allowedSenders, ...body }) =>
-      call(handle, { method: 'PUT', body: { ...body, allowedSenders: [...allowedSenders] } }),
-    release: (handle) => call(handle, { method: 'DELETE' }),
-    status: (handle) => call(handle, { method: 'GET' }),
+      call(
+        handle,
+        { method: 'PUT', body: { ...body, allowedSenders: [...allowedSenders] } },
+        AgentMailbox.MailboxStatus,
+      ),
+    release: (handle) => call(handle, { method: 'DELETE' }, AgentMailbox.MailboxStatus),
+    status: (handle) => call(handle, { method: 'GET' }, AgentMailbox.MailboxStatus),
+    send: ({ handle, ...body }) => call(handle, { method: 'POST', body }, AgentMailbox.SendResult, '/send'),
   };
 };
 

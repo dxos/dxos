@@ -24,9 +24,9 @@ import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin';
 import * as ClaudePlugin from '@dxos/plugin-claude/ClaudePlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as CloudflarePlugin from '@dxos/plugin-cloudflare/CloudflarePlugin';
+import * as CodeGraphPlugin from '@dxos/plugin-code-graph/CodeGraphPlugin';
 import * as CodePlugin from '@dxos/plugin-code/CodePlugin';
 import * as CommercePlugin from '@dxos/plugin-commerce/CommercePlugin';
-import * as ComputerPlugin from '@dxos/plugin-computer/ComputerPlugin';
 import * as ConductorPlugin from '@dxos/plugin-conductor/ConductorPlugin';
 import * as CrmPlugin from '@dxos/plugin-crm/CrmPlugin';
 import * as CrxPlugin from '@dxos/plugin-crx/CrxPlugin';
@@ -152,6 +152,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       BookmarksPlugin.meta.profile.key,
       CallsPlugin.meta.profile.key,
       CodePlugin.meta.profile.key,
+      CodeGraphPlugin.meta.profile.key,
       CommercePlugin.meta.profile.key,
       CrmPlugin.meta.profile.key,
       DebugPlugin.meta.profile.key,
@@ -271,10 +272,9 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     ClaudePlugin.make(),
     CloudflarePlugin.make(),
     CodePlugin.make(),
+    // Reads code-index through a `vite dev` route (see its vite plugin below in vite.config.ts); inert in a build.
+    CodeGraphPlugin.make(),
     CommercePlugin.make(),
-    // Dev-only coding harness, gated on `isDev` for availability (not just defaults, unlike
-    // Debug/Devtools below) since its tools need the dev server's route (vite.config.ts).
-    isDev && ComputerPlugin.make(),
     ConductorPlugin.make(),
     CrmPlugin.make(),
     !isTauri && CrxPlugin.make(),

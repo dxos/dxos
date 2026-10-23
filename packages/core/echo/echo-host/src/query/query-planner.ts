@@ -1292,7 +1292,11 @@ export class QueryPlanner {
     // A SkipStep between a propagation target and the LimitStep drops items after the limit
     // would be applied. Since the LimitStep is removed, the limit pushed into the earlier step
     // must also cover the skipped prefix — otherwise `skip(k).limit(n)` yields only `n - k` items.
+    // A feed scan drops the prefix itself, before any document loads, so it takes the SkipSteps instead.
     const skipBetween = (fromIndex: number): number => {
+      if (feedScan !== undefined) {
+        return 0;
+      }
       let total = 0;
       for (let i = fromIndex + 1; i < limitStepIndex; i++) {
         const step = processedSteps[i];
@@ -1325,10 +1329,14 @@ export class QueryPlanner {
       };
     }
 
-    // Remove the LimitStep since limit is now propagated.
-    newSteps.splice(limitStepIndex, 1);
-
-    return QueryPlan.Plan.make(newSteps);
+    // Remove the LimitStep since limit is now propagated, and the SkipSteps a feed scan applies.
+    return QueryPlan.Plan.make(
+      newSteps.filter(
+        (step, index) =>
+          index !== limitStepIndex &&
+          !(feedScan !== undefined && step._tag === 'SkipStep' && index > selectStepIndex && index < limitStepIndex),
+      ),
+    );
   }
 }
 
@@ -1434,8 +1442,8 @@ const createRelationTraversalStep = (direction: QueryPlan.RelationTraversal['dir
  * a page capped before a step that prunes it would come back short of what the caller asked for.
  *
  * Sound only when every step between the select and the limit is one the scan reproduces:
- * the deleted filter (folded into the returned scan), a residual filter the selector already
- * enforces, a skip (the caller inflates the limit by it), and the order step the scan matches.
+ * the deleted filter and any skip (both folded into the returned scan), a residual filter the
+ * selector already enforces, and the order step the scan matches.
  */
 const feedScanForLimit = (
   steps: readonly QueryPlan.Step[],
@@ -1467,6 +1475,7 @@ const feedScanForLimit = (
   }
 
   let deleted: boolean | undefined;
+  let skip = 0;
   for (let index = selectStepIndex + 1; index < limitStepIndex; index++) {
     const step = steps[index];
     switch (step._tag) {
@@ -1486,17 +1495,22 @@ const feedScanForLimit = (
         break;
       case 'SkipStep':
         // A skip below the order composes the other way round: the plan drops rows in scan order
-        // and orders what is left, where an inflated scan limit orders first and drops from that.
+        // and orders what is left, where the scan orders first and drops from that.
         if (orderStepIndex !== -1 && index < orderStepIndex) {
           return undefined;
         }
+        skip += step.skip;
         break;
       default:
         return undefined;
     }
   }
 
-  return deleted === undefined ? { direction } : { direction, deleted };
+  return {
+    direction,
+    ...(deleted !== undefined ? { deleted } : {}),
+    ...(skip > 0 ? { skip } : {}),
+  };
 };
 
 /**

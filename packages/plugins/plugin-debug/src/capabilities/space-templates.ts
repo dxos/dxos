@@ -5,11 +5,14 @@
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 
 import {
+  FieldstoneSpace,
   IncidentSpace,
   PipelineSpace,
+  PresenterSpace,
   ReviewSpace,
   StockfishSpace,
   TidepoolSpace,
+  TimelineSpace,
   WeatherSpace,
   WorkerSpace,
 } from '../samples/index.ts';
@@ -22,4 +25,7 @@ export default [
   WeatherSpace.makeTemplate(),
   IncidentSpace.makeTemplate(),
   ReviewSpace.makeTemplate(),
+  FieldstoneSpace.makeTemplate(),
+  PresenterSpace.makeTemplate(),
+  TimelineSpace.makeTemplate(),
 ] satisfies ReadonlyArray<AppCapabilities.SpaceTemplate>;

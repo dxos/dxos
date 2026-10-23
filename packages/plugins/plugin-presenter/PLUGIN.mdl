@@ -4,7 +4,7 @@ name: PresenterPlugin
 version: 0.1.0
 ---
 
-A presentation plugin for DXOS Composer that turns existing workspace objects — markdown documents and collections — into interactive slideshows with fullscreen mode and keyboard navigation.
+A presentation plugin for DXOS Composer. A Presentation is an ordered deck of sections, each an owned markdown slide or a link to any workspace object, shown in the navtree as a folder of slides and presented with fullscreen mode and keyboard navigation. A markdown document can still be previewed as a deck through its Presenter companion.
 
 ## Extensions
 
@@ -20,91 +20,143 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `op`        | `org.dxos.mdl.op@1.1`         |
 | `test`      | `org.dxos.mdl.test@1.0`       |
 | `step`      | `org.dxos.mdl.step@1.0`       |
+| `decision`  | `org.dxos.mdl.decision@1.0`   |
 
 ## Types
 
 ```mdl
-type PresentationTarget
-  literals: document | collection
-  desc: The kind of workspace object being presented.
+type Presentation
+  desc: |
+    An ordered deck of sections. Typename `org.dxos.type.presentation@0.1.0`. A section is either an owned
+    markdown `Text` (parented to the presentation) or a link to any other ECHO object, which keeps its own parent.
+    Ownership is set explicitly when a slide is created, never by a schema annotation. It is tagged as a
+    collection item, so it is filed into the space's Collections. Its navtree node lists `sections`; an owned
+    slide has no remove action there (the space's undoable Delete deletes it), a linked one is only unlinked.
+    Deleting the Presentation deletes its owned slides, even ones linked elsewhere; linked objects stay.
+  fields:
+    name?: string
+    sections: Ref<Obj>[]        # slide order; one section is exactly one slide
 ```
 
 ```mdl
-type SlideIndex
+type SlideViewState
+  desc: |
+    Per-user, per-deck view state (`presenter-slide`, local backend) in `@dxos/react-ui-attention`,
+    keyed by the Presentation's (or previewed document's) URI. Never syncs to collaborators.
   fields:
-    current: number             # zero-based index of the active slide
-    count: number               # total number of slides in the presentation
+    index: number               # zero-based index of the slide this user is viewing; clamped to the deck on read
 ```
 
 ```mdl
-type PresentationSettings
-  fields:
-    presentCollections?: boolean  # when true, Collections may also be presented as slideshows (experimental)
+type SlideSource
+  literals: text | object | pending
+  desc: |
+    One slide of a deck: `text` is an owned Text rendered as markdown; `object` is any linked object (a
+    Markdown.Document included) rendered through the slide surface fallback; `pending` is a section whose
+    target has not loaded yet. A section whose target was deleted yields no slide.
 ```
 
 ## Components
 
 ```mdl
-component DocumentArticle
+component Deck
   desc: |
-    Full-screen Reveal.js player for a single Markdown document.
-    Parses the document content into slides using horizontal/vertical `---` separators.
-    Renders in a Panel that fills the available viewport.
+    Paged slide deck. Inline it shows the pager centered in a status bar below the slide; in fullscreen an overlay pager that auto-hides when idle
+    and wakes on pointer movement. Keys are scoped to the deck's focus scope, never `window`: left and right
+    step, Shift+left and Shift+right (or Home and End) jump to first and last, `f` toggles fullscreen,
+    Escape exits fullscreen.
   props:
-    document: Markdown.Document
-  slots:
-    (none)
+    slides: SlideSource[]
+    index: number
+    fullscreen: boolean
+    toolbar?: ReactNode
   actions:
-    exit()                      # navigates back to the originating document view
+    onIndexChange(index: number)
+    onFullscreenChange(fullscreen: boolean)
+    onAddSlide()
   layout: |
     ┌─────────────────────────────┐
+    │ [toolbar]              [⛶] │  ← hidden in fullscreen
+    ├─────────────────────────────┤
     │                             │
-    │        RevealPlayer         │
-    │  (full-screen slide canvas) │
-    │                             │
+    │     SlideFrame (slide N)    │
+    │   (overlay pager, idle)     │
+    ├─────────────────────────────┤
+    │      ◀◀ ◀  3 / 12  ▶ ▶▶     │  ← status bar; hidden in fullscreen
     └─────────────────────────────┘
 ```
 
 ```mdl
-component CollectionArticle
+component PresentationArticle
   desc: |
-    Slideshow player for a Collection.
-    Renders one slide per object in the collection's ordered items array.
-    The active slide is delegated to the AppSurface.Slide surface, so each
-    item's own plugin renders it (e.g. SlideArticle for documents).
+    A Presentation's article is its deck. Fullscreen is read per object (is this Presentation on the
+    fullscreen plank) and toggles in place on the Presentation's own plank; the current slide is per-viewer
+    view state. The toolbar adds slides and links objects through SectionPicker.
   props:
-    subject: Collection.Collection
-    role?: string
-  state:
-    slide: number               # zero-based index of the current slide
-    running: boolean            # whether keyboard navigation is active (from PresenterContext)
-  slots:
-    (none)
+    subject: Presentation
+    attendableId?: string
+```
+
+```mdl
+component SlideEditorArticle
+  desc: |
+    Article for an owned slide: a 16:9 live preview above a markdown editor, opened by clicking the slide's
+    child node in the navtree.
+  props:
+    subject: Text
+```
+
+```mdl
+component SectionPicker
+  desc: |
+    Toolbar picker ("Add to presentation") over the space's objects that links the chosen object into the
+    presentation as a section. It queries the space only while open; an unnamed object is listed as
+    "Untitled <type>".
+  props:
+    presentation: Presentation
+```
+
+```mdl
+component SlideFrame
+  desc: |
+    A fixed 16:9 logical canvas scaled to its container, so every slide contributor designs for one size.
+    SlideRenderer wraps linked object slides in it; the markdown slide surface (SlideArticle) renders the
+    slide only and relies on the caller for the frame.
+  props:
+    children: ReactNode
+```
+
+```mdl
+component SlideRenderer
+  desc: |
+    Renders one SlideSource. Text sources render markdown; pending sources show a loading slide; object sources
+    render through the
+    AppSurface.Slide surface, falling back to a title slide while no surface matches, and request gated slide
+    surfaces on demand.
+  props:
+    source: SlideSource
+```
+
+```mdl
+component DocumentArticle
+  desc: |
+    Presenter companion of a Markdown document: a Reveal.js player over the document content, split into slides
+    on horizontal `---` separators. Vertical slides are not configured. Nothing is persisted. Fullscreen is read
+    per object from the deck's fullscreen plank (is this document presented), not from the global layout mode.
+    The companion stays on Reveal.js until the markdown renderer replaces it.
+  props:
+    document: Markdown.Document
   actions:
-    setSlide(index: number)
-    exit()
-  layout: |
-    ┌─────────────────────────────┐
-    │                             │
-    │       Surface (slide N)     │  ← AppSurface.Slide surface
-    │                             │
-    ├────────────────┬────────────┤
-    │   [Pager]      │ [PageNum]  │
-    └────────────────┴────────────┘
+    exit()                      # exits fullscreen for this document
 ```
 
 ```mdl
 component SlideArticle
   desc: |
-    Renders a single Markdown document as a slide panel inside a Collection presentation.
-    Used as the AppSurface.Slide surface implementation for Markdown.Document objects.
+    The AppSurface.Slide surface for Markdown.Document objects: renders the document as a slide, without a
+    frame (SlideRenderer owns it).
   props:
     document: Markdown.Document
-  layout: |
-    ┌─────────────────────────────┐
-    │  Panel                      │
-    │   └─ Slide (markdown)       │
-    └─────────────────────────────┘
 ```
 
 ## Operations
@@ -113,18 +165,19 @@ component SlideArticle
 op TogglePresentation
   key: org.dxos.operation.presenter.setPresenting
   desc: |
-    Enters or exits presentation for a Markdown document or Collection by toggling the deck's
-    fullscreen overlay (EphemeralDeckState.fullscreen) onto the presenter companion node.
+    Enters or exits presentation for a Markdown document or Presentation by toggling the deck's
+    fullscreen overlay (EphemeralDeckState.fullscreen). A Markdown document presents through its presenter
+    companion node; a Presentation presents fullscreen on its own plank, since its article is the deck.
     The overlay is independent of what is open, so neither direction navigates: the URL and the
     open planks are unchanged.
   input:
-    object: Markdown.Document | Collection.Collection
+    object: Markdown.Document | Presentation
     state: boolean              # on or off; callers that flip read the current state first
   output: void
   effects: [deck:fullscreen]
   requires: [DeckCapabilities.EphemeralState, DeckOperation.Adjust]
   note: |
-    Resolves the presenter companion node path as `<objectPath>/~presenter`.
+    For a document the path is `<objectPath>/~presenter`; for a Presentation it is the plank's own path.
     Keyboard shortcut: Shift+Cmd+P (macOS), Shift+Alt+P (Windows/Linux).
 ```
 
@@ -135,50 +188,85 @@ feat F-1: Presentation Mode
 
   req F-1.1: Every Markdown document in the workspace has a companion "Presenter" node in the app graph.
   req F-1.2:
-    when: settings.presentCollections is true
-    then: every Collection also has a companion Presenter node
-  req F-1.3:
-    when: user activates TogglePresentation on a document or collection
+    when: user activates TogglePresentation on a document
     then: the presenter companion fills the screen in the deck's fullscreen overlay, without the companion tab strip, and the URL does not change
-  req F-1.4:
+  req F-1.3:
     when: user presses Shift+Cmd+P (macOS) or Shift+Alt+P (Windows)
     then: TogglePresentation is invoked for the focused object
+  req F-1.4:
+    when: user activates TogglePresentation on a Presentation
+    then: the Presentation's own plank fills the screen in the fullscreen overlay and the URL does not change
 ```
 
 ```mdl
-feat F-2: Document Slideshow (Reveal.js)
+feat F-2: Document Preview (Reveal.js)
 
   req F-2.1:
     when: DocumentArticle mounts with a Markdown.Document
     then: RevealPlayer parses the document content and renders slides
-  req F-2.2: Horizontal slides are separated by `---`; vertical slides by `----`.
+  req F-2.2: Slides are separated by horizontal `---`; vertical slides are not configured.
   req F-2.3:
     when: user presses Escape or the exit action is triggered
-    then: presenter navigates back to the originating document view
+    then: fullscreen exits for that document, leaving it and its companion as they were
 ```
 
 ```mdl
-feat F-3: Collection Slideshow
+feat F-3: Presentation Object
 
-  req F-3.1:
-    when: CollectionArticle mounts with a Collection
-    then: slide 0 is shown, corresponding to collection.objects[0]
-  req F-3.2:
-    when: user navigates to slide N via the Pager
-    then: the AppSurface.Slide surface renders collection.objects[N]
-  req F-3.3: PageNumber displays the current slide index and total count.
+  req F-3.1: A Presentation is created from the space's create-object menu, is filed into the space's Collections, and holds an ordered `sections` array.
+  req F-3.2: One section is exactly one slide; `---` inside a section is a horizontal rule, not a slide break.
+  req F-3.3: A section is an owned markdown Text (parented to the presentation) or a link to any object.
   req F-3.4:
-    when: user presses Escape or the exit action is triggered
-    then: presenter navigates back to the collection view
+    when: user adds a slide from the toolbar
+    then: a new owned Text section is appended
+  req F-3.5:
+    when: user links an object through SectionPicker
+    then: the object becomes a section and keeps its own parent
+  req F-3.6:
+    when: an owned slide is deleted with the space's Delete
+    then: it leaves the deck and the navtree, and the delete can be undone
+  req F-3.7:
+    when: a linked section is removed from the presentation
+    then: only the link is removed; the object remains
+  req F-3.8: Presentation deletion does not cascade to linked objects.
 ```
 
 ```mdl
-feat F-4: Plugin Settings
+feat F-4: Presentation Deck
 
-  req F-4.1: PresenterSettings panel is registered for the plugin settings surface.
-  req F-4.2:
-    when: user enables "Present collections (experimental)"
-    then: settings.presentCollections is set to true and Collection nodes gain Presenter companions
+  req F-4.1:
+    when: PresentationArticle mounts
+    then: the slide at the viewer's stored index is shown, clamped to the deck
+  req F-4.2: The pager shows the current slide and total count; an empty deck shows none.
+  req F-4.3: Keys bind to the deck's focus scope, never `window`.
+  req F-4.4:
+    when: user presses `f`
+    then: the deck toggles fullscreen in place
+  req F-4.5:
+    when: the deck is fullscreen and the pointer is idle
+    then: the overlay pager hides, and shows again on pointer movement
+  req F-4.6:
+    when: user presses Escape in fullscreen
+    then: the deck exits fullscreen
+  req F-4.7: The current slide index is per-user view state, kept across navigation and reloads, and never shared with collaborators.
+  req F-4.8: Only an attended deck takes focus on mount.
+  req F-4.9: A linked object with no slide surface renders as a title slide rather than failing.
+  req F-4.10: A section whose target was deleted is omitted from the deck; one whose target has not loaded shows a pending slide.
+```
+
+```mdl
+feat F-5: Navtree Folder
+
+  req F-5.1: A Presentation node lists its sections as children.
+  req F-5.2: An owned slide is labelled by its name, else its first markdown heading, else "Slide N".
+  req F-5.3:
+    when: user drags a child to a new position
+    then: `sections` is reordered to match
+  req F-5.4:
+    when: user clicks a slide child
+    then: the slide's own article opens (SlideEditorArticle for an owned slide)
+  req F-5.5: An owned slide offers no remove action, only the space's Delete; a linked section's remove action is labelled "Remove from presentation".
+  req F-5.6: The children are the deck's slides in deck order, so a deleted section leaves both.
 ```
 
 ## Acceptance
@@ -188,17 +276,17 @@ scenario T-1: Document presenter opens in fullscreen
   given: a Markdown document exists in the workspace
   when: user invokes TogglePresentation (keyboard or action menu)
   then:
-    - Composer switches to solo-fullscreen layout
-    - DocumentArticle is shown with the document content
+    - the presenter companion fills the screen in the deck's fullscreen overlay
     - RevealPlayer is visible with at least one slide
+    - the URL is unchanged
 ```
 
 ```mdl
-scenario T-2: Slide navigation via Reveal.js
+scenario T-2: Document slides split on separators
   given: a Markdown document with three `---`-separated sections
   when: DocumentArticle renders the document
   then:
-    - three horizontal slides are produced
+    - three slides are produced
     - arrow-key navigation advances and retreats between slides
 ```
 
@@ -210,29 +298,28 @@ scenario T-3: Exit returns to document view
 ```
 
 ```mdl
-scenario T-4: Collection slideshow renders per-item surfaces
-  given: a Collection with two Markdown documents and settings.presentCollections = true
-  when: CollectionArticle mounts
+scenario T-4: Presentation renders one slide per section
+  given: a Presentation with one owned slide and one linked Markdown document
+  when: PresentationArticle mounts
   then:
-    - slide 0 shows SlideArticle for collection.objects[0]
-    - Pager shows count = 2
+    - slide 0 shows the owned slide
+    - the pager shows count = 2
 ```
 
 ```mdl
-scenario T-5: Collection slide advance
-  given: CollectionArticle at slide 0 with a three-item collection
-  when: user clicks the next-slide control in Pager
+scenario T-5: Slide advance
+  given: PresentationArticle at slide 0 with a three-section Presentation
+  when: user presses the right arrow
   then:
     - slide index advances to 1
-    - AppSurface.Slide renders collection.objects[1]
-    - PageNumber shows "2 / 3"
+    - the pager shows "2 / 3"
 ```
 
 ```mdl
-scenario T-6: Collections hidden when setting disabled
-  given: settings.presentCollections is false (default)
-  when: app graph is built for a Collection node
-  then: no Presenter companion node is created for the collection
+scenario T-6: Slide index survives reload
+  given: PresentationArticle at slide 1
+  when: the app reloads and the Presentation is opened again
+  then: slide 1 is shown
 ```
 
 ```mdl
@@ -241,6 +328,31 @@ scenario T-7: Keyboard shortcut registered
   then:
     - action with key TogglePresentation is present on the node
     - keyBinding shows Shift+Cmd+P on macOS
+```
+
+```mdl
+scenario T-8: Presentation presents fullscreen on its own plank
+  given: a Presentation is open
+  when: user presses `f`
+  then:
+    - the deck fills the screen with the overlay pager
+    - Escape returns the deck to its plank
+```
+
+```mdl
+scenario T-9: Reorder in the navtree
+  given: a Presentation with three slides
+  when: user drags the third slide to the top
+  then: the deck order and the pager follow the navtree order
+```
+
+```mdl
+scenario T-10: Removing a linked section keeps the object
+  given: a Presentation with a linked Markdown document
+  when: user removes the section
+  then:
+    - the section leaves the Presentation
+    - the document still exists
 ```
 
 ---
@@ -254,7 +366,7 @@ invocable operation, an agent binding (`invoke`). Report failures by test and st
 test QA-1: Preview a document in the companion, then present it
   desc: The core presenter round-trip — create a document with slide separators, preview it in the presenter companion, present it fullscreen, then exit.
   actors: both
-  covers: [F-1.1, F-1.3, F-2.1, F-2.2, F-2.3, T-1, T-3]
+  covers: [F-1.1, F-1.2, F-2.1, F-2.2, F-2.3, T-1, T-3]
   status: unverified
   automated:
     - composer-e2e:presenter.spec.ts#Presenter › preview a document in the companion, then present it
@@ -295,6 +407,248 @@ test QA-1: Preview a document in the companion, then present it
       do: Right-click "QA Slides" in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$created.object], target: $given.collection }
       expect: the row leaves the navtree and its plank closes
+
+test QA-2: Showcase clip
+  desc: |
+    The 10s showcase clip: Present a document as slides and page through them. Recorded light at 60 fps with no ident, captions or
+    count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: presenter` step.
+  actors: human
+  status: unverified        # driven by autocue/showcase.mjs
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-markdown, plugin-presenter enabled
+  steps:
+    - name: Present a document
+      do: Write a document split by --- and press Shift+Cmd+P.
+      expect: the first slide fills the plank
+    - name: Page through
+      do: Press the right arrow three times.
+      expect: each slide shows in turn
+
+test QA-3: Build and present a Presentation
+  desc: Create a Presentation, add a slide, link a markdown document, reorder in the navtree, present it fullscreen, step, exit and reload.
+  actors: human
+  covers: [F-3.1, F-3.2, F-3.4, F-3.5, F-3.6, F-3.7, F-4.1, F-4.4, F-4.5, F-4.6, F-4.7, F-4.8, F-4.9, F-5.1, F-5.2, F-5.3, F-5.5, T-4, T-5, T-6, T-8, T-9, T-10]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-markdown, plugin-presenter enabled
+  steps:
+    - name: Create a Presentation
+      do: In the space's create-object menu choose Presentation and name it "QA Deck".
+      expect: "QA Deck" appears in the navtree as a folder with no children
+    - name: Add a slide
+      do: Open "QA Deck" and click the add-slide button.
+      expect: a child "New slide" appears and the pager shows "1 / 1"
+    - name: Link a document
+      do: Use the link-object picker to link an existing markdown document.
+      expect: the document appears as a second child and the pager shows "1 / 2"
+    - name: Reorder
+      do: Drag the second child above the first in the navtree.
+      expect: the order of the children and of the deck follows the drag
+    - name: Present
+      do: Press `f`, then step with the arrow keys.
+      expect: the deck fills the screen, the overlay pager shows and hides with pointer movement, and each arrow press changes the slide
+    - name: Exit and reload
+      do: Press Escape, then reload the app and reopen "QA Deck".
+      expect: the deck is inline again and shows the slide that was current before the reload
+    - name: Remove the linked document
+      do: In the navtree, open the linked document's menu under "QA Deck" and choose "Remove from presentation".
+      expect: the child leaves the folder, the pager shows "1 / 1", and the document is still in Collections
+    - name: Delete the owned slide
+      do: Open the owned slide's menu under "QA Deck"; it has no "Remove from presentation". Choose Delete.
+      expect: the child leaves the folder and the pager shows "0 / 0"; undo brings the slide back
+```
+
+## Changelog
+
+```mdl
+decision D-1: A dedicated `Presentation` object owns an ordered list of sections, each an owned markdown `Text` or a link to any object, and is shown in the navtree as a folder of slides.
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [Presentation, F-3, F-5]
+  source: docs/DESIGN.md Q1
+```
+
+```mdl
+decision D-2: One section is exactly one slide.
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [F-3.2]
+  source: docs/DESIGN.md Q2
+```
+
+```mdl
+decision D-3: The markdown document companion stays as a quick preview split on `---`.
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [DocumentArticle, F-2]
+  source: docs/DESIGN.md Q2b
+```
+
+```mdl
+decision D-4: An object without a slide surface still renders through a fallback chain ending in a title slide; the picker toggle filters to objects with a dedicated slide surface.
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [SlideRenderer, F-4.9]
+  source: docs/DESIGN.md Q3
+```
+
+```mdl
+decision D-5: The current slide index is per-user, per-deck view state in `react-ui-attention` with the local backend.
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [SlideViewState, F-4.7]
+  source: docs/DESIGN.md Q4
+```
+
+```mdl
+decision D-6: The pager is a separate `Pager` primitive; `Carousel` shares its styles.
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [Deck]
+  source: docs/DESIGN.md Q5
+```
+
+```mdl
+decision D-7: The assistant skill is annotated on `Presentation` only and `agentCanEnable`.
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [Presentation]
+  source: docs/DESIGN.md Q6
+```
+
+```mdl
+decision D-8: A presenter view is deferred to a later phase; speaker notes are parsed now.
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [Deck]
+  source: docs/DESIGN.md Q7
+```
+
+```mdl
+decision D-9: Slide syntax is a strict Slidev-compatible subset rendered by the plugin's own pipeline.
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [F-2]
+  source: docs/DESIGN.md Q8
+```
+
+```mdl
+decision D-10: Collection decks, the `presentCollections` setting and the Settings module are removed; a Presentation replaces them. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Presentation, F-1, F-3]
+  why: A first-class deck object makes the experimental collection mode redundant.
+  rejected: Keeping collection decks behind the setting.
+```
+
+```mdl
+decision D-11: Owned slides are parented to the presentation explicitly when created, not by a schema annotation. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Presentation, F-3.8]
+  why: A parent annotation would also adopt linked parentless objects, so deleting a Presentation could delete them.
+  rejected: `Annotation.SetParent` on `sections`.
+```
+
+```mdl
+decision D-12: A Presentation presents fullscreen on its own plank. Fills in [D-4].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [TogglePresentation, F-1.4, T-8]
+  why: A Presentation has no presenter companion; its article is the deck.
+  rejected: Giving Presentation a presenter companion.
+```
+
+```mdl
+decision D-13: Fullscreen state is read per object, so a fullscreen change for one deck does not remount or refocus another. Fills in [D-12].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [PresentationArticle, DocumentArticle]
+  why: The global layout mode changes for every deck when any one toggles.
+  rejected: Reading the global layout mode.
+```
+
+```mdl
+decision D-14: Clicking a slide child in the navtree opens that slide's own article, the markdown editor for an owned slide. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-5.4, SlideEditorArticle]
+  why: Slides need an editing surface, and the navtree is where a slide is selected.
+  rejected: Opening the presentation at that slide.
+```
+
+```mdl
+decision D-15: An owned slide's navtree label is its name, else its first heading, else "Slide N". Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-5.2]
+  why: The Text type carries a name field that a person sets deliberately, so it takes precedence.
+```
+
+```mdl
+decision D-16: Removing an owned slide from the navtree is labelled "Remove from presentation". Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-5.5]
+  why: The generic label "Remove from collection" misdescribes a delete of the owned Text.
+```
+
+```mdl
+decision D-17: An owned slide has no navtree remove action; the space's undoable Delete is the only way to delete it, and a linked section keeps "Remove from presentation", which only unlinks. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-16
+  affects: [Presentation, F-3.6, F-5.5]
+  why: A container remove that deletes cannot be undone, and an owned slide would show both remove and Delete.
+  rejected: Routing an owned remove through the space delete operation under a "Delete slide" label.
+```
+
+```mdl
+decision D-18: A section whose target was deleted is omitted from the deck and from the navtree folder; a target that has not loaded stays a pending slide. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [SlideSource, F-4.10, F-5.6]
+  why: A deleted target never loads, so a pending placeholder would wait forever, and the pager and navtree must agree.
+  rejected: A placeholder slide for a deleted target.
+```
+
+```mdl
+decision D-19: A Presentation is tagged as a collection item, so it is filed into the space's Collections when created. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Presentation, F-3.1]
+  why: Without the tag a new Presentation is filed nowhere and cannot be found in the navtree.
+```
+
+```mdl
+decision D-20: The Phase 1 fixes are applied in one wave after the running-app verification. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Presentation]
+  why: Bugs found in the running app then land with the review fixes in one set of commits.
+```
+
+```mdl
+decision D-21: Inline, the Deck pager sits centered in a status bar below the slide, not in the top toolbar. Fills in [D-1].
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [Deck]
+  why: The toolbar keeps the editing actions; navigation sits under the slide it controls.
 ```
 
 ---

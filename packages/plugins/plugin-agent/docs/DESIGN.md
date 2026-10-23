@@ -1,20 +1,20 @@
 # Interlocutor — design
 
 Status: draft 4 (2026-10-03) — goals, home space and workspaces; architecture as built for the first
-spike. Memory model:
-[MEMORY.md](./MEMORY.md). EDGE half: dxos/edge `discord-service/src/agent-bot/` (Discord),
+spike. Facts and profiles:
+[FACTS.md](./FACTS.md). EDGE half: dxos/edge `discord-service/src/agent-bot/` (Discord),
 `compute-service/src/email/` (email) and that repo's `.agents/projects/interlocutor/DESIGN.md`.
 
 ## Goals
 
 Set by Rich, 2026-10-03.
 
-1. **Memory lives in the home space.** An agent's memory is the space it was created in — its
-   **home**, where it has permission to store memories. It may later learn about other spaces, but
-   its memories stay home.
+1. **Knowledge lives in the home space.** An agent's knowledge belongs to the space it was created
+   in — its **home**, where it has permission to store it. It may later learn about other spaces, but
+   what it knows stays home.
 2. **Notes on anything.** An agent can attach a note to any object — a document, a sketch, a
-   `Person`, a `Project`. A note is a memory object, initially little more than a markdown `Text`,
-   related to its subject (see [MEMORY.md](./MEMORY.md)).
+   `Person`, a `Project`. Today the Note-taker records notes as facts about their subject (see
+   [FACTS.md](./FACTS.md)).
 3. **Modes, extensible through skills.** An agent works in modes — transcriber (meetings, calls),
    designer, interviewer, fact-checker, researcher. A mode is a skill (instructions plus tools), so
    new modes are new skills.
@@ -23,7 +23,7 @@ Set by Rich, 2026-10-03.
    do.
 5. **Many conversations at once.** An agent monitors several channels (threads, feeds) at the same
    time, with many people and groups.
-6. **A model of everyone and everything.** An agent keeps a memory of everyone it interacts with in
+6. **A model of everyone and everything.** An agent keeps facts about everyone it interacts with in
    the space, and a graph of the other concepts it encounters.
 
 ## What it is
@@ -37,8 +37,8 @@ and controls each agent's Discord bot.
 ## Architecture
 
 Two loops share one ECHO space: a control loop (Composer configures and starts a bot on EDGE) and a
-conversation loop (Discord ↔ EDGE ↔ the agent). Memory lives as ECHO objects in that space, so
-Discord threads and Composer chats see the same knowledge.
+conversation loop (Discord ↔ EDGE ↔ the agent). People, goals and profiles are ECHO objects in that
+space and facts live in the agent's brain, so Discord threads and Composer chats see the same knowledge.
 
 ```
  Composer (browser)                    EDGE (Cloudflare)                                  Discord
@@ -56,17 +56,22 @@ Discord threads and Composer chats see the same knowledge.
    │                                                                  │     └▶ model + skills → tool calls → ECHO writes
    │                                                                  └ mirror: new assistant Messages ── REST ──▶ thread reply
    │
-   └ Chat article / Profile panel ◀── replication ── ECHO space: Agent, Chats, Person, Goal, Memory, profile doc
+   └ Chat article / Profile panel ◀── replication ── ECHO space: Agent, Chats, Person, Goal, profile doc
 ```
 
 ### 1. Setup (Composer)
 
 - `createAgent` makes an `Agent` (instructions, primary chat, the agent-conversation and interview skills).
-- The agent's **Activity** companion edits its `AgentChannels` (`{ agent, channels: Ref<Channel>[] }`,
-  parented to the agent) with a channel picker, and below it renders each channel's
-  `ObjectProperties` surface. For a Discord-backed channel that is plugin-discord's form over the
-  `DiscordChannel` config (`{ accessToken, applicationId, guildId?, channels }`; the bot token is an
-  `AccessToken` object), the bot status and Start / Stop / Refresh.
+- Agents live under **space settings → Agents**, beside Members and Connections; `Agent` is not a
+  user type, so agents are not listed with the space's content. Each agent's companions set up where
+  it talks: plugin-discord's **Discord** companion signs in, installs the bot in a server and binds
+  channels; plugin-agent's **Email** companion creates and connects its address. Both add `Channel`s
+  to the agent's `AgentChannels` (`{ agent, channels: Ref<Channel>[] }`, parented to the agent).
+- The **Activity** companion lists those channels with their connection status, Start / Stop /
+  Refresh for all of them, the agent's skills and its channel conversations. A Discord channel's
+  `ObjectProperties` surface is plugin-discord's form over the `DiscordChannel` config
+  (`{ accessToken?, applicationId, guildId?, channels }`). For Kai, EDGE holds the token and the config
+  names none; a team's own bot records an `AccessToken`.
 - Start / Stop / Refresh invoke plugin-thread's `connectChannel` / `disconnectChannel` /
   `getChannelStatus`, which dispatch to the Discord backend's `connection`: `PUT` / `DELETE` / `GET
 /discord/bots/:appId` through `EdgeHttpClient.request`, a generic call signed with the
@@ -104,8 +109,8 @@ threadId } } }`. The message lands on the chat feed with its author, and the mod
 
 `AgentProcess` runs the model with the agent's instructions and skills. On EDGE, tools resolve from
 the operations registered in operation-service, which include plugin-agent's. The interview
-skill writes the graph as it goes — `resolveEntity`, `recordMemory`, `suggestGoal`,
-`setGoalStatus`, `updateProfile` (see [MEMORY.md](./MEMORY.md)).
+skill writes the graph as it goes — `resolveEntity`, `recordFacts`, `suggestGoal`,
+`setGoalStatus`, `updateProfile` (see [FACTS.md](./FACTS.md)).
 
 ### 4. Outbound (agent → Discord)
 
@@ -116,15 +121,15 @@ the follow-up; it needs hosted tool calls to resolve managed tokens.
 ### 5. Composer
 
 Every chat — the agent's primary chat and one per Discord thread — is a child of the one `Agent`, so
-they share instructions, skills and memory. `Agent.loadChat` skips chats carrying a foreign key, so a
+they share instructions, skills and facts. `Agent.loadChat` skips chats carrying a foreign key, so a
 thread never becomes the primary chat. Person and Organization properties show the profile panel
-(goals and memories, live).
+(goals and facts, live).
 
 ### 6. Email
 
 An agent can also have an address: an Email channel (`AgentEmail` config: handle, display name,
-allowed senders) in its `AgentChannels`. Connecting it claims `<handle>@dx.pub` through
-`AgentMailbox.AgentMailboxService` (`PUT <edge>/compute/email/mailboxes/:handle`). On EDGE,
+allowed senders) in its `AgentChannels`, created from the agent's Email companion (`createEmailChannel`). Connecting it claims `<handle>@dxos.ai` (`@dev.dxos.ai`
+on dev) through `AgentMailbox.AgentMailboxService` (`PUT <edge>/compute/email/mailboxes/:handle`). On EDGE,
 compute-service's `email` handler hands that handle's mail to an `AgentMailbox` Durable Object,
 which keeps one chat per email thread (`ensureChannelChat`, keyed by the thread's reply token),
 runs the agent's turn, and mails the reply in the same thread. Allowed senders default to
@@ -134,26 +139,26 @@ instructions. The agent only answers: it does not start new email threads yet.
 ## Home space and workspaces
 
 An agent may be asked to work in spaces other than its home. Example: Kai lives in Rich's home space
-and is invited into "Eng Space" to organise its projects and tasks, while its memories about the
+and is invited into "Eng Space" to organise its projects and tasks, while its facts about the
 people there stay home. The model:
 
-- **Home space** — holds the `Agent`, its chats, its own task list, and all its memory (people,
-  organisations, concepts, goals, notes). Memory is always written home, whichever space the work is
-  in.
+- **Home space** — holds the `Agent`, its chats, its own task list, and all it knows (people,
+  organisations, concepts, goals, profiles; facts in its brain). Knowledge is always written home,
+  whichever space the work is in.
 - **Workspaces** — other spaces the agent is invited into. Work products (tasks, projects, documents)
   are written where the work is; the agent reads them there and uses that space's skills while it
   works on them.
-- **Provenance** — every memory records the space (and channel) it was learned in, so recall can
-  filter by audience: what was learned in Eng Space is used when working for Eng Space, and DMs stay
-  private (see MEMORY.md, Conversations).
+- **Provenance** — every fact records the source it was learned from, so recall can filter by
+  audience: what was learned in Eng Space is used when working for Eng Space, and DMs stay private
+  (not built; see FACTS.md, Not built).
 
 **Can we do this? Yes — the runtime already scopes each operation call to a space.**
 `Operation.InvokeOptions.spaceId` sets the space whose `Database.Service` the handler (and anything
 it spawns) runs against, and the browser and EDGE invokers both honour it. What is missing:
 
 1. **Per-tool space routing.** Today a turn's tool calls inherit the space of the process running
-   the conversation. The agent needs its memory tools (`resolveEntity`, `recordMemory`,
-   `retrieveMemories`, `suggestGoal`, `updateProfile`, notes) routed to the **home** space, and its
+   the conversation. The agent needs its knowledge tools (`resolveEntity`, `recordFacts`,
+   `retrieveFacts`, `suggestGoal`, `updateProfile`) routed to the **home** space, and its
    work tools (tasks, projects, documents) routed to the **workspace** the conversation is about —
    e.g. a skill-level `space: 'home' | 'workspace'` binding resolved by the session when it invokes
    the tool, with the workspace taken from the conversation (a chat bound to Eng Space).
@@ -161,7 +166,7 @@ it spawns) runs against, and the browser and EDGE invokers both honour it. What 
    can already reach any space the creator is a member of. For spaces the creator does not own, the
    agent needs its own HALO identity, invited as a member of Eng Space, with grants scoped by the
    permission design (e.g. tasks and projects only).
-3. **Cross-space references.** Memories about Eng Space objects refer to them by space-qualified
+3. **Cross-space references.** Facts about Eng Space objects refer to them by space-qualified
    `echo://<space>/<id>` URIs; a `Person` at home links to that person's member identity (DID) in
    every workspace, so the same person is recognised across spaces.
 4. **Workspace skills.** "All skills of the spaces I'm in" as a resolved list — today skills bind to
@@ -182,11 +187,11 @@ it spawns) runs against, and the browser and EDGE invokers both honour it. What 
 
 ## Profiles, goals and relay
 
-- **Profile** = a `Person` (or `Organization` for a team) plus the memories and goals the agent holds
+- **Profile** = a `Person` (or `Organization` for a team) plus the facts and goals the agent holds
   about them, summarised into a profile document linked by `ProfileOf`. Details in
-  [MEMORY.md](./MEMORY.md).
-- **Relay** (not built) is a task: "tell team X about Y" becomes a `Task` assigned to the agent, which
-  it completes by posting to the right Chat, recording the delivery on the task.
+  [FACTS.md](./FACTS.md).
+- **Relay** is a task: "tell team X about Y" becomes a `Relay` plus a `Task` in the agent's own task
+  list, which it completes by posting to the recipient's chat, recording the delivery on the relay.
 
 ## Decisions
 
@@ -403,6 +408,6 @@ needs server-side receiving brings its own EDGE worker the same way.
 - `Agent`, `Chat`, `AgentService`, `AgentIdentity` — `packages/core/compute/{assistant,compute,agent-runtime}`.
 - plugin-discord (REST sync into `Channel` feeds), `@dxos/pipeline-discord`, `@dxos/crawler`.
 - EDGE compute-service process DOs and operation-service, identity-service keyrings, kms-service.
-- plugin-crm `ProfileOf`; plugin-brain's fact store becomes a derived index over `Memory` (open).
+- plugin-crm `ProfileOf`; pipeline-rdf facts and the agent brain (`BrainService`).
 - Prior specs: `agents/superpowers/specs/2026-07-08-discord-bot-design.md`,
   `2026-07-21-agent-identity.md`, `.agents/projects/agent-process-edge/DESIGN.md`.

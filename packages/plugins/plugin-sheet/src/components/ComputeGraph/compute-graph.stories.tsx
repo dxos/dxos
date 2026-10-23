@@ -91,7 +91,7 @@ const meta = {
   decorators: [
     withTheme(),
     withClientProvider({
-      types: [Operation.PersistentOperation, Sheet.Sheet],
+      types: [Operation.PersistentOperation, Sheet.Sheet, Sheet.Chart],
       createIdentity: true,
       createSpace: true,
     }),

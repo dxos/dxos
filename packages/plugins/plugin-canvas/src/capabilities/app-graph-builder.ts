@@ -32,9 +32,8 @@ export default Capability.makeModule(
     const extension = yield* AppGraphBuilder.createExtension({
       id: 'canvasActions',
       match: (node, get) =>
-        Option.filter(
-          AppNodeMatcher.whenEchoType(Drawing.Drawing)(node, get),
-          (drawing) => get(Obj.atom(drawing.canvas))?.schema === Canvas.SCENE_SCHEMA,
+        Option.filter(AppNodeMatcher.whenEchoType(Drawing.Drawing)(node, get), (drawing) =>
+          Canvas.isSceneSchema(get(Obj.atom(drawing.canvas))?.schema),
         ),
       actions: (drawing, get) => {
         // The mode is this viewer's, kept in the canvas's view state where the article reads it; the item flips it, so

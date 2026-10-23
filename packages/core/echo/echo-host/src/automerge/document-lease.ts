@@ -255,10 +255,14 @@ export type DocumentLeaseRegistryParams = {
    * delay, and bounds nothing else: leased documents are never counted against it.
    */
   minResidentDocuments?: number;
+
+  /** How many released documents may wait out the delay. Past it the oldest are evicted at once. */
+  maxIdleDocuments?: number;
 };
 
 const DEFAULT_EVICTION_DELAY = 0;
 const DEFAULT_MIN_RESIDENT_DOCUMENTS = 0;
+const DEFAULT_MAX_IDLE_DOCUMENTS = Infinity;
 
 /**
  * Reference counts the documents the host holds loaded, and evicts each one once its last lease has
@@ -281,11 +285,16 @@ export class DocumentLeaseRegistry {
   /** Released documents by release time, in release order — the eviction queue. */
   readonly #idle = new Map<DocumentId, number>();
 
+  /** Idle documents whose eviction was deferred: each retries once the delay passes, whatever the ceiling. */
+  readonly #deferred = new Set<DocumentId>();
+
   readonly #params: DocumentLeaseRegistryParams;
   readonly #evictionDelay: number;
   readonly #minResidentDocuments: number;
+  readonly #maxIdleDocuments: number;
 
   #timer: ReturnType<typeof setTimeout> | undefined = undefined;
+  #timerDue = 0;
   #draining: Promise<void> | undefined = undefined;
   #closed = false;
 
@@ -293,6 +302,7 @@ export class DocumentLeaseRegistry {
     this.#params = params;
     this.#evictionDelay = params.evictionDelay ?? DEFAULT_EVICTION_DELAY;
     this.#minResidentDocuments = params.minResidentDocuments ?? DEFAULT_MIN_RESIDENT_DOCUMENTS;
+    this.#maxIdleDocuments = params.maxIdleDocuments ?? DEFAULT_MAX_IDLE_DOCUMENTS;
   }
 
   /** Documents currently leased — the host's document residency. */
@@ -317,6 +327,7 @@ export class DocumentLeaseRegistry {
   acquire<T>(documentId: DocumentId): DocumentLease<T> {
     invariant(!this.#closed, 'Document lease registry is closed.');
     this.#idle.delete(documentId);
+    this.#deferred.delete(documentId);
     this.#counts.set(documentId, (this.#counts.get(documentId) ?? 0) + 1);
     // Faulted in now so the document starts loading, and re-resolved on each access — see the
     // lease's constructor for why the pair cannot be captured here.
@@ -338,6 +349,7 @@ export class DocumentLeaseRegistry {
   forget(documentId: DocumentId): void {
     this.#counts.delete(documentId);
     this.#idle.delete(documentId);
+    this.#deferred.delete(documentId);
     this.#resolved.delete(documentId);
   }
 
@@ -349,6 +361,7 @@ export class DocumentLeaseRegistry {
     this.#closed = true;
     this.#counts.clear();
     this.#idle.clear();
+    this.#deferred.clear();
     this.#resolved.clear();
     this.#clearTimer();
   }
@@ -404,6 +417,7 @@ export class DocumentLeaseRegistry {
     }
 
     const now = Date.now();
+    let overCeiling = this.#idle.size - this.#maxIdleDocuments;
     const evictable: DocumentId[] = [];
     for (const [documentId, releasedAt] of this.#idle) {
       if (evictable.length >= excess) {
@@ -413,16 +427,22 @@ export class DocumentLeaseRegistry {
         continue;
       }
       if (!force && now - releasedAt < this.#evictionDelay) {
-        // Release order, so nothing after this one has waited longer.
-        break;
+        if (overCeiling <= 0) {
+          // Release order, so nothing after this one has waited longer.
+          break;
+        }
+        if (this.#deferred.has(documentId)) {
+          continue;
+        }
       }
+      overCeiling--;
       evictable.push(documentId);
     }
     return evictable;
   }
 
   #scheduleDrain(): void {
-    if (this.#timer !== undefined || this.#closed) {
+    if (this.#closed) {
       return;
     }
 
@@ -430,8 +450,19 @@ export class DocumentLeaseRegistry {
     if (excess <= 0) {
       return;
     }
+    const now = Date.now();
     const oldest = this.#idle.values().next();
-    const wait = oldest.done ? 0 : Math.max(0, this.#evictionDelay - (Date.now() - oldest.value));
+    const wait =
+      oldest.done || (this.#idle.size > this.#maxIdleDocuments && this.#idle.size > this.#deferred.size)
+        ? 0
+        : Math.max(0, this.#evictionDelay - (now - oldest.value));
+    if (this.#timer !== undefined) {
+      if (this.#timerDue <= now + wait) {
+        return;
+      }
+      this.#clearTimer();
+    }
+    this.#timerDue = now + wait;
     this.#timer = setTimeout(() => {
       this.#timer = undefined;
       void this.#run(false);
@@ -471,6 +502,7 @@ export class DocumentLeaseRegistry {
       for (const documentId of documentIds) {
         attempted.add(documentId);
         this.#idle.delete(documentId);
+        this.#deferred.delete(documentId);
         if (this.#counts.has(documentId)) {
           continue;
         }
@@ -503,6 +535,7 @@ export class DocumentLeaseRegistry {
           // Still resident, so it goes back in the queue rather than being forgotten — re-stamped,
           // which spaces the retry out by the idle delay instead of retrying in a tight loop.
           this.#idle.set(documentId, Date.now());
+          this.#deferred.add(documentId);
         }
       }
     }
