@@ -102,6 +102,7 @@ export const make = (options: Options): Sandbox.Sandbox => ({
           name: operation.name,
           description: operation.description,
           parameters: operation.parameters,
+          backed: operation.definition !== undefined,
         })),
       };
 

@@ -4367,6 +4367,12 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../assistant
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../link
+      '@dxos/mcp-client':
+        specifier: workspace:*
+        version: link:../mcp-client
       '@effect/vitest':
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)(vitest@4.1.10)
@@ -4882,9 +4888,15 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/mcp-client':
+        specifier: workspace:*
+        version: link:../mcp-client
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
@@ -4965,9 +4977,6 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../../common/keys
-      '@dxos/link':
-        specifier: workspace:*
-        version: link:../link
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
@@ -9765,6 +9774,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/mcp-client':
+        specifier: workspace:*
+        version: link:../../core/compute/mcp-client
       '@dxos/mcp-server':
         specifier: workspace:*
         version: link:../../core/compute/mcp-server

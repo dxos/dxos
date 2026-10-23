@@ -86,5 +86,7 @@ export type SandboxInit = {
     readonly description?: string;
     /** As the dialect renders it into the prompt: JSON schema, already plain data. */
     readonly parameters: unknown;
+    /** Whether an operation backs it; an MCP server's tool has none, so the dialect binds it by name. */
+    readonly backed: boolean;
   }[];
 };
