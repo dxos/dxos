@@ -10,6 +10,7 @@ import { log } from '@dxos/log';
 import '@dxos/react-ui/theme.css';
 import * as Button from '@dxos/react-ui/Button';
 import { withRegistry, withTheme } from '@dxos/react-ui/testing';
+import { mx } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
 
@@ -159,7 +160,11 @@ const DefaultStory = ({ contributors = [], narrow, asMenu }: StoryProps) => {
         </ActionMenu>
       ) : (
         // Fills the story frame; resize the window and groups move into ⋮ by collapse rank, coming back as it widens.
-        <ActionToolbar {...menu} alwaysActive classNames={narrow ? 'max-w-[20rem]' : undefined} />
+        <ActionToolbar
+          {...menu}
+          alwaysActive
+          classNames={mx('border border-separator-subtle', narrow ? 'max-w-[20rem]' : undefined)}
+        />
       )}
     </div>
   );
