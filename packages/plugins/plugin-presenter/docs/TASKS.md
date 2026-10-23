@@ -68,10 +68,11 @@ Design: [DESIGN.md](./DESIGN.md).
 - [x] **unified pipeline** → React for the Slidev subset; layouts, `::slot::`, `<v-click*>`, notes.
 - [x] **Evaluate `@slidev/parser`** for the preview `---` split — rejected (Node-targeted, not in the repo); the splitter is owned in `src/markdown`.
 - [x] **Migrate** reveal syntax in test decks; reveal.js deleted (no setting).
-- [x] **Print stylesheet** — `MarkdownSlide/print.css`, imported by `Deck`; scoped by `html[data-printing-deck]`, prints every slide.
+- [x] **Print stylesheet** — `Deck/print.css`, imported by `Deck`; scoped by `html[data-printing-deck]`, prints every slide.
 - [ ] `class:` frontmatter only works with Tailwind utilities that are already generated (the markdown is not scanned); consider a safelist.
 - [ ] Known deck conversion losses: per-colour tints behind the ECHO/HALO/MESH/EDGE images (needs a tint layer separate from `backgroundOpacity`), fixed image heights, and the dropped hidden FADE slide.
 - [ ] **Print/export operation**: an operation that prints a document or presentation to PDF (uses the print stylesheet; Save as PDF). Browser print already prints the whole deck from the focused deck. (User TODO, 2026-10-22.)
+- [ ] **Print async content**: the print container mounts at `beforeprint`, so Prism grammars, embedded surfaces and images can print blank; pre-mount and await the container (e.g. in the print/export operation) before opening the print dialog.
 
 ## Phase 4: Slide surfaces
 

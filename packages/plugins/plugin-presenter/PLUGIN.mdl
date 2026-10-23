@@ -147,7 +147,8 @@ component SlideRenderer
 component MarkdownSlide
   desc: |
     Renders one slide of the Slidev markdown subset on the 2560x1440 canvas: per-slide frontmatter
-    (`layout`, `image`, `background`, `class`, `title`), `::left::` / `::right::` / `::default::` slots,
+    (`layout`, `image`, `background`, `class`; `title` is parsed and reserved, not rendered),
+    `::left::` / `::right::` / `::default::` slots,
     `<v-click>`, `<v-clicks>` (`depth`, `every`) and `<v-after>` click steps, highlighted code blocks with
     static line ranges, and notes. All other raw HTML is escaped, never rendered. Elements with a later click
     step stay laid out but invisible. `class:` accepts only Tailwind utilities already generated.
@@ -172,7 +173,8 @@ component SlideLayouts
 component SlideBackground
   desc: |
     The slide's background: a colour, an `image`, or a looping, muted, autoplaying `backgroundVideo`, with
-    `backgroundOpacity` and `backgroundPosition`, behind a theme scrim so text over a photo stays legible.
+    `backgroundOpacity` and `backgroundPosition`. In the `image` layout a theme scrim sits between the
+    picture and any slide content so text over a photo stays legible; other layouts draw no scrim.
   props:
     frontmatter: SlideFrontmatter
     layout: string
@@ -184,7 +186,8 @@ component EmbeddedSurface
     Renders the object a slide's `<Surface ref="echo:///<id>" role="slide|section|card" />` names, through
     ObjectSurface (fallback `slide`, `section`, `card`, then a title slide). A malformed, missing or deleted
     ref settles on a "Missing object" placeholder, never a spinner left running; a space-qualified ref
-    resolves only while that space is open in the client.
+    resolves only while that space is open in the client. A ref to a `Text` (such as another deck's owned
+    slide) renders that markdown as a scaled slide, whose own `<Surface>`s stay placeholders.
   props:
     uri: string
     role: slide | section | card
@@ -493,6 +496,7 @@ test QA-4: Slidev subset and click steps
     - name: Print preview
       do: Click the deck, then open the browser's print preview.
       expect: one landscape page per slide of the deck, every list item visible and no toolbar or status bar
+      note: The print container mounts at `beforeprint`, so content that loads asynchronously (Prism grammars, embedded surfaces, images) can be missing or blank in the printout; a print/export operation that awaits the container is a follow-up.
 
 ```
 
@@ -787,9 +791,9 @@ decision D-21: Inline, the Deck pager sits centered in a status bar below the sl
 
 ```mdl
 decision D-22: Reveal.js and RevealPlayer are deleted; the document preview renders on the shared Deck with no setting. Fills in [D-3].
+  date: 2026-10-22
   by: agent:claude-code
   for: user:richburdon
-  by: agent:claude-code
   affects: [DocumentArticle, F-2]
   why: One renderer for decks and previews; the Settings module is gone, so there is nothing to put reveal behind.
 ```
@@ -885,6 +889,54 @@ decision D-32: Printing is scoped to the focused or fullscreen deck: it sets `da
   affects: [Deck, F-9.1, F-9.2]
   why: Unscoped print rules blank every other print in the app and overlap when two decks are open, and printing only the current slide drops the rest of the deck.
   rejected: A global `@media print` stylesheet that hides everything outside the deck.
+```
+
+```mdl
+decision D-33: Print does not wait for asynchronous slide content; the limitation is recorded in QA-4 and a print/export operation that pre-mounts and awaits the print container is a follow-up. Fills in [D-32].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Deck, F-9.1]
+  why: The browser takes the print layout straight after `beforeprint`, which leaves no time for code grammars, embedded surfaces or images to load.
+  rejected: Delaying `beforeprint`, which the browser does not allow.
+```
+
+```mdl
+decision D-34: The theme scrim applies only in the `image` layout, over its full-bleed picture. Fills in [D-24].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [SlideBackground]
+  why: Other layouts place text beside or away from the picture, and a scrim there would dim a `background` the author chose.
+  rejected: A scrim over every image background.
+```
+
+```mdl
+decision D-35: The frontmatter `title` is parsed and reserved; it is not rendered on the slide. Fills in [D-23].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [MarkdownSlide, F-6.1]
+  why: Slidev uses it for the browser title and slide index, which have no presenter surface yet, and keeping it parsed avoids an unknown-key issue on converted decks.
+```
+
+```mdl
+decision D-36: An embedded `<Surface ref>` whose target is a `Text` renders the text as a slide, not through the surface chain. Fills in [D-25].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [EmbeddedSurface, F-8.2]
+  why: A `Text`'s section surface is a markdown editor, so embedding another deck's owned slide showed a tiny editor instead of the slide.
+  rejected: Registering a slide surface for every `Text`, which would also change linked sections elsewhere.
+```
+
+```mdl
+decision D-37: A link whose URL is removed as unsafe renders without `href` or a new-tab target. Fills in [D-23].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [MarkdownSlide]
+  why: An empty `href` with `target="_blank"` opens the app itself in a new tab.
 ```
 
 ---
