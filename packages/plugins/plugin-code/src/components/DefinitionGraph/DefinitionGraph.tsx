@@ -18,19 +18,23 @@ import { meta } from '#meta';
 import { LatticeGraph } from '../LatticeGraph/index.ts';
 import {
   type DefinitionModel,
+  KIND_GROUPS,
+  type KindGroup,
   type ReviewModel,
   type SpecTexts,
   STATUS_STYLE,
   type VerdictStatus,
   buildDefinitionGraph,
+  groupOf,
+  hiddenKinds,
   kindStyle,
   reviewAnnotations,
   selectDefinitions,
   statusOf,
 } from '../SpecModel/index.ts';
 
-/** Acceptance blocks; they name most of the design, so they are hidden until asked for to keep the design legible. */
-const ACCEPTANCE_KINDS = ['scenario', 'test', 'suite'];
+/** QA blocks name most of the design, so they start hidden to keep the design legible. */
+const DEFAULT_GROUPS: Record<KindGroup, boolean> = { concepts: true, requirements: true, qa: false };
 
 /** Short cards: a definition shows its kind, id and title, and its dependencies are the arrows. */
 const LATTICE: LatticeSpec = { width: 256, height: 128, gutterX: 64, gutterY: 64 };
@@ -111,35 +115,43 @@ const STATUS_TEXT: Record<VerdictStatus, string> = {
 };
 
 type KindLegendProps = {
+  /** Every kind in the spec, shown or not, so a hidden group still lists what it holds. */
   kinds: string[];
-  acceptance: boolean;
-  onAcceptanceChange: (acceptance: boolean) => void;
+  groups: Record<KindGroup, boolean>;
+  onGroupChange: (group: KindGroup, shown: boolean) => void;
   /** Absent when no annotation links the spec to code, so the switch is not offered. */
   code?: boolean;
   onCodeChange: (code: boolean) => void;
 };
 
-const KindLegend = ({ kinds, acceptance, onAcceptanceChange, code, onCodeChange }: KindLegendProps) => {
+/** One switch per group, each beside the kinds it holds. */
+const KindLegend = ({ kinds, groups, onGroupChange, code, onCodeChange }: KindLegendProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <Layout.Flex
-      wrap
+      column
       gap='xs'
-      classNames='absolute top-2 start-2 z-10 p-2 items-center rounded-sm bg-base-surface border border-separator'
+      classNames='absolute top-2 start-2 z-10 p-2 rounded-sm bg-base-surface border border-separator'
       data-testid='definition-graph.legend'
     >
-      {kinds.map((kind) => (
-        <Tag.Tag key={kind} hue={kindStyle(kind).hue}>
-          <Icon.Icon icon={kindStyle(kind).icon} size='xs' />
-          {kind}
-        </Tag.Tag>
+      {KIND_GROUPS.map((group) => (
+        <Layout.Flex key={group} wrap gap='xs' classNames='items-center'>
+          <Input.Switch
+            checked={groups[group]}
+            onCheckedChange={({ checked }) => onGroupChange(group, checked)}
+            label={t(`definition-graph.group-${group}.label`)}
+            data-testid={`definition-graph.group-${group}`}
+          />
+          {kinds
+            .filter((kind) => groupOf(kind) === group && kind !== 'code')
+            .map((kind) => (
+              <Tag.Tag key={kind} hue={groups[group] ? kindStyle(kind).hue : 'neutral'}>
+                <Icon.Icon icon={kindStyle(kind).icon} size='xs' />
+                {kind}
+              </Tag.Tag>
+            ))}
+        </Layout.Flex>
       ))}
-      <Input.Switch
-        checked={acceptance}
-        onCheckedChange={({ checked }) => onAcceptanceChange(checked)}
-        label={t('definition-graph.acceptance.label')}
-        data-testid='definition-graph.acceptance'
-      />
       {code !== undefined && (
         <Input.Switch
           checked={code}
@@ -161,8 +173,8 @@ export type DefinitionGraphProps = {
   review?: ReviewModel;
   /** Block kinds to leave out. */
   exclude?: string[];
-  /** Whether scenarios, tests and suites start shown; a toggle in the legend changes it. */
-  defaultAcceptance?: boolean;
+  /** Which groups of kinds start shown (concepts and requirements by default); the legend's switches change them. */
+  defaultGroups?: Partial<Record<KindGroup, boolean>>;
   /** Double-click: an external node opens its spec or code; a local one is revealed in the spec. */
   onActivate?: (definition: DefinitionModel) => void;
 };
@@ -177,18 +189,21 @@ export const DefinitionGraph = ({
   specs,
   review,
   exclude = [],
-  defaultAcceptance = false,
+  defaultGroups,
   onActivate,
 }: DefinitionGraphProps) => {
-  const [acceptance, setAcceptance] = useState(defaultAcceptance);
+  const [groups, setGroups] = useState<Record<KindGroup, boolean>>(() => ({ ...DEFAULT_GROUPS, ...defaultGroups }));
+  const handleGroupChange = useCallback(
+    (group: KindGroup, shown: boolean) => setGroups((groups) => ({ ...groups, [group]: shown })),
+    [],
+  );
   const [code, setCode] = useState(true);
   const annotations = useMemo(() => reviewAnnotations(review), [review]);
+  const full = useMemo(() => buildDefinitionGraph(content, specs, annotations), [content, specs, annotations]);
+  const allKinds = useMemo(() => [...new Set(full.definitions.map(({ kind }) => kind))], [full]);
   // A key rather than the array, so a caller passing a fresh literal each render does not re-lay out the graph.
-  const excludeKey = [...exclude, ...(acceptance ? [] : ACCEPTANCE_KINDS), ...(code ? [] : ['code'])].join(',');
-  const model = useMemo(
-    () => selectDefinitions(buildDefinitionGraph(content, specs, annotations), excludeKey.split(',')),
-    [content, specs, annotations, excludeKey],
-  );
+  const excludeKey = [...exclude, ...hiddenKinds(allKinds, groups), ...(code ? [] : ['code'])].join(',');
+  const model = useMemo(() => selectDefinitions(full, excludeKey.split(',')), [full, excludeKey]);
   const graph = useMemo<GraphModel>(
     () => ({
       nodes: model.definitions.map(({ id, title }) => ({ id, label: title ?? id })),
@@ -226,9 +241,9 @@ export const DefinitionGraph = ({
     <div className='contents' onDoubleClick={handleDoubleClick}>
       <LatticeGraph graph={graph} renderNode={renderNode} lattice={LATTICE} arrange='force'>
         <KindLegend
-          kinds={model.kinds}
-          acceptance={acceptance}
-          onAcceptanceChange={setAcceptance}
+          kinds={allKinds}
+          groups={groups}
+          onGroupChange={handleGroupChange}
           code={annotations.length > 0 ? code : undefined}
           onCodeChange={setCode}
         />
