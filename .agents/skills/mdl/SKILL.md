@@ -71,6 +71,24 @@ reworded requirements and spec-sync reconciliation. CI rejects a changed spec wi
 | `decision` | `org.dxos.mdl.decision@1.0` |
 ```
 
+### Record spec decisions, never process
+
+A decision is a choice about the system the spec describes: its behavior, requirements, structure,
+interfaces, data, tests, or the reason for one of those. How you or the person worked on the spec or
+its code is not a decision, so it never goes in the log:
+
+- which tool, skill or format to use ("use the sharing-specs skill", "draw it with the illustrator");
+- how the spec is shared, published or reviewed ("share it as an Artifact");
+- which PR, branch or repository a change goes in, or that it continues earlier work;
+- that the document should exist, have diagrams, or be reorganized;
+- the order of tasks, or "fix it properly" with nothing about what the system must do.
+
+When a person's instruction is only about process, follow it and record nothing. When it mixes
+both, record only the spec part ("trace askAgent" is process; "askAgent reports its timings" is
+spec). A spec change with no decision behind it, such as a new diagram, carries the
+`Spec-Changelog-Skip` trailer (below). A spec whose system is itself a process (Deus, a review
+harness, a workflow) records decisions about that process; that is its subject, not your process.
+
 ### Separate the person's knowledge from yours
 
 A person usually gives coarse direction and you fill in the gaps. Never merge the two into one
@@ -148,12 +166,19 @@ decided", or "agent:claude-code decided for user:alice; not approved yet". Never
 
 ## Checking your work
 
-Run both checks before you commit:
+Run all three checks before you commit:
 
 ```bash
 node packages/reflect/deus/scripts/check-changelog.ts
 node packages/reflect/deus/scripts/lint-mdl.ts --only mdl/decision <file.mdl>...
+node .agents/skills/mdl/scripts/check-decisions.ts
 ```
+
+`check-decisions.ts` (in this skill's `scripts/`) asks TypeSafe System One whether each decision your branch adds records
+process instead of a spec decision, and fails at a probability of 0.8 or more. It needs
+`TYPESAFE_API_KEY` (`1password` skill); without it, it passes with a notice. Pass file paths to
+judge every decision in those files, with each probability printed. CI runs it as **Check spec
+decisions**. When it flags a decision, remove the process from it, or remove the entry.
 
 `check-changelog.ts` compares every changed `.mdl` file with the merge base of `origin/main`,
 uncommitted edits included. CI runs the same script as **Check spec changelogs**. It fails when:
