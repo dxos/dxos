@@ -64,7 +64,7 @@ Notes
 - CRITICAL: Swarms of agents need formal security: audits and explicit, delegated authority.
 
 Notes
-- Driversf
+- Drivers
 - Edge = Network computing
 - Full decentralization: EDGE
 - Agent OS replaces device OS
@@ -83,7 +83,7 @@ Notes
 
 <!--
 - Virtual organizations of agents, governed by semantic models of who may do what.
-- Agents leave the screen and act in the physical world. 100x information acredtion.
+- Agents leave the screen and act in the physical world. 100x information accretion.
 - Shared knowledge across agents becomes a collective intelligence: the hivemind.
 - Potential divergence: machine optimization vs. human understanding.
 
@@ -144,7 +144,6 @@ The Coordination Trap Behind the Metacrisis
 - It sets up the choice on the next slides: control (blue pill) or reform (red pill).
 
 - Tragedy of the commons (economic externalities)
-
 - Moloch names a destructive competitive dynamic: people and institutions can collectively create outcomes that almost nobody wants, even while each acts rationally within the system.
 - Competition rewards harmful choices: a company that sacrifices safety for speed may outperform a cautious rival, pushing others to follow.
 - Individual restraint can become a disadvantage: refusing to pollute, exploit workers, or escalate an arms race may mean losing influence to actors who will.
