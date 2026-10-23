@@ -74,7 +74,7 @@ export const Commands = AppCapability.commands(() => import('#commands'));
 export const Namespace = Capability.inlineModule(
   'namespace',
   {
-    environments: ['browser', 'node', 'tauri'],
+    environments: ['browser', 'node', 'tauri', 'workerd'],
     provides: [ObservabilityCapabilities.Namespace],
     props: (options: ObservabilityOptions.ObservabilityPluginOptions) => options.namespace,
   },
@@ -83,7 +83,7 @@ export const Namespace = Capability.inlineModule(
 export const Observability = Capability.inlineModule(
   'observability',
   {
-    environments: ['browser', 'node', 'tauri'],
+    environments: ['browser', 'node', 'tauri', 'workerd'],
     provides: [ObservabilityCapabilities.Observability],
     props: (options: ObservabilityOptions.ObservabilityPluginOptions) => options.observability,
   },
@@ -94,7 +94,7 @@ export const Observability = Capability.inlineModule(
       return [Capability.contribute(ObservabilityCapabilities.Observability, obs)];
     }),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('#operation-handler'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article'],
 });
@@ -102,6 +102,20 @@ export const ObservabilitySettings = AppCapability.settings(() => import('./sett
   provides: [ObservabilityCapabilities.Settings],
   environments: ['browser', 'tauri'],
 });
+export const SettingsReactor = Capability.lazyModule(
+  'SettingsReactor',
+  {
+    environments: ['browser', 'tauri'],
+    requires: [
+      Capabilities.AtomRegistry,
+      ObservabilityCapabilities.Namespace,
+      ObservabilityCapabilities.Observability,
+      ObservabilityCapabilities.Settings,
+    ],
+    provides: [],
+  },
+  () => import('./settings-reactor.ts'),
+);
 export const ObservabilityState = Capability.lazyModule(
   'ObservabilityState',
   {
