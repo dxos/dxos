@@ -21,15 +21,19 @@ import { ObjectSurface } from './ObjectSurface.tsx';
 export type SlideRendererProps = {
   source: SlideSource;
   attendableId?: string;
+  /** Click step for text slides (default: all revealed). */
+  step?: number;
+  /** Reports a text slide's click count; slides of other kinds have none. */
+  onClicks?: (count: number) => void;
 };
 
 /**
  * Renders one deck slide inside its scaled frame, whatever the slide's source.
  */
-export const SlideRenderer = ({ source, attendableId }: SlideRendererProps) => {
+export const SlideRenderer = ({ source, attendableId, step, onClicks }: SlideRendererProps) => {
   switch (source.kind) {
     case 'text':
-      return <TextSlide text={source.text} />;
+      return <TextSlide text={source.text} step={step} onClicks={onClicks} />;
     case 'object':
       return <ObjectSlide object={source.object} attendableId={attendableId} />;
     case 'pending':
@@ -37,7 +41,7 @@ export const SlideRenderer = ({ source, attendableId }: SlideRendererProps) => {
   }
 };
 
-const TextSlide = ({ text }: { text: Text.Text }) => {
+const TextSlide = ({ text, step, onClicks }: { text: Text.Text } & Pick<SlideRendererProps, 'step' | 'onClicks'>) => {
   const [content] = useObject(text, 'content');
   // Refs resolve against the owner's database so space-relative `echo:///<id>` refs find their target.
   const db = Obj.getDatabase(text);
@@ -47,7 +51,7 @@ const TextSlide = ({ text }: { text: Text.Text }) => {
   );
   return (
     <SlideFrame>
-      <MarkdownSlide content={content} renderSurface={renderSurface} />
+      <MarkdownSlide content={content} step={step} onClicks={onClicks} renderSurface={renderSurface} />
     </SlideFrame>
   );
 };

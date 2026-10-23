@@ -75,6 +75,17 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
     const index = SlideViewState.clamp(indexProp, count);
     const slide = slides[index];
 
+    // Click state is tied to the slide it belongs to, so any index change (pager, jump, controlled) resets it.
+    const [stepState, setStepState] = useState({ index: 0, step: 0 });
+    const [clickState, setClickState] = useState({ index: 0, clicks: 0 });
+    const clicks = clickState.index === index ? clickState.clicks : 0;
+    const step = stepState.index === index ? Math.min(stepState.step, clicks) : 0;
+    const handleClicks = useCallback(
+      (next: number) =>
+        setClickState((state) => (state.index === index && state.clicks === next ? state : { index, clicks: next })),
+      [index],
+    );
+
     const handleKeyDown = useCallback(
       (event: KeyboardEvent<HTMLDivElement>) => {
         if (isEditable(event.target) || event.metaKey || event.ctrlKey || event.altKey) {
@@ -90,16 +101,39 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
           event.preventDefault();
           onIndexChange(SlideViewState.clamp(next, count));
         };
+        const forward = () => {
+          if (step < clicks) {
+            event.preventDefault();
+            setStepState({ index, step: step + 1 });
+          } else {
+            go(index + 1);
+          }
+        };
         switch (event.key) {
+          case ' ':
+            return forward();
           case 'f':
           case 'F':
             event.preventDefault();
             onFullscreenChange?.(!fullscreen);
             return;
           case 'ArrowLeft':
-            return go(event.shiftKey ? 0 : index - 1);
+            if (event.shiftKey) {
+              return go(0);
+            }
+            if (step > 0) {
+              event.preventDefault();
+              setStepState({ index, step: step - 1 });
+              return;
+            }
+            if (index > 0) {
+              event.preventDefault();
+              setStepState({ index: index - 1, step: Number.POSITIVE_INFINITY });
+              onIndexChange(index - 1);
+            }
+            return;
           case 'ArrowRight':
-            return go(event.shiftKey ? count - 1 : index + 1);
+            return event.shiftKey ? go(count - 1) : forward();
           case 'Home':
           case 'ArrowUp':
             return go(0);
@@ -108,7 +142,7 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
             return go(count - 1);
         }
       },
-      [index, count, onIndexChange, fullscreen, onFullscreenChange],
+      [index, count, step, clicks, onIndexChange, fullscreen, onFullscreenChange],
     );
 
     const shellRef = useRef<HTMLDivElement>(null);
@@ -135,7 +169,15 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
           {onAddSlide && <Button.Root label={t('add-slide.label')} onClick={onAddSlide} />}
         </div>
       ) : (
-        slide && <SlideRenderer source={slide} attendableId={attendableId} />
+        slide && (
+          <SlideRenderer
+            key={slide.id}
+            source={slide}
+            attendableId={attendableId}
+            step={step}
+            onClicks={handleClicks}
+          />
+        )
       );
 
     const shell = (

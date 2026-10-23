@@ -32,6 +32,17 @@ const createTextSlides = (count: number): SlideSource[] =>
     text: Text.make({ content: `# Slide ${index + 1}` }),
   }));
 
+const createClickSlides = (): SlideSource[] =>
+  [['# Clicks', '', '<v-clicks>', '', '- one', '- two', '- three', '', '</v-clicks>'].join('\n'), '# Plain'].map(
+    (content, index) => ({ kind: 'text' as const, id: `click-${index}`, text: Text.make({ content }) }),
+  );
+
+const ClickStepsStory = () => {
+  const slides = useMemo(() => createClickSlides(), []);
+  const [index, setIndex] = useState(0);
+  return <Deck slides={slides} index={index} onIndexChange={setIndex} />;
+};
+
 const DefaultStory = ({ count = 5, ...props }: Partial<DeckProps> & { count?: number }) => {
   const slides = useMemo(() => createTextSlides(count), [count]);
   const [index, setIndex] = useState(0);
@@ -252,5 +263,31 @@ export const StaleIndex: Story = {
   render: StaleIndexStory,
   play: async ({ canvasElement }) => {
     await expect(await within(canvasElement).findByText('3 / 3')).toBeVisible();
+  },
+};
+
+/** Click steps reveal items before the slide advances; going back lands on the previous slide fully revealed. */
+export const ClickSteps: Story = {
+  render: ClickStepsStory,
+  decorators: [withEmptyPlugins],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const deck = await canvas.findByTestId('presenter.deck');
+    const hidden = () => canvasElement.querySelectorAll('li.invisible').length;
+    await waitFor(() => expect(hidden()).toBe(3));
+    // The click count arrives from the slide's effect after first paint.
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    deck.focus();
+    for (const remaining of [2, 1, 0]) {
+      await userEvent.keyboard('{ArrowRight}');
+      await waitFor(() => expect(hidden()).toBe(remaining));
+      await expect(canvas.getByText('1 / 2')).toBeVisible();
+    }
+    await userEvent.keyboard('{ArrowRight}');
+    await expect(await canvas.findByText('2 / 2')).toBeVisible();
+    await userEvent.keyboard('{ArrowLeft}');
+    await expect(await canvas.findByText('1 / 2')).toBeVisible();
+    await waitFor(() => expect(hidden()).toBe(0));
+    await expect(canvasElement.querySelectorAll('li')).toHaveLength(3);
   },
 };
