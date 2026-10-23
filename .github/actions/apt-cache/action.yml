@@ -1,0 +1,77 @@
+name: Apt cache
+description: >
+  Run a command that installs apt packages, with the downloaded `.deb` files restored from and saved to
+  the Actions cache. The runner's Ubuntu mirror (azure.archive.ubuntu.com) intermittently serves at
+  ~40 kB/s, which stretched `playwright install --with-deps` from 20 s to 10–38 minutes in Check;
+  with the archives restored, apt installs from local files and fetches only package lists.
+
+inputs:
+  name:
+    description: Cache name; one per distinct package set (e.g. `playwright-chromium`).
+    required: true
+  run:
+    description: The bash command that runs apt (directly or through a tool such as Playwright).
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    # Keyed on the runner image so the archives refresh with each weekly image, whose preinstalled
+    # versions decide which packages apt needs at all.
+    - name: Resolve cache key
+      id: key
+      shell: bash
+      env:
+        NAME: ${{ inputs.name }}
+      run: |
+        echo "dir=$RUNNER_TEMP/apt-cache-$NAME" >> "$GITHUB_OUTPUT"
+        echo "key=apt-$NAME-${ImageOS:-unknown}-${ImageVersion:-unknown}" >> "$GITHUB_OUTPUT"
+
+    - name: Restore apt archives
+      id: restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ steps.key.outputs.dir }}
+        key: ${{ steps.key.outputs.key }}
+        restore-keys: apt-${{ inputs.name }}-
+
+    # apt reuses an archive in /var/cache/apt/archives whose name and checksum match the candidate, so a
+    # stale one costs only a download of the newer version, and `restore-keys` carries last week's
+    # archives into a new image's key. The conf keeps apt from deleting archives after install, which
+    # would leave nothing to save.
+    - name: Install
+      shell: bash
+      env:
+        DIR: ${{ steps.key.outputs.dir }}
+        COMMAND: ${{ inputs.run }}
+      run: |
+        sudo=$([ "$(id -u)" = 0 ] || echo sudo)
+        echo 'Binary::apt-get::APT::Keep-Downloaded-Packages "true"; APT::Keep-Downloaded-Packages "true";' |
+          $sudo tee /etc/apt/apt.conf.d/99-keep-debs > /dev/null
+        mkdir -p "$DIR"
+        if compgen -G "$DIR/*.deb" > /dev/null; then
+          $sudo cp "$DIR"/*.deb /var/cache/apt/archives/
+          echo "Restored $(ls "$DIR"/*.deb | wc -l) archives."
+        fi
+        # A miss still downloads, so a stalled mirror is cut off and the install retried without it; a
+        # healthy install takes under a minute. GNU timeout signals the whole process group, apt included.
+        if ! timeout --kill-after=15 300 bash -e -c "$COMMAND"; then
+          echo '::warning::apt install did not finish in 5 minutes; retrying without azure.archive.ubuntu.com.'
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            $sudo sed -i '/azure\.archive\.ubuntu\.com/d' /etc/apt/apt-mirrors.txt
+          fi
+          $sudo dpkg --configure -a || true
+          bash -e -c "$COMMAND"
+        fi
+        if compgen -G '/var/cache/apt/archives/*.deb' > /dev/null; then
+          cp -u /var/cache/apt/archives/*.deb "$DIR"/
+        fi
+
+    # Matrix cells share a key, so all but the first save lose the reservation; that is a warning, not a failure.
+    - name: Save apt archives
+      if: ${{ steps.restore.outputs.cache-hit != 'true' }}
+      continue-on-error: true
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ steps.key.outputs.dir }}
+        key: ${{ steps.key.outputs.key }}

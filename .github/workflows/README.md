@@ -26,14 +26,27 @@ shard count never changes the required checks.
 
 | Job | Cells | Why |
 | :-- | :-- | :-- |
-| `test node` | 2 shards, 4 targets at a time | Peaks under 10 GB with no browser. |
+| `test node` | 4 shards, 4 targets at a time | Peaks under 10 GB with no browser. A change to a core package runs about 110 task-minutes of tests, which held two shards at 30 minutes. |
 | `native` | 1 job: every `:test-native` | The Rust addon compiles RocksDB from source, about 25 minutes when forced; in a node cell it starved the tests. |
 | `test browser` | Up to 8 cells of affected targets from `plan`: build the cell's closure at concurrency 4, then test 1 target at a time | Each target drives its own Chromium; sharing 4 vCPU with another target or a build made timing-sensitive stories fail. |
 | `e2e composer` | Chromium and Firefox 2 shards × 2 workers, WebKit 4 shards × 1 worker | One WebKit page holds ~6 GB and two-peer specs open two, so WebKit cannot run two tests at once. The cell table is in [`plan.mjs`](../actions/plan/plan.mjs). |
-| `e2e rest` | 2 target halves per browser, 1 worker | Storybook's cold start lost module loads with two workers. |
+| `e2e rest` | 2 cells per browser, split by measured duration in [`e2e-rest-shard.mjs`](../actions/plan/e2e-rest-shard.mjs), 1 worker | Storybook's cold start lost module loads with two workers. `react-ui-canvas` alone runs about five minutes. |
 
 `moon exec --job N --job-total` splits targets by count and Playwright's `--shard` splits tests by count,
-so shard times vary with which heavy targets land together.
+so shard times vary with which heavy targets land together. `e2e rest` is the exception: few targets, one
+of them five times the median, so it splits by a weight table.
+
+### Runner time
+
+- **apt.** Every apt install (`playwright install --with-deps`, the sandbox tools, libclang) goes through
+  [`actions/apt-cache`](../actions/apt-cache), which restores the `.deb` files from the Actions cache. The
+  runner's Ubuntu mirror intermittently serves at ~40 kB/s; before the cache, that stretched one browser or
+  e2e cell per run from 20 s to 8–38 minutes and cost 17% of all Check runner-minutes.
+- **Timeouts.** Each job's limit is about twice its measured p90, so a hung runner fails in minutes. The
+  nightly, fork PRs and Dependabot PRs build without the remote cache and keep the old limits.
+- **Merge queue fail-fast.** The `fail-fast` job cancels a merge-queue run at the first failed step of any
+  job. The queue dequeues a PR only once its run concludes, so otherwise one hung cell held the queue
+  after `check` had already failed.
 
 ### Affected scoping
 

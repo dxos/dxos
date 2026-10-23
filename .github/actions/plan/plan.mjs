@@ -29,7 +29,8 @@ const COMPOSER_SHARDS = {
   webkit: { shards: 4, workers: 1 },
 };
 
-// Target-list halves per browser for the rest of the e2e pool, one Playwright worker each.
+// Cells per browser for the rest of the e2e pool, one Playwright worker each; `e2e-rest-shard.mjs` splits
+// the targets by measured duration.
 const REST_SHARDS = 2;
 
 // Most cells the browser and storybook targets are split across, by count.
