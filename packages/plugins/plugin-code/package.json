@@ -191,7 +191,6 @@
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
-    "@tauri-apps/plugin-fs": "catalog:",
     "@typescript/typescript6": "catalog:",
     "@typescript/vfs": "catalog:",
     "effect": "catalog:",

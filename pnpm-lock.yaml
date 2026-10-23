@@ -10122,9 +10122,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
-      '@tauri-apps/plugin-fs':
-        specifier: 'catalog:'
-        version: 2.6.0
       '@typescript/typescript6':
         specifier: 'catalog:'
         version: 6.0.2
