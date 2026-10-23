@@ -117,7 +117,7 @@ const DefaultStory = ({ kind, content }: StoryProps) => {
 
   return (
     <>
-      <SlideRenderer source={source} />
+      <SlideRenderer source={source} inset />
     </>
   );
 };
@@ -223,7 +223,7 @@ const SpaceSlideStory = ({ name }: { name: string }) => {
     return <Loading />;
   }
 
-  return <SlideRenderer source={{ kind: 'text', id: text.id, text }} />;
+  return <SlideRenderer source={{ kind: 'text', id: text.id, text }} inset />;
 };
 
 /** Renders the named document from the story space as a linked-object slide. */
@@ -234,7 +234,7 @@ const DocumentSlideStory = ({ name }: { name: string }) => {
     return <Loading />;
   }
 
-  return <SlideRenderer source={{ kind: 'object', id: document.id, object: document }} />;
+  return <SlideRenderer source={{ kind: 'object', id: document.id, object: document }} inset />;
 };
 
 const meta = {

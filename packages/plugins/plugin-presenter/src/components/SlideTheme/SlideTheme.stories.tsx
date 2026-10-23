@@ -34,7 +34,7 @@ const DefaultStory = ({ themes }: StoryProps) => (
     {themes.map((settings, index) => (
       <div key={index} data-theme-name={settings.name} className='flex flex-col min-h-0'>
         <SlideThemeProvider settings={settings}>
-          <SlideFrame>
+          <SlideFrame inset>
             <MarkdownSlide content={CONTENT} />
           </SlideFrame>
         </SlideThemeProvider>

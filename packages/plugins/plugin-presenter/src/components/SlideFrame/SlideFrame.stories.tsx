@@ -14,7 +14,7 @@ import { SlideFrame } from './SlideFrame.tsx';
 
 const DefaultStory = ({ content = '' }: MarkdownSlideProps) => {
   return (
-    <SlideFrame classNames='bg-scrim-surface'>
+    <SlideFrame inset>
       <MarkdownSlide content={content} />
     </SlideFrame>
   );

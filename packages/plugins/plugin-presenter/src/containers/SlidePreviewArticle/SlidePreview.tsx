@@ -40,16 +40,11 @@ export const SlidePreview = ({ subject }: SlidePreviewProps) => {
   );
 
   return (
-    <div
-      data-testid='presenter.slide-editor.preview'
-      className='relative flex size-full p-4 overflow-hidden bg-deck-surface'
-    >
+    <div data-testid='presenter.slide-editor.preview' className='relative flex size-full'>
       {/* Outside a click group every step shows, so the slide reads as it will once fully revealed. */}
       <SlideRenderer
         source={source}
-        // The frame lets the wrapper's solid void show on every side of the 16:9 slide; the radius is in canvas
-        // pixels, scaled with the slide, and applies only to this slide, not to slides embedded in it.
-        frameClassNames='bg-transparent [&>div>[data-slide]]:rounded-[32px]'
+        inset
         step={step === 0 ? undefined : step}
         activeSlot={activeSlot}
         onSourceClick={handleSourceClick}

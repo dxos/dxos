@@ -27,8 +27,8 @@ export type SlideRendererProps = MarkdownOptions & {
   attendableId?: string;
   /** Wrap the slide in the scaled `SlideFrame` (default); print renders it unscaled at canvas size. */
   framed?: boolean;
-  /** Classes for the scaled frame, e.g. to tint the space around the 16:9 slide. */
-  frameClassNames?: string;
+  /** Inset the slide in a solid void (see `SlideFrame`). */
+  inset?: boolean;
 };
 
 type FrameProps = { Frame: ComponentType<PropsWithChildren> };
@@ -39,20 +39,12 @@ const PrintFrame = ({ children }: PropsWithChildren) => <div className='flex rel
 /**
  * Renders one deck slide inside its scaled frame, whatever the slide's source.
  */
-export const SlideRenderer = ({
-  source,
-  attendableId,
-  framed = true,
-  frameClassNames,
-  ...options
-}: SlideRendererProps) => {
+export const SlideRenderer = ({ source, attendableId, framed = true, inset, ...options }: SlideRendererProps) => {
   // Memoized so a re-render keeps the same frame component and does not remount the slide.
   const Frame = useMemo<ComponentType<PropsWithChildren>>(
     () =>
-      framed
-        ? ({ children }: PropsWithChildren) => <SlideFrame classNames={frameClassNames}>{children}</SlideFrame>
-        : PrintFrame,
-    [framed, frameClassNames],
+      framed ? ({ children }: PropsWithChildren) => <SlideFrame inset={inset}>{children}</SlideFrame> : PrintFrame,
+    [framed, inset],
   );
   switch (source.kind) {
     // The slide's own object counts as an ancestor, so a slide that embeds itself stops at one level.

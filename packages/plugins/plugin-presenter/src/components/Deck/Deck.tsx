@@ -259,7 +259,9 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
           {onAddSlide && <Button.Root label={t('add-slide.label')} onClick={onAddSlide} />}
         </div>
       ) : (
-        slide && <SlideRenderer key={slide.id} source={slide} attendableId={attendableId} step={step} />
+        slide && (
+          <SlideRenderer key={slide.id} source={slide} attendableId={attendableId} step={step} inset={!fullscreen} />
+        )
       );
 
     const shell = (

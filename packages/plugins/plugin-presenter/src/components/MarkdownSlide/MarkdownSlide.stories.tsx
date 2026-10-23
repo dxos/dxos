@@ -22,7 +22,7 @@ const IMAGE = `data:image/svg+xml;utf8,${encodeURIComponent(
 )}`;
 
 const DefaultStory = (props: MarkdownSlideProps) => (
-  <SlideFrame classNames='bg-scrim-surface'>
+  <SlideFrame inset>
     <MarkdownSlide {...props} />
   </SlideFrame>
 );

@@ -8,12 +8,17 @@ import { useResizeDetector } from 'react-resize-detector';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-export type SlideFrameProps = Util.ThemedClassName<PropsWithChildren<{}>>;
+export type SlideFrameProps = Util.ThemedClassName<
+  PropsWithChildren<{
+    /** Inset the slide, with rounded corners, in a solid void that shows on every side, so the slide's own background reads as distinct from what surrounds it. */
+    inset?: boolean;
+  }>
+>;
 
 /**
  * Scaled 16:9 slide canvas.
  */
-export const SlideFrame = ({ children, classNames }: SlideFrameProps) => {
+export const SlideFrame = ({ children, classNames, inset }: SlideFrameProps) => {
   const [props, setProps] = useState({});
   const {
     ref: containerRef,
@@ -33,13 +38,23 @@ export const SlideFrame = ({ children, classNames }: SlideFrameProps) => {
   });
 
   // TODO(burdon): Reconcile highlight colors with markdown editor.
-  return (
-    <div ref={containerRef} className={mx('flex grow relative overflow-hidden dx-attention-surface', classNames)}>
+  const frame = (
+    <div
+      ref={containerRef}
+      className={mx(
+        'flex grow relative overflow-hidden',
+        // The radius is in canvas pixels, scaled with the slide, and applies only to this slide, not to slides embedded in it.
+        inset ? 'bg-transparent [&>div>[data-slide]]:rounded-[32px]' : 'dx-attention-surface',
+        classNames,
+      )}
+    >
       <div className={mx('dx-expand absolute')} style={props}>
         {!!width && !!height && children}
       </div>
     </div>
   );
+
+  return inset ? <div className='flex grow relative p-4 overflow-hidden bg-deck-surface'>{frame}</div> : frame;
 };
 
 /**
