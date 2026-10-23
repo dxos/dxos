@@ -81,10 +81,12 @@ jobs:
           file: .github/Dockerfile.repo
           build-args: |
             REPO_SHA=${{ steps.shas.outputs.image }}
-          secrets: |
-            moon_ca=${{ secrets.MOON_CACHE_CA_PEM }}
-            moon_client_pem=${{ secrets.MOON_CACHE_CLIENT_PEM }}
-            moon_client_key=${{ secrets.MOON_CACHE_CLIENT_KEY }}
+          # `secret-envs`, not `secrets`: the latter splits on newlines and truncates a PEM to its first line.
+          secret-envs: |
+            moon_ca=MOON_CACHE_CA_PEM
+            moon_client_pem=MOON_CACHE_CLIENT_PEM
+            moon_client_key=MOON_CACHE_CLIENT_KEY
+          provenance: false
           outputs: type=image,push=true,compression=zstd,compression-level=3,force-compression=true,oci-mediatypes=true
           tags: |
             ${{ env.IMAGE_NAME }}:${{ steps.shas.outputs.tag }}
@@ -92,7 +94,13 @@ jobs:
 
       - name: Report image size
         run: |
-          docker buildx imagetools inspect --raw "$IMAGE_NAME:${{ steps.shas.outputs.tag }}" > manifest.json
+          ref="$IMAGE_NAME:${{ steps.shas.outputs.tag }}"
+          docker buildx imagetools inspect --raw "$ref" > manifest.json
+          # An index wraps the platform manifest; follow it to the amd64 one.
+          if jq -e '.manifests' manifest.json >/dev/null; then
+            digest=$(jq -r '[.manifests[] | select(.platform.architecture == "amd64")][0].digest' manifest.json)
+            docker buildx imagetools inspect --raw "$IMAGE_NAME@$digest" > manifest.json
+          fi
           jq -r '.layers[] | "\(.size / 1e6 | floor) MB  \(.mediaType)"' manifest.json
           jq -r '"total \([.layers[].size] | add / 1e6 | floor) MB compressed"' manifest.json
           df -h /
