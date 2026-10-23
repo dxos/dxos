@@ -11,6 +11,7 @@ import React, {
   useRef,
 } from 'react';
 
+import { useMasonryTileRevealed } from '@dxos/react-ui-masonry';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -157,6 +158,14 @@ export const EditField = ({
     shownRef.current = value;
   }, [value]);
 
+  // A new card's tile stays hidden until the board has measured it, so focus waits for the reveal.
+  const revealed = useMasonryTileRevealed();
+  useEffect(() => {
+    if (autoFocus && revealed) {
+      fieldRef.current?.focus();
+    }
+  }, [autoFocus, revealed]);
+
   const handleBlur = (event: FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const next = event.currentTarget.value.trim();
     if (next !== value) {
@@ -180,7 +189,6 @@ export const EditField = ({
     placeholder,
     'aria-label': label,
     'data-testid': testId,
-    autoFocus,
     'onBlur': handleBlur,
     'onKeyDown': handleKeyDown,
     'onPointerDown': stopPropagation,

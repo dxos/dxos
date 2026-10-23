@@ -11,15 +11,15 @@ section of a `PLUGIN.mdl` or of `packages/apps/composer-app/spec/APP.mdl`, and t
 that group them. The dialect is `packages/reflect/deus/lang/qa.mdl`; **executing anything is the
 `composer-qa` skill's job, and this command does not restate it** — invoke the skill and follow it.
 
-Enumerate with the plugin's own script rather than grepping:
+Enumerate with the `deus` CLI from the repo root rather than grepping (`dx deus qa list` is the same command):
 
 ```
-node "${CLAUDE_PLUGIN_ROOT}/scripts/list-tests.mjs" [<plugin> <testId> | <filter>] [--suites] [--tag <tag>] [--suite <name>] [--json]
+pnpm deus qa list [<plugin> <testId> | <filter>] [--suites] [--tag <tag>] [--suite <name>] [--json]
 ```
 
 Two positionals resolve **exactly** — `markdown QA-1` and `chess QA-1` are different tests, so an
 id on its own is ambiguous; `app` is the short name of `APP.mdl`. One positional is a loose
-substring match over path, id and title. The script prints a numbered table: `plugin:id`, status,
+substring match over path, id and title. It prints a numbered table: `plugin:id`, status,
 step counts per stage, title, and the document. **The numbering is this command's addressing
 scheme** — a bare number in a later message refers to that row, exactly as `/dxos:project list`
 works.
@@ -32,7 +32,7 @@ works.
 - **`show <plugin> <testId>`** — print one test's block verbatim, so its `given` and its
   `before` / `steps` / `after` stages can be read before committing to a run. A row number from
   the last table also works.
-- **`run <plugin> <testId> [--stage=…]`** — execute one test. Resolve with the script and **stop
+- **`run <plugin> <testId> [--stage=…]`** — execute one test. Resolve with `deus qa list` and **stop
   if it returns anything other than exactly one test** — show the candidates and ask.
 - **`run <plugin>`** — every test of that document, as its implicit suite.
 - **`run --suite <name>`** / **`run --tag <tag>`** — the tests of one suite, or of every suite

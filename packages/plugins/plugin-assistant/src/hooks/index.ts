@@ -14,7 +14,7 @@ export * from './useContextBinder.ts';
 export * from './useContextObjects.ts';
 export { useDebug } from './useDebug.ts';
 export * from './useFilteredTypes.ts';
-export * from './useMcpServer.ts';
+export * from './useMcpConnections.ts';
 export * from './useObjectMentions.ts';
 export * from './usePlatform.ts';
 export * from './usePresets.ts';

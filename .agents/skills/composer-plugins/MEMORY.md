@@ -4,6 +4,15 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-10-23 — plugin-code-graph (new plugin)
+
+- Reuse the feature-map canvas for any derived graph: `createDynamicProjection` from `@dxos/react-ui-canvas/scene` with `arrange: 'force' | 'crossings'`; feed positions from another engine (e.g. `@dxos/diagram` `SemanticEngine`) as the `Overlay` (`plugin-code-graph/src/components/CodeGraphCanvas`).
+- A canvas fits once on mount; pass `refitKey` to `Canvas.Root` and change it when positions arrive asynchronously, or the view stays framed on the pre-layout scene.
+- `SemanticEngine` coordinates start at its own origin; recentre them on (0,0) before using them as canvas positions, which open centred on the origin.
+- Dev-server-only data for a plugin: ship a `./vite-plugin` export (connect middleware, `apply: 'serve'`) and mount it from `composer-app/vite.config.ts` with a dynamic `import()`, as `plugin-dev-shell` does; check loopback + JSON content type.
+- An object added with `Database.add` (no collection) opens at `root/<spaceId>/system/database/<typename>/<objectId>` (`GraphPath.getObjectPath`).
+- A capability restricted to `environments: ['browser', 'tauri']` does not activate in node plugin tests; restrict only what truly needs a DOM.
+
 ## 2026-09-17 — plugin-typesafe + plugin-labeler (new plugins)
 
 - `AppCapability.layerSpec(loader, { name })` takes a NAME, not `provides` — unlike the other makers (`plugin-assistant/src/capabilities/index.ts`).
