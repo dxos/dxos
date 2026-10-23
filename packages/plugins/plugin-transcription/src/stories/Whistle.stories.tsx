@@ -11,6 +11,7 @@
  *
  * - The toolbar's Low latency switch makes it a pass every 200 ms: words commit sooner,
  *   but passes that close together agree on half-heard words more often.
+ * - A pause of a second or more between words starts a new paragraph.
  * - `Microphone` streams the default input; `File` plays the same hosted m4a as `Transcription`.
  * - The model downloads on the first press and is cached by the browser afterwards.
  * - The waveform shows everything captured; the raw recording stays in the tab and can be saved as WAV.
@@ -39,7 +40,10 @@ import { Waveform } from './whistle/Waveform.tsx';
 const ACCURATE_PASS_MS = 1_000;
 const LOW_LATENCY_PASS_MS = 200;
 
-/** A paragraph closes at the first sentence end after this many words. */
+/** A pause at least this long (seconds between committed words) starts a new paragraph. */
+const PARAGRAPH_PAUSE_SECONDS = 1;
+
+/** Without a pause, a paragraph closes at the first sentence end after this many words. */
 const PARAGRAPH_MIN_WORDS = 30;
 
 const SENTENCE_END = /[.?!]$/;
@@ -61,7 +65,7 @@ const makeParagraph = (text: string): Message.Message =>
  */
 const useStreamingTranscript = () => {
   const model = useMemo(() => new TranscriptModel<Message.Message>(renderParagraph), []);
-  const state = useRef<{ paragraph?: Message.Message; committed: string[] }>({ committed: [] });
+  const state = useRef<{ paragraph?: Message.Message; committed: string[]; lastEnd?: number }>({ committed: [] });
 
   const render = useCallback(
     (pending: string) => {
@@ -86,11 +90,19 @@ const useStreamingTranscript = () => {
 
   const commit = useCallback(
     (words: WhistleWord[], pending: string) => {
-      for (const { word } of words) {
+      for (const { word, start, end } of words) {
+        const { lastEnd } = state.current;
+        // A restarted stream counts time from zero again, so a jump back is a break too; word times may overlap slightly.
+        const paused = lastEnd !== undefined && Math.abs(start - lastEnd) >= PARAGRAPH_PAUSE_SECONDS;
+        if (paused && state.current.committed.length > 0) {
+          render('');
+          state.current = { committed: [] };
+        }
+        state.current.lastEnd = end;
         state.current.committed.push(word);
         if (state.current.committed.length >= PARAGRAPH_MIN_WORDS && SENTENCE_END.test(word)) {
           render('');
-          state.current = { committed: [] };
+          state.current = { committed: [], lastEnd: end };
         }
       }
       render(pending);
