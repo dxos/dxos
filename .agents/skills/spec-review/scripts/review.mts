@@ -11,7 +11,7 @@
 //     Validates a review against its spec and the checkout: frontmatter, statuses, notes,
 //     coverage of every item, and that each evidence key names an existing file and symbol.
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 
 const STATUSES = new Set(['done', 'untested', 'partial', 'diverged', 'missing']);
@@ -138,8 +138,9 @@ const check = (reviewPath: string): number => {
       return {};
     }
     const file = path.resolve(root, match[2]);
-    // A key names a file inside the checkout; `..` must not reach outside it.
-    if (match[2].split('/').includes('..') || !file.startsWith(`${path.resolve(root)}${path.sep}`)) {
+    // A key names a file inside the checkout; neither `..` nor a symlink may reach outside it.
+    const real = existsSync(file) ? realpathSync(file) : file;
+    if (match[2].split('/').includes('..') || !real.startsWith(`${realpathSync(root)}${path.sep}`)) {
       return { error: `key leaves the checkout: ${key}` };
     }
     return { file, symbol: match[3] };
