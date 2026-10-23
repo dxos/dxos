@@ -170,11 +170,25 @@ jobs:
           set -euo pipefail
           case "$VARIANT" in squashfs) ext=sqfs ;; erofs) ext=erofs ;; tar) ext=tar.zst ;; esac
           sudo mkdir -p /mnt/ws && sudo chown "$(id -u):$(id -g)" /mnt/ws
-          curl -fsSL "https://github.com/oras-project/oras/releases/download/v${ORAS_VERSION}/oras_${ORAS_VERSION}_linux_amd64.tar.gz" |
-            sudo tar -xz -C /usr/local/bin oras
+          # Plain curl in 8 parallel ranges: `oras pull` is one stream and took 6–35 s where this takes 3–6 s.
+          repo=${ARTIFACT_REPO#ghcr.io/}
+          token=$(curl -fsS "https://ghcr.io/token?scope=repository:$repo:pull" | jq -r .token)
+          blob=$(curl -fsS -H "Authorization: Bearer $token" -H 'Accept: application/vnd.oci.image.manifest.v1+json' \
+            "https://ghcr.io/v2/$repo/manifests/ws-${IMAGE_SHA:0:12}-${ext//./-}" | jq -r '.layers[0] | "\(.digest) \(.size)"')
+          digest=${blob% *}; size=${blob#* }
+          start=$(date +%s.%N)
+          parts=8; chunk=$(( (size + parts - 1) / parts )); pids=()
+          for i in $(seq 0 $((parts - 1))); do
+            from=$((i * chunk)); to=$(( from + chunk - 1 < size - 1 ? from + chunk - 1 : size - 1 ))
+            curl -fsSL -H "Authorization: Bearer $token" -r "$from-$to" -o "/mnt/ws/part.$i" "https://ghcr.io/v2/$repo/blobs/$digest" &
+            pids+=($!)
+          done
+          for pid in "${pids[@]}"; do wait "$pid"; done
+          printf 'download: %.1fs, %d MB\n' "$(echo "$(date +%s.%N) - $start" | bc)" $((size / 1000000))
           SECONDS=0
-          oras pull --no-tty -o /mnt/ws "$ARTIFACT_REPO:ws-${IMAGE_SHA:0:12}-${ext//./-}" >/dev/null
-          echo "download: ${SECONDS}s, $(du -h /mnt/ws/workspace.$ext | cut -f1)"
+          cat $(seq -f /mnt/ws/part.%g 0 $((parts - 1))) > "/mnt/ws/workspace.$ext" && rm /mnt/ws/part.*
+          [ "sha256:$(sha256sum "/mnt/ws/workspace.$ext" | cut -d' ' -f1)" = "$digest" ]
+          echo "assemble: ${SECONDS}s"
           SECONDS=0
           if [ "$VARIANT" = tar ]; then
             mkdir -p /mnt/ws/x
