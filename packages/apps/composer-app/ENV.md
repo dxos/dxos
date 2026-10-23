@@ -28,7 +28,10 @@ preview; override with `DX_EDGE_BASE_URL` to reach EDGE dev or a local EDGE.
   bind already exists — `preview` and `dev` deliberately share `composer-feedback-logs-dev`, while
   `production` and `staging` have their own. Note `staging`'s bucket is `composer-feedback-logs-preview`:
   it is bound by `env.staging` and has nothing to do with the `preview` environment. What each new Worker
-  does need is its own `POSTHOG_PROJECT_TOKEN` secret (`pnpm secrets remote <env> composer`), matched by a
-  1Password section named after the raw Worker name.
+  does need is its own `POSTHOG_PROJECT_TOKEN` secret: `op://eng-ops/com.posthog/PROJECT_TOKEN` for
+  `production`, `staging` and `preview`, `op://eng-dev/com.posthog/PROJECT_TOKEN` for `dev`. Without it
+  `/api/otel` answers 503. Push it with
+  `op read -n <ref> | wrangler secret put POSTHOG_PROJECT_TOKEN --env <env>`; for `dev` use
+  `wrangler versions secret put`, since per-PR deploys upload versions to that Worker.
 - Secrets are managed via [`scripts/secrets.mjs`](../../../scripts/secrets.mjs) (`pnpm secrets`), sourced
   from 1Password.

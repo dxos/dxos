@@ -39,7 +39,7 @@
   },
   // Per-env Workers (name = the deployed Worker; production = the bare name that carries the custom domain,
   // others suffixed). Bindings are NOT inherited, so each env repeats them. Cloudflare-side: each Worker
-  // needs its R2 bucket + the POSTHOG_PROJECT_TOKEN secret (`pnpm secrets remote <env> composer`).
+  // needs its R2 bucket + the POSTHOG_PROJECT_TOKEN secret (see ENV.md).
   "env": {
     "production": {
       "name": "composer",
