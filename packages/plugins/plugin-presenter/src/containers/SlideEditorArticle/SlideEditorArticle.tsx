@@ -28,7 +28,9 @@ import {
   createThemeExtensions,
   documentSlots,
   editorClassNames,
+  folding,
   formattingListener,
+  scrollbarAutohide,
 } from '@dxos/ui-editor';
 
 import { type BackgroundSettings, type SlideInsert, SlideToolbar } from '#components';
@@ -113,9 +115,9 @@ const SlideEditorContent = ({ subject }: SlideEditorContentProps) => {
       createThemeExtensions({ themeMode, slots: documentSlots }),
       createMarkdownExtensions(),
       slideHighlight(),
-      // The scrollbar's space is always reserved, so the text does not shift sideways once the slide overflows; one
-      // edge only, since CodeMirror positions the caret as if the scroller had no leading gutter.
-      NaturalEditorView.theme({ '.cm-scroller': { scrollbarGutter: 'stable' } }),
+      // As the markdown editor: the fold gutter (which also sets the text's inset) and the auto-hiding scrollbar.
+      folding(),
+      scrollbarAutohide(),
       automerge(Doc.createAccessor(subject, ['content'])),
       formattingListener((formatting: EditorToolbarState) =>
         registry.set(toolbarState, { ...registry.get(toolbarState), ...formatting }),
