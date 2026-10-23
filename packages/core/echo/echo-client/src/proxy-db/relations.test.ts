@@ -49,6 +49,18 @@ describe('Relations', () => {
     expect(Obj.isDeleted(source)).toBe(true);
   });
 
+  test('a relation query is answered from the working set', async () => {
+    const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
+    const org = db.add(Obj.make(TestSchema.Organization, { name: 'DXOS' }));
+    const relation = db.add(
+      Relation.make(TestSchema.EmployedBy, { [Relation.Source]: person, [Relation.Target]: org, role: 'CEO' }),
+    );
+    await db.flush();
+
+    expect(db.query(Filter.type(TestSchema.EmployedBy)).runSync()).toEqual([relation]);
+    expect(db.query(Query.select(Filter.id(org.id)).targetOf()).runSync()).toEqual([relation]);
+  });
+
   test('create relation between two objects', async () => {
     const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice' }));
     const org = db.add(Obj.make(TestSchema.Organization, { name: 'DXOS' }));

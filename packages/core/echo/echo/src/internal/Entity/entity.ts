@@ -127,6 +127,9 @@ export interface EchoTypeSchema<
  */
 export const TypeMetaSchemaDXN = DXN.make('org.dxos.type.schema', '0.1.0');
 
+/** Identity of `Lens.Stored`, the type of every lens-kind entity, which an index row names in place of a kind. */
+export const LensStoredDXN = DXN.make('org.dxos.type.lens', '0.1.0');
+
 /**
  * Effect Schema that every `Type.Type` entity is an instance of: the meta-schema
  * struct `{ name?, jsonSchema, id }` branded as a type-kind ECHO entity. This is

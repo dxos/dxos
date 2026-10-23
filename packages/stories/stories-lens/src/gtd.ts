@@ -4,17 +4,16 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, DXN, Type } from '@dxos/echo';
-import { Lens } from '@dxos/echo-panproto';
+import { Annotation, DXN, Lens, Type } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
 //
 // The demo lens: a `Task` viewed as a GTD task.
 //
 // `GtdTask` is written out, not derived — that is what lets an interface be built once against it and
-// reused for every source that maps to it. It lives here rather than in `@dxos/echo-panproto` because
-// `core/echo` must not depend on `sdk/types`: the mechanism ships in the package, an example lens
-// ships with the types it binds.
+// reused for every source that maps to it. It lives here rather than in `@dxos/echo` because `core/echo`
+// must not depend on `sdk/types`: the mechanism ships in the package, an example lens ships with the
+// types it binds.
 //
 
 /** The shape the lensed interface is written against. */
@@ -34,8 +33,6 @@ export class GtdTask extends Type.makeObject<GtdTask>(DXN.make('org.dxos.demo.Gt
   }).pipe(Annotation.LabelAnnotation.set(['title'])),
 ) {}
 
-export const GTD_LENS_ID = 'org.dxos.demo.lens.task-as-gtd';
-
 const URGENCY: Record<string, number> = { none: 1, low: 2, medium: 3, high: 4, urgent: 5 };
 
 /**
@@ -45,26 +42,24 @@ const URGENCY: Record<string, number> = { none: 1, low: 2, medium: 3, high: 4, u
  * they map themselves. `context` and `waitingOn` are absent too, for the opposite reason — nothing on
  * `Task` corresponds, so they fall through to the overlay.
  */
-export const GtdLens: Lens.Lens<Task.Task, GtdTask> = Lens.register(
-  Lens.make(GTD_LENS_ID, Task.Task, GtdTask, {
-    urgency: Lens.from('priority', Lens.lookup(URGENCY)),
+export const GtdLens: Lens.Lens<Task.Task, GtdTask> = Lens.make(Task.Task, GtdTask, {
+  urgency: Lens.from('priority', Lens.lookup(URGENCY)),
 
-    // The lossy split: `done` alone cannot restore `todo` vs `started`, so `put` reads the live
-    // `status` (declared in `from`) to decide.
-    done: {
-      from: ['status'],
-      get: ({ status }) => status === 'done',
-      put: (done: boolean | undefined, { status }) => ({
-        status: done === true ? ('done' as const) : status === 'done' ? ('todo' as const) : status,
-      }),
-    },
-    stage: {
-      from: ['status'],
-      get: ({ status }) => status,
-      put: (stage: 'todo' | 'started' | 'done' | undefined) => ({ status: stage }),
-    },
-  }),
-);
+  // The lossy split: `done` alone cannot restore `todo` vs `started`, so `put` reads the live
+  // `status` (declared in `from`) to decide.
+  done: {
+    from: ['status'],
+    get: ({ status }) => status === 'done',
+    put: (done: boolean | undefined, { status }) => ({
+      status: done === true ? ('done' as const) : status === 'done' ? ('todo' as const) : status,
+    }),
+  },
+  stage: {
+    from: ['status'],
+    get: ({ status }) => status,
+    put: (stage: 'todo' | 'started' | 'done' | undefined) => ({ status: stage }),
+  },
+});
 
 export const makeDemoTask = () =>
   Task.make({

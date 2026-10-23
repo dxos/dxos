@@ -23,6 +23,7 @@ import { getObjectCore } from '../echo-handler/index.ts';
 import { type FeedHandle } from '../feed/feed-handle.ts';
 import { type QuerySourceProvider, recordObjectDiagnostic } from '../hypergraph.ts';
 import { DatabaseImpl } from '../proxy-db/index.ts';
+import { toDeclaredVersion } from '../proxy-db/version-documents/declared-version.ts';
 import {
   type QuerySource,
   type SourceEntry,
@@ -66,6 +67,11 @@ export type IndexQueryProviderProps = {
   runtime: EffectContext.Context<never>;
   objectLoader: ObjectLoader;
   graph: Hypergraph.Hypergraph;
+  /**
+   * Type URIs of the schema versions the client reads in a space, or in every space it has open when none is
+   * named, oldest first; none when absent.
+   */
+  versionsFor?: (spaceId?: SpaceId) => readonly string[];
   /** Overrides {@link QUERY_SERVICE_TIMEOUT}; tests drive the budget rather than waiting it out. */
   queryTimeout?: number;
   /** Fires as the host's index makes progress; each restarts a one-shot query's index budget. */
@@ -100,6 +106,7 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
       runtime: this._params.runtime,
       objectLoader: this._params.objectLoader,
       graph: this._params.graph,
+      versionsFor: this._params.versionsFor,
       queryTimeout: this._params.queryTimeout,
       hydrationTimeout: this._params.hydrationTimeout,
       indexProgress: this._params.indexProgress,
@@ -112,6 +119,11 @@ export type IndexQuerySourceProps = {
   runtime: EffectContext.Context<never>;
   objectLoader: ObjectLoader;
   graph: Hypergraph.Hypergraph;
+  /**
+   * Type URIs of the schema versions the client reads in a space, or in every space it has open when none is
+   * named, oldest first; none when absent.
+   */
+  versionsFor?: (spaceId?: SpaceId) => readonly string[];
   /** Overrides {@link QUERY_SERVICE_TIMEOUT}; tests drive the budget rather than waiting it out. */
   queryTimeout?: number;
   /** Fires as the host's index makes progress; each restarts a one-shot query's index budget. */
@@ -318,7 +330,7 @@ export class IndexQuerySource implements QuerySource {
     cleanup = subscribeStream(
       this._params.runtime,
       this._params.service['QueryService.execQuery']({
-        query: JSON.stringify(query),
+        query: JSON.stringify(this._withVersions(query)),
         queryId: String(queryId),
         reactivity: QueryReactivity.ONE_SHOT,
         subscriptionIds: this._subscriptionIds(query),
@@ -388,7 +400,7 @@ export class IndexQuerySource implements QuerySource {
     this._streamCleanup = subscribeStream(
       this._params.runtime,
       this._params.service['QueryService.execQuery']({
-        query: JSON.stringify(query),
+        query: JSON.stringify(this._withVersions(query)),
         queryId: String(queryId),
         reactivity: QueryReactivity.REACTIVE,
         subscriptionIds: this._subscriptionIds(query),
@@ -545,11 +557,12 @@ export class IndexQuerySource implements QuerySource {
       length: records.length,
     });
 
-    const load = await this._placeRows(ctx, records);
+    const kept = this._oneRecordPerObject(records);
+    const load = await this._placeRows(ctx, kept);
     const hydratedIntoFeedHandle = new Set<string>();
     // Chunked so hydrating a large local result set is not one uninterrupted run of microtasks.
     const processedResults: (SourceEntry | null | typeof STALLED)[] = [];
-    for (const chunk of chunkArray([...records], HYDRATE_RECORDS_PER_YIELD_CHECK)) {
+    for (const chunk of chunkArray(kept, HYDRATE_RECORDS_PER_YIELD_CHECK)) {
       await yieldOrContinue('smooth');
       processedResults.push(
         ...(await Promise.all(
@@ -557,7 +570,7 @@ export class IndexQuerySource implements QuerySource {
         )),
       );
     }
-    const stalled = records.filter((_, index) => processedResults[index] === STALLED).map((record) => record.id);
+    const stalled = kept.filter((_, index) => processedResults[index] === STALLED).map((record) => record.id);
     const results = processedResults.filter((entry) => entry !== STALLED).filter(isNonNullable);
 
     // Only rewrite the set we just hydrated — a newer host response may have replaced it meanwhile.
@@ -672,6 +685,51 @@ export class IndexQuerySource implements QuerySource {
   private _subscriptionIds(query: QueryAST.Query): string[] | undefined {
     const ids = this._params.objectLoader.subscriptionIds?.(getTargetSpacesForQuery(query));
     return ids?.length ? ids : undefined;
+  }
+
+  /**
+   * One record per object: an object stored once per schema version matches in each version's document when the
+   * host could not resolve its versions, so of those the document the database reads it from is kept.
+   */
+  private _oneRecordPerObject(records: readonly QueryService.QueryResult[]): QueryService.QueryResult[] {
+    const byObject = new Map<string, QueryService.QueryResult[]>();
+    for (const record of records) {
+      if (record.documentId !== undefined && !record.queueId) {
+        const key = `${record.spaceId}:${record.id}`;
+        byObject.set(key, [...(byObject.get(key) ?? []), record]);
+      }
+    }
+    const dropped = new Set<QueryService.QueryResult>();
+    for (const group of byObject.values()) {
+      const [{ spaceId, id }] = group;
+      const database = group.length > 1 ? this._params.graph.getDatabase(SpaceId.make(spaceId)) : undefined;
+      if (!(database instanceof DatabaseImpl)) {
+        continue;
+      }
+      const preferred = database._entityManager.preferredDocument(
+        id,
+        group.flatMap(({ documentId }) => (documentId === undefined ? [] : [documentId])),
+      );
+      if (preferred === undefined) {
+        continue;
+      }
+      for (const record of group) {
+        if (record.documentId !== preferred) {
+          dropped.add(record);
+        }
+      }
+    }
+    return dropped.size === 0 ? [...records] : records.filter((record) => !dropped.has(record));
+  }
+
+  /** Names the schema versions this client reads, so the host returns an object stored per version once. */
+  private _withVersions(query: QueryAST.Query): QueryAST.Query {
+    const versionsFor = this._params.versionsFor;
+    const spaceIds = getTargetSpacesForQuery(query);
+    const versions = versionsFor
+      ? [...new Set(spaceIds.length > 0 ? spaceIds.flatMap((spaceId) => versionsFor(spaceId)) : versionsFor())]
+      : [];
+    return versions.length === 0 ? query : { type: 'options', query, options: { versions } };
   }
 
   private _assertResultSpaces(query: QueryAST.Query, response: QueryService.QueryResponse): void {
@@ -808,7 +866,8 @@ export class IndexQuerySource implements QuerySource {
       return queryResult;
     }
 
-    const object = await load(result);
+    const resolved = await load(result);
+    const object = resolved ? await toDeclaredVersion(resolved, query) : resolved;
     if (!object) {
       return null;
     }

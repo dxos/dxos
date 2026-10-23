@@ -471,6 +471,15 @@ Demonstrated in both directions:
 
 ## 10. Migration
 
+> **Superseded (2026-10-02).** ECHO moved from one-off migrations to continuous migration: every
+> version of an object is kept in a document of its own, and the host translates each edit between
+> them through lenses (§12). The in-place migration code this section describes — fold-forward,
+> `Migration.fromLens`, the multi-object migration helpers, `ObjectCore.foldAt`, `Obj.getConflict` and
+> the migration bench — was removed, and main's one-off migration code was restored. It remains in this
+> branch's history: `bfb4ccae39` is the last commit that holds it. The work recorded here is how the
+> continuous design was reached, and much of it carried over into it: deterministic translation, the
+> structural list and text edits, and the convergence-key merge replay.
+
 Not scheduled. Recorded because the lens changes what is _possible_ here: it turns a migration from a
 one-shot script into a rule that can be re-applied, and that is what makes the goal in §10.1
 plausible rather than hopeless.
@@ -595,6 +604,39 @@ knows only the old type and writes it directly. Fold-forward is for that case.
    schema creates a child object after a fan-in absorbed the last one (§10.5). Nothing else in this
    list requires the mechanism to notice a new entity rather than a changed property, and it is the
    most likely reason the bar in §10.1 turns out to be unreachable.
+
+#### Outcomes (M0 complete 2026-08-02; follow-up spikes 2026-09-25)
+
+Every falsifiable claim above was answered empirically and none broke the §10.1 bar — the
+fold-forward hypothesis stands. The proving suite is
+`echo-client-e2e/src/migration-bench/` (10 files, 46 tests); the full record — the final design,
+the evidence map, and everything ruled out along the way with reasons — is
+[M0-REPORT.md](./M0-REPORT.md). The outcomes, in brief:
+
+- **Single object and chains: solved**, under a mechanically-enforceable constraint set (keep
+  sources; two head-marks + ancestry check; value-compare every write; equal values never
+  conflict; one `Obj.update` per composed fold; per-object markers).
+- **N→N multi-object: same machinery per object**, including guarded cross-object moves.
+- **Fan-in: solved with three declared ingredients** — removal choice, property-collision
+  resolution, and a query-based late-child path — each independently load-bearing.
+- **Fan-out: reduced to object-merging keys** (random object id + derived `meta.convergenceKey`;
+  passive collapse via the landed #12412 engine). The engine loses pre-merge loser edits; the fix
+  replays the loser's edits since creation at the winner's creation heads, which makes genuine
+  conflicts native automerge conflicts (needs adopting in the engine).
+- **Array fan-out: a define-time precondition + two-step composition** — elements must carry a
+  pre-existing stable id used in the meta key; id-less arrays first run an ordinary stamping
+  migration (random ids; the temporal gate to step 2 carries the correctness). Proven against
+  the real engine; the residual is reviewable duplicates, detectable without tracking.
+- **Conflicts are history-native** — `changeAt` fold-at-heads materializes real CRDT conflicts,
+  reviewable forever from ops alone, with the winner a deterministic policy (user-wins
+  recommended). No app-level shadow records. The user-wins sentinel actor is sound only for
+  byte-identical fold changes; the mechanism is an open decision.
+- **Collaborative text folds character-wise** via `changeAt` splice replay, with a chained
+  target-side fork frontier; across fan-out duplicates only when creation text matches.
+- **Multi-object non-atomicity is a repairable window, not corruption** — effects-as-data write
+  sets + per-step guards make any peer able to complete an interrupted migration.
+- **Epochs: last resort, platform-owned, deliberately history-erasing** — the fold window closes
+  at the boundary as an owned consequence; epoch timing is the window policy (§10.7 q2).
 
 ### 10.4 A migration is a lens
 
@@ -848,6 +890,14 @@ Shared plumbing, so it is built once: their Phase 1 exposes relation-endpoint mu
 (`ObjectCore.setSource`/`setTarget`) for ref rewriting — the same internal API fan-out-to-relation
 writes need here.
 
+**Baseline-aware three-way merge — proposal for PR #12412 (verified).** Their per-field
+winner-preference loses a loser-side unconflicted edit on any field the deterministic transform
+also wrote on the winner (all of them, for migration-minted duplicates). The fix: classify each
+field against the recomputable baseline — take unconflicted loser edits, keep the winner's value
+on genuine conflicts, tombstone (never erase) losers. Loss only where peers actually contradict;
+inspectable and revertible; convergent and idempotent. Evidence and detail: M0-REPORT.md (design
+4 and "Ruled out").
+
 ### 10.6 Convergence between peers
 
 A preference order, not a menu.
@@ -875,9 +925,20 @@ marks itself `effectful`, requires being online, and claims a lease. It cannot r
 partition either blocks it or risks two leaders, so it must be the exception a migration asks for.
 
 **D. Epochs become compaction only, never the migration mechanism.** An epoch is a storage
-optimization, run when convenient; correctness never depends on one. This retires the current failure
-mode directly. Note the interaction with §10.3 claim 2 — compaction rewrites history, so it must not
-destroy the heads fold-forward relies on.
+optimization and a **last resort, avoided as much as possible**; correctness never depends on one. This retires the current failure
+mode directly. Revised in review (2026-08-02, ratified): an epoch deliberately erases history and
+need NOT preserve the heads fold-forward relies on — running one closes the fold-forward window and
+drops live history-native conflicts, as an owned consequence (§10.7 q2 is thereby answered: the
+window is "until the next epoch"). The heads ancestry check is what keeps the boundary safe: a fold
+seeing foreign heads stops instead of re-applying the world. The operational model: epochs are a
+last resort, not routine cadence-driven compaction — owned and executed by the platform, NOT
+exposed as an app-level surface for the foreseeable future — so the fold-forward window is
+long-lived by default and history-native conflicts persist until one actually runs. When a space
+does run one (well-known/announced), a peer offline past it owns whatever
+it can no longer reconcile automatically. Its late writes still merge as raw data (bounded loss:
+manual reconciliation, not disappearance), and the ancestry-check failure doubles as the signal
+apps may consume to notify the user ("changes from before the epoch need review"); consuming that
+signal is the full extent of app involvement.
 
 **And version state moves onto the object.** A space-level scalar cannot say which objects migrated
 and races between peers. `EntityMeta.version` already exists per object and `transform` can already
@@ -888,22 +949,61 @@ convergent — and makes "what is left to migrate" a query instead of a guess.
 
 1. **Does promotion need coordination?** Draining an overlay into a real property is idempotent and
    deterministic, so probably not — but it changes what queries return, so peers disagree until it
-   propagates. Is a half-promoted space acceptable, and for how long?
+   propagates. Is a half-promoted space acceptable, and for how long? — **DECIDED (2026-09-25):**
+   yes, uncoordinated. Promotion is a migration (explicit version step moving overlay values into a
+   real property) with all the fold-forward machinery. Lens views stay consistent (read the real
+   property, fall back to the overlay); only queries on the new field lag, like any migration
+   window. Fold-forward must also diff the overlay's annotations path, not just `data`.
 2. **How long is the fold-forward window?** Keeping migration heads and un-deleted old properties
    forever is a storage cost. When is it safe to compact, given a peer could always have been offline
-   longer?
+   longer? — **ANSWERED (2026-08-02, ratified): the window is "until the next epoch".** Epochs
+   deliberately erase history; running one closes the fold window and drops live history-native
+   conflicts, as an owned consequence. Epoch timing is the policy knob; the heads ancestry check
+   makes the boundary safe (§10.3 addendum).
 3. **Reverse compatibility window.** How long do we keep old lenses, and what happens when a chain
-   grows to several hops?
+   grows to several hops? — **DECIDED (2026-09-25):** migrations are structured to be kept
+   indefinitely (a peer can return from any offline period, and epochs are out of scope); never
+   retiring is the default. Retirement is planned for as part of the process (e.g. a declared
+   support window after which late old-version data arrives unmigrated for manual review) but used
+   only if migrations become unmanageable. Long chains only affect views: stored objects converge
+   to the latest version by fold-forward.
 4. **Lens versioning** (§8.7) — a lens pins `source` to `typename@version`, and migration is exactly
-   the event that moves it. These must be designed together.
+   the event that moves it. These must be designed together. — **DECIDED (2026-09-25):** two
+   mechanisms. _Viewing_ (ephemeral) resolves the shortest path through the registry's graph of
+   lenses between type versions (`Task@2 → Task@1 → GtdTask@1`; a direct lens, once written, is
+   simply shorter), with deterministic tie-breaking so peers present the same view; weighting paths
+   by coverage loss is a later refinement. _Migrating_ (permanent base-data rewrite) only ever uses
+   explicitly declared version-to-version migrations, applied in sequence — never a discovered
+   path, which could route through an unrelated type and permanently drop what that detour drops.
 5. **Validation on the way through.** A `put` validates against the base type; during a migration the
-   base type is what is changing.
+   base type is what is changing. — **DECIDED (2026-09-25):** ordinary writes validate against the
+   object's own current version (today's per-property `_validateValue`); the migration's write set
+   validates as a whole against the target version and applies in the same change as the type
+   switch; retained source properties are recorded as retired in the object's migration marker
+   (refined 2026-09-27: the target does not accept writes to them — only old clients write them, and
+   replicated ops are not validated — so no schema-level declaration is needed); a fold write that fails target validation becomes `Write.report` (source left, flagged).
+   Validation is a local-write guard only — replicated ops are never validated, so readers must
+   tolerate invalid data regardless.
 6. **What runs fold-forward, and what does it cost?** "Re-applied whenever old-shaped data
    appears" needs a concrete hook — a doc-change listener, the indexer, or query time — and every
-   choice taxes a hot path on each change to each object of a migrated type. Unpriced so far.
+   choice taxes a hot path on each change to each object of a migrated type. Unpriced so far. —
+   **DECIDED (2026-09-25): the worker's indexing stream**, the home #12412's convergence-key merge
+   settled on (durable intents in the indexing transaction, crash-safe, sees replication arrivals).
+   Cost still to be measured there.
 7. **Does branching subsume the overlay here?** `createBranch`/`mergeBranch` already gives same-id
    alternate timelines with CRDT merge-back — close to Jazz's per-schema-hash branches. Possibly a
-   better home for in-flight migration state than the overlay.
+   better home for in-flight migration state than the overlay. — **DECIDED (2026-09-25):** not now. Start
+   with the overlay; migration state is not held on branches, and branch-based migration preview is
+   a possible later opt-in. **Long-term target (a mental model, deliberately not committed):** one
+   system where a _lens_ is the transformation, a _branch_ is a shared alternate timeline where data
+   is materialized, and a _migration_ is a lens applied at one of three levels — view (read/write
+   through it, base untouched), preview (materialize onto a branch the whole space can see and edit),
+   commit (merge that branch into main). Branch creation already records its fork heads, which are
+   the pre-migration heads fold-forward needs. Unverified points before committing to it: merge-back
+   must be merge + fold-forward (main keeps taking old-shape writes during a preview); a space-wide
+   preview forks every affected document; whether a branch can hold objects main lacks (fan-out /
+   fan-in); peers offline across the commit still fold forward. Deferred because branching itself
+   is not fully fleshed out, and unifying early would constrain exploration and slow implementation.
 
 ## 11. Cross-object lenses
 
@@ -1045,7 +1145,385 @@ a late old-shape write to a referenced object is recoverable exactly as it is fo
 Projection is the half that needs §10.5's write-set-with-an-address. Composition needs none of it,
 which is another reason to build composition first.
 
-## 12. References
+## 12. Version documents — identity, storage and queries (draft, 2026-09-30)
+
+_Direction in [IMPLEMENTATION-PLAN.md](./IMPLEMENTATION-PLAN.md) ("Direction: version documents");
+translation rules proven by the prototype in `echo-client/src/proxy-db/version-documents/`. This section
+works out how one logical object with several version documents fits ECHO, borrowing from branching
+(`echo-client/docs/VERSIONING.md`), which already gives one object id several documents._
+
+### 12.1 What branching already solves
+
+- **Registry outside `links`.** Branch documents live in `DatabaseDirectory.branches[rootId][name].members
+[objectId] → docUrl` (`echo-protocol/src/document-structure.ts`), never in `links`, so the loader never
+  materializes them as extra objects. Every document-enumeration path (replication
+  `getAllLinkedDocuments`, the reclamation closure, import remapping) walks the registry too.
+- **One object per id in results.** The host indexes every document, rows keyed by `(space, documentId,
+objectId)`; the client drops any hit whose document is not the one it routes that id to
+  (`echo-client/src/client/echo-client.ts` `_loadObjectFromDocument`). Known costs: rows from other
+  documents are indexed and can make a limited result short.
+- **Another view of the same id.** `db.branch(obj, name)` returns a binding whose core is bound to the
+  branch document; references resolve by id to the canonical instance.
+- **Random document ids are fine when histories are shared.** A branch document is an import of the
+  source's history under a new id; `A.merge` across ids works because the changes are the same.
+
+### 12.2 Storage
+
+- **Registry.** `DatabaseDirectory.versions[objectId][typeVersion] → docUrl`, outside `links`, walked by
+  every enumeration path branching already extended (replication, reclamation, import remap, flush
+  heads — the gap branching has there should be closed for both).
+- **`links[objectId]` stays what released apps read.** Apps released before version documents follow only
+  `links`. It keeps pointing at the document an object was created in, and for a type that existed
+  before version documents shipped, at the version those apps know; newer versions are reachable only
+  through the registry, which they ignore.
+- **Document ids are random.** Automerge document ids cannot be derived, so two devices that create the
+  same version document concurrently create two documents. Deterministic roots make this harmless: both
+  start from the byte-identical root change, so they share history exactly as a branch shares its
+  source's. The registry entry resolves by last-writer-wins; a device holding the losing document merges
+  it into the winner (`A.merge`, as `mergeBranch` does) and drops it. Until then, queries dedupe by id.
+
+### 12.3 Queries and identity
+
+The rule: a query can target any version the reader knows, never returns an object twice, and by default
+returns each object at the newest version the reader knows.
+
+- **Index.** Every version document is indexed under its own type, as branch documents are today, so
+  `Filter.type(Foo@2)` already matches only v2 documents.
+- **Resolution.** For each object id in a result, pick one document: the version the query names, else
+  the newest version the reader's registry knows among those the object has. Unknown newer versions are
+  never the default. This replaces branching's "the document `links` routes to" with "the document the
+  reader's version preference routes to".
+- **Where it runs.** Client-side first, as branching does (drop hits from non-chosen documents, then load
+  by id). The limit-shortfall problem then applies to versions too; the fix, for both, is host-side
+  resolution given the reader's known versions (sent with the query).
+- **Cores.** A reader may hold two versions of one object at once (a v2 query and a v3 query in one
+  session), so cores are keyed by `(objectId, version)`, with the default version the one `Filter.id` and
+  plain reads return. `db.version(obj, v)` returns another version's binding, like `db.branch`.
+- **References** carry an object id and resolve to the reader's default version. A reference that
+  names a version (a versioned DXN) resolves to that version's document.
+
+### 12.4 Translation and branches
+
+- **Who translates.** Every device holding two version documents translates between them (prototype
+  rules). Translation is triggered on document updates, as fold-forward is today; lens code runs in the
+  client until lenses are data (then the host or EDGE can run them).
+- **Branches of a versioned object.** Open. A branch forks documents; a versioned object has several. The
+  simplest rule forks every version document of each member and translates within the branch, so a
+  branch is a consistent alternate timeline across versions; merging a branch merges each version
+  document with its main counterpart. Registry shape: `branches[...].members[objectId]` becomes a
+  per-version map.
+
+### 12.5 Decisions (2026-09-30)
+
+1. **`links` points at the legacy version for every object, and every version document replicates to
+   every peer.** For each type, the legacy version is the newest version that existed before version
+   documents shipped: the one released apps read. Existing objects keep their document; objects created
+   later get one at the legacy version too (phase 1 creates every version up front), so released apps see
+   new objects. Older apps also sync down newer version documents they cannot read, so those are already
+   present when the app upgrades. Released hosts replicate only `links` and the branch registry, so version
+   documents are recorded where they already look: under reserved branch names
+   (`branches[objectId]['@v<version>']`), which every release that ships branching replicates and never
+   materializes as extra objects. Releases older than branching cannot sync them.
+2. **The query names the versions its reader knows** (revised 2026-10-01). Each client sends the type
+   URIs its lenses know as `QueryOptions.versions`, and the host resolves each object once over the
+   query's own matches against them. The option travels with the request, so it is exactly the requesting
+   client's knowledge (two tabs of different builds can share a host), it cannot race the asynchronous
+   registry push of #13284, and the query path needs no registry lookup. #13284 is therefore not needed
+   for this.
+3. **"Update to open" for unreadable newer versions is out of scope.**
+4. **Branches of a versioned object: the simplest rule.** A branch forks every version document of each
+   member (registry `members[objectId]` becomes a per-version map), translation runs inside the branch as
+   on main, and merging a branch merges each version document into its main counterpart.
+5. **Duplicate version documents resolve deterministically.**
+   - Which document wins is the registry's visible value for `versions[objectId][version]`: concurrent
+     writes are an Automerge conflict, and every peer reads the same winner once synced.
+   - The losers are the other values of that conflict (`A.getConflicts`). Any device that holds a loser
+     merges it into the winner. The result is the union of both histories, identical whoever merges and
+     however often, because both documents start from the same deterministic root.
+   - A loser is reclaimed only once the winner holds its heads (`A.hasHeads`), a condition every device
+     evaluates the same way; the reclamation closure follows only the registry's visible values.
+   - Edits a device made into its losing document before it saw the winner are carried by the merge.
+
+### 12.6 As built (2026-09-30)
+
+- **Legacy version.** `links` names the oldest version in the type's lens chain, so a chain starts at the
+  version released apps read. An object an app creates at a newer version is linked at the oldest once
+  its versions exist.
+- **Registry.** Every version, the linked one included, is recorded as `branches[id]['@v<version>']` with the
+  version's type URI (`BranchRecord.type`), so a reader picks a version without loading documents.
+- **Designation.** A derived root records the digest of the lens keys from its origin; a device whose
+  lenses give a different digest does not translate. Lenses with the same definition have the same key,
+  so builds that agree need no designation.
+- **Branches carry every version** (decision 4, as built). `BranchRecord.versions[memberId][version]` beside
+  `members`; a branch opened before an upgrade gains the new versions from the runner, derived from the
+  object's origin, so they share main's roots and merge back without duplicating translated edits.
+- **A query's result type is part of the query.** A selection returns rows of the version its type filter
+  names; a query naming several versions of one type returns each object once, at the newest named; one
+  naming no version returns the newest the reader knows. The host resolves this over the query's own matches
+  (not every document of the object), once, before ordering, limits and aggregation.
+- **Several live objects per id.** The live object reads the reader's default version; a row of another
+  version is returned as a version binding bound to that version's document, one per object and version,
+  also reached by `db.version(obj, Type)`. A reference resolves to the version its schema declares, and a
+  query that traverses it returns that version (the traversal clause names only the property, so the client
+  derives the target from the anchor's schema).
+
+### 12.7 One lens (decided 2026-10-01)
+
+`Lens` (a view of one type through another) and `VersionLens` (translation between version documents)
+become one entity. A lens is to types what a relation is to objects: an edge between two of them.
+
+1. **One definition, two uses.** `Lens.make` is the only constructor. A view runs `get`/`put` against a live
+   object; version documents compile the same declarative mapping to `forward`/`backward` over plain data.
+   Ephemeral use is unchanged: a lens made and used on the spot needs no registration or storage, and may
+   use inline functions or be coded.
+2. **The subset version documents accept.** Rename, same-name match, add with a default and remove with a
+   default translate in both directions; lists, maps and text join them (step 2). Everything else stays a
+   view lens, and registering it between two versions of one type throws, naming the entry. Every
+   migration built so far gets a lens form by the end of step 4:
+   - forward only (older peers read but do not edit): `readOnly` and codec entries, `Migration.define`
+     transforms (step 3), cross-object moves, fan-out, fan-in and array fan-out (step 4);
+   - code only, shipped with the app and never stored: arbitrary transforms and function collision
+     policies;
+   - not yet: a typename rename, since version documents key everything by typename. It stays in place.
+3. **Identity.** A lens is named by its endpoints, `<source URI> → <target URI or identifier>`, and there is
+   at most one lens per pair. A plain-schema target must carry an identifier annotation. Overlays are stored
+   under that name. Separately, a `digest` of the resolved mapping (both URIs, every explicit and same-name
+   entry, defaults included) designates which lens derived a version root; a schema that changes without a
+   version bump changes the digest, and that device stops translating. A code-only lens's digest is a
+   declared version plus a hash of its source.
+4. **Target-only properties.** In version documents a target-only property lives in the target version's
+   document, starting at the target schema's default, unset when optional; a required property with no
+   default needs `add(property, default)`. Removed properties mirror this backward. A view between two
+   versions of one type reads the version document when one exists; overlays remain for views between
+   different types and for ephemeral use, so no fact is stored twice.
+5. **A new entity kind.** `EntityKind.Lens`, modelled on the `Type` kind: persisted with `db.addLens()`, kept
+   out of `db.add()`, and indexed by the registry by endpoints (`lensBetween`, `lensesFrom`). It is the kind
+   query traversals through lenses will use later. The stored `Lens.Object` is replaced, not migrated. A
+   lens between two versions is immutable once published; changing it means a new type version.
+6. **The host translates.** Translation runs in the host's indexing pass with a durable intent log, as
+   convergence-key merging does, using the declarative lenses stored in the space. A client stores each lens
+   it registers in every space it opens, deduplicated by endpoints and digest. Code-only lenses run in the
+   client. The static `Lens.register` and `syncVersions`/`watchVersions` go away; the registry supplies the
+   lenses, and queries still carry the versions each client knows.
+7. **Trust.** Any member may store a lens. An existing object translates with the lens whose digest its
+   root records, so a later lens cannot change it. A pair with two stored lenses of different digests
+   derives no new versions on any host until one is removed, and devtools shows the conflict.
+8. **Storage.** Declarative lenses are stored in the space (decision 6), with a stored kind of their own
+   (`system.kind: 'lens'`, decided 2026-10-01). Released clients assert the kind is object, relation or
+   type, so their queries throw on a space holding a lens; `'type'` was introduced the same way.
+
+### 12.8 One lens, as built (2026-10-01)
+
+- **Name and id.** A lens's identity is `name` (`<source URI> -> <target>`); `id` is an entity id stamped at
+  construction, as a type's is. `overlayKey` is the name, except that a composed lens keeps its last hop's.
+- **Digest.** Canonical JSON (not a hash: whatever records it hashes it) of the endpoints, every entry
+  described by behavior (a same-name match and an explicit same-name rename are the same entry), the
+  overlays and the resolved defaults. Inline code contributes its source text.
+- **Kind.** `EntityKind.Lens`. A lens made in code carries the kind and a `LensTypeId` marker, so
+  `Lens.isLens` means "runs here" and `Lens.isStored` means "a record in a space"; both have the kind.
+  `Type.AnyEntity` gains `Type.LensKind`, the schema kind stored lenses are instances of (`Lens.Stored`,
+  `org.dxos.type.lens@0.1.0`, registered by every hypergraph beside `Type.Type`).
+- **Stored lens.** Holds every resolved entry (same-name matches included), the overlays, the dropped
+  properties and the resolved defaults, so a peer can run it without the schemas it connects; `fromStored`
+  rehydrates it against the types and gets the stored digest back when they are unchanged.
+- **Registry.** `registry.add` accepts lenses and keeps them apart from entities (not in `list` or
+  queries); `lenses()`, `lensBetween(source, target)` and `lensesFrom(source)` read them, local shadowing
+  upstream by name. A different lens for a registered pair throws. The static `Lens.register` is gone;
+  `Lens.findPath`/`resolveView` take the lenses to walk.
+- **Persistence.** `db.addLens(lens)` stores it (reusing one with the same name and digest); `db.add`
+  rejects lenses at compile time and at run time, as it does types.
+- **Version edges.** Translation runs on `Lens.VersionEdge`s: a lens between two versions as plain data,
+  named by type URIs, with `forward`/`backward` over plain object data. `Lens.versionEdge(lens)` builds one
+  from code (throwing outside the subset); `Lens.storedVersionEdge(data)` from a stored lens's data,
+  without schemas. `Lens.versionPath` walks edges by version, either direction, ties broken by digest; views
+  still walk `Lens.findPath`. Both read the same lenses, but there are two walkers, not one.
+- **Host translation.** The runner, translation core and their helpers moved to `@dxos/echo-host/versions`,
+  over a small document-store interface. `EchoHost` runs `VersionTranslator` after each index pass that
+  indexed documents (and once at startup), without blocking indexing: per space it reads the stored lenses
+  through the index, finds the objects of their types, and syncs an object again only when its documents,
+  registry entries or the space's lenses changed (compared by the documents' live heads). Because the first
+  pass after startup syncs everything, no separate intent log is needed.
+- **Conflicts.** Per object, the runner picks, among a type's stored lenses, the choice every held derived
+  document was derived with; a type with two lenses for one pair derives nothing new.
+- **Client.** `syncVersions`/`watchVersions` are gone. On open and on every registry change, a database
+  reads the versions its registry's version lenses connect (routing and `QueryOptions.versions`) and stores
+  those lenses in its space; `db.flush()` waits for that store.
+
+### 12.9 Lens steps 2 and 3, as built (2026-10-01)
+
+- **Nested entries (step 2).** `Lens.within(property, mapping)`, `Lens.each(property, mapping)` and
+  `Lens.values(property, mapping)` map a struct, each element of a list of structs (by position) or each
+  value of a record of structs through an inner mapping that resolves as a top-level one does. Each takes
+  defaults for the inner properties one side alone declares. Translation needs nothing new below the lens:
+  `applyStructuralEdit` already rebases list, map and text edits element by element, so concurrent edits to
+  different elements in different versions both survive.
+- **One-way built-ins (step 3).** `Lens.concat`, `Lens.part`, `Lens.mapValue` and `Lens.constant` compute a
+  target property from source properties, stored as data so a host runs them; `readOnly` is the one-way copy.
+  Forward only: an edit in the older version recomputes the property, and an edit to it in the newer
+  version stays there. A source property only one-way entries read is not restored going back, so it needs
+  a default when required (objects created at the newer version derive their older document from it). In a
+  view the property is read-only. Arbitrary code transforms wait (decided 2026-10-01).
+- **Plan as data.** A stored lens holds its whole plan as one canonical JSON field (`SerializedPlan`), so
+  nested plans need no recursive ECHO schema; code lenses and stored lenses build version steps from the
+  same data. Version documents reject an entry that runs code, naming it by path (`items[].qty`).
+
+### 12.10 Multi-object migrations across versions (draft for review, 2026-10-01)
+
+The in-place work (§10.5) met fan-out, fan-in and array split as entity creation and destruction, with
+convergence keys and the merge engine to make concurrent creation converge. Version documents change two of
+the premises behind that design.
+
+- **Nothing is destroyed.** Every version stays, so fan-in never deletes the absorbed object: older readers
+  still read it. The "absorb first, delete later" hazard (§10.5) does not arise.
+- **Derived identity is safe again.** §10.5 rejected derived object ids because two documents created
+  concurrently under one id share no history, and the loser is orphaned. A document derived the way version
+  roots are — a deterministic first change from the parent's creation — shares its first change with every
+  concurrent copy, so the copies merge as duplicate version documents already do (the visible `links`
+  value wins, losers merge into it).
+
+**The proposal: a fan-out child is a derived document of its parent.** Extracting `Person@1.address` into an
+`Address` object gives the address a new object id, derived as `hash(parent id, lens digest, role)`, whose
+document's root is derived from the parent's creation change through the lens, exactly as a version root is.
+Translation then treats `(Person@1, data.address)` and `(Address, data)` as two views of the same history:
+images of ancestors, originals-only translation, designation by recorded digest and the duplicate rule all
+apply unchanged. What changes is that a lens edge may address part of an object (a property path) and a
+target object other than the source.
+
+| Shape                | Older version                           | Newer version                                       | Translation                                                                           |
+| -------------------- | --------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Fan-out, 1 → 1       | `Person@1 { address: {…} }`             | `Person@2 { address: Ref }` + derived `Address`     | `Person@1.address.*` ↔ `Address.*`; the ref is a constant of the derivation           |
+| Fan-in, 1 → 1        | `Person@1 { address: Ref }` + `Address` | `Person@2 { address: {…} }`                         | `Address.*` ↔ `Person@2.address.*`; `Person@2`'s root derives from both creations     |
+| Array fan-out, 1 → N | `Order@1 { items: [{ id, … }] }`        | `Order@2 { items: Ref[] }` + one `Item` per element | per element, keyed by the element's stamped id, never its position                    |
+| Relation fan-out     | `Task@1 { assignee: string }`           | `Task@2` + `Person` + `assignedTo`                  | later: a relation's endpoints must both exist before it surfaces (§10.5, "Relations") |
+
+**Decisions (2026-10-01).**
+
+1. **Children are ordinary objects.** A fan-out child gets a random id and a convergence key
+   `lens:<digest>:<parent id>:<property>`; concurrent duplicates collapse through the merge engine. Object ids
+   do not change. Consequences: the child's first change records the parent state it was derived from (the
+   parent document's change and the lens digest), and the merge engine's replay must skip a loser's change
+   that translates an original the winner already holds, or a list edit would apply twice. (As built, the
+   merge writes no data for these keys at all; §12.11.)
+2. **One lens, the child mapping embedded.** `Lens.extract(property, ChildType, mapping)` is an entry of the
+   parent's version lens; there is no separate child lens, the parent's digest covers the child mapping, and
+   the target property is the role.
+3. **Fan-in with restrictions.** `Lens.absorb` derives the embedding version's root from both creation
+   changes (the parent's and the absorbed object's). Repointing the reference is not translated: the embedded
+   copy keeps following the object it started from, and the repoint is logged. Shared children are allowed;
+   an edit to one embedded copy reaches the others directly, through the shared object's mapping.
+4. **(Folded into 3.)**
+5. **Array elements are keyed by Automerge element identity** (the element's insertion, read as a cursor in
+   the older version's document). A move, which ECHO makes by deleting and reinserting, gives the element a
+   new identity: the old child is marked deleted and a new one is created; an edit to the old child
+   concurrent with the move is lost. Non-destructive moves (an ordered collection keyed by stable id with an
+   order key per item) are a separate ECHO change, handed off on 2026-10-01.
+6. **Order:** `extract`, then `extractEach`, then `absorb`, then review; relations later.
+
+**One mechanism for both directions.** `extract` and `absorb` are the same link read from either end: an
+embedded struct in one version document of the parent, and a child object's data. Every derived root stands
+for the creations of all its origins, so roots map to roots and the image rules hold: a parent version derived
+from an object created at the other end (a person created at v2 with an address object, then derived back to
+v1) has a root standing for both creations, which is the two-origin root `absorb` needs anyway.
+
+### 12.11 `Lens.extract`, as built (2026-10-01)
+
+- **Lens side.** `Lens.extract(property, Child, mapping, defaults?)` is a version-lens entry whose target
+  property is a `Ref` to `Child`. The edge gains `links`: `{ property, from, child, forward, backward }`. The
+  struct leaves the newer version's data and the reference is dropped going back, so the struct counts as a
+  one-way input and needs a default when required. A view reads the property as unset and rejects writes.
+  Lens planning reads the declared (type-side) property AST, since the encoded side drops the `Ref` target.
+- **Creation** (`echo-host/src/versions/version-links.ts`). For each link the runner reads the reference in
+  the newer version document. With none, and no earlier change marked `lens-link <property>`, it creates the
+  object from the older version's root state through the link. The object gets a random id, the convergence key
+  `lens:<hash(edge digest)>:<parent id>:<property>`, and a first change `link-root <version> <heads>`. The
+  runner links it from the space root and writes the reference into the newer version under that message,
+  so a reference an app removes is not extracted again.
+- **Translation.** `translateBetween` generalizes the core: each side is `(doc, object id, label)`, labels are
+  versions or object ids, and a projection maps the source entry into the target's sections. The pairs are:
+  - every held parent version to the object: the struct through the lenses to the edge's older end, plus the
+    deletion. A version that holds the reference sends only the deletion.
+  - the object to every version embedding the struct: the version is at most the edge's older end.
+  - every object merged into the live one, to the live one and to the embedding versions.
+- **Fork rule change.** A change that moves nothing the target holds is walked past, a translation included;
+  before, a translation without an image waited. This also fixes a latent stall: in a chain v1–v2–v3, a v3
+  edit to a property v1 lacks reaches v2 as a translation, and a later v2 edit waited forever for a v1 image
+  that never comes.
+- **Merging duplicates (refines decision 1).** For a `lens:` key the merge engine writes no data: no flat
+  fold, no creation-heads replay, no late fold. It only redirects, tombstones and records `mergedFrom`. The
+  runner follows the newer version's reference through `mergedInto` and translates every loser's originals
+  into the winner and the parent. Skipping only the translations a winner already holds was not enough: a
+  replay is itself an original, so it would reach the parent a second time.
+- **Host.** Change detection also covers the extracted objects' documents (the `onHandle` set of the last
+  sync), so an edit to one triggers its parent's sync.
+- **Limits.**
+  - Main only: branches do not extract.
+  - A reference that names an object outside the convergence key is logged and left alone (`absorb`, M3).
+  - An object created at the newer version gets an extracted object built from the struct's default, unless
+    the app set the reference itself.
+  - A host too old to know `lens:` keys merges duplicates the old way, and its data fold reaches the parent
+    as an edit.
+  - `meta` is not translated.
+
+### 12.12 `Lens.extractEach`, as built (2026-10-01)
+
+- **Identity (refines decision 5).** Automerge 3.5 has cursors only for text, so an element is identified by
+  its map's object id (`counter@actor`), which is its insertion op. That id is stable under concurrent edits,
+  readable on a view of history, and replaced by a reorder (delete and insert). The convergence key appends
+  it: `lens:<hash>:<parent id>:<property>:<element id>`.
+- **Creation.** An element's object derives from the older version as the change that inserted it left it.
+  That change is the last change of the op's actor starting at or below the op's counter; an empty change
+  shares its successor's start, which is why it is the last. Every device therefore derives the same root, and
+  the element's object records those heads in its `link-root` change.
+- **Roots.** A translation side may name the changes its root stands for. For an element's object, the older
+  version's side stands for the ancestors of the insertion change, so an edit to the object forks at the
+  insertion, where the element exists.
+- **Located sections.** A section may give a locator instead of a fixed path. The object's data is written at
+  its element's current index in the target's state, and dropped if the element is gone there. A section whose
+  value the source does not know (before the element exists, or once it is gone) moves nothing.
+- **Membership.** The older version owns membership and order:
+  - an inserted element gets an object;
+  - a removed element marks its object deleted;
+  - the runner rewrites the newer version's list of references to follow the older version's order, keeping
+    references already in order.
+  - Deleting an object at the newer version removes its element from the older version (`lens-unlink`),
+    unless the whole parent is deleted.
+  - Other versions of the parent send only the parent's deletion.
+- **Limits.**
+  - A list is extracted only from the oldest version: element ids are local to one document, so a version
+    older still could not follow them (logged).
+  - Objects added to the newer version's list are not adopted into the older version; that is `absorb`'s
+    two-origin root (M3).
+  - Two devices rewriting the reference list concurrently can briefly duplicate a reference until a pass sees
+    both writes.
+  - Each element's object costs a scan of the older version's history per pass.
+
+### 12.13 `Lens.absorb`, as built (2026-10-01)
+
+- **Lens side.** `Lens.absorb(property, Child, mapping, defaults?)` maps the older version's reference to a
+  `Child` into a struct of the newer version, through an inner plan from the child's properties to the struct.
+  The edge's link has shape `absorb`. The reference counts as a one-way input, so it must be optional (or have
+  a default): an object created at the newer version has nothing to reference.
+- **Two-origin roots.** A version embedding the struct derives its root from the parent's creation and from the
+  creation of the object the parent referenced when it was created. The root message lists each absorbed
+  object as `<property>/<object id>/<creation>`. While that object's document is unavailable, no version is
+  derived, since a root built without it would differ from every other device's.
+- **Translation.** The absorbed object exchanges edits with every held version at or after the edge's newer
+  end, at the struct's place through the lenses. Only the parts the struct adds are embedded, so a path's
+  defaults never overwrite what a version holds.
+- **Labels across objects.** A parent version's label is `<object id>:<version>` in these pairs. Copies of one
+  object in different parents are then different sources; within one object, versions keep plain labels.
+- **Shared objects (decision 3).** Through `VersionStore.referrers` (the index's referrers on the host), each
+  parent's embedding versions translate into the copies other parents absorbed from the same object, through
+  the object's mapping.
+- **Repoints (decision 3).** A reference changed after the root is logged; the copy keeps following the object
+  recorded in its root.
+- **Limits.**
+  - An object created at the newer version has no reference in the older version: the struct is not
+    extracted back into an object.
+  - An absorbed object merged into another by its convergence key keeps translating from its own document.
+  - Without `referrers`, copies of a shared object do not exchange edits directly.
+
+## 13. References
 
 - panproto — https://github.com/panproto/panproto · book https://panproto.dev/book/ ·
   `panproto-lens` https://docs.rs/panproto-lens/latest/panproto_lens/ ·
