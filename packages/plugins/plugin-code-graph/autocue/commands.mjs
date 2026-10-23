@@ -50,7 +50,11 @@ export const steps = [
     name: "Show a package's exports",
     run: async (context) => {
       const { demo, page } = context;
-      await demo.caption({ value: 'Open the command bar and ask for the ECHO exports', subtitle: SPEC });
+      await demo.caption({
+        value: 'Open the command bar and ask for the ECHO exports',
+        subtitle: SPEC,
+        position: 'top',
+      });
       await demo.click({ selector: '[data-testid="code-graph-command-open"]', label: 'Command' });
       await page.locator(INPUT).waitFor();
       await command(context, 'show me the ECHO package exports');
@@ -59,7 +63,7 @@ export const steps = [
   {
     name: 'Draw what depends on a service',
     run: async (context) => {
-      await context.demo.caption({ value: 'A question draws its answer', subtitle: SPEC });
+      await context.demo.caption({ value: 'A question draws its answer', subtitle: SPEC, position: 'top' });
       await command(context, 'What depends on identity service in halo');
     },
   },
@@ -67,7 +71,7 @@ export const steps = [
     name: 'Clear the graph',
     run: async (context) => {
       const { demo, page } = context;
-      await demo.caption({ value: 'Clear the graph', subtitle: SPEC });
+      await demo.caption({ value: 'Clear the graph', subtitle: SPEC, position: 'top' });
       await command(context, 'clear the graph');
       if (!(await visible(page.locator('[data-testid="code-graph-article"] >> text=press / for a command'), 10_000))) {
         throw new Error('the graph did not clear');

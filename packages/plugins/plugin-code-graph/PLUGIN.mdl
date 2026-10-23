@@ -233,6 +233,7 @@ test QA-2: Single commands
   desc: The command bar, apart from the chat: replace the graph with a package's exports, draw what depends on a service, then clear it.
   actors: human, agent
   covers: [F-5.1, F-5.2, F-5.3, F-5.4]
+  status: passing           # 2026-10-23; driven by autocue/commands.mjs against `vite dev` with EDGE preview; 9.3 s for the first command (index process cold), 4–5 s after. Speech was not exercised (no microphone in the sandbox).
   given:
     - the index is built (`bun tools/code-index/bin/code-index.ts index`) and no other code-index process holds it
     - composer-app runs under `moon run composer-app:serve` with an AI service (EDGE preview, `DX_EDGE_BASE_URL=https://preview.dxos.network/`)
