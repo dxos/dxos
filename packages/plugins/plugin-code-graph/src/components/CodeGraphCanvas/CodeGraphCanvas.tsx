@@ -132,6 +132,8 @@ export type CodeGraphCanvasProps = {
   onOpen?: (id: string) => void;
   /** Boxes deleted on the canvas; without it they cannot be. */
   onRemove?: (ids: string[]) => void;
+  /** Changing it reframes the view on the boxes, e.g. once an asynchronous layout lands; edits never refit by themselves. */
+  refitKey?: string | number;
 };
 
 /**
@@ -147,6 +149,7 @@ export const CodeGraphCanvas = ({
   selected,
   onOpen,
   onRemove,
+  refitKey,
 }: CodeGraphCanvasProps) => {
   const atomRegistry = useContext(RegistryContext);
   const lookup = useMemo(() => {
@@ -216,6 +219,7 @@ export const CodeGraphCanvas = ({
         nodes={registry}
         createProjection={createProjection}
         backgroundGrid='none'
+        refitKey={refitKey}
       >
         <Canvas.Viewport />
         <Canvas.Navigation />

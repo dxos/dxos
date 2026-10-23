@@ -165,7 +165,7 @@ test QA-1: Draw and reshape a package graph
   desc: The primary journey — create a graph, fill it from the index, expand a box, switch layouts.
   actors: human, agent
   covers: [F-1.1, F-2.1, F-2.3, F-3.1, F-3.2]
-  status: unverified
+  status: passing           # 2026-10-23; driven by a Playwright script against `vite dev`: steps 1-3 by `invoke`, step 4 and the details panel's Expand by clicks. The assistant chat itself was not exercised (no model key in the sandbox).
   given:
     - the index is built (`bun tools/code-index/bin/code-index.ts index`) and no other code-index process holds it
     - composer-app runs under `moon run composer-app:serve`
@@ -206,6 +206,11 @@ decision D-1: The page reaches code-index through a dev-server route that runs `
   date: 2026-10-23
   by: agent:claude
   why: the index's store is single-process behind a native addon, and the code-index web server has no SPARQL route; the user accepted a vite-dev or tauri-only plugin
+
+decision D-3: The illustrator layout is recentred on the origin and the canvas refits when it lands
+  date: 2026-10-23
+  by: agent:claude
+  why: the engine's coordinates start at its own origin and arrive after the canvas's first fit, so the graph opened off-centre and tiny
 
 decision D-2: One canvas serves the illustrator, force and rank layouts; the illustrator supplies positions as the overlay
   date: 2026-10-23

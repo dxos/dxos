@@ -47,7 +47,7 @@ const useSemanticLayout = (
   nodes: readonly CodeGraph.Node[],
   edges: readonly CodeGraph.Edge[],
   enabled: boolean,
-): { layout: Semantic.Layout; pending: boolean } => {
+): { layout: Semantic.Layout; pending: boolean; key?: string } => {
   // Keyed on structure, not positions: dragging a box must not re-run the engine.
   const key = useMemo(
     () =>
@@ -70,7 +70,7 @@ const useSemanticLayout = (
     );
     return () => void Effect.runFork(Fiber.interrupt(fiber));
   }, [enabled, key]);
-  return { layout: state.layout, pending: enabled && state.key !== key };
+  return { layout: state.layout, pending: enabled && state.key !== key, key: state.key };
 };
 
 export type CodeGraphArticleProps = AppSurface.ObjectArticleProps<CodeGraph.CodeGraph>;
@@ -198,6 +198,8 @@ export const CodeGraphArticle = ({ role, subject }: CodeGraphArticleProps) => {
               selected={selected}
               onOpen={setSelected}
               onRemove={handleRemove}
+              // Reframe when boxes come or go, and when the illustrator's positions land after the first frame.
+              refitKey={`${nodes.length}:${layout === 'illustrator' ? semantic.key : ''}`}
             />
           )}
           {selectedNode && (

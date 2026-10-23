@@ -113,5 +113,18 @@ export const layout = (graph: Model.Patch, options?: { flow?: 'down' | 'right' }
       };
     }
   }
-  return { positions, objects, problems: problems.map(({ message }) => message) };
+  return { positions: centred(positions), objects, problems: problems.map(({ message }) => message) };
+};
+
+/** Moves the points so their bounds straddle the origin, where the canvas opens, as its own arrangements do. */
+const centred = (positions: Record<string, Point>): Record<string, Point> => {
+  const points = Object.values(positions);
+  if (points.length === 0) {
+    return positions;
+  }
+  const xs = points.map(({ x }) => x);
+  const ys = points.map(({ y }) => y);
+  const dx = (Math.min(...xs) + Math.max(...xs)) / 2;
+  const dy = (Math.min(...ys) + Math.max(...ys)) / 2;
+  return Object.fromEntries(Object.entries(positions).map(([id, { x, y }]) => [id, { x: x - dx, y: y - dy }]));
 };

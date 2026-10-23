@@ -31,6 +31,15 @@ export type NodeDetailsProps = {
 /** Facts shown: enough to say what the resource is without turning the panel into a dump. */
 const FACTS = 16;
 
+/** The index states some facts in more than one graph (a file's own and a derived one); show each once. */
+const unique = (facts: readonly Fact[] = []): Fact[] => {
+  const seen = new Set<string>();
+  return facts.filter(({ predicate, object }) => {
+    const key = `${predicate} ${object}`;
+    return !seen.has(key) && !!seen.add(key);
+  });
+};
+
 /** One resource's facts from the index, with the moves the canvas offers on it. */
 export const NodeDetails = ({ node, facts, incoming, error, onExpand, onRemove, onClose }: NodeDetailsProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
@@ -55,24 +64,32 @@ export const NodeDetails = ({ node, facts, incoming, error, onExpand, onRemove, 
       <Toolbar.Root classNames='px-1'>
         <Button.Root
           icon='ph--arrow-down-right--regular'
+          iconOnly
           label={t('expand-out.label')}
           onClick={() => onExpand?.('out')}
         />
-        <Button.Root icon='ph--arrow-up-left--regular' label={t('expand-in.label')} onClick={() => onExpand?.('in')} />
+        <Button.Root
+          icon='ph--arrow-up-left--regular'
+          iconOnly
+          label={t('expand-in.label')}
+          onClick={() => onExpand?.('in')}
+        />
         <Button.Root icon='ph--trash--regular' iconOnly label={t('remove-node.label')} onClick={onRemove} />
       </Toolbar.Root>
       <ScrollArea.Root classNames='grow'>
         <ScrollArea.Viewport>
           <dl className='grid grid-cols-[max-content_1fr] gap-x-3 gap-y-1 p-2 text-sm'>
             {error && <dd className='col-span-2 text-error-text'>{error}</dd>}
-            {facts?.slice(0, FACTS).map(({ predicate, object }, index) => (
-              <React.Fragment key={index}>
-                <dt className='text-description'>{Iri.localName(predicate)}</dt>
-                <dd className='truncate' title={object}>
-                  {Iri.isIri(object) ? Iri.labelOf(object) : object}
-                </dd>
-              </React.Fragment>
-            ))}
+            {unique(facts)
+              .slice(0, FACTS)
+              .map(({ predicate, object }, index) => (
+                <React.Fragment key={index}>
+                  <dt className='text-description'>{Iri.localName(predicate)}</dt>
+                  <dd className='truncate' title={object}>
+                    {Iri.isIri(object) ? Iri.labelOf(object) : object}
+                  </dd>
+                </React.Fragment>
+              ))}
             {incoming?.map(({ predicate, count }) => (
               <React.Fragment key={predicate}>
                 <dt className='text-description'>← {Iri.localName(predicate)}</dt>

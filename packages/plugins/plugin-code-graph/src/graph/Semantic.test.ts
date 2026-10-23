@@ -61,6 +61,11 @@ describe('Semantic', () => {
       }
     }
     expect(objects.some((object) => object.ref === pkg('echo'))).toBe(true);
+    // Centred on the origin, where the canvas opens.
+    const xs = points.map(({ x }) => x);
+    const ys = points.map(({ y }) => y);
+    expect(Math.min(...xs) + Math.max(...xs)).toBeCloseTo(0);
+    expect(Math.min(...ys) + Math.max(...ys)).toBeCloseTo(0);
     // An interactive canvas waits on this; a five-box graph must not take seconds.
     expect(elapsed).toBeLessThan(5_000);
   });
