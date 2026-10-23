@@ -5,6 +5,8 @@
 import type { Properties } from 'hast';
 import type { Data, Html, Paragraph, Parent, Root, RootContent, Text } from 'mdast';
 
+import { EID } from '@dxos/keys';
+
 import { type SlideIssue } from './frontmatter.ts';
 
 /** Content regions of a slide, selected by `::name::` markers. */
@@ -72,6 +74,9 @@ const COMMENT = /^<!--((?:(?!-->)[\s\S])*)-->$/;
 const TAG = /<!--[\s\S]*?-->|<(\/?)([A-Za-z][A-Za-z0-9-]*)((?:[^>"']|"[^"]*"|'[^']*')*)>/g;
 const ATTRIBUTE = /([A-Za-z_:][\w:.-]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
 const SLOT_MARKER = /^::([a-z]+)::$/;
+const URL_SCHEME = /^([a-z][a-z0-9+.-]*):/i;
+const SAFE_SCHEMES = new Set(['http', 'https', 'mailto', 'echo']);
+const DATA_IMAGE = /^data:image\//i;
 
 type Token =
   | { kind: 'open'; tag: ContainerTag; attributes: Record<string, string>; raw: string }
@@ -94,6 +99,27 @@ const parseAttributes = (source: string): Record<string, string> => {
   return attributes;
 };
 
+/** True for relative/fragment URLs and allowlisted schemes; `data:image/*` only where it is an image source. */
+const isSafeUrl = (url: string, image: boolean): boolean => {
+  // Browsers ignore control characters and spaces when reading a scheme, so `java\tscript:` must not slip past.
+  const normalized = [...url].filter((char) => char.charCodeAt(0) > 0x20 && char.charCodeAt(0) !== 0x7f).join('');
+  const scheme = URL_SCHEME.exec(normalized)?.[1];
+  if (scheme === undefined) {
+    return true;
+  }
+  return SAFE_SCHEMES.has(scheme.toLowerCase()) || (image && DATA_IMAGE.test(normalized));
+};
+
+const sanitizeUrl = (node: RootContent, issues: SlideIssue[]) => {
+  if (
+    (node.type === 'link' || node.type === 'definition' || node.type === 'image') &&
+    !isSafeUrl(node.url, node.type === 'image')
+  ) {
+    issues.push({ kind: 'html', message: `Unsafe URL removed: ${node.url}` });
+    node.url = '';
+  }
+};
+
 const slideElement = (hName: string, hProperties: Properties, children: RootContent[] = []): SlideElement => ({
   type: 'slideElement',
   children,
@@ -106,7 +132,8 @@ const setStep = (node: RootContent, step: number) => {
 
 /**
  * Transforms the HTML, slot markers, notes and frontmatter of one slide's mdast; the `data.slidev` it attaches is
- * read by `parseSlide`. Raw HTML outside the allowlist becomes text so it is shown, never executed.
+ * read by `parseSlide` and is the plugin's only output. Raw HTML outside the allowlist becomes text so it is shown,
+ * never executed.
  */
 export const remarkSlidev = () => (tree: Root) => {
   tree.data = { ...tree.data, slidev: transformSlide(tree) };
@@ -146,7 +173,6 @@ const transformSlide = (tree: Root): SlidevData => {
     }
   }
 
-  tree.children = slots.default.children;
   return { frontmatter, notes, clicks, issues, slots };
 };
 
@@ -161,6 +187,7 @@ const slotMarker = (node: RootContent): SlotName | undefined => {
 /** Rewrites raw HTML in `parent` (bottom-up) into allowlisted elements or escaped text. */
 const transformChildren = (parent: Parent, issues: SlideIssue[]) => {
   for (const child of parent.children) {
+    sanitizeUrl(child, issues);
     if ('children' in child) {
       transformChildren(child, issues);
     }
@@ -278,6 +305,8 @@ const surfaceElement = (attributes: Record<string, string>, issues: SlideIssue[]
   const ref = attributes.ref;
   if (!ref) {
     issues.push({ kind: 'html', message: '<Surface> requires a ref attribute.' });
+  } else if (EID.tryParse(ref) === undefined) {
+    issues.push({ kind: 'html', message: `<Surface> has an invalid object reference: ${ref}` });
   }
   const requested = attributes.role ?? SURFACE_ROLES[0];
   if (!isSurfaceRole(requested)) {
@@ -347,6 +376,10 @@ const assignSteps = (children: RootContent[], start: number): number => {
           break;
         }
         case 'slide-clicks': {
+          // Text carries no properties into hast, so inline targets are wrapped to hold their step.
+          node.children = node.children.map((child) =>
+            child.type === 'text' || child.type === 'break' ? slideElement('span', {}, [child]) : child,
+          );
           const { depth, every } = node.data.hProperties;
           const targets = clickTargets(node.children, typeof depth === 'number' ? depth : 1);
           const group = typeof every === 'number' ? every : 1;

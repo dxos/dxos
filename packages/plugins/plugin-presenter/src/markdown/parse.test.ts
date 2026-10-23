@@ -168,6 +168,78 @@ describe('parseSlide', () => {
     expect(slide.issues.map((issue) => issue.kind)).toEqual(['html']);
   });
 
+  test('inline <v-clicks> gives the counted click a stepped element', () => {
+    const slide = parseSlide('x <v-clicks>a b</v-clicks> y');
+    expect(slide.clicks).toBe(1);
+    const stepped = elements(slide.slots.default, 'span').filter((element) => element.properties.step !== undefined);
+    expect(stepped.map((element) => [textOf(element), element.properties.step])).toEqual([['a b', '1']]);
+  });
+
+  test('<Surface> with an invalid ref keeps the element and reports it', () => {
+    const slide = parseSlide('<Surface ref="javascript:alert(1)" />');
+    expect(elements(slide.slots.default, 'slide-surface')).toHaveLength(1);
+    expect(slide.issues).toEqual([{ kind: 'html', message: expect.stringContaining('invalid object reference') }]);
+  });
+
+  test('a non-trailing comment is dropped without an issue', () => {
+    const slide = parseSlide('# Title\n\n<!-- hidden -->\n\nBody');
+    expect(textOf(slide.slots.default)).not.toContain('hidden');
+    expect(slide.notes).toBeUndefined();
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('<svg/onload> stays text', () => {
+    const slide = parseSlide('Hi <svg/onload=alert(1)> there');
+    expect(elements(slide.slots.default, 'svg')).toEqual([]);
+    expect(textOf(slide.slots.default)).toContain('<svg/onload=alert(1)>');
+    // CommonMark needs whitespace before attributes, so this is plain text and never reaches the HTML rewrite.
+    expect(slide.issues).toEqual([]);
+  });
+
+  test.each([
+    ['link', '[x](javascript:alert(1))'],
+    ['autolink', '<javascript:alert(1)>'],
+    ['reference link', '[x][d]\n\n[d]: javascript:alert(1)'],
+    ['data:text/html link', '[x](data:text/html,<script>alert(1)</script>)'],
+    ['obfuscated scheme', '[x](JaVa&#x09;Script:alert(1))'],
+  ])('unsafe %s href is removed', (_, markdown) => {
+    const slide = parseSlide(markdown);
+    const links = elements(slide.slots.default, 'a');
+    expect(links).toHaveLength(1);
+    expect(links[0].properties.href).toBe('');
+    expect(slide.issues.map((issue) => issue.kind)).toEqual(['html']);
+  });
+
+  test.each([
+    ['javascript:', '![x](javascript:alert(1))'],
+    ['data:text/html', '![x](data:text/html;base64,PHNjcmlwdD4=)'],
+  ])('unsafe %s image src is removed', (_, markdown) => {
+    const slide = parseSlide(markdown);
+    expect(elements(slide.slots.default, 'img')[0].properties.src).toBe('');
+    expect(slide.issues.map((issue) => issue.kind)).toEqual(['html']);
+  });
+
+  test('safe URLs are kept', () => {
+    const svg = 'data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=';
+    const slide = parseSlide(
+      `[a](https://dxos.org) [b](mailto:a@b.c) [c](#top) [d](./doc) [e](echo:///A)\n\n![i](${svg})`,
+    );
+    expect(elements(slide.slots.default, 'a').map((link) => link.properties.href)).toEqual([
+      'https://dxos.org',
+      'mailto:a@b.c',
+      '#top',
+      './doc',
+      'echo:///A',
+    ]);
+    expect(elements(slide.slots.default, 'img')[0].properties.src).toBe(svg);
+    expect(slide.issues).toEqual([]);
+  });
+
+  test('data:image is not allowed as a link href', () => {
+    const slide = parseSlide('[x](data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=)');
+    expect(elements(slide.slots.default, 'a')[0].properties.href).toBe('');
+  });
+
   test('malformed frontmatter keeps the body intact', () => {
     const slide = parseSlide('---\nlayout: [unclosed\n---\n# Body');
     expect(slide.frontmatter).toEqual({});
