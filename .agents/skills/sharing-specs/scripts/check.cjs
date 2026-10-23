@@ -26,9 +26,19 @@ void (async () => {
   page.on('pageerror', (error) => errors.push(error.message));
   // A spec that fails to load falls back to the bundled text silently, so the check has to fail it.
   const specs = new Map();
+  const specPath = (requestUrl) =>
+    requestUrl.startsWith(origin + '/specs/') ? decodeURIComponent(new URL(requestUrl).pathname.slice(1)) : undefined;
   page.on('response', (response) => {
-    if (response.url().startsWith(origin + '/specs/')) {
-      specs.set(decodeURIComponent(new URL(response.url()).pathname.slice(1)), response.status());
+    const path = specPath(response.url());
+    if (path) {
+      specs.set(path, response.status());
+    }
+  });
+  // A request that never gets a response (refused, aborted) fires no `response` event.
+  page.on('requestfailed', (request) => {
+    const path = specPath(request.url());
+    if (path) {
+      specs.set(path, request.failure()?.errorText ?? 'failed');
     }
   });
   await page.goto(url);
