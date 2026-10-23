@@ -96,6 +96,10 @@ op remove
 op setLayout
   key: org.dxos.operation.codeGraph.setLayout
   desc: Chooses the layout, and optionally forgets dragged positions.
+
+op runCommand
+  key: org.dxos.operation.codeGraph.runCommand
+  desc: Carries out one short command with its own fast model, which may only add SPARQL results or remove boxes by a text filter; a decision model ends the loop.
 ```
 
 ## Components
@@ -114,6 +118,9 @@ component CodeGraphDiagram
 
 component NodeDetails
   desc: The selected resource's facts, with expand and remove actions.
+
+component CommandBar
+  desc: A floating button (or `/`) that opens a one-line command field over the canvas, with a microphone toggle for spoken commands and a line for the outcome and the trailer.
 ```
 
 ## Features
@@ -141,6 +148,13 @@ feat F-4: Inspect a box
   req F-4.2: The details panel expands the box's dependencies or dependents, or removes it.
 ```
 
+feat F-5: Single commands
+  req F-5.1: A command bar, apart from the chat assistant, takes one typed or spoken command and runs it with RunCommand.
+  req F-5.2: The command model sees the graph as it is and may only add the rows of a SPARQL SELECT or remove boxes matching a text filter (`*`, `kind:<kind>`, `/regex/`, or text).
+  req F-5.3: Between turns a decision model judges whether the command is done; a failed or empty action earns another turn without asking, and a turn that only removed boxes ends the command; at most 3 turns.
+  req F-5.4: A command adds at most 40 boxes; the rest are left out and summarised in a trailer (counts by kind and package, and a few names) shown to the user and the model.
+  req F-5.5: Speaking uses Whistle on the device: with the microphone on, each pause ends a command.
+
 ## Acceptance
 
 ```mdl
@@ -155,13 +169,28 @@ scenario T-2: Switch layout
   then: the same boxes are re-placed by the force arrangement, and the graph's layout field reads force
 ```
 
+scenario T-3: Clear the graph
+  given: a code graph with boxes
+  when: the user runs the command "clear the graph"
+  then: the graph is empty after one model turn
+
+scenario T-4: Show a package's exports
+  given: a code graph showing unrelated packages
+  when: the user runs "show me the ECHO package exports"
+  then: the graph shows only the exports of @dxos/echo
+
+scenario T-5: Draw dependents
+  given: an empty code graph
+  when: the user runs "What depends on identity service in halo"
+  then: the graph shows the identity service with an arrow from each file that imports it, the first 40 boxes at most and a trailer for the rest
+
 ## QA
 
 ```mdl
 test QA-1: Draw and reshape a package graph
   desc: The primary journey — create a graph, fill it from the index, expand a box, switch layouts.
   actors: human, agent
-  covers: [F-1.1, F-2.1, F-2.3, F-3.1, F-3.2]
+  covers: [F-1.1, F-2.1, F-2.3, F-3.1, F-3.2, F-5.1]
   status: passing           # 2026-10-23; driven by a Playwright script against `vite dev`: steps 1-3 by `invoke`, step 4 and the details panel's Expand by clicks. The assistant chat itself was not exercised (no model key in the sandbox).
   given:
     - the index is built (`bun tools/code-index/bin/code-index.ts index`) and no other code-index process holds it
@@ -188,10 +217,38 @@ test QA-1: Draw and reshape a package graph
       do: Click the force-directed layout button in the toolbar.
       invoke: [op:setLayout] { graph: $graph.object, layout: "force" }
       expect: the same boxes are re-placed; none overlap
+    - name: Run a command
+      do: Press /, type "clear the graph" and press Enter.
+      invoke: [op:runCommand] { graph: $graph.object, command: "clear the graph" }
+      expect: the canvas empties and the command bar says what it did
+      assert: return $result.removedNodes > 0;
   after:
     - name: Delete the graph
       do: Right-click "QA Code Graph" in the navtree and choose Delete.
       expect: the graph leaves the navtree
+```
+
+```mdl
+test QA-2: Single commands
+  desc: The command bar, apart from the chat: replace the graph with a package's exports, draw what depends on a service, then clear it.
+  actors: human, agent
+  covers: [F-5.1, F-5.2, F-5.3, F-5.4]
+  given:
+    - the index is built (`bun tools/code-index/bin/code-index.ts index`) and no other code-index process holds it
+    - composer-app runs under `moon run composer-app:serve` with an AI service (EDGE preview, `DX_EDGE_BASE_URL=https://preview.dxos.network/`)
+    - space: a space is open
+    - plugin-code-graph is enabled
+    - a Code Graph named "Commands" is open
+  steps:
+    - name: Show a package's exports
+      do: Press /, type "show me the ECHO package exports" and press Enter.
+      expect: the graph shows @dxos/echo with an arrow to each module it exports, and the bar says what it drew
+    - name: Draw what depends on a service
+      do: Type "What depends on identity service in halo" and press Enter.
+      expect: the echo exports are replaced by Identity.Service and the symbols and operations that use it
+    - name: Clear the graph
+      do: Type "clear the graph" and press Enter.
+      expect: the canvas is empty
 ```
 
 ## Changelog
@@ -265,4 +322,39 @@ decision D-8: A graph holds at most 300 boxes; an addition past that fails whole
   affects: [F-2.4]
   why: An assistant expanding without end would grow the document and the layouts past what stays fast or readable.
   rejected: Truncating the addition silently.
+```
+
+```mdl
+decision D-9: A single-command mode, apart from Composer's agent, runs typed or spoken commands with a model that sees the graph and may only add SPARQL results or remove boxes by a text filter; a decision model judges between turns whether to stop, and an addition past N boxes adds the first N with a trailer summarising the rest.
+  date: 2026-10-23
+  by: user:dmaretskyi
+  affects: [CommandBar, F-5]
+```
+
+```mdl
+decision D-10: The command loop asks for one structured step per turn (actions and a sentence) from Claude Haiku rather than running a tool-calling agent; the judge is the AI service's default decision model. Fills in [D-9].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.2, F-5.3]
+  why: A command should take one model round trip; several actions fit in one step, and a decision model answers "is this done" faster and cheaper than another language-model turn.
+  rejected: Reusing the chat assistant's tool loop, which plans and explains at length.
+```
+
+```mdl
+decision D-11: A command adds at most 40 boxes; a failed or empty action earns a turn without the judge, a turn that only removed boxes ends the command without it, and with no decision model a command stops after its first successful turn. Fills in [D-9].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.3, F-5.4]
+  why: Forty boxes stay readable under every layout; retrying a refused query, or accepting a removal that did what it said, needs no judgement, so asking would only add latency.
+```
+
+```mdl
+decision D-12: Whistle moves from plugin-transcription's stories to `@dxos/plugin-transcription/Whistle` so the command bar can use it. Fills in [D-9].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.5]
+  why: The command bar asked for the microphone and Whistle; the stories held the only copy of the on-device speech hook.
 ```

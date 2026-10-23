@@ -11,11 +11,12 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
-import { type Fact, NodeDetails } from '#components';
+import { CommandBar, type CommandOutcome, type Fact, NodeDetails } from '#components';
 import { Semantic } from '#graph';
 import { meta } from '#meta';
 import { CodeGraph, CodeGraphOperation } from '#types';
@@ -23,6 +24,7 @@ import { CodeGraph, CodeGraphOperation } from '#types';
 // Imported directly rather than through the barrel: the canvas engine and the illustrator renderer are large.
 import { CodeGraphCanvas } from '../../components/CodeGraphCanvas/index.ts';
 import { CodeGraphDiagram } from '../../components/CodeGraphDiagram/index.ts';
+import { useSpeechCommand } from './useSpeechCommand.ts';
 
 type Point = Semantic.Point;
 
@@ -150,6 +152,9 @@ export const CodeGraphArticle = ({ role, subject, attendableId }: CodeGraphArtic
     [invokePromise, subject, spaceId],
   );
 
+  const command = useCommand(subject, invokePromise);
+  const speech = useSpeechCommand(command.run);
+
   const [selected, setSelected] = useState<string>();
   const selectedNode = useMemo(() => nodes.find(({ id }) => id === selected), [nodes, selected]);
   const details = useInspect(selected, invokePromise);
@@ -168,7 +173,17 @@ export const CodeGraphArticle = ({ role, subject, attendableId }: CodeGraphArtic
       </Panel.Header>
       <Panel.Body asChild>
         {/* Positioned rather than a layout box: the details panel floats over the canvas, anchored to this frame. */}
-        <div className='relative dx-cover' data-testid='code-graph-article'>
+        <div
+          className='relative dx-cover'
+          data-testid='code-graph-article'
+          onKeyDown={(event) => {
+            // `/` opens the command bar from the canvas, as in a terminal or a search page.
+            if (event.key === '/' && !command.open && !isEditable(event.target)) {
+              event.preventDefault();
+              command.setOpen(true);
+            }
+          }}
+        >
           {nodes.length === 0 ? (
             <Layout.Flex center classNames='dx-cover text-description'>
               {t('empty.message')}
@@ -205,6 +220,31 @@ export const CodeGraphArticle = ({ role, subject, attendableId }: CodeGraphArtic
               onClose={() => setSelected(undefined)}
             />
           )}
+          <CommandBar
+            open={command.open}
+            onOpenChange={command.setOpen}
+            pending={command.pending}
+            outcome={command.outcome}
+            onSubmit={command.run}
+            draft={speech.heard}
+            speech={
+              <Button.Root
+                icon={
+                  speech.loading
+                    ? 'ph--spinner--regular'
+                    : speech.listening
+                      ? 'ph--microphone-slash--regular'
+                      : 'ph--microphone--regular'
+                }
+                iconOnly
+                variant={speech.listening ? 'destructive' : 'ghost'}
+                // The tooltip carries a microphone or model failure, the one place the bar has for it.
+                label={speech.error ?? t(speech.listening ? 'command-stop-listening.label' : 'command-listen.label')}
+                onClick={speech.toggle}
+                data-testid='code-graph-command-listen'
+              />
+            }
+          />
         </div>
       </Panel.Body>
     </Panel.Root>
@@ -289,4 +329,34 @@ const useInspect = (iri: string | undefined, invokePromise: Invoke) => {
     };
   }, [iri, invokePromise]);
   return state;
+};
+
+const isEditable = (target: EventTarget) =>
+  target instanceof HTMLElement &&
+  (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
+
+/** The command bar's state: one command at a time, through the RunCommand operation. */
+const useCommand = (subject: CodeGraph.CodeGraph, invokePromise: Invoke) => {
+  const [open, setOpen] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [outcome, setOutcome] = useState<CommandOutcome>();
+  const spaceId = Obj.getDatabase(subject)?.spaceId;
+  const run = useCallback(
+    (text: string) => {
+      setPending(true);
+      setOutcome({ command: text });
+      const started = performance.now();
+      void invokePromise(CodeGraphOperation.RunCommand, { graph: Ref.make(subject), command: text }, { spaceId })
+        .then(({ data, error }) =>
+          setOutcome({
+            command: text,
+            elapsedMs: performance.now() - started,
+            ...(data ? { message: data.message, trailer: data.trailer } : { error: error?.message ?? 'Failed.' }),
+          }),
+        )
+        .finally(() => setPending(false));
+    },
+    [invokePromise, subject, spaceId],
+  );
+  return { open, setOpen, pending, outcome, run };
 };

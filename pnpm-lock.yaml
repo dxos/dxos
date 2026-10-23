@@ -10183,6 +10183,9 @@ importers:
 
   packages/plugins/plugin-code-graph:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -10216,12 +10219,18 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/plugin-transcription':
+        specifier: workspace:*
+        version: link:../plugin-transcription
       '@dxos/react-ui-canvas':
         specifier: workspace:*
         version: link:../../ui/react-ui-canvas
       '@dxos/react-ui-menu':
         specifier: workspace:*
         version: link:../../ui/react-ui-menu
+      '@dxos/react-ui-transcription':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-transcription
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -10232,6 +10241,9 @@ importers:
         specifier: 4.0.4
         version: 4.0.4
     devDependencies:
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
