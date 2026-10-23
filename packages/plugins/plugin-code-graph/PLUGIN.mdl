@@ -128,6 +128,7 @@ feat F-2: The assistant shapes the graph
   req F-2.1: The Code Graph skill offers query, inspect, read, addFromQuery, addNodes, addNeighbors, remove and setLayout, and the space's addObject to create a graph.
   req F-2.2: A chat about a CodeGraph object carries the skill (SkillsAnnotation).
   req F-2.3: Adding never duplicates a box or an arrow, and a box an arrow needs is added with it.
+  req F-2.4: An addition that would take a graph past 300 boxes fails whole with `LimitError`.
 
 feat F-3: Two layouts on one canvas
   req F-3.1: The illustrator layout solves the graph as semantic DSL and places canvas boxes at the solved centres, framing boxes by package when there are 2 to 6 packages.
@@ -244,4 +245,24 @@ decision D-6: Illustrator positions are centred on the origin, and the canvas re
   for: user:dmaretskyi
   affects: [CodeGraphCanvas, F-3.1]
   why: The engine's coordinates start at its own origin and arrive after the canvas's first fit, so the graph opened off-centre and too small to read.
+```
+
+```mdl
+decision D-7: The skill creates a graph with the space's addObject from a typed draft; the plugin has no create operation. Fills in [D-2].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.1]
+  why: An assistant cannot pass a live object back from a tool call, so it needs a draft form, which addObject already accepts; a create operation that also saved the object duplicated it.
+  rejected: A create operation that adds the graph to the space itself.
+```
+
+```mdl
+decision D-8: A graph holds at most 300 boxes; an addition past that fails whole with LimitError. Fills in [D-2].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.4]
+  why: An assistant expanding without end would grow the document and the layouts past what stays fast or readable.
+  rejected: Truncating the addition silently.
 ```

@@ -96,6 +96,9 @@ export const make = ({ command, args, cwd, timeout = 60_000 }: McpClientOptions)
     stderr.length = 0;
     const process = spawn(command, [...args], { cwd, stdio: ['pipe', 'pipe', 'pipe'] });
     child = process;
+    // A write racing the child's death fails with EPIPE; unheard, it would throw in the dev server, and the exit
+    // handler already fails the pending calls.
+    process.stdin.on('error', () => {});
     createInterface({ input: process.stdout }).on('line', (line) => {
       let message: JsonRpcResponse;
       try {
