@@ -88,6 +88,23 @@ export const StatusOptions: Option<Status>[] = [
 ];
 
 /**
+ * The order status GROUPS appear in on a board (and nowhere else): deliberately not
+ * {@link StatusOptions}'s order, since a picker lists statuses by workflow stage while a board
+ * wants the ones needing attention first.
+ */
+export const StatusGroupOrder: readonly Status[] = [
+  'review',
+  'failed',
+  'started',
+  'todo',
+  'blocked',
+  'backlog',
+  'done',
+  'cancelled',
+  'duplicate',
+];
+
+/**
  * What happened to a task, as recorded in its {@link History}. Deliberately coarser than the field
  * set: an entry says a task was assigned, not which field carried it, so the log stays readable
  * when the shape of a task changes.
