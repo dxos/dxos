@@ -19,7 +19,7 @@
   ],
   "references": [
     {
-      "path": "../../common/effect"
+      "path": "../../common/keys"
     },
     {
       "path": "../../common/random"
@@ -34,6 +34,12 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-client"
+    },
+    {
+      "path": "../../core/echo/echo-doc"
+    },
+    {
       "path": "../../core/echo/echo-react"
     },
     {
@@ -44,6 +50,12 @@
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
     },
     {
       "path": "../../ui/react-primitives/react-hooks"
@@ -58,6 +70,9 @@
       "path": "../../ui/react-ui-editor"
     },
     {
+      "path": "../../ui/react-ui-form"
+    },
+    {
       "path": "../../ui/ui-editor"
     },
     {
@@ -68,6 +83,9 @@
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-space"
     },
     {
       "path": "../plugin-testing"

@@ -9,9 +9,11 @@ import {
   FieldstoneSpace,
   IncidentSpace,
   PipelineSpace,
+  PresenterSpace,
   ReviewSpace,
   StockfishSpace,
   TidepoolSpace,
+  TimelineSpace,
   WeatherSpace,
   WorkerSpace,
 } from '../samples/index.ts';
@@ -26,4 +28,6 @@ export default [
   ReviewSpace.makeTemplate(),
   FieldstoneSpace.makeTemplate(),
   DemoSpace.makeTemplate(),
+  PresenterSpace.makeTemplate(),
+  TimelineSpace.makeTemplate(),
 ] satisfies ReadonlyArray<AppCapabilities.SpaceTemplate>;

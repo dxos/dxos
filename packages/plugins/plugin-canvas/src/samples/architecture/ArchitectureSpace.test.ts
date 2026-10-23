@@ -93,7 +93,8 @@ describe('ArchitectureSpace', () => {
     const [metrics] = await db.query(Filter.type(Sheet.Sheet)).run();
     expect(metrics?.rows).toHaveLength(21);
     expect(metrics?.columns).toHaveLength(5);
-    expect(metrics?.charts).toEqual([
+    const charts = await Promise.all((metrics?.charts ?? []).map((ref) => ref.load()));
+    expect(charts).toEqual([
       expect.objectContaining({ range: 'A1:E21', type: 'bar', horizontal: true, stacked: true }),
       expect.objectContaining({ range: 'A1:B9', type: 'pie', header: true }),
     ]);
