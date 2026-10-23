@@ -10,6 +10,11 @@ inputs:
       Set "true" to force a full run whatever the trigger — a dispatch that asks for the whole suite,
       or a job whose target set is not meaningfully scopeable. Anything else defers to the trigger.
     default: 'false'
+  force:
+    description: >
+      Set "false" to keep the cache on the scheduled run, for a job whose builds another job already
+      forces.
+    default: 'true'
 
 runs:
   using: 'composite'
@@ -20,4 +25,5 @@ runs:
       shell: bash
       env:
         CI_AFFECTED_ALL: ${{ inputs.all }}
+        CI_AFFECTED_FORCE: ${{ inputs.force }}
       run: node ./.github/actions/affected/resolve-affected.mjs
