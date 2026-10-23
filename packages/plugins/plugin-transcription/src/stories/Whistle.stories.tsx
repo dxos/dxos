@@ -9,19 +9,18 @@
  * nothing is sent to a service: words two consecutive passes agree on are committed, and the unconfirmed
  * tail is shown (italic) as soon as the first pass returns.
  *
- * - The toolbar's Low latency switch makes it a pass every 200 ms: words commit sooner,
- *   but passes that close together agree on half-heard words more often.
- * - A pause (1.5 s of silence or more) between words, or Stop, starts a new paragraph; each paragraph's audio can be
- *   played or saved on its own.
- * - `Microphone` streams the default input; `File` plays the same hosted m4a as `Transcription`.
- * - Keywords (comma-separated, prefilled with DXOS terms) bias recognition towards names and jargon; edits apply
- *   from the next pass.
- * - The model downloads on the first press and is cached by the browser afterwards.
+ * - `Microphone`: Record toggles the default input, or hold Space to talk; after first use the microphone stays
+ *   open so a press does not clip the first word. `File` plays the same hosted m4a as `Transcription`.
+ * - A pause (1.5 s of silence or more), or Stop, starts a new paragraph; each paragraph can be played or saved.
+ * - The second column holds the settings: Low latency (a pass every 200 ms: words commit sooner, but passes that
+ *   close together agree on half-heard words more often), keywords that bias recognition (prefilled with DXOS
+ *   terms, applied from the next pass), and timings.
+ * - The engine and model download on the first press and are kept in Cache Storage afterwards.
  * - The waveform shows everything captured; the raw recording stays in the tab and can be saved as WAV.
  */
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Fragment, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAudioFile, useAudioTrack } from '@dxos/react-ui-transcription';
 import * as Button from '@dxos/react-ui/Button';
@@ -62,7 +61,7 @@ const DXOS_KEYWORDS = [
 
 const parseKeywords = (text: string): string[] =>
   text
-    .split(',')
+    .split(/[,\n]/)
     .map((keyword) => keyword.trim())
     .filter(Boolean);
 
@@ -172,20 +171,32 @@ const formatMs = (value?: number) => (value === undefined ? '–' : `${Math.roun
 
 const formatSeconds = (value?: number) => (value === undefined ? '–' : `${value.toFixed(2)} s`);
 
-const Stats = ({ status, error, progress, stats }: UseWhistleResult) => {
+/** Model loading and errors, beside the record button. */
+const Status = ({ status, error, progress }: UseWhistleResult) => {
   if (status === 'error') {
     return <span className='text-error-text text-sm truncate'>{error}</span>;
   }
   if (status === 'loading') {
     return <span className='text-description text-sm'>Loading model {Math.round(progress * 100)}%</span>;
   }
-  return (
-    <span className='text-description text-sm font-mono tabular-nums whitespace-nowrap'>
-      load {formatMs(stats.loadMs)} · pass {formatMs(stats.passMs)} · lag {formatSeconds(stats.commitLag)} · backlog{' '}
-      {formatSeconds(stats.backlog)}
-    </span>
-  );
+  return null;
 };
+
+const Stats = ({ stats }: UseWhistleResult) => (
+  <dl className='grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm'>
+    {[
+      ['Model load', formatMs(stats.loadMs)],
+      ['Pass', formatMs(stats.passMs)],
+      ['Commit lag', formatSeconds(stats.commitLag)],
+      ['Backlog', formatSeconds(stats.backlog)],
+    ].map(([name, value]) => (
+      <Fragment key={name}>
+        <dt className='text-description'>{name}</dt>
+        <dd className='font-mono tabular-nums'>{value}</dd>
+      </Fragment>
+    ))}
+  </dl>
+);
 
 /** Saves the recording, or the part of it between `start` and `end` seconds, as WAV. */
 const saveRecording = (recording: Recording, range?: { start: number; end: number }) => {
@@ -234,74 +245,86 @@ const WhistlePanel = ({
   });
 
   return (
-    <Panel.Root>
-      <Panel.Header>
-        <Toolbar.Root>
-          {actions}
+    <>
+      <Panel.Root classNames='w-[40rem] dx-base-surface'>
+        <Panel.Header>
+          <Toolbar.Root classNames='py-2'>
+            {actions}
+            <Toolbar.Separator variant='gap' />
+            <Status {...whistle} />
+          </Toolbar.Root>
+          <Waveform recording={whistle.recording} />
+        </Panel.Header>
+        <ScrollContainer.Root pin>
+          <Panel.Body asChild>
+            <ScrollContainer.Content>
+              <ScrollContainer.Viewport>
+                <div className='flex flex-col gap-2 p-2'>
+                  {paragraphs.map((paragraph) => {
+                    const id = String(paragraph.id);
+                    const start = paragraph.start - PARAGRAPH_PADDING_SECONDS;
+                    const end = paragraph.end + PARAGRAPH_PADDING_SECONDS;
+                    const isPlaying = playback.playing === id;
+                    return (
+                      <div key={paragraph.id} className='flex items-start gap-3'>
+                        <span className='shrink-0 w-10 pt-1 text-sm text-description font-mono tabular-nums'>
+                          {formatClock(paragraph.start)}
+                        </span>
+                        <p className='grow pt-0.5'>
+                          {paragraph.text}
+                          {paragraph.id === openId && pending && <em className='text-description'> {pending}</em>}
+                        </p>
+                        <Button.Root
+                          iconOnly
+                          variant='ghost'
+                          icon={isPlaying ? 'ph--stop--regular' : 'ph--play--regular'}
+                          label={isPlaying ? 'Stop' : 'Play this paragraph'}
+                          onClick={() => (isPlaying ? playback.stop() : playback.play(id, start, end))}
+                        />
+                        <Button.Root
+                          iconOnly
+                          variant='ghost'
+                          icon='ph--download-simple--regular'
+                          label='Save this paragraph'
+                          onClick={() => saveRecording(recording, { start, end })}
+                        />
+                      </div>
+                    );
+                  })}
+                  {openId === undefined && pending && <em className='ps-13 text-description'>{pending}</em>}
+                </div>
+              </ScrollContainer.Viewport>
+            </ScrollContainer.Content>
+          </Panel.Body>
+        </ScrollContainer.Root>
+      </Panel.Root>
+
+      <Panel.Root classNames='w-80 dx-base-surface'>
+        <Panel.Body classNames='flex flex-col gap-4 p-3 overflow-y-auto'>
           <Input.Switch label='Low latency' checked={fast} onCheckedChange={({ checked }) => setFast(checked)} />
+          <p className='text-sm text-description'>
+            A pass every {fast ? LOW_LATENCY_PASS_MS : ACCURATE_PASS_MS} ms of new audio.{' '}
+            {fast ? 'Words appear sooner but are wrong more often.' : 'As in Cactus’s own demo.'}
+          </p>
+          <label className='flex flex-col gap-1'>
+            <span className='text-sm text-description'>Keywords</span>
+            <Input.Textarea
+              rows={8}
+              value={keywordsText}
+              placeholder='Names and terms, separated by commas or lines'
+              spellCheck={false}
+              onChange={(event) => setKeywordsText(event.target.value)}
+            />
+          </label>
+          <Stats {...whistle} />
           <Button.Root
-            iconOnly
             icon='ph--download-simple--regular'
             label='Save recording'
             onClick={() => saveRecording(whistle.recording)}
           />
-          <Toolbar.Separator variant='gap' />
-          <Stats {...whistle} />
-        </Toolbar.Root>
-        <label className='flex items-center gap-2 px-2'>
-          <span className='shrink-0 text-sm text-description'>Keywords</span>
-          <Input.Root
-            value={keywordsText}
-            placeholder='Comma-separated names and terms'
-            spellCheck={false}
-            onChange={(event) => setKeywordsText(event.target.value)}
-          />
-        </label>
-        <Waveform recording={whistle.recording} />
-      </Panel.Header>
-      <ScrollContainer.Root pin>
-        <Panel.Body asChild>
-          <ScrollContainer.Content>
-            <ScrollContainer.Viewport>
-              <div className='flex flex-col gap-2 p-2'>
-                {paragraphs.map((paragraph) => {
-                  const id = String(paragraph.id);
-                  const start = paragraph.start - PARAGRAPH_PADDING_SECONDS;
-                  const end = paragraph.end + PARAGRAPH_PADDING_SECONDS;
-                  const isPlaying = playback.playing === id;
-                  return (
-                    <div key={paragraph.id} className='flex items-start gap-3'>
-                      <span className='shrink-0 w-10 pt-1 text-sm text-description font-mono tabular-nums'>
-                        {formatClock(paragraph.start)}
-                      </span>
-                      <p className='grow pt-0.5'>
-                        {paragraph.text}
-                        {paragraph.id === openId && pending && <em className='text-description'> {pending}</em>}
-                      </p>
-                      <Button.Root
-                        iconOnly
-                        variant='ghost'
-                        icon={isPlaying ? 'ph--stop--regular' : 'ph--play--regular'}
-                        label={isPlaying ? 'Stop' : 'Play this paragraph'}
-                        onClick={() => (isPlaying ? playback.stop() : playback.play(id, start, end))}
-                      />
-                      <Button.Root
-                        iconOnly
-                        variant='ghost'
-                        icon='ph--download-simple--regular'
-                        label='Save this paragraph'
-                        onClick={() => saveRecording(recording, { start, end })}
-                      />
-                    </div>
-                  );
-                })}
-                {openId === undefined && pending && <em className='ps-13 text-description'>{pending}</em>}
-              </div>
-            </ScrollContainer.Viewport>
-          </ScrollContainer.Content>
         </Panel.Body>
-      </ScrollContainer.Root>
-    </Panel.Root>
+      </Panel.Root>
+    </>
   );
 };
 
@@ -312,9 +335,53 @@ type StoryArgs = {
   lowLatency?: boolean;
 };
 
+/** True while Space is held, outside text fields; a held key's repeats are ignored. */
+const usePushToTalk = (): boolean => {
+  const [held, setHeld] = useState(false);
+  useEffect(() => {
+    const isTyping = (event: KeyboardEvent) =>
+      event.target instanceof HTMLElement &&
+      (event.target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName));
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.code === 'Space' && !isTyping(event)) {
+        // Space would otherwise also click the focused button or scroll the page.
+        event.preventDefault();
+        if (!event.repeat) {
+          setHeld(true);
+        }
+      }
+    };
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (event.code === 'Space' && !isTyping(event)) {
+        event.preventDefault();
+        setHeld(false);
+      }
+    };
+    const onBlur = () => setHeld(false);
+    window.addEventListener('keydown', onKeyDown, { capture: true });
+    window.addEventListener('keyup', onKeyUp, { capture: true });
+    window.addEventListener('blur', onBlur);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown, { capture: true });
+      window.removeEventListener('keyup', onKeyUp, { capture: true });
+      window.removeEventListener('blur', onBlur);
+    };
+  }, []);
+  return held;
+};
+
 const MicrophoneStory = ({ language, keywords, lowLatency }: StoryArgs) => {
-  const [active, setActive] = useState(false);
-  const track = useAudioTrack(active, WHISTLE_AUDIO_CONSTRAINTS);
+  const [toggled, setToggled] = useState(false);
+  const held = usePushToTalk();
+  const active = toggled || held;
+  // The microphone stays open after first use, so push-to-talk does not clip the first word while it opens.
+  const [warm, setWarm] = useState(false);
+  useEffect(() => {
+    if (active) {
+      setWarm(true);
+    }
+  }, [active]);
+  const track = useAudioTrack(warm, WHISTLE_AUDIO_CONSTRAINTS);
   return (
     <WhistlePanel
       track={track}
@@ -323,12 +390,16 @@ const MicrophoneStory = ({ language, keywords, lowLatency }: StoryArgs) => {
       keywords={keywords}
       lowLatency={lowLatency}
       actions={
-        <Button.Root
-          iconOnly
-          icon={active ? 'ph--microphone-slash--regular' : 'ph--microphone--regular'}
-          label={active ? 'Stop' : 'Start'}
-          onClick={() => setActive((value) => !value)}
-        />
+        <>
+          <Button.Root
+            size='lg'
+            variant={active ? 'destructive' : 'primary'}
+            icon={active ? 'ph--stop--regular' : 'ph--microphone--regular'}
+            label={active ? 'Stop' : 'Record'}
+            onClick={() => setToggled((value) => !value)}
+          />
+          <span className='text-sm text-description'>{held ? 'Release Space to stop' : 'or hold Space to talk'}</span>
+        </>
       }
     />
   );
@@ -364,7 +435,8 @@ const FileStory = ({ audioUrl, language, keywords, lowLatency }: StoryArgs & { a
         lowLatency={lowLatency}
         actions={
           <Button.Root
-            iconOnly
+            size='lg'
+            variant={active ? 'destructive' : 'primary'}
             disabled={!stream}
             icon={active ? 'ph--pause--regular' : 'ph--play--regular'}
             label={active ? 'Pause' : 'Play'}
@@ -379,7 +451,12 @@ const FileStory = ({ audioUrl, language, keywords, lowLatency }: StoryArgs & { a
 const meta = {
   title: 'plugins/plugin-transcription/stories/Whistle',
   render: MicrophoneStory,
-  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  decorators: [
+    withTheme(),
+    withLayout(({ children }) => (
+      <div className='fixed inset-0 flex justify-center gap-2 overflow-hidden dx-deck-surface'>{children}</div>
+    )),
+  ],
 } satisfies Meta<StoryArgs>;
 
 export default meta;

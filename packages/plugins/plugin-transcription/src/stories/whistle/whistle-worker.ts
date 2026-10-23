@@ -71,8 +71,28 @@ let streamReceived = 0;
 
 const post = (message: WhistleResponse) => globalThis.postMessage(message);
 
-const fetchWithProgress = async (url: string): Promise<ArrayBuffer> => {
+/** Cache Storage bucket for the engine and model; bump the version to drop old entries. */
+const ASSET_CACHE = 'whistle-assets-v1';
+
+/**
+ * Fetches an asset through Cache Storage. Hugging Face redirects to a signed CDN URL behind a `no-store`
+ * redirect, so the HTTP cache never hits; the asset URLs pin a revision, so a cached copy never goes stale.
+ */
+const fetchCached = async (url: string): Promise<Response> => {
+  const cache = globalThis.caches ? await globalThis.caches.open(ASSET_CACHE).catch(() => undefined) : undefined;
+  const cached = await cache?.match(url);
+  if (cached) {
+    return cached;
+  }
   const response = await fetch(url);
+  if (response.ok && cache) {
+    await cache.put(url, response.clone()).catch(() => undefined);
+  }
+  return response;
+};
+
+const fetchWithProgress = async (url: string): Promise<ArrayBuffer> => {
+  const response = await fetchCached(url);
   if (!response.ok || !response.body) {
     throw new Error(`${response.status} fetching ${url}`);
   }
@@ -103,7 +123,7 @@ const fetchWithProgress = async (url: string): Promise<ArrayBuffer> => {
  * export and importing it as a blob module evaluates it unchanged.
  */
 const loadEngineFactory = async (url: string): Promise<CreateNeedle> => {
-  const source = await (await fetch(url)).text();
+  const source = await (await fetchCached(url)).text();
   const blobUrl = URL.createObjectURL(
     new Blob([source, '\nexport default createNeedle;\n'], { type: 'text/javascript' }),
   );
@@ -136,7 +156,7 @@ const init = async (assets: WhistleAssets, language?: string) => {
   const started = performance.now();
   const [createNeedle, wasmBinary, model] = await Promise.all([
     loadEngineFactory(assets.engineUrl),
-    fetch(assets.wasmUrl).then((response) => response.arrayBuffer()),
+    fetchCached(assets.wasmUrl).then((response) => response.arrayBuffer()),
     fetchWithProgress(assets.modelUrl),
   ]);
 
