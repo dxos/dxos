@@ -120,10 +120,16 @@ const DEFAULTS: Required<Pick<DynamicOptions, 'pitch' | 'size'>> = {
 export const DYNAMIC_VIEW_ID = 'dynamic';
 
 /** Rank rows top-down along the edges; columns are the order within a row. Overrides win. */
-export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: DynamicOptions): View => {
+export const layoutGraph = (
+  graph: GraphModel,
+  overlay: Overlay,
+  options: DynamicOptions,
+  /** Slots already arranged for `options`, reused for a graph seen before. */
+  slotsCache?: SlotsCache,
+): View => {
   const { pitch, size } = options.lattice ? latticeSlots(options.lattice) : { ...DEFAULTS, ...options };
   const known = new Set(graph.nodes.map(({ id }) => id));
-  const slots = slotsOf(graph, options);
+  const slots = slotsOf(graph, options, slotsCache);
 
   // Taken from the slots rather than from the placed nodes, so dragging a node (which only writes an
   // override) leaves the rest of the graph where it is.
@@ -173,13 +179,13 @@ export const layoutGraph = (graph: GraphModel, overlay: Overlay, options: Dynami
 };
 
 /**
- * Each graph's slots, by the options they were arranged with: a drag re-runs the layout with a new overlay but the
- * same graph, and arranging (a force simulation, a routed search) is the costly part.
+ * Each graph's slots, for one set of options: a drag re-runs the layout with a new overlay but the same graph, and
+ * arranging (a force simulation, a routed search) is the costly part. A projection owns one.
  */
-const slotsCache = new WeakMap<GraphModel, WeakMap<DynamicOptions, Map<string, Slot>>>();
+export type SlotsCache = WeakMap<GraphModel, Map<string, Slot>>;
 
-const slotsOf = (graph: GraphModel, options: DynamicOptions): Map<string, Slot> => {
-  const cached = slotsCache.get(graph)?.get(options);
+const slotsOf = (graph: GraphModel, options: DynamicOptions, cache?: SlotsCache): Map<string, Slot> => {
+  const cached = cache?.get(graph);
   if (cached) {
     return cached;
   }
@@ -190,9 +196,7 @@ const slotsOf = (graph: GraphModel, options: DynamicOptions): Map<string, Slot> 
   const seed = arrange(new Map(ids.map((id) => [id, ranks.get(id) ?? 0])), edges, options.arrange, options.force);
   const slots =
     options.arrange === 'routed' && options.lattice ? routedSlots(graph, edges, seed, options, options.lattice) : seed;
-  const byOptions = slotsCache.get(graph) ?? new WeakMap<DynamicOptions, Map<string, Slot>>();
-  byOptions.set(options, slots);
-  slotsCache.set(graph, byOptions);
+  cache?.set(graph, slots);
   return slots;
 };
 
@@ -316,8 +320,9 @@ export const createDynamicProjection = ({
   onDelete,
   constrained = () => true,
 }: DynamicProjectionOptions): Projection => {
+  const slotsCache: SlotsCache = new WeakMap();
   const scene = Atom.keepAlive(
-    Atom.make((get) => layoutGraph(get(graph), pruneOverlay(get(graph), get(overlay)), options)),
+    Atom.make((get) => layoutGraph(get(graph), pruneOverlay(get(graph), get(overlay)), options, slotsCache)),
   );
   // A free force layout leaves nodes between cells, so it keeps the lattice's sizes but not its snapping or routing.
   const lattice = options.arrange === 'force-free' ? undefined : options.lattice;

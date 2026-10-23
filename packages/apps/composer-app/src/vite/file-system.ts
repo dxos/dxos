@@ -18,7 +18,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import path from 'node:path';
 import { type Plugin } from 'vite';
 
-import { gitShow, gitStatus } from './git.ts';
+import { createGitReader } from './git.ts';
 
 /** Must match `ROUTE` in `@dxos/plugin-file-system/FileSystem`. */
 const ROUTE = '/__dx/fs';
@@ -127,6 +127,7 @@ export const fileSystemPlugin = (rootDir: string, env = process.env): Plugin => 
   const within = (file: string): string | undefined => withinRoots(roots, file);
   // One entry per configured root, looked up once so polling `/roots` does not spawn git every time.
   const remotes = new Map(roots.map((root) => [root, readRemote(root)]));
+  const git = createGitReader(env);
 
   return {
     name: 'dxos:file-system',
@@ -161,9 +162,9 @@ export const fileSystemPlugin = (rootDir: string, env = process.env): Plugin => 
               return send(res, 403, 'File is outside the allowed roots.');
             }
             if (url.pathname === '/git/status') {
-              return send(res, 200, { status: (await gitStatus(file)) ?? null });
+              return send(res, 200, { status: (await git.status(file)) ?? null });
             }
-            const text = await gitShow(file, url.searchParams.get('rev') ?? '');
+            const text = await git.show(file, url.searchParams.get('rev') ?? '');
             return text === undefined ? send(res, 404, 'Not found.') : send(res, 200, text);
           }
 

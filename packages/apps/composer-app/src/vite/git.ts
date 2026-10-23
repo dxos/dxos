@@ -15,6 +15,9 @@ const TIMEOUT = 5_000;
 /** How long a pull-request lookup is reused; it costs a `gh` call or a GitHub API request. */
 const PR_TTL = 5 * 60_000;
 
+/** Branches whose pull-request lookup is remembered; bounds the cache when a long-lived server sees many checkouts. */
+const MAX_PULL_REQUEST_LOOKUPS = 64;
+
 /** The open pull request a branch heads. */
 export type GitPullRequest = { number: number; url: string; title: string; base: string };
 
@@ -65,8 +68,6 @@ const defaultBranch = async (dir: string): Promise<string | undefined> => {
   }
   return undefined;
 };
-
-const pullRequests = new Map<string, { at: number; value?: GitPullRequest }>();
 
 /** `owner/repo` of the checkout's origin on GitHub. */
 const githubRepo = async (dir: string): Promise<string | undefined> =>
@@ -124,60 +125,73 @@ const findPullRequest = async (
   }
 };
 
-const cachedPullRequest = async (
-  dir: string,
-  branch: string,
-  env: NodeJS.ProcessEnv,
-): Promise<GitPullRequest | undefined> => {
-  const key = `${dir}\n${branch}`;
-  const cached = pullRequests.get(key);
-  if (cached && Date.now() - cached.at < PR_TTL) {
-    return cached.value;
-  }
-  const value = await findPullRequest(dir, branch, env);
-  pullRequests.set(key, { at: Date.now(), value });
-  return value;
+/** Git queries for the dev server, created once per server with its environment and its own lookup cache. */
+export type GitReader = {
+  /** The status of the repository holding `file`, or undefined when it is not in a git working tree. */
+  status: (file: string) => Promise<GitStatus | undefined>;
+  /** `file`'s text at commit `rev`, or undefined when it did not exist there. */
+  show: (file: string, rev: string) => Promise<string | undefined>;
 };
 
-/** The status of the repository holding `file`, or undefined when it is not in a git working tree. */
-export const gitStatus = async (file: string, env: NodeJS.ProcessEnv = process.env): Promise<GitStatus | undefined> => {
-  const dir = existingDir(file);
-  const head = (await git(dir, ['rev-parse', 'HEAD']))?.trim();
-  if (!head) {
-    return undefined;
-  }
-  const branch = (await git(dir, ['symbolic-ref', '--short', '-q', 'HEAD']))?.trim() || undefined;
-  const fallback = await defaultBranch(dir);
-  const pullRequest =
-    branch && branch !== fallback?.replace(/^origin\//, '') ? await cachedPullRequest(dir, branch, env) : undefined;
-  // The pull request's base as the remote has it, since the local branch of that name may be stale or absent.
-  const prBase =
-    pullRequest &&
-    (
-      await Promise.all(
-        [`origin/${pullRequest.base}`, pullRequest.base].map(async (ref) => ({
-          ref,
-          ok: Boolean(await git(dir, ['rev-parse', '--verify', '--quiet', `${ref}^{commit}`])),
-        })),
-      )
-    ).find(({ ok }) => ok)?.ref;
-  const base = prBase ?? fallback ?? 'HEAD';
-  const mergeBase = (await git(dir, ['merge-base', 'HEAD', base]))?.trim() || undefined;
-  return {
-    ...(branch && { branch }),
-    head,
-    base,
-    ...(mergeBase && { mergeBase }),
-    ...(pullRequest && { pullRequest }),
+export const createGitReader = (env: NodeJS.ProcessEnv = process.env): GitReader => {
+  const pullRequests = new Map<string, { at: number; value?: GitPullRequest }>();
+
+  const cachedPullRequest = async (dir: string, branch: string): Promise<GitPullRequest | undefined> => {
+    const key = `${dir}\n${branch}`;
+    const cached = pullRequests.get(key);
+    if (cached && Date.now() - cached.at < PR_TTL) {
+      return cached.value;
+    }
+    const value = await findPullRequest(dir, branch, env);
+    pullRequests.delete(key);
+    pullRequests.set(key, { at: Date.now(), value });
+    // A map iterates in insertion order, so the first key is the lookup refreshed longest ago.
+    if (pullRequests.size > MAX_PULL_REQUEST_LOOKUPS) {
+      pullRequests.delete(pullRequests.keys().next().value ?? '');
+    }
+    return value;
   };
-};
 
-/** `file`'s text at commit `rev`, or undefined when it did not exist there. */
-export const gitShow = async (file: string, rev: string): Promise<string | undefined> => {
-  if (!isCommit(rev)) {
-    throw new Error(`Not a commit id: ${rev}`);
-  }
-  const dir = existingDir(file);
-  // `./` makes the path relative to `dir` rather than to the repository's top level.
-  return git(dir, ['show', `${rev}:./${path.relative(dir, file)}`]);
+  const status = async (file: string): Promise<GitStatus | undefined> => {
+    const dir = existingDir(file);
+    const head = (await git(dir, ['rev-parse', 'HEAD']))?.trim();
+    if (!head) {
+      return undefined;
+    }
+    const branch = (await git(dir, ['symbolic-ref', '--short', '-q', 'HEAD']))?.trim() || undefined;
+    const fallback = await defaultBranch(dir);
+    const pullRequest =
+      branch && branch !== fallback?.replace(/^origin\//, '') ? await cachedPullRequest(dir, branch) : undefined;
+    // The pull request's base as the remote has it, since the local branch of that name may be stale or absent.
+    const prBase =
+      pullRequest &&
+      (
+        await Promise.all(
+          [`origin/${pullRequest.base}`, pullRequest.base].map(async (ref) => ({
+            ref,
+            ok: Boolean(await git(dir, ['rev-parse', '--verify', '--quiet', `${ref}^{commit}`])),
+          })),
+        )
+      ).find(({ ok }) => ok)?.ref;
+    const base = prBase ?? fallback ?? 'HEAD';
+    const mergeBase = (await git(dir, ['merge-base', 'HEAD', base]))?.trim() || undefined;
+    return {
+      ...(branch && { branch }),
+      head,
+      base,
+      ...(mergeBase && { mergeBase }),
+      ...(pullRequest && { pullRequest }),
+    };
+  };
+
+  const show = async (file: string, rev: string): Promise<string | undefined> => {
+    if (!isCommit(rev)) {
+      throw new Error(`Not a commit id: ${rev}`);
+    }
+    const dir = existingDir(file);
+    // `./` makes the path relative to `dir` rather than to the repository's top level.
+    return git(dir, ['show', `${rev}:./${path.relative(dir, file)}`]);
+  };
+
+  return { status, show };
 };

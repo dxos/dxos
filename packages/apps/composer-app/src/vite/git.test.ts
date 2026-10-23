@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, describe, test } from 'vitest';
 
-import { gitShow, gitStatus, isCommit } from './git.ts';
+import { createGitReader, isCommit } from './git.ts';
 
 describe('git route', () => {
   const root = mkdtempSync(path.join(tmpdir(), 'dx-git-'));
@@ -28,30 +28,32 @@ describe('git route', () => {
   const head = git('rev-parse', 'HEAD');
   writeFileSync(spec, 'uncommitted\n');
 
+  // No GITHUB_TOKEN and no GitHub remote, so no pull-request lookup reaches GitHub.
+  const reader = createGitReader({});
+
   afterAll(() => rmSync(root, { recursive: true, force: true }));
 
   test('a branch is compared with where it forked from the default branch', async ({ expect }) => {
-    // No remote, so no pull request lookup reaches GitHub.
-    expect(await gitStatus(spec, {})).toEqual({ branch: 'feature', head, base: 'main', mergeBase: forkPoint });
+    expect(await reader.status(spec)).toEqual({ branch: 'feature', head, base: 'main', mergeBase: forkPoint });
   });
 
   test('a file reads back at the fork point and at HEAD', async ({ expect }) => {
-    expect(await gitShow(spec, forkPoint)).toBe('base\n');
-    expect(await gitShow(spec, head)).toBe('committed\n');
-    expect(await gitShow(path.join(root, 'NEW.mdl'), head)).toBeUndefined();
+    expect(await reader.show(spec, forkPoint)).toBe('base\n');
+    expect(await reader.show(spec, head)).toBe('committed\n');
+    expect(await reader.show(path.join(root, 'NEW.mdl'), head)).toBeUndefined();
   });
 
   test('only commit ids are accepted as revisions', async ({ expect }) => {
     expect(isCommit(head)).toBe(true);
     expect(isCommit('--output=/tmp/x')).toBe(false);
     expect(isCommit('HEAD~1')).toBe(false);
-    await expect(gitShow(spec, '--help')).rejects.toThrow();
+    await expect(reader.show(spec, '--help')).rejects.toThrow();
   });
 
   test('a file outside any repository has no status', async ({ expect }) => {
     const outside = mkdtempSync(path.join(tmpdir(), 'dx-nogit-'));
     try {
-      expect(await gitStatus(path.join(outside, 'SPEC.mdl'), {})).toBeUndefined();
+      expect(await reader.status(path.join(outside, 'SPEC.mdl'))).toBeUndefined();
     } finally {
       rmSync(outside, { recursive: true, force: true });
     }

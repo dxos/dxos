@@ -69,11 +69,10 @@ import { CodeOperation } from '#types';
 import {
   type DiffAgainst,
   fileKey,
-  useGitStatus,
   useLocalTexts,
   useResolvedPath,
+  useSpecDiff,
   useSpecSyncState,
-  useTextAt,
 } from './useSpecSources.ts';
 
 /** What the panel beside the spec shows. */
@@ -189,16 +188,8 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     );
     const codePath = useResolvedPath(codeTarget);
 
-    // Diff mode: the spec against where its branch forked from the base (the pull request's, else the default
-    // branch), or against the last commit to see only what is not committed yet.
-    const specPath = useResolvedPath(key);
-    const git = useGitStatus(specPath);
-    const [diff, setDiff] = useState<DiffAgainst | undefined>(defaultDiff);
+    const { git, diff, setDiff, baseText, available: diffAvailable } = useSpecDiff(key, { base, defaultDiff });
     const [fold, setFold] = useState(false);
-    const rev = diff === 'base' ? git?.mergeBase : diff === 'head' ? git?.head : undefined;
-    const gitBase = useTextAt(specPath, rev);
-    const baseText = diff === undefined ? undefined : rev ? gitBase : diff === 'base' ? base : undefined;
-    const diffAvailable = git !== undefined || base !== undefined;
     const pullRequest = git?.pullRequest;
 
     // A spec with no changelog has none; slicing from -1 would make the whole body the "changelog".

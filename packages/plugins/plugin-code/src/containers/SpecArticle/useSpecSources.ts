@@ -133,3 +133,32 @@ export const useTextAt = (path: string | undefined, rev: string | undefined): st
   // A text loaded for another file or commit is not shown while the new one loads.
   return text && text.key === key ? text.text : undefined;
 };
+
+export type SpecDiffState = {
+  git?: FileSystem.GitStatus;
+  /** What the spec is compared with; undefined outside diff mode. */
+  diff?: DiffAgainst;
+  setDiff: (diff: DiffAgainst | undefined) => void;
+  /** The text diff mode compares with; undefined outside diff mode and while it loads. */
+  baseText?: string;
+  /** Whether diff mode can be offered: the checkout runs git, or a base was given. */
+  available: boolean;
+};
+
+/**
+ * Diff mode for a spec: the spec against where its branch forked from the base (the pull request's, else the default
+ * branch), or against the last commit to see only what is not committed yet. `base` stands in for git's base where
+ * the host cannot run git.
+ */
+export const useSpecDiff = (
+  key: SourceKey | undefined,
+  { base, defaultDiff }: { base?: string; defaultDiff?: DiffAgainst } = {},
+): SpecDiffState => {
+  const path = useResolvedPath(key);
+  const git = useGitStatus(path);
+  const [diff, setDiff] = useState<DiffAgainst | undefined>(defaultDiff);
+  const rev = diff === 'base' ? git?.mergeBase : diff === 'head' ? git?.head : undefined;
+  const gitBase = useTextAt(path, rev);
+  const baseText = diff === undefined ? undefined : rev ? gitBase : diff === 'base' ? base : undefined;
+  return { git, diff, setDiff, baseText, available: git !== undefined || base !== undefined };
+};

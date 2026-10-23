@@ -68,41 +68,42 @@ const computeRuns = (points: readonly Point[], owner: number): Run[] =>
     return [{ owner, start, axis, coord: across(axis, from), lo: Math.min(a, b), hi: Math.max(a, b) }];
   });
 
-/**
- * Runs by line, reused while the line is unchanged: scoring a candidate rereads every line, but a candidate replaces
- * only the lines it moves, so the rest keep their arrays and their runs.
- */
-const runsCache = new WeakMap<readonly Point[], Run[]>();
-
-const runsOf = (points: readonly Point[], owner: number): Run[] => {
-  const cached = runsCache.get(points);
-  if (cached && (cached.length === 0 || cached[0].owner === owner)) {
-    return cached;
-  }
-  const runs = computeRuns(points, owner);
-  runsCache.set(points, runs);
-  return runs;
-};
-
 type Box = { minX: number; minY: number; maxX: number; maxY: number };
 
-const boxCache = new WeakMap<readonly Point[], Box>();
+/**
+ * Runs and bounding boxes by line, for one `nudge` call: scoring a candidate rereads every line, but a candidate
+ * replaces only the lines it moves, so the rest keep their arrays and what was derived from them.
+ */
+class LineCache {
+  #runs = new WeakMap<readonly Point[], Run[]>();
+  #boxes = new WeakMap<readonly Point[], Box>();
 
-/** A line's bounding box; two lines whose boxes are apart can neither share a run nor cross. */
-const boxOf = (points: readonly Point[]): Box => {
-  let box = boxCache.get(points);
-  if (!box) {
-    box = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
-    for (const { x, y } of points) {
-      box.minX = Math.min(box.minX, x);
-      box.minY = Math.min(box.minY, y);
-      box.maxX = Math.max(box.maxX, x);
-      box.maxY = Math.max(box.maxY, y);
+  runsOf(points: readonly Point[], owner: number): Run[] {
+    const cached = this.#runs.get(points);
+    if (cached && (cached.length === 0 || cached[0].owner === owner)) {
+      return cached;
     }
-    boxCache.set(points, box);
+    const runs = computeRuns(points, owner);
+    this.#runs.set(points, runs);
+    return runs;
   }
-  return box;
-};
+
+  /** A line's bounding box; two lines whose boxes are apart can neither share a run nor cross. */
+  boxOf(points: readonly Point[]): Box {
+    let box = this.#boxes.get(points);
+    if (!box) {
+      box = { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity };
+      for (const { x, y } of points) {
+        box.minX = Math.min(box.minX, x);
+        box.minY = Math.min(box.minY, y);
+        box.maxX = Math.max(box.maxX, x);
+        box.maxY = Math.max(box.maxY, y);
+      }
+      this.#boxes.set(points, box);
+    }
+    return box;
+  }
+}
 
 const apart = (left: Box, right: Box): boolean =>
   left.maxX < right.minX - EPSILON ||
@@ -144,6 +145,7 @@ const interiorRun = (run: Run, rect: Rect): number => {
  * overlaps need so that separating one of two channels two lines share still lowers the count.
  */
 const pairCount = (
+  cache: LineCache,
   lines: readonly Point[][],
   changed: ReadonlySet<number>,
   related: (a: Run, b: Run) => boolean,
@@ -152,14 +154,14 @@ const pairCount = (
 ) => {
   let count = 0;
   for (const owner of changed) {
-    const box = boxOf(lines[owner]);
-    const own = runsOf(lines[owner], owner);
+    const box = cache.boxOf(lines[owner]);
+    const own = cache.runsOf(lines[owner], owner);
     for (const other of scope ?? lines.keys()) {
       const points = lines[other];
-      if (other === owner || (changed.has(other) && other < owner) || apart(box, boxOf(points))) {
+      if (other === owner || (changed.has(other) && other < owner) || apart(box, cache.boxOf(points))) {
         continue;
       }
-      const others = runsOf(points, other);
+      const others = cache.runsOf(points, other);
       if (perRun) {
         for (const run of own) {
           count += others.filter((candidate) => related(run, candidate)).length;
@@ -173,9 +175,9 @@ const pairCount = (
 };
 
 /** Collinear runs of different lines that overlap, grouped transitively along each shared line. */
-const channelsOf = (lines: readonly Point[][], movable: number): Run[][] => {
+const channelsOf = (cache: LineCache, lines: readonly Point[][], movable: number): Run[][] => {
   const runs = lines
-    .flatMap((points, owner) => runsOf(points, owner))
+    .flatMap((points, owner) => cache.runsOf(points, owner))
     .sort((a, b) =>
       a.axis === b.axis
         ? Math.abs(a.coord - b.coord) < EPSILON
@@ -309,6 +311,7 @@ type Candidate = { lines: Point[][]; overlaps: number; crossings: number; revers
  * without adding crossings or cutting through a box.
  */
 const separate = (
+  cache: LineCache,
   lines: readonly Point[][],
   channel: readonly Run[],
   paths: readonly NudgePath[],
@@ -349,7 +352,7 @@ const separate = (
     Math.max(...assignments.flatMap(({ offsets }) => [...offsets.values()].map((offset) => Math.abs(offset))), 0) +
     EPSILON;
   const region = channel
-    .map((run) => boxOf(lines[run.owner]))
+    .map((run) => cache.boxOf(lines[run.owner]))
     .reduce(
       (union, box) => ({
         minX: Math.min(union.minX, box.minX - reach),
@@ -359,7 +362,7 @@ const separate = (
       }),
       { minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity },
     );
-  const scope = [...lines.keys()].filter((index) => !apart(region, boxOf(lines[index])));
+  const scope = [...lines.keys()].filter((index) => !apart(region, cache.boxOf(lines[index])));
   const nearObstacles = obstacles.filter(
     (rect) => !apart(region, { minX: rect.x, minY: rect.y, maxX: rect.x + rect.w, maxY: rect.y + rect.h }),
   );
@@ -368,8 +371,9 @@ const separate = (
     [...owners].reduce(
       (total, owner) =>
         total +
-        runsOf(candidate[owner], owner).filter((run) => nearObstacles.some((rect) => interiorRun(run, rect) > EPSILON))
-          .length,
+        cache
+          .runsOf(candidate[owner], owner)
+          .filter((run) => nearObstacles.some((rect) => interiorRun(run, rect) > EPSILON)).length,
       0,
     );
 
@@ -380,8 +384,8 @@ const separate = (
     let counts = before.get(key);
     if (!counts) {
       counts = {
-        overlaps: pairCount(lines, changed, shared, true, scope),
-        crossings: pairCount(lines, changed, crosses, false, scope),
+        overlaps: pairCount(cache, lines, changed, shared, true, scope),
+        crossings: pairCount(cache, lines, changed, crosses, false, scope),
         obstructed: obstructed(lines, changed),
       };
       before.set(key, counts);
@@ -411,12 +415,12 @@ const separate = (
     if (!valid) {
       continue;
     }
-    const overlaps = pairCount(candidate, changed, shared, true, scope);
+    const overlaps = pairCount(cache, candidate, changed, shared, true, scope);
     const { overlaps: overlapsBefore, crossings: crossingsBefore, obstructed: obstructedBefore } = beforeOf(changed);
     if (overlaps >= overlapsBefore) {
       continue;
     }
-    const crossings = pairCount(candidate, changed, crosses, false, scope);
+    const crossings = pairCount(cache, candidate, changed, crosses, false, scope);
     // A crossing still reads as two lines and a shared run does not, so each overlap resolved may cost one crossing.
     if (crossings - crossingsBefore > overlapsBefore - overlaps || obstructed(candidate, changed) > obstructedBefore) {
       continue;
@@ -445,6 +449,7 @@ const separate = (
 export const nudge = (paths: readonly NudgePath[], options: NudgeOptions = {}): Point[][] => {
   const { spacing = 8, obstacles = [], fixed = [], margin = spacing } = options;
   let lines: Point[][] = [...paths.map((path) => simplify(path.points)), ...fixed.map((points) => [...points])];
+  const cache = new LineCache();
   const touched = new Set<number>();
   const attempted = new Set<string>();
   const signature = (channel: readonly Run[]) =>
@@ -454,12 +459,12 @@ export const nudge = (paths: readonly NudgePath[], options: NudgeOptions = {}): 
       .join(',')}`;
   // Each separation strictly lowers the overlap count and a failed channel is never retried, so this terminates.
   for (;;) {
-    const channel = channelsOf(lines, paths.length).find((candidate) => !attempted.has(signature(candidate)));
+    const channel = channelsOf(cache, lines, paths.length).find((candidate) => !attempted.has(signature(candidate)));
     if (!channel) {
       break;
     }
     attempted.add(signature(channel));
-    const next = separate(lines, channel, paths, obstacles, spacing, margin);
+    const next = separate(cache, lines, channel, paths, obstacles, spacing, margin);
     if (next) {
       next.forEach((points, owner) => points !== lines[owner] && touched.add(owner));
       lines = next;
