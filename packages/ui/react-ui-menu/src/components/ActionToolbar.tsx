@@ -421,9 +421,14 @@ const OverflowMenuTrigger = ({ menu, actions, testId }: ItemProps<{ actions: Men
   );
 };
 
+/** The element a row lays out in: the `Toolbar.Root` scroll frame around it, else the row itself. */
+const frameOf = (row: HTMLElement): HTMLElement =>
+  row.parentElement?.classList.contains('dx-toolbar-scroll') ? row.parentElement : row;
+
 /**
- * Moves collapsible items into the overflow menu, highest rank first, while any row scrolls; each comes back once the
- * toolbar is wider than when it collapsed, so hidden items are never measured.
+ * Moves collapsible items into the overflow menu, highest rank first, while any row is too narrow; each comes back once
+ * the toolbar is wider than when it collapsed, so hidden items are never measured. With nothing left to collapse, each
+ * row is held at its content width, so the toolbar never scrolls and the overflow menu stays in view.
  */
 const useCollapse = (units: MenuItem[], rows: RefObject<(HTMLElement | null)[]>): MenuItem[] => {
   const collapsible = useMemo(
@@ -442,16 +447,24 @@ const useCollapse = (units: MenuItem[], rows: RefObject<(HTMLElement | null)[]>)
 
   useLayoutEffect(() => {
     const elements = rows.current.filter((row): row is HTMLElement => !!row);
-    if (collapsible.length === 0 || elements.length === 0) {
+    if (elements.length === 0) {
       return;
     }
-    const overflowing = elements.some((row) => row.scrollWidth > row.clientWidth + 1);
-    const width = elements[0].clientWidth;
+    // Released first, so the rows measure the width their container gives them.
+    elements.forEach((row) => (frameOf(row).style.minWidth = ''));
+    const overflows = (row: HTMLElement) => row.scrollWidth > row.clientWidth + 1;
+    const overflowing = elements.some(overflows);
+    const width = frameOf(elements[0]).clientWidth;
     if (overflowing && count < collapsible.length) {
       thresholds.current[count] = width;
       setCount(count + 1);
     } else if (!overflowing && count > 0 && width > (thresholds.current[count - 1] ?? Infinity)) {
       setCount(count - 1);
+    } else {
+      elements.filter(overflows).forEach((row) => {
+        const frame = frameOf(row);
+        frame.style.minWidth = `${row.scrollWidth + frame.offsetWidth - row.clientWidth}px`;
+      });
     }
   });
 
@@ -463,7 +476,7 @@ const useCollapse = (units: MenuItem[], rows: RefObject<(HTMLElement | null)[]>)
       return;
     }
     const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
-    observer.observe(element);
+    observer.observe(frameOf(element));
     return () => observer.disconnect();
   }, [observed, rows]);
 
