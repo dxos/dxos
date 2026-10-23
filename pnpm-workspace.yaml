@@ -244,6 +244,7 @@ catalog:
   '@types/dom-speech-recognition': ^0.0.6
   '@types/flubber': ^0.4.0
   '@types/geojson': ^7946.0.14
+  '@types/hast': ^3.0.5
   '@types/js-yaml': ^4.0.5
   '@types/jsdom': ^28.0.3
   '@types/json-stringify-safe': 5.0.0
@@ -257,6 +258,7 @@ catalog:
   '@types/lodash.orderby': ^4.6.9
   '@types/lodash.sortby': ^4.7.7
   '@types/mailparser': ^3.4.6
+  '@types/mdast': ^4.0.4
   '@types/minimatch': ^5.1.2
   '@types/mocha': ^10.0.7
   '@types/n3': ^1.26.1
@@ -594,7 +596,9 @@ catalog:
   rehype-highlight: ^6.0.0
   remark-frontmatter: ^5.0.0
   remark-gfm: ^4.0.1
+  remark-parse: ^11.0.0
   remark-parse-frontmatter: ^1.0.3
+  remark-rehype: ^11.1.2
   remotion: 4.0.534
   resize-observer-polyfill: ^1.5.1
   reveal.js: ^5.1.0
@@ -649,7 +653,7 @@ catalog:
   ua-parser-js: ^1.0.39
   uint8arrays: ^5.1.0
   ulidx: ^2.3.0
-  unified: ^11.0.0
+  unified: ^11.0.5
   unplugin: ^1.7.1
   unplugin-fonts: ^1.4.0
   unzip-stream: ^0.3.2

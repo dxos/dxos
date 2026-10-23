@@ -172,8 +172,12 @@
     "rehype-add-classes": "catalog:",
     "rehype-highlight": "catalog:",
     "remark-frontmatter": "catalog:",
+    "remark-gfm": "catalog:",
+    "remark-parse": "catalog:",
     "remark-parse-frontmatter": "catalog:",
+    "remark-rehype": "catalog:",
     "reveal.js": "catalog:",
+    "unified": "catalog:",
     "yaml": "catalog:"
   },
   "devDependencies": {
@@ -185,6 +189,8 @@
     "@dxos/ui-theme": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
+    "@types/hast": "catalog:",
+    "@types/mdast": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@types/reveal.js": "catalog:",

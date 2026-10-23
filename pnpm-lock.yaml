@@ -540,6 +540,9 @@ catalogs:
     '@types/geojson':
       specifier: ^7946.0.14
       version: 7946.0.14
+    '@types/hast':
+      specifier: ^3.0.5
+      version: 3.0.5
     '@types/js-yaml':
       specifier: ^4.0.5
       version: 4.0.9
@@ -567,6 +570,9 @@ catalogs:
     '@types/mailparser':
       specifier: ^3.4.6
       version: 3.4.6
+    '@types/mdast':
+      specifier: ^4.0.4
+      version: 4.0.4
     '@types/n3':
       specifier: ^1.26.1
       version: 1.26.1
@@ -1374,9 +1380,15 @@ catalogs:
     remark-gfm:
       specifier: ^4.0.1
       version: 4.0.1
+    remark-parse:
+      specifier: ^11.0.0
+      version: 11.0.0
     remark-parse-frontmatter:
       specifier: ^1.0.3
       version: 1.0.3
+    remark-rehype:
+      specifier: ^11.1.2
+      version: 11.1.2
     remotion:
       specifier: 4.0.534
       version: 4.0.534
@@ -1524,6 +1536,9 @@ catalogs:
     ulidx:
       specifier: ^2.3.0
       version: 2.3.0
+    unified:
+      specifier: ^11.0.5
+      version: 11.0.5
     unplugin:
       specifier: ^1.7.1
       version: 1.14.1
@@ -15247,12 +15262,24 @@ importers:
       remark-frontmatter:
         specifier: 'catalog:'
         version: 5.0.0
+      remark-gfm:
+        specifier: 'catalog:'
+        version: 4.0.1
+      remark-parse:
+        specifier: 'catalog:'
+        version: 11.0.0
       remark-parse-frontmatter:
         specifier: 'catalog:'
         version: 1.0.3
+      remark-rehype:
+        specifier: 'catalog:'
+        version: 11.1.2
       reveal.js:
         specifier: 'catalog:'
         version: 5.1.0
+      unified:
+        specifier: 'catalog:'
+        version: 11.0.5
       yaml:
         specifier: 'catalog:'
         version: 2.8.2
@@ -15281,6 +15308,12 @@ importers:
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
+      '@types/hast':
+        specifier: 'catalog:'
+        version: 3.0.5
+      '@types/mdast':
+        specifier: 'catalog:'
+        version: 4.0.4
       '@types/react':
         specifier: ~19.2.17
         version: 19.2.17
@@ -34907,9 +34940,6 @@ packages:
 
   '@types/hast@2.3.4':
     resolution: {integrity: sha512-wLEm0QvaoawEDoTRwzTXp4b4jpwiJDvR5KMnFnVodm3scufTlBOWRD6N1OBf9TZMhjlNsSfcO5V+7AF4+Vy+9g==}
-
-  '@types/hast@3.0.4':
-    resolution: {integrity: sha512-WPs+bbQw5aCj+x6laNGWLH3wviHtoCv/P3+otBhbOhJgG8qtpdAMlTCxLtsTWA7LH1Oh/bFCHsBn0TPS5m30EQ==}
 
   '@types/hast@3.0.5':
     resolution: {integrity: sha512-rp/ezSWaD1m44dPKICGhiskI13nVr7qTloFwDa/IYkhhf5nzwP+zIQcIJh3WIFSBOy/H1PzB40jPjMDksN4F+g==}
@@ -57433,10 +57463,6 @@ snapshots:
     dependencies:
       '@types/unist': 3.0.3
 
-  '@types/hast@3.0.4':
-    dependencies:
-      '@types/unist': 3.0.3
-
   '@types/hast@3.0.5':
     dependencies:
       '@types/unist': 3.0.3
@@ -63263,7 +63289,7 @@ snapshots:
 
   hast-util-from-html@2.0.3:
     dependencies:
-      '@types/hast': 3.0.4
+      '@types/hast': 3.0.5
       devlop: 1.1.0
       hast-util-from-parse5: 8.0.3
       parse5: 7.3.0
@@ -65331,7 +65357,7 @@ snapshots:
       mdast-util-gfm-strikethrough: 2.0.0
       mdast-util-gfm-table: 2.0.0
       mdast-util-gfm-task-list-item: 2.0.0
-      mdast-util-to-markdown: 2.1.0
+      mdast-util-to-markdown: 2.1.2
     transitivePeerDependencies:
       - supports-color
 
@@ -65349,7 +65375,7 @@ snapshots:
   mdast-util-mdx-jsx@3.2.0:
     dependencies:
       '@types/estree-jsx': 1.0.0
-      '@types/hast': 3.0.4
+      '@types/hast': 3.0.5
       '@types/mdast': 4.0.4
       '@types/unist': 3.0.3
       ccount: 2.0.1
@@ -65381,7 +65407,7 @@ snapshots:
 
   mdast-util-to-hast@13.2.1:
     dependencies:
-      '@types/hast': 3.0.4
+      '@types/hast': 3.0.5
       '@types/mdast': 4.0.4
       '@ungap/structured-clone': 1.2.0
       devlop: 1.1.0
@@ -67876,7 +67902,7 @@ snapshots:
 
   react-markdown@10.1.0(@types/react@19.2.17)(react@19.2.7):
     dependencies:
-      '@types/hast': 3.0.4
+      '@types/hast': 3.0.5
       '@types/mdast': 4.0.4
       '@types/react': 19.2.17
       devlop: 1.1.0
@@ -68285,7 +68311,7 @@ snapshots:
   remark-stringify@11.0.0:
     dependencies:
       '@types/mdast': 4.0.4
-      mdast-util-to-markdown: 2.1.0
+      mdast-util-to-markdown: 2.1.2
       unified: 11.0.5
 
   remotion@4.0.534(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
