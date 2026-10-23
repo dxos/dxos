@@ -10,7 +10,7 @@ import 'highlight.js/styles/tokyo-night-dark.css';
 
 import hljs from 'highlight.js';
 import typescript from 'highlight.js/lib/languages/typescript';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { type ReactNode, useEffect, useRef, useState } from 'react';
 import Reveal from 'reveal.js';
 import RevealHighlight from 'reveal.js/plugin/highlight/highlight';
 import RevealMarkdown, { type MarkdownPlugin } from 'reveal.js/plugin/markdown/plugin.js';
@@ -19,6 +19,8 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
+
+import { type SlideEmbed, findEmbeds, markEmbeds } from './embeds.ts';
 
 const styles = `
 <style type="text/css">
@@ -52,6 +54,32 @@ const styles = `
   .reveal pre {
     margin-left: 0;
   }
+  .reveal table {
+    width: 100%;
+    font-family: "Raleway", sans-serif;
+    font-size: 24px;
+    font-weight: 300;
+    line-height: 1.4;
+  }
+  .reveal table th {
+    font-size: 18px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.6;
+  }
+  .reveal table th, .reveal table td:not(:last-child) {
+    white-space: nowrap;
+  }
+  .reveal table th, .reveal table td {
+    padding: 12px 16px;
+    vertical-align: top;
+    text-align: left;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+  .reveal .dx-slide-embed {
+    display: none;
+  }
   .reveal code {
     font-size: 20px;
     background: #111111;
@@ -63,6 +91,8 @@ const styles = `
 
 export type RevealProps = {
   content: string;
+  /** Renders an object embedded in the current slide over the whole viewport; without one, embeds render as images. */
+  renderEmbed?: (embed: SlideEmbed) => ReactNode;
   slide?: number;
   fullscreen?: boolean;
   onExit?: () => void;
@@ -119,7 +149,12 @@ const updateSlides = async (player: Player, content: string) => {
 };
 
 /** Builds a Markdown deck on `element`, seeded with `content`, and waits for it to be ready. */
-const createPlayer = async (element: HTMLElement, slides: HTMLElement, content: string): Promise<Player> => {
+const createPlayer = async (
+  element: HTMLElement,
+  slides: HTMLElement,
+  content: string,
+  keyboardCondition: (event: KeyboardEvent) => boolean,
+): Promise<Player> => {
   // Required for syntax highlighting.
   hljs.registerLanguage('typescript', typescript);
 
@@ -142,6 +177,8 @@ const createPlayer = async (element: HTMLElement, slides: HTMLElement, content: 
     embedded: true,
     // Narrow decks scale like wide ones; scroll view would wrap the sections that edits replace.
     scrollActivationWidth: 0,
+    // Asked before every key the deck would act on.
+    keyboardCondition,
 
     // Disable autoplay to prevent errors in headless environments (e.g., CI).
     autoPlayMedia: false,
@@ -153,7 +190,8 @@ const createPlayer = async (element: HTMLElement, slides: HTMLElement, content: 
     // width: 1600,
     // height: 900,
     margin: 0.1,
-    // center: false,
+    // Slides keep their titles at the top rather than centering their content.
+    center: false,
     // minScale: 0.1,
     // maxScale: 1.4,
 
@@ -179,15 +217,51 @@ const createPlayer = async (element: HTMLElement, slides: HTMLElement, content: 
   return { deck, markdown, highlight, slides, renderedContent: content };
 };
 
+// The smallest body text a slide shrinks to; the theme's own size is the largest.
+const MIN_FONT_SIZE = 20;
+
+/**
+ * Shrinks the current slide's body text, a step at a time, until the slide fits the deck's height. Titles have fixed
+ * sizes, so they stay put; a slide that already fits keeps the theme's size.
+ */
+const fitSlide = (deck: Reveal.Api) => {
+  const slide = deck.getCurrentSlide();
+  if (!slide) {
+    return;
+  }
+  slide.style.fontSize = '';
+  const height = Number(deck.getConfig().height) || 700;
+  let size = Number.parseFloat(getComputedStyle(slide).fontSize);
+  while (slide.scrollHeight > height && size > MIN_FONT_SIZE) {
+    size -= 2;
+    slide.style.fontSize = `${size}px`;
+  }
+};
+
+const currentEmbeds = (deck: Reveal.Api): SlideEmbed[] => {
+  const current = deck.getCurrentSlide();
+  return current ? findEmbeds(current).map(({ uri, label }) => ({ uri, label })) : [];
+};
+
 export const RevealPlayer = Util.composable<HTMLDivElement, RevealProps>(
-  ({ content, slide, fullscreen = true, onExit, children, ...props }, forwardedRef) => {
+  ({ content: contentProp, slide, fullscreen = true, onExit, renderEmbed, children, ...props }, forwardedRef) => {
     const deckDivRef = useRef<HTMLDivElement>(null);
     const slidesRef = useRef<HTMLDivElement>(null);
     const [player, setPlayer] = useState<Player>();
+    // The objects embedded in the current slide.
+    const [embeds, setEmbeds] = useState<SlideEmbed[]>([]);
+    // While an embedded object fills the viewport its keys are its own: the deck acts only on Escape, to exit.
+    const embedShowingRef = useRef(false);
+    embedShowingRef.current = renderEmbed !== undefined && embeds.length > 0;
+    const content = renderEmbed ? markEmbeds(contentProp) : contentProp;
 
     useEffect(() => {
       if (player && player.renderedContent !== content) {
-        void updateSlides(player, content);
+        // Rebuilding the slides replaces the current slide, so its embeds are found again once it is done.
+        void updateSlides(player, content).then(() => {
+          fitSlide(player.deck);
+          setEmbeds(currentEmbeds(player.deck));
+        });
       }
     }, [player, content]);
 
@@ -198,7 +272,12 @@ export const RevealPlayer = Util.composable<HTMLDivElement, RevealProps>(
         return;
       }
 
-      const player = await createPlayer(element, slides, content);
+      const player = await createPlayer(
+        element,
+        slides,
+        content,
+        (event) => !embedShowingRef.current || event.key === 'Escape',
+      );
       const { deck } = player;
       if (controller.signal.aborted) {
         deck.destroy();
@@ -214,6 +293,12 @@ export const RevealPlayer = Util.composable<HTMLDivElement, RevealProps>(
       });
 
       setPlayer(player);
+      fitSlide(deck);
+      setEmbeds(currentEmbeds(deck));
+      deck.on('slidechanged', () => {
+        fitSlide(deck);
+        setEmbeds(currentEmbeds(deck));
+      });
 
       // Reveal re-lays out only on window resize; a plank or companion resizes without one.
       const resizeObserver = new ResizeObserver(() => deck.layout());
@@ -250,6 +335,17 @@ export const RevealPlayer = Util.composable<HTMLDivElement, RevealProps>(
             />
             <div ref={slidesRef} className={mx('slides', !fullscreen && 'dx-base-surface p-8')} />
           </div>
+          {/* Outside the deck, so an embed fills the viewport at its own resolution rather than scaled with the slide;
+              above reveal's slides (z-index 1) and below its controls (z-index 11). */}
+          {renderEmbed && embeds.length > 0 && (
+            <div className='dx-cover z-[2] grid auto-rows-fr dx-base-surface'>
+              {embeds.map((embed, index) => (
+                <div key={`${index}:${embed.uri}`} className='grid overflow-hidden'>
+                  {renderEmbed(embed)}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </Layout.Grid>
     );

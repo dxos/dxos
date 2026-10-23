@@ -11,6 +11,7 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
+import { diagramBlockDescription, diagramPreview } from '@dxos/diagram/extension';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
@@ -100,6 +101,7 @@ export type SpecArticleProps = Omit<AppSurface.ObjectArticleProps<Spec.Spec>, 's
  * A spec as an IDE page: the MDL editor beside a panel of views. `github:` keys in the text are links (Ctrl/⌘-click):
  * a code key opens the file at its symbol, another spec's key opens that spec, synced from its checkout. The latest
  * compliance review (`<SPEC>.review.mdl` beside the spec) marks each reviewed item in the margin and on the graph.
+ * Each ```diagram fence is drawn in place of its source until the selection enters it.
  */
 export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
   ({ role, subject: spec, content, sourceKey, attendableId, readOnly = spec == null }, forwardedRef) => {
@@ -234,7 +236,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
       () =>
         [
           createBasicExtensions({ lineNumbers: true, readOnly }),
-          createMarkdownExtensions({ codeLanguages: [mdlBlockDescription] }),
+          createMarkdownExtensions({ codeLanguages: [mdlBlockDescription, diagramBlockDescription] }),
           createThemeExtensions({ themeMode, slots: documentSlots }),
           decorateMarkdown(),
           mdl(),
@@ -256,6 +258,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
               },
               onOpen: (target) => void open(target),
             }),
+          diagramPreview(),
           // Live two-way binding only when editing an ECHO Spec; static content is rendered via `value`.
           spec &&
             target &&

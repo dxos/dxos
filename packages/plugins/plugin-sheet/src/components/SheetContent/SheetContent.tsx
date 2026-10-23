@@ -22,6 +22,7 @@ import {
   rangeToA1Notation,
 } from '@dxos/compute-hyperformula';
 import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
 import { useAttention, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import {
@@ -95,6 +96,9 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
     setActiveRefs,
     ignoreAttention,
   } = useSheetContext();
+  // The grid spans the sheet's own rows and columns, which grow past the defaults.
+  const [sheetRows] = useObject(model.sheet, 'rows');
+  const [sheetColumns] = useObject(model.sheet, 'columns');
 
   // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us
   //  a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
@@ -374,8 +378,8 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
       <Grid.Content
         className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'
         initialCells={initialCells}
-        limitColumns={SheetUtil.DEFAULT_COLS}
-        limitRows={SheetUtil.DEFAULT_ROWS}
+        limitColumns={sheetColumns?.length ?? SheetUtil.DEFAULT_COLS}
+        limitRows={sheetRows?.length ?? SheetUtil.DEFAULT_ROWS}
         columns={columns}
         rows={rows}
         columnDefault={sheetColDefault}

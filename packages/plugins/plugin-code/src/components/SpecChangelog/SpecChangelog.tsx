@@ -5,6 +5,7 @@
 import React, { useMemo, useState } from 'react';
 
 import { mdl, mdlBlockDescription } from '@dxos/deus/extension';
+import { diagramBlockDescription, diagramPreview } from '@dxos/diagram/extension';
 import { Editor } from '@dxos/react-ui-editor';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -84,10 +85,11 @@ export const SpecChangelog = ({
   const extensions = useMemo(
     () => [
       createBasicExtensions({ lineNumbers: true, readOnly: true }),
-      createMarkdownExtensions({ codeLanguages: [mdlBlockDescription] }),
+      createMarkdownExtensions({ codeLanguages: [mdlBlockDescription, diagramBlockDescription] }),
       createThemeExtensions({ themeMode, slots: documentSlots }),
       decorateMarkdown(),
       mdl(),
+      diagramPreview(),
       decisionGutter(decisions, (id) => {
         setSelected(id);
         // A gutter chip is about a decision, so it brings back a view that shows decisions.

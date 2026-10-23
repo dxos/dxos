@@ -33,7 +33,7 @@ import { makeInProcessClient } from '@dxos/protocols';
 import { DataService } from '@dxos/protocols/rpc';
 import { openAndClose } from '@dxos/test-utils';
 
-import { DocumentUnavailableError, EchoClientError, RepoClosedError } from '../errors.ts';
+import { CLOSE_REASON_ATTRIBUTE, DocumentUnavailableError, EchoClientError, RepoClosedError } from '../errors.ts';
 import { createTmpPath } from '../testing/index.ts';
 import { type DocHandleProxy } from './doc-handle-proxy.ts';
 import { RepoProxy, type SaveStateChangedEvent } from './repo-proxy.ts';
@@ -920,6 +920,25 @@ describe('RepoProxy', () => {
     // caller that can abandon the work recognises it, rather than an assertion failure.
     expect(() => clientRepo.find(url)).to.throw(RepoClosedError);
     expect(() => clientRepo.create<{ text: string }>()).to.throw(RepoClosedError);
+  });
+
+  test('a write after close names what closed the proxy', async () => {
+    const { dataService } = await setup();
+    const [clientRepo] = createProxyRepos(dataService);
+    await clientRepo.open();
+    await clientRepo.close(new Context({ attributes: { [CLOSE_REASON_ATTRIBUTE]: 'invocation abandoned' } }));
+
+    let error: unknown;
+    try {
+      clientRepo.create<{ text: string }>();
+    } catch (err) {
+      error = err;
+    }
+    invariant(error instanceof RepoClosedError);
+    expect(error.context.closeReason).to.equal('invocation abandoned');
+    // The cause's stack is the close call site, so it names this file rather than the write.
+    invariant(error.cause instanceof Error);
+    expect(error.cause.stack).to.include('repo-proxy.test.ts');
   });
 
   test('a failed update leaves the proxy usable and is retried', { timeout: 5_000 }, async () => {

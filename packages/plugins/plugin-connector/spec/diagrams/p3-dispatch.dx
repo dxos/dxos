@@ -1,0 +1,28 @@
+diagram flow=right
+group kms "kms-service" {
+  node Iface "Provider"
+  node GitHubP "github.ts"
+  node LinearP "linear.ts"
+  node Ingress "webhook ingress"
+  node Grants "token + grant"
+}
+group compute "compute-service" {
+  node Router "EventRouter"
+  node Dispatch "TriggersDispatcher"
+}
+group github "plugin-github" {
+  node Sync "sync operation"
+}
+node Trigger "event trigger"
+node App "GitHub App"
+edge GitHubP implements Iface
+edge LinearP implements Iface
+edge Ingress depends-on Iface "verify, route"
+edge Grants depends-on Iface "checkAccess"
+edge App -> Ingress "signed webhook"
+edge Ingress -> Router "github.com/o/r"
+edge Router -> Dispatch "poke"
+edge Dispatch -> Sync "run"
+edge Dispatch -> Trigger "load" stroke=dashed
+edge Dispatch -> Grants "issue grant" stroke=dashed
+edge Dispatch -> Router "register" stroke=dashed

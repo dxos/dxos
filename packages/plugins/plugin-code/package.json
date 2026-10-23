@@ -165,6 +165,7 @@
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/deus": "workspace:*",
+    "@dxos/diagram": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-react": "workspace:*",

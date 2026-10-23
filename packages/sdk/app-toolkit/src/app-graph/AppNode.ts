@@ -212,9 +212,12 @@ export const makeObject = ({
   const iconAnnotation = delegatedIcon ?? staticIcon;
   const graphProps = schema ? Option.getOrUndefined(AppAnnotation.GraphPropsAnnotation.get(schema)) : undefined;
 
+  const containerProps = schema ? Option.getOrUndefined(AppAnnotation.ContainerAnnotation.get(schema)) : undefined;
   const partials = Obj.instanceOf(Collection.Collection, object)
     ? getListPartials(ContainerModel.collection(object), db)
-    : graphProps;
+    : containerProps
+      ? { ...graphProps, ...getListPartials({ object, ...containerProps }, db) }
+      : graphProps;
 
   const label =
     get(Obj.labelAtom(object)) || getDynamicLabel('object-name.placeholder', typename, { defaultValue: 'New item' });
