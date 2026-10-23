@@ -25,6 +25,11 @@ describe('Iri', () => {
     expect(Iri.localName('deus:imports')).toBe('imports');
   });
 
+  test('a malformed percent sequence labels as written instead of throwing', ({ expect }) => {
+    expect(Iri.labelOf(`${Iri.FILE}src/100%.ts`)).toBe('100%.ts');
+    expect(Iri.labelOf(`${Iri.PACKAGE}@dxos/%zz`)).toBe('@dxos/%zz');
+  });
+
   test('shorthand expands to full IRIs', ({ expect }) => {
     expect(Iri.expand('pkg:@dxos/echo')).toBe(echo);
     expect(Iri.expand('file:packages/common/log/src/index.ts')).toBe(file);

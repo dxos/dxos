@@ -5,7 +5,7 @@
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 
 import {
   type Arrangement,
@@ -170,7 +170,10 @@ export const CodeGraphCanvas = ({
 
   // Read through a ref so the registry and projection, which the canvas does not expect to change, stay stable.
   const callbacks = useRef({ onOpen, onRemove });
-  callbacks.current = { onOpen, onRemove };
+  // After commit, so a render React discards never leaves its callbacks behind.
+  useLayoutEffect(() => {
+    callbacks.current = { onOpen, onRemove };
+  }, [onOpen, onRemove]);
   const registry = useMemo(() => createRegistry((id) => callbacks.current.onOpen?.(id)), []);
 
   useEffect(() => {

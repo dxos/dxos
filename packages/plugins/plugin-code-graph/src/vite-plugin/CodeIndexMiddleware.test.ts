@@ -65,3 +65,19 @@ describe('CodeIndexMiddleware', () => {
     expect((await post({ tool: 'query' }, 'text/plain')).status).toBe(415);
   });
 });
+
+describe('isAllowedHost', () => {
+  test('accepts this machine by name or address', ({ expect }) => {
+    for (const host of ['localhost:5173', 'app.localhost', '127.0.0.1:5173', '[::1]:5173', '192.168.1.4:5173']) {
+      expect(CodeIndexMiddleware.isAllowedHost(host)).toBe(true);
+    }
+  });
+
+  test('refuses a domain that could rebind to loopback, unless the dev server allows it', ({ expect }) => {
+    expect(CodeIndexMiddleware.isAllowedHost('evil.example:5173')).toBe(false);
+    expect(CodeIndexMiddleware.isAllowedHost(undefined)).toBe(false);
+    expect(CodeIndexMiddleware.isAllowedHost('local.composer.space', ['local.composer.space'])).toBe(true);
+    expect(CodeIndexMiddleware.isAllowedHost('a.composer.space', ['.composer.space'])).toBe(true);
+    expect(CodeIndexMiddleware.isAllowedHost('evil.example', true)).toBe(true);
+  });
+});

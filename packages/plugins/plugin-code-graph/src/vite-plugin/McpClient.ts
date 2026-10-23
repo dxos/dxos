@@ -122,10 +122,12 @@ export const make = ({ command, args, cwd, timeout = 60_000 }: McpClientOptions)
       }
     });
     const exited = (reason: string) => {
-      if (child === process) {
-        child = undefined;
-        ready = undefined;
+      // A child replaced after a failed start or a close exits late; its requests are already settled.
+      if (child !== process) {
+        return;
       }
+      child = undefined;
+      ready = undefined;
       failAll(new Error([`code-index mcp ${reason}`, ...stderr].join('\n')));
     };
     process.on('error', (error) => exited(`could not start: ${error.message}`));
@@ -144,7 +146,11 @@ export const make = ({ command, args, cwd, timeout = 60_000 }: McpClientOptions)
   return {
     callTool: async (name, args) => {
       ready ??= start().catch((error) => {
+        // A child that did not finish starting may still hold the store's lock, so it goes before a retry spawns another.
+        const failed = child;
+        child = undefined;
         ready = undefined;
+        failed?.kill();
         throw error;
       });
       await ready;

@@ -32,19 +32,28 @@ export const kindOf = (iri: string): CodeGraph.NodeKind => {
   return 'other';
 };
 
+/** Percent-decoded text, or the text as is when it is not valid percent-encoding (a stray `%` from a row or prompt). */
+const decode = (value: string): string => {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+};
+
 /** The repo-relative path of a file or symbol IRI. */
 export const pathOf = (iri: string): string | undefined =>
-  iri.startsWith(FILE) ? decodeURIComponent(iri.slice(FILE.length).split('#')[0]) : undefined;
+  iri.startsWith(FILE) ? decode(iri.slice(FILE.length).split('#')[0]) : undefined;
 
 /** A short name for a box: a package's name, a file's basename, a symbol's name. */
 export const labelOf = (iri: string): string => {
   switch (kindOf(iri)) {
     case 'package':
-      return decodeURIComponent(iri.slice(PACKAGE.length));
+      return decode(iri.slice(PACKAGE.length));
     case 'module':
-      return decodeURIComponent(iri.slice(MODULE.length));
+      return decode(iri.slice(MODULE.length));
     case 'symbol':
-      return decodeURIComponent(iri.slice(iri.indexOf('#') + 1));
+      return decode(iri.slice(iri.indexOf('#') + 1));
     case 'file':
       return pathOf(iri)?.split('/').pop() ?? iri;
     default:

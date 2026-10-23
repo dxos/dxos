@@ -19,6 +19,11 @@ export type MakeOptions = {
   args?: readonly string[];
   /** Route to answer on; defaults to {@link Protocol.PATH}. */
   path?: string;
+  /**
+   * Host names accepted beyond localhost and IP literals, as Vite's `server.allowedHosts` takes them (a leading `.`
+   * matches subdomains); `true` accepts any host.
+   */
+  allowedHosts?: readonly string[] | true;
 };
 
 export type Middleware = ((req: IncomingMessage, res: ServerResponse, next: () => void) => Promise<void>) & {
@@ -44,6 +49,35 @@ const readBody = (req: IncomingMessage): Promise<string> =>
     req.on('error', reject);
   });
 
+/**
+ * Whether the `Host` header names this machine. A loopback socket is not enough on its own: a page on a domain that
+ * DNS-rebinds to 127.0.0.1 reaches the route same-origin, and only its `Host` gives it away. IP literals pass, as
+ * in Vite, since a rebinding attack always arrives under a domain name.
+ */
+export const isAllowedHost = (header: string | undefined, allowedHosts: readonly string[] | true = []): boolean => {
+  if (allowedHosts === true) {
+    return true;
+  }
+  if (!header) {
+    return false;
+  }
+  let hostname: string;
+  try {
+    hostname = new URL(`http://${header}`).hostname;
+  } catch {
+    return false;
+  }
+  if (hostname === 'localhost' || hostname.endsWith('.localhost')) {
+    return true;
+  }
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(hostname) || hostname.startsWith('[')) {
+    return true;
+  }
+  return allowedHosts.some((allowed) =>
+    allowed.startsWith('.') ? hostname === allowed.slice(1) || hostname.endsWith(allowed) : hostname === allowed,
+  );
+};
+
 const isLoopback = (address: string | undefined) =>
   address === '127.0.0.1' || address === '::1' || address === '::ffff:127.0.0.1';
 
@@ -64,13 +98,14 @@ export const make = ({
   command = 'bun',
   args = ['tools/code-index/bin/code-index.ts', 'mcp'],
   path = Protocol.PATH,
+  allowedHosts,
 }: MakeOptions): Middleware => {
   const client = McpClient.make({ command, args, cwd: root });
   const middleware = async (req: IncomingMessage, res: ServerResponse, next: () => void): Promise<void> => {
     if (req.method !== 'POST' || req.url?.split('?')[0] !== path) {
       return next();
     }
-    if (!isLoopback(req.socket.remoteAddress)) {
+    if (!isLoopback(req.socket.remoteAddress) || !isAllowedHost(req.headers.host, allowedHosts)) {
       return reply(res, 403, { ok: false, error: 'code-index requests are accepted from this machine only' });
     }
     if (!req.headers['content-type']?.includes('application/json')) {
