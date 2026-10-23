@@ -176,19 +176,20 @@ jobs:
           blob=$(curl -fsS -H "Authorization: Bearer $token" -H 'Accept: application/vnd.oci.image.manifest.v1+json' \
             "https://ghcr.io/v2/$repo/manifests/ws-${IMAGE_SHA:0:12}-${ext//./-}" | jq -r '.layers[0] | "\(.digest) \(.size)"')
           digest=${blob% *}; size=${blob#* }
+          # Each range lands at its own offset in one preallocated file, so there is no join afterwards. A broken
+          # transfer fails curl (`-f`, or exit 18 on a short read), and a corrupt image fails the mount, which falls back below.
+          out="/mnt/ws/workspace.$ext"
+          fallocate -l "$size" "$out"
           start=$(date +%s.%N)
           parts=8; chunk=$(( (size + parts - 1) / parts )); pids=()
           for i in $(seq 0 $((parts - 1))); do
             from=$((i * chunk)); to=$(( from + chunk - 1 < size - 1 ? from + chunk - 1 : size - 1 ))
-            curl -fsSL -H "Authorization: Bearer $token" -r "$from-$to" -o "/mnt/ws/part.$i" "https://ghcr.io/v2/$repo/blobs/$digest" &
+            ( curl -fsSL -H "Authorization: Bearer $token" -r "$from-$to" "https://ghcr.io/v2/$repo/blobs/$digest" |
+                dd of="$out" bs=4M iflag=fullblock oflag=seek_bytes seek="$from" conv=notrunc status=none ) &
             pids+=($!)
           done
           for pid in "${pids[@]}"; do wait "$pid"; done
           printf 'download: %.1fs, %d MB\n' "$(echo "$(date +%s.%N) - $start" | bc)" $((size / 1000000))
-          SECONDS=0
-          cat $(seq -f /mnt/ws/part.%g 0 $((parts - 1))) > "/mnt/ws/workspace.$ext" && rm /mnt/ws/part.*
-          [ "sha256:$(sha256sum "/mnt/ws/workspace.$ext" | cut -d' ' -f1)" = "$digest" ]
-          echo "assemble: ${SECONDS}s"
           SECONDS=0
           if [ "$VARIANT" = tar ]; then
             mkdir -p /mnt/ws/x
