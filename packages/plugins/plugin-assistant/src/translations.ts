@@ -9,6 +9,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { Sequence } from '@dxos/conductor';
 import { Type } from '@dxos/echo';
 import { translations as assistantTranslations } from '@dxos/react-ui-assistant/translations';
+import { translations as chatTranslations } from '@dxos/react-ui-chat/translations';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as taskTranslations } from '@dxos/react-ui-task/translations';
@@ -19,6 +20,7 @@ import { meta } from '#meta';
 
 export const translations: Theme.Resource[] = [
   ...assistantTranslations,
+  ...chatTranslations,
   ...componentsTranslations,
   ...formTranslations,
   ...taskTranslations,
@@ -173,11 +175,11 @@ export const translations: Theme.Resource[] = [
         'plugin-url-prompt.button': 'Load plugin',
 
         'search.placeholder': 'Search...',
-        'prompt.placeholder': 'Ask anything. @ adds an object, / runs a skill or command',
+        'prompt.placeholder': '/ for skills, @ for content',
         'add-menu.button': 'Add',
         'add-files.label': 'Add files or photos',
-        'add-object.menu': 'Add an object…',
-        'add-object.title': 'Add an object',
+        'add-object.menu': 'Add object…',
+        'add-object.title': 'Add object',
         'commands-and-skills.label': 'Commands and skills',
         'connectors.label': 'Connectors',
         'connections-manage.label': 'Manage connections…',

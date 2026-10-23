@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import { Annotation, Collection, type Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 
+import { AppAnnotation } from '../echo/index.ts';
 import * as ContainerModel from '../types/ContainerModel.ts';
 import * as AppNode from './AppNode.ts';
 
@@ -144,5 +145,42 @@ describe('list and drop-target partials: move', () => {
     expect(Obj.getParent(doc)?.id).toBe(owner.id);
     expect(linked.objects).toHaveLength(0);
     expect(to.objects).toHaveLength(1);
+  });
+});
+
+const Deck = Type.makeObject(DXN.make('com.example.type.deck', '0.1.0'))(
+  Schema.Struct({ items: Schema.Array(Ref.Ref(Obj.Unknown)) }).pipe(
+    AppAnnotation.ContainerAnnotation.set({ property: 'items', deleteOwned: true }),
+    Annotation.UserType.set(),
+  ),
+);
+
+describe('makeObject: container annotation', () => {
+  let testBuilder: EchoTestBuilder;
+  let db: Database.Database;
+
+  beforeEach(async () => {
+    testBuilder = await new EchoTestBuilder().open();
+    ({ db } = await testBuilder.createDatabase({ types: [Deck, Doc] }));
+  });
+
+  afterEach(async () => {
+    await testBuilder.close();
+  });
+
+  test('an annotated object lists its ref array and reorders it', async ({ expect }) => {
+    const first = db.add(Obj.make(Doc, { name: 'first' }));
+    const second = db.add(Obj.make(Doc, { name: 'second' }));
+    const deck = db.add(Obj.make(Deck, { items: [Ref.make(first), Ref.make(second)] }));
+    await db.flush();
+
+    const node = AtomRegistry.make().get(Atom.make((get) => AppNode.makeObject({ get, db, object: deck })));
+    const properties = node?.properties;
+    expect(properties?.role).toBe('branch');
+    expect(properties && 'onRearrange' in properties).toBe(true);
+    if (properties && 'onRearrange' in properties) {
+      properties.onRearrange([second, first]);
+    }
+    expect(deck.items.map((ref) => ref.target?.id)).toEqual([second.id, first.id]);
   });
 });

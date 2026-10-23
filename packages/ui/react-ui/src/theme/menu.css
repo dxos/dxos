@@ -1,5 +1,5 @@
 /*
- * Menu: a portalled popup (`.dx-popup` supplies size, level and the focus outline) of block-tall item rows.
+ * Menu: a portalled popup (`.dx-popup` supplies size, level and radius) of block-tall item rows.
  */
 
 @layer dx-components {

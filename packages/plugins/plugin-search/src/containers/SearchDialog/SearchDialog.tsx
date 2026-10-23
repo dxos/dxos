@@ -90,7 +90,6 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp, title, handle }: Sea
       <Dialog.Body>
         <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
           <SearchList.Input
-            classNames='px-0'
             autoFocus
             escapeBehavior='dismiss'
             placeholder={t('search.placeholder')}

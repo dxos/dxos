@@ -16,6 +16,7 @@ import {
   Schema,
   Settings as SettingsCapability,
   SkillDefinition,
+  SpecSync,
   Translations,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -32,6 +33,7 @@ export const CodePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(Schema),
   Plugin.addModule(SettingsCapability),
   Plugin.addModule(SkillDefinition),
+  Plugin.addModule(SpecSync),
   Plugin.addModule(Translations),
   Plugin.make,
 );
