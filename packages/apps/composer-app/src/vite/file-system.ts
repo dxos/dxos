@@ -3,7 +3,17 @@
 //
 
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  readlinkSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import path from 'node:path';
 import { type Plugin } from 'vite';
@@ -16,16 +26,7 @@ const SKIP_DIRS = new Set(['node_modules', 'dist', 'target']);
 /** Bounds a listing so a mistaken root (a home directory) cannot stall the server. */
 const MAX_LISTED = 5_000;
 
-const remotes = new Map<string, string | undefined>();
-
-/** The `owner/repo` of a checkout's origin, looked up once per root so polling `/roots` does not spawn git. */
-const remoteOf = (dir: string): string | undefined => {
-  if (!remotes.has(dir)) {
-    remotes.set(dir, readRemote(dir));
-  }
-  return remotes.get(dir);
-};
-
+/** The `owner/repo` of a checkout's origin. */
 const readRemote = (dir: string): string | undefined => {
   try {
     const url = execFileSync('git', ['-C', dir, 'remote', 'get-url', 'origin'], {
@@ -85,27 +86,32 @@ const WRITABLE = ['.mdl'];
 /** Whether the route may write or remove `file`. */
 export const isWritable = (file: string): boolean => WRITABLE.some((suffix) => file.endsWith(suffix));
 
-/** The real path of the nearest existing ancestor, with the missing tail re-appended, so a new file can be checked. */
-const realpathOf = (file: string): string => {
+/**
+ * The real path of `file`, following every symlink: the nearest existing ancestor's real path with the missing tail
+ * re-appended, and a dangling link resolved through its target, so a write cannot follow a link out of a root.
+ */
+const realpathOf = (file: string, depth = 0): string => {
   try {
     return realpathSync(file);
   } catch {
+    if (depth < 40 && lstatSync(file, { throwIfNoEntry: false })?.isSymbolicLink()) {
+      return realpathOf(path.resolve(path.dirname(file), readlinkSync(file)), depth + 1);
+    }
     const parent = path.dirname(file);
-    return parent === file ? file : path.join(realpathOf(parent), path.basename(file));
+    return parent === file ? file : path.join(realpathOf(parent, depth), path.basename(file));
   }
 };
 
 /**
- * The resolved path when `file` lies inside one of `roots`, else undefined. Symlinks are followed before the check,
- * since a link inside a checkout can point anywhere.
+ * The real path of `file` when it lies inside one of `roots`, else undefined. Callers read and write the returned
+ * path, so the `.mdl` check and the write both apply to the link's target, not to the alias.
  */
 export const withinRoots = (roots: readonly string[], file: string): string | undefined => {
-  const resolved = path.resolve(file);
-  const real = realpathOf(resolved);
+  const real = realpathOf(path.resolve(file));
   return roots
     .map((root) => realpathOf(path.resolve(root)))
     .some((root) => real === root || real.startsWith(`${root}${path.sep}`))
-    ? resolved
+    ? real
     : undefined;
 };
 
@@ -117,6 +123,8 @@ export const withinRoots = (roots: readonly string[], file: string): string | un
 export const fileSystemPlugin = (rootDir: string, env = process.env): Plugin => {
   const roots = [rootDir, ...(env.DX_FS_ROOTS?.split(':').filter(Boolean) ?? [])].map((root) => path.resolve(root));
   const within = (file: string): string | undefined => withinRoots(roots, file);
+  // One entry per configured root, looked up once so polling `/roots` does not spawn git every time.
+  const remotes = new Map(roots.map((root) => [root, readRemote(root)]));
 
   return {
     name: 'dxos:file-system',
@@ -128,7 +136,7 @@ export const fileSystemPlugin = (rootDir: string, env = process.env): Plugin => 
           if (url.pathname === '/roots') {
             return send(res, 200, {
               roots: roots.flatMap((root) => {
-                const repo = remoteOf(root);
+                const repo = remotes.get(root);
                 return repo ? [{ repo, path: root }] : [];
               }),
             });

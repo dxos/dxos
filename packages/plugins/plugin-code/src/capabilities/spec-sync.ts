@@ -32,8 +32,11 @@ export default Capability.makeModule(
     const fs = FileSystem.get();
     const bases = new SyncBases();
 
-    const state = Atom.make<CodeCapabilities.SpecSyncState>({ available: false, roots: [], specs: {} }).pipe(
-      Atom.keepAlive,
+    const state = Atom.make<CodeCapabilities.SpecSyncState>({ available: false, roots: [], specs: {} });
+    // Mounted for the module's scope so passes that run with no subscriber keep their result.
+    yield* Effect.acquireRelease(
+      Effect.sync(() => registry.mount(state)),
+      (unmount) => Effect.sync(unmount),
     );
     const wake = yield* Queue.sliding<void>(1);
 

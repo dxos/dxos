@@ -5,6 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
+import * as Layout from '@dxos/react-ui/Layout';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
@@ -20,7 +21,7 @@ const REVIEW = parseReview(FILE_SYSTEM_REVIEW);
 const meta = {
   title: 'plugins/plugin-code/components/VerdictCard',
   component: VerdictCard,
-  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-[24rem] p-4' })],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-card-default-width p-4' })],
   parameters: { translations: [...translations, ...reactUiTranslations] },
   args: { onReveal: () => {}, onOpenCode: () => {} },
 } satisfies Meta<typeof VerdictCard>;
@@ -38,11 +39,11 @@ export const Missing: Story = {
 export const EveryStatus: Story = {
   args: { verdict: REVIEW.verdicts[0] },
   render: (args) => (
-    <div className='flex flex-col gap-2'>
+    <Layout.Flex column gap='sm'>
       {VERDICT_STATUSES.map((status) => {
         const verdict = REVIEW.verdicts.find((candidate) => candidate.status === status);
         return verdict && <VerdictCard key={status} {...args} verdict={verdict} />;
       })}
-    </div>
+    </Layout.Flex>
   ),
 };

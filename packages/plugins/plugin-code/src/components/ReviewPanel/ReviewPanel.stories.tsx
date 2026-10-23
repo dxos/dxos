@@ -29,7 +29,11 @@ const meta = {
   title: 'plugins/plugin-code/components/ReviewPanel',
   component: ReviewPanel,
   render: (args) => <ControlledPanel {...args} />,
-  decorators: [withMosaic(), withTheme(), withLayout({ layout: 'column', classNames: 'w-[28rem] h-[48rem]' })],
+  decorators: [
+    withMosaic(),
+    withTheme(),
+    withLayout({ layout: 'column', classNames: 'w-(--dx-complementary-sidebar-size)' }),
+  ],
   parameters: { translations: [...translations, ...reactUiTranslations] },
 } satisfies Meta<typeof ReviewPanel>;
 

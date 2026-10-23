@@ -100,13 +100,14 @@ const tauriFileSystem = (): FileSystem => {
 
 const devFileSystem = (): FileSystem => {
   const request = async (path: string, init?: RequestInit): Promise<Response> => {
-    const response = await fetch(`${ROUTE}${path}`, init);
+    const url = `${ROUTE}${path}`;
+    const response = await fetch(url, init);
     // A deployed app answers unknown routes with its HTML shell, which means there is no dev server here.
     if (response.headers.get('content-type')?.includes('text/html')) {
-      throw new Error(`No ${ROUTE} route on this server`);
+      throw new Error(`No ${ROUTE} route on this server (${init?.method ?? 'GET'} ${url})`);
     }
     if (!response.ok && response.status !== 404) {
-      throw new Error(`${response.status} ${await response.text()}`);
+      throw new Error(`${init?.method ?? 'GET'} ${url} failed: ${response.status} ${await response.text()}`);
     }
     return response;
   };

@@ -58,25 +58,25 @@ export const getSpecKey = (spec: Spec.Spec): SourceKey | undefined =>
 export class SyncBases {
   readonly #memory = new Map<string, string>();
 
-  get(id: string): string | undefined {
-    if (!this.#memory.has(id)) {
-      try {
-        const stored = globalThis.localStorage?.getItem(`${SYNC_BASE_PREFIX}${id}`);
-        stored != null && this.#memory.set(id, stored);
-      } catch {
-        // Storage can be unavailable (private window); the in-memory base still works for the session.
-      }
+  get(id: string): Effect.Effect<string | undefined> {
+    if (this.#memory.has(id)) {
+      return Effect.succeed(this.#memory.get(id));
     }
-    return this.#memory.get(id);
+    return Effect.try(() => globalThis.localStorage?.getItem(`${SYNC_BASE_PREFIX}${id}`)).pipe(
+      // Storage can be unavailable (private window); the in-memory base still works for the session.
+      Effect.orElseSucceed(() => undefined),
+      Effect.map((stored) => {
+        stored != null && this.#memory.set(id, stored);
+        return this.#memory.get(id);
+      }),
+    );
   }
 
-  set(id: string, text: string): void {
+  set(id: string, text: string): Effect.Effect<void> {
     this.#memory.set(id, text);
-    try {
-      globalThis.localStorage?.setItem(`${SYNC_BASE_PREFIX}${id}`, text);
-    } catch {
-      // See `get`.
-    }
+    return Effect.try(() => globalThis.localStorage?.setItem(`${SYNC_BASE_PREFIX}${id}`, text)).pipe(
+      Effect.orElseSucceed(() => undefined),
+    );
   }
 }
 
@@ -85,27 +85,27 @@ const SYNC_BASE_PREFIX = 'org.dxos.plugin.code.sync-base:';
 export type SyncResult = { status: SyncStatus; path?: string; error?: string };
 
 /** One sync pass for one spec. */
-export const syncSpec = (
-  spec: Spec.Spec,
-  { fs, roots, bases }: { fs: FileSystem.FileSystem; roots: readonly FileSystem.RepoRoot[]; bases: SyncBases },
-): Effect.Effect<SyncResult> =>
-  Effect.gen(function* () {
+export const syncSpec = Effect.fnUntraced(
+  function* (
+    spec: Spec.Spec,
+    { fs, roots, bases }: { fs: FileSystem.FileSystem; roots: readonly FileSystem.RepoRoot[]; bases: SyncBases },
+  ) {
     const key = getSpecKey(spec);
     const path = key && resolvePath(roots, key);
     if (!path) {
-      return { status: 'unresolved' as const };
+      return { status: 'unresolved' } satisfies SyncResult;
     }
     const text = spec.content.target;
     if (!text) {
-      return { status: 'synced' as const, path };
+      return { status: 'synced', path } satisfies SyncResult;
     }
     const disk = yield* fs.read(path);
     if (disk === undefined) {
-      return { status: 'missing' as const, path };
+      return { status: 'missing', path } satisfies SyncResult;
     }
 
     const local = text.content;
-    const { action, status } = reconcile({ local, disk, base: bases.get(spec.id) });
+    const { action, status } = reconcile({ local, disk, base: yield* bases.get(spec.id) });
     if (action === 'pull') {
       Doc.updateText(text, ['content'], disk);
     } else if (action === 'push') {
@@ -114,6 +114,8 @@ export const syncSpec = (
     if (status === 'conflict') {
       log.warn('spec changed in Composer and on disk; disk wins', { path });
     }
-    bases.set(spec.id, action === 'push' ? local : disk);
-    return { status, path };
-  }).pipe(Effect.catch((error) => Effect.succeed<SyncResult>({ status: 'error', error: error.message })));
+    yield* bases.set(spec.id, action === 'push' ? local : disk);
+    return { status, path } satisfies SyncResult;
+  },
+  Effect.catch((error) => Effect.succeed<SyncResult>({ status: 'error', error: error.message })),
+);
