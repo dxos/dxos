@@ -130,12 +130,13 @@ type WhistlePanelProps = {
   active: boolean;
   language?: string;
   keywords?: string[];
+  minPassMs?: number;
   actions: ReactNode;
 };
 
-const WhistlePanel = ({ track, active, language, keywords, actions }: WhistlePanelProps) => {
+const WhistlePanel = ({ track, active, language, keywords, minPassMs, actions }: WhistlePanelProps) => {
   const { model, commit } = useStreamingTranscript();
-  const whistle = useWhistle({ track, active, language, keywords, onResult: commit });
+  const whistle = useWhistle({ track, active, language, keywords, minPassMs, onResult: commit });
 
   return (
     <Panel.Root>
@@ -169,9 +170,11 @@ const WhistlePanel = ({ track, active, language, keywords, actions }: WhistlePan
 type StoryArgs = {
   language?: string;
   keywords?: string[];
+  /** Smallest batch of new audio, in milliseconds, worth a pass. */
+  minPassMs?: number;
 };
 
-const MicrophoneStory = ({ language, keywords }: StoryArgs) => {
+const MicrophoneStory = ({ language, keywords, minPassMs }: StoryArgs) => {
   const [active, setActive] = useState(false);
   const track = useAudioTrack(active);
   return (
@@ -180,6 +183,7 @@ const MicrophoneStory = ({ language, keywords }: StoryArgs) => {
       active={active}
       language={language}
       keywords={keywords}
+      minPassMs={minPassMs}
       actions={
         <Button.Root
           iconOnly
@@ -246,6 +250,10 @@ type Story = StoryObj<typeof meta>;
 export const Microphone: Story = {
   args: {
     language: 'en',
+    minPassMs: 500,
+  },
+  argTypes: {
+    minPassMs: { control: { type: 'range', min: 100, max: 1000, step: 100 } },
   },
 };
 

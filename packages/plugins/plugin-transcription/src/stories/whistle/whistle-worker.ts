@@ -44,8 +44,8 @@ type StreamOutput = {
 
 const OUT_CAPACITY = 64 * 1024;
 
-/** Smallest batch worth a pass; anything queued while a pass runs joins the next one. */
-const MIN_PASS_SAMPLES = WHISTLE_SAMPLE_RATE / 2;
+/** Default smallest batch worth a pass; anything queued while a pass runs joins the next one. */
+const DEFAULT_MIN_PASS_MS = 500;
 
 /**
  * Every pass re-decodes the whole stream buffer, so pass time grows with it until it falls behind
@@ -56,6 +56,7 @@ const SOFT_SEGMENT_SECONDS = 3;
 const HARD_SEGMENT_SECONDS = 6;
 
 let engine: NeedleModule | undefined;
+let minPassSamples = (WHISTLE_SAMPLE_RATE * DEFAULT_MIN_PASS_MS) / 1000;
 let outPtr = 0;
 let languagePtr = 0;
 let keywordsPtr = 0;
@@ -135,7 +136,8 @@ const readString = (module: NeedleModule, ptr: number): string => {
   return new TextDecoder().decode(heap.subarray(ptr, end));
 };
 
-const init = async (assets: WhistleAssets, language?: string, keywords?: string[]) => {
+const init = async (assets: WhistleAssets, language?: string, keywords?: string[], minPassMs = DEFAULT_MIN_PASS_MS) => {
+  minPassSamples = Math.round((WHISTLE_SAMPLE_RATE * minPassMs) / 1000);
   const started = performance.now();
   const [createNeedle, wasmBinary, model] = await Promise.all([
     loadEngineFactory(assets.engineUrl),
@@ -177,7 +179,7 @@ const takeQueued = (): { samples: Float32Array; marker?: 'flush' | 'stop' } => {
   return { samples, marker: typeof marker === 'string' ? marker : undefined };
 };
 
-const hasWork = () => queued >= MIN_PASS_SAMPLES || queue.some((item) => typeof item === 'string');
+const hasWork = () => queued >= minPassSamples || queue.some((item) => typeof item === 'string');
 
 const parseOutput = (module: NeedleModule): StreamOutput => JSON.parse(readString(module, outPtr));
 
@@ -259,7 +261,7 @@ globalThis.addEventListener('message', (event: MessageEvent<WhistleRequest>) => 
   const request = event.data;
   switch (request.type) {
     case 'init': {
-      init(request.assets, request.language, request.keywords).catch((err) =>
+      init(request.assets, request.language, request.keywords, request.minPassMs).catch((err) =>
         post({ type: 'error', message: err instanceof Error ? err.message : String(err) }),
       );
       break;

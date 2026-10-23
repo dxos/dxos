@@ -41,6 +41,8 @@ export type UseWhistleProps = {
   active?: boolean;
   language?: string;
   keywords?: string[];
+  /** Smallest batch of new audio, in milliseconds, worth a pass; lower commits sooner at more passes per second. */
+  minPassMs?: number;
   /** Called after every pass with the words it committed (seconds from stream start) and the unconfirmed tail. */
   onResult?: (words: WhistleWord[], pending: string) => void;
 };
@@ -91,7 +93,14 @@ class Downsampler {
  * the model. The model loads on first activation (≈17 MB, cached by the browser afterwards); audio
  * never leaves the tab.
  */
-export const useWhistle = ({ track, active, language, keywords, onResult }: UseWhistleProps): UseWhistleResult => {
+export const useWhistle = ({
+  track,
+  active,
+  language,
+  keywords,
+  minPassMs,
+  onResult,
+}: UseWhistleProps): UseWhistleResult => {
   const [status, setStatus] = useState<WhistleStatus>('idle');
   const [error, setError] = useState<string>();
   const [progress, setProgress] = useState(0);
@@ -153,7 +162,13 @@ export const useWhistle = ({ track, active, language, keywords, onResult }: UseW
     };
 
     setStatus('loading');
-    send({ type: 'init', assets: WHISTLE_ASSETS, language, keywords: keywordsKey ? keywordsKey.split('\n') : [] });
+    send({
+      type: 'init',
+      assets: WHISTLE_ASSETS,
+      language,
+      keywords: keywordsKey ? keywordsKey.split('\n') : [],
+      minPassMs,
+    });
     setWorker(instance);
     return () => {
       instance.terminate();
@@ -162,7 +177,7 @@ export const useWhistle = ({ track, active, language, keywords, onResult }: UseW
     };
     // `keywords` is read via the serialized `keywordsKey`.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [requested, language, keywordsKey]);
+  }, [requested, language, keywordsKey, minPassMs]);
 
   // Capture runs only while active; the worker queues audio that arrives before the model is ready.
   useEffect(() => {

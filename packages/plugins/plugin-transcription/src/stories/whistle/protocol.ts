@@ -25,7 +25,14 @@ export type WhistleWord = {
 };
 
 export type WhistleRequest =
-  | { type: 'init'; assets: WhistleAssets; language?: string; keywords?: string[] }
+  | {
+      type: 'init';
+      assets: WhistleAssets;
+      language?: string;
+      keywords?: string[];
+      /** Smallest batch of new audio, in milliseconds, worth a pass. */
+      minPassMs?: number;
+    }
   /** 16 kHz mono samples; transferred. */
   | { type: 'audio'; samples: Float32Array }
   /** End of an utterance: commit the unconfirmed tail and start a fresh stream buffer. */
