@@ -8,7 +8,7 @@
 
 ---
 
-![Macro timeline|480]({{timeline}})
+![Timeline|480]({{timeline}})
 
 ---
 
@@ -24,6 +24,12 @@
 - State machine (personal agents)
 
 <!--
+- Each wave moved computing out from a central owner to a wider circle of users and builders.
+- Platforms became infrastructure: mainframe → PC → web → cloud → mobile and networked devices.
+- AI took the same path: research techniques (diffusion, CNNs, transformers) became products once post-training (RLHF) made them usable.
+- The newest layer is the harness: tools, hooks and skills that make models reliable at inference time.
+- Next come agents that hold state and act on a person’s behalf.
+
 - Technology pressure gradients
 - Web from internet; BigTable/MapReduce (cf RDBMS)
 - Kanas => Gmail
@@ -40,6 +46,9 @@
 
 # Inversion of Control
 
+- Request/Response → P2P
+  - Edge computing
+  - Local models
 - Tasks → Workflows → Outcomes
   - Agent OS (agents and services)
   - The Everything App — Finally, The SaaSpocalypse
@@ -48,19 +57,36 @@
   - Swarms: Formal security models; audits; delegated authority
 
 <!--
+- Control moves from the server that answers requests to the people and devices at the edge.
+- Software stops being tasks a person performs and becomes outcomes an agent delivers.
+- An agent OS coordinates agents and services; separate apps collapse into one interface.
+- Systems look ahead rather than report the past: agents negotiate with each other through brokers and exchanges.
+- Swarms of agents need formal security: audits and explicit, delegated authority.
 
+- Drivers
+- Edge = Network computing
+- Full decentralization: EDGE
+- Agent OS replaces device OS
+- No screen
 -->
 
 ---
 
 # FSD
 
+- Virtual organizations
+- Semantic models: human control structures (delegated authority)
 - Embodied agents
 - The Hivemind
 - Neuralize vs. biological narratives
-- Semantic models: human control structures (delegated authority)
 
 <!--
+- Full self-driving as a metaphor: organizations that run themselves while people supervise.
+- Virtual organizations of agents, governed by semantic models of who may do what.
+- Agents leave the screen and act in the physical world.
+- Shared knowledge across agents becomes a collective intelligence: the hivemind.
+- The open question is which narrative steers: machine optimization or human meaning.
+
 - Airplane mode: real time differential equations (no narrative)
 -->
 
@@ -73,6 +99,11 @@
 [Thomas Carlyle]
 
 <!--
+- Carlyle: history is driven by exceptional individuals.
+- The fallacy credits or blames individuals for outcomes that systems produce.
+- Technology and institutions create the conditions that make particular leaders possible.
+- Applied to AI, a focus on founders and CEOs hides the incentives that drive the race.
+
 Attach undo weight to individuals.
 The central debate is about causation: Did Napoleon transform Europe because of his exceptional abilities,
 or did revolutionary France create conditions in which someone like Napoleon would rise?
@@ -106,7 +137,11 @@ The Coordination Trap Behind the Metacrisis
 - Escape requires changing incentives so cooperation can succeed.
 
 <!--
-- Tragedey of the commons (economic externalities)
+- Moloch, from Ginsberg’s “Howl”, as Scott Alexander used it: the personification of coordination failure.
+- The metacrisis is not a set of separate problems but one failure of incentives.
+- It sets up the choice on the next slides: control (blue pill) or reform (red pill).
+
+- Tragedy of the commons (economic externalities)
 
 - Moloch names a destructive competitive dynamic: people and institutions can collectively create outcomes that almost nobody wants, even while each acts rationally within the system.
 - Competition rewards harmful choices: a company that sacrifices safety for speed may outperform a cautious rival, pushing others to follow.
