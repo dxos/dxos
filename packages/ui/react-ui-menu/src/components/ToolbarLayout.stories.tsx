@@ -163,7 +163,7 @@ const DefaultStory = ({ contributors = [], narrow, asMenu }: StoryProps) => {
         <ActionToolbar
           {...menu}
           alwaysActive
-          classNames={mx('border border-separator-subtle', narrow ? 'max-w-[20rem]' : undefined)}
+          classNames={mx('border border-separator', narrow ? 'max-w-[20rem]' : undefined)}
         />
       )}
     </div>
