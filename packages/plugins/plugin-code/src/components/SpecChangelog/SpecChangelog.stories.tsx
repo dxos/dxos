@@ -126,7 +126,8 @@ export const SpecIde: Story = {
       .getAllByTestId('spec-editor.implementation-chip')
       .find((chip) => chip.dataset.key?.includes('/plugin-code/src/'));
     if (!local) {
-      throw new Error('No code chip points into plugin-code.');
+      const keys = canvas.getAllByTestId('spec-editor.implementation-chip').map((chip) => chip.dataset.key);
+      throw new Error(`No code chip points into plugin-code/src; chips point at: ${keys.join(', ')}`);
     }
     await userEvent.hover(local);
     const card = await waitFor(() => within(canvasElement.ownerDocument.body).getByTestId('spec-review.snippet-card'));
