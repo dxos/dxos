@@ -9,8 +9,8 @@ screens. This records what exists and the design; the story is
 
 - **Model:** `MenuBuilder` builds an action graph (`ActionGraphProps`): actions, groups (`dropdownMenu`,
   `toggleGroup`), `line`/`gap` separators, and a hand-built overflow dropdown (`.menu('more', …)`).
-- **Rendering:** `ActionToolbar` renders each row as a `Toolbar.Root` (a horizontal scroll container) of start, middle
-  and end zones, then the overflow menu. `variant: 'custom'` renders a contributor's own element.
+- **Rendering:** `ActionToolbar` renders each row as a `Toolbar.Root` (a horizontal scroll container) of start and end
+  zones, then the overflow menu. `variant: 'custom'` renders a contributor's own element.
 - **Extension:** a plugin contributes an app-graph extension whose actions carry `disposition: 'toolbar'`; the owner
   merges them with `graphActions(graph, get, id, { filter: isToolbarAction })` (MarkdownArticle passes them to
   `EditorToolbar` as `customActions`). `useMenuContribution` adds items to a menu by priority.
@@ -35,12 +35,12 @@ An item or group carries an optional `placement` (`ToolbarPlacement` on `MenuIte
 
 | Field      | Meaning                                                                                             |
 | ---------- | --------------------------------------------------------------------------------------------------- |
-| `zone`     | `start`, `middle` or `end` of its row.                                                              |
+| `zone`     | `start` (left) or `end` (right) of its row.                                                         |
 | `row`      | Row of a multi-row toolbar; `0` is the first.                                                       |
 | `order`    | Order within its zone or group, so a contributor interleaves with the owner's items.                |
 | `collapse` | Rank for moving into the overflow menu when the row is too narrow; higher goes first; none = never. |
 
-Each row is one `Toolbar.Root` laid out as `start | gap | middle | gap | end`, with the overflow menu last in row 0.
+Each row is one `Toolbar.Root` laid out as `start | gap | end`, with the overflow menu last in row 0.
 The story `ui/react-ui-menu/ToolbarLayout` covers `Groups`, `Extended` (contributions and two rows), `Narrow` and `AsMenu`.
 
 ## Open questions
@@ -48,7 +48,5 @@ The story `ui/react-ui-menu/ToolbarLayout` covers `Groups`, `Extended` (contribu
 1. Where do placement defaults come from: the owner per contributed action (`presentation[surface]`), or only the
    contributor?
 2. Should `order` be numeric slots the owner documents (e.g. formatting 10–60), or named anchors ("after `link`")?
-3. Does the middle zone need true centring (a three-column grid) rather than two flexible gaps, which centre only when
-   start and end are equally wide?
-4. Row 1 on narrow screens: keep two rows, or fold row 1 into the overflow menu first?
-5. Keyboard: one roving-focus sequence across rows, or one per row (as now, one `Toolbar.Root` each)?
+3. Row 1 on narrow screens: keep two rows, or fold row 1 into the overflow menu first?
+4. Keyboard: one roving-focus sequence across rows, or one per row (as now, one `Toolbar.Root` each)?

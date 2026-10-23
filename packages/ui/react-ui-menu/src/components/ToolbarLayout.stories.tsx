@@ -52,7 +52,7 @@ const ownerGraph = (log: Log): ActionGraphProps =>
             log('quote'),
           ),
     )
-    .group('view', { label: 'View', icon: 'ph--eye--regular', placement: { zone: 'middle', collapse: 1 } }, (group) =>
+    .group('view', { label: 'View', icon: 'ph--eye--regular', placement: { zone: 'end', collapse: 1 } }, (group) =>
       group.action('preview', { label: 'Preview', icon: 'ph--eye--regular' }, () => log('preview')),
     )
     .group('tools', { label: 'Tools', icon: 'ph--wrench--regular', placement: { zone: 'end' } }, (group) =>
@@ -157,11 +157,11 @@ const DefaultStory = ({ contributors = [], width, asMenu }: StoryProps) => {
           <Button.Root data-testid='menu.trigger' icon='ph--list--regular' label='Menu' />
         </ActionMenu>
       ) : (
-        // Drag the corner to narrow the toolbar; groups move into ⋮ by collapse rank and come back as it widens.
+        // Fills the story frame; resize the window and groups move into ⋮ by collapse rank, coming back as it widens.
         <div
           data-testid='toolbar.frame'
-          className='resize-x overflow-hidden border border-separator rounded-sm min-w-[8rem]'
-          style={{ width: width ?? 720 }}
+          className='overflow-hidden border border-separator rounded-sm'
+          style={width ? { maxWidth: width } : undefined}
         >
           <ActionToolbar {...menu} alwaysActive />
         </div>
@@ -188,7 +188,7 @@ const labels = (canvasElement: HTMLElement, row = 0) => {
   return [...(rows[row]?.querySelectorAll('button') ?? [])].map((button) => button.getAttribute('aria-label'));
 };
 
-/** The owner's named groups across the start, middle and end zones, with Export in the overflow menu. */
+/** The owner's named groups across the start and end zones, with Export in the overflow menu. */
 export const Groups: Story = {
   play: async ({ canvasElement }) => {
     await waitFor(() =>

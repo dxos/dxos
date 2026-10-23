@@ -352,7 +352,7 @@ export const MenuToolbarItem = ({ menu, item }: ItemProps<{ item: MenuItem }>) =
 // Layout (private): zones, rows and the overflow menu.
 //
 
-const ZONES: readonly ToolbarZone[] = ['start', 'middle', 'end'];
+const ZONES: readonly ToolbarZone[] = ['start', 'end'];
 
 const placementOf = (item: MenuItem): ToolbarPlacement => (isSeparator(item) ? {} : (item.properties.placement ?? {}));
 
@@ -492,7 +492,7 @@ export type ActionToolbarProps = Partial<MenuActions> &
   };
 
 /**
- * A toolbar driven from a `MenuActions`. Each item's `placement` puts it in the start, middle or end zone of a row; a
+ * A toolbar driven from a `MenuActions`. Each item's `placement` puts it in the start or end zone of a row; a
  * plain named group renders inline and others extend it (`MenuBuilder.extend`); the overflow menu (⋮,
  * `TOOLBAR_OVERFLOW_ID`) ends the first row and takes collapsible items while a row is too narrow. One row renders as a
  * single `Toolbar.Root` (which takes the props and ref); more stack one per row. `start` and the children frame the
@@ -553,7 +553,7 @@ export const ActionToolbar = Util.composable<HTMLDivElement, ActionToolbarProps>
           {first && start}
           {zones.map(({ name, items }, index) => (
             <Fragment key={name}>
-              {/* A zone after the first is pushed along by a gap, so `end` sits at the far right. */}
+              {/* A gap pushes the end zone to the far right. */}
               {index > 0 && items.length > 0 && <Toolbar.Separator variant='gap' />}
               {items.map((item, index) =>
                 isPlainGroup(item) ? (

@@ -9,11 +9,11 @@ import { type Label } from '#translations';
 import { type ClassNameValue } from './theme.ts';
 
 /** Horizontal region of a toolbar row. */
-export type ToolbarZone = 'start' | 'middle' | 'end';
+export type ToolbarZone = 'start' | 'end';
 
 /** Where a toolbar item or named group goes; menus ignore it. */
 export type ToolbarPlacement = {
-  /** Region of its row (default `start`). */
+  /** Left or right of its row (default `start`). */
   zone?: ToolbarZone;
   /** Row of a multi-row toolbar (default `0`). */
   row?: number;
