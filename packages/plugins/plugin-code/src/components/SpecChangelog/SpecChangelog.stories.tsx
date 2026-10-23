@@ -132,6 +132,21 @@ export const SpecIde: Story = {
     await userEvent.hover(local);
     const card = await waitFor(() => within(canvasElement.ownerDocument.body).getByTestId('spec-review.snippet-card'));
     await waitFor(() => expect(within(card).getByTestId('spec-review.snippet')).toBeTruthy());
+
+    // The current Review card of an op expands to its walkthrough, each step with its code.
+    await userEvent.click(canvas.getByTestId('spec-changelog.view.review'));
+    const importSpec = await waitFor(
+      () =>
+        canvasElement.querySelector<HTMLElement>('[data-testid="verdict-card"][data-verdict="importSpec"]') ??
+        undefined,
+      TIMEOUT,
+    );
+    if (!importSpec) {
+      throw new Error('The review has no importSpec card.');
+    }
+    await userEvent.click(importSpec);
+    const steps = await waitFor(() => within(importSpec).getAllByTestId('verdict-card.walkthrough-step'), TIMEOUT);
+    await waitFor(() => expect(within(importSpec).getAllByTestId('spec-review.snippet')).toHaveLength(steps.length));
   },
 };
 

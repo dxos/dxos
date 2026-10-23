@@ -107,7 +107,14 @@ const VerdictTile = forwardRef<HTMLDivElement, VerdictTileProps>(({ data, locati
       current={current}
     >
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-        <VerdictCard verdict={data} current={current} onReveal={onSelect} onOpenCode={onOpenCode} ref={forwardedRef} />
+        <VerdictCard
+          verdict={data}
+          current={current}
+          read={read}
+          onReveal={onSelect}
+          onOpenCode={onOpenCode}
+          ref={forwardedRef}
+        />
       </Focus.Item>
     </Mosaic.Tile>
   );

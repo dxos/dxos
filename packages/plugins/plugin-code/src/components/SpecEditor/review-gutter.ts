@@ -34,7 +34,7 @@ const EXERCISE_LABEL: Record<Verdict['status'], { text: string; hue: string } | 
 /** How long a hover card stays after the pointer leaves its chip, so the pointer can move onto the card. */
 const HIDE_DELAY = 200;
 
-type HoverCard = { rect: DOMRect; render: () => HTMLElement };
+type HoverCard = { chip: HTMLElement; render: () => HTMLElement };
 
 const setHoverCard = StateEffect.define<HoverCard | null>();
 
@@ -49,7 +49,8 @@ const hoverCardField = StateField.define<Tooltip | null>({
           ? {
               pos: 0,
               above: true,
-              getCoords: () => card.rect,
+              // Measured on every reposition, so the card follows its chip when the editor scrolls.
+              getCoords: () => card.chip.getBoundingClientRect(),
               create: () => ({ dom: card.render() }),
             }
           : null;
@@ -83,7 +84,7 @@ class HoverController {
       this.#cancel();
       view.dispatch({
         effects: setHoverCard.of({
-          rect: chip.getBoundingClientRect(),
+          chip,
           render: () => {
             const dom = render();
             dom.addEventListener('mouseenter', () => this.#cancel());
