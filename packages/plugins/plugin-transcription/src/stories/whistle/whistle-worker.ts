@@ -176,7 +176,7 @@ const hasWork = () => queued >= minPassSamples || queue.some((item) => typeof it
 
 const parseOutput = (module: NeedleModule): StreamOutput => JSON.parse(readString(module, outPtr));
 
-type PassResult = Omit<Extract<WhistleResponse, { type: 'result' }>, 'type' | 'backlog'>;
+type PassResult = Omit<Extract<WhistleResponse, { type: 'result' }>, 'type' | 'backlog' | 'ended'>;
 
 /** Ends the stream; its unconfirmed tail becomes committed words. */
 const endStream = (module: NeedleModule): WhistleWord[] => {
@@ -229,7 +229,7 @@ const drain = async () => {
       }
       // Posted after the yield so the backlog counts the audio that arrived during the pass.
       await yieldToMessages();
-      post({ type: 'result', ...result, backlog: queued / WHISTLE_SAMPLE_RATE });
+      post({ type: 'result', ...result, backlog: queued / WHISTLE_SAMPLE_RATE, ended: stop });
     }
   } catch (err) {
     post({ type: 'error', message: err instanceof Error ? err.message : String(err) });

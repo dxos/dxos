@@ -30,8 +30,11 @@ export type UseWhistleProps = {
   keywords?: string[];
   /** Smallest batch of new audio, in milliseconds, worth a pass; lower commits sooner but less accurately. */
   minPassMs?: number;
-  /** Called after every pass with the words it committed (seconds from stream start) and the unconfirmed tail. */
-  onResult?: (words: WhistleWord[], pending: string) => void;
+  /**
+   * Called after every pass with the words it committed (seconds into the {@link Recording}), the unconfirmed
+   * tail, and whether the stream ended with it.
+   */
+  onResult?: (words: WhistleWord[], pending: string, ended: boolean) => void;
 };
 
 export type UseWhistleResult = {
@@ -67,6 +70,8 @@ export const useWhistle = ({
 
   const onResultRef = useRef(onResult);
   onResultRef.current = onResult;
+  // The worker times words from the start of each stream; the recording keeps every stream back to back.
+  const streamOffsetRef = useRef(0);
 
   // Model loading is deferred to first activation so mounting the story downloads nothing.
   const [requested, setRequested] = useState(false);
@@ -104,7 +109,9 @@ export const useWhistle = ({
             backlog: response.backlog,
             commitLag: lastWord ? response.received - lastWord.end : previous.commitLag,
           }));
-          onResultRef.current?.(response.words, response.pending);
+          const offset = streamOffsetRef.current;
+          const words = response.words.map((word) => ({ ...word, start: word.start + offset, end: word.end + offset }));
+          onResultRef.current?.(words, response.pending, response.ended);
           break;
         }
         case 'error': {
@@ -147,6 +154,7 @@ export const useWhistle = ({
     }
 
     let stopped = false;
+    streamOffsetRef.current = recording.duration;
     const capture = startCapture(track, (samples) => {
       recording.append(samples);
       const copy = samples.slice();

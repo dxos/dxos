@@ -53,5 +53,7 @@ export type WhistleResponse =
       backlog: number;
       /** Seconds of audio received since the stream began. */
       received: number;
+      /** The stream ended with this result (after `stop`). */
+      ended: boolean;
     }
   | { type: 'error'; message: string };

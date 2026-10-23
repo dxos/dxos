@@ -50,10 +50,13 @@ export class Recording {
     return () => void this.#listeners.delete(listener);
   }
 
-  /** The capture as a 16-bit PCM WAV file. */
-  toWav(): Blob {
+  /** The capture, or the part between `start` and `end` seconds, as a 16-bit PCM WAV file. */
+  toWav(start = 0, end = this.duration): Blob {
+    const from = Math.max(0, Math.floor(start * WHISTLE_SAMPLE_RATE));
+    const to = Math.min(this.#length, Math.ceil(end * WHISTLE_SAMPLE_RATE));
+    const length = Math.max(0, to - from);
     const header = new DataView(new ArrayBuffer(44));
-    const dataBytes = this.#length * 2;
+    const dataBytes = length * 2;
     const writeTag = (offset: number, tag: string) =>
       [...tag].forEach((char, index) => header.setUint8(offset + index, char.charCodeAt(0)));
     writeTag(0, 'RIFF');
@@ -70,12 +73,14 @@ export class Recording {
     writeTag(36, 'data');
     header.setUint32(40, dataBytes, true);
 
-    const data = new Int16Array(this.#length);
-    let offset = 0;
+    const data = new Int16Array(length);
+    let position = 0;
     for (const chunk of this.#chunks) {
-      for (const sample of chunk) {
-        data[offset++] = Math.max(-1, Math.min(1, sample)) * 0x7fff;
+      const chunkEnd = position + chunk.length;
+      for (let index = Math.max(from, position); index < Math.min(to, chunkEnd); index++) {
+        data[index - from] = Math.max(-1, Math.min(1, chunk[index - position])) * 0x7fff;
       }
+      position = chunkEnd;
     }
     return new Blob([header, data], { type: 'audio/wav' });
   }
