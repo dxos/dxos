@@ -72,7 +72,6 @@ export const makePluginMetrics = (): Sheet.Sheet => {
         stacked: true,
       },
       {
-        id: 'plugin-prs',
         name: `PR share, top ${PIE_PLUGINS} plugins`,
         // A pie draws its range's first series, so the range is the plugin names and their PRs alone.
         range: `A1:B${PIE_PLUGINS + 1}`,
