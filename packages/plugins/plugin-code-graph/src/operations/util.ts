@@ -8,7 +8,7 @@ import { Obj } from '@dxos/echo';
 
 import { CodeIndexClient } from '#client';
 import { Iri, Model } from '#graph';
-import { CodeGraph, type CodeGraphOperation } from '#types';
+import { CodeGraph } from '#types';
 
 /** Predicates drawn as arrows when boxes are connected; the ones that read as "depends on". */
 export const CONNECT_PREDICATES = ['imports', 'usesPackage'];
@@ -42,54 +42,49 @@ export const neighbours = (iri: string, predicate: string, direction: 'out' | 'i
 const sizeOf = (graph: CodeGraph.CodeGraph) => ({ nodes: graph.nodes.length, edges: graph.edges.length });
 
 /** Adds what the patch has that the graph lacks, and reports it; refused whole if the graph would pass its cap. */
-export const addPatch = (
-  graph: CodeGraph.CodeGraph,
-  patch: Model.Patch,
-): Effect.Effect<CodeGraphOperation.Summary, CodeGraph.LimitError> =>
-  Effect.gen(function* () {
-    const added = Model.missing({ nodes: [...graph.nodes], edges: [...graph.edges] }, patch);
-    if (graph.nodes.length + added.nodes.length > CodeGraph.MAX_NODES) {
-      return yield* Effect.fail(
-        new CodeGraph.LimitError({
-          context: { nodes: graph.nodes.length, adding: added.nodes.length, max: CodeGraph.MAX_NODES },
-        }),
-      );
-    }
-    if (added.nodes.length > 0 || added.edges.length > 0) {
-      Obj.update(graph, (graph) => {
-        graph.nodes.push(...added.nodes);
-        graph.edges.push(...added.edges);
-      });
-    }
-    return { addedNodes: added.nodes.length, addedEdges: added.edges.length, removedNodes: 0, ...sizeOf(graph) };
-  });
+export const addPatch = Effect.fn('CodeGraph.addPatch')(function* (graph: CodeGraph.CodeGraph, patch: Model.Patch) {
+  const added = Model.missing({ nodes: [...graph.nodes], edges: [...graph.edges] }, patch);
+  if (graph.nodes.length + added.nodes.length > CodeGraph.MAX_NODES) {
+    return yield* Effect.fail(
+      new CodeGraph.LimitError({
+        context: { nodes: graph.nodes.length, adding: added.nodes.length, max: CodeGraph.MAX_NODES },
+      }),
+    );
+  }
+  if (added.nodes.length > 0 || added.edges.length > 0) {
+    Obj.update(graph, (graph) => {
+      graph.nodes.push(...added.nodes);
+      graph.edges.push(...added.edges);
+    });
+  }
+  return { addedNodes: added.nodes.length, addedEdges: added.edges.length, removedNodes: 0, ...sizeOf(graph) };
+});
 
 /** Removes the boxes (all of them when `ids` is absent) and every arrow touching them. */
-export const removeNodes = (
+export const removeNodes = Effect.fn('CodeGraph.removeNodes')(function* (
   graph: CodeGraph.CodeGraph,
   ids: readonly string[] | undefined,
-): Effect.Effect<CodeGraphOperation.Summary> =>
-  Effect.sync(() => {
-    const next = ids
-      ? Model.without({ nodes: [...graph.nodes], edges: [...graph.edges] }, ids)
-      : { nodes: [], edges: [] };
-    const removedNodes = graph.nodes.length - next.nodes.length;
-    if (removedNodes > 0 || next.edges.length !== graph.edges.length) {
-      const keepNodes = new Set(next.nodes.map(({ id }) => id));
-      const keepEdges = new Set(next.edges.map(Model.edgeId));
-      Obj.update(graph, (graph) => {
-        // Spliced in place, back to front, so a concurrent push from another peer is not overwritten.
-        for (let index = graph.edges.length - 1; index >= 0; index--) {
-          if (!keepEdges.has(Model.edgeId(graph.edges[index]))) {
-            graph.edges.splice(index, 1);
-          }
+) {
+  const next = ids
+    ? Model.without({ nodes: [...graph.nodes], edges: [...graph.edges] }, ids)
+    : { nodes: [], edges: [] };
+  const removedNodes = graph.nodes.length - next.nodes.length;
+  if (removedNodes > 0 || next.edges.length !== graph.edges.length) {
+    const keepNodes = new Set(next.nodes.map(({ id }) => id));
+    const keepEdges = new Set(next.edges.map(Model.edgeId));
+    Obj.update(graph, (graph) => {
+      // Spliced in place, back to front, so a concurrent push from another peer is not overwritten.
+      for (let index = graph.edges.length - 1; index >= 0; index--) {
+        if (!keepEdges.has(Model.edgeId(graph.edges[index]))) {
+          graph.edges.splice(index, 1);
         }
-        for (let index = graph.nodes.length - 1; index >= 0; index--) {
-          if (!keepNodes.has(graph.nodes[index].id)) {
-            graph.nodes.splice(index, 1);
-          }
+      }
+      for (let index = graph.nodes.length - 1; index >= 0; index--) {
+        if (!keepNodes.has(graph.nodes[index].id)) {
+          graph.nodes.splice(index, 1);
         }
-      });
-    }
-    return { addedNodes: 0, addedEdges: 0, removedNodes, ...sizeOf(graph) };
-  });
+      }
+    });
+  }
+  return { addedNodes: 0, addedEdges: 0, removedNodes, ...sizeOf(graph) };
+});
