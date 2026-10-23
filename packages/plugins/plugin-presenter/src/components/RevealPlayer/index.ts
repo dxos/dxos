@@ -3,3 +3,4 @@
 //
 
 export * from './RevealPlayer.tsx';
+export type { SlideEmbed } from './embeds.ts';

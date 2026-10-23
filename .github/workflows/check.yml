@@ -143,6 +143,14 @@ jobs:
           MDL_BASE_REF: ${{ github.event.pull_request.base.sha }}
         run: node packages/reflect/deus/scripts/check-changelog.ts
 
+      # Passes with a notice until the repository has a TYPESAFE_API_KEY secret.
+      - name: Check spec decisions
+        if: ${{ !cancelled() && steps.affected.outcome == 'success' }}
+        env:
+          MDL_BASE_REF: ${{ github.event.pull_request.base.sha }}
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+        run: node .agents/skills/mdl/scripts/check-decisions.ts
+
       - name: Check version files in sync
         if: ${{ !cancelled() && steps.affected.outcome == 'success' }}
         run: node scripts/sync-versions.mjs --check
