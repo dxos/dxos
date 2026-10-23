@@ -15,6 +15,7 @@ import {
   type WhistleResponse,
   type WhistleWord,
 } from './protocol.ts';
+import { Recording } from './recording.ts';
 
 /** Capture flush interval; short so audio reaches the engine as soon as a pass can take it. */
 const CAPTURE_INTERVAL_MS = 100;
@@ -52,6 +53,8 @@ export type UseWhistleResult = {
   /** Whether the noise gate currently hears speech. */
   speaking: boolean;
   stats: WhistleStats;
+  /** Everything captured since mount, gated or not. */
+  recording: Recording;
 };
 
 /**
@@ -95,6 +98,7 @@ export const useWhistle = ({ track, active, language, keywords, onResult }: UseW
   const [stats, setStats] = useState<WhistleStats>({});
   const [speaking, setSpeaking] = useState(false);
   const [worker, setWorker] = useState<Worker>();
+  const [recording] = useState(() => new Recording());
 
   const onResultRef = useRef(onResult);
   onResultRef.current = onResult;
@@ -171,7 +175,9 @@ export const useWhistle = ({ track, active, language, keywords, onResult }: UseW
     const gate = new NoiseGate();
     recorder.setOnChunk((chunk) => {
       downsampler ??= new Downsampler(recorder.wavConfig.sampleRate / WHISTLE_SAMPLE_RATE);
-      const { samples, closed, open } = gate.process(downsampler.process(chunk.data));
+      const audio = downsampler.process(chunk.data);
+      const { samples, closed, open } = gate.process(audio);
+      recording.append(audio, open);
       if (samples.length > 0) {
         worker.postMessage({ type: 'audio', samples } satisfies WhistleRequest, [samples.buffer]);
       }
@@ -188,7 +194,7 @@ export const useWhistle = ({ track, active, language, keywords, onResult }: UseW
       setSpeaking(false);
       void recorder.stop().then(() => worker.postMessage({ type: 'stop' } satisfies WhistleRequest));
     };
-  }, [worker, track, active]);
+  }, [worker, track, active, recording]);
 
-  return { status, error, progress, speaking, stats };
+  return { status, error, progress, speaking, stats, recording };
 };

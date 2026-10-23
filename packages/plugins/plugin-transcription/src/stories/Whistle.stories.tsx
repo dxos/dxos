@@ -11,6 +11,8 @@
  *
  * - `Microphone` streams the default input; `File` plays the same hosted m4a as `Transcription`.
  * - The model downloads on the first press and is cached by the browser afterwards.
+ * - The waveform shows everything captured, with the speech the gate passed highlighted; the raw
+ *   recording stays in the tab and can be saved as WAV.
  */
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
@@ -26,7 +28,9 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Message } from '@dxos/types';
 
 import { type WhistleWord } from './whistle/protocol.ts';
+import { type Recording } from './whistle/recording.ts';
 import { type UseWhistleResult, useWhistle } from './whistle/useWhistle.ts';
+import { Waveform } from './whistle/Waveform.tsx';
 
 /** A paragraph closes at the first sentence end after this many words. */
 const PARAGRAPH_MIN_WORDS = 30;
@@ -112,6 +116,15 @@ const Stats = ({ status, error, progress, speaking, stats }: UseWhistleResult) =
   );
 };
 
+const saveRecording = (recording: Recording) => {
+  const url = URL.createObjectURL(recording.toWav());
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `whistle-${new Date().toISOString()}.wav`;
+  link.click();
+  URL.revokeObjectURL(url);
+};
+
 type WhistlePanelProps = {
   track?: MediaStreamTrack;
   active: boolean;
@@ -129,9 +142,16 @@ const WhistlePanel = ({ track, active, language, keywords, actions }: WhistlePan
       <Panel.Header>
         <Toolbar.Root>
           {actions}
+          <Button.Root
+            iconOnly
+            icon='ph--download-simple--regular'
+            label='Save recording'
+            onClick={() => saveRecording(whistle.recording)}
+          />
           <Toolbar.Separator variant='gap' />
           <Stats {...whistle} />
         </Toolbar.Root>
+        <Waveform recording={whistle.recording} />
       </Panel.Header>
       <ScrollContainer.Root pin>
         <Panel.Body asChild>
