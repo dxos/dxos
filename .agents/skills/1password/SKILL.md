@@ -37,7 +37,7 @@ because the token is present.
 
 - **Cloud sandbox:** `.config/claude-code-setup.sh` installs `op`, and the environment provides
   `OP_SERVICE_ACCOUNT_TOKEN`. The service account sees only the vaults it was granted,
-  currently **`CI`**, plus **`edge-dev`** for the agents fixtures key (`private-fixtures` skill) once granted. If `op` is missing because setup did not run, rerun the step labelled
+  currently **`CI`**, plus **`eng-dev`** for the agents fixtures key (`private-fixtures` skill) once granted. If `op` is missing because setup did not run, rerun the step labelled
   `# 2.` in that script.
 - **Local session (no token):** skip `op`. If the shell check above found nothing, use
   the `.secrets/` flow (`AGENTS.md` → "Handing an agent a credential"). If the user

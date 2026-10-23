@@ -29,12 +29,12 @@ transcription evals). Everything else stays per-user.
 
 - **Your own key:** `age-keygen -o ~/.config/dxos/fixtures.key`, then
   `export DX_FIXTURES_AGE_KEY=~/.config/dxos/fixtures.key` (an `op://` reference also works).
-- **Agents key:** the secret is in 1Password, vault `edge-dev`, item `Fixtures agents age key`,
+- **Agents key:** the secret is in 1Password, vault `eng-dev`, item `Fixtures agents age key`,
   field `credential`. Its public half is committed as `AGENTS_RECIPIENT` in `bin/fixtures.mjs`.
   To pull agents fixtures someone else pushed:
-  `export DX_FIXTURES_AGENTS_KEY='op://edge-dev/Fixtures agents age key/credential'`.
+  `export DX_FIXTURES_AGENTS_KEY='op://eng-dev/Fixtures agents age key/credential'`.
 - **Cloud sandbox:** `op` reads that reference through the service account, so the pull works as-is
-  provided the service account can see `edge-dev` (see the `1password` skill).
+  provided the service account can see `eng-dev` (see the `1password` skill).
 - **Local session:** never run `op` (it pops a desktop prompt). Point `DX_FIXTURES_AGENTS_KEY` at a
   file the user exported, or ask the user to run the command.
 

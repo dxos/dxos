@@ -49,7 +49,7 @@
 // Environment:
 //   DX_FIXTURES_AGE_KEY   Path to your age identity file. May be an `op://` reference.
 //   DX_FIXTURES_AGENTS_KEY  The agents identity, for pulling `--scope agents` fixtures pushed by someone else; usually
-//                         `op://edge-dev/Fixtures agents age key/credential`.
+//                         `op://eng-dev/Fixtures agents age key/credential`.
 //   DX_FIXTURES_BUCKET    Overrides the bucket name (default `test-fixtures`).
 //   DX_FIXTURES_DIR       Overrides the local directory (default `<repo>/testing/fixtures`).
 //   CLOUDFLARE_ACCOUNT_ID Required by wrangler when the token spans several accounts.
@@ -85,7 +85,7 @@ const VERSION_RE = /^\d{8}-\d{6}$/;
 // A file extension, interpolated into keys and filenames like a name.
 const EXTENSION_RE = /^[a-z0-9]{1,8}$/;
 
-// Public half of the team's agents key (its secret is in 1Password, edge-dev); `--scope agents` encrypts to it.
+// Public half of the team's agents key (its secret is in 1Password, eng-dev); `--scope agents` encrypts to it.
 const AGENTS_RECIPIENT = 'age197g2gqngxhg9vj3f627hyz8qjcduklz2a048dft29jg4zfwguavqygsjkw';
 
 const SCOPES = ['user', 'agents'];
