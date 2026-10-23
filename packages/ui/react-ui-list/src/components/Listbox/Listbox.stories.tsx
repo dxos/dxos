@@ -236,17 +236,16 @@ const TilesStory = () => {
   });
   const items = order.map((value) => ({ value, label: value[0].toUpperCase() + value.slice(1) }));
   return (
-    <div className='flex flex-col h-80'>
+    <div className='flex flex-col h-80 [grid-column:full]'>
       <Listbox.Root items={items} tiles={4} value={selected} onValueChange={setSelected} classNames='dx-grow'>
         <Listbox.Viewport>
-          <Listbox.Content aria-label='Swatches' classNames='p-2'>
+          <Listbox.Content aria-label='Swatches'>
             {order.map((value) => (
               <SwatchTile key={value} value={value} controller={controller} />
             ))}
           </Listbox.Content>
         </Listbox.Viewport>
       </Listbox.Root>
-      <Typography.Text data-testid='order'>{order.join(' ')}</Typography.Text>
     </div>
   );
 };
