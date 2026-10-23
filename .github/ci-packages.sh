@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# System packages, Node, pnpm and Playwright's native dependencies for the GitHub Actions container
+# System packages, Node, pnpm, Playwright's native dependencies and its browsers for the GitHub Actions container
 # (`Dockerfile`).
 # Runs as root.
 #
@@ -38,3 +38,5 @@ ln -sf /opt/nodejs/bin/* /usr/local/bin/
 npm install -g --prefix /usr/local "pnpm@${PNPM_VERSION}"
 # https://playwright.dev/docs/docker#build-your-own-image
 npx -y "playwright@${PLAYWRIGHT_VERSION}" install-deps
+# Browsers too, so CI jobs skip the download; they land in PLAYWRIGHT_BROWSERS_PATH (`Dockerfile`).
+npx -y "playwright@${PLAYWRIGHT_VERSION}" install chromium firefox webkit

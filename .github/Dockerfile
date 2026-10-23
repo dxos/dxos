@@ -1,7 +1,9 @@
 FROM ubuntu:24.04
 
-# System packages, Node, pnpm and Playwright's native dependencies: `ci-packages.sh`.
+# System packages, Node, pnpm, Playwright's native dependencies and browsers: `ci-packages.sh`.
 ARG NODE_VERSION=24.11.1
+# A fixed path outside $HOME, which GitHub overrides to /github/home in container jobs.
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 COPY ci-packages.sh /tmp/ci-packages.sh
 RUN NODE_VERSION=${NODE_VERSION} bash /tmp/ci-packages.sh \
   && rm -rf /var/lib/apt/lists/* /tmp/ci-packages.sh
@@ -21,8 +23,9 @@ RUN groupadd -g 1001 runner && \
 # /__t: Tool cache (rarely used directly)
 # /__e: Actions cache (rarely used directly)
 # /github: GitHub internals (env, path, workflow)
+# /ms-playwright: so `playwright install` can add a browser revision after a catalog bump outpaces the image.
 RUN mkdir -p /__w /__t /__e /github && \
-    chown -R runner:runner /__w /__t /__e /github
+    chown -R runner:runner /__w /__t /__e /github /ms-playwright
 
 # Switch to the user.
 USER runner

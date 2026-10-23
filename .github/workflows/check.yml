@@ -527,6 +527,12 @@ jobs:
       matrix:
         cell: ${{ fromJSON(needs.plan.outputs.browser-cells) }}
     runs-on: ubuntu-24.04
+    # Ships Playwright's apt deps and browsers: `--with-deps` on the bare runner hits the Azure apt mirror,
+    # which at times drops to ~50 kB/s and stalls the install for ~10 minutes. `--ipc=host` because
+    # Docker's 64 MB /dev/shm crashes Chromium.
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      options: --ipc=host
     # Covers a cold build: the forced nightly, and fork or Dependabot PRs with no remote cache.
     timeout-minutes: 90
     env:
@@ -566,9 +572,10 @@ jobs:
           builds=$(node .github/actions/plan/closure.mjs $CELL_TARGETS < /dev/null)
           [ -z "$builds" ] || moon exec --on-failure continue $builds
 
+      # A no-op when the image's browsers match the catalog's Playwright; downloads only after a bump.
       - name: Install Playwright
         if: ${{ !cancelled() }}
-        run: pnpm exec playwright install --with-deps chromium
+        run: pnpm exec playwright install chromium
 
       # After a failed build too, so every target that does not depend on it still runs and reports.
       - name: Test
@@ -616,6 +623,12 @@ jobs:
       matrix:
         cell: ${{ fromJSON(needs.plan.outputs.composer-cells) }}
     runs-on: ubuntu-24.04
+    # Ships Playwright's apt deps and browsers: `--with-deps` on the bare runner hits the Azure apt mirror,
+    # which at times drops to ~50 kB/s and stalls the install for ~10 minutes. `--ipc=host` because
+    # Docker's 64 MB /dev/shm crashes Chromium.
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      options: --ipc=host
     # Headroom over the step's own cap, which fails cleanly with traces attached; hitting this one
     # cancels the job and proves nothing.
     timeout-minutes: 40
@@ -651,9 +664,9 @@ jobs:
         with:
           all: ${{ github.event_name == 'workflow_dispatch' }}
 
-      # Only this cell's browser — the other two engines' downloads are dead weight here.
+      # A no-op when the image's browsers match the catalog's Playwright; downloads only after a bump.
       - name: Install Playwright
-        run: pnpm exec playwright install --with-deps ${{ env.PLAYWRIGHT_BROWSER }}
+        run: pnpm exec playwright install ${{ env.PLAYWRIGHT_BROWSER }}
 
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps
       # run. Avoids 504 Outdated Optimize Dep when graph differs from bundle step. Storybook puts
@@ -713,6 +726,12 @@ jobs:
       matrix:
         cell: ${{ fromJSON(needs.plan.outputs.rest-cells) }}
     runs-on: ubuntu-24.04
+    # Ships Playwright's apt deps and browsers: `--with-deps` on the bare runner hits the Azure apt mirror,
+    # which at times drops to ~50 kB/s and stalls the install for ~10 minutes. `--ipc=host` because
+    # Docker's 64 MB /dev/shm crashes Chromium.
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      options: --ipc=host
     # Headroom over the step's own cap, which fails cleanly with traces attached; hitting this one
     # cancels the job and proves nothing.
     timeout-minutes: 40
@@ -749,9 +768,9 @@ jobs:
         with:
           all: ${{ github.event_name == 'workflow_dispatch' }}
 
-      # Only this cell's browser — the other two engines' downloads are dead weight here.
+      # A no-op when the image's browsers match the catalog's Playwright; downloads only after a bump.
       - name: Install Playwright
-        run: pnpm exec playwright install --with-deps ${{ env.PLAYWRIGHT_BROWSER }}
+        run: pnpm exec playwright install ${{ env.PLAYWRIGHT_BROWSER }}
 
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps
       # run. Avoids 504 Outdated Optimize Dep when graph differs from bundle step. Storybook puts
