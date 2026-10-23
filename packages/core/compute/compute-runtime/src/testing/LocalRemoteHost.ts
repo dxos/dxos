@@ -176,9 +176,7 @@ export const makeHost = (options: Options): Effect.Effect<Host> =>
               inputCounts.set(pid, (inputCounts.get(pid) ?? 0) + 1);
               applied.push({ pid, input: decoded });
               yield* handle.submitInput(decoded);
-              // EDGE answers an input once the turn it started has settled; a failed turn still answers,
-              // and its FAILED state is what the caller reads next.
-              yield* handle.runUntilSettled().pipe(Effect.catchCause(() => Effect.void));
+              yield* handle.runUntilSettled().pipe(Effect.catchDefect(() => Effect.void));
             }),
         ),
 

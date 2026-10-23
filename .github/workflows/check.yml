@@ -452,9 +452,6 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       # One target per core.
       MOON_CONCURRENCY: 4
-      # The nightly's tests must execute, but the `vitest` action keeps MOON_FORCE off them: forced, every
-      # dependency rebuilds beside the tests on these 4 vCPU and harness cold starts pass 15 s. `check`
-      # already forces the builds.
       DX_TEST_RUN_ID: ${{ github.event_name == 'schedule' && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
     steps:
       - name: Checkout
@@ -470,6 +467,8 @@ jobs:
 
       - name: Resolve affected scope
         uses: ./.github/actions/affected
+        with:
+          force: 'false'
 
       # plugin-sandbox's local-backend tests skip without these.
       - name: Install sandbox tools

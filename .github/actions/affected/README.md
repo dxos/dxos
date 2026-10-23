@@ -24,7 +24,7 @@ The base comes from the event payload rather than from moon's own `vcs.defaultBr
 | `merge_group` | affected | `merge_group.base_sha` |
 | `push` to `main` | all | none |
 | `push` to any other branch, `workflow_dispatch` | affected | merge-base with `origin/main` |
-| `schedule` | all, bypassing the cache | none |
+| `schedule` | all, bypassing the cache unless the job passes `force: 'false'` | none |
 | no event payload | affected | merge-base with `origin/main` |
 | `all: true` on the action | all | none |
 | a scoped trigger above, when the change touches `pnpm-lock.yaml` or `tools/moon-dependency-closure/dependency-closure.wasm`, or the diff cannot be read | all | none |
@@ -39,7 +39,7 @@ Only tasks that load other projects' code outside the dependency graph list `pnp
 
 Touched-file detection cannot see a closure: scoped to the files a PR touched, a lockfile-only change would select no build or test. A change to `pnpm-lock.yaml` or to the committed plugin therefore runs everything, and the cache decides what executes. `moon run <target> --log debug` prints what each project's closure hashes.
 
-On the scheduled run on weekday mornings this action sets `MOON_FORCE`, which bypasses the cache, so in every job that calls it an input missing from a task's key fails by the next weekday run instead of passing from the cache. The `vitest` action's test step unsets it. Forced, a node cell rebuilds every dependency on its 4 vCPU while its tests run, and their cold starts time out. That step uses `DX_TEST_RUN_ID`, a task input set per scheduled run, so its tests still execute. `check` forces the builds.
+On the scheduled run on weekday mornings this action sets `MOON_FORCE`, which bypasses the cache, so in every job that calls it an input missing from a task's key fails by the next weekday run instead of passing from the cache. `test-node` passes `force: 'false'`. Forced, a node cell rebuilds every dependency on its 4 vCPU while its tests run, and their cold starts time out. Its test tasks list `DX_TEST_RUN_ID`, which `test-node` sets per scheduled run, so they still execute. `check` forces the builds.
 
 ## Opting a step out
 
