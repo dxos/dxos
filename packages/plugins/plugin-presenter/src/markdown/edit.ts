@@ -17,6 +17,10 @@ const FRONTMATTER = /^---[ \t]*\r?\n([\s\S]*?)\r?\n?---[ \t]*(?:\r?\n|$)/;
 export const setFrontmatter = (content: string, patch: Record<string, string | number | undefined>): SlideEdit => {
   const match = FRONTMATTER.exec(content);
   const document = Yaml.parseDocument(match?.[1] ?? '');
+  // Malformed YAML, or YAML that is not a mapping, cannot take a key; the slide is left as written.
+  if (document.errors.length > 0 || (document.contents !== null && !Yaml.isMap(document.contents))) {
+    return { from: 0, to: 0, insert: '', cursor: 0 };
+  }
   for (const [key, value] of Object.entries(patch)) {
     if (value === undefined) {
       document.delete(key);

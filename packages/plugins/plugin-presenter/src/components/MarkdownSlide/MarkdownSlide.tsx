@@ -72,7 +72,11 @@ export const MarkdownSlide = ({
   const handleClick = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
       const element = event.target instanceof Element ? event.target.closest('[data-source]') : null;
-      const range = parseSourceRange(element?.getAttribute('data-source'));
+      // A slide embedded in this one has its own source offsets, which do not index this slide's markdown.
+      if (element?.closest('[data-slide]') !== event.currentTarget) {
+        return;
+      }
+      const range = parseSourceRange(element.getAttribute('data-source'));
       if (range) {
         onSourceClick?.(range);
       }

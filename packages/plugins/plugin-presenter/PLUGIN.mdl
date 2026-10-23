@@ -1076,6 +1076,26 @@ decision D-48: Clicking the preview moves the editor's caret to the start of the
   source: chat 2026-10-23
 ```
 
+```mdl
+decision D-49: Each slide-toolbar action is one editor change, so one undo reverts it. Fills in [D-45].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [SlideEditorArticle, F-10.2]
+  why: A toolbar action is one intent; an author undoing a layout pick or an inserted click group expects it gone in one step.
+  rejected: Writing the slide's `content` through ECHO directly, which bypasses the editor's history and moves the cursor.
+```
+
+```mdl
+decision D-50: Frontmatter edits go through the YAML document API, keeping the block's other keys, their order and its comments; malformed or non-mapping frontmatter is left as written. Fills in [D-45].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [SlideEditorArticle, F-10.2]
+  why: The frontmatter is hand-written text; a picker must not reformat what the author wrote around the one key it sets.
+  rejected: Re-serialising the parsed frontmatter object, which drops comments and reorders keys.
+```
+
 ---
 
 ## Appendix: Extension Definitions

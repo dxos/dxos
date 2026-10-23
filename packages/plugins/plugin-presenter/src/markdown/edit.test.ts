@@ -25,6 +25,12 @@ describe('setFrontmatter', () => {
     expect(applyEdit(before, setFrontmatter(before, { layout: undefined }))).toBe('# Title');
   });
 
+  test('malformed or non-mapping frontmatter is left as written', () => {
+    for (const before of ['---\nlayout: [cover\n---\n# Title', '---\n- a\n- b\n---\n# Title']) {
+      expect(applyEdit(before, setFrontmatter(before, { layout: 'center' }))).toBe(before);
+    }
+  });
+
   test('sets numbers as numbers', () => {
     const content = applyEdit('', setFrontmatter('', { backgroundOpacity: 0.5 }));
     expect(parseSlide(content).frontmatter.backgroundOpacity).toBe(0.5);
