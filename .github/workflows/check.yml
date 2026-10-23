@@ -436,7 +436,7 @@ jobs:
       packages: read
       statuses: write
     runs-on: ubuntu-24.04
-    # The scheduled run bypasses the cache and rebuilds every dependency per shard; a cell took 58 minutes.
+    # A forced nightly once rebuilt every dependency per shard here; a cell took 58 minutes.
     timeout-minutes: 75
     env:
       NODE_VERSION: '24.11.1'
@@ -530,14 +530,13 @@ jobs:
       matrix:
         cell: ${{ fromJSON(needs.plan.outputs.browser-cells) }}
     runs-on: ubuntu-24.04
-    # Covers a cold build: the forced nightly, and fork or Dependabot PRs with no remote cache.
+    # Covers a cold build: fork or Dependabot PRs with no remote cache.
     timeout-minutes: 90
     env:
       # The test phase; the build step overrides it.
       MOON_CONCURRENCY: 1
       CELL_SHARD: ${{ fromJSON(needs.plan.outputs.browser-config)[matrix.cell].shard }}
       CELL_TARGETS: ${{ fromJSON(needs.plan.outputs.browser-config)[matrix.cell].targets }}
-      # The nightly's tests must execute, but its force flag stays on the build step.
       DX_TEST_RUN_ID: ${{ github.event_name == 'schedule' && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
       NODE_VERSION: '24.11.1'
       # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
@@ -560,11 +559,10 @@ jobs:
         uses: ./.github/actions/setup
 
       # Everything this cell's targets depend on, at full concurrency and before any Chromium. No affected
-      # scope: the list is the scope. The nightly forces this step only, so its tests run once.
+      # scope: the list is the scope.
       - name: Build
         env:
           MOON_CONCURRENCY: 4
-          MOON_FORCE: ${{ github.event_name == 'schedule' }}
         run: |
           builds=$(node .github/actions/plan/closure.mjs $CELL_TARGETS < /dev/null)
           [ -z "$builds" ] || moon exec --on-failure continue $builds
@@ -653,6 +651,7 @@ jobs:
         uses: ./.github/actions/affected
         with:
           all: ${{ github.event_name == 'workflow_dispatch' }}
+          force: 'false'
 
       # Only this cell's browser — the other two engines' downloads are dead weight here.
       - name: Install Playwright
@@ -751,6 +750,7 @@ jobs:
         uses: ./.github/actions/affected
         with:
           all: ${{ github.event_name == 'workflow_dispatch' }}
+          force: 'false'
 
       # Only this cell's browser — the other two engines' downloads are dead weight here.
       - name: Install Playwright

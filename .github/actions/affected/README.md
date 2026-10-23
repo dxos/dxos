@@ -39,7 +39,7 @@ Only tasks that load other projects' code outside the dependency graph list `pnp
 
 Touched-file detection cannot see a closure: scoped to the files a PR touched, a lockfile-only change would select no build or test. A change to `pnpm-lock.yaml` or to the committed plugin therefore runs everything, and the cache decides what executes. `moon run <target> --log debug` prints what each project's closure hashes.
 
-On the scheduled run on weekday mornings this action sets `MOON_FORCE`, which bypasses the cache, so in every job that calls it an input missing from a task's key fails by the next weekday run instead of passing from the cache. `test-node` passes `force: 'false'`. Forced, a node cell rebuilds every dependency on its 4 vCPU while its tests run, and their cold starts time out. Its test tasks list `DX_TEST_RUN_ID`, which `test-node` sets per scheduled run, so they still execute. `check` forces the builds.
+On the scheduled run on weekday mornings this action sets `MOON_FORCE`, which bypasses the cache, so in every job that calls it an input missing from a task's key fails by the next weekday run instead of passing from the cache. The jobs that run tests (`test-node` and both e2e jobs) pass `force: 'false'`, because `check` already forces the builds and a forced test job rebuilds every dependency on the same 4 vCPU its tests run on. Their test tasks list a per-run input instead (`DX_TEST_RUN_ID`, `DX_E2E_RUN_ID`), so the scheduled run still executes them rather than replaying the cache.
 
 ## Opting a step out
 
