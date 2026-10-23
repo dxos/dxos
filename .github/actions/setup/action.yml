@@ -213,16 +213,21 @@ runs:
         fi
         echo "$cargo_home/bin" >> "$GITHUB_PATH"
         rustup toolchain install "$toolchain" --profile minimal --no-self-update
-        rustc_seconds=$SECONDS
-
-        if ! compgen -G '/usr/lib/llvm-*/lib/libclang.so' >/dev/null; then
-          sudo=$([ "$(id -u)" = 0 ] || echo sudo)
-          $sudo apt-get update -qq
-          $sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends libclang-dev >/dev/null
-        fi
         (cd tools/code-index-native && rustc --version && cargo --version)
-        echo "Rust ready in ${SECONDS}s (toolchain ${rustc_seconds}s, libclang $((SECONDS - rustc_seconds))s)."
+        echo "Rust ready in ${SECONDS}s."
       shell: bash
+
+    - name: Install libclang
+      if: ${{ inputs.rust == 'true' }}
+      uses: ./.github/actions/apt-cache
+      with:
+        name: libclang
+        run: |
+          if ! compgen -G '/usr/lib/llvm-*/lib/libclang.so' >/dev/null; then
+            sudo=$([ "$(id -u)" = 0 ] || echo sudo)
+            $sudo apt-get update -qq
+            $sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends libclang-dev >/dev/null
+          fi
 
     # `.github/Dockerfile` installs node and pnpm to bootstrap CI while moon installs them from
     # `.prototools`, so the two can drift and only a cold toolchain cache would reveal it — print what PATH

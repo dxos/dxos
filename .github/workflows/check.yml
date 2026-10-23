@@ -86,9 +86,12 @@ jobs:
       contents: read
       packages: read
     runs-on: ubuntu-24.04
-    # The scheduled run bypasses the cache: the compile gate takes about 24 minutes, then module structure
-    # rebuilds every package again (another 12), before knip and the docs bundle.
-    timeout-minutes: 75
+    # Warm limits are about twice the measured p90 (`check` 18m, `test node` 33m on two cells, `test browser`
+    # 22m, `native` 22m, an e2e cell 15m), so a hung runner fails in minutes rather than holding the merge
+    # queue for an hour. The nightly bypasses the cache (the compile gate alone takes about 24 minutes, then
+    # module structure rebuilds every package again), and fork and Dependabot PRs get no remote cache, so
+    # those cold runs keep the old limits.
+    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 35 }}
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -242,7 +245,7 @@ jobs:
       contents: read
       packages: read
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 30 || 20 }}
     env:
       COMPARE: >-
         ${{ github.event_name == 'pull_request' &&
@@ -426,10 +429,12 @@ jobs:
     if: >-
       ${{ !cancelled() && inputs.only != 'e2e' && needs.plan.result == 'success' &&
       needs.plan.outputs.node == 'true' }}
+    # Four cells, not two: a run that touches a core package executes about 110 task-minutes of tests with
+    # every build a cache hit, which kept two cells at 30 minutes and on the merge queue's critical path.
     strategy:
       fail-fast: false
       matrix:
-        cell: ['1/2', '2/2']
+        cell: ['1/4', '2/4', '3/4', '4/4']
     # `statuses: write` lets the second cell post the advisory suites' results.
     permissions:
       contents: read
@@ -437,7 +442,7 @@ jobs:
       statuses: write
     runs-on: ubuntu-24.04
     # The scheduled run bypasses the cache and rebuilds every dependency per shard; a cell took 58 minutes.
-    timeout-minutes: 75
+    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 30 }}
     env:
       NODE_VERSION: '24.11.1'
       # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
@@ -469,7 +474,10 @@ jobs:
 
       # plugin-sandbox's local-backend tests skip without these.
       - name: Install sandbox tools
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq bubblewrap socat ripgrep
+        uses: ./.github/actions/apt-cache
+        with:
+          name: sandbox-tools
+          run: sudo apt-get update -qq && sudo apt-get install -y -qq bubblewrap socat ripgrep
 
       - name: Test
         uses: ./.github/actions/vitest
@@ -494,7 +502,7 @@ jobs:
       ${{ inputs.only != 'check' && inputs.only != 'e2e' &&
       !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 75
+    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 30 }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -528,7 +536,7 @@ jobs:
         cell: ${{ fromJSON(needs.plan.outputs.browser-cells) }}
     runs-on: ubuntu-24.04
     # Covers a cold build: the forced nightly, and fork or Dependabot PRs with no remote cache.
-    timeout-minutes: 90
+    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 90 || 35 }}
     env:
       # The test phase; the build step overrides it.
       MOON_CONCURRENCY: 1
@@ -568,7 +576,10 @@ jobs:
 
       - name: Install Playwright
         if: ${{ !cancelled() }}
-        run: pnpm exec playwright install --with-deps chromium
+        uses: ./.github/actions/apt-cache
+        with:
+          name: playwright-chromium
+          run: pnpm exec playwright install --with-deps chromium
 
       # After a failed build too, so every target that does not depend on it still runs and reports.
       - name: Test
@@ -602,6 +613,44 @@ jobs:
           echo "result=$result" >> "$GITHUB_OUTPUT"
           [ "$result" = success ]
 
+  # Cancels a merge-queue run as soon as any job fails, since the queue dequeues the PR only once the run
+  # concludes: a `check` failure at minute 6 otherwise waited behind a node cell whose runner was lost until
+  # minute 47. Steps marked `if: always()` (report and trace uploads) still run on cancel. A separate job so the
+  # `actions: write` token never shares a runner with the branch code the other jobs build and run.
+  fail-fast:
+    if: ${{ github.event_name == 'merge_group' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      actions: write
+    steps:
+      # A failed step counts before its job ends, so `check` stops the run at its first failed gate rather
+      # than after knip and the docs bundle. Polls every 20s: a deep queue holds several runs at once.
+      - name: Watch for a failure
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JOBS: repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/attempts/${{ github.run_attempt }}/jobs
+          RUN: repos/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SELF: ${{ github.job }}
+        run: |
+          while :; do
+            if ! jobs=$(gh api --paginate "$JOBS?per_page=100" --jq '.jobs[] | select(.name != env.SELF)'); then
+              sleep 20
+              continue
+            fi
+            failed=$(jq -r 'select(.conclusion == "failure" or any(.steps[]?; .conclusion == "failure")) | .name' <<< "$jobs")
+            if [ -n "$failed" ]; then
+              echo "::error::Failed: $(paste -sd, <<< "$failed"). Cancelling the run so the queue moves on."
+              gh api -X POST "$RUN/cancel"
+              exit 0
+            fi
+            if ! jq -e 'select(.status != "completed")' <<< "$jobs" > /dev/null; then
+              echo 'Every job finished without a failure.'
+              exit 0
+            fi
+            sleep 20
+          done
+
   # Composer e2e dwarfs every other suite, so `plan` splits it into Playwright shards per browser
   # (`--shard` divides the tests by count); `e2e-rest` splits the rest of the pool's targets in two.
   # The jobs repeat their steps because a composite action cannot carry the `Test` step's own timeout.
@@ -618,7 +667,7 @@ jobs:
     runs-on: ubuntu-24.04
     # Headroom over the step's own cap, which fails cleanly with traces attached; hitting this one
     # cancels the job and proves nothing.
-    timeout-minutes: 40
+    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 40 || 25 }}
     env:
       # Scoped per job because at workflow level it would also move the hashes of `test`, `storybook`,
       # `workerd` and `cli`.
@@ -653,7 +702,10 @@ jobs:
 
       # Only this cell's browser — the other two engines' downloads are dead weight here.
       - name: Install Playwright
-        run: pnpm exec playwright install --with-deps ${{ env.PLAYWRIGHT_BROWSER }}
+        uses: ./.github/actions/apt-cache
+        with:
+          name: playwright-${{ env.PLAYWRIGHT_BROWSER }}
+          run: pnpm exec playwright install --with-deps ${{ env.PLAYWRIGHT_BROWSER }}
 
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps
       # run. Avoids 504 Outdated Optimize Dep when graph differs from bundle step. Storybook puts
@@ -663,7 +715,7 @@ jobs:
 
       - name: Test
         if: ${{ env.TRUNK_TOKEN != '' }}
-        timeout-minutes: 35
+        timeout-minutes: ${{ (github.event_name == 'schedule' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 35 || 20 }}
         uses: trunk-io/analytics-uploader@v1
         env:
           # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit
@@ -681,7 +733,7 @@ jobs:
       # A fork PR gets no secrets, and the uploader cannot run without a token.
       - name: Test (no analytics)
         if: ${{ env.TRUNK_TOKEN == '' }}
-        timeout-minutes: 35
+        timeout-minutes: ${{ (github.event_name == 'schedule' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 35 || 20 }}
         run: >-
           moon exec --on-failure continue composer-e2e:e2e --
           --shard=${{ env.CELL_SHARD }}/${{ env.CELL_TOTAL }} --workers=${{ env.CELL_WORKERS }}
@@ -715,7 +767,7 @@ jobs:
     runs-on: ubuntu-24.04
     # Headroom over the step's own cap, which fails cleanly with traces attached; hitting this one
     # cancels the job and proves nothing.
-    timeout-minutes: 40
+    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 40 || 25 }}
     env:
       # Scoped per job because at workflow level it would also move the hashes of `test`, `storybook`,
       # `workerd` and `cli`.
@@ -751,7 +803,10 @@ jobs:
 
       # Only this cell's browser — the other two engines' downloads are dead weight here.
       - name: Install Playwright
-        run: pnpm exec playwright install --with-deps ${{ env.PLAYWRIGHT_BROWSER }}
+        uses: ./.github/actions/apt-cache
+        with:
+          name: playwright-${{ env.PLAYWRIGHT_BROWSER }}
+          run: pnpm exec playwright install --with-deps ${{ env.PLAYWRIGHT_BROWSER }}
 
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps
       # run. Avoids 504 Outdated Optimize Dep when graph differs from bundle step. Storybook puts
@@ -759,19 +814,18 @@ jobs:
       - name: Clear Storybook Vite cache
         run: find . -type d -path '*/node_modules/.cache/storybook' -prune -print0 | xargs -0 rm -rf
 
-      # moon ignores MQL negation in `moon query tasks` and `moon exec --query`, so composer-e2e is
-      # filtered in node, which also takes every `total`-th target for this shard.
+      # Split by measured duration, not count; the weights live in the script.
       - name: Select targets
         id: shard
         run: |
           targets=$(moon query tasks "task=e2e" < /dev/null |
-            node -e "let s='';process.stdin.on('data',(d)=>(s+=d)).on('end',()=>console.log(Object.keys(JSON.parse(s).tasks).filter((project)=>project!=='composer-e2e').sort().filter((_,i)=>i%${{ env.CELL_TOTAL }}===${{ env.CELL_SHARD }}).map((project)=>project+':e2e').join(' ')))")
+            node .github/actions/plan/e2e-rest-shard.mjs ${{ env.CELL_SHARD }} ${{ env.CELL_TOTAL }})
           [ -n "$targets" ] || { echo 'no e2e targets resolved'; exit 1; }
           echo "targets=$targets" >> "$GITHUB_OUTPUT"
 
       - name: Test
         if: ${{ env.TRUNK_TOKEN != '' }}
-        timeout-minutes: 35
+        timeout-minutes: ${{ (github.event_name == 'schedule' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 35 || 20 }}
         uses: trunk-io/analytics-uploader@v1
         env:
           # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit
@@ -788,7 +842,7 @@ jobs:
       # A fork PR gets no secrets, and the uploader cannot run without a token.
       - name: Test (no analytics)
         if: ${{ env.TRUNK_TOKEN == '' }}
-        timeout-minutes: 35
+        timeout-minutes: ${{ (github.event_name == 'schedule' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 35 || 20 }}
         run: >-
           moon exec --on-failure continue ${{ steps.shard.outputs.targets }}
 
