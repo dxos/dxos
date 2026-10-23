@@ -36,6 +36,7 @@ type Presentation
   fields:
     name?: string
     sections: Ref<Obj>[]        # slide order; one section is exactly one slide
+    theme?: SlideTheme.Settings # deck theme; overrides the first slide's `theme:` headmatter
 ```
 
 ```mdl
@@ -45,6 +46,19 @@ type SlideViewState
     keyed by the Presentation's (or previewed document's) URI. Never syncs to collaborators.
   fields:
     index: number               # zero-based index of the slide this user is viewing; clamped to the deck on read
+```
+
+```mdl
+type SlideTheme
+  desc: |
+    A deck's theme settings (`SlideTheme.Settings`): a built-in theme name and optional overrides. Applied as
+    `--slide-*` CSS variables on each slide; linked object slides are painted with the same variables.
+  fields:
+    name?: default | light | dark | serif
+    accent?: string             # plain CSS color
+    background?: string         # plain CSS color
+    foreground?: string         # plain CSS color
+    font?: string               # font-family list for body and headings
 ```
 
 ```mdl
@@ -74,6 +88,7 @@ component Deck
     index: number
     fullscreen: boolean
     toolbar?: ReactNode
+    theme?: SlideTheme          # without a name, the first slide's `theme:` headmatter applies
   actions:
     onIndexChange(index: number)
     onFullscreenChange(fullscreen: boolean)
@@ -327,6 +342,11 @@ feat F-6: Markdown Slides
   req F-6.5: Raw HTML other than `v-click`, `v-clicks`, `v-after`, `Surface` and `br` is escaped, never rendered or executed; URLs with unsafe schemes are not followed.
   req F-6.6: A fenced code block renders highlighted; a `{2,4-5}` meta marks the lines that stay emphasised.
   req F-6.7: In the preview companion `---` splits slides except inside a fenced code block, and a leading frontmatter block is slide metadata.
+  req F-6.8: A deck has one theme, `default`, `light`, `dark` or `serif`, named by the first slide's `theme:` headmatter; `default` follows the app's light/dark mode and `light`/`dark` force one, code highlighting included.
+  req F-6.9: A Presentation's `theme` setting names the theme and may override its accent, background and text colors and its font; it wins over headmatter, and linked object slides are painted with it too.
+  req F-6.10:
+    when: a slide names an unknown theme, or an override is not a plain color or font list
+    then: the default theme or value applies and, for an unknown name, a validation issue is reported
 ```
 
 ```mdl
@@ -949,6 +969,42 @@ decision D-38: An embed whose target already encloses it (the slide's subject or
   affects: [EmbeddedSurface, F-8.2]
   why: An author-controlled document must not hang the app; a document that embeds itself, or two that embed each other, otherwise render without limit.
   rejected: Dropping `renderSurface` below the first embed, which would leave every nested surface a placeholder.
+```
+
+```mdl
+decision D-39: Slides are themed through `--slide-*` CSS variables, with built-in `default`, `light`, `dark` and `serif` themes chosen by `theme:` headmatter or the Presentation's `theme` setting, which also carries color and font overrides. Fills in [D-23].
+  date: 2026-10-22
+  by: user:richburdon
+  affects: [Presentation, MarkdownSlide, Deck, F-6.8, F-6.9]
+  source: chat 2026-10-22 (themes Q1 option 2, Q2 option 1)
+```
+
+```mdl
+decision D-40: Only the first slide's `theme:` is read, as Slidev headmatter, and the Presentation's `theme` name wins over it. Fills in [D-39].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Deck, F-6.8, F-6.9]
+  why: A per-slide theme would break the strict Slidev subset, and the object setting is the one a user edits in a form.
+```
+
+```mdl
+decision D-41: Theme overrides accept only plain colors (hex, names, `rgb`/`hsl`/`oklch`-style functions of numbers) and font lists, checked in the schema and again at render. Fills in [D-39].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [SlideTheme, F-6.10]
+  why: Override values reach inline styles from synced, author-controlled data; `url(...)` would load remote resources and a `;` could inject declarations.
+```
+
+```mdl
+decision D-42: `light` and `dark` force their mode by setting `color-scheme` on the slide (the app tokens use `light-dark()`), and the code block passes the mode to `SyntaxHighlighter`'s new `themeMode` prop. Fills in [D-39].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [MarkdownSlide, F-6.8]
+  why: The highlighter picks its palette in script from the app's mode, which CSS cannot override.
+  rejected: Toggling the `.dark` class on the slide, which cannot switch a dark app's slide to light.
 ```
 
 ---

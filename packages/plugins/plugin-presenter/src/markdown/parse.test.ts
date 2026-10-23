@@ -5,7 +5,7 @@
 import type { Element, Root, RootContent } from 'hast';
 import { describe, expect, test } from 'vitest';
 
-import { parseSlide } from './parse.ts';
+import { parseHeadmatterTheme, parseSlide } from './parse.ts';
 
 type HastNode = Root | RootContent;
 
@@ -298,5 +298,21 @@ describe('parseSlide', () => {
     const slide = parseSlide('# A\n\n    ::right::\n\nB');
     expect(textOf(slide.slots.right)).toBe('');
     expect(textOf(slide.slots.default)).toContain('::right::');
+  });
+});
+
+describe('parseHeadmatterTheme', () => {
+  test('returns a built-in theme name', () => {
+    expect(parseHeadmatterTheme('---\ntheme: serif\n---\n\n# Title')).toBe('serif');
+  });
+
+  test('an unknown theme is reported and ignored', () => {
+    const content = '---\ntheme: seriph\n---\n\n# Title';
+    expect(parseHeadmatterTheme(content)).toBeUndefined();
+    expect(parseSlide(content).issues.map((issue) => issue.kind)).toEqual(['theme']);
+  });
+
+  test('a slide without headmatter has no theme', () => {
+    expect(parseHeadmatterTheme('# Title')).toBeUndefined();
   });
 });

@@ -76,6 +76,20 @@ const EditableStory = () => {
   return <Deck slides={slides} index={index} onIndexChange={setIndex} />;
 };
 
+/** Markdown slides whose first slide names a theme in its headmatter; `theme` props override it. */
+const ThemedStory = ({ theme }: Pick<DeckProps, 'theme'>) => {
+  const slides = useMemo(
+    (): SlideSource[] =>
+      [
+        ['---', 'theme: light', '---', '', '# Light theme', '', 'Named by the first slide.'].join('\n'),
+        ['# Every slide', '', '```ts', "const deck = 'themed';", '```'].join('\n'),
+      ].map((content, index) => ({ kind: 'markdown', id: `themed-${index}`, content })),
+    [],
+  );
+  const [index, setIndex] = useState(0);
+  return <Deck slides={slides} index={index} onIndexChange={setIndex} theme={theme} />;
+};
+
 /** Index is far past the end, as when slides were deleted since the view state was saved. */
 const StaleIndexStory = () => {
   const slides = useMemo(() => createTextSlides(3), []);
@@ -370,5 +384,25 @@ export const PrintUnfocused: Story = {
     window.dispatchEvent(new Event('beforeprint'));
     await expect(document.querySelector('[data-print-deck]')).toBeNull();
     await expect(document.documentElement.hasAttribute('data-printing-deck')).toBe(false);
+  },
+};
+
+/** The first slide's `theme: light` headmatter themes the whole deck. */
+export const ThemeHeadmatter: Story = {
+  render: () => <ThemedStory />,
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(canvasElement.querySelector<HTMLElement>('[data-slide]')?.style.colorScheme).toBe('light'),
+    );
+  },
+};
+
+/** A Presentation-style `theme` setting wins over headmatter. */
+export const ThemeOverride: Story = {
+  render: () => <ThemedStory theme={{ name: 'dark', accent: '#f97316' }} />,
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(canvasElement.querySelector<HTMLElement>('[data-slide]')?.style.colorScheme).toBe('dark'),
+    );
   },
 };

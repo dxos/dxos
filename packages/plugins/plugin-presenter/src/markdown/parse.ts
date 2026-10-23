@@ -10,6 +10,8 @@ import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import { unified } from 'unified';
 
+import { SlideTheme } from '#types';
+
 import { type LayoutName, LAYOUTS, type SlideFrontmatter, type SlideIssue, parseFrontmatter } from './frontmatter.ts';
 import { type SlotName, remarkSlidev } from './remark-slidev.ts';
 import { isolateSlotMarkers } from './split.ts';
@@ -56,6 +58,10 @@ export const parseSlide = (content: string): ParsedSlide => {
     }
   }
 
+  if (frontmatter.theme !== undefined && !SlideTheme.isName(frontmatter.theme)) {
+    issues.push({ kind: 'theme', message: `Unknown theme "${frontmatter.theme}"; using "default".` });
+  }
+
   const toHast = (slot: SlotName): HastRoot =>
     hastProcessor.runSync(slidev?.slots[slot] ?? { type: 'root', children: [] });
 
@@ -67,4 +73,12 @@ export const parseSlide = (content: string): ParsedSlide => {
     clicks: slidev?.clicks ?? 0,
     issues,
   };
+};
+
+/**
+ * The deck theme named by a first slide's headmatter, if it is a built-in theme.
+ */
+export const parseHeadmatterTheme = (content: string): SlideTheme.Name | undefined => {
+  const { theme } = parseSlide(content).frontmatter;
+  return SlideTheme.isName(theme) ? theme : undefined;
 };

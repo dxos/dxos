@@ -117,6 +117,11 @@
       "types": "./dist/types/src/types/Presentation.d.ts",
       "import": "./dist/lib/Presentation.mjs"
     },
+    "./SlideTheme": {
+      "source": "./src/types/SlideTheme.ts",
+      "types": "./dist/types/src/types/SlideTheme.d.ts",
+      "import": "./dist/lib/SlideTheme.mjs"
+    },
     "./SlideViewState": {
       "source": "./src/types/SlideViewState.ts",
       "types": "./dist/types/src/types/SlideViewState.d.ts",

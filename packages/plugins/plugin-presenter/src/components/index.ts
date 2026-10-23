@@ -9,3 +9,4 @@ export * from './PresentationShell/index.ts';
 export * from './SectionPicker/index.ts';
 export * from './SlideFrame/index.ts';
 export * from './SlideRenderer/index.ts';
+export * from './SlideTheme/index.ts';

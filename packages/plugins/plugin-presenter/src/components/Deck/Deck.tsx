@@ -14,13 +14,14 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Util from '@dxos/react-ui/Util';
 
 import { type SlideSource } from '#deck';
-import { useSlideClicks } from '#hooks';
+import { useDeckTheme, useSlideClicks } from '#hooks';
 import { meta } from '#meta';
-import { SlideViewState } from '#types';
+import { type SlideTheme, SlideViewState } from '#types';
 
 import { PageNumber, Pager } from '../Pager/index.ts';
 import { PresentationShell } from '../PresentationShell/index.ts';
 import { SlideRenderer } from '../SlideRenderer/index.ts';
+import { SlideThemeProvider } from '../SlideTheme/index.ts';
 
 /** Set on `<html>` while a deck prints; every print rule is keyed on it so other prints are unaffected. */
 const PRINTING_ATTRIBUTE = 'data-printing-deck';
@@ -39,6 +40,8 @@ export type DeckProps = {
   /** Extra toolbar content, shown at the start of the toolbar. */
   toolbar?: ReactNode;
   attendableId?: string;
+  /** Deck theme; without a name, the first slide's `theme:` headmatter applies. */
+  theme?: SlideTheme.Settings;
   /** Focus the deck on mount, so keys work without a click; it is refocused after every fullscreen toggle regardless. */
   autoFocus?: boolean;
 };
@@ -77,6 +80,7 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
       toolbar,
       attendableId,
       autoFocus = false,
+      theme,
       ...props
     },
     forwardedRef,
@@ -97,6 +101,7 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
       }
     }
     const clicks = useSlideClicks(slide);
+    const themeSettings = useDeckTheme(slides, theme);
     const step = stepState.index === index ? Math.min(stepState.step, clicks) : 0;
 
     // Only the deck holding focus (or the fullscreen one) prints; the print container holds every slide.
@@ -135,19 +140,21 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
     const printContainer =
       printing &&
       createPortal(
-        <div data-print-deck=''>
-          {slides.map((source, slideIndex) => (
-            // An object linked twice yields two slides with one id.
-            <div key={`${source.id}:${slideIndex}`} data-print-slide=''>
-              <SlideRenderer
-                source={source}
-                attendableId={attendableId}
-                step={Number.POSITIVE_INFINITY}
-                framed={false}
-              />
-            </div>
-          ))}
-        </div>,
+        <SlideThemeProvider settings={themeSettings}>
+          <div data-print-deck=''>
+            {slides.map((source, slideIndex) => (
+              // An object linked twice yields two slides with one id.
+              <div key={`${source.id}:${slideIndex}`} data-print-slide=''>
+                <SlideRenderer
+                  source={source}
+                  attendableId={attendableId}
+                  step={Number.POSITIVE_INFINITY}
+                  framed={false}
+                />
+              </div>
+            ))}
+          </div>
+        </SlideThemeProvider>,
         document.body,
       );
 
@@ -252,7 +259,9 @@ export const Deck = Util.composable<HTMLDivElement, DeckProps>(
         fullscreen={fullscreen}
         onExit={handleExit}
       >
-        <div className='dx-cover flex flex-col'>{body}</div>
+        <div className='dx-cover flex flex-col'>
+          <SlideThemeProvider settings={themeSettings}>{body}</SlideThemeProvider>
+        </div>
         {fullscreen && <OverlayPager index={index} count={count} onChange={onIndexChange} />}
       </PresentationShell>
     );

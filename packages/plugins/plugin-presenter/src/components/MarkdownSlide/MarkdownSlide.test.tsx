@@ -6,6 +6,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 
+import { SlideThemeProvider } from '../SlideTheme/index.ts';
 import { MarkdownSlide, parseLineHighlights } from './MarkdownSlide.tsx';
 import { backgroundStyle } from './SlideBackground.tsx';
 
@@ -15,8 +16,22 @@ const render = (content: string, step?: number) =>
 const clicks = ['<v-clicks>', '', '- one', '- two', '- three', '', '</v-clicks>'].join('\n');
 
 describe('MarkdownSlide', () => {
-  test('heading uses the accent class', ({ expect }) => {
-    expect(render('# Title')).toMatch(/<h1 class="[^"]*text-accent-text[^"]*">Title<\/h1>/);
+  test('heading uses the theme accent', ({ expect }) => {
+    expect(render('# Title')).toMatch(/<h1 class="[^"]*text-\(color:--slide-accent\)[^"]*">Title<\/h1>/);
+  });
+
+  test('root carries the default theme variables', ({ expect }) => {
+    expect(render('# Title')).toMatch(/data-slide="true"[^>]*style="[^"]*--slide-accent:var\(--color-accent-text\)/);
+  });
+
+  test('provider theme forces its color scheme and overrides', ({ expect }) => {
+    const markup = renderToStaticMarkup(
+      <SlideThemeProvider settings={{ name: 'dark', accent: '#ff0000' }}>
+        <MarkdownSlide content='# Title' />
+      </SlideThemeProvider>,
+    );
+    expect(markup).toContain('color-scheme:dark');
+    expect(markup).toContain('--slide-accent:#ff0000');
   });
 
   test('step 0 hides every click item', ({ expect }) => {

@@ -227,6 +227,20 @@ code highlighter. Layouts are React components receiving `{ frontmatter, slots, 
   `image-left`/`image-right` and `default`.
 - Print: a print stylesheet, one slide per page, all clicks revealed.
 
+**Themes** _(user, 2026-10-22)_. A deck has one theme, applied to every slide as `--slide-*` CSS variables
+(background, text, accent, code surface, separator, body/heading/code fonts) that the layout and node classes
+read.
+
+- Built-in: `default` (app tokens; follows the app's light/dark mode), `light` and `dark` (force a mode by setting
+  `color-scheme`, since the tokens use `light-dark()`; the code highlighter gets the mode through its
+  `themeMode` prop), and `serif` (serif body and headings).
+- Chosen by `theme:` in the first slide's headmatter, as in Slidev (whose `theme:` names an npm package; ours
+  names a built-in, and an unknown name falls back to `default` with an issue).
+- A Presentation's `theme` setting (`SlideTheme.Settings`: name plus accent, background, text color and font
+  overrides) wins over headmatter. Linked object slides are painted with the same variables, so their surfaces
+  follow a forced mode.
+- Overrides accept only plain colors and font lists (_agent call_): they reach inline styles from synced data.
+
 ### 7. Assistant skill _(user)_
 
 - `PresenterSkill` (`src/skills/`), contributed via `AppCapabilities.SkillDefinition` and attached to the

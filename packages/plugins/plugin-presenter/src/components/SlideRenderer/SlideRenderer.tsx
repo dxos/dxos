@@ -15,6 +15,7 @@ import { meta } from '#meta';
 
 import { MarkdownSlide, type MarkdownSlideProps } from '../MarkdownSlide/index.ts';
 import { SlideFrame } from '../SlideFrame/index.ts';
+import { SlideThemeScope } from '../SlideTheme/index.ts';
 import { EmbedAncestor, EmbeddedSurface } from './EmbeddedSurface.tsx';
 import { ObjectSurface } from './ObjectSurface.tsx';
 
@@ -89,7 +90,9 @@ export const useSurfaceRenderer = (db: Database.Database | undefined): MarkdownS
 
 const ObjectSlide = ({ Frame, object, attendableId }: FrameProps & { object: Obj.Unknown; attendableId?: string }) => (
   <Frame>
-    <ObjectSurface object={object} role='slide' attendableId={attendableId} />
+    <SlideThemeScope>
+      <ObjectSurface object={object} role='slide' attendableId={attendableId} />
+    </SlideThemeScope>
   </Frame>
 );
 
@@ -97,10 +100,10 @@ const PendingSlide = ({ Frame }: FrameProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <Frame>
-      <div className='flex grow h-full items-center justify-center gap-6 text-6xl'>
+      <SlideThemeScope classNames='items-center justify-center gap-6 text-6xl'>
         <Icon.Icon icon='ph--circle-notch--regular' spin classNames='size-16' />
         <span>{t('slide-pending.label')}</span>
-      </div>
+      </SlideThemeScope>
     </Frame>
   );
 };

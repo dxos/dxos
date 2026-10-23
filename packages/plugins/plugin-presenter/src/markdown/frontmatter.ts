@@ -30,7 +30,7 @@ export type LayoutName = (typeof LAYOUTS)[number];
 
 /** A problem found while parsing or validating a slide; the slide still renders. */
 export type SlideIssue = {
-  kind: 'frontmatter' | 'layout' | 'html';
+  kind: 'frontmatter' | 'layout' | 'theme' | 'html';
   message: string;
 };
 
@@ -43,6 +43,7 @@ const fields = {
   backgroundVideo: Schema.String,
   backgroundOpacity: Schema.Number.check(Schema.isBetween({ minimum: 0, maximum: 1 })),
   backgroundPosition: Schema.String,
+  theme: Schema.String,
 };
 
 /** Per-slide frontmatter; unknown keys are dropped. */
@@ -55,6 +56,8 @@ export const SlideFrontmatter = Schema.Struct({
   backgroundVideo: Schema.optionalKey(fields.backgroundVideo),
   backgroundOpacity: Schema.optionalKey(fields.backgroundOpacity),
   backgroundPosition: Schema.optionalKey(fields.backgroundPosition),
+  /** Deck theme; read only from the first slide (Slidev headmatter). */
+  theme: Schema.optionalKey(fields.theme),
 });
 
 export type SlideFrontmatter = Schema.Schema.Type<typeof SlideFrontmatter>;

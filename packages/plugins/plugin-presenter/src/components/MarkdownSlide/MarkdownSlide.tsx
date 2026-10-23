@@ -13,6 +13,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { type SlotName, SURFACE_ROLES, type SurfaceRole, parseSlide } from '#markdown';
 
+import { slideThemeClasses, useSlideColorScheme, useSlideThemeStyle } from '../SlideTheme/index.ts';
 import { layouts } from './layouts.tsx';
 import { SlideBackground } from './SlideBackground.tsx';
 import { theme } from './theme.ts';
@@ -44,11 +45,19 @@ export const MarkdownSlide = ({ classNames, content, step, renderSurface }: Mark
     return { default: render('default'), left: render('left'), right: render('right') };
   }, [parsed, step]);
 
+  const themeStyle = useSlideThemeStyle();
   const Layout = layouts[parsed.layout];
   return (
     <div
       data-slide
-      className={mx('relative size-full overflow-hidden', theme.root, parsed.frontmatter.class, classNames)}
+      className={mx(
+        'relative size-full overflow-hidden',
+        slideThemeClasses,
+        theme.root,
+        parsed.frontmatter.class,
+        classNames,
+      )}
+      style={themeStyle}
     >
       <SlideBackground frontmatter={parsed.frontmatter} layout={parsed.layout} />
       <div className='relative size-full'>
@@ -113,6 +122,7 @@ const lineHighlightRenderer =
     });
 
 const CodeBlock = ({ language, meta, source = '' }: SlideCodeProps) => {
+  const themeMode = useSlideColorScheme();
   const renderer = useMemo(() => {
     const lines = parseLineHighlights(meta, source.replace(/\n$/, '').split('\n').length);
     return lines && lineHighlightRenderer(lines);
@@ -120,6 +130,7 @@ const CodeBlock = ({ language, meta, source = '' }: SlideCodeProps) => {
   return (
     <SyntaxHighlighter
       language={language}
+      themeMode={themeMode}
       scroll={false}
       classNames={mx(theme.nodes.pre, theme.nodes.code)}
       PreTag='pre'

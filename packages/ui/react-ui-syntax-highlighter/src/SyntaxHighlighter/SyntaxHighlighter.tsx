@@ -12,7 +12,7 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
-import { type AllowedAxis } from '@dxos/ui-types';
+import { type AllowedAxis, type ThemeMode } from '@dxos/ui-types';
 
 import { renderRows } from './renderer.ts';
 
@@ -43,6 +43,8 @@ export type SyntaxHighlighterProps = Pick<
   | 'PreTag'
 > & {
   themeStyle?: NaturalSyntaxHighlighterProps['style'];
+  /** Picks the built-in light or dark style regardless of the app's mode (default: the app's mode). */
+  themeMode?: ThemeMode;
   fallback?: string;
   copyButton?: boolean;
   /**
@@ -121,6 +123,7 @@ const SyntaxHighlighterLeaf = Util.composable<HTMLDivElement, Omit<SyntaxHighlig
       role,
       style,
       themeStyle,
+      themeMode: themeModeProp,
       language: languageProp = 'text',
       fallback = zeroWidthSpace,
       copyButton,
@@ -128,7 +131,8 @@ const SyntaxHighlighterLeaf = Util.composable<HTMLDivElement, Omit<SyntaxHighlig
     },
     forwardedRef,
   ) => {
-    const themeMode = Hooks.useThemeMode();
+    const appThemeMode = Hooks.useThemeMode();
+    const themeMode = themeModeProp ?? appThemeMode;
     const source = sourceOf(children, fallback);
     const language = source.length > MAX_HIGHLIGHTED_LENGTH ? 'text' : languageProp;
 

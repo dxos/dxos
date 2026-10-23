@@ -41,6 +41,10 @@ describe('parseFrontmatter', () => {
     expect(issues).toHaveLength(1);
   });
 
+  test('keeps the theme name', () => {
+    expect(parseFrontmatter('theme: dark').frontmatter).toEqual({ theme: 'dark' });
+  });
+
   test('empty input is valid', () => {
     expect(parseFrontmatter('')).toEqual({ frontmatter: {}, issues: [] });
   });

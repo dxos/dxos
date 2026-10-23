@@ -240,16 +240,7 @@ const DocumentSlideStory = ({ name }: { name: string }) => {
 const meta = {
   title: 'plugins/plugin-presenter/components/SlideRenderer',
   render: DefaultStory,
-  decorators: [
-    withTheme(),
-    withLayout({ layout: 'fullscreen' }),
-    withClientProvider({
-      types: [Markdown.Document, Drawing.Drawing, Drawing.Canvas, Text.Text, Presentation.Presentation],
-      createIdentity: true,
-      createSpace: true,
-      onCreateSpace: createSpaceSlides,
-    }),
-  ],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
     layout: 'fullscreen',
     translations,
@@ -260,8 +251,16 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// The story space and its fixture objects are created before every story renders.
+// Space stories wait for the story space and its fixture objects.
 const LOAD_TIMEOUT = { timeout: 10_000 };
+
+/** Only stories that read fixture objects create the space, so the others render at once. */
+const withSpace = withClientProvider({
+  types: [Markdown.Document, Drawing.Drawing, Drawing.Canvas, Text.Text, Presentation.Presentation],
+  createIdentity: true,
+  createSpace: true,
+  onCreateSpace: createSpaceSlides,
+});
 
 const withSlideSurface = withPluginManager({ plugins: [createSlidePlugin()()] });
 
@@ -327,7 +326,7 @@ export const GatedSurface: Story = {
 /** A `<Surface ref>` in a layout slot renders a Drawing through its slide surface, not the title-slide fallback. */
 export const EmbeddedSurface: Story = {
   render: () => <SpaceSlideStory name='embedded' />,
-  decorators: [withSlideSurface],
+  decorators: [withSlideSurface, withSpace],
   args: { kind: 'text' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -340,7 +339,7 @@ export const EmbeddedSurface: Story = {
 /** A ref to a deleted object and a malformed ref each settle on the placeholder rather than spinning. */
 export const EmbeddedSurfaceMissing: Story = {
   render: () => <SpaceSlideStory name='missing' />,
-  decorators: [withSlideSurface],
+  decorators: [withSlideSurface, withSpace],
   args: { kind: 'text' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -352,7 +351,7 @@ export const EmbeddedSurfaceMissing: Story = {
 /** An ECHO-shaped but invalid ref and a well-formed ref to an id that never existed each settle on the placeholder. */
 export const EmbeddedSurfaceUnresolvable: Story = {
   render: () => <SpaceSlideStory name='unresolvable' />,
-  decorators: [withSlideSurface],
+  decorators: [withSlideSurface, withSpace],
   args: { kind: 'text' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -364,7 +363,7 @@ export const EmbeddedSurfaceUnresolvable: Story = {
 /** `<Surface />` with no ref settles on the placeholder. */
 export const EmbeddedSurfaceNoRef: Story = {
   render: () => <SpaceSlideStory name='no-ref' />,
-  decorators: [withSlideSurface],
+  decorators: [withSlideSurface, withSpace],
   args: { kind: 'text' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -377,7 +376,7 @@ export const EmbeddedSurfaceNoRef: Story = {
 /** A ref to another deck's owned slide renders that slide's markdown, not a text editor. */
 export const EmbeddedTextSlide: Story = {
   render: () => <SpaceSlideStory name='embedded-text' />,
-  decorators: [withSlideSurface],
+  decorators: [withSlideSurface, withSpace],
   args: { kind: 'text' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -398,7 +397,7 @@ const recursivePlaceholders = (canvasElement: HTMLElement) =>
 /** A document that embeds itself renders once, with the recursion placeholder in place of the second level. */
 export const EmbeddedSelf: Story = {
   render: () => <DocumentSlideStory name='self' />,
-  decorators: [withArticleSurface],
+  decorators: [withArticleSurface, withSpace],
   args: { kind: 'object' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -412,7 +411,7 @@ export const EmbeddedSelf: Story = {
 /** Two documents that embed each other stop when the cycle returns to the first. */
 export const EmbeddedCycle: Story = {
   render: () => <DocumentSlideStory name='cycle-a' />,
-  decorators: [withArticleSurface],
+  decorators: [withArticleSurface, withSpace],
   args: { kind: 'object' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
