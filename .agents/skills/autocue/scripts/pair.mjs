@@ -14,7 +14,7 @@
  * which tiles the panes and burns the step captions across the full width.
  *
  *   node pair.mjs --flow packages/apps/composer-app/autocue/two-peer-collaboration.mjs \
- *     --url http://127.0.0.1:4173 --out /tmp/pair [--peers Alice,Bob] [--scale 2] [--mp4 on]
+ *     --url http://127.0.0.1:4173 --out /tmp/pair [--peers Alice,Bob] [--boot-peers Alice] [--scale 2] [--mp4 on]
  *
  * A flow exports `steps`: `{ name, setup?, caption?, run }`, where `run({ peers, caption, sleep })` gets each
  * peer by its lowercased name (`peers.alice.page`, `peers.alice.click(locator)`). Steps run in order; a
@@ -52,6 +52,9 @@ const parseArgs = () => {
     'boot-attempts': 3,
     // `serial` boots one peer at a time: two cold boots at once double the worker's module load.
     'boot': 'serial',
+    // Peers to boot into the app before the take, comma-separated; the rest start on a blank page with no app
+    // loaded, as a fresh browser does (a flow then opens a link in them on camera). Every peer when unset.
+    'boot-peers': '',
     // Boots a throwaway context first, so the peers load from a warm server and their first attempt counts.
     'warm': 'on',
     'action-timeout': 30_000,
@@ -274,10 +277,16 @@ try {
         .catch((error) => console.error(String(error?.message ?? error)))
         .finally(() => context.close());
     }
+    const bootNames = String(options['boot-peers'] || '')
+      .split(',')
+      .map((name) => name.trim().toLowerCase())
+      .filter(Boolean);
+    const booted =
+      bootNames.length > 0 ? peerList.filter((peer) => bootNames.includes(peer.name.toLowerCase())) : peerList;
     if (options.boot === 'parallel') {
-      await Promise.all(peerList.map((peer) => bootPage(peer.page, peer.name)));
+      await Promise.all(booted.map((peer) => bootPage(peer.page, peer.name)));
     } else {
-      for (const peer of peerList) {
+      for (const peer of booted) {
         await bootPage(peer.page, peer.name);
       }
     }

@@ -19,6 +19,7 @@ Each extension is defined in the Appendix or resolved via its URI.
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.1`          |
 | `test`      | `org.dxos.mdl.test@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
 
 ## Types
 
@@ -425,6 +426,28 @@ op SpaceOperation.GetShareLink
 ```
 
 ```mdl
+op SpaceOperation.OpenShareObject
+  desc: Opens the share dialog for one object.
+  key: org.dxos.operation.space.openShareObject
+  input:
+    object: Obj
+  output: void
+  effects: [ui:dialog]
+```
+
+```mdl
+op SpaceOperation.ShareObject
+  desc: Makes a link that opens one object. With `anyone` access the link carries a delegated multi-use invitation, the objects a non-member replicates, and the plugins that render them.
+  key: org.dxos.operation.space.shareObject
+  input:
+    object: Obj
+    access: 'restricted' | 'anyone'
+    role?: 'editor' | 'viewer'
+  output: { url: string, objects: string[], plugins: string[] }
+  effects: [echo:control-feed]
+```
+
+```mdl
 op CollectionOperation.Create
   desc: Creates a new Collection object in the active space.
   key: org.dxos.operation.space.createCollection
@@ -457,6 +480,14 @@ feat F-2: Membership and Sharing
   req F-2.2: MembersContainer shows all current members with their presence status.
   req F-2.3: User can generate single-use or multi-use invitation links.
   req F-2.4: User can get a direct shareable link to a space or object via op:SpaceOperation.GetShareLink.
+  req F-2.5: Every object has a Share action that opens a share dialog (op:SpaceOperation.OpenShareObject) listing the people with access, the general access setting with a role, and a Copy link button.
+  req F-2.6:
+    when: user copies a link with general access set to anyone with the link
+    then: op:SpaceOperation.ShareObject creates a delegated multi-use invitation, and the link carries it with the object's scope (the object, every object it references or links to, and the space properties) and the plugins that render that scope
+  req F-2.7:
+    when: someone opens a share link
+    then: a member lands on the object; a non-member joins in the background without a dialog, replicates only the scope, has the plugins enabled, and lands on the object; a browser with no identity gets one first, with no welcome screen
+  req F-2.8: A space joined through a share link replicates only the documents of its scope; the guest's own client enforces this, and EDGE does not.
 ```
 
 ```mdl
@@ -688,6 +719,104 @@ test QA-2: Register a schema and add a typed relation
       expect: the space still opens cleanly and the registered schemas remain listed
 ```
 
+```mdl
+test QA-3: Share one document of a space with a fresh browser
+  desc: Object sharing end to end — the link joins a guest with no identity and replicates only what the shared document needs.
+  actors: human
+  covers: [F-2.5, F-2.6, F-2.7, F-2.8]
+  status: unverified
+  given:
+    - host: a booted app with an identity and a space holding ten documents, one of which links to another
+    - guest: a SECOND, fresh browser profile with no identity
+  steps:
+    - name: Open the share dialog
+      do: On the host, open the linking document and click Share in its heading.
+      expect: the dialog lists the host under People with access, General access reads Anyone with the link, and it names the two documents the link shares
+    - name: Copy the link
+      do: Click Copy link.
+      expect: the link appears in the dialog and is copied
+    - name: Open the link on the guest
+      do: Paste the link into the guest's address bar.
+      expect: the guest gets an identity with no welcome screen, joins the space, and shows the shared document's text
+    - name: Follow the link inside the document
+      do: On the guest, follow the shared document's link to the other document.
+      expect: the linked document opens
+  then:
+    - the guest holds the two shared documents and the space properties, and none of the other eight documents
+```
+
+## Changelog
+
+```mdl
+decision D-1: Every object in Composer has a Share button that opens a share dialog laid out like Google Docs' and built from the Composer design-system primitives.
+  date: 2026-10-23
+  by: user:mykola-vrmchk
+  affects: [F-2.5, op:SpaceOperation.OpenShareObject]
+```
+
+```mdl
+decision D-2: Sharing an object creates a link that carries a delegated invitation (created automatically), the plugins needed to render the object, and the subset of the space to synchronize: the object and all its children.
+  date: 2026-10-23
+  by: user:mykola-vrmchk
+  affects: [F-2.6, op:SpaceOperation.ShareObject]
+```
+
+```mdl
+decision D-3: Opening a share link loads the object for a member; joins a non-member in the background, enables the plugins and synchronizes only the shared subset, guarded on the client; and creates an identity in place for a browser with none.
+  date: 2026-10-23
+  by: user:mykola-vrmchk
+  affects: [F-2.7, F-2.8]
+```
+
+```mdl
+decision D-4: The partial-sync guard is client-side only, and the spec says so; EDGE does not restrict a member to a subset of the space's documents.
+  date: 2026-10-23
+  by: user:mykola-vrmchk
+  affects: [F-2.8]
+```
+
+```mdl
+decision D-5: A link's scope is the object, every object reachable through its references or through ECHO links in its text, and the space properties; the root collection is left out. Fills in [D-2].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-2.6]
+  why: A document that links another must open with its link working, and the space does not report ready without its properties. The root collection would list every object in the space as an unloadable reference.
+  rejected:
+    - References only — a markdown link to another document would open nothing on the guest.
+```
+
+```mdl
+decision D-6: The link is the object's shareable path plus a `share` query parameter, so a member opens it through the existing URL projection. Fills in [D-2].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-2.6, F-2.7]
+  why: Members need no new code path; only a non-member reads the payload.
+  rejected:
+    - A dedicated share route — every member would pay a redirect, and it duplicates object routing.
+```
+
+```mdl
+decision D-7: The guard quarantines out-of-scope documents with an `out-of-scope` reason and leaves them out of the space's collection; a stored `sync_scope` in the space metadata re-applies it on every start. Fills in [D-3].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-2.8]
+  why: The quarantine already refuses a document on load, request, accept, serve and advertise, so one more reason covers every direction at once.
+  rejected:
+    - A separate allow-list gate — it would duplicate every quarantine call site.
+```
+
+```mdl
+decision D-8: The link uses a delegated, multi-use invitation authenticated by a known public key, with the role from the dialog (Editor or Viewer). Fills in [D-2].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-2.6, op:SpaceOperation.ShareObject]
+  why: It is the invitation the existing invite-many link uses, which EDGE already redeems with no member online.
+```
+
 ---
 
 ## Appendix: Extension Definitions
@@ -752,4 +881,22 @@ ext op
     effects?: EffectList
     requires?: ServiceList
     note?: Prose
+```
+
+```mdl
+ext decision
+  uri: org.dxos.mdl.decision@1.0
+  desc: |
+    One decision about the spec, attributed to exactly one actor. The inline prose is the decision
+    itself, stated as what is now true, not as the edit that was made.
+  fields:
+    date: Date                  # YYYY-MM-DD, the day the decision was made
+    by: ActorRef                # user:<handle> | agent:<name> — the decider
+    for?: UserRef               # agent entries only: the person the agent acted for
+    affects?: RefList           # block ids the decision constrains, e.g. [Scene, F-2.1]
+    supersedes?: Identifier     # an earlier decision this one replaces
+    why?: Prose                 # the reason; on a user entry, only a reason the person gave
+    rejected?: ProseList        # alternatives considered and why they lost
+    source?: URI                # PR, review comment, issue, or session where it was made
+  inline-prose: true
 ```
