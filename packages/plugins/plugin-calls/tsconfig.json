@@ -35,6 +35,9 @@
       "path": "../../common/display-name"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/graph"
     },
     {
@@ -60,6 +63,9 @@
     },
     {
       "path": "../../core/halo/halo"
+    },
+    {
+      "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../core/protocols"

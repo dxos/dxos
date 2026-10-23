@@ -40,7 +40,6 @@ type Meeting
 type MeetingState
   fields:
     activeMeeting?: Meeting
-    transcriptionManager?: TranscriptionManager
 ```
 
 ## Components
@@ -172,7 +171,7 @@ feat F-2: Active Meeting
     then: plugin state activeMeeting is updated
 
   req F-2.2:
-    when: op:SetActive is invoked with a meeting
+    when: op:SetActive is invoked with a meeting other than the one the call already advertises
     then: call layer is updated with meeting DXN as activity payload
 
   req F-2.3:
@@ -185,19 +184,19 @@ feat F-3: Real-Time Transcription
 
   req F-3.1:
     when: user joins a call
-    then: TranscriptionManager is opened and stored in plugin state
+    then: the call's transcript sink enriches each segment with entity extraction before it is written
 
   req F-3.2:
     when: HandlePayload is received with transcriptionEnabled: true
-    then: transcription starts writing to the linked Transcript feed
+    then: each participant's own native transcript segments are written to the linked Transcript feed
 
   req F-3.3:
-    when: user's speaking state changes
-    then: TranscriptionManager.setRecording is called with the current value
+    when: HandlePayload is received without transcriptionEnabled
+    then: the transcription state is unchanged
 
   req F-3.4:
     when: user leaves the call
-    then: TranscriptionManager is closed and plugin state is reset
+    then: the transcript sink is unbound and plugin state is reset
 ```
 
 ```mdl
@@ -277,8 +276,8 @@ scenario T-4: Handle incoming payload
   when: op:HandlePayload is invoked with meetingId, transcriptDXN, and transcriptionEnabled: true
   then:
     - state.activeMeeting resolves to the correct Meeting
-    - TranscriptionManager.setFeed is called with the resolved Feed
-    - TranscriptionManager.setEnabled is called with true
+    - the call manager's transcript feed is the resolved Feed
+    - the call manager's transcription is enabled
 ```
 
 ```mdl
@@ -305,11 +304,11 @@ scenario T-6: Regenerate summary
 scenario T-7: Transcription lifecycle
   given: user is in a call
   when: user joins the call
-  then: TranscriptionManager is opened and stored in state
+  then: the call manager's transcript enricher is set
 
   when: user leaves the call
   then:
-    - TranscriptionManager is closed
+    - the call manager's transcript feed and enricher are cleared
     - plugin state is reset to empty
 ```
 
@@ -481,6 +480,24 @@ decision D-4: QA-2 makes the meeting active before adding the colleagues, and bi
   affects: [QA-2]
   why: An agent runs QA-2's invoke literally, so it must match the operation's input and the active meeting.
   source: https://github.com/dxos/dxos/pull/14040
+```
+
+```mdl
+decision D-5: A call's transcript comes from RealtimeKit's native transcription instead of each client recording its microphone: each participant writes its own segments to the linked Transcript feed, enriched with entity extraction, and the transcription toggle is meeting-wide.
+  date: 2026-10-23
+  by: user:mykola-vrmchk
+  affects: [F-3, F-3.1, F-3.2, F-3.4, T-4, T-7, MeetingState]
+  source: https://github.com/dxos/dxos/pull/12046
+```
+
+```mdl
+decision D-6: A meeting payload without `transcriptionEnabled` leaves transcription as it is, and SetActive does not re-announce the meeting the call already advertises. Fills in [D-5].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-2.2, F-3.3]
+  why: The meeting activity is one last-write-wins value, so a bare meeting selection would otherwise switch transcription off for everyone.
+  source: https://github.com/dxos/dxos/pull/12046
 ```
 
 ## Appendix: Extension Definitions

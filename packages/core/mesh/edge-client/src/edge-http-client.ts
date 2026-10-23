@@ -97,6 +97,22 @@ export type CreateApiTokenResponse = {
   expiresAt?: number | null;
 };
 
+export type JoinCallRoomRequest = {
+  /** DXN of the object anchoring the call (e.g. a Meeting); also the swarm room id. */
+  roomId: string;
+  /** HALO device key hex (== swarm `UserState.id`), bound to the RealtimeKit participant. */
+  deviceKey: string;
+  /** Meeting id the swarm already agreed on; the first joiner omits it. */
+  meetingId?: string;
+};
+
+export type JoinCallRoomResponse = {
+  /** RealtimeKit meeting id, to advertise to the swarm. */
+  meetingId: string;
+  /** Participant token for `RealtimeKitClient.init`. */
+  authToken: string;
+};
+
 export type TriggersDispatcherStatus = {
   isActive: boolean;
   nextCronTaskRunTimestamp?: number;
@@ -917,6 +933,27 @@ export class EdgeHttpClient extends BaseHttpClient {
       method: 'POST',
       auth: true,
       ...args,
+    });
+  }
+
+  //
+  // Calls
+  //
+
+  /**
+   * Joins a call room on Cloudflare RealtimeKit through calls-service, which creates the meeting for the first
+   * joiner and mints a participant token named after this client's identity.
+   */
+  public async joinCallRoom(
+    ctx: Context,
+    request: JoinCallRoomRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<JoinCallRoomResponse> {
+    return this._call(ctx, new URL('/calls/rooms/join', this.baseUrl), {
+      ...args,
+      body: request,
+      method: 'POST',
+      auth: true,
     });
   }
 

@@ -18,7 +18,7 @@ export type CallProperties = {
   onJoin: (state: { channel?: Channel.Channel; roomId?: string }) => Promise<void>;
   onLeave: (roomId?: string) => Promise<void>;
   onCallStateUpdated: (callState: CallState) => Promise<void>;
-  onMediaStateUpdated: ([mediaState, isSpeaking]: [MediaState, boolean]) => Promise<void>;
+  onMediaStateUpdated?: ([mediaState, isSpeaking]: [MediaState, boolean]) => Promise<void>;
 };
 
 export const EventHandler = Capability.makeSingleton<CallProperties>()(`${meta.profile.key}.capability.callExtension`);

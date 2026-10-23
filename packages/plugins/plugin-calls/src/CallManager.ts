@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-export { CallManager, type GlobalState } from './calls/call-manager.ts';
+export { CallManager, type GlobalState, type TranscriptMessageEnricher } from './calls/call-manager.ts';
 export {
   type SimulatedAvatar,
   type SimulatedAvatarRenderer,

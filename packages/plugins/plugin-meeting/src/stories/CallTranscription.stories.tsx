@@ -4,13 +4,13 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
@@ -20,10 +20,9 @@ import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
-import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
 import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { Config } from '@dxos/react-client';
-import { getSpace, useSpaces } from '@dxos/react-client/echo';
+import { useSpaces } from '@dxos/react-client/echo';
 import * as Button from '@dxos/react-ui/Button';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -53,84 +52,63 @@ type CallTranscriptionViewProps = {
 };
 
 /**
- * Two-column live view: the call's video/participant grid beside the meeting hub whose Transcript
- * tab reflects the live transcript feed. A story-local toolbar joins the call and toggles recording.
+ * Two-column live view: the call's video/participant grid beside the meeting hub whose Transcript tab reflects the
+ * live feed. The toolbar drives the production path: `join()` opens a RealtimeKit meeting through EDGE, and toggling
+ * transcription publishes the meeting activity that binds the feed, after which each participant's native segments
+ * reach it through the call manager. Needs a network, a microphone and an EDGE serving `/calls/rooms/join`.
  */
 const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewProps) => {
   const callManager = Hooks.useCapabilities(CallsCapabilities.Manager)[0];
-  const transcriptionManagerProvider = Hooks.useCapabilities(TranscriptionCapabilities.TranscriptionManagerProvider)[0];
   const roomId = Obj.getURI(meeting);
 
-  const space = getSpace(transcript);
-  const feed = transcript.feed.target;
+  const [joined, setJoined] = useState(false);
+  const [transcribing, setTranscribing] = useState(false);
 
-  // Create the same TranscriptionManager service that plugin-meeting uses in production (via the
-  // call-extension) and bind it to the transcript's feed; the story drives it directly.
-  const managerRef = useRef<TranscriptionCapabilities.TranscriptionManager | undefined>(undefined);
-  useEffect(() => {
-    if (!transcriptionManagerProvider || !space || !feed) {
-      return;
-    }
-    const manager = transcriptionManagerProvider({});
-    manager.setFeed(space.db, feed);
-    void manager.open();
-    managerRef.current = manager;
-    return () => {
-      void manager.close();
-      managerRef.current = undefined;
-    };
-  }, [transcriptionManagerProvider, space, feed]);
-
-  // Toggle mic capture into the manager (production sources the track from the call instead).
-  const [recording, setRecording] = useState(false);
-  const trackRef = useRef<MediaStreamTrack | undefined>(undefined);
-  const toggleRecording = useCallback(async () => {
-    const manager = managerRef.current;
-    if (!manager) {
-      return;
-    }
-    if (recording) {
-      manager.setRecording(false);
-      await manager.setAudioTrack(undefined);
-      trackRef.current?.stop();
-      trackRef.current = undefined;
-      setRecording(false);
-    } else {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true }).catch((err) => log.catch(err));
-      const track = stream?.getAudioTracks()[0];
-      if (!track) {
-        return;
-      }
-      trackRef.current = track;
-      await manager.setEnabled(true);
-      await manager.setAudioTrack(track);
-      manager.setRecording(true);
-      setRecording(true);
-    }
-  }, [recording]);
-
-  const handleStartCall = useCallback(async () => {
+  const handleToggleCall = useCallback(async () => {
     if (!callManager) {
       return;
     }
-    callManager.setRoomId(roomId);
-    await callManager.join().catch((err) => log.catch(err));
-  }, [callManager, roomId]);
+    if (joined) {
+      await callManager.leave().catch((err) => log.catch(err));
+      setJoined(false);
+      setTranscribing(false);
+    } else {
+      callManager.setRoomId(roomId);
+      await callManager.join().catch((err) => log.catch(err));
+      setJoined(true);
+    }
+  }, [callManager, joined, roomId]);
+
+  const handleToggleTranscription = useCallback(() => {
+    const feed = transcript.feed.target;
+    const feedUri = feed && Feed.getFeedUri(feed);
+    const typename = Type.getTypename(Meeting.Meeting);
+    if (!callManager || !feedUri || !typename) {
+      return;
+    }
+    const next = !transcribing;
+    callManager.setActivity(typename, {
+      meetingId: roomId,
+      transcriptDxn: feedUri.toString(),
+      transcriptionEnabled: next,
+    });
+    setTranscribing(next);
+  }, [callManager, transcribing, transcript, roomId]);
 
   return (
     <div className='dx-expand flex flex-col gap-2'>
       <Toolbar.Root>
         <Button.Root
-          icon='ph--phone-call--regular'
-          label='Start call'
+          icon={joined ? 'ph--phone-x--regular' : 'ph--phone-call--regular'}
+          label={joined ? 'Leave call' : 'Start call'}
           disabled={!callManager}
-          onClick={handleStartCall}
+          onClick={handleToggleCall}
         />
-        {/* TODO(burdon): Replace with SystemIconButton.Mic. */}
         <Button.Root
-          icon={recording ? 'ph--stop--regular' : 'ph--microphone--regular'}
-          label={recording ? 'Stop transcription' : 'Start transcription'}
-          onClick={toggleRecording}
+          icon={transcribing ? 'ph--subtitles-slash--regular' : 'ph--subtitles--regular'}
+          label={transcribing ? 'Stop transcription' : 'Start transcription'}
+          disabled={!joined}
+          onClick={handleToggleTranscription}
         />
       </Toolbar.Root>
       <div className='grid grid-cols-2 gap-2 dx-grow'>
@@ -164,7 +142,6 @@ const meta = {
             runtime: {
               services: {
                 edge: { url: 'https://dev.dxos.network/' },
-                iceProviders: [{ urls: 'https://dxos.network/ice' }],
               },
             },
           }),

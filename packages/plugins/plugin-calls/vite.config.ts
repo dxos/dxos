@@ -23,5 +23,9 @@ export default defineConfig({
     'types': 'src/types/index.ts',
   },
   jsx: 'react',
-  test: { node: true },
+  test: {
+    node: true,
+    // The plugin-load smoke test boots a whole client, which only the node project has time for.
+    browser: { browsers: ['chromium'], include: ['src/**/*.browser.test.ts'] },
+  },
 });

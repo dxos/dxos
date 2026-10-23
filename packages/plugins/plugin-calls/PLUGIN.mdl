@@ -10,9 +10,9 @@ WebRTC video / audio conferencing for `DXOS` Composer, plus a slim, persistent
 `plugin-calls` is **meeting-agnostic**: it owns everything required to join,
 render, and leave a multi-party real-time call, and a slim persistent `Call`
 ECHO type that holds only a transport descriptor (`{ name?, created, transport }`).
-The live transport (Cloudflare Calls / WebRTC) is one pluggable
+The live transport (Cloudflare RealtimeKit / WebRTC) is one pluggable
 `CallTransportProvider`; the `Call` persists which transport it uses and that
-provider's reconnection config (e.g. SFU room id) so a call is **resumable**.
+provider's reconnection config (e.g. meeting id) so a call is **resumable**.
 This mirrors the `Channel.backend` pluggable-backend pattern in `plugin-thread`.
 
 A `Call` carries **no** notes / summary / transcript / participants — those live
@@ -149,7 +149,7 @@ type TrackInfo
 
 ```mdl
 type SessionId
-  desc: Opaque identifier for a Cloudflare Calls SFU session.
+  desc: Opaque identifier for the room's RealtimeKit meeting, agreed through the swarm.
   fields:
     value: string
 ```
@@ -163,7 +163,7 @@ type TrackId
 
 ```mdl
 type LocalTrack
-  desc: A media track produced by the local device and pushed to the SFU.
+  desc: A media track produced by the local device and published to the meeting.
   fields:
     id: TrackId
     kind: "audio" | "video" | "screenshare"
@@ -172,7 +172,7 @@ type LocalTrack
 
 ```mdl
 type RemoteTrack
-  desc: A media track received from a remote participant via the SFU.
+  desc: A media track received from a remote participant via the meeting.
   fields:
     id: TrackId
     kind: "audio" | "video" | "screenshare"
@@ -326,25 +326,43 @@ component CallDebugPanel
 ## Services
 
 ```mdl
-service CallsService
+service RoomJoiner
   desc: |
-    HTTP client for the Cloudflare Calls SFU. Provisions tracks for a session,
-    pulls remote tracks, and tears them down on leave.
+    Joins a room on EDGE (`POST /calls/rooms/join`, authenticated as the caller). EDGE
+    creates the RealtimeKit meeting for the first joiner and mints a participant token
+    named after the caller's identity, with the device key as its participant id.
   ops:
-    createSession() → SessionId
-    pushTracks(session: SessionId, tracks: LocalTrack[]) → RemoteTrack[]
-    pullTracks(session: SessionId, ids: TrackId[]) → MediaStreamTrack[]
-    closeSession(session: SessionId)
+    join(roomId: RoomId, deviceKey: string, meetingId?: SessionId) → { meetingId: SessionId, authToken: string }
   errors:
-    SessionUnavailable: SFU rejected the session
+    SessionUnavailable: EDGE or RealtimeKit refused the join
   effects: [http]
+```
+
+```mdl
+service MediaTransport
+  desc: |
+    The call's media backend (RealtimeKit; a fake in tests). Publishes local tracks,
+    exposes the remote tracks in its roster keyed by device key, signals roster
+    changes, and delivers native transcription segments.
+  ops:
+    open()
+    close()
+    pushTrack(track: MediaStreamTrack | null) → LocalTrack
+    setScreenShareEnabled(enabled: boolean) → LocalTrack?
+    getRemoteTracks() → RemoteTrack[]
+    subscribeMediaChanges(callback) → unsubscribe
+    subscribeTranscripts(callback) → unsubscribe
+  errors:
+    SessionUnavailable: the meeting could not be joined
+  effects: [network, device]
 ```
 
 ```mdl
 service CallSwarmSynchronizer
   desc: |
     Discovers peers in a room via DXOS swarm signalling and shares each
-    peer's TrackBundle so remote tracks can be pulled from the SFU.
+    peer's TrackBundle and the room's meeting id, so every peer joins the same
+    RealtimeKit meeting and the UI resolves remote tracks by advertised name.
   ops:
     join(roomId: RoomId) → Participant[]
     leave(roomId: RoomId)
@@ -396,7 +414,7 @@ op startCall
   errors:
     DisplayNameMissing: identity has no display name set
     PermissionDenied: media permission denied
-    SessionUnavailable: SFU unreachable
+    SessionUnavailable: RealtimeKit unreachable
 ```
 
 ```mdl
@@ -682,7 +700,7 @@ scenario T-1: Join a call from a Channel
     - CallState.joined === true
     - CallState.roomId === DXN(channel)
     - "Active Call" deck companion appears
-    - local audio + video tracks are published to the SFU
+    - local audio + video tracks are published to the RealtimeKit meeting
 ```
 
 ```mdl
@@ -969,6 +987,36 @@ decision D-10: react-ui-experimental exports the agent visualizations as its `Av
   by: user:richburdon
   affects: [op:SetSimulatedParticipants]
   source: https://github.com/dxos/dxos/pull/14040
+```
+
+```mdl
+decision D-11: Calls move to Cloudflare RealtimeKit for their media and for native meeting transcription.
+  date: 2026-10-23
+  by: user:mykola-vrmchk
+  affects: [service:MediaTransport]
+  source: https://github.com/dxos/dxos/pull/12046
+```
+
+```mdl
+decision D-12: RealtimeKit sits behind a `MediaTransport`, and a room maps to one RealtimeKit meeting, whose id the first joiner mints through EDGE and advertises on the swarm for the others; the swarm stays the source of presence. Fills in [D-11].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [service:RoomJoiner, service:MediaTransport, service:CallSwarmSynchronizer, type:SessionId]
+  why: EDGE minting the participant token keeps the RealtimeKit API token off clients, and the swarm already carries per-room state.
+  rejected:
+    - Keeping the Cloudflare Calls SFU client as a second transport: RealtimeKit has no pull-by-track-name model, so `MediaManager` would need two reconciliation paths.
+  source: https://github.com/dxos/dxos/pull/12046
+```
+
+```mdl
+decision D-13: Native transcription reaches every participant, and each one appends only its own segments to the meeting's transcript feed. Fills in [D-11].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [service:MediaTransport]
+  why: Writing by speaker stores each segment once with no writer to elect, so a participant leaving opens no gap.
+  source: https://github.com/dxos/dxos/pull/12046
 ```
 
 ## Appendix: Extension Definitions
