@@ -27,7 +27,8 @@ runs:
         echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
 
     - name: Restore the package cache
-      uses: actions/cache@v5
+      id: restore
+      uses: actions/cache/restore@v5
       with:
         path: ${{ steps.apt.outputs.dir }}
         key: playwright-apt-${{ runner.arch }}-${{ steps.apt.outputs.image }}-${{ inputs.browser }}-${{ steps.apt.outputs.version }}
@@ -40,9 +41,8 @@ runs:
         BROWSER: ${{ inputs.browser }}
       run: pnpm exec playwright install --with-deps "$BROWSER"
 
-    # apt leaves `partial/` and `lock` owned by root, which the cache's post-job save cannot read.
+    # apt leaves `partial/` and `lock` owned by root, which the cache save cannot read.
     - name: Release the package cache
-      if: ${{ always() }}
       shell: bash
       env:
         DIR: ${{ steps.apt.outputs.dir }}
@@ -50,3 +50,11 @@ runs:
         sudo rm -rf "$DIR/partial" "$DIR/lock"
         sudo chown -R "$(id -u):$(id -g)" "$DIR"
         echo "Cached $(find "$DIR" -name '*.deb' | wc -l) packages, $(du -sh "$DIR" | cut -f1)."
+
+    # Saved here rather than in a post-job step, which a cell that later times out skips.
+    - name: Save the package cache
+      if: ${{ steps.restore.outputs.cache-hit != 'true' }}
+      uses: actions/cache/save@v5
+      with:
+        path: ${{ steps.apt.outputs.dir }}
+        key: ${{ steps.restore.outputs.cache-primary-key }}
