@@ -31,7 +31,7 @@ type Story = StoryObj<typeof meta>;
 
 const DATA_URI_IMAGE = '[style*="data:image/svg+xml"]';
 
-/** Steps through every owned layout to the linked documents. */
+/** Steps through every owned layout (image-right, image over text, full-bleed image) to the linked documents. */
 export const Demo: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -50,10 +50,12 @@ export const Demo: Story = {
 
     await next(6);
     await expect(await canvas.findByRole('heading', { name: 'Columns' })).toBeVisible();
+    await waitFor(() => expect(canvasElement.querySelector('[data-layout="image-right"] [data-image]')).not.toBeNull());
     await waitFor(() => expect(canvasElement.querySelector(DATA_URI_IMAGE)).not.toBeNull());
 
     await next(7);
     await expect(await canvas.findByRole('heading', { name: 'Rows' })).toBeVisible();
+    await waitFor(() => expect(canvasElement.querySelector('[data-layout="image"]')).not.toBeNull());
     await waitFor(() => expect(canvasElement.querySelector(DATA_URI_IMAGE)).not.toBeNull());
 
     await next(8);

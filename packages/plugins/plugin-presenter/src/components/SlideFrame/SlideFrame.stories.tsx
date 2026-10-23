@@ -9,13 +9,13 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { createSlide } from '#testing';
 
-import { Slide, type SlideProps } from '../Slide/index.ts';
+import { MarkdownSlide, type MarkdownSlideProps } from '../MarkdownSlide/index.ts';
 import { SlideFrame } from './SlideFrame.tsx';
 
-const DefaultStory = ({ content = '' }: SlideProps) => {
+const DefaultStory = ({ content = '' }: MarkdownSlideProps) => {
   return (
     <SlideFrame classNames='bg-scrim-surface'>
-      <Slide content={content} />
+      <MarkdownSlide content={content} />
     </SlideFrame>
   );
 };

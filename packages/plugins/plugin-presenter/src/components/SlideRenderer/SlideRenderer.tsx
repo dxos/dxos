@@ -16,7 +16,7 @@ import { type Text } from '@dxos/schema';
 import { type SlideSource } from '#deck';
 import { meta } from '#meta';
 
-import { Slide } from '../Slide/index.ts';
+import { MarkdownSlide } from '../MarkdownSlide/index.ts';
 import { SlideFrame } from '../SlideFrame/index.ts';
 
 export type SlideRendererProps = {
@@ -42,7 +42,7 @@ const TextSlide = ({ text }: { text: Text.Text }) => {
   const [content] = useObject(text, 'content');
   return (
     <SlideFrame>
-      <Slide content={content} />
+      <MarkdownSlide content={content} />
     </SlideFrame>
   );
 };

@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useMemo } from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, waitFor, within } from 'storybook/test';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -24,12 +24,12 @@ import { Text } from '@dxos/schema';
 import { type SlideSource } from '#deck';
 import { translations } from '#translations';
 
-import { Slide } from '../Slide/index.ts';
+import { MarkdownSlide } from '../MarkdownSlide/index.ts';
 import { SlideRenderer } from './SlideRenderer.tsx';
 
 const DocumentSlide = ({ subject }: { subject: Markdown.Document }) => {
   const [content] = useObject(subject.content, 'content');
-  return <Slide content={content} />;
+  return <MarkdownSlide content={content ?? ''} />;
 };
 
 const createSlidePlugin = (options: { gated?: boolean } = {}) =>
@@ -55,13 +55,13 @@ const createSlidePlugin = (options: { gated?: boolean } = {}) =>
     Plugin.make,
   );
 
-type StoryProps = { kind: SlideSource['kind'] | 'unmatched' };
+type StoryProps = { kind: SlideSource['kind'] | 'unmatched'; content?: string };
 
-const DefaultStory = ({ kind }: StoryProps) => {
+const DefaultStory = ({ kind, content }: StoryProps) => {
   const source = useMemo((): SlideSource => {
     switch (kind) {
       case 'text':
-        return { kind, id: 'text', text: Text.make({ content: '# Owned slide' }) };
+        return { kind, id: 'text', text: Text.make({ content: content ?? '# Owned slide' }) };
       case 'object':
         return {
           kind: 'object',
@@ -73,7 +73,7 @@ const DefaultStory = ({ kind }: StoryProps) => {
       case 'pending':
         return { kind, id: 'pending' };
     }
-  }, [kind]);
+  }, [kind, content]);
 
   return (
     <>
@@ -108,6 +108,17 @@ export const Text_: Story = {
   args: { kind: 'text' },
   play: async ({ canvasElement }) => {
     await expect(await within(canvasElement).findByText('Owned slide')).toBeVisible();
+  },
+};
+
+/** An unrecognised `layout` falls back to the default layout rather than failing. */
+export const UnknownLayout: Story = {
+  decorators: [withSlideSurface],
+  args: { kind: 'text', content: '---\nlayout: nope\n---\n# Fallback slide' },
+  play: async ({ canvasElement }) => {
+    await expect(await within(canvasElement).findByRole('heading', { name: 'Fallback slide' })).toBeVisible();
+    await waitFor(() => expect(canvasElement.querySelector('[data-layout="default"]')).not.toBeNull());
+    await expect(canvasElement.querySelector('[data-layout="nope"]')).toBeNull();
   },
 };
 

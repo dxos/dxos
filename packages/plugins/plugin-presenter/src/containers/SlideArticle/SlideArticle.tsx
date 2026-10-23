@@ -8,7 +8,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useObject } from '@dxos/echo-react';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
 
-import { Slide } from '#components';
+import { MarkdownSlide } from '#components';
 
 export type SlideArticleProps = AppSurface.ObjectSectionProps<Markdown.Document>;
 
@@ -19,7 +19,7 @@ export const SlideArticle = ({ subject: document }: SlideArticleProps) => {
     return null;
   }
 
-  return <Slide content={content} />;
+  return <MarkdownSlide content={content} />;
 };
 
 SlideArticle.displayName = 'SlideArticle';
