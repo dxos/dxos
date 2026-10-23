@@ -1,26 +1,20 @@
 $schema: https://moonrepo.dev/schemas/tasks.json
 tasks:
-  # What a dependent's tests load from this project: its source without its own tests and stories, and the
-  # configs that decide how that source is transformed and built. `test` and `test-workerd` key on this chain,
-  # not on `^:build`, whose hash also takes in every test, story and spec file. `cacheStrategy: hash` because
-  # moon leaves a task without outputs out of its dependents' hash by default.
+  # What a dependent's tests load from this project: its production source, and the configs that decide how
+  # that source is transformed and built. `test` and `test-workerd` key on this chain, not on `^:build`, whose
+  # hash also takes in every test, story and spec file. `cacheStrategy: hash` because moon leaves a task
+  # without outputs out of its dependents' hash by default.
   source-hash:
     command: noop
     deps:
       - target: ^:source-hash
         cacheStrategy: hash
     inputs:
-      - src/**/*
-      - '!src/**/*.test.ts'
-      - '!src/**/*.test.tsx'
-      - '!src/**/*.spec.ts'
-      - '!src/**/*.stories.tsx'
-      - '!src/stories/**/*'
-      - '!src/test/**/*'
+      - '@group(production)'
       - tsconfig.json
       - vite.config.ts
 
-# The projects with a `build` a dependent's tests can read from. Wider would cycle: storybook-react depends
-# on every package, and the packages' `e2e` tasks depend on it.
+# Every project a test can depend on. Not all projects: storybook-react depends on every package, and the
+# packages' `e2e` tasks depend on it.
 inheritedBy:
-  tags: [ts-vite-build, ts-compile, vendor]
+  tags: [ts-compile, ts-test, ts-vite-build, vendor]
