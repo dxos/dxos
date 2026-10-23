@@ -42,13 +42,13 @@ export const SlidePreview = ({ subject }: SlidePreviewProps) => {
   return (
     <div
       data-testid='presenter.slide-editor.preview'
-      className='relative flex size-full p-4 overflow-hidden bg-scrim-surface'
+      className='relative flex size-full p-4 overflow-hidden bg-deck-surface'
     >
       {/* Outside a click group every step shows, so the slide reads as it will once fully revealed. */}
       <SlideRenderer
         source={source}
-        // A different tone around the slide shows where the 16:9 canvas ends.
-        frameClassNames='bg-scrim-surface'
+        // The frame lets the wrapper's solid void show on every side of the 16:9 slide.
+        frameClassNames='bg-transparent'
         step={step === 0 ? undefined : step}
         activeSlot={activeSlot}
         onSourceClick={handleSourceClick}
