@@ -37,8 +37,8 @@ that served it: models change mid-session and the name must stay stable across t
 ## Rules
 
 1. **Every change to a spec adds a decision.** A change to anything outside `## Changelog` comes
-   with at least one new entry in the same change. The check in
-   `packages/reflect/deus/scripts/check-changelog.ts` enforces this in CI. Trivial edits are exempt:
+   with at least one new entry in the same change. The check
+   `pnpm deus changelog check` enforces this in CI. Trivial edits are exempt:
    whitespace, and fixes of at most 3 words by 1–2 letters each, excluding words with digits and
    normative words. A bulk mechanical edit may be waived with a `Spec-Changelog-Skip: <reason>`
    commit trailer.

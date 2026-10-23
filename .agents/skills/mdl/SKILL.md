@@ -148,15 +148,16 @@ decided", or "agent:claude-code decided for user:alice; not approved yet". Never
 
 ## Checking your work
 
-Run both checks before you commit:
+Run both checks from the repo root before you commit (`dx deus …` is the same command tree):
 
 ```bash
-node packages/reflect/deus/scripts/check-changelog.ts
-node packages/reflect/deus/scripts/lint-mdl.ts --only mdl/decision <file.mdl>...
+pnpm deus changelog check
+pnpm deus lint --only mdl/decision <file.mdl>...
 ```
 
-`check-changelog.ts` compares every changed `.mdl` file with the merge base of `origin/main`,
-uncommitted edits included. CI runs the same script as **Check spec changelogs**. It fails when:
+`deus changelog check` compares every changed `.mdl` file with the merge base of `origin/main`
+(`--base <ref>` or `MDL_BASE_REF` picks another), uncommitted edits included. CI runs the same
+command as **Check spec changelogs**. It fails when:
 
 - the spec changed outside `## Changelog` beyond a trivial edit, no decision was added, and no
   branch commit carries `Spec-Changelog-Skip`;
@@ -169,7 +170,7 @@ It skips language definitions (`packages/reflect/deus/lang/`), review rules (`ru
 fixtures. Only `decision` blocks under `## Changelog` count as the log. Example decisions elsewhere
 in the document are ignored.
 
-`lint-mdl.ts` runs the editor's checks. With `--only mdl/decision` it reports a `decision` with no
+`deus lint` runs the editor's checks. With `--only mdl/decision` it reports a `decision` with no
 typed `by:`, an `agent:` decision with no `for:`, a `for:` on a `user:` decision or one that names
 an agent. Without `--only` it also runs the block-type
 check. That check knows only the built-in types, so it flags dialect blocks such as `node` or

@@ -7194,6 +7194,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../common/context
+      '@dxos/deus':
+        specifier: workspace:*
+        version: link:../../reflect/deus
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
@@ -19723,9 +19726,18 @@ importers:
       '@codemirror/view':
         specifier: 'catalog:'
         version: 6.43.13
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
+      '@effect/platform-node':
+        specifier: 'catalog:'
+        version: 4.0.4(effect@4.0.4)
       '@lezer/lr':
         specifier: ^1.4.10
         version: 1.4.10
+      effect:
+        specifier: 4.0.4
+        version: 4.0.4
     devDependencies:
       '@lezer/generator':
         specifier: 'catalog:'

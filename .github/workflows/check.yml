@@ -141,7 +141,7 @@ jobs:
         if: ${{ !cancelled() && steps.affected.outcome == 'success' }}
         env:
           MDL_BASE_REF: ${{ github.event.pull_request.base.sha }}
-        run: node packages/reflect/deus/scripts/check-changelog.ts
+        run: pnpm deus changelog check
 
       - name: Check version files in sync
         if: ${{ !cancelled() && steps.affected.outcome == 'success' }}
