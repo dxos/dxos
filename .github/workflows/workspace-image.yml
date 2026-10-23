@@ -33,6 +33,9 @@ env:
   # are denied there. Until then the images are OCI artifacts in the public `gh-actions` package, pulled
   # anonymously over plain HTTPS, still without Docker.
   ARTIFACT_REPO: ghcr.io/dxos/gh-actions
+  # Pinned: on an overlay the workspace is its own filesystem, and pnpm then picks a store on it, which no
+  # longer matches node_modules/.modules.yaml and makes it recreate node_modules from scratch.
+  npm_config_store_dir: /home/runner/.local/share/pnpm/store
   ORAS_VERSION: 1.2.3
 
 concurrency:
@@ -71,7 +74,7 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
 
-      # Only source, .git and node_modules: build outputs, moon's cache and the certificates the setup
+      # Source, .git and node_modules only at this point: untracked leftovers and the certificates the setup
       # action wrote must not ship. The stat settings keep the index valid once inodes and ctimes change.
       - name: Strip to source and dependencies
         run: |
@@ -79,6 +82,18 @@ jobs:
           git config core.checkStat minimal
           git config core.trustctime false
           du -sh --apparent-size . .git
+
+      # Outputs and moon's local cache ship with the image, so unchanged projects hit locally. The certificates
+      # exist only for this step.
+      - name: Build into moon's local cache
+        run: |
+          mkdir -p .moon/certs
+          printf '%s\n' "$MOON_CACHE_CA_PEM" > .moon/certs/ca.pem
+          printf '%s\n' "$MOON_CACHE_CLIENT_PEM" > .moon/certs/client.pem
+          printf '%s\n' "$MOON_CACHE_CLIENT_KEY" > .moon/certs/client.key
+          moon exec --on-failure continue :build || echo "::warning:::build failed; shipping the partial cache"
+          rm -rf .moon/certs
+          du -sh .moon/cache
 
       # node and pnpm on PATH from the image, since `moon setup` installs them without proto's bins.
       - name: Link toolchain binaries
@@ -234,7 +249,7 @@ jobs:
           bytes=$(find node_modules/.pnpm -type f -print0 | xargs -0 cat | wc -c)
           echo "read $((bytes / 1000000)) MB in ${SECONDS}s"
 
-      # A real suite, run directly so moon's cache cannot skip it.
+      # A real suite: the passthrough argument changes the task's hash, so this one runs while its
+      # dependencies still come from cache.
       - name: Test (client)
-        working-directory: packages/sdk/client
-        run: pnpm exec vitest run --reporter=dot || true
+        run: moon run client:test -- --reporter=dot || true
