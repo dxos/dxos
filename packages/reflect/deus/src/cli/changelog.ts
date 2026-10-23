@@ -17,8 +17,8 @@ import { git, lines } from './git.ts';
 /** A commit trailer that waives the missing-decision rule for a bulk mechanical edit; append-only rules still apply. */
 export const WAIVER = 'Spec-Changelog-Skip';
 
-/** Language definitions, review rules and test fixtures are .mdl files but not specs. */
-const EXEMPT = [/^packages\/reflect\/deus\/lang\//, /\/__fixtures__\//, /(^|\/)rules\//];
+/** Language definitions, review rules, spec reviews and test fixtures are .mdl files but not specs. */
+const EXEMPT = [/^packages\/reflect\/deus\/lang\//, /\/__fixtures__\//, /(^|\/)rules\//, /\.review\.mdl$/];
 
 export const DEFAULT_BASE_REF = 'origin/main';
 

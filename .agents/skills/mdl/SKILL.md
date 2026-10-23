@@ -51,9 +51,11 @@ reworded requirements and spec-sync reconciliation. CI rejects a changed spec wi
   1–2 letters each (`recieved` → `received`). The check decides this, not you. A changed word that
   contains a digit (an id such as `F-1.2`, a number) or is a normative word (`must`, `not`,
   `never`, `only`, …) is never trivial.
-- **Escape hatch: the `Spec-Changelog-Skip` commit trailer.** Use it only for a bulk mechanical
-  edit that changes no requirement, such as a rename across many specs or a reformat. Do not use
-  it for a change that is real but small, and do not use it to avoid asking who made a decision.
+- **Escape hatch: the `Spec-Changelog-Skip` commit trailer.** Use it only for an edit that changes
+  no requirement: a bulk mechanical edit, such as a rename across many specs or a reformat, or a
+  change with no spec decision behind it, such as a new diagram or reorganized sections (see
+  "Record spec decisions, never process"). Do not use it for a change that is real but small, and
+  do not use it to avoid asking who made a decision.
   Add the trailer, with a reason, to a commit on the branch:
 
   ```
@@ -70,6 +72,24 @@ reworded requirements and spec-sync reconciliation. CI rejects a changed spec wi
 ```
 | `decision` | `org.dxos.mdl.decision@1.0` |
 ```
+
+### Record spec decisions, never process
+
+A decision is a choice about the system the spec describes: its behavior, requirements, structure,
+interfaces, data, tests, or the reason for one of those. How you or the person worked on the spec or
+its code is not a decision, so it never goes in the log:
+
+- which tool, skill or format to use ("use the sharing-specs skill", "draw it with the illustrator");
+- how the spec is shared, published or reviewed ("share it as an Artifact");
+- which PR, branch or repository a change goes in, or that it continues earlier work;
+- that the document should exist, have diagrams, or be reorganized;
+- the order of tasks, or "fix it properly" with nothing about what the system must do.
+
+When a person's instruction is only about process, follow it and record nothing. When it mixes
+both, record only the spec part ("trace askAgent" is process; "askAgent reports its timings" is
+spec). A spec change with no decision behind it, such as a new diagram, carries the
+`Spec-Changelog-Skip` trailer (below). A spec whose system is itself a process (Deus, a review
+harness, a workflow) records decisions about that process; that is its subject, not your process.
 
 ### Separate the person's knowledge from yours
 
@@ -148,12 +168,19 @@ decided", or "agent:claude-code decided for user:alice; not approved yet". Never
 
 ## Checking your work
 
-Run both checks from the repo root before you commit (`dx deus …` is the same command tree):
+Run all three checks from the repo root before you commit (`dx deus …` is the same command tree):
 
 ```bash
 pnpm deus changelog check
 pnpm deus lint --only mdl/decision <file.mdl>...
+node .agents/skills/mdl/scripts/check-decisions.ts
 ```
+
+`check-decisions.ts` (in this skill's `scripts/`) asks TypeSafe System One whether each decision your branch adds records
+process instead of a spec decision, and fails at a probability of 0.8 or more. It needs
+`TYPESAFE_API_KEY` (`1password` skill); without it, it passes with a notice. Pass file paths to
+judge every decision in those files, with each probability printed. CI runs it as **Check spec
+decisions**. When it flags a decision, remove the process from it, or remove the entry.
 
 `deus changelog check` compares every changed `.mdl` file with the merge base of `origin/main`
 (`--base <ref>` or `MDL_BASE_REF` picks another), uncommitted edits included. CI runs the same

@@ -14,7 +14,7 @@ import * as Path from 'effect/Path';
 import { describe, test } from 'vitest';
 
 import { git } from './git.ts';
-import { ChangelogCheckError, LintError, QaLintError, checkChangelog, deus } from './index.ts';
+import { ChangelogCheckError, LintError, QaLintError, ReviewCheckError, checkChangelog, deus } from './index.ts';
 
 const FIXTURES = new URL('./__fixtures__/', import.meta.url).pathname;
 const QA_LIST = `${FIXTURES}qa-list`;
@@ -138,6 +138,35 @@ describe('deus qa lint', () => {
   test('--check rejects an unknown lint', async ({ expect }) => {
     const { exit } = await run(['qa', 'lint', '--root', root, '--check', 'nope']);
     expect(CliError.isCliError(failure(exit))).toBe(true);
+  });
+});
+
+describe('deus review', () => {
+  const dir = `${FIXTURES}review`;
+
+  test('items lists reqs in place of their feat, plus other reviewed blocks', async ({ expect }) => {
+    const { exit, output } = await run(['review', 'items', `${dir}/SPEC.mdl`]);
+    expect(Exit.isSuccess(exit)).toBe(true);
+    expect(output.map((line) => line.split('\t').slice(0, 2).join(' '))).toEqual([
+      'F-1.1 req',
+      'F-1.2 req',
+      'Greet op',
+      'QA-1 test',
+    ]);
+  });
+
+  test('check reports every broken verdict and each item without one', async ({ expect }) => {
+    const { exit, output } = await run(['review', 'check', `${dir}/SPEC.review.mdl`]);
+    expect(ReviewCheckError.is(failure(exit))).toBe(true);
+    const errors = output.filter((line) => line.startsWith('error: '));
+    expect(errors.map((line) => line.replace(/^error: .*?:\d+: /, ''))).toEqual([
+      'F-1.2 is partial but has no note saying what is missing or different',
+      'no declaration of noSuchSymbol in github:dxos/dxos/packages/reflect/deus/src/cli/review.ts (a mention is not evidence)',
+      'Greet has status `shiny`; use one of done, untested, partial, diverged, missing',
+      'key leaves the checkout: github:dxos/dxos/../outside.ts',
+      'QA-1 has no verdict',
+    ]);
+    expect(output.at(-1)).toBe('3 verdicts for 4 items; 5 errors, 1 warnings.');
   });
 });
 

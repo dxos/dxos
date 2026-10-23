@@ -97,6 +97,9 @@
       "path": "../../ui/react-ui-menu"
     },
     {
+      "path": "../../ui/react-ui-mosaic"
+    },
+    {
       "path": "../../ui/ui-editor"
     },
     {
@@ -104,6 +107,9 @@
     },
     {
       "path": "../plugin-client"
+    },
+    {
+      "path": "../plugin-file-system"
     },
     {
       "path": "../plugin-space"

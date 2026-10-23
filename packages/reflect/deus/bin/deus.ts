@@ -11,13 +11,17 @@ import * as Command from 'effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 
-import { ChangelogCheckError, LintError, QaLintError, deus } from '../src/cli/index.ts';
+import { ChangelogCheckError, LintError, QaLintError, ReviewCheckError, deus } from '../src/cli/index.ts';
 
 const VERSION = '0.0.0';
 
 /** Failures whose details are already on screen: CLI usage errors and the findings of a failed check. */
 const isReported = (error: unknown): boolean =>
-  CliError.isCliError(error) || ChangelogCheckError.is(error) || LintError.is(error) || QaLintError.is(error);
+  CliError.isCliError(error) ||
+  ChangelogCheckError.is(error) ||
+  LintError.is(error) ||
+  QaLintError.is(error) ||
+  ReviewCheckError.is(error);
 
 // A reported failure exits non-zero with no further output; any other failure prints its message.
 Command.runWith(deus, { version: VERSION })(process.argv.slice(2)).pipe(

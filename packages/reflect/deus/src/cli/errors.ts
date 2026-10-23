@@ -13,5 +13,8 @@ export class ChangelogCheckError extends BaseError.extend('DeusChangelogCheckErr
 /** A QA lint reported findings in the plugin specs. */
 export class QaLintError extends BaseError.extend('DeusQaLintError', 'The QA lints reported findings.') {}
 
+/** A spec review breaks the review rules. */
+export class ReviewCheckError extends BaseError.extend('DeusReviewCheckError', 'The spec review has errors.') {}
+
 /** One or more `.mdl` files have lint errors. */
 export class LintError extends BaseError.extend('DeusLintError', 'The .mdl files have lint errors.') {}
