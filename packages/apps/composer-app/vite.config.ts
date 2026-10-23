@@ -588,6 +588,12 @@ export default defineConfig((env) => ({
     // because this config's static imports are bundled as CJS `require` and the package is ESM-only.
     import('@dxos/plugin-dev-shell/vite-plugin').then(({ DevShellVitePlugin }) => DevShellVitePlugin()),
 
+    // Serves code-index to plugin-code-graph by running `code-index mcp` beside the dev server. Imported dynamically
+    // for the same reason as the dev shell: the package is ESM-only and this config's static imports are bundled as CJS.
+    import('@dxos/plugin-code-graph/vite-plugin').then(({ CodeIndexVitePlugin }) =>
+      CodeIndexVitePlugin({ root: rootDir }),
+    ),
+
     // RSS proxy middleware for CORS-free feed fetching.
     {
       name: 'rss-proxy',
