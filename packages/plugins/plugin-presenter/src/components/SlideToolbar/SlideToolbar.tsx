@@ -13,6 +13,7 @@ import * as Popover from '@dxos/react-ui/Popover';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { type ThemedClassName } from '@dxos/react-ui/Util';
+import { mx } from '@dxos/ui-theme';
 
 import { type LayoutName, type SlideFrontmatter } from '#markdown';
 import { meta } from '#meta';
@@ -67,7 +68,9 @@ export const SlideToolbar = ({
 }: SlideToolbarProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
-    <Toolbar.Root data-testid='presenter.slide-toolbar' classNames={classNames}>
+    // The toolbar pads its start when the first control is not a square button (the layout picker has a label);
+    // dropped so this row starts where the formatting row below it does.
+    <Toolbar.Root data-testid='presenter.slide-toolbar' classNames={mx('ps-0!', classNames)}>
       <LayoutPicker value={layout} onChange={onLayoutChange} />
       <Menu.Root onSelect={({ value }) => onInsert(value === 'clicks' ? 'clicks' : 'click')}>
         <Menu.Trigger asChild>

@@ -101,7 +101,7 @@ Design: [DESIGN.md](./DESIGN.md).
 - [x] **DSL highlighting** — `slideTokens` (frontmatter, keys, `::slot::`, click/`Surface` tags and attributes, object embeds, notes) and the `slideHighlight` CodeMirror extension.
 
 - [ ] **Reconcile the toolbars** (user TODO, 2026-10-23): editing actions such as "start next column" and "insert object" belong in the formatting toolbar, not the slide toolbar; keep only slide-level controls (layout, background, notes, view) separate.
-- [ ] **Extending another component's toolbar** (user TODO, 2026-10-23): design a generic way for a consumer to add items to a toolbar it does not own (here, slide actions in `react-ui-editor`'s `EditorToolbar`). Starting points: `EditorToolbar`'s `customActions` atom (menu actions only, no custom React items such as pickers) and app-graph toolbar actions (`graphActions` with `isToolbarAction`, as MarkdownArticle uses).
+- [ ] **Extending another component's toolbar** (user TODO, 2026-10-23): design a generic way for a consumer to add items to a toolbar it does not own (here, slide actions in `react-ui-editor`'s `EditorToolbar`). Starting points: `EditorToolbar`'s `customActions` atom (menu actions only, no custom React items such as pickers) and app-graph toolbar actions (`graphActions` with `isToolbarAction`, as MarkdownArticle uses). Draft design and prototype: `react-ui-menu/docs/TOOLBAR.md`, story `ui/react-ui-menu/ToolbarLayout (prototype)` (zones, rows, overflow menu, contributor placement).
 
 ## Phase 7: Later
 
