@@ -3,7 +3,7 @@
 A toolbar that another component owns (the markdown editor's) must take items from other components (review's
 comment button, transcription's microphone, presenter's slide actions), place them sensibly, and degrade on narrow
 screens. This records what exists and the design; the story is
-`ui/react-ui-menu/ToolbarLayout` (`src/components/ToolbarLayout.stories.tsx`).
+`ui/react-ui-menu/ActionToolbar` (`src/components/ActionToolbar.stories.tsx`).
 
 ## What exists
 
@@ -41,7 +41,7 @@ An item or group carries an optional `placement` (`ToolbarPlacement` on `MenuIte
 | `collapse` | Rank for moving into the overflow menu when the row is too narrow; higher goes first; none = never. |
 
 Each row is one `Toolbar.Root` laid out as `start | gap | end`, with the overflow menu last in row 0.
-The story `ui/react-ui-menu/ToolbarLayout` covers `Groups`, `Extended` (contributions and two rows), `Narrow` and `AsMenu`.
+The `ui/react-ui-menu/ActionToolbar` stories cover `Groups`, `Extended` (contributions and two rows), `Narrow` and `AsMenu`.
 
 ## Open questions
 
