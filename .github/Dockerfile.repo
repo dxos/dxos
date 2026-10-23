@@ -1,0 +1,49 @@
+# CI image with the repo already in it: a main commit at /repo with dependencies installed, moon's
+# toolchain, and `:build` outputs in moon's cache, so a job only syncs the commits since and rebuilds what
+# they touched. Built by `workflows/ci-repo-image.yml`.
+#
+# /repo rather than the job workspace: GitHub bind-mounts the workspace over whatever the image holds there.
+ARG BASE=ghcr.io/dxos/gh-actions:24.11.1
+FROM ${BASE}
+
+ARG REPO_SHA
+ARG PROTO_VERSION=0.60.2
+ARG MOON_VERSION=2.5.2
+
+USER root
+RUN mkdir -p /repo /opt/proto /opt/moon /opt/pnpm-store && \
+    chown runner:runner /repo /opt/proto /opt/moon /opt/pnpm-store
+USER runner
+
+# Outside $HOME, which GitHub replaces with /github/home in container jobs. The pnpm store sits in the
+# same layer as node_modules so their hardlinks survive, and a later install links rather than downloads.
+ENV PROTO_HOME=/opt/proto \
+    MOON_HOME=/opt/moon \
+    npm_config_store_dir=/opt/pnpm-store \
+    PATH=/opt/proto/shims:/opt/proto/bin:$PATH
+
+RUN curl -fsSL https://moonrepo.dev/install/proto.sh | bash -s -- "${PROTO_VERSION}" --yes --no-profile && \
+    proto install moon "${MOON_VERSION}"
+
+# Blobless like Check's checkout, so later fetches pull only new commits and the files they touch.
+RUN git clone --filter=blob:none --no-checkout https://github.com/dxos/dxos.git /repo && \
+    git -C /repo checkout --detach "${REPO_SHA}"
+WORKDIR /repo
+
+RUN moon setup && pnpm install --frozen-lockfile --prefer-offline
+
+# A failed build still ships the image: whatever built is cached, and the job rebuilds the rest. The
+# certificates are copied in and removed within one step so no layer keeps them.
+RUN --mount=type=secret,id=moon_ca,uid=1001 \
+    --mount=type=secret,id=moon_client_pem,uid=1001 \
+    --mount=type=secret,id=moon_client_key,uid=1001 \
+    if [ -s /run/secrets/moon_ca ]; then \
+      mkdir -p .moon/certs && \
+      cp /run/secrets/moon_ca .moon/certs/ca.pem && \
+      cp /run/secrets/moon_client_pem .moon/certs/client.pem && \
+      cp /run/secrets/moon_client_key .moon/certs/client.key; \
+    else \
+      export MOON_REMOTE_HOST=; \
+    fi; \
+    moon exec --on-failure continue :build || echo "moon :build failed; shipping the partial cache"; \
+    rm -rf .moon/certs

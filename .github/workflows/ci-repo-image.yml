@@ -1,0 +1,156 @@
+name: CI Repo Image
+
+# Builds `.github/Dockerfile.repo` — main with deps installed and `:build` cached — and measures it against
+# the current setup: both bench jobs bring the same main commit to a built state, one from a bare runner
+# through the setup action and moon's remote cache, one from the image.
+
+permissions:
+  contents: read
+  packages: write
+
+on:
+  schedule:
+    - cron: '23 4 * * *'
+  push:
+    branches:
+      - main
+      # TODO(dmaretskyi): Remove before merging; builds from this branch produce the measurements.
+      - claude/prebuilt-ci-image
+    paths:
+      - .github/Dockerfile.repo
+      - .github/workflows/ci-repo-image.yml
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: ghcr.io/dxos/gh-actions
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+
+concurrency:
+  group: ci-repo-image-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    outputs:
+      tag: ${{ steps.shas.outputs.tag }}
+      bench-sha: ${{ steps.shas.outputs.bench }}
+    steps:
+      # node_modules, the pnpm store, build outputs and BuildKit's copy of each outgrow the runner's default free space.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      # Off main the image is built 20 commits back (about a day of main), so the bench pays a nightly
+      # image's typical drift rather than none.
+      - name: Resolve commits
+        id: shas
+        run: |
+          git fetch --no-tags --depth=21 origin main
+          bench=$(git rev-parse FETCH_HEAD)
+          if [ "$GITHUB_REF" = refs/heads/main ]; then image=$bench; else image=$(git rev-parse FETCH_HEAD~20); fi
+          echo "bench=$bench" >> "$GITHUB_OUTPUT"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          echo "tag=repo-${image:0:12}" >> "$GITHUB_OUTPUT"
+          echo "image $image, bench $bench"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: dxos-bot
+          password: ${{ secrets.GH_DXOS_BOT_PAT }}
+
+      # zstd because the runner unpacks layers on one core, and gzip at ~30 MB/s is most of a pull.
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .github
+          file: .github/Dockerfile.repo
+          build-args: |
+            REPO_SHA=${{ steps.shas.outputs.image }}
+          secrets: |
+            moon_ca=${{ secrets.MOON_CACHE_CA_PEM }}
+            moon_client_pem=${{ secrets.MOON_CACHE_CLIENT_PEM }}
+            moon_client_key=${{ secrets.MOON_CACHE_CLIENT_KEY }}
+          outputs: type=image,push=true,compression=zstd,compression-level=3,force-compression=true,oci-mediatypes=true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ steps.shas.outputs.tag }}
+            ${{ github.ref == 'refs/heads/main' && format('{0}:repo-main', env.IMAGE_NAME) || '' }}
+
+      - name: Report image size
+        run: |
+          docker buildx imagetools inspect --raw "$IMAGE_NAME:${{ steps.shas.outputs.tag }}" > manifest.json
+          jq -r '.layers[] | "\(.size / 1e6 | floor) MB  \(.mediaType)"' manifest.json
+          jq -r '"total \([.layers[].size] | add / 1e6 | floor) MB compressed"' manifest.json
+          df -h /
+
+  # Today's path: checkout, the setup action (pnpm store cache, install, moon toolchain), then `:build` from
+  # the remote cache.
+  bench-baseline:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.build.outputs.bench-sha }}
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Build
+        run: moon exec --on-failure continue :build || true
+
+  # The image's path: sync /repo to the same commit, install the lockfile delta, rebuild what changed.
+  bench-prebuilt:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    container:
+      image: ghcr.io/dxos/gh-actions:${{ needs.build.outputs.tag }}
+    defaults:
+      run:
+        working-directory: /repo
+    steps:
+      - name: Sync to commit
+        env:
+          SHA: ${{ needs.build.outputs.bench-sha }}
+        run: |
+          before=$(git rev-parse HEAD)
+          git fetch --no-tags origin "$SHA"
+          git checkout --force --detach "$SHA"
+          echo "$(git rev-list --count "$before..$SHA") commits, $(git diff --name-only "$before" "$SHA" | wc -l) files changed"
+
+      - name: Install remote cache certificates
+        run: |
+          mkdir -p .moon/certs
+          printf '%s\n' "$MOON_CACHE_CA_PEM" > .moon/certs/ca.pem
+          printf '%s\n' "$MOON_CACHE_CLIENT_PEM" > .moon/certs/client.pem
+          printf '%s\n' "$MOON_CACHE_CLIENT_KEY" > .moon/certs/client.key
+          chmod 600 .moon/certs/client.key
+
+      - name: Install moon toolchains
+        run: moon setup
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Build
+        run: moon exec --on-failure continue :build || true
