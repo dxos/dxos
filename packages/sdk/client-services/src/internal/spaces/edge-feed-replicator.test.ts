@@ -131,6 +131,14 @@ describe('EdgeFeedReplicator', () => {
     await expect.poll(() => messageSink.find((msg) => msg.type === 'data')).toBeDefined();
   });
 
+  test('rejects a non-positive resync interval', async () => {
+    const { endpoint } = await createEdge();
+    const { messenger } = await createClient(endpoint);
+    expect(() => new EdgeFeedReplicator({ messenger, spaceId: SpaceId.random(), resyncInterval: 0 })).toThrow(
+      'resyncInterval must be positive',
+    );
+  });
+
   test('propagates errors unrelated to reconnect', async () => {
     const { endpoint, admitConnection } = await createEdge();
     const { messenger, sendSpy } = await createClient(endpoint);
@@ -267,9 +275,14 @@ describe('EdgeFeedReplicator', () => {
       };
     };
 
-    const startReplicator = async (endpoint: string, replica: HypercoreWrapper<any>, admitConnection: Trigger) => {
+    const startReplicator = async (
+      endpoint: string,
+      replica: HypercoreWrapper<any>,
+      admitConnection: Trigger,
+      resyncInterval?: number,
+    ) => {
       const { messenger } = await createClient(endpoint);
-      const replicator = new EdgeFeedReplicator({ messenger, spaceId: SpaceId.random() });
+      const replicator = new EdgeFeedReplicator({ messenger, spaceId: SpaceId.random(), resyncInterval });
       await replicator.addHypercore(replica);
       await openAndClose(replicator);
       admitConnection.wake();
@@ -429,6 +442,98 @@ describe('EdgeFeedReplicator', () => {
       edge.send({ type: 'data', feedKey, blocks: [await blockAt(4)] });
       expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 3, to: 5 } });
       await holds([3, 4]);
+    });
+
+    test('asks again when the metadata reply is lost', async () => {
+      const { replica, feedKey, blocksIn, holds } = await setupFeeds(3);
+      let metadataRequests = 0;
+      const edge = await createScriptedEdge(async (message) => {
+        if (message.type === 'get-metadata') {
+          // The router dropped the first reply.
+          return ++metadataRequests === 1 ? undefined : { type: 'metadata', feedKey, length: 3 };
+        }
+        if (message.type === 'request') {
+          return { type: 'data', feedKey, blocks: await blocksIn(message.range) };
+        }
+      });
+      await startReplicator(edge.endpoint, replica, edge.admitConnection, 50);
+      expect(await edge.next()).toMatchObject({ type: 'get-metadata' });
+      expect(await edge.next()).toMatchObject({ type: 'get-metadata' });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 0, to: 3 } });
+      await holds([0, 1, 2]);
+    });
+
+    test('requests again when the data reply is lost', async () => {
+      const { replica, feedKey, blocksIn, holds } = await setupFeeds(3);
+      let requests = 0;
+      const edge = await createScriptedEdge(async (message) => {
+        if (message.type === 'get-metadata') {
+          return { type: 'metadata', feedKey, length: 3 };
+        }
+        if (message.type === 'request') {
+          return ++requests === 1 ? undefined : { type: 'data', feedKey, blocks: await blocksIn(message.range) };
+        }
+      });
+      await startReplicator(edge.endpoint, replica, edge.admitConnection, 50);
+      expect(await edge.next()).toMatchObject({ type: 'get-metadata' });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 0, to: 3 } });
+      expect(await edge.next()).toMatchObject({ type: 'get-metadata' });
+      expect(await edge.next()).toMatchObject({ type: 'request', range: { from: 0, to: 3 } });
+      await holds([0, 1, 2]);
+    });
+
+    test('backs off asking about a feed EDGE never answers for', async () => {
+      const { replica } = await setupFeeds(1);
+      const edge = await createScriptedEdge(async () => undefined);
+      await startReplicator(edge.endpoint, replica, edge.admitConnection, 20);
+      const askedAt: number[] = [];
+      for (const _ of range(5)) {
+        expect(await edge.next()).toMatchObject({ type: 'get-metadata' });
+        askedAt.push(Date.now());
+      }
+      // Re-asks wait 2, 3, 5 and then 9 ticks; asking on a fixed timer would keep the gaps equal.
+      expect(askedAt[4] - askedAt[3]).toBeGreaterThanOrEqual(2 * (askedAt[2] - askedAt[1]));
+    });
+
+    test('does not ask again about a feed that is caught up', async () => {
+      const caughtUp = await setupFeeds(3);
+      const lagging = await setupFeeds(1);
+      const edge = await createScriptedEdge(async (message) => {
+        if (message.feedKey !== caughtUp.feedKey) {
+          return undefined;
+        }
+        if (message.type === 'get-metadata') {
+          return { type: 'metadata', feedKey: caughtUp.feedKey, length: 3 };
+        }
+        if (message.type === 'request') {
+          return { type: 'data', feedKey: caughtUp.feedKey, blocks: await caughtUp.blocksIn(message.range) };
+        }
+      });
+      const { messenger } = await createClient(edge.endpoint);
+      const replicator = new EdgeFeedReplicator({ messenger, spaceId: SpaceId.random(), resyncInterval: 10 });
+      await replicator.addHypercore(caughtUp.replica);
+      await replicator.addHypercore(lagging.replica);
+      await openAndClose(replicator);
+      edge.admitConnection.wake();
+      await caughtUp.holds([0, 1, 2]);
+      // A re-ask decided while the first reply was still in flight is legitimate, and the tick that sent it
+      // sent the lagging feed's ask right after it; so asks only count from the first lagging ask on.
+      const caughtUpAt = edge.received.length;
+      let consumed = 0;
+      let settledAt: number | undefined;
+      let laggingAsks = 0;
+      while (laggingAsks < 3) {
+        const message = await edge.next();
+        consumed++;
+        if (consumed > caughtUpAt && message.type === 'get-metadata' && message.feedKey === lagging.feedKey) {
+          settledAt ??= consumed;
+          laggingAsks++;
+        }
+      }
+      const caughtUpAsks = edge.received
+        .slice(settledAt)
+        .filter((message) => message.type === 'get-metadata' && message.feedKey === caughtUp.feedKey);
+      expect(caughtUpAsks).toHaveLength(0);
     });
 
     test('a hole above the remote length does not block the feed', async () => {
