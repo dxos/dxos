@@ -10,6 +10,7 @@ import * as Card from '@dxos/react-ui/Card';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
+import * as Tag from '@dxos/react-ui/Tag';
 
 import { Iri, Kind } from '#graph';
 import { meta } from '#meta';
@@ -101,11 +102,16 @@ export const NodeDetails = ({
         )}
       </Card.Header>
       <Card.Body>
-        <Card.Description>{kind ?? node.kind}</Card.Description>
+        <Layout.Flex>
+          <Tag.Tag hue={Kind.hueOf(kind ?? node.kind)}>{kind ?? node.kind}</Tag.Tag>
+        </Layout.Flex>
       </Card.Body>
       {snippet && (
-        <Card.Row span='full' data-testid='code-graph-snippet'>
-          <SyntaxHighlighter language={languageOf(node.id)} classNames='max-h-60 text-xs bg-transparent'>
+        <Card.Row span='end' data-testid='code-graph-snippet'>
+          <SyntaxHighlighter
+            language={languageOf(node.id)}
+            classNames='max-h-60 py-1 text-xs rounded-sm bg-group-surface'
+          >
             {snippet}
           </SyntaxHighlighter>
         </Card.Row>

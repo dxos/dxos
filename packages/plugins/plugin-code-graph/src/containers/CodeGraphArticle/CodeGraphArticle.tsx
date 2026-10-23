@@ -21,7 +21,7 @@ import { meta } from '#meta';
 import { CodeGraph, CodeGraphOperation } from '#types';
 
 // Imported directly rather than through the barrel: the canvas engine and the illustrator renderer are large.
-import { CodeGraphCanvas } from '../../components/CodeGraphCanvas/index.ts';
+import { CodeGraphCanvas, framePositions } from '../../components/CodeGraphCanvas/index.ts';
 import { CodeGraphDiagram } from '../../components/CodeGraphDiagram/index.ts';
 
 type Point = Semantic.Point;
@@ -33,7 +33,9 @@ const LAYOUTS: { value: CodeGraph.Layout; icon: string }[] = [
   { value: 'diagram', icon: 'ph--pencil-simple--regular' },
 ];
 
-const EMPTY: Semantic.Layout = { positions: {}, objects: [], problems: [] };
+const NO_FRAMES: readonly Semantic.Frame[] = [];
+
+const EMPTY: Semantic.Layout = { positions: {}, frames: [], objects: [], problems: [] };
 
 /**
  * The illustrator's layout of the graph. The engine is synchronous and takes up to seconds, so it runs after the
@@ -42,16 +44,18 @@ const EMPTY: Semantic.Layout = { positions: {}, objects: [], problems: [] };
 const useSemanticLayout = (
   nodes: readonly CodeGraph.Node[],
   edges: readonly CodeGraph.Edge[],
-  enabled: boolean,
+  { enabled, grouped, labels }: { enabled: boolean; grouped: boolean; labels: Record<string, string> },
 ): { layout: Semantic.Layout; pending: boolean; key?: string } => {
   // Keyed on structure, not positions: dragging a box must not re-run the engine.
   const key = useMemo(
     () =>
       JSON.stringify([
+        grouped,
+        labels,
         nodes.map(({ id, label, group }) => [id, label, group]),
         edges.map(({ from, to, kind }) => [from, to, kind]),
       ]),
-    [nodes, edges],
+    [nodes, edges, grouped, labels],
   );
   const [state, setState] = useState<{ key?: string; layout: Semantic.Layout }>({ layout: EMPTY });
   useEffect(() => {
@@ -60,7 +64,9 @@ const useSemanticLayout = (
     }
     const fiber = Effect.runFork(
       Effect.sleep('16 millis').pipe(
-        Effect.andThen(Effect.sync(() => Semantic.layout({ nodes: [...nodes], edges: [...edges] }))),
+        Effect.andThen(
+          Effect.sync(() => Semantic.layout({ nodes: [...nodes], edges: [...edges] }, { grouped, labels })),
+        ),
         Effect.tap((layout) => Effect.sync(() => setState({ key, layout }))),
       ),
     );
@@ -79,7 +85,21 @@ export const CodeGraphArticle = ({ role, subject, attendableId }: CodeGraphArtic
   const nodes = graph.nodes;
   const edges = graph.edges;
 
-  const semantic = useSemanticLayout(nodes, edges, layout === 'illustrator' || layout === 'diagram');
+  const grouped = graph.grouped ?? false;
+  const info = useResourceInfo(graph.nodes, invokePromise);
+  const kinds = info.kinds;
+  // The index knows every box's package, including a package box's own, which its IRI alone does not say.
+  const placed = useMemo(
+    () => graph.nodes.map((node) => ({ ...node, group: info.groups[node.id] ?? node.group })),
+    [graph.nodes, info.groups],
+  );
+  const semantic = useSemanticLayout(placed, edges, {
+    enabled: layout === 'illustrator' || layout === 'diagram',
+    grouped,
+    labels: info.packages,
+  });
+  // Only the illustrator places boxes by package, so only its canvas can frame them.
+  const frames = layout === 'illustrator' ? semantic.layout.frames : NO_FRAMES;
 
   // Where the user dragged boxes; the rest are placed by the layout.
   const dragged = useMemo(
@@ -91,7 +111,10 @@ export const CodeGraphArticle = ({ role, subject, attendableId }: CodeGraphArtic
       ),
     [nodes],
   );
-  const computed = layout === 'illustrator' ? semantic.layout.positions : {};
+  const computed = useMemo(
+    () => (layout === 'illustrator' ? { ...semantic.layout.positions, ...framePositions(frames) } : {}),
+    [layout, semantic.layout, frames],
+  );
   const positions = useMemo(() => ({ ...computed, ...dragged }), [computed, dragged]);
 
   const handlePositionsChange = useCallback(
@@ -113,6 +136,14 @@ export const CodeGraphArticle = ({ role, subject, attendableId }: CodeGraphArtic
       }
     },
     [subject, positions],
+  );
+
+  const handleGroupedChange = useCallback(
+    () =>
+      Obj.update(subject, (subject) => {
+        subject.grouped = !grouped;
+      }),
+    [subject, grouped],
   );
 
   const handleLayoutChange = useCallback(
@@ -150,7 +181,6 @@ export const CodeGraphArticle = ({ role, subject, attendableId }: CodeGraphArtic
     [invokePromise, subject, spaceId],
   );
 
-  const kinds = useKinds(nodes, invokePromise);
   const [selected, setSelected] = useState<string>();
   const selectedNode = useMemo(() => nodes.find(({ id }) => id === selected), [nodes, selected]);
   const details = useInspect(selected, invokePromise);
@@ -177,7 +207,9 @@ export const CodeGraphArticle = ({ role, subject, attendableId }: CodeGraphArtic
     layout,
     pending: semantic.pending,
     hasDragged: Object.keys(dragged).length > 0,
+    grouped,
     onLayoutChange: handleLayoutChange,
+    onGroupedChange: handleGroupedChange,
     onResetPositions: handleResetPositions,
   });
 
@@ -202,6 +234,7 @@ export const CodeGraphArticle = ({ role, subject, attendableId }: CodeGraphArtic
               nodes={nodes}
               edges={edges}
               arrange={layout === 'force' ? 'force' : 'crossings'}
+              frames={frames}
               positions={positions}
               onPositionsChange={handlePositionsChange}
               kinds={kinds}
@@ -244,13 +277,17 @@ const useToolbarActions = ({
   layout,
   pending,
   hasDragged,
+  grouped,
   onLayoutChange,
+  onGroupedChange,
   onResetPositions,
 }: {
   layout: CodeGraph.Layout;
   pending: boolean;
   hasDragged: boolean;
+  grouped: boolean;
   onLayoutChange: (layout: CodeGraph.Layout) => void;
+  onGroupedChange: () => void;
   onResetPositions: () => void;
 }) =>
   useMenuBuilder(
@@ -274,6 +311,18 @@ const useToolbarActions = ({
             }
           },
         )
+        .switch(
+          'group-by-package',
+          {
+            label: ['group-by-package.label', { ns: meta.profile.key }],
+            icon: 'ph--package--regular',
+            iconOnly: true,
+            checked: grouped,
+            // The force and rank arrangements place boxes with no regard to their package.
+            disabled: layout === 'force' || layout === 'rank',
+          },
+          onGroupedChange,
+        )
         .action(
           'reset-positions',
           {
@@ -287,7 +336,7 @@ const useToolbarActions = ({
           onResetPositions,
         )
         .build(),
-    [layout, pending, hasDragged, onLayoutChange, onResetPositions],
+    [layout, pending, hasDragged, grouped, onLayoutChange, onGroupedChange, onResetPositions],
   );
 
 /** The selected resource's facts from the index, through the Inspect operation. */
@@ -345,10 +394,12 @@ const NodePreview = ({
 };
 
 /**
- * What each box is, from one index query over the whole graph: re-run only when the set of boxes changes, and
+ * What each box is and which package it sits in, from one index query over the whole graph: re-run only when the set of boxes changes, and
  * empty when the index cannot answer, so boxes fall back to their coarse kind.
  */
-const useKinds = (nodes: readonly CodeGraph.Node[], invokePromise: Invoke): Record<string, string> => {
+const NO_INFO: Kind.Info = { kinds: {}, groups: {}, packages: {} };
+
+const useResourceInfo = (nodes: readonly CodeGraph.Node[], invokePromise: Invoke): Kind.Info => {
   const ids = useMemo(
     () =>
       nodes
@@ -357,7 +408,7 @@ const useKinds = (nodes: readonly CodeGraph.Node[], invokePromise: Invoke): Reco
         .join('\n'),
     [nodes],
   );
-  const [kinds, setKinds] = useState<Record<string, string>>({});
+  const [info, setInfo] = useState<Kind.Info>(NO_INFO);
   useEffect(() => {
     const sparql = Kind.query(nodes.map(({ id }) => id));
     if (!sparql) {
@@ -366,12 +417,12 @@ const useKinds = (nodes: readonly CodeGraph.Node[], invokePromise: Invoke): Reco
     let cancelled = false;
     void invokePromise(CodeGraphOperation.Query, { sparql, limit: 2000 }).then(({ data }) => {
       if (!cancelled && data) {
-        setKinds(Kind.fromRows(nodes, data.rows));
+        setInfo(Kind.fromRows(nodes, data.rows));
       }
     });
     return () => {
       cancelled = true;
     };
   }, [ids, invokePromise]);
-  return kinds;
+  return info;
 };

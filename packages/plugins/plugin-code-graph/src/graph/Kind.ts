@@ -4,6 +4,8 @@
 
 // @import-as-namespace
 
+import type * as Tag from '@dxos/react-ui/Tag';
+
 import { type CodeGraph } from '#types';
 
 import * as Iri from './Iri.ts';
@@ -72,37 +74,97 @@ export const titleOf = (node: Pick<CodeGraph.Node, 'id' | 'kind' | 'label'>): st
 /** IRIs a SPARQL `<…>` term can hold as written. */
 const isSafeIri = (iri: string): boolean => Iri.isIri(iri) && !/[\s<>"{}|\\^`]/.test(iri);
 
-/** One SELECT for the classes and declaration kind of every resource, so a graph needs one round trip. */
+/**
+ * One SELECT for every resource's classes, declaration kind and package (directory and name), so a graph needs one
+ * round trip. A package names itself; a file names its package; a symbol names its file's. Grouped to one row per
+ * resource: the package lookups multiply rows, which would otherwise run a large graph into the row cap.
+ */
 export const query = (iris: readonly string[]): string | undefined => {
   const terms = [...new Set(iris)].filter(isSafeIri).map((iri) => `<${iri}>`);
   if (terms.length === 0) {
     return undefined;
   }
   return [
-    'SELECT ?s ?type ?kind WHERE {',
+    'SELECT ?s (GROUP_CONCAT(DISTINCT STR(?type); SEPARATOR=" ") AS ?types)',
+    '  (SAMPLE(?kind) AS ?kind) (SAMPLE(?dir) AS ?dir) (SAMPLE(?pkg) AS ?pkg) WHERE {',
     `  VALUES ?s { ${terms.join(' ')} }`,
     '  OPTIONAL { ?s a ?type }',
     '  OPTIONAL { ?s deus:kind ?kind }',
-    '}',
+    '  OPTIONAL {',
+    '    { ?s deus:packagePath ?dir ; deus:name ?pkg }',
+    '    UNION { ?s deus:inPackage ?p . ?p deus:packagePath ?dir ; deus:name ?pkg }',
+    '    UNION { ?f deus:declares ?s . ?f deus:inPackage ?p . ?p deus:packagePath ?dir ; deus:name ?pkg }',
+    '  }',
+    '} GROUP BY ?s',
   ].join('\n');
+};
+
+export type Info = {
+  /** What each resource is, by IRI. */
+  kinds: Record<string, string>;
+  /** The package directory each resource belongs to, by IRI; a package box belongs to its own. */
+  groups: Record<string, string>;
+  /** Package names by directory, for labelling frames. */
+  packages: Record<string, string>;
 };
 
 /** The rows of {@link query}, folded into one description per resource. */
 export const fromRows = (
   nodes: readonly Pick<CodeGraph.Node, 'id' | 'kind'>[],
   rows: readonly Record<string, string>[],
-): Record<string, string> => {
+): Info => {
   const facts = new Map<string, { types: string[]; kind?: string }>();
+  const groups: Record<string, string> = {};
+  const packages: Record<string, string> = {};
   for (const row of rows) {
     if (!row.s) {
       continue;
     }
     const entry = facts.get(row.s) ?? { types: [] };
-    if (row.type) {
-      entry.types.push(row.type);
-    }
+    entry.types.push(...(row.types ?? row.type ?? '').split(' ').filter(Boolean));
     entry.kind ??= row.kind;
     facts.set(row.s, entry);
+    if (row.dir) {
+      groups[row.s] ??= row.dir;
+      if (row.pkg) {
+        packages[row.dir] ??= row.pkg;
+      }
+    }
   }
-  return Object.fromEntries(nodes.map(({ id, kind }) => [id, describe({ ...facts.get(id), coarse: kind })] as const));
+  return {
+    kinds: Object.fromEntries(nodes.map(({ id, kind }) => [id, describe({ ...facts.get(id), coarse: kind })] as const)),
+    groups,
+    packages,
+  };
 };
+
+/** A hue per kind, so boxes of one kind read as a set; related kinds share a family (layers, operations, plugins). */
+const HUES: Record<string, Tag.TagHue> = {
+  'service': 'yellow',
+  'layer': 'lime',
+  'layer factory': 'lime',
+  'capability': 'indigo',
+  'operation': 'orange',
+  'operation handler': 'amber',
+  'handler set': 'amber',
+  'ECHO type': 'sky',
+  'ECHO relation': 'sky',
+  'error': 'red',
+  'skill': 'fuchsia',
+  'RPC': 'teal',
+  'plugin': 'purple',
+  'plugin meta': 'purple',
+  'plugin module': 'violet',
+  'schema': 'blue',
+  'function': 'emerald',
+  'class': 'pink',
+  'type': 'cyan',
+  'interface': 'cyan',
+  'enum': 'cyan',
+  'package': 'rose',
+  'module': 'violet',
+  'spec': 'green',
+};
+
+/** The hue a kind is drawn in; kinds without one of their own are neutral. */
+export const hueOf = (kind: string): Tag.TagHue => HUES[kind] ?? 'neutral';
