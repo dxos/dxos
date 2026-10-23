@@ -26,14 +26,23 @@ runs:
         echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
         echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
 
+    # A cache key is immutable, so the primary key is per run and restore takes the newest cache for
+    # this version, then for any version.
     - name: Restore the package cache
       id: restore
       uses: actions/cache/restore@v5
       with:
         path: ${{ steps.apt.outputs.dir }}
-        key: playwright-apt-${{ runner.arch }}-${{ steps.apt.outputs.image }}-${{ inputs.browser }}-${{ steps.apt.outputs.version }}
+        key: playwright-apt-${{ runner.arch }}-${{ steps.apt.outputs.image }}-${{ inputs.browser }}-${{ steps.apt.outputs.version }}-${{ github.run_id }}
         restore-keys: |
+          playwright-apt-${{ runner.arch }}-${{ steps.apt.outputs.image }}-${{ inputs.browser }}-${{ steps.apt.outputs.version }}-
           playwright-apt-${{ runner.arch }}-${{ steps.apt.outputs.image }}-${{ inputs.browser }}-
+
+    - name: List the cached packages
+      shell: bash
+      env:
+        DIR: ${{ steps.apt.outputs.dir }}
+      run: find "$DIR" -maxdepth 1 -name '*.deb' -printf '%f\n' | sort > "$RUNNER_TEMP/playwright-apt-before.txt"
 
     - name: Install
       shell: bash
@@ -41,19 +50,26 @@ runs:
         BROWSER: ${{ inputs.browser }}
       run: pnpm exec playwright install --with-deps "$BROWSER"
 
-    # apt leaves `partial/` and `lock` owned by root, which the cache save cannot read.
+    # `autoclean` drops superseded revisions so the cache does not grow with every update. apt leaves
+    # `partial/` and `lock` owned by root, which the cache save cannot read.
     - name: Release the package cache
+      id: release
       shell: bash
       env:
         DIR: ${{ steps.apt.outputs.dir }}
       run: |
+        sudo apt-get autoclean -qq
         sudo rm -rf "$DIR/partial" "$DIR/lock"
         sudo chown -R "$(id -u):$(id -g)" "$DIR"
-        echo "Cached $(find "$DIR" -name '*.deb' | wc -l) packages, $(du -sh "$DIR" | cut -f1)."
+        find "$DIR" -maxdepth 1 -name '*.deb' -printf '%f\n' | sort > "$RUNNER_TEMP/playwright-apt-after.txt"
+        added=$(comm -13 "$RUNNER_TEMP/playwright-apt-before.txt" "$RUNNER_TEMP/playwright-apt-after.txt" | wc -l)
+        echo "Cached $(wc -l < "$RUNNER_TEMP/playwright-apt-after.txt") packages, $(du -sh "$DIR" | cut -f1); $added downloaded."
+        echo "added=$added" >> "$GITHUB_OUTPUT"
 
-    # Saved here rather than in a post-job step, which a cell that later times out skips.
+    # Only when apt downloaded something. Saved here rather than in a post-job step, which a cell that
+    # later times out skips.
     - name: Save the package cache
-      if: ${{ steps.restore.outputs.cache-hit != 'true' }}
+      if: ${{ steps.release.outputs.added != '0' }}
       uses: actions/cache/save@v5
       with:
         path: ${{ steps.apt.outputs.dir }}
