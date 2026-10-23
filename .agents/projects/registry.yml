@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: object-share
+    status: active
+    user: mykola
+    host: cloud-sandbox
+    created: 2026-10-23
+    summary: 'Google-Docs-style object sharing in Composer: a Share button on every object, a link that carries a delegated invitation, the required plugins and the object scope; opening it joins in the background (creating an identity if needed) and replicates only the scoped documents, enforced client-side.'
+    tasks: .agents/projects/object-share/TASKS.md
+    design: .agents/projects/object-share/DESIGN.md
+    prs: []
+    resume: 'v1 in progress on claude/stoic-pascal-eestng. NEXT: see TASKS.md.'
   - name: autocue-ui
     status: active
     user: burdon

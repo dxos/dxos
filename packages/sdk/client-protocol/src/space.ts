@@ -68,6 +68,12 @@ export interface SpaceInternal {
   setEdgeReplicationPreference(setting: EdgeReplicationSetting): Promise<void>;
 
   /**
+   * Adds objects to the space's sync scope when this client replicates it partially (it joined through an object
+   * share link); a no-op for a space replicated in full.
+   */
+  extendSyncScope(objectIds: readonly string[]): Promise<void>;
+
+  /**
    * Waits until the space is fully synced with EDGE.
    * @throws If the EDGE sync is disabled.
    */

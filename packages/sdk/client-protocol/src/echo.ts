@@ -24,6 +24,17 @@ export type CreateSpaceOptions = {
   origin?: Database.Origin;
 };
 
+/**
+ * Options for joining a space.
+ */
+export type JoinSpaceOptions = {
+  /**
+   * Replicate only these objects of the space, as when joining through an object share link. Enforced by this
+   * client only: other members and EDGE serve the whole space to any member.
+   */
+  syncScope?: { objectIds: readonly string[] };
+};
+
 export interface Echo extends MulticastObservable<Space[]>, Database.Queryable {
   /**
    * Returns the list of spaces.
@@ -57,7 +68,7 @@ export interface Echo extends MulticastObservable<Space[]>, Database.Queryable {
   /**
    * Joins an existing space using the given invitation.
    */
-  join(invitation: Invitation | string): AuthenticatingInvitation;
+  join(invitation: Invitation | string, options?: JoinSpaceOptions): AuthenticatingInvitation;
 
   joinBySpaceKey(spaceKey: PublicKey): Promise<Space>;
 }

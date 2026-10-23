@@ -50,7 +50,7 @@ import * as Hook from '@dxos/effect/Hook';
 import { type HypercoreStore, HypercoreStoreService, writeMessages } from '@dxos/feed-store';
 import { assertArgument, assertState, failedInvariant, invariant } from '@dxos/invariant';
 import { type KeyringApi, KeyringApiService } from '@dxos/keyring';
-import { PublicKey, type SpaceId } from '@dxos/keys';
+import { PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import {
@@ -71,7 +71,7 @@ import {
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type Runtime_Client_EdgeFeatures } from '@dxos/protocols/buf/dxos/config_pb';
 import { type FeedMessage, type FeedMessage_Payload } from '@dxos/protocols/buf/dxos/echo/feed_pb';
-import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
+import { EdgeReplicationSetting, SpaceSyncScopeSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type SpaceMetadata, SpaceMetadataSchema } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import {
   type Credential,
@@ -484,6 +484,7 @@ export class DataSpaceManager extends Resource {
       controlTimeframe: opts.controlTimeframe && fromTimeframe(opts.controlTimeframe),
       dataTimeframe: opts.dataTimeframe && fromTimeframe(opts.dataTimeframe),
       tags,
+      syncScope: opts.syncScope && create(SpaceSyncScopeSchema, { objectIds: [...opts.syncScope] }),
     });
 
     const space = await this._constructSpace(ctx, metadata);
@@ -837,8 +838,27 @@ export class DataSpaceManager extends Resource {
     space.stateUpdate.emit();
   }
 
+  async extendSpaceSyncScope(spaceKey: PublicKey, objectIds: readonly string[]): Promise<void> {
+    const space = this._spaces.get(spaceKey);
+    invariant(space, 'Space not found.');
+    const scope = this._metadataStore.getSpaceSyncScope(spaceKey);
+    if (!scope) {
+      return;
+    }
+    const extended = [...new Set([...scope, ...objectIds])];
+    if (extended.length === scope.length) {
+      return;
+    }
+    await this._metadataStore.setSpaceSyncScope(spaceKey, extended);
+    this._echoHost.setSpaceSyncScope(space.id, extended);
+  }
+
   private async _constructSpace(ctx: Context, metadata: SpaceMetadata): Promise<DataSpace> {
     log('construct space', { metadata });
+    // Applied before the data pipeline opens the space's root, so its first sync round is already limited.
+    if (metadata.syncScope && SpaceId.isValid(metadata.spaceId)) {
+      this._echoHost.setSpaceSyncScope(metadata.spaceId, metadata.syncScope.objectIds);
+    }
     const gossip = new Gossip({
       localPeerId: this.signingContext.deviceKey,
     });

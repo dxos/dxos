@@ -79,11 +79,23 @@ message SpaceMetadata {
   optional timeframe.TimeframeVector data_timeframe = 5;
 
   optional EdgeReplicationSetting edge_replication = 11;
+
+  /// Restricts which objects of the space this peer replicates; absent means the whole space.
+  optional SpaceSyncScope sync_scope = 14;
 }
 
 enum EdgeReplicationSetting {
   DISABLED = 0;
   ENABLED = 1;
+}
+
+/**
+ * Objects a peer replicates from a space it joined through an object share link.
+ * Enforced by the peer's own client only: other members and EDGE serve the whole space to any member.
+ */
+message SpaceSyncScope {
+  /// Ids of the objects to replicate; the space directory, root and credentials documents always replicate.
+  repeated string object_ids = 1;
 }
 
 message ControlPipelineSnapshot {

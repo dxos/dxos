@@ -3,7 +3,12 @@
 //
 
 import { Trigger } from '@dxos/async';
-import { type AuthenticatingInvitation, type CancellableInvitation, InvitationEncoder } from '@dxos/client-protocol';
+import {
+  type AuthenticatingInvitation,
+  type CancellableInvitation,
+  InvitationEncoder,
+  type JoinSpaceOptions,
+} from '@dxos/client-protocol';
 import { Context } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
 import { toPublicKey } from '@dxos/protocols/buf';
@@ -28,8 +33,9 @@ export type InvitationHost = {
   share(options?: Partial<Invitation>): CancellableInvitation;
 };
 
+/** A HALO joins with the profile of the device it admits; a space list joins with its own options. */
 export type InvitationGuest = {
-  join(invitation: Invitation | string, deviceProfile?: DeviceProfileDocument): AuthenticatingInvitation;
+  join(invitation: Invitation | string, options?: DeviceProfileDocument | JoinSpaceOptions): AuthenticatingInvitation;
 };
 
 export type PerformInvitationCallbacks<T> = {

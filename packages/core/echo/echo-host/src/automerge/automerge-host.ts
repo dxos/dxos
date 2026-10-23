@@ -867,6 +867,11 @@ export class AutomergeHost extends Resource {
     return this._leases.acquire<T>(id);
   }
 
+  /** Whether this host created the document in the current session. */
+  isCreatedInSession(documentId: DocumentId): boolean {
+    return this._createdDocuments.has(documentId);
+  }
+
   /** Whether the host refuses to load the document; see {@link quarantineDocument}. */
   isQuarantined(documentId: AnyDocumentId): boolean {
     return this.#quarantined.has(interpretAsDocumentId(documentId));
@@ -934,6 +939,19 @@ export class AutomergeHost extends Resource {
     // Debug level: every open re-applies the `retired` entries, and a load failure already warned where it was caught.
     log('quarantined document', { documentId, reason });
     this.documentQuarantined.emit(record);
+  }
+
+  /**
+   * Lifts an `'out-of-scope'` quarantine once the document enters its space's sync scope, so the next sync round
+   * fetches it. Any other quarantine stays: it records a document that must not be loaded.
+   */
+  releaseOutOfScopeDocument(documentId: DocumentId): void {
+    if (this.#quarantined.get(documentId)?.reason !== 'out-of-scope') {
+      return;
+    }
+    this.#quarantined.delete(documentId);
+    log('released out-of-scope document', { documentId });
+    this._sharePolicyChangedTask?.schedule();
   }
 
   /** Documents currently leased — what the host holds because something is using it. */

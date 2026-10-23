@@ -12,14 +12,25 @@ import { InvitationSchema } from './buf/proto/gen/dxos/client/invitation_pb.ts';
 import { QueryInvitationsResponseSchema } from './buf/proto/gen/dxos/client/services_pb.ts';
 import { DeviceProfileDocumentSchema } from './buf/proto/gen/dxos/halo/credentials_pb.ts';
 import { bufMessage, serviceError } from './service-rpc.ts';
+import { mutableArray } from './service-schemas.ts';
 
 //
 // RPC message schemas.
 //
 
+/**
+ * Objects to replicate from a space joined through an object share link. The guest's own client enforces it; the
+ * host and EDGE never see it.
+ */
+export const SyncScope = Schema.Struct({
+  objectIds: mutableArray(Schema.String),
+});
+export interface SyncScope extends Schema.Schema.Type<typeof SyncScope> {}
+
 export const AcceptInvitationRequest = Schema.Struct({
   invitation: bufMessage(InvitationSchema),
   deviceProfile: Schema.optional(bufMessage(DeviceProfileDocumentSchema)),
+  syncScope: Schema.optional(SyncScope),
 });
 export interface AcceptInvitationRequest extends Schema.Schema.Type<typeof AcceptInvitationRequest> {}
 

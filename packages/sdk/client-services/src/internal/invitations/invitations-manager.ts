@@ -57,6 +57,7 @@ export class InvitationsManager {
 
   private _invitationHandlerFactory?: (
     invitation: Partial<Invitation> & Pick<Invitation, 'kind'>,
+    options?: InvitationsContract.InvitationHandlerOptions,
   ) => InvitationProtocol;
 
   constructor(
@@ -68,7 +69,10 @@ export class InvitationsManager {
    * Wires the invitation handler factory after the composing stack is fully constructed.
    */
   setInvitationHandlerFactory(
-    getHandler: (invitation: Partial<Invitation> & Pick<Invitation, 'kind'>) => InvitationProtocol,
+    getHandler: (
+      invitation: Partial<Invitation> & Pick<Invitation, 'kind'>,
+      options?: InvitationsContract.InvitationHandlerOptions,
+    ) => InvitationProtocol,
   ): void {
     this._invitationHandlerFactory = getHandler;
   }
@@ -76,9 +80,12 @@ export class InvitationsManager {
   /**
    * Resolves the protocol for an invitation kind; throws until a factory has been wired.
    */
-  getInvitationHandler(invitation: Partial<Invitation> & Pick<Invitation, 'kind'>): InvitationProtocol {
+  getInvitationHandler(
+    invitation: Partial<Invitation> & Pick<Invitation, 'kind'>,
+    options?: InvitationsContract.InvitationHandlerOptions,
+  ): InvitationProtocol {
     invariant(this._invitationHandlerFactory, 'Invitation handler factory not set.');
-    return this._invitationHandlerFactory(invitation);
+    return this._invitationHandlerFactory(invitation, options);
   }
 
   @trace.span({ showInBrowserTimeline: true, op: 'lifecycle' })
@@ -165,6 +172,7 @@ export class InvitationsManager {
     request: {
       invitation: InvitationsService.AcceptInvitationRequest['invitation'];
       deviceProfile?: DeviceProfileDocument;
+      syncScope?: InvitationsService.AcceptInvitationRequest['syncScope'];
     },
   ): AuthenticatingInvitation {
     const options = request.invitation;
@@ -173,7 +181,7 @@ export class InvitationsManager {
       return existingInvitation;
     }
 
-    const handler = this.getInvitationHandler(options);
+    const handler = this.getInvitationHandler(options, { syncScope: request.syncScope?.objectIds });
     const {
       ctx: invitationCtx,
       invitation,
