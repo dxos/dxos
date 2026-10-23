@@ -132,6 +132,12 @@ export const SpecIde: Story = {
     await userEvent.hover(local);
     const card = await waitFor(() => within(canvasElement.ownerDocument.body).getByTestId('spec-review.snippet-card'));
     await waitFor(() => expect(within(card).getByTestId('spec-review.snippet')).toBeTruthy());
+    // The card must sit on screen beside its chip, not merely be in the DOM.
+    await waitFor(() => {
+      const box = card.getBoundingClientRect();
+      const chip = local.getBoundingClientRect();
+      return expect(box.top >= 0 && (box.top >= chip.bottom || box.bottom <= chip.top)).toBe(true);
+    });
 
     // The current Review card of an op expands to its walkthrough, each step with its code.
     await userEvent.click(canvas.getByTestId('spec-changelog.view.review'));

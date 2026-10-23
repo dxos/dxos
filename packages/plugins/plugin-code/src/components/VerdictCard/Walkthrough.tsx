@@ -2,14 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 
+import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 
 import { type SourceKey, formatSourceKey, parseSourceKey } from '#sync';
 
-import { declarationSnippet } from '../CodeView/symbol.ts';
+import { type Snippet, declarationSnippet } from '../CodeView/symbol.ts';
 import { type SourceReader } from '../SpecEditor/snippet-card.ts';
+import { mountSnippet } from '../SpecEditor/snippet-view.ts';
 import { type WalkthroughStep } from '../SpecModel/index.ts';
 
 export type WalkthroughProps = {
@@ -47,7 +49,7 @@ const WalkthroughSegment = ({ index, step, read, onOpenCode }: WalkthroughSegmen
       )}
       <button
         type='button'
-        className='self-start font-mono text-xs text-description hover:underline'
+        className='self-start text-start break-all font-mono text-xs text-description hover:underline'
         title={formatSourceKey(key)}
         disabled={!onOpenCode}
         onClick={(event) => {
@@ -59,17 +61,22 @@ const WalkthroughSegment = ({ index, step, read, onOpenCode }: WalkthroughSegmen
         {key.path}
         {key.fragment && `#${key.fragment}`}
       </button>
-      {snippet && (
-        <pre className='overflow-x-auto text-xs leading-5 font-mono' data-testid='spec-review.snippet'>
-          {snippet.lines.map((line, offset) => (
-            <div key={offset} className='flex'>
-              <span className='w-8 shrink-0 pe-2 text-end text-description select-none'>{snippet.line + offset}</span>
-              <span className='whitespace-pre'>{line}</span>
-            </div>
-          ))}
-          {snippet.truncated && <div className='ps-8 text-description'>…</div>}
-        </pre>
-      )}
+      {snippet && <SnippetCode snippet={snippet} path={key.path} />}
     </Layout.Flex>
   );
+};
+
+/** A highlighted, read-only code view of one snippet, in the palette of the current theme. */
+const SnippetCode = ({ snippet, path }: { snippet: Snippet; path: string }) => {
+  const themeMode = Hooks.useThemeMode();
+  const parentRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!parentRef.current) {
+      return;
+    }
+    const view = mountSnippet(parentRef.current, snippet, path, themeMode === 'dark');
+    return () => view.destroy();
+  }, [snippet, path, themeMode]);
+
+  return <div ref={parentRef} className='overflow-x-auto' data-testid='spec-review.snippet' />;
 };

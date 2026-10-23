@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type EditorState, type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, type Tooltip, WidgetType, showTooltip } from '@codemirror/view';
+import { type EditorState, type Extension, RangeSetBuilder } from '@codemirror/state';
+import { Decoration, type DecorationSet, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 
 import { type SourceKey, formatSourceKey } from '#sync';
 
@@ -15,7 +15,7 @@ import {
   reviewAnnotations,
   walkthroughOf,
 } from '../SpecModel/index.ts';
-import { type SourceReader, snippetCard, walkthroughCard } from './snippet-card.ts';
+import { type SnippetCard, type SourceReader, snippetCard, walkthroughCard } from './snippet-card.ts';
 
 /** A block declaration line, `feat F-1: …`, `  req F-1.2: …` or `type Scene`, captured as its kind and id. */
 const DECLARATION = /^\s*([a-z]+)\s+([A-Za-z][\w.-]*)\s*(?::|$)/;
@@ -34,33 +34,6 @@ const EXERCISE_LABEL: Record<Verdict['status'], { text: string; hue: string } | 
 /** How long a hover card stays after the pointer leaves its chip, so the pointer can move onto the card. */
 const HIDE_DELAY = 200;
 
-type HoverCard = { chip: HTMLElement; render: () => HTMLElement };
-
-const setHoverCard = StateEffect.define<HoverCard | null>();
-
-/** The one hover card a chip opens, anchored to the chip rather than to a document position. */
-const hoverCardField = StateField.define<Tooltip | null>({
-  create: () => null,
-  update: (value, transaction) => {
-    for (const effect of transaction.effects) {
-      if (effect.is(setHoverCard)) {
-        const card = effect.value;
-        return card
-          ? {
-              pos: 0,
-              above: true,
-              // Measured on every reposition, so the card follows its chip when the editor scrolls.
-              getCoords: () => card.chip.getBoundingClientRect(),
-              create: () => ({ dom: card.render() }),
-            }
-          : null;
-      }
-    }
-    return value;
-  },
-  provide: (field) => showTooltip.from(field),
-});
-
 /** More code chips than this collapse into a `+n` chip whose tooltip lists the rest. */
 const MAX_CODE_CHIPS = 3;
 
@@ -75,35 +48,78 @@ export type ReviewGutterCallbacks = {
   read?: SourceReader;
 };
 
-/** Shows a card while the pointer is on the chip or on the card itself. */
+/** The gap between a chip and its card. */
+const CARD_GAP = 4;
+
+/**
+ * Shows one card while the pointer is on its chip or on the card itself.
+ * The card lives on `document.body` at fixed coordinates measured from the chip, since CodeMirror's tooltip layer
+ * misplaces fixed tooltips under the transformed containers the spec editor sits in.
+ */
 class HoverController {
   #timer: ReturnType<typeof setTimeout> | undefined;
+  #card: SnippetCard | undefined;
+  #chip: HTMLElement | undefined;
+  readonly #reposition = () => this.#place();
 
-  attach(view: EditorView, chip: HTMLElement, render: () => HTMLElement): void {
+  attach(view: EditorView, chip: HTMLElement, render: (dark: boolean) => SnippetCard): void {
     chip.addEventListener('mouseenter', () => {
       this.#cancel();
-      view.dispatch({
-        effects: setHoverCard.of({
-          chip,
-          render: () => {
-            const dom = render();
-            dom.addEventListener('mouseenter', () => this.#cancel());
-            dom.addEventListener('mouseleave', () => this.#hide(view));
-            return dom;
-          },
-        }),
-      });
+      this.close();
+      const card = render(view.state.facet(EditorView.darkTheme));
+      card.dom.classList.add(
+        'fixed',
+        'z-50',
+        'rounded-sm',
+        'border',
+        'border-separator',
+        'bg-modal-surface',
+        'shadow-sm',
+      );
+      card.dom.addEventListener('mouseenter', () => this.#cancel());
+      card.dom.addEventListener('mouseleave', () => this.#hide());
+      chip.ownerDocument.body.appendChild(card.dom);
+      this.#card = card;
+      this.#chip = chip;
+      this.#place();
+      window.addEventListener('scroll', this.#reposition, true);
     });
-    chip.addEventListener('mouseleave', () => this.#hide(view));
+    chip.addEventListener('mouseleave', () => this.#hide());
+  }
+
+  /** Removes the open card, if any. */
+  close(): void {
+    window.removeEventListener('scroll', this.#reposition, true);
+    this.#card?.dom.remove();
+    this.#card?.destroy();
+    this.#card = undefined;
+    this.#chip = undefined;
+  }
+
+  /** Below the chip when it fits, else above; kept inside the window horizontally. */
+  #place(): void {
+    if (!this.#card || !this.#chip) {
+      return;
+    }
+    if (!this.#chip.isConnected) {
+      this.close();
+      return;
+    }
+    const chip = this.#chip.getBoundingClientRect();
+    const { dom } = this.#card;
+    const { width, height } = dom.getBoundingClientRect();
+    const below = chip.bottom + CARD_GAP + height <= window.innerHeight || chip.top < height + CARD_GAP;
+    dom.style.top = `${below ? chip.bottom + CARD_GAP : chip.top - CARD_GAP - height}px`;
+    dom.style.left = `${Math.max(CARD_GAP, Math.min(chip.left, window.innerWidth - width - CARD_GAP))}px`;
   }
 
   #cancel(): void {
     clearTimeout(this.#timer);
   }
 
-  #hide(view: EditorView): void {
+  #hide(): void {
     this.#cancel();
-    this.#timer = setTimeout(() => view.dispatch({ effects: setHoverCard.of(null) }), HIDE_DELAY);
+    this.#timer = setTimeout(() => this.close(), HIDE_DELAY);
   }
 }
 
@@ -173,14 +189,14 @@ class ReviewWidget extends WidgetType {
     );
     statusTag.dataset.status = status;
     if (steps) {
-      this.hover.attach(view, statusTag, () => walkthroughCard(steps, read, onOpen));
+      this.hover.attach(view, statusTag, (dark) => walkthroughCard(steps, { read, onOpen, dark }));
     }
 
     const codeChips = (keys: readonly SourceKey[], hue: string, testId: string) => {
       keys.slice(0, MAX_CODE_CHIPS).forEach((key) => {
         const chip = tag(`</> ${labelOf(key)}`, hue, undefined, testId, () => onOpen?.(key));
         chip.dataset.key = formatSourceKey(key);
-        this.hover.attach(view, chip, () => snippetCard(key, read, onOpen));
+        this.hover.attach(view, chip, (dark) => snippetCard(key, { read, onOpen, dark }));
       });
       const rest = keys.slice(MAX_CODE_CHIPS);
       if (rest.length > 0) {
@@ -225,11 +241,10 @@ class ReviewWidget extends WidgetType {
       );
       chip.dataset.testing = testing;
       if (tests.length > 0) {
-        this.hover.attach(view, chip, () =>
+        this.hover.attach(view, chip, (dark) =>
           walkthroughCard(
             tests.map((key) => ({ text: '', key: formatSourceKey(key) })),
-            read,
-            onOpen,
+            { read, onOpen, dark },
           ),
         );
       }
@@ -282,7 +297,8 @@ export const reviewGutter = (review: ReviewModel, callbacks: ReviewGutterCallbac
   const annotations = new Map(reviewAnnotations(review).map((annotation) => [annotation.id, annotation]));
   const hover = new HoverController();
   return [
-    hoverCardField,
+    // The card is outside the editor's DOM, so it goes when the editor does.
+    ViewPlugin.define(() => ({ destroy: () => hover.close() })),
     EditorView.decorations.compute(['doc'], (state) =>
       buildDecorations(state, verdicts, annotations, callbacks, hover),
     ),
