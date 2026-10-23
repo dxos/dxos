@@ -19,7 +19,7 @@ import { translations } from '#translations';
 import { SpaceCapabilities, SpaceCapability, SpaceSchema } from '#types';
 
 import { SpaceOperationConfig } from '../operations/helpers.ts';
-import { makeCreateInvitationUrl, makeCreateJoinUrl } from './helpers.ts';
+import { makeCreateInvitationUrl, makeCreateJoinUrl, resolveShareableLinkOrigin } from './helpers.ts';
 
 export * from './app-graph-builder/index.ts';
 export * from './settings-sync/index.ts';
@@ -136,6 +136,7 @@ export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mapp
   props: (options: SpaceSchema.SpacePluginOptions) => ({
     createInvitationUrl: makeCreateInvitationUrl(options),
     createJoinUrl: makeCreateJoinUrl(options),
+    shareableLinkOrigin: resolveShareableLinkOrigin(options),
   }),
 });
 export const Translations = AppCapability.translations([

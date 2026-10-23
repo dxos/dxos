@@ -35,3 +35,9 @@ export class TemplateApplyError extends BaseError.extend('TemplateApplyError', '
 
 /** A `?spaceKey=` deep link timed out or was rejected while joining, distinct from an invitation-code failure. */
 export class JoinByKeyError extends BaseError.extend('JoinByKeyError', 'Failed to join the space by key.') {}
+
+/** A `?share=` parameter that is not a share payload this version understands. */
+export class InvalidSharePayloadError extends BaseError.extend(
+  'InvalidSharePayloadError',
+  'The share link is malformed or was made by a newer version.',
+) {}

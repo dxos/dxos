@@ -44,6 +44,7 @@ export const handlers = OperationHandlerSet.lazy([
   SpaceOperation.OpenImportSpace.pipe(Operation.lazyHandler(() => import('./open-import-space.ts'))),
   SpaceOperation.OpenMembers.pipe(Operation.lazyHandler(() => import('./open-members.ts'))),
   SpaceOperation.OpenSettings.pipe(Operation.lazyHandler(() => import('./open-settings.ts'))),
+  SpaceOperation.OpenShareObject.pipe(Operation.lazyHandler(() => import('./open-share-object.ts'))),
   SpaceOperation.RemoveAllObjects.pipe(Operation.lazyHandler(() => import('./remove-all-objects.ts'))),
   SpaceOperation.RemoveObjects.pipe(Operation.lazyHandler(() => import('./remove-objects.ts'))),
   SpaceOperation.Rename.pipe(Operation.lazyHandler(() => import('./rename.ts'))),
@@ -53,5 +54,6 @@ export const handlers = OperationHandlerSet.lazy([
   SpaceOperation.RestoreObjects.pipe(Operation.lazyHandler(() => import('./restore-objects.ts'))),
   SpaceOperation.SetArchived.pipe(Operation.lazyHandler(() => import('./set-archived.ts'))),
   SpaceOperation.Share.pipe(Operation.lazyHandler(() => import('./share.ts'))),
+  SpaceOperation.ShareObject.pipe(Operation.lazyHandler(() => import('./share-object.ts'))),
   SpaceOperation.Snapshot.pipe(Operation.lazyHandler(() => import('./snapshot.ts'))),
 ]);

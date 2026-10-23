@@ -23,6 +23,7 @@ import { SpaceOperation } from '#types';
 
 import { JoinByKeyError, NoIdentityError } from '../../errors.ts';
 import { readJoinSpaceKey } from './join-space-key.ts';
+import { handleShareLink } from './share-link-handler.ts';
 
 export type NavigationHandlerOptions = {
   invitationProp?: string;
@@ -32,8 +33,8 @@ export type NavigationHandlerOptions = {
 };
 
 /**
- * NavigationHandler for space invitation URL params.
- * Handles ?spaceInvitationCode=X → join space via invitation.
+ * NavigationHandlers for space invitation URL params.
+ * Handles ?spaceInvitationCode=X → join space via invitation, and ?share=X → open a shared object.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({
@@ -104,7 +105,16 @@ export default Capability.makeModule(
         Effect.provideService(Operation.Service, operationService),
       );
 
-    return Capability.contribute(AppCapabilities.NavigationHandler, handler);
+    const shareLinkHandler: AppCapabilities.NavigationHandler = (url: URL) =>
+      handleShareLink(url).pipe(
+        Effect.provideService(Capability.Service, capabilities),
+        Effect.provideService(Operation.Service, operationService),
+      );
+
+    return [
+      Capability.contribute(AppCapabilities.NavigationHandler, handler),
+      Capability.contribute(AppCapabilities.NavigationHandler, shareLinkHandler),
+    ];
   }),
 );
 

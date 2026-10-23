@@ -63,7 +63,8 @@ The object's existing shareable path plus one query parameter:
 https://composer.space/w/<spaceId>/db/<typeSlug>+<objectId>?share=<payload>
 ```
 
-The path is what the existing **Copy link** action already produces
+The query parameter is `SpaceOperation.SHARE_PARAM`, which plugin-onboarding also reads (§6). The path is what the
+existing **Copy link** action already produces
 (`UrlResolution.getShareableLinkPath`), so a member who opens it lands on the object through the
 normal URL projection with no extra work. `payload` is `base64url(deflate-raw(JSON))` of:
 
@@ -72,7 +73,7 @@ type SharePayload = {
   v: 1;
   spaceId: SpaceId;
   objectId: ObjectId; // The target.
-  typename: string; // Lets the guest build the graph path before the type is registered.
+  typeSlug: string; // The type's graph path segment, so the guest can open the object before its type registers.
   invitation?: string; // InvitationEncoder code; absent for Restricted links.
   plugins: string[]; // Plugin ids that render the scope's types.
   objects: ObjectId[]; // The scope (§4): the target first.
@@ -120,11 +121,11 @@ the code, so the link itself is the secret, exactly like today's invite-many lin
 A new plugin-space `NavigationHandler` (`share-link-handler`) reads `?share=`, removes it from the
 address bar, and branches:
 
-| Recipient                    | What happens                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **(a) already a member**     | Enables any missing plugins, extends the space's sync scope if the member is itself a partial guest (`space.internal.extendSyncScope`, a no-op for full members), and returns — URL projection opens the object from the path.                                                                                                                                                                                                                                  |
-| **(b) identity, not member** | Enables the plugins, then `client.spaces.join(invitation, { syncScope: { objectIds } })` without a dialog. The handler awaits the join (bounded) so projection resolves the object path as soon as the space is ready; if the join outlives the bound it carries on detached and opens the object when it lands (`LayoutOperation.Open`).                                                                                                                       |
-| **(c) no identity**          | plugin-onboarding sees `?share=` and creates the identity in place — no welcome screen, no help tour — then (b). The handler waits for the identity rather than creating one, so the two never race to create two.                                                                                                                                                                                                                                             |
+| Recipient                    | What happens                                                                                                                                                                                                                                                                                                                              |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **(a) already a member**     | Enables any missing plugins, extends the space's sync scope if the member is itself a partial guest (`space.internal.extendSyncScope`, a no-op for full members), and returns — URL projection opens the object from the path.                                                                                                            |
+| **(b) identity, not member** | Enables the plugins, then `client.spaces.join(invitation, { syncScope: { objectIds } })` without a dialog. The handler awaits the join (bounded) so projection resolves the object path as soon as the space is ready; if the join outlives the bound it carries on detached and opens the object when it lands (`LayoutOperation.Open`). |
+| **(c) no identity**          | plugin-onboarding sees `?share=` and creates the identity in place — no welcome screen, no help tour — then (b). The handler waits for the identity rather than creating one, so the two never race to create two.                                                                                                                        |
 
 ## 7. Partial sync — the client-side guard
 
@@ -199,17 +200,17 @@ What closing the gap needs (tracked as tasks):
 
 ## 10. Decision log
 
-| #   | Decision                                                                                                                         | Why                                                                                                                                                         |
-| --- | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D1  | Lives in plugin-space, not a new plugin.                                                                                         | plugin-space already owns object actions, invitations, the members panel and URL handlers, and it is a core plugin, so every object gets the action.        |
-| D2  | Link = the object's shareable path + `?share=`.                                                                                  | Members open it with no new code path; the payload only matters to non-members.                                                                             |
-| D3  | Scope enforcement reuses the quarantine gate with a new reason.                                                                  | It already covers load, request, accept, serve and advertise; a parallel gate would duplicate seven call sites and drift.                                   |
-| D4  | Scope persisted in `SpaceMetadata`, not SQL.                                                                                     | The metadata store is one protobuf blob, so a new optional field needs no migration; `edge_replication` is the precedent.                                    |
-| D5  | Scope travels in `AcceptInvitationRequest`, not in the `Invitation` proto.                                                       | It is the guest's local choice, not part of what the host signs or EDGE reads; an Effect-schema field needs no codegen on the wire.                         |
-| D6  | Root collection excluded from the scope; space properties included.                                                              | Properties gate `SpaceProxy` readiness; the root collection would leak the object list as dangling refs.                                                   |
-| D7  | Markdown `echo:` links count as edges.                                                                                           | "A document that addresses another one" must open with its link working; without it the guest sees a dead link.                                            |
-| D8  | KNOWN_PUBLIC_KEY + multi-use + delegated, like invite-many.                                                                      | Proven EDGE path in production; NONE works too but has no extra benefit and is less exercised.                                                              |
-| D9  | Onboarding owns identity creation for share links.                                                                               | Onboarding and the handler would otherwise race to create two identities on a fresh browser.                                                                |
+| #   | Decision                                                                   | Why                                                                                                                                                  |
+| --- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | Lives in plugin-space, not a new plugin.                                   | plugin-space already owns object actions, invitations, the members panel and URL handlers, and it is a core plugin, so every object gets the action. |
+| D2  | Link = the object's shareable path + `?share=`.                            | Members open it with no new code path; the payload only matters to non-members.                                                                      |
+| D3  | Scope enforcement reuses the quarantine gate with a new reason.            | It already covers load, request, accept, serve and advertise; a parallel gate would duplicate seven call sites and drift.                            |
+| D4  | Scope persisted in `SpaceMetadata`, not SQL.                               | The metadata store is one protobuf blob, so a new optional field needs no migration; `edge_replication` is the precedent.                            |
+| D5  | Scope travels in `AcceptInvitationRequest`, not in the `Invitation` proto. | It is the guest's local choice, not part of what the host signs or EDGE reads; an Effect-schema field needs no codegen on the wire.                  |
+| D6  | Root collection excluded from the scope; space properties included.        | Properties gate `SpaceProxy` readiness; the root collection would leak the object list as dangling refs.                                             |
+| D7  | Markdown `echo:` links count as edges.                                     | "A document that addresses another one" must open with its link working; without it the guest sees a dead link.                                      |
+| D8  | KNOWN_PUBLIC_KEY + multi-use + delegated, like invite-many.                | Proven EDGE path in production; NONE works too but has no extra benefit and is less exercised.                                                       |
+| D9  | Onboarding owns identity creation for share links.                         | Onboarding and the handler would otherwise race to create two identities on a fresh browser.                                                         |
 
 ## 11. Test plan
 
