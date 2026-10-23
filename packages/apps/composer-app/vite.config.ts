@@ -38,10 +38,10 @@ import { createConfig as createTestConfig } from '../../../vitest.base.config.ts
 import { bootChunking } from './src/vite/boot-chunking.ts';
 import { bootMarkFilter, channelFaviconPlugin, channelVariant } from './src/vite/channel-branding.ts';
 import { debugPortSidecarPlugin, resolveDebugPortSession } from './src/vite/debug-port.ts';
+import { fileSystemPlugin } from './src/vite/file-system.ts';
 import { nodeBuiltinStubs } from './src/vite/node-builtin-stubs.ts';
 import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
 import { reactRefreshPreamble } from './src/vite/react-refresh-preamble.ts';
-import { specFsPlugin } from './src/vite/spec-fs.ts';
 import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
 
 const isTrue = (str?: string) => str === 'true' || str === '1';
@@ -589,8 +589,8 @@ export default defineConfig((env) => ({
     // because this config's static imports are bundled as CJS `require` and the package is ESM-only.
     import('@dxos/plugin-dev-shell/vite-plugin').then(({ DevShellVitePlugin }) => DevShellVitePlugin()),
 
-    // Dev-only: local spec files for plugin-code's spec sync (the desktop app uses the Tauri fs plugin instead).
-    specFsPlugin(rootDir),
+    // Dev-only: local files for plugin-file-system's FileSystem service (the desktop app uses the Tauri fs plugin instead).
+    fileSystemPlugin(rootDir),
 
     // RSS proxy middleware for CORS-free feed fetching.
     {

@@ -266,7 +266,15 @@ const externalDefinition = (key: SourceKey, specs: SpecTexts): DefinitionModel =
 };
 
 /** Keys attached to a spec item from outside its text, e.g. a review's evidence; `id` may name a nested req (`F-1.2`). */
-export type Annotation = { id: string; keys: readonly SourceKey[] };
+export type Annotation = {
+  id: string;
+  /** The code that implements the item. */
+  keys: readonly SourceKey[];
+  /** Whether a review found tests for the item; absent when it does not say. */
+  testing?: 'tested' | 'untested';
+  /** The tests that exercise the item. */
+  tests?: readonly SourceKey[];
+};
 
 /**
  * Every definition of a spec with an edge to each other definition its title or body names, plus a node for each

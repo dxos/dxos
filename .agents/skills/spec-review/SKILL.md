@@ -53,6 +53,18 @@ decides whether the code or the spec changes.
    not evidence. An anonymous default export (most op handlers and capability modules) has no
    symbol: cite the file alone, `github:<owner>/<repo>/<path>`.
 
+   Cite the **tests** that exercise the item in `tests:`, as test file keys without a `#`
+   (`github:<owner>/<repo>/<path>.test.ts`, a story or an e2e spec). A `done` verdict cites at least
+   one; an `untested` verdict cites none. The viewer shows `tested` or `untested` beside the item
+   from these, and "no code" when `evidence:` is empty.
+
+   A **`scenario` or `test`** block is judged on whether automation exercises it, not on whether code
+   implements it: `done` when an automated test runs it end to end, `partial` when a test covers some
+   of its steps, `diverged` when the test runs something else, `missing` when nothing runs it (a manual
+   QA run does not count). `untested` does not apply. `tests:` names the test files and is required
+   unless the status is `missing`; `evidence:` may name the code the test drives. The viewer shows
+   exercised, partly exercised or not exercised, with a chip per test file.
+
 5. **Write the review** to the spec's directory as `<SPEC>.review.mdl` (`PLUGIN.mdl` →
    `PLUGIN.review.mdl`), replacing any previous one. Frontmatter:
 
@@ -74,6 +86,7 @@ decides whether the code or the spec changes.
    verdict F-1.2: The OS directory picker opens on the action.
      status: done
      evidence: [github:dxos/dxos/packages/plugins/plugin-file-system/src/util.ts#openDirectoryPicker]
+     tests: [github:dxos/dxos/packages/plugins/plugin-file-system/src/util.test.ts]
    ```
    ````
 
@@ -89,7 +102,9 @@ decides whether the code or the spec changes.
    It fails on a missing or malformed frontmatter field, an unknown status, a non-`done` verdict
    without a note, an item with no verdict, a verdict for an id the spec does not have, and evidence
    that names a missing file or a symbol the file does not declare. It warns when the `commit` is not
-   in the clone and when a done, untested or partial verdict cites no evidence.
+   in the clone, when a done, untested or partial verdict cites no evidence, and when a done verdict
+   cites no tests. A test key with a `#`, a missing test file, or tests on an `untested` verdict is an
+   error.
 
 7. **Report** the counts per status and the three findings that matter most.
 

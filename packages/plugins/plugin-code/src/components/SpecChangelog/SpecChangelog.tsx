@@ -29,8 +29,8 @@ import { DataModelGraph } from '../DataModelGraph/index.ts';
 import { DecisionLog } from '../DecisionLog/index.ts';
 import { DefinitionGraph } from '../DefinitionGraph/index.ts';
 import { ReviewPanel } from '../ReviewPanel/index.ts';
-import { implementationChips, reviewGutter } from '../SpecEditor/index.ts';
-import { parseReview, reviewAnnotations } from '../SpecModel/index.ts';
+import { reviewGutter } from '../SpecEditor/index.ts';
+import { parseReview } from '../SpecModel/index.ts';
 import { decisionGutter } from './decision-gutter.ts';
 
 /** What the panel beside the spec shows. */
@@ -94,13 +94,13 @@ export const SpecChangelog = ({
         setView((current) => (current === 'decisions' || current === 'log' ? current : 'decisions'));
       }),
       review
-        ? [
-            reviewGutter(review, (id) => {
+        ? reviewGutter(review, {
+            onSelect: (id) => {
               setSelectedVerdict(id);
               setView('review');
-            }),
-            implementationChips(reviewAnnotations(review), (key) => onOpenCode?.(key)),
-          ]
+            },
+            onOpen: (key) => onOpenCode?.(key),
+          })
         : [],
     ],
     [themeMode, decisions, review, onOpenCode],

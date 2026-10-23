@@ -7,10 +7,10 @@ import * as Effect from 'effect/Effect';
 import { Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { log } from '@dxos/log';
+import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
 import { type Spec } from '@dxos/types';
 
 import { resolvePath } from './repo-roots.ts';
-import { type RepoRoot, type SpecFs } from './spec-fs.ts';
 import { type SourceKey, fromMetaKey, isSpecKey } from './spec-key.ts';
 
 /** What a sync pass did to one spec. */
@@ -87,7 +87,7 @@ export type SyncResult = { status: SyncStatus; path?: string; error?: string };
 /** One sync pass for one spec. */
 export const syncSpec = (
   spec: Spec.Spec,
-  { fs, roots, bases }: { fs: SpecFs; roots: readonly RepoRoot[]; bases: SyncBases },
+  { fs, roots, bases }: { fs: FileSystem.FileSystem; roots: readonly FileSystem.RepoRoot[]; bases: SyncBases },
 ): Effect.Effect<SyncResult> =>
   Effect.gen(function* () {
     const key = getSpecKey(spec);

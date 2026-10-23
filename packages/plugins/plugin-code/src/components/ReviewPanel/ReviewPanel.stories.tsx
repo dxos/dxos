@@ -16,7 +16,7 @@ import FILE_SYSTEM_REVIEW from '../../../../plugin-file-system/PLUGIN.review.mdl
 import { parseReview } from '../SpecModel/index.ts';
 import { ReviewPanel, type ReviewPanelProps } from './ReviewPanel.tsx';
 
-/** The plugin-file-system review the spec-review skill wrote: 31 verdicts across every status. */
+/** The plugin-file-system review the spec-review skill wrote, with verdicts across every status. */
 const REVIEW = parseReview(FILE_SYSTEM_REVIEW);
 
 /** Holds the current verdict the way the spec page does, so selection round-trips through the host. */
@@ -43,7 +43,7 @@ export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const cards = await waitFor(() => canvas.getAllByTestId('verdict-card'));
-    await expect(cards).toHaveLength(31);
+    await expect(cards).toHaveLength(REVIEW.verdicts.length);
     await expect(cards[0].dataset.status).toBe('missing');
     await userEvent.click(cards[2]);
     await waitFor(() => expect(cards[2].closest('[aria-current], .dx-current')).not.toBeNull());

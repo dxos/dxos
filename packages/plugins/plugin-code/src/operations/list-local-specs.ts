@@ -5,8 +5,9 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
+import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
 
-import { formatSourceKey, getSpecFs, resolveRoots } from '#sync';
+import { formatSourceKey, resolveRoots } from '#sync';
 import { CodeOperation } from '#types';
 
 import { CodeOperationError } from '../errors.ts';
@@ -15,7 +16,7 @@ import { configuredRepos } from './import-spec.ts';
 const handler: Operation.WithHandler<typeof CodeOperation.ListLocalSpecs> = CodeOperation.ListLocalSpecs.pipe(
   Operation.withHandler(
     Effect.fn(function* () {
-      const fs = getSpecFs();
+      const fs = FileSystem.get();
       const roots = yield* resolveRoots(fs, yield* configuredRepos);
       const keys = yield* Effect.forEach(roots, (root) =>
         fs.list(root.path, '.mdl').pipe(

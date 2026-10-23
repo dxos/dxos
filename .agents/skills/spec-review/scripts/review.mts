@@ -17,7 +17,23 @@ import path from 'node:path';
 const STATUSES = new Set(['done', 'untested', 'partial', 'diverged', 'missing']);
 
 /** Kinds a review judges. Acceptance blocks (scenarios, QA tests) are run, not reviewed; history is not code. */
-const REVIEWED_KINDS = new Set(['feat', 'req', 'type', 'op', 'component', 'service', 'capability', 'module', 'db']);
+const REVIEWED_KINDS = new Set([
+  'plugin',
+  'feat',
+  'req',
+  'type',
+  'op',
+  'component',
+  'service',
+  'capability',
+  'module',
+  'db',
+  'scenario',
+  'test',
+]);
+
+/** Kinds judged on whether automation exercises them rather than on whether code implements them. */
+const EXERCISE_KINDS = new Set(['scenario', 'test']);
 
 type Item = { id: string; kind: string; line: number; title: string };
 
@@ -124,6 +140,7 @@ const check = (reviewPath: string): number => {
   }
   const items = specText ? reviewItems(specText) : [];
   const itemIds = new Set(items.map(({ id }) => id));
+  const kindOf = new Map(items.map(({ id, kind }) => [id, kind]));
 
   const verdicts = blocks(text).flatMap(({ body, line }) => {
     const header = body.split('\n')[0].match(/^verdict\s+([A-Za-z][\w.-]*)\s*(?::\s*(.*))?$/);
@@ -146,11 +163,12 @@ const check = (reviewPath: string): number => {
     if (status && status !== 'done' && !field(body, 'note')) {
       errors.push(`${at}: ${id} is ${status} but has no note saying what is missing or different`);
     }
+    const exercise = EXERCISE_KINDS.has(kindOf.get(id) ?? '');
     const evidence = (field(body, 'evidence') ?? '')
       .replace(/^\[|\]$/g, '')
       .split(/[,\s]+/)
       .filter(Boolean);
-    if ((status === 'done' || status === 'untested' || status === 'partial') && evidence.length === 0) {
+    if (!exercise && (status === 'done' || status === 'untested' || status === 'partial') && evidence.length === 0) {
       warnings.push(`${at}: ${id} is ${status} with no evidence`);
     }
     for (const key of evidence) {
@@ -163,6 +181,32 @@ const check = (reviewPath: string): number => {
         if (!declares(readFileSync(file, 'utf8'), symbol.split('.').pop() ?? symbol)) {
           errors.push(`${at}: no declaration of ${symbol} in ${key.split('#')[0]} (a mention is not evidence)`);
         }
+      }
+    }
+    const tests = (field(body, 'tests') ?? '')
+      .replace(/^\[|\]$/g, '')
+      .split(/[,\s]+/)
+      .filter(Boolean);
+    if (exercise && status === 'untested') {
+      errors.push(`${at}: ${id} is a ${kindOf.get(id)}; use done, partial, diverged or missing (see lang/review.mdl)`);
+    }
+    if (exercise && status !== 'missing' && tests.length === 0) {
+      errors.push(`${at}: ${id} is a ${kindOf.get(id)} judged ${status} but cites no tests`);
+    }
+    if (status === 'untested' && tests.length > 0) {
+      errors.push(`${at}: ${id} is untested but cites tests; make it done or drop the tests`);
+    }
+    if (!exercise && status === 'done' && tests.length === 0) {
+      warnings.push(`${at}: ${id} is done with no tests; cite them or make it untested`);
+    }
+    for (const key of tests) {
+      const { file, symbol, error } = resolveKey(key);
+      if (error) {
+        errors.push(`${at}: ${error}`);
+      } else if (symbol) {
+        errors.push(`${at}: a test key names the test file only, without #: ${key}`);
+      } else if (file && !existsSync(file)) {
+        errors.push(`${at}: test file not found: ${key}`);
       }
     }
   }

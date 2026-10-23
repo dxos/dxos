@@ -10068,6 +10068,9 @@ importers:
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
+      '@dxos/plugin-file-system':
+        specifier: workspace:*
+        version: link:../plugin-file-system
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -11867,6 +11870,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph

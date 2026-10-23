@@ -4,7 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
-import { type RepoRoot, type SpecFs } from './spec-fs.ts';
+import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
+
 import { type SourceKey, repoId } from './spec-key.ts';
 
 /** `owner/repo` from a GitHub remote URL (`git@github.com:o/r.git`, `https://github.com/o/r`). */
@@ -27,7 +28,7 @@ export const parseGitConfigRemote = (config: string): string | undefined => {
  * The `owner/repo` a working tree checks out. A linked worktree's `.git` is a file naming its gitdir
  * (`<main>/.git/worktrees/<name>`), whose shared config sits two levels up.
  */
-export const detectRepo = (fs: SpecFs, path: string): Effect.Effect<string | undefined> =>
+export const detectRepo = (fs: FileSystem.FileSystem, path: string): Effect.Effect<string | undefined> =>
   Effect.gen(function* () {
     const dotGit = yield* fs.read(`${path}/.git`).pipe(Effect.orElseSucceed(() => undefined));
     const gitdir = dotGit?.match(/^gitdir:\s*(.+?)\s*$/m)?.[1];
@@ -53,21 +54,24 @@ export const parseRepoEntry = (entry: string): { repo?: string; path: string } |
 };
 
 /** Every known checkout: configured entries first (so they win), then the host's own working tree. */
-export const resolveRoots = (fs: SpecFs, entries: readonly string[] = []): Effect.Effect<RepoRoot[]> =>
+export const resolveRoots = (
+  fs: FileSystem.FileSystem,
+  entries: readonly string[] = [],
+): Effect.Effect<FileSystem.RepoRoot[]> =>
   Effect.gen(function* () {
     const configured = yield* Effect.forEach(
       entries.map(parseRepoEntry).filter((entry) => entry !== undefined),
       (entry) =>
         entry.repo
-          ? Effect.succeed<RepoRoot | undefined>({ repo: entry.repo, path: entry.path })
+          ? Effect.succeed<FileSystem.RepoRoot | undefined>({ repo: entry.repo, path: entry.path })
           : detectRepo(fs, entry.path).pipe(Effect.map((repo) => (repo ? { repo, path: entry.path } : undefined))),
     );
-    const host = yield* fs.roots().pipe(Effect.orElseSucceed((): RepoRoot[] => []));
+    const host = yield* fs.roots().pipe(Effect.orElseSucceed((): FileSystem.RepoRoot[] => []));
     return [...configured.filter((root) => root !== undefined), ...host];
   });
 
 /** The absolute path a key names, when its repository is checked out locally. */
-export const resolvePath = (roots: readonly RepoRoot[], key: SourceKey): string | undefined => {
+export const resolvePath = (roots: readonly FileSystem.RepoRoot[], key: SourceKey): string | undefined => {
   const root = roots.find(({ repo }) => repo.toLowerCase() === repoId(key).toLowerCase());
   return root && `${root.path}/${key.path}`;
 };

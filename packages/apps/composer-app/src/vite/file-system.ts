@@ -3,13 +3,13 @@
 //
 
 import { execFileSync } from 'node:child_process';
-import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import path from 'node:path';
 import { type Plugin } from 'vite';
 
-/** Must match `SPEC_FS_ROUTE` in plugin-code's `#sync`. */
-const ROUTE = '/__dx/spec-fs';
+/** Must match `ROUTE` in `@dxos/plugin-file-system/FileSystem`. */
+const ROUTE = '/__dx/fs';
 
 const SKIP_DIRS = new Set(['node_modules', 'dist', 'target']);
 
@@ -66,20 +66,23 @@ const send = (res: ServerResponse, status: number, body: unknown) => {
   }
 };
 
+/** Writes and removals are limited to these suffixes, so a page cannot rewrite source code through the dev server. */
+const WRITABLE = ['.mdl'];
+
 /**
- * Dev-only file access for plugin-code's spec sync, the browser counterpart of the desktop app's Tauri fs plugin.
- * Reads any file inside an allowed root (specs, and code a spec links to) and writes only `.mdl` files. The roots are
- * the workspace this server runs from plus `DX_SPEC_ROOTS` (colon-separated absolute paths of other checkouts).
+ * Dev-only backend of plugin-file-system's FileSystem service, the browser counterpart of the desktop app's Tauri fs
+ * plugin. Reads any file inside an allowed root and writes or removes only `WRITABLE` files. The roots are the
+ * workspace this server runs from plus `DX_FS_ROOTS` (colon-separated absolute paths of other checkouts).
  */
-export const specFsPlugin = (rootDir: string, env = process.env): Plugin => {
-  const roots = [rootDir, ...(env.DX_SPEC_ROOTS?.split(':').filter(Boolean) ?? [])].map((root) => path.resolve(root));
+export const fileSystemPlugin = (rootDir: string, env = process.env): Plugin => {
+  const roots = [rootDir, ...(env.DX_FS_ROOTS?.split(':').filter(Boolean) ?? [])].map((root) => path.resolve(root));
   const within = (file: string): string | undefined => {
     const resolved = path.resolve(file);
     return roots.some((root) => resolved === root || resolved.startsWith(`${root}${path.sep}`)) ? resolved : undefined;
   };
 
   return {
-    name: 'dxos:spec-fs',
+    name: 'dxos:file-system',
     apply: 'serve',
     configureServer(server) {
       server.middlewares.use(ROUTE, async (req, res) => {
@@ -100,7 +103,7 @@ export const specFsPlugin = (rootDir: string, env = process.env): Plugin => {
               return send(res, 403, 'Directory is outside the allowed roots.');
             }
             return send(res, 200, {
-              files: existsSync(dir) ? list(dir, url.searchParams.get('suffix') ?? '.mdl') : [],
+              files: existsSync(dir) ? list(dir, url.searchParams.get('suffix') ?? '') : [],
             });
           }
 
@@ -109,17 +112,22 @@ export const specFsPlugin = (rootDir: string, env = process.env): Plugin => {
             if (!file) {
               return send(res, 403, 'File is outside the allowed roots.');
             }
-            if (req.method === 'PUT') {
-              if (!file.endsWith('.mdl')) {
-                return send(res, 403, 'Only .mdl files are written.');
+            if (req.method === 'PUT' || req.method === 'DELETE') {
+              if (!WRITABLE.some((suffix) => file.endsWith(suffix))) {
+                return send(res, 403, `Only ${WRITABLE.join(', ')} files are written.`);
               }
-              writeFileSync(file, await readBody(req));
+              if (req.method === 'DELETE') {
+                rmSync(file, { force: true });
+              } else {
+                mkdirSync(path.dirname(file), { recursive: true });
+                writeFileSync(file, await readBody(req));
+              }
               return send(res, 200, { ok: true });
             }
             return existsSync(file) ? send(res, 200, readFileSync(file, 'utf8')) : send(res, 404, 'Not found.');
           }
 
-          send(res, 404, 'Unknown spec-fs route.');
+          send(res, 404, 'Unknown file-system route.');
         } catch (error) {
           send(res, 500, String(error));
         }

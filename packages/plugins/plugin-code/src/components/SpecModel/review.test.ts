@@ -23,6 +23,7 @@ const REVIEW = [
       'verdict F-1.1: The action is registered.',
       '  status: done',
       '  evidence: [github:dxos/dxos/packages/plugins/plugin-x/src/a.ts#openThing]',
+      '  tests: [github:dxos/dxos/packages/plugins/plugin-x/src/a.test.ts#opens]',
     ].join('\n'),
   ),
   fence(
@@ -41,8 +42,16 @@ describe('review', () => {
         status: 'done',
         summary: 'The action is registered.',
         evidence: ['github:dxos/dxos/packages/plugins/plugin-x/src/a.ts#openThing'],
+        tests: ['github:dxos/dxos/packages/plugins/plugin-x/src/a.test.ts#opens'],
       },
-      { id: 'F-1.2', status: 'missing', summary: 'No picker yet.', evidence: [], note: 'Nothing calls the dialog.' },
+      {
+        id: 'F-1.2',
+        status: 'missing',
+        summary: 'No picker yet.',
+        evidence: [],
+        tests: [],
+        note: 'Nothing calls the dialog.',
+      },
     ]);
   });
 
@@ -56,6 +65,20 @@ describe('review', () => {
     expect(parseReview(`${wrapped}\n\n${items}`).verdicts.map(({ evidence }) => evidence)).toEqual([
       ['github:o/r/a.ts#A', 'github:o/r/b.ts#B'],
       ['github:o/r/c.ts#C'],
+    ]);
+  });
+
+  test('an item is tested by its tests or a done verdict, untested otherwise unless missing', ({ expect }) => {
+    const review = parseReview(
+      ['done', 'untested', 'partial', 'missing']
+        .map((status) => fence([`verdict ${status}: x`, `  status: ${status}`].join('\n')))
+        .join('\n\n'),
+    );
+    expect(reviewAnnotations(review).map(({ id, testing }) => [id, testing])).toEqual([
+      ['done', 'tested'],
+      ['untested', 'untested'],
+      ['partial', 'untested'],
+      ['missing', undefined],
     ]);
   });
 
@@ -121,7 +144,11 @@ describe('implementation annotations', () => {
       {
         id: 'F-1.1',
         keys: [{ owner: 'dxos', repo: 'dxos', path: 'packages/plugins/plugin-x/src/a.ts', fragment: 'openThing' }],
+        testing: 'tested',
+        tests: [{ owner: 'dxos', repo: 'dxos', path: 'packages/plugins/plugin-x/src/a.test.ts', fragment: 'opens' }],
       },
+      // Missing: no code, and nothing to say about tests.
+      { id: 'F-1.2', keys: [] },
     ]);
     const graph = buildDefinitionGraph(spec, new Map(), annotations);
     const code = 'github:dxos/dxos/packages/plugins/plugin-x/src/a.ts#openThing';

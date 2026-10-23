@@ -9,18 +9,10 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
+import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
 import { Spec } from '@dxos/types';
 
-import {
-  formatSourceKey,
-  getSpecFs,
-  getSpecKey,
-  isSpecKey,
-  parseSourceKey,
-  resolvePath,
-  resolveRoots,
-  toMetaKey,
-} from '#sync';
+import { formatSourceKey, getSpecKey, isSpecKey, parseSourceKey, resolvePath, resolveRoots, toMetaKey } from '#sync';
 import { CodeCapabilities, CodeOperation } from '#types';
 
 import { CodeOperationError } from '../errors.ts';
@@ -49,7 +41,7 @@ const handler: Operation.WithHandler<typeof CodeOperation.ImportSpec> = CodeOper
         return { spec: Ref.make(existing), created: false };
       }
 
-      const fs = getSpecFs();
+      const fs = FileSystem.get();
       const roots = yield* resolveRoots(fs, yield* configuredRepos);
       const path = resolvePath(roots, key);
       if (!path) {

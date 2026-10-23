@@ -10,8 +10,9 @@ import * as Schedule from 'effect/Schedule';
 import { useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
 
-import { type SourceKey, formatSourceKey, getSpecFs, parseSourceKey, resolvePath } from '#sync';
+import { type SourceKey, formatSourceKey, parseSourceKey, resolvePath } from '#sync';
 import { CodeCapabilities } from '#types';
 
 const UNAVAILABLE = Atom.make<CodeCapabilities.SpecSyncState>({ available: false, roots: [], specs: {} });
@@ -42,7 +43,7 @@ export const useLocalTexts = (keys: readonly string[]): ReadonlyMap<string, stri
       setTexts(new Map());
       return;
     }
-    const fs = getSpecFs();
+    const fs = FileSystem.get();
     const targets = keysKey.split('\n').flatMap((raw) => {
       const key = parseSourceKey(raw);
       const path = key && resolvePath(roots, key);

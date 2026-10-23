@@ -44,6 +44,26 @@ The body opens with a short summary, then one `verdict` per reviewed item.
 | `diverged` | The code does something different from what the item says.               |
 | `missing`  | Nothing in the code does it.                                             |
 
+The spec viewer shows beside each judged item whether code covers it (its `evidence:`, or "no code")
+and whether tests exercise it: `tested` when the verdict names `tests:` or is `done`, `untested` for
+any other status but `missing`, where there is no code to test.
+
+## Tests and scenarios
+
+A `scenario` or a `test` block describes behaviour to exercise, so it is judged on whether
+automation exercises it, not on whether code implements it:
+
+| Status     | For a `scenario` or `test`                                                  |
+| ---------- | --------------------------------------------------------------------------- |
+| `done`     | An automated test runs it end to end; `tests:` cites that test.             |
+| `partial`  | A test covers some of its steps or `then:` clauses; the note says which.    |
+| `diverged` | A test runs something different from what it describes.                     |
+| `missing`  | Nothing runs it (a manual QA run is not automation).                        |
+
+`untested` does not apply. `tests:` names the test files that exercise it and is required for
+`done`, `partial` and `diverged`; `evidence:` may name the code it drives. The viewer shows
+`exercised`, `partly exercised` or `not exercised` beside it, with a chip per test file.
+
 A `feat` with nested `req` items is judged through its requirements; its status is the worst of
 theirs. Judge a `feat` directly only when it has no requirements.
 
@@ -58,9 +78,11 @@ ext verdict
   fields:
     status: done | untested | partial | diverged | missing
     evidence?: RefList          # github: keys of the code that supports the verdict, with #Symbol
+    tests?: RefList             # github: keys of the test files that exercise the item, without #
     note?: Prose                # what is missing or different; required unless status is done
   syntax: |
     verdict F-1.2: The picker opens on the action.
       status: done
       evidence: [github:dxos/dxos/packages/plugins/plugin-file-system/src/util.ts#openDirectoryPicker]
+      tests: [github:dxos/dxos/packages/plugins/plugin-file-system/src/util.test.ts]
 ```

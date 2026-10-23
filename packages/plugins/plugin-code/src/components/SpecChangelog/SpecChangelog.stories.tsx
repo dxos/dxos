@@ -21,6 +21,7 @@ import FILE_SYSTEM_SPEC from '../../../../plugin-file-system/PLUGIN.mdl?raw';
 import FILE_SYSTEM_REVIEW from '../../../../plugin-file-system/PLUGIN.review.mdl?raw';
 import CANVAS_AUTOGROW_SPEC from '../ChangelogGraph/__fixtures__/canvas-autogrow.mdl?raw';
 import INBOX_SYNC_SPEC from '../ChangelogGraph/__fixtures__/inbox-sync.mdl?raw';
+import { parseReview } from '../SpecModel/index.ts';
 import { SpecChangelog } from './SpecChangelog.tsx';
 
 const meta = {
@@ -104,7 +105,10 @@ export const FileSystemReview: Story = {
   args: { content: FILE_SYSTEM_SPEC, review: FILE_SYSTEM_REVIEW, onOpenCode: openOnGitHub, defaultView: 'review' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await waitFor(() => expect(canvas.getAllByTestId('verdict-card').length).toBe(31), TIMEOUT);
+    await waitFor(
+      () => expect(canvas.getAllByTestId('verdict-card').length).toBe(parseReview(FILE_SYSTEM_REVIEW).verdicts.length),
+      TIMEOUT,
+    );
   },
 };
 

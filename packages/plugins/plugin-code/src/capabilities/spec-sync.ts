@@ -10,9 +10,10 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Filter } from '@dxos/echo';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
 import { Spec } from '@dxos/types';
 
-import { SyncBases, getSpecFs, getSpecKey, resolveRoots, syncSpec } from '#sync';
+import { SyncBases, getSpecKey, resolveRoots, syncSpec } from '#sync';
 import { CodeCapabilities } from '#types';
 
 /** Polling keeps one code path for both hosts; a spec file is small and the dev route is on loopback. */
@@ -27,7 +28,7 @@ export default Capability.makeModule(
     const client = yield* ClientCapabilities.Client;
     const registry = yield* Capabilities.AtomRegistry;
     const settings = yield* CodeCapabilities.Settings;
-    const fs = getSpecFs();
+    const fs = FileSystem.get();
     const bases = new SyncBases();
 
     const state = Atom.make<CodeCapabilities.SpecSyncState>({ available: false, roots: [], specs: {} }).pipe(

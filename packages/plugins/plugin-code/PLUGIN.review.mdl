@@ -1,44 +1,41 @@
 ---
 spec: github:dxos/dxos/packages/plugins/plugin-code/PLUGIN.mdl
-commit: 7f8c1386e279356e8b0111401817d4dc09719c23
-date: 2026-10-22
+commit: 6583de2d32521afaaa701ae02adb29d67b372011
+date: 2026-10-23
 by: agent:claude-code
 ---
 
 # Review: CodePlugin
 
-The ECHO side is solid. `CodeProject`, `SourceFile` and `Settings` match the spec field for field.
-The eleven Coder tools (file CRUD, scaffold, hello-world, reset, build, run) are real handlers in
-one lazy `OperationHandlerSet`. The skill declares every tool and the introspect-mcp server. The
-in-browser build pipeline (`@typescript/vfs` for one file, esbuild-wasm for several) and the
-console-capturing runner do what F-12a and F-12b say. The newer IDE features also hold up: two-way
-spec sync (F-14), source-key links (F-15) and review annotations (F-16) are implemented, and their
-pure logic (key parsing, three-way reconcile, repo roots, review parsing, symbol lookup) has unit
-tests.
+129 items: 24 done, 67 untested, 11 partial, 10 diverged, 17 missing. The review read the working tree on top of
+the commit above, including the uncommitted move of spec sync onto plugin-file-system's `FileSystem`. Most items
+are untested, not broken. The code matches the spec, but no test runs it: no test invokes an operation handler,
+mounts CodeArticle, CodeSettings or SpecArticle, or loads the Coder skill. The tests that exist cover the compiler
+(`compileEntry`, `bundleEntry` and `executeScript`), the sync helpers (source keys, `reconcile`, repo roots), the
+review model, and three stories with play functions (ReviewPanel, SpecChangelog, DefinitionGraph). Most compiler
+tests are tagged `manual`, so default CI skips them.
 
-The biggest divergence is in the oldest features. F-3 describes a `CodeArticle` that edits the Spec,
-with a Spec | Code tab toggle and a "Build output will appear here" placeholder. None of that exists
-now. `SpecArticle` is the Spec editor, with a panel of views beside it, and `CodeArticle` is the
-CodeProject file browser. F-1.4 ("SpecArticle → CodeArticle") is reversed in the same way. The
-credentials story (F-4, `Credentials`, `CodeSettings`) also diverged. The API key is an
-`AccessToken` written straight into the first space on input blur. There are no Save or Clear
-actions, and no credentials API is used.
+Of the 19 acceptance scenarios and QA tests, none is exercised end to end. Three are partly exercised: T-15, T-16
+and T-18 have their build and run steps covered by compiler tests that bypass the operations. T-4 is diverged,
+because its only test drives a different view switcher. The other 15, including QA-1, are not exercised.
+
+The spec-sync move holds up. `importSpec`, `listLocalSpecs`, the `SpecSync` capability and the review reader all
+go through `FileSystem.get()`. The dev route is now `/__dx/fs`, with `DX_FS_ROOTS`, and it refuses writes that are
+not `.mdl`. The editor review chips (F-16.5, F-16.6) are now installed in SpecArticle and SpecChangelog: one row per
+item, and scenario lines carry test chips. The biggest divergence is still in the oldest features. F-1.4 and F-3
+describe a CodeArticle that edits the Spec behind a Spec | Code toggle. In the code, SpecArticle is the Spec IDE and
+CodeArticle is the file browser. The credentials story (F-4, `CodeSettings`, `Credentials`) also diverged.
 
 Gaps that matter:
 
-- `bundleEntry` calls `esbuild.initialize({})` with no `wasmURL`. The browser build of esbuild-wasm
-  requires one, so multi-file builds probably fail in the app. They pass only under Node, where the
-  manual-tagged tests run. This was not checked at runtime.
-- `readFile` fails with `CodeOperationError`, not a `FileNotFound` error.
-- The SpecArticle editor gets `mdl()` and `mdlBlockDescription`, but not `mdlLint` or `mdlComplete`.
-- Creating a CodeProject seeds the Spec with `Spec.make()`'s example text, not an empty spec.
-- F-16.5 (evidence chips and code boxes) is part-wired in the working tree. `implementationChips`,
-  `reviewAnnotations` and the graph's annotation input exist, but `SpecArticle` does not install
-  the chips.
-
-Nothing tests an operation handler, the settings panel, the sync capability loop, the dev route or
-any SpecArticle interaction. The compiler tests are tagged `manual`, so CI skips them; only the
-`executeScript` tests run by default.
+- No operation has a handler test, so every Coder tool and both sync operations are untested. T-7 to T-14 and T-17
+  describe exactly these tests.
+- `bundleEntry` calls `esbuild.initialize({})` with no `wasmURL`. Multi-file builds probably fail in the browser.
+  They pass only in the manual Node tests.
+- In `plugin CodePlugin`, NavigationTargetResolver is described as resolving github: keys. It maps CodeProject
+  objects to graph paths.
+- `readFile` fails with `CodeOperationError`, not `FileNotFound`. The SpecArticle editor has no `mdlLint` or
+  `mdlComplete`. A new CodeProject's Spec is not empty.
 
 ## Extensions
 
@@ -49,49 +46,69 @@ any SpecArticle interaction. The compiler tests are tagged `manual`, so CI skips
 ## Verdicts
 
 ```mdl
+verdict CodePlugin: All twelve modules are added in the listed order; one module does something other than its description says.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/plugin.tsx#CodePlugin, github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/index.ts#NavigationTargetResolver, github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/index.ts#SpecSync, github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/index.ts#BuildRunState]
+  tests: [github:dxos/dxos/packages/reflect/introspect/src/__sanity__/plugins.test.ts]
+  note: |
+    NavigationTargetResolver maps a CodeProject object to its graph path (`NavigationResolver.forType`); it does not
+    resolve a github: key to a spec or file. BuildRunState holds the in-browser build and run results, not a "build
+    agent"; Schema also registers SourceFile. The introspect sanity test (opt-in, `INTROSPECT_REAL=1`) finds the plugin,
+    its surfaces and schemas, but no test activates the plugin's modules.
+```
+
+```mdl
 verdict Spec: Spec lives in @dxos/types with `name?` and an owned `content: Ref<Text>`.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/sdk/types/src/types/Spec.ts#Spec]
+  note: The fields match. No test checks the schema or its typename.
 ```
 
 ```mdl
 verdict CodeProject: Fields `name?`, `spec`, `files?` and typename `org.dxos.type.codeProject` match.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/types/CodeProject.ts#CodeProject]
+  note: No test constructs a CodeProject or checks its schema.
 ```
 
 ```mdl
 verdict SourceFile: Fields `path`, `content: Ref<Text>`, `mode?` and typename match.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/types/SourceFile.ts#SourceFile]
+  note: No test constructs a SourceFile or checks its schema.
 ```
 
 ```mdl
 verdict Settings: Mutable schema with optional `endpoint` and `repos`.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/types/Settings.ts#Settings]
+  note: No test reads or writes the settings.
 ```
 
 ```mdl
 verdict CodeArticle: The CodeProject article shows FileTree, build output and a per-file editor.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/containers/CodeArticle/CodeArticle.tsx#CodeArticle, github:dxos/dxos/packages/plugins/plugin-code/src/containers/CodeArticle/CodeArticle.tsx#languageForPath, github:dxos/dxos/packages/plugins/plugin-code/src/containers/CodeArticle/CodeArticle.tsx#FileEditor]
   note: |
-    The layout has a third pane (BuildOutput, bottom left) from F-12a.8. Files that are not .ts or
-    .md get `javascript()`, not plain text; this matches F-9.3 but not this component's desc.
+    The layout has a third pane (BuildOutput, bottom left) from F-12a.8. Files that are not .ts or .md get
+    `javascript()`, not plain text; this matches F-9.3 but not this component's desc. The stories render it, but none
+    has a play function.
 ```
 
 ```mdl
 verdict FileTree: A pure component that builds collapsible folders from paths.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/FileTree/FileTree.tsx#FileTree, github:dxos/dxos/packages/plugins/plugin-code/src/components/FileTree/FileTree.tsx#buildTree]
+  note: The Default and Empty stories render it; no play function or unit test checks the tree or `onSelect`.
 ```
 
 ```mdl
 verdict SpecArticle: The MDL editor sits beside a six-view panel; the props and state match.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx#SpecArticle, github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx#VIEWS]
-  note: The sync status tag is in the panel toolbar, not above the editor as the layout sketch shows.
+  note: |
+    The sync status tag is in the panel toolbar, not above the editor as the layout sketch shows. The SpecArticle
+    stories have no play function; the SpecChangelog stories exercise the shared editor pieces, not this container.
 ```
 
 ```mdl
@@ -99,38 +116,25 @@ verdict CodeSettings: An API-key input and the settings form exist, but not the 
   status: diverged
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/containers/CodeSettings/CodeSettings.tsx#CodeSettings]
   note: |
-    The component takes a settings `subject` (an atom), not `settings: Settings`. There are no
-    saveApiKey or clearApiKey actions: the key commits on blur, and an emptied field removes it.
-    The AccessToken is written with `space.db` into `useSpaces()[0]`, not the HALO space, and does
-    not go through the credentials API.
+    The component takes a settings `subject` (an atom), not `settings: Settings`. There are no saveApiKey or
+    clearApiKey actions: the key commits on blur, and an emptied field removes it. The AccessToken is written with
+    `space.db` into `useSpaces()[0]`, not the HALO space, and does not go through the credentials API. No test.
 ```
 
 ```mdl
 verdict Credentials: The plugin does not use the credentials API.
   status: missing
   note: |
-    Searched plugin-code/src for CredentialsService, getCredential and queryCredentials: no use.
-    CodeSettings reads and writes AccessToken objects through ECHO queries directly.
+    Searched plugin-code/src for CredentialsService, getCredential and queryCredentials: no use. CodeSettings reads
+    and writes AccessToken objects through ECHO queries directly.
 ```
 
 ```mdl
 verdict BuildAgent: There is no EDGE BuildAgent client; the spec puts it out of scope.
   status: missing
   note: |
-    Nothing in plugin-code calls a remote build service. runBuildAgent is a stub that returns
-    `queued`, and `Settings.endpoint` is never read.
-```
-
-```mdl
-verdict SpecFs: One interface with a Tauri and a dev-route backend; ops, errors and the route's limits match.
-  status: untested
-  evidence:
-    [github:dxos/dxos/packages/plugins/plugin-code/src/sync/spec-fs.ts#getSpecFs,
-     github:dxos/dxos/packages/plugins/plugin-code/src/sync/spec-fs.ts#tauriSpecFs,
-     github:dxos/dxos/packages/apps/composer-app/src/vite/spec-fs.ts#specFsPlugin]
-  note: |
-    The sync tests use an in-memory SpecFs, so neither backend is exercised by a test; the dev
-    route was only checked by hand against a running dev server.
+    Nothing in plugin-code calls a remote build service. runBuildAgent is a stub that returns `queued`, and
+    `Settings.endpoint` is never read.
 ```
 
 ```mdl
@@ -138,18 +142,15 @@ verdict verifySpec: Defined, but the handler is the phase-1 stub with no lint or
   status: partial
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/types/CodeOperation.ts#VerifySpec, github:dxos/dxos/packages/plugins/plugin-code/src/operations/verify-spec.ts]
   note: |
-    It always returns `{ ok: true, messages: [] }`, which the spec allows for phase 1. The desc
-    promises lint and structural checks, and `lintMdl` exists in @dxos/deus, but it is not called.
-    No test.
+    It always returns `{ ok: true, messages: [] }`, which the spec allows for phase 1. The desc promises lint and
+    structural checks, and `lintMdl` exists in @dxos/deus, but it is not called. No test.
 ```
 
 ```mdl
 verdict runBuildAgent: Defined as the phase-1 stub that returns `queued`.
   status: partial
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/types/CodeOperation.ts#RunBuildAgent, github:dxos/dxos/packages/plugins/plugin-code/src/operations/run-build-agent.ts]
-  note: |
-    It declares only `Database.Service`, not Credentials, and does no HTTP call; this is the
-    phase-2 part. No test.
+  note: It declares only `Database.Service`, not Credentials, and does no HTTP call; this is the phase-2 part. No test.
 ```
 
 ```mdl
@@ -164,8 +165,8 @@ verdict readFile: It reads by exact path, but the error is not FileNotFound.
   status: partial
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/types/CodeOperation.ts#ReadFile, github:dxos/dxos/packages/plugins/plugin-code/src/operations/read-file.ts]
   note: |
-    A missing path fails with `CodeOperationError("File not found: …")`. The error type declared in
-    the spec, `FileNotFound`, does not exist. No test.
+    A missing path fails with `CodeOperationError("File not found: …")`. The error type declared in the spec,
+    `FileNotFound`, does not exist. No test.
 ```
 
 ```mdl
@@ -187,9 +188,8 @@ verdict scaffoldProject: It seeds package.json, src/plugin.ts and README.md, ove
   status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/types/CodeOperation.ts#ScaffoldProject, github:dxos/dxos/packages/plugins/plugin-code/src/operations/scaffold-project.ts]
   note: |
-    No test. The scaffolded src/plugin.ts imports `definePlugin` from '@dxos/app-framework', an
-    API that no longer exists, so a fresh scaffold will not type-check if built with imports
-    resolved.
+    No test. The scaffolded src/plugin.ts imports `definePlugin` from '@dxos/app-framework', an API that no longer
+    exists, so a fresh scaffold will not type-check if built with imports resolved.
 ```
 
 ```mdl
@@ -210,51 +210,66 @@ verdict resetProject: It clears `files`, removes each SourceFile (its Text casca
 verdict buildProject: It compiles in the browser and returns diagnostics plus the entry JS.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/operations/build-project.ts, github:dxos/dxos/packages/plugins/plugin-code/src/compiler/build.ts#compileEntry]
-  note: The compileEntry tests are tagged `manual`, so default CI skips them.
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/build.test.ts, github:dxos/dxos/packages/plugins/plugin-code/src/compiler/bundle.test.ts]
+  note: |
+    The tests drive `compileEntry`, which the handler calls after loading the project's files; the handler itself is
+    not invoked. The compileEntry and bundle tests are tagged `manual`, so default CI skips them.
 ```
 
 ```mdl
 verdict runBuild: It builds, then runs the entry with a console shim and never raises.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/operations/run-build.ts, github:dxos/dxos/packages/plugins/plugin-code/src/compiler/build.ts#executeScript]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/build.test.ts]
+  note: The `executeScript` tests run in default CI; the compile-and-run round trip is tagged `manual`. The handler is not invoked.
 ```
 
 ```mdl
-verdict importSpec: It links a checkout file to a new Spec or returns the one with that key.
+verdict importSpec: It links a checkout file to a new Spec through the shared FileSystem, or returns the one with that key.
   status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/types/CodeOperation.ts#ImportSpec, github:dxos/dxos/packages/plugins/plugin-code/src/operations/import-spec.ts#configuredRepos]
-  note: No test covers the handler; only the key and root helpers it uses are tested.
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/types/CodeOperation.ts#ImportSpec, github:dxos/dxos/packages/plugins/plugin-code/src/operations/import-spec.ts#configuredRepos, github:dxos/dxos/packages/plugins/plugin-file-system/src/types/FileSystem.ts#get]
+  note: |
+    The handler resolves the key with `resolveRoots` over `FileSystem.get()` and fails with CodeOperationError for a
+    non-spec key, a missing checkout or a missing file, as the spec lists. It also queries the Database, which
+    `requires:` does not name. No test covers the handler; only the key and root helpers it uses are tested.
 ```
 
 ```mdl
-verdict listLocalSpecs: It lists the `.mdl` keys under every root and leaves out reviews.
+verdict listLocalSpecs: It lists the `.mdl` keys under every root through the shared FileSystem and leaves out reviews.
   status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/types/CodeOperation.ts#ListLocalSpecs, github:dxos/dxos/packages/plugins/plugin-code/src/operations/list-local-specs.ts]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/types/CodeOperation.ts#ListLocalSpecs, github:dxos/dxos/packages/plugins/plugin-code/src/operations/list-local-specs.ts, github:dxos/dxos/packages/plugins/plugin-file-system/src/types/FileSystem.ts#get]
   note: No test invokes the handler.
 ```
 
 ```mdl
 verdict CoderSkill: The key, all eleven tools, the introspect-mcp server and the instructions match.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/skills/coder.ts#make, github:dxos/dxos/packages/plugins/plugin-code/src/skills/coder.ts#operations]
+  note: No test loads the skill or checks its tools.
 ```
 
 ```mdl
 verdict F-1.1: The package is `@dxos/plugin-code`.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/package.json]
+  tests: [github:dxos/dxos/packages/reflect/introspect/src/__sanity__/plugins.test.ts]
+  note: The introspect sanity test asserts the package name; it is opt-in (`INTROSPECT_REAL=1`).
 ```
 
 ```mdl
 verdict F-1.2: The directory is packages/plugins/plugin-code; no plugin-spec directory remains.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/dx.config.ts]
+  tests: [github:dxos/dxos/packages/reflect/introspect/src/__sanity__/plugins.test.ts]
+  note: The introspect sanity test finds the plugin by scanning the monorepo; it does not assert the directory name.
 ```
 
 ```mdl
 verdict F-1.3: The plugin key is `org.dxos.plugin.code`.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/dx.config.ts]
+  tests: [github:dxos/dxos/packages/reflect/introspect/src/__sanity__/plugins.test.ts]
+  note: The introspect sanity test looks the plugin up by this id; it is opt-in.
 ```
 
 ```mdl
@@ -262,14 +277,15 @@ verdict F-1.4: CodePlugin exists, but SpecArticle was kept as the Spec surface, 
   status: diverged
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/plugin.tsx#CodePlugin, github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx#SpecArticle]
   note: |
-    `SpecArticle` renders Spec objects and bundled plugin specs. `CodeArticle` is a different
-    component that renders CodeProjects. The rename in this requirement was reversed later.
+    `SpecArticle` renders Spec objects and bundled plugin specs. `CodeArticle` is a different component that renders
+    CodeProjects. The rename in this requirement was reversed later.
 ```
 
 ```mdl
 verdict F-1.5: Spec keeps the typename `org.dxos.type.spec`.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/sdk/types/src/types/Spec.ts#Spec]
+  note: No test checks the typename.
 ```
 
 ```mdl
@@ -281,14 +297,16 @@ verdict F-1.6: Spec objects render through the `specArticle` surface with no mig
 
 ```mdl
 verdict F-2.1: CodeProject has the typename `org.dxos.type.codeProject`.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/types/CodeProject.ts#CodeProject]
+  note: No test checks the typename.
 ```
 
 ```mdl
 verdict F-2.2: `name?` and `spec: Ref<Spec>` are reactive ECHO fields.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/types/CodeProject.ts#CodeProject]
+  note: No test.
 ```
 
 ```mdl
@@ -296,17 +314,18 @@ verdict F-2.3: Creating a CodeProject also creates and links a Spec, but not an 
   status: diverged
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/create-object.ts, github:dxos/dxos/packages/sdk/types/src/types/Spec.ts#make]
   note: |
-    `Spec.make()` with no content seeds the default example spec text (frontmatter and a sentence),
-    so the new Spec is not empty. No test.
+    `Spec.make()` with no content seeds the default example spec text (frontmatter and a sentence), so the new Spec is
+    not empty. No test.
 ```
 
 ```mdl
 verdict F-2.4: The schema is registered; no metadata module exists.
   status: partial
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/index.ts#Schema, github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/schema.ts]
+  tests: [github:dxos/dxos/packages/reflect/introspect/src/__sanity__/plugins.test.ts]
   note: |
-    It is registered through `AppCapability.schema`. There is no `addMetadataModule`
-    contribution; the icon and label come from schema annotations instead.
+    It is registered through `AppCapability.schema`. There is no `addMetadataModule` contribution; the icon and label
+    come from schema annotations instead. The introspect sanity test lists the registered schemas.
 ```
 
 ```mdl
@@ -314,9 +333,8 @@ verdict F-3.1: The Spec editor uses Editor primitives, but in SpecArticle, not C
   status: diverged
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx#SpecArticle]
   note: |
-    SpecArticle uses `Editor.Root`, `Editor.Toolbar` and `Editor.View` (there is no
-    `Editor.Content`). CodeArticle no longer edits a Spec; it edits SourceFiles with `Editor.Root`
-    and `Editor.View`.
+    SpecArticle uses `Editor.Root`, `Editor.Toolbar` and `Editor.View` (there is no `Editor.Content`). CodeArticle no
+    longer edits a Spec; it edits SourceFiles with `Editor.Root` and `Editor.View`.
 ```
 
 ```mdl
@@ -324,8 +342,8 @@ verdict F-3.2: `mdl()` and `mdlBlockDescription` are passed; `mdlLint` and `mdlC
   status: partial
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx#SpecArticle]
   note: |
-    No file in plugin-code imports `mdlLint` or `mdlComplete`. They are exported by
-    @dxos/deus/extension, so the editor has no lint or completion.
+    No file in plugin-code imports `mdlLint` or `mdlComplete`. They are exported by @dxos/deus/extension, so the
+    editor has no lint or completion. No test.
 ```
 
 ```mdl
@@ -340,17 +358,15 @@ verdict F-3.4: There is no Spec | Code toggle; a six-way view selector replaced 
   status: diverged
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx#VIEWS]
   note: |
-    The panel beside the editor has a `Toolbar.ToggleGroup` with definitions, review, code,
-    decisions, data and api. It is not on the editor toolbar and does not use `customActions`.
+    The panel beside the editor has a `Toolbar.ToggleGroup` with definitions, review, code, decisions, data and api.
+    It is not on the editor toolbar and does not use `customActions`.
 ```
 
 ```mdl
 verdict F-3.5: The "Code" view shows a source file, not a build-output placeholder.
   status: diverged
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx#SpecArticle]
-  note: |
-    The editor stays visible. The code view shows CodeView for a clicked key, or a hint. The
-    `view.code.placeholder` translation is unused.
+  note: The editor stays visible. The code view shows CodeView for a clicked key, or a hint. The `view.code.placeholder` translation is unused.
 ```
 
 ```mdl
@@ -362,26 +378,30 @@ verdict F-3.6: There is nothing to restore; the editor is never hidden.
 
 ```mdl
 verdict F-3.7: The selected view is local `useState` and is not persisted.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx#SpecArticle]
+  note: No test switches SpecArticle's views; the SpecChangelog SwitchViews story does so for a different component.
 ```
 
 ```mdl
 verdict F-4.1: Settings is a mutable schema with an optional `endpoint`.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/types/Settings.ts#Settings]
+  note: No test.
 ```
 
 ```mdl
 verdict F-4.2: Settings are contributed through `AppCapability.settings` and a KVS atom.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/index.ts#Settings, github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/settings.ts]
+  note: No test activates the settings module.
 ```
 
 ```mdl
 verdict F-4.3: CodeSettings renders a password input for the API key.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/containers/CodeSettings/CodeSettings.tsx#CodeSettings]
+  note: The story renders the panel; it has no play function.
 ```
 
 ```mdl
@@ -389,9 +409,8 @@ verdict F-4.4: An AccessToken is upserted on blur, written directly to ECHO, not
   status: diverged
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/containers/CodeSettings/CodeSettings.tsx#CodeSettings]
   note: |
-    There is no save action. On blur after an edit, the handler updates or adds
-    `AccessToken { source: 'anthropic.com' }` in the first space from `useSpaces()`. No test; the
-    story only renders the panel.
+    There is no save action. On blur after an edit, the handler updates or adds `AccessToken { source: 'anthropic.com' }`
+    in the first space from `useSpaces()`. No test.
 ```
 
 ```mdl
@@ -403,26 +422,30 @@ verdict F-4.5: Emptying the field and blurring removes the matching AccessToken.
 
 ```mdl
 verdict F-4.6: The key is never written to Settings.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/types/Settings.ts#Settings]
+  note: The schema has no key field; no test checks the settings after a key is entered.
 ```
 
 ```mdl
 verdict F-5.1: The skill `org.dxos.skill.coder` is contributed as a skill definition.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/skill-definition.ts, github:dxos/dxos/packages/plugins/plugin-code/src/skills/coder.ts#SKILL_KEY]
+  note: No test queries the skill definitions.
 ```
 
 ```mdl
 verdict F-5.2: The tools include verifySpec and runBuildAgent.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/skills/coder.ts#operations]
+  note: No test.
 ```
 
 ```mdl
 verdict F-5.3: The instructions describe the Coder workflow from spec to verify to build.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/skills/coder.ts#make]
+  note: No agent test or eval checks the instructions.
 ```
 
 ```mdl
@@ -441,8 +464,9 @@ verdict F-6.2: runBuildAgent returns `{ status: "queued" }`.
 
 ```mdl
 verdict F-6.3: The handlers are contributed through `AppCapability.operationHandler`.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/operations/index.ts#CodeOperationHandlerSet, github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/operation-handler.ts]
+  note: No test resolves a handler from the set.
 ```
 
 ```mdl
@@ -454,20 +478,24 @@ verdict F-6.4: The operations are skill tools with handlers, but no tool call is
 
 ```mdl
 verdict F-7.1: SourceFile has the typename `org.dxos.type.sourceFile`.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/types/SourceFile.ts#SourceFile]
+  note: No test checks the typename.
 ```
 
 ```mdl
 verdict F-7.2: CodeProject has an optional `files: Ref<SourceFile>[]`.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/types/CodeProject.ts#CodeProject]
+  note: No test.
 ```
 
 ```mdl
 verdict F-7.3: SourceFile is in the schema module and has translations.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/schema.ts, github:dxos/dxos/packages/plugins/plugin-code/src/translations.ts#translations]
+  tests: [github:dxos/dxos/packages/reflect/introspect/src/__sanity__/plugins.test.ts]
+  note: The introspect sanity test (opt-in) lists `SourceFile.SourceFile` among the schemas; the translations are not checked.
 ```
 
 ```mdl
@@ -528,21 +556,23 @@ verdict F-8.6: scaffoldProject seeds the three files and returns the sorted list
 
 ```mdl
 verdict F-8.7: Every file op is in the CoderSkill tool set.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/skills/coder.ts#operations]
+  note: No test checks the tool set.
 ```
 
 ```mdl
 verdict F-9.1: FileTree is on the left and the editor on the right.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/containers/CodeArticle/CodeArticle.tsx#CodeArticle]
-  note: The left column is split, with BuildOutput below the tree (F-12a.8).
+  note: The left column is split, with BuildOutput below the tree (F-12a.8). The stories have no play function.
 ```
 
 ```mdl
 verdict F-9.2: FileTree is pure and has Default and Empty stories.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/FileTree/FileTree.tsx#FileTree]
+  note: It is coverable from a story as required, but neither story has a play function, so nothing checks it.
 ```
 
 ```mdl
@@ -568,21 +598,23 @@ verdict F-9.5: `useObject(project)` re-resolves the file refs, so new files appe
 
 ```mdl
 verdict F-9.6: An empty project shows "No files yet. Ask the Coder to scaffold a project."
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/FileTree/FileTree.tsx#FileTree, github:dxos/dxos/packages/plugins/plugin-code/src/translations.ts#translations]
+  note: The FileTree and CodeArticle Empty stories render it; no play function checks the message.
 ```
 
 ```mdl
 verdict F-10.1: The skill declares an HTTP MCP server at the introspect URL.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/skills/coder.ts#INTROSPECT_MCP_URL]
-  note: The URL is hard-coded, with a TODO to make it a setting.
+  note: The URL is hard-coded, with a TODO to make it a setting. No test.
 ```
 
 ```mdl
 verdict F-10.2: The instructions direct the agent to the introspect tools before it writes code.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/skills/coder.ts#make]
+  note: No agent test or eval checks this.
 ```
 
 ```mdl
@@ -608,8 +640,9 @@ verdict F-11.2: resetProject removes every file, then calls Database.remove and 
 
 ```mdl
 verdict F-11.3: helloWorld and resetProject are skill tools.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/skills/coder.ts#operations]
+  note: No test checks the tool set.
 ```
 
 ```mdl
@@ -630,15 +663,15 @@ verdict F-11.5: The instructions reserve resetProject for an explicit reset requ
 verdict F-12a.1: A module-level Compiler wraps @typescript/vfs and loads lib files lazily from the CDN.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/compiler.ts#Compiler, github:dxos/dxos/packages/plugins/plugin-code/src/compiler/singleton.ts#getCompiler]
-  note: |
-    In the browser the lib cache is `localStorage`, so it outlives the page. The compiler tests are
-    tagged `manual`.
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/build.test.ts]
+  note: In the browser the lib cache is `localStorage`, so it outlives the page. The compiler tests are tagged `manual`.
 ```
 
 ```mdl
 verdict F-12a.2: buildProject picks hello.ts, else plugin.ts, and returns diagnostics and the emitted JS.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/build.ts#compileEntry, github:dxos/dxos/packages/plugins/plugin-code/src/compiler/build.ts#ENTRY_CANDIDATES]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/build.test.ts]
   note: Tests are tagged `manual`.
 ```
 
@@ -646,13 +679,15 @@ verdict F-12a.2: buildProject picks hello.ts, else plugin.ts, and returns diagno
 verdict F-12a.3: A missing entry returns `ok: false` with an explanatory diagnostic.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/build.ts#compileEntry]
-  note: Tested in build.test.ts, which is tagged `manual`.
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/build.test.ts]
+  note: Tagged `manual`.
 ```
 
 ```mdl
 verdict F-12a.4: runBuild runs the emitted JS through `new Function` with a console shim.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/build.ts#executeScript, github:dxos/dxos/packages/plugins/plugin-code/src/operations/run-build.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/build.test.ts]
   note: Instead of patching the global console, it passes a shim as the `console` parameter.
 ```
 
@@ -660,19 +695,22 @@ verdict F-12a.4: runBuild runs the emitted JS through `new Function` with a cons
 verdict F-12a.5: The global console is never touched, and each call has its own buffers.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/build.ts#executeScript]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/build.test.ts]
 ```
 
 ```mdl
 verdict F-12a.6: A runtime throw goes to stderr with `ok: false` and empty diagnostics.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/build.ts#executeScript, github:dxos/dxos/packages/plugins/plugin-code/src/operations/run-build.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/build.test.ts]
+  note: The tests check `executeScript`; the handler that adds the empty diagnostics is not invoked.
 ```
 
 ```mdl
 verdict F-12a.7: Both ops are registered and are skill tools; the prompt gives write, build, run.
-  status: done
+  status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/operations/index.ts#CodeOperationHandlerSet, github:dxos/dxos/packages/plugins/plugin-code/src/skills/coder.ts#make]
-  note: The prompt names the tools with `Operation.toolName`, not the literal `build-project` and `run-build`.
+  note: The prompt names the tools with `Operation.toolName`, not the literal `build-project` and `run-build`. No test.
 ```
 
 ```mdl
@@ -693,68 +731,71 @@ verdict F-12a.9: Build and run state is a kept-alive atom capability keyed by pr
 verdict F-12b.1: esbuild-wasm is a catalog dependency and starts lazily, but no wasmURL is passed.
   status: partial
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/bundle.ts#ensureEsbuild]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/bundle.test.ts]
   note: |
-    `esbuild.initialize({})` gives neither `wasmURL` nor `wasmModule`. The browser build of
-    esbuild-wasm (lib/browser.js) throws "Must provide either the wasmURL option or the wasmModule
-    option", so multi-file builds probably fail in the app. The Node tests use lib/main.js and pass.
-    This was not checked in a browser.
+    `esbuild.initialize({})` gives neither `wasmURL` nor `wasmModule`. The browser build of esbuild-wasm
+    (lib/browser.js) throws "Must provide either the wasmURL option or the wasmModule option", so multi-file builds
+    probably fail in the app. The Node tests use lib/main.js and pass. This was not checked in a browser.
 ```
 
 ```mdl
 verdict F-12b.2: The bundler's esbuild plugin resolves files from the in-memory set and reports misses.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/bundle.ts#bundleEntry]
-  note: |
-    The helper is named `bundleEntry`. Bare imports are rejected rather than resolved against the
-    project. Tests are tagged `manual`.
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/bundle.test.ts]
+  note: The helper is named `bundleEntry`. Bare imports are rejected rather than resolved against the project. Tagged `manual`.
 ```
 
 ```mdl
 verdict F-12b.3: The bundler runs when there is more than one .ts file or the entry imports something.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/bundle.ts#needsBundling, github:dxos/dxos/packages/plugins/plugin-code/src/compiler/build.ts#compileEntry]
-  note: The language service still type-checks, with module-resolution codes filtered out. Tests are tagged `manual`.
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/bundle.test.ts]
+  note: The language service still type-checks, with module-resolution codes filtered out. Tagged `manual`.
 ```
 
 ```mdl
 verdict F-12b.4: The two-file bundle runs under Node; in the browser it depends on F-12b.1.
   status: partial
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/bundle.ts#bundleEntry]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/bundle.test.ts]
   note: |
-    bundle.test.ts ("multi-file project round-trips through bundle + execute") covers this under
-    Node and is tagged `manual`. The CodeArticle MultiFile story is the browser path, and it hits
-    the missing wasmURL.
+    bundle.test.ts ("multi-file project round-trips through bundle + execute") covers this under Node and is tagged
+    `manual`. The CodeArticle MultiFile story is the browser path, and it hits the missing wasmURL.
 ```
 
 ```mdl
 verdict F-12b.5: Bare imports are build errors that point at F-13.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/bundle.ts#bundleEntry]
-  note: Tested in bundle.test.ts, which is tagged `manual`.
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/bundle.test.ts]
+  note: Tagged `manual`.
 ```
 
 ```mdl
-verdict F-14.1: SpecFs reaches files through the Tauri fs plugin or the dev route; otherwise sync is off.
+verdict F-14.1: Sync reaches files only through plugin-file-system's FileSystem: Tauri fs or the `/__dx/fs` dev route; otherwise off.
   status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/sync/spec-fs.ts#getSpecFs, github:dxos/dxos/packages/apps/composer-app/src/vite/spec-fs.ts#specFsPlugin]
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file-system/src/types/FileSystem.ts#get, github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/spec-sync.ts, github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/index.ts#SpecSync, github:dxos/dxos/packages/apps/composer-app/src/vite/file-system.ts#fileSystemPlugin]
   note: |
-    A deployed app answers `/roots` with its HTML shell, which marks sync unavailable. Neither
-    host implementation is tested; sync.test.ts uses a stand-in.
+    `FileSystem.get()` picks the Tauri backend or the dev route. The capability marks sync unavailable when the route's
+    `/roots` answers with anything but JSON, which a deployed app does. Sync writes only to keys that end in `.mdl`
+    (`getSpecKey` keeps spec keys only); the Tauri backend itself does not limit suffixes. sync.test.ts uses an
+    in-memory FileSystem for the root helpers; neither backend nor the sync loop is tested.
 ```
 
 ```mdl
 verdict F-14.2: Configured checkouts resolve first (path or owner/repo=path), then the dev server's tree.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/sync/repo-roots.ts#resolveRoots, github:dxos/dxos/packages/plugins/plugin-code/src/sync/repo-roots.ts#parseRepoEntry, github:dxos/dxos/packages/plugins/plugin-code/src/sync/repo-roots.ts#detectRepo]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/sync/sync.test.ts]
 ```
 
 ```mdl
 verdict F-14.3: A 2-second loop reconciles three-way against a stored base; the file wins.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/sync/spec-sync.ts#reconcile, github:dxos/dxos/packages/plugins/plugin-code/src/sync/spec-sync.ts#syncSpec, github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/spec-sync.ts#SYNC_INTERVAL]
-  note: |
-    `reconcile` is unit-tested; the polling capability is not. Bases are kept in `localStorage`, per
-    browser.
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/sync/sync.test.ts]
+  note: `reconcile` is unit-tested; the polling capability and `syncSpec` are not. Bases are kept in `localStorage`, per browser.
 ```
 
 ```mdl
@@ -765,12 +806,12 @@ verdict F-14.4: A pull goes through `Doc.updateText`, which applies a minimal Au
 ```
 
 ```mdl
-verdict F-14.5: The dev route confines reads to its roots and writes only `.mdl` files.
+verdict F-14.5: The `/__dx/fs` route confines reads to the workspace and `DX_FS_ROOTS`, and writes only `.mdl` files.
   status: untested
-  evidence: [github:dxos/dxos/packages/apps/composer-app/src/vite/spec-fs.ts#specFsPlugin]
+  evidence: [github:dxos/dxos/packages/apps/composer-app/src/vite/file-system.ts#fileSystemPlugin]
   note: |
-    The containment check uses `path.resolve`, so `..` cannot escape, but a symlink inside a root
-    can. No test.
+    PUT and DELETE are refused unless the path ends in `.mdl`. The containment check uses `path.resolve`, so `..`
+    cannot escape, but a symlink inside a root can. No test.
 ```
 
 ```mdl
@@ -784,6 +825,8 @@ verdict F-14.6: importSpec returns the Spec that has the key, or creates one fro
 verdict F-15.1: External blocks are dashed boxes with an edge, described from the other spec when known.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/spec-model.ts#externalDefinition, github:dxos/dxos/packages/plugins/plugin-code/src/components/DefinitionGraph/DefinitionGraph.tsx#DefinitionCard]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.test.ts]
+  note: The graph model is tested; the dashed rendering is not.
 ```
 
 ```mdl
@@ -797,6 +840,7 @@ verdict F-15.2: Ctrl/⌘-click and double-click import the other spec and open i
 verdict F-15.3: CodeView shows a file at the symbol's line and offers "Open in VS Code" when the path is known.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/CodeView/CodeView.tsx#CodeView, github:dxos/dxos/packages/plugins/plugin-code/src/components/CodeView/symbol.ts#findSymbolLine]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.test.ts]
   note: Symbol lookup is tested; the `vscode://` link is not.
 ```
 
@@ -804,35 +848,198 @@ verdict F-15.3: CodeView shows a file at the symbol's line and offers "Open in V
 verdict F-16.1: The review beside the spec is read from the checkout every 3 seconds.
   status: untested
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/useSpecSources.ts#useLocalTexts, github:dxos/dxos/packages/plugins/plugin-code/src/sync/spec-key.ts#reviewKeyOf]
-  note: No test.
+  note: Only `reviewKeyOf` is tested; nothing tests the polling read.
 ```
 
 ```mdl
-verdict F-16.2: Reviewed lines get a coloured bar and a chip; the chip opens the Review view.
-  status: untested
+verdict F-16.2: Reviewed lines get a coloured bar and a status chip; the chip opens the Review view.
+  status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/review-gutter.ts#reviewGutter]
-  note: No test.
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecChangelog/SpecChangelog.stories.tsx]
+  note: The SpecIde story waits for the status chips; no test clicks one.
 ```
 
 ```mdl
 verdict F-16.3: Graph cards get a status badge; a feature takes the worst of its requirements.
   status: done
   evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.ts#statusOf, github:dxos/dxos/packages/plugins/plugin-code/src/components/DefinitionGraph/DefinitionGraph.tsx#DefinitionCard]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.test.ts]
+  note: `statusOf` is tested; the badge rendering is not.
 ```
 
 ```mdl
-verdict F-16.4: The Review view sorts worst first; an evidence key opens CodeView at the symbol.
-  status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/ReviewPanel/ReviewPanel.tsx#ReviewPanel]
-  note: No test.
-```
-
-```mdl
-verdict F-16.5: The pieces for evidence chips and code boxes exist, but the editor chips are not wired in.
-  status: partial
-  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/implementation-chips.ts#implementationChips, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.ts#reviewAnnotations, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/spec-model.ts#buildDefinitionGraph]
+verdict F-16.4: The Review view lists verdict cards worst first; a card menu shows the item or opens its code.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/ReviewPanel/ReviewPanel.tsx#ReviewPanel, github:dxos/dxos/packages/plugins/plugin-code/src/components/VerdictCard/VerdictCard.tsx#VerdictCard]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/components/ReviewPanel/ReviewPanel.stories.tsx, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecChangelog/SpecChangelog.stories.tsx]
   note: |
-    This is uncommitted work in the tree under review. DefinitionGraph feeds `reviewAnnotations`
-    into `buildDefinitionGraph`, so code symbols become dashed boxes. `SpecArticle` does not
-    install `implementationChips`, so no chips appear in the margin yet. No test.
+    The ReviewPanel story checks the order and that a clicked card becomes current; the card menu and the card
+    following the spec's selection are not exercised. Both stories count the cards of plugin-file-system's review, so
+    they break when that review gains or loses verdicts.
+```
+
+```mdl
+verdict F-16.5: Evidence keys become code chips in the item's chip row and dashed code boxes; both open the Code view.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/review-gutter.ts#reviewGutter, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.ts#reviewAnnotations, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/spec-model.ts#buildDefinitionGraph, github:dxos/dxos/packages/plugins/plugin-code/src/containers/SpecArticle/SpecArticle.tsx#SpecArticle]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.test.ts, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecChangelog/SpecChangelog.stories.tsx]
+  note: |
+    One chip row per item (status, up to three code chips then `+n`, or "no code", then tested or untested), floated
+    beside the decision chips. SpecArticle and SpecChangelog install `reviewGutter`; DefinitionGraph feeds
+    `reviewAnnotations` into `buildDefinitionGraph`. review.test.ts checks the annotations and code boxes; the SpecIde
+    story waits for the code chips. No test clicks a chip or double-clicks a box.
+```
+
+```mdl
+verdict F-16.6: Scenario and test lines show their test-file chips and exercised, partly or not exercised.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecEditor/review-gutter.ts#reviewGutter, github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.ts#reviewAnnotations]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecModel/review.test.ts]
+  note: |
+    review.test.ts checks that `tests:` keys reach the annotations the chips are made from. No test asserts the
+    exercised label or a test chip. A `diverged` verdict shows "partly exercised"; an `untested` one (not allowed for
+    these items) shows "not exercised".
+```
+
+```mdl
+verdict T-1: No automation loads an old Spec into the renamed plugin.
+  status: missing
+  note: Nothing runs it. It also describes CodeArticle rendering a Spec, which F-1.4 records as diverged.
+```
+
+```mdl
+verdict T-2: No automation creates a CodeProject.
+  status: missing
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/capabilities/create-object.ts]
+  note: Nothing invokes the create entry; no Playwright spec under composer-app covers plugin-code.
+```
+
+```mdl
+verdict T-3: No test asserts markdown decoration, mdl highlighting or lint wiring.
+  status: missing
+  note: The SpecChangelog stories mount the mdl editor but assert only chips and panels, not decoration or highlighting.
+```
+
+```mdl
+verdict T-4: The only view-switching test drives a different switcher.
+  status: diverged
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/components/SpecChangelog/SpecChangelog.stories.tsx]
+  note: |
+    The SpecChangelog SwitchViews story clicks through five panel views beside an always-visible editor. Nothing
+    tests a Spec | Code toggle that hides the editor, which no longer exists (F-3.4).
+```
+
+```mdl
+verdict T-5: No automation saves an API key.
+  status: missing
+  note: Nothing runs it: no plugin-code test or story, and no composer-app Playwright spec, drives these steps.
+```
+
+```mdl
+verdict T-6: No automation clears an API key.
+  status: missing
+  note: Nothing runs it: no plugin-code test or story, and no composer-app Playwright spec, drives these steps.
+```
+
+```mdl
+verdict T-7: No test queries the skill definitions.
+  status: missing
+  note: Nothing runs it: no plugin-code test or story, and no composer-app Playwright spec, drives these steps.
+```
+
+```mdl
+verdict T-8: No test invokes the stub operations.
+  status: missing
+  note: Nothing runs it: no plugin-code test or story, and no composer-app Playwright spec, drives these steps.
+```
+
+```mdl
+verdict T-9: No test invokes scaffoldProject.
+  status: missing
+  note: Nothing runs it: no plugin-code test or story, and no composer-app Playwright spec, drives these steps.
+```
+
+```mdl
+verdict T-10: No test runs the read/write/delete round trip.
+  status: missing
+  note: Nothing runs it: no plugin-code test or story, and no composer-app Playwright spec, drives these steps.
+```
+
+```mdl
+verdict T-11: No test mounts CodeArticle and writes a file.
+  status: missing
+  note: The CodeArticle stories have no play function.
+```
+
+```mdl
+verdict T-12: No test checks the skill's file tools or MCP server.
+  status: missing
+  note: Nothing runs it: no plugin-code test or story, and no composer-app Playwright spec, drives these steps.
+```
+
+```mdl
+verdict T-13: No test invokes helloWorld.
+  status: missing
+  note: Nothing runs it: no plugin-code test or story, and no composer-app Playwright spec, drives these steps.
+```
+
+```mdl
+verdict T-14: No test invokes resetProject.
+  status: missing
+  note: Nothing runs it: no plugin-code test or story, and no composer-app Playwright spec, drives these steps.
+```
+
+```mdl
+verdict T-15: compileEntry tests cover both cases, but not through op:buildProject.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/build.ts#compileEntry]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/build.test.ts]
+  note: |
+    "emits JS for the hello-world scaffold" checks ok, the entry path, the emitted source and no `: void`. "reports
+    diagnostics for syntactically invalid entry" checks ok false, an error and no entry, but its source is a type
+    error, not a syntax error. No test builds a CodeProject from ECHO through the operation. Tagged `manual`.
+```
+
+```mdl
+verdict T-16: compile-and-run tests cover both cases, but not through op:runBuild.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/build.ts#executeScript]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/build.test.ts]
+  note: |
+    The round trip "hello-world scaffold prints Hello, World!" (tagged `manual`) covers the first case; the
+    `executeScript` throw tests cover the second. No test calls the operation on a project, so `diagnostics: []` on a
+    runtime error is not checked.
+```
+
+```mdl
+verdict T-17: No test checks the skill's build and run tools.
+  status: missing
+  note: Nothing runs it: no plugin-code test or story, and no composer-app Playwright spec, drives these steps.
+```
+
+```mdl
+verdict T-18: The bundle tests cover all three steps, but not through the operations.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/bundle.ts#bundleEntry, github:dxos/dxos/packages/plugins/plugin-code/src/compiler/build.ts#compileEntry]
+  tests: [github:dxos/dxos/packages/plugins/plugin-code/src/compiler/bundle.test.ts]
+  note: |
+    The two-file round trip through `compileEntry` and `executeScript` covers the clean build and "from util" on
+    stdout; a bare import is rejected by `bundleEntry`, not by a build of the same project. Under Node only, tagged
+    `manual`; nothing runs it in a browser, where F-12b.1 applies.
+```
+
+```mdl
+verdict QA-1: No automated test runs the QA round trip.
+  status: missing
+  note: |
+    It is driven by hand or by the composer-qa skill against a live app, which is not automation; its status is
+    `unverified`. No Playwright spec under packages/apps/composer-app/src/playwright covers plugin-code.
+```
+
+```mdl
+verdict QA-2: The showcase recorder drives the clip, but nothing checks what it expects.
+  status: missing
+  note: |
+    tools/autocue/showcase/overnight.mjs records the clip by driving the app; it asserts none of the `expect:`
+    lines, so it records the behaviour rather than exercising it as a test.
 ```

@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
+import * as FileSystem from '@dxos/plugin-file-system/FileSystem';
 
 import {
   detectRepo,
@@ -15,7 +16,6 @@ import {
   resolvePath,
   resolveRoots,
 } from './repo-roots.ts';
-import { type SpecFs } from './spec-fs.ts';
 import {
   findSourceKeys,
   formatSourceKey,
@@ -28,10 +28,15 @@ import {
 import { reconcile } from './spec-sync.ts';
 
 /** An in-memory file service; `roots` stands in for the dev server's own checkout. */
-const memoryFs = (files: Record<string, string>, roots: { repo: string; path: string }[] = []): SpecFs => ({
+const memoryFs = (
+  files: Record<string, string>,
+  roots: { repo: string; path: string }[] = [],
+): FileSystem.FileSystem => ({
   kind: 'dev',
+  available: () => Effect.succeed(true),
   read: (path) => Effect.succeed(files[path]),
   write: (path, content) => Effect.sync(() => void (files[path] = content)),
+  remove: (path) => Effect.sync(() => void delete files[path]),
   list: () => Effect.succeed([]),
   roots: () => Effect.succeed(roots),
 });

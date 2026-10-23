@@ -9,11 +9,16 @@ import { parseSourceKey } from '#sync';
 
 import { type Annotation, parseFields } from './spec-model.ts';
 
-/** A review's evidence as annotations: the spec's links to the code that implements each item. */
+/**
+ * A review's verdicts as annotations: the code that implements each item and the tests that exercise it. `done` means
+ * tested by definition (see `VERDICT_STATUSES`); nothing is said about testing code that does not exist.
+ */
 export const reviewAnnotations = (review: ReviewModel | undefined): Annotation[] =>
-  (review?.verdicts ?? []).flatMap(({ id, evidence }) => {
+  (review?.verdicts ?? []).map(({ id, status, evidence, tests }): Annotation => {
     const keys = evidence.map(parseSourceKey).filter((key) => key !== undefined);
-    return keys.length > 0 ? [{ id, keys }] : [];
+    const testKeys = tests.map(parseSourceKey).filter((key) => key !== undefined);
+    const testing = testKeys.length > 0 || status === 'done' ? 'tested' : status === 'missing' ? undefined : 'untested';
+    return { id, keys, ...(testing && { testing }), ...(testKeys.length > 0 && { tests: testKeys }) };
   });
 
 /**
@@ -31,6 +36,8 @@ export type Verdict = {
   summary?: string;
   /** `github:` keys of the code that supports the verdict. */
   evidence: string[];
+  /** `github:` keys of the tests that exercise the item; empty when the review names none. */
+  tests: string[];
   note?: string;
 };
 
@@ -78,13 +85,23 @@ export const parseReview = (text: string): ReviewModel => {
         return [];
       }
       // A list may be inline (`[a, b]`), wrapped over several lines, or written as `- a` items.
-      const evidence = [fields.get('evidence')?.inline, ...(fields.get('evidence')?.lines ?? [])]
-        .join(',')
-        .split(',')
-        .map((value) => value.replace(/^[\s[-]+|[\s\]]+$/g, ''))
-        .filter(Boolean);
+      const list = (name: string) =>
+        [fields.get(name)?.inline, ...(fields.get(name)?.lines ?? [])]
+          .join(',')
+          .split(',')
+          .map((value) => value.replace(/^[\s[-]+|[\s\]]+$/g, ''))
+          .filter(Boolean);
       const note = [fields.get('note')?.inline, ...(fields.get('note')?.lines ?? [])].filter(Boolean).join(' ');
-      return [{ id, status, ...(title && { summary: title }), evidence, ...(note && { note }) }];
+      return [
+        {
+          id,
+          status,
+          ...(title && { summary: title }),
+          evidence: list('evidence'),
+          tests: list('tests'),
+          ...(note && { note }),
+        },
+      ];
     });
   return { spec, commit, date, by, verdicts };
 };
