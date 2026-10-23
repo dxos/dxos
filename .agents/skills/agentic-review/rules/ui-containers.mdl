@@ -103,7 +103,9 @@ rule leaf-objects-render-as-cards: Every object inside a container is a card wit
   item component rendered inside a container that is not built on `Card.*`
   or `CardTile.*`, and a card header assembled from raw elements, or missing
   the title or menu. Do NOT flag the object's main article view, which is a
-  node of its own, or a cell in a table.
+  node of its own; a section of a document stack (`plugin-stack` sections,
+  notebook cells), which shows a whole document and is an article node too;
+  or a cell in a table.
   scope: repo
   files:
     - packages/plugins/**/*.tsx
