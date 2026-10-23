@@ -202,7 +202,15 @@ export const DefinitionGraph = ({
   const full = useMemo(() => buildDefinitionGraph(content, specs, annotations), [content, specs, annotations]);
   const allKinds = useMemo(() => [...new Set(full.definitions.map(({ kind }) => kind))], [full]);
   // A key rather than the array, so a caller passing a fresh literal each render does not re-lay out the graph.
-  const excludeKey = [...exclude, ...hiddenKinds(allKinds, groups), ...(code ? [] : ['code'])].join(',');
+  // Code has its own switch, so the concepts group never hides it.
+  const excludeKey = [
+    ...exclude,
+    ...hiddenKinds(
+      allKinds.filter((kind) => kind !== 'code'),
+      groups,
+    ),
+    ...(code ? [] : ['code']),
+  ].join(',');
   const model = useMemo(() => selectDefinitions(full, excludeKey.split(',')), [full, excludeKey]);
   const graph = useMemo<GraphModel>(
     () => ({

@@ -6,6 +6,7 @@
 
 import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import { closeSync, openSync } from 'node:fs';
+import { devNull } from 'node:os';
 import { createInterface } from 'node:readline';
 
 import { log } from '@dxos/log';
@@ -70,7 +71,7 @@ const RESERVED_FDS = 8;
  * the pipes are numbered from slots taken while the table was still small and released just before the spawn.
  */
 const reserveDescriptors = () => {
-  const take = () => Array.from({ length: RESERVED_FDS }, () => openSync('/dev/null', 'r'));
+  const take = () => Array.from({ length: RESERVED_FDS }, () => openSync(devNull, 'r'));
   const release = (fds: number[]) => fds.forEach((fd) => closeSync(fd));
   let fds = take();
   return {
