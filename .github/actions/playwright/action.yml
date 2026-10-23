@@ -1,0 +1,52 @@
+name: Playwright
+description: >
+  Install one Playwright browser with its system dependencies, keeping the apt packages those
+  dependencies download in the Actions cache. Call after the setup action.
+
+inputs:
+  browser:
+    description: The browser to install (chromium, firefox or webkit).
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    # `--with-deps` downloads 50-100 MB of fonts, codecs and GStreamer from the runner's Ubuntu
+    # mirror, which has run at ~35 kB/s and timed a cell out mid-install. Cached, apt downloads only
+    # the packages whose versions changed since.
+    - name: Point apt at the package cache
+      id: apt
+      shell: bash
+      run: |
+        dir="$HOME/.cache/playwright-apt"
+        mkdir -p "$dir/partial"
+        printf 'Dir::Cache::Archives "%s/";\nAPT::Keep-Downloaded-Packages "true";\n' "$dir" \
+          | sudo tee /etc/apt/apt.conf.d/99playwright-cache > /dev/null
+        echo "dir=$dir" >> "$GITHUB_OUTPUT"
+        echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
+        echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+
+    - name: Restore the package cache
+      uses: actions/cache@v5
+      with:
+        path: ${{ steps.apt.outputs.dir }}
+        key: playwright-apt-${{ runner.arch }}-${{ steps.apt.outputs.image }}-${{ inputs.browser }}-${{ steps.apt.outputs.version }}
+        restore-keys: |
+          playwright-apt-${{ runner.arch }}-${{ steps.apt.outputs.image }}-${{ inputs.browser }}-
+
+    - name: Install
+      shell: bash
+      env:
+        BROWSER: ${{ inputs.browser }}
+      run: pnpm exec playwright install --with-deps "$BROWSER"
+
+    # apt leaves `partial/` and `lock` owned by root, which the cache's post-job save cannot read.
+    - name: Release the package cache
+      if: ${{ always() }}
+      shell: bash
+      env:
+        DIR: ${{ steps.apt.outputs.dir }}
+      run: |
+        sudo rm -rf "$DIR/partial" "$DIR/lock"
+        sudo chown -R "$(id -u):$(id -g)" "$DIR"
+        echo "Cached $(find "$DIR" -name '*.deb' | wc -l) packages, $(du -sh "$DIR" | cut -f1)."

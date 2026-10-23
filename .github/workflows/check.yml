@@ -569,7 +569,9 @@ jobs:
 
       - name: Install Playwright
         if: ${{ !cancelled() }}
-        run: pnpm exec playwright install --with-deps chromium
+        uses: ./.github/actions/playwright
+        with:
+          browser: chromium
 
       # After a failed build too, so every target that does not depend on it still runs and reports.
       - name: Test
@@ -658,7 +660,9 @@ jobs:
 
       # Only this cell's browser — the other two engines' downloads are dead weight here.
       - name: Install Playwright
-        run: pnpm exec playwright install --with-deps ${{ env.PLAYWRIGHT_BROWSER }}
+        uses: ./.github/actions/playwright
+        with:
+          browser: ${{ env.PLAYWRIGHT_BROWSER }}
 
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps
       # run. Avoids 504 Outdated Optimize Dep when graph differs from bundle step. Storybook puts
@@ -756,7 +760,9 @@ jobs:
 
       # Only this cell's browser — the other two engines' downloads are dead weight here.
       - name: Install Playwright
-        run: pnpm exec playwright install --with-deps ${{ env.PLAYWRIGHT_BROWSER }}
+        uses: ./.github/actions/playwright
+        with:
+          browser: ${{ env.PLAYWRIGHT_BROWSER }}
 
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps
       # run. Avoids 504 Outdated Optimize Dep when graph differs from bundle step. Storybook puts
