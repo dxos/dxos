@@ -11,6 +11,7 @@ export * from './useNavigationPresence.ts';
 export * from './useObjectMenuItems.ts';
 export * from './usePluginRegistryAvailable.ts';
 export * from './useProgressMonitor.ts';
+export * from './usePushNotificationsRow.tsx';
 export * from './useSchemaFilter.ts';
 export * from './useSettingsScope.ts';
 export * from './useSettingsSpace.ts';

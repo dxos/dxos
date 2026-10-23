@@ -44,6 +44,11 @@ describe('channelVariant', () => {
     expect(channelVariant('build', undefined)).toBeUndefined();
   });
 
+  test('a developer machine label is a local build, not a channel', ({ expect }) => {
+    expect(channelVariant('build', 'local')).toBeUndefined();
+    expect(channelVariant('build', 'jdw-mbp.local')).toBeUndefined();
+  });
+
   test('a prerelease channel is named by its environment', ({ expect }) => {
     expect(channelVariant('build', 'preview')).toEqual('preview');
     expect(channelVariant('build', 'dev')).toEqual('dev');

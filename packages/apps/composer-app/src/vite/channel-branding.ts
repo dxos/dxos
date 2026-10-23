@@ -54,6 +54,12 @@ const CONTENT_TYPES: Record<string, string> = {
  */
 const UNBRANDED_ENVIRONMENTS = new Set(['production', 'ci']);
 
+/**
+ * A developer's own machine: `local`, or a `.local` hostname (`jdw-mbp.local`) exported to label its telemetry. Like an
+ * unset environment, that is a local build, not a channel.
+ */
+const isLocalEnvironment = (environment: string): boolean => environment === 'local' || environment.endsWith('.local');
+
 /** Environments that ship as a channel under another name: TestFlight builds come from dev deploys. */
 const ENVIRONMENT_CHANNELS: Record<string, ChannelVariant> = { testflight: 'dev' };
 
@@ -73,7 +79,7 @@ export const channelVariant = (
   if (command === 'serve') {
     return DEV_SERVER_VARIANT;
   }
-  if (!environment || UNBRANDED_ENVIRONMENTS.has(environment)) {
+  if (!environment || UNBRANDED_ENVIRONMENTS.has(environment) || isLocalEnvironment(environment)) {
     return undefined;
   }
   if (Object.hasOwn(ENVIRONMENT_CHANNELS, environment)) {

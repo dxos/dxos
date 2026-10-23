@@ -34,6 +34,22 @@ export const translations = [
         'settings.updates.failed.message': 'Update failed: {{error}}',
         'settings.updates.unsupported.message': 'Updates are not available in this browser or build.',
         'settings.updates.dev.message': 'Updates are not enabled in dev mode.',
+        'settings.notifications.label': 'Notifications on this device',
+        'settings.notifications.description':
+          'Show a system notification for invitations and messages, even while Composer is closed.',
+        'settings.notifications.unsupported.message':
+          'This browser or deployment cannot show notifications while Composer is closed.',
+        'settings.notifications.denied.message':
+          'Notifications are blocked for Composer. Allow them in your browser settings, then turn this on again.',
+        'settings.notifications.failed.message': 'Notifications could not be turned on. Try again.',
+        'settings.notifications.test.title': 'Test notification',
+        'settings.notifications.test.label': 'Send test',
+        'settings.notifications.test.idle.message': 'Send one to see what a notification looks like on this device.',
+        'settings.notifications.test.sending.message': 'Sending a test notification…',
+        'settings.notifications.test.shown.message': 'The test notification reached this device.',
+        'settings.notifications.test.not-shown.message':
+          'The test notification did not arrive. Check that your system allows notifications from this browser.',
+        'settings.notifications.test.failed.message': 'The test notification could not be sent.',
       },
     },
   },
