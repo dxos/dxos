@@ -9,9 +9,8 @@
  * nothing is sent to a service: words two consecutive passes agree on are committed, and the unconfirmed
  * tail is shown (italic) as soon as the first pass returns.
  *
- * - The toolbar's lightning toggle re-decodes every 200 ms instead: words commit sooner, but passes that
- *   close together agree on half-heard words more often.
- *
+ * - The toolbar's Accurate / Low latency toggle switches to a pass every 200 ms: words commit sooner,
+ *   but passes that close together agree on half-heard words more often.
  * - `Microphone` streams the default input; `File` plays the same hosted m4a as `Transcription`.
  * - The model downloads on the first press and is cached by the browser afterwards.
  * - The waveform shows everything captured; the raw recording stays in the tab and can be saved as WAV.
@@ -26,6 +25,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollContainer from '@dxos/react-ui/ScrollContainer';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Message } from '@dxos/types';
 
@@ -156,17 +156,15 @@ const WhistlePanel = ({ track, active, language, keywords, lowLatency = false, a
       <Panel.Header>
         <Toolbar.Root>
           {actions}
-          <Button.Root
-            iconOnly
-            variant={fast ? 'primary' : 'ghost'}
-            icon='ph--lightning--regular'
-            label={
-              fast
-                ? `Low latency: a pass every ${LOW_LATENCY_PASS_MS} ms`
-                : `Accurate: a pass every ${ACCURATE_PASS_MS} ms`
-            }
-            onClick={() => setFast((value) => !value)}
-          />
+          <Toolbar.ToggleGroup
+            type='single'
+            aria-label='Latency'
+            value={fast ? 'low' : 'accurate'}
+            onValueChange={(value) => value && setFast(value === 'low')}
+          >
+            <ToggleGroup.Item value='accurate'>Accurate</ToggleGroup.Item>
+            <ToggleGroup.Item value='low'>Low latency</ToggleGroup.Item>
+          </Toolbar.ToggleGroup>
           <Button.Root
             iconOnly
             icon='ph--download-simple--regular'
