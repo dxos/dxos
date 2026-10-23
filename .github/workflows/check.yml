@@ -624,6 +624,9 @@ jobs:
       # Scoped per job because at workflow level it would also move the hashes of `test`, `storybook`,
       # `workerd` and `cli`.
       DX_ENVIRONMENT: ci
+      # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit
+      # and reports green without executing a test.
+      DX_E2E_RUN_ID: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
       # Selects this cell's Playwright project; also a moon task hash input, so each browser gets its
       # own remote-cache entry.
       PLAYWRIGHT_BROWSER: ${{ fromJSON(needs.plan.outputs.composer-config)[matrix.cell].browser }}
@@ -667,10 +670,6 @@ jobs:
         if: ${{ env.TRUNK_TOKEN != '' }}
         timeout-minutes: 35
         uses: trunk-io/analytics-uploader@v1
-        env:
-          # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit
-          # and reports green without executing a test.
-          DX_E2E_RUN_ID: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
@@ -722,6 +721,9 @@ jobs:
       # Scoped per job because at workflow level it would also move the hashes of `test`, `storybook`,
       # `workerd` and `cli`.
       DX_ENVIRONMENT: ci
+      # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit
+      # and reports green without executing a test.
+      DX_E2E_RUN_ID: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
       # Selects this cell's Playwright project; also a moon task hash input, so each browser gets its
       # own remote-cache entry.
       PLAYWRIGHT_BROWSER: ${{ fromJSON(needs.plan.outputs.rest-config)[matrix.cell].browser }}
@@ -776,10 +778,6 @@ jobs:
         if: ${{ env.TRUNK_TOKEN != '' }}
         timeout-minutes: 35
         uses: trunk-io/analytics-uploader@v1
-        env:
-          # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit
-          # and reports green without executing a test.
-          DX_E2E_RUN_ID: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
