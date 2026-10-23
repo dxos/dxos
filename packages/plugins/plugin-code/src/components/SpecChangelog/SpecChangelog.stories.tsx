@@ -3,8 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
@@ -12,27 +14,41 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 import { type SourceKey } from '#sync';
 import { translations } from '#translations';
 
-import REVIEW_DIALECT from '../../../../../reflect/deus/lang/review.mdl?raw';
-import DEUS_SPEC from '../../../../../reflect/deus/SPEC.mdl?raw';
-import CALLS_SPEC from '../../../../plugin-calls/PLUGIN.mdl?raw';
-import CODE_SPEC from '../../../../plugin-code/PLUGIN.mdl?raw';
-import CODE_REVIEW from '../../../../plugin-code/PLUGIN.review.mdl?raw';
-import CONNECTOR_EVENTS_SPEC from '../../../../plugin-connector/spec/EVENTS.mdl?raw';
-import FILE_SYSTEM_SPEC from '../../../../plugin-file-system/PLUGIN.mdl?raw';
-import FILE_SYSTEM_REVIEW from '../../../../plugin-file-system/PLUGIN.review.mdl?raw';
-import GITHUB_FILE_SYNC_SPEC from '../../../../plugin-github/spec/FILE-SYNC.mdl?raw';
-import GITHUB_SYNC_SPEC from '../../../../plugin-github/spec/SYNC.mdl?raw';
-import CANVAS_AUTOGROW_SPEC from '../ChangelogGraph/__fixtures__/canvas-autogrow.mdl?raw';
-import INBOX_SYNC_SPEC from '../ChangelogGraph/__fixtures__/inbox-sync.mdl?raw';
+import REVIEW_DIALECT from '../../../../../reflect/deus/lang/review.mdl?spec';
+import DEUS_SPEC from '../../../../../reflect/deus/SPEC.mdl?spec';
+import CALLS_SPEC from '../../../../plugin-calls/PLUGIN.mdl?spec';
+import CODE_SPEC from '../../../../plugin-code/PLUGIN.mdl?spec';
+import CODE_REVIEW from '../../../../plugin-code/PLUGIN.review.mdl?spec';
+import CONNECTOR_EVENTS_SPEC from '../../../../plugin-connector/spec/EVENTS.mdl?spec';
+import FILE_SYSTEM_SPEC from '../../../../plugin-file-system/PLUGIN.mdl?spec';
+import FILE_SYSTEM_REVIEW from '../../../../plugin-file-system/PLUGIN.review.mdl?spec';
+import GITHUB_FILE_SYNC_SPEC from '../../../../plugin-github/spec/FILE-SYNC.mdl?spec';
+import GITHUB_SYNC_SPEC from '../../../../plugin-github/spec/SYNC.mdl?spec';
+import { type SpecFile, resolveSpecText, useSpecTexts } from '../../testing/index.ts';
+import CANVAS_AUTOGROW_SPEC from '../ChangelogGraph/__fixtures__/canvas-autogrow.mdl?spec';
+import INBOX_SYNC_SPEC from '../ChangelogGraph/__fixtures__/inbox-sync.mdl?spec';
 import { parseReview } from '../SpecModel/index.ts';
-import { SpecChangelog } from './SpecChangelog.tsx';
+import { SpecChangelog, type SpecChangelogProps } from './SpecChangelog.tsx';
+
+type SpecFileChangelogProps = Omit<SpecChangelogProps, 'content' | 'review'> & {
+  content: SpecFile;
+  review?: SpecFile;
+};
+
+/** Renders the published copy of each spec in a static build, so a spec-only republish needs no rebuild. */
+const SpecFileChangelog = ({ content, review, ...props }: SpecFileChangelogProps) => {
+  const texts = useSpecTexts({ content, review });
+  return texts?.content === undefined ? null : (
+    <SpecChangelog {...props} content={texts.content} review={texts.review} />
+  );
+};
 
 const meta = {
   title: 'plugins/plugin-code/components/SpecChangelog',
-  component: SpecChangelog,
+  component: SpecFileChangelog,
   decorators: [withRegistry, withMosaic(), withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: { translations: [...translations, ...reactUiTranslations] },
-} satisfies Meta<typeof SpecChangelog>;
+} satisfies Meta<typeof SpecFileChangelog>;
 
 export default meta;
 
@@ -108,10 +124,8 @@ export const FileSystemReview: Story = {
   args: { content: FILE_SYSTEM_SPEC, review: FILE_SYSTEM_REVIEW, onOpenCode: openOnGitHub, defaultView: 'review' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await waitFor(
-      () => expect(canvas.getAllByTestId('verdict-card').length).toBe(parseReview(FILE_SYSTEM_REVIEW).verdicts.length),
-      TIMEOUT,
-    );
+    const review = parseReview(await EffectEx.runPromise(resolveSpecText(FILE_SYSTEM_REVIEW)));
+    await waitFor(() => expect(canvas.getAllByTestId('verdict-card').length).toBe(review.verdicts.length), TIMEOUT);
   },
 };
 

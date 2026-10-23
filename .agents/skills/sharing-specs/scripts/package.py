@@ -15,7 +15,9 @@ Writes <out dir>/page.html plus the build's files, adjusted for the artifact pub
   - <html>/<head>/<body> wrappers are removed (the publisher adds its own skeleton),
   - control bytes and U+FFFD in JS become escapes, and the icon sprite loses its DOCTYPE
     (the publisher rejects both),
-  - GitHub avatars are downloaded into avatars/ and the bundle points at them (no external images).
+  - GitHub avatars are downloaded into avatars/ and the bundle points at them (no external images),
+  - specs the stories import with `?spec` are refreshed in specs/ from the working tree (stories fetch them
+    at runtime, so a spec edit needs no rebuild).
 """
 
 import argparse
@@ -26,6 +28,8 @@ import os
 import re
 import shutil
 import urllib.request
+
+import specs
 
 parser = argparse.ArgumentParser()
 parser.add_argument('build')
@@ -90,6 +94,11 @@ tab_bar = f"""
       tab.addEventListener('click', function () {{
         var preview = window.__STORYBOOK_PREVIEW__;
         if (!preview || !preview.channel) {{ return; }}
+        // The open tab remounts its story, which refetches its specs, so a spec-only republish shows without a reload.
+        if (tab.getAttribute('aria-selected') === 'true') {{
+          preview.channel.emit('forceRemount', {{ storyId: tab.dataset.story }});
+          return;
+        }}
         preview.channel.emit('setCurrentStory', {{ storyId: tab.dataset.story, viewMode: 'story' }});
         mark(tab.dataset.story);
       }});
@@ -139,4 +148,6 @@ for sprite in glob.glob('**/*.svg', recursive=True):
     text = open(sprite, encoding='utf-8', errors='surrogateescape').read()
     open(sprite, 'w', encoding='utf-8', errors='surrogateescape').write(re.sub(r'<!DOCTYPE[^>]*>', '', text, count=1))
 
+refreshed = specs.refresh('.')
+print(f'specs: {len(specs.read_manifest("."))} shipped, {len(refreshed)} changed in the working tree since the build')
 print(f'wrote {os.path.join(args.out, "page.html")} with {len(tabs)} tabs')
