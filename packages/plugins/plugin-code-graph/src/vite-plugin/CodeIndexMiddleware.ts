@@ -78,6 +78,17 @@ export const isAllowedHost = (header: string | undefined, allowedHosts: readonly
   );
 };
 
+/** The media type of a `content-type` header, without parameters, lower-cased. */
+export const mediaType = (header: string | undefined): string | undefined => header?.split(';')[0].trim().toLowerCase();
+
+const hostOf = (origin: string): string | undefined => {
+  try {
+    return new URL(origin).host;
+  } catch {
+    return undefined;
+  }
+};
+
 const isLoopback = (address: string | undefined) =>
   address === '127.0.0.1' || address === '::1' || address === '::ffff:127.0.0.1';
 
@@ -108,8 +119,14 @@ export const make = ({
     if (!isLoopback(req.socket.remoteAddress) || !isAllowedHost(req.headers.host, allowedHosts)) {
       return reply(res, 403, { ok: false, error: 'code-index requests are accepted from this machine only' });
     }
-    if (!req.headers['content-type']?.includes('application/json')) {
+    // The exact media type: a cross-site page may send `text/plain; x=application/json` without a preflight.
+    if (mediaType(req.headers['content-type']) !== 'application/json') {
       return reply(res, 415, { ok: false, error: 'content-type must be application/json' });
+    }
+    // Belt to the same braces, for a client that sends an Origin whose host is not this server's.
+    const origin = req.headers.origin;
+    if (origin && hostOf(origin) !== req.headers.host) {
+      return reply(res, 403, { ok: false, error: 'cross-origin request' });
     }
 
     let request: unknown;

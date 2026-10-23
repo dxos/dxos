@@ -63,7 +63,31 @@ describe('CodeIndexMiddleware', () => {
   test('refuses unknown tools and non-JSON requests', async ({ expect }) => {
     expect((await post({ tool: 'index' })).status).toBe(400);
     expect((await post({ tool: 'query' }, 'text/plain')).status).toBe(415);
+    // A CORS-safelisted type that merely mentions JSON in a parameter.
+    expect((await post({ tool: 'query' }, 'text/plain; x=application/json')).status).toBe(415);
+    expect((await post({ tool: 'query' }, 'application/json; charset=utf-8')).status).toBe(200);
   });
+});
+
+test('refuses a cross-origin page', async ({ expect }) => {
+  const middleware = CodeIndexMiddleware.make({ root: process.cwd(), command: process.execPath, args: [FAKE_SERVER] });
+  const server = createServer((req, res) => middleware(req, res, () => res.end()));
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const address = server.address();
+  if (!address || typeof address === 'string') {
+    throw new Error('server has no port');
+  }
+  try {
+    const response = await fetch(`http://127.0.0.1:${address.port}/api/code-index`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'origin': 'http://evil.example' },
+      body: JSON.stringify({ tool: 'query' }),
+    });
+    expect(response.status).toBe(403);
+  } finally {
+    middleware.close();
+    server.close();
+  }
 });
 
 describe('isAllowedHost', () => {
