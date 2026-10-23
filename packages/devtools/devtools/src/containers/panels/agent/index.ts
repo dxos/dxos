@@ -4,4 +4,4 @@
 
 import { lazy } from 'react';
 
-export const AgentsArticle = lazy(() => import('./AgentsArticle/index.ts'));
+export const AgentHaloArticle = lazy(() => import('./AgentHaloArticle/index.ts'));

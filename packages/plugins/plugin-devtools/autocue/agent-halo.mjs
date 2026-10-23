@@ -225,7 +225,7 @@ const openAgentHalo = async (peer, { remount = false } = {}) => {
 const agentSelect = (page) =>
   page
     .locator('[data-scope="select"][data-part="trigger"]')
-    .filter({ hasText: /Select agent|\(did:/ })
+    .filter({ hasText: new RegExp(`Select agent|^${AGENT}$`) })
     .first();
 const viewSelect = (page) =>
   page

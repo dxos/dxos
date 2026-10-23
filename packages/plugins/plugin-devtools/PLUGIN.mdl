@@ -172,7 +172,7 @@ The following components are thin wrappers around `@dxos/devtools` panel compone
 | SignalArticle            | Mesh.Signal                | Signal-server connection state          |
 | SwarmArticle             | Mesh.Swarm                 | Active swarm peers                      |
 | NetworkArticle           | Mesh.Network               | Full network topology for active space  |
-| AgentsArticle            | Agent.Halo                 | An agent's HALO, read from EDGE         |
+| AgentHaloArticle         | Agent.Halo                 | An agent's HALO, read from EDGE         |
 | EdgeDashboardArticle     | Edge.Dashboard             | EDGE node health / worker stats         |
 | WorkflowArticle          | Edge.Workflows             | Workflow definitions in active space    |
 | InvocationTraceContainer | Edge.Traces              | Invocation trace timeline from feed     |
@@ -197,7 +197,7 @@ feat F-1: Devtools Graph Node
   req F-1.4: A tools-explorer sub-node renders ToolsExplorer connected to the MCP introspect service.
   req F-1.5: No devtools node declares a URL binding; selecting one renders its article in the panel and leaves `window.location` unchanged.
   req F-1.6: A space-scoped inspector resolves the active workspace's space at render time; no space travels in node data.
-  req F-1.7: Agent › HALO (AgentsArticle) lists the agents the viewer administers: those whose default space (`AppSpace.AGENT_SPACE_TAG`) the client holds with the viewer as an ADMIN or EDITOR member. For the one picked it reads the agent's HALO from EDGE through the client's `client.edge.http` (`GET /compute/brain/:did/halo`), since no client replicates an agent's HALO: its identity, admins and spaces as JSON, or every credential in the HALO in the table HALO › Credentials uses. EDGE answers the agent's admins only, and its refusal shows as `error`.
+  req F-1.7: Agent › HALO (AgentHaloArticle) lists the agents the viewer administers: those whose default space (`AppSpace.AGENT_SPACE_TAG`) the client holds with the viewer as an ADMIN or EDITOR member. For the one picked it reads the agent's HALO from EDGE through the client's `client.edge.http` (`GET /compute/brain/:did/halo`), since no client replicates an agent's HALO: its identity, admins and spaces as JSON, or every credential in the HALO in the table HALO › Credentials uses. EDGE answers the agent's admins only, and its refusal shows as `error`.
 ```
 
 ```mdl
@@ -435,7 +435,7 @@ decision D-2: The agents page is a devtools page: it ships with the Devtools plu
 ```
 
 ```mdl
-decision D-3: The page is `AgentsArticle` in `@dxos/devtools` (`containers/panels/agent`), on the `Devtools.Agent.Halo` node of a new Agent group, and lists the agents the viewer administers, as [D-1] asks. Fills in [D-1] and [D-2].
+decision D-3: The page is `AgentHaloArticle` in `@dxos/devtools` (`containers/panels/agent`), on the `Devtools.Agent.Halo` node of a new Agent group, and lists the agents the viewer administers, as [D-1] asks. Fills in [D-1] and [D-2].
   date: 2026-10-23
   by: agent:claude-code
   for: user:mykola-vrmchk

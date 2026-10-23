@@ -10,7 +10,7 @@ import * as Surface from '@dxos/app-framework/Surface';
 import type * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import {
-  AgentsArticle,
+  AgentHaloArticle,
   AutomergeArticle,
   ConfigArticle,
   CredentialsArticle,
@@ -355,7 +355,7 @@ export default Capability.makeModule(
       Surface.create({
         id: 'agent.halo',
         filter: AppSurface.literal(DebugSurface.Page, Devtools.Agent.Halo),
-        component: AgentsArticle,
+        component: AgentHaloArticle,
         props: ({ role }) => ({ role }),
       }),
       Surface.create({
