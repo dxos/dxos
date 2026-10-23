@@ -9,7 +9,7 @@
  * nothing is sent to a service: words two consecutive passes agree on are committed, and the unconfirmed
  * tail is shown (italic) as soon as the first pass returns.
  *
- * - The toolbar's Accurate / Low latency toggle switches to a pass every 200 ms: words commit sooner,
+ * - The toolbar's Low latency switch makes it a pass every 200 ms: words commit sooner,
  *   but passes that close together agree on half-heard words more often.
  * - `Microphone` streams the default input; `File` plays the same hosted m4a as `Transcription`.
  * - The model downloads on the first press and is cached by the browser afterwards.
@@ -22,10 +22,10 @@ import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useStat
 import { Obj } from '@dxos/echo';
 import { Transcription, TranscriptModel, useAudioFile, useAudioTrack } from '@dxos/react-ui-transcription';
 import * as Button from '@dxos/react-ui/Button';
+import * as Input from '@dxos/react-ui/Input';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollContainer from '@dxos/react-ui/ScrollContainer';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Message } from '@dxos/types';
 
@@ -156,15 +156,7 @@ const WhistlePanel = ({ track, active, language, keywords, lowLatency = false, a
       <Panel.Header>
         <Toolbar.Root>
           {actions}
-          <Toolbar.ToggleGroup
-            type='single'
-            aria-label='Latency'
-            value={fast ? 'low' : 'accurate'}
-            onValueChange={(value) => value && setFast(value === 'low')}
-          >
-            <ToggleGroup.Item value='accurate'>Accurate</ToggleGroup.Item>
-            <ToggleGroup.Item value='low'>Low latency</ToggleGroup.Item>
-          </Toolbar.ToggleGroup>
+          <Input.Switch label='Low latency' checked={fast} onCheckedChange={({ checked }) => setFast(checked)} />
           <Button.Root
             iconOnly
             icon='ph--download-simple--regular'
