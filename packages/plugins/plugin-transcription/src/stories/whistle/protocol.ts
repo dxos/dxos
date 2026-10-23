@@ -29,10 +29,12 @@ export type WhistleRequest =
       type: 'init';
       assets: WhistleAssets;
       language?: string;
-      keywords?: string[];
     }
-  /** Smallest batch of new audio, in milliseconds, worth a pass; changes take effect on the next pass. */
-  | { type: 'config'; minPassMs: number }
+  /**
+   * Settings that change without reloading the model, from the next pass on: the smallest batch of new audio
+   * worth a pass, and terms to bias recognition towards (names, jargon).
+   */
+  | { type: 'config'; minPassMs?: number; keywords?: string[] }
   /** 16 kHz mono samples; transferred. */
   | { type: 'audio'; samples: Float32Array }
   /** Commit the unconfirmed tail and end the stream; word times restart from zero. */

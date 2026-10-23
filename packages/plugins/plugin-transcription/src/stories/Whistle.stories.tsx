@@ -14,12 +14,14 @@
  * - A pause (1.5 s of silence or more) between words, or Stop, starts a new paragraph; each paragraph's audio can be
  *   played or saved on its own.
  * - `Microphone` streams the default input; `File` plays the same hosted m4a as `Transcription`.
+ * - Keywords (comma-separated, prefilled with DXOS terms) bias recognition towards names and jargon; edits apply
+ *   from the next pass.
  * - The model downloads on the first press and is cached by the browser afterwards.
  * - The waveform shows everything captured; the raw recording stays in the tab and can be saved as WAV.
  */
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAudioFile, useAudioTrack } from '@dxos/react-ui-transcription';
 import * as Button from '@dxos/react-ui/Button';
@@ -35,6 +37,34 @@ import { Recording } from './whistle/recording.ts';
 import { usePlayback } from './whistle/usePlayback.ts';
 import { type UseWhistleResult, useWhistle } from './whistle/useWhistle.ts';
 import { Waveform } from './whistle/Waveform.tsx';
+
+/** Terms Whistle is biased towards by default: DXOS names it would otherwise hear as ordinary words. */
+const DXOS_KEYWORDS = [
+  'DXOS',
+  'Composer',
+  'ECHO',
+  'HALO',
+  'MESH',
+  'EDGE',
+  'Kai',
+  'Braneframe',
+  'Automerge',
+  'Effect',
+  'Cloudflare',
+  'Durable Object',
+  'Storybook',
+  'Whistle',
+  'Cactus',
+  'Needle',
+  'CRDT',
+  'DXN',
+];
+
+const parseKeywords = (text: string): string[] =>
+  text
+    .split(',')
+    .map((keyword) => keyword.trim())
+    .filter(Boolean);
 
 /** New audio per pass: as Cactus's demo for accuracy, or a fifth of it for latency. */
 const ACCURATE_PASS_MS = 1_000;
@@ -178,7 +208,16 @@ type WhistlePanelProps = {
   actions: ReactNode;
 };
 
-const WhistlePanel = ({ track, active, language, keywords, lowLatency = false, actions }: WhistlePanelProps) => {
+const WhistlePanel = ({
+  track,
+  active,
+  language,
+  keywords = DXOS_KEYWORDS,
+  lowLatency = false,
+  actions,
+}: WhistlePanelProps) => {
+  const [keywordsText, setKeywordsText] = useState(() => keywords.join(', '));
+  const parsedKeywords = useMemo(() => parseKeywords(keywordsText), [keywordsText]);
   const [recording] = useState(() => new Recording());
   const { paragraphs, openId, pending, commit } = useStreamingTranscript(recording);
   const playback = usePlayback(recording);
@@ -188,7 +227,7 @@ const WhistlePanel = ({ track, active, language, keywords, lowLatency = false, a
     track,
     active,
     language,
-    keywords,
+    keywords: parsedKeywords,
     minPassMs: fast ? LOW_LATENCY_PASS_MS : ACCURATE_PASS_MS,
     recording,
     onResult: commit,
@@ -209,6 +248,15 @@ const WhistlePanel = ({ track, active, language, keywords, lowLatency = false, a
           <Toolbar.Separator variant='gap' />
           <Stats {...whistle} />
         </Toolbar.Root>
+        <label className='flex items-center gap-2 px-2'>
+          <span className='shrink-0 text-sm text-description'>Keywords</span>
+          <Input.Root
+            value={keywordsText}
+            placeholder='Comma-separated names and terms'
+            spellCheck={false}
+            onChange={(event) => setKeywordsText(event.target.value)}
+          />
+        </label>
         <Waveform recording={whistle.recording} />
       </Panel.Header>
       <ScrollContainer.Root pin>

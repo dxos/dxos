@@ -128,28 +128,29 @@ export const useWhistle = ({
     };
 
     setStatus('loading');
-    instance.postMessage({
-      type: 'init',
-      assets: WHISTLE_ASSETS,
-      language,
-      keywords: keywordsKey ? keywordsKey.split('\n') : [],
-    } satisfies WhistleRequest);
+    instance.postMessage({ type: 'init', assets: WHISTLE_ASSETS, language } satisfies WhistleRequest);
     setWorker(instance);
     return () => {
       instance.terminate();
       setWorker(undefined);
       setStatus('idle');
     };
-    // `keywords` is read via the serialized `keywordsKey`.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [requested, language, keywordsKey]);
+  }, [requested, language]);
 
-  // Sent separately from `init` so switching latency mid-stream keeps the loaded model and the stream.
+  // Sent separately from `init` so changing latency or keywords mid-stream keeps the loaded model and the stream.
   useEffect(() => {
     if (worker && minPassMs !== undefined) {
       worker.postMessage({ type: 'config', minPassMs } satisfies WhistleRequest);
     }
   }, [worker, minPassMs]);
+  useEffect(() => {
+    if (worker) {
+      worker.postMessage({
+        type: 'config',
+        keywords: keywordsKey ? keywordsKey.split('\n') : [],
+      } satisfies WhistleRequest);
+    }
+  }, [worker, keywordsKey]);
 
   // Capture runs only while active; the worker queues audio that arrives before the model is ready.
   useEffect(() => {

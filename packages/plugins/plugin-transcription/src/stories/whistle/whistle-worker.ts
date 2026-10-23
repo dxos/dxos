@@ -56,6 +56,8 @@ let minPassSamples = (WHISTLE_SAMPLE_RATE * DEFAULT_MIN_PASS_MS) / 1_000;
 let outPtr = 0;
 let languagePtr = 0;
 let keywordsPtr = 0;
+/** Newline-separated bias terms, kept until the engine is loaded to write them into its heap. */
+let keywordsText = '';
 let pcmPtr = 0;
 let pcmCapacity = 0;
 
@@ -130,7 +132,7 @@ const readString = (module: NeedleModule, ptr: number): string => {
   return new TextDecoder().decode(heap.subarray(ptr, end));
 };
 
-const init = async (assets: WhistleAssets, language?: string, keywords?: string[]) => {
+const init = async (assets: WhistleAssets, language?: string) => {
   const started = performance.now();
   const [createNeedle, wasmBinary, model] = await Promise.all([
     loadEngineFactory(assets.engineUrl),
@@ -148,7 +150,7 @@ const init = async (assets: WhistleAssets, language?: string, keywords?: string[
 
   outPtr = module._malloc(OUT_CAPACITY);
   languagePtr = writeString(module, language);
-  keywordsPtr = writeString(module, keywords?.join('\n'));
+  keywordsPtr = writeString(module, keywordsText);
   engine = module;
   post({ type: 'ready', loadMs: performance.now() - started });
 };
@@ -242,7 +244,7 @@ globalThis.addEventListener('message', (event: MessageEvent<WhistleRequest>) => 
   const request = event.data;
   switch (request.type) {
     case 'init': {
-      init(request.assets, request.language, request.keywords).catch((err) =>
+      init(request.assets, request.language).catch((err) =>
         post({ type: 'error', message: err instanceof Error ? err.message : String(err) }),
       );
       break;
@@ -254,7 +256,18 @@ globalThis.addEventListener('message', (event: MessageEvent<WhistleRequest>) => 
       break;
     }
     case 'config': {
-      minPassSamples = Math.round((WHISTLE_SAMPLE_RATE * request.minPassMs) / 1_000);
+      if (request.minPassMs !== undefined) {
+        minPassSamples = Math.round((WHISTLE_SAMPLE_RATE * request.minPassMs) / 1_000);
+      }
+      if (request.keywords) {
+        keywordsText = request.keywords.join('\n');
+        if (engine) {
+          if (keywordsPtr) {
+            engine._free(keywordsPtr);
+          }
+          keywordsPtr = writeString(engine, keywordsText);
+        }
+      }
       void drain();
       break;
     }
