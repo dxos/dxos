@@ -30,8 +30,11 @@ const findSeparators = (lines: string[]): number[] => {
 };
 
 /** True when the lines between two separators read as a YAML mapping. */
-const isFrontmatter = (lines: string[]): boolean =>
-  lines.length > 0 && YAML_KEY.test(lines[0]) && lines.every((line) => line.trim() === '' || YAML_LINE.test(line));
+const isFrontmatter = (lines: string[]): boolean => {
+  // Markdown formatters insert a blank line after the opening `---`.
+  const first = lines.findIndex((line) => line.trim() !== '');
+  return first >= 0 && YAML_KEY.test(lines[first]) && lines.every((line) => line.trim() === '' || YAML_LINE.test(line));
+};
 
 /**
  * Splits a markdown document into slides using the Slidev rule: a `---` line separates slides, and a

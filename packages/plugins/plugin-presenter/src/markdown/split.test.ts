@@ -46,6 +46,14 @@ describe('splitSlides', () => {
     expect(splitSlides('one\n---\nNote: x\nsome prose\n---\ntwo')).toEqual(['one', 'Note: x\nsome prose', 'two']);
   });
 
+  test('a blank line before the first key is still frontmatter', () => {
+    expect(splitSlides('---\n\nlayout: center\n---\n# T')).toEqual(['---\n\nlayout: center\n---\n# T']);
+  });
+
+  test('a blank line before a key followed by prose is body', () => {
+    expect(splitSlides('one\n---\n\nNote: x\nsome prose\n---\ntwo')).toEqual(['one', 'Note: x\nsome prose', 'two']);
+  });
+
   test('empty document', () => {
     expect(splitSlides('')).toEqual(['']);
   });

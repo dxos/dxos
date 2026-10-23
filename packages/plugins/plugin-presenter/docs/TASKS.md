@@ -69,6 +69,8 @@ Design: [DESIGN.md](./DESIGN.md).
 - [ ] **Evaluate `@slidev/parser`** for the preview `---` split (browser-safe?).
 - [x] **Migrate** reveal syntax in test decks (done: `deck.md`, `2025-05-20-effect.md`); reveal behind a setting until parity, then delete.
 - [ ] **Print stylesheet**.
+- [ ] `class:` frontmatter only works with Tailwind utilities that are already generated (the markdown is not scanned); consider a safelist.
+- [ ] Known deck conversion losses: per-colour tints behind the ECHO/HALO/MESH/EDGE images (needs a tint layer separate from `backgroundOpacity`), fixed image heights, and the dropped hidden FADE slide.
 
 ## Phase 4: Slide surfaces
 

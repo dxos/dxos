@@ -3,6 +3,7 @@ backgroundVideo: 'https://media.dxos.network/DXOS.mp4'
 ---
 
 ---
+
 layout: center
 background: '#151515'
 ---
@@ -16,6 +17,7 @@ Join us on 𝕏 and Discord
 [dxos.org/discord](https://dxos.org/discord)
 
 ---
+
 layout: center
 background: '#151515'
 ---
@@ -25,6 +27,7 @@ background: '#151515'
 > To enable open source developers to build «&nbsp;commercially-competitive&nbsp;» privacy-preserving applications.
 
 ---
+
 background: '#151515'
 ---
 
@@ -44,6 +47,7 @@ background: '#151515'
 -->
 
 ---
+
 layout: image
 image: 'https://media.dxos.network/bg-echo.svg'
 backgroundOpacity: 0.5
@@ -61,6 +65,7 @@ backgroundPosition: '100% 50%'
 ## Distributed Data
 
 ---
+
 layout: image
 image: 'https://media.dxos.network/bg-halo.svg'
 backgroundOpacity: 0.5
@@ -78,6 +83,7 @@ backgroundPosition: '100% 50%'
 ## Identity & Security
 
 ---
+
 layout: image
 image: 'https://media.dxos.network/bg-mesh.svg'
 backgroundOpacity: 0.5
@@ -95,6 +101,7 @@ backgroundPosition: '100% 50%'
 ## Resilient Networks
 
 ---
+
 layout: image
 image: 'https://media.dxos.network/bg-kube.svg'
 backgroundOpacity: 0.5
@@ -112,6 +119,7 @@ backgroundPosition: '100% 50%'
 ## Decentralized Compute
 
 ---
+
 background: '#111111'
 backgroundOpacity: 0.5
 ---
@@ -127,6 +135,7 @@ const Component = ({ str }: { str?: string }) => {
 ```
 
 ---
+
 layout: center
 ---
 
@@ -135,5 +144,6 @@ layout: center
 > _Super App_: n. A mobile or web application that integrates a wide variety of services and functions into a single platform.
 
 ---
+
 backgroundVideo: 'https://media.dxos.network/DXOS.mp4'
 ---

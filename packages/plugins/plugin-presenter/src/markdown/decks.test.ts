@@ -25,6 +25,13 @@ describe.each([
   });
 
   test('keeps no reveal.js syntax', () => {
-    expect(load(name)).not.toMatch(/\.slide:|\.element:|data-background|<center|<img|style=/);
+    expect(load(name)).not.toMatch(/\.slide:|\.element|data-background|data-visibility|<center|<img|style=/);
+  });
+});
+
+describe('formatted frontmatter', () => {
+  test('a blank line after the opening --- still yields frontmatter', () => {
+    const parsed = parseSlide('---\n\nlayout: center\n---\n# T');
+    expect(parsed.layout).toBe('center');
   });
 });
