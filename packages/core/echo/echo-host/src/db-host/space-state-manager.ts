@@ -38,7 +38,10 @@ export class SpaceStateManager extends Resource {
   private readonly _rootBySpace = new Map<SpaceId, DocumentId>();
   /** Keyed by space, not by root document: two spaces can share one root and must tear down apart. */
   private readonly _perSpaceContext = new Map<SpaceId, Context>();
-  private readonly _lastSpaceDocumentList = new Map<SpaceId, { documentIds: DocumentId[]; outOfScope: DocumentId[] }>();
+  private readonly _lastSpaceDocumentList = new Map<
+    SpaceId,
+    { documentIds: DocumentId[]; outOfScope: Record<DocumentId, string[]> }
+  >();
   /** Object ids each partially replicated space is limited to; a space absent here replicates in full. */
   private readonly _syncScopes = new Map<SpaceId, ReadonlySet<string>>();
   private readonly _spaceRootRefs = new Map<SpaceId, SpaceRootRefs>();
@@ -276,7 +279,7 @@ export class SpaceStateManager extends Resource {
         const { inScope, outOfScope } =
           scope && directory
             ? partitionBySyncScope(directory, scope)
-            : { inScope: root.getAllLinkedDocuments().map((url) => interpretAsDocumentId(url)), outOfScope: [] };
+            : { inScope: root.getAllLinkedDocuments().map((url) => interpretAsDocumentId(url)), outOfScope: {} };
         const documentIds = [root.documentId, ...anchorIds, ...inScope];
         const list = { documentIds, outOfScope };
         if (!isEqual(list, this._lastSpaceDocumentList.get(spaceId))) {
@@ -381,7 +384,10 @@ export class SpaceDocumentListUpdatedEvent {
     /** The directory `spaceRootId` replaced; set only on the first update after the swap. */
     public readonly previousRootId: DocumentId | undefined,
     public readonly documentIds: DocumentId[],
-    /** Linked documents left out of `documentIds` by the space's sync scope; empty for a space replicated in full. */
-    public readonly outOfScopeDocumentIds: DocumentId[] = [],
+    /**
+     * Linked documents left out of `documentIds` by the space's sync scope, with the objects each holds; empty for a
+     * space replicated in full.
+     */
+    public readonly outOfScope: Record<DocumentId, string[]> = {},
   ) {}
 }

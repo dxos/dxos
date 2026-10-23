@@ -173,9 +173,17 @@ chooses to ask for nothing else. A modified client — or the same identity on a
 `CrossDeviceSpaceSynchronizer` joins to the full space — obtains every document in the space.
 
 So in v1 a share link is **"invite to the space, show one object"**, not a capability limited to
-that object. The dialog says "Anyone with the link can open this object"; the design must not be
-sold as access control until the server side exists. Related: `READER` is recorded on the member
-credential but ECHO does not enforce it on document writes.
+that object. Other properties of the link to keep in mind:
+
+- It is a bearer secret: the invitation's guest keypair is in the query string, which reaches the
+  Composer Worker and its logs. It expires with the invitation (7 days by default) and is not revoked
+  when the dialog closes.
+- It turns on the plugins it names without asking. Only installed plugins can be named, so the
+  exposure is limited to what this build ships.
+- A share link skips the welcome screen, so someone with an account who opens it on a new device
+  gets a fresh identity rather than signing in (a login token in the same URL still wins). The dialog says "Anyone with the link can open this object"; the design must not be
+  sold as access control until the server side exists. Related: `READER` is recorded on the member
+  credential but ECHO does not enforce it on document writes.
 
 What closing the gap needs (tracked as tasks):
 
@@ -191,8 +199,13 @@ What closing the gap needs (tracked as tasks):
 - The scope is fixed when the link is made. A child the owner adds later (a new comment thread, an
   embedded sketch) is not visible to the guest until the scope is extended. Follow-up: grow the
   scope on the host by following references out of in-scope documents.
-- Objects the guest creates stay in scope only while this host remembers creating them
-  (`AutomergeHost` keeps that set in memory); after a reload they fall out of scope until extended.
+- Objects the guest creates join the scope as soon as the directory lists them, and the extension is
+  persisted (`EchoHost.syncScopeExtended` → `DataSpaceManager.extendSpaceSyncScope`).
+- A document the client asked for while it was out of scope is answered `unavailable`; when the
+  scope grows, the host sends it after all (`AutomergeHost.documentReleased`).
+- The scope does not follow queries: a table or kanban shows the rows its view selects, which are
+  not references, so a shared table arrives empty. Comment threads attached by relation are left out
+  for the same reason.
 - Other devices of the guest replicate the whole space (§8).
 - Move `?share=` (and `spaceInvitationCode`) into the URL fragment.
 - Revocation: cancelling the delegated invitation stops new joins; it does not remove members who
@@ -200,17 +213,20 @@ What closing the gap needs (tracked as tasks):
 
 ## 10. Decision log
 
-| #   | Decision                                                                   | Why                                                                                                                                                  |
-| --- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D1  | Lives in plugin-space, not a new plugin.                                   | plugin-space already owns object actions, invitations, the members panel and URL handlers, and it is a core plugin, so every object gets the action. |
-| D2  | Link = the object's shareable path + `?share=`.                            | Members open it with no new code path; the payload only matters to non-members.                                                                      |
-| D3  | Scope enforcement reuses the quarantine gate with a new reason.            | It already covers load, request, accept, serve and advertise; a parallel gate would duplicate seven call sites and drift.                            |
-| D4  | Scope persisted in `SpaceMetadata`, not SQL.                               | The metadata store is one protobuf blob, so a new optional field needs no migration; `edge_replication` is the precedent.                            |
-| D5  | Scope travels in `AcceptInvitationRequest`, not in the `Invitation` proto. | It is the guest's local choice, not part of what the host signs or EDGE reads; an Effect-schema field needs no codegen on the wire.                  |
-| D6  | Root collection excluded from the scope; space properties included.        | Properties gate `SpaceProxy` readiness; the root collection would leak the object list as dangling refs.                                             |
-| D7  | Markdown `echo:` links count as edges.                                     | "A document that addresses another one" must open with its link working; without it the guest sees a dead link.                                      |
-| D8  | KNOWN_PUBLIC_KEY + multi-use + delegated, like invite-many.                | Proven EDGE path in production; NONE works too but has no extra benefit and is less exercised.                                                       |
-| D9  | Onboarding owns identity creation for share links.                         | Onboarding and the handler would otherwise race to create two identities on a fresh browser.                                                         |
+| #   | Decision                                                                                           | Why                                                                                                                                                  |
+| --- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | Lives in plugin-space, not a new plugin.                                                           | plugin-space already owns object actions, invitations, the members panel and URL handlers, and it is a core plugin, so every object gets the action. |
+| D2  | Link = the object's shareable path + `?share=`.                                                    | Members open it with no new code path; the payload only matters to non-members.                                                                      |
+| D3  | Scope enforcement reuses the quarantine gate with a new reason.                                    | It already covers load, request, accept, serve and advertise; a parallel gate would duplicate seven call sites and drift.                            |
+| D4  | Scope persisted in `SpaceMetadata`, not SQL.                                                       | The metadata store is one protobuf blob, so a new optional field needs no migration; `edge_replication` is the precedent.                            |
+| D5  | Scope travels in `AcceptInvitationRequest`, not in the `Invitation` proto.                         | It is the guest's local choice, not part of what the host signs or EDGE reads; an Effect-schema field needs no codegen on the wire.                  |
+| D6  | Root collection excluded from the scope; space properties included.                                | Properties gate `SpaceProxy` readiness; the root collection would leak the object list as dangling refs.                                             |
+| D7  | Markdown `echo:` links count as edges.                                                             | "A document that addresses another one" must open with its link working; without it the guest sees a dead link.                                      |
+| D8  | KNOWN_PUBLIC_KEY + multi-use + delegated, like invite-many.                                        | Proven EDGE path in production; NONE works too but has no extra benefit and is less exercised.                                                       |
+| D9  | Onboarding owns identity creation for share links.                                                 | Onboarding and the handler would otherwise race to create two identities on a fresh browser.                                                         |
+| D10 | The handler keeps `?share=` until an identity exists, and never blocks URL projection on the join. | Onboarding reads the parameter after handlers start; a projection held by a slow join kept the app shell blank for 30 s in the first demo run.       |
+| D11 | The joined space appearing is the join's success signal, not the invitation's state.               | The invitation reports a failed attempt (EDGE refusing, a host timing out) while another path still admits the guest.                                |
+| D12 | Only a member who may admit others re-hosts delegated invitations.                                 | An Editor guest re-hosting them threw in `afterReady`, which skipped announcing the space and stalled it for ~90 s.                                  |
 
 ## 11. Test plan
 

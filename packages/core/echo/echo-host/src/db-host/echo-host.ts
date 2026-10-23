@@ -17,7 +17,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as SqlClient from 'effect/sql/SqlClient';
 
-import { Mutex, scheduleTask, sleep, yieldBehindQueuedTasks } from '@dxos/async';
+import { Event, Mutex, scheduleTask, sleep, yieldBehindQueuedTasks } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import {
@@ -201,6 +201,9 @@ export class EchoHost extends Resource {
 
   /** What the index is doing, for boot screens and progress indicators; see {@link DataService.IndexStatus}. */
   readonly indexStatus: IndexStatusTracker;
+
+  /** A partially replicated space's scope grew to take in objects this host created; the payload is what was added. */
+  readonly syncScopeExtended = new Event<{ spaceId: SpaceId; objectIds: string[] }>();
 
   private _feedService: FeedService.Handlers;
 
@@ -1271,13 +1274,21 @@ export class EchoHost extends Resource {
    * @returns The documents the space's collection holds.
    */
   #applySyncScope(event: SpaceDocumentListUpdatedEvent): DocumentId[] {
-    const created = event.outOfScopeDocumentIds.filter((documentId) =>
-      this._automergeHost.isCreatedInSession(documentId),
+    const outOfScope = Object.entries(event.outOfScope).flatMap(([documentId, objectIds]) =>
+      isValidDocumentId(documentId) ? [{ documentId, objectIds }] : [],
     );
-    const excluded = event.outOfScopeDocumentIds.filter(
-      (documentId) => !this._automergeHost.isCreatedInSession(documentId),
-    );
-    const documentIds = [...event.documentIds, ...created];
+    const created = outOfScope.filter(({ documentId }) => this._automergeHost.isCreatedInSession(documentId));
+    const excluded = outOfScope
+      .filter(({ documentId }) => !this._automergeHost.isCreatedInSession(documentId))
+      .map(({ documentId }) => documentId);
+    const scope = this._spaceStateManager.getSyncScope(event.spaceId);
+    if (created.length > 0 && scope) {
+      // The guest's own objects join the scope; the space manager persists the extension so a restart keeps them.
+      const objectIds = created.flatMap(({ objectIds }) => objectIds);
+      this._spaceStateManager.setSyncScope(event.spaceId, [...scope, ...objectIds]);
+      this.syncScopeExtended.emit({ spaceId: event.spaceId, objectIds });
+    }
+    const documentIds = [...event.documentIds, ...created.map(({ documentId }) => documentId)];
     for (const documentId of documentIds) {
       this._automergeHost.releaseOutOfScopeDocument(documentId);
     }

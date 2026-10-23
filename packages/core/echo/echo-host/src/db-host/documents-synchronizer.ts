@@ -81,6 +81,9 @@ export class DocumentsSynchronizer extends Resource {
    */
   private readonly _pendingUnavailable = new Set<DocumentId>();
 
+  /** Quarantined documents the client still subscribes to, sent once a quarantine on them is lifted. */
+  private readonly _awaitingRelease = new Set<DocumentId>();
+
   /**
    * Job that schedules if there are pending updates.
    */
@@ -126,6 +129,11 @@ export class DocumentsSynchronizer extends Resource {
       if (this._lifecycleState === LifecycleState.CLOSED) {
         continue;
       }
+      // Leasing a quarantined document throws, which would drop every document after it in this batch.
+      if (this._params.automergeHost.isQuarantined(documentId)) {
+        this._markUnavailable(documentId);
+        continue;
+      }
       const existing = this._syncStates.get(documentId);
       if (existing) {
         existing.passive = passive;
@@ -143,12 +151,6 @@ export class DocumentsSynchronizer extends Resource {
         const syncState: DocSyncState = { passive, lastSentHead: heads };
         this._syncStates.set(documentId, syncState);
         waiting.push({ documentId, heads, syncState });
-        continue;
-      }
-      // Leasing a quarantined document throws, which would drop every document after it in this batch.
-      if (this._params.automergeHost.isQuarantined(documentId)) {
-        this._pendingUnavailable.add(documentId);
-        this._sendUpdatesJob?.trigger();
         continue;
       }
       log('loading document', { documentId });
@@ -244,12 +246,29 @@ export class DocumentsSynchronizer extends Resource {
       this._syncStates.delete(documentId);
       this._pendingUpdates.delete(documentId);
       this._pendingRequesting.delete(documentId);
+      this._awaitingRelease.delete(documentId);
     }
+  }
+
+  /** Tells the client the document is unavailable, and remembers the request in case the quarantine is lifted. */
+  private _markUnavailable(documentId: DocumentId): void {
+    this._syncStates.get(documentId)?.initialLease?.[Symbol.dispose]();
+    this._syncStates.delete(documentId);
+    this._pendingUpdates.delete(documentId);
+    this._pendingRequesting.delete(documentId);
+    this._pendingUnavailable.add(documentId);
+    this._awaitingRelease.add(documentId);
+    this._sendUpdatesJob?.trigger();
   }
 
   protected override async _open(): Promise<void> {
     this._sendUpdatesJob = new UpdateScheduler(this._ctx, this._checkAndSendUpdates.bind(this), {
       maxFrequency: MAX_UPDATE_FREQ,
+    });
+    this._params.automergeHost.documentReleased.on(this._ctx, (documentId) => {
+      if (this._awaitingRelease.delete(documentId)) {
+        void this.addDocuments([{ documentId }]);
+      }
     });
     // Every save the host makes, whatever wrote it: this client's own mutation, another client's,
     // or a peer's replicated change.
@@ -344,6 +363,10 @@ export class DocumentsSynchronizer extends Resource {
     if (!syncState || syncState.initialLease) {
       return;
     }
+    if (this._params.automergeHost.isQuarantined(documentId)) {
+      this._markUnavailable(documentId);
+      return;
+    }
     using lease = this._params.automergeHost.acquireDoc<DatabaseDirectory>(documentId);
     if (!lease.loaded) {
       // Gone from this host (e.g. wiped by garbage collection); its next save, if any, queues it again.
@@ -380,6 +403,11 @@ export class DocumentsSynchronizer extends Resource {
 
   private async _writeMutation(ctx: Context, documentId: DocumentId, mutation: Uint8Array): Promise<void> {
     if (this._lifecycleState === LifecycleState.CLOSED) {
+      return;
+    }
+    // A write to a document that left the client's scope cannot land; failing it would reject the client's batch.
+    if (this._params.automergeHost.isQuarantined(documentId)) {
+      log.warn('dropped a write to a quarantined document', { documentId });
       return;
     }
     log('write mutation', { documentId });

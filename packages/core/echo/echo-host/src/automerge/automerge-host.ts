@@ -272,6 +272,9 @@ export class AutomergeHost extends Resource {
    */
   readonly #quarantined = new Map<DocumentId, QuarantineRecord>();
 
+  /** Fired when an out-of-scope quarantine is lifted, so a client that asked for the document can have it after all. */
+  public readonly documentReleased = new Event<DocumentId>();
+
   /** Fired when a document is quarantined, so waits on it end and the space that links it can retire it. */
   public readonly documentQuarantined = new Event<QuarantineRecord>();
 
@@ -952,6 +955,7 @@ export class AutomergeHost extends Resource {
     this.#quarantined.delete(documentId);
     log('released out-of-scope document', { documentId });
     this._sharePolicyChangedTask?.schedule();
+    this.documentReleased.emit(documentId);
   }
 
   /** Documents currently leased — what the host holds because something is using it. */

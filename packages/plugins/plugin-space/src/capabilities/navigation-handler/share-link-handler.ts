@@ -3,7 +3,6 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Fiber from 'effect/Fiber';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -26,15 +25,14 @@ import { type SharePayload, decodeSharePayload } from '../../util/index.ts';
 /** How long a fresh browser may take to create its identity (onboarding does that for a share link). */
 const IDENTITY_TIMEOUT = 60_000;
 
-/**
- * How long URL projection waits on the join. Projection resolves the link's object path only once the space exists,
- * so waiting lets the object open straight away; a join that outlives this carries on and opens it when it lands.
- */
-const JOIN_WAIT = 30_000;
+/** How long a member waits for the host to widen a partially replicated space's scope. */
+const EXTEND_TIMEOUT = 5_000;
+
+/** How long a background join may take to produce a ready space before it gives up and says so. */
+const SPACE_TIMEOUT = 180_000;
 
 /**
- * Opens an object share link (`?share=`, see `.agents/projects/object-share/DESIGN.md` §6): turns on the plugins it
- * names, then — for a member — extends a partial space's sync scope and leaves the path to URL projection; for anyone
+ * Opens an object share link (`?share=`): turns on the plugins it names, then — for a member — extends a partial space's sync scope and leaves the path to URL projection; for anyone
  * else, joins the space in the background replicating only the shared objects, then opens the object.
  */
 export const handleShareLink = (url: URL): Effect.Effect<void, never, Capability.Service | Operation.Service> =>
@@ -43,7 +41,6 @@ export const handleShareLink = (url: URL): Effect.Effect<void, never, Capability
     if (!encoded) {
       return;
     }
-    removeQueryParam(SpaceOperation.SHARE_PARAM);
 
     const payload = yield* decodeSharePayload(encoded);
     const spaceId = payload.spaceId;
@@ -53,14 +50,18 @@ export const handleShareLink = (url: URL): Effect.Effect<void, never, Capability
     yield* enablePlugins(payload.plugins);
 
     const client = yield* Capability.get(ClientCapabilities.Client);
-    yield* Effect.promise(() => client.waitUntilInitialized({ timeout: INITIALIZE_TIMEOUT }));
+    yield* Effect.tryPromise(() => client.waitUntilInitialized({ timeout: INITIALIZE_TIMEOUT }));
     yield* waitForIdentity(client).pipe(Effect.timeout(IDENTITY_TIMEOUT));
+    // Kept until now: onboarding reads it from the address bar, after this handler starts, to create the identity.
+    removeQueryParam(SpaceOperation.SHARE_PARAM);
 
     const existing = client.spaces.get(spaceId);
     if (existing) {
-      // A member who joined through another link replicates only that link's objects.
-      yield* Effect.promise(() => existing.waitUntilReady());
-      yield* Effect.promise(() => existing.internal.extendSyncScope(payload.objects));
+      // A member who joined through another link replicates only that link's objects; a full member is unaffected.
+      yield* Effect.tryPromise(() => existing.internal.extendSyncScope(payload.objects)).pipe(
+        Effect.timeout(EXTEND_TIMEOUT),
+        Effect.catch((error) => Effect.sync(() => log.warn('sync scope not extended', { spaceId, error }))),
+      );
       return;
     }
 
@@ -72,13 +73,10 @@ export const handleShareLink = (url: URL): Effect.Effect<void, never, Capability
       id: `${meta.profile.key}/share-link-opening`,
       icon: 'ph--share-network--regular',
       title: ['share-link-opening.title', { ns: meta.profile.key }],
-      duration: 5_000,
+      duration: 15_000,
     });
-    // Detached so the join outlives this handler; its own failure is reported from inside it.
-    const join = yield* Effect.forkDetach(
-      joinAndOpen(client, invitation, spaceId, payload).pipe(Effect.catch(reportFailure)),
-    );
-    yield* Fiber.join(join).pipe(Effect.timeout(JOIN_WAIT), Effect.ignore);
+    // Detached: URL projection waits on every handler, and the app should render while the join runs.
+    yield* Effect.forkDetach(joinAndOpen(client, invitation, spaceId, payload).pipe(Effect.catch(reportFailure)));
   }).pipe(Effect.catch(reportFailure));
 
 const reportFailure = (error: unknown): Effect.Effect<void, never, Operation.Service> =>
@@ -119,7 +117,11 @@ const waitForIdentity = (client: Client): Effect.Effect<void> =>
     return Effect.sync(() => subscription.unsubscribe());
   });
 
-/** Joins with the link's scope and no dialog, waits for the space, and opens the shared object. */
+/**
+ * Joins with the link's scope and no dialog, waits for the space, and opens the shared object. The space appearing is
+ * the success signal: the invitation reports a failed attempt (EDGE refusing, a host timing out) while another path
+ * still goes on to admit the guest.
+ */
 const joinAndOpen = (
   client: Client,
   code: string,
@@ -127,32 +129,26 @@ const joinAndOpen = (
   payload: SharePayload,
 ): Effect.Effect<void, SpaceOperationError, Operation.Service> =>
   Effect.gen(function* () {
-    const { InvitationEncoder, Invitation_State } = yield* Effect.promise(() => import('@dxos/client/invitations'));
-    const invitation = client.spaces.join(InvitationEncoder.decode(code), {
-      syncScope: { objectIds: payload.objects },
+    const { InvitationEncoder } = yield* Effect.promise(() => import('@dxos/client/invitations'));
+    const decoded = yield* Effect.try({
+      try: () => InvitationEncoder.decode(code),
+      catch: (cause) => new SpaceOperationError({ cause }),
     });
-    const failed = [
-      Invitation_State.ERROR,
-      Invitation_State.CANCELLED,
-      Invitation_State.TIMEOUT,
-      Invitation_State.EXPIRED,
-    ];
-    yield* Effect.callback<void, SpaceOperationError>((resume) => {
-      const subscription = invitation.subscribe(
-        (value) => {
-          if (value.state === Invitation_State.SUCCESS) {
-            resume(Effect.void);
-          } else if (failed.includes(value.state)) {
-            resume(Effect.fail(new SpaceOperationError({ message: 'The invitation in the link was not accepted.' })));
-          }
-        },
-        (cause) => resume(Effect.fail(new SpaceOperationError({ cause }))),
-      );
-      return Effect.sync(() => subscription.unsubscribe());
-    });
+    const invitation = client.spaces.join(decoded, { syncScope: { objectIds: payload.objects } });
+    const subscription = invitation.subscribe(
+      (value) => log('share link invitation', { state: value.state }),
+      (error) => log('share link invitation attempt failed', { error }),
+    );
 
-    const space = yield* waitForSpace(client, spaceId);
-    yield* Effect.promise(() => space.waitUntilReady());
+    const space = yield* Effect.gen(function* () {
+      const space = yield* waitForSpace(client, spaceId);
+      yield* Effect.tryPromise(() => space.waitUntilReady());
+      return space;
+    }).pipe(
+      Effect.timeout(SPACE_TIMEOUT),
+      Effect.mapError((cause) => new SpaceOperationError({ message: 'The shared space did not open.', cause })),
+      Effect.ensuring(Effect.sync(() => subscription.unsubscribe())),
+    );
     yield* Operation.invoke(LayoutOperation.Open, {
       subject: [GraphPath.getObjectPath(space.id, payload.typeSlug, payload.objectId)],
       workspace: GraphPath.getSpacePath(space.id),

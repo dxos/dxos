@@ -55,19 +55,23 @@ export const ShareObjectDialog = ({ object }: ShareObjectDialogProps) => {
   // One link per access/role choice: a second copy reuses it rather than minting another invitation.
   const [links, setLinks] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
-  const [copied, setCopied] = useState(false);
+  // Keyed like `links`, so changing access or role does not keep claiming the previous link was copied.
+  const [copiedKey, setCopiedKey] = useState<string>();
   const [scope, setScope] = useState<Obj.Unknown[]>([]);
   const linkKey = access === 'anyone' ? `${access}:${role}` : access;
   const link = links[linkKey];
+  const copied = copiedKey === linkKey;
 
   // A one-shot read of what the link would carry, shown before anything is created.
   useEffect(() => {
     let cancelled = false;
-    void EffectEx.runPromise(collectShareScope(object)).then((objects) => {
-      if (!cancelled) {
-        setScope(objects);
-      }
-    });
+    void EffectEx.runPromise(collectShareScope(object))
+      .then((objects) => {
+        if (!cancelled) {
+          setScope(objects);
+        }
+      })
+      .catch((error) => log.catch(error));
     return () => {
       cancelled = true;
     };
@@ -81,15 +85,17 @@ export const ShareObjectDialog = ({ object }: ShareObjectDialogProps) => {
       .map((plugin) => plugin.meta.profile.name ?? plugin.meta.profile.key);
   }, [manager, scope]);
 
-  const self = toPublicKey(client.halo.identity.get()?.identityKey);
+  const selfKey = toPublicKey(client.halo.identity.get()?.identityKey)?.toHex();
   const people = useMemo(
     () =>
       members
         .filter((member) => member.identity)
-        .map((member) => toPerson(member, self && toPublicKey(member.identity?.identityKey)?.equals(self)))
+        .map((member) => toPerson(member, selfKey))
         .sort((first, second) => Number(second.self) - Number(first.self)),
-    [members, self],
+    [members, selfKey],
   );
+  // Objects without a name of their own (a document's text) are counted but not listed.
+  const scopeLabels = scope.map((entry) => Obj.getLabel(entry)).filter((entryLabel) => !!entryLabel);
 
   const handleCopy = useCallback(async () => {
     setBusy(true);
@@ -105,7 +111,7 @@ export const ShareObjectDialog = ({ object }: ShareObjectDialogProps) => {
       }
       // Shown in the field either way, so a refused clipboard write still leaves the link to copy by hand.
       await navigator.clipboard.writeText(url).then(
-        () => setCopied(true),
+        () => setCopiedKey(linkKey),
         (error) => log.info('clipboard write refused', { error }),
       );
     } catch (error) {
@@ -170,12 +176,12 @@ export const ShareObjectDialog = ({ object }: ShareObjectDialogProps) => {
           <Layout.Flex column gap='xs' asChild>
             <section>
               <Typography.Text tone='muted'>{t('share-object-dialog.access.heading')}</Typography.Text>
-              <Layout.Flex gap='sm' align='center'>
+              <Layout.Grid cols={['min', 'fill', 'max']} gap='sm' align='center'>
                 <Avatar.Root
                   icon={access === 'anyone' ? 'ph--globe-hemisphere-west--regular' : 'ph--lock-simple--regular'}
                   hue={Avatar.toAvatarHue(access === 'anyone' ? 'emerald' : 'neutral')}
                 />
-                <Layout.Flex column grow>
+                <Layout.Flex column>
                   <Select.Root
                     items={accessItems}
                     value={[access]}
@@ -206,15 +212,10 @@ export const ShareObjectDialog = ({ object }: ShareObjectDialogProps) => {
                     </Select.Content>
                   </Select.Root>
                 )}
-              </Layout.Flex>
+              </Layout.Grid>
               {access === 'anyone' && scope.length > 0 && (
                 <Typography.Text tone='subtle' data-testid='share-object-dialog.scope'>
-                  {t('share-object-dialog.scope.label', {
-                    count: scope.length,
-                    labels: scope
-                      .map((entry) => Obj.getLabel(entry) ?? t('share-object-dialog.untitled.label'))
-                      .join(', '),
-                  })}
+                  {t('share-object-dialog.scope.label', { count: scope.length, labels: scopeLabels.join(', ') })}
                   {pluginNames.length > 0 &&
                     ` · ${t('share-object-dialog.plugins.label', { names: pluginNames.join(', ') })}`}
                 </Typography.Text>
@@ -259,7 +260,7 @@ type Person = {
   self: boolean;
 };
 
-const toPerson = (member: SpaceMember, self = false): Person => {
+const toPerson = (member: SpaceMember, selfKey: string | undefined): Person => {
   const identityKey = toPublicKey(member.identity?.identityKey);
   const id = identityKey?.toHex() ?? '';
   const fallback = identityKey ? keyToFallback(identityKey) : { hue: 'neutral', emoji: '' };
@@ -274,6 +275,6 @@ const toPerson = (member: SpaceMember, self = false): Person => {
         : member.role === SpaceMember_Role.READER
           ? 'viewer'
           : 'editor',
-    self,
+    self: !!selfKey && id === selfKey,
   };
 };

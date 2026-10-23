@@ -165,8 +165,9 @@ export class OnboardingManager {
       // Ensure that agent is present.
       await this._createAgent();
       return;
-    } else if (!this._skipAuth && this._deviceInvitationCode === undefined && !this._shareLink) {
-      // No identity yet: show welcome. Skipped when a device invitation is pending, since both dialog
+    } else if (!this._skipAuth && this._deviceInvitationCode === undefined && (!this._shareLink || this._token)) {
+      // No identity yet: show welcome. Skipped for a share link without a login token, whose guest gets an identity in
+      // place below. Skipped when a device invitation is pending, since both dialog
       // updates then race through the operation layer and a welcome landing second hides the join.
       // A `?token=...` param means a magic-link redemption is about to run: show the "authorizing"
       // dialog instead of the login form, so the multi-second server + HALO-replication wait doesn't
@@ -198,9 +199,6 @@ export class OnboardingManager {
       }
     } else if (!this._identity && this._skipAuth) {
       await this._startFreshIdentity();
-    } else if (!this._identity && this._shareLink) {
-      // A guest opening a shared object: no recovery or help tour in its way; both follow on a later start.
-      await this._createIdentity();
     } else if (!this._identity && this._token) {
       // Login flow: redeem the recovery token from `/account/login` to restore
       // the existing identity. Awaiting `_login()` lets HALO finish replicating
@@ -214,6 +212,9 @@ export class OnboardingManager {
         await this._showLoginFailedToast(result);
         await this._showWelcome();
       }
+    } else if (!this._identity && this._shareLink) {
+      // A guest opening a shared object: no recovery or help tour in its way; both follow on a later start.
+      await this._createIdentity();
     }
     if (aborted()) {
       return;

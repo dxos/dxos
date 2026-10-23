@@ -32,7 +32,10 @@ describe('sync scope', () => {
 
     const { inScope, outOfScope } = partitionBySyncScope(directory, new Set([shared]));
     expect(inScope.sort()).toEqual([sharedUrl, branchUrl].map(interpretAsDocumentId).sort());
-    expect(outOfScope.sort()).toEqual([otherUrl, otherBranchUrl].map(interpretAsDocumentId).sort());
+    expect(outOfScope).toEqual({
+      [interpretAsDocumentId(otherUrl)]: [other],
+      [interpretAsDocumentId(otherBranchUrl)]: [other],
+    });
   });
 
   test('a scoped space quarantines out-of-scope documents and releases them when the scope grows', async ({
@@ -70,5 +73,36 @@ describe('sync scope', () => {
 
     host.setSpaceSyncScope(spaceId, [shared, other]);
     await expect.poll(() => host.automergeHost.isQuarantined(otherUrl)).toBe(false);
+  });
+
+  test("the guest's own objects join the scope rather than being quarantined", async ({ expect }) => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    const host = new EchoHost({ runtime });
+    await host.open(Context.default());
+    onTestFinished(async () => {
+      await host.close();
+      await dispose();
+    });
+
+    const spaceKey = PublicKey.random();
+    const spaceId = await createIdFromSpaceKey(spaceKey);
+    const [shared, own] = [EntityId.random(), EntityId.random()];
+    const extended: string[][] = [];
+    host.syncScopeExtended.on(({ objectIds }) => {
+      extended.push(objectIds);
+    });
+
+    host.setSpaceSyncScope(spaceId, [shared]);
+    const root = await host.createSpaceRoot(Context.default(), spaceKey);
+    // Created on this host, as an object the guest adds to the shared space.
+    using ownDocument = await host.automergeHost.createDoc({});
+    root.change((directory) => {
+      directory.links ??= {};
+      directory.links[own] = new A.RawString(ownDocument.url);
+    });
+
+    await expect.poll(() => extended).toEqual([[own]]);
+    expect(host.getSpaceSyncScope(spaceId)?.has(own)).toBe(true);
+    expect(host.automergeHost.isQuarantined(ownDocument.documentId)).toBe(false);
   });
 });

@@ -296,6 +296,16 @@ export class DataSpaceManager extends Resource {
     log('open');
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
 
+    // Objects a guest creates in a partially replicated space join its scope; persisted so a restart keeps them.
+    this._echoHost.syncScopeExtended.on(this._ctx, ({ spaceId, objectIds }) => {
+      const space = this.getSpaceById(spaceId);
+      if (space) {
+        void this.extendSpaceSyncScope(space.key, objectIds).catch((err) =>
+          log.warn('failed to persist sync scope', { spaceId, err }),
+        );
+      }
+    });
+
     const spacesToActivate: DataSpace[] = [];
     await forEachAsync(this._metadataStore.spaces, async (spaceMetadata) => {
       try {
@@ -838,6 +848,7 @@ export class DataSpaceManager extends Resource {
     space.stateUpdate.emit();
   }
 
+  @synchronized
   async extendSpaceSyncScope(spaceKey: PublicKey, objectIds: readonly string[]): Promise<void> {
     const space = this._spaces.get(spaceKey);
     invariant(space, 'Space not found.');
@@ -856,8 +867,11 @@ export class DataSpaceManager extends Resource {
   private async _constructSpace(ctx: Context, metadata: SpaceMetadata): Promise<DataSpace> {
     log('construct space', { metadata });
     // Applied before the data pipeline opens the space's root, so its first sync round is already limited.
-    if (metadata.syncScope && SpaceId.isValid(metadata.spaceId)) {
-      this._echoHost.setSpaceSyncScope(metadata.spaceId, metadata.syncScope.objectIds);
+    if (metadata.syncScope) {
+      const spaceId = SpaceId.isValid(metadata.spaceId)
+        ? metadata.spaceId
+        : await createIdFromSpaceKey(requirePublicKey(metadata.key));
+      this._echoHost.setSpaceSyncScope(spaceId, metadata.syncScope.objectIds);
     }
     const gossip = new Gossip({
       localPeerId: this.signingContext.deviceKey,
@@ -1114,6 +1128,11 @@ export class DataSpaceManager extends Resource {
     space: DataSpace,
     invitations: Array<[PublicKey, DelegateSpaceInvitation]>,
   ): Promise<void> {
+    // Only a member who may admit others can host an invitation; creating one otherwise throws, which would abort
+    // the caller's `afterReady` before it announces the space.
+    if (!space.inner.spaceState.hasMembershipManagementPermission(this.signingContext.identityKey)) {
+      return;
+    }
     const tasks = invitations.map(([credentialId, invitation]) => {
       const expiresOn = toDate(invitation.expiresOn);
       return this._invitationsManager.createInvitation(this._ctx, {

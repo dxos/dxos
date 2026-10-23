@@ -12,8 +12,8 @@ import { type DatabaseDirectory } from '@dxos/echo-protocol';
 export type ScopedDocuments = {
   /** Documents holding an object in the scope, or a branch of one. */
   inScope: DocumentId[];
-  /** Every other linked or branch document. */
-  outOfScope: DocumentId[];
+  /** Every other linked or branch document, with the ids of the objects it holds. */
+  outOfScope: Record<DocumentId, string[]>;
 };
 
 /**
@@ -22,13 +22,14 @@ export type ScopedDocuments = {
  */
 export const partitionBySyncScope = (directory: DatabaseDirectory, scope: ReadonlySet<string>): ScopedDocuments => {
   const inScope = new Set<DocumentId>();
-  const all = new Set<DocumentId>();
+  const objectsByDocument = new Map<DocumentId, Set<string>>();
   const add = (url: string, objectId: string) => {
     if (!isValidAutomergeUrl(url)) {
       return;
     }
     const documentId = interpretAsDocumentId(url);
-    all.add(documentId);
+    const objects = objectsByDocument.get(documentId) ?? new Set();
+    objectsByDocument.set(documentId, objects.add(objectId));
     if (scope.has(objectId)) {
       inScope.add(documentId);
     }
@@ -47,6 +48,10 @@ export const partitionBySyncScope = (directory: DatabaseDirectory, scope: Readon
 
   return {
     inScope: [...inScope],
-    outOfScope: [...all].filter((documentId) => !inScope.has(documentId)),
+    outOfScope: Object.fromEntries(
+      [...objectsByDocument]
+        .filter(([documentId]) => !inScope.has(documentId))
+        .map(([documentId, objects]) => [documentId, [...objects]]),
+    ),
   };
 };
