@@ -36,8 +36,9 @@ runs:
         restore-keys: apt-${{ inputs.name }}-
 
     # apt reuses an archive in /var/cache/apt/archives whose name and checksum match the candidate, so a
-    # stale one costs only a download of the newer version. The conf keeps apt from deleting archives
-    # after install, which would leave nothing to save.
+    # stale one costs only a download of the newer version, and `restore-keys` carries last week's
+    # archives into a new image's key. The conf keeps apt from deleting archives after install, which
+    # would leave nothing to save.
     - name: Install
       shell: bash
       env:
@@ -52,7 +53,16 @@ runs:
           $sudo cp "$DIR"/*.deb /var/cache/apt/archives/
           echo "Restored $(ls "$DIR"/*.deb | wc -l) archives."
         fi
-        bash -e -c "$COMMAND"
+        # A miss still downloads, so a stalled mirror is cut off and the install retried without it; a
+        # healthy install takes under a minute. GNU timeout signals the whole process group, apt included.
+        if ! timeout --kill-after=15 300 bash -e -c "$COMMAND"; then
+          echo '::warning::apt install did not finish in 5 minutes; retrying without azure.archive.ubuntu.com.'
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            $sudo sed -i '/azure\.archive\.ubuntu\.com/d' /etc/apt/apt-mirrors.txt
+          fi
+          $sudo dpkg --configure -a || true
+          bash -e -c "$COMMAND"
+        fi
         if compgen -G '/var/cache/apt/archives/*.deb' > /dev/null; then
           cp -u /var/cache/apt/archives/*.deb "$DIR"/
         fi
