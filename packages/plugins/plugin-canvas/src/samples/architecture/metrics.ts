@@ -57,7 +57,6 @@ export const makePluginMetrics = (): Sheet.Sheet => {
     ranges: SheetRange.headerRanges(cells, `A1:${COLUMNS[HEADER.length - 1]}1`),
     charts: [
       {
-        id: 'plugin-metrics',
         name: 'Plugin metrics',
         range,
         type: 'bar',

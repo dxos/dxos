@@ -26,7 +26,7 @@ export type Provides = {
 
 /** Composer and EDGE as nested canvas drawings, with the three documents that introduce them and a sheet of plugin metrics. Spec: `CONTENT.md`. */
 export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('architecture', {
-  schemas: [Drawing.Drawing, Drawing.Canvas, Markdown.Document, Sheet.Sheet],
+  schemas: [Drawing.Drawing, Drawing.Canvas, Markdown.Document, Sheet.Sheet, Sheet.Chart],
   run: () =>
     Effect.gen(function* () {
       const { db } = yield* Database.Service;

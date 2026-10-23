@@ -2,6 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './Markdown/index.ts';
-export * from './Presenter/index.ts';
+export * from './Deck/index.ts';
+export * from './Pager/index.ts';
+export * from './PresentationShell/index.ts';
 export * from './RevealPlayer/index.ts';
+export * from './SectionPicker/index.ts';
+export * from './Slide/index.ts';
+export * from './SlideFrame/index.ts';
+export * from './SlideRenderer/index.ts';

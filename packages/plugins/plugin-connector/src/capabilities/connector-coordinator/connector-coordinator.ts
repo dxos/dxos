@@ -175,6 +175,7 @@ const openCreateSyncRoutineDialog = (
   connector: ConnectorSpec.ConnectorEntry,
   connection: Connection.Connection,
   subject: Obj.Unknown,
+  { priority }: { priority?: string } = {},
 ): Effect.Effect<void, never> =>
   Effect.gen(function* () {
     const result = yield* invoker.invoke(SpaceOperation.OpenObjectForm, {
@@ -189,7 +190,7 @@ const openCreateSyncRoutineDialog = (
     const created = result?.target;
     if (created) {
       Effect.runFork(
-        Binding.syncCreatedRoutine({ created, connector, spaceId: db.spaceId }).pipe(
+        Binding.syncCreatedRoutine({ created, connector, spaceId: db.spaceId, priority }).pipe(
           Effect.provideService(Capability.Service, capabilities),
           Effect.catch((error) => Effect.sync(() => log.warn('first sync after routine created failed', { error }))),
           // A force-run EDGE fails other than as switched off arrives as a defect, which the typed
@@ -270,10 +271,12 @@ const finalizePendingEntry = (
       }
       if (bound?.needsSyncRoutine) {
         // Ordered after navigation so the dialog opens over the surface the user lands on.
-        yield* openCreateSyncRoutineDialog(invoker, capabilities, db, connector, persistedConnection, bound.target);
+        yield* openCreateSyncRoutineDialog(invoker, capabilities, db, connector, persistedConnection, bound.target, {
+          priority: bound.cursor.id,
+        });
       } else {
         // Ordered after navigation so the user lands on the target while the first sync fills it in.
-        yield* autoSyncConnection(invoker, capabilities, db, connector, persistedConnection);
+        yield* autoSyncConnection(invoker, capabilities, db, connector, persistedConnection, bound?.cursor.id);
       }
     }
   });

@@ -156,7 +156,7 @@ export const DecisionLog = ({ content, selected }: DecisionLogProps) => {
   }
 
   return (
-    <ScrollArea.Root orientation='vertical' data-testid='decision-log'>
+    <ScrollArea.Root orientation='vertical' classNames='dx-fill' data-testid='decision-log'>
       <ScrollArea.Viewport>
         <Layout.Flex column gap='lg' classNames='p-4'>
           {groups.map((group) => (

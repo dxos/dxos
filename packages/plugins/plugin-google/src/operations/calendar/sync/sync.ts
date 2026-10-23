@@ -5,6 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
+import * as Progress from '@dxos/app-toolkit/Progress';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj, Ref } from '@dxos/echo';
 import type * as EchoError from '@dxos/echo/Error';
 import { type Resolver } from '@dxos/extractor';
@@ -91,7 +93,7 @@ export const syncCalendar = ({
 }: SyncCalendarProps): Effect.Effect<
   { newEvents: number },
   GoogleCalendarApiError | EchoError.EntityNotFoundError,
-  Database.Service | Resolver | GoogleCalendarApi
+  Database.Service | Resolver | GoogleCalendarApi | Trace.TraceService
 > =>
   Effect.gen(function* () {
     const binding = yield* Database.load(bindingRef);
@@ -119,32 +121,41 @@ export const syncCalendar = ({
     log('syncing google calendar', { calendar: Obj.getURI(calendar), calendarId, isInitialSync });
 
     const stats: Cursor.Stats = { newMessages: 0 };
-    yield* fetchEvents(calendarId, cursorKey, {
-      syncBackDays: syncBack,
-      syncForwardDays: syncForward,
-      pageSize,
-      searchFilter,
-    }).pipe(
-      Cursor.dedupStage<GoogleCalendar.Event>(
-        'dedup',
-        (event) => event.id,
-        (event) => (event.updated ? Date.parse(event.updated) : 0),
-      ),
-      makeRecurringDedupStage(isInitialSync),
-      mapEventStage,
-      Stream.grouped(CALENDAR_SYNC_CONFIG.commitPageSize),
-      Pipeline.run({ sink: Cursor.commit }),
-      Effect.provide(
-        Cursor.layer({
-          cursor: binding,
-          feed,
-          foreignKeySource: GOOGLE_INTEGRATION_SOURCE,
-          maxKey: cursorKey,
-          // Store the cursor as an ISO `updated` timestamp (used as `updatedMin` next run).
-          formatCursor: (key) => new Date(key).toISOString(),
-          stats,
-        }),
-      ),
+    const label = Obj.getLabel(calendar);
+    // No total: events.list returns no count, and listing first to size the run would cost as much as the sync.
+    yield* Progress.withReporter(
+      { key: Progress.createSyncKey(calendar), label: label ? `Syncing ${label}` : 'Syncing calendar' },
+      (reporter) =>
+        fetchEvents(calendarId, cursorKey, {
+          syncBackDays: syncBack,
+          syncForwardDays: syncForward,
+          pageSize,
+          searchFilter,
+        }).pipe(
+          Cursor.dedupStage<GoogleCalendar.Event>(
+            'dedup',
+            (event) => event.id,
+            (event) => (event.updated ? Date.parse(event.updated) : 0),
+          ),
+          makeRecurringDedupStage(isInitialSync),
+          mapEventStage,
+          Stream.grouped(CALENDAR_SYNC_CONFIG.commitPageSize),
+          Pipeline.run({
+            sink: (page) =>
+              Cursor.commit(page).pipe(Effect.tap(() => Effect.sync(() => reporter.advance(page.length)))),
+          }),
+          Effect.provide(
+            Cursor.layer({
+              cursor: binding,
+              feed,
+              foreignKeySource: GOOGLE_INTEGRATION_SOURCE,
+              maxKey: cursorKey,
+              // Store the cursor as an ISO `updated` timestamp (used as `updatedMin` next run).
+              formatCursor: (key) => new Date(key).toISOString(),
+              stats,
+            }),
+          ),
+        ),
     );
 
     // Flush indexes once at the end of the run (per-page commits no longer flush — see

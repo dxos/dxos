@@ -174,7 +174,7 @@ const selectTask = async (canvas: ReturnType<typeof within>, title: string) => {
 const ANSWER_DELAY = 8_000;
 
 /** Clicks `answer` on the open question the detail pane shows, once it is on screen. */
-const answerQuestion = async (canvasElement: HTMLElement, answer: string): Promise<boolean> => {
+const answerQuestion = async (canvasElement: HTMLElement, answer: string, delay: number): Promise<boolean> => {
   const prompt = canvasElement.querySelector<HTMLElement>('[data-testid="task-question"]:has(input)');
   if (!prompt) {
     return false;
@@ -186,7 +186,7 @@ const answerQuestion = async (canvasElement: HTMLElement, answer: string): Promi
     return false;
   }
   // Held so the blocked task and its question read on screen, as a person would take a while to answer.
-  await new Promise((resolve) => setTimeout(resolve, ANSWER_DELAY));
+  await new Promise((resolve) => setTimeout(resolve, delay));
   await userEvent.click(option);
   return true;
 };
@@ -197,7 +197,7 @@ const answerQuestion = async (canvasElement: HTMLElement, answer: string): Promi
  * with its reviewer. With `answer`, the question the agent blocks on is answered from that pane.
  */
 const makePlay =
-  ({ answer }: { answer?: string } = {}): Story['play'] =>
+  ({ answer, answerDelay = ANSWER_DELAY }: { answer?: string; answerDelay?: number } = {}): Story['play'] =>
   async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await seedContent();
@@ -229,7 +229,7 @@ const makePlay =
           await selectTask(canvas, next.title);
         }
         if (!answered && answer !== undefined) {
-          answered = await answerQuestion(canvasElement, answer);
+          answered = await answerQuestion(canvasElement, answer, answerDelay);
         }
         // The delegated task has reviewers, so the agent's `done` lands it in `review`.
         await expect(subtasks.every(AgentSimulator.isFinished) && root.status === 'review').toBe(true);
@@ -237,11 +237,12 @@ const makePlay =
       { timeout: 180_000, interval: 500 },
     );
 
-    // Every sub-task's history records the agent starting and finishing it.
+    // Every sub-task's history records the agent starting and finishing it; a finish with reviewers lands in review.
     for (const task of subtasks) {
       const log = (task.history ?? []).flatMap((entry) => (Task.isChangeEntry(entry) ? [entry.description ?? ''] : []));
+      const finished = (task.reviewers?.length ?? 0) > 0 ? /to review/i : /to done/i;
       await expect(log.some((line) => /started/i.test(line))).toBe(true);
-      await expect(log.some((line) => /done/i.test(line))).toBe(true);
+      await expect(log.some((line) => finished.test(line))).toBe(true);
     }
     // The exchange stays in the blocked task's history: the question and the answer it resumed on.
     if (answer !== undefined) {
@@ -255,8 +256,6 @@ const meta: Meta<typeof ModuleContainer> = {
   render: ModuleContainer,
   parameters: storyParameters,
   args: { columns: '2fr_1fr' },
-  // Paced for a watchable demo (about a minute), which is too slow for the CI story run.
-  tags: ['!test'],
   beforeEach: () => {
     seeded = undefined;
     generation += 1;
@@ -267,15 +266,29 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+const TEST_PACE: AgentSimulator.Pace = { think: '50 millis', work: '200 millis' };
+
 /** One sub-task at a time, in order. */
 export const Sequential: Story = {
   decorators: createDecorators(),
+  tags: ['!test'],
+  play: makePlay(),
+};
+
+export const TestSequential: Story = {
+  decorators: createDecorators({ pace: TEST_PACE }),
   play: makePlay(),
 };
 
 /** Sub-tasks started one after another so they overlap, then finished one by one. */
 export const Concurrent: Story = {
   decorators: createDecorators({ strategy: AgentSimulator.concurrent }),
+  tags: ['!test'],
+  play: makePlay(),
+};
+
+export const TestConcurrent: Story = {
+  decorators: createDecorators({ strategy: AgentSimulator.concurrent, pace: TEST_PACE }),
   play: makePlay(),
 };
 
@@ -285,5 +298,14 @@ export const Concurrent: Story = {
  */
 export const Question: Story = {
   decorators: createDecorators({ strategy: AgentSimulator.withQuestion(AgentSimulator.concurrent, QUESTION) }),
+  tags: ['!test'],
   play: makePlay({ answer: QUESTION.options[0] }),
+};
+
+export const TestQuestion: Story = {
+  decorators: createDecorators({
+    strategy: AgentSimulator.withQuestion(AgentSimulator.concurrent, QUESTION),
+    pace: TEST_PACE,
+  }),
+  play: makePlay({ answer: QUESTION.options[0], answerDelay: 0 }),
 };

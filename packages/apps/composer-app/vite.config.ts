@@ -38,6 +38,7 @@ import { createConfig as createTestConfig } from '../../../vitest.base.config.ts
 import { bootChunking } from './src/vite/boot-chunking.ts';
 import { bootMarkFilter, channelFaviconPlugin, channelVariant } from './src/vite/channel-branding.ts';
 import { debugPortSidecarPlugin, resolveDebugPortSession } from './src/vite/debug-port.ts';
+import { fileSystemPlugin } from './src/vite/file-system.ts';
 import { nodeBuiltinStubs } from './src/vite/node-builtin-stubs.ts';
 import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
 import { reactRefreshPreamble } from './src/vite/react-refresh-preamble.ts';
@@ -587,6 +588,15 @@ export default defineConfig((env) => ({
     // Hosts the dev shell's shell route against the vite process cwd. Imported dynamically
     // because this config's static imports are bundled as CJS `require` and the package is ESM-only.
     import('@dxos/plugin-dev-shell/vite-plugin').then(({ DevShellVitePlugin }) => DevShellVitePlugin()),
+
+    // Serves code-index to plugin-code-graph by running `code-index mcp` beside the dev server. Imported dynamically
+    // for the same reason as the dev shell: the package is ESM-only and this config's static imports are bundled as CJS.
+    import('@dxos/plugin-code-graph/vite-plugin').then(({ CodeIndexVitePlugin }) =>
+      CodeIndexVitePlugin({ root: rootDir }),
+    ),
+
+    // Dev-only: local files for plugin-file-system's FileSystem service (the desktop app uses the Tauri fs plugin instead).
+    fileSystemPlugin(rootDir),
 
     // RSS proxy middleware for CORS-free feed fetching.
     {
