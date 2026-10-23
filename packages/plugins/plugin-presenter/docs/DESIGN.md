@@ -1,6 +1,6 @@
 # plugin-presenter — Design
 
-Status: **Phase 1 implemented; code is the truth, spec in PLUGIN.mdl** (2026-10-22; Q8 slide syntax added). Items marked _agent call_ were settled by the agent
+Status: **Phases 1 and 3 implemented; code is the truth, spec in PLUGIN.mdl** (2026-10-22; Q8 slide syntax added). Items marked _agent call_ were settled by the agent
 and are open to review; everything marked _user_ was decided in discussion.
 
 ## Intent
@@ -94,6 +94,7 @@ const Presentation = Schema.Struct({
 type SlideSource =
   | { kind: 'text'; id: string; text: Text.Text } // owned slide, rendered as markdown
   | { kind: 'object'; id: string; object: Obj.Unknown } // any linked object, Markdown.Document included
+  | { kind: 'markdown'; id: string; content: string; db?: Database.Database } // a raw slide of the preview companion
   | { kind: 'pending'; id: string }; // a section whose target has not loaded yet
 ```
 
@@ -101,9 +102,9 @@ type SlideSource =
   `SlideSource[]`, resolving each ref on its own so the order holds while targets load. A section whose target
   was **deleted** is omitted; one not yet loaded stays `pending` (_agent call_). The navtree folder reads the
   same atom, so its children are the deck's slides in deck order.
-- `Deck` is rendered by `PresentationArticle`. The **quick-preview companion** _(user)_ is still
-  `DocumentArticle` → `RevealPlayer`, splitting the document on `---`; nothing is persisted, and it moves to the
-  deck runtime with the Phase 3 renderer. The one-section-one-slide rule applies only inside a Presentation.
+- `Deck` is rendered by `PresentationArticle`. The **quick-preview companion** _(user)_ is
+  `DocumentArticle` on the shared `Deck` (reveal.js is gone), splitting the document on `---` into `markdown`
+  sources that carry the document's database for embedded surfaces; nothing is persisted. The one-section-one-slide rule applies only inside a Presentation.
 - `CollectionArticle` is gone. `SlideArticle` stays: it is the markdown `role=slide` surface a linked
   `Markdown.Document` renders through. `SlideEditorArticle` edits an owned slide under a 16:9 live preview.
 
@@ -196,18 +197,19 @@ Speaker notes: the last comment in a slide (parsed and hidden now; shown by the 
 
 Supported subset (v1):
 
-| Slidev feature                                                               | Supported                                                                                                                                                                  | Notes                                                                                                                                                                                                                                                                         |
-| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Slide separator `---`                                                        | Preview companion only                                                                                                                                                     | Inside a Presentation each section is one slide (Q2).                                                                                                                                                                                                                         |
-| Per-slide frontmatter                                                        | `layout`, `image`, `background`, `class`, `title`                                                                                                                          | Other keys (`transition`, `clicks`, `level`, …) ignored.                                                                                                                                                                                                                      |
-| Headmatter (first slide's frontmatter)                                       | `title`, `aspectRatio`                                                                                                                                                     | Preview companion only; a Presentation stores these as fields (_agent call_: added when first needed).                                                                                                                                                                        |
-| Layouts                                                                      | `default`, `cover`, `center`, `section`, `intro`, `end`, `fact`, `statement`, `quote`, `two-cols`, `two-cols-header`, `image`, `image-left`, `image-right`, `full`, `none` | Ours, styled with our tokens; same names and slots as Slidev's built-ins. Excluded: `iframe*` (_agent call_: revisit with a sandboxed embed).                                                                                                                                 |
-| Slots                                                                        | `::right::`, `::left::`, `::default::`                                                                                                                                     | Per the layouts that define them.                                                                                                                                                                                                                                             |
-| Clicks                                                                       | `<v-click>`, `<v-clicks>` (`depth`, `every`), `<v-after>`                                                                                                                  | Parsed as plain tags; no `v-click` attribute directive, no `$clicks` expressions.                                                                                                                                                                                             |
-| Speaker notes                                                                | Last `<!-- … -->` comment of the slide                                                                                                                                     | Markdown inside notes.                                                                                                                                                                                                                                                        |
-| Code blocks                                                                  | Language + static line highlight `{2,4-5}`                                                                                                                                 | Click-stepped highlights `{1\|2-3}` render the first step only (_agent call_).                                                                                                                                                                                                |
-| Vue components, `<style>` blocks, UnoCSS utilities, Monaco, LaTeX, Mermaid   | No                                                                                                                                                                         | Raw HTML other than the click tags is escaped.                                                                                                                                                                                                                                |
-| DXOS extension: `backgroundVideo`, `backgroundOpacity`, `backgroundPosition` | Yes _(user, 2026-10-22)_                                                                                                                                                   | Per-slide frontmatter beyond Slidev: a looping, muted, autoplaying video behind the slide (and image opacity/position, which reveal decks use). Slidev ignores unknown keys, so such a slide still renders there, without the video. Keeps `testing/deck.md`'s opening slide. |
+| Slidev feature                                                               | Supported                                                                                                                                                                  | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Slide separator `---`                                                        | Preview companion only                                                                                                                                                     | Inside a Presentation each section is one slide (Q2).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Per-slide frontmatter                                                        | `layout`, `image`, `background`, `class`, `title`                                                                                                                          | `title` is parsed and reserved (not rendered). Other keys (`transition`, `clicks`, `level`, …) ignored.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Headmatter (first slide's frontmatter)                                       | `title`, `aspectRatio`                                                                                                                                                     | Preview companion only; a Presentation stores these as fields (_agent call_: added when first needed).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Layouts                                                                      | `default`, `cover`, `center`, `section`, `intro`, `end`, `fact`, `statement`, `quote`, `two-cols`, `two-cols-header`, `image`, `image-left`, `image-right`, `full`, `none` | Ours, styled with our tokens; same names and slots as Slidev's built-ins. Excluded: `iframe*` (_agent call_: revisit with a sandboxed embed).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Slots                                                                        | `::right::`, `::left::`, `::default::`                                                                                                                                     | Per the layouts that define them.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Clicks                                                                       | `<v-click>`, `<v-clicks>` (`depth`, `every`), `<v-after>`                                                                                                                  | Parsed as plain tags; no `v-click` attribute directive, no `$clicks` expressions.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Speaker notes                                                                | Last `<!-- … -->` comment of the slide                                                                                                                                     | Markdown inside notes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Code blocks                                                                  | Language + static line highlight `{2,4-5}`                                                                                                                                 | Click-stepped highlights `{1\|2-3}` render the first step only (_agent call_).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Vue components, `<style>` blocks, UnoCSS utilities, Monaco, LaTeX, Mermaid   | No                                                                                                                                                                         | Raw HTML other than the click tags, `<Surface>` and `<br>` is escaped.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| DXOS extension: `backgroundVideo`, `backgroundOpacity`, `backgroundPosition` | Yes _(user, 2026-10-22)_                                                                                                                                                   | Per-slide frontmatter beyond Slidev: a looping, muted, autoplaying video behind the slide (and image opacity/position, which reveal decks use). Slidev ignores unknown keys, so such a slide still renders there, without the video. Keeps `testing/deck.md`'s opening slide.                                                                                                                                                                                                                                                                                                                                                                        |
+| DXOS extension: embedded surfaces `<Surface ref="echo:///<id>" role="…" />`  | Yes _(user, 2026-10-22)_                                                                                                                                                   | Renders any ECHO object inside a slide through the app's surfaces, e.g. a live table or drawing beside text. `ref` is the object's ECHO URI (`echo:///<id>`, or `echo://<space>/<id>`); `role` defaults to `slide` and falls back like linked sections (`slide` → `section` → `card` → title). Allowlisted like the click tags (all other raw HTML stays escaped); placed in a layout slot it fills that slot. The editor offers it via "Insert object" (_agent call_ on syntax and role names). `![label](echo:///<id>)` is shorthand for the same embed (an image alone in its paragraph fills the slot). Slidev shows it as an unknown component. |
 
 Pipeline: `remark-parse` + `remark-gfm` + `remark-frontmatter` → a small remark plugin that (1) takes the trailing
 HTML comment as notes, (2) splits the tree on `::slot::` paragraphs, (3) turns `<v-click*>` html nodes into
@@ -224,6 +226,20 @@ code highlighter. Layouts are React components receiving `{ frontmatter, slots, 
   dependency. Today's `Slide.tsx` frontmatter (`layout: fullscreen|columns|rows` + `image`) maps to `image`,
   `image-left`/`image-right` and `default`.
 - Print: a print stylesheet, one slide per page, all clicks revealed.
+
+**Themes** _(user, 2026-10-22)_. A deck has one theme, applied to every slide as `--slide-*` CSS variables
+(background, text, accent, code surface, separator, body/heading/code fonts) that the layout and node classes
+read.
+
+- Built-in: `default` (app tokens; follows the app's light/dark mode), `light` and `dark` (force a mode by setting
+  `color-scheme`, since the tokens use `light-dark()`; the code highlighter gets the mode through its
+  `themeMode` prop), and `serif` (serif body and headings).
+- Chosen by `theme:` in the first slide's headmatter, as in Slidev (whose `theme:` names an npm package; ours
+  names a built-in, and an unknown name falls back to `default` with an issue).
+- A Presentation's `theme` setting (`SlideTheme.Settings`: name plus accent, background, text color and font
+  overrides) wins over headmatter. Linked object slides are painted with the same variables, so their surfaces
+  follow a forced mode.
+- Overrides accept only plain colors and font lists (_agent call_): they reach inline styles from synced data.
 
 ### 7. Assistant skill _(user)_
 
@@ -242,6 +258,34 @@ code highlighter. Layouts are React components receiving `{ frontmatter, slots, 
 - Eval: one `assistant-evals` eval with memoized fixtures (outline → presentation; checks slide count and
   layouts).
 
+### 8. Slide editor _(user, 2026-10-23)_
+
+`SlideEditorArticle` edits one owned slide of a Presentation. Markdown documents keep plugin-markdown's editor
+and the deck preview in their companion (Q11); the slide tools may move into that toolbar later.
+
+- **Toolbar** (Q10), in the panel header. _Agent call:_ two rows, slide tools above formatting, since each
+  `Toolbar.Root` is a full-width scroll container and two cannot share a row:
+  - _Formatting:_ the shared `EditorToolbar` from `@dxos/react-ui-editor` (headings, emphasis, lists, code, link).
+  - _Slide:_ a layout picker that writes the `layout:` frontmatter (thumbnails of the 16 layouts); insert a click
+    step (`<v-click>` / `<v-clicks>`); insert a column break (`::right::`, offered only for layouts with slots);
+    insert an object (`<Surface ref>` through the object picker); background image or video
+    (`image` / `backgroundVideo` frontmatter); speaker notes (the trailing HTML comment).
+  - _View:_ preview mode (split / companion); previous and next slide of the deck; "Present from here", which
+    opens the deck fullscreen at this slide.
+- **Preview modes** (Q9), chosen in the toolbar and kept per user in view state:
+  - _Split_ (default): the editor on top and the rendered slide below, in a vertical `Splitter` from
+    `@dxos/react-ui` whose position is kept with the mode.
+  - _Companion_: the rendered slide in the plank's companion, so a wide screen shows editor and slide side by
+    side at full height.
+- **Cursor sync** (Q12), both ways:
+  - _Editor → preview:_ with the cursor inside a `<v-click>` or `<v-clicks>`, the preview reveals up to that step;
+    in a slotted layout the slot holding the cursor is outlined.
+  - _Preview → editor:_ clicking an element in the preview moves the caret to the start of its source (no range). The parser keeps each
+    node's source offsets (mdast `position`) as a `data-source` range on the rendered element; frontmatter
+    offsets are added back so ranges index the whole slide.
+- _Agent call:_ toolbar edits are plain text changes through the editor view (one undo step each), and the
+  frontmatter is rewritten through the YAML parser so comments and key order survive.
+
 ## Phases
 
 1. **Presentation type + runtime** — schema, create action, app-graph folder and children, "Add to presentation"
@@ -251,12 +295,17 @@ code highlighter. Layouts are React components receiving `{ frontmatter, slots, 
    still renders markdown slides.
 2. **`Pager` primitive** in `@dxos/react-ui`; presenter adopts it; `Carousel` styles and autocue `TakeStory`
    follow.
-3. **Markdown renderer** for the Slidev subset (layouts, slots, clicks, notes); reveal behind a setting; migrate
-   test decks; print stylesheet.
+3. **Markdown renderer** for the Slidev subset (layouts, slots, clicks, notes) — **done**; reveal.js deleted (no
+   setting); test decks converted; print stylesheet; embedded `<Surface>`s addressed by ECHO URI
+   (`echo:///<id>`, or `echo://<space>/<id>` while that space is open) resolve through the slide's owning
+   database and settle on a "Missing object" placeholder when malformed, missing or deleted.
+   Known limit: `class:` frontmatter only takes Tailwind utilities that are already generated, since the
+   markdown is not scanned; a safelist is a follow-up.
 4. **Slide surfaces** for sheet, canvas, tldraw, outline; fallback chain; surface-lookup helper and picker
    filter.
 5. **Assistant skill** + eval.
-6. **Later:** presenter view (notes, next slide, timer; single window first, second window once view state is
+6. **Slide editor** — toolbar, split and companion preview, two-way cursor sync (§8).
+7. **Later:** presenter view (notes, next slide, timer; single window first, second window once view state is
    confirmed to sync across windows).
 
 Each phase updates `PLUGIN.mdl` (features, scenarios, QA, `## Changelog`) and ships with stories and tests.
@@ -274,6 +323,10 @@ Each phase updates `PLUGIN.mdl` (features, scenarios, QA, `## Changelog`) and sh
 | Q6  | Skill trigger?               | Annotate `Presentation` only; `agentCanEnable`                                         | user |
 | Q7  | Presenter view now?          | Later (Phase 6); notes parsed now                                                      | user |
 | Q8  | Slide syntax?                | Strict Slidev-compatible subset, rendered by our own pipeline                          | user |
+| Q9  | Slide editor preview?        | Split (editor above, slide below) and companion; no picture-in-picture                 | user |
+| Q10 | Slide editor toolbar?        | Formatting, slide tools (layout, clicks, slots, objects, background, notes), view      | user |
+| Q11 | Editor for markdown docs?    | No; Presentation slides only, slide tools may join plugin-markdown's toolbar later     | user |
+| Q12 | Cursor sync?                 | Both ways: cursor reveals click steps; clicking the slide moves the cursor             | user |
 
 ## References
 

@@ -10,7 +10,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { createSlide } from '#testing';
 
-import { Slide } from '../Slide/index.ts';
+import { MarkdownSlide } from '../MarkdownSlide/index.ts';
+import { SlideFrame } from '../SlideFrame/index.ts';
 import { PresentationShell, type PresentationShellProps } from './PresentationShell.tsx';
 
 // Remounts the shell on re-enter so its fade-in runs again after an exit.
@@ -26,7 +27,11 @@ const DefaultStory = (props: PresentationShellProps) => {
 
   return (
     <PresentationShell {...props} onExit={() => setOpen(false)}>
-      <Slide content={createSlide({ number: 1, code: true })} />
+      <div className='dx-cover flex flex-col'>
+        <SlideFrame>
+          <MarkdownSlide content={createSlide({ number: 1, code: true })} />
+        </SlideFrame>
+      </div>
     </PresentationShell>
   );
 };

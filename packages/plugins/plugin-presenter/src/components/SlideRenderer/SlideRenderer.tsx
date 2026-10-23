@@ -2,12 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useAtomValue } from '@effect/atom-react/Hooks';
-import React, { useEffect, useMemo } from 'react';
+import React, { type ComponentType, type PropsWithChildren, useMemo } from 'react';
 
-import * as Surface from '@dxos/app-framework/Surface';
-import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Obj } from '@dxos/echo';
+import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -16,78 +13,105 @@ import { type Text } from '@dxos/schema';
 import { type SlideSource } from '#deck';
 import { meta } from '#meta';
 
-import { Slide } from '../Slide/index.ts';
+import { MarkdownSlide, type MarkdownSlideProps } from '../MarkdownSlide/index.ts';
 import { SlideFrame } from '../SlideFrame/index.ts';
+import { SlideThemeScope } from '../SlideTheme/index.ts';
+import { EmbedAncestor, EmbeddedSurface } from './EmbeddedSurface.tsx';
+import { ObjectSurface } from './ObjectSurface.tsx';
 
-export type SlideRendererProps = {
+/** Options for markdown slides: click step (default: all revealed), the outlined slot, and source clicks. */
+type MarkdownOptions = Pick<MarkdownSlideProps, 'step' | 'activeSlot' | 'onSourceClick'>;
+
+export type SlideRendererProps = MarkdownOptions & {
   source: SlideSource;
   attendableId?: string;
+  /** Wrap the slide in the scaled `SlideFrame` (default); print renders it unscaled at canvas size. */
+  framed?: boolean;
+  /** Inset the slide in a solid void (see `SlideFrame`). */
+  inset?: boolean;
 };
+
+type FrameProps = { Frame: ComponentType<PropsWithChildren> };
+
+/** Frame for print: the slide at its nominal canvas size, with no scaling to measure. */
+const PrintFrame = ({ children }: PropsWithChildren) => <div className='flex relative size-full'>{children}</div>;
 
 /**
  * Renders one deck slide inside its scaled frame, whatever the slide's source.
  */
-export const SlideRenderer = ({ source, attendableId }: SlideRendererProps) => {
+export const SlideRenderer = ({ source, attendableId, framed = true, inset, ...options }: SlideRendererProps) => {
+  // Memoized so a re-render keeps the same frame component and does not remount the slide.
+  const Frame = useMemo<ComponentType<PropsWithChildren>>(
+    () =>
+      framed ? ({ children }: PropsWithChildren) => <SlideFrame inset={inset}>{children}</SlideFrame> : PrintFrame,
+    [framed, inset],
+  );
   switch (source.kind) {
+    // The slide's own object counts as an ancestor, so a slide that embeds itself stops at one level.
     case 'text':
-      return <TextSlide text={source.text} />;
+      return (
+        <EmbedAncestor id={source.text.id}>
+          <TextSlide Frame={Frame} text={source.text} {...options} />
+        </EmbedAncestor>
+      );
+    case 'markdown':
+      return <MarkdownContentSlide Frame={Frame} content={source.content} db={source.db} {...options} />;
     case 'object':
-      return <ObjectSlide object={source.object} attendableId={attendableId} />;
+      return (
+        <EmbedAncestor id={source.object.id}>
+          <ObjectSlide Frame={Frame} object={source.object} attendableId={attendableId} />
+        </EmbedAncestor>
+      );
     case 'pending':
-      return <PendingSlide />;
+      return <PendingSlide Frame={Frame} />;
   }
 };
 
-const TextSlide = ({ text }: { text: Text.Text }) => {
+const TextSlide = ({ Frame, text, ...options }: FrameProps & { text: Text.Text } & MarkdownOptions) => {
   const [content] = useObject(text, 'content');
+  // Refs resolve against the owner's database so space-relative `echo:///<id>` refs find their target.
+  return <MarkdownContentSlide Frame={Frame} content={content} db={Obj.getDatabase(text)} {...options} />;
+};
+
+const MarkdownContentSlide = ({
+  Frame,
+  content,
+  db,
+  ...options
+}: FrameProps & { content: string | undefined; db?: Database.Database } & MarkdownOptions) => {
+  const renderSurface = useSurfaceRenderer(db);
   return (
-    <SlideFrame>
-      <Slide content={content} />
-    </SlideFrame>
+    <Frame>
+      <MarkdownSlide content={content ?? ''} renderSurface={renderSurface} {...options} />
+    </Frame>
   );
 };
 
-const ObjectSlide = ({ object, attendableId }: { object: Obj.Unknown; attendableId?: string }) => {
-  // Subscribed so the slide swaps in when a lazily gated surface registers.
-  const surfaceManager = Surface.useSurfaceManager();
-  const candidates = useAtomValue(surfaceManager.candidatesAtom(AppSurface.Slide.role));
-  const data = useMemo(() => ({ subject: object, attendableId: attendableId ?? object.id }), [object, attendableId]);
-  const available = Surface.matchCandidates(candidates, AppSurface.Slide.role, data).length > 0;
-
-  // The availability check fires the role's demand on a miss, which loads gated surface modules.
-  const isAvailable = Surface.useIsAvailable();
-  useEffect(() => {
-    if (!available) {
-      isAvailable({ type: AppSurface.Slide, data });
-    }
-  }, [available, isAvailable, data]);
-
-  return (
-    <SlideFrame>
-      {available ? <Surface.Surface type={AppSurface.Slide} data={data} limit={1} /> : <TitleSlide object={object} />}
-    </SlideFrame>
+/**
+ * Renders a slide's embedded `<Surface>`s against the owner's database; without one they stay placeholders.
+ */
+export const useSurfaceRenderer = (db: Database.Database | undefined): MarkdownSlideProps['renderSurface'] =>
+  useMemo<MarkdownSlideProps['renderSurface']>(
+    () => (db ? ({ uri, role }) => <EmbeddedSurface uri={uri} role={role} db={db} /> : undefined),
+    [db],
   );
-};
 
-/** Shown when no surface renders the object as a slide. */
-const TitleSlide = ({ object }: { object: Obj.Unknown }) => {
-  const icon = Obj.getIcon(object)?.icon ?? 'ph--cube--regular';
-  return (
-    <div className='flex flex-col grow h-full items-center justify-center gap-8 text-8xl'>
-      <Icon.Icon icon={icon} classNames='size-48' />
-      <span>{Obj.getLabel(object)}</span>
-    </div>
-  );
-};
+const ObjectSlide = ({ Frame, object, attendableId }: FrameProps & { object: Obj.Unknown; attendableId?: string }) => (
+  <Frame>
+    <SlideThemeScope>
+      <ObjectSurface object={object} role='slide' attendableId={attendableId} />
+    </SlideThemeScope>
+  </Frame>
+);
 
-const PendingSlide = () => {
+const PendingSlide = ({ Frame }: FrameProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
-    <SlideFrame>
-      <div className='flex grow h-full items-center justify-center gap-6 text-6xl'>
+    <Frame>
+      <SlideThemeScope classNames='items-center justify-center gap-6 text-6xl'>
         <Icon.Icon icon='ph--circle-notch--regular' spin classNames='size-16' />
         <span>{t('slide-pending.label')}</span>
-      </div>
-    </SlideFrame>
+      </SlideThemeScope>
+    </Frame>
   );
 };

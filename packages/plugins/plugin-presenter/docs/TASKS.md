@@ -23,7 +23,7 @@ Design: [DESIGN.md](./DESIGN.md).
 - [x] **Fullscreen toggle, toolbar + overlay pager, focus-scoped keys**.
 - [x] **Slide index view state** — `presenter-slide` aspect, `local` backend.
 - [x] **Delete** `PresenterContext`, `StartButton`, `Layout`, `CollectionArticle`, `presentCollections`.
-- [x] **Demo presentation story** — `plugins/plugin-presenter/Demo` (plan Task 10), 10 slides, every layout.
+- [x] **Demo presentation story** — `plugins/plugin-presenter/stories/Demo` (`src/stories/Demo.stories.tsx`) (plan Task 10), 10 slides, every layout.
 - [x] **Verify in the running app** — 10/11 steps passed. The failure (a new Presentation was not filed into
       Collections, so it was invisible in the navtree) is fixed by tagging it `Collection.ItemTag`. Cosmetic
       findings fixed in the same wave: typename label for unnamed decks, picker labels and tooltip, owned slides
@@ -63,11 +63,20 @@ Design: [DESIGN.md](./DESIGN.md).
 
 ## Phase 3: Markdown renderer
 
-- [ ] **DXOS frontmatter extension** — `backgroundVideo` (loop, muted, autoplay), `backgroundOpacity`, `backgroundPosition`; convert `testing/deck.md` and `testing/2025-05-20-effect.md` from reveal syntax.
-- [ ] **unified pipeline** → React for the Slidev subset; layouts, `::slot::`, `<v-click*>`, notes.
-- [ ] **Evaluate `@slidev/parser`** for the preview `---` split (browser-safe?).
-- [ ] **Migrate** reveal syntax in test decks; reveal behind a setting until parity, then delete.
-- [ ] **Print stylesheet**.
+- [x] **Embedded surfaces** — `<Surface ref="echo:///<id>" role="slide" />` inside a slide (any slot), with the linked-section fallback chain; story `plugins/plugin-presenter/components/SlideRenderer` → `EmbeddedSurface` (text + a live object in `two-cols`); missing, malformed and never-existed refs settle on the placeholder.
+- [x] **DXOS frontmatter extension** — `backgroundVideo` (loop, muted, autoplay), `backgroundOpacity`, `backgroundPosition`; convert `testing/deck.md` and `testing/2025-05-20-effect.md` from reveal syntax.
+- [x] **unified pipeline** → React for the Slidev subset; layouts, `::slot::`, `<v-click*>`, notes.
+- [x] **Evaluate `@slidev/parser`** for the preview `---` split — rejected (Node-targeted, not in the repo); the splitter is owned in `src/markdown`.
+- [x] **Migrate** reveal syntax in test decks; reveal.js deleted (no setting).
+- [x] **Print stylesheet** — `Deck/print.css`, imported by `Deck`; scoped by `html[data-printing-deck]`, prints every slide.
+- [x] **Object image embeds** — `![label](echo:///<id>)` renders the object like `<Surface ref>`, keeping main's reveal-era syntax (#14152) and plugin-debug's presenter sample working.
+- [x] **Themes** — `default`, `light`, `dark`, `serif` via `--slide-*` variables; `theme:` headmatter, Presentation `theme` setting with color/font overrides; story `plugins/plugin-presenter/components/SlideTheme`.
+- [x] **Slide grid** — the Presentation article shows every slide as a thumbnail (`SlideGrid`, react-ui-list `Listbox` tiles in a `Viewport`), no pager; drag a thumbnail to reorder sections, double-click to present from it (D-51).
+- [ ] Theme-driven Tailwind utilities for plugin-contributed themes (a `SlideTheme` capability) if a second source of themes appears.
+- [ ] `class:` frontmatter only works with Tailwind utilities that are already generated (the markdown is not scanned); consider a safelist.
+- [ ] Known deck conversion losses: per-colour tints behind the ECHO/HALO/MESH/EDGE images (needs a tint layer separate from `backgroundOpacity`), fixed image heights, and the dropped hidden FADE slide.
+- [ ] **Print/export operation**: an operation that prints a document or presentation to PDF (uses the print stylesheet; Save as PDF). Browser print already prints the whole deck from the focused deck. (User TODO, 2026-10-22.)
+- [ ] **Print async content**: the print container mounts at `beforeprint`, so Prism grammars, embedded surfaces and images can print blank; pre-mount and await the container (e.g. in the print/export operation) before opening the print dialog.
 
 ## Phase 4: Slide surfaces
 
@@ -80,6 +89,22 @@ Design: [DESIGN.md](./DESIGN.md).
 - [ ] **`PresenterSkill`** on `Presentation` — `CreatePresentation`, `AddSection`, `ListLayouts`, `PresentObject`.
 - [ ] **Eval** with memoized fixtures.
 
-## Phase 6: Later
+## Phase 6: Slide editor
+
+- [x] **Toolbar** — `EditorToolbar` formatting; layout picker (writes `layout:`); insert click step, column break, object, background, notes; view controls.
+- [x] **Preview modes** — vertical split (editor above, slide below) and companion; mode and split position in view state.
+- [x] **Editor → preview** — cursor inside a click group reveals up to its step; the cursor's slot is outlined.
+- [x] **Preview → editor** — rendered elements carry `data-source` ranges from mdast positions; a click selects the source.
+- [x] **Present from here** and previous/next slide from the editor.
+- [x] Stories with play tests for typing, layout, insert, cursor step and preview click (`containers/SlideEditorArticle`).
+- [ ] Stories for the companion mode, background and object insert; spec QA entries.
+- [x] Layout picker on a tiled `Listbox` (react-ui `Listbox` gained `tiles`).
+- [x] **DSL highlighting** — `slideTokens` (frontmatter, keys, `::slot::`, click/`Surface` tags and attributes, object embeds, notes) and the `slideHighlight` CodeMirror extension.
+
+- [ ] **Reconcile the toolbars** (user TODO, 2026-10-23): editing actions such as "start next column" and "insert object" belong in the formatting toolbar, not the slide toolbar; keep only slide-level controls (layout, background, notes, view) separate.
+- [ ] **Extending another component's toolbar** (user TODO, 2026-10-23): design a generic way for a consumer to add items to a toolbar it does not own (here, slide actions in `react-ui-editor`'s `EditorToolbar`). Starting points: `EditorToolbar`'s `customActions` atom (menu actions only, no custom React items such as pickers) and app-graph toolbar actions (`graphActions` with `isToolbarAction`, as MarkdownArticle uses). Draft design and prototype: `react-ui-menu/docs/TOOLBAR.md`, story `ui/react-ui-menu/ToolbarLayout (prototype)` (zones, rows, overflow menu, contributor placement).
+- [ ] **SlideToolbar on the toolbar builder** (user TODO, 2026-10-23): `SlideToolbar` hand-assembles `Toolbar.Root` children instead of using `MenuBuilder` + `ActionToolbar`; migrate it as part of the toolbar-mechanism review (`react-ui-menu/docs/TOOLBAR.md`).
+
+## Phase 7: Later
 
 - [ ] **Presenter view** — notes, next slide, timer.

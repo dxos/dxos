@@ -314,8 +314,8 @@ node.data)`; connector maps `sections` (reactive, as in plugin-space `collection
 
 **Files:**
 
-- Create: `src/containers/PresentationArticle/PresentationArticle.demo.stories.tsx` (title
-  `plugins/plugin-presenter/Demo`), `src/testing/demoPresentation.ts` (imported directly by the story, not
+- Create: `src/stories/Demo.stories.tsx` (title
+  `plugins/plugin-presenter/stories/Demo`), `src/testing/demoPresentation.ts` (imported directly by the story, not
   exported from `#testing`, which stays light)
 
 **Interfaces:**

@@ -81,7 +81,7 @@ export type PageNumberProps = {
 
 export const PageNumber = ({ index = 0, count = 1 }: PageNumberProps) => {
   return (
-    <Layout.Flex align='center' classNames='text-neutral-500 text-2xl'>
+    <Layout.Flex align='center' classNames='text-neutral-500 text-2xl tabular-nums'>
       <div>
         {count === 0 ? 0 : index + 1} / {count}
       </div>
