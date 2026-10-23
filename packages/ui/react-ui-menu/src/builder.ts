@@ -138,6 +138,19 @@ class MenuBuilderImpl implements MenuBuilder {
   }
 }
 
+/** Id of the overflow menu (⋮) every toolbar ends with; contributors add to it with {@link MenuBuilder.extend}. */
+export const TOOLBAR_OVERFLOW_ID = 'toolbar-overflow';
+
 export const MenuBuilder = Object.freeze({
   make: (): MenuBuilder => new MenuBuilderImpl({ nodes: [], edges: [] }, 'root'),
+
+  /**
+   * Builds items into a named group another component declared, so a plugin extends a toolbar or menu it does not own.
+   * The result is merged into the owner's graph (e.g. with `subgraph`); its edges hang off `groupId`.
+   */
+  extend: (groupId: string, cb: ActionGroupBuilderFn): ActionGraphProps => {
+    const data: ActionGraphProps = { nodes: [], edges: [] };
+    cb(new MenuBuilderImpl(data, groupId));
+    return data;
+  },
 });
