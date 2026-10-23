@@ -3,174 +3,19 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import '@dxos/react-ui/theme.css';
 import * as Button from '@dxos/react-ui/Button';
-import * as Hooks from '@dxos/react-ui/Hooks';
 import { withRegistry, withTheme } from '@dxos/react-ui/testing';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
-import { type ToolbarPlacement, type ToolbarZone } from '@dxos/ui-types';
 
-import { translationKey, translations } from '#translations';
+import { translations } from '#translations';
 
 import { MenuBuilder, TOOLBAR_OVERFLOW_ID } from '../builder.ts';
-import { type ActionGraphProps, useMenuBuilder, useMenuItems } from '../hooks/index.ts';
-import { type MenuActions, type MenuItem, type MenuItemGroup, isMenuGroup, isSeparator } from '../types.ts';
+import { type ActionGraphProps, useMenuBuilder } from '../hooks/index.ts';
 import { ActionMenu } from './ActionMenu.tsx';
-import { MenuToolbarItem } from './ActionToolbar.tsx';
-
-//
-// Prototype: toolbars and menus share one model, built with `MenuBuilder`.
-// - The owner declares named groups; a plain group (no `variant`) renders inline as a cluster of controls.
-// - Other components extend a named group with `MenuBuilder.extend(groupId, …)`, ordered by `placement.order`.
-// - Every toolbar ends with an overflow menu (⋮), itself a named group (`TOOLBAR_OVERFLOW_ID`) others extend.
-// - When a row is too narrow, groups move into the overflow menu by `placement.collapse` rank, as submenus.
-//
-
-const ZONES: readonly ToolbarZone[] = ['start', 'middle', 'end'];
-
-const placementOf = (item: MenuItem): ToolbarPlacement => (isSeparator(item) ? {} : (item.properties.placement ?? {}));
-
-const isPlainGroup = (item: MenuItem): item is MenuItemGroup => isMenuGroup(item) && !item.properties.variant;
-
-/** Sorts by `placement.order`, keeping insertion order for items without one. */
-const byOrder = (items: readonly MenuItem[]): MenuItem[] =>
-  items
-    .map((item, index) => ({ item, order: placementOf(item).order ?? index }))
-    .sort((a, b) => a.order - b.order)
-    .map(({ item }) => item);
-
-/** A named group laid out inline: its own and contributed items, in order. */
-const InlineGroup = ({ menu, group }: { menu: MenuActions; group: MenuItemGroup }) => {
-  const items = useMenuItems(menu, group);
-  const ordered = useMemo(() => byOrder(items ?? []), [items]);
-  return (
-    <div role='group' aria-label={group.id} data-group={group.id} className='flex items-center'>
-      {ordered.map((item) => (
-        <MenuToolbarItem key={item.id} menu={menu} item={item} />
-      ))}
-    </div>
-  );
-};
-
-const ToolbarUnit = ({ menu, item }: { menu: MenuActions; item: MenuItem }) =>
-  isPlainGroup(item) ? <InlineGroup menu={menu} group={item} /> : <MenuToolbarItem menu={menu} item={item} />;
-
-/** The ⋮ menu: groups collapsed from the rows (as submenus), then the overflow group's own and contributed items. */
-const OverflowMenu = ({
-  menu,
-  group,
-  collapsed,
-}: {
-  menu: MenuActions;
-  group?: MenuItemGroup;
-  collapsed: MenuItem[];
-}) => {
-  const { t } = Hooks.useTranslation(translationKey);
-  const items = useMenuItems(menu, group);
-  const actions = useMemo(() => [...collapsed, ...byOrder(items ?? [])], [collapsed, items]);
-  return (
-    <ActionMenu {...menu} actions={actions} disabled={actions.length === 0}>
-      <Button.Root
-        data-testid='toolbar.overflow'
-        icon='ph--dots-three-vertical--regular'
-        iconOnly
-        variant='ghost'
-        label={t('toolbar-overflow.menu')}
-        disabled={actions.length === 0}
-      />
-    </ActionMenu>
-  );
-};
-
-type ToolbarLayoutProps = {
-  menu: MenuActions;
-  /** Testing hook: the ids of the groups currently moved into the overflow menu. */
-  onOverflowChange?: (ids: string[]) => void;
-};
-
-/**
- * One `Toolbar.Root` per row, each laid out as start | gap | middle | gap | end, with the overflow menu (⋮) at the far
- * right of the first row. Groups move into the overflow menu by collapse rank while a row is too narrow.
- */
-const ToolbarLayout = ({ menu, onOverflowChange }: ToolbarLayoutProps) => {
-  const items = useMenuItems(menu);
-  const overflow = items?.find((item): item is MenuItemGroup => isMenuGroup(item) && item.id === TOOLBAR_OVERFLOW_ID);
-  const units = useMemo(
-    () => (items ?? []).filter((item) => !isSeparator(item) && item.id !== TOOLBAR_OVERFLOW_ID),
-    [items],
-  );
-
-  // Collapse order: highest rank first, later units first among equals.
-  const collapsible = useMemo(
-    () =>
-      units
-        .map((item, index) => ({ item, rank: placementOf(item).collapse, index }))
-        .filter(({ rank }) => rank !== undefined)
-        .sort((a, b) => (b.rank ?? 0) - (a.rank ?? 0) || b.index - a.index)
-        .map(({ item }) => item),
-    [units],
-  );
-
-  const rootRef = useRef<HTMLDivElement>(null);
-  const [collapsedCount, setCollapsedCount] = useState(0);
-  // The width at which each collapse happened: a group comes back once the toolbar is wider than that again.
-  const thresholds = useRef<number[]>([]);
-  const [, setWidth] = useState(0);
-
-  useLayoutEffect(() => {
-    const rows = rootRef.current?.querySelectorAll<HTMLElement>('[data-row]') ?? [];
-    const overflowing = [...rows].some((row) => row.scrollWidth > row.clientWidth + 1);
-    const width = rootRef.current?.clientWidth ?? 0;
-    if (overflowing && collapsedCount < collapsible.length) {
-      thresholds.current[collapsedCount] = width;
-      setCollapsedCount(collapsedCount + 1);
-    } else if (!overflowing && collapsedCount > 0 && width > (thresholds.current[collapsedCount - 1] ?? Infinity)) {
-      setCollapsedCount(collapsedCount - 1);
-    }
-  });
-
-  useLayoutEffect(() => {
-    const element = rootRef.current;
-    if (!element) {
-      return;
-    }
-    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
-
-  const collapsed = useMemo(() => collapsible.slice(0, collapsedCount), [collapsible, collapsedCount]);
-  useLayoutEffect(() => onOverflowChange?.(collapsed.map((item) => item.id)), [collapsed, onOverflowChange]);
-
-  const rowCount = Math.max(1, ...units.map((item) => (placementOf(item).row ?? 0) + 1));
-  const zone = (row: number, zone: ToolbarZone) =>
-    byOrder(
-      units.filter((item) => {
-        const placement = placementOf(item);
-        return (placement.row ?? 0) === row && (placement.zone ?? 'start') === zone && !collapsed.includes(item);
-      }),
-    ).flatMap((item, index) => [
-      ...(index > 0 ? [<Toolbar.Separator key={`${item.id}-separator`} variant='line' />] : []),
-      <ToolbarUnit key={item.id} menu={menu} item={item} />,
-    ]);
-
-  return (
-    <div ref={rootRef} className='flex flex-col min-w-0'>
-      {Array.from({ length: rowCount }, (_, row) => (
-        <Toolbar.Root key={row} data-row={row}>
-          {ZONES.flatMap((name, index) => [
-            ...(index > 0 ? [<Toolbar.Separator key={`${name}-gap`} variant='gap' />] : []),
-            ...zone(row, name),
-          ])}
-          {row === 0 && <OverflowMenu menu={menu} group={overflow} collapsed={collapsed} />}
-        </Toolbar.Root>
-      ))}
-    </div>
-  );
-};
+import { ActionToolbar } from './ActionToolbar.tsx';
 
 //
 // Story fixtures: an owner's toolbar (a document editor) and the components that extend it.
@@ -294,7 +139,6 @@ type StoryProps = { contributors?: Contributor[]; width?: number; asMenu?: boole
 
 const DefaultStory = ({ contributors = [], width, asMenu }: StoryProps) => {
   const [log, setLog] = useState<string[]>([]);
-  const [overflow, setOverflow] = useState<string[]>([]);
   const record = useCallback((id: string) => setLog((log) => [...log, id]), []);
   const menu = useMenuBuilder(
     () =>
@@ -319,19 +163,16 @@ const DefaultStory = ({ contributors = [], width, asMenu }: StoryProps) => {
           className='resize-x overflow-hidden border border-separator rounded-sm min-w-[8rem]'
           style={{ width: width ?? 720 }}
         >
-          <ToolbarLayout menu={menu} onOverflowChange={setOverflow} />
+          <ActionToolbar {...menu} alwaysActive />
         </div>
       )}
-      <pre className='text-xs text-description' data-testid='toolbar.overflow-ids'>
-        overflow: {overflow.join(', ') || '—'}
-        {'\n'}log: {log.join(', ') || '—'}
-      </pre>
+      <pre className='text-xs text-description'>log: {log.join(', ') || '—'}</pre>
     </div>
   );
 };
 
 const meta = {
-  title: 'ui/react-ui-menu/ToolbarLayout (prototype)',
+  title: 'ui/react-ui-menu/ToolbarLayout',
   render: DefaultStory,
   decorators: [withTheme(), withRegistry],
   parameters: { translations },
@@ -341,32 +182,55 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const groupIds = (canvasElement: HTMLElement) =>
-  [...canvasElement.querySelectorAll<HTMLElement>('[data-group]')].map((element) => element.dataset.group);
-
-const groupItems = (canvasElement: HTMLElement, group: string) =>
-  [...canvasElement.querySelectorAll<HTMLElement>(`[data-group="${group}"] button`)].map((element) =>
-    element.getAttribute('aria-label'),
-  );
+/** The labels of a row's buttons, in DOM order. */
+const labels = (canvasElement: HTMLElement, row = 0) => {
+  const rows = canvasElement.querySelectorAll<HTMLElement>('[role=toolbar]');
+  return [...(rows[row]?.querySelectorAll('button') ?? [])].map((button) => button.getAttribute('aria-label'));
+};
 
 /** The owner's named groups across the start, middle and end zones, with Export in the overflow menu. */
 export const Groups: Story = {
   play: async ({ canvasElement }) => {
-    await waitFor(() => expect(groupIds(canvasElement)).toEqual(['formatting', 'blocks', 'view', 'tools']));
+    await waitFor(() =>
+      expect(labels(canvasElement)).toEqual([
+        'Heading',
+        'Bold',
+        'Italic',
+        'Link',
+        'List',
+        'Quote',
+        'Preview',
+        'Search',
+        'More',
+      ]),
+    );
     await userEvent.click(within(canvasElement).getByTestId('toolbar.overflow'));
     await expect(await within(document.body).findByRole('menuitem', { name: 'Export' })).toBeVisible();
   },
 };
 
-/** Other components extend the owner's named groups, interleaved by order, and its overflow menu. */
+/** Other components extend the owner's named groups (interleaved by order), add a second row, and extend ⋮. */
 export const Extended: Story = {
   args: { contributors: ['review', 'transcription', 'presenter'] },
   play: async ({ canvasElement }) => {
     await waitFor(() =>
-      expect(groupItems(canvasElement, 'formatting')).toEqual(['Heading', 'Bold', 'Italic', 'Link', 'Comment']),
+      expect(labels(canvasElement)).toEqual([
+        'Heading',
+        'Bold',
+        'Italic',
+        'Link',
+        'Comment',
+        'List',
+        'Quote',
+        'Start next column',
+        'Insert object',
+        'Preview',
+        'Dictate',
+        'Search',
+        'More',
+      ]),
     );
-    await expect(groupItems(canvasElement, 'tools')).toEqual(['Dictate', 'Search']);
-    await expect(canvasElement.querySelectorAll('[data-row]')).toHaveLength(2);
+    await expect(labels(canvasElement, 1)).toEqual(['Layout', 'Background', 'Present']);
     await userEvent.click(within(canvasElement).getByTestId('toolbar.overflow'));
     await expect(await within(document.body).findByRole('menuitem', { name: 'Print' })).toBeVisible();
   },
@@ -377,7 +241,7 @@ export const Narrow: Story = {
   args: { contributors: ['review', 'transcription', 'presenter'], width: 320 },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await waitFor(() => expect(canvas.getByTestId('toolbar.overflow-ids').textContent).toContain('blocks'));
+    await waitFor(() => expect(labels(canvasElement)).not.toContain('List'));
     await expect(canvas.getByTestId('toolbar.microphone')).toBeVisible();
     await userEvent.click(canvas.getByTestId('toolbar.overflow'));
     const body = within(document.body);
