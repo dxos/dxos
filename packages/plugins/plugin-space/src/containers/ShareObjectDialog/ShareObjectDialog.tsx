@@ -213,6 +213,11 @@ export const ShareObjectDialog = ({ object }: ShareObjectDialogProps) => {
                   </Select.Root>
                 )}
               </Layout.Grid>
+              {access === 'anyone' && role === 'viewer' && (
+                <Typography.Text tone='muted' data-testid='share-object-dialog.viewer-note'>
+                  {t('share-object-dialog.role.viewer.note')}
+                </Typography.Text>
+              )}
               {access === 'anyone' && scope.length > 0 && (
                 <Typography.Text tone='subtle' data-testid='share-object-dialog.scope'>
                   {t('share-object-dialog.scope.label', { count: scope.length, labels: scopeLabels.join(', ') })}

@@ -52,6 +52,12 @@ describe('share payload', () => {
     expect(InvalidSharePayloadError.is(await decodeError(await encodeJson({ hello: 'world' })))).toBe(true);
   });
 
+  test('rejects a payload that inflates past the cap instead of filling memory', async ({ expect }) => {
+    const bomb = await encodeJson({ ...payload, invitation: '0'.repeat(1024 * 1024) });
+    expect(bomb.length).toBeLessThan(4_096);
+    expect(InvalidSharePayloadError.is(await decodeError(bomb))).toBe(true);
+  });
+
   test('rejects a payload from another version rather than half-applying it', async ({ expect }) => {
     expect(InvalidSharePayloadError.is(await decodeError(await encodeJson({ ...payload, v: 2 })))).toBe(true);
   });

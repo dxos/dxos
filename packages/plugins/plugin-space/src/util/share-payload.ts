@@ -38,7 +38,7 @@ export const encodeSharePayload = (payload: SharePayload): Effect.Effect<string>
 /** Reverses {@link encodeSharePayload}, failing on anything that is not a payload this version reads. */
 export const decodeSharePayload = (encoded: string): Effect.Effect<SharePayload, InvalidSharePayloadError> =>
   Effect.tryPromise({
-    try: () => transform(fromBase64Url(encoded), new DecompressionStream('deflate-raw')),
+    try: () => transform(fromBase64Url(encoded), new DecompressionStream('deflate-raw'), MAX_DECODED_BYTES),
     catch: (cause) => new InvalidSharePayloadError({ cause }),
   }).pipe(
     Effect.flatMap((bytes) => decodePayload(new TextDecoder().decode(bytes))),
@@ -47,11 +47,27 @@ export const decodeSharePayload = (encoded: string): Effect.Effect<SharePayload,
     ),
   );
 
+/** Most bytes a link's payload may inflate to; real ones are a few KB, and a crafted one could otherwise fill the tab's memory. */
+const MAX_DECODED_BYTES = 256 * 1024;
+
 const transform = async (
   bytes: Uint8Array<ArrayBuffer>,
   stream: CompressionStream | DecompressionStream,
-): Promise<Uint8Array<ArrayBuffer>> =>
-  new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(stream)).arrayBuffer());
+  maxBytes = Infinity,
+): Promise<Uint8Array<ArrayBuffer>> => {
+  const reader = new Blob([bytes]).stream().pipeThrough(stream).getReader();
+  const chunks: Uint8Array<ArrayBuffer>[] = [];
+  let size = 0;
+  for (let next = await reader.read(); !next.done; next = await reader.read()) {
+    size += next.value.byteLength;
+    if (size > maxBytes) {
+      await reader.cancel();
+      throw new Error(`Share payload inflates past ${maxBytes} bytes.`);
+    }
+    chunks.push(next.value);
+  }
+  return new Uint8Array(await new Blob(chunks).arrayBuffer());
+};
 
 const toBase64Url = (bytes: Uint8Array): string =>
   btoa(Array.from(bytes, (byte) => String.fromCharCode(byte)).join(''))

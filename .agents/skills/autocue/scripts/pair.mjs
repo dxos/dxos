@@ -281,6 +281,11 @@ try {
       .split(',')
       .map((name) => name.trim().toLowerCase())
       .filter(Boolean);
+    // A misspelt name would otherwise boot nobody and let the flow start against a blank page.
+    const unknown = bootNames.filter((name) => !peerList.some((peer) => peer.name.toLowerCase() === name));
+    if (unknown.length > 0) {
+      throw new Error(`--boot-peers names no such peer: ${unknown.join(', ')}`);
+    }
     const booted =
       bootNames.length > 0 ? peerList.filter((peer) => bootNames.includes(peer.name.toLowerCase())) : peerList;
     if (options.boot === 'parallel') {

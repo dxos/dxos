@@ -480,10 +480,10 @@ feat F-2: Membership and Sharing
   req F-2.2: MembersContainer shows all current members with their presence status.
   req F-2.3: User can generate single-use or multi-use invitation links.
   req F-2.4: User can get a direct shareable link to a space or object via op:SpaceOperation.GetShareLink.
-  req F-2.5: Every object has a Share action that opens a share dialog (op:SpaceOperation.OpenShareObject) listing the people with access, the general access setting with a role, and a Copy link button.
+  req F-2.5: Every object has a Share action that opens a share dialog (op:SpaceOperation.OpenShareObject) listing the people with access, the general access setting with a role, and a Copy link button. With the Viewer role selected the dialog says that Viewer is not enforced and anyone with the link can still edit.
   req F-2.6:
     when: user copies a link with general access set to anyone with the link
-    then: op:SpaceOperation.ShareObject creates a delegated multi-use invitation, and the link carries it with the object's scope (the object, every object it references or links to, and the space properties) and the plugins that render that scope
+    then: op:SpaceOperation.ShareObject creates a delegated multi-use invitation, and the link carries it with the object's scope (the object, every object it references or links to, the space properties, and each of these objects' strong dependencies — its parent and a type stored in the space — without the dependencies' own references) and the plugins that render that scope
   req F-2.7:
     when: someone opens a share link
     then: a member lands on the object; a non-member joins in the background without a dialog, replicates only the scope, has the plugins enabled, and lands on the object; a browser with no identity gets one first, with no welcome screen
@@ -815,6 +815,30 @@ decision D-8: The link uses a delegated, multi-use invitation authenticated by a
   for: user:mykola-vrmchk
   affects: [F-2.6, op:SpaceOperation.ShareObject]
   why: It is the invitation the existing invite-many link uses, which EDGE already redeems with no member online.
+```
+
+```mdl
+decision D-9: A link's scope is the object, every object reachable through its references or through ECHO links in its text, the space properties, and each scoped object's strong dependencies — its parent and a type stored in the space — whose own references are not followed. Fills in [D-2].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  supersedes: D-5
+  affects: [F-2.6]
+  why: The host index and the client both hide an object whose strong dependency is missing, so a document filed in the root collection opened on the guest as a plank that never left loading. Following a dependency's references would replicate every sibling of the shared document.
+  rejected:
+    - Leave the root collection out ([D-5]) — the shared document never surfaced on the guest.
+    - Follow the dependencies' references too — sharing one document would replicate its whole collection.
+```
+
+```mdl
+decision D-10: With the Viewer role selected, the share dialog says that Viewer is not enforced and anyone with the link can still edit. Fills in [D-8].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-2.5]
+  why: The role is recorded on the member credential but nothing checks it on a write, so a Viewer link grants edit access; the dialog must not imply otherwise.
+  rejected:
+    - Hide the Viewer option until enforcement exists — drops the Google-Docs layout the dialog follows, and the role is still recorded for when it is enforced.
 ```
 
 ---
