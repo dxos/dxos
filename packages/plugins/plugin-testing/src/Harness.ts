@@ -4,11 +4,10 @@
 
 // @import-as-namespace
 
-import * as Effect from 'effect/Effect';
-
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { type TestAppOptions, type TestHarness, createTestApp } from '@dxos/app-framework/testing';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { AttentionPlugin } from '@dxos/plugin-attention/testing';
 import { GraphPlugin } from '@dxos/plugin-graph/testing';
 import { SettingsPlugin } from '@dxos/plugin-settings/testing';
@@ -62,7 +61,7 @@ export const createComposerTestApp = async (opts: ComposerTestAppOptions = {}): 
  */
 export const preload = async (opts: Pick<ComposerTestAppOptions, 'plugins' | 'theme'> = {}): Promise<void> => {
   const plugins = await Promise.all(
-    (await composerPlugins(opts)).map((plugin) => Effect.runPromise(Plugin.resolveLazy(plugin))),
+    (await composerPlugins(opts)).map((plugin) => EffectEx.runPromise(Plugin.resolveLazy(plugin))),
   );
   await Promise.all(plugins.flatMap((plugin) => plugin.modules.map((module) => module.load?.())));
 };
