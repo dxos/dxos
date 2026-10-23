@@ -39,7 +39,8 @@
   },
   // Per-env Workers (name = the deployed Worker; production = the bare name that carries the custom domain,
   // others suffixed). Bindings are NOT inherited, so each env repeats them. Cloudflare-side: each Worker
-  // needs its R2 bucket + the POSTHOG_PROJECT_TOKEN secret (see ENV.md).
+  // needs its R2 bucket + the POSTHOG_PROJECT_TOKEN secret (see ENV.md), which `secrets.required` makes
+  // `wrangler deploy` and `versions upload` refuse to ship without.
   "env": {
     "production": {
       "name": "composer",
@@ -48,6 +49,7 @@
         "ENVIRONMENT": "production",
         "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i",
       },
+      "secrets": { "required": ["POSTHOG_PROJECT_TOKEN"] },
       "r2_buckets": [
         { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs" },
         { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets" },
@@ -60,6 +62,7 @@
         "ENVIRONMENT": "staging",
         "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i",
       },
+      "secrets": { "required": ["POSTHOG_PROJECT_TOKEN"] },
       "r2_buckets": [
         { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-preview" },
         { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets-staging" },
@@ -74,6 +77,7 @@
         "ENVIRONMENT": "preview",
         "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i",
       },
+      "secrets": { "required": ["POSTHOG_PROJECT_TOKEN"] },
       "r2_buckets": [
         { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" },
         { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets-preview" },
@@ -87,6 +91,7 @@
         "ENVIRONMENT": "dev",
         "POSTHOG_OTLP_URL": "https://eu.i.posthog.com/i",
       },
+      "secrets": { "required": ["POSTHOG_PROJECT_TOKEN"] },
       "r2_buckets": [
         { "binding": "FEEDBACK_LOGS", "bucket_name": "composer-feedback-logs-dev" },
         { "binding": "ASSET_ARCHIVE", "bucket_name": "composer-assets-dev" },
