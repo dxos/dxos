@@ -59,6 +59,15 @@ describe('Endpointer', () => {
     expect(endpoints.map(({ endpoint }) => endpoint)).toEqual(['idle', 'idle']);
   });
 
+  test('quiet room tone never opens a stream, however far above its floor', ({ expect }) => {
+    const endpointer = new Endpointer(0.5);
+    // Peaks of about -40 dBFS over a floor near -80, like the whistle-silence fixture.
+    feed(endpointer, concat(signal(0.3, 0.0001), signal(0.7, 0.01)));
+    expect(endpointer.heard).toBe(false);
+    feed(endpointer, signal(0.3, 0.3));
+    expect(endpointer.heard).toBe(true);
+  });
+
   test('a click is not a request', ({ expect }) => {
     const endpointer = new Endpointer(0.5);
     const endpoints = feed(endpointer, concat(signal(0.5, 0.001), signal(0.05, 0.3), signal(0.6, 0.001)));

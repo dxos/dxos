@@ -17,6 +17,13 @@ const IDLE_GAP_SECONDS = 0.5;
 const MIN_SOUND_SECONDS = 0.15;
 
 /**
+ * A bar quieter than this is never sound, however far above the noise floor: room tone in a quiet room sits
+ * well above its own floor, and Whistle hears words in it ("Thank you."). Speech after the browser's gain
+ * control peaks around -20 dBFS; the silence fixture's room tone peaks at -37.
+ */
+const MIN_SOUND_DB = -35;
+
+/**
  * Tracks silence in a stream's audio as it arrives: where a spoken request ends (a pause after sound, when a
  * pause is set), and how much silence the stream ends in. Every pass re-decodes the whole stream, so it also
  * ends streams that have heard nothing, keeping each request's stream short.
@@ -30,8 +37,17 @@ export class Endpointer {
   #soundBars = 0;
   #silentBars = 0;
 
+  readonly #pauseSeconds: number | undefined;
+
   /** `pauseSeconds`: end a request at a pause this long; without it, requests end only when stopped. */
-  constructor(readonly pauseSeconds?: number) {}
+  constructor(pauseSeconds?: number) {
+    this.#pauseSeconds = pauseSeconds;
+  }
+
+  /** The stream has heard sound long enough to be speech. */
+  get heard(): boolean {
+    return this.#soundBars * BAR_SECONDS >= MIN_SOUND_SECONDS;
+  }
 
   /** Seconds of silence the audio so far ends in. */
   get silentSeconds(): number {
@@ -66,16 +82,16 @@ export class Endpointer {
     }
     const thresholdDb = silenceThresholdDb(this.#recentDb) ?? 0;
     this.#bars++;
-    if (levelDb < thresholdDb) {
+    if (levelDb < thresholdDb || levelDb < MIN_SOUND_DB) {
       this.#silentBars++;
     } else {
       this.#soundBars++;
       this.#silentBars = 0;
     }
 
-    const heard = this.#soundBars * BAR_SECONDS >= MIN_SOUND_SECONDS;
+    const heard = this.heard;
     const endpoint: Endpoint | undefined =
-      heard && this.pauseSeconds !== undefined && this.#silentBars * BAR_SECONDS >= this.pauseSeconds
+      heard && this.#pauseSeconds !== undefined && this.#silentBars * BAR_SECONDS >= this.#pauseSeconds
         ? 'request'
         : !heard && this.#bars * BAR_SECONDS >= IDLE_SECONDS && this.#silentBars * BAR_SECONDS >= IDLE_GAP_SECONDS
           ? 'idle'

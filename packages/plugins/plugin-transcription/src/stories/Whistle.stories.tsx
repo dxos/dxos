@@ -66,6 +66,12 @@ const parseKeywords = (text: string): string[] =>
     .map((keyword) => keyword.trim())
     .filter(Boolean);
 
+/**
+ * Silence is never decoded: Whistle invents words in room tone ("Thank you."), so a stream opens only once it
+ * hears sound. No pause ends a stream here; Record and Space do.
+ */
+const SILENCE_GATE = {};
+
 /** New audio per pass: as Cactus's demo for accuracy, or a fifth of it for latency. */
 const ACCURATE_PASS_MS = 1_000;
 const LOW_LATENCY_PASS_MS = 200;
@@ -242,6 +248,7 @@ const WhistlePanel = ({
     keywords: parsedKeywords,
     minPassMs: fast ? LOW_LATENCY_PASS_MS : ACCURATE_PASS_MS,
     recording,
+    endpoint: SILENCE_GATE,
     onResult: commit,
   });
 

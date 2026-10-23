@@ -8,7 +8,8 @@
 // committed in silence (likely invented), low confidence, or slow to commit.
 //
 // Usage: node whistle-replay.mjs <file> [--pass-ms 1000] [--keywords "ECHO, DXOS"] [--language en]
-//                                       [--reference "expected text"] [-o timeline.jsonl] [--json]
+//                                       [--reference "expected text"] [-o timeline.jsonl] [--json] [--no-gate]
+// --no-gate decodes from the first sample instead of waiting, as the story does, for sound.
 
 import { writeFileSync } from 'node:fs';
 
@@ -36,7 +37,7 @@ const passMs = Number(flags['pass-ms'] ?? 1_000);
 const samples = loadAudio(file);
 const analysis = analyze(samples);
 const whistle = await loadWhistle({ language: flags.language ?? 'en', keywords });
-const events = whistle.replay(samples, { passMs });
+const events = whistle.replay(samples, { passMs, gate: !flags['no-gate'] });
 
 const words = events.flatMap(({ at, committed }) =>
   committed.map((word) => ({ ...word, committedAt: at, lag: at - word.end })),

@@ -23,6 +23,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAudioTrack } from '@dxos/react-ui-transcription';
 import * as Button from '@dxos/react-ui/Button';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollContainer from '@dxos/react-ui/ScrollContainer';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -286,11 +287,11 @@ const HomeStory = ({ lowLatency = true, handsFree: handsFreeProp = false }: Stor
           <Panel.Body asChild>
             <ScrollContainer.Content>
               <ScrollContainer.Viewport>
-                <div className='flex flex-col gap-2 p-2'>
+                <Layout.Flex column gap='sm' classNames='p-2'>
                   {commands.map((command) => (
                     <CommandEntry key={command.id} command={command} onApply={(call) => confirm(command.id, call)} />
                   ))}
-                </div>
+                </Layout.Flex>
               </ScrollContainer.Viewport>
             </ScrollContainer.Content>
           </Panel.Body>

@@ -306,6 +306,9 @@ feat F-7: On-device Streaming Transcription (Whistle story)
   req F-7.7: The whole recording stays in the tab; each paragraph can be played back or saved as WAV, and so can the whole recording.
   req F-7.8: The engine and model download on first use only and are kept in Cache Storage; mounting the story downloads nothing.
   req F-7.9: After first use the microphone stays open, so push-to-talk does not clip the first word.
+  req F-7.10:
+    when: the audio holds no sound louder than -35 dBFS for 0.15 s
+    then: no stream is opened and nothing is decoded, so Whistle cannot invent words in silence or room tone; the last 0.5 s before sound is kept so the first word is heard from its onset
 ```
 
 ```mdl
@@ -340,7 +343,7 @@ feat F-9: Audio Tooling and Evals
   req F-9.2: Recordings with real voices are private fixtures in the encrypted test-fixtures bucket, never in git; the agents scope holds whistle-silence, whistle-one-two-three, whistle-echo-query-a and whistle-echo-query-b.
   req F-9.3:
     when: the manual Whistle evals run and a fixture is present
-    then: each recording is replayed and its word error rate against the expected transcript, the words committed during silence and keyword recall are reported; a missing fixture skips its test, and CI does not run them
+    then: each recording is replayed through the story's silence gate and its word error rate against the expected transcript, the words committed during silence and keyword recall are reported; whistle-silence must commit no words; a missing fixture skips its test, and CI does not run them
   req F-9.4: A compare script runs one recording through larger hosted models (OpenAI whisper-1 and gpt-4o-transcribe, Cloudflare Workers AI whisper-large-v3-turbo), skips a provider without credentials, and prints the transcripts side by side with word error rate against a reference. Anthropic's API takes no audio input, so it is not compared.
 ```
 
@@ -602,6 +605,34 @@ decision D-11: In the fixture evals, accurate mode (1 s passes) must stay at or 
   for: user:dmaretskyi
   affects: [F-9.3]
   why: The recordings are few and short, so tight bounds would fail on one word; the expected failure turns into a failing test once Whistle stops inventing words over silence, which is the signal to make it a plain test. Whistle writes "1. 2. 3." for "one two three", which is correct and scored 100% wrong before.
+```
+
+```mdl
+decision D-12: Whistle committing "Thank you." over the silence recording is fixed in this change, not left as an expected failure.
+  date: 2026-10-23
+  by: user:dmaretskyi
+  affects: [F-7.10, F-9.3]
+```
+
+```mdl
+decision D-13: Silence is never decoded: a stream opens only once 0.15 s of audio is louder than both the noise-floor threshold and -35 dBFS, with 0.5 s of pre-roll, in the worker and in the replay the evals use; whistle-silence becomes a plain test. Fills in [D-12]. Supersedes the expected failure in [D-11].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-7.10, F-9.3]
+  supersedes: D-11
+  why: Whistle alone, and Cloudflare's whisper-large-v3-turbo too, transcribe the fixture's room tone as "Thank you.", so no model setting removes it; its 50 ms bars peak at -37 dBFS while every speech fixture has 27 or more bars above -35, and the speech fixtures transcribe the same with the gate as without it.
+  rejected:
+    - The noise-floor threshold alone: the room tone sits 30 dB above its own floor, so it counts as sound.
+    - Dropping "Thank you." from transcripts: it is a real phrase, and other inventions would remain.
+```
+
+```mdl
+decision D-14: The rest of [D-11] stands: accurate mode at or under 50% word error rate with no words committed in silence, low-latency mode committing words with its error rate logged, keyword recall logged, and digits scored as number words.
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-9.3]
 ```
 
 ## Appendix: Extension Definitions

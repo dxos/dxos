@@ -42,6 +42,15 @@ type ReplaySummary = {
   meanCommitLag?: number;
 };
 
+/** The pulled fixture's path; the suites skip when it is missing, so a missing one here is a bug. */
+const pulled = (name: string): string => {
+  const file = fixturePath(name, { extension: 'wav' });
+  if (!file) {
+    throw new Error(`Fixture ${name} is not pulled`);
+  }
+  return file;
+};
+
 const replay = (file: string, reference: string, passMs: number): ReplaySummary => {
   const args = [REPLAY, file, '--json', '--pass-ms', String(passMs), '--keywords', KEYWORDS.join(', ')];
   const result = spawnSync(process.execPath, [...args, '--reference', reference], { encoding: 'utf8' });
@@ -72,12 +81,11 @@ const speech = [
 ];
 
 describe.skipIf(!fixtureExists('whistle-silence', { extension: 'wav' }))('whistle-silence', () => {
-  // Known defect: Whistle commits "Thank you." over room tone; this flips to a failure once it stops.
-  test.fails('commits no words', options, ({ expect }) => {
-    const file = fixturePath('whistle-silence', { extension: 'wav' });
-    expect(file).toBeDefined();
+  // Whistle alone commits "Thank you." over this room tone; the story's gate keeps it from being decoded.
+  test('commits no words', options, ({ expect }) => {
+    const file = pulled('whistle-silence');
     for (const passMs of Object.values(MODES)) {
-      expect(replay(file ?? '', '', passMs).transcript).toBe('');
+      expect(replay(file, '', passMs).transcript).toBe('');
     }
   });
 });
@@ -85,18 +93,18 @@ describe.skipIf(!fixtureExists('whistle-silence', { extension: 'wav' }))('whistl
 for (const { name, reference } of speech) {
   describe.skipIf(!fixtureExists(name, { extension: 'wav' }))(name, () => {
     test('accurate mode transcribes it closely, with nothing invented in silence', options, ({ expect }) => {
-      const file = fixturePath(name, { extension: 'wav' });
+      const file = pulled(name);
       expect(file).toBeDefined();
-      const summary = replay(file ?? '', reference, MODES.accurate);
+      const summary = replay(file, reference, MODES.accurate);
       expect(summary.wer).toBeLessThanOrEqual(0.5);
       expect(summary.inSilence).toEqual([]);
     });
 
     test('low-latency mode commits words', options, ({ expect }) => {
-      const file = fixturePath(name, { extension: 'wav' });
+      const file = pulled(name);
       expect(file).toBeDefined();
       // Reported, not bounded: passes 200 ms apart trade accuracy for latency by design.
-      const summary = replay(file ?? '', reference, MODES.lowLatency);
+      const summary = replay(file, reference, MODES.lowLatency);
       expect(summary.transcript).not.toBe('');
     });
   });

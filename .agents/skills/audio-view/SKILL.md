@@ -42,6 +42,17 @@ CLOUDFLARE_ACCOUNT_ID='op://eng-dev/com.cloudflare/ACCOUNT_ID' op run -- node $S
 
 Whisper-family models echo their prompt over silence, so a keyword list on a silent clip comes back as the transcript.
 
+`compare.mjs` times each provider's whole run, which for Whistle includes loading the model. Latency after the speaker
+stops, measured on 1–3 s clips (2026-10-23, this sandbox): Whistle needs 0.44–0.98 s, because its last pass re-decodes
+the whole utterance (a single `needle_transcribe` call is no faster), while a Workers AI request takes 0.76–6.1 s,
+typically about 2 s, round trip through the sandbox's proxy.
+
+## Silence
+
+`whistle-replay.mjs` opens the stream only once the story's endpointer hears sound (louder than the noise-floor
+threshold and -35 dBFS for 0.15 s, with 0.5 s of pre-roll), as the stories' worker does; without that Whistle
+transcribes room tone as "Thank you.". `--no-gate` decodes from the first sample, to see what the model alone hears.
+
 ## Evals over the fixtures
 
 `packages/plugins/plugin-transcription/src/stories/whistle/fixtures.test.ts` replays the agents-scope `whistle-*`

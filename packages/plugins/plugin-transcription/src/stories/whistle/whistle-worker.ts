@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { log } from '@dxos/log';
+
 import { Endpointer } from './endpoint.ts';
 import {
   type AssistantConfig,
@@ -75,6 +77,8 @@ const DEFAULT_MAX_TOKENS = 128;
 const COMPOUND_REQUEST = /\b(and|then|also)\b/i;
 
 let engine: NeedleModule | undefined;
+/** The engine failed to load; audio is no longer queued. */
+let failed = false;
 let assistantReady = false;
 let maxTokens = DEFAULT_MAX_TOKENS;
 let minPassSamples = (WHISTLE_SAMPLE_RATE * DEFAULT_MIN_PASS_MS) / 1_000;
@@ -89,6 +93,14 @@ let pcmCapacity = 0;
 /** Where a stream ends, when (worker time) it was found to end, and the silence the audio ended in then. */
 type StreamEnd = { endedAt: number; silentSeconds: number };
 
+/** Audio left out before a stream opened, so word times still count it. */
+type Skipped = { skipped: number };
+
+type QueueItem = Float32Array | StreamEnd | Skipped;
+
+/** Audio kept from before a stream opens, so the first word is heard from its onset. */
+const PRE_ROLL_SECONDS = 0.5;
+
 /**
  * Once the stream's last pass has heard this much silence, passes wait for sound or the stream's end: more
  * passes on silence change nothing, and one in progress when the request ends would delay its answer.
@@ -96,12 +108,19 @@ type StreamEnd = { endedAt: number; silentSeconds: number };
 const HOLD_SECONDS = 0.15;
 
 /** Audio in arrival order, with a marker wherever a stream ends. */
-let queue: Array<Float32Array | StreamEnd> = [];
+let queue: QueueItem[] = [];
 let queued = 0;
 let draining = false;
 
 /** Ends streams at pauses (hands-free), when configured. */
 let endpointer: Endpointer | undefined;
+
+/**
+ * With an endpointer, a stream opens only once it hears sound: Whistle invents words in silence and room
+ * tone ("Thank you."), so audio before that is held here (the latest `PRE_ROLL_SECONDS`) instead of decoded.
+ */
+let streamOpen = false;
+let preRoll: Float32Array[] = [];
 
 /** Seconds of audio in the current stream. */
 let streamReceived = 0;
@@ -125,14 +144,22 @@ const ASSET_CACHE = 'whistle-assets-v1';
  * redirect, so the HTTP cache never hits; the asset URLs pin a revision, so a cached copy never goes stale.
  */
 const fetchCached = async (url: string): Promise<Response> => {
-  const cache = globalThis.caches ? await globalThis.caches.open(ASSET_CACHE).catch(() => undefined) : undefined;
+  // Without Cache Storage the asset is fetched every time, which is slower but not an error.
+  const cache = globalThis.caches
+    ? await globalThis.caches.open(ASSET_CACHE).catch((err: unknown) => {
+        log.warn('whistle cache unavailable', { err });
+        return undefined;
+      })
+    : undefined;
   const cached = await cache?.match(url);
   if (cached) {
     return cached;
   }
   const response = await fetch(url);
   if (response.ok && cache) {
-    await cache.put(url, response.clone()).catch(() => undefined);
+    await cache
+      .put(url, response.clone())
+      .catch((err: unknown) => log.warn('whistle cache write failed', { url, err }));
   }
   return response;
 };
@@ -249,12 +276,20 @@ const init = async (assets: WhistleAssets, language?: string, assistant?: Assist
   post({ type: 'ready', loadMs: performance.now() - started });
 };
 
-const isAudio = (item: Float32Array | StreamEnd): item is Float32Array => item instanceof Float32Array;
+const isAudio = (item: QueueItem): item is Float32Array => item instanceof Float32Array;
 
-/** Takes the audio up to the next marker, and the marker itself. */
+const isEnd = (item: QueueItem): item is StreamEnd => 'endedAt' in item;
+
+/** Takes the audio up to the next marker, and the marker itself; skipped audio is counted as consumed. */
 const takeQueued = (): { samples: Float32Array; end?: StreamEnd } => {
-  const index = queue.findIndex((item) => !isAudio(item));
-  const chunks = (index < 0 ? queue : queue.slice(0, index)).filter(isAudio);
+  const index = queue.findIndex(isEnd);
+  const taken = index < 0 ? queue : queue.slice(0, index);
+  const chunks = taken.filter(isAudio);
+  for (const item of taken) {
+    if (!isAudio(item) && !isEnd(item)) {
+      consumed += item.skipped;
+    }
+  }
   const marker = index < 0 ? undefined : queue[index];
   queue = index < 0 ? [] : queue.slice(index + 1);
 
@@ -265,14 +300,55 @@ const takeQueued = (): { samples: Float32Array; end?: StreamEnd } => {
     offset += chunk.length;
   }
   queued -= samples.length;
-  return { samples, end: marker && !isAudio(marker) ? marker : undefined };
+  return { samples, end: marker && isEnd(marker) ? marker : undefined };
 };
 
 /** All queued audio is silence that a pass has already heard enough of. */
 const holding = () =>
   endpointer !== undefined && endpointer.silentSeconds >= queued / WHISTLE_SAMPLE_RATE + HOLD_SECONDS;
 
-const hasWork = () => queue.some((item) => !isAudio(item)) || (queued >= minPassSamples && !holding());
+const hasWork = () => queue.some(isEnd) || (queued >= minPassSamples && !holding());
+
+const enqueue = (samples: Float32Array) => {
+  queue.push(samples);
+  queued += samples.length;
+};
+
+/** Feeds arriving audio through the endpointer: held until the stream hears sound, ended at a pause. */
+const receive = (samples: Float32Array) => {
+  if (!endpointer) {
+    enqueue(samples);
+    return;
+  }
+  const silentSeconds = endpointer.silentSeconds;
+  const endpoint = endpointer.push(samples);
+  if (streamOpen) {
+    enqueue(samples);
+  } else if (endpointer.heard || endpoint === 'request') {
+    streamOpen = true;
+    preRoll.forEach(enqueue);
+    preRoll = [];
+    enqueue(samples);
+  } else {
+    preRoll.push(samples);
+    let held = preRoll.reduce((total, chunk) => total + chunk.length, 0);
+    let skipped = 0;
+    while (held - preRoll[0].length >= PRE_ROLL_SECONDS * WHISTLE_SAMPLE_RATE) {
+      const [first] = preRoll.splice(0, 1);
+      held -= first.length;
+      skipped += first.length;
+    }
+    if (skipped > 0) {
+      queue.push({ skipped });
+    }
+  }
+  if (endpoint === 'request' && streamOpen) {
+    // The marker goes exactly where the pause ends, however far passes have fallen behind the audio; the
+    // endpointer restarts there, so the silence before it is what the marker records.
+    queue.push({ endedAt: performance.now(), silentSeconds: silentSeconds + samples.length / WHISTLE_SAMPLE_RATE });
+    streamOpen = false;
+  }
+};
 
 const parseOutput = (module: NeedleModule): StreamOutput => JSON.parse(readString(module, outPtr));
 
@@ -397,29 +473,27 @@ globalThis.addEventListener('message', (event: MessageEvent<WhistleRequest>) => 
   switch (request.type) {
     case 'init': {
       offset = request.offset ?? 0;
-      init(request.assets, request.language, request.assistant).catch((err) =>
-        post({ type: 'error', message: err instanceof Error ? err.message : String(err) }),
-      );
+      init(request.assets, request.language, request.assistant).catch((err) => {
+        failed = true;
+        queue = [];
+        queued = 0;
+        post({ type: 'error', message: err instanceof Error ? err.message : String(err) });
+      });
       break;
     }
     case 'audio': {
-      queue.push(request.samples);
-      queued += request.samples.length;
-      // The marker goes exactly where the pause ends, however far passes have fallen behind the audio.
-      const silentSeconds = endpointer?.silentSeconds ?? 0;
-      if (endpointer?.push(request.samples)) {
-        // The endpointer restarts at the end; the silence before it is what the marker records.
-        queue.push({
-          endedAt: performance.now(),
-          silentSeconds: silentSeconds + request.samples.length / WHISTLE_SAMPLE_RATE,
-        });
+      // Audio waits in the queue only until the next pass; with no engine coming it would grow without bound.
+      if (failed) {
+        break;
       }
+      receive(request.samples);
       void drain();
       break;
     }
     case 'config': {
       if (request.endpoint !== undefined) {
         endpointer = request.endpoint ? new Endpointer(request.endpoint.pauseSeconds) : undefined;
+        streamOpen = !endpointer;
       }
       if (request.maxTokens !== undefined) {
         maxTokens = request.maxTokens;
@@ -440,8 +514,15 @@ globalThis.addEventListener('message', (event: MessageEvent<WhistleRequest>) => 
       break;
     }
     case 'stop': {
+      // Audio still held never opened a stream; it is counted, not decoded.
+      const held = preRoll.reduce((total, chunk) => total + chunk.length, 0);
+      if (held > 0) {
+        queue.push({ skipped: held });
+      }
+      preRoll = [];
       queue.push({ endedAt: performance.now(), silentSeconds: endpointer?.silentSeconds ?? 0 });
       endpointer?.reset();
+      streamOpen = !endpointer;
       void drain();
       break;
     }
