@@ -3,6 +3,7 @@
 //
 
 export * from './Deck/index.ts';
+export * from './MarkdownSlide/index.ts';
 export * from './Pager/index.ts';
 export * from './PresentationShell/index.ts';
 export * from './RevealPlayer/index.ts';

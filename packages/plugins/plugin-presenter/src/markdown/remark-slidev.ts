@@ -100,7 +100,7 @@ const parseAttributes = (source: string): Record<string, string> => {
 };
 
 /** True for relative/fragment URLs and allowlisted schemes; `data:image/*` only where it is an image source. */
-const isSafeUrl = (url: string, image: boolean): boolean => {
+export const isSafeUrl = (url: string, image: boolean): boolean => {
   // Browsers ignore control characters and spaces when reading a scheme, so `java\tscript:` must not slip past.
   const normalized = [...url].filter((char) => char.charCodeAt(0) > 0x20 && char.charCodeAt(0) !== 0x7f).join('');
   const scheme = URL_SCHEME.exec(normalized)?.[1];

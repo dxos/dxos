@@ -440,6 +440,7 @@ catalog:
   glslify: ^7.1.1
   handlebars: 4.7.8
   happy-dom: ^20.0.0
+  hast-util-to-jsx-runtime: ^2.3.6
   hastscript: ^7.1.0
   highlight.js: ^11.9.0
   html-to-image: ^1.11.13
