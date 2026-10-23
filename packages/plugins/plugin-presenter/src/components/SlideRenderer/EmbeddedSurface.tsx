@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { type PropsWithChildren, createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
@@ -25,10 +25,30 @@ export type EmbeddedSurfaceProps = {
   db: Database.Database;
 };
 
+/** Deepest chain of nested embeds rendered; anything deeper shows the recursion placeholder. */
+const MAX_EMBED_DEPTH = 3;
+
+/** Ids of the objects enclosing the current embed, outermost first. */
+const EmbedAncestorsContext = createContext<readonly string[]>([]);
+
+/**
+ * Marks `id` as enclosing its children, so an embed of it (directly or through a cycle) renders a placeholder
+ * instead of recursing without limit.
+ */
+export const EmbedAncestor = ({ id, children }: PropsWithChildren<{ id: string | undefined }>) => {
+  const ancestors = useContext(EmbedAncestorsContext);
+  const value = useMemo(
+    () => (id === undefined || ancestors.includes(id) ? ancestors : [...ancestors, id]),
+    [ancestors, id],
+  );
+  return <EmbedAncestorsContext.Provider value={value}>{children}</EmbedAncestorsContext.Provider>;
+};
+
 /**
  * Renders the object a slide's `<Surface ref>` names, or a placeholder when it is malformed, missing or deleted.
  */
 export const EmbeddedSurface = ({ uri, role, db }: EmbeddedSurfaceProps) => {
+  const ancestors = useContext(EmbedAncestorsContext);
   const ref = useMemo(() => {
     const eid = EID.tryParse(uri);
     return eid ? db.makeRef<Obj.Unknown>(eid) : undefined;
@@ -55,14 +75,21 @@ export const EmbeddedSurface = ({ uri, role, db }: EmbeddedSurfaceProps) => {
   }, [ref]);
 
   if (object && !Obj.isDeleted(object)) {
+    if (ancestors.includes(object.id) || ancestors.length > MAX_EMBED_DEPTH) {
+      return <Placeholder testId='presenter.embedded-surface.recursive' label='recursive-embed.label' />;
+    }
     // A Text is a slide's own markdown (e.g. another deck's owned slide); its surfaces are text editors, not slides.
     if (Obj.instanceOf(Text.Text, object)) {
       return <EmbeddedTextSlide text={object} />;
     }
-    return <ObjectSurface object={object} role={role} />;
+    return (
+      <EmbedAncestor id={object.id}>
+        <ObjectSurface object={object} role={role} />
+      </EmbedAncestor>
+    );
   }
   if (!ref || missing || object) {
-    return <MissingObject />;
+    return <Placeholder testId='presenter.embedded-surface.missing' label='missing-object.label' />;
   }
   return <Pending />;
 };
@@ -77,15 +104,15 @@ const EmbeddedTextSlide = ({ text }: { text: Text.Text }) => {
   );
 };
 
-const MissingObject = () => {
+const Placeholder = ({ testId, label }: { testId: string; label: string }) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <div
-      data-testid='presenter.embedded-surface.missing'
+      data-testid={testId}
       className='flex grow items-center justify-center gap-6 p-8 border-4 border-dashed border-separator text-[32px] text-description'
     >
       <Icon.Icon icon='ph--warning--regular' classNames='size-12' />
-      <span>{t('missing-object.label')}</span>
+      <span>{t(label)}</span>
     </div>
   );
 };

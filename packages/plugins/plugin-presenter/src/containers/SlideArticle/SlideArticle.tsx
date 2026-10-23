@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
 
-import { MarkdownSlide, useSurfaceRenderer } from '#components';
+import { EmbedAncestor, MarkdownSlide, useSurfaceRenderer } from '#components';
 
 export type SlideArticleProps = AppSurface.ObjectSectionProps<Markdown.Document>;
 
@@ -22,7 +22,12 @@ export const SlideArticle = ({ subject: document }: SlideArticleProps) => {
     return null;
   }
 
-  return <MarkdownSlide content={content} renderSurface={renderSurface} />;
+  // The document is an ancestor of its own embeds, so one that embeds itself renders a placeholder, not a loop.
+  return (
+    <EmbedAncestor id={document.id}>
+      <MarkdownSlide content={content} renderSurface={renderSurface} />
+    </EmbedAncestor>
+  );
 };
 
 SlideArticle.displayName = 'SlideArticle';

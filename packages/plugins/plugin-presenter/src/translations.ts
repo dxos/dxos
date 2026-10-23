@@ -33,6 +33,7 @@ export const translations = [
         'slide-fallback.label': 'Slide {{count}}',
         'remove-section.label': 'Remove from presentation',
         'missing-object.label': 'Missing object',
+        'recursive-embed.label': 'Embedded in itself',
       },
     },
   },

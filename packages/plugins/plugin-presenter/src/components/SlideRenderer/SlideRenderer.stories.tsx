@@ -31,6 +31,7 @@ import { type SlideSource } from '#deck';
 import { translations } from '#translations';
 import { Presentation } from '#types';
 
+import { SlideArticle } from '../../containers/SlideArticle/SlideArticle.tsx';
 import { MarkdownSlide } from '../MarkdownSlide/index.ts';
 import { SlideRenderer } from './SlideRenderer.tsx';
 
@@ -62,7 +63,7 @@ const DrawingSlide = (_props: { subject: Drawing.Drawing }) => {
   return <SceneSvg.SceneSvg classNames='grow' objects={objects} />;
 };
 
-const createSlidePlugin = (options: { gated?: boolean } = {}) =>
+const createSlidePlugin = (options: { gated?: boolean; article?: boolean } = {}) =>
   Plugin.define(
     Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test.presenterSlide'), name: 'PresenterSlideStory' }),
   ).pipe(
@@ -76,7 +77,8 @@ const createSlidePlugin = (options: { gated?: boolean } = {}) =>
             Surface.create({
               id: 'slide',
               filter: AppSurface.object(AppSurface.Slide, Markdown.Document),
-              component: DocumentSlide,
+              // The production article renders the document's own `<Surface>`s, which recursion stories need.
+              component: options.article ? SlideArticle : DocumentSlide,
               props: ({ data }) => ({ ...data }),
             }),
             Surface.create({
@@ -121,6 +123,16 @@ const DefaultStory = ({ kind, content }: StoryProps) => {
 };
 
 const surfaceTag = (eid: string) => `<Surface ref="${eid}" />`;
+
+/** Replaces a document's markdown, for content that names the document's own id. */
+const setContent = (document: Markdown.Document, content: string) => {
+  const text = document.content.target;
+  if (text) {
+    Obj.update(text, (text) => {
+      text.content = content;
+    });
+  }
+};
 
 /** Slide content per story, built from objects the space creates so refs carry their real ids. */
 const createSpaceSlides = async ({ space }: { space: Space }) => {
@@ -174,6 +186,12 @@ const createSpaceSlides = async ({ space }: { space: Space }) => {
       ],
     }),
   );
+  const self = space.db.add(Markdown.make({ name: 'self', content: '' }));
+  setContent(self, `# Self\n\n${surfaceTag(EID.make({ entityId: self.id }))}`);
+  const cycleA = space.db.add(Markdown.make({ name: 'cycle-a', content: '' }));
+  const cycleB = space.db.add(Markdown.make({ name: 'cycle-b', content: '' }));
+  setContent(cycleA, `# Cycle A\n\n${surfaceTag(EID.make({ entityId: cycleB.id }))}`);
+  setContent(cycleB, `# Cycle B\n\n${surfaceTag(EID.make({ entityId: cycleA.id }))}`);
   space.db.add(Presentation.make({ name: 'no-ref', slides: ['# Without a ref\n\n<Surface />'] }));
   const source = space.db.add(Presentation.make({ name: 'source' }));
   const owned = Presentation.addSlide(source, '# Embedded slide\n\nOwned by another deck');
@@ -206,6 +224,17 @@ const SpaceSlideStory = ({ name }: { name: string }) => {
   }
 
   return <SlideRenderer source={{ kind: 'text', id: text.id, text }} />;
+};
+
+/** Renders the named document from the story space as a linked-object slide. */
+const DocumentSlideStory = ({ name }: { name: string }) => {
+  const { space } = useClientStory();
+  const [document] = useQuery(space?.db, Filter.type(Markdown.Document, { name }));
+  if (!document) {
+    return <Loading />;
+  }
+
+  return <SlideRenderer source={{ kind: 'object', id: document.id, object: document }} />;
 };
 
 const meta = {
@@ -358,5 +387,38 @@ export const EmbeddedTextSlide: Story = {
       LOAD_TIMEOUT,
     );
     await expect(canvasElement.querySelector('[data-surface] .cm-editor')).toBeNull();
+  },
+};
+
+const withArticleSurface = withPluginManager({ plugins: [createSlidePlugin({ article: true })()] });
+
+const recursivePlaceholders = (canvasElement: HTMLElement) =>
+  canvasElement.querySelectorAll('[data-testid="presenter.embedded-surface.recursive"]').length;
+
+/** A document that embeds itself renders once, with the recursion placeholder in place of the second level. */
+export const EmbeddedSelf: Story = {
+  render: () => <DocumentSlideStory name='self' />,
+  decorators: [withArticleSurface],
+  args: { kind: 'object' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByRole('heading', { name: 'Self' }, LOAD_TIMEOUT)).toBeVisible();
+    await waitFor(() => expect(recursivePlaceholders(canvasElement)).toBe(1), LOAD_TIMEOUT);
+    await expect(canvas.getAllByRole('heading', { name: 'Self' })).toHaveLength(1);
+    await expect(canvas.getByText('Embedded in itself')).toBeInTheDocument();
+  },
+};
+
+/** Two documents that embed each other stop when the cycle returns to the first. */
+export const EmbeddedCycle: Story = {
+  render: () => <DocumentSlideStory name='cycle-a' />,
+  decorators: [withArticleSurface],
+  args: { kind: 'object' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByRole('heading', { name: 'Cycle A' }, LOAD_TIMEOUT)).toBeVisible();
+    await expect(await canvas.findByRole('heading', { name: 'Cycle B' }, LOAD_TIMEOUT)).toBeInTheDocument();
+    await waitFor(() => expect(recursivePlaceholders(canvasElement)).toBe(1), LOAD_TIMEOUT);
+    await expect(canvas.getAllByRole('heading', { name: 'Cycle A' })).toHaveLength(1);
   },
 };

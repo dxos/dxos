@@ -15,7 +15,7 @@ import { meta } from '#meta';
 
 import { MarkdownSlide, type MarkdownSlideProps } from '../MarkdownSlide/index.ts';
 import { SlideFrame } from '../SlideFrame/index.ts';
-import { EmbeddedSurface } from './EmbeddedSurface.tsx';
+import { EmbedAncestor, EmbeddedSurface } from './EmbeddedSurface.tsx';
 import { ObjectSurface } from './ObjectSurface.tsx';
 
 export type SlideRendererProps = {
@@ -38,12 +38,21 @@ const PrintFrame = ({ children }: PropsWithChildren) => <div className='flex rel
 export const SlideRenderer = ({ source, attendableId, step, framed = true }: SlideRendererProps) => {
   const Frame = framed ? SlideFrame : PrintFrame;
   switch (source.kind) {
+    // The slide's own object counts as an ancestor, so a slide that embeds itself stops at one level.
     case 'text':
-      return <TextSlide Frame={Frame} text={source.text} step={step} />;
+      return (
+        <EmbedAncestor id={source.text.id}>
+          <TextSlide Frame={Frame} text={source.text} step={step} />
+        </EmbedAncestor>
+      );
     case 'markdown':
       return <MarkdownContentSlide Frame={Frame} content={source.content} db={source.db} step={step} />;
     case 'object':
-      return <ObjectSlide Frame={Frame} object={source.object} attendableId={attendableId} />;
+      return (
+        <EmbedAncestor id={source.object.id}>
+          <ObjectSlide Frame={Frame} object={source.object} attendableId={attendableId} />
+        </EmbedAncestor>
+      );
     case 'pending':
       return <PendingSlide Frame={Frame} />;
   }
