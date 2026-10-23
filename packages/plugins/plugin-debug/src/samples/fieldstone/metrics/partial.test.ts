@@ -9,6 +9,7 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { buildArchive } from '@dxos/app-toolkit/testing';
 import { addressFromA1Notation, rangeFromA1Notation } from '@dxos/compute-hyperformula/types';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import { invariant } from '@dxos/invariant';
 import type * as Sheet from '@dxos/plugin-sheet/Sheet';
 import * as SheetUtil from '@dxos/plugin-sheet/SheetUtil';
 import { loadTopology } from '@dxos/react-ui-geo/data';
@@ -53,8 +54,12 @@ describe('Alien Labs metrics', () => {
     });
     const { result, json } = await EffectEx.runPromise(buildArchive(definition));
     const { sheets } = result.metrics;
-    const archive: { objects: Array<{ '@type'?: string; 'name'?: string; 'objects'?: Array<{ '/': string }> }> } =
-      JSON.parse(json);
+    type ArchivedChart = Pick<Sheet.ChartProperties, 'range' | 'type' | 'regression'> & { sheet: { '/': string } };
+    const archive: {
+      objects: Array<
+        { '@type'?: string; 'name'?: string; 'objects'?: Array<{ '/': string }> } & Partial<ArchivedChart>
+      >;
+    } = JSON.parse(json);
 
     const collection = archive.objects.find((object) => object.name === 'Metrics');
     expect(collection?.objects?.map((ref) => ref['/'].replace('echo:///', ''))).toEqual(
@@ -62,8 +67,12 @@ describe('Alien Labs metrics', () => {
     );
 
     const charts = Object.values(sheets).map((sheet) => {
+      // Charts are their own objects in the archive, each pointing back at its sheet.
       expect(sheet.charts, sheet.name).toHaveLength(1);
-      const [chart] = sheet.charts ?? [];
+      const chart = archive.objects.find(
+        (object) => object['@type']?.includes('org.dxos.type.chart') && object.sheet?.['/'].endsWith(sheet.id),
+      );
+      invariant(chart?.range && chart.type, `${sheet.name} has no chart`);
       const { from, to = from } = rangeFromA1Notation(chart.range);
       expect(from).toEqual(addressFromA1Notation('A1'));
       for (const { row, col } of cellsOf(sheet)) {

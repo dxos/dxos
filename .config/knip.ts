@@ -594,6 +594,8 @@ const config: KnipConfig = {
     // Shipped by @dxos/app-framework, a dependency of every plugin the `composer-plugin` tag
     // applies to; the tag file that invokes it lives at the root, which declares no such dep.
     'dx-plugin',
+    // moon's built-in no-op command (`.moon/tasks/source-hash.yml`), not a binary.
+    'noop',
   ],
   ignoreDependencies: [
     //

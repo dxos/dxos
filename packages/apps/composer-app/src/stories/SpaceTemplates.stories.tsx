@@ -39,6 +39,7 @@ import * as MagazinePlugin from '@dxos/plugin-magazine/MagazinePlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as NavTreePlugin from '@dxos/plugin-navtree/NavTreePlugin';
 import * as PipelinePlugin from '@dxos/plugin-pipeline/PipelinePlugin';
+import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
 import * as PreviewPlugin from '@dxos/plugin-preview/PreviewPlugin';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
 import * as ReviewPlugin from '@dxos/plugin-review/ReviewPlugin';
@@ -63,10 +64,13 @@ const TEMPLATES = {
   architecture: 'org.dxos.plugin.canvas.template.architecture',
   fieldstone: 'org.dxos.plugin-debug.template.fieldstone',
   incident: 'org.dxos.plugin-debug.template.incident',
+  presenter: 'org.dxos.plugin-debug.template.presenter',
+  sales: 'org.dxos.plugin.sheet.template.sales',
   pipeline: 'org.dxos.plugin-debug.template.pipeline',
   review: 'org.dxos.plugin-debug.template.review',
   stockfish: 'org.dxos.plugin-debug.template.stockfish',
   tidepool: 'org.dxos.plugin-debug.template.tidepool',
+  timeline: 'org.dxos.plugin-debug.template.timeline',
   weather: 'org.dxos.plugin-debug.template.weather',
   worker: 'org.dxos.plugin-debug.template.worker',
 } as const;
@@ -241,6 +245,7 @@ const meta = {
         MagazinePlugin.make(),
         MarkdownPlugin.make(),
         PipelinePlugin.make(),
+        PresenterPlugin.make(),
         ProjectsPlugin.make(),
         ReviewPlugin.make(),
         ScriptPlugin.make(),
@@ -320,6 +325,11 @@ export const HelloWorker: Story = { args: { template: TEMPLATES.worker }, play }
 
 export const Incident: Story = { args: { template: TEMPLATES.incident }, play };
 
+/** The Macro events sheet, its timeline chart and a deck that presents the chart. */
+export const Presenter: Story = { args: { template: TEMPLATES.presenter }, play };
+
+export const Sales: Story = { args: { template: TEMPLATES.sales }, play };
+
 export const Pipeline: Story = { args: { template: TEMPLATES.pipeline }, play };
 
 export const Review: Story = { args: { template: TEMPLATES.review }, play };
@@ -327,5 +337,8 @@ export const Review: Story = { args: { template: TEMPLATES.review }, play };
 export const Stockfish: Story = { args: { template: TEMPLATES.stockfish }, play };
 
 export const Tidepool: Story = { args: { template: TEMPLATES.tidepool }, play };
+
+/** The timeline chart's project: its feature map and open tasks. */
+export const TimelineProject: Story = { args: { template: TEMPLATES.timeline }, play };
 
 export const Weather: Story = { args: { template: TEMPLATES.weather }, play };
