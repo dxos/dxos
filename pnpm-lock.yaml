@@ -15487,6 +15487,9 @@ importers:
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../plugin-assistant
+      '@dxos/plugin-attention':
+        specifier: workspace:*
+        version: link:../plugin-attention
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox
@@ -17018,6 +17021,12 @@ importers:
         specifier: 'catalog:'
         version: 1.3.0
     devDependencies:
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
