@@ -128,6 +128,11 @@
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
     },
+    "./ShogiSpace": {
+      "source": "./src/samples/shogi/ShogiSpace.ts",
+      "types": "./dist/types/src/samples/shogi/ShogiSpace.d.ts",
+      "import": "./dist/lib/ShogiSpace.mjs"
+    },
     "./StockfishSpace": {
       "source": "./src/samples/stockfish/StockfishSpace.ts",
       "types": "./dist/types/src/samples/stockfish/StockfishSpace.d.ts",
@@ -152,6 +157,11 @@
       "source": "./src/samples/worker/WorkerSpace.ts",
       "types": "./dist/types/src/samples/worker/WorkerSpace.d.ts",
       "import": "./dist/lib/WorkerSpace.mjs"
+    },
+    "./WorldClockSpace": {
+      "source": "./src/samples/world-clock/WorldClockSpace.ts",
+      "types": "./dist/types/src/samples/world-clock/WorldClockSpace.d.ts",
+      "import": "./dist/lib/WorldClockSpace.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./package.json": "./package.json",
