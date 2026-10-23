@@ -27,9 +27,9 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   documentSlots,
+  editorClassNames,
   formattingListener,
 } from '@dxos/ui-editor';
-import { mx } from '@dxos/ui-theme';
 
 import { type BackgroundSettings, type SlideInsert, SlideToolbar } from '#components';
 import { slideEditorSyncAtom, useObjectOptions } from '#hooks';
@@ -109,17 +109,13 @@ const SlideEditorContent = ({ subject }: SlideEditorContentProps) => {
   const extensions = useMemo(
     () => [
       createBasicExtensions({ lineWrapping: true }),
-      // Document margins, as the markdown editor has, so the slide reads at the same measure; the inline inset
-      // matches the toolbars' (their inset plus a button's padding), so text starts under the first icon.
-      createThemeExtensions({
-        themeMode,
-        slots: { content: { className: mx(documentSlots?.content?.className, 'px-2!') } },
-      }),
+      // The markdown editor's document slots, so the slide reads at the same measure and margins.
+      createThemeExtensions({ themeMode, slots: documentSlots }),
       createMarkdownExtensions(),
       slideHighlight(),
-      // The scrollbar's space is always reserved (on both edges, so the document column stays centred under the
-      // toolbars), and the text does not shift sideways once the slide overflows.
-      NaturalEditorView.theme({ '.cm-scroller': { scrollbarGutter: 'stable both-edges' } }),
+      // The scrollbar's space is always reserved, so the text does not shift sideways once the slide overflows; one
+      // edge only, since CodeMirror positions the caret as if the scroller had no leading gutter.
+      NaturalEditorView.theme({ '.cm-scroller': { scrollbarGutter: 'stable' } }),
       automerge(Doc.createAccessor(subject, ['content'])),
       formattingListener((formatting: EditorToolbarState) =>
         registry.set(toolbarState, { ...registry.get(toolbarState), ...formatting }),
@@ -148,7 +144,7 @@ const SlideEditorContent = ({ subject }: SlideEditorContentProps) => {
     view.focus();
   }, [controller, select]);
 
-  return <Editor.View classNames='dx-expand' extensions={extensions} />;
+  return <Editor.View classNames={editorClassNames()} extensions={extensions} />;
 };
 
 type SlideEditorToolbarsProps = Pick<SlideEditorArticleProps, 'subject' | 'attendableId'> & {
