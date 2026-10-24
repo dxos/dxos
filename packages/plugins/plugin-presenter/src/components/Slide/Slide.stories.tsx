@@ -384,8 +384,12 @@ export const EmbeddedSurfaceImage: Story = {
       () => expect(canvasElement.querySelector('[data-slot="default"] [data-surface]')).not.toBeNull(),
       LOAD_TIMEOUT,
     );
-    const surface = canvasElement.querySelector('[data-slot="default"] [data-surface]');
-    await waitFor(() => expect(surface?.getBoundingClientRect().height ?? 0).toBeGreaterThan(100));
+    // The slot fills the slide, so an embed with no height of its own (a canvas drawing) does not collapse.
+    const slide = canvasElement.querySelector('[data-layout="image"]');
+    const slot = canvasElement.querySelector('[data-layout="image"] [data-slot="default"]');
+    await expect(
+      (slot?.getBoundingClientRect().height ?? 0) / (slide?.getBoundingClientRect().height ?? 1),
+    ).toBeGreaterThan(0.5);
   },
 };
 
