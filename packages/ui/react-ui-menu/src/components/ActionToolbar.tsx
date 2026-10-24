@@ -313,7 +313,8 @@ const ToggleGroupToolbarItem = ({
   );
 };
 
-const ToolbarItem = ({ menu, item }: ItemProps<{ item: MenuItem }>) => {
+/** One menu item rendered as its toolbar control (button, toggle, switch, dropdown, toggle group or custom). */
+export const MenuToolbarItem = ({ menu, item }: ItemProps<{ item: MenuItem }>) => {
   if (isSeparator(item)) {
     return <Toolbar.Separator variant={item.properties.variant === 'line' ? 'line' : 'gap'} />;
   }
@@ -345,7 +346,7 @@ const ActionToolbarItems = ({ menu }: { menu: MenuActions }) => {
   return (
     <>
       {items?.map((item) => (
-        <ToolbarItem key={item.id} menu={menu} item={item} />
+        <MenuToolbarItem key={item.id} menu={menu} item={item} />
       ))}
     </>
   );

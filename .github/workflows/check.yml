@@ -436,7 +436,7 @@ jobs:
       packages: read
       statuses: write
     runs-on: ubuntu-24.04
-    # The scheduled run bypasses the cache and rebuilds every dependency per shard; a cell took 58 minutes.
+    # A forced nightly once rebuilt every dependency per shard here; a cell took 58 minutes.
     timeout-minutes: 75
     env:
       NODE_VERSION: '24.11.1'
@@ -452,6 +452,7 @@ jobs:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       # One target per core.
       MOON_CONCURRENCY: 4
+      DX_TEST_RUN_ID: ${{ github.event_name == 'schedule' && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -466,6 +467,8 @@ jobs:
 
       - name: Resolve affected scope
         uses: ./.github/actions/affected
+        with:
+          force: 'false'
 
       # plugin-sandbox's local-backend tests skip without these.
       - name: Install sandbox tools
@@ -527,14 +530,13 @@ jobs:
       matrix:
         cell: ${{ fromJSON(needs.plan.outputs.browser-cells) }}
     runs-on: ubuntu-24.04
-    # Covers a cold build: the forced nightly, and fork or Dependabot PRs with no remote cache.
+    # Covers a cold build: fork or Dependabot PRs with no remote cache.
     timeout-minutes: 90
     env:
       # The test phase; the build step overrides it.
       MOON_CONCURRENCY: 1
       CELL_SHARD: ${{ fromJSON(needs.plan.outputs.browser-config)[matrix.cell].shard }}
       CELL_TARGETS: ${{ fromJSON(needs.plan.outputs.browser-config)[matrix.cell].targets }}
-      # The nightly's tests must execute, but its force flag stays on the build step.
       DX_TEST_RUN_ID: ${{ github.event_name == 'schedule' && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
       NODE_VERSION: '24.11.1'
       # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
@@ -557,18 +559,19 @@ jobs:
         uses: ./.github/actions/setup
 
       # Everything this cell's targets depend on, at full concurrency and before any Chromium. No affected
-      # scope: the list is the scope. The nightly forces this step only, so its tests run once.
+      # scope: the list is the scope.
       - name: Build
         env:
           MOON_CONCURRENCY: 4
-          MOON_FORCE: ${{ github.event_name == 'schedule' }}
         run: |
           builds=$(node .github/actions/plan/closure.mjs $CELL_TARGETS < /dev/null)
           [ -z "$builds" ] || moon exec --on-failure continue $builds
 
       - name: Install Playwright
         if: ${{ !cancelled() }}
-        run: pnpm exec playwright install --with-deps chromium
+        uses: ./.github/actions/playwright
+        with:
+          browser: chromium
 
       # After a failed build too, so every target that does not depend on it still runs and reports.
       - name: Test
@@ -623,6 +626,9 @@ jobs:
       # Scoped per job because at workflow level it would also move the hashes of `test`, `storybook`,
       # `workerd` and `cli`.
       DX_ENVIRONMENT: ci
+      # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit
+      # and reports green without executing a test.
+      DX_E2E_RUN_ID: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
       # Selects this cell's Playwright project; also a moon task hash input, so each browser gets its
       # own remote-cache entry.
       PLAYWRIGHT_BROWSER: ${{ fromJSON(needs.plan.outputs.composer-config)[matrix.cell].browser }}
@@ -650,10 +656,13 @@ jobs:
         uses: ./.github/actions/affected
         with:
           all: ${{ github.event_name == 'workflow_dispatch' }}
+          force: 'false'
 
       # Only this cell's browser — the other two engines' downloads are dead weight here.
       - name: Install Playwright
-        run: pnpm exec playwright install --with-deps ${{ env.PLAYWRIGHT_BROWSER }}
+        uses: ./.github/actions/playwright
+        with:
+          browser: ${{ env.PLAYWRIGHT_BROWSER }}
 
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps
       # run. Avoids 504 Outdated Optimize Dep when graph differs from bundle step. Storybook puts
@@ -665,10 +674,6 @@ jobs:
         if: ${{ env.TRUNK_TOKEN != '' }}
         timeout-minutes: 35
         uses: trunk-io/analytics-uploader@v1
-        env:
-          # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit
-          # and reports green without executing a test.
-          DX_E2E_RUN_ID: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos
@@ -720,6 +725,9 @@ jobs:
       # Scoped per job because at workflow level it would also move the hashes of `test`, `storybook`,
       # `workerd` and `cli`.
       DX_ENVIRONMENT: ci
+      # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit
+      # and reports green without executing a test.
+      DX_E2E_RUN_ID: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
       # Selects this cell's Playwright project; also a moon task hash input, so each browser gets its
       # own remote-cache entry.
       PLAYWRIGHT_BROWSER: ${{ fromJSON(needs.plan.outputs.rest-config)[matrix.cell].browser }}
@@ -748,10 +756,13 @@ jobs:
         uses: ./.github/actions/affected
         with:
           all: ${{ github.event_name == 'workflow_dispatch' }}
+          force: 'false'
 
       # Only this cell's browser — the other two engines' downloads are dead weight here.
       - name: Install Playwright
-        run: pnpm exec playwright install --with-deps ${{ env.PLAYWRIGHT_BROWSER }}
+        uses: ./.github/actions/playwright
+        with:
+          browser: ${{ env.PLAYWRIGHT_BROWSER }}
 
       # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps
       # run. Avoids 504 Outdated Optimize Dep when graph differs from bundle step. Storybook puts
@@ -773,10 +784,6 @@ jobs:
         if: ${{ env.TRUNK_TOKEN != '' }}
         timeout-minutes: 35
         uses: trunk-io/analytics-uploader@v1
-        env:
-          # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit
-          # and reports green without executing a test.
-          DX_E2E_RUN_ID: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
         with:
           junit-paths: 'test-results/playwright/report/*.xml'
           org-slug: dxos

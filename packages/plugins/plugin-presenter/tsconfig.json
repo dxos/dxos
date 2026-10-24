@@ -19,7 +19,13 @@
   ],
   "references": [
     {
+      "path": "../../common/diagram"
+    },
+    {
       "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
     },
     {
       "path": "../../common/random"
@@ -73,6 +79,12 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
       "path": "../../ui/ui-editor"
     },
     {
@@ -80,6 +92,9 @@
     },
     {
       "path": "../plugin-deck"
+    },
+    {
+      "path": "../plugin-illustrator"
     },
     {
       "path": "../plugin-markdown"

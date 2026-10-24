@@ -16,11 +16,12 @@ import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import { Text } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { slideSourcesAtom } from '#deck';
 import { meta } from '#meta';
-import { Presentation, PresenterOperation } from '#types';
+import { Presentation, PresenterOperation, SlideEditorViewState } from '#types';
 
 import { isPresenting } from '../paths.ts';
 
@@ -68,7 +69,7 @@ export const createSectionsExtension = () =>
       return Effect.succeed(
         get(slideSourcesAtom(presentation))
           .map((source, position) => {
-            if (source.kind === 'pending') {
+            if (source.kind === 'pending' || source.kind === 'markdown') {
               return undefined;
             }
             const object = source.kind === 'text' ? source.text : source.object;
@@ -87,6 +88,26 @@ export const createSectionsExtension = () =>
           .filter(isNonNullable),
       );
     },
+  });
+
+/** An owned slide's companion shows the rendered slide beside its editor. */
+export const createSlidePreviewExtension = () =>
+  AppGraphBuilder.createExtension({
+    id: 'slidePreview',
+    relation: AppNode.companion,
+    match: (node) =>
+      Obj.instanceOf(Text.Text, node.data) && Obj.instanceOf(Presentation.Presentation, Obj.getParent(node.data))
+        ? Option.some(node.data)
+        : Option.none(),
+    connector: () =>
+      Effect.succeed([
+        AppNode.makeCompanion({
+          variant: SlideEditorViewState.COMPANION_VARIANT,
+          label: ['slide-preview.label', { ns: meta.profile.key }],
+          icon: 'ph--presentation--regular',
+          data: SlideEditorViewState.COMPANION_VARIANT,
+        }),
+      ]),
   });
 
 export default Capability.makeModule(
@@ -137,7 +158,12 @@ export default Capability.makeModule(
     });
 
     const sectionsExtensions = yield* createSectionsExtension();
+    const slidePreviewExtensions = yield* createSlidePreviewExtension();
 
-    return Capability.contribute(AppCapabilities.AppGraphBuilder, [...companionExtensions, ...sectionsExtensions]);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, [
+      ...companionExtensions,
+      ...sectionsExtensions,
+      ...slidePreviewExtensions,
+    ]);
   }),
 );

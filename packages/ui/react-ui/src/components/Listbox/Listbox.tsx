@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { createListCollection } from '@ark-ui/react/collection';
+import { createGridCollection, createListCollection } from '@ark-ui/react/collection';
 import { Listbox as ListboxPrimitive, type UseListboxContext, useListboxContext } from '@ark-ui/react/listbox';
 import React, {
   Children,
@@ -51,6 +51,7 @@ type RootContextValue = {
   items: readonly ListboxOption[];
   selectionMode: ListboxSelectionMode;
   columns?: string;
+  tiles?: number;
   virtual?: VirtualMode;
   /** Set by Content when it windows its rows; zag calls it to bring a highlighted row it has not mounted into view. */
   scrollToIndexRef: RefObject<((index: number) => void) | null>;
@@ -92,7 +93,15 @@ type ListboxRootProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'd
    * order. Without it rows lay out by part (a leading cell, the text over its description, trailing parts).
    */
   columns?: string;
-  /** Long lists: `fixed` windows equal-height rows, `measured` windows rows of any height, `variable` defers off-screen rows (`content-visibility`). */
+  /**
+   * Lays the items out as tiles in this many equal columns (a gallery, a thumbnail picker); the arrow keys then move
+   * across and down. Items keep the row states (hover, highlight, selection) but not the row's part layout.
+   */
+  tiles?: number;
+  /**
+   * Long lists: `fixed` windows equal-height rows, `measured` windows rows of any height, `variable` defers off-screen
+   * rows (`content-visibility`). Ignored for `tiles`.
+   */
   virtual?: VirtualMode;
   size?: Size;
 };
@@ -115,27 +124,32 @@ const ListboxRoot = forwardRef<HTMLDivElement, ListboxRootProps>(
       disabled,
       loopFocus,
       columns,
-      virtual,
+      tiles,
+      virtual: virtualProp,
       size,
       children,
       ...props
     },
     forwardedRef,
   ) => {
-    const collection = useMemo(
-      () =>
-        createListCollection<ListboxOption>({
-          items: [...items],
-          itemToValue: (item) => item.value,
-          itemToString: (item) => item.label,
-          isItemDisabled: (item) => item.disabled ?? false,
-        }),
-      [items],
-    );
+    // Windowing counts rows of one item each, which a tile grid does not have.
+    const virtual = tiles ? undefined : virtualProp;
+    const collection = useMemo(() => {
+      const options = {
+        items: [...items],
+        itemToValue: (item: ListboxOption) => item.value,
+        itemToString: (item: ListboxOption) => item.label,
+        isItemDisabled: (item: ListboxOption) => item.disabled ?? false,
+      };
+      // A grid collection gives zag the column count it moves by on ArrowUp and ArrowDown.
+      return tiles
+        ? createGridCollection<ListboxOption>({ ...options, columnCount: tiles })
+        : createListCollection<ListboxOption>(options);
+    }, [items, tiles]);
     const scrollToIndexRef = useRef<((index: number) => void) | null>(null);
     const context = useMemo<RootContextValue>(
-      () => ({ items, selectionMode, columns, virtual, scrollToIndexRef }),
-      [items, selectionMode, columns, virtual],
+      () => ({ items, selectionMode, columns, tiles, virtual, scrollToIndexRef }),
+      [items, selectionMode, columns, tiles, virtual],
     );
 
     return (
@@ -229,7 +243,7 @@ type ListboxContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> &
 const ListboxContent = composable<HTMLDivElement, ContainerProps & Omit<ComponentPropsWithoutRef<'div'>, 'className'>>(
   ({ gutter, gap, padBlock, onKeyDown, onFocus, onBlur, children, ...props }, forwardedRef) => {
     const api = useListboxContext();
-    const { columns, virtual, scrollToIndexRef } = useRootContext('Content');
+    const { columns, tiles, virtual, scrollToIndexRef } = useRootContext('Content');
     const inViewport = useContext(ViewportContext);
     const [element, setElement] = useState<HTMLDivElement | null>(null);
     const rows = Children.toArray(children);
@@ -260,6 +274,7 @@ const ListboxContent = composable<HTMLDivElement, ContainerProps & Omit<Componen
         data-scope='listbox'
         data-part='content'
         data-virtual={virtual}
+        data-tiles={tiles ? '' : undefined}
         style={{ ...contentProps.style, ...style, ...ownStyle }}
         className={className}
         onFocus={(event) => {
@@ -275,7 +290,8 @@ const ListboxContent = composable<HTMLDivElement, ContainerProps & Omit<Componen
           if (event.defaultPrevented && event.target === event.currentTarget) {
             return;
           }
-          if (handleGridKeyDown(event)) {
+          // Tiles move across with ArrowLeft and ArrowRight, which the row keyboard would take to enter a row's controls.
+          if (!tiles && handleGridKeyDown(event)) {
             return;
           }
           contentProps.onKeyDown?.(event);
@@ -359,12 +375,13 @@ const ListboxItem = forwardRef<HTMLDivElement, ListboxItemProps>(
     forwardedRef,
   ) => {
     const api = useListboxContext();
-    const { columns, selectionMode } = useRootContext('Item');
+    const { columns, tiles, selectionMode } = useRootContext('Item');
     const textId = useId();
     const row = useMemo(() => ({ textId }), [textId]);
     // Under Root `columns` the row is a subgrid of the Content's tracks (theme); otherwise it has its own template.
+    // A tile is laid out by the theme as a column of its parts, so it takes no row template.
     const { style: columnsStyle, ...attributes } = containerAttributes(
-      columns ? {} : { columns: 'var(--dx-item-columns)' },
+      columns || tiles ? {} : { columns: 'var(--dx-item-columns)' },
     );
     const itemProps = api.getItemProps({ item, highlightOnHover });
     const content = children ?? (
@@ -387,10 +404,22 @@ const ListboxItem = forwardRef<HTMLDivElement, ListboxItemProps>(
             data-part='item'
             data-selectable={selectionMode === 'none' ? undefined : ''}
             style={{ ...columnsStyle, ...style }}
-            className={mx(recipes.container(), recipes.row(), recipes.listboxItem(), classNames)}
+            className={mx(
+              tiles
+                ? [recipes.row(), recipes.listboxTile()]
+                : [recipes.container(), recipes.row(), recipes.listboxItem()],
+              classNames,
+            )}
             onMouseDown={(event) => {
               onMouseDown?.(event);
-              if (!isFromControl(event.currentTarget, event.target)) {
+              if (isFromControl(event.currentTarget, event.target)) {
+                return;
+              }
+              // Zag cancels the press to keep focus on the list, which would also stop the native drag of a row that is its
+              // own drag handle (`data-drag-row`, set by useReorder); such a row moves focus to the list itself instead.
+              if (event.currentTarget.hasAttribute('data-drag-row')) {
+                event.currentTarget.closest<HTMLElement>('[role="listbox"]')?.focus({ preventScroll: true });
+              } else {
                 itemProps.onMouseDown?.(event);
               }
             }}
