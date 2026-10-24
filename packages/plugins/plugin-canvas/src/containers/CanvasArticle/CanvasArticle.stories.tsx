@@ -125,6 +125,22 @@ export const Slide: Story = {
     await expect(await view.findByTestId('scene-view', undefined, { timeout: 30_000 })).toBeInTheDocument();
     await expect(canvasElement.querySelector('[role="toolbar"]')).toBeNull();
     await expect(view.queryByTestId('palette')).toBeNull();
+    // Transparent: nothing from the scene up to the article's panel paints a background, so a slide shows through.
+    const scene = await view.findByTestId('scene-view');
+    const panel = scene.closest('.dx-panel');
+    const painted: string[] = [];
+    for (
+      let element: Element | null = scene;
+      element && element !== panel?.parentElement;
+      element = element.parentElement
+    ) {
+      const color = getComputedStyle(element).backgroundColor;
+      if (color !== 'rgba(0, 0, 0, 0)' && color !== 'transparent') {
+        painted.push(`${element.tagName}.${element.className}: ${color}`);
+      }
+    }
+    await expect(painted).toEqual([]);
+    await expect(canvasElement.querySelector('[data-testid="scene-background-fill"]')).toBeNull();
   },
 };
 

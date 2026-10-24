@@ -207,7 +207,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   return (
     // A section takes the document's width and has no height of its own (read-only, it has no dock), so its height
     // follows from the drawing's 3:2 frame.
-    <Panel.Root role={role} classNames={section ? 'w-full aspect-[3/2]' : undefined}>
+    <Panel.Root role={role} classNames={section ? 'w-full aspect-[3/2]' : slide ? 'bg-transparent' : undefined}>
       {newer && !embedded && (
         <Panel.Header>
           <NewerFormatBanner />
