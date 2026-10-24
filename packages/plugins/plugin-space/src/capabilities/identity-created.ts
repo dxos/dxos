@@ -18,9 +18,15 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { SpaceCapabilities } from '#types';
 
 /** Longest this identity's own spaces wait for the shared space, short of the module activation timeout. */
-const SHARE_JOIN_WAIT = 15_000;
+const SHARE_JOIN_WAIT = 20_000;
 
-/** Resolves once the first space the identity lists, the one a share link joins, is ready, or after {@link SHARE_JOIN_WAIT}. */
+/** How long the shared object has the worker to itself once its space is ready: it loads and renders in about 2.5 s. */
+const SHARE_RENDER_SETTLE = 4_000;
+
+/**
+ * Resolves {@link SHARE_RENDER_SETTLE} after the first space the identity lists, the one a share link joins, is ready,
+ * or after {@link SHARE_JOIN_WAIT}.
+ */
 const waitForSharedSpace = (client: Client): Effect.Effect<void> =>
   Effect.callback<Space>((resume) => {
     const subscription = client.spaces.subscribe((spaces) => {
@@ -32,6 +38,7 @@ const waitForSharedSpace = (client: Client): Effect.Effect<void> =>
   }).pipe(
     Effect.flatMap((space) => Effect.tryPromise(() => space.waitUntilReady())),
     Effect.ignore,
+    Effect.andThen(Effect.sleep(SHARE_RENDER_SETTLE)),
     Effect.timeoutOrElse({ duration: SHARE_JOIN_WAIT, orElse: () => Effect.void }),
   );
 

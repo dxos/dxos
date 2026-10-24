@@ -849,12 +849,12 @@ decision D-11: Opening a share link puts the object on screen as early as possib
 ```
 
 ```mdl
-decision D-12: The object's plank opens once the space is listed, the article surfaces load during the join, and an identity created for the link makes its own spaces after the shared space is ready. Fills in [D-11].
+decision D-12: The object's plank opens once the space is listed, the article surfaces load during the join, and an identity created for the link makes its own spaces a few seconds after the shared space is ready. Fills in [D-11].
   date: 2026-10-24
   by: agent:claude-code
   for: user:mykola-vrmchk
   affects: [F-2.7]
-  why: Measured on a fresh browser, the guest spent 3.5–4.6 s between the space being listed and ready, then 2.2–3.3 s more to load surface code and render; opening on listing overlaps the two, and the identity's two spaces queued on the worker ahead of the join for about 0.75 s.
+  why: Measured on a fresh browser, the guest spent 3.5–4.6 s between the space being listed and ready, then 2.2–3.3 s more to load surface code and render; opening on listing overlaps the two. The identity's two spaces queued on the worker ahead of the join for about 0.75 s, and made right at ready they held the object's load and listing queries for another 1–1.5 s.
   rejected:
     - Open the object once the space is ready — the surfaces start loading only after the slowest step.
     - Skip the identity's own spaces for a guest — the guest has nowhere to create their own objects later.

@@ -112,70 +112,101 @@ const clearChrome = async ({ page }) => {
 let shareLink;
 let openedAt;
 
-/** `SpaceState.SPACE_READY` in the client's space proto. */
-const SPACE_READY = 3;
+/** The stages of opening the link that the stopwatch shows, in the order they happen. */
+const STAGES = [
+  ['client', 'Composer started'],
+  ['identity', 'Identity created'],
+  ['joined', 'Joined the space'],
+  ['ready', 'Space ready'],
+  ['rendered', 'Document on screen'],
+];
 
 /**
- * Milestones of opening the link on a fresh browser, in ms from pressing Enter: the app shell, the identity
- * onboarding creates, the space appearing in the client (the join landed), the space ready, and the shared
- * document's text on screen. Polled every 100 ms, but no probe runs while the page boots, so every stage reached
- * during the boot reads as the moment it ended.
+ * Runs in Bob's page from its first script: records each stage of opening the link the moment it holds, as a
+ * `share-stage:` performance mark and on `globalThis.shareOpenTiming`, and draws a stopwatch listing them in a
+ * corner. Timed from inside the page because a probe from outside waits out the boot, which would put every stage
+ * reached during it at the boot's end.
  */
-const timeOpening = async (page, spaceId) => {
-  const timing = {};
-  const mark = (name) => {
-    timing[name] ??= Date.now() - openedAt;
+const STOPWATCH = ({ text, spaceId, stages }) => {
+  if (!location.pathname.startsWith('/w/')) {
+    return;
+  }
+  const reached = {};
+  globalThis.shareOpenTiming = { timeOrigin: performance.timeOrigin, reached };
+  const panel = document.createElement('div');
+  panel.style.cssText =
+    'position:fixed;right:16px;bottom:44px;z-index:2147483647;pointer-events:none;padding:12px 16px;' +
+    'border-radius:10px;background:rgba(10,12,16,0.82);color:#f2f2f2;font:14px/1.6 ui-monospace,Menlo,monospace;' +
+    'min-width:260px;box-shadow:0 4px 24px rgba(0,0,0,0.4)';
+  const seconds = (ms) => `${(ms / 1000).toFixed(1)} s`;
+  const row = (label, value, strong) => {
+    const line = document.createElement('div');
+    line.style.cssText = `display:flex;justify-content:space-between;gap:24px;${strong ? 'font-size:20px;font-weight:600' : ''}`;
+    const name = document.createElement('span');
+    name.textContent = label;
+    const time = document.createElement('span');
+    time.textContent = value;
+    line.append(name, time);
+    return line;
   };
+  const render = () => {
+    const elapsed = reached.rendered ?? performance.now();
+    panel.replaceChildren(
+      row('⏱ since the link opened', seconds(elapsed), true),
+      ...stages.map(([key, label]) => row(label, reached[key] === undefined ? '…' : seconds(reached[key]))),
+    );
+  };
+  const mark = (key, holds) => {
+    if (reached[key] === undefined && holds) {
+      reached[key] = performance.now();
+      performance.mark(`share-stage:${key}`);
+    }
+  };
+  const check = () => {
+    const client = globalThis.dxos?.client;
+    let space;
+    try {
+      space = client?.spaces.get().find((candidate) => candidate.id === spaceId);
+    } catch {}
+    mark('client', !!client?.initialized);
+    mark('identity', !!client?.halo.identity.get());
+    mark('joined', !!space);
+    // `SpaceState.SPACE_READY`.
+    mark('ready', space?.state.get() === 3);
+    const root = document.querySelector('[data-testid="composer.markdownRoot"]');
+    mark('rendered', !!root && root.textContent.includes(text));
+    render();
+    if (reached.rendered !== undefined) {
+      clearInterval(interval);
+      observer.disconnect();
+    }
+  };
+  const interval = setInterval(check, 100);
+  const observer = new MutationObserver(check);
+  observer.observe(document, { subtree: true, childList: true, characterData: true });
+  document.documentElement.append(panel);
+  render();
+};
+
+/** Bob's stage times in ms from pressing Enter, once the shared document is on screen. */
+const timeOpening = async (page) => {
   const deadline = Date.now() + JOIN_TIMEOUT;
-  while (timing.documentRendered === undefined) {
+  for (;;) {
+    // Bounded: an evaluate issued while the page boots is held until it finishes.
+    const timing = await Promise.race([
+      page.evaluate(() => globalThis.shareOpenTiming).catch(() => undefined),
+      new Promise((resolve) => setTimeout(() => resolve(undefined), PROBE_TIMEOUT)),
+    ]);
+    if (timing?.reached.rendered !== undefined) {
+      return Object.fromEntries(
+        Object.entries(timing.reached).map(([key, at]) => [key, Math.round(timing.timeOrigin + at - openedAt)]),
+      );
+    }
     if (Date.now() > deadline) {
       throw new Error(`timed out waiting for the shared document on Bob's side: ${JSON.stringify(timing)}`);
     }
-    // Bounded: an evaluate issued while the page boots is held until it finishes, which would mark every milestone at once.
-    const state = await Promise.race([
-      page
-        .evaluate((spaceId) => {
-          const client = globalThis.dxos?.client;
-          const space = client?.spaces.get().find((space) => space.id === spaceId);
-          return {
-            identity: !!client?.halo.identity.get(),
-            joined: !!space,
-            state: space?.state.get(),
-          };
-        }, spaceId)
-        .catch(() => ({})),
-      new Promise((resolve) => setTimeout(() => resolve({}), PROBE_TIMEOUT)),
-    ]);
-    if (
-      await page
-        .getByTestId('deck.plank')
-        .first()
-        .isVisible()
-        .catch(() => false)
-    ) {
-      mark('appBooted');
-    }
-    if (state.identity) {
-      mark('identity');
-    }
-    if (state.joined) {
-      mark('joined');
-    }
-    if (state.state === SPACE_READY) {
-      mark('spaceReady');
-    }
-    if (
-      (
-        await textbox(page)
-          .innerText()
-          .catch(() => '')
-      ).includes(SHARED_TEXT)
-    ) {
-      mark('documentRendered');
-    }
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 250));
   }
-  return timing;
 };
 
 export const steps = [
@@ -278,6 +309,11 @@ export const steps = [
     subtitle: 'QA-3 step 3: Open the link on the guest',
     run: async ({ peers: { alice, bob } }) => {
       await alice.click(alice.page.getByTestId('share-object-dialog.done'));
+      await bob.context.addInitScript(STOPWATCH, {
+        text: SHARED_TEXT,
+        spaceId: new URL(shareLink).pathname.split('/')[2],
+        stages: STAGES,
+      });
       const address = bob.page.locator('#address');
       await bob.click(address);
       await address.fill(shareLink);
@@ -292,18 +328,20 @@ export const steps = [
     caption: false,
     run: async ({ peers: { bob }, caption }) => {
       caption(`Bob gets an identity, joins in the background, and sees "${SHARED}"`, 'QA-3 step 3');
-      const timing = await timeOpening(bob.page, new URL(shareLink).pathname.split('/')[2]);
+      const timing = await timeOpening(bob.page);
       // Read by whoever runs the flow.
       console.log(JSON.stringify({ objectShareTiming: timing }));
       await clearChrome(bob);
       // Off the companion toggle `clearChrome` clicked, whose tooltip would otherwise stay over the plank.
       await bob.page.mouse.move(600, 400);
-      // The stages are not shown: a probe cannot run while the page boots, so they all land when it finishes.
+      const seconds = (ms) => `${(ms / 1000).toFixed(1)} s`;
       caption(
-        `Shared document open in ${(timing.documentRendered / 1000).toFixed(1)} s after pasting the link`,
-        `New identity, background join; the other ${OTHERS.length} documents never sync to Bob`,
+        `Shared document on screen ${seconds(timing.rendered)} after pasting the link`,
+        STAGES.filter(([key]) => key !== 'rendered')
+          .map(([key, label]) => `${label} ${seconds(timing[key])}`)
+          .join(' · ') + ` · the other ${OTHERS.length} documents never sync to Bob`,
       );
-      await bob.page.waitForTimeout(4_000);
+      await bob.page.waitForTimeout(8_000);
     },
   },
 ];
