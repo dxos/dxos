@@ -16,6 +16,12 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
+      "path": "../../common/invariant"
+    },
+    {
       "path": "../../common/keys"
     },
     {
@@ -37,6 +43,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-react"
+    },
+    {
       "path": "../../core/protocols"
     },
     {
@@ -55,7 +64,19 @@
       "path": "../../plugins/plugin-discord"
     },
     {
+      "path": "../../plugins/plugin-markdown"
+    },
+    {
+      "path": "../../plugins/plugin-review"
+    },
+    {
       "path": "../../plugins/plugin-routine"
+    },
+    {
+      "path": "../../plugins/plugin-space"
+    },
+    {
+      "path": "../../plugins/plugin-testing"
     },
     {
       "path": "../../plugins/plugin-thread"
@@ -67,10 +88,16 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/client"
+    },
+    {
       "path": "../../sdk/config"
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/types"
@@ -79,10 +106,16 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-attention"
+    },
+    {
       "path": "../../ui/react-ui-debug"
     },
     {
       "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/ui-editor"
     },
     {
       "path": "../storybook-testing"

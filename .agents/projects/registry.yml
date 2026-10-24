@@ -6,6 +6,16 @@
 # status: active | paused | blocked | ended
 
 projects:
+  - name: multi-actor
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-10-24
+    summary: 'Several identities editing one object at once, each in its own real plugin article, driven by an actor flow on a virtual clock and rendered frame by frame for the autocue grid. First scenario: four actors writing, correcting and commenting on a markdown document (stories-agent).'
+    tasks: .agents/projects/multi-actor/TASKS.md
+    design: .agents/projects/multi-actor/DESIGN.md
+    prs: [14053]
+    resume: 'Build the prototype per DESIGN.md.'
   - name: autocue-ui
     status: active
     user: burdon

@@ -21318,6 +21318,15 @@ importers:
 
   packages/stories/stories-agent:
     dependencies:
+      '@bufbuild/protobuf':
+        specifier: 'catalog:'
+        version: 2.11.0
+      '@codemirror/state':
+        specifier: 'catalog:'
+        version: 6.7.6
+      '@codemirror/view':
+        specifier: 'catalog:'
+        version: 6.43.13
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -21327,6 +21336,12 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/compute/assistant
+      '@dxos/async':
+        specifier: workspace:*
+        version: link:../../common/async
+      '@dxos/client':
+        specifier: workspace:*
+        version: link:../../sdk/client
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
@@ -21339,6 +21354,15 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/link':
         specifier: workspace:*
         version: link:../../core/compute/link
@@ -21351,9 +21375,24 @@ importers:
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../plugins/plugin-assistant
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-client
       '@dxos/plugin-discord':
         specifier: workspace:*
         version: link:../../plugins/plugin-discord
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-markdown
+      '@dxos/plugin-review':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-review
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-space
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-testing
       '@dxos/plugin-thread':
         specifier: workspace:*
         version: link:../../plugins/plugin-thread
@@ -21366,15 +21405,24 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
       '@dxos/react-ui-debug':
         specifier: workspace:*
         version: link:../../ui/react-ui-debug
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/ui-editor
       effect:
         specifier: 4.0.4
         version: 4.0.4
@@ -21385,12 +21433,6 @@ importers:
         specifier: ~19.2.7
         version: 19.2.7(react@19.2.7)
     devDependencies:
-      '@dxos/keys':
-        specifier: workspace:*
-        version: link:../../common/keys
-      '@dxos/plugin-client':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-client
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../../plugins/plugin-connector
