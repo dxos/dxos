@@ -1,4 +1,5 @@
 ---
+# multiple-changesets: the react-ui-menu toolbar API (toolbar-zones-groups.md, shared with dxos/dxos#14188) is looked up apart from these presenter features.
 '@dxos/plugin-presenter': patch
 ---
 
