@@ -33,29 +33,43 @@ const slideContents = Effect.fnUntraced(function* (presentation: Presentation.Pr
 
 describe('PresenterSkill operations', () => {
   it.effect(
-    'CreatePresentation adds owned slides, files the presentation, and reports problems',
+    'CreatePresentation adds owned slides and files the presentation',
     Effect.fnUntraced(
       function* (_) {
-        const result = yield* Operation.invoke(PresenterOperation.CreatePresentation, {
-          name: 'Roadmap',
-          slides: ['---\nlayout: cover\n---\n# Roadmap', '  ', '---\nlayout: nope\n---\n# Next'],
-        });
-        expect(result.issues).toEqual([
-          'Slide 2 is empty and was left out.',
-          expect.stringMatching(/^Slide 3: .*nope/),
-        ]);
+        const slides = ['---\nlayout: cover\n---\n# Roadmap', '# Next'];
+        const result = yield* Operation.invoke(PresenterOperation.CreatePresentation, { name: 'Roadmap', slides });
+        expect(result.issues).toEqual([]);
+        const id = result.id;
+        if (!id) {
+          throw new Error('No presentation was created.');
+        }
 
-        const presentation = yield* Database.resolve(EID.parse(result.id), Presentation.Presentation);
+        const presentation = yield* Database.resolve(EID.parse(id), Presentation.Presentation);
         expect(presentation.name).toBe('Roadmap');
-        expect(yield* slideContents(presentation)).toEqual([
-          '---\nlayout: cover\n---\n# Roadmap',
-          '---\nlayout: nope\n---\n# Next',
-        ]);
+        expect(yield* slideContents(presentation)).toEqual(slides);
 
         const [properties] = yield* Database.query(Filter.type(SpaceProperties)).run;
         const rootRef = Annotation.get(properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrThrow);
         const root = yield* Database.load<Collection.Collection>(rootRef);
         expect(root.objects.map((ref) => ref.target?.id)).toContain(presentation.id);
+      },
+      WithProperties,
+      Effect.provide(OperationTestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'CreatePresentation saves nothing while any slide has a problem',
+    Effect.fnUntraced(
+      function* (_) {
+        const result = yield* Operation.invoke(PresenterOperation.CreatePresentation, {
+          name: 'Roadmap',
+          slides: ['# Roadmap', '  ', '---\nlayout: nope\n---\n# Next'],
+        });
+        expect(result.issues).toEqual(['Slide 2 is empty.', expect.stringMatching(/^Slide 3: .*nope/)]);
+        expect(result.id).toBeUndefined();
+        expect(yield* Database.query(Filter.type(Presentation.Presentation)).run).toHaveLength(0);
       },
       WithProperties,
       Effect.provide(OperationTestLayer),
@@ -88,6 +102,16 @@ describe('PresenterSkill operations', () => {
           presentation: Ref.make(presentation),
         });
         expect(neither.issues).toHaveLength(1);
+
+        // A bad slide is not added, and its problem is numbered where it would have landed (appended, past the end).
+        const count = presentation.sections.length;
+        const bad = yield* Operation.invoke(PresenterOperation.AddSection, {
+          presentation: Ref.make(presentation),
+          content: '---\nlayout: nope\n---\n# Bad',
+          index: 100,
+        });
+        expect(bad.issues).toEqual([expect.stringMatching(new RegExp(`^Slide ${count + 1}: `))]);
+        expect(presentation.sections).toHaveLength(count);
       },
       WithProperties,
       Effect.provide(OperationTestLayer),

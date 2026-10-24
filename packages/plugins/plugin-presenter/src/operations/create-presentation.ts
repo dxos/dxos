@@ -16,10 +16,12 @@ const handler: Operation.WithHandler<typeof PresenterOperation.CreatePresentatio
   PresenterOperation.CreatePresentation.pipe(
     Operation.withHandler(
       Effect.fn(function* ({ name, slides }) {
+        // Nothing is saved while any slide has a problem, so a corrected retry never duplicates a slide.
         const issues = slideIssues(slides);
-        const presentation = yield* Database.add(
-          Presentation.make({ name, slides: slides.filter((content) => content.trim() !== '') }),
-        );
+        if (issues.length > 0) {
+          return { issues };
+        }
+        const presentation = yield* Database.add(Presentation.make({ name, slides: [...slides] }));
         yield* DefaultParent.add({ object: presentation });
         // Persist before returning the id so a later tool call (or another process) can resolve the presentation.
         yield* Database.flush();

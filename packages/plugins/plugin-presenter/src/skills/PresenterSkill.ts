@@ -47,8 +47,9 @@ export const make = (): Skill.Skill =>
         Keep slides short: a heading and a few points each. Turn each top-level heading or bullet of an outline into a
         slide, and use the first slide as a title slide (${'`layout: cover`'}).
 
-        If a tool returns issues, fix the slides they name and add them again with
-        ${Operation.toolName(PresenterOperation.AddSection)}, which also links an existing object as a slide.
+        If a tool returns issues, it saved nothing: fix the slides they name and call the same tool again with every
+        slide. Use ${Operation.toolName(PresenterOperation.AddSection)} to add a slide to an existing presentation, or to
+        link an existing object as a slide.
         Present a presentation only when asked, with ${Operation.toolName(PresenterOperation.PresentObject)}.
       `,
     }),

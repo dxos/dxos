@@ -123,8 +123,8 @@ component Deck
 ```mdl
 component PresentationArticle
   desc: |
-    A Presentation's article is a grid of its slides (`Deck` `view='grid'`); presenting shows the deck one slide
-    at a time. Fullscreen is read per object (is this Presentation on the
+    A Presentation's article is a grid of its slides (`Deck.Grid`); presenting shows one slide at a time (`Deck.Viewport`).
+    Fullscreen is read per object (is this Presentation on the
     fullscreen plank) and toggles in place on the Presentation's own plank; the current slide is per-viewer
     view state. The toolbar adds slides and links objects through SectionPicker.
   props:

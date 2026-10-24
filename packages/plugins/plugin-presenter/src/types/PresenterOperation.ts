@@ -30,7 +30,7 @@ export const SetPresenting = Operation.make({
 
 const Issues = Schema.Array(Schema.String).annotate({
   description:
-    'Problems found in the slides (for example an unknown layout); the slides still render. Fix and retry if any.',
+    'Problems found in the slides (for example an unknown layout); when there are any, nothing was saved. Fix them and call again.',
 });
 
 export const CreatePresentation = Operation.make({
@@ -50,7 +50,9 @@ export const CreatePresentation = Operation.make({
     }),
   }),
   output: Schema.Struct({
-    id: Schema.String.annotate({ description: 'The DXN of the created presentation.' }),
+    id: Schema.optional(Schema.String).annotate({
+      description: 'The DXN of the created presentation; absent when there were issues and nothing was saved.',
+    }),
     issues: Issues,
   }),
 });

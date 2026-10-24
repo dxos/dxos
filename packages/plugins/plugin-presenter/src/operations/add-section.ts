@@ -22,8 +22,13 @@ const handler: Operation.WithHandler<typeof PresenterOperation.AddSection> = Pre
       if (content === undefined || content.trim() === '') {
         return { issues: ['Give either the content of a new slide or an object to link.'] };
       }
-      Presentation.addSlide(presentation, content, index);
-      return { issues: slideIssues([content], (index ?? presentation.sections.length - 1) + 1) };
+      // Numbered where the slide lands: an index past the end appends, as `addSlide` does.
+      const position = Math.max(0, Math.min(index ?? presentation.sections.length, presentation.sections.length));
+      const issues = slideIssues([content], position + 1);
+      if (issues.length === 0) {
+        Presentation.addSlide(presentation, content, position);
+      }
+      return { issues };
     }),
   ),
 );
