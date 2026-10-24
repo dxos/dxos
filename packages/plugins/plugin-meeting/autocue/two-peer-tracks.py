@@ -30,7 +30,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 LEAD_IN = 3.0
 GAP = 0.9
-TAIL = 4.0
+TAIL = 12.0
 SIZE = (1280, 720)
 FONT = '/usr/share/fonts/opentype/inter/Inter-SemiBold.otf'
 VOICES = 'https://huggingface.co/rhasspy/piper-voices/resolve/main'

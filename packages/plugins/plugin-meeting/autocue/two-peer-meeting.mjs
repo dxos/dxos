@@ -21,6 +21,14 @@
  *
  * The WebRTC policy flag sends media over TCP through the proxy, for a sandbox with no UDP egress; RealtimeKit then
  * relays through TURN over TLS on 443.
+ *
+ * The recording is silent. Lay both voices under `side-by-side.mp4`, delayed to the first spoken line's caption `ms`
+ * in `<out>/timeline.json` (its `steps`), with each track's lead-in cut off:
+ *
+ *   ffmpeg -i side-by-side.mp4 -i alice.webm -i bob.webm -filter_complex \
+ *     "[1:a]atrim=start=3,asetpts=PTS-STARTPTS[a1];[2:a]atrim=start=3,asetpts=PTS-STARTPTS[a2];\
+ *      [a1][a2]amix=inputs=2:normalize=0[mix];anullsrc=r=48000:cl=stereo,atrim=duration=<ms/1000>[sil];\
+ *      [sil][mix]concat=n=2:v=0:a=1,apad[a]" -map 0:v -map "[a]" -shortest -c:v copy -c:a aac out.mp4
  */
 
 import { readFileSync } from 'node:fs';
@@ -38,6 +46,8 @@ const MEETINGS = 'org.dxos.plugin.meeting';
 const PLANK = '[data-testid="deck.plank"]';
 const COMPANION = '[data-testid="deck.companion"]';
 const SUBTITLE = 'plugin-meeting/PLUGIN.mdl · QA-3';
+/** `MEETING_TRANSCRIPT=off` records the call without its transcription steps, for an EDGE whose preset cannot transcribe. */
+const TRANSCRIPT = process.env.MEETING_TRANSCRIPT !== 'off';
 const TIMEOUT = 60_000;
 /** A beat for the viewer after a visible change. */
 const BEAT = 1_500;
@@ -291,23 +301,27 @@ export const steps = [
       });
     },
   },
+  ...(TRANSCRIPT
+    ? [
+        {
+          name: 'Alice starts transcription and opens the transcript',
+          subtitle: `${SUBTITLE} · step 4`,
+          run: async ({ peers: { alice, bob } }) => {
+            await alice.click(`${PLANK} [data-testid="meeting.toolbar.transcription"]`);
+            for (const peer of [alice, bob]) {
+              const transcript = peer.page.locator(`${COMPANION} button[aria-label="Transcript"]`).first();
+              if (!(await transcript.isVisible().catch(() => false))) {
+                await peer.click('button[aria-label="Open companion side-by-side"]');
+                await peer.click('[data-testid="deck.companion.tab.meeting"]');
+              }
+              await peer.click(transcript);
+            }
+          },
+        },
+      ]
+    : []),
   {
-    name: 'Alice starts transcription and opens the transcript',
-    subtitle: `${SUBTITLE} · step 4`,
-    run: async ({ peers: { alice, bob } }) => {
-      await alice.click(`${PLANK} [data-testid="meeting.toolbar.transcription"]`);
-      for (const peer of [alice, bob]) {
-        const transcript = peer.page.locator(`${COMPANION} button[aria-label="Transcript"]`).first();
-        if (!(await transcript.isVisible().catch(() => false))) {
-          await peer.click('button[aria-label="Open companion side-by-side"]');
-          await peer.click('[data-testid="deck.companion.tab.meeting"]');
-        }
-        await peer.click(transcript);
-      }
-    },
-  },
-  {
-    name: 'They talk; the transcript fills in on both screens',
+    name: TRANSCRIPT ? 'They talk; the transcript fills in on both screens' : 'They talk',
     subtitle: `${SUBTITLE} · step 5`,
     run: async ({ peers, caption }) => {
       // Both tracks start on one cue, so each person's lines land where the other expects them.
@@ -320,25 +334,36 @@ export const steps = [
         }
         caption(line.text, line.speaker === 'alice' ? 'Alice' : 'Bob');
       }
-      const last = TIMELINE.lines.at(-1);
-      const end = started + (last.end + 4) * 1_000 - Date.now();
+      const end = started + (TIMELINE.lines.at(-1).end + 1.5) * 1_000 - Date.now();
       if (end > 0) {
         await new Promise((resolve) => setTimeout(resolve, end));
       }
-      await waitFor(
-        () =>
-          Promise.all(
-            Object.values(peers).map(({ page }) =>
-              page.evaluate(
-                (companion) => /friday/i.test(document.querySelector(companion)?.textContent ?? ''),
-                COMPANION,
-              ),
-            ),
-          ).then((seen) => seen.every(Boolean)),
-        { what: "Bob's line about Friday in both transcripts", timeout: 30_000 },
-      );
     },
   },
+  ...(TRANSCRIPT
+    ? [
+        {
+          // Checked before Bob leaves: the meeting companion exists only while its call is joined.
+          name: "Both transcripts hold Bob's line",
+          subtitle: `${SUBTITLE} · step 5`,
+          caption: false,
+          run: async ({ peers }) => {
+            await waitFor(
+              () =>
+                Promise.all(
+                  Object.values(peers).map(({ page }) =>
+                    page.evaluate(
+                      (companion) => /friday/i.test(document.querySelector(companion)?.textContent ?? ''),
+                      COMPANION,
+                    ),
+                  ),
+                ).then((seen) => seen.every(Boolean)),
+              { what: "Bob's line about Friday in both transcripts", timeout: 10_000 },
+            );
+          },
+        },
+      ]
+    : []),
   {
     name: 'Bob leaves; Alice is alone in the call',
     subtitle: `${SUBTITLE} · step 6`,

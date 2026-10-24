@@ -472,7 +472,7 @@ test QA-3: Two people meet in one Meeting's call, with live transcription
     needs a real EDGE and RealtimeKit: this is the test that the call's media and transcript cross between two devices.
   actors: agent
   covers: [F-1.1, F-1.2, F-3.2, F-3.6, T-1]
-  status: unverified
+  status: blocked             # 2026-10-24, autocue/two-peer-meeting.mjs on edge dev: steps 1-3 and 6 pass (video and voice cross both ways); no transcript arrives, as the RealtimeKit preset `group_call_participant` does not enable transcription
   given:
     - two identities on separate devices (browser contexts), with display names "Alice" and "Bob"
     - space: "Launch sync", created by Alice; Bob has joined it by invitation
