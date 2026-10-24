@@ -14,6 +14,7 @@ export default defineConfig({
     containers: 'src/containers/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
+    DemoSpace: 'src/samples/demo/DemoSpace.ts',
     FieldstoneSpace: 'src/samples/fieldstone/FieldstoneSpace.ts',
     IncidentSpace: 'src/samples/incident/IncidentSpace.ts',
     PresenterSpace: 'src/samples/presenter/PresenterSpace.ts',

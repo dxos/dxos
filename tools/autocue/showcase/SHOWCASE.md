@@ -7,6 +7,10 @@ fits, with the last tour cell in the bottom-left quadrant.
 Clips are read from the gitignored `temp/grid-zoom/` at the repo root: `tour-<n>.mp4` for the tour cells and
 `clip-<NN>.mp4` (row-major index) for every other cell.
 
+Alternative transitions (the shift loop, the Composer console, and others that never frame more than 3x3) are
+prototyped as sibling stories; see [GRID-TRANSITIONS.md](GRID-TRANSITIONS.md). `render.mjs --story <id>` renders any of
+them.
+
 ## Recording by hand
 
 The grid can also be built from clips recorded by hand in Screen Studio: three 20s tour shots and about 30 short

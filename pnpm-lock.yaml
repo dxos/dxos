@@ -10912,6 +10912,9 @@ importers:
       '@dxos/plugin-kanban':
         specifier: workspace:*
         version: link:../plugin-kanban
+      '@dxos/plugin-map':
+        specifier: workspace:*
+        version: link:../plugin-map
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
@@ -10924,12 +10927,18 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/plugin-spacetime':
+        specifier: workspace:*
+        version: link:../plugin-spacetime
       '@dxos/plugin-status-bar':
         specifier: workspace:*
         version: link:../plugin-status-bar
       '@dxos/plugin-tldraw':
         specifier: workspace:*
         version: link:../plugin-tldraw
+      '@dxos/plugin-voxel':
+        specifier: workspace:*
+        version: link:../plugin-voxel
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../core/protocols
@@ -11033,6 +11042,9 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
+      chess.js:
+        specifier: 'catalog:'
+        version: 1.4.0
       effect:
         specifier: 4.0.4
         version: 4.0.4
