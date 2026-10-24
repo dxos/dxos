@@ -24,6 +24,7 @@ import { resolveKeyBinding } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
+import { TOOLBAR_OVERFLOW_ID } from '../builder.ts';
 import { useMenuActions, useMenuItems } from '../hooks/index.ts';
 import {
   type MenuAction,
@@ -192,17 +193,35 @@ const ActionMenuEntry = ({ menu, item, group }: { menu: MenuActions; item: MenuI
     return <Menu.Separator />;
   }
   if (isMenuGroup(item)) {
+    // A toolbar's overflow items are already "more" in a menu, so they follow the other items rather than nest.
+    if (item.id === TOOLBAR_OVERFLOW_ID) {
+      return <OverflowSection menu={menu} group={item} />;
+    }
     // A graph group's properties are an open record, validated by the plugin that contributed them.
     return <ActionSubMenu menu={menu} group={item as MenuItemGroup<MenuItemChrome>} />;
   }
   const action = item as MenuAction;
-  if (action.properties?.hidden) {
+  // A label belongs to a toolbar row; a menu has its own title.
+  if (action.properties?.hidden || action.properties?.variant === 'text') {
     return null;
   }
   return isCheckable(action) ? (
     <ActionCheckboxItem menu={menu} action={action} group={group} />
   ) : (
     <ActionMenuItem menu={menu} action={action} group={group} />
+  );
+};
+
+const OverflowSection = ({ menu, group }: { menu: MenuActions; group: MenuItemGroup }) => {
+  const items = useMenuItems(menu, group);
+  if (!items?.length) {
+    return null;
+  }
+  return (
+    <>
+      <Menu.Separator />
+      <ActionMenuItems menu={menu} group={group} />
+    </>
   );
 };
 

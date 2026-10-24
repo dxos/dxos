@@ -8,8 +8,25 @@ import { type Label } from '#translations';
 
 import { type ClassNameValue } from './theme.ts';
 
+/** Horizontal region of a toolbar row. */
+export type ToolbarZone = 'start' | 'end';
+
+/** Where a toolbar item or named group goes; menus ignore it. */
+export type ToolbarPlacement = {
+  /** Left or right of its row (default `start`). */
+  zone?: ToolbarZone;
+  /** Row of a multi-row toolbar (default `0`). */
+  row?: number;
+  /** Order within its zone or group; contributors interleave with the owner's items by it. */
+  order?: number;
+  /** Moves into the overflow menu when the row is too narrow; higher ranks go first, none never moves. */
+  collapse?: number;
+};
+
 /** Shared presentation fields for menu actions and group triggers. */
 export type MenuItemChrome = {
+  /** Toolbar layout; ignored when the item renders in a menu. */
+  placement?: ToolbarPlacement;
   label: Label;
   icon?: string;
   iconOnly?: boolean;
@@ -29,7 +46,8 @@ export type MenuItemChrome = {
 
 // TODO(burdon): Narrow MenuActionProperties to a discriminated union.
 export type MenuActionChrome = MenuItemChrome & {
-  variant?: 'action' | 'primary' | 'toggle' | 'switch' | 'custom';
+  /** `text` is a plain label (a panel's name) that takes the free space; it is not an item and never collapses. */
+  variant?: 'action' | 'primary' | 'toggle' | 'switch' | 'custom' | 'text';
   value?: string;
   checked?: boolean;
   /**

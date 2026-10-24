@@ -162,7 +162,7 @@ export const InsertClick: Story = {
     const canvas = within(canvasElement);
     const editor = await canvas.findByRole('textbox', undefined, LOAD_TIMEOUT);
     await userEvent.click(editor);
-    await userEvent.click(canvas.getByTestId('presenter.slide-toolbar.click'));
+    await userEvent.click(await canvas.findByTestId('presenter.slide-toolbar.click'));
     // Chosen by keyboard: zag's menu does not take testing-library's synthetic pointer sequence as a selection.
     await within(document.body).findByTestId('presenter.insert-click');
     await userEvent.keyboard('{ArrowDown}{Enter}');
