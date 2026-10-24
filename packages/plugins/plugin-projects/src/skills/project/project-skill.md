@@ -51,6 +51,12 @@ single-entry list, and rewrite it in the new shape the next time you touch it.
 This is a hard gate, not a suggestion: no partial writes, no unlisted space. A project system
 split across spaces is worse than an agent that refuses and asks the user to fix the binding.
 
+**Nobody to ask.** In an unattended run the gate still holds: a request that names a space loosely
+("the dxos space") is not a pick from `spaces`, and a name that matches one space is not consent. Do
+the read-only work (`whoami`, queries, reading the repo), write nothing to any space, and finish by
+reporting what you found and the one thing needed — a `/project setup` pick — so the next run can write.
+Never settle the question by choosing the space yourself and noting it afterwards.
+
 ### `/project setup` — binding this repo to a space
 
 An unbound repo is a setup prompt, not a dead end. Run this on `/project setup`, and offer it
@@ -156,7 +162,10 @@ you hold is a bare object id, and then write the full URI: `{"/": "echo:///" + i
 Tasks nest to any depth: a root task sits in the task set, and each sub-task sits in its parent's
 `subtasks`. Read the whole tree before acting on any part of it.
 
-- Load it with `tasks-list { project, includeSubtasks: true, spaceId }`. Without `includeSubtasks`
+- Load it with `tasks-list { project, includeSubtasks: true, spaceId }`. `project` is the **project**
+  ref; the task set's own ref goes in `taskSet` instead. A task-set ref passed as `project` matches
+  nothing and returns an empty list rather than an error, so an empty result for a project that reports
+  open tasks means the wrong ref. Without `includeSubtasks`
   you see only root tasks and miss most of the work. Results are paged: while the response carries
   `nextCursor`, call again with `after: nextCursor` (and the same `includeSubtasks: true`).
 - For any task you touch, look **down** (its `subtasks`, recursively) and **up** (the task whose
@@ -253,6 +262,11 @@ invisible to the space unless it reports itself. Keep a session object for your 
 - **When you stop**, record once more with `state: "finished"` (or `"failed"`) so the session is not
   left looking like it is still running.
 
+Over MCP, an operation is refused without the `skillToken` that `loadSkill` returned for a skill it
+belongs to, and each skill has its own token. The project token covers the operations listed above;
+the generic Get Objects read belongs to the database skill, so load that skill too when you need it.
+Get Objects takes its references as `objects`, not `refs`.
+
 Hooks in some harnesses already call `tasks-record-session`. Check in yourself anyway when you
 have something new to report: the hook cannot write the summary.
 
@@ -278,9 +292,14 @@ subfeatures and depend on each other. A feature belongs to at most one **project
 Features tab shows them as a board. Specs stay in the repo, so a feature lists spec paths rather than
 holding the text.
 
-- Read a project's features with `projects-get-features { project }` before changing them: it returns each
-  feature's status, dependencies, linked tasks and showcases.
-- Create a feature with `projects-create-feature { name, project? }`. A feature's parts are **subfeatures**:
+- **Membership lives on the feature, not the project.** `Project` has no `features` field: a feature is on a
+  project's map because its own `project` ref points there, and the Features tab queries by that ref. So
+  `projects-get` never lists features — read them with `projects-get-features { project }`, which is also how
+  you confirm a write landed. It returns each feature's status, dependencies, linked tasks and showcases;
+  read it before changing them.
+- Create a feature with `projects-create-feature { name, description?, status?, specs?, project? }`. It takes
+  no `subfeatures` (passing them is refused as an excess property) — set them in a second call. A feature's
+  parts are **subfeatures**:
   records with a name and their own status, set as a whole list with
   `projects-update-feature { feature, subfeatures: [{ name, status }] }`. They are one level deep and have
   no specs, dependencies or tasks of their own — give those to the feature.
@@ -289,14 +308,38 @@ holding the text.
   `projects-remove-feature-dependency` undoes one. Move a feature into a project with
   `projects-update-feature { feature, project }`, and take it out with `project: null`.
 - **When you pick up a task that moves a feature**, link it with `projects-link-feature-task { task, feature }`.
+  Link the root task of a tree; link a sub-task as well only when it moves a different feature than its
+  root does. Linking does not follow the tree, so a feature shows exactly the tasks you linked.
 - **Set the status when you observe it**, with `projects-update-feature { feature, status }`: `in-progress`
   when work starts, `prototype` when it works in a demo, `operational` when people can rely on it, and
-  `failing` when it worked before and does not now.
+  `failing` when it worked before and does not now. Observing means running it, or reading a showcase
+  that did. A feature you know only from specs and task state has not been observed: use `planned` when no
+  work has started and `in-progress` when it has, and use `prototype` only for something already built
+  that nobody has run. Never set `operational` from the ledger alone — it is flagged without a showcase.
+- **Positions are optional.** A feature with no `position` is laid out by the board, so do not set one to
+  make a feature appear; the user places cards by dragging.
 - **When you finish work that shows a feature working**, make a showcase with
   `projects-create-showcase { name, content, targets, artifacts? }`: markdown saying what you showed and
   how to reproduce it, the screenshots and videos you uploaded as files and the PRs it landed in as
   `artifacts`, and every feature and task it demonstrates in `targets`. An `operational` feature without a showcase
   is flagged on the board.
+
+### Building a feature map
+
+Run this on `/project features [max]` or when asked to map, plan or set up features for a project. The
+map is read from three sources, in this order: the project's **tasks** (`tasks-list` with
+`includeSubtasks: true`, plus the outline and design documents), the repo's **specs** (`PLUGIN.mdl`,
+`SPEC.mdl` and the like — each `feat F-n` block is a candidate, and its path with `#F-n` goes in `specs`),
+and the **code** the specs and tasks name, to confirm a part exists.
+
+1. Group by outcome a person would name ("Agents use MCP servers from connections"), not by task or file.
+   Respect the user's cap (default 5); fold small outcomes into subfeatures rather than exceeding it.
+2. Check `projects-get-features` first and extend what exists instead of duplicating it.
+3. In this order: `projects-create-feature` for each (with `project`, `description`, `status`, `specs`);
+   `projects-update-feature { subfeatures }` for each; `projects-add-feature-dependency` for each
+   "does not work without" edge; `projects-link-feature-task` for each task that moves one.
+4. Read `projects-get-features` back and check the count, dependencies and linked tasks before saying it is
+   done. Report any status you could not observe as inferred.
 
 ## Verbs
 
@@ -315,6 +358,8 @@ spaceId }`. Report the new project id.
   from `projects-get`; if it is missing, stop and say so — see "The shape of a project"). If the text
   names a milestone, pass that milestone's ref; otherwise ask which milestone if the project has
   several — never guess silently.
+- **`/project features [max]`** — build or extend the project's feature map from its tasks, specs and
+  code; see "Building a feature map". With no project named, use the single `active` one or ask.
 - **`/project hydrate`** — checkpoint before stopping or handing off:
   1. Reconcile task statuses: `tasks-update { status }` every task whose real state has
      moved; leave a short `description` note on anything left `started` (what's blocked,
@@ -395,28 +440,34 @@ spaceId }`. Report the new project id.
 
 ## Common mistakes
 
-| Mistake                                                            | Fix                                                                                           |
-| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
-| Calling a tool without checking `space.yml` / `whoami` first       | Read the binding and confirm it's in the session's spaces before any project/task call.       |
-| Falling back to the session's default space when the binding fails | Stop and report the failure; never substitute a space the file does not list.                 |
-| Writing to a space that is not in `spaces`                         | Only the listed spaces are candidates; offer setup to add one rather than writing to it.      |
-| Binding a space the user did not name (even the only one listed)   | Offer setup, list spaces by name, and bind only on an explicit answer.                        |
-| Passing a bare id, or `echo://<id>`, where a ref is expected       | Refs wrap an `echo:` URI: `{"/": "echo:///<id>"}`. Two slashes means a space, not an object.  |
-| Recording project state in local files                             | The space is the only store; files don't survive across repos, sessions, or collaborators.    |
-| Flat task list with no milestone grouping                          | Create one milestone per phase; file each task under it with `tasks-create`'s `milestone`.    |
-| Leaving task status stale after work lands                         | `tasks-update { status }` in the same turn the work completes, not batched at the end.        |
-| Asking "should I mark this done?" / "want me to update the task?"  | Just update it: the ledger is yours to keep current; say what changed if it matters.          |
-| Marking a task `done` while its PR is still open                   | Set `review` with the PR attached; `done` once it has merged.                                 |
-| Losing the resume pointer                                          | `tasks-update-outline` the `Resume:` line at every checkpoint, not just at the very end.      |
-| Writing design decisions to the outline instead of the document    | Outline = scratch/checklist; the document object is the durable design record.                |
-| Duplicating a session todo list and the task set                   | Task set = durable/cross-session; session todos = in-turn scratch. Don't mirror both.         |
-| Creating a new project when one for this work already exists       | Query for projects first; resume/extend the existing one instead of forking state.            |
-| Guessing at a decision only the user can make                      | `tasks-ask-question` on the task, then read the answer back from its `history`.               |
-| Asking a task's question in chat                                   | File it with `tasks-ask-question` on the task, even when the user is in the conversation.     |
-| Reading only root tasks                                            | `tasks-list { includeSubtasks: true }`; check each task's parent and sub-tasks before acting. |
-| Starting a large task as one lump                                  | Break it into sub-tasks with `tasks-create { parentTask }` first, then close them one by one. |
-| Opening a PR without recording it                                  | `github-import-pull-request`, then `tasks-add-artifact` the PR onto the task.                 |
-| Working outside Composer without checking in                       | `tasks-record-session` at the start, at checkpoints, and with a terminal `state` at the end.  |
-| Spawning a task chip for a follow-up you just discovered           | Record it with `tasks-create`; `spawn` only hands off a task already in the ledger.           |
-| A `spawn` prompt that assumes this conversation                    | The receiving session has none of it — restate project, task, ids and paths verbatim.         |
-| Renumbering between `tasks` and `spawn`                            | Same order, same numbers; the user is quoting a row they just saw.                            |
+| Mistake                                                            | Fix                                                                                                       |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| Calling a tool without checking `space.yml` / `whoami` first       | Read the binding and confirm it's in the session's spaces before any project/task call.                   |
+| Falling back to the session's default space when the binding fails | Stop and report the failure; never substitute a space the file does not list.                             |
+| Writing to a space that is not in `spaces`                         | Only the listed spaces are candidates; offer setup to add one rather than writing to it.                  |
+| Binding a space the user did not name (even the only one listed)   | Offer setup, list spaces by name, and bind only on an explicit answer.                                    |
+| Passing a bare id, or `echo://<id>`, where a ref is expected       | Refs wrap an `echo:` URI: `{"/": "echo:///<id>"}`. Two slashes means a space, not an object.              |
+| Recording project state in local files                             | The space is the only store; files don't survive across repos, sessions, or collaborators.                |
+| Flat task list with no milestone grouping                          | Create one milestone per phase; file each task under it with `tasks-create`'s `milestone`.                |
+| Leaving task status stale after work lands                         | `tasks-update { status }` in the same turn the work completes, not batched at the end.                    |
+| Asking "should I mark this done?" / "want me to update the task?"  | Just update it: the ledger is yours to keep current; say what changed if it matters.                      |
+| Marking a task `done` while its PR is still open                   | Set `review` with the PR attached; `done` once it has merged.                                             |
+| Losing the resume pointer                                          | `tasks-update-outline` the `Resume:` line at every checkpoint, not just at the very end.                  |
+| Writing design decisions to the outline instead of the document    | Outline = scratch/checklist; the document object is the durable design record.                            |
+| Duplicating a session todo list and the task set                   | Task set = durable/cross-session; session todos = in-turn scratch. Don't mirror both.                     |
+| Creating a new project when one for this work already exists       | Query for projects first; resume/extend the existing one instead of forking state.                        |
+| Guessing at a decision only the user can make                      | `tasks-ask-question` on the task, then read the answer back from its `history`.                           |
+| Asking a task's question in chat                                   | File it with `tasks-ask-question` on the task, even when the user is in the conversation.                 |
+| Reading only root tasks                                            | `tasks-list { includeSubtasks: true }`; check each task's parent and sub-tasks before acting.             |
+| Starting a large task as one lump                                  | Break it into sub-tasks with `tasks-create { parentTask }` first, then close them one by one.             |
+| Opening a PR without recording it                                  | `github-import-pull-request`, then `tasks-add-artifact` the PR onto the task.                             |
+| Working outside Composer without checking in                       | `tasks-record-session` at the start, at checkpoints, and with a terminal `state` at the end.              |
+| Spawning a task chip for a follow-up you just discovered           | Record it with `tasks-create`; `spawn` only hands off a task already in the ledger.                       |
+| A `spawn` prompt that assumes this conversation                    | The receiving session has none of it — restate project, task, ids and paths verbatim.                     |
+| Renumbering between `tasks` and `spawn`                            | Same order, same numbers; the user is quoting a row they just saw.                                        |
+| Looking for a project's features on the project object             | `Project` has no features field; membership is each feature's `project` ref. Use `projects-get-features`. |
+| Passing `subfeatures` to `projects-create-feature`                 | Create refuses them; set them with `projects-update-feature` after.                                       |
+| Passing a task-set ref as `project` to `tasks-list`                | Use `taskSet` for a task set; an empty list for a project with open tasks means the wrong ref.            |
+| Setting `operational` from specs and task state alone              | Observe it or cite a showcase; otherwise `planned` / `in-progress` (see "Features and showcases").        |
+| Setting feature positions so cards appear                          | Positions are optional; the board lays out unpositioned features itself.                                  |
+| Picking the space yourself because nobody can answer               | Read-only work, no writes, and report that a `/project setup` pick is needed.                             |
