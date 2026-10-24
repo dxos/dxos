@@ -54,7 +54,8 @@ type FontDefinition = {
   load?: () => Promise<unknown>;
 };
 
-// Web fonts are imported on first use, so a deck pays only for the fonts it picks.
+// Web fonts are imported on first use, so a deck pays only for the fonts it picks; composer-app's `ON_DEMAND_FONTS`
+// keeps them out of the PWA precache, so add new ones there too.
 const FONTS: Record<SlideTheme.Font, FontDefinition> = {
   'mono': { family: 'var(--font-mono)' },
   'sans': {
