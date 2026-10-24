@@ -39,10 +39,14 @@ import {
   LAYOUTS,
   type SlideEdit,
   SNIPPETS,
+  columnSnippet,
+  hasSlots,
   insertSnippet,
+  nextSlot,
   notesEdit,
   parseSlide,
   setFrontmatter,
+  slotAtOffset,
   surfaceSnippet,
 } from '#markdown';
 import { meta } from '#meta';
@@ -166,7 +170,7 @@ const SlideEditorToolbars = ({ subject, attendableId, previewMode }: SlideEditor
   const { objects, onObjectsOpenChange, onInsertObject, ...actions } = useSlideActions(subject, attendableId, view);
   const insertActions = useSlideInsertActions({
     onInsert: actions.onInsert,
-    columns: parsed.layout === 'two-cols' || parsed.layout === 'two-cols-header',
+    columns: hasSlots(parsed.layout),
     objects,
     onObjectsOpenChange,
     onInsertObject,
@@ -250,9 +254,22 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
     onLayoutChange: (layout: (typeof LAYOUTS)[number]) =>
       apply((content) => setFrontmatter(content, { layout: layout === 'default' ? undefined : layout }), false),
     onInsert: (insert: SlideInsert) =>
-      apply((content, cursor) =>
-        insert === 'notes' ? notesEdit(content) : insertSnippet(content, cursor, SNIPPETS[insert]),
-      ),
+      apply((content, cursor) => {
+        switch (insert) {
+          case 'notes':
+            return notesEdit(content);
+          case 'column': {
+            // The next region of the layout after the one holding the caret; the last region has none.
+            const parsed = parseSlide(content);
+            const slot = nextSlot(parsed.layout, slotAtOffset(parsed, cursor));
+            return slot
+              ? insertSnippet(content, cursor, columnSnippet(slot))
+              : { from: cursor, to: cursor, insert: '', cursor };
+          }
+          default:
+            return insertSnippet(content, cursor, SNIPPETS[insert]);
+        }
+      }),
     onBackgroundChange: (background: BackgroundSettings) =>
       apply((content) => setFrontmatter(content, background), false),
     objects,

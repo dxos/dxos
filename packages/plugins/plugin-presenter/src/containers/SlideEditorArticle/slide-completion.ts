@@ -4,6 +4,7 @@
 
 import { type CompletionContext, type CompletionResult, autocompletion } from '@codemirror/autocomplete';
 import { EditorState, type Extension } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
 
 import { type LayoutName, frontmatterCompletion } from '#markdown';
 
@@ -34,5 +35,14 @@ export const slideCompletion = ({ describeLayout }: SlideCompletionOptions): Ext
     // matches results to sources by identity, so the provider must return the same function every time.
     EditorState.languageData.of(() => [{ autocomplete: source }]),
     autocompletion({ icons: false }),
+    // Two columns: the value at a fixed width (the longest layout name), then its display name.
+    EditorView.baseTheme({
+      '.cm-tooltip-autocomplete .cm-completionLabel': { display: 'inline-block', minWidth: '16ch' },
+      '.cm-tooltip-autocomplete .cm-completionDetail': {
+        marginLeft: '1em',
+        fontStyle: 'normal',
+        color: 'var(--color-fg-subtle)',
+      },
+    }),
   ];
 };

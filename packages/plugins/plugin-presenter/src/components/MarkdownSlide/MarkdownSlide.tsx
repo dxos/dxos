@@ -19,7 +19,7 @@ import { SyntaxHighlighter, type SyntaxHighlighterProps, renderRows } from '@dxo
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { type SlotName, SURFACE_ROLES, type SurfaceRole, parseSlide, parseSourceRange } from '#markdown';
+import { LAYOUT_SLOTS, type SlotName, SURFACE_ROLES, type SurfaceRole, parseSlide, parseSourceRange } from '#markdown';
 
 import { slideThemeClasses, useSlideColorScheme, useSlideThemeStyle } from '../SlideTheme/index.ts';
 import { ActiveSlotContext, layouts } from './layouts.tsx';
@@ -61,13 +61,20 @@ export const MarkdownSlide = ({
       hasContent(parsed.slots[slot])
         ? toJsxRuntime(prepareRoot(parsed.slots[slot], current), { Fragment, jsx, jsxs, components })
         : null;
-    return { default: render('default'), left: render('left'), right: render('right') };
+    return {
+      'default': render('default'),
+      'left': render('left'),
+      'middle': render('middle'),
+      'right': render('right'),
+      'bottom-left': render('bottom-left'),
+      'bottom-right': render('bottom-right'),
+    };
   }, [parsed, step]);
 
   const themeStyle = useSlideThemeStyle();
   const Layout = layouts[parsed.layout];
-  // `two-cols` renders its `::left::` content inside the default column.
-  const outlinedSlot = parsed.layout === 'two-cols' && activeSlot === 'left' ? 'default' : activeSlot;
+  // Layouts without a `left` slot render `::left::` content inside the first region.
+  const outlinedSlot = activeSlot === 'left' && !LAYOUT_SLOTS[parsed.layout]?.includes('left') ? 'default' : activeSlot;
 
   const handleClick = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {

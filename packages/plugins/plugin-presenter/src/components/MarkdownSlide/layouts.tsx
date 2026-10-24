@@ -103,6 +103,29 @@ const TwoColsHeaderLayout = ({ slots }: LayoutProps) => (
   </Frame>
 );
 
+const ThreeColsLayout = ({ slots }: LayoutProps) => (
+  <Frame name='three-cols' className={mx('grid grid-cols-3 gap-16', theme.padding)}>
+    <Slot name='default'>
+      {slots.default}
+      {slots.left}
+    </Slot>
+    <Slot name='middle'>{slots.middle}</Slot>
+    <Slot name='right'>{slots.right}</Slot>
+  </Frame>
+);
+
+const GridLayout = ({ slots }: LayoutProps) => (
+  <Frame name='grid' className={mx('grid grid-cols-2 grid-rows-2 gap-x-16 gap-y-12', theme.padding)}>
+    <Slot name='default'>
+      {slots.default}
+      {slots.left}
+    </Slot>
+    <Slot name='right'>{slots.right}</Slot>
+    <Slot name='bottom-left'>{slots['bottom-left']}</Slot>
+    <Slot name='bottom-right'>{slots['bottom-right']}</Slot>
+  </Frame>
+);
+
 // The picture itself is painted by `SlideBackground`; a scrim keeps any content on top of it readable.
 const ImageLayout = ({ slots }: LayoutProps) => (
   <Frame name='image' className={mx('flex flex-col', theme.padding)}>
@@ -147,7 +170,7 @@ const NoneLayout = ({ slots }: LayoutProps) => (
   </Frame>
 );
 
-/** One component per Slidev built-in layout, with the same names and slots. */
+/** One component per Slidev built-in layout, with the same names and slots, plus `three-cols` and `grid` (2 × 2). */
 export const layouts: Record<LayoutName, Layout> = {
   'default': DefaultLayout,
   'cover': vertical({ name: 'cover', className: emphasis }),
@@ -160,6 +183,8 @@ export const layouts: Record<LayoutName, Layout> = {
   'quote': vertical({ name: 'quote', className: '[&_blockquote]:text-[72px]' }),
   'two-cols': TwoColsLayout,
   'two-cols-header': TwoColsHeaderLayout,
+  'three-cols': ThreeColsLayout,
+  'grid': GridLayout,
   'image': ImageLayout,
   'image-left': ImageLeftLayout,
   'image-right': ImageRightLayout,

@@ -78,6 +78,40 @@ describe('MarkdownSlide', () => {
     expect(markup).toMatch(/data-slot="default"[^>]*>(?:(?!data-slot).)*Left side/s);
   });
 
+  test('three-cols places ::middle:: and ::right:: content in their columns', ({ expect }) => {
+    const markup = render(
+      ['---', 'layout: three-cols', '---', '', 'One', '', '::middle::', '', 'Two', '', '::right::', '', 'Three'].join(
+        '\n',
+      ),
+    );
+    expect(markup).toContain('data-layout="three-cols"');
+    expect(markup).toMatch(/data-slot="default"[^>]*>(?:(?!data-slot).)*One/s);
+    expect(markup).toMatch(/data-slot="middle"[^>]*>(?:(?!data-slot).)*Two/s);
+    expect(markup).toMatch(/data-slot="right"[^>]*>(?:(?!data-slot).)*Three/s);
+  });
+
+  test('grid places four regions in reading order', ({ expect }) => {
+    const markup = render(
+      [
+        ['---', 'layout: grid', '---', '', 'One'],
+        ['::right::', '', 'Two'],
+        ['::bottom-left::', '', 'Three'],
+        ['::bottom-right::', '', 'Four'],
+      ]
+        .map((lines) => lines.join('\n'))
+        .join('\n\n'),
+    );
+    expect(markup).toContain('data-layout="grid"');
+    for (const [slot, text] of [
+      ['default', 'One'],
+      ['right', 'Two'],
+      ['bottom-left', 'Three'],
+      ['bottom-right', 'Four'],
+    ]) {
+      expect(markup).toMatch(new RegExp(`data-slot="${slot}"[^>]*>(?:(?!data-slot).)*${text}`, 's'));
+    }
+  });
+
   test('code block renders its source inside pre', ({ expect }) => {
     const markup = render(['```ts {2}', 'const a = 1;', 'const b = 2;', '```'].join('\n'));
     expect(markup).toMatch(/<pre[^>]*>(?:(?!<\/pre>).)*const a = 1;(?:(?!<\/pre>).)*<\/pre>/s);

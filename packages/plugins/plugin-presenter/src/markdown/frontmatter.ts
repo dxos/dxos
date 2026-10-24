@@ -19,6 +19,8 @@ export const LAYOUTS = [
   'quote',
   'two-cols',
   'two-cols-header',
+  'three-cols',
+  'grid',
   'image',
   'image-left',
   'image-right',

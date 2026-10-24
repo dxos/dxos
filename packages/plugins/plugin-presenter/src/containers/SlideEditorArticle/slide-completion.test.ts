@@ -6,6 +6,8 @@ import { CompletionContext, type CompletionResult } from '@codemirror/autocomple
 import { EditorState } from '@codemirror/state';
 import { describe, expect, test } from 'vitest';
 
+import { LAYOUTS } from '#markdown';
+
 import { slideCompletion } from './slide-completion.ts';
 
 const complete = async (marked: string, explicit = false): Promise<CompletionResult | null> => {
@@ -33,6 +35,6 @@ describe('slideCompletion', () => {
   });
 
   test('opens on an empty value right after the colon', async () => {
-    expect((await complete('---\nlayout: |\n---\n'))?.options).toHaveLength(16);
+    expect((await complete('---\nlayout: |\n---\n'))?.options).toHaveLength(LAYOUTS.length);
   });
 });

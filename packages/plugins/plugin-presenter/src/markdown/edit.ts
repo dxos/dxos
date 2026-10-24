@@ -4,6 +4,8 @@
 
 import * as Yaml from 'yaml';
 
+import { type SlotName } from './remark-slidev.ts';
+
 /** A text replacement in a slide's markdown, with where the cursor should land afterwards. */
 export type SlideEdit = { from: number; to: number; insert: string; cursor: number };
 
@@ -41,8 +43,10 @@ export const setFrontmatter = (content: string, patch: Record<string, string | n
 export const SNIPPETS = {
   click: '<v-click>\n\n|\n\n</v-click>\n',
   clicks: '<v-clicks>\n\n- |\n\n</v-clicks>\n',
-  column: '\n::right::\n\n|',
 } as const;
+
+/** A marker starting `slot`; `|` marks where the cursor lands. */
+export const columnSnippet = (slot: SlotName) => `\n::${slot}::\n\n|`;
 
 /** An embedded-object tag for the object's ECHO URI. */
 export const surfaceSnippet = (uri: string) => `<Surface ref="${uri}" />\n|`;

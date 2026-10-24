@@ -49,7 +49,7 @@ describe('parseFrontmatter', () => {
     expect(parseFrontmatter('')).toEqual({ frontmatter: {}, issues: [] });
   });
 
-  test('lists 16 layouts', () => {
-    expect(LAYOUTS).toHaveLength(16);
+  test('lists 18 layouts', () => {
+    expect(LAYOUTS).toHaveLength(18);
   });
 });
