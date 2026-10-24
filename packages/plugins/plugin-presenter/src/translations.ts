@@ -46,7 +46,7 @@ export const translations = [
         'layout.statement.label': 'Statement',
         'layout.quote.label': 'Quote',
         'layout.two-cols.label': 'Two columns',
-        'layout.two-cols-header.label': 'Header and columns',
+        'layout.two-cols-header.label': 'Titled columns',
         'layout.image.label': 'Image',
         'layout.image-left.label': 'Image on the left',
         'layout.image-right.label': 'Image on the right',
