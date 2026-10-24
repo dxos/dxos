@@ -83,13 +83,21 @@ export const makeSlide = (content: Obj.Unknown, props: Omit<Partial<Slide>, 'con
 /**
  * Creates a presentation with one owned markdown slide per string.
  */
+type MakeProps = { name?: string; description?: string; theme?: SlideTheme.Settings };
+
 export const make = ({
   name,
   description,
+  theme,
   slides = [],
-}: { name?: string; description?: string; slides?: string[] } = {}): Presentation => {
+}: MakeProps & { slides?: string[] } = {}): Presentation => {
   const owned = slides.map((content) => makeSlide(Text.make({ content })));
-  const presentation = Obj.make(Presentation, { name, description, slides: owned.map((slide) => Ref.make(slide)) });
+  const presentation = Obj.make(Presentation, {
+    name,
+    description,
+    theme,
+    slides: owned.map((slide) => Ref.make(slide)),
+  });
   // Parent is set after the refs exist because setParent warns when the parent holds no ref.
   for (const slide of owned) {
     Obj.setParent(slide, presentation);
@@ -100,8 +108,8 @@ export const make = ({
 /**
  * A presentation from one Slidev markdown document: a slide per `---`, each keeping its own frontmatter.
  */
-export const makeFromMarkdown = ({ name, markdown }: { name?: string; markdown: string }): Presentation =>
-  make({ name, slides: splitSlides(markdown) });
+export const makeFromMarkdown = ({ markdown, ...props }: MakeProps & { markdown: string }): Presentation =>
+  make({ ...props, slides: splitSlides(markdown) });
 
 /**
  * Whether a slide's content is its own markdown `Text`, rather than a linked object.
