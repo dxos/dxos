@@ -16,6 +16,7 @@ export default defineConfig({
     markdown: 'src/markdown/index.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
+    skills: 'src/skills/index.ts',
     translations: 'src/translations.ts',
     testing: 'src/testing/index.ts',
     Presentation: 'src/types/Presentation.ts',

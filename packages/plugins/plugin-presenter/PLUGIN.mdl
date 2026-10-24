@@ -76,6 +76,9 @@ type SlideSource
 ```mdl
 component Deck
   desc: |
+    A composite (`Deck.Root`, headless, holding the state and keys; `Deck.Content`, the focus scope that handles keys
+    and prints; `Deck.Viewport`, the current slide; `Deck.Grid`, every slide as a thumbnail; `Deck.Pager`,
+    `Deck.PageNumber` and `Deck.FullscreenButton`), composed by its containers into a Panel.
     Paged slide deck. Inline it shows the pager centered in a status bar below the slide; in fullscreen an overlay pager that auto-hides when idle
     and wakes on pointer movement. Keys are scoped to the deck's focus scope, never `window`: left and right
     step, Shift+left and Shift+right (or Home and End) jump to first and last, `f` toggles fullscreen,
@@ -85,23 +88,21 @@ component Deck
     slide into a print-only container, one 16:9 page each with every click step shown, and drops the rest of the
     app from the printout.
   props:
-    slides: SlideSource[]
-    index: number
-    fullscreen: boolean
-    toolbar?: ReactNode
-    theme?: SlideTheme          # without a name, the first slide's `theme:` headmatter applies
-    view?: 'slide' | 'grid'     # inline view; fullscreen always shows one slide
+    slides: SlideSource[]       # Deck.Root
+    index: number               # Deck.Root
+    fullscreen: boolean         # Deck.Root
+    theme?: SlideTheme          # Deck.Root; without a name, the first slide's `theme:` headmatter applies
   actions:
-    onIndexChange(index: number)
-    onFullscreenChange(fullscreen: boolean)
-    onAddSlide()
-    onMoveSlide(from: number, to: number)   # grid only; enables dragging thumbnails
+    onIndexChange(index: number)              # Deck.Root
+    onFullscreenChange(fullscreen: boolean)   # Deck.Root
+    onAddSlide()                              # Deck.Viewport; offered when the deck is empty
+    onMove(from: number, to: number)          # Deck.Grid; enables dragging thumbnails
   layout: |
     ┌─────────────────────────────┐
     │ [toolbar]              [⛶] │  ← hidden in fullscreen
     ├─────────────────────────────┤
     │                             │
-    │     SlideFrame (slide N)    │
+    │   Deck.Viewport (slide N)   │
     │   (overlay pager, idle)     │
     ├─────────────────────────────┤
     │      ◀◀ ◀  3 / 12  ▶ ▶▶     │  ← status bar; hidden in fullscreen and in the grid view
@@ -110,7 +111,7 @@ component Deck
     ┌─────────────────────────────┐
     │ [toolbar]              [⛶] │
     ├─────────────────────────────┤
-    │ ┌────┐ ┌────┐ ┌────┐ ┌────┐ │  ← SlideGrid: thumbnails, current one outlined;
+    │ ┌────┐ ┌────┐ ┌────┐ ┌────┐ │  ← Deck.Grid: thumbnails, current one outlined;
     │ │ 1  │ │ 2  │ │[3] │ │ 4  │ │    scrolls vertically; columns follow the width
     │ └────┘ └────┘ └────┘ └────┘ │
     │ ┌────┐                      │
@@ -122,8 +123,8 @@ component Deck
 ```mdl
 component PresentationArticle
   desc: |
-    A Presentation's article is a grid of its slides (`Deck` `view='grid'`); presenting shows the deck one slide
-    at a time. Fullscreen is read per object (is this Presentation on the
+    A Presentation's article is a grid of its slides (`Deck.Grid`); presenting shows one slide at a time (`Deck.Viewport`).
+    Fullscreen is read per object (is this Presentation on the
     fullscreen plank) and toggles in place on the Presentation's own plank; the current slide is per-viewer
     view state. The toolbar adds slides and links objects through SectionPicker.
   props:
@@ -152,35 +153,28 @@ component SectionPicker
 ```
 
 ```mdl
-component SlideFrame
+component Slide
   desc: |
-    A fixed 16:9 logical canvas scaled to its container, so every slide contributor designs for one size.
-    SlideRenderer wraps linked object slides in it; the markdown slide surface (SlideArticle) renders the
-    slide only and relies on the caller for the frame.
+    A composite: `Slide.Root` (headless) holds one SlideSource and its options; `Slide.Frame` is a fixed 16:9
+    logical canvas scaled to its container (inset in a solid void with `inset`, unscaled for print), so every slide
+    contributor designs for one size; `Slide.Content` draws the source. Text sources render markdown through
+    MarkdownSlide; markdown sources (the preview companion's raw slides) do the same; pending sources show a
+    loading slide; object sources render through the AppSurface.Slide surface, falling back to a title slide while
+    no surface matches, and request gated slide surfaces on demand. It supplies MarkdownSlide's embedded surfaces
+    from the database of the slide's owner.
   props:
-    children: ReactNode
-```
-
-```mdl
-component SlideRenderer
-  desc: |
-    Renders one SlideSource. Text sources render markdown through MarkdownSlide; markdown sources (the
-    preview companion's raw slides) do the same; pending sources show a loading slide; object sources
-    render through the AppSurface.Slide surface, falling back to a title slide while no surface matches, and
-    request gated slide surfaces on demand. It supplies MarkdownSlide's embedded surfaces from the database of
-    the slide's owner.
-  props:
-    source: SlideSource
-    step?: number
+    source: SlideSource         # Slide.Root
+    step?: number               # Slide.Root
+    inset?: boolean             # Slide.Frame
 ```
 
 ```mdl
 component MarkdownSlide
   desc: |
     Renders one slide of the Slidev markdown subset on the 2560x1440 canvas: per-slide frontmatter
-    (`layout`, `image`, `background`, `class`, `backgroundVideo`, `backgroundOpacity`, `backgroundPosition`, and
-    `theme` on the first slide; `title` is parsed and reserved, not rendered),
-    `::left::` / `::right::` / `::default::` slots,
+    (`layout`, `image`, `background`, `class`, `backgroundVideo`, `backgroundOpacity`, `backgroundPosition`,
+    `bleed`, and `theme` on the first slide; `title` is parsed and reserved, not rendered),
+    `::default::` / `::left::` / `::middle::` / `::right::` / `::bottom-left::` / `::bottom-right::` slots,
     `<v-click>`, `<v-clicks>` (`depth`, `every`) and `<v-after>` click steps, highlighted code blocks with
     static line ranges, and notes. All other raw HTML is escaped, never rendered. Elements with a later click
     step stay laid out but invisible. `class:` accepts only Tailwind utilities already generated.
@@ -194,9 +188,9 @@ component MarkdownSlide
 component SlideLayouts
   desc: |
     The layouts a slide's `layout` names: default, cover, center, section, intro, end, fact, statement, quote,
-    two-cols, two-cols-header, three-cols, two-by-two, image, image-left, image-right, full, none. three-cols
-    fills `default`, `middle` and `right`; two-by-two fills `default`, `right`, `bottom-left` and `bottom-right`.
-    An unknown name renders with default and is reported as a validation issue.
+    two-cols, two-cols-header, three-cols, two-by-two, image, image-left, image-right, full, none. An unknown
+    name renders with default and is reported as a validation issue. `bleed: left | right` takes the outer column
+    of `two-cols` or `three-cols` to the slide's edges.
   props:
     slots: { default, left, middle, right, bottom-left, bottom-right }
     frontmatter: SlideFrontmatter
@@ -246,7 +240,7 @@ component DocumentArticle
 component SlideArticle
   desc: |
     The AppSurface.Slide surface for Markdown.Document objects: renders the document as a slide, without a
-    frame (SlideRenderer owns it).
+    frame (Slide.Frame owns it).
   props:
     document: Markdown.Document
 ```
@@ -356,8 +350,8 @@ feat F-4: Presentation Deck
 ```mdl
 feat F-6: Markdown Slides
 
-  req F-6.1: A slide is written in a strict Slidev subset: per-slide frontmatter `layout`, `image`, `background`, `class`, `title` (and the DXOS keys of F-8.1 and the `theme` headmatter of F-6.8); slots `::left::`, `::right::`, `::default::`; notes as the slide's last HTML comment.
-  req F-6.2: The layouts are default, cover, center, section, intro, end, fact, statement, quote, two-cols, two-cols-header, three-cols, two-by-two, image, image-left, image-right, full and none; three-cols has slots `default`, `::middle::` and `::right::`, two-by-two has `default`, `::right::`, `::bottom-left::` and `::bottom-right::`.
+  req F-6.1: A slide is written in a strict Slidev subset: per-slide frontmatter `layout`, `image`, `background`, `class`, `title` (and the DXOS keys of F-8.1 and F-8.5 and the `theme` headmatter of F-6.8); slots `::left::`, `::right::`, `::default::`, and for the DXOS layouts `three-cols` and `two-by-two` also `::middle::`, `::bottom-left::` and `::bottom-right::`; notes as the slide's last HTML comment.
+  req F-6.2: The layouts are default, cover, center, section, intro, end, fact, statement, quote, two-cols, two-cols-header, three-cols, two-by-two, image, image-left, image-right, full and none.
   req F-6.3:
     when: a slide names an unknown layout
     then: it renders with default, no error is shown, and a validation issue is reported
@@ -365,10 +359,10 @@ feat F-6: Markdown Slides
     when: a slide's frontmatter YAML is malformed
     then: the body still renders, the frontmatter is ignored and a validation issue is reported
   req F-6.5: Raw HTML other than `v-click`, `v-clicks`, `v-after`, `Surface` and `br` is escaped, never rendered or executed; URLs with unsafe schemes are not followed.
-  req F-6.6: A fenced code block renders highlighted; a `{2,4-5}` meta marks the lines that stay emphasised.
+  req F-6.6: A fenced code block renders highlighted; a `{2,4-5}` meta marks the lines that stay emphasised, and Slidev's `{lines:true}` option numbers the lines.
   req F-6.7: In the preview companion `---` splits slides except inside a fenced code block, and a leading frontmatter block is slide metadata.
   req F-6.8: A deck has one theme, `default`, `light`, `dark` or `serif`, named by the first slide's `theme:` headmatter; `default` follows the app's light/dark mode and `light`/`dark` force one, code highlighting included.
-  req F-6.9: A Presentation's `theme` setting names the theme and may override its accent, background and text colors, its text font (`mono`, `sans`, `rounded`, `serif`, `display`) and its code font (`jetbrains`, `fira`, `plex`, `system`); it wins over headmatter, and linked object slides are painted with it too.
+  req F-6.9: A Presentation's `theme` setting names the theme and may override its accent, background and text colors, its text font (`mono`, `sans`, `rounded`, `serif`, `display`, `space-grotesk`, `mali`, `geist`, `orbitron`, `unbounded`, `opendyslexic`, `lxgw-wenkai`) and its code font (`jetbrains`, `fira`, `plex`, `system`); it wins over headmatter, and linked object slides are painted with it too.
   req F-6.10:
     when: a slide names an unknown theme, or an override is not a plain color or font list
     then: the default theme or value applies and, for an unknown name, a validation issue is reported
@@ -399,6 +393,7 @@ feat F-8: Backgrounds and Embedded Surfaces
     when: the ref is malformed, never existed, or its target is deleted
     then: a "Missing object" placeholder shows in its place, with no spinner left
   req F-8.4: An image whose URL is an object URI (`![label](echo:///<id>)`) embeds that object as `<Surface ref>` with the `slide` role; alone in its paragraph it fills its slot, and the label is ignored.
+  req F-8.5: Frontmatter `bleed: left` or `bleed: right` takes the outer column of a `two-cols` or `three-cols` slide to the slide's edges on that side, top and bottom, with no padding, for an embedded object to fill.
 ```
 
 ```mdl
@@ -1137,7 +1132,85 @@ decision D-52: A theme's fonts are picked by name, a text font and a code font, 
 ```
 
 ```mdl
-decision D-53: Add two layouts beyond Slidev's built-ins: three-cols (slots `default`, `::middle::`, `::right::`) and two-by-two (`default`, `::right::`, `::bottom-left::`, `::bottom-right::`); "Start next column" inserts the marker of the column after the cursor's. Fills in [F-6.2].
+decision D-53: Two layouts beyond Slidev's set: `three-cols` (default content, then `::middle::` and `::right::`) and `grid`, 2 × 2 in reading order (default content, `::right::`, `::bottom-left::`, `::bottom-right::`); both, like `two-cols`, take `::left::` content into their first region, and "Start the next column" inserts the marker after the one holding the caret.
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-6.1, MarkdownSlide, SlideToolbar]
+  why: The user asked for a three-column and a 2 × 2 layout; reusing `::right::` keeps a two-cols slide valid when its layout is switched to either.
+  rejected: Positional names such as `::top-left::` for the grid, which would make a two-cols slide lose its right column when switched to `grid`.
+```
+
+```mdl
+decision D-54: A column bleeds to the slide's edges by a per-slide frontmatter key, `bleed: left | right`, rather than by an attribute on an embed; with it the layout pads its columns instead of its frame.
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-8.5, MarkdownSlide]
+  why: The user asked to optionally drop the padding around an embedded object; a column is the unit the padding belongs to, and frontmatter is where a slide's layout is already set.
+  rejected: `<Surface … bleed />`, which would need negative margins matched to each layout's padding.
+```
+
+```mdl
+decision D-55: Slides offer a three-column layout and a 2 × 2 layout. [D-53] records how they were filled in.
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [F-6.1, F-6.2]
+  why: Content often splits three ways or into a grid of four, which two columns cannot hold.
+```
+
+```mdl
+decision D-56: A slide can drop the padding around an embedded object, so the object reaches the slide's edges. [D-54] records how it was filled in.
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [F-8.5]
+  why: An embedded object (a drawing, a map, an image) reads better edge to edge than inset in a padded column.
+```
+
+```mdl
+decision D-57: The 2 × 2 layout is named `two-by-two`, not `grid`. Supersedes the name in [D-53].
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [F-6.1, F-6.2, SlideLayouts]
+  why: It matches the name dxos/dxos#14188 gives the same layout, and `grid` already names the presentation's thumbnail view.
+```
+
+```mdl
+decision D-58: The deck and the slide are Radix-style composites, `Deck.*` and `Slide.*`, with a headless `Root`; they stay internal to the plugin until they move to a `react-ui-presenter` package.
+  date: 2026-10-24
+  by: user:richburdon
+  affects: [Deck, Slide]
+  why: Containers compose the parts they need (a grid inline, one slide fullscreen, a pager or not) instead of switching modes through props.
+```
+
+```mdl
+decision D-59: `Deck.Root` holds the slides, index, click step, fullscreen and the key handler; `Deck.Content` is the focus scope (keys, print); the parent chooses `Deck.Viewport` or `Deck.Grid`, and the fullscreen pager lives inside `Deck.Viewport`. `Slide.Frame` needs no `Slide.Root`, so a bare markdown slide can be framed directly. Fills in [D-58].
+  date: 2026-10-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Deck, Slide]
+  why: Fullscreen changes which parts render, so the parent that composes them decides; keeping the pager inside the viewport keeps it over the slide it pages.
+  rejected: A `Deck.Overlay` part, which every fullscreen composition would have to remember to include.
+```
+
+```mdl
+decision D-60: The text fonts add Space Grotesk, Mali, Geist, Orbitron, Unbounded and OpenDyslexic, each loaded on demand like the others of [D-52].
+  date: 2026-10-24
+  by: user:richburdon
+  affects: [SlideTheme, F-6.9]
+  why: A wider choice of faces for decks, including OpenDyslexic for readability.
+```
+
+```mdl
+decision D-61: LXGW WenKai joins the text fonts, loaded on demand and kept out of the web app's install-time cache, despite shipping as one 8.4 MB file per weight.
+  date: 2026-10-24
+  by: user:richburdon
+  affects: [SlideTheme, F-6.9]
+  why: It covers Chinese text, which none of the other fonts do; on the web its size is paid only by decks that use it.
+```
+
+```mdl
+decision D-62: Add two layouts beyond Slidev's built-ins: three-cols (slots `default`, `::middle::`, `::right::`) and two-by-two (`default`, `::right::`, `::bottom-left::`, `::bottom-right::`); "Start next column" inserts the marker of the column after the cursor's. Recorded on dxos/dxos#14188 as D-53; renumbered when merged, and [D-55] records the same request.
   date: 2026-10-24
   by: user:richburdon
   affects: [F-6.2]

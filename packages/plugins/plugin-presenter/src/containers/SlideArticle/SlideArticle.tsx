@@ -9,15 +9,15 @@ import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
 
-import { EmbedAncestor, MarkdownSlide, useSurfaceRenderer } from '#components';
+import { EmbedAncestor, MarkdownSlide, Slide } from '#components';
 
 export type SlideArticleProps = AppSurface.ObjectSectionProps<Markdown.Document>;
 
-/** Unframed: `SlideRenderer` owns the scaled frame. */
+/** Unframed: `Slide.Frame` owns the scaled frame. */
 export const SlideArticle = ({ subject: document }: SlideArticleProps) => {
   const [content] = useObject(document.content, 'content');
   // Space-relative refs in the document resolve against the document's own database.
-  const renderSurface = useSurfaceRenderer(Obj.getDatabase(document));
+  const renderSurface = Slide.useSurfaceRenderer(Obj.getDatabase(document));
   if (!content) {
     return null;
   }

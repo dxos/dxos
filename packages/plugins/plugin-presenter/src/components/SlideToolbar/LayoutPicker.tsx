@@ -12,8 +12,7 @@ import * as Popover from '@dxos/react-ui/Popover';
 import { type LayoutName, LAYOUTS } from '#markdown';
 import { meta } from '#meta';
 
-import { MarkdownSlide } from '../MarkdownSlide/index.ts';
-import { SlideFrame } from '../SlideFrame/index.ts';
+import { Slide } from '../Slide/index.ts';
 
 // Placeholder content per thumbnail, so each layout shows how it places a title, text and columns.
 const sample = (layout: LayoutName): string => {
@@ -53,21 +52,17 @@ export type LayoutPickerProps = {
 export const LayoutPicker = ({ value, onChange }: LayoutPickerProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [open, setOpen] = useState(false);
-  const options = useMemo(
-    () => LAYOUTS.map((layout) => ({ value: layout, label: t(`layout.${layout}.label`, { defaultValue: layout }) })),
-    [t],
-  );
+  const options = useMemo(() => LAYOUTS.map((layout) => ({ value: layout, label: t(`layout.${layout}.label`) })), [t]);
   return (
     <Popover.Root open={open} onOpenChange={({ open }) => setOpen(open)}>
       <Popover.Trigger asChild>
         <Button.Root
           data-testid='presenter.slide-toolbar.layout'
           icon='ph--layout--regular'
+          iconOnly
           variant='ghost'
           label={t('slide-layout.label')}
-        >
-          {t(`layout.${value}.label`, { defaultValue: value })}
-        </Button.Root>
+        />
       </Popover.Trigger>
       {/* The grid is wider than a popover's default cap, so the cap is lifted to the viewport. */}
       <Popover.Content classNames='max-w-[calc(100vw-1rem)] overflow-auto'>
@@ -94,9 +89,11 @@ export const LayoutPicker = ({ value, onChange }: LayoutPickerProps) => {
                   classNames='text-xs'
                 >
                   <div className='relative flex aspect-video pointer-events-none border border-separator'>
-                    <SlideFrame>
-                      <MarkdownSlide content={sample(layout)} />
-                    </SlideFrame>
+                    <Slide.Root source={{ kind: 'markdown', id: layout, content: sample(layout) }}>
+                      <Slide.Frame>
+                        <Slide.Content />
+                      </Slide.Frame>
+                    </Slide.Root>
                   </div>
                   <Listbox.ItemText />
                 </Listbox.Item>

@@ -11,8 +11,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { SlideTheme } from '#types';
 
 import { MarkdownSlide } from '../MarkdownSlide/index.ts';
-import { SlideFrame } from '../SlideFrame/index.ts';
-import { SlideThemeProvider } from './SlideTheme.tsx';
+import { Slide } from '../Slide/index.ts';
+import { SlideThemeProvider, useSlideThemeStyle } from './SlideTheme.tsx';
 
 const CONTENT = [
   '# Local-first',
@@ -29,17 +29,84 @@ const CONTENT = [
 
 type StoryProps = { themes: SlideTheme.Settings[] };
 
+/** One line naming a variant's settings, e.g. `serif · font: display`. */
+const caption = (settings: SlideTheme.Settings) =>
+  Object.entries(settings)
+    .map(([key, value]) => (key === 'name' ? String(value) : `${key}: ${value}`))
+    .join(' · ');
+
+/** Every variant as a full-width 16:9 slide, one under another, in a column that scrolls. */
 const DefaultStory = ({ themes }: StoryProps) => (
-  <div className='grid grid-cols-2 auto-rows-fr gap-2 p-2 size-full'>
-    {themes.map((settings, index) => (
-      <div key={index} data-theme-name={settings.name} className='flex flex-col min-h-0'>
-        <SlideThemeProvider settings={settings}>
-          <SlideFrame inset>
-            <MarkdownSlide content={CONTENT} />
-          </SlideFrame>
-        </SlideThemeProvider>
-      </div>
-    ))}
+  <div className='size-full overflow-y-auto'>
+    <div className='flex flex-col gap-8 p-8 max-w-[64rem] mx-auto'>
+      {themes.map((settings, index) => (
+        <figure key={index} data-theme-name={settings.name} className='flex flex-col gap-2 m-0'>
+          <figcaption className='text-sm text-description font-mono'>{caption(settings)}</figcaption>
+          <div className='flex aspect-video'>
+            <SlideThemeProvider settings={settings}>
+              <Slide.Frame inset>
+                <MarkdownSlide content={CONTENT} />
+              </Slide.Frame>
+            </SlideThemeProvider>
+          </div>
+        </figure>
+      ))}
+    </div>
+  </div>
+);
+
+const SPECIMEN_TITLE = 'The quick brown fox jumps over the lazy dog';
+
+const SPECIMEN_TEXT =
+  'Local-first software keeps your data on your own devices, syncs it peer to peer, and still lets a whole team ' +
+  'work on it together. Numbers 0123456789, and punctuation: “quotes”, (brackets) & ampersands. 中文：本地优先的软件。';
+
+const SPECIMEN_CODE = "const space = await client.spaces.create({ name: 'Demo' }); // 0O 1lI";
+
+type SpecimenProps = { label: string; settings: SlideTheme.Settings; code?: boolean };
+
+/** One font's sample: a title and a paragraph in it (or a line of code), loaded on demand as a deck would. */
+const Specimen = ({ label, settings, code }: SpecimenProps) => (
+  <SlideThemeProvider settings={settings}>
+    <SpecimenText label={label} code={code} />
+  </SlideThemeProvider>
+);
+
+const SpecimenText = ({ label, code }: Pick<SpecimenProps, 'label' | 'code'>) => {
+  const style = useSlideThemeStyle();
+  const family = code ? 'var(--slide-font-mono)' : 'var(--slide-font-body)';
+  return (
+    <section data-font={label} style={style} className='flex flex-col gap-3 py-8 border-b border-separator'>
+      <div className='text-xs text-description font-mono'>{label}</div>
+      {code ? (
+        <pre className='m-0 text-lg whitespace-pre-wrap' style={{ fontFamily: family }}>
+          {SPECIMEN_CODE}
+        </pre>
+      ) : (
+        <>
+          <h2 className='m-0 text-4xl' style={{ fontFamily: 'var(--slide-font-heading)' }}>
+            {SPECIMEN_TITLE}
+          </h2>
+          <p className='m-0 text-lg leading-relaxed' style={{ fontFamily: family }}>
+            {SPECIMEN_TEXT}
+          </p>
+        </>
+      )}
+    </section>
+  );
+};
+
+/** Every text font, then every code font, in one scrolling list. */
+const FontSpecimensStory = () => (
+  <div className='size-full overflow-y-auto'>
+    <div className='flex flex-col px-8 max-w-[56rem] mx-auto'>
+      {SlideTheme.FONTS.map((font) => (
+        <Specimen key={font} label={`font: ${font}`} settings={{ font }} />
+      ))}
+      {SlideTheme.MONO_FONTS.map((monoFont) => (
+        <Specimen key={monoFont} label={`monoFont: ${monoFont}`} settings={{ monoFont }} code />
+      ))}
+    </div>
   </div>
 );
 
@@ -74,26 +141,38 @@ export const Default: Story = {
   },
 };
 
-/** A theme with accent, background, text color and font overrides; the unsafe value is ignored. */
-export const Overrides: Story = {
-  args: {
-    themes: [
-      { name: 'dark', accent: '#f97316' },
-      { name: 'light', background: '#fef3c7', foreground: '#451a03', accent: '#b45309' },
-      { name: 'serif', accent: 'oklch(65% 0.2 300)' },
-      { name: 'default', accent: 'url(https://example.com/x)', font: 'sans' },
-    ],
-  },
-};
+/** Accent, background, text color and font overrides; the unsafe accent is ignored. */
+const OVERRIDES: SlideTheme.Settings[] = [
+  { name: 'dark', accent: '#f97316' },
+  { name: 'light', background: '#fef3c7', foreground: '#451a03', accent: '#b45309' },
+  { name: 'serif', accent: 'oklch(65% 0.2 300)' },
+  { name: 'default', accent: 'url(https://example.com/x)', font: 'sans' },
+];
 
 /** Each text font with a code font; web fonts load on first use. */
-export const Fonts: Story = {
-  args: {
-    themes: [
-      { name: 'default', font: 'sans', monoFont: 'fira' },
-      { name: 'default', font: 'rounded', monoFont: 'plex' },
-      { name: 'light', font: 'serif', monoFont: 'jetbrains' },
-      { name: 'dark', font: 'display', monoFont: 'system' },
-    ],
+const FONTS: SlideTheme.Settings[] = [
+  { name: 'default', font: 'sans', monoFont: 'fira' },
+  { name: 'default', font: 'rounded', monoFont: 'plex' },
+  { name: 'light', font: 'serif', monoFont: 'jetbrains' },
+  { name: 'dark', font: 'display', monoFont: 'system' },
+];
+
+/** Every variant in one column: the built-in themes, then overrides, then font pairings. */
+export const All: Story = {
+  args: { themes: [...SlideTheme.NAMES.map((name) => ({ name })), ...OVERRIDES, ...FONTS] },
+};
+
+export const Overrides: Story = { args: { themes: OVERRIDES } };
+
+export const Fonts: Story = { args: { themes: FONTS } };
+
+/** The same title and paragraph in each text font, and a line of code in each code font. */
+export const FontSpecimens: Story = {
+  args: { themes: [] },
+  render: () => <FontSpecimensStory />,
+  play: async ({ canvasElement }) => {
+    await expect(canvasElement.querySelectorAll('[data-font]')).toHaveLength(
+      SlideTheme.FONTS.length + SlideTheme.MONO_FONTS.length,
+    );
   },
 };

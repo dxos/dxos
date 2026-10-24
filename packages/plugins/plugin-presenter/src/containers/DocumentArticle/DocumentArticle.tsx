@@ -8,6 +8,8 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { useAttention } from '@dxos/react-ui-attention';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Deck } from '#components';
 import { useDocumentDeck, useIsPresenting, useSetPresenting, useSlideIndex } from '#hooks';
@@ -33,8 +35,7 @@ export const DocumentArticle = ({ role, subject: document, attendableId }: Docum
   );
 
   return (
-    <Deck
-      role={role}
+    <Deck.Root
       slides={slides}
       index={index}
       onIndexChange={setIndex}
@@ -42,7 +43,32 @@ export const DocumentArticle = ({ role, subject: document, attendableId }: Docum
       onFullscreenChange={handleFullscreenChange}
       attendableId={attendableId}
       autoFocus={hasAttention}
-    />
+    >
+      <Panel.Root role={role} asChild>
+        <Deck.Content>
+          {/* Fullscreen is the slide alone; the toolbar and pager return on exit. */}
+          {!fullscreen && (
+            <Panel.Header>
+              <Toolbar.Root>
+                <div className='grow' />
+                <Deck.FullscreenButton />
+              </Toolbar.Root>
+            </Panel.Header>
+          )}
+          <Panel.Body asChild>
+            <Deck.Viewport />
+          </Panel.Body>
+          {!fullscreen && (
+            <Panel.Footer>
+              <div className='flex items-center justify-center gap-4'>
+                <Deck.Pager />
+                <Deck.PageNumber />
+              </div>
+            </Panel.Footer>
+          )}
+        </Deck.Content>
+      </Panel.Root>
+    </Deck.Root>
   );
 };
 

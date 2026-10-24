@@ -25,7 +25,7 @@ export const Pager = ({ index = 0, count = 0, onChange }: PagerProps) => {
   const atEnd = count === 0 || index >= count - 1;
 
   return (
-    <Layout.Flex align='center' classNames='text-neutral-500'>
+    <Layout.Flex align='center' classNames='text-neutral-500 select-none'>
       <Button.Root
         icon='ph--caret-double-left--regular'
         iconSize='xl'
@@ -80,9 +80,12 @@ export type PageNumberProps = {
 };
 
 export const PageNumber = ({ index = 0, count = 1 }: PageNumberProps) => {
+  // Wide enough for the last page (tabular digits are 1ch, and 3ch covers ` / `), so moving from page 9 to 10 does not
+  // widen the pager; one text node, so the label still reads (and is found) as `9 / 10`.
+  const width = `${String(count).length * 2 + 3}ch`;
   return (
-    <Layout.Flex align='center' classNames='text-neutral-500 text-2xl tabular-nums'>
-      <div>
+    <Layout.Flex align='center' classNames='text-neutral-500 text-2xl tabular-nums select-none'>
+      <div className='text-end' style={{ minWidth: width }}>
         {count === 0 ? 0 : index + 1} / {count}
       </div>
     </Layout.Flex>

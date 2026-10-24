@@ -30,6 +30,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
   roles: ['org.dxos.role.article', 'org.dxos.role.slide'],
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,

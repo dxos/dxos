@@ -16,14 +16,47 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { DXN } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { withClientProvider } from '@dxos/react-client/testing';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Text } from '@dxos/schema';
 
 import { type SlideSource } from '#deck';
 import { useSlideIndex } from '#hooks';
 import { translations } from '#translations';
 
-import { Deck, type DeckProps } from './Deck.tsx';
+import * as Deck from './Deck.tsx';
+
+type DeckPanelProps = Omit<Deck.RootProps, 'children'> & { onAddSlide?: () => void };
+
+/** The single-slide deck as `DocumentArticle` composes it: toolbar, viewport and pager; fullscreen is the slide alone. */
+const DeckPanel = ({ onAddSlide, ...props }: DeckPanelProps) => (
+  <Deck.Root {...props}>
+    <Panel.Root asChild>
+      <Deck.Content>
+        {!props.fullscreen && (
+          <Panel.Header>
+            <Toolbar.Root>
+              <div className='grow' />
+              <Deck.FullscreenButton />
+            </Toolbar.Root>
+          </Panel.Header>
+        )}
+        <Panel.Body asChild>
+          <Deck.Viewport onAddSlide={onAddSlide} />
+        </Panel.Body>
+        {!props.fullscreen && (
+          <Panel.Footer>
+            <div className='flex items-center justify-center gap-4'>
+              <Deck.Pager />
+              <Deck.PageNumber />
+            </div>
+          </Panel.Footer>
+        )}
+      </Deck.Content>
+    </Panel.Root>
+  </Deck.Root>
+);
 
 const createTextSlides = (count: number): SlideSource[] =>
   Array.from({ length: count }, (_, index) => ({
@@ -40,14 +73,14 @@ const createClickSlides = (): SlideSource[] =>
 const ClickStepsStory = () => {
   const slides = useMemo(() => createClickSlides(), []);
   const [index, setIndex] = useState(0);
-  return <Deck slides={slides} index={index} onIndexChange={setIndex} />;
+  return <DeckPanel slides={slides} index={index} onIndexChange={setIndex} />;
 };
 
 /** The click slide comes last, so advancing past it has no next slide to go to. */
 const ClickStepsLastStory = () => {
   const slides = useMemo(() => createClickSlides().reverse(), []);
   const [index, setIndex] = useState(0);
-  return <Deck slides={slides} index={index} onIndexChange={setIndex} />;
+  return <DeckPanel slides={slides} index={index} onIndexChange={setIndex} />;
 };
 
 const CLICKS_MARKDOWN = ['<v-clicks>', '', '- one', '- two', '- three', '', '</v-clicks>'].join('\n');
@@ -62,17 +95,17 @@ const EditedSlideStory = () => {
       <button data-testid='replace-slide' onClick={() => setContent(`# After\n\n${CLICKS_MARKDOWN}`)}>
         Replace
       </button>
-      <Deck slides={slides} index={index} onIndexChange={setIndex} />
+      <DeckPanel slides={slides} index={index} onIndexChange={setIndex} />
     </div>
   );
 };
 
-const DefaultStory = ({ count = 5, ...props }: Partial<DeckProps> & { count?: number }) => {
+const DefaultStory = ({ count = 5, ...props }: Partial<DeckPanelProps> & { count?: number }) => {
   const slides = useMemo(() => createTextSlides(count), [count]);
   const [index, setIndex] = useState(0);
   const [fullscreen, setFullscreen] = useState(props.fullscreen ?? false);
   return (
-    <Deck
+    <DeckPanel
       {...props}
       slides={slides}
       index={index}
@@ -97,11 +130,11 @@ const EditableStory = () => {
     [],
   );
   const [index, setIndex] = useState(0);
-  return <Deck slides={slides} index={index} onIndexChange={setIndex} />;
+  return <DeckPanel slides={slides} index={index} onIndexChange={setIndex} />;
 };
 
 /** Markdown slides whose first slide names a theme in its headmatter; `theme` props override it. */
-const ThemedStory = ({ theme }: Pick<DeckProps, 'theme'>) => {
+const ThemedStory = ({ theme }: Pick<DeckPanelProps, 'theme'>) => {
   const slides = useMemo(
     (): SlideSource[] =>
       [
@@ -111,14 +144,14 @@ const ThemedStory = ({ theme }: Pick<DeckProps, 'theme'>) => {
     [],
   );
   const [index, setIndex] = useState(0);
-  return <Deck slides={slides} index={index} onIndexChange={setIndex} theme={theme} />;
+  return <DeckPanel slides={slides} index={index} onIndexChange={setIndex} theme={theme} />;
 };
 
 /** Index is far past the end, as when slides were deleted since the view state was saved. */
 const StaleIndexStory = () => {
   const slides = useMemo(() => createTextSlides(3), []);
   const [, setIndex] = useSlideIndex('stale-index-story', slides.length);
-  return <Deck slides={slides} index={9} onIndexChange={setIndex} />;
+  return <DeckPanel slides={slides} index={9} onIndexChange={setIndex} />;
 };
 
 const InputSlide = () => (
@@ -251,6 +284,22 @@ export const Fullscreen: Story = {
     await waitFor(() => expect(overlay).toHaveAttribute('data-visible', 'false'), { timeout: 3_000 });
     window.dispatchEvent(new PointerEvent('pointermove'));
     await waitFor(() => expect(overlay).toHaveAttribute('data-visible', 'true'));
+  },
+};
+
+/** The overlay pager stays while the pointer rests on it, and fades once the pointer leaves. */
+export const FullscreenHover: Story = {
+  decorators: [withEmptyPlugins],
+  args: { fullscreen: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const overlay = await canvas.findByTestId('presenter.overlay');
+    await userEvent.hover(overlay);
+    // Longer than the idle time, after which an unhovered pager has faded.
+    await new Promise((resolve) => setTimeout(resolve, 2_500));
+    await expect(overlay).toHaveAttribute('data-visible', 'true');
+    await userEvent.unhover(overlay);
+    await waitFor(() => expect(overlay).toHaveAttribute('data-visible', 'false'), { timeout: 3_000 });
   },
 };
 

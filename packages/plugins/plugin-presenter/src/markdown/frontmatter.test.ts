@@ -20,6 +20,13 @@ describe('parseFrontmatter', () => {
     expect(issues).toEqual([]);
   });
 
+  test('bleed takes a side; anything else is reported and dropped', () => {
+    expect(parseFrontmatter('bleed: right').frontmatter).toEqual({ bleed: 'right' });
+    const { frontmatter, issues } = parseFrontmatter('bleed: top');
+    expect(frontmatter).toEqual({});
+    expect(issues).toHaveLength(1);
+  });
+
   test('rejects out-of-range and non-numeric opacity', () => {
     for (const source of ["backgroundOpacity: '0.5'", 'backgroundOpacity: 2']) {
       const { frontmatter, issues } = parseFrontmatter(source);
@@ -49,7 +56,7 @@ describe('parseFrontmatter', () => {
     expect(parseFrontmatter('')).toEqual({ frontmatter: {}, issues: [] });
   });
 
-  test('lists 16 layouts', () => {
+  test('lists 18 layouts', () => {
     expect(LAYOUTS).toHaveLength(18);
   });
 });

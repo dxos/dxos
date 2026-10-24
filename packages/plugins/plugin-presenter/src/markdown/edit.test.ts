@@ -11,7 +11,6 @@ import {
   insertSnippet,
   notesEdit,
   setFrontmatter,
-  slotBefore,
   surfaceSnippet,
 } from './edit.ts';
 import { parseSlide } from './parse.ts';
@@ -47,28 +46,8 @@ describe('setFrontmatter', () => {
 });
 
 describe('columnSnippet', () => {
-  test("starts the column after the cursor's", () => {
-    expect(columnSnippet('two-cols', 'default')).toBe('\n::right::\n\n|');
-    expect(columnSnippet('three-cols', 'default')).toBe('\n::middle::\n\n|');
-    expect(columnSnippet('three-cols', 'middle')).toBe('\n::right::\n\n|');
-    expect(columnSnippet('two-by-two', 'right')).toBe('\n::bottom-left::\n\n|');
-    expect(columnSnippet('two-by-two', undefined)).toBe('\n::right::\n\n|');
-  });
-
-  test("the cursor's slot is the last marker before it, so trailing blank lines stay in their column", () => {
-    const content = '---\nlayout: three-cols\n---\none\n\n::middle::\n\ntwo\n\n\n';
-    expect(slotBefore(content, content.length)).toBe('middle');
-    expect(columnSnippet('three-cols', slotBefore(content, content.length))).toBe('\n::right::\n\n|');
-    expect(slotBefore('# Title\n\n', 8)).toBe('default');
-    expect(slotBefore('a\n\n::bottom-left::\n\nb\n', 20)).toBe('bottom-left');
-    // An unknown marker is content, as the parser reads it, so the slot before it still holds the cursor.
-    expect(slotBefore('a\n\n::middle::\n\n::unknown::\n\nb\n', 30)).toBe('middle');
-    // A marker-like prefix of a longer line is content, so the cursor after it is still in the first column.
-    expect(slotBefore('a\n\n::middle::text\n', 13)).toBe('default');
-  });
-
-  test('from the last column it starts the last one again', () => {
-    expect(columnSnippet('two-by-two', 'bottom-right')).toBe('\n::bottom-right::\n\n|');
+  test('starts the given slot with the cursor below its marker', () => {
+    expect(columnSnippet('bottom-left')).toBe('\n::bottom-left::\n\n|');
   });
 });
 

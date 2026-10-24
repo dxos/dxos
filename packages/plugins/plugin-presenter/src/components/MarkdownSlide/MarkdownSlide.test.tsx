@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 
 import { SlideThemeProvider } from '../SlideTheme/index.ts';
-import { MarkdownSlide, parseLineHighlights } from './MarkdownSlide.tsx';
+import { MarkdownSlide, parseLineHighlights, parseLineNumbers } from './MarkdownSlide.tsx';
 import { backgroundStyle } from './SlideBackground.tsx';
 
 const render = (content: string, step?: number) =>
@@ -76,6 +76,49 @@ describe('MarkdownSlide', () => {
     expect(markup).toContain('data-layout="two-cols"');
     expect(markup).toMatch(/data-slot="right"[^>]*>(?:(?!data-slot).)*Right side/s);
     expect(markup).toMatch(/data-slot="default"[^>]*>(?:(?!data-slot).)*Left side/s);
+  });
+
+  test('bleed: right moves padding off the frame and keeps none on the right column', ({ expect }) => {
+    const markup = render(
+      ['---', 'layout: two-cols', 'bleed: right', '---', '', 'Left', '', '::right::', '', 'Right'].join('\n'),
+    );
+    expect(markup).toMatch(/data-layout="two-cols" class="(?![^"]*px-40)[^"]*"/);
+    expect(markup).toMatch(/data-slot="default"[^>]*class="[^"]*pl-40[^"]*"/);
+    expect(markup).toMatch(/data-slot="right"[^>]*class="(?![^"]*p[rxy]-)[^"]*"/);
+  });
+
+  test('three-cols places ::middle:: and ::right:: content in their columns', ({ expect }) => {
+    const markup = render(
+      ['---', 'layout: three-cols', '---', '', 'One', '', '::middle::', '', 'Two', '', '::right::', '', 'Three'].join(
+        '\n',
+      ),
+    );
+    expect(markup).toContain('data-layout="three-cols"');
+    expect(markup).toMatch(/data-slot="default"[^>]*>(?:(?!data-slot).)*One/s);
+    expect(markup).toMatch(/data-slot="middle"[^>]*>(?:(?!data-slot).)*Two/s);
+    expect(markup).toMatch(/data-slot="right"[^>]*>(?:(?!data-slot).)*Three/s);
+  });
+
+  test('two-by-two places four regions in reading order', ({ expect }) => {
+    const markup = render(
+      [
+        ['---', 'layout: two-by-two', '---', '', 'One'],
+        ['::right::', '', 'Two'],
+        ['::bottom-left::', '', 'Three'],
+        ['::bottom-right::', '', 'Four'],
+      ]
+        .map((lines) => lines.join('\n'))
+        .join('\n\n'),
+    );
+    expect(markup).toContain('data-layout="two-by-two"');
+    for (const [slot, text] of [
+      ['default', 'One'],
+      ['right', 'Two'],
+      ['bottom-left', 'Three'],
+      ['bottom-right', 'Four'],
+    ]) {
+      expect(markup).toMatch(new RegExp(`data-slot="${slot}"[^>]*>(?:(?!data-slot).)*${text}`, 's'));
+    }
   });
 
   test('code block renders its source inside pre', ({ expect }) => {
@@ -176,5 +219,19 @@ describe('parseLineHighlights', () => {
     expect(parseLineHighlights('{2-100000000}', 3)).toEqual(new Set([2, 3]));
     expect(parseLineHighlights('{1-100000000}')?.size).toBeLessThanOrEqual(10_000);
     expect(parseLineHighlights('{5}', 3)).toBeUndefined();
+  });
+});
+
+describe('parseLineNumbers', () => {
+  test("reads Slidev's `{lines:true}` option, alone or after line ranges", ({ expect }) => {
+    expect(parseLineNumbers('{lines:true}')).toBe(true);
+    expect(parseLineNumbers('{2}{lines:true}')).toBe(true);
+    expect(parseLineNumbers('{2}')).toBe(false);
+    expect(parseLineNumbers(undefined)).toBe(false);
+  });
+
+  test('the option block is not read as line ranges', ({ expect }) => {
+    expect(parseLineHighlights('{lines:true}')).toBeUndefined();
+    expect(parseLineHighlights('{2}{lines:true}')).toEqual(new Set([2]));
   });
 });

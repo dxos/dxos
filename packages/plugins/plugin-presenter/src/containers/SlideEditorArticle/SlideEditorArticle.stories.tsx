@@ -122,7 +122,8 @@ export const Default: Story = {
     const editor = await canvas.findByRole('textbox', undefined, LOAD_TIMEOUT);
     await expect(await preview(canvasElement).findByRole('heading', { name: 'Collaboration' })).toBeVisible();
     await userEvent.click(editor);
-    await userEvent.keyboard('{ArrowDown>20/}{End}{Enter}- Comments');
+    // Enter at the end of a list item starts the next item, so only its text is typed.
+    await userEvent.keyboard('{ArrowDown>20/}{End}{Enter}Comments');
     const right = await waitFor(() => {
       const slot = canvasElement.querySelector('[data-testid="presenter.slide-editor.preview"] [data-slot="right"]');
       if (!slot) {
@@ -130,7 +131,7 @@ export const Default: Story = {
       }
       return slot;
     });
-    await waitFor(() => expect(right.textContent).toContain('Comments'));
+    await waitFor(() => expect(right.querySelector('li:last-child')?.textContent).toBe('Comments'));
     const previewBox = canvas.getByTestId('presenter.slide-editor.preview').getBoundingClientRect();
     await expect(previewBox.top).toBeGreaterThan(editor.getBoundingClientRect().top);
   },
@@ -190,6 +191,40 @@ export const CursorStep: Story = {
     await waitFor(() => expect(hidden()).toBe(2));
     await userEvent.keyboard('{ArrowDown}');
     await waitFor(() => expect(hidden()).toBe(1));
+  },
+};
+
+/** A slot marker is one unit: the caret steps over `::right::` in one move, and Backspace deletes it whole. */
+export const AtomicMarker: Story = {
+  args: { slide: 0 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const editor = await canvas.findByRole('textbox', undefined, LOAD_TIMEOUT);
+    // A synthetic click has no coordinates for CodeMirror to place the cursor, so it is moved by key instead.
+    await userEvent.click(await canvas.findByText(editorLine('- Sync is peer to peer')));
+    // To the blank line above the marker, onto the marker's start, then one step past the whole marker.
+    await userEvent.keyboard('{ArrowUp>8/}{ArrowDown>8/}{Home}{ArrowRight}{ArrowRight}X');
+    await waitFor(() => expect(editor.textContent).toContain('::right::X'));
+    await userEvent.keyboard('{Backspace}{Backspace}');
+    await waitFor(() => expect(editor.textContent).not.toContain('::right::'));
+  },
+};
+
+/** Typing a `layout:` value offers the matching layouts with their names; picking one changes the slide. */
+export const LayoutCompletion: Story = {
+  args: { slide: 0 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const editor = await canvas.findByRole('textbox', undefined, LOAD_TIMEOUT);
+    // A synthetic click has no coordinates for CodeMirror to place the cursor, so it is moved by key instead.
+    await userEvent.click(await canvas.findByText(editorLine('- Sync is peer to peer')));
+    // To the end of `layout: two-cols`, then replace the value.
+    await userEvent.keyboard('{ArrowUp>8/}{ArrowDown}{End}{Backspace>8/}q');
+    const option = await within(document.body).findByRole('option', { name: /quote/ });
+    await expect(option).toHaveTextContent('Quote');
+    await userEvent.click(option);
+    await waitFor(() => expect(editor.textContent).toContain('layout: quote'));
+    await waitFor(() => expect(preview(canvasElement).queryByText('Collaboration')).toBeNull());
   },
 };
 

@@ -40,17 +40,20 @@ import {
   type SlideEdit,
   SNIPPETS,
   columnSnippet,
+  hasSlots,
   insertSnippet,
-  isColumnLayout,
+  nextSlot,
   notesEdit,
   parseSlide,
   setFrontmatter,
   slotBefore,
   surfaceSnippet,
 } from '#markdown';
+import { meta } from '#meta';
 import { Presentation, PresenterOperation, SlideEditorViewState, SlideViewState } from '#types';
 
 import { SlidePreview } from '../SlidePreviewArticle/SlidePreview.tsx';
+import { slideCompletion } from './slide-completion.ts';
 import { slideHighlight } from './slide-highlight.ts';
 
 export type SlideEditorArticleProps = AppSurface.ObjectArticleProps<Text.Text>;
@@ -104,6 +107,7 @@ type SlideEditorContentProps = Pick<SlideEditorArticleProps, 'subject'>;
 
 /** The markdown editor; publishes its cursor and applies the preview's selection requests. */
 const SlideEditorContent = ({ subject }: SlideEditorContentProps) => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const themeMode = UiHooks.useThemeMode();
   const registry = useContext(RegistryContext);
   const { controller, state: toolbarState } = useEditorContext('SlideEditorContent');
@@ -118,6 +122,7 @@ const SlideEditorContent = ({ subject }: SlideEditorContentProps) => {
       createThemeExtensions({ themeMode, slots: documentSlots }),
       createMarkdownExtensions(),
       slideHighlight(),
+      slideCompletion({ describeLayout: (layout) => t(`layout.${layout}.label`) }),
       // As the markdown editor: the fold gutter (which also sets the text's inset) and the auto-hiding scrollbar.
       folding(),
       scrollbarAutohide(),
@@ -132,7 +137,7 @@ const SlideEditorContent = ({ subject }: SlideEditorContentProps) => {
         }
       }),
     ],
-    [subject, themeMode, registry, toolbarState, setSync],
+    [subject, themeMode, registry, toolbarState, setSync, t],
   );
 
   // Only a new request moves the cursor, so remounting the editor does not replay the last click.
@@ -165,7 +170,7 @@ const SlideEditorToolbars = ({ subject, attendableId, previewMode }: SlideEditor
   const { objects, onObjectsOpenChange, onInsertObject, ...actions } = useSlideActions(subject, attendableId, view);
   const insertActions = useSlideInsertActions({
     onInsert: actions.onInsert,
-    columns: isColumnLayout(parsed.layout),
+    columns: hasSlots(parsed.layout),
     objects,
     onObjectsOpenChange,
     onInsertObject,
@@ -249,11 +254,22 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
     onLayoutChange: (layout: (typeof LAYOUTS)[number]) =>
       apply((content) => setFrontmatter(content, { layout: layout === 'default' ? undefined : layout }), false),
     onInsert: (insert: SlideInsert) =>
-      apply((content, cursor) =>
-        insert === 'notes'
-          ? notesEdit(content)
-          : insertSnippet(content, cursor, insert === 'column' ? nextColumn(content, cursor) : SNIPPETS[insert]),
-      ),
+      apply((content, cursor) => {
+        switch (insert) {
+          case 'notes':
+            return notesEdit(content);
+          case 'column': {
+            // The next region of the layout after the one holding the caret; the last region has none.
+            const parsed = parseSlide(content);
+            const slot = nextSlot(parsed.layout, slotBefore(content, cursor));
+            return slot
+              ? insertSnippet(content, cursor, columnSnippet(slot))
+              : { from: cursor, to: cursor, insert: '', cursor };
+          }
+          default:
+            return insertSnippet(content, cursor, SNIPPETS[insert]);
+        }
+      }),
     onBackgroundChange: (background: BackgroundSettings) =>
       apply((content) => setFrontmatter(content, background), false),
     objects,
@@ -277,12 +293,6 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
           }
         : undefined,
   };
-};
-
-/** The marker for the column after the cursor's, in the slide's column layout (`two-cols` when it has none). */
-const nextColumn = (content: string, cursor: number): string => {
-  const { layout } = parseSlide(content);
-  return columnSnippet(isColumnLayout(layout) ? layout : 'two-cols', slotBefore(content, cursor));
 };
 
 /** The entity id a section's ref points at. */

@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type LayoutName } from '#markdown';
 
-import { SlideFrame } from '../SlideFrame/index.ts';
+import { Slide } from '../Slide/index.ts';
 import { MarkdownSlide, type MarkdownSlideProps } from './MarkdownSlide.tsx';
 
 // A one-second 32×18 WebM, inlined so the story needs no network.
@@ -22,9 +22,9 @@ const IMAGE = `data:image/svg+xml;utf8,${encodeURIComponent(
 )}`;
 
 const DefaultStory = (props: MarkdownSlideProps) => (
-  <SlideFrame inset>
+  <Slide.Frame inset>
     <MarkdownSlide {...props} />
-  </SlideFrame>
+  </Slide.Frame>
 );
 
 const meta = {
@@ -154,13 +154,13 @@ export const ThreeCols = layoutStory(
     { layout: 'three-cols' },
     '# One',
     '',
-    'First column',
+    '- first',
     '',
     '::middle::',
     '',
     '# Two',
     '',
-    'Middle column',
+    '- second',
     '',
     '::right::',
     '',
@@ -168,8 +168,8 @@ export const ThreeCols = layoutStory(
     '',
     'Third column',
   ),
-  '[data-slot="middle"]',
-  'Middle column',
+  '[data-slot="right"]',
+  'Third column',
 );
 
 export const TwoByTwo = layoutStory(
@@ -189,9 +189,11 @@ export const TwoByTwo = layoutStory(
     '::bottom-right::',
     '',
     '# Four',
+    '',
+    'Fourth region',
   ),
   '[data-slot="bottom-right"]',
-  'Four',
+  'Fourth region',
 );
 
 export const Image = layoutStory('image', slide({ layout: 'image', image: IMAGE }, '# Over image'), 'h1', 'Over image');
@@ -266,6 +268,27 @@ export const Code: Story = {
     const highlighted = canvasElement.querySelectorAll('pre .bg-hover-surface');
     await expect(highlighted).toHaveLength(1);
     await expect(highlighted[0].textContent).toContain('reduce');
+  },
+};
+
+/** `{lines:true}` numbers the lines, alongside a highlighted line. */
+export const CodeLineNumbers: Story = {
+  args: {
+    content: [
+      '# Code with line numbers',
+      '',
+      '```ts {2}{lines:true}',
+      'const values = [1, 2, 3];',
+      'const sum = values.reduce((total, value) => total + value, 0);',
+      'console.log(sum);',
+      '```',
+    ].join('\n'),
+  },
+  play: async ({ canvasElement }) => {
+    await query(canvasElement, 'pre span.token', 5_000);
+    const numbers = [...canvasElement.querySelectorAll('pre .linenumber')].map((element) => element.textContent);
+    await expect(numbers).toEqual(['1', '2', '3']);
+    await expect(canvasElement.querySelectorAll('pre .bg-hover-surface')).toHaveLength(1);
   },
 };
 

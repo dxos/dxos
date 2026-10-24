@@ -6,8 +6,6 @@ import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import * as Yaml from 'yaml';
 
-import { type SlotName } from './remark-slidev.ts';
-
 /** Layout names supported by the Slidev subset. */
 export const LAYOUTS = [
   'default',
@@ -32,20 +30,10 @@ export const LAYOUTS = [
 
 export type LayoutName = (typeof LAYOUTS)[number];
 
-/**
- * The slots of each column layout, in reading order; the first is `default` (which also takes `::left::` content,
- * except in `two-cols-header`, where `default` is the header).
- */
-export const COLUMN_SLOTS = {
-  'two-cols': ['default', 'right'],
-  'two-cols-header': ['default', 'left', 'right'],
-  'three-cols': ['default', 'middle', 'right'],
-  'two-by-two': ['default', 'right', 'bottom-left', 'bottom-right'],
-} as const satisfies Partial<Record<LayoutName, readonly SlotName[]>>;
+/** Sides a column layout's outer column can extend to the slide's edge on (`bleed:`). */
+export const BLEED_SIDES = ['left', 'right'] as const;
 
-/** Whether a layout has more than one column, so a column break means something. */
-export const isColumnLayout = (layout: LayoutName): layout is keyof typeof COLUMN_SLOTS =>
-  Object.hasOwn(COLUMN_SLOTS, layout);
+export type BleedSide = (typeof BLEED_SIDES)[number];
 
 /** A problem found while parsing or validating a slide; the slide still renders. */
 export type SlideIssue = {
@@ -62,6 +50,7 @@ const fields = {
   backgroundVideo: Schema.String,
   backgroundOpacity: Schema.Number.check(Schema.isBetween({ minimum: 0, maximum: 1 })),
   backgroundPosition: Schema.String,
+  bleed: Schema.Literals(BLEED_SIDES),
   theme: Schema.String,
 };
 
@@ -75,6 +64,8 @@ export const SlideFrontmatter = Schema.Struct({
   backgroundVideo: Schema.optionalKey(fields.backgroundVideo),
   backgroundOpacity: Schema.optionalKey(fields.backgroundOpacity),
   backgroundPosition: Schema.optionalKey(fields.backgroundPosition),
+  /** DXOS: the outer column on this side reaches the slide's edges, with no padding (`two-cols`, `three-cols`). */
+  bleed: Schema.optionalKey(fields.bleed),
   /** Deck theme; read only from the first slide (Slidev headmatter). */
   theme: Schema.optionalKey(fields.theme),
 });

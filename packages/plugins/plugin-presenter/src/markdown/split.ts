@@ -34,7 +34,7 @@ const findSeparators = (lines: string[]): number[] => {
 };
 
 // Only the slot names the renderer knows, indented at most as far as markdown allows before it becomes code.
-export const SLOT_LINE = /^ {0,3}::(left|right|default)::\s*$/;
+export const SLOT_LINE = /^ {0,3}::(default|left|middle|right|bottom-left|bottom-right)::\s*$/;
 
 /**
  * Puts a blank line around every `::name::` line outside fenced code, so a marker written without blank lines

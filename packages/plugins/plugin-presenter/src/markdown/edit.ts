@@ -4,8 +4,7 @@
 
 import * as Yaml from 'yaml';
 
-import { COLUMN_SLOTS } from './frontmatter.ts';
-import { SLOT_MARKER, type SlotName, isSlotName } from './remark-slidev.ts';
+import { type SlotName } from './remark-slidev.ts';
 
 /** A text replacement in a slide's markdown, with where the cursor should land afterwards. */
 export type SlideEdit = { from: number; to: number; insert: string; cursor: number };
@@ -46,37 +45,8 @@ export const SNIPPETS = {
   clicks: '<v-clicks>\n\n- |\n\n</v-clicks>\n',
 } as const;
 
-/**
- * The slot the cursor is in: the last known slot marker on a line of its own before `offset`, else `default`. Read from the
- * source, so a blank line after a column's last block still belongs to that column.
- */
-export const slotBefore = (content: string, offset: number): SlotName => {
-  // Only known names start a slot, as in the parser; an unknown marker stays content of the slot before it. Whole lines
-  // are matched, up to the cursor's, so a marker-like prefix of a longer line is not taken for a marker.
-  const lineEnd = content.indexOf('\n', offset);
-  const lines = content
-    .slice(0, lineEnd === -1 ? content.length : lineEnd)
-    .split('\n')
-    .reverse();
-  return (
-    lines
-      .map((line) => SLOT_MARKER.exec(line.trim())?.[1])
-      .find((name): name is SlotName => !!name && isSlotName(name)) ?? 'default'
-  );
-};
-
-/**
- * The marker that starts the column after the cursor's `slot` in a column layout, with the cursor below it; outside any
- * slot the cursor is in the first column, and from the last column it starts the last one again.
- */
-export const columnSnippet = (layout: keyof typeof COLUMN_SLOTS, slot: SlotName | undefined): string => {
-  const slots: readonly SlotName[] = COLUMN_SLOTS[layout];
-  // `::left::` content renders in the first column, except under `two-cols-header`'s header.
-  const current = slot === 'left' && layout !== 'two-cols-header' ? 'default' : slot;
-  const index = Math.max(0, current === undefined ? 0 : slots.indexOf(current));
-  const next = slots[Math.min(index + 1, slots.length - 1)];
-  return `\n::${next}::\n\n|`;
-};
+/** A marker starting `slot`; `|` marks where the cursor lands. */
+export const columnSnippet = (slot: SlotName) => `\n::${slot}::\n\n|`;
 
 /** An embedded-object tag for the object's ECHO URI. */
 export const surfaceSnippet = (uri: string) => `<Surface ref="${uri}" />\n|`;

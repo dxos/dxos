@@ -10,6 +10,8 @@ import { useObject } from '@dxos/echo-react';
 import { useAttention } from '@dxos/react-ui-attention';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Deck, SectionPicker } from '#components';
 import { useIsPresenting, usePresentationDeck, useSetPresenting, useSlideIndex } from '#hooks';
@@ -53,33 +55,46 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
   );
 
   return (
-    <Deck
-      role={role}
+    <Deck.Root
       slides={slides}
       index={index}
       onIndexChange={setIndex}
       fullscreen={fullscreen}
       onFullscreenChange={handleFullscreenChange}
-      onAddSlide={handleAddSlide}
-      onMoveSlide={handleMoveSlide}
       attendableId={attendableId}
       autoFocus={hasAttention}
       theme={theme}
-      view='grid'
-      toolbar={
-        <>
-          <SectionPicker presentation={subject} />
-          <Button.Root
-            data-testid='presenter.add-slide'
-            icon='ph--plus--regular'
-            iconOnly
-            variant='ghost'
-            label={t('add-slide.label')}
-            onClick={handleAddSlide}
-          />
-        </>
-      }
-    />
+    >
+      <Panel.Root role={role} asChild>
+        <Deck.Content>
+          {!fullscreen && (
+            <Panel.Header>
+              <Toolbar.Root>
+                <SectionPicker presentation={subject} />
+                <Button.Root
+                  data-testid='presenter.add-slide'
+                  icon='ph--plus--regular'
+                  iconOnly
+                  variant='ghost'
+                  label={t('add-slide.label')}
+                  onClick={handleAddSlide}
+                />
+                <div className='grow' />
+                <Deck.FullscreenButton />
+              </Toolbar.Root>
+            </Panel.Header>
+          )}
+          {/* Inline, the article is the grid of slides; presenting (or an empty deck) shows one slide. */}
+          <Panel.Body asChild>
+            {fullscreen || slides.length === 0 ? (
+              <Deck.Viewport onAddSlide={handleAddSlide} />
+            ) : (
+              <Deck.Grid onMove={handleMoveSlide} />
+            )}
+          </Panel.Body>
+        </Deck.Content>
+      </Panel.Root>
+    </Deck.Root>
   );
 };
 

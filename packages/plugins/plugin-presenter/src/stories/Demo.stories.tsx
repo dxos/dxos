@@ -29,6 +29,9 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/** The demo presentation to browse by hand; no interaction runs. */
+export const Default: Story = {};
+
 const DATA_URI_IMAGE = '[style*="data:image/svg+xml"]';
 
 /** Presents and steps through every owned layout (image-right, image over text, full-bleed image) to the linked documents. */

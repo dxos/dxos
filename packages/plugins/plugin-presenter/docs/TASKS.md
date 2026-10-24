@@ -86,7 +86,7 @@ Design: [DESIGN.md](./DESIGN.md).
 
 ## Phase 5: Assistant skill
 
-- [ ] **`PresenterSkill`** on `Presentation` — `CreatePresentation`, `AddSection`, `ListLayouts`, `PresentObject`.
+- [x] **`PresenterSkill`** on `Presentation` — `CreatePresentation`, `AddSection`, `ListLayouts`, `PresentObject`; handler tests in `src/operations/presenter-skill.test.ts` (`PresentObject` is untested: it needs the deck's capabilities).
 - [ ] **Eval** with memoized fixtures.
 
 ## Phase 6: Slide editor

@@ -13,7 +13,20 @@ export type Name = (typeof NAMES)[number];
 export const isName = (value: unknown): value is Name => NAMES.some((name) => name === value);
 
 /** Fonts for a deck's text (body and headings). */
-export const FONTS = ['mono', 'sans', 'rounded', 'serif', 'display'] as const;
+export const FONTS = [
+  'mono',
+  'sans',
+  'rounded',
+  'serif',
+  'display',
+  'space-grotesk',
+  'mali',
+  'geist',
+  'orbitron',
+  'unbounded',
+  'opendyslexic',
+  'lxgw-wenkai',
+] as const;
 
 export type Font = (typeof FONTS)[number];
 
