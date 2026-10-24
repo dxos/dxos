@@ -4,7 +4,7 @@
 
 import { EID } from '@dxos/echo';
 import type * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as Presentation from '@dxos/plugin-presenter/Presentation';
 
 import deck from './echo.md?raw';
 
@@ -14,13 +14,13 @@ export type EchoDeckDrawings = Readonly<Record<string, Drawing.Drawing>>;
 const PLACEHOLDER = /\{\{([a-z-]+)\}\}/g;
 
 /**
- * The ECHO presentation: a markdown deck (one slide per `---`) from `echo.md`, each `{{diagram-id}}` replaced with that
- * drawing's space-relative URI so its `<Surface>` embeds resolve in whatever space the template seeds.
+ * The ECHO presentation: a slide per `---` of `echo.md`, each `{{diagram-id}}` replaced with that drawing's
+ * space-relative URI so its `<Surface>` embeds resolve in whatever space the template seeds.
  */
-export const makeEchoDeck = (drawings: EchoDeckDrawings): Markdown.Document =>
-  Markdown.make({
+export const makeEchoDeck = (drawings: EchoDeckDrawings): Presentation.Presentation =>
+  Presentation.makeFromMarkdown({
     name: 'ECHO',
-    content: deck.replaceAll(PLACEHOLDER, (placeholder, id: string) => {
+    markdown: deck.replaceAll(PLACEHOLDER, (placeholder, id: string) => {
       const drawing = drawings[id];
       if (!drawing) {
         throw new Error(`The ECHO deck embeds an unknown diagram: ${placeholder}.`);

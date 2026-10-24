@@ -26,8 +26,8 @@ describe('Alien Labs template', () => {
     expect(countOf('type.agent:')).toBe(4);
     expect(countOf('type.project:')).toBe(4);
     expect(countOf('type.event')).toBe(171);
-    // 15 Alien Labs documents, 5 project artifacts, 3 architecture guides and the ECHO deck.
-    expect(countOf('type.document')).toBe(24);
+    // 15 Alien Labs documents, 5 project artifacts, 3 architecture guides.
+    expect(countOf('type.document')).toBe(23);
     // 5 Alien Labs drawings and 12 architecture diagrams.
     expect(countOf('type.drawing')).toBe(17);
     expect(Object.keys(result.docs.docs)).toHaveLength(15);

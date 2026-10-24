@@ -11,6 +11,7 @@ import { Text } from '@dxos/schema';
 
 import { meta } from '#meta';
 
+import { splitSlides } from '../markdown/split.ts';
 import * as SlideTheme from './SlideTheme.ts';
 
 /** Key of the presenter skill, attached to the Presentation type. */
@@ -55,6 +56,12 @@ export const make = ({ name, slides = [] }: { name?: string; slides?: string[] }
   }
   return presentation;
 };
+
+/**
+ * A presentation from one Slidev markdown document: a slide per `---`, each keeping its own frontmatter.
+ */
+export const makeFromMarkdown = ({ name, markdown }: { name?: string; markdown: string }): Presentation =>
+  make({ name, slides: splitSlides(markdown) });
 
 /**
  * Whether the target is an owned slide, read from its parent so one array keeps the order.
