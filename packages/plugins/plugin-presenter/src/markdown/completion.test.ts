@@ -20,7 +20,7 @@ describe('frontmatterCompletion', () => {
   test('filters by the value typed so far and replaces it', () => {
     const content = '---\nlayout: two|\n---\n';
     const result = complete(content);
-    expect(result?.options).toEqual(['two-cols', 'two-cols-header']);
+    expect(result?.options).toEqual(['two-cols', 'two-cols-header', 'two-by-two']);
     expect(result?.from).toBe(content.indexOf('two'));
   });
 
