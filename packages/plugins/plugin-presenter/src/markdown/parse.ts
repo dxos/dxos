@@ -72,7 +72,14 @@ export const parseSlide = (content: string): ParsedSlide => {
   return {
     frontmatter,
     layout,
-    slots: { default: toHast('default'), left: toHast('left'), right: toHast('right') },
+    slots: {
+      'default': toHast('default'),
+      'left': toHast('left'),
+      'middle': toHast('middle'),
+      'right': toHast('right'),
+      'bottom-left': toHast('bottom-left'),
+      'bottom-right': toHast('bottom-right'),
+    },
     notes: slidev?.notes,
     clicks: slidev?.clicks ?? 0,
     issues,

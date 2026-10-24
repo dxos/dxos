@@ -30,7 +30,6 @@ type ToolbarActionsContext = {
   stateAtom: ToolbarStateAtom;
   registry: Registry.AtomRegistry;
   cursorFallbackRange?: CompleteCellRange;
-  customActions?: Atom.Atom<ActionGraphProps>;
 };
 
 const createToolbarActions = ({
@@ -38,7 +37,6 @@ const createToolbarActions = ({
   stateAtom,
   registry,
   cursorFallbackRange,
-  customActions,
 }: ToolbarActionsContext): Atom.Atom<ActionGraphProps> => {
   return Atom.make((get) => {
     const state = get(stateAtom);
@@ -51,12 +49,6 @@ const createToolbarActions = ({
       nodes: [...align.nodes, ...style.nodes, ...gap.nodes],
       edges: [...align.edges, ...style.edges, ...gap.edges],
     };
-
-    if (customActions) {
-      const custom = get(customActions);
-      graph.nodes.push(...custom.nodes);
-      graph.edges.push(...custom.edges);
-    }
 
     return graph;
   });
@@ -77,13 +69,19 @@ export const SheetToolbar = Util.composable<HTMLDivElement, SheetToolbarProps>((
   }, [graph, attendableId]);
 
   const actionsCreator = useMemo(
-    () => createToolbarActions({ model, stateAtom, registry, cursorFallbackRange, customActions }),
-    [model, stateAtom, registry, cursorFallbackRange, customActions],
+    () => createToolbarActions({ model, stateAtom, registry, cursorFallbackRange }),
+    [model, stateAtom, registry, cursorFallbackRange],
   );
   const menuActions = useMenuActions(actionsCreator);
 
   return (
-    <ActionToolbar {...menuActions} attendableId={attendableId} {...Util.composableProps(props)} ref={forwardedRef} />
+    <ActionToolbar
+      {...menuActions}
+      attendableId={attendableId}
+      customActions={customActions}
+      {...Util.composableProps(props)}
+      ref={forwardedRef}
+    />
   );
 });
 

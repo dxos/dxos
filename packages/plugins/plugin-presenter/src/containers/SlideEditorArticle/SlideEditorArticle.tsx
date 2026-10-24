@@ -33,16 +33,19 @@ import {
   scrollbarAutohide,
 } from '@dxos/ui-editor';
 
-import { type BackgroundSettings, type SlideInsert, SlideToolbar } from '#components';
+import { type BackgroundSettings, type SlideInsert, SlideToolbar, useSlideInsertActions } from '#components';
 import { slideEditorSyncAtom, useObjectOptions } from '#hooks';
 import {
   LAYOUTS,
   type SlideEdit,
   SNIPPETS,
+  columnSnippet,
   insertSnippet,
+  isColumnLayout,
   notesEdit,
   parseSlide,
   setFrontmatter,
+  slotBefore,
   surfaceSnippet,
 } from '#markdown';
 import { Presentation, PresenterOperation, SlideEditorViewState, SlideViewState } from '#types';
@@ -153,27 +156,40 @@ type SlideEditorToolbarsProps = Pick<SlideEditorArticleProps, 'subject' | 'atten
   previewMode: SlideEditorViewState.PreviewMode;
 };
 
-/** The slide toolbar above the markdown formatting toolbar. */
+/** The slide toolbar above the markdown formatting toolbar, whose insert group takes the slide's editing actions. */
 const SlideEditorToolbars = ({ subject, attendableId, previewMode }: SlideEditorToolbarsProps) => {
   const { controller } = useEditorContext('SlideEditorToolbars');
   const view = controller?.view ?? undefined;
   const [content] = useObject(subject, 'content');
   const parsed = useMemo(() => parseSlide(content ?? ''), [content]);
-  const actions = useSlideActions(subject, attendableId, view);
+  const { objects, onObjectsOpenChange, onInsertObject, ...actions } = useSlideActions(subject, attendableId, view);
+  const insertActions = useSlideInsertActions({
+    onInsert: actions.onInsert,
+    columns: isColumnLayout(parsed.layout),
+    objects,
+    onObjectsOpenChange,
+    onInsertObject,
+  });
 
   return (
     // Each toolbar scrolls on its own row, so neither hides the other in a narrow plank.
     <div className='flex flex-col'>
       <SlideToolbar
         layout={parsed.layout}
-        columns={parsed.layout === 'two-cols' || parsed.layout === 'two-cols-header'}
         background={{ image: parsed.frontmatter.image, backgroundVideo: parsed.frontmatter.backgroundVideo }}
         classNames='dx-document'
         previewMode={previewMode}
         {...actions}
       />
       {/* The formatting toolbar reads the editor view, which exists only after the editor mounts. */}
-      {view && <Editor.Toolbar classNames='dx-document' attendableId={attendableId} showSearch={false} />}
+      {view && (
+        <Editor.Toolbar
+          classNames='dx-document'
+          attendableId={attendableId}
+          showSearch={false}
+          customActions={insertActions}
+        />
+      )}
     </div>
   );
 };
@@ -234,7 +250,9 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
       apply((content) => setFrontmatter(content, { layout: layout === 'default' ? undefined : layout }), false),
     onInsert: (insert: SlideInsert) =>
       apply((content, cursor) =>
-        insert === 'notes' ? notesEdit(content) : insertSnippet(content, cursor, SNIPPETS[insert]),
+        insert === 'notes'
+          ? notesEdit(content)
+          : insertSnippet(content, cursor, insert === 'column' ? nextColumn(content, cursor) : SNIPPETS[insert]),
       ),
     onBackgroundChange: (background: BackgroundSettings) =>
       apply((content) => setFrontmatter(content, background), false),
@@ -259,6 +277,12 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
           }
         : undefined,
   };
+};
+
+/** The marker for the column after the cursor's, in the slide's column layout (`two-cols` when it has none). */
+const nextColumn = (content: string, cursor: number): string => {
+  const { layout } = parseSlide(content);
+  return columnSnippet(isColumnLayout(layout) ? layout : 'two-cols', slotBefore(content, cursor));
 };
 
 /** The entity id a section's ref points at. */

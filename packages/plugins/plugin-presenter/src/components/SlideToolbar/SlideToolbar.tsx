@@ -2,16 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type KeyboardEvent, useState } from 'react';
+import * as Atom from 'effect/reactivity/Atom';
+import React, { type KeyboardEvent, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
+import { EDITOR_TOOLBAR_INSERT_GROUP } from '@dxos/react-ui-editor';
 import { ObjectPicker } from '@dxos/react-ui-form';
+import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
-import * as Menu from '@dxos/react-ui/Menu';
 import * as Popover from '@dxos/react-ui/Popover';
-import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Theme from '@dxos/react-ui/Theme';
 import { type ThemedClassName } from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
@@ -21,24 +22,20 @@ import { type SlideEditorViewState } from '#types';
 
 import { LayoutPicker } from './LayoutPicker.tsx';
 
-/** Snippets the toolbar inserts at the cursor. */
+/** Snippets the toolbars insert at the cursor. */
 export type SlideInsert = 'click' | 'clicks' | 'column' | 'notes';
 
 /** Frontmatter keys the background popover edits. */
 export type BackgroundSettings = Pick<SlideFrontmatter, 'image' | 'backgroundVideo'>;
 
+const label = (key: string): Theme.Label => [key, { ns: meta.profile.key }];
+
 export type SlideToolbarProps = ThemedClassName<{
   layout: LayoutName;
   onLayoutChange: (layout: LayoutName) => void;
   onInsert: (insert: SlideInsert) => void;
-  /** Whether the layout has a second column, so a column break means something. */
-  columns?: boolean;
   background: BackgroundSettings;
   onBackgroundChange: (background: BackgroundSettings) => void;
-  /** Objects offered by "Insert object"; requested only while its picker is open. */
-  objects?: { id: string; label: string }[];
-  onObjectsOpenChange?: (open: boolean) => void;
-  onInsertObject?: (id: string) => void;
   previewMode: SlideEditorViewState.PreviewMode;
   onPreviewModeChange: (mode: SlideEditorViewState.PreviewMode) => void;
   onPrevious?: () => void;
@@ -47,134 +44,238 @@ export type SlideToolbarProps = ThemedClassName<{
 }>;
 
 /**
- * Slide tools and view controls for the slide editor; the markdown formatting toolbar sits beside it.
+ * Slide-level controls for the slide editor (layout, background, notes, preview and navigation); editing actions join
+ * the formatting toolbar below it through {@link useSlideInsertActions}.
  */
 export const SlideToolbar = ({
   classNames,
   layout,
   onLayoutChange,
   onInsert,
-  columns,
   background,
   onBackgroundChange,
-  objects = [],
-  onObjectsOpenChange,
-  onInsertObject,
   previewMode,
   onPreviewModeChange,
   onPrevious,
   onNext,
   onPresent,
 }: SlideToolbarProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const menu = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .group('slide', { label: label('slide-layout.label') }, (group) =>
+          group
+            .action(
+              'layout',
+              {
+                label: label('slide-layout.label'),
+                variant: 'custom',
+                render: () => <LayoutPicker value={layout} onChange={onLayoutChange} />,
+              },
+              () => {},
+            )
+            .action(
+              'background',
+              {
+                label: label('slide-background.label'),
+                variant: 'custom',
+                render: () => <BackgroundPopover value={background} onChange={onBackgroundChange} />,
+              },
+              () => {},
+            )
+            .action(
+              'notes',
+              { label: label('slide-notes.label'), icon: 'ph--note--regular', testId: 'presenter.slide-toolbar.notes' },
+              () => onInsert('notes'),
+            ),
+        )
+        .group(
+          'preview',
+          {
+            label: label('preview-mode.label'),
+            icon: 'ph--eye--regular',
+            variant: 'toggleGroup',
+            selectCardinality: 'single',
+            value: previewMode,
+            placement: { zone: 'end', collapse: 2 },
+          },
+          (group) =>
+            group
+              .action(
+                'split',
+                {
+                  label: label('preview-split.label'),
+                  icon: 'ph--rows--regular',
+                  checked: previewMode === 'split',
+                  testId: 'presenter.slide-toolbar.split',
+                },
+                () => previewMode !== 'split' && onPreviewModeChange('split'),
+              )
+              .action(
+                'companion',
+                {
+                  label: label('preview-companion.label'),
+                  icon: 'ph--sidebar-simple--regular',
+                  checked: previewMode === 'companion',
+                  testId: 'presenter.slide-toolbar.companion',
+                },
+                () => previewMode !== 'companion' && onPreviewModeChange('companion'),
+              ),
+        )
+        .group(
+          'navigate',
+          {
+            label: label('present-from-here.label'),
+            icon: 'ph--presentation--regular',
+            placement: { zone: 'end', collapse: 1 },
+          },
+          (group) =>
+            group
+              .action(
+                'previous',
+                {
+                  label: label('previous-slide.label'),
+                  icon: 'ph--caret-left--regular',
+                  disabled: !onPrevious,
+                  testId: 'presenter.slide-toolbar.previous',
+                },
+                () => onPrevious?.(),
+              )
+              .action(
+                'next',
+                {
+                  label: label('next-slide.label'),
+                  icon: 'ph--caret-right--regular',
+                  disabled: !onNext,
+                  testId: 'presenter.slide-toolbar.next',
+                },
+                () => onNext?.(),
+              )
+              .action(
+                'present',
+                {
+                  label: label('present-from-here.label'),
+                  icon: 'ph--presentation--regular',
+                  disabled: !onPresent,
+                  testId: 'presenter.slide-toolbar.present',
+                },
+                () => onPresent?.(),
+              ),
+        )
+        .build(),
+    [
+      layout,
+      onLayoutChange,
+      onInsert,
+      background,
+      onBackgroundChange,
+      previewMode,
+      onPreviewModeChange,
+      onPrevious,
+      onNext,
+      onPresent,
+    ],
+  );
+
   return (
     // The toolbar pads its start when the first control is not a square button (the layout picker has a label);
     // dropped so this row starts where the formatting row below it does.
-    <Toolbar.Root data-testid='presenter.slide-toolbar' classNames={mx('ps-0!', classNames)}>
-      <LayoutPicker value={layout} onChange={onLayoutChange} />
-      <Menu.Root onSelect={({ value }) => onInsert(value === 'clicks' ? 'clicks' : 'click')}>
-        <Menu.Trigger asChild>
-          <Button.Root
-            data-testid='presenter.slide-toolbar.click'
-            icon='ph--cursor-click--regular'
-            iconOnly
-            variant='ghost'
-            label={t('insert-click.label')}
-          />
-        </Menu.Trigger>
-        <Menu.Content>
-          <Menu.Item item={{ value: 'click', label: t('insert-click.label') }} data-testid='presenter.insert-click' />
-          <Menu.Item
-            item={{ value: 'clicks', label: t('insert-clicks.label') }}
-            data-testid='presenter.insert-clicks'
-          />
-        </Menu.Content>
-      </Menu.Root>
-      <Button.Root
-        data-testid='presenter.slide-toolbar.column'
-        icon='ph--columns--regular'
-        iconOnly
-        variant='ghost'
-        label={t('insert-column.label')}
-        disabled={!columns}
-        onClick={() => onInsert('column')}
-      />
-      <ObjectPicker
-        options={objects}
-        onOpenChange={onObjectsOpenChange}
-        onSelect={(id) => id && onInsertObject?.(id)}
-        trigger={
-          <Button.Root
-            data-testid='presenter.slide-toolbar.object'
-            icon='ph--squares-four--regular'
-            iconOnly
-            variant='ghost'
-            label={t('insert-object.label')}
-          />
-        }
-      />
-      <BackgroundPopover value={background} onChange={onBackgroundChange} />
-      <Button.Root
-        data-testid='presenter.slide-toolbar.notes'
-        icon='ph--note--regular'
-        iconOnly
-        variant='ghost'
-        label={t('slide-notes.label')}
-        onClick={() => onInsert('notes')}
-      />
-      <Toolbar.Separator />
-      <Toolbar.ToggleGroup
-        type='single'
-        value={previewMode}
-        aria-label={t('preview-mode.label')}
-        // Only an actual change of mode is reported; the group can echo the current value back as focus moves.
-        onValueChange={(value) =>
-          (value === 'split' || value === 'companion') && value !== previewMode && onPreviewModeChange(value)
-        }
-      >
-        <ToggleGroup.Item
-          value='split'
-          data-testid='presenter.slide-toolbar.split'
-          icon='ph--rows--regular'
-          iconOnly
-          label={t('preview-split.label')}
-        />
-        <ToggleGroup.Item
-          value='companion'
-          data-testid='presenter.slide-toolbar.companion'
-          icon='ph--sidebar-simple--regular'
-          iconOnly
-          label={t('preview-companion.label')}
-        />
-      </Toolbar.ToggleGroup>
-      <Button.Root
-        data-testid='presenter.slide-toolbar.previous'
-        icon='ph--caret-left--regular'
-        iconOnly
-        variant='ghost'
-        label={t('previous-slide.label')}
-        disabled={!onPrevious}
-        onClick={onPrevious}
-      />
-      <Button.Root
-        data-testid='presenter.slide-toolbar.next'
-        icon='ph--caret-right--regular'
-        iconOnly
-        variant='ghost'
-        label={t('next-slide.label')}
-        disabled={!onNext}
-        onClick={onNext}
-      />
-      <Button.Root
-        data-testid='presenter.slide-toolbar.present'
-        icon='ph--presentation--regular'
-        iconOnly
-        variant='ghost'
-        label={t('present-from-here.label')}
-        disabled={!onPresent}
-        onClick={onPresent}
-      />
-    </Toolbar.Root>
+    <ActionToolbar {...menu} alwaysActive data-testid='presenter.slide-toolbar' classNames={mx('ps-0!', classNames)} />
+  );
+};
+
+export type SlideInsertActionsProps = {
+  onInsert: (insert: SlideInsert) => void;
+  /** Whether the layout has a second column, so a column break means something. */
+  columns?: boolean;
+  /** Objects offered by "Insert object"; requested only while its picker is open. */
+  objects?: { id: string; label: string }[];
+  onObjectsOpenChange?: (open: boolean) => void;
+  onInsertObject?: (id: string) => void;
+};
+
+/**
+ * Slide editing actions for the formatting toolbar's insert group (`customActions` of `Editor.Toolbar`): reveal steps,
+ * a column break and an embedded object.
+ */
+export const useSlideInsertActions = ({
+  onInsert,
+  columns,
+  objects = [],
+  onObjectsOpenChange,
+  onInsertObject,
+}: SlideInsertActionsProps): Atom.Atom<ActionGraphProps> => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  // The handlers change every render; read through a ref so the graph is rebuilt only when what it shows changes.
+  const handlers = useRef({ onInsert, onObjectsOpenChange, onInsertObject });
+  useLayoutEffect(() => {
+    handlers.current = { onInsert, onObjectsOpenChange, onInsertObject };
+  });
+
+  return useMemo(
+    () =>
+      Atom.make(() =>
+        // Ids are prefixed, since they share the editor's graph with its own and other contributors' items.
+        MenuBuilder.extend(EDITOR_TOOLBAR_INSERT_GROUP, (group) =>
+          group
+            .group(
+              'slide-reveal',
+              {
+                label: label('insert-click.label'),
+                icon: 'ph--cursor-click--regular',
+                iconOnly: true,
+                caretDown: false,
+                variant: 'dropdownMenu',
+                testId: 'presenter.slide-toolbar.click',
+              },
+              (menu) =>
+                menu
+                  .action('slide-click', { label: label('insert-click.label'), testId: 'presenter.insert-click' }, () =>
+                    handlers.current.onInsert('click'),
+                  )
+                  .action(
+                    'slide-clicks',
+                    { label: label('insert-clicks.label'), testId: 'presenter.insert-clicks' },
+                    () => handlers.current.onInsert('clicks'),
+                  ),
+            )
+            .action(
+              'slide-column',
+              {
+                label: label('insert-column.label'),
+                icon: 'ph--columns--regular',
+                disabled: !columns,
+                testId: 'presenter.slide-toolbar.column',
+              },
+              () => handlers.current.onInsert('column'),
+            )
+            .action(
+              'slide-object',
+              {
+                label: label('insert-object.label'),
+                variant: 'custom',
+                render: () => (
+                  <ObjectPicker
+                    options={objects}
+                    onOpenChange={(open) => handlers.current.onObjectsOpenChange?.(open)}
+                    onSelect={(id) => id && handlers.current.onInsertObject?.(id)}
+                    trigger={
+                      <Button.Root
+                        data-testid='presenter.slide-toolbar.object'
+                        icon='ph--squares-four--regular'
+                        iconOnly
+                        variant='ghost'
+                        label={t('insert-object.label')}
+                      />
+                    }
+                  />
+                ),
+              },
+              () => {},
+            ),
+        ),
+      ),
+    [columns, objects, t],
   );
 };
 

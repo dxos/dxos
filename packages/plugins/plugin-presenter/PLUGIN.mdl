@@ -194,10 +194,11 @@ component MarkdownSlide
 component SlideLayouts
   desc: |
     The layouts a slide's `layout` names: default, cover, center, section, intro, end, fact, statement, quote,
-    two-cols, two-cols-header, image, image-left, image-right, full, none. An unknown name renders with
-    default and is reported as a validation issue.
+    two-cols, two-cols-header, three-cols, two-by-two, image, image-left, image-right, full, none. three-cols
+    fills `default`, `middle` and `right`; two-by-two fills `default`, `right`, `bottom-left` and `bottom-right`.
+    An unknown name renders with default and is reported as a validation issue.
   props:
-    slots: { default, left, right }
+    slots: { default, left, middle, right, bottom-left, bottom-right }
     frontmatter: SlideFrontmatter
 ```
 
@@ -356,7 +357,7 @@ feat F-4: Presentation Deck
 feat F-6: Markdown Slides
 
   req F-6.1: A slide is written in a strict Slidev subset: per-slide frontmatter `layout`, `image`, `background`, `class`, `title` (and the DXOS keys of F-8.1 and the `theme` headmatter of F-6.8); slots `::left::`, `::right::`, `::default::`; notes as the slide's last HTML comment.
-  req F-6.2: The layouts are default, cover, center, section, intro, end, fact, statement, quote, two-cols, two-cols-header, image, image-left, image-right, full and none.
+  req F-6.2: The layouts are default, cover, center, section, intro, end, fact, statement, quote, two-cols, two-cols-header, three-cols, two-by-two, image, image-left, image-right, full and none; three-cols has slots `default`, `::middle::` and `::right::`, two-by-two has `default`, `::right::`, `::bottom-left::` and `::bottom-right::`.
   req F-6.3:
     when: a slide names an unknown layout
     then: it renders with default, no error is shown, and a validation issue is reported
@@ -1133,6 +1134,14 @@ decision D-52: A theme's fonts are picked by name, a text font and a code font, 
   affects: [SlideTheme, F-6.9]
   why: A picker is easier than writing a CSS font list, and a deck pays only for the fonts it picks.
   rejected: A free-text font-family list, which names fonts the app may not have; system font lists only, which look different on every machine.
+```
+
+```mdl
+decision D-53: Add two layouts beyond Slidev's built-ins: three-cols (slots `default`, `::middle::`, `::right::`) and two-by-two (`default`, `::right::`, `::bottom-left::`, `::bottom-right::`); "Start next column" inserts the marker of the column after the cursor's. Fills in [F-6.2].
+  date: 2026-10-24
+  by: user:richburdon
+  affects: [F-6.2]
+  why: Comparison and quadrant slides need more than two columns.
 ```
 
 ---
