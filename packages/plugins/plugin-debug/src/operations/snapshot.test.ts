@@ -16,6 +16,8 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 import { DebugPlugin } from '#plugin';
 import { DebugOperation } from '#types';
 
+await Harness.preload({ plugins: [DebugPlugin(), ClientPlugin.make({}), SpacePlugin({})] });
+
 describe('DebugOperation.Snapshot', () => {
   test('returns a degraded snapshot on a headless host', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({ plugins: [DebugPlugin()] });

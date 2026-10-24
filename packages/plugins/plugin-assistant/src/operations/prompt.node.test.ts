@@ -23,6 +23,8 @@ import { Message } from '@dxos/types';
 
 import { AssistantPlugin } from '#plugin';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), AssistantPlugin(), RoutinePlugin.make()] });
+
 EntityId.dangerouslyDisableRandomness();
 
 describe('Agent prompt (composer plugin harness)', () => {

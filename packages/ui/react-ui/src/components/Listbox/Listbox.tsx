@@ -412,8 +412,14 @@ const ListboxItem = forwardRef<HTMLDivElement, ListboxItemProps>(
             )}
             onMouseDown={(event) => {
               onMouseDown?.(event);
-              // Zag cancels the press to keep focus on the list, which would also stop a draggable row's native drag.
-              if (!isFromControl(event.currentTarget, event.target) && !event.currentTarget.draggable) {
+              if (isFromControl(event.currentTarget, event.target)) {
+                return;
+              }
+              // Zag cancels the press to keep focus on the list, which would also stop the native drag of a row that is its
+              // own drag handle (`data-drag-row`, set by useReorder); such a row moves focus to the list itself instead.
+              if (event.currentTarget.hasAttribute('data-drag-row')) {
+                event.currentTarget.closest<HTMLElement>('[role="listbox"]')?.focus({ preventScroll: true });
+              } else {
                 itemProps.onMouseDown?.(event);
               }
             }}

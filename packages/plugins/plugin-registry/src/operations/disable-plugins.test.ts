@@ -12,6 +12,8 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 import { RegistryOperation } from '#operations';
 import { RegistryPlugin } from '#plugin';
 
+await Harness.preload({ plugins: [RegistryPlugin()] });
+
 const graphKey = GraphPlugin.make().meta.profile.key;
 
 describe('RegistryOperation.DisablePlugins', () => {

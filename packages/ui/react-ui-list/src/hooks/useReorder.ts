@@ -220,9 +220,17 @@ export const useReorderList = <T>({
           }
         };
         refs.row.addEventListener('dragstart', handleNativeDragStart);
+        // A row that is its own handle (a tile) is dragged from anywhere, so a list must let its presses through.
+        const wholeRow = refs.handle === refs.row;
+        if (wholeRow) {
+          refs.row.setAttribute('data-drag-row', '');
+        }
         return combine(
           () => {
             refs.row.removeEventListener('dragstart', handleNativeDragStart);
+            if (wholeRow) {
+              refs.row.removeAttribute('data-drag-row');
+            }
             setDropTarget(refs.row, null);
           },
           draggable({
