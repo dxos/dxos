@@ -122,7 +122,8 @@ export const Default: Story = {
     const editor = await canvas.findByRole('textbox', undefined, LOAD_TIMEOUT);
     await expect(await preview(canvasElement).findByRole('heading', { name: 'Collaboration' })).toBeVisible();
     await userEvent.click(editor);
-    await userEvent.keyboard('{ArrowDown>20/}{End}{Enter}- Comments');
+    // Enter at the end of a list item starts the next item, so only its text is typed.
+    await userEvent.keyboard('{ArrowDown>20/}{End}{Enter}Comments');
     const right = await waitFor(() => {
       const slot = canvasElement.querySelector('[data-testid="presenter.slide-editor.preview"] [data-slot="right"]');
       if (!slot) {
@@ -130,7 +131,7 @@ export const Default: Story = {
       }
       return slot;
     });
-    await waitFor(() => expect(right.textContent).toContain('Comments'));
+    await waitFor(() => expect(right.querySelector('li:last-child')?.textContent).toBe('Comments'));
     const previewBox = canvas.getByTestId('presenter.slide-editor.preview').getBoundingClientRect();
     await expect(previewBox.top).toBeGreaterThan(editor.getBoundingClientRect().top);
   },
