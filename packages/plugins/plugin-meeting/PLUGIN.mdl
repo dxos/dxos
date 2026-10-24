@@ -201,6 +201,11 @@ feat F-3: Real-Time Transcription
   req F-3.5:
     when: HandlePayload is received without transcriptDxn
     then: the call's transcript feed is unbound, so no segment reaches the previously active meeting
+
+  req F-3.6:
+    when: the user is in a Meeting's own call (started from its Call tab)
+    then: the meeting's toolbar offers Start transcription (Stop once on), which turns transcription on or off for
+      everyone in the call and binds the meeting's Transcript feed, as the channel call's toggle does
 ```
 
 ```mdl
@@ -452,7 +457,7 @@ test QA-3: Two people meet in one Meeting's call, with live transcription
     both screens. Each person's camera and microphone play a pre-recorded track, so the test needs no camera, but it
     needs a real EDGE and RealtimeKit: this is the test that the call's media and transcript cross between two devices.
   actors: agent
-  covers: [F-1.1, F-1.2, T-1]
+  covers: [F-1.1, F-1.2, F-3.2, F-3.6, T-1]
   status: unverified
   given:
     - two identities on separate devices (browser contexts), with display names "Alice" and "Bob"
@@ -561,6 +566,16 @@ decision D-8: QA-3 tests a two-person Meeting call across two devices over Realt
   for: user:mykola-vrmchk
   affects: [QA-3]
   why: QA-2's colleagues are simulated on one device, so no test covered media and transcript crossing between two devices.
+  source: https://github.com/dxos/dxos/pull/14186
+```
+
+```mdl
+decision D-9: A Meeting's own call offers the Start/Stop transcription toggle on the meeting's toolbar while the user is in it. Fills in [D-5].
+  date: 2026-10-24
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-3.6, QA-3]
+  why: The toggle existed only on channel calls, so a call started from a Meeting's Call tab could not turn transcription on; QA-3 found it.
   source: https://github.com/dxos/dxos/pull/14186
 ```
 

@@ -40,6 +40,31 @@ const activeMeetingOrPlaceholderFamily = Atom.family((store: MeetingCapabilities
   Atom.make((get) => get(store.stateAtom).activeMeeting ?? ('meeting' as const)),
 );
 
+/** Turns the meeting's transcription on or off for everyone in its call, with the feed segments go to. */
+const setMeetingTranscription = Effect.fnUntraced(function* (meeting: Meeting.Meeting, enabled: boolean) {
+  const callManager = yield* Capability.get(CallsCapabilities.Manager);
+  const transcript = yield* Effect.promise(() => meeting.transcript.load());
+  const transcriptFeed = yield* Effect.promise(() => transcript.feed.load());
+  const transcriptFeedUri = Feed.getFeedUri(transcriptFeed);
+  invariant(transcriptFeedUri, 'Transcript feed has no feed URI');
+  callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
+    meetingId: Obj.getURI(meeting),
+    transcriptDxn: transcriptFeedUri.toString(),
+    transcriptionEnabled: enabled,
+  });
+  if (!enabled) {
+    log.warn('transcription disabled');
+  }
+});
+
+const transcriptionToggleProperties = (enabled: boolean) => ({
+  label: enabled
+    ? ['stop-transcription.label', { ns: meta.profile.key }]
+    : ['start-transcription.label', { ns: meta.profile.key }],
+  icon: 'ph--subtitles--regular',
+  disposition: 'toolbar',
+});
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     // Read reactively so extensions establish a dependency and heal once these capabilities
@@ -149,32 +174,14 @@ export default Capability.makeModule(
                     meeting = addResult.object as Meeting.Meeting;
                   }
 
-                  const callManager = yield* Capability.get(CallsCapabilities.Manager);
-                  const transcript = yield* Effect.promise(() => meeting.transcript.load());
-                  const transcriptFeed = yield* Effect.promise(() => transcript.feed.load());
-                  const transcriptFeedUri = Feed.getFeedUri(transcriptFeed);
-                  invariant(transcriptFeedUri, 'Transcript feed has no feed URI');
                   const transcriptionEnabled = !enabled;
-                  callManager.setActivity(Type.getTypename(Meeting.Meeting)!, {
-                    meetingId: Obj.getURI(meeting),
-                    transcriptDxn: transcriptFeedUri.toString(),
-                    transcriptionEnabled,
-                  });
-
-                  if (!transcriptionEnabled) {
-                    log.warn('transcription disabled');
-                  } else {
+                  yield* setMeetingTranscription(meeting, transcriptionEnabled);
+                  if (transcriptionEnabled) {
                     const companion = Attention.linkedSegment('transcript');
                     yield* Operation.invoke(LayoutOperation.UpdateCompanion, { subject: companion });
                   }
                 }),
-                properties: {
-                  label: enabled
-                    ? ['stop-transcription.label', { ns: meta.profile.key }]
-                    : ['start-transcription.label', { ns: meta.profile.key }],
-                  icon: 'ph--subtitles--regular',
-                  disposition: 'toolbar',
-                },
+                properties: transcriptionToggleProperties(enabled),
               },
             ];
           }).pipe(Effect.orDie),
@@ -197,6 +204,27 @@ export default Capability.makeModule(
                 data: get(Obj.atom(meeting.transcript)),
                 position: Position.first,
               }),
+            ];
+          }).pipe(Effect.orDie),
+      }),
+
+      // A meeting's own call (its Call tab) has no channel node, so the toggle a channel call offers lives on the meeting.
+      AppGraphBuilder.createTypeExtension({
+        id: 'meetingTranscription',
+        type: Meeting.Meeting,
+        actions: (meeting, get) =>
+          Effect.gen(function* () {
+            const [callManager] = get(callManagerAtom);
+            if (!callManager || !get(callManager.joinedAtom) || get(callManager.roomIdAtom) !== Obj.getURI(meeting)) {
+              return [];
+            }
+            const enabled = get(callManager.transcriptionEnabledAtom);
+            return [
+              {
+                id: 'action.startStopMeetingTranscription',
+                data: () => setMeetingTranscription(meeting, !enabled),
+                properties: transcriptionToggleProperties(enabled),
+              },
             ];
           }).pipe(Effect.orDie),
       }),

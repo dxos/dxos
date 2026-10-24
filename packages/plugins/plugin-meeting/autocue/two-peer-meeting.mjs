@@ -94,26 +94,24 @@ const clearChrome = async ({ page }) => {
   }
 };
 
-/** Names shown on the tiles of a peer's call grid. */
-const tileNames = (page) =>
+/**
+ * Each tile of a peer's call grid: its name label and whether its video shows frames. A tile is matched by its own
+ * name label (two levels down), since outer containers hold every tile's name.
+ */
+const tiles = (page) =>
   page.evaluate(
     (plank) =>
-      [...document.querySelectorAll(`${plank} .dx-expand`)]
-        .map((tile) => tile.textContent?.trim() ?? '')
-        .filter(Boolean),
+      [...document.querySelectorAll(`${plank} .dx-expand.group`)].map((tile) => ({
+        name: [...tile.querySelectorAll(':scope > div > div')]
+          .map((label) => label.textContent?.trim())
+          .filter(Boolean)
+          .join(' '),
+        playing: [...tile.querySelectorAll('video')].some((video) => video.videoWidth > 0 && !video.paused),
+      })),
     PLANK,
   );
 
-/** True once a tile showing `name` plays video with real frames. */
-const playsVideoOf = (page, name) =>
-  page.evaluate(
-    ([plank, name]) =>
-      [...document.querySelectorAll(`${plank} .dx-expand`)].some(
-        (tile) =>
-          tile.textContent?.includes(name) && [...tile.querySelectorAll('video')].some((video) => video.videoWidth > 0),
-      ),
-    [PLANK, name],
-  );
+const playsVideoOf = async (page, name) => (await tiles(page)).some((tile) => tile.name === name && tile.playing);
 
 export const steps = [
   {
@@ -140,7 +138,10 @@ export const steps = [
       }
       const keys = await Promise.all(
         Object.values(peers).map(({ page }) =>
-          page.evaluate(() => String(globalThis.dxos?.client?.halo.identity.get()?.identityKey ?? '')),
+          page.evaluate(() => {
+            const identity = globalThis.dxos?.client?.halo.identity.get();
+            return String(identity?.did ?? identity?.identityKey?.toHex?.() ?? '');
+          }),
         ),
       );
       if (!keys[0] || keys[0] === keys[1]) {
@@ -281,8 +282,12 @@ export const steps = [
       await bob.click(`${PLANK} button:has-text("Join")`);
       await bob.page.locator(`${PLANK} button:has-text("Leave")`).first().waitFor({ timeout: TIMEOUT });
       await waitFor(async () => (await playsVideoOf(alice.page, 'Bob')) && (await playsVideoOf(bob.page, 'Alice')), {
-        what: `each to play the other's video (Alice sees ${await tileNames(alice.page)}; Bob sees ${await tileNames(bob.page)})`,
+        what: "each to play the other's video",
         timeout: 90_000,
+      }).catch(async (error) => {
+        throw new Error(
+          `${error.message}: Alice ${JSON.stringify(await tiles(alice.page))}; Bob ${JSON.stringify(await tiles(bob.page))}`,
+        );
       });
     },
   },
@@ -340,7 +345,7 @@ export const steps = [
     run: async ({ peers: { alice, bob } }) => {
       await bob.click(`${PLANK} button:has-text("Leave")`);
       await bob.page.locator(`${PLANK} button:has-text("Join")`).first().waitFor({ timeout: TIMEOUT });
-      await waitFor(async () => !(await tileNames(alice.page)).some((name) => name.includes('Bob')), {
+      await waitFor(async () => !(await tiles(alice.page)).some((tile) => tile.name === 'Bob'), {
         what: "Bob's tile to leave Alice's grid",
       });
       await alice.page.waitForTimeout(BEAT * 2);
