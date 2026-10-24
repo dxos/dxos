@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
-import { expect, fireEvent, screen, userEvent, waitFor, within } from 'storybook/test';
+import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
 import { Filter } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
@@ -76,27 +76,16 @@ export const Default: Story = {
   },
 };
 
-/** A tile's context menu hides and shows its slide, and removes a linked object. */
+/** Each tile names its slide's graph node, so the app's context menu (plugin-navtree) shows that node's actions. */
 export const SlideMenu: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await tile(canvas, 3);
-    // The menu is driven by keyboard: zag ignores the synthetic pointer events a test can send.
-    const choose = async (index: number, testId: string) => {
-      const target = await tile(canvas, index);
-      const { left, top } = target.getBoundingClientRect();
-      await fireEvent.contextMenu(target, { clientX: left + 10, clientY: top + 10 });
-      const item = await screen.findByTestId(testId);
-      const items = [...(item.closest('[role="menu"]')?.querySelectorAll('[role="menuitem"]') ?? [])];
-      await userEvent.keyboard('{ArrowDown}'.repeat(items.indexOf(item) + 1) + '{Enter}');
-    };
-    await choose(0, 'presenter.slide-grid.hide');
-    await waitFor(async () => expect(await tile(canvas, 0)).toHaveAttribute('data-hidden'));
-    await choose(0, 'presenter.slide-grid.hide');
-    await waitFor(async () => expect(await tile(canvas, 0)).not.toHaveAttribute('data-hidden'));
-    // The linked document is unlinked in place; an owned slide is deleted through the space's operation (not here).
-    await choose(3, 'presenter.slide-grid.delete');
-    await waitFor(() => expect(canvas.queryByTestId('presenter.slide-grid.3')).toBeNull());
+    const first = await tile(canvas, 0);
+    await waitFor(() => expect(first.getAttribute('data-dx-context')).toMatch(/\/[^/]+$/));
+    const ids = [0, 1, 2, 3].map((index) =>
+      canvas.getByTestId(`presenter.slide-grid.${index}`).getAttribute('data-dx-context'),
+    );
+    await expect(new Set(ids).size).toBe(4);
   },
 };
 

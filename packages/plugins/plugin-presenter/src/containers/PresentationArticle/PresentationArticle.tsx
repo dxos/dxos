@@ -10,7 +10,6 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useAttention } from '@dxos/react-ui-attention';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -18,8 +17,9 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Deck, LayoutPicker, SectionPicker } from '#components';
+import { type SlideSource } from '#deck';
 import { useIsPresenting, usePresentationDeck, usePresentedSlides, useSetPresenting, useSlideIndex } from '#hooks';
-import { type LayoutName, applyEdit, isHiddenSlide, setFrontmatter } from '#markdown';
+import { type LayoutName } from '#markdown';
 import { meta } from '#meta';
 import { Presentation } from '#types';
 
@@ -96,36 +96,10 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
     openSection(text.id);
   }, [subject, newSlideLayout, slides.length, setIndex, openSection]);
 
-  // A slide of the presentation's own is deleted as the navtree deletes it (undoable); a linked object is only unlinked.
-  const handleDeleteSlide = useCallback(
-    (slideIndex: number) => {
-      const slide = slides[slideIndex];
-      if (slide?.kind === 'text') {
-        void invokePromise(
-          SpaceOperation.RemoveObjects,
-          { objects: [slide.text] },
-          { spaceId: Obj.getDatabase(slide.text)?.spaceId },
-        );
-      } else if (slide?.kind === 'object') {
-        Presentation.remove(subject, slide.object);
-      }
-    },
-    [invokePromise, slides, subject],
-  );
-
-  const handleToggleHidden = useCallback(
-    (slideIndex: number) => {
-      const slide = slides[slideIndex];
-      if (slide?.kind !== 'text') {
-        return;
-      }
-      const content = slide.text.content;
-      const next = applyEdit(content, setFrontmatter(content, { hide: isHiddenSlide(content) ? undefined : true }));
-      Obj.update(slide.text, (text) => {
-        text.content = next;
-      });
-    },
-    [slides],
+  // Each tile opens its slide's node's actions (the navtree's, e.g. delete and hide) as the app's context menu.
+  const contextMenuId = useCallback(
+    (slide: SlideSource) => GraphPath.getCollectionObjectPath(GraphPath.getObjectPathFromObject(subject), slide.id),
+    [subject],
   );
 
   const handleMoveSlide = useCallback(
@@ -190,8 +164,7 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
                 onMove={handleMoveSlide}
                 onOpen={handleOpenSlide}
                 onAddSlide={handleAddSlide}
-                onDeleteSlide={handleDeleteSlide}
-                onToggleHidden={handleToggleHidden}
+                contextMenuId={contextMenuId}
               />
             )}
           </Panel.Body>

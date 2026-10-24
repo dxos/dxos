@@ -5,11 +5,11 @@
 import React, { useCallback, useMemo } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { useObject } from '@dxos/echo-react';
 import { Listbox, type ReorderListController, useReorderItem, useReorderList } from '@dxos/react-ui-list';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
-import * as Menu from '@dxos/react-ui/Menu';
 import { mx } from '@dxos/ui-theme';
 
 import { type SlideSource } from '#deck';
@@ -32,10 +32,8 @@ export type SlideGridProps = {
   onMove?: (from: number, to: number) => void;
   /** Adds a slide from a ghost tile after the last one; without it there is no ghost. */
   onAdd?: () => void;
-  /** Deletes a slide (or unlinks an object) from the tile's context menu. */
-  onDelete?: (index: number) => void;
-  /** Hides or shows a markdown slide from the tile's context menu. */
-  onToggleHidden?: (index: number) => void;
+  /** The graph node a tile shows, so right-clicking it opens that node's actions (the app's context menu). */
+  contextMenuId?: (source: SlideSource) => string | undefined;
 };
 
 type Tile = { key: string; index: number; source: SlideSource };
@@ -50,8 +48,7 @@ export const SlideGrid = ({
   onPresent,
   onMove,
   onAdd,
-  onDelete,
-  onToggleHidden,
+  contextMenuId,
 }: SlideGridProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const { ref, width } = useResizeDetector({ refreshMode: 'debounce', refreshRate: 100, handleHeight: false });
@@ -110,8 +107,7 @@ export const SlideGrid = ({
                   controller={controller}
                   draggable={!!onMove}
                   onPresent={onPresent}
-                  onDelete={onDelete}
-                  onToggleHidden={onToggleHidden}
+                  contextMenuId={contextMenuId?.(tile.source)}
                 />
               ))}
               {onAdd && (
@@ -142,12 +138,10 @@ type SlideTileProps = {
   controller: ReorderListController<Tile>;
   draggable: boolean;
   onPresent?: (index: number) => void;
-  onDelete?: (index: number) => void;
-  onToggleHidden?: (index: number) => void;
+  contextMenuId?: string;
 };
 
-const SlideTile = ({ tile, controller, draggable, onPresent, onDelete, onToggleHidden }: SlideTileProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+const SlideTile = ({ tile, controller, draggable, onPresent, contextMenuId }: SlideTileProps) => {
   const { rowRef, handleRef, isDragging } = useReorderItem(controller, tile.key);
   const [text] = useObject(tile.source.kind === 'text' ? tile.source.text : undefined);
   const hidden = isHiddenSlide(tile.source.kind === 'markdown' ? tile.source.content : (text?.content ?? ''));
@@ -162,57 +156,26 @@ const SlideTile = ({ tile, controller, draggable, onPresent, onDelete, onToggleH
     [draggable, rowRef, handleRef],
   );
 
-  // Only a slide of the presentation's own text can be hidden; a linked object is unlinked rather than deleted.
-  const canHide = !!onToggleHidden && tile.source.kind === 'text';
-  const canDelete = !!onDelete && tile.source.kind !== 'pending';
-  const linked = tile.source.kind === 'object';
   return (
-    <Menu.Root
-      onSelect={({ value }) => {
-        if (value === 'hide') {
-          onToggleHidden?.(tile.index);
-        } else if (value === 'delete') {
-          onDelete?.(tile.index);
-        }
-      }}
+    <Listbox.Item
+      ref={ref}
+      id={String(tile.index)}
+      data-testid={`presenter.slide-grid.${tile.index}`}
+      data-hidden={hidden || undefined}
+      {...(contextMenuId ? AppNode.contextMenuProps(contextMenuId) : {})}
+      classNames={mx('text-xs', (isDragging || hidden) && 'opacity-50')}
+      onDoubleClick={() => onPresent?.(tile.index)}
     >
-      <Menu.ContextTrigger asChild>
-        <Listbox.Item
-          ref={ref}
-          id={String(tile.index)}
-          data-testid={`presenter.slide-grid.${tile.index}`}
-          data-hidden={hidden || undefined}
-          classNames={mx('text-xs', (isDragging || hidden) && 'opacity-50')}
-          onDoubleClick={() => onPresent?.(tile.index)}
-        >
-          {/* Thumbnails are pictures of the slide; their controls must not take clicks from the grid. */}
-          <div className='relative flex aspect-video pointer-events-none rounded-sm overflow-hidden border border-separator'>
-            <Slide.Root source={tile.source} step={Number.POSITIVE_INFINITY}>
-              <Slide.Frame>
-                <Slide.Content />
-              </Slide.Frame>
-            </Slide.Root>
-            {hidden && <Icon.Icon icon='ph--eye-slash--regular' size='md' classNames='absolute top-1 end-1' />}
-          </div>
-          <Listbox.ItemText tone='muted' classNames='text-sm tabular-nums' />
-        </Listbox.Item>
-      </Menu.ContextTrigger>
-      {(canHide || canDelete) && (
-        <Menu.Content>
-          {canHide && (
-            <Menu.Item
-              item={{ value: 'hide', label: t(hidden ? 'show-slide.label' : 'hide-slide.label') }}
-              data-testid='presenter.slide-grid.hide'
-            />
-          )}
-          {canDelete && (
-            <Menu.Item
-              item={{ value: 'delete', label: t(linked ? 'remove-section.label' : 'delete-slide.label') }}
-              data-testid='presenter.slide-grid.delete'
-            />
-          )}
-        </Menu.Content>
-      )}
-    </Menu.Root>
+      {/* Thumbnails are pictures of the slide; their controls must not take clicks from the grid. */}
+      <div className='relative flex aspect-video pointer-events-none rounded-sm overflow-hidden border border-separator'>
+        <Slide.Root source={tile.source} step={Number.POSITIVE_INFINITY}>
+          <Slide.Frame>
+            <Slide.Content />
+          </Slide.Frame>
+        </Slide.Root>
+        {hidden && <Icon.Icon icon='ph--eye-slash--regular' size='md' classNames='absolute top-1 end-1' />}
+      </div>
+      <Listbox.ItemText tone='muted' classNames='text-sm tabular-nums' />
+    </Listbox.Item>
   );
 };

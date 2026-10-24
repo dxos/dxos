@@ -434,17 +434,15 @@ type DeckGridProps = {
   onOpen?: (index: number) => void;
   /** Adds a slide from a ghost tile after the last one; without it there is no ghost. */
   onAddSlide?: () => void;
-  /** Deletes a slide (or unlinks an object) from its tile's context menu. */
-  onDeleteSlide?: (index: number) => void;
-  /** Hides or shows a slide from its tile's context menu. */
-  onToggleHidden?: (index: number) => void;
+  /** The graph node a tile shows, so right-clicking it opens that node's actions. */
+  contextMenuId?: (source: SlideSource) => string | undefined;
 };
 
 /**
  * Every slide as a thumbnail; the current one is selected, and a double-click opens it (or presents from it).
  */
 const DeckGrid = Util.composable<HTMLDivElement, DeckGridProps>(
-  ({ onMove, onOpen, onAddSlide, onDeleteSlide, onToggleHidden, ...props }, forwardedRef) => {
+  ({ onMove, onOpen, onAddSlide, contextMenuId, ...props }, forwardedRef) => {
     const { slides, index, setIndex, setFullscreen, themeSettings, focusRef } = useDeckContext('Deck.Grid');
     const ref = useComposedRefs<HTMLDivElement>(forwardedRef, focusRef);
     return (
@@ -461,8 +459,7 @@ const DeckGrid = Util.composable<HTMLDivElement, DeckGridProps>(
             onIndexChange={setIndex}
             onMove={onMove}
             onAdd={onAddSlide}
-            onDelete={onDeleteSlide}
-            onToggleHidden={onToggleHidden}
+            contextMenuId={contextMenuId}
             onPresent={(slideIndex) => {
               setIndex(slideIndex);
               if (onOpen) {

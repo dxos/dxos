@@ -1235,6 +1235,14 @@ decision D-64: A slide is hidden by Slidev's own frontmatter key, `hide: true`; 
   rejected: A `hidden` flag on the section ref, which a linked object could carry but plain markdown could not.
 ```
 
+```mdl
+decision D-65: A grid tile's right-click menu is the app's context menu for the slide's graph node, not a menu of the grid's own: it lists the node's navtree actions (delete, remove from presentation), and hiding or showing a slide is a graph action on owned slides. Supersedes the grid-local menu of [D-63].
+  date: 2026-10-24
+  by: user:richburdon
+  affects: [PresentationArticle, SlideGrid]
+  why: One context menu for the whole app, whose items plugins contribute by context, rather than a menu per component.
+```
+
 ---
 
 ## Appendix: Extension Definitions
