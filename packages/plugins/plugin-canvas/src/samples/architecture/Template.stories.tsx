@@ -7,6 +7,7 @@ import React, { type PropsWithChildren, useEffect } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Entity, Filter, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -17,6 +18,7 @@ import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
 import * as MermaidPlugin from '@dxos/plugin-mermaid/MermaidPlugin';
+import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
 import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 
 import { CanvasPlugin } from '#plugin';
@@ -35,7 +37,9 @@ import {
 
 type StoryArgs = {
   /** The template document opened as the article. */
-  document?: 'Composer' | 'DXOS' | 'EDGE';
+  document?: 'Composer' | 'DXOS' | 'EDGE' | 'ECHO';
+  /** Opens the document as a presenter deck rather than as a document. */
+  deck?: boolean;
   /** The diagram stories' drawings open read-only: nothing is selected, and no tool, handle, port or panel edits them. */
   readonly?: boolean;
 };
@@ -45,7 +49,13 @@ const definition = ArchitectureSpace.make();
 // The space is seeded by the template's own definition, as `SpaceOperation.ApplyTemplate` applies it.
 const withTemplate = createStoryDecorators<StoryArgs>(({ args }) => ({
   types: [...definition.schemas],
-  plugins: [IllustratorPlugin.make(), CanvasPlugin(), MarkdownPlugin.make(), MermaidPlugin.make()],
+  plugins: [
+    IllustratorPlugin.make(),
+    CanvasPlugin(),
+    MarkdownPlugin.make(),
+    MermaidPlugin.make(),
+    PresenterPlugin.make(),
+  ],
   onInit: async ({ space }) => {
     await EffectEx.runPromise(SampleSpace.applyTo(definition, space));
     await space.db.flush();
@@ -54,7 +64,17 @@ const withTemplate = createStoryDecorators<StoryArgs>(({ args }) => ({
     if (!document) {
       throw new Error(`The template seeded no ${args.document} document.`);
     }
-    return [[Cell.article(document)]];
+    // The presenter shows a markdown document as a deck through a subject naming the presenter.
+    return [
+      [
+        args.deck
+          ? {
+              type: AppSurface.Article,
+              data: { subject: { type: PresenterPlugin.meta.profile.key, object: document } },
+            }
+          : Cell.article(document),
+      ],
+    ];
   },
 }));
 
@@ -131,6 +151,17 @@ export const Dxos: Story = { ...documentArgs, args: { document: 'DXOS' } };
 
 /** The EDGE document, embedding the EDGE architecture. */
 export const Edge: Story = { ...documentArgs, args: { document: 'EDGE' } };
+
+/** The ECHO deck, presented: types, the CRDT, spaces, queries, feeds, replication, migration and agents. */
+export const Echo: Story = {
+  ...documentArgs,
+  args: { document: 'ECHO', deck: true },
+  play: async ({ canvasElement }) => {
+    await expect(
+      await within(canvasElement).findByRole('heading', { name: 'ECHO' }, { timeout: 30_000 }),
+    ).toBeInTheDocument();
+  },
+};
 
 /** Opens once the overview's drill-down boxes are frames onto their diagrams. */
 const play =
