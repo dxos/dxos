@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { type SlideTokenKind, slideTokens } from './tokens.ts';
+import { type SlideTokenKind, atomicTokens, slideTokens } from './tokens.ts';
 
 /** Each token as `kind:text`, so expectations read as the highlighted source. */
 const spans = (content: string, kind?: SlideTokenKind) =>
@@ -60,5 +60,22 @@ describe('slideTokens', () => {
       'frontmatter-key',
       'frontmatter-delimiter',
     ]);
+  });
+});
+
+describe('atomicTokens', () => {
+  test('slot markers and plain click tags are atomic; tags with attributes are not', () => {
+    const content = [
+      '<v-click>',
+      'One',
+      '</v-click>',
+      '',
+      '::right::',
+      '',
+      '<v-click at="2">',
+      '<Surface ref="echo:///A" />',
+    ].join('\n');
+    const atomic = atomicTokens(slideTokens(content)).map((token) => content.slice(token.from, token.to));
+    expect(atomic).toEqual(['<v-click>', '</v-click>', '::right::']);
   });
 });

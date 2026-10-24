@@ -87,3 +87,15 @@ export const slideTokens = (content: string): SlideToken[] => {
   // Decorations must be added in document order, and a span's own parts after the span that holds them.
   return tokens.sort((a, b) => a.from - b.from || b.to - a.to);
 };
+
+/**
+ * The markers the editor treats as one unit, so the caret steps over and deletes them whole: `::slot::` markers and
+ * click tags without attributes. A tag with attributes (`<Surface ref="…">`, `<v-click at="2">`) stays editable.
+ */
+export const atomicTokens = (tokens: readonly SlideToken[]): SlideToken[] =>
+  tokens.filter(
+    (token) =>
+      token.kind === 'slot' ||
+      (token.kind === 'tag' &&
+        !tokens.some((part) => part.kind === 'tag-attribute' && part.from >= token.from && part.to <= token.to)),
+  );

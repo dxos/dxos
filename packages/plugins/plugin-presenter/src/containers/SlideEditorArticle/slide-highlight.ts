@@ -5,7 +5,7 @@
 import { type Extension, RangeSetBuilder } from '@codemirror/state';
 import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from '@codemirror/view';
 
-import { type SlideTokenKind, slideTokens } from '#markdown';
+import { type SlideTokenKind, atomicTokens, slideTokens } from '#markdown';
 
 const marks: Record<SlideTokenKind, Decoration> = {
   'frontmatter': Decoration.mark({ class: 'cm-slide-frontmatter' }),
@@ -18,38 +18,54 @@ const marks: Record<SlideTokenKind, Decoration> = {
   'notes': Decoration.mark({ class: 'cm-slide-notes' }),
 };
 
+const atomic = Decoration.mark({});
+
+type Decorations = { marks: DecorationSet; atomic: DecorationSet };
+
 // A slide is short, so the whole document is re-tokenized on each change rather than tracking visible ranges.
-const decorate = (view: EditorView): DecorationSet => {
-  const builder = new RangeSetBuilder<Decoration>();
-  for (const { from, to, kind } of slideTokens(view.state.doc.toString())) {
+const decorate = (view: EditorView): Decorations => {
+  const tokens = slideTokens(view.state.doc.toString());
+  const marksBuilder = new RangeSetBuilder<Decoration>();
+  for (const { from, to, kind } of tokens) {
     if (to > from) {
-      builder.add(from, to, marks[kind]);
+      marksBuilder.add(from, to, marks[kind]);
     }
   }
-  return builder.finish();
+  const atomicBuilder = new RangeSetBuilder<Decoration>();
+  for (const { from, to } of atomicTokens(tokens)) {
+    if (to > from) {
+      atomicBuilder.add(from, to, atomic);
+    }
+  }
+  return { marks: marksBuilder.finish(), atomic: atomicBuilder.finish() };
 };
+
+const plugin = ViewPlugin.fromClass(
+  class {
+    decorations: Decorations;
+
+    constructor(view: EditorView) {
+      this.decorations = decorate(view);
+    }
+
+    update(update: ViewUpdate) {
+      if (update.docChanged) {
+        this.decorations = decorate(update.view);
+      }
+    }
+  },
+  { decorations: (instance) => instance.decorations.marks },
+);
 
 /**
  * Highlights what the slide DSL adds to markdown: the frontmatter (its delimiters and keys), `::slot::` markers,
- * click and `Surface` tags (and their attribute names), object embeds, and the speaker notes.
+ * click and `Surface` tags (and their attribute names), object embeds, and the speaker notes; slot markers and plain
+ * click tags are atomic.
  */
 export const slideHighlight = (): Extension => [
-  ViewPlugin.fromClass(
-    class {
-      decorations: DecorationSet;
-
-      constructor(view: EditorView) {
-        this.decorations = decorate(view);
-      }
-
-      update(update: ViewUpdate) {
-        if (update.docChanged) {
-          this.decorations = decorate(update.view);
-        }
-      }
-    },
-    { decorations: (plugin) => plugin.decorations },
-  ),
+  plugin,
+  // Markers such as `::right::` are syntax, not text: the caret steps over them and a delete removes them whole.
+  EditorView.atomicRanges.of((view) => view.plugin(plugin)?.decorations.atomic ?? Decoration.none),
   EditorView.baseTheme({
     // DSL markup is code, not prose, so it reads in the code font (the notes stay prose); descendants too, since the
     // markdown highlighter wraps the same text in spans that set their own font.

@@ -193,6 +193,22 @@ export const CursorStep: Story = {
   },
 };
 
+/** A slot marker is one unit: the caret steps over `::right::` in one move, and Backspace deletes it whole. */
+export const AtomicMarker: Story = {
+  args: { slide: 0 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const editor = await canvas.findByRole('textbox', undefined, LOAD_TIMEOUT);
+    // A synthetic click has no coordinates for CodeMirror to place the cursor, so it is moved by key instead.
+    await userEvent.click(await canvas.findByText(editorLine('- Sync is peer to peer')));
+    // To the blank line above the marker, onto the marker's start, then one step past the whole marker.
+    await userEvent.keyboard('{ArrowUp>8/}{ArrowDown>8/}{Home}{ArrowRight}{ArrowRight}X');
+    await waitFor(() => expect(editor.textContent).toContain('::right::X'));
+    await userEvent.keyboard('{Backspace}{Backspace}');
+    await waitFor(() => expect(editor.textContent).not.toContain('::right::'));
+  },
+};
+
 /** Clicking an element in the preview puts the caret at the start of its source. */
 export const SourceClick: Story = {
   args: { slide: 1 },
