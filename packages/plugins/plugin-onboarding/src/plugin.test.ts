@@ -10,6 +10,8 @@ import { OnboardingPlugin } from '#plugin';
 
 import { meta } from './meta.ts';
 
+await Harness.preload({ plugins: [OnboardingPlugin({ generateDemoSpace: false })] });
+
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('OnboardingPlugin', () => {

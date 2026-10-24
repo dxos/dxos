@@ -12,6 +12,8 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 import { meta } from '#meta';
 import { ExcalidrawPlugin } from '#plugin';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), IllustratorPlugin.make(), ExcalidrawPlugin()] });
+
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('ExcalidrawPlugin', () => {
