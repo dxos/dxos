@@ -42,6 +42,11 @@ export const Default: Story = {
 
 export const Unset: Story = {};
 
+/** The mid tones only, for a palette without its near-white and near-black ends. */
+export const MidTones: Story = {
+  args: { defaultValue: '#3b82f6', tones: [300, 400, 500, 600, 700, 800, 900] },
+};
+
 /** Typing sets any CSS color; clearing the box leaves the value unset rather than a fallback color. */
 export const Typed: Story = {
   args: { defaultValue: '#3b82f6' },

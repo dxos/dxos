@@ -214,9 +214,15 @@ const ColorPickerTrigger = ({
 
 type SwatchesProps = { hues: SwatchHue[]; tones: number[]; onPick: (color: string) => void };
 
-/** One row per hue, one column per tone; a pick writes the tone's resolved color, since a value must not be a `var()`. */
+/**
+ * One row per hue, one column per tone; a pick writes the tone's resolved color, since a value must not be a `var()`.
+ * The grid is the wheel's width whatever the tone count, and rows stay one swatch tall, so fewer tones widen the cells.
+ */
 const Swatches = ({ hues, tones, onPick }: SwatchesProps) => (
-  <div className='grid w-48 gap-0.5' style={{ gridTemplateColumns: `repeat(${tones.length}, minmax(0, 1fr))` }}>
+  <div
+    className='grid w-48 gap-0.5'
+    style={{ gridTemplateColumns: `repeat(${tones.length}, minmax(0, 1fr))`, gridAutoRows: '1rem' }}
+  >
     {hues.flatMap((hue) =>
       tones.map((tone) => {
         const name = `--color-${hue}-${tone}`;
@@ -226,7 +232,7 @@ const Swatches = ({ hues, tones, onPick }: SwatchesProps) => (
             type='button'
             title={`${hue}-${tone}`}
             aria-label={`${hue}-${tone}`}
-            className='dx-focus-ring aspect-square rounded-xs'
+            className='dx-focus-ring rounded-xs'
             style={{ backgroundColor: `var(${name})` }}
             onClick={(event) => {
               const resolved = getComputedStyle(event.currentTarget).getPropertyValue(name).trim();
