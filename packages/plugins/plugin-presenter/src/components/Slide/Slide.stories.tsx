@@ -168,6 +168,16 @@ const createSpaceSlides = async ({ space }: { space: Space }) => {
   );
   space.db.add(
     Presentation.make({
+      name: 'embedded-image',
+      slides: [
+        ['---', 'layout: image', '---', '# Over the drawing', surfaceTag(EID.make({ entityId: embedded.id }))].join(
+          '\n',
+        ),
+      ],
+    }),
+  );
+  space.db.add(
+    Presentation.make({
       name: 'embedded-bleed',
       slides: [
         [
@@ -359,6 +369,23 @@ export const EmbeddedSurface: Story = {
     await expect(await canvas.findByRole('heading', { name: 'Beside the document' }, LOAD_TIMEOUT)).toBeVisible();
     await waitFor(() => expect(canvasElement.querySelector('[data-surface] svg')).not.toBeNull(), LOAD_TIMEOUT);
     await expect(await canvas.findByText('Client', undefined, LOAD_TIMEOUT)).toBeInTheDocument();
+  },
+};
+
+/** In the `image` layout, an embedded object fills the slide below the heading rather than collapsing to nothing. */
+export const EmbeddedSurfaceImage: Story = {
+  render: () => <SpaceSlideStory name='embedded-image' />,
+  decorators: [withSlideSurface, withSpace],
+  args: { kind: 'text' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByRole('heading', { name: 'Over the drawing' }, LOAD_TIMEOUT)).toBeVisible();
+    await waitFor(
+      () => expect(canvasElement.querySelector('[data-slot="default"] [data-surface]')).not.toBeNull(),
+      LOAD_TIMEOUT,
+    );
+    const surface = canvasElement.querySelector('[data-slot="default"] [data-surface]');
+    await waitFor(() => expect(surface?.getBoundingClientRect().height ?? 0).toBeGreaterThan(100));
   },
 };
 
