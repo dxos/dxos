@@ -30,6 +30,9 @@ import { PopupScroll, popupPositioning, usePopupSize } from '../ScrollArea/Popup
 /** Gap between trigger and popup, in px (positioning takes a number, not a CSS variable). */
 const POPUP_GUTTER = 2;
 
+/** A popup's ring is 1px drawn outside its box, so a submenu this far off its parent paints its ring on the parent's. */
+const SUBMENU_OFFSET = 1;
+
 //
 // Root
 //
@@ -485,8 +488,8 @@ const MenuSub = ({ positioning, onSelect, ...props }: MenuSubProps) => {
 };
 
 /**
- * The trigger item's rect stretched to its menu's end edge, so a submenu opens beside the menu rather than over the
- * thumb strip an overflowing menu reserves after its items.
+ * The trigger item's rect stretched to its menu's end edge (plus {@link SUBMENU_OFFSET}, since zag forces a submenu's
+ * gutter to 0), so a submenu opens beside the menu rather than over the thumb strip an overflowing menu reserves.
  */
 const parentEdgeRect = (element: unknown) => {
   // A virtual anchor has no menu to measure, so zag falls back to its own rect.
@@ -495,7 +498,7 @@ const parentEdgeRect = (element: unknown) => {
   }
   const item = element.getBoundingClientRect();
   const frame = element.closest('.dx-popup')?.getBoundingClientRect();
-  return { x: item.x, y: item.y, width: (frame?.right ?? item.right) - item.x, height: item.height };
+  return { x: item.x, y: item.y, width: (frame?.right ?? item.right) + SUBMENU_OFFSET - item.x, height: item.height };
 };
 
 MenuSub.displayName = 'Menu.Sub';

@@ -25,6 +25,8 @@ import { PresentationSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb
 
 import { RoutinePlugin } from '#plugin';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), RoutinePlugin()] });
+
 const Double = Operation.make({
   meta: { key: DXN.make('com.example.operation.test.double'), name: 'Double' },
   input: Schema.Struct({ value: Schema.Number }),

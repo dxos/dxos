@@ -48,7 +48,7 @@ export class JmapCredentials extends Context.Service<JmapCredentials, Credential
       JmapCredentials,
       Effect.gen(function* () {
         const connection = yield* Database.load(connectionRef);
-        const accessToken = yield* Database.load(connection.accessToken);
+        const accessToken = yield* Database.load(Connection.getAccessToken(connection));
         log('using connection access token', { source: accessToken.source });
         return { host: accessToken.source, account: accessToken.account, token: accessToken.token };
       }),

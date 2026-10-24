@@ -26,6 +26,17 @@ import { FeatureMapView, ProjectCapabilities, ProjectOperation } from '#types';
 
 import { featureSpec } from '../templates/feature-spec.ts';
 
+await TestingHarness.preload({
+  plugins: [
+    ClientPlugin.make({}),
+    SpacePlugin.make({}),
+    AttentionPlugin.make(),
+    AssistantPlugin.make(),
+    TasksPlugin.make(),
+    ProjectsPlugin(),
+  ],
+});
+
 describe('ProjectOperation.Create', () => {
   test('scaffolds the owned graph and files it with one cascading add', async ({ expect }) => {
     await using harness = await setup();

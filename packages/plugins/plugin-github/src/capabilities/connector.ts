@@ -14,7 +14,7 @@ import { OAuthProvider } from '@dxos/protocols';
 
 import { GitHubOperation } from '#types';
 
-import { GITHUB_APP_PROVIDER_ID, GITHUB_PROVIDER_ID, GITHUB_SOURCE } from '../constants.ts';
+import { GITHUB_APP_PROVIDER_ID, GITHUB_MCP_ENDPOINT, GITHUB_PROVIDER_ID, GITHUB_SOURCE } from '../constants.ts';
 import { GitHubApi } from '../services/index.ts';
 
 /**
@@ -116,6 +116,7 @@ export default Capability.makeModule(
         source: GITHUB_SOURCE,
         label: 'GitHub',
         kind: 'user',
+        mcp: () => GITHUB_MCP_ENDPOINT,
         oauth: {
           provider: OAuthProvider.GITHUB,
           scopes: [],
@@ -129,6 +130,7 @@ export default Capability.makeModule(
         source: GITHUB_SOURCE,
         label: 'GitHub App',
         kind: 'app',
+        mcp: () => GITHUB_MCP_ENDPOINT,
         oauth: {
           provider: OAuthProvider.GITHUB,
           scopes: [],

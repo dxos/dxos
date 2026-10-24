@@ -167,7 +167,7 @@ describe('reconcileCursors', () => {
     const lastTick = '2026-04-01T00:00:00.000Z';
     const existing = db.add(
       Cursor.makeExternal({
-        source: connection.accessToken,
+        source: Connection.getAccessToken(connection),
         target: Ref.make(obj),
         externalId: 'kept',
         label: 'Kept',
@@ -240,7 +240,7 @@ describe('reconcileCursors', () => {
     // A single-target connector (e.g. Gmail) creates a cursor with a target but no externalId;
     // reconciling remote-id selections must not delete it.
     const auto = db.add(Obj.make(Expando.Expando, { name: 'auto' }));
-    db.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(auto) }));
+    db.add(Cursor.makeExternal({ source: Connection.getAccessToken(connection), target: Ref.make(auto) }));
 
     const result = await reconcile(db, connection, makeConnector(), [{ externalId: 'new', name: 'New' }]);
     expect(result.added).toBe(1);

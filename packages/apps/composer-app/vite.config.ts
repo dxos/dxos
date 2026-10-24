@@ -76,6 +76,29 @@ const isBundledDev =
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
+
+/**
+ * Slide theme fonts that plugin-presenter imports only when a deck picks one (`FONTS`/`MONO_FONTS` in its
+ * `SlideTheme.tsx`; keep the two in step). Precaching them would download every one at install, so the service
+ * worker caches each on first use instead. Matched by Fontsource's `<font>-<subset>-…` file names, so a family
+ * that only shares a prefix (`nunito-sans`) is not caught.
+ */
+const ON_DEMAND_FONTS = [
+  'inter',
+  'nunito',
+  'source-serif-4',
+  'fira-code',
+  'ibm-plex-mono',
+  'space-grotesk',
+  'mali',
+  'geist',
+  'orbitron',
+  'unbounded',
+  'opendyslexic',
+  'lxgw-wenkai',
+];
+
+const FONT_SUBSETS = '@(latin|latin-ext|cyrillic|cyrillic-ext|greek|greek-ext|vietnamese|thai|math|symbols|symbols2)';
 const dxosIcons = path.join(rootDir, '/packages/ui/brand/assets/icons');
 const extendedIcons = path.join(rootDir, '/packages/ui/ui-icons/assets');
 
@@ -589,6 +612,12 @@ export default defineConfig((env) => ({
     // because this config's static imports are bundled as CJS `require` and the package is ESM-only.
     import('@dxos/plugin-dev-shell/vite-plugin').then(({ DevShellVitePlugin }) => DevShellVitePlugin()),
 
+    // Serves code-index to plugin-code-graph by running `code-index mcp` beside the dev server. Imported dynamically
+    // for the same reason as the dev shell: the package is ESM-only and this config's static imports are bundled as CJS.
+    import('@dxos/plugin-code-graph/vite-plugin').then(({ CodeIndexVitePlugin }) =>
+      CodeIndexVitePlugin({ root: rootDir }),
+    ),
+
     // Dev-only: local files for plugin-file-system's FileSystem service (the desktop app uses the Tauri fs plugin instead).
     fileSystemPlugin(rootDir),
 
@@ -738,7 +767,7 @@ export default defineConfig((env) => ({
         // manifest entries alone would add one install-time request per file, slowing every
         // install/update. sw.ts caches /phosphor/ fetches at runtime (cache-first) instead,
         // so any icon the app has rendered once stays available offline.
-        globIgnores: ['**/phosphor/**'],
+        globIgnores: ['**/phosphor/**', ...ON_DEMAND_FONTS.map((font) => `**/${font}-${FONT_SUBSETS}-*.woff2`)],
       },
       includeAssets: ['favicon.ico'],
       manifest: {

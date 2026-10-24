@@ -3,7 +3,7 @@
 //
 
 import { type EditorState, type Extension, RangeSetBuilder } from '@codemirror/state';
-import { Decoration, type DecorationSet, EditorView, WidgetType } from '@codemirror/view';
+import { Decoration, type DecorationSet, EditorView, ViewPlugin, WidgetType } from '@codemirror/view';
 
 import { type SourceKey, formatSourceKey } from '#sync';
 
@@ -13,7 +13,9 @@ import {
   STATUS_STYLE,
   type Verdict,
   reviewAnnotations,
+  walkthroughOf,
 } from '../SpecModel/index.ts';
+import { type SnippetCard, type SourceReader, snippetCard, walkthroughCard } from './snippet-card.ts';
 
 /** A block declaration line, `feat F-1: …`, `  req F-1.2: …` or `type Scene`, captured as its kind and id. */
 const DECLARATION = /^\s*([a-z]+)\s+([A-Za-z][\w.-]*)\s*(?::|$)/;
@@ -22,12 +24,15 @@ const DECLARATION = /^\s*([a-z]+)\s+([A-Za-z][\w.-]*)\s*(?::|$)/;
 const EXERCISE_KINDS = new Set(['scenario', 'test']);
 
 const EXERCISE_LABEL: Record<Verdict['status'], { text: string; hue: string } | undefined> = {
-  done: { text: 'exercised', hue: 'success' },
-  partial: { text: 'partly exercised', hue: 'warning' },
-  diverged: { text: 'partly exercised', hue: 'warning' },
-  missing: { text: 'not exercised', hue: 'error' },
-  untested: { text: 'not exercised', hue: 'error' },
+  done: { text: 'tested', hue: 'success' },
+  partial: { text: 'partly tested', hue: 'warning' },
+  diverged: { text: 'partly tested', hue: 'warning' },
+  missing: { text: 'not tested', hue: 'error' },
+  untested: { text: 'not tested', hue: 'error' },
 };
+
+/** How long a hover card stays after the pointer leaves its chip, so the pointer can move onto the card. */
+const HIDE_DELAY = 200;
 
 /** More code chips than this collapse into a `+n` chip whose tooltip lists the rest. */
 const MAX_CODE_CHIPS = 3;
@@ -39,7 +44,91 @@ export type ReviewGutterCallbacks = {
   onSelect?: (id: string) => void;
   /** A code or test chip opens the file at its symbol. */
   onOpen?: (key: SourceKey) => void;
+  /** The checkout's text of a file, for the declarations hover cards show. */
+  read?: SourceReader;
 };
+
+/** The gap between a chip and its card. */
+const CARD_GAP = 4;
+
+/**
+ * Shows one card while the pointer is on its chip or on the card itself.
+ * The card lives on `document.body` at fixed coordinates measured from the chip, since CodeMirror's tooltip layer
+ * misplaces fixed tooltips under the transformed containers the spec editor sits in.
+ */
+class HoverController {
+  #timer: ReturnType<typeof setTimeout> | undefined;
+  #card: SnippetCard | undefined;
+  #chip: HTMLElement | undefined;
+  readonly #reposition = () => this.#place();
+
+  /** `description` carries the card's content to assistive tech, since the card itself is never focused. */
+  attach(view: EditorView, chip: HTMLElement, render: (dark: boolean) => SnippetCard, description: string): void {
+    chip.setAttribute('aria-description', description);
+    const show = () => {
+      this.#cancel();
+      this.close();
+      const card = render(view.state.facet(EditorView.darkTheme));
+      card.dom.classList.add(
+        'fixed',
+        'z-50',
+        'rounded-sm',
+        'border',
+        'border-separator',
+        'bg-modal-surface',
+        'shadow-sm',
+      );
+      card.dom.addEventListener('mouseenter', () => this.#cancel());
+      card.dom.addEventListener('mouseleave', () => chip.ownerDocument.activeElement !== chip && this.#hide());
+      chip.ownerDocument.body.appendChild(card.dom);
+      this.#card = card;
+      this.#chip = chip;
+      this.#place();
+      window.addEventListener('scroll', this.#reposition, true);
+    };
+    // Focus as well as hover, so keyboard users get the card; the chips are buttons and already focusable.
+    chip.addEventListener('mouseenter', show);
+    chip.addEventListener('focus', show);
+    // A focused chip keeps its card when the pointer leaves; blur closes it.
+    chip.addEventListener('mouseleave', () => chip.ownerDocument.activeElement !== chip && this.#hide());
+    chip.addEventListener('blur', () => this.#hide());
+  }
+
+  /** Removes the open card, if any. */
+  close(): void {
+    window.removeEventListener('scroll', this.#reposition, true);
+    this.#card?.dom.remove();
+    this.#card?.destroy();
+    this.#card = undefined;
+    this.#chip = undefined;
+  }
+
+  /** Below the chip when it fits, else above; kept inside the window horizontally. */
+  #place(): void {
+    if (!this.#card || !this.#chip) {
+      return;
+    }
+    if (!this.#chip.isConnected) {
+      this.close();
+      return;
+    }
+    const chip = this.#chip.getBoundingClientRect();
+    const { dom } = this.#card;
+    const { width, height } = dom.getBoundingClientRect();
+    const below = chip.bottom + CARD_GAP + height <= window.innerHeight || chip.top < height + CARD_GAP;
+    dom.style.top = `${below ? chip.bottom + CARD_GAP : chip.top - CARD_GAP - height}px`;
+    dom.style.left = `${Math.max(CARD_GAP, Math.min(chip.left, window.innerWidth - width - CARD_GAP))}px`;
+  }
+
+  #cancel(): void {
+    clearTimeout(this.#timer);
+  }
+
+  #hide(): void {
+    this.#cancel();
+    this.#timer = setTimeout(() => this.close(), HIDE_DELAY);
+  }
+}
 
 const keysEqual = (left: readonly SourceKey[] = [], right: readonly SourceKey[] = []): boolean =>
   left.map((key) => formatSourceKey(key)).join() === right.map((key) => formatSourceKey(key)).join();
@@ -50,6 +139,7 @@ class ReviewWidget extends WidgetType {
     readonly annotation: Annotation | undefined,
     readonly exercise: boolean,
     readonly callbacks: ReviewGutterCallbacks,
+    readonly hover: HoverController,
   ) {
     super();
   }
@@ -62,27 +152,30 @@ class ReviewWidget extends WidgetType {
       other.verdict.status === this.verdict.status &&
       other.verdict.summary === this.verdict.summary &&
       other.verdict.note === this.verdict.note &&
+      other.verdict.walkthrough === this.verdict.walkthrough &&
       other.annotation?.testing === this.annotation?.testing &&
       keysEqual(other.annotation?.keys, this.annotation?.keys) &&
       keysEqual(other.annotation?.tests, this.annotation?.tests)
     );
   }
 
-  override toDOM(): HTMLElement {
+  override toDOM(view: EditorView): HTMLElement {
     const { id, status, summary, note } = this.verdict;
-    const { onSelect, onOpen } = this.callbacks;
+    const { onSelect, onOpen, read } = this.callbacks;
     // Floated into the right margin, beside the decision chips, so the annotated line's text does not move.
     const row = document.createElement('span');
     row.className = 'float-right flex flex-wrap justify-end gap-1 ms-2 select-none';
     row.dataset.testid = 'spec-review.chips';
     row.dataset.verdict = id;
 
-    const tag = (text: string, hue: string, title: string, testId: string, onClick?: () => void) => {
+    const tag = (text: string, hue: string, title: string | undefined, testId: string, onClick?: () => void) => {
       const element = document.createElement(onClick ? 'button' : 'span');
       element.className = `dx-tag dx-tag-inline${onClick ? ' cursor-pointer' : ''}`;
       element.dataset.hue = hue;
       element.dataset.testid = testId;
-      element.title = title;
+      if (title) {
+        element.title = title;
+      }
       element.textContent = text;
       if (onClick) {
         element.setAttribute('type', 'button');
@@ -92,19 +185,33 @@ class ReviewWidget extends WidgetType {
       return element;
     };
 
+    // An item implemented in several places shows its walkthrough on hover; the browser tooltip would cover it.
+    const steps = walkthroughOf(this.verdict);
     const statusTag = tag(
       STATUS_STYLE[status].label,
       STATUS_STYLE[status].hue,
-      [`${STATUS_STYLE[status].label}: ${summary ?? id}`, note].filter(Boolean).join('\n\n'),
+      steps ? undefined : [`${STATUS_STYLE[status].label}: ${summary ?? id}`, note].filter(Boolean).join('\n\n'),
       'spec-review.gutter-chip',
       () => onSelect?.(id),
     );
     statusTag.dataset.status = status;
+    if (steps) {
+      this.hover.attach(
+        view,
+        statusTag,
+        (dark) => walkthroughCard(steps, { read, onOpen, dark }),
+        [`${STATUS_STYLE[status].label}: ${summary ?? id}`, ...steps.map((step) => `${step.text} ${step.key}`)].join(
+          '. ',
+        ),
+      );
+    }
 
     const codeChips = (keys: readonly SourceKey[], hue: string, testId: string) => {
-      keys
-        .slice(0, MAX_CODE_CHIPS)
-        .forEach((key) => tag(`</> ${labelOf(key)}`, hue, formatSourceKey(key), testId, () => onOpen?.(key)));
+      keys.slice(0, MAX_CODE_CHIPS).forEach((key) => {
+        const chip = tag(`</> ${labelOf(key)}`, hue, undefined, testId, () => onOpen?.(key));
+        chip.dataset.key = formatSourceKey(key);
+        this.hover.attach(view, chip, (dark) => snippetCard(key, { read, onOpen, dark }), formatSourceKey(key));
+      });
       const rest = keys.slice(MAX_CODE_CHIPS);
       if (rest.length > 0) {
         tag(`+${rest.length}`, hue, rest.map((key) => formatSourceKey(key)).join('\n'), testId, () =>
@@ -135,17 +242,30 @@ class ReviewWidget extends WidgetType {
 
     const testing = this.annotation?.testing;
     if (testing) {
-      tag(
+      const chip = tag(
         testing,
         testing === 'tested' ? 'success' : 'warning',
         tests.length > 0
-          ? tests.map((key) => formatSourceKey(key)).join('\n')
+          ? undefined
           : testing === 'tested'
             ? 'Tested: the review judged the item done.'
             : 'No test exercises this item.',
         'spec-review.testing',
         tests.length > 0 ? () => onOpen?.(tests[0]) : undefined,
-      ).dataset.testing = testing;
+      );
+      chip.dataset.testing = testing;
+      if (tests.length > 0) {
+        this.hover.attach(
+          view,
+          chip,
+          (dark) =>
+            walkthroughCard(
+              tests.map((key) => ({ text: '', key: formatSourceKey(key) })),
+              { read, onOpen, dark },
+            ),
+          `Tested by ${tests.map((key) => formatSourceKey(key)).join(', ')}`,
+        );
+      }
     }
     return row;
   }
@@ -160,6 +280,7 @@ const buildDecorations = (
   verdicts: Map<string, Verdict>,
   annotations: Map<string, Annotation>,
   callbacks: ReviewGutterCallbacks,
+  hover: HoverController,
 ): DecorationSet => {
   const builder = new RangeSetBuilder<Decoration>();
   const seen = new Set<string>();
@@ -176,7 +297,7 @@ const buildDecorations = (
         line.from,
         line.from,
         Decoration.widget({
-          widget: new ReviewWidget(verdict, annotations.get(verdict.id), EXERCISE_KINDS.has(kind), callbacks),
+          widget: new ReviewWidget(verdict, annotations.get(verdict.id), EXERCISE_KINDS.has(kind), callbacks, hover),
           side: -1,
         }),
       );
@@ -192,8 +313,13 @@ const buildDecorations = (
 export const reviewGutter = (review: ReviewModel, callbacks: ReviewGutterCallbacks = {}): Extension => {
   const verdicts = new Map(review.verdicts.map((verdict) => [verdict.id, verdict]));
   const annotations = new Map(reviewAnnotations(review).map((annotation) => [annotation.id, annotation]));
+  const hover = new HoverController();
   return [
-    EditorView.decorations.compute(['doc'], (state) => buildDecorations(state, verdicts, annotations, callbacks)),
+    // The card is outside the editor's DOM, so it goes when the editor does.
+    ViewPlugin.define(() => ({ destroy: () => hover.close() })),
+    EditorView.decorations.compute(['doc'], (state) =>
+      buildDecorations(state, verdicts, annotations, callbacks, hover),
+    ),
     EditorView.theme({
       '.dx-review-done': { boxShadow: 'inset 3px 0 0 var(--color-success-text, #16a34a)' },
       '.dx-review-untested': { boxShadow: 'inset 3px 0 0 var(--color-info-text, #2563eb)' },

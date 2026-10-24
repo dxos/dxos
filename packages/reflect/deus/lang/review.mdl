@@ -62,7 +62,21 @@ automation exercises it, not on whether code implements it:
 
 `untested` does not apply. `tests:` names the test files that exercise it and is required for
 `done`, `partial` and `diverged`; `evidence:` may name the code it drives. The viewer shows
-`exercised`, `partly exercised` or `not exercised` beside it, with a chip per test file.
+`tested`, `partly tested` or `not tested` beside it, with a chip per test file.
+
+## Walkthrough
+
+When an item is implemented in more than one place, the verdict carries a `walkthrough:`: 1 to 5
+segments, in reading order, that say where each part is implemented. Each segment is one
+sentence followed by the `github:` key of the code it describes; the viewer shows the sentence
+above the declaration the key names, linked to its file. Keep each sentence to what the code
+does for this item, not how it works line by line.
+
+- A `type` needs none: its one declaration is the hover card of its code chip.
+- An `op` walks its declaration (the schema), then each handler.
+- A `feat` or `req` walks the pieces in the order a request passes through them.
+
+An item with a single implementation gets no walkthrough.
 
 A `feat` with nested `req` items is judged through its requirements; its status is the worst of
 theirs. Judge a `feat` directly only when it has no requirements.
@@ -79,6 +93,7 @@ ext verdict
     status: done | untested | partial | diverged | missing
     evidence?: RefList          # github: keys of the code that supports the verdict, with #Symbol
     tests?: RefList             # github: keys of the test files that exercise the item, without #
+    walkthrough?: ProseList     # 1-5 items `- <one sentence>. github:<key>`, when there is more than one implementation
     note?: Prose                # what is missing or different; required unless status is done
   syntax: |
     verdict F-1.2: The picker opens on the action.
