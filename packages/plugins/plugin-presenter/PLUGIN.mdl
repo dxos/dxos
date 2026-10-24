@@ -78,7 +78,7 @@ component Deck
   desc: |
     A composite (`Deck.Root`, headless, holding the state and keys; `Deck.Content`, the focus scope that handles keys
     and prints; `Deck.Viewport`, the current slide; `Deck.Grid`, every slide as a thumbnail; `Deck.Pager`,
-    `Deck.PageNumber` and `Deck.FullscreenButton`), composed by its containers into a Panel.
+    `Deck.PageNumber` and `Deck.PlayButton`), composed by its containers into a Panel.
     Paged slide deck. Inline it shows the pager centered in a status bar below the slide; in fullscreen an overlay pager that auto-hides when idle
     and wakes on pointer movement. Keys are scoped to the deck's focus scope, never `window`: left and right
     step, Shift+left and Shift+right (or Home and End) jump to first and last, `f` toggles fullscreen,

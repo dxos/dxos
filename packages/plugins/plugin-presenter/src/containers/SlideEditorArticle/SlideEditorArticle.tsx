@@ -28,7 +28,6 @@ import {
   createThemeExtensions,
   documentSlots,
   editorClassNames,
-  folding,
   formattingListener,
   scrollbarAutohide,
 } from '@dxos/ui-editor';
@@ -123,8 +122,8 @@ const SlideEditorContent = ({ subject }: SlideEditorContentProps) => {
       createMarkdownExtensions(),
       slideHighlight(),
       slideCompletion({ describeLayout: (layout) => t(`layout.${layout}.label`) }),
-      // As the markdown editor: the fold gutter (which also sets the text's inset) and the auto-hiding scrollbar.
-      folding(),
+      // A slide is too short to fold; the inset the markdown editor's fold gutter gives its text is kept.
+      NaturalEditorView.theme({ '.cm-content': { paddingInlineStart: '32px' } }),
       scrollbarAutohide(),
       automerge(Doc.createAccessor(subject, ['content'])),
       formattingListener((formatting: EditorToolbarState) =>

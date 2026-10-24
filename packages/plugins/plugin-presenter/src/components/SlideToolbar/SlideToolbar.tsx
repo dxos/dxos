@@ -105,7 +105,7 @@ export const SlideToolbar = ({
                 'split',
                 {
                   label: label('preview-split.label'),
-                  icon: 'ph--rows--regular',
+                  icon: 'ph--square-split-vertical--regular',
                   checked: previewMode === 'split',
                   testId: 'presenter.slide-toolbar.split',
                 },

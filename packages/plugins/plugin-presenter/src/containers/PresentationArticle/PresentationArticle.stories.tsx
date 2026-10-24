@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
-import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fireEvent, screen, userEvent, waitFor, within } from 'storybook/test';
 
 import { Filter } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
@@ -63,14 +63,40 @@ const LOAD_TIMEOUT = { timeout: 10_000 };
 const tile = (canvas: ReturnType<typeof within>, index: number) =>
   canvas.findByTestId(`presenter.slide-grid.${index}`, undefined, LOAD_TIMEOUT);
 
-/** Every slide is a thumbnail; adding a slide adds a tile. */
+/** Every slide is a thumbnail; the toolbar's add button and the ghost tile after the last slide each add a tile. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await tile(canvas, 3);
     await expect(canvas.queryByTestId('presenter.slide-grid.4')).toBeNull();
-    await userEvent.click(canvas.getByRole('button', { name: 'Add slide' }));
+    await userEvent.click(canvas.getByTestId('presenter.add-slide'));
     await tile(canvas, 4);
+    await userEvent.click(canvas.getByTestId('presenter.slide-grid.add'));
+    await tile(canvas, 5);
+  },
+};
+
+/** A tile's context menu hides and shows its slide, and removes a linked object. */
+export const SlideMenu: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await tile(canvas, 3);
+    // The menu is driven by keyboard: zag ignores the synthetic pointer events a test can send.
+    const choose = async (index: number, testId: string) => {
+      const target = await tile(canvas, index);
+      const { left, top } = target.getBoundingClientRect();
+      await fireEvent.contextMenu(target, { clientX: left + 10, clientY: top + 10 });
+      const item = await screen.findByTestId(testId);
+      const items = [...(item.closest('[role="menu"]')?.querySelectorAll('[role="menuitem"]') ?? [])];
+      await userEvent.keyboard('{ArrowDown}'.repeat(items.indexOf(item) + 1) + '{Enter}');
+    };
+    await choose(0, 'presenter.slide-grid.hide');
+    await waitFor(async () => expect(await tile(canvas, 0)).toHaveAttribute('data-hidden'));
+    await choose(0, 'presenter.slide-grid.hide');
+    await waitFor(async () => expect(await tile(canvas, 0)).not.toHaveAttribute('data-hidden'));
+    // The linked document is unlinked in place; an owned slide is deleted through the space's operation (not here).
+    await choose(3, 'presenter.slide-grid.delete');
+    await waitFor(() => expect(canvas.queryByTestId('presenter.slide-grid.3')).toBeNull());
   },
 };
 
@@ -90,7 +116,7 @@ export const Fullscreen: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await tile(canvas, 3);
-    await userEvent.click(canvas.getByTestId('presenter.fullscreen'));
+    await userEvent.click(canvas.getByTestId('presenter.play'));
     await expect(await canvas.findByTestId('presenter.overlay')).toBeInTheDocument();
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(canvas.queryByTestId('presenter.overlay')).toBeNull());
@@ -100,12 +126,13 @@ export const Fullscreen: Story = {
   },
 };
 
-/** Double-clicking a thumbnail presents from that slide. */
-export const PresentFromTile: Story = {
+/** Double-clicking a thumbnail opens that slide rather than presenting it. */
+export const OpenFromTile: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.dblClick(await tile(canvas, 2));
-    await expect(await canvas.findByText('3 / 4')).toBeInTheDocument();
+    await waitFor(async () => expect(await tile(canvas, 2)).toHaveAttribute('aria-selected', 'true'));
+    await expect(canvas.queryByTestId('presenter.overlay')).toBeNull();
   },
 };
 

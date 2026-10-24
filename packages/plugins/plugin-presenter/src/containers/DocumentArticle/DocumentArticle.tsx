@@ -51,7 +51,7 @@ export const DocumentArticle = ({ role, subject: document, attendableId }: Docum
             <Panel.Header>
               <Toolbar.Root>
                 <div className='grow' />
-                <Deck.FullscreenButton />
+                <Deck.PlayButton />
               </Toolbar.Root>
             </Panel.Header>
           )}

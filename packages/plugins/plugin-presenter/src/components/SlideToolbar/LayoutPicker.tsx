@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo, useState } from 'react';
+import React, { type ReactElement, useMemo, useState } from 'react';
 
 import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
@@ -42,27 +42,32 @@ const sample = (layout: LayoutName): string => {
 };
 
 export type LayoutPickerProps = {
-  value: LayoutName;
+  /** The selected layout; none when the picker chooses a layout for something new. */
+  value?: LayoutName;
   onChange: (layout: LayoutName) => void;
+  /** Replaces the default layout button, e.g. the caret of a split button. */
+  trigger?: ReactElement;
 };
 
 /**
  * Toolbar button opening a grid of layout thumbnails; picking one sets the slide's `layout:`.
  */
-export const LayoutPicker = ({ value, onChange }: LayoutPickerProps) => {
+export const LayoutPicker = ({ value, onChange, trigger }: LayoutPickerProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [open, setOpen] = useState(false);
   const options = useMemo(() => LAYOUTS.map((layout) => ({ value: layout, label: t(`layout.${layout}.label`) })), [t]);
   return (
     <Popover.Root open={open} onOpenChange={({ open }) => setOpen(open)}>
       <Popover.Trigger asChild>
-        <Button.Root
-          data-testid='presenter.slide-toolbar.layout'
-          icon='ph--layout--regular'
-          iconOnly
-          variant='ghost'
-          label={t('slide-layout.label')}
-        />
+        {trigger ?? (
+          <Button.Root
+            data-testid='presenter.slide-toolbar.layout'
+            icon='ph--layout--regular'
+            iconOnly
+            variant='ghost'
+            label={t('slide-layout.label')}
+          />
+        )}
       </Popover.Trigger>
       {/* The grid is wider than a popover's default cap, so the cap is lifted to the viewport. */}
       <Popover.Content classNames='max-w-[calc(100vw-1rem)] overflow-auto'>
@@ -80,7 +85,7 @@ export const LayoutPicker = ({ value, onChange }: LayoutPickerProps) => {
               }
             }}
           >
-            <Listbox.Content aria-label={t('slide-layout.label')} classNames='w-[40rem]'>
+            <Listbox.Content aria-label={t('slide-layout.label')} classNames='w-[40rem] p-2'>
               {options.map(({ value: layout }) => (
                 <Listbox.Item
                   key={layout}
