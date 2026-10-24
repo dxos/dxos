@@ -35,6 +35,12 @@ export const MONO_FONTS = ['jetbrains', 'fira', 'plex', 'system'] as const;
 
 export type MonoFont = (typeof MONO_FONTS)[number];
 
+/** The text font a built-in theme uses when the deck sets none (the serif theme's is the system serif). */
+export const defaultFont = (name: Name | undefined): Font => (name === 'serif' ? 'serif' : 'mono');
+
+/** The code font every built-in theme uses when the deck sets none. */
+export const DEFAULT_MONO_FONT: MonoFont = 'jetbrains';
+
 /** True for a text font name. */
 export const isFont = (value: unknown): value is Font => FONTS.some((font) => font === value);
 
