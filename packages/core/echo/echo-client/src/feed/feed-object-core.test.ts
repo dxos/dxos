@@ -110,6 +110,28 @@ describe('FeedObjectCore', () => {
     core.dispose();
   });
 
+  test('a superseded write that lands keeps the position its state was ordered after', ({ expect }) => {
+    const entity = stamped(Obj.make(TestSchema.Person, { name: 'v1' }), { actorId: 'a', sequence: 1, position: 10 });
+    const core = new FeedObjectCore(entity, () => {});
+
+    Obj.update(entity, (entity) => {
+      entity.name = 'v2';
+    });
+    const first = core.captureForAppend();
+    Obj.update(entity, (entity) => {
+      entity.name = 'v3';
+    });
+    core.captureForAppend();
+    core.confirmAppend(first.token, EchoFeedCodec.blockId('a', 2));
+
+    // Both blocks are ordered at or before the state the pending write was captured from.
+    expect(core.accepts({ actorId: 'a', sequence: 1, position: 10 })).toBe(false);
+    expect(core.accepts({ actorId: 'b', sequence: 5, position: 9 })).toBe(false);
+    expect(core.accepts({ actorId: 'b', sequence: 1, position: 11 })).toBe(true);
+    expect(entity.name).toEqual('v3');
+    core.dispose();
+  });
+
   test('an append whose store reports no block id waits for a block ordered after the current state', ({ expect }) => {
     const entity = stamped(Obj.make(TestSchema.Person, { name: 'v1' }), { position: 3 });
     const core = new FeedObjectCore(entity, () => {});
