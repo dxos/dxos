@@ -92,6 +92,11 @@ const FONTS: Record<SlideTheme.Font, FontDefinition> = {
     family: "'OpenDyslexic', ui-sans-serif, sans-serif",
     load: () => import('@fontsource/opendyslexic/index.css'),
   },
+  // Covers Chinese as well as Latin in one 8.4 MB file (no per-script subsets); the package's default weight is 300.
+  'lxgw-wenkai': {
+    family: "'LXGW WenKai', ui-serif, serif",
+    load: () => import('@fontsource/lxgw-wenkai/index.css'),
+  },
 };
 
 const MONO_FONTS: Record<SlideTheme.MonoFont, FontDefinition> = {

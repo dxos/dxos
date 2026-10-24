@@ -243,6 +243,9 @@ catalogs:
     '@fontsource/ibm-plex-mono':
       specifier: 5.3.0
       version: 5.3.0
+    '@fontsource/lxgw-wenkai':
+      specifier: 5.3.0
+      version: 5.3.0
     '@fontsource/mali':
       specifier: 5.3.0
       version: 5.3.0
@@ -15410,6 +15413,9 @@ importers:
       '@fontsource/ibm-plex-mono':
         specifier: 'catalog:'
         version: 5.3.0
+      '@fontsource/lxgw-wenkai':
+        specifier: 'catalog:'
+        version: 5.3.0
       '@fontsource/mali':
         specifier: 'catalog:'
         version: 5.3.0
@@ -29920,6 +29926,9 @@ packages:
 
   '@fontsource/ibm-plex-mono@5.3.0':
     resolution: {integrity: sha512-eTgnZjZEGk1QtD3ZstF+Vclo2HLAni8YMy34/DxllwZvyz1lR/1RF/xTiAquOBO7MvqBx8D2Ig2WCPMVfdZu7Q==}
+
+  '@fontsource/lxgw-wenkai@5.3.0':
+    resolution: {integrity: sha512-+U5AAOXeaB7o+3G0Qm7I7Djz2Jd1hqNY+kClOZH8bTunyyGa2WxY12LZftt2AqUsxlfxwdQpd75Js1HQIt4H4g==}
 
   '@fontsource/mali@5.3.0':
     resolution: {integrity: sha512-/H7zdnFcBUdLh7mPUCLWfCoQVgtvnVKrlHjknq90kltPvUcu0nC9ybne4z2rzTghV9ez9N7nRDvRZesODB/YbQ==}
@@ -52450,6 +52459,8 @@ snapshots:
   '@fontsource-variable/unbounded@5.3.0': {}
 
   '@fontsource/ibm-plex-mono@5.3.0': {}
+
+  '@fontsource/lxgw-wenkai@5.3.0': {}
 
   '@fontsource/mali@5.3.0': {}
 

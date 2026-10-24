@@ -25,6 +25,7 @@ export const FONTS = [
   'orbitron',
   'unbounded',
   'opendyslexic',
+  'lxgw-wenkai',
 ] as const;
 
 export type Font = (typeof FONTS)[number];

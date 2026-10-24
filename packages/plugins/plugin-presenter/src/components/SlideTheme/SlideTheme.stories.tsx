@@ -59,7 +59,7 @@ const SPECIMEN_TITLE = 'The quick brown fox jumps over the lazy dog';
 
 const SPECIMEN_TEXT =
   'Local-first software keeps your data on your own devices, syncs it peer to peer, and still lets a whole team ' +
-  'work on it together. Numbers 0123456789, and punctuation: “quotes”, (brackets) & ampersands.';
+  'work on it together. Numbers 0123456789, and punctuation: “quotes”, (brackets) & ampersands. 中文：本地优先的软件。';
 
 const SPECIMEN_CODE = "const space = await client.spaces.create({ name: 'Demo' }); // 0O 1lI";
 

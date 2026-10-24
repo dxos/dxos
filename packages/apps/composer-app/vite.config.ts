@@ -95,6 +95,7 @@ const ON_DEMAND_FONTS = [
   'orbitron',
   'unbounded',
   'opendyslexic',
+  'lxgw-wenkai',
 ];
 
 const FONT_SUBSETS = '@(latin|latin-ext|cyrillic|cyrillic-ext|greek|greek-ext|vietnamese|thai|math|symbols|symbols2)';
