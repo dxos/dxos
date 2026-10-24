@@ -27,16 +27,33 @@ Each extension is defined in the Appendix or resolved via its URI.
 ```mdl
 type Presentation
   desc: |
-    An ordered deck of sections. Typename `org.dxos.type.presentation@0.1.0`. A section is either an owned
-    markdown `Text` (parented to the presentation) or a link to any other ECHO object, which keeps its own parent.
-    Ownership is set explicitly when a slide is created, never by a schema annotation. It is tagged as a
-    collection item, so it is filed into the space's Collections. Its navtree node lists `sections`; an owned
-    slide has no remove action there (the space's undoable Delete deletes it), a linked one is only unlinked.
-    Deleting the Presentation deletes its owned slides, even ones linked elsewhere; linked objects stay.
+    An ordered deck of slides. Typename `org.dxos.type.presentation@0.2.0`. Each slide is a `Slide` object owned
+    by the presentation. It is tagged as a collection item, so it is filed into the space's Collections. Its
+    navtree node lists `slides`; deleting a slide deletes its `Slide` (and the slide's owned `Text`), while a
+    linked object it shows is only unlinked. Deleting the Presentation deletes its slides; linked objects stay.
+    Version 0.1.0 held `sections: Ref<Obj>[]` directly; its migration wraps each section in a `Slide`.
   fields:
     name?: string
-    sections: Ref<Obj>[]        # slide order; one section is exactly one slide
+    description?: string
+    slides: Ref<Slide>[]        # slide order
     theme?: SlideTheme.Settings # deck theme; overrides the first slide's `theme:` headmatter
+```
+
+```mdl
+type Slide
+  desc: |
+    One slide of a Presentation, owned by it. Typename `org.dxos.type.slide@0.1.0`. Its `content` is either an
+    owned markdown `Text` (parented to the Slide, written in the Slidev subset of F-6) or a link to any other
+    ECHO object, rendered through its `role=slide` surface. The fields hold what applies to any content, so a
+    linked object can be hidden, annotated and given an image as a markdown slide can; `layout` and
+    `background` stay in a markdown slide's frontmatter. A slide opened from the navtree or the grid opens the
+    `Slide`, so the assistant beside it has the slide as its context.
+  fields:
+    content: Ref<Obj>           # owned Text or a linked object
+    title?: string              # overrides the label read from the content's first heading
+    hidden?: boolean            # left out when presenting; replaces frontmatter `hide:`
+    notes?: Ref<Text>           # speaker notes for any slide
+    image?: Ref<MediaArtifact>  # the image a layout places (cover and image layouts), from plugin-studio
 ```
 
 ```mdl
@@ -267,6 +284,23 @@ op TogglePresentation
     Keyboard shortcut: Shift+Cmd+P (macOS), Shift+Alt+P (Windows/Linux).
 ```
 
+```mdl
+op GenerateSlideImage
+  key: org.dxos.operation.presenter.generateSlideImage
+  desc: |
+    Generates an image for a slide from a prompt with plugin-studio's `StudioOperation.Generate` (image kind,
+    the space's configured provider), stores it as a `MediaArtifact`, and sets it as the slide's `image`. A
+    markdown slide whose layout places no image is switched to `layout: image` (or keeps an `image-left` /
+    `image-right` / `cover` layout it already has).
+  input:
+    slide: Ref<Slide>
+    prompt: string
+  output:
+    artifact: Ref<MediaArtifact>
+  effects: [echo:write]
+  requires: [Database.Service, Operation.Service]
+```
+
 ## Features
 
 ```mdl
@@ -433,6 +467,19 @@ feat F-5: Navtree Folder
     then: the slide's own article opens (SlideEditorArticle for an owned slide)
   req F-5.5: An owned slide offers no remove action, only the space's Delete; a linked section's remove action is labelled "Remove from presentation".
   req F-5.6: The children are the deck's slides in deck order, so a deleted section leaves both.
+```
+
+```mdl
+feat F-11: Slides as Objects
+
+  req F-11.1: A Presentation's slides are `Slide` objects, each holding its content (an owned Text or a linked object) and the slide's own metadata (title, hidden, notes, image).
+  req F-11.2: A Presentation has an optional description.
+  req F-11.3: Opening a slide opens its `Slide`; the assistant companion beside it has the Slide, its content and its presentation as context, with the presenter skill enabled.
+  req F-11.4:
+    when: the assistant is asked for an image on the slide it is beside
+    then: it calls `GenerateSlideImage`, and the slide shows the generated image in its layout
+  req F-11.5: An image is held as a ref to a plugin-studio `MediaArtifact`, which the slide background resolves to its image.
+  req F-11.6: Presentations of version 0.1.0 migrate in place: each section becomes a `Slide`, and a markdown slide's `hide: true` becomes `hidden`.
 ```
 
 ## Acceptance
@@ -1241,6 +1288,40 @@ decision D-65: A grid tile's right-click menu is the app's context menu for the 
   by: user:richburdon
   affects: [PresentationArticle, SlideGrid]
   why: One context menu for the whole app, whose items plugins contribute by context, rather than a menu per component.
+```
+
+```mdl
+decision D-66: A Presentation holds `Slide` objects rather than bare section refs; a Slide refs its content (an owned Text or a linked object) and carries the slide's own metadata. A Presentation gains a description, and `sections` is renamed `slides`.
+  date: 2026-10-24
+  by: user:richburdon
+  affects: [Presentation, Slide, F-11.1, F-11.2]
+  why: A section was always exactly one slide, and metadata that applies to any slide (hidden, notes, an image) had nowhere to live for a linked object.
+```
+
+```mdl
+decision D-67: Slide metadata that applies to any content (`hidden`, `notes`, `image`, `title`) lives on the `Slide`; `layout` and `background` stay in a markdown slide's frontmatter, and an export writes the fields back as frontmatter.
+  date: 2026-10-24
+  by: user:richburdon
+  affects: [Slide, F-11.1]
+  why: A linked object has no frontmatter, so frontmatter alone could not hide or annotate it.
+  rejected: Keeping everything in frontmatter, which is portable Slidev but serves owned markdown slides only.
+```
+
+```mdl
+decision D-68: A slide's image is a ref to a plugin-studio `MediaArtifact`, which the slide background resolves; it is generated through plugin-studio's `StudioOperation.Generate`, not a provider called directly.
+  date: 2026-10-24
+  by: user:richburdon
+  affects: [Slide, GenerateSlideImage, F-11.4, F-11.5]
+  why: The artifact keeps the image's provenance and variants, and studio owns provider choice.
+  rejected: Writing the image URL into frontmatter `image:`, which renders today but loses the link to the artifact.
+```
+
+```mdl
+decision D-69: The prototype is a story of a slide beside the assistant companion, with a mocked AI service whose scripted reply calls the real `GenerateSlideImage` tool, which writes the image onto the slide. Fills in [D-66] and [D-68].
+  date: 2026-10-24
+  by: user:richburdon
+  affects: [F-11.3, F-11.4]
+  why: It shows the slide-scoped assistant end to end without a network, with only the model's reply scripted.
 ```
 
 ---
