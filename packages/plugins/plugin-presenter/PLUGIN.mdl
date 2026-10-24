@@ -362,7 +362,7 @@ feat F-6: Markdown Slides
   req F-6.6: A fenced code block renders highlighted; a `{2,4-5}` meta marks the lines that stay emphasised, and Slidev's `{lines:true}` option numbers the lines.
   req F-6.7: In the preview companion `---` splits slides except inside a fenced code block, and a leading frontmatter block is slide metadata.
   req F-6.8: A deck has one theme, `default`, `light`, `dark` or `serif`, named by the first slide's `theme:` headmatter; `default` follows the app's light/dark mode and `light`/`dark` force one, code highlighting included.
-  req F-6.9: A Presentation's `theme` setting names the theme and may override its accent, background and text colors, its text font (`mono`, `sans`, `rounded`, `serif`, `display`) and its code font (`jetbrains`, `fira`, `plex`, `system`); it wins over headmatter, and linked object slides are painted with it too.
+  req F-6.9: A Presentation's `theme` setting names the theme and may override its accent, background and text colors, its text font (`mono`, `sans`, `rounded`, `serif`, `display`, `space-grotesk`, `mali`, `geist`, `orbitron`, `unbounded`, `opendyslexic`) and its code font (`jetbrains`, `fira`, `plex`, `system`); it wins over headmatter, and linked object slides are painted with it too.
   req F-6.10:
     when: a slide names an unknown theme, or an override is not a plain color or font list
     then: the default theme or value applies and, for an unknown name, a validation issue is reported
@@ -1191,6 +1191,14 @@ decision D-59: `Deck.Root` holds the slides, index, click step, fullscreen and t
   affects: [Deck, Slide]
   why: Fullscreen changes which parts render, so the parent that composes them decides; keeping the pager inside the viewport keeps it over the slide it pages.
   rejected: A `Deck.Overlay` part, which every fullscreen composition would have to remember to include.
+```
+
+```mdl
+decision D-60: The text fonts add Space Grotesk, Mali, Geist, Orbitron, Unbounded and OpenDyslexic, each loaded on demand like the others of [D-52].
+  date: 2026-10-24
+  by: user:richburdon
+  affects: [SlideTheme, F-6.9]
+  why: A wider choice of faces for decks, including OpenDyslexic for readability.
 ```
 
 ---

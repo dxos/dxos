@@ -216,6 +216,9 @@ catalogs:
     '@fontsource-variable/fira-code':
       specifier: 5.3.0
       version: 5.3.0
+    '@fontsource-variable/geist':
+      specifier: 5.3.0
+      version: 5.3.0
     '@fontsource-variable/inter':
       specifier: 5.2.8
       version: 5.2.8
@@ -225,10 +228,25 @@ catalogs:
     '@fontsource-variable/nunito':
       specifier: 5.2.7
       version: 5.2.7
+    '@fontsource-variable/orbitron':
+      specifier: 5.3.0
+      version: 5.3.0
     '@fontsource-variable/source-serif-4':
       specifier: 5.3.1
       version: 5.3.1
+    '@fontsource-variable/space-grotesk':
+      specifier: 5.3.0
+      version: 5.3.0
+    '@fontsource-variable/unbounded':
+      specifier: 5.3.0
+      version: 5.3.0
     '@fontsource/ibm-plex-mono':
+      specifier: 5.3.0
+      version: 5.3.0
+    '@fontsource/mali':
+      specifier: 5.3.0
+      version: 5.3.0
+    '@fontsource/opendyslexic':
       specifier: 5.3.0
       version: 5.3.0
     '@fontsource/poiret-one':
@@ -15365,16 +15383,34 @@ importers:
       '@fontsource-variable/fira-code':
         specifier: 'catalog:'
         version: 5.3.0
+      '@fontsource-variable/geist':
+        specifier: 'catalog:'
+        version: 5.3.0
       '@fontsource-variable/inter':
         specifier: 'catalog:'
         version: 5.2.8
       '@fontsource-variable/nunito':
         specifier: 'catalog:'
         version: 5.2.7
+      '@fontsource-variable/orbitron':
+        specifier: 'catalog:'
+        version: 5.3.0
       '@fontsource-variable/source-serif-4':
         specifier: 'catalog:'
         version: 5.3.1
+      '@fontsource-variable/space-grotesk':
+        specifier: 'catalog:'
+        version: 5.3.0
+      '@fontsource-variable/unbounded':
+        specifier: 'catalog:'
+        version: 5.3.0
       '@fontsource/ibm-plex-mono':
+        specifier: 'catalog:'
+        version: 5.3.0
+      '@fontsource/mali':
+        specifier: 'catalog:'
+        version: 5.3.0
+      '@fontsource/opendyslexic':
         specifier: 'catalog:'
         version: 5.3.0
       hast-util-to-jsx-runtime:
@@ -29855,6 +29891,9 @@ packages:
   '@fontsource-variable/fira-code@5.3.0':
     resolution: {integrity: sha512-ZhvHeknlicraKVSJBa1NrJnXDVByUkC407zwgELYfmnx3p9g8vwIPfQCxx8YD3K7dAeCdLuHJOHlpMfRsIcApQ==}
 
+  '@fontsource-variable/geist@5.3.0':
+    resolution: {integrity: sha512-j0m+vLQuG5XAYoHtGCVu0spvlGreR3EzpECUVzkFmI1mTVnAO38l/NEPDCFgZ177JxzYJCLSmTQibIiYPilGrA==}
+
   '@fontsource-variable/inter@5.2.8':
     resolution: {integrity: sha512-kOfP2D+ykbcX/P3IFnokOhVRNoTozo5/JxhAIVYLpea/UBmCQ/YWPBfWIDuBImXX/15KH+eKh4xpEUyS2sQQGQ==}
 
@@ -29864,11 +29903,26 @@ packages:
   '@fontsource-variable/nunito@5.2.7':
     resolution: {integrity: sha512-2N8QhatkyKgSUbAGZO2FYLioxA32+RyI1EplVLawbpkGjUeui9Qg9VMrpkCaik1ydjFjfLV+kzQ0cGEsMrMenQ==}
 
+  '@fontsource-variable/orbitron@5.3.0':
+    resolution: {integrity: sha512-KwW0YX1DJNqF0v86W1hZonuauypCFaltGdpB6qwCeu5bUyHoFpeZ84aAjChZSRF7RWZFithg/il0nMwYxJgqDA==}
+
   '@fontsource-variable/source-serif-4@5.3.1':
     resolution: {integrity: sha512-4Rtay22SC4lMvw11r/+9kxANB6P3M0X8s1NudBC2v0J1KU2y3DcMoNcT3lBoZ/CqLirzf+StlO6UlJilyrvaUg==}
 
+  '@fontsource-variable/space-grotesk@5.3.0':
+    resolution: {integrity: sha512-2IxmvfB08i9vnGB3Ym/AXvhRE+8XOjWMXIyDum03c+tPwH0FUoMNQfGpU8NXPxjbws0Vvss3AH0Zqt4oJBBAdw==}
+
+  '@fontsource-variable/unbounded@5.3.0':
+    resolution: {integrity: sha512-ea565Ncn4r7gPdBEHcmaF31V11hDfkL7b/JCklLobQbMfbu2ZZQrVWNgdeEFWFLqNh36yhieZWOgxdAnMTzrLg==}
+
   '@fontsource/ibm-plex-mono@5.3.0':
     resolution: {integrity: sha512-eTgnZjZEGk1QtD3ZstF+Vclo2HLAni8YMy34/DxllwZvyz1lR/1RF/xTiAquOBO7MvqBx8D2Ig2WCPMVfdZu7Q==}
+
+  '@fontsource/mali@5.3.0':
+    resolution: {integrity: sha512-/H7zdnFcBUdLh7mPUCLWfCoQVgtvnVKrlHjknq90kltPvUcu0nC9ybne4z2rzTghV9ez9N7nRDvRZesODB/YbQ==}
+
+  '@fontsource/opendyslexic@5.3.0':
+    resolution: {integrity: sha512-BVYIW/ghc1U2iAghhYTN+GFWiZ3lnCy8Jf2KkZC23aHQHBNcMqKT718zckfqVxRx4qsXJmIMPWvczirRuhmtsg==}
 
   '@fontsource/poiret-one@5.2.8':
     resolution: {integrity: sha512-w/sOQ0ctiIx730UdG+AChxtIqfOnORQUbFbyy+ALNh6YXCBAmLW2LmGMLCyg5F897bTrAGZoLvvkxXZ4IXopnQ==}
@@ -52376,15 +52430,27 @@ snapshots:
 
   '@fontsource-variable/fira-code@5.3.0': {}
 
+  '@fontsource-variable/geist@5.3.0': {}
+
   '@fontsource-variable/inter@5.2.8': {}
 
   '@fontsource-variable/jetbrains-mono@5.0.21': {}
 
   '@fontsource-variable/nunito@5.2.7': {}
 
+  '@fontsource-variable/orbitron@5.3.0': {}
+
   '@fontsource-variable/source-serif-4@5.3.1': {}
 
+  '@fontsource-variable/space-grotesk@5.3.0': {}
+
+  '@fontsource-variable/unbounded@5.3.0': {}
+
   '@fontsource/ibm-plex-mono@5.3.0': {}
+
+  '@fontsource/mali@5.3.0': {}
+
+  '@fontsource/opendyslexic@5.3.0': {}
 
   '@fontsource/poiret-one@5.2.8': {}
 

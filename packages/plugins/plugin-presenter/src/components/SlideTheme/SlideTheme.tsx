@@ -56,20 +56,41 @@ type FontDefinition = {
 
 // Web fonts are imported on first use, so a deck pays only for the fonts it picks.
 const FONTS: Record<SlideTheme.Font, FontDefinition> = {
-  mono: { family: 'var(--font-mono)' },
-  sans: {
+  'mono': { family: 'var(--font-mono)' },
+  'sans': {
     family: "'Inter Variable', ui-sans-serif, system-ui, sans-serif",
     load: () => import('@fontsource-variable/inter/index.css'),
   },
-  rounded: {
+  'rounded': {
     family: "'Nunito Variable', ui-rounded, ui-sans-serif, sans-serif",
     load: () => import('@fontsource-variable/nunito/index.css'),
   },
-  serif: {
+  'serif': {
     family: `'Source Serif 4 Variable', ${SERIF}`,
     load: () => import('@fontsource-variable/source-serif-4/index.css'),
   },
-  display: { family: "'Poiret One', ui-sans-serif, sans-serif" },
+  'display': { family: "'Poiret One', ui-sans-serif, sans-serif" },
+  'space-grotesk': {
+    family: "'Space Grotesk Variable', ui-sans-serif, sans-serif",
+    load: () => import('@fontsource-variable/space-grotesk/index.css'),
+  },
+  'mali': { family: "'Mali', ui-rounded, ui-sans-serif, sans-serif", load: () => import('@fontsource/mali/index.css') },
+  'geist': {
+    family: "'Geist Variable', ui-sans-serif, system-ui, sans-serif",
+    load: () => import('@fontsource-variable/geist/index.css'),
+  },
+  'orbitron': {
+    family: "'Orbitron Variable', ui-sans-serif, sans-serif",
+    load: () => import('@fontsource-variable/orbitron/index.css'),
+  },
+  'unbounded': {
+    family: "'Unbounded Variable', ui-sans-serif, sans-serif",
+    load: () => import('@fontsource-variable/unbounded/index.css'),
+  },
+  'opendyslexic': {
+    family: "'OpenDyslexic', ui-sans-serif, sans-serif",
+    load: () => import('@fontsource/opendyslexic/index.css'),
+  },
 };
 
 const MONO_FONTS: Record<SlideTheme.MonoFont, FontDefinition> = {
