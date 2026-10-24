@@ -20,6 +20,7 @@ import { useQuery, useResolveRef } from '@dxos/echo-react';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import { AssistantPlugin } from '@dxos/plugin-assistant/testing';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as FilePlugin from '@dxos/plugin-file/FilePlugin';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProjectsPlugin from '@dxos/plugin-projects/ProjectsPlugin';
@@ -35,6 +36,7 @@ import { Config } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
+import { File } from '@dxos/types';
 
 import { useSlideImage } from '#hooks';
 import { PresenterPlugin } from '#plugin';
@@ -79,6 +81,9 @@ const SlideAssistantStory = () => {
   // The scripted call names the slide on screen, whichever space the story's client listed first.
   slideUri = slide ? Obj.getURI(slide).toString() : undefined;
   const image = useSlideImage(slide);
+  const artifact = useResolveRef(slide?.image);
+  const variant = useResolveRef(artifact?.variants?.[0]);
+  const file = variant?.content;
   const { invokePromise } = Hooks.useOperationInvoker();
   const [chat, setChat] = useState<Chat.Chat>();
   useEffect(() => {
@@ -99,7 +104,13 @@ const SlideAssistantStory = () => {
   return (
     <div className='flex dx-fill overflow-hidden'>
       {/* The image the slide renders, for the play to read whatever the preview's size. */}
-      <span hidden data-testid='slide.image' data-url={image ?? ''} data-artifact={slide.image?.uri ?? ''} />
+      <span
+        hidden
+        data-testid='slide.image'
+        data-url={image ?? ''}
+        data-artifact={slide.image?.uri ?? ''}
+        data-file={file?.uri ?? ''}
+      />
       {/* Its own box: the article's root lays its parts out as the parent's children. */}
       <div className='flex grow overflow-hidden'>
         <SlideEditorArticle role='article' subject={text} attendableId='slide' />
@@ -129,6 +140,7 @@ const meta = {
             Feed.Feed,
             MediaArtifact.MediaArtifact,
             Variant.Variant,
+            File.File,
           ],
           config: new Config({ runtime: { services: SERVICES_CONFIG.REMOTE } }),
           onClientInitialized: ({ client }) =>
@@ -157,6 +169,8 @@ const meta = {
         TasksPlugin.make(),
         ProjectsPlugin.make(),
         StudioPlugin.make(),
+        // The tool stores the generated image as a file through plugin-file (inline storage in the story).
+        FilePlugin.make(),
         FakeImageProviderPlugin(),
         PresenterPlugin(),
         StorybookPlugin.make({}),
@@ -195,7 +209,8 @@ export const Default: Story = {};
 
 /**
  * Asking the assistant beside a slide for an image runs the real `GenerateSlideImage`: the slide gets a generated
- * media artifact, switches to the image layout, and its preview paints the image.
+ * media artifact whose image is stored as a file through plugin-file, switches to the image layout, and its preview
+ * paints the image.
  */
 export const GenerateImage: Story = {
   play: async ({ canvasElement }) => {
@@ -206,10 +221,16 @@ export const GenerateImage: Story = {
     await waitFor(() => expect(canvas.getByTestId('slide.image').getAttribute('data-artifact')).not.toBe(''), {
       timeout: 10_000,
     });
-    await waitFor(
-      () => expect(canvas.getByTestId('slide.image').getAttribute('data-url')).toContain('data:image/svg+xml'),
-      { timeout: 10_000 },
-    );
+    // The image is stored as a file through plugin-file, and the slide renders it from there.
+    await waitFor(() => expect(canvas.getByTestId('slide.image').getAttribute('data-file')).not.toBe(''), {
+      timeout: 10_000,
+    });
+    // A stored inline file renders through an object URL.
+    await waitFor(() => expect(canvas.getByTestId('slide.image').getAttribute('data-url')).toMatch(/^blob:/), {
+      timeout: 10_000,
+    });
+    // The preview paints it as the image layout's background.
+    await waitFor(() => expect(canvasElement.querySelector('[style*="blob:"]')).not.toBeNull(), { timeout: 10_000 });
     await expect(text()).toContain('layout: image');
   },
 };

@@ -8,14 +8,43 @@ import * as Exit from 'effect/Exit';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
+import * as FileOperation from '@dxos/plugin-file/FileOperation';
 import * as MediaArtifact from '@dxos/plugin-studio/MediaArtifact';
 import * as StudioOperation from '@dxos/plugin-studio/StudioOperation';
 
 import { applyEdit, parseSlide, setFrontmatter } from '#markdown';
 import { Presentation, PresenterOperation } from '#types';
 
+import { toFileSource } from './file-source.ts';
+
 /** Layouts that already place the slide's image. */
 const IMAGE_LAYOUTS = new Set(['cover', 'image', 'image-left', 'image-right']);
+
+/**
+ * Stores the generated image through plugin-file and points the variant at the file, so the slide keeps its image when
+ * the provider's URL expires; the provider URL is dropped, since the stored file now renders.
+ */
+const storeImage = Effect.fn(function* (artifact: MediaArtifact.MediaArtifact, name: string) {
+  const variantRef = artifact.cover ?? artifact.variants?.[0];
+  if (!variantRef) {
+    return;
+  }
+
+  const variant = yield* Database.load(variantRef);
+  const source = variant.url && !variant.content ? toFileSource(variant.url) : undefined;
+  if (!source) {
+    return;
+  }
+
+  const { object } = yield* Operation.invoke(FileOperation.CreateFromSource, { source, name });
+  Obj.update(variant, (variant) => {
+    variant.content = Ref.make(object);
+    delete variant.url;
+  });
+  // The file belongs to the variant (after the ref, which the parent edge expects), so it goes when the image does.
+  Obj.setParent(object, variant);
+  yield* Database.flush();
+});
 
 const handler: Operation.WithHandler<typeof PresenterOperation.GenerateSlideImage> =
   PresenterOperation.GenerateSlideImage.pipe(
@@ -47,12 +76,14 @@ const handler: Operation.WithHandler<typeof PresenterOperation.GenerateSlideImag
         const exit = yield* Effect.exit(
           Operation.invoke(StudioOperation.Generate, { artifact: Ref.make(artifact), provider, config: { prompt } }),
         );
-        if (Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause)) {
-          return yield* Effect.failCause(exit.cause);
+        // Storing is the same kind of result: a failure leaves the provider's URL in place and says why.
+        const stored = Exit.isSuccess(exit) ? yield* Effect.exit(storeImage(artifact, prompt)) : exit;
+        if (Exit.isFailure(stored) && Cause.hasInterruptsOnly(stored.cause)) {
+          return yield* Effect.failCause(stored.cause);
         }
         return {
           artifact: Ref.make(artifact),
-          ...(Exit.isFailure(exit) ? { error: Cause.pretty(exit.cause) } : {}),
+          ...(Exit.isFailure(stored) ? { error: Cause.pretty(stored.cause) } : {}),
         };
       }),
     ),
