@@ -65,9 +65,9 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
       void invokePromise(ClientOperation.OpenUsage, undefined);
     }, [invokePromise]);
 
-    // Sourced from this surface's own node rather than `attendableId`: a companion shares the host plank's
-    // attention id, so the plank's prompt node would be the document's, not the companion's.
-    const prompt = usePromptActions(nodeId ?? attendableId);
+    // Hosted by this surface's own graph node, which every host passes as `nodeId`; a companion's
+    // `attendableId` is its host plank's.
+    const prompt = usePromptActions(nodeId);
 
     // Reset the one-shot guard when the target conversation changes, so a pending prompt for a new
     // `attendableId` is still auto-submitted within the same mount.

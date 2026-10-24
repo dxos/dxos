@@ -684,7 +684,7 @@ decision D-17: Every chat prompt reads the buttons other plugins add to it from 
   date: 2026-10-23
   by: user:wittjosiah
   affects: [QA-3]
-  why: Most prompts have a draft chat with no graph node, so actions filed on the chat's node, the microphone among them, never reached them. Actions in the app graph are also what the command palette and the agent snapshot list.
+  why: Most prompts have a draft chat with no graph node, so actions filed on the chat's node, the microphone among them, never reached them. Graph actions keep one way for a plugin to add a button to another plugin's surface. The command palette does not list a prompt node's actions yet: it walks only the attended node and its ancestors.
   rejected:
     - A surface role for prompt buttons: a contribution would be a component, not an action other parts of the app can list.
     - An `ObjectAction` capability: it has no custom render, which the microphone needs, and keeps actions out of the app graph. `ObjectAction` is deprecated in favour of graph actions.

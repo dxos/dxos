@@ -42,22 +42,24 @@ const makeMicAction = (docId: string, disposition: string) =>
     },
   });
 
+/** The mic in the toolbar of a dictatable document and in every chat prompt, whether or not its chat is stored yet. */
+export const createMicExtensions = () =>
+  Effect.all([
+    AppGraphBuilder.createExtension({
+      id: 'transcriptionToolbar',
+      match: (node, get) => whenDictatable(node, get),
+      actions: (matched) => Effect.succeed([makeMicAction(matched.id, 'toolbar')]),
+    }),
+    AppGraphBuilder.createExtension({
+      id: 'transcriptionPrompt',
+      match: GraphNodeMatcher.whenNodeType(AppNode.PROMPT_TYPE),
+      actions: (matched) => Effect.succeed([makeMicAction(matched.id, 'prompt')]),
+    }),
+  ]);
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    const extensions = yield* Effect.all([
-      AppGraphBuilder.createExtension({
-        id: 'transcriptionToolbar',
-        match: (node, get) => whenDictatable(node, get),
-        actions: (matched) => Effect.succeed([makeMicAction(matched.id, 'toolbar')]),
-      }),
-      // Every chat prompt, whether or not its chat is stored yet.
-      AppGraphBuilder.createExtension({
-        id: 'transcriptionPrompt',
-        match: GraphNodeMatcher.whenNodeType(AppNode.PROMPT_TYPE),
-        actions: (matched) => Effect.succeed([makeMicAction(matched.id, 'prompt')]),
-      }),
-    ]);
-
+    const extensions = yield* createMicExtensions();
     return Capability.contribute(AppCapabilities.AppGraphBuilder, extensions);
   }),
 );

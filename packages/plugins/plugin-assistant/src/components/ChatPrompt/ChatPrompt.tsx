@@ -79,7 +79,7 @@ export type ChatPromptProps = Merge<
     slashCommands?: readonly SlashCommand.SlashCommand[];
     event: Event<ChatEvent>;
     drawers?: ChatActionsProps['drawers'];
-    /** The prompt's graph node, which is what contributed actions are filed under. */
+    /** Attention id of the surface: scopes the toolbar and pivots the panels the prompt opens. */
     attendableId?: string;
     /** Actions other plugins filed on this prompt's node (see `ChatActions`). */
     customActions?: Atom.Atom<ActionGraphProps>;

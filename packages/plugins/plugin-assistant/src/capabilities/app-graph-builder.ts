@@ -56,11 +56,12 @@ const whenNonChatObject = GraphNodeMatcher.whenAll(
 );
 
 /**
- * Match the nodes whose surface renders a chat prompt: a chat, the assistant companion (which has no chat
- * until one is provisioned) and a space's home.
+ * Match the nodes whose surface renders a chat prompt: a chat, an agent (whose article is its chat), the
+ * assistant companion (which has no chat until one is provisioned) and a space's home.
  */
 const whenPromptHost = GraphNodeMatcher.whenAny(
   AppNodeMatcher.whenEchoTypeMatches(Chat.Chat),
+  AppNodeMatcher.whenEchoTypeMatches(Agent.Agent),
   (node: AppGraphNode.Node) =>
     node.type === AppNode.PLANK_COMPANION_TYPE &&
     GraphNode.segmentId(node.id) === Attention.linkedSegment(ASSISTANT_COMPANION_VARIANT)
@@ -68,6 +69,14 @@ const whenPromptHost = GraphNodeMatcher.whenAny(
       : Option.none(),
   GraphNodeMatcher.whenNodeType(SpaceSchema.SPACE_HOME_NODE_TYPE),
 );
+
+/** A prompt node under every node that hosts a chat prompt, where other plugins file prompt actions. */
+export const createPromptExtension = () =>
+  AppGraphBuilder.createExtension({
+    id: 'prompt',
+    match: whenPromptHost,
+    connector: () => Effect.succeed([AppNode.makePrompt()]),
+  });
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -212,12 +221,7 @@ export default Capability.makeModule(
           }).pipe(Effect.orDie),
       }),
 
-      // A prompt node under every surface that hosts a chat prompt, where other plugins file prompt actions.
-      AppGraphBuilder.createExtension({
-        id: 'prompt',
-        match: whenPromptHost,
-        connector: () => Effect.succeed([AppNode.makePrompt()]),
-      }),
+      createPromptExtension(),
 
       AppGraphBuilder.createExtension({
         id: 'invocations',
