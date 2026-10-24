@@ -27,6 +27,7 @@ import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
+  decorateMarkdown,
   documentSlots,
   editorClassNames,
   formattingListener,
@@ -122,6 +123,9 @@ const SlideEditorContent = ({ subject }: SlideEditorContentProps) => {
       // The markdown editor's document slots, so the slide reads at the same measure and margins.
       createThemeExtensions({ themeMode, slots: documentSlots }),
       createMarkdownExtensions(),
+      // Fenced code reads as the markdown editor shows it (a shaded block, its fences hidden until the caret enters);
+      // the rest stays source, since `decorateMarkdown` would draw a slide's `---` frontmatter fences as rules.
+      decorateMarkdown({ nodes: ['FencedCode'] }),
       slideHighlight(),
       slideCompletion({ describeLayout: (layout) => t(`layout.${layout}.label`) }),
       // A slide is too short to fold; the inset the markdown editor's fold gutter gives its text is kept.

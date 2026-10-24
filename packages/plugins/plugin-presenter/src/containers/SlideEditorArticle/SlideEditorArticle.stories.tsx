@@ -48,6 +48,8 @@ const COLUMNS = ['# Plan', '', '- Design', '- Build', '', '::right::', '', '# Sh
   '\n',
 );
 
+const CODE = ['# Code', '', '```ts', 'const answer = 42;', '```'].join('\n');
+
 const CLICKS = ['# Clicks', '', '<v-clicks>', '', '- one', '- two', '- three', '', '</v-clicks>'].join('\n');
 
 /** Edits the presentation's slide at `slide` (default: the first, a two-column slide). */
@@ -100,7 +102,7 @@ const meta = {
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         const presentation = space.db.add(
-          Presentation.make({ name: 'Demo', slides: [TWO_COLS, '# Two', CLICKS, '', COLUMNS] }),
+          Presentation.make({ name: 'Demo', slides: [TWO_COLS, '# Two', CLICKS, '', COLUMNS, CODE] }),
         );
         Presentation.link(presentation, space.db.add(Markdown.make({ name: 'Notes', content: '# Notes' })));
         await space.db.flush({ indexes: true });
@@ -139,6 +141,17 @@ export const DeletedSection: Story = {
     const previous = await canvas.findByTestId('presenter.slide-toolbar.previous', undefined, LOAD_TIMEOUT);
     await waitFor(() => expect(previous).toBeDisabled());
     await expect(canvas.getByTestId('presenter.slide-toolbar.next')).toBeEnabled();
+  },
+};
+
+/** Fenced code is decorated as in the markdown editor: its lines are a shaded block. */
+export const CodeBlock: Story = {
+  args: { slide: 5 },
+  play: async ({ canvasElement }) => {
+    await waitFor(
+      () => expect(canvasElement.querySelectorAll('.cm-codeblock-line').length).toBeGreaterThan(0),
+      LOAD_TIMEOUT,
+    );
   },
 };
 
