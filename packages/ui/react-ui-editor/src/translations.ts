@@ -27,6 +27,7 @@ export const translations = [
         'formatting.code.label': 'Code',
         'formatting.link.label': 'Link',
 
+        'list.label': 'List',
         'list.bullet.label': 'Bullet list',
         'list.ordered.label': 'Numbered list',
         'list.task.label': 'Task list',

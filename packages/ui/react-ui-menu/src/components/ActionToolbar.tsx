@@ -500,18 +500,6 @@ const setRef = <T,>(ref: ForwardedRef<T>, value: T | null) => {
 // ActionToolbar
 //
 
-export type ActionToolbarProps = Partial<MenuActions> &
-  Omit<Toolbar.RootProps, 'disabled' | 'children'> & {
-    /** The toolbar is dimmed (still operable) while this attendable lacks attention, unless `alwaysActive`. */
-    attendableId?: string;
-    alwaysActive?: boolean;
-    /**
-     * Items another component adds to this toolbar, merged with its own group by group: root items follow the owner's,
-     * and `MenuBuilder.extend(groupId, …)` adds to a named group.
-     */
-    customActions?: Atom.Atom<ActionGraphProps>;
-  };
-
 /** Each group's items from `base`, then from `extra`, so a second graph extends the first group by group. */
 const mergeItems = (base: MenuItemsAccessor, extra: MenuItemsAccessor): MenuItemsAccessor => {
   const atoms = new Map<string, Atom.Atom<MenuItem[] | null>>();
@@ -529,6 +517,18 @@ const mergeItems = (base: MenuItemsAccessor, extra: MenuItemsAccessor): MenuItem
     return atom;
   };
 };
+
+export type ActionToolbarProps = Partial<MenuActions> &
+  Omit<Toolbar.RootProps, 'disabled' | 'children'> & {
+    /** The toolbar is dimmed (still operable) while this attendable lacks attention, unless `alwaysActive`. */
+    attendableId?: string;
+    alwaysActive?: boolean;
+    /**
+     * Items another component adds to this toolbar, merged with its own group by group: root items follow the owner's,
+     * and `MenuBuilder.extend(groupId, …)` adds to a named group.
+     */
+    customActions?: Atom.Atom<ActionGraphProps>;
+  };
 
 /**
  * A toolbar driven from a `MenuActions`. Each item's `placement` puts it in the start or end zone of a row; a

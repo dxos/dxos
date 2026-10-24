@@ -10,6 +10,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { MenuBuilder, TOOLBAR_OVERFLOW_ID } from '@dxos/react-ui-menu';
+import { translations as menuTranslations } from '@dxos/react-ui-menu/translations';
+import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import {
@@ -49,9 +51,14 @@ const consumerActions = Atom.make(() =>
 
 const DOCUMENT_ID = 'document';
 
-type StoryArgs = { placeholder?: string; viewMode?: EditorViewMode; extended?: boolean } & UseTextEditorProps;
+type StoryArgs = {
+  placeholder?: string;
+  viewMode?: EditorViewMode;
+  extended?: boolean;
+  asMenu?: boolean;
+} & UseTextEditorProps;
 
-const DefaultStory = ({ autoFocus, initialValue, placeholder, viewMode = 'source', extended }: StoryArgs) => {
+const DefaultStory = ({ autoFocus, initialValue, placeholder, viewMode = 'source', extended, asMenu }: StoryArgs) => {
   const themeMode = Hooks.useThemeMode();
   // The toolbar and editor are one attendable, so focus in either (or in a menu the toolbar opens) keeps it attended.
   const attentionAttrs = useAttentionAttributes(DOCUMENT_ID);
@@ -80,11 +87,18 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder, viewMode = 'source
     <Editor.Root extensions={extensions} viewMode={viewMode}>
       <div className='contents' {...attentionAttrs}>
         <Editor.Content>
-          <Editor.Toolbar
-            classNames='dx-document'
-            attendableId={DOCUMENT_ID}
-            customActions={extended ? consumerActions : undefined}
-          />
+          {asMenu ? (
+            // The same graph as a menu: each toolbar group is a submenu, the overflow group one more.
+            <Editor.ToolbarMenu customActions={extended ? consumerActions : undefined}>
+              <Button.Root data-testid='editor.menu' icon='ph--text-aa--regular' label='Format' classNames='m-1' />
+            </Editor.ToolbarMenu>
+          ) : (
+            <Editor.Toolbar
+              classNames='dx-document'
+              attendableId={DOCUMENT_ID}
+              customActions={extended ? consumerActions : undefined}
+            />
+          )}
           <div className='dx-expand dx-document dx-base-surface'>
             <Editor.View autoFocus={autoFocus} initialValue={initialValue} selectionEnd />
           </div>
@@ -100,7 +114,7 @@ const meta = {
   decorators: [withAttention(DOCUMENT_ID), withRegistry, withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
-    translations,
+    translations: [...translations, ...menuTranslations],
   },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -124,5 +138,16 @@ export const Extended: Story = {
     await waitFor(() => expect(canvas.getByTestId('editor.toolbar.column')).toBeVisible());
     await userEvent.click(canvas.getByTestId('toolbar.overflow'));
     await expect(await within(document.body).findByRole('menuitem', { name: 'Export' })).toBeVisible();
+  },
+};
+
+/** The editor toolbar's actions as a menu, extended by the same consumer. */
+export const Menu: Story = {
+  args: { ...Default.args, extended: true, asMenu: true },
+  play: async ({ canvasElement }) => {
+    const body = within(document.body);
+    await userEvent.click(await within(canvasElement).findByTestId('editor.menu'));
+    await userEvent.click(await body.findByRole('menuitem', { name: 'Formatting' }));
+    await expect(await body.findByRole('menuitemcheckbox', { name: /Bold/ })).toBeVisible();
   },
 };

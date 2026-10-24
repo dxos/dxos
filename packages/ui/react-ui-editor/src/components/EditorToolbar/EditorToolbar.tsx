@@ -4,11 +4,12 @@
 
 import { type EditorView } from '@codemirror/view';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { memo, useMemo } from 'react';
+import React, { type ReactNode, memo, useMemo } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import {
   type ActionGraphProps,
+  ActionMenu,
   ActionToolbar,
   type MenuAction,
   MenuBuilder,
@@ -71,6 +72,22 @@ export const EditorToolbar = memo(({ classNames, role, attendableId, onAction, .
   const menuActions = useMarkdownMenuActions(props);
 
   return <ActionToolbar {...menuActions} attendableId={attendableId} onAction={onAction} classNames={classNames} />;
+});
+
+export type EditorToolbarMenuProps = Omit<EditorToolbarProps, 'role' | 'attendableId' | 'classNames'> & {
+  /** The trigger. */
+  children: ReactNode;
+};
+
+/** The toolbar's actions as a menu, built from the same graph: groups become submenus, toggles checkable items. */
+export const EditorToolbarMenu = memo(({ onAction, children, ...props }: EditorToolbarMenuProps) => {
+  const menuActions = useMarkdownMenuActions(props);
+
+  return (
+    <ActionMenu {...menuActions} onAction={onAction}>
+      {children}
+    </ActionMenu>
+  );
 });
 
 type ToolbarActionsProps = Pick<EditorToolbarActionGraphProps, 'state' | 'getView' | 'customActions'> &
