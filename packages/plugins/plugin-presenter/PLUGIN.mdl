@@ -1217,6 +1217,24 @@ decision D-62: Add two layouts beyond Slidev's built-ins: three-cols (slots `def
   why: Comparison and quadrant slides need more than two columns.
 ```
 
+```mdl
+decision D-63: In the presentation grid, double-clicking a slide or adding one opens it in the slide editor; the toolbar's add button is a split button whose caret sets the layout later adds use; a ghost tile after the last slide adds one; a tile's context menu hides or shows a slide and deletes it; the toolbar presents with the editor's present icon and has no fullscreen button; a slide can be hidden from the presentation.
+  date: 2026-10-24
+  by: user:richburdon
+  affects: [PresentationArticle, Deck, SlideGrid]
+  why: The grid is where a deck is assembled, so opening, adding, hiding and removing slides belong there; presenting is the one way to go fullscreen.
+```
+
+```mdl
+decision D-64: A slide is hidden by Slidev's own frontmatter key, `hide: true`; presenting skips it while the grid still shows it, dimmed with an eye-slash, and the presented index maps back to the slide's position in the whole deck. Deleting an owned slide invokes the space's undoable `RemoveObjects`, as the navtree does; a linked object is only unlinked. Fills in [D-63].
+  date: 2026-10-24
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-6.1, PresentationArticle, SlideGrid]
+  why: Keeping to Slidev's key keeps a deck portable; the stored index stays the grid's, so hiding a slide never moves the viewer's place.
+  rejected: A `hidden` flag on the section ref, which a linked object could carry but plain markdown could not.
+```
+
 ---
 
 ## Appendix: Extension Definitions
