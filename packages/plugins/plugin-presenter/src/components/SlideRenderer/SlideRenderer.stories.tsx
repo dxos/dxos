@@ -158,6 +158,22 @@ const createSpaceSlides = async ({ space }: { space: Space }) => {
   );
   space.db.add(
     Presentation.make({
+      name: 'embedded-bleed',
+      slides: [
+        [
+          '---',
+          'layout: two-cols',
+          'bleed: right',
+          '---',
+          '# Edge to edge',
+          '::right::',
+          surfaceTag(EID.make({ entityId: embedded.id })),
+        ].join('\n'),
+      ],
+    }),
+  );
+  space.db.add(
+    Presentation.make({
       name: 'missing',
       slides: [
         [
@@ -333,6 +349,30 @@ export const EmbeddedSurface: Story = {
     await expect(await canvas.findByRole('heading', { name: 'Beside the document' }, LOAD_TIMEOUT)).toBeVisible();
     await waitFor(() => expect(canvasElement.querySelector('[data-surface] svg')).not.toBeNull(), LOAD_TIMEOUT);
     await expect(await canvas.findByText('Client', undefined, LOAD_TIMEOUT)).toBeInTheDocument();
+  },
+};
+
+/** `bleed: right` takes the right column, and the drawing in it, to the slide's top, right and bottom edges. */
+export const EmbeddedSurfaceBleed: Story = {
+  render: () => <SpaceSlideStory name='embedded-bleed' />,
+  decorators: [withSlideSurface, withSpace],
+  args: { kind: 'text' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByRole('heading', { name: 'Edge to edge' }, LOAD_TIMEOUT)).toBeVisible();
+    await waitFor(
+      () => expect(canvasElement.querySelector('[data-slot="right"] [data-surface]')).not.toBeNull(),
+      LOAD_TIMEOUT,
+    );
+    const slide = canvasElement.querySelector('[data-layout="two-cols"]');
+    const right = canvasElement.querySelector('[data-slot="right"]');
+    if (!slide || !right) {
+      throw new Error('The two-cols slide did not render.');
+    }
+    const outer = slide.getBoundingClientRect();
+    const column = right.getBoundingClientRect();
+    await expect(Math.round(column.right)).toBe(Math.round(outer.right));
+    await expect(Math.round(column.top)).toBe(Math.round(outer.top));
   },
 };
 

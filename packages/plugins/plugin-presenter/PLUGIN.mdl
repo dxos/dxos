@@ -398,6 +398,7 @@ feat F-8: Backgrounds and Embedded Surfaces
     when: the ref is malformed, never existed, or its target is deleted
     then: a "Missing object" placeholder shows in its place, with no spinner left
   req F-8.4: An image whose URL is an object URI (`![label](echo:///<id>)`) embeds that object as `<Surface ref>` with the `slide` role; alone in its paragraph it fills its slot, and the label is ignored.
+  req F-8.5: Frontmatter `bleed: left` or `bleed: right` takes the outer column of a `two-cols` or `three-cols` slide to the slide's edges on that side, top and bottom, with no padding, for an embedded object to fill.
 ```
 
 ```mdl
@@ -1143,6 +1144,16 @@ decision D-53: Two layouts beyond Slidev's set: `three-cols` (default content, t
   affects: [F-6.1, MarkdownSlide, SlideToolbar]
   why: The user asked for a three-column and a 2 × 2 layout; reusing `::right::` keeps a two-cols slide valid when its layout is switched to either.
   rejected: Positional names such as `::top-left::` for the grid, which would make a two-cols slide lose its right column when switched to `grid`.
+```
+
+```mdl
+decision D-54: A column bleeds to the slide's edges by a per-slide frontmatter key, `bleed: left | right`, rather than by an attribute on an embed; with it the layout pads its columns instead of its frame.
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-8.5, MarkdownSlide]
+  why: The user asked to optionally drop the padding around an embedded object; a column is the unit the padding belongs to, and frontmatter is where a slide's layout is already set.
+  rejected: `<Surface … bleed />`, which would need negative margins matched to each layout's padding.
 ```
 
 ---

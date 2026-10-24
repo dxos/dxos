@@ -83,15 +83,28 @@ const DefaultLayout = ({ slots }: LayoutProps) => (
   </Frame>
 );
 
-const TwoColsLayout = ({ slots }: LayoutProps) => (
-  <Frame name='two-cols' className={mx('grid grid-cols-2 gap-16', theme.padding)}>
-    <Slot name='default'>
-      {slots.default}
-      {slots.left}
-    </Slot>
-    <Slot name='right'>{slots.right}</Slot>
-  </Frame>
-);
+// With `bleed:`, padding moves from the frame to the columns, and the column on the bleeding side keeps none.
+const columns = (bleed: SlideFrontmatter['bleed']) => ({
+  frame: bleed ? undefined : theme.padding,
+  left: bleed === 'left' ? undefined : bleed ? 'pl-40 py-16' : undefined,
+  middle: bleed ? 'py-16' : undefined,
+  right: bleed === 'right' ? undefined : bleed ? 'pr-40 py-16' : undefined,
+});
+
+const TwoColsLayout = ({ slots, frontmatter }: LayoutProps) => {
+  const padding = columns(frontmatter.bleed);
+  return (
+    <Frame name='two-cols' className={mx('grid grid-cols-2 gap-16', padding.frame)}>
+      <Slot name='default' className={padding.left}>
+        {slots.default}
+        {slots.left}
+      </Slot>
+      <Slot name='right' className={padding.right}>
+        {slots.right}
+      </Slot>
+    </Frame>
+  );
+};
 
 const TwoColsHeaderLayout = ({ slots }: LayoutProps) => (
   <Frame name='two-cols-header' className={mx('grid grid-cols-2 grid-rows-[auto_1fr] gap-x-16 gap-y-8', theme.padding)}>
@@ -103,16 +116,23 @@ const TwoColsHeaderLayout = ({ slots }: LayoutProps) => (
   </Frame>
 );
 
-const ThreeColsLayout = ({ slots }: LayoutProps) => (
-  <Frame name='three-cols' className={mx('grid grid-cols-3 gap-16', theme.padding)}>
-    <Slot name='default'>
-      {slots.default}
-      {slots.left}
-    </Slot>
-    <Slot name='middle'>{slots.middle}</Slot>
-    <Slot name='right'>{slots.right}</Slot>
-  </Frame>
-);
+const ThreeColsLayout = ({ slots, frontmatter }: LayoutProps) => {
+  const padding = columns(frontmatter.bleed);
+  return (
+    <Frame name='three-cols' className={mx('grid grid-cols-3 gap-16', padding.frame)}>
+      <Slot name='default' className={padding.left}>
+        {slots.default}
+        {slots.left}
+      </Slot>
+      <Slot name='middle' className={padding.middle}>
+        {slots.middle}
+      </Slot>
+      <Slot name='right' className={padding.right}>
+        {slots.right}
+      </Slot>
+    </Frame>
+  );
+};
 
 const GridLayout = ({ slots }: LayoutProps) => (
   <Frame name='grid' className={mx('grid grid-cols-2 grid-rows-2 gap-x-16 gap-y-12', theme.padding)}>

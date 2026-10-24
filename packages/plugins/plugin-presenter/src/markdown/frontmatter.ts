@@ -30,6 +30,11 @@ export const LAYOUTS = [
 
 export type LayoutName = (typeof LAYOUTS)[number];
 
+/** Sides a column layout's outer column can extend to the slide's edge on (`bleed:`). */
+export const BLEED_SIDES = ['left', 'right'] as const;
+
+export type BleedSide = (typeof BLEED_SIDES)[number];
+
 /** A problem found while parsing or validating a slide; the slide still renders. */
 export type SlideIssue = {
   kind: 'frontmatter' | 'layout' | 'theme' | 'html';
@@ -45,6 +50,7 @@ const fields = {
   backgroundVideo: Schema.String,
   backgroundOpacity: Schema.Number.check(Schema.isBetween({ minimum: 0, maximum: 1 })),
   backgroundPosition: Schema.String,
+  bleed: Schema.Literals(BLEED_SIDES),
   theme: Schema.String,
 };
 
@@ -58,6 +64,8 @@ export const SlideFrontmatter = Schema.Struct({
   backgroundVideo: Schema.optionalKey(fields.backgroundVideo),
   backgroundOpacity: Schema.optionalKey(fields.backgroundOpacity),
   backgroundPosition: Schema.optionalKey(fields.backgroundPosition),
+  /** DXOS: the outer column on this side reaches the slide's edges, with no padding (`two-cols`, `three-cols`). */
+  bleed: Schema.optionalKey(fields.bleed),
   /** Deck theme; read only from the first slide (Slidev headmatter). */
   theme: Schema.optionalKey(fields.theme),
 });

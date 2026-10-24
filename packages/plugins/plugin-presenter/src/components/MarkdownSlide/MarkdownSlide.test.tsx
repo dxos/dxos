@@ -78,6 +78,15 @@ describe('MarkdownSlide', () => {
     expect(markup).toMatch(/data-slot="default"[^>]*>(?:(?!data-slot).)*Left side/s);
   });
 
+  test('bleed: right moves padding off the frame and keeps none on the right column', ({ expect }) => {
+    const markup = render(
+      ['---', 'layout: two-cols', 'bleed: right', '---', '', 'Left', '', '::right::', '', 'Right'].join('\n'),
+    );
+    expect(markup).toMatch(/data-layout="two-cols" class="(?![^"]*px-40)[^"]*"/);
+    expect(markup).toMatch(/data-slot="default"[^>]*class="[^"]*pl-40[^"]*"/);
+    expect(markup).toMatch(/data-slot="right"[^>]*class="(?![^"]*p[rxy]-)[^"]*"/);
+  });
+
   test('three-cols places ::middle:: and ::right:: content in their columns', ({ expect }) => {
     const markup = render(
       ['---', 'layout: three-cols', '---', '', 'One', '', '::middle::', '', 'Two', '', '::right::', '', 'Three'].join(
