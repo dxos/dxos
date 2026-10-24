@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { SlideTheme } from '#types';
 
 import { MarkdownSlide } from '../MarkdownSlide/index.ts';
-import { SlideFrame } from '../SlideFrame/index.ts';
+import { Slide } from '../Slide/index.ts';
 import { SlideThemeProvider } from './SlideTheme.tsx';
 
 const CONTENT = [
@@ -44,9 +44,9 @@ const DefaultStory = ({ themes }: StoryProps) => (
           <figcaption className='text-sm text-description font-mono'>{caption(settings)}</figcaption>
           <div className='flex aspect-video'>
             <SlideThemeProvider settings={settings}>
-              <SlideFrame inset>
+              <Slide.Frame inset>
                 <MarkdownSlide content={CONTENT} />
-              </SlideFrame>
+              </Slide.Frame>
             </SlideThemeProvider>
           </div>
         </figure>

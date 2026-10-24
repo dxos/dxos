@@ -12,7 +12,7 @@ import { mx } from '@dxos/ui-theme';
 import { type SlideSource } from '#deck';
 import { meta } from '#meta';
 
-import { SlideRenderer } from '../SlideRenderer/index.ts';
+import { Slide } from '../Slide/index.ts';
 
 /** Narrowest thumbnail before the grid drops a column (px). */
 const TILE_MIN_WIDTH = 240;
@@ -133,7 +133,11 @@ const SlideTile = ({ tile, controller, draggable, onPresent }: SlideTileProps) =
     >
       {/* Thumbnails are pictures of the slide; their controls must not take clicks from the grid. */}
       <div className='relative flex aspect-video pointer-events-none rounded-sm overflow-hidden border border-separator'>
-        <SlideRenderer source={tile.source} step={Number.POSITIVE_INFINITY} />
+        <Slide.Root source={tile.source} step={Number.POSITIVE_INFINITY}>
+          <Slide.Frame>
+            <Slide.Content />
+          </Slide.Frame>
+        </Slide.Root>
       </div>
       <Listbox.ItemText tone='muted' classNames='text-sm tabular-nums' />
     </Listbox.Item>

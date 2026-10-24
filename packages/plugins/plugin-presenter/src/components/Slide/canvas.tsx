@@ -8,7 +8,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-export type SlideFrameProps = Util.ThemedClassName<
+export type SlideCanvasProps = Util.ThemedClassName<
   PropsWithChildren<{
     /** Inset the slide, with rounded corners, in a solid void that shows on every side, so the slide's own background reads as distinct from what surrounds it. */
     inset?: boolean;
@@ -16,9 +16,9 @@ export type SlideFrameProps = Util.ThemedClassName<
 >;
 
 /**
- * Scaled 16:9 slide canvas.
+ * The 2560 × 1440 slide canvas scaled to fit its container (16:9); `Slide.Frame` and embedded text slides share it.
  */
-export const SlideFrame = ({ children, classNames, inset }: SlideFrameProps) => {
+export const SlideCanvas = ({ children, classNames, inset }: SlideCanvasProps) => {
   const [props, setProps] = useState({});
   const {
     ref: containerRef,

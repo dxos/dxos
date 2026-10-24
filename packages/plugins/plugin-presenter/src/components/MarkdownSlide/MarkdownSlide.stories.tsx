@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type LayoutName } from '#markdown';
 
-import { SlideFrame } from '../SlideFrame/index.ts';
+import { Slide } from '../Slide/index.ts';
 import { MarkdownSlide, type MarkdownSlideProps } from './MarkdownSlide.tsx';
 
 // A one-second 32×18 WebM, inlined so the story needs no network.
@@ -22,9 +22,9 @@ const IMAGE = `data:image/svg+xml;utf8,${encodeURIComponent(
 )}`;
 
 const DefaultStory = (props: MarkdownSlideProps) => (
-  <SlideFrame inset>
+  <Slide.Frame inset>
     <MarkdownSlide {...props} />
-  </SlideFrame>
+  </Slide.Frame>
 );
 
 const meta = {

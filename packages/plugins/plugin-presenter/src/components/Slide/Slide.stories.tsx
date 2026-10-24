@@ -28,12 +28,22 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
 import { type SlideSource } from '#deck';
+import { createSlide } from '#testing';
 import { translations } from '#translations';
 import { Presentation } from '#types';
 
 import { SlideArticle } from '../../containers/SlideArticle/SlideArticle.tsx';
 import { MarkdownSlide } from '../MarkdownSlide/index.ts';
-import { SlideRenderer } from './SlideRenderer.tsx';
+import * as Slide from './Slide.tsx';
+
+/** One slide inset in a void, as the slide preview shows it. */
+const SlideView = ({ source }: { source: SlideSource }) => (
+  <Slide.Root source={source}>
+    <Slide.Frame inset>
+      <Slide.Content />
+    </Slide.Frame>
+  </Slide.Root>
+);
 
 const DocumentSlide = ({ subject }: { subject: Markdown.Document }) => {
   const [content] = useObject(subject.content, 'content');
@@ -117,7 +127,7 @@ const DefaultStory = ({ kind, content }: StoryProps) => {
 
   return (
     <>
-      <SlideRenderer source={source} inset />
+      <SlideView source={source} />
     </>
   );
 };
@@ -239,7 +249,7 @@ const SpaceSlideStory = ({ name }: { name: string }) => {
     return <Loading />;
   }
 
-  return <SlideRenderer source={{ kind: 'text', id: text.id, text }} inset />;
+  return <SlideView source={{ kind: 'text', id: text.id, text }} />;
 };
 
 /** Renders the named document from the story space as a linked-object slide. */
@@ -250,11 +260,11 @@ const DocumentSlideStory = ({ name }: { name: string }) => {
     return <Loading />;
   }
 
-  return <SlideRenderer source={{ kind: 'object', id: document.id, object: document }} inset />;
+  return <SlideView source={{ kind: 'object', id: document.id, object: document }} />;
 };
 
 const meta = {
-  title: 'plugins/plugin-presenter/components/SlideRenderer',
+  title: 'plugins/plugin-presenter/components/Slide',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   parameters: {
@@ -460,4 +470,9 @@ export const EmbeddedCycle: Story = {
     await waitFor(() => expect(recursivePlaceholders(canvasElement)).toBe(1), LOAD_TIMEOUT);
     await expect(canvas.getAllByRole('heading', { name: 'Cycle A' })).toHaveLength(1);
   },
+};
+
+/** A markdown string as a slide; the frame scales the 2560 × 1440 canvas to fit, inset in a void. */
+export const MarkdownSource: Story = {
+  args: { kind: 'markdown', content: createSlide({ number: 1 }) },
 };

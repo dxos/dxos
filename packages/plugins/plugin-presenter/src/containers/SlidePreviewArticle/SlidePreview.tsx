@@ -8,7 +8,7 @@ import React, { useCallback, useMemo } from 'react';
 import { useObject } from '@dxos/echo-react';
 import { type Text } from '@dxos/schema';
 
-import { SlideRenderer } from '#components';
+import { Slide } from '#components';
 import { type SlideSource } from '#deck';
 import { slideEditorSyncAtom } from '#hooks';
 import { hasSlots, parseSlide, slotAtOffset, stepAtOffset } from '#markdown';
@@ -39,13 +39,16 @@ export const SlidePreview = ({ subject }: SlidePreviewProps) => {
   return (
     <div data-testid='presenter.slide-editor.preview' className='relative flex size-full'>
       {/* Outside a click group every step shows, so the slide reads as it will once fully revealed. */}
-      <SlideRenderer
+      <Slide.Root
         source={source}
-        inset
         step={step === 0 ? undefined : step}
         activeSlot={activeSlot}
         onSourceClick={handleSourceClick}
-      />
+      >
+        <Slide.Frame inset>
+          <Slide.Content />
+        </Slide.Frame>
+      </Slide.Root>
     </div>
   );
 };

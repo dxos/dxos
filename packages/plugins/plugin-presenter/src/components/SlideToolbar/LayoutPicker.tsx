@@ -12,8 +12,7 @@ import * as Popover from '@dxos/react-ui/Popover';
 import { type LayoutName, LAYOUTS } from '#markdown';
 import { meta } from '#meta';
 
-import { MarkdownSlide } from '../MarkdownSlide/index.ts';
-import { SlideFrame } from '../SlideFrame/index.ts';
+import { Slide } from '../Slide/index.ts';
 
 // Placeholder content per thumbnail, so each layout shows how it places a title, text and columns.
 const sample = (layout: LayoutName): string => {
@@ -90,9 +89,11 @@ export const LayoutPicker = ({ value, onChange }: LayoutPickerProps) => {
                   classNames='text-xs'
                 >
                   <div className='relative flex aspect-video pointer-events-none border border-separator'>
-                    <SlideFrame>
-                      <MarkdownSlide content={sample(layout)} />
-                    </SlideFrame>
+                    <Slide.Root source={{ kind: 'markdown', id: layout, content: sample(layout) }}>
+                      <Slide.Frame>
+                        <Slide.Content />
+                      </Slide.Frame>
+                    </Slide.Root>
                   </div>
                   <Listbox.ItemText />
                 </Listbox.Item>

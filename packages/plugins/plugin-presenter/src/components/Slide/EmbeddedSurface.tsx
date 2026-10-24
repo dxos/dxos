@@ -14,7 +14,7 @@ import { Text } from '@dxos/schema';
 import { meta } from '#meta';
 
 import { MarkdownSlide, type SlideSurfaceRole } from '../MarkdownSlide/index.ts';
-import { SlideFrame } from '../SlideFrame/index.ts';
+import { SlideCanvas } from './canvas.tsx';
 import { ObjectSurface } from './ObjectSurface.tsx';
 
 export type EmbeddedSurfaceProps = {
@@ -98,9 +98,9 @@ export const EmbeddedSurface = ({ uri, role, db }: EmbeddedSurfaceProps) => {
 const EmbeddedTextSlide = ({ text }: { text: Text.Text }) => {
   const [content] = useObject(text, 'content');
   return (
-    <SlideFrame>
+    <SlideCanvas>
       <MarkdownSlide content={content ?? ''} />
-    </SlideFrame>
+    </SlideCanvas>
   );
 };
 
