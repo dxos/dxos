@@ -30,6 +30,6 @@ const makeCapabilities = () => {
 export const OperationTestLayer = AssistantTestLayer({
   extraServices: Layer.succeed(Capability.Service, makeCapabilities()),
   operationHandlers: PresenterOperationHandlerSet,
-  types: [SpaceProperties, Collection.Collection, Skill.Skill, Presentation.Presentation, Text.Text, Markdown.Document],
+  types: [SpaceProperties, Collection.Collection, Skill.Skill, Presentation.Presentation, Presentation.Slide, Text.Text, Markdown.Document],
   disableLlmMemoization: true,
 });

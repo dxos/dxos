@@ -253,7 +253,8 @@ const createSpaceSlides = async ({ space }: { space: Space }) => {
 const SpaceSlideStory = ({ name }: { name: string }) => {
   const { space } = useClientStory();
   const [presentation] = useQuery(space?.db, Filter.type(Presentation.Presentation, { name }));
-  const target = useResolveRef(presentation?.sections[0]);
+  const slide = useResolveRef(presentation?.slides[0]);
+  const target = useResolveRef(slide?.content);
   const text = target && Obj.instanceOf(Text.Text, target) ? target : undefined;
   if (!text) {
     return <Loading />;

@@ -8,7 +8,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Filter, Ref } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
+import { useResolveRef } from '@dxos/echo-react';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -60,9 +61,9 @@ const DefaultStory = ({ slide: index = 0 }: { slide?: number }) => {
   const attentionAttributes = useAttentionAttributes(ATTENDED_ID);
   const { space } = useClientStory();
   const [presentation] = useQuery(space?.db, Filter.type(Presentation.Presentation));
-  const texts = useQuery(space?.db, Filter.type(Text.Text));
-  const section = presentation?.sections[index];
-  const slide = section && texts.find((text) => Ref.hasEntityId(text.id)(section));
+  const slideObject = useResolveRef(presentation?.slides[index]);
+  const content = useResolveRef(slideObject?.content);
+  const slide = content && Obj.instanceOf(Text.Text, content) ? content : undefined;
   if (!slide) {
     return <Loading />;
   }
@@ -75,13 +76,12 @@ const DefaultStory = ({ slide: index = 0 }: { slide?: number }) => {
   );
 };
 
-/** The editor on the second section after the first section's slide is deleted, which leaves its ref behind. */
+/** The editor on the second slide after the first slide's content is deleted, which leaves its slide behind. */
 const DeletedFirstStory = () => {
   const { space } = useClientStory();
   const [presentation] = useQuery(space?.db, Filter.type(Presentation.Presentation));
-  const texts = useQuery(space?.db, Filter.type(Text.Text));
-  const first = presentation?.sections[0];
-  const deleted = first && texts.find((text) => Ref.hasEntityId(text.id)(first));
+  const first = useResolveRef(presentation?.slides[0]);
+  const deleted = useResolveRef(first?.content);
   useEffect(() => {
     if (deleted) {
       space?.db.remove(deleted);
@@ -97,7 +97,7 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withClientProvider({
-      types: [Presentation.Presentation, Text.Text, Markdown.Document],
+      types: [Presentation.Presentation, Presentation.Slide, Text.Text, Markdown.Document],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {

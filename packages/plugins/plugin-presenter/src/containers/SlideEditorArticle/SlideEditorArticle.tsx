@@ -211,13 +211,12 @@ const NO_SLIDES = Atom.make<SlideSource[]>([]);
 const useSlideActions = (subject: Text.Text, attendableId: string | undefined, view: EditorView | undefined) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const { update } = useViewStateActions(SlideEditorViewState.aspect, SlideEditorViewState.CONTEXT);
-  const parent = Obj.getParent(subject);
-  const presentation = Obj.instanceOf(Presentation.Presentation, parent) ? parent : undefined;
-  // The deck's slides, not the raw sections: a section whose target was deleted is no slide to move to.
+  const presentation = Presentation.getPresentation(subject);
+  // The deck's slides: a slide whose content was deleted is no slide to move to.
   const slides = useAtomValue(
     useMemo(() => (presentation ? slideSourcesAtom(presentation) : NO_SLIDES), [presentation]),
   );
-  const position = slides.findIndex((slide) => slide.id === subject.id);
+  const position = slides.findIndex((slide) => slide.kind === 'text' && slide.text.id === subject.id);
   const { set: setSlideIndex } = useViewStateActions(
     SlideViewState.aspect,
     presentation ? Obj.getURI(presentation) : undefined,

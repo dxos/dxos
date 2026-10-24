@@ -13,7 +13,6 @@ import * as Icon from '@dxos/react-ui/Icon';
 import { mx } from '@dxos/ui-theme';
 
 import { type SlideSource } from '#deck';
-import { isHiddenSlide } from '#markdown';
 import { meta } from '#meta';
 
 import { Slide } from '../Slide/index.ts';
@@ -143,8 +142,8 @@ type SlideTileProps = {
 
 const SlideTile = ({ tile, controller, draggable, onPresent, contextMenuId }: SlideTileProps) => {
   const { rowRef, handleRef, isDragging } = useReorderItem(controller, tile.key);
-  const [text] = useObject(tile.source.kind === 'text' ? tile.source.text : undefined);
-  const hidden = isHiddenSlide(tile.source.kind === 'markdown' ? tile.source.content : (text?.content ?? ''));
+  const [slide] = useObject(tile.source.kind === 'markdown' ? undefined : tile.source.slide);
+  const hidden = slide?.hidden === true;
   // The whole tile is the drag handle.
   const ref = useCallback(
     (node: HTMLDivElement | null) => {

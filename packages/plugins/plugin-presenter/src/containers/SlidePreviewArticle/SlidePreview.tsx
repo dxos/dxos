@@ -6,7 +6,6 @@ import { useAtom, useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo } from 'react';
 
-import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { type Text } from '@dxos/schema';
 
@@ -36,8 +35,7 @@ export const SlidePreview = ({ subject }: SlidePreviewProps) => {
     sync.cursor !== undefined && hasSlots(parsed.layout) ? slotAtOffset(parsed, sync.cursor) : undefined;
   const source = useMemo((): SlideSource => ({ kind: 'text', id: subject.id, text: subject }), [subject]);
   // The slide is previewed in its deck's theme: the presentation's, else its first slide's headmatter.
-  const parent = Obj.getParent(subject);
-  const presentation = Obj.instanceOf(Presentation.Presentation, parent) ? parent : undefined;
+  const presentation = Presentation.getPresentation(subject);
   const [theme] = useObject(presentation, 'theme');
   const deck = useAtomValue(useMemo(() => (presentation ? slideSourcesAtom(presentation) : NO_SLIDES), [presentation]));
   const themeSettings = useDeckTheme(deck.length > 0 ? deck : [source], theme);

@@ -31,7 +31,7 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'column' }),
     withClientProvider({
-      types: [Presentation.Presentation, Text.Text],
+      types: [Presentation.Presentation, Presentation.Slide, Text.Text],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {

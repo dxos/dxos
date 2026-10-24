@@ -3,41 +3,38 @@
 //
 
 import { type Database, Obj } from '@dxos/echo';
-import { EID } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 
 import { Presentation } from '#types';
 
 /**
- * One slide of a deck: an owned Text, a linked object, raw markdown (with the database its embeds resolve in),
- * or a ref not yet resolved.
+ * One slide of a deck: an owned Text, a linked object, raw markdown (with the database its embeds resolve in), or a
+ * slide whose content has not loaded yet. A presentation's sources carry their `Slide` (whose id is theirs); a
+ * previewed document's markdown slides have none.
  */
 export type SlideSource =
-  | { kind: 'text'; id: string; text: Text.Text }
-  | { kind: 'object'; id: string; object: Obj.Unknown }
+  | { kind: 'text'; id: string; text: Text.Text; slide?: Presentation.Slide }
+  | { kind: 'object'; id: string; object: Obj.Unknown; slide?: Presentation.Slide }
   | { kind: 'markdown'; id: string; content: string; db?: Database.Database }
-  | { kind: 'pending'; id: string };
+  | { kind: 'pending'; id: string; slide?: Presentation.Slide };
+
+/** A presentation's slide with its content resolved; `content` is undefined until it loads. */
+export type ResolvedSlide = { id: string; slide?: Presentation.Slide; content?: Obj.Unknown };
 
 /**
- * Maps sections to slide sources; `targets[index]` is the resolved target of `sections[index]`.
- * An unresolved target is `pending`; a deleted one is omitted, so the deck never waits on it.
+ * Maps a presentation's slides to slide sources. A slide (or its content) not loaded yet is `pending`; a deleted one
+ * is omitted, so the deck never waits on it.
  */
-export const toSlideSources = (
-  presentation: Presentation.Presentation,
-  targets: ReadonlyArray<Obj.Unknown | undefined>,
-): SlideSource[] =>
-  presentation.sections.flatMap((ref, index): SlideSource[] => {
-    const target = targets[index];
-    const uri = EID.tryParse(ref.uri);
-    const id = (uri && EID.getEntityId(uri)) || ref.uri;
-    if (!target) {
-      return [{ kind: 'pending', id }];
+export const toSlideSources = (resolved: ReadonlyArray<ResolvedSlide>): SlideSource[] =>
+  resolved.flatMap(({ id, slide, content }): SlideSource[] => {
+    if (!slide || !content) {
+      return [{ kind: 'pending', id, slide }];
     }
-    if (Obj.isDeleted(target)) {
+    if (Obj.isDeleted(slide) || Obj.isDeleted(content)) {
       return [];
     }
-    if (Obj.instanceOf(Text.Text, target) && Presentation.isOwned(presentation, target)) {
-      return [{ kind: 'text', id, text: target }];
+    if (Presentation.isOwnedContent(slide, content)) {
+      return [{ kind: 'text', id, text: content, slide }];
     }
-    return [{ kind: 'object', id, object: target }];
+    return [{ kind: 'object', id, object: content, slide }];
   });

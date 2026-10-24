@@ -27,7 +27,7 @@ describe('slideSourcesAtom', () => {
 
   const setup = async (slides: string[]) => {
     const { db } = await builder.createDatabase({
-      types: [Presentation.Presentation, Text.Text, Markdown.Document, Collection.Collection],
+      types: [Presentation.Presentation, Presentation.Slide, Text.Text, Markdown.Document, Collection.Collection],
     });
     const presentation = db.add(Presentation.make({ slides }));
     await db.flush({ indexes: true });
@@ -60,13 +60,13 @@ describe('slideSourcesAtom', () => {
   test('omits a deleted owned slide', async ({ expect }) => {
     const { db, presentation, registry, atom } = await setup(['a', 'b']);
     const [, second] = registry.get(atom);
-    const text = await presentation.sections[0].load();
-    db.remove(text);
+    const slide = await presentation.slides[0].load();
+    db.remove(await slide.content.load());
     await db.flush();
     await expect.poll(() => registry.get(atom).map((source) => source.id)).toEqual([second.id]);
   });
 
-  test('reorders when sections move', async ({ expect }) => {
+  test('reorders when slides move', async ({ expect }) => {
     const { presentation, registry, atom } = await setup(['a', 'b']);
     const [first, second] = registry.get(atom).map((source) => source.id);
     Presentation.move(presentation, 0, 1);
@@ -74,10 +74,15 @@ describe('slideSourcesAtom', () => {
   });
 
   test('presented positions skip hidden slides and keep an object linked twice at both places', async ({ expect }) => {
-    const { db, presentation, registry } = await setup(['a', '---\nhide: true\n---\n\nb', 'c']);
+    const { db, presentation, registry } = await setup(['a', 'b', 'c']);
+    const hidden = await presentation.slides[1].load();
+    Obj.update(hidden, (hidden) => {
+      hidden.hidden = true;
+    });
     const doc = db.add(Markdown.make({ content: 'x' }));
+    const twice = [Presentation.makeSlide(doc), Presentation.makeSlide(doc)];
     Obj.update(presentation, (presentation) => {
-      presentation.sections.push(Ref.make(doc), Ref.make(doc));
+      presentation.slides.push(...twice.map((slide) => Ref.make(slide)));
     });
     await db.flush({ indexes: true });
     const positions = presentedPositionsAtom(presentation);
