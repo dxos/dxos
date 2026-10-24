@@ -175,6 +175,10 @@ const STOPWATCH = ({ text, spaceId, stages }) => {
     mark('ready', space?.state.get() === 3);
     const root = document.querySelector('[data-testid="composer.markdownRoot"]');
     mark('rendered', !!root && root.textContent.includes(text));
+    // The script runs before the document has a body, and boot may replace what the body holds.
+    if (!panel.isConnected && document.body) {
+      document.body.append(panel);
+    }
     render();
     if (reached.rendered !== undefined) {
       clearInterval(interval);
@@ -184,8 +188,6 @@ const STOPWATCH = ({ text, spaceId, stages }) => {
   const interval = setInterval(check, 100);
   const observer = new MutationObserver(check);
   observer.observe(document, { subtree: true, childList: true, characterData: true });
-  document.documentElement.append(panel);
-  render();
 };
 
 /** Bob's stage times in ms from pressing Enter, once the shared document is on screen. */

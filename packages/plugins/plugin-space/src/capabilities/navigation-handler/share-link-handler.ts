@@ -35,9 +35,13 @@ const SPACE_TIMEOUT = 180_000;
 
 /**
  * Opens an object share link (`?share=`): turns on the plugins it names, then — for a member — extends a partial space's sync scope and leaves the path to URL projection; for anyone
- * else, joins the space in the background replicating only the shared objects, then opens the object.
+ * else, joins the space in the background replicating only the shared objects, then opens the object. The link's
+ * space is in `joining` until that attempt ends.
  */
-export const handleShareLink = (url: URL): Effect.Effect<void, never, Capability.Service | Operation.Service> =>
+export const handleShareLink = (
+  url: URL,
+  joining: Set<string>,
+): Effect.Effect<void, never, Capability.Service | Operation.Service> =>
   Effect.gen(function* () {
     const encoded = url.searchParams.get(SpaceOperation.SHARE_PARAM);
     if (!encoded) {
@@ -49,16 +53,24 @@ export const handleShareLink = (url: URL): Effect.Effect<void, never, Capability
     if (!SpaceId.isValid(spaceId)) {
       return yield* Effect.fail(new SpaceOperationError({ message: 'The link names no valid space.' }));
     }
+    joining.add(spaceId);
+    const settled = Effect.sync(() => joining.delete(spaceId));
     yield* enablePlugins(payload.plugins);
 
     const client = yield* Capability.get(ClientCapabilities.Client);
-    yield* Effect.tryPromise(() => client.waitUntilInitialized({ timeout: INITIALIZE_TIMEOUT }));
-    yield* waitForIdentity(client).pipe(Effect.timeout(IDENTITY_TIMEOUT));
+    yield* Effect.tryPromise(() => client.waitUntilInitialized({ timeout: INITIALIZE_TIMEOUT })).pipe(
+      Effect.tapError(() => settled),
+    );
+    yield* waitForIdentity(client).pipe(
+      Effect.timeout(IDENTITY_TIMEOUT),
+      Effect.tapError(() => settled),
+    );
     // Kept until now: onboarding reads it from the address bar, after this handler starts, to create the identity.
     removeQueryParam(SpaceOperation.SHARE_PARAM);
 
     const existing = client.spaces.get(spaceId);
     if (existing) {
+      yield* settled;
       // A member who joined through another link replicates only that link's objects; a full member is unaffected.
       yield* Effect.tryPromise(() => existing.internal.extendSyncScope(payload.objects)).pipe(
         Effect.timeout(EXTEND_TIMEOUT),
@@ -69,6 +81,7 @@ export const handleShareLink = (url: URL): Effect.Effect<void, never, Capability
 
     const invitation = payload.invitation;
     if (!invitation) {
+      yield* settled;
       return yield* Effect.fail(new SpaceOperationError({ message: 'The link is only for members of its space.' }));
     }
     yield* Operation.invoke(LayoutOperation.AddToast, {
@@ -79,7 +92,9 @@ export const handleShareLink = (url: URL): Effect.Effect<void, never, Capability
     });
     // Detached: URL projection waits on every handler, and the app should render while the join runs.
     yield* Effect.forkDetach(preloadArticleSurfaces);
-    yield* Effect.forkDetach(joinAndOpen(client, invitation, spaceId, payload).pipe(Effect.catch(reportFailure)));
+    yield* Effect.forkDetach(
+      joinAndOpen(client, invitation, spaceId, payload).pipe(Effect.ensuring(settled), Effect.catch(reportFailure)),
+    );
   }).pipe(Effect.catch(reportFailure));
 
 const reportFailure = (error: unknown): Effect.Effect<void, never, Operation.Service> =>

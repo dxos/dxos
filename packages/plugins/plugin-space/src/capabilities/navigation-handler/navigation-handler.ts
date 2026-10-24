@@ -105,8 +105,17 @@ export default Capability.makeModule(
         Effect.provideService(Operation.Service, operationService),
       );
 
+    // Spaces a share link is joining: the link's own URL names the workspace, which the navtree would otherwise call
+    // missing until the join lands.
+    const joining = new Set<string>();
+    const joiningLoader: AppCapabilities.NavigationTargetLoader = {
+      id: `${meta.profile.key}/share-link`,
+      load: ({ spaceId, entityId }) =>
+        Effect.succeed(entityId === undefined && joining.has(spaceId) ? 'exists' : 'unknown'),
+    };
+
     const shareLinkHandler: AppCapabilities.NavigationHandler = (url: URL) =>
-      handleShareLink(url).pipe(
+      handleShareLink(url, joining).pipe(
         Effect.provideService(Capability.Service, capabilities),
         Effect.provideService(Operation.Service, operationService),
       );
@@ -114,6 +123,7 @@ export default Capability.makeModule(
     return [
       Capability.contribute(AppCapabilities.NavigationHandler, handler),
       Capability.contribute(AppCapabilities.NavigationHandler, shareLinkHandler),
+      Capability.contribute(AppCapabilities.NavigationTargetLoader, joiningLoader),
     ];
   }),
 );
