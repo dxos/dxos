@@ -30,7 +30,11 @@ export const ViewportOverlay = ({ camera, look }: ViewportOverlayProps) => {
   const { displayScene, navigating, removePoint, menu, closeMenu, menuAnchorRef } = useCanvasGesture('Canvas.Viewport');
   const selectionAspect = useCanvasSelection('Canvas.Viewport');
   const editingAspect = useCanvasEditing('Canvas.Viewport');
-  const { drillIn } = useCanvasNavigation('Canvas.Viewport').commands;
+  const { drillIn, back } = useCanvasNavigation('Canvas.Viewport').commands;
+  // Back is offered only where there is a level above: inside a frame's scene, or an instance opened in isolation.
+  const path = useAtomValue(atoms.path);
+  const isolation = useAtomValue(atoms.isolation);
+  const canGoBack = path.length > 1 || isolation !== undefined;
   const selection = useAtomValue(selectionAspect.atoms.selection);
   const clipboard = useAtomValue(editingAspect.atoms.clipboard);
   const { copy, cut, paste } = editingAspect.commands;
@@ -120,6 +124,9 @@ export const ViewportOverlay = ({ camera, look }: ViewportOverlayProps) => {
                 </>
               )}
             </>
+          )}
+          {menu?.kind === 'canvas' && canGoBack && (
+            <Menu.Item data-testid='menu-back' onSelect={back} item={{ value: 'Back', label: 'Back' }} />
           )}
           {menu?.kind === 'canvas' && (
             <Menu.Item
