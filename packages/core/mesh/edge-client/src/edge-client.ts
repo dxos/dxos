@@ -25,6 +25,7 @@ import {
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { trace } from '@dxos/tracing';
+import { markMilestone } from '@dxos/util';
 
 import {
   authenticateViaChallengeEndpoint,
@@ -330,6 +331,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
       return;
     }
     this._networkingStarted = true;
+    markMilestone('network.started');
     this._persistentLifecycle.open().catch((err) => {
       log.warn('Error while opening connection', { err });
     });
@@ -414,6 +416,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
       {
         onConnected: () => {
           if (this._isActive(connection)) {
+            markMilestone('network.connected');
             this._ready.wake();
             this._notifyReconnected();
           } else {

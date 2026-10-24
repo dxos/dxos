@@ -93,7 +93,7 @@ const WorkingSetItem = Object.freeze({
 export type WorkingSetDataProvider = {
   spaceId: SpaceId;
   allCores(): ObjectCore[];
-  getCoreById(id: EntityId, load?: boolean): ObjectCore | undefined;
+  getCoreById(id: EntityId): ObjectCore | undefined;
   areStrongDepsSatisfied(core: ObjectCore): boolean;
   areStrongDepsResolved(core: ObjectCore): boolean;
 };
@@ -204,7 +204,7 @@ export class WorkingSetQueryExecutor {
         }
         case 'IdSelector': {
           for (const id of step.selector.objectIds) {
-            const core = this._provider.getCoreById(id, true);
+            const core = this._provider.getCoreById(id);
             // Resolved, not satisfied: an id selector names one object the caller already holds an
             // id for, so a dependency that is settled unreachable must still surface it. Requiring
             // satisfaction here left an object that `getObjectById` returns unloadable by its own
