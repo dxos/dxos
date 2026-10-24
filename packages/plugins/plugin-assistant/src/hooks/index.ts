@@ -18,6 +18,7 @@ export * from './useMcpConnections.ts';
 export * from './useObjectMentions.ts';
 export * from './usePlatform.ts';
 export * from './usePresets.ts';
+export * from './usePromptActions.ts';
 export * from './useSelectionContext.ts';
 export * from './useSlashCommands.ts';
 export * from './useHomeSuggestions.ts';
