@@ -20,7 +20,7 @@ export const LAYOUTS = [
   'two-cols',
   'two-cols-header',
   'three-cols',
-  'grid',
+  'two-by-two',
   'image',
   'image-left',
   'image-right',

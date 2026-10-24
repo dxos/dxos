@@ -99,10 +99,10 @@ describe('MarkdownSlide', () => {
     expect(markup).toMatch(/data-slot="right"[^>]*>(?:(?!data-slot).)*Three/s);
   });
 
-  test('grid places four regions in reading order', ({ expect }) => {
+  test('two-by-two places four regions in reading order', ({ expect }) => {
     const markup = render(
       [
-        ['---', 'layout: grid', '---', '', 'One'],
+        ['---', 'layout: two-by-two', '---', '', 'One'],
         ['::right::', '', 'Two'],
         ['::bottom-left::', '', 'Three'],
         ['::bottom-right::', '', 'Four'],
@@ -110,7 +110,7 @@ describe('MarkdownSlide', () => {
         .map((lines) => lines.join('\n'))
         .join('\n\n'),
     );
-    expect(markup).toContain('data-layout="grid"');
+    expect(markup).toContain('data-layout="two-by-two"');
     for (const [slot, text] of [
       ['default', 'One'],
       ['right', 'Two'],

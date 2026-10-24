@@ -13,9 +13,9 @@ describe('nextSlot', () => {
     expect(nextSlot('two-cols-header', 'default')).toBe('left');
     expect(nextSlot('three-cols', 'default')).toBe('middle');
     expect(nextSlot('three-cols', 'middle')).toBe('right');
-    expect(nextSlot('grid', 'right')).toBe('bottom-left');
-    expect(nextSlot('grid', 'bottom-left')).toBe('bottom-right');
-    expect(nextSlot('grid', 'bottom-right')).toBeUndefined();
+    expect(nextSlot('two-by-two', 'right')).toBe('bottom-left');
+    expect(nextSlot('two-by-two', 'bottom-left')).toBe('bottom-right');
+    expect(nextSlot('two-by-two', 'bottom-right')).toBeUndefined();
   });
 
   test('a `::left::` region counts as the first one where the layout has no `left` slot', () => {
@@ -24,7 +24,7 @@ describe('nextSlot', () => {
   });
 
   test('content before any marker is the first region; single-region layouts have none to add', () => {
-    expect(nextSlot('grid', undefined)).toBe('right');
+    expect(nextSlot('two-by-two', undefined)).toBe('right');
     expect(nextSlot('cover', 'default')).toBeUndefined();
     expect(hasSlots('cover')).toBe(false);
     expect(hasSlots('three-cols')).toBe(true);

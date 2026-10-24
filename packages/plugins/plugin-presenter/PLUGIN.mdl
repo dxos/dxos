@@ -194,7 +194,7 @@ component MarkdownSlide
 component SlideLayouts
   desc: |
     The layouts a slide's `layout` names: default, cover, center, section, intro, end, fact, statement, quote,
-    two-cols, two-cols-header, three-cols, grid (2 × 2), image, image-left, image-right, full, none. An unknown
+    two-cols, two-cols-header, three-cols, two-by-two, image, image-left, image-right, full, none. An unknown
     name renders with default and is reported as a validation issue. `bleed: left | right` takes the outer column
     of `two-cols` or `three-cols` to the slide's edges.
   props:
@@ -356,8 +356,8 @@ feat F-4: Presentation Deck
 ```mdl
 feat F-6: Markdown Slides
 
-  req F-6.1: A slide is written in a strict Slidev subset: per-slide frontmatter `layout`, `image`, `background`, `class`, `title` (and the DXOS keys of F-8.1 and F-8.5 and the `theme` headmatter of F-6.8); slots `::left::`, `::right::`, `::default::`, and for the DXOS layouts `three-cols` and `grid` (2 × 2) also `::middle::`, `::bottom-left::` and `::bottom-right::`; notes as the slide's last HTML comment.
-  req F-6.2: The layouts are default, cover, center, section, intro, end, fact, statement, quote, two-cols, two-cols-header, three-cols, grid, image, image-left, image-right, full and none.
+  req F-6.1: A slide is written in a strict Slidev subset: per-slide frontmatter `layout`, `image`, `background`, `class`, `title` (and the DXOS keys of F-8.1 and F-8.5 and the `theme` headmatter of F-6.8); slots `::left::`, `::right::`, `::default::`, and for the DXOS layouts `three-cols` and `two-by-two` also `::middle::`, `::bottom-left::` and `::bottom-right::`; notes as the slide's last HTML comment.
+  req F-6.2: The layouts are default, cover, center, section, intro, end, fact, statement, quote, two-cols, two-cols-header, three-cols, two-by-two, image, image-left, image-right, full and none.
   req F-6.3:
     when: a slide names an unknown layout
     then: it renders with default, no error is shown, and a validation issue is reported
@@ -1171,6 +1171,14 @@ decision D-56: A slide can drop the padding around an embedded object, so the ob
   by: user:richburdon
   affects: [F-8.5]
   why: An embedded object (a drawing, a map, an image) reads better edge to edge than inset in a padded column.
+```
+
+```mdl
+decision D-57: The 2 × 2 layout is named `two-by-two`, not `grid`. Supersedes the name in [D-53].
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [F-6.1, F-6.2, SlideLayouts]
+  why: It matches the name dxos/dxos#14188 gives the same layout, and `grid` already names the presentation's thumbnail view.
 ```
 
 ---

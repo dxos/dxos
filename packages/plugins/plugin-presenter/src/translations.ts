@@ -48,7 +48,7 @@ export const translations = [
         'layout.two-cols.label': 'Two columns',
         'layout.two-cols-header.label': 'Titled columns',
         'layout.three-cols.label': 'Three columns',
-        'layout.grid.label': 'Grid (2 × 2)',
+        'layout.two-by-two.label': 'Two by two',
         'layout.image.label': 'Image',
         'layout.image-left.label': 'Image left',
         'layout.image-right.label': 'Image right',

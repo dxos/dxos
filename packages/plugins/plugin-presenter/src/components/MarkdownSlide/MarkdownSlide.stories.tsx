@@ -148,6 +148,54 @@ export const TwoColsHeader = layoutStory(
   'Left column',
 );
 
+export const ThreeCols = layoutStory(
+  'three-cols',
+  slide(
+    { layout: 'three-cols' },
+    '# One',
+    '',
+    '- first',
+    '',
+    '::middle::',
+    '',
+    '# Two',
+    '',
+    '- second',
+    '',
+    '::right::',
+    '',
+    '# Three',
+    '',
+    'Third column',
+  ),
+  '[data-slot="right"]',
+  'Third column',
+);
+
+export const TwoByTwo = layoutStory(
+  'two-by-two',
+  slide(
+    { layout: 'two-by-two' },
+    '# One',
+    '',
+    '::right::',
+    '',
+    '# Two',
+    '',
+    '::bottom-left::',
+    '',
+    '# Three',
+    '',
+    '::bottom-right::',
+    '',
+    '# Four',
+    '',
+    'Fourth region',
+  ),
+  '[data-slot="bottom-right"]',
+  'Fourth region',
+);
+
 export const Image = layoutStory('image', slide({ layout: 'image', image: IMAGE }, '# Over image'), 'h1', 'Over image');
 
 /** Text over a photo gets a scrim; a content-free image slide does not. */

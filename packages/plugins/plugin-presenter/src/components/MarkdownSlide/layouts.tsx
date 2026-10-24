@@ -134,8 +134,8 @@ const ThreeColsLayout = ({ slots, frontmatter }: LayoutProps) => {
   );
 };
 
-const GridLayout = ({ slots }: LayoutProps) => (
-  <Frame name='grid' className={mx('grid grid-cols-2 grid-rows-2 gap-x-16 gap-y-12', theme.padding)}>
+const TwoByTwoLayout = ({ slots }: LayoutProps) => (
+  <Frame name='two-by-two' className={mx('grid grid-cols-2 grid-rows-2 gap-x-16 gap-y-12', theme.padding)}>
     <Slot name='default'>
       {slots.default}
       {slots.left}
@@ -190,7 +190,7 @@ const NoneLayout = ({ slots }: LayoutProps) => (
   </Frame>
 );
 
-/** One component per Slidev built-in layout, with the same names and slots, plus `three-cols` and `grid` (2 × 2). */
+/** One component per Slidev built-in layout, with the same names and slots, plus `three-cols` and `two-by-two`. */
 export const layouts: Record<LayoutName, Layout> = {
   'default': DefaultLayout,
   'cover': vertical({ name: 'cover', className: emphasis }),
@@ -204,7 +204,7 @@ export const layouts: Record<LayoutName, Layout> = {
   'two-cols': TwoColsLayout,
   'two-cols-header': TwoColsHeaderLayout,
   'three-cols': ThreeColsLayout,
-  'grid': GridLayout,
+  'two-by-two': TwoByTwoLayout,
   'image': ImageLayout,
   'image-left': ImageLeftLayout,
   'image-right': ImageRightLayout,

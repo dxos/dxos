@@ -8,13 +8,13 @@ import { slideTokens } from './tokens.ts';
 
 /**
  * The slots of each layout with more than one, in reading order; content before the first marker goes to `default`.
- * `two-cols`, `three-cols` and `grid` also take `::left::` into their first region, as Slidev's `two-cols` does.
+ * `two-cols`, `three-cols` and `two-by-two` also take `::left::` into their first region, as Slidev's `two-cols` does.
  */
 export const LAYOUT_SLOTS: Partial<Record<LayoutName, readonly SlotName[]>> = {
   'two-cols': ['default', 'right'],
   'two-cols-header': ['default', 'left', 'right'],
   'three-cols': ['default', 'middle', 'right'],
-  'grid': ['default', 'right', 'bottom-left', 'bottom-right'],
+  'two-by-two': ['default', 'right', 'bottom-left', 'bottom-right'],
 };
 
 /** True when the layout has more than one slot, so a slot marker means something. */
