@@ -3,7 +3,7 @@
 //
 
 import * as Atom from 'effect/reactivity/Atom';
-import React, { type KeyboardEvent, useMemo, useRef, useState } from 'react';
+import React, { type KeyboardEvent, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { EDITOR_TOOLBAR_INSERT_GROUP } from '@dxos/react-ui-editor';
 import { ObjectPicker } from '@dxos/react-ui-form';
@@ -208,7 +208,9 @@ export const useSlideInsertActions = ({
   const { t } = Hooks.useTranslation(meta.profile.key);
   // The handlers change every render; read through a ref so the graph is rebuilt only when what it shows changes.
   const handlers = useRef({ onInsert, onObjectsOpenChange, onInsertObject });
-  handlers.current = { onInsert, onObjectsOpenChange, onInsertObject };
+  useLayoutEffect(() => {
+    handlers.current = { onInsert, onObjectsOpenChange, onInsertObject };
+  });
 
   return useMemo(
     () =>
