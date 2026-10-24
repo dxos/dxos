@@ -1,5 +1,65 @@
 # @dxos/plugin-magazine
 
+## 0.17.0
+
+### Minor Changes
+
+- f0cc5e6: Add the Reading Room space template: three illustrated feeds with article bodies and a curated Weekend Reading magazine.
+- 3b37cd1: Space templates now run in the new space's process: `SpaceOperation.ApplyTemplate` applies them, so a template's `build` can schedule operations. Breaking: `SpaceTemplate.apply` returns an `Effect` (requiring `Operation.Service`) instead of a `Promise`, and `SampleSpace.Definition`, `applyTo` and `buildArchive` take an `R` type parameter for what `build` needs. The magazine plugin adds an AI Briefing template with five live AI news feeds and a magazine that curates itself after creation, and feed and magazine cards share one layout.
+
+### Patch Changes
+
+- Updated dependencies [710da43]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [f142d06]
+- Updated dependencies [e343467]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [13bc40d]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [49df146]
+- Updated dependencies [074e3e6]
+- Updated dependencies [a843e27]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [80c25fe]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [e1d537b]
+- Updated dependencies [df65316]
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/plugin-space@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/assistant-toolkit@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/plugin-client@0.17.0
+  - @dxos/plugin-attention@0.17.0
+  - @dxos/plugin-routine@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/react-ui-components@0.17.0
+  - @dxos/react-ui-markdown@0.17.0
+  - @dxos/react-ui-masonry@0.17.0
+  - @dxos/react-ui-mosaic@0.17.0
+  - @dxos/echo-react@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/markdown@0.17.0
+  - @dxos/ui-theme@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

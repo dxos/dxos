@@ -1,5 +1,51 @@
 # @dxos/plugin-navtree
 
+## 0.17.0
+
+### Patch Changes
+
+- 41413e4: A space without a colour of its own shows the same colour in the sidebar as on its pills in the contact list: both hash the space id.
+- Updated dependencies [710da43]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [f142d06]
+- Updated dependencies [e343467]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [49df146]
+- Updated dependencies [a843e27]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [80c25fe]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [e1d537b]
+- Updated dependencies [c1c6cf4]
+- Updated dependencies [6f27147]
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/react-ui-list@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/plugin-attention@0.17.0
+  - @dxos/plugin-deck@0.17.0
+  - @dxos/plugin-graph@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/react-ui-search@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/graph@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/react-focus@0.17.0
+  - @dxos/lit-ui@0.17.0
+  - @dxos/debug@0.17.0
+  - @dxos/ui-theme@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

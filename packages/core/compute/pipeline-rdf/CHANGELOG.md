@@ -1,5 +1,21 @@
 # @dxos/pipeline-rdf
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [768db81]
+  - @dxos/keys@0.17.0
+  - @dxos/ai@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/sql-sqlite@0.17.0
+  - @dxos/pipeline@0.17.0
+  - @dxos/sparql-sqlite@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

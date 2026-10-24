@@ -1,5 +1,47 @@
 # @dxos/code-index
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [82f2242]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [9d1d6f0]
+- Updated dependencies [f142d06]
+- Updated dependencies [e343467]
+- Updated dependencies [1302e04]
+- Updated dependencies [98db701]
+- Updated dependencies [6eb949e]
+- Updated dependencies [39eb10b]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [592fdad]
+- Updated dependencies [074e3e6]
+- Updated dependencies [0166448]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [bdb73fb]
+- Updated dependencies [d00cc85]
+- Updated dependencies [df65316]
+  - @dxos/diagram@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/react-ui-chat@0.17.0
+  - @dxos/plugin-illustrator@0.17.0
+  - @dxos/react-ui-assistant@0.17.0
+  - @dxos/react-ui-feed@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/ui-editor@0.17.0
+  - @dxos/react-ui-markdown@0.17.0
+  - @dxos/ai@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/sql-sqlite@0.17.0
+  - @dxos/node-std@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/vite-plugin-icons@0.17.0
+  - @dxos/vite-plugin-import-source@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

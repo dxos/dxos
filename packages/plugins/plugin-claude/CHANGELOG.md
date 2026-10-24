@@ -1,5 +1,83 @@
 # @dxos/plugin-claude
 
+## 0.17.0
+
+### Minor Changes
+
+- f55e992: GitHub and Linear connections now give the assistant their MCP server's tools, acting as whoever the connection signs in as, and any other MCP server can be added as a Custom MCP Server connection. Each chat can turn a connection's MCP server off, and the agent can add one with the Skill Manager. The Browser and DXOS Introspect servers are built in: plugins contribute them (`AppCapabilities.McpServer`), they live in the registry rather than a space, and each chat turns them on as its skills need them. A chat in code mode calls its connections' MCP tools from its code, and Claude Code gets the chat's connections too, with each credential kept in Composer.
+
+  Breaking:
+
+  - `Connection.accessToken` is optional, so code reading it must handle a connection with no credential (`Connection.getAccessToken` asserts one).
+  - `Skill.mcpServers` is removed: a skill carries instructions and tools, and its servers come from connections.
+  - An MCP server's tools are offered to the agent as `mcp__<connection>__<tool>` (for example `mcp__weather__get_weather`), as other MCP hosts name them; instructions that name a tool by its bare name should name the prefixed one.
+  - The `McpServer` ECHO type (`@dxos/compute/McpServer`) is removed without a migration. Servers stored that way are no longer connected; add them again as Custom MCP Server connections.
+
+### Patch Changes
+
+- c229a28: Claude Code (cloud) now runs only with a Claude subscription OAuth token and is never lent an Anthropic API key; a space that holds only an API key lends no Claude credential.
+- Updated dependencies [d65fd2a]
+- Updated dependencies [6f6547f]
+- Updated dependencies [710da43]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [9d1d6f0]
+- Updated dependencies [f142d06]
+- Updated dependencies [d105c19]
+- Updated dependencies [e343467]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [a245692]
+- Updated dependencies [f10c1dc]
+- Updated dependencies [13bc40d]
+- Updated dependencies [a1c19cc]
+- Updated dependencies [853af68]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [592fdad]
+- Updated dependencies [49df146]
+- Updated dependencies [ece15ab]
+- Updated dependencies [074e3e6]
+- Updated dependencies [f55e992]
+- Updated dependencies [85ec7e0]
+- Updated dependencies [a843e27]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [80c25fe]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [df65316]
+  - @dxos/edge-client@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/plugin-assistant@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/assistant@0.17.0
+  - @dxos/plugin-projects@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/compute-runtime@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/edge-compute@0.17.0
+  - @dxos/plugin-connector@0.17.0
+  - @dxos/plugin-client@0.17.0
+  - @dxos/client@0.17.0
+  - @dxos/agent-runtime@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/mcp-server@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/mcp-client@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

@@ -1,5 +1,29 @@
 # @dxos/echo
 
+## 0.17.0
+
+### Minor Changes
+
+- a70fb5a: Live queries now answer from loaded objects before a write returns and check every index answer against local state: traversal hits are revalidated by the edges that reached them, aggregate counts follow local writes, property orders apply across local and index results, and feed writes appear at once. Query entries gain `resolution.version` and `resolution.verified`, the host answers from its index copies instead of loading documents where it can, and `markMilestone` in `@dxos/util` draws startup milestones on the DevTools timeline.
+- df65316: After an upgrade that migrates or rebuilds the ECHO index, Composer keeps its boot screen up with progress until the data is usable, and spaces load without a reload. Supporting this: `Client.indexStatus` and `Client.indexActivity` report index work, boot-path timeouts fail only once that work stops making progress, a `Resource` whose open failed can be opened again, a plugin can hold the boot loader with `Capabilities.BootGate`, and feed index rebuilds no longer skip blocks.
+
+### Patch Changes
+
+- 074e3e6: Deleting an identity in place no longer leaves feed index cursors without their stored token, which made every index pass fail with `Cursor token mismatch` after the next restart and kept every space on the device from opening. The wipe now waits for the index pass under way and drops the feed store's cached tokens (`EchoHost.wipeStorage`, `FeedStore.resetCaches`). A profile already in that state recovers: the indexer reads a feed again from the start when its cursor was issued by another store (`FeedStore.isCursorCurrent`). A failed index pass no longer closes the ECHO host for the rest of the session: it is retried with backoff, and a caller waiting on the index (such as `db.flush()`) fails with `IndexPassFailedError` instead of resolving as if its writes were indexed.
+- 2cebedc: A database client that is never closed no longer stays in memory for the life of a Cloudflare Workers isolate: the client registers its `pagehide` listener only where a page exists.
+- Updated dependencies [768db81]
+  - @dxos/keys@0.17.0
+  - @dxos/echo-protocol@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/blob@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/debug@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

@@ -1,5 +1,19 @@
 # @dxos/diagram
 
+## 0.17.0
+
+### Minor Changes
+
+- 82f2242: A laid-out diagram opened in the Canvas editor ("Edit in Canvas") now draws with the same renderer as its SVG file: `SvgFile` builds a `Markup` tree (`sceneTree`, `elementMarkup`, `markerDefs`, `connectorElements`) that `@dxos/react-ui-canvas`'s new `diagram` node type and diagram connectors render, keeping the layout's bends, group tints, colors, fonts and markers; a connector whose box moves re-routes with the layout's own router (`UmlGrid.rerouteConnector`).
+- 1302e04: `@dxos/diagram` adds `diagramPreview()`, a CodeMirror extension that renders every ` ```diagram ` fence in a markdown document as its laid-out diagram, showing the source again while the selection is inside the fence; `renderDiagram(source)` returns the standalone SVG and its size.
+
+### Patch Changes
+
+- 39eb10b: Exported diagram SVGs now render correctly outside browsers: tinted group frames and hollow markers carry plain-color fallbacks, so librsvg, sharp and ImageMagick no longer paint them solid black or see-through.
+- @dxos/util@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

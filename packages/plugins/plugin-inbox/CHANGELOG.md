@@ -1,5 +1,91 @@
 # @dxos/plugin-inbox
 
+## 0.17.0
+
+### Patch Changes
+
+- 8d7d5e1: A run that continues with `Operation.runAgain()` shows as one run instead of one per invocation. `Trace.Meta.runId` holds the pid of the run's first invocation, and the trigger dispatcher stamps it on every retry. The routine's run history lists the chain as one run whose status follows its latest invocation, and labels a yielded run "Continuing". The trace graph draws a continuing run as a branch with one commit per invocation, then one commit once it finishes, or once the span timeout passes without a continuation. The sync progress meter keeps one bar across every run: mail sync sizes the remaining backfill on each run (Gmail's `resultSizeEstimate`, JMAP's `calculateTotal`), the progress sink holds that total across the gap between runs, and the count is the messages each run keeps.
+- Updated dependencies [710da43]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [f142d06]
+- Updated dependencies [d105c19]
+- Updated dependencies [e343467]
+- Updated dependencies [68d1c38]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f10c1dc]
+- Updated dependencies [13bc40d]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [592fdad]
+- Updated dependencies [49df146]
+- Updated dependencies [074e3e6]
+- Updated dependencies [a843e27]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [80c25fe]
+- Updated dependencies [de25be8]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [bdb73fb]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [e1d537b]
+- Updated dependencies [df65316]
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/react-ui-editor@0.17.0
+  - @dxos/plugin-space@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/plugin-markdown@0.17.0
+  - @dxos/assistant@0.17.0
+  - @dxos/echo-client@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/ui-editor@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/plugin-connector@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/plugin-client@0.17.0
+  - @dxos/client@0.17.0
+  - @dxos/plugin-graph@0.17.0
+  - @dxos/plugin-routine@0.17.0
+  - @dxos/plugin-settings@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/react-ui-calendar@0.17.0
+  - @dxos/react-ui-card@0.17.0
+  - @dxos/react-ui-components@0.17.0
+  - @dxos/react-ui-html@0.17.0
+  - @dxos/react-ui-mosaic@0.17.0
+  - @dxos/react-ui-query@0.17.0
+  - @dxos/react-ui-search@0.17.0
+  - @dxos/extractor@0.17.0
+  - @dxos/extractor-lib@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/pipeline-email@0.17.0
+  - @dxos/echo-doc@0.17.0
+  - @dxos/echo-react@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/ai@0.17.0
+  - @dxos/echo-query@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/graph@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/react-hooks@0.17.0
+  - @dxos/pipeline@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/markdown@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/ui-types@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

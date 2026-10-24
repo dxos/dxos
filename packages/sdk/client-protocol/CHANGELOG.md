@@ -1,5 +1,35 @@
 # @dxos/client-protocol
 
+## 0.17.0
+
+### Minor Changes
+
+- 0d3e4cf: `ClientServicesProvider.reconnected` now carries `{ isOwner }`, and Composer no longer reloads a tab that reconnects to a worker it just became leader of, which ended an endless reload loop between two open tabs. The client's blob store follows the services to the new worker after such a reconnect instead of calling the closed one.
+
+### Patch Changes
+
+- Updated dependencies [68d1c38]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [ece15ab]
+- Updated dependencies [074e3e6]
+- Updated dependencies [de25be8]
+- Updated dependencies [2cebedc]
+- Updated dependencies [768db81]
+- Updated dependencies [df65316]
+  - @dxos/echo-client@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/worker-framework@0.17.0
+  - @dxos/credentials@0.17.0
+  - @dxos/rpc@0.17.0
+  - @dxos/rpc-tunnel@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

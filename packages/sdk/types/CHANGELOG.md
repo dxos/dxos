@@ -1,5 +1,30 @@
 # @dxos/types
 
+## 0.17.0
+
+### Minor Changes
+
+- 592fdad: The Hello Worker space template now starts from a partial plan for the assistant to finish. It seeds a `Spec` object holding a partly written `.mdl` spec (Deus), four planned features on the project's feature map that cite it, and three planning tasks: complete the spec, draw its architecture, and plan the implementation as tasks. A feature's spec row opens the spec in the space. The `Spec` type moves from plugin-code to `@dxos/types` so any plugin can create one; its typename (`org.dxos.type.spec`) is unchanged, so existing specs keep working.
+- ed0d367: `Repo` now also models repositories hosted by EDGE, marked by an `edge.dxos.network` foreign key (`Repo.EDGE_SOURCE`, `Repo.edgeId`, `Repo.makeEdge`), and `AiContext.boundObjects` reads the objects a conversation currently binds.
+
+### Patch Changes
+
+- Updated dependencies [68d1c38]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [074e3e6]
+- Updated dependencies [de25be8]
+- Updated dependencies [2cebedc]
+- Updated dependencies [df65316]
+  - @dxos/echo-client@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/random@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

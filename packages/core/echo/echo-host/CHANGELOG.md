@@ -1,5 +1,49 @@
 # @dxos/echo-host
 
+## 0.17.0
+
+### Minor Changes
+
+- 2ed9310: A paged feed read (`orderBy(Order.natural(…)).skip(k).limit(n)` over a feed) now loads only the `n` documents it returns instead of loading `k + n` and dropping `k`: the planner folds the skip into the feed scan, and the index applies it as `OFFSET` before any document loads.
+
+  `QueryPlan.FeedScan` gains `skip`, and the plan no longer carries a `SkipStep` after such a scan, so a consumer that executes plans itself must pass `feedScan.skip` into its window (`NaturalQueueWindow` in `@dxos/index-core` gains `skip`) or it returns the first `n` rows instead of the page.
+
+### Patch Changes
+
+- 3058ee6: Update `@automerge/automerge-subduction` to 0.21.0 and `@automerge/automerge-repo` to 2.6.0-subduction.49.
+- b601d34: Quarantine a document whose load runs out of memory only when its stored bytes hold at least 100K ops, counted without loading it, so a small document that fails because the heap is already full is left alone. Log the retirements a space directory re-applies on every open at debug level.
+- Updated dependencies [d65fd2a]
+- Updated dependencies [6f6547f]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [a245692]
+- Updated dependencies [ece15ab]
+- Updated dependencies [074e3e6]
+- Updated dependencies [2cebedc]
+- Updated dependencies [768db81]
+- Updated dependencies [df65316]
+  - @dxos/edge-client@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/index-core@0.17.0
+  - @dxos/echo-protocol@0.17.0
+  - @dxos/feed@0.17.0
+  - @dxos/teleport@0.17.0
+  - @dxos/teleport-extension-automerge-replicator@0.17.0
+  - @dxos/crypto@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/tracing@0.17.0
+  - @dxos/sql-sqlite@0.17.0
+  - @dxos/debug@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+  - @dxos/typings@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

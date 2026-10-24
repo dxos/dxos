@@ -1,5 +1,31 @@
 # @dxos/plugin-s3
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [710da43]
+- Updated dependencies [e8029c3]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [853af68]
+- Updated dependencies [49df146]
+- Updated dependencies [074e3e6]
+- Updated dependencies [2d585c2]
+- Updated dependencies [2cebedc]
+- Updated dependencies [768db81]
+- Updated dependencies [df65316]
+  - @dxos/app-framework@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/compute-runtime@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/plugin-connector@0.17.0
+  - @dxos/plugin-client@0.17.0
+  - @dxos/plugin-file@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/blob@0.17.0
+  - @dxos/errors@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

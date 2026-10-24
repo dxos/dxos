@@ -1,5 +1,39 @@
 # @dxos/ui-editor
 
+## 0.17.0
+
+### Minor Changes
+
+- bdb73fb: `diffView` takes `orientation: 'changes'` to read the editor's document as the newer version, with a line-first diff that stays precise on long documents, and `collapseUnchanged` to fold unchanged runs. Smart links on a lattice route about six times faster with the same result, and dragging a node no longer re-runs the graph's arrangement.
+
+### Patch Changes
+
+- Updated dependencies [68d1c38]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [ece15ab]
+- Updated dependencies [074e3e6]
+- Updated dependencies [de25be8]
+- Updated dependencies [2cebedc]
+- Updated dependencies [768db81]
+- Updated dependencies [df65316]
+  - @dxos/echo-client@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/client@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/echo-doc@0.17.0
+  - @dxos/display-name@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/nlp@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/ui@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/ui-types@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

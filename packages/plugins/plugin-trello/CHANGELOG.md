@@ -1,5 +1,41 @@
 # @dxos/plugin-trello
 
+## 0.17.0
+
+### Patch Changes
+
+- 0a14251: Connector syncs report a progress meter. `Progress.withReporter` (with `makeReporter` and `createSyncKey`) starts a meter for one run and ends it with the run's outcome. Trello, Linear, GitHub, Slack and Google Contacts report one meter per synced board, team, repo, channel or group, with the exact total set from the listing before anything is processed. The magazine feed sync's total is now the posts it adds rather than every post it fetched. Google Calendar reports a count of events synced, since its API returns no total.
+- Updated dependencies [710da43]
+- Updated dependencies [e8029c3]
+- Updated dependencies [f142d06]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [49df146]
+- Updated dependencies [ece15ab]
+- Updated dependencies [074e3e6]
+- Updated dependencies [a843e27]
+- Updated dependencies [2d585c2]
+- Updated dependencies [80c25fe]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [df65316]
+  - @dxos/app-framework@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/plugin-connector@0.17.0
+  - @dxos/plugin-kanban@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

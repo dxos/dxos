@@ -1,5 +1,31 @@
 # @dxos/plugin-heygen
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [d65fd2a]
+- Updated dependencies [6f6547f]
+- Updated dependencies [710da43]
+- Updated dependencies [e8029c3]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [a245692]
+- Updated dependencies [49df146]
+- Updated dependencies [074e3e6]
+- Updated dependencies [2d585c2]
+- Updated dependencies [2cebedc]
+- Updated dependencies [768db81]
+- Updated dependencies [df65316]
+  - @dxos/edge-client@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/plugin-connector@0.17.0
+  - @dxos/plugin-studio@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

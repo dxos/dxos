@@ -1,5 +1,46 @@
 # @dxos/echo-client-e2e
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [3058ee6]
+- Updated dependencies [68d1c38]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [2ed9310]
+- Updated dependencies [592fdad]
+- Updated dependencies [ece15ab]
+- Updated dependencies [074e3e6]
+- Updated dependencies [a843e27]
+- Updated dependencies [b601d34]
+- Updated dependencies [de25be8]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [768db81]
+- Updated dependencies [df65316]
+  - @dxos/echo-host@0.17.0
+  - @dxos/echo-client@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/echo-panproto@0.17.0
+  - @dxos/index-core@0.17.0
+  - @dxos/echo-protocol@0.17.0
+  - @dxos/teleport@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/random@0.17.0
+  - @dxos/test-utils@0.17.0
+  - @dxos/sql-sqlite@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/perf-harness@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

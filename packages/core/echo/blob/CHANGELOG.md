@@ -1,5 +1,16 @@
 # @dxos/blob
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [768db81]
+  - @dxos/keys@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes
