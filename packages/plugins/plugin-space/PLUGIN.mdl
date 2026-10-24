@@ -486,7 +486,7 @@ feat F-2: Membership and Sharing
     then: op:SpaceOperation.ShareObject creates a delegated multi-use invitation, and the link carries it with the object's scope (the object, every object it references or links to, the space properties, and each of these objects' strong dependencies — its parent and a type stored in the space — without the dependencies' own references) and the plugins that render that scope
   req F-2.7:
     when: someone opens a share link
-    then: a member lands on the object; a non-member joins in the background without a dialog, replicates only the scope, has the plugins enabled, and lands on the object; a browser with no identity gets one first, with no welcome screen
+    then: a member lands on the object; a non-member joins in the background without a dialog, replicates only the scope, has the plugins enabled, and lands on the object as soon as the space is listed, its plank loading while the space finishes opening; a browser with no identity gets one first, with no welcome screen, and creates its own spaces only once the shared space is ready; a browser that has never run Composer starts with only the core plugins and those the link names
   req F-2.8: A space joined through a share link replicates only the documents of its scope; the guest's own client enforces this, and EDGE does not.
 ```
 
@@ -839,6 +839,25 @@ decision D-10: With the Viewer role selected, the share dialog says that Viewer 
   why: The role is recorded on the member credential but nothing checks it on a write, so a Viewer link grants edit access; the dialog must not imply otherwise.
   rejected:
     - Hide the Viewer option until enforcement exists — drops the Google-Docs layout the dialog follows, and the role is still recorded for when it is enforced.
+```
+
+```mdl
+decision D-11: Opening a share link puts the object on screen as early as possible: a browser that has never run Composer loads only the plugins the object needs, the object opens before the space has finished opening, and nothing waits on indexing.
+  date: 2026-10-24
+  by: user:mykola-vrmchk
+  affects: [F-2.7]
+```
+
+```mdl
+decision D-12: The object's plank opens once the space is listed, the article surfaces load during the join, and an identity created for the link makes its own spaces after the shared space is ready. Fills in [D-11].
+  date: 2026-10-24
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-2.7]
+  why: Measured on a fresh browser, the guest spent 3.5–4.6 s between the space being listed and ready, then 2.2–3.3 s more to load surface code and render; opening on listing overlaps the two, and the identity's two spaces queued on the worker ahead of the join for about 0.75 s.
+  rejected:
+    - Open the object once the space is ready — the surfaces start loading only after the slowest step.
+    - Skip the identity's own spaces for a guest — the guest has nowhere to create their own objects later.
 ```
 
 ---

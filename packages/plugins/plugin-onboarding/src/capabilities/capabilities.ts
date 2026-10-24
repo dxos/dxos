@@ -9,6 +9,8 @@ import { type OnboardingManager } from '../onboarding-manager.ts';
 
 export type OnboardingOptions = {
   generateDemoSpace: boolean;
+  /** Seeds a new identity's default space (README, plugin callbacks, demo space) and opens it; off for a share-link guest. */
+  defaultContent?: boolean;
 };
 
 export namespace OnboardingCapabilities {

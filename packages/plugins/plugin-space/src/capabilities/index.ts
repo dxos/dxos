@@ -50,6 +50,7 @@ export const IdentityCreated = Capability.lazyModule(
     // Runtime event: the default space is created when a local identity is created, not at startup.
     activatesOn: ClientEvents.IdentityCreated,
     environments: ['browser', 'node', 'tauri'],
+    props: (options: SpaceSchema.SpacePluginOptions) => ({ shareBoot: options.shareBoot }),
   },
   () => import('./identity-created.ts'),
 );

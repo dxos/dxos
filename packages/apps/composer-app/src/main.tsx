@@ -51,6 +51,7 @@ import {
   PARAM_MODEL,
   PARAM_PROFILER,
   PARAM_SAFE_MODE,
+  PARAM_SHARE,
   type Profiler,
   WorkerLogProcessor,
   defaultStorageIsEmpty,
@@ -628,6 +629,8 @@ const main = async () => {
     scriptedModel:
       url.searchParams.get(PARAM_MODEL) === 'scripted' &&
       (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'),
+    // A browser that has never booted Composer: the link handler enables the plugins the link names.
+    shareBoot: url.searchParams.has(PARAM_SHARE) && !Hooks.hasSavedPlugins(),
   };
 
   // `getPlugins` is synchronous: each plugin's main entry exposes only
@@ -664,7 +667,7 @@ const main = async () => {
   const plugins = [...builtinPlugins, ...remotePlugins];
   const pluginLoader = UrlLoader.make(builtinPlugins, { cache: assetCache });
   const onPluginRemove = (id: string) => UrlLoader.uninstall(id, { cache: assetCache });
-  const defaults = getDefaults(conf);
+  const defaults = conf.shareBoot ? [] : getDefaults(conf);
 
   const edgeUrl = config.values.runtime?.services?.edge?.url;
   const pluginRegistryProvider = edgeUrl ? new Registry.EdgePluginProvider(new EdgeHttpClient(edgeUrl)) : undefined;
@@ -755,7 +758,8 @@ const main = async () => {
       pluginRegistryProvider,
       plugins,
       defaults,
-      cacheEnabled: true,
+      // Not saved for a share boot, so the guest's next visit starts with the full default set.
+      cacheEnabled: !conf.shareBoot,
       safeMode,
       // The useLoading state machine ticks every `debounce` ms (Loading → FadeIn → FadeOut → Done),
       // so the gap between `Startup` activated and `<Placeholder>` dismissed is at least 2× debounce.

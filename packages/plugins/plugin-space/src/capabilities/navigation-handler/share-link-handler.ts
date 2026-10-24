@@ -4,8 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Client } from '@dxos/client';
@@ -76,6 +78,7 @@ export const handleShareLink = (url: URL): Effect.Effect<void, never, Capability
       duration: 15_000,
     });
     // Detached: URL projection waits on every handler, and the app should render while the join runs.
+    yield* Effect.forkDetach(preloadArticleSurfaces);
     yield* Effect.forkDetach(joinAndOpen(client, invitation, spaceId, payload).pipe(Effect.catch(reportFailure)));
   }).pipe(Effect.catch(reportFailure));
 
@@ -102,6 +105,15 @@ const enablePlugins = Effect.fnUntraced(function* (ids: readonly string[]) {
   }
 });
 
+/**
+ * Loads the code an opened object renders with while the join leaves the page idle, rather than once the object
+ * opens and its plank first asks for it.
+ */
+const preloadArticleSurfaces: Effect.Effect<void, never, Capability.Service> = Effect.gen(function* () {
+  const manager = yield* Capability.get(Capabilities.PluginManager);
+  yield* manager.activate(ActivationEvents.SurfacesRequested(AppSurface.Article.role));
+}).pipe(Effect.catch((error) => Effect.sync(() => log.warn('article surfaces not preloaded', { error }))));
+
 /** Resolves once the client has an identity; a fresh browser gets one from onboarding. */
 const waitForIdentity = (client: Client): Effect.Effect<void> =>
   Effect.callback<void>((resume) => {
@@ -118,9 +130,9 @@ const waitForIdentity = (client: Client): Effect.Effect<void> =>
   });
 
 /**
- * Joins with the link's scope and no dialog, waits for the space, and opens the shared object. The space appearing is
- * the success signal: the invitation reports a failed attempt (EDGE refusing, a host timing out) while another path
- * still goes on to admit the guest.
+ * Joins with the link's scope and no dialog, and opens the shared object once the space is listed, so its plank loads
+ * while the space finishes opening. The space appearing is the success signal: the invitation reports a failed attempt
+ * (EDGE refusing, a host timing out) while another path still goes on to admit the guest.
  */
 const joinAndOpen = (
   client: Client,
@@ -140,20 +152,19 @@ const joinAndOpen = (
       (error) => log('share link invitation attempt failed', { error }),
     );
 
-    const space = yield* Effect.gen(function* () {
+    yield* Effect.gen(function* () {
       const space = yield* waitForSpace(client, spaceId);
+      yield* Operation.invoke(LayoutOperation.Open, {
+        subject: [GraphPath.getObjectPath(space.id, payload.typeSlug, payload.objectId)],
+        workspace: GraphPath.getSpacePath(space.id),
+        navigation: 'immediate',
+      });
       yield* Effect.tryPromise(() => space.waitUntilReady());
-      return space;
     }).pipe(
       Effect.timeout(SPACE_TIMEOUT),
       Effect.mapError((cause) => new SpaceOperationError({ message: 'The shared space did not open.', cause })),
       Effect.ensuring(Effect.sync(() => subscription.unsubscribe())),
     );
-    yield* Operation.invoke(LayoutOperation.Open, {
-      subject: [GraphPath.getObjectPath(space.id, payload.typeSlug, payload.objectId)],
-      workspace: GraphPath.getSpacePath(space.id),
-      navigation: 'immediate',
-    }).pipe(Effect.mapError((cause) => new SpaceOperationError({ cause })));
   });
 
 /** The space once the client lists it, which trails the invitation's success. */
