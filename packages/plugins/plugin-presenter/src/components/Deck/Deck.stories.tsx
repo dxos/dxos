@@ -254,6 +254,22 @@ export const Fullscreen: Story = {
   },
 };
 
+/** The overlay pager stays while the pointer rests on it, and fades once the pointer leaves. */
+export const FullscreenHover: Story = {
+  decorators: [withEmptyPlugins],
+  args: { fullscreen: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const overlay = await canvas.findByTestId('presenter.overlay');
+    await userEvent.hover(overlay);
+    // Longer than the idle time, after which an unhovered pager has faded.
+    await new Promise((resolve) => setTimeout(resolve, 2_500));
+    await expect(overlay).toHaveAttribute('data-visible', 'true');
+    await userEvent.unhover(overlay);
+    await waitFor(() => expect(overlay).toHaveAttribute('data-visible', 'false'), { timeout: 3_000 });
+  },
+};
+
 export const FullscreenKey: Story = {
   decorators: [withEmptyPlugins],
   args: { onFullscreenChange: fn() },

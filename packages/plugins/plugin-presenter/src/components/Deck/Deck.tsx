@@ -349,17 +349,20 @@ Deck.displayName = 'Deck';
 
 type OverlayPagerProps = { index: number; count: number; onChange: (index: number) => void };
 
-/** Bottom pager that fades out after the pointer rests, and returns on movement. */
+/** Bottom pager that fades out after the pointer rests, and returns on movement; it stays while the pointer is on it. */
 const OverlayPager = ({ index, count, onChange }: OverlayPagerProps) => {
   const [visible, setVisible] = useState(true);
 
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const hovered = useRef(false);
 
   // Window-level so movement over the slide (not just the overlay) wakes it; each move restarts the idle timer.
   useEffect(() => {
     const schedule = () => {
       clearTimeout(timer.current);
-      timer.current = setTimeout(() => setVisible(false), OVERLAY_IDLE_DURATION);
+      if (!hovered.current) {
+        timer.current = setTimeout(() => setVisible(false), OVERLAY_IDLE_DURATION);
+      }
     };
     const show = () => {
       setVisible(true);
@@ -377,6 +380,16 @@ const OverlayPager = ({ index, count, onChange }: OverlayPagerProps) => {
     <div
       data-testid='presenter.overlay'
       data-visible={visible}
+      onPointerEnter={() => {
+        hovered.current = true;
+        clearTimeout(timer.current);
+        setVisible(true);
+      }}
+      onPointerLeave={() => {
+        hovered.current = false;
+        clearTimeout(timer.current);
+        timer.current = setTimeout(() => setVisible(false), OVERLAY_IDLE_DURATION);
+      }}
       className='absolute bottom-4 left-1/2 z-[300] flex -translate-x-1/2 items-center gap-4 rounded-md bg-black/50 px-4 py-1 text-white transition-opacity duration-500 data-[visible=false]:opacity-0 data-[visible=false]:pointer-events-none'
     >
       <Pager index={index} count={count} onChange={onChange} />
