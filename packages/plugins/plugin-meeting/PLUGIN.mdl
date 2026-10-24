@@ -444,6 +444,46 @@ test QA-2: A four-person meeting call, with notes taken during it
     - name: Remove the simulated participants and the meeting
       invoke: org.dxos.operation.calls.setSimulatedParticipants { participants: [] }
       expect: the call manager has no simulated participants
+
+test QA-3: Two people meet in one Meeting's call, with live transcription
+  desc: |
+    Alice and Bob, each with their own identity, share a space and open the same Meeting. Both join its call over
+    RealtimeKit, each sees and hears the other, Alice turns transcription on, they talk, and the transcript fills in on
+    both screens. Each person's camera and microphone play a pre-recorded track, so the test needs no camera, but it
+    needs a real EDGE and RealtimeKit: this is the test that the call's media and transcript cross between two devices.
+  actors: agent
+  covers: [F-1.1, F-1.2, T-1]
+  status: unverified
+  given:
+    - two identities on separate devices (browser contexts), with display names "Alice" and "Bob"
+    - space: "Launch sync", created by Alice; Bob has joined it by invitation
+    - plugin-calls and plugin-meeting are enabled on both
+    - the runtime config names an EDGE that serves `/calls/rooms/join`, and its RealtimeKit preset allows transcription
+    - tracks: `alice.webm` and `bob.webm` of equal length, made by `autocue/two-peer-tracks.py`; each device's camera
+      and microphone play its own (`fake-media.mjs`), and `timeline.json` gives each line's speaker, start and text
+    - meeting: a Meeting named "Meetings plugin launch" in the space, open and active on both devices
+  steps:
+    - name: Open the call
+      do: On both devices, open the Call tab, turn the camera on and unmute.
+      expect: each shows its own camera preview and a Join button
+    - name: Alice joins
+      do: On Alice's device, click Join.
+      expect: Alice's grid shows her own tile, and the toolbar offers Leave
+    - name: Bob joins
+      do: On Bob's device, click Join.
+      expect: each grid shows two tiles, Alice and Bob, and each plays the other's video
+    - name: Start transcription
+      do: On Alice's device, choose Start transcription; on both, open the meeting companion's Transcript tab.
+      expect: the transcript tab is open beside the call on both devices
+    - name: They talk
+      do: Start both tracks on one cue and watch until the last line ("Perfect. I'll put that in the meeting notes.").
+      expect: |
+        each line appears in both transcripts, attributed to its speaker, among them Bob's "I can have the release
+        notes ready by Friday."
+      note: Each device writes only its own speaker's segments, so a line reaches the other device through the space.
+    - name: Bob leaves
+      do: On Bob's device, click Leave.
+      expect: Bob's call returns to the lobby, and Bob's tile leaves Alice's grid
 ```
 
 ---
@@ -512,6 +552,16 @@ decision D-7: A meeting payload without `transcriptDxn` unbinds the call's trans
   affects: [F-3.5]
   why: Selecting another meeting mid-call publishes only its id, and the previous meeting's feed would otherwise keep receiving segments.
   source: https://github.com/dxos/dxos/pull/14179
+```
+
+```mdl
+decision D-8: QA-3 tests a two-person Meeting call across two devices over RealtimeKit, with a real EDGE, each device's camera and microphone playing its own pre-recorded track, and the transcript checked on both.
+  date: 2026-10-24
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [QA-3]
+  why: QA-2's colleagues are simulated on one device, so no test covered media and transcript crossing between two devices.
+  source: https://github.com/dxos/dxos/pull/14186
 ```
 
 ## Appendix: Extension Definitions
