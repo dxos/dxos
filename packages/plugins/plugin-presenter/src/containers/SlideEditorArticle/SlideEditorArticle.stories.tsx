@@ -209,6 +209,24 @@ export const AtomicMarker: Story = {
   },
 };
 
+/** Typing a `layout:` value offers the matching layouts with their names; picking one changes the slide. */
+export const LayoutCompletion: Story = {
+  args: { slide: 0 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const editor = await canvas.findByRole('textbox', undefined, LOAD_TIMEOUT);
+    // A synthetic click has no coordinates for CodeMirror to place the cursor, so it is moved by key instead.
+    await userEvent.click(await canvas.findByText(editorLine('- Sync is peer to peer')));
+    // To the end of `layout: two-cols`, then replace the value.
+    await userEvent.keyboard('{ArrowUp>8/}{ArrowDown}{End}{Backspace>8/}q');
+    const option = await within(document.body).findByRole('option', { name: /quote/ });
+    await expect(option).toHaveTextContent('Quote');
+    await userEvent.click(option);
+    await waitFor(() => expect(editor.textContent).toContain('layout: quote'));
+    await waitFor(() => expect(preview(canvasElement).queryByText('Collaboration')).toBeNull());
+  },
+};
+
 /** Clicking an element in the preview puts the caret at the start of its source. */
 export const SourceClick: Story = {
   args: { slide: 1 },

@@ -157,6 +157,7 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@codemirror/autocomplete": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
     "@dxos/app-framework": "workspace:*",

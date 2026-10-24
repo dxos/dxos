@@ -15287,6 +15287,9 @@ importers:
 
   packages/plugins/plugin-presenter:
     dependencies:
+      '@codemirror/autocomplete':
+        specifier: 'catalog:'
+        version: 6.20.3
       '@codemirror/state':
         specifier: 'catalog:'
         version: 6.7.6

@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+export * from './completion.ts';
 export * from './edit.ts';
 export * from './frontmatter.ts';
 export * from './parse.ts';

@@ -45,9 +45,11 @@ import {
   setFrontmatter,
   surfaceSnippet,
 } from '#markdown';
+import { meta } from '#meta';
 import { Presentation, PresenterOperation, SlideEditorViewState, SlideViewState } from '#types';
 
 import { SlidePreview } from '../SlidePreviewArticle/SlidePreview.tsx';
+import { slideCompletion } from './slide-completion.ts';
 import { slideHighlight } from './slide-highlight.ts';
 
 export type SlideEditorArticleProps = AppSurface.ObjectArticleProps<Text.Text>;
@@ -101,6 +103,7 @@ type SlideEditorContentProps = Pick<SlideEditorArticleProps, 'subject'>;
 
 /** The markdown editor; publishes its cursor and applies the preview's selection requests. */
 const SlideEditorContent = ({ subject }: SlideEditorContentProps) => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const themeMode = UiHooks.useThemeMode();
   const registry = useContext(RegistryContext);
   const { controller, state: toolbarState } = useEditorContext('SlideEditorContent');
@@ -115,6 +118,7 @@ const SlideEditorContent = ({ subject }: SlideEditorContentProps) => {
       createThemeExtensions({ themeMode, slots: documentSlots }),
       createMarkdownExtensions(),
       slideHighlight(),
+      slideCompletion({ describeLayout: (layout) => t(`layout.${layout}.label`) }),
       // As the markdown editor: the fold gutter (which also sets the text's inset) and the auto-hiding scrollbar.
       folding(),
       scrollbarAutohide(),
@@ -129,7 +133,7 @@ const SlideEditorContent = ({ subject }: SlideEditorContentProps) => {
         }
       }),
     ],
-    [subject, themeMode, registry, toolbarState, setSync],
+    [subject, themeMode, registry, toolbarState, setSync, t],
   );
 
   // Only a new request moves the cursor, so remounting the editor does not replay the last click.
