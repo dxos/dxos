@@ -130,6 +130,28 @@ describe('FeedObjectCore', () => {
     core.dispose();
   });
 
+  test('a write is acknowledged once the store holds it, and not while an edit or capture is outstanding', ({
+    expect,
+  }) => {
+    const entity = Obj.make(TestSchema.Person, { name: 'v1' });
+    const core = new FeedObjectCore(entity, () => {});
+
+    Obj.update(entity, (entity) => {
+      entity.name = 'v2';
+    });
+    expect(core.acknowledged).toBe(false);
+
+    const { token } = core.captureForAppend();
+    expect(core.acknowledged).toBe(false);
+    core.confirmAppend(token, 'block-1');
+    expect(core.acknowledged).toBe(true);
+
+    const next = core.captureForAppend();
+    core.confirmAppend(next.token, undefined);
+    expect(core.acknowledged).toBe(true);
+    core.dispose();
+  });
+
   test('revertCapture only clears the pending slot for the write it names', ({ expect }) => {
     const entity = Obj.make(TestSchema.Person, { name: 'v1' });
     const core = new FeedObjectCore(entity, () => {});

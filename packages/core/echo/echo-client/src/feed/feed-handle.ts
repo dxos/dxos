@@ -101,8 +101,13 @@ export class FeedHandle {
   /** In-flight append RPCs, awaited by {@link waitForPendingWrites}. */
   readonly #inFlight = new Set<Promise<void>>();
 
-  /** Cores of the objects appended or edited through this handle, in the order they were first written. */
-  readonly #writtenHere = new Set<FeedObjectCore>();
+  /**
+   * Cores of the objects appended or edited through this handle, by id in the order they were first written. Held
+   * weakly, so an acknowledged write no live query shows can be collected like any other feed object.
+   */
+  readonly #writtenHere = new Map<EntityId, WeakRef<FeedObjectCore>>();
+  /** Written cores the feed service has not acknowledged, held strongly because nothing else may carry the write. */
+  readonly #unacknowledged = new Set<FeedObjectCore>();
 
   /**
    * Settles when the last send does: each send starts after the one before it, because the store orders
@@ -318,17 +323,30 @@ export class FeedHandle {
    * index answer does; keeping one past its acknowledgement keeps it from vanishing until the index catches up.
    */
   localWrites(): Entity.Unknown[] {
-    return [...this.#writtenHere].filter((core) => !core.deleted).map((core) => core.entity);
+    const objects: Entity.Unknown[] = [];
+    for (const [id, ref] of this.#writtenHere) {
+      const core = ref.deref();
+      if (!core) {
+        this.#writtenHere.delete(id);
+      } else if (!core.deleted) {
+        objects.push(core.entity);
+      }
+    }
+    return objects;
   }
 
   #markWritten(core: FeedObjectCore): void {
-    this.#writtenHere.add(core);
+    const id = EntityId.make(core.entity.id);
+    if (this.#writtenHere.get(id)?.deref() !== core) {
+      this.#writtenHere.set(id, new WeakRef(core));
+    }
+    this.#unacknowledged.add(core);
   }
 
   /** The object written through this handle under `id`, if there is one. */
   getLocalWrite(id: EntityId): Entity.Unknown | undefined {
-    const core = this.#cores.get(id);
-    return core && this.#writtenHere.has(core) && !core.deleted ? core.entity : undefined;
+    const core = this.#writtenHere.get(id)?.deref();
+    return core && !core.deleted ? core.entity : undefined;
   }
 
   async delete(ids: string[]): Promise<void> {
@@ -344,6 +362,8 @@ export class FeedHandle {
         deleted.push(core.entity);
         this.#cores.delete(id);
         this.#dirtyCores.delete(core);
+        this.#writtenHere.delete(id);
+        this.#unacknowledged.delete(core);
       }
       this.#objects.delete(id);
     }
@@ -399,7 +419,12 @@ export class FeedHandle {
           },
           { timeout: RPC_TIMEOUT },
         );
-        chunk.forEach(({ core, token }, index) => core.confirmAppend(token, blocks?.[index]));
+        chunk.forEach(({ core, token }, index) => {
+          core.confirmAppend(token, blocks?.[index]);
+          if (core.acknowledged) {
+            this.#unacknowledged.delete(core);
+          }
+        });
       } catch (err) {
         this.#onAppendFailed(err, batch.slice(i));
         // A closed endpoint never retries, so the write is lost and the caller must hear it.
@@ -870,6 +895,8 @@ export class FeedHandle {
     }
     this.#cores.clear();
     this.#dirtyCores.clear();
+    this.#writtenHere.clear();
+    this.#unacknowledged.clear();
     await this._ctx.dispose();
     await this.#pushChain;
     if (unsent !== undefined) {
