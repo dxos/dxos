@@ -5,6 +5,7 @@
 import { type EditorView, EditorView as NaturalEditorView, type ViewUpdate } from '@codemirror/view';
 import { useAtomSet, useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
@@ -33,6 +34,7 @@ import {
 } from '@dxos/ui-editor';
 
 import { type BackgroundSettings, type SlideInsert, SlideToolbar, useSlideInsertActions } from '#components';
+import { type SlideSource, slideSourcesAtom } from '#deck';
 import { slideEditorSyncAtom, useObjectOptions } from '#hooks';
 import {
   LAYOUTS,
@@ -199,14 +201,20 @@ const SlideEditorToolbars = ({ subject, attendableId, previewMode }: SlideEditor
   );
 };
 
+/** Stands in for the slides of a slide with no presentation. */
+const NO_SLIDES = Atom.make<SlideSource[]>([]);
+
 /** Toolbar callbacks: each edit is one change to the editor (one undo step), the rest are navigation. */
 const useSlideActions = (subject: Text.Text, attendableId: string | undefined, view: EditorView | undefined) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const { update } = useViewStateActions(SlideEditorViewState.aspect, SlideEditorViewState.CONTEXT);
   const parent = Obj.getParent(subject);
   const presentation = Obj.instanceOf(Presentation.Presentation, parent) ? parent : undefined;
-  const [sections] = useObject(presentation, 'sections');
-  const position = sections?.findIndex((ref) => sectionId(ref.uri) === subject.id) ?? -1;
+  // The deck's slides, not the raw sections: a section whose target was deleted is no slide to move to.
+  const slides = useAtomValue(
+    useMemo(() => (presentation ? slideSourcesAtom(presentation) : NO_SLIDES), [presentation]),
+  );
+  const position = slides.findIndex((slide) => slide.id === subject.id);
   const { set: setSlideIndex } = useViewStateActions(
     SlideViewState.aspect,
     presentation ? Obj.getURI(presentation) : undefined,
@@ -236,9 +244,8 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
 
   const open = useCallback(
     (index: number) => {
-      const target = sections?.[index];
+      const id = slides[index]?.id;
       const db = Obj.getDatabase(subject);
-      const id = target && sectionId(target.uri);
       if (!presentation || !db || !id) {
         return;
       }
@@ -247,7 +254,7 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
         workspace: GraphPath.getSpacePath(db.spaceId),
       });
     },
-    [invokePromise, presentation, sections, subject],
+    [invokePromise, presentation, slides, subject],
   );
 
   return {
@@ -284,7 +291,7 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
       });
     },
     onPrevious: position > 0 ? () => open(position - 1) : undefined,
-    onNext: sections && position >= 0 && position < sections.length - 1 ? () => open(position + 1) : undefined,
+    onNext: position >= 0 && position < slides.length - 1 ? () => open(position + 1) : undefined,
     onPresent:
       presentation && position >= 0
         ? () => {
@@ -293,10 +300,4 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
           }
         : undefined,
   };
-};
-
-/** The entity id a section's ref points at. */
-const sectionId = (uri: string): string | undefined => {
-  const eid = EID.tryParse(uri);
-  return eid ? EID.getEntityId(eid) : undefined;
 };
