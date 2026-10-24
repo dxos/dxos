@@ -29,17 +29,29 @@ const CONTENT = [
 
 type StoryProps = { themes: SlideTheme.Settings[] };
 
+/** One line naming a variant's settings, e.g. `serif · font: display`. */
+const caption = (settings: SlideTheme.Settings) =>
+  Object.entries(settings)
+    .map(([key, value]) => (key === 'name' ? String(value) : `${key}: ${value}`))
+    .join(' · ');
+
+/** Every variant as a full-width 16:9 slide, one under another, in a column that scrolls. */
 const DefaultStory = ({ themes }: StoryProps) => (
-  <div className='grid grid-cols-2 auto-rows-fr gap-2 p-2 size-full'>
-    {themes.map((settings, index) => (
-      <div key={index} data-theme-name={settings.name} className='flex flex-col min-h-0'>
-        <SlideThemeProvider settings={settings}>
-          <SlideFrame inset>
-            <MarkdownSlide content={CONTENT} />
-          </SlideFrame>
-        </SlideThemeProvider>
-      </div>
-    ))}
+  <div className='size-full overflow-y-auto'>
+    <div className='flex flex-col gap-8 p-8 max-w-[64rem] mx-auto'>
+      {themes.map((settings, index) => (
+        <figure key={index} data-theme-name={settings.name} className='flex flex-col gap-2 m-0'>
+          <figcaption className='text-sm text-description font-mono'>{caption(settings)}</figcaption>
+          <div className='flex aspect-video'>
+            <SlideThemeProvider settings={settings}>
+              <SlideFrame inset>
+                <MarkdownSlide content={CONTENT} />
+              </SlideFrame>
+            </SlideThemeProvider>
+          </div>
+        </figure>
+      ))}
+    </div>
   </div>
 );
 
@@ -74,26 +86,27 @@ export const Default: Story = {
   },
 };
 
-/** A theme with accent, background, text color and font overrides; the unsafe value is ignored. */
-export const Overrides: Story = {
-  args: {
-    themes: [
-      { name: 'dark', accent: '#f97316' },
-      { name: 'light', background: '#fef3c7', foreground: '#451a03', accent: '#b45309' },
-      { name: 'serif', accent: 'oklch(65% 0.2 300)' },
-      { name: 'default', accent: 'url(https://example.com/x)', font: 'sans' },
-    ],
-  },
-};
+/** Accent, background, text color and font overrides; the unsafe accent is ignored. */
+const OVERRIDES: SlideTheme.Settings[] = [
+  { name: 'dark', accent: '#f97316' },
+  { name: 'light', background: '#fef3c7', foreground: '#451a03', accent: '#b45309' },
+  { name: 'serif', accent: 'oklch(65% 0.2 300)' },
+  { name: 'default', accent: 'url(https://example.com/x)', font: 'sans' },
+];
 
 /** Each text font with a code font; web fonts load on first use. */
-export const Fonts: Story = {
-  args: {
-    themes: [
-      { name: 'default', font: 'sans', monoFont: 'fira' },
-      { name: 'default', font: 'rounded', monoFont: 'plex' },
-      { name: 'light', font: 'serif', monoFont: 'jetbrains' },
-      { name: 'dark', font: 'display', monoFont: 'system' },
-    ],
-  },
+const FONTS: SlideTheme.Settings[] = [
+  { name: 'default', font: 'sans', monoFont: 'fira' },
+  { name: 'default', font: 'rounded', monoFont: 'plex' },
+  { name: 'light', font: 'serif', monoFont: 'jetbrains' },
+  { name: 'dark', font: 'display', monoFont: 'system' },
+];
+
+/** Every variant in one column: the built-in themes, then overrides, then font pairings. */
+export const All: Story = {
+  args: { themes: [...SlideTheme.NAMES.map((name) => ({ name })), ...OVERRIDES, ...FONTS] },
 };
+
+export const Overrides: Story = { args: { themes: OVERRIDES } };
+
+export const Fonts: Story = { args: { themes: FONTS } };
