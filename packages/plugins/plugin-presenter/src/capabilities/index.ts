@@ -27,7 +27,7 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
   activatesOn: ActivationEvents.Idle,
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
-  roles: ['org.dxos.role.article', 'org.dxos.role.slide'],
+  roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties', 'org.dxos.role.slide'],
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));

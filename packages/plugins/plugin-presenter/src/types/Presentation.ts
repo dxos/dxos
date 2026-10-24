@@ -24,8 +24,8 @@ export class Presentation extends Type.makeObject<Presentation>(DXN.make('org.dx
     name: Schema.optional(Schema.String),
     /** Sections in slide order; owned `Text` targets are parented to the presentation. */
     sections: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Annotation.FormInputAnnotation.set(false)),
-    /** Overrides the first slide's `theme:` headmatter for every slide, linked objects included. */
-    theme: Schema.optional(SlideTheme.Settings),
+    /** Overrides the first slide's `theme:` headmatter for every slide, linked objects included; edited by `PresentationProperties`. */
+    theme: Schema.optional(SlideTheme.Settings).pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--presentation--regular', hue: 'orange' }),
