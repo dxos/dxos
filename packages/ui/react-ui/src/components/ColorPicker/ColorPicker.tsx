@@ -228,22 +228,39 @@ const ColorPickerTrigger = ({
   );
 };
 
+/** The current swatch, ringed like focus (selection follows focus) and raised over its neighbours. */
+const SELECTED_STYLE = {
+  zIndex: 10,
+  outline: 'var(--dx-focus-ring-width) solid var(--dx-focus-ring-color)',
+  outlineOffset: '1px',
+};
+
 type SwatchesProps = {
   hues: SwatchHue[];
   tones: number[];
-  /** The current color, outlined when it is one of the swatches. */
+  /** The current color, ringed (and focused) when it is one of the swatches. */
   value?: string;
-  onPick: (color: string) => void;
+  /** A pick, or `undefined` when Escape restores an unset value. */
+  onPick: (color: string | undefined) => void;
 };
 
 /**
  * One row per hue, one column per tone; a pick writes the tone's resolved color, since a value must not be a `var()`.
  * The grid is the wheel's width whatever the tone count, and rows stay one swatch tall, so fewer tones widen the cells.
- * A radio group: arrow keys move between swatches, Enter picks and closes the popover, Escape closes it unchanged.
+ * A radio group whose selection follows focus: arrow keys pick as they move, Enter closes the popover keeping the pick,
+ * and Escape closes it restoring the color it opened with.
  */
 const Swatches = ({ hues, tones, value, onPick }: SwatchesProps) => {
-  const { setOpen } = useArkColorPickerContext();
+  const { open, setOpen } = useArkColorPickerContext();
   const gridRef = useRef<HTMLDivElement>(null);
+  // The color the popover opened with, for Escape to restore; the grid stays mounted across openings.
+  const initialValue = useRef(value);
+  useEffect(() => {
+    if (open) {
+      initialValue.current = value;
+    }
+    // Only an opening re-reads the value; picks while open must not move the restore point.
+  }, [open]);
   const names = useMemo(() => hues.flatMap((hue) => tones.map((tone) => `${hue}-${tone}`)), [hues, tones]);
 
   // The swatches' colors as values: a stored color is a resolved string, so the selection is found by comparing them.
@@ -261,9 +278,12 @@ const Swatches = ({ hues, tones, value, onPick }: SwatchesProps) => {
     }
   }, [selected]);
 
-  const focus = (index: number) => {
+  const select = (index: number) => {
     setActive(index);
     gridRef.current?.querySelectorAll<HTMLButtonElement>('button')[index]?.focus();
+    if (resolved[index]) {
+      onPick(resolved[index]);
+    }
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -272,14 +292,16 @@ const Swatches = ({ hues, tones, value, onPick }: SwatchesProps) => {
     const step: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -columns, ArrowDown: columns };
     if (event.key in step) {
       event.preventDefault();
-      focus(Math.min(last, Math.max(0, active + step[event.key])));
+      select(Math.min(last, Math.max(0, active + step[event.key])));
     } else if (event.key === 'Home' || event.key === 'End') {
       event.preventDefault();
-      focus(event.key === 'Home' ? 0 : last);
-    } else if (event.key === 'Enter' && resolved[active]) {
+      select(event.key === 'Home' ? 0 : last);
+    } else if (event.key === 'Enter') {
       event.preventDefault();
-      onPick(resolved[active]);
       setOpen(false);
+    } else if (event.key === 'Escape') {
+      // The picker's own Escape handling then closes the popover.
+      onPick(initialValue.current);
     }
   };
 
@@ -301,13 +323,13 @@ const Swatches = ({ hues, tones, value, onPick }: SwatchesProps) => {
           title={name}
           // Roving focus: Tab enters the grid at the current (or selected) swatch, and arrows move within it.
           tabIndex={index === active ? 0 : -1}
-          className='dx-focus-ring rounded-xs'
+          // A cell is too small for the inset focus ring, so focus and selection ring it outside, raised over its neighbours.
+          className='relative rounded-xs outline-none focus-visible:z-20 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-(--dx-focus-ring-color)'
           style={{
             backgroundColor: `var(--color-${name})`,
-            ...(index === selected && { outline: '2px solid var(--color-fg)', outlineOffset: '1px' }),
+            ...(index === selected && SELECTED_STYLE),
           }}
-          onFocus={() => setActive(index)}
-          onClick={() => resolved[index] && onPick(resolved[index])}
+          onClick={() => select(index)}
         />
       ))}
     </div>

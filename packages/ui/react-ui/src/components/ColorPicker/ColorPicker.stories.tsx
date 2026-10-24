@@ -74,31 +74,38 @@ export const Swatch: Story = {
   },
 };
 
-/** The current swatch is checked; arrows move between swatches, Enter picks and closes, Escape closes unchanged. */
+/** Selection follows focus: arrows pick as they move, Enter closes keeping the pick, Escape restores the opening color. */
 export const Keyboard: Story = {
   args: { tones: [400, 600] },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const value = () => canvas.getByTestId('color.value').textContent;
-    await userEvent.click(canvas.getByRole('button', { name: 'Pick color' }));
-    await userEvent.click(await screen.findByRole('tab', { name: 'Swatches' }));
+    const open = async () => {
+      await userEvent.click(canvas.getByRole('button', { name: 'Pick color' }));
+      await userEvent.click(await screen.findByRole('tab', { name: 'Swatches' }));
+    };
+
+    await open();
     await userEvent.click(await screen.findByRole('radio', { name: 'red-600' }));
     await waitFor(() => expect(screen.getByRole('radio', { name: 'red-600' })).toHaveAttribute('aria-checked', 'true'));
-    const picked = value();
+    const red = value();
 
-    // Down a row (one hue per row) from red-600 is orange-600; Enter picks it and closes the popover.
+    // Down a row (one hue per row) from red-600 is orange-600, picked as focus lands on it; Enter keeps it and closes.
     await userEvent.keyboard('{ArrowDown}');
     await expect(screen.getByRole('radio', { name: 'orange-600' })).toHaveFocus();
+    await expect(screen.getByRole('radio', { name: 'orange-600' })).toHaveAttribute('aria-checked', 'true');
+    await waitFor(() => expect(value()).not.toBe(red));
+    const orange = value();
     await userEvent.keyboard('{Enter}');
-    await waitFor(() => expect(value()).not.toBe(picked));
     await waitFor(() => expect(screen.queryByRole('radio', { name: 'orange-600' })).toBeNull());
+    await expect(value()).toBe(orange);
 
-    // Escape closes without changing the value.
-    const kept = value();
-    await userEvent.click(canvas.getByRole('button', { name: 'Pick color' }));
-    await userEvent.click(await screen.findByRole('tab', { name: 'Swatches' }));
-    await expect(await screen.findByRole('radio', { name: 'orange-600' })).toHaveAttribute('aria-checked', 'true');
+    // Moving and then pressing Escape restores the color the popover opened with.
+    await open();
+    await userEvent.click(await screen.findByRole('radio', { name: 'orange-600' }));
+    await userEvent.keyboard('{ArrowUp}');
+    await waitFor(() => expect(value()).toBe(red));
     await userEvent.keyboard('{Escape}');
-    await expect(value()).toBe(kept);
+    await waitFor(() => expect(value()).toBe(orange));
   },
 };
