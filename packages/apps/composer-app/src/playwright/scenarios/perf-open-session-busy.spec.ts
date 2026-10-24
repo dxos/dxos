@@ -5,6 +5,7 @@
 import { type Locator, type Page, expect } from '@playwright/test';
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import { type SpaceId } from '@dxos/keys';
 
 import { defineScenario, invokeInPage } from '../perf/scenario.ts';
 
@@ -25,6 +26,13 @@ const PROMPT = 'Survey this project.';
 /** Twenty-one scripted model turns, as the projects flow measured them. */
 const ASSISTANT_TIMEOUT = 300_000;
 
+/**
+ * Restates `SpaceId`'s predicate (`packages/common/keys/src/space-id.ts`), whose module does not load
+ * under Playwright: RFC4648 base-32, multibase 'B' prefix, 33 characters.
+ */
+const isSpaceId = (value: unknown): value is SpaceId =>
+  typeof value === 'string' && value.startsWith('B') && value.length === 33;
+
 const projectPath = (spaceId: string, projectId: string): string =>
   GraphPath.getSpacePath(spaceId, GraphPath.GroupSegments.ai, PROJECT_TYPENAME, projectId);
 
@@ -43,7 +51,7 @@ const invokeForId = (
   key: string,
   input: unknown,
   path: readonly string[],
-  spaceId?: string,
+  spaceId?: SpaceId,
 ): Promise<string | undefined> =>
   page.evaluate(
     async ({ key, input, path, spaceId }) => {
@@ -66,7 +74,7 @@ const invokeForId = (
   );
 
 /** A database write needs the space in the invocation; the active workspace is not enough. */
-const createProject = async (page: Page, spaceId: string, name: string): Promise<string> => {
+const createProject = async (page: Page, spaceId: SpaceId, name: string): Promise<string> => {
   const projectId = await invokeForId(page, 'org.dxos.operation.projects.create', { name }, ['project'], spaceId);
   if (projectId === undefined) {
     throw new Error('projects.create returned no project');
@@ -106,7 +114,7 @@ const runTurn = async (page: Page, budget: number): Promise<void> => {
   await threadDone(page).waitFor({ timeout: Math.max(budget, ASSISTANT_TIMEOUT) });
 };
 
-let opened: { spaceId: string; projectId: string } | undefined;
+let opened: { spaceId: SpaceId; projectId: string } | undefined;
 
 // `pnpm perf run --scenario open-session-busy` runs it; `pnpm perf scenario check open-session-busy` proves it.
 defineScenario({
@@ -120,8 +128,8 @@ defineScenario({
     // `space.create` returns the space under `space` in some paths and bare in others, as the projects fixture reads it.
     const input = { name: `PERF: Sessions ${runId}` };
     const spaceId = await invokeForId(page, 'org.dxos.operation.space.create', input, ['space']);
-    if (spaceId === undefined) {
-      throw new Error('space.create returned no id');
+    if (!isSpaceId(spaceId)) {
+      throw new Error(`space.create returned no space id: ${spaceId}`);
     }
     await invokeInPage(page, 'org.dxos.operation.appToolkit.switchWorkspace', { subject: `root/${spaceId}` });
     await page.waitForURL(new RegExp(`/w/${spaceId}`), { timeout: budget });
