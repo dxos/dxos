@@ -147,7 +147,8 @@ const SlideSurface = ({ uri = '', role, className, 'data-step': dataStep }: Slid
   const renderSurface = useContext(RenderSurfaceContext);
   const surfaceRole: SlideSurfaceRole = isSurfaceRole(role) ? role : 'slide';
   return (
-    <div data-surface={uri} data-role={surfaceRole} data-step={dataStep} className={mx('flex dx-grow', className)}>
+    // `data-embed`, not the theme's `data-surface` (a surface tone), which would paint the embed with a surface fill.
+    <div data-embed={uri} data-role={surfaceRole} data-step={dataStep} className={mx('flex dx-grow', className)}>
       {renderSurface?.({ uri, role: surfaceRole }) ?? (
         <div className='flex grow items-center justify-center p-8 border-4 border-dashed border-separator text-[32px]'>
           {`${surfaceRole}: ${uri}`}

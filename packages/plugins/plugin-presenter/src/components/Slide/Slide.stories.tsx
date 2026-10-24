@@ -368,7 +368,7 @@ export const EmbeddedSurface: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByRole('heading', { name: 'Beside the document' }, LOAD_TIMEOUT)).toBeVisible();
-    await waitFor(() => expect(canvasElement.querySelector('[data-surface] svg')).not.toBeNull(), LOAD_TIMEOUT);
+    await waitFor(() => expect(canvasElement.querySelector('[data-embed] svg')).not.toBeNull(), LOAD_TIMEOUT);
     await expect(await canvas.findByText('Client', undefined, LOAD_TIMEOUT)).toBeInTheDocument();
   },
 };
@@ -382,7 +382,7 @@ export const EmbeddedSurfaceImage: Story = {
     const canvas = within(canvasElement);
     await expect(await canvas.findByRole('heading', { name: 'Over the drawing' }, LOAD_TIMEOUT)).toBeVisible();
     await waitFor(
-      () => expect(canvasElement.querySelector('[data-slot="default"] [data-surface]')).not.toBeNull(),
+      () => expect(canvasElement.querySelector('[data-slot="default"] [data-embed]')).not.toBeNull(),
       LOAD_TIMEOUT,
     );
     // The slot fills the slide, so an embed with no height of its own (a canvas drawing) does not collapse.
@@ -403,7 +403,7 @@ export const EmbeddedSurfaceBleed: Story = {
     const canvas = within(canvasElement);
     await expect(await canvas.findByRole('heading', { name: 'Edge to edge' }, LOAD_TIMEOUT)).toBeVisible();
     await waitFor(
-      () => expect(canvasElement.querySelector('[data-slot="right"] [data-surface]')).not.toBeNull(),
+      () => expect(canvasElement.querySelector('[data-slot="right"] [data-embed]')).not.toBeNull(),
       LOAD_TIMEOUT,
     );
     const slide = canvasElement.querySelector('[data-layout="two-cols"]');
@@ -464,10 +464,10 @@ export const EmbeddedTextSlide: Story = {
     const canvas = within(canvasElement);
     await expect(await canvas.findByRole('heading', { name: 'Beside the slide' }, LOAD_TIMEOUT)).toBeVisible();
     await waitFor(
-      () => expect(canvasElement.querySelector('[data-surface] [data-slide] h1')?.textContent).toBe('Embedded slide'),
+      () => expect(canvasElement.querySelector('[data-embed] [data-slide] h1')?.textContent).toBe('Embedded slide'),
       LOAD_TIMEOUT,
     );
-    await expect(canvasElement.querySelector('[data-surface] .cm-editor')).toBeNull();
+    await expect(canvasElement.querySelector('[data-embed] .cm-editor')).toBeNull();
   },
 };
 

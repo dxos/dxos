@@ -60,6 +60,8 @@ export type CanvasRootProps = Util.ThemedClassName<{
   grid?: number;
   /** Least gap between the scene's frame and each viewport edge when fitting, in major cells. */
   margin?: number;
+  /** Highest zoom a fit reaches: 1:1 by default, so a small scene is not magnified; a slide raises it to fill its box. */
+  fitZoom?: number;
   /**
    * Look, select and navigate only: no gesture or key reaches the model, and no handle or port is drawn,
    * whatever the projection would allow.

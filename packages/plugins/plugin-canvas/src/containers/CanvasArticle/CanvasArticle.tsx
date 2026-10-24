@@ -24,6 +24,7 @@ import {
   type CanvasPropertiesProps,
   type Element,
   type InspectorMode,
+  MAX_ZOOM,
   type Node,
   type SceneDisplay,
   type ViewId,
@@ -236,6 +237,10 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               onBackgroundGridChange={embedded || newer ? undefined : handleBackgroundGridChange}
               readonly={readonly}
               transparent={slide}
+              // A slide lays the picture out itself, so the drawing fills its box: no fit margin, and a small drawing is
+              // enlarged rather than kept at 1:1.
+              margin={slide ? 0 : undefined}
+              fitZoom={slide ? MAX_ZOOM : undefined}
               // A newer plugin's format stays read-only here, so the toggle that would unlock it is not offered.
               onReadonlyChange={embedded || newer ? undefined : handleReadonlyChange}
               initialCamera={savedCamera}
