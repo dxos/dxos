@@ -77,6 +77,7 @@ import {
   replacementDocumentId,
 } from './retirement.ts';
 import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManager } from './space-state-manager.ts';
+import { UnindexedDocuments } from './unindexed-documents.ts';
 
 /**
  * Documents walked between event-loop yields during a reachability traversal. Bounds how long one
@@ -220,6 +221,9 @@ export class EchoHost extends Resource {
   /** Last known document set per space, to detect what left the directory. */
   private readonly _spaceDocumentIds = new Map<SpaceId, Set<DocumentId>>();
 
+  /** Documents saved since the index last drained, so queries can read the ones it has never seen from disk. */
+  readonly #unindexedDocuments = new UnindexedDocuments();
+
   /** The latest retirement pass per space; passes are chained so two never write one space's directory at once. */
   readonly #retirements = new Map<SpaceId, Promise<void>>();
 
@@ -275,7 +279,14 @@ export class EchoHost extends Resource {
     this._indexScheduler = new IndexScheduler({
       feedBlocks: this._feedStore.onNewBlocks,
       documentsSaved: this._automergeHost.documentsSaved,
-      runPass: (ctx, reasons) => this._runIndexPass(ctx, reasons),
+      runPass: async (ctx, reasons) => {
+        const startedAt = this.#unindexedDocuments.beginPass();
+        const outcome = await this._runIndexPass(ctx, reasons);
+        if (outcome) {
+          this.#unindexedDocuments.endPass(startedAt, outcome.drained);
+        }
+        return outcome;
+      },
     });
     this._feedService = new LocalFeedServiceImpl(runtime, this._feedStore, {
       // Read the mutable slot lazily so a handler wired after construction takes effect;
@@ -300,8 +311,7 @@ export class EchoHost extends Resource {
       automergeHost: this._automergeHost,
       spaceStateManager: this._spaceStateManager,
       // Delegate to the public method so the closed-host early-out and cooperative loop apply.
-      // `QueryEntry.feedScoped`, or a compiled query whose snapshot store is still filling, is what
-      // decides a query must await indexing before its first result.
+      // Only a one-shot feed-scoped query awaits it; every other query answers from the index and disk as they stand.
       updateIndexes: () => this.updateIndexes({ reason: 'feed-scoped-query' }),
       executor: resolveQueryExecutorMode(queryExecutor),
       debounce: queryDebounce,
@@ -312,6 +322,7 @@ export class EchoHost extends Resource {
       hasCompleteSnapshots: (scope) =>
         RuntimeProvider.runPromise(this._runtime)(this.indexEngine.hasCompleteSnapshots(scope)),
       holdsDocument: (subscriptionIds, documentId) => this._dataService.holds(subscriptionIds, documentId),
+      unreadDocuments: (spaceIds) => this.#unreadDocuments(spaceIds),
     });
 
     this._dataService = new DataServiceImpl({
@@ -460,10 +471,19 @@ export class EchoHost extends Resource {
     );
     // A released document's bytes may already be stored, and a pass skipped it while it was quarantined.
     this._automergeHost.documentReleased.on(this._ctx, () => this._indexScheduler.schedule('document-released'));
+    this._automergeHost.documentStored.on(this._ctx, (documentId) => this.#unindexedDocuments.markSaved(documentId));
+    this.#unindexedDocuments.added.on(this._ctx, (documentId) => {
+      void this.#classifyUnindexed(documentId);
+    });
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
       const documentIds = this.#applySyncScope(e);
       const previous = this._spaceDocumentIds.get(e.spaceId);
-      this._spaceDocumentIds.set(e.spaceId, new Set(documentIds));
+      const listed = new Set(documentIds);
+      this._spaceDocumentIds.set(e.spaceId, listed);
+      // A joining space's root is saved before the space lists it, which left it unclassified.
+      for (const documentId of this.#unindexedDocuments.unclassified((documentId) => listed.has(documentId))) {
+        void this.#classifyUnindexed(documentId);
+      }
 
       if (e.previousRootId) {
         void this._automergeHost.clearLocalCollectionState(deriveCollectionIdFromSpaceId(e.spaceId, e.previousRootId));
@@ -1266,6 +1286,61 @@ export class EchoHost extends Resource {
   #departedDocuments(previous: ReadonlySet<DocumentId>, documentIds: readonly DocumentId[]): DocumentId[] {
     const current = new Set(documentIds);
     return [...previous].filter((documentId) => !current.has(documentId));
+  }
+
+  /**
+   * Marks a just-saved document the index has never read as one queries read from disk, and re-runs the queries over
+   * its space so its objects show before a pass indexes them. A document outside every known space stays unmarked,
+   * left to the pass.
+   */
+  async #classifyUnindexed(documentId: DocumentId): Promise<void> {
+    const spaceId = this.#spaceOfDocument(documentId);
+    if (!spaceId || !this._indexEngine) {
+      return;
+    }
+    const indexed = await RuntimeProvider.runPromise(this._runtime)(
+      this._indexEngine.hasIndexed({
+        sourceName: this._automergeDataSource.sourceName,
+        spaceId,
+        resourceId: documentId,
+      }),
+    ).catch((err) => {
+      log.warn('index cursor could not be read', { documentId, err });
+      return true;
+    });
+    if (this.#unindexedDocuments.classify(documentId, !indexed) && !indexed) {
+      this._queryService.invalidateQueries({ spaceIds: new Set([spaceId]) });
+    }
+  }
+
+  #spaceOfDocument(documentId: DocumentId): SpaceId | undefined {
+    for (const [spaceId, documentIds] of this._spaceDocumentIds) {
+      if (documentIds.has(documentId)) {
+        return spaceId;
+      }
+    }
+    return undefined;
+  }
+
+  /** Per space, the saved documents the index has never read; every known space when `spaceIds` is null. */
+  #unreadDocuments(spaceIds: Iterable<SpaceId> | null): Map<SpaceId, DocumentId[]> {
+    const unread = new Map<SpaceId, DocumentId[]>();
+    if (this.#unindexedDocuments.size === 0) {
+      return unread;
+    }
+    for (const spaceId of spaceIds ?? this._spaceDocumentIds.keys()) {
+      const inSpace = this._spaceDocumentIds.get(spaceId);
+      // A branch document holds draft copies under the objects' own ids.
+      const documentIds = inSpace
+        ? this.#unindexedDocuments.unread(
+            (documentId) => inSpace.has(documentId) && !this._spaceStateManager.isBranchDocument(documentId),
+          )
+        : [];
+      if (documentIds.length > 0) {
+        unread.set(spaceId, documentIds);
+      }
+    }
+    return unread;
   }
 
   /**

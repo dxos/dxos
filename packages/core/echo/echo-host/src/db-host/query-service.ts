@@ -37,20 +37,23 @@ export type QueryServiceProps = {
   automergeHost: AutomergeHost;
   spaceStateManager: SpaceStateManager;
   /**
-   * Brings the index up to date and resolves once done. Awaited before a feed-scoped query's first
-   * execution so that a query issued right after a feed append reads the just-written items instead
-   * of racing the host's deferred indexing task. Feed reads have no client-side working-set
-   * fallback, so the index is their only source of truth.
+   * Brings the index up to date and resolves once done. A one-shot feed-scoped query awaits it before
+   * answering, so a read issued right after a feed append sees the just-written items: feed reads
+   * have no client-side working-set fallback and no disk fallback here, and a one-shot query gets no
+   * second answer. A live feed-scoped query answers at once and starts it, re-running when the pass
+   * invalidates it.
    */
   updateIndexes: () => Promise<void>;
 
   /**
    * True once every indexed object in scope has a snapshot (see `IndexEngine.hasCompleteSnapshots`).
    * The compiled executor reads that store rather than loading documents, so while it is still
-   * filling after upgrade a query awaits indexing before its first execution. Ignored on the
-   * in-memory path, which loads documents itself.
+   * filling after upgrade a query runs its uncompiled plan, which loads documents itself.
    */
   hasCompleteSnapshots?: (scope: { spaceIds?: readonly SpaceId[]; feeds: boolean }) => Promise<boolean>;
+
+  /** Per space, the saved documents the index has never read, which queries read from disk; see `QueryExecutor`. */
+  unreadDocuments?: (spaceIds: Iterable<SpaceId> | null) => ReadonlyMap<SpaceId, readonly DocumentId[]>;
 
   /** Evaluation path for every query this service creates; see {@link QueryExecutorMode}. */
   executor?: QueryExecutorMode;
@@ -99,7 +102,7 @@ type ActiveQuery = {
 
   firstResult: boolean;
 
-  /** Query reads from at least one feed scope, so its first result must await indexing. */
+  /** Query reads from at least one feed scope, which only the index answers. */
   feedScoped: boolean;
 
   /** Answered once and never re-run; its stream ends after the first response. */
@@ -264,14 +267,18 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       );
       scheduleMicroTask(ctx, async () => {
         await queryEntry.executor.open();
-        const readsSnapshotStore = queryEntry.executor.compiled;
-        if (queryEntry.feedScoped || (readsSnapshotStore && !(await this.#snapshotsComplete(queryEntry.executor)))) {
+        if (queryEntry.feedScoped) {
           // A failed pass is logged and retried by the scheduler; the query answers from the index as it stands.
-          await this._params.updateIndexes().catch((error) => {
+          const indexed = this._params.updateIndexes().catch((error) => {
             if (!(error instanceof IndexPassFailedError)) {
               throw error;
             }
           });
+          if (queryEntry.oneShot) {
+            await indexed;
+          } else {
+            void indexed.catch((err) => log.catch(err));
+          }
         }
         if (!this._queries.has(queryEntry)) {
           return;
@@ -348,6 +355,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         sql: this._params.sql(),
         spaceStateManager: this._params.spaceStateManager,
         holds: (documentId) => this._params.holdsDocument?.(subscriptionIds, documentId) ?? false,
+        unreadDocuments: this._params.unreadDocuments,
       }),
       dirty: true,
       open: false,
@@ -464,7 +472,11 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   async #runQuery(query: ActiveQuery): Promise<void> {
     try {
       const begin = performance.now();
-      const { changed } = await query.executor.execQuery();
+      const compiled = !query.executor.compiled || (await this.#snapshotsComplete(query.executor));
+      if (!this._queries.has(query)) {
+        return;
+      }
+      const { changed } = await query.executor.execQuery({ compiled });
       const finishedAt = performance.now();
       countWork('echo.queryExecutions');
       query.cost = this.#debounce.cost?.(query.executor.query, finishedAt - begin) ?? finishedAt - begin;

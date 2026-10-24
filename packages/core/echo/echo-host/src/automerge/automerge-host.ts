@@ -304,6 +304,9 @@ export class AutomergeHost extends Resource {
    */
   public readonly documentsSaved = new Event();
 
+  /** Fired per document as its save commits, before {@link documentsSaved}, so a listener sees it ahead of any index pass that save schedules. */
+  public readonly documentStored = new Event<DocumentId>();
+
   /** Fired per document whose heads a save advanced — what a reader of that document must catch up on. */
   public readonly documentHeadsChanged = new Event<{ documentId: DocumentId; heads: Heads }>();
 
@@ -1508,6 +1511,7 @@ export class AutomergeHost extends Resource {
     this._headsUpdates.set(documentId, heads);
     invariant(this._onHeadsChangedTask, 'onHeadsChangedTask is not initialized');
     this._onHeadsChangedTask.schedule();
+    this.documentStored.emit(documentId);
     this.documentsSaved.emit();
   }
 

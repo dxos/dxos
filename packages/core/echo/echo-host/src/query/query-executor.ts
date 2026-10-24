@@ -18,6 +18,7 @@ import {
   EscapedPropPath,
   PROPERTY_ID,
   QueryAST,
+  SpaceDocVersion,
   backingJson,
   isEncodedReference,
 } from '@dxos/echo-protocol';
@@ -41,7 +42,13 @@ import { chunkArray, compositeKey, getDeep, isNonNullable } from '@dxos/util';
 import type { AutomergeHost } from '../automerge/index.ts';
 import type { SpaceStateManager } from '../db-host/index.ts';
 import { type InvalidationHint, canonicalTypename } from '../db-host/invalidation-hint.ts';
-import { filterMatchDoc, filterMatchEntityMeta, filterMatchObjectJSON, getEntityMetaTypeURI } from '../filter/index.ts';
+import {
+  type MatchedDoc,
+  filterMatchDoc,
+  filterMatchEntityMeta,
+  filterMatchObjectJSON,
+  getEntityMetaTypeURI,
+} from '../filter/index.ts';
 import { type ChangeItem, changeResults, executeChangesPlan, serializeChangeResults } from './changes-executor.ts';
 import { QueryError } from './errors.ts';
 import { type GroupAggregates, GroupBy, type GroupKeyValue, compareCodeUnits } from './group-by.ts';
@@ -71,6 +78,12 @@ type QueryExecutorOptions = {
   sql?: SqlClient.SqlClient;
   /** Whether the client already holds a document; its rows ship without JSON and stored changes. */
   holds?: (documentId: DocumentId) => boolean;
+  /**
+   * Per space, the saved documents the index has never read; every known space when given null. Selects read their
+   * objects from disk instead of leaving them out until a pass indexes them, and a query with any runs its uncompiled
+   * plan, since a compiled statement reads only the index.
+   */
+  unreadDocuments?: (spaceIds: Iterable<SpaceId> | null) => ReadonlyMap<SpaceId, readonly DocumentId[]>;
 };
 
 type QueryExecutionResult = {
@@ -688,8 +701,10 @@ export class QueryExecutor extends Resource {
   // TODO(dmaretskyi): Might be used in the future.
   private readonly _reactivity: QueryReactivity;
 
-  /** The uncompiled steps until the first execution, which swaps in the compiled plan. */
+  /** The compiled plan under the `sql` executor when the compiler took it; otherwise {@link #plannedPlan}. */
   private _plan: QueryPlan.Plan;
+  /** The plan as planned, run step by step when the compiled plan cannot see everything the query should. */
+  readonly #plannedPlan: QueryPlan.Plan;
   #scopes: QueryScopes;
   readonly #includeAllFeeds: boolean;
   private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
@@ -698,6 +713,9 @@ export class QueryExecutor extends Resource {
   readonly #planner: QueryPlanner;
   readonly #mode: QueryExecutorMode;
   readonly #holds: (documentId: DocumentId) => boolean;
+  readonly #unreadDocuments: QueryExecutorOptions['unreadDocuments'];
+  /** {@link QueryExecutorOptions.unreadDocuments} for the query's spaces, read once per `execQuery` run. */
+  #unread: ReadonlyMap<SpaceId, readonly DocumentId[]> = new Map();
 
   /**
    * Resolved `in-query` (subquery-membership) sets for the current `execQuery` run, keyed by
@@ -730,9 +748,11 @@ export class QueryExecutor extends Resource {
     this._reactivity = options.reactivity;
 
     this.#holds = options.holds ?? (() => false);
+    this.#unreadDocuments = options.unreadDocuments;
     this.#mode = options.executor ?? 'memory';
     this.#planner = new QueryPlanner();
     const plan = this.#planner.createPlan(this._query);
+    this.#plannedPlan = plan;
     const planSubquery = (query: QueryAST.Query) => this.#planner.createPlan(query);
     this._plan =
       this.#mode === 'sql' && options.sql !== undefined && !planDeclinedByCompiler(plan, planSubquery)
@@ -930,7 +950,10 @@ export class QueryExecutor extends Resource {
     );
   }
 
-  async execQuery(): Promise<QueryExecutionResult> {
+  /**
+   * @param options.compiled Whether the compiled plan may run; false while the snapshot store it reads is incomplete.
+   */
+  async execQuery({ compiled = true }: { compiled?: boolean } = {}): Promise<QueryExecutionResult> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
     log('exec query', {
@@ -958,7 +981,9 @@ export class QueryExecutor extends Resource {
     }
 
     const previous = this._lastResultSet;
-    const { workingSet, trace } = await this._resolveWorkingSet();
+    this.#unread = this.#unreadDocuments?.(this.#scopes.isSimple ? this.#scopes.spaceIds : null) ?? new Map();
+    const plan = compiled && this.#unread.size === 0 ? this._plan : this.#plannedPlan;
+    const { workingSet, trace } = await this._resolveWorkingSet(plan);
     this._lastResultSet = workingSet;
     trace.name = 'Root';
     trace.details = JSON.stringify({ id: this._id, query: Query.pretty(Query.fromAst(this._query)) });
@@ -982,12 +1007,12 @@ export class QueryExecutor extends Resource {
   }
 
   /** Runs the plan, then drops items whose strong dependencies cannot be resolved from local state. */
-  private async _resolveWorkingSet(): Promise<{ workingSet: QueryItem[]; trace: ExecutionTrace }> {
+  private async _resolveWorkingSet(plan: QueryPlan.Plan): Promise<{ workingSet: QueryItem[]; trace: ExecutionTrace }> {
     try {
-      const { workingSet, trace } = await this._execPlan(this._plan, []);
+      const { workingSet, trace } = await this._execPlan(plan, []);
       // A compiled plan resolved these in SQL. Keyed on the plan rather than the mode, because a plan
       // the compiler declined runs step by step even under `sql` and needs the filter.
-      if (this.compiled) {
+      if (plan.steps.some((step) => step._tag === 'SqlStep')) {
         return { workingSet, trace };
       }
       // Unresolvable items never reach the client, where hydration would fail or stall on them.
@@ -1087,13 +1112,13 @@ export class QueryExecutor extends Resource {
       case 'WildcardSelector': {
         const beginIndexQuery = performance.now();
         const queueRefs = extractQueueRefs(queues);
-        const metas = await this._queryAllFromSqlIndex(
+        const indexMetas = await this._queryAllFromSqlIndex(
           spaces,
           allQueuesFromSpaces,
           queueRefs,
           extractQueueWindow(step),
         );
-        trace.indexHits = metas.length;
+        trace.indexHits = indexMetas.length;
         trace.indexQueryTime += performance.now() - beginIndexQuery;
 
         if (this._ctx.disposed) {
@@ -1101,11 +1126,13 @@ export class QueryExecutor extends Resource {
         }
 
         const documentLoadStart = performance.now();
+        const unindexed = await this.#readUnindexed(spaces, () => true);
+        const metas = withoutUnindexed(indexMetas, unindexed);
         const results = step.bare ? metas.map(QueryItem.fromIndexRow) : await this._loadDocumentsAfterSqlQuery(metas);
-        trace.documentsLoaded += step.bare ? 0 : results.length;
+        trace.documentsLoaded += (step.bare ? 0 : results.length) + unindexed.items.length;
         trace.documentLoadTime += performance.now() - documentLoadStart;
 
-        workingSet.push(...results.filter(isNonNullable));
+        workingSet.push(...results.filter(isNonNullable), ...unindexed.items);
         trace.objectCount = workingSet.length;
 
         break;
@@ -1155,7 +1182,7 @@ export class QueryExecutor extends Resource {
       case 'TypeSelector': {
         const beginIndexQuery = performance.now();
         const queueRefs = extractQueueRefs(queues);
-        const metas = await this._queryTypesFromSqlIndex(
+        const indexMetas = await this._queryTypesFromSqlIndex(
           spaces,
           step.selector.typename,
           step.selector.inverted,
@@ -1163,7 +1190,7 @@ export class QueryExecutor extends Resource {
           queueRefs,
           extractQueueWindow(step),
         );
-        trace.indexHits = metas.length;
+        trace.indexHits = indexMetas.length;
         trace.indexQueryTime += performance.now() - beginIndexQuery;
 
         if (this._ctx.disposed) {
@@ -1171,11 +1198,18 @@ export class QueryExecutor extends Resource {
         }
 
         const documentLoadStart = performance.now();
+        const { typename, inverted } = step.selector;
+        const typeFilters = typename.map((type): QueryAST.Filter => ({ type: 'object', typename: type, props: {} }));
+        const unindexed = await this.#readUnindexed(
+          spaces,
+          (candidate) => typeFilters.some((filter) => filterMatchDoc(filter, candidate)) !== inverted,
+        );
+        const metas = withoutUnindexed(indexMetas, unindexed);
         const results = step.bare ? metas.map(QueryItem.fromIndexRow) : await this._loadDocumentsAfterSqlQuery(metas);
-        trace.documentsLoaded += step.bare ? 0 : results.length;
+        trace.documentsLoaded += (step.bare ? 0 : results.length) + unindexed.items.length;
         trace.documentLoadTime += performance.now() - documentLoadStart;
 
-        workingSet.push(...results.filter(isNonNullable));
+        workingSet.push(...results.filter(isNonNullable), ...unindexed.items);
         trace.objectCount = workingSet.length;
 
         break;
@@ -2249,6 +2283,56 @@ export class QueryExecutor extends Resource {
     );
   }
 
+  /**
+   * The objects `match` accepts in the documents of `spaces` that the index has never read, read from disk, so a select
+   * shows them before a pass indexes them. At most {@link MAX_UNINDEXED_DOCUMENT_READS} documents per run.
+   */
+  async #readUnindexed(spaces: readonly SpaceId[], match: (candidate: MatchedDoc) => boolean): Promise<UnindexedRead> {
+    const sources = spaces
+      .flatMap((spaceId) => (this.#unread.get(spaceId) ?? []).map((documentId) => ({ spaceId, documentId })))
+      .slice(0, MAX_UNINDEXED_DOCUMENT_READS);
+    if (sources.length === 0) {
+      return { documentIds: new Set(), items: [] };
+    }
+    const storedHeads = await this._automergeHost.getStoredHeads(sources.map(({ documentId }) => documentId));
+    const items = await Promise.all(
+      sources.map(async ({ spaceId, documentId }, index): Promise<QueryItem[]> => {
+        using lease = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId, {
+          fetchFromNetwork: false,
+        });
+        const doc = lease?.doc();
+        if (!doc || doc.version !== SpaceDocVersion.CURRENT) {
+          return [];
+        }
+        const heads = A.getHeads(doc);
+        const saved = isSaved(storedHeads[index], heads);
+        return Object.entries(doc.objects ?? {}).flatMap(([objectId, structure]): QueryItem[] => {
+          if (!EntityId.isValid(objectId) || !match({ id: objectId, spaceId, doc: structure })) {
+            return [];
+          }
+          const text = saved ? backingJson(doc, structure, objectStructureToJson(objectId, structure)) : undefined;
+          const createdAt = structure.system?.createdAt;
+          return [
+            {
+              objectId,
+              documentId,
+              spaceId,
+              queueId: null,
+              queueNamespace: null,
+              doc: structure,
+              data: null,
+              rank: 1,
+              createdAt: typeof createdAt === 'number' ? createdAt : null,
+              updatedAt: null,
+              backing: text !== undefined ? { heads, json: text } : undefined,
+            },
+          ];
+        });
+      }),
+    );
+    return { documentIds: new Set(sources.map(({ documentId }) => documentId)), items: items.flat() };
+  }
+
   private async _loadQueueSnapshotMap(metas: readonly EntityMeta[]): Promise<Map<number, unknown>> {
     const queueMetas = metas.filter((meta) => !meta.documentId && !!meta.queueId);
     if (queueMetas.length === 0) {
@@ -2808,3 +2892,22 @@ const withoutBacking = ({
   updatedAt: _updatedAt,
   ...row
 }: QueryService.QueryResult): QueryService.QueryResult => row;
+
+/** Most unindexed documents one select reads from disk, bounding a run while a large space syncs in. */
+const MAX_UNINDEXED_DOCUMENT_READS = 64;
+
+/** Objects a select read from documents the index has never read, and those documents. */
+type UnindexedRead = { documentIds: ReadonlySet<string>; items: QueryItem[] };
+
+/** Index rows a select keeps alongside an {@link UnindexedRead}: none from the documents it read, nor for an object it read. */
+const withoutUnindexed = (metas: readonly EntityMeta[], unindexed: UnindexedRead): readonly EntityMeta[] => {
+  if (unindexed.documentIds.size === 0) {
+    return metas;
+  }
+  const read = new Set(unindexed.items.map((item) => compositeKey(item.spaceId, item.objectId)));
+  return metas.filter(
+    (meta) =>
+      !unindexed.documentIds.has(meta.documentId) &&
+      !(meta.queueId === '' && read.has(compositeKey(meta.spaceId, meta.objectId))),
+  );
+};
