@@ -1,5 +1,64 @@
 # @dxos/assistant-toolkit
 
+## 0.17.0
+
+### Patch Changes
+
+- f142d06: The chat prompt is redesigned. One picker chooses the agent, where it runs (this device or EDGE) and the model. Skills load as `/` commands, and `@` mentions an object, which joins the chat's context when the message is sent. A "+" menu adds files, objects, commands and MCP servers; "Add an object…" opens the search dialog as a picker (`SearchOperation.SelectObject`). The chat's tasks and its context are two drawers above the prompt, and other plugins can add sections to the context drawer (`ChatSurface.ChatDetails`).
+
+  The `@` menus in the chat and in the markdown editor now run a full-text search once typing pauses, through `ObjectCombobox.useSearch` in `@dxos/app-toolkit`; the markdown `@` menu now matches body text as well as names. `searchQuery`, `searchFilter`, `byRelevance` and `useListedTypeUris` moved to `ObjectCombobox` from plugin-search, which no longer exports `buildSearchQuery`, `buildSearchFilter` or `useSearchableTypeUris`.
+
+  Replies no longer stop rendering when the thread's view is switched while they stream.
+
+- Updated dependencies [d65fd2a]
+- Updated dependencies [6f6547f]
+- Updated dependencies [df16fba]
+- Updated dependencies [f142d06]
+- Updated dependencies [d105c19]
+- Updated dependencies [e343467]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [a245692]
+- Updated dependencies [f10c1dc]
+- Updated dependencies [853af68]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [592fdad]
+- Updated dependencies [ece15ab]
+- Updated dependencies [074e3e6]
+- Updated dependencies [0d3e4cf]
+- Updated dependencies [a843e27]
+- Updated dependencies [0166448]
+- Updated dependencies [80c25fe]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [df65316]
+  - @dxos/edge-client@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/assistant@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/compute-runtime@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/client-protocol@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/agent-runtime@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/ai@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/mcp-client@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/ui-theme@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

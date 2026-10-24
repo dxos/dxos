@@ -1,6 +1,6 @@
 {
   "name": "@dxos/drawing",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Diagrams your coding agent can draw: lay out a semantic diagram (.dx) into an SVG.",
   "homepage": "https://drawing.sh",
   "bugs": "https://github.com/dxos/dxos/issues",

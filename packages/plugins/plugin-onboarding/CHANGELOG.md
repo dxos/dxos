@@ -1,5 +1,77 @@
 # @dxos/plugin-onboarding
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [d65fd2a]
+- Updated dependencies [6f6547f]
+- Updated dependencies [710da43]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [f142d06]
+- Updated dependencies [e343467]
+- Updated dependencies [98db701]
+- Updated dependencies [6eb949e]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [a245692]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [592fdad]
+- Updated dependencies [49df146]
+- Updated dependencies [ece15ab]
+- Updated dependencies [074e3e6]
+- Updated dependencies [a843e27]
+- Updated dependencies [3f5e201]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [80c25fe]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [296c44c]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [df65316]
+  - @dxos/edge-client@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/plugin-space@0.17.0
+  - @dxos/plugin-illustrator@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/plugin-markdown@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/plugin-sheet@0.17.0
+  - @dxos/plugin-inbox@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/plugin-client@0.17.0
+  - @dxos/client@0.17.0
+  - @dxos/plugin-kanban@0.17.0
+  - @dxos/plugin-map@0.17.0
+  - @dxos/plugin-routine@0.17.0
+  - @dxos/plugin-support@0.17.0
+  - @dxos/plugin-tldraw@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/react-client@0.17.0
+  - @dxos/brand@0.17.0
+  - @dxos/react-ui-table@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/credentials@0.17.0
+  - @dxos/config@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/graph@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/ui-theme@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

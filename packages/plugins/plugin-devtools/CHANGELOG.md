@@ -1,5 +1,66 @@
 # @dxos/plugin-devtools
 
+## 0.17.0
+
+### Minor Changes
+
+- 6f6547f: DevTools has an Agent › HALO page: pick one of the agents you administer to see its identity, its admins, the spaces it is in and every credential in its HALO, read from EDGE with the new `EdgeHttpClient.getAgentHalo`. EDGE answers the agent's admins only. `@dxos/devtools` exports the page as `AgentHaloArticle` and the credentials table it shares with HALO › Credentials as `CredentialsTable`, which now leads with the credential's type and shows its id and issuer as hex rather than `[object Object]`. `JsonView` renders buf public keys and bigint timestamps, so a selected credential's details no longer fail with "Do not know how to serialize a BigInt".
+
+### Patch Changes
+
+- Updated dependencies [6f6547f]
+- Updated dependencies [710da43]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [f142d06]
+- Updated dependencies [e343467]
+- Updated dependencies [6eb949e]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [592fdad]
+- Updated dependencies [49df146]
+- Updated dependencies [ece15ab]
+- Updated dependencies [074e3e6]
+- Updated dependencies [a843e27]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [80c25fe]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [df65316]
+  - @dxos/devtools@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/plugin-space@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/plugin-debug@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/cli-util@0.17.0
+  - @dxos/plugin-script@0.17.0
+  - @dxos/client@0.17.0
+  - @dxos/client-services@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/react-client@0.17.0
+  - @dxos/react-ui-introspect@0.17.0
+  - @dxos/react-ui-query@0.17.0
+  - @dxos/react-ui-table@0.17.0
+  - @dxos/react-ui-terminal@0.17.0
+  - @dxos/echo-react@0.17.0
+  - @dxos/config@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/graph@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/ui-theme@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

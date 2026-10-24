@@ -1,5 +1,67 @@
 # @dxos/plugin-illustrator
 
+## 0.17.0
+
+### Minor Changes
+
+- e8029c3: Canvas undo and redo patch the store instead of restoring snapshots. Every edit is a commit of a `CanvasHistory` that records the store's heads before and after and the paths it wrote; undo writes a path back only while nobody has changed it since, and returns the view to the View path and selection the edit was made in. `Canvas.Root` takes `history` (from `useCanvasHistory`, or a `CreateHistory`); without one the canvas keeps a local history, so ⌘Z, ⇧⌘Z and the toolbar work standalone. Breaking: `Projection.snapshot`/`restore`, `withUndo`, `recordViews`, `recordStoreStep` and `CanvasAtoms.undo` are removed; a projection with a model of its own exposes it as `model` (a `VersionedSource`) and may implement `restored()`, and `useViewProjection` now takes `history`. `ViewStore.versions`, `VersionedSource`, `recordChanges` and `patchSource` are exported from `headless`.
+
+  In plugin-canvas, a canvas in Composer records its edits on the app's `HistoryTracker` as `CanvasOperation.Patch`, scoped to the canvas, and agents can edit a canvas with `CanvasOperation.Apply` (intents); both are undoable, and `Apply` refuses a malformed intent (`isIntent`, exported from `headless`) or a canvas with no version history before it writes. The ECHO-backed store reads its past through Automerge heads. In app-framework, `UndoMapping` gains `merge` (fold merged invocations into one forward and re-derive the inverse) and `toast` (false records an entry without the deck's undo toast).
+
+  Drawing conversion copies by default: `DrawingOperation.Convert` writes a new drawing beside the source (`replace: true` converts in place, as drawing.sh does) and names it in its output, and Composer's menu offers "Copy as …" for each variant, opening the copy. A plugin can register an `IllustratorCapabilities.Converter` for a pair of variants, which `Convert` uses over the generic scene replay (`IllustratorModel.convertByScene`). plugin-canvas registers one for tldraw to canvas that converts a DSL-managed drawing generically and maps a hand-drawn one shape by shape; breaking: `CanvasOperation.ImportTldraw` and its "Copy as canvas" action are removed in its favour.
+
+  The canvas's Snap and Lattice toggles move to the bottom-right bar beside the grid and guides, and the centre action bar hides on a canvas too narrow for it. A link's `style.fontSize` sets its caption's size (unset is `LINK_FONT_SIZE`, 14), and a caption on a straight sloped line is shortened only when it does not fit the line's run. A rounded regular polygon rounds its corners by the look's rounded radius; a `NodeDef.silhouette` is given that radius in px. A polygon's `params.fit` sets how it sits in its frame: `frame` (the default) fills the frame, `circle` puts its vertices on the circle that fits it; `polygonPath` takes an options bag. The bottom-right bar ends with the theme picker. A form field override can control a nested group's `open` state (`onOpenChange`); the canvas properties panel takes `groups`, and plugin-canvas keeps which groups are open in its view state. Breaking: `ThemePanel` is renamed `DisplayPanel`. Breaking: a polygon's `sides` and `fit` and a cloud's `bumps` move into the node's `params` (`PolygonParams`, `CloudParams`), shown as the type's own group in the properties panel; stored drawings read in the new shape through `withLegacyParams`.
+
+### Patch Changes
+
+- 98db701: `importDxSvg` returns the database's own drawing, so converting an imported drawing to another editor persists; `IllustratorCapabilities` exports `editTargets`, `editLabel` and `variantSlug` for hosts that offer the "Edit in …" actions outside the app graph.
+- 6eb949e: The Drawing skill lays out boxes-and-arrows diagrams with the semantic diagram engine: an agent states the boxes, arrows and groups and the engine places them and routes the arrows, instead of the agent positioning every box itself, which left boxes and labels overlapping. The Hello Worker template binds the Drawing skill to its project and asks for its architecture diagram in that language.
+- Updated dependencies [710da43]
+- Updated dependencies [82f2242]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [f142d06]
+- Updated dependencies [e343467]
+- Updated dependencies [1302e04]
+- Updated dependencies [39eb10b]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [13bc40d]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [49df146]
+- Updated dependencies [074e3e6]
+- Updated dependencies [a843e27]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [80c25fe]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [df65316]
+  - @dxos/app-framework@0.17.0
+  - @dxos/diagram@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/plugin-space@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/plugin-client@0.17.0
+  - @dxos/cli-util@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/react-ui-search@0.17.0
+  - @dxos/echo-react@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/ui-theme@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

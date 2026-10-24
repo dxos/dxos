@@ -1,5 +1,17 @@
 # @dxos/rpc-tunnel-e2e
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [ece15ab]
+  - @dxos/protocols@0.17.0
+  - @dxos/rpc@0.17.0
+  - @dxos/rpc-tunnel@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/react-hooks@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

@@ -1,5 +1,48 @@
 # @dxos/stories-compute
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [710da43]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [d105c19]
+- Updated dependencies [e343467]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f10c1dc]
+- Updated dependencies [13bc40d]
+- Updated dependencies [853af68]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [592fdad]
+- Updated dependencies [49df146]
+- Updated dependencies [074e3e6]
+- Updated dependencies [a843e27]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [d00cc85]
+- Updated dependencies [df65316]
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/assistant@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/compute-runtime@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/permission@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/storybook-testing@0.17.0
+  - @dxos/react-client@0.17.0
+  - @dxos/react-ui-masonry@0.17.0
+  - @dxos/react-ui-trace@0.17.0
+  - @dxos/agent-runtime@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/debug@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

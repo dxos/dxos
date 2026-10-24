@@ -1,5 +1,15 @@
 # @dxos/tracing
 
+## 0.17.0
+
+### Patch Changes
+
+- @dxos/util@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

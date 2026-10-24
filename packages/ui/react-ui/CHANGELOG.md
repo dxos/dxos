@@ -1,5 +1,52 @@
 # @dxos/react-ui
 
+## 0.17.0
+
+### Minor Changes
+
+- 9d66bcd: Collections share one model for the current item, selection and arrow movement.
+
+  - **Current** is the item with keyboard focus, drawn only by the focus ring, whether it was reached by a click or the arrow keys. `Focus.Item` no longer writes `aria-current` on focus; `aria-current` is the caller's "you are here" (`current` prop).
+  - **Selected** is `aria-selected`, drawn by one shared neutral edge in `--dx-selected-color` (`.dx-focus-item[aria-selected='true']`, and `Card` `selected`), so a selection that has lost focus never reads as focus. `Focus.Item` takes `selected`; a selectable item is an `option` unless it names its own role. When an item is both, the focus ring is drawn.
+  - **One selection API.** Every collection takes `itemProps(id)`, a `Focus.ItemBinding` (`aria-selected`, `onClick`, `onFocus`, and `onActivate` for click or Enter), as `useListSelection`'s `bind(id).rowProps` gives it; `Focus.bindItem` maps a binding onto an element. `Masonry.Viewport`, `Mosaic.Container` and `Board.Root` take it, replacing masonry's `selectedIds`/`onSelect` and mosaic's `selectedIds`/`onSelectionChange` and the context's `setSelected`. `Mosaic.Tile` and `CardTile.Root` take a `binding`, which a stack passes each tile. A collection whose items carry `aria-selected` is a `listbox` of `option`s. `useListSelection` follows focus anywhere in the item's arrow-key group, so a board's columns select as one collection.
+  - **Masonry** tiles are `Focus.Item`s with no ring of their own, and no longer wrap their cards in a second `Focus.Item`.
+  - **Arrow movement by position**, as tabster's grid mode: `useFocusGroup`'s `grid` axis moves to the item on screen in the arrow's direction (`grid-linear` for up and down); both previously stepped in DOM order. A new `itemSelector` names targets at any depth, and `findNearest` is exported. `Focus.Group` takes `orientation='grid' | 'grid-linear'` and `itemSelector`. `Board.Root` takes `navigation='grid'` to move between cards across columns.
+  - A toolbar that starts or ends with a `Layout.Block` no longer adds edge padding, so a Board column without a drag handle aligns its title as one with a handle does.
+  - Feature maps:
+    - `FeatureCard` is a composite (`Root`, `Provider`, header parts and section parts) that each view composes.
+    - It takes two generic handlers, `onChange(feature, changes)` and `onOpen(target)`.
+    - Edit is in the card's menu.
+    - Long lists scroll inside the card.
+    - Kanban and masonry cards show the focus ring on click and follow the arrow keys by position, and both select the focused card, marking what it needs and fading the rest; Escape clears it.
+    - The cards view filters by text and status.
+    - Removing a feature from a project now takes its card off the project's views.
+
+- 0166448: Presentations render slides written in a Slidev markdown subset (layouts, click steps, video backgrounds, embedded object surfaces) and print the whole deck, one slide per page; reveal.js is removed. A Presentation's article is a grid of slide thumbnails that can be dragged to reorder and double-clicked to present. A deck takes a theme (`default`, `light`, `dark`, `serif`) with color overrides and a named text and code font, whose web fonts load only when used. Slides open in an editor with a slide toolbar and a live preview, below it or in the companion, kept in step with the cursor both ways.
+
+  `Listbox` takes `tiles` (a column count) to lay items out as a grid of cards with two-dimensional arrow keys; a list's current row is now marked in a neutral color and its selection in the focus color, and draggable rows can be reordered in a grid (`useReorder` with `axis: 'horizontal'`). `SyntaxHighlighter` takes a `themeMode` prop and `react-ui-syntax-highlighter` exports `renderRows`.
+
+- d00cc85: Typing quickly into a combobox or a controlled `Editor.View` no longer drops characters when the page renders slowly, and Enter picks a combobox's first match even when pressed in the same frame as the typing. A chat feed's jump to the latest message now arrives however long the feed sat idle, and scrolling away while an answer streams is no longer undone. Table cells for any type with a GeoPoint field open their editor instead of an error, and a new feature card's name field takes focus once the board shows it. `useMasonryTileRevealed`, `pin` on `useFollow`'s handle, and the `gate` option on scripted model turns are new.
+
+### Patch Changes
+
+- df16fba: Popups (menus, selects, comboboxes, popovers) no longer draw a focus ring; the highlighted item shows where focus is. In the chat prompt, the placeholder is shortened to "/ for skills, @ for content", "Add an object" is renamed "Add object", and switching between the tasks and context drawers closes the open drawer before the other opens. The search and add-to-collection dialogs keep their input's inner padding. The prompt's command completions render as a react-ui-list Listbox in a popover above the editor, at most 8 rows tall, whose arrow keys stop at the first and last command instead of wrapping; Escape closes it and leaves focus in the editor. An editor no longer moves focus to its host on an Escape CodeMirror already acted on.
+
+  A polyline locked while its vertices are being edited loses its vertex handles, Delete no longer removes a vertex from it, and a vertex drag the lock lands in the middle of neither previews nor commits a change.
+
+- e343467: A floating panel stays opaque while it is dragged; the devtools SDK Explorer shows a connecting state and scrolls its tool list; the MESH signal panel no longer crashes before signal status arrives; the ECHO Objects tree drops the `$.content` role labels and shows a relation's glyph at the end of its row; and the ECHO Queries list supports arrow-key navigation with compact query labels.
+- @dxos/util@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/react-focus@0.17.0
+  - @dxos/react-hooks@0.17.0
+  - @dxos/react-error-boundary@0.17.0
+  - @dxos/lit-ui@0.17.0
+  - @dxos/i18n@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/ui-types@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

@@ -1,5 +1,21 @@
 # @dxos/echo-doc
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [68d1c38]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [074e3e6]
+- Updated dependencies [de25be8]
+- Updated dependencies [2cebedc]
+- Updated dependencies [df65316]
+  - @dxos/echo-client@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

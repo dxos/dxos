@@ -1,5 +1,38 @@
 # @dxos/agent-runtime
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [d105c19]
+- Updated dependencies [68d1c38]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [f10c1dc]
+- Updated dependencies [853af68]
+- Updated dependencies [592fdad]
+- Updated dependencies [074e3e6]
+- Updated dependencies [a843e27]
+- Updated dependencies [de25be8]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [768db81]
+- Updated dependencies [df65316]
+  - @dxos/assistant@0.17.0
+  - @dxos/echo-client@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/compute-runtime@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/ai@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/mcp-client@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

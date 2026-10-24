@@ -1,5 +1,49 @@
 # @dxos/plugin-preview
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [710da43]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [f142d06]
+- Updated dependencies [e343467]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [13bc40d]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [592fdad]
+- Updated dependencies [49df146]
+- Updated dependencies [074e3e6]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [80c25fe]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [df65316]
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/react-ui-syntax-highlighter@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/plugin-client@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/react-ui-card@0.17.0
+  - @dxos/echo-react@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/ui-types@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

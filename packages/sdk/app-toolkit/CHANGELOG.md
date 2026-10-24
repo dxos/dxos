@@ -1,5 +1,82 @@
 # @dxos/app-toolkit
 
+## 0.17.0
+
+### Minor Changes
+
+- 80c25fe: The transcription microphone shows in every chat prompt again, just before Send: the Space Home prompt, the assistant companion before its first message, an agent's chat, and stored chats. Each prompt reads the buttons other plugins add to it from a hidden prompt node under the node that hosts it, which `AppNode.makePrompt`, `AppNode.getPromptId` and `AppNode.PROMPT_TYPE` describe; contributors file app-graph actions on it with the `prompt` disposition. Every surface that hosts a chat article now passes its graph node as `nodeId`, which is where the prompt finds its host. `ObjectAction` is deprecated in favour of app-graph actions on the subject's node.
+- 3b37cd1: Space templates now run in the new space's process: `SpaceOperation.ApplyTemplate` applies them, so a template's `build` can schedule operations. Breaking: `SpaceTemplate.apply` returns an `Effect` (requiring `Operation.Service`) instead of a `Promise`, and `SampleSpace.Definition`, `applyTo` and `buildArchive` take an `R` type parameter for what `build` needs. The magazine plugin adds an AI Briefing template with five live AI news feeds and a magazine that curates itself after creation, and feed and magazine cards share one layout.
+- 0a14251: Connector syncs report a progress meter. `Progress.withReporter` (with `makeReporter` and `createSyncKey`) starts a meter for one run and ends it with the run's outcome. Trello, Linear, GitHub, Slack and Google Contacts report one meter per synced board, team, repo, channel or group, with the exact total set from the listing before anything is processed. The magazine feed sync's total is now the posts it adds rather than every post it fetched. Google Calendar reports a count of events synced, since its API returns no total.
+
+### Patch Changes
+
+- f142d06: The chat prompt is redesigned. One picker chooses the agent, where it runs (this device or EDGE) and the model. Skills load as `/` commands, and `@` mentions an object, which joins the chat's context when the message is sent. A "+" menu adds files, objects, commands and MCP servers; "Add an object…" opens the search dialog as a picker (`SearchOperation.SelectObject`). The chat's tasks and its context are two drawers above the prompt, and other plugins can add sections to the context drawer (`ChatSurface.ChatDetails`).
+
+  The `@` menus in the chat and in the markdown editor now run a full-text search once typing pauses, through `ObjectCombobox.useSearch` in `@dxos/app-toolkit`; the markdown `@` menu now matches body text as well as names. `searchQuery`, `searchFilter`, `byRelevance` and `useListedTypeUris` moved to `ObjectCombobox` from plugin-search, which no longer exports `buildSearchQuery`, `buildSearchFilter` or `useSearchableTypeUris`.
+
+  Replies no longer stop rendering when the thread's view is switched while they stream.
+
+- Updated dependencies [d65fd2a]
+- Updated dependencies [6f6547f]
+- Updated dependencies [710da43]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [e343467]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [a245692]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [592fdad]
+- Updated dependencies [49df146]
+- Updated dependencies [ece15ab]
+- Updated dependencies [074e3e6]
+- Updated dependencies [0d3e4cf]
+- Updated dependencies [a843e27]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [d00cc85]
+- Updated dependencies [768db81]
+- Updated dependencies [e1d537b]
+- Updated dependencies [c1c6cf4]
+- Updated dependencies [6f27147]
+- Updated dependencies [df65316]
+  - @dxos/edge-client@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/client-protocol@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/react-ui-syntax-highlighter@0.17.0
+  - @dxos/react-ui-list@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/client@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/react-client@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/migrations@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/ai@0.17.0
+  - @dxos/credentials@0.17.0
+  - @dxos/config@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/graph@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/react-focus@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/i18n@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/progress@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/ui-types@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

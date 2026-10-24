@@ -1,5 +1,23 @@
 # @dxos/credentials
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [ece15ab]
+- Updated dependencies [768db81]
+  - @dxos/protocols@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/keyring@0.17.0
+  - @dxos/crypto@0.17.0
+  - @dxos/timeframe@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

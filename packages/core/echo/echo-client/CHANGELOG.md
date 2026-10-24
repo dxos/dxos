@@ -1,5 +1,37 @@
 # @dxos/echo-client
 
+## 0.17.0
+
+### Patch Changes
+
+- 68d1c38: New documents now reach the host as Automerge bytes in `DataService.createDocument`'s new `initialDocument` field, so initial values holding `RawString` links or bytes are no longer rejected by the RPC transport. The JSON `initialValue` field is deprecated and logs a warning when a host receives it. A creation the transport refuses as invalid now fails once instead of retrying forever, and retried creations back off instead of re-sending every 250 ms.
+- de25be8: `RepoClosedError` now says what stopped the repo proxy. Its `closeReason` context is the reason the closer gave, read from the `CLOSE_REASON_ATTRIBUTE` attribute of the `Context` passed to `close()` (`'closed'` when none is given), or `'error'` when an error put the proxy in its error state. Its `cause` is that error, or one whose stack is the `close()` call site. The proxy logs once when it stops: at info for a close that gave a reason or an error, at debug for a plain close. `EchoClient`, `DatabaseImpl` and `EntityManager` pass their close context down to the proxy.
+- Updated dependencies [3058ee6]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [2ed9310]
+- Updated dependencies [ece15ab]
+- Updated dependencies [074e3e6]
+- Updated dependencies [b601d34]
+- Updated dependencies [2cebedc]
+- Updated dependencies [768db81]
+- Updated dependencies [df65316]
+  - @dxos/echo-host@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/echo-protocol@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/blob@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/tracing@0.17.0
+  - @dxos/debug@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

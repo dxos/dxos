@@ -1,5 +1,87 @@
 # @dxos/plugin-sheet
 
+## 0.17.0
+
+### Minor Changes
+
+- 3f5e201: Add scatter (with optional per-series and pooled regression lines), heatmap, radar and world-map chart types to `Plot`, and make them available to sheet charts. The sheet charts companion now shows the first chart of each sheet when you switch sheets.
+- 296c44c: Sheet charts gain a timeline type that plots a range with one event per row (date, category, title, description, image URL) along a vertical spine. Categories can nest by path (`Tech/AI`) and show as toggle tags grouped under their parent, in a chosen order and colors; the timeline offers a left, center or right spine, log, linear or compact spacing (animated when switched), optional dates in labels, labels sized to fit, a text filter, click and arrow-key selection, and a card with each event's description and image. `@dxos/react-ui-plot` exports the `Timeline` component, `TimelineOptions`, and helpers for reading and arranging events.
+
+  Charts are now their own ECHO objects (`org.dxos.type.chart`), owned by their sheet and pointing back to it, so a document can embed a chart as a section or slide; the sheet (`org.dxos.type.sheet` 0.2.0) holds refs to them, and a migration turns 0.1.0 sheets' inline charts into chart objects. `Sheet.addChart`, `Sheet.updateChart` and `Sheet.removeChart` manage them.
+
+  plugin-sheet contributes a "Sales" space template (a small sales sheet with a bar chart and a pie chart) and `SheetUtil.cellsFromRows`, which turns rows of values into A1 cells.
+
+  Presented markdown decks render embedded objects (`![label](echo:…)`) through their slide surface instead of as broken images, and a sheet's grid spans all its rows and columns rather than the first 50 rows.
+
+  The timeline reads deep time (`13.8 Gya`, `66 Mya`, `300 kya`) and labels negative years as BCE, ticking spans longer than ten thousand years in years ago; `@dxos/react-ui-plot/testing` now holds a history of the universe. Presented decks keep slides at the top rather than centering them.
+
+### Patch Changes
+
+- Updated dependencies [710da43]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [f142d06]
+- Updated dependencies [e343467]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [13bc40d]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [592fdad]
+- Updated dependencies [49df146]
+- Updated dependencies [074e3e6]
+- Updated dependencies [a843e27]
+- Updated dependencies [3f5e201]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [80c25fe]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [296c44c]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [bdb73fb]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [e1d537b]
+- Updated dependencies [c1c6cf4]
+- Updated dependencies [6f27147]
+- Updated dependencies [df65316]
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/plugin-space@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/plugin-markdown@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/react-ui-plot@0.17.0
+  - @dxos/react-ui-list@0.17.0
+  - @dxos/ui-editor@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/plugin-client@0.17.0
+  - @dxos/client@0.17.0
+  - @dxos/plugin-review@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/react-client@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/react-ui-grid@0.17.0
+  - @dxos/echo-doc@0.17.0
+  - @dxos/echo-react@0.17.0
+  - @dxos/compute-hyperformula@0.17.0
+  - @dxos/crypto@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/react-hooks@0.17.0
+  - @dxos/lit-grid@0.17.0
+  - @dxos/debug@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/ui-types@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

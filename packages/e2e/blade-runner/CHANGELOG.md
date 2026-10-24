@@ -1,5 +1,53 @@
 # @dxos/blade-runner
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [d65fd2a]
+- Updated dependencies [6f6547f]
+- Updated dependencies [3058ee6]
+- Updated dependencies [68d1c38]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [a245692]
+- Updated dependencies [2ed9310]
+- Updated dependencies [853af68]
+- Updated dependencies [ece15ab]
+- Updated dependencies [074e3e6]
+- Updated dependencies [0d3e4cf]
+- Updated dependencies [b601d34]
+- Updated dependencies [de25be8]
+- Updated dependencies [2cebedc]
+- Updated dependencies [768db81]
+- Updated dependencies [df65316]
+  - @dxos/edge-client@0.17.0
+  - @dxos/echo-host@0.17.0
+  - @dxos/echo-client@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/compute-runtime@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/client-protocol@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/edge-compute@0.17.0
+  - @dxos/messaging@0.17.0
+  - @dxos/plugin-script@0.17.0
+  - @dxos/client@0.17.0
+  - @dxos/echo-doc@0.17.0
+  - @dxos/echo-protocol@0.17.0
+  - @dxos/network-manager@0.17.0
+  - @dxos/rpc@0.17.0
+  - @dxos/config@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/random@0.17.0
+  - @dxos/tracing@0.17.0
+  - @dxos/debug@0.17.0
+  - @dxos/esbuild-plugins@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

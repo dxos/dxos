@@ -1,5 +1,117 @@
 # @dxos/plugin-projects
 
+## 0.17.0
+
+### Minor Changes
+
+- f10c1dc: **Features belong to projects.** `Feature` gains `project` and `position`, and the `FeatureMap` type and its map operations are removed: `FeatureOperation.GetFeatures { project }` replaces `GetMap`, and `Update { project }` moves a feature (`null` takes it off). Existing feature maps are not migrated; move their features onto a project. A project's Features tab shows its features as cards, on a canvas, or on a Kanban board, where dragging a card to another column sets its status. A feature's article files a task into its project's task set. A spec path naming a plugin's bundled `PLUGIN.mdl` opens that spec rendered in Composer rather than on GitHub, and plugin-projects bundles its own; plugin-registry exports its graph paths as `@dxos/plugin-registry/RegistryPaths`.
+
+  **Claude Code under `vite dev`.** The local coding-agent runtime (the agent entry, the `AgentHelper` host interface, the agent server, worktrees and the project's code folder) moves from plugin-code to plugin-claude, whose Tauri-only module runs it as the `dx-agent` sidecar. `@dxos/plugin-computer` is renamed `@dxos/plugin-dev-shell` and is a core plugin under `vite dev`: it hosts the same agent server in its own process, started before the dev server holds too many files to spawn, and contributes an `AgentHelper` over it. Its exec route likewise runs scripts in a runner process. The agent host takes a `runtime` option for the command that runs agent entries (default `bun`), and the page's `HelperClient` forgets an agent server that no longer answers, so the next request starts a new one. plugin-code is the plugin-authoring workbench only; its coding-agent permission setting is now plugin-claude's.
+
+  **Assistant.** A turn no longer ends silently when the model calls a tool the toolkit lacks or with parameters it rejects: tool calls are decoded with deferred validation, so the model gets a tool error to recover from. A code-mode turn is no longer capped at 16 model/tool turns unless the host passes `maxTurns`. A form list field keeps every item it adds; before, adding a second item brought back the first one blank. `Board.Column.Body` in react-ui-mosaic is generic over its item.
+
+- 13bc40d: Feature maps are editable in Composer: create a feature on the map and name it in place, add an existing one from the toolbar, edit a card's name and description inline, set status or remove a feature from its card menu, draw and delete dependency arrows and remove boxes on the canvas, and add dependencies and link tasks from the feature article. Every edit runs the same operation an agent uses, and a refused edit (a dependency that would close a cycle) shows its message as a toast. The canvas dynamic projection accepts `onLink` and `onDelete` hooks, so a host can apply those edits to its own model instead of the projection's graph. `ObjectPicker` no longer pins its popup to a custom trigger's width, so a picker behind an icon button is readable.
+- a1c19cc: Projects gains feature maps: `Feature` (status, two-level subfeatures, repo spec links, `DependsOn` and `Implements` relations), `Showcase` (a write-up with artifacts that `Demonstrates` a feature or task) and `FeatureMap` (a board with cards and canvas views), with operations agents use through the project skill. The canvas dynamic projection now accepts a node factory, a link style with arrow ends, and its own capabilities, so a host can render its own nodes in a drag-only view.
+
+### Patch Changes
+
+- d105c19: Code-mode `print` renders an ECHO object as a compact card — schema fields, refs as `→ type id "label"`, long values cut with a marker — followed by counts of its relations, children and referrers with the exact query that fetches each, and the skills its type declares that the chat has not enabled; Effect `Result`/`Exit`/`Option` values and errors print by their real fields. A request now shows history calls to tools it no longer offers as text rather than as callable tool calls, `query-skills` takes a `query` that finds the skill providing a tool by name or description, and a chat attached to a feature binds the project skill.
+- 9d66bcd: Collections share one model for the current item, selection and arrow movement.
+
+  - **Current** is the item with keyboard focus, drawn only by the focus ring, whether it was reached by a click or the arrow keys. `Focus.Item` no longer writes `aria-current` on focus; `aria-current` is the caller's "you are here" (`current` prop).
+  - **Selected** is `aria-selected`, drawn by one shared neutral edge in `--dx-selected-color` (`.dx-focus-item[aria-selected='true']`, and `Card` `selected`), so a selection that has lost focus never reads as focus. `Focus.Item` takes `selected`; a selectable item is an `option` unless it names its own role. When an item is both, the focus ring is drawn.
+  - **One selection API.** Every collection takes `itemProps(id)`, a `Focus.ItemBinding` (`aria-selected`, `onClick`, `onFocus`, and `onActivate` for click or Enter), as `useListSelection`'s `bind(id).rowProps` gives it; `Focus.bindItem` maps a binding onto an element. `Masonry.Viewport`, `Mosaic.Container` and `Board.Root` take it, replacing masonry's `selectedIds`/`onSelect` and mosaic's `selectedIds`/`onSelectionChange` and the context's `setSelected`. `Mosaic.Tile` and `CardTile.Root` take a `binding`, which a stack passes each tile. A collection whose items carry `aria-selected` is a `listbox` of `option`s. `useListSelection` follows focus anywhere in the item's arrow-key group, so a board's columns select as one collection.
+  - **Masonry** tiles are `Focus.Item`s with no ring of their own, and no longer wrap their cards in a second `Focus.Item`.
+  - **Arrow movement by position**, as tabster's grid mode: `useFocusGroup`'s `grid` axis moves to the item on screen in the arrow's direction (`grid-linear` for up and down); both previously stepped in DOM order. A new `itemSelector` names targets at any depth, and `findNearest` is exported. `Focus.Group` takes `orientation='grid' | 'grid-linear'` and `itemSelector`. `Board.Root` takes `navigation='grid'` to move between cards across columns.
+  - A toolbar that starts or ends with a `Layout.Block` no longer adds edge padding, so a Board column without a drag handle aligns its title as one with a handle does.
+  - Feature maps:
+    - `FeatureCard` is a composite (`Root`, `Provider`, header parts and section parts) that each view composes.
+    - It takes two generic handlers, `onChange(feature, changes)` and `onOpen(target)`.
+    - Edit is in the card's menu.
+    - Long lists scroll inside the card.
+    - Kanban and masonry cards show the focus ring on click and follow the arrow keys by position, and both select the focused card, marking what it needs and fading the rest; Escape clears it.
+    - The cards view filters by text and status.
+    - Removing a feature from a project now takes its card off the project's views.
+
+- d00cc85: Typing quickly into a combobox or a controlled `Editor.View` no longer drops characters when the page renders slowly, and Enter picks a combobox's first match even when pressed in the same frame as the typing. A chat feed's jump to the latest message now arrives however long the feed sat idle, and scrolling away while an answer streams is no longer undone. Table cells for any type with a GeoPoint field open their editor instead of an error, and a new feature card's name field takes focus once the board shows it. `useMasonryTileRevealed`, `pin` on `useFollow`'s handle, and the `gate` option on scripted model turns are new.
+- Updated dependencies [710da43]
+- Updated dependencies [5ee83e7]
+- Updated dependencies [c1c6cf4]
+- Updated dependencies [a5742a9]
+- Updated dependencies [df16fba]
+- Updated dependencies [40271d5]
+- Updated dependencies [e82b80a]
+- Updated dependencies [e8029c3]
+- Updated dependencies [9d1d6f0]
+- Updated dependencies [f142d06]
+- Updated dependencies [e343467]
+- Updated dependencies [94df7d2]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [df1380a]
+- Updated dependencies [13bc40d]
+- Updated dependencies [a1c19cc]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [592fdad]
+- Updated dependencies [49df146]
+- Updated dependencies [6030742]
+- Updated dependencies [074e3e6]
+- Updated dependencies [f55e992]
+- Updated dependencies [85ec7e0]
+- Updated dependencies [a843e27]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [80c25fe]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [e1d537b]
+- Updated dependencies [c1c6cf4]
+- Updated dependencies [6f27147]
+- Updated dependencies [df65316]
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui-canvas@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/plugin-assistant@0.17.0
+  - @dxos/plugin-space@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/assistant-toolkit@0.17.0
+  - @dxos/plugin-markdown@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/react-ui-list@0.17.0
+  - @dxos/plugin-inbox@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/plugin-registry@0.17.0
+  - @dxos/plugin-attention@0.17.0
+  - @dxos/plugin-routine@0.17.0
+  - @dxos/plugin-tasks@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/react-client@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/react-ui-dnd@0.17.0
+  - @dxos/react-ui-masonry@0.17.0
+  - @dxos/react-ui-mosaic@0.17.0
+  - @dxos/react-ui-search@0.17.0
+  - @dxos/react-ui-task@0.17.0
+  - @dxos/react-ui-trace@0.17.0
+  - @dxos/extractor-lib@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/echo-react@0.17.0
+  - @dxos/ai@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/graph@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

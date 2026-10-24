@@ -1,5 +1,138 @@
 # @dxos/plugin-assistant
 
+## 0.17.0
+
+### Minor Changes
+
+- f55e992: GitHub and Linear connections now give the assistant their MCP server's tools, acting as whoever the connection signs in as, and any other MCP server can be added as a Custom MCP Server connection. Each chat can turn a connection's MCP server off, and the agent can add one with the Skill Manager. The Browser and DXOS Introspect servers are built in: plugins contribute them (`AppCapabilities.McpServer`), they live in the registry rather than a space, and each chat turns them on as its skills need them. A chat in code mode calls its connections' MCP tools from its code, and Claude Code gets the chat's connections too, with each credential kept in Composer.
+
+  Breaking:
+
+  - `Connection.accessToken` is optional, so code reading it must handle a connection with no credential (`Connection.getAccessToken` asserts one).
+  - `Skill.mcpServers` is removed: a skill carries instructions and tools, and its servers come from connections.
+  - An MCP server's tools are offered to the agent as `mcp__<connection>__<tool>` (for example `mcp__weather__get_weather`), as other MCP hosts name them; instructions that name a tool by its bare name should name the prefixed one.
+  - The `McpServer` ECHO type (`@dxos/compute/McpServer`) is removed without a migration. Servers stored that way are no longer connected; add them again as Custom MCP Server connections.
+
+### Patch Changes
+
+- df16fba: Popups (menus, selects, comboboxes, popovers) no longer draw a focus ring; the highlighted item shows where focus is. In the chat prompt, the placeholder is shortened to "/ for skills, @ for content", "Add an object" is renamed "Add object", and switching between the tasks and context drawers closes the open drawer before the other opens. The search and add-to-collection dialogs keep their input's inner padding. The prompt's command completions render as a react-ui-list Listbox in a popover above the editor, at most 8 rows tall, whose arrow keys stop at the first and last command instead of wrapping; Escape closes it and leaves focus in the editor. An editor no longer moves focus to its host on an Escape CodeMirror already acted on.
+
+  A polyline locked while its vertices are being edited loses its vertex handles, Delete no longer removes a vertex from it, and a vertex drag the lock lands in the middle of neither previews nor commits a change.
+
+- 9d1d6f0: An assistant chat that anyone besides the reader has written in shows an avatar beside every prompt, and names the prompts the reader did not write. `ChatThread.Root` takes `userDid` and `getAuthor` for this, and a prompt's row keeps its author's DID while it is on its way to the agent.
+- f142d06: The chat prompt is redesigned. One picker chooses the agent, where it runs (this device or EDGE) and the model. Skills load as `/` commands, and `@` mentions an object, which joins the chat's context when the message is sent. A "+" menu adds files, objects, commands and MCP servers; "Add an object…" opens the search dialog as a picker (`SearchOperation.SelectObject`). The chat's tasks and its context are two drawers above the prompt, and other plugins can add sections to the context drawer (`ChatSurface.ChatDetails`).
+
+  The `@` menus in the chat and in the markdown editor now run a full-text search once typing pauses, through `ObjectCombobox.useSearch` in `@dxos/app-toolkit`; the markdown `@` menu now matches body text as well as names. `searchQuery`, `searchFilter`, `byRelevance` and `useListedTypeUris` moved to `ObjectCombobox` from plugin-search, which no longer exports `buildSearchQuery`, `buildSearchFilter` or `useSearchableTypeUris`.
+
+  Replies no longer stop rendering when the thread's view is switched while they stream.
+
+- 85ec7e0: Chats run on Claude Code (or any agent of its own) are now named automatically: a chat delegated several tasks is named from their titles, and a chat whose first prompt from Composer is queued behind a running turn is named from that prompt.
+- 80c25fe: The transcription microphone shows in every chat prompt again, just before Send: the Space Home prompt, the assistant companion before its first message, an agent's chat, and stored chats. Each prompt reads the buttons other plugins add to it from a hidden prompt node under the node that hosts it, which `AppNode.makePrompt`, `AppNode.getPromptId` and `AppNode.PROMPT_TYPE` describe; contributors file app-graph actions on it with the `prompt` disposition. Every surface that hosts a chat article now passes its graph node as `nodeId`, which is where the prompt finds its host. `ObjectAction` is deprecated in favour of app-graph actions on the subject's node.
+- Updated dependencies [d65fd2a]
+- Updated dependencies [6f6547f]
+- Updated dependencies [710da43]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [9d1d6f0]
+- Updated dependencies [f142d06]
+- Updated dependencies [d105c19]
+- Updated dependencies [e343467]
+- Updated dependencies [68d1c38]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [a245692]
+- Updated dependencies [f10c1dc]
+- Updated dependencies [13bc40d]
+- Updated dependencies [853af68]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [592fdad]
+- Updated dependencies [49df146]
+- Updated dependencies [074e3e6]
+- Updated dependencies [a843e27]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [80c25fe]
+- Updated dependencies [de25be8]
+- Updated dependencies [ed0d367]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [85131cc]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [bdb73fb]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [e1d537b]
+- Updated dependencies [c1c6cf4]
+- Updated dependencies [6f27147]
+- Updated dependencies [df65316]
+  - @dxos/edge-client@0.17.0
+  - @dxos/devtools@0.17.0
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/react-ui-chat@0.17.0
+  - @dxos/react-ui-editor@0.17.0
+  - @dxos/plugin-search@0.17.0
+  - @dxos/plugin-space@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/react-ui-assistant@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/assistant-toolkit@0.17.0
+  - @dxos/plugin-markdown@0.17.0
+  - @dxos/react-ui-feed@0.17.0
+  - @dxos/assistant@0.17.0
+  - @dxos/echo-client@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/compute-runtime@0.17.0
+  - @dxos/types@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/react-ui-list@0.17.0
+  - @dxos/plugin-transcription@0.17.0
+  - @dxos/react-ui-experimental@0.17.0
+  - @dxos/react-ui-transcription@0.17.0
+  - @dxos/ui-editor@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/plugin-connector@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/plugin-client@0.17.0
+  - @dxos/plugin-registry@0.17.0
+  - @dxos/client@0.17.0
+  - @dxos/plugin-attention@0.17.0
+  - @dxos/plugin-deck@0.17.0
+  - @dxos/plugin-file@0.17.0
+  - @dxos/plugin-graph@0.17.0
+  - @dxos/plugin-observability@0.17.0
+  - @dxos/plugin-routine@0.17.0
+  - @dxos/plugin-status-bar@0.17.0
+  - @dxos/plugin-tasks@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/react-client@0.17.0
+  - @dxos/react-ui-attention@0.17.0
+  - @dxos/react-ui-components@0.17.0
+  - @dxos/react-ui-task@0.17.0
+  - @dxos/react-ui-trace@0.17.0
+  - @dxos/agent-runtime@0.17.0
+  - @dxos/conductor@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/echo-react@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/ai@0.17.0
+  - @dxos/observability@0.17.0
+  - @dxos/config@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/halo-react@0.17.0
+  - @dxos/mcp-client@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/graph@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/react-hooks@0.17.0
+  - @dxos/react-list@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/ui@0.17.0
+  - @dxos/ui-theme@0.17.0
+  - @dxos/ui-types@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

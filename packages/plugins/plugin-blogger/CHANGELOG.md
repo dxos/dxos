@@ -1,5 +1,57 @@
 # @dxos/plugin-blogger
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [710da43]
+- Updated dependencies [df16fba]
+- Updated dependencies [e8029c3]
+- Updated dependencies [f142d06]
+- Updated dependencies [e343467]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [13bc40d]
+- Updated dependencies [9d66bcd]
+- Updated dependencies [49df146]
+- Updated dependencies [074e3e6]
+- Updated dependencies [a843e27]
+- Updated dependencies [2d585c2]
+- Updated dependencies [0166448]
+- Updated dependencies [80c25fe]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [3b37cd1]
+- Updated dependencies [d00cc85]
+- Updated dependencies [0a14251]
+- Updated dependencies [768db81]
+- Updated dependencies [e1d537b]
+- Updated dependencies [df65316]
+  - @dxos/app-framework@0.17.0
+  - @dxos/react-ui@0.17.0
+  - @dxos/plugin-space@0.17.0
+  - @dxos/react-ui-form@0.17.0
+  - @dxos/app-toolkit@0.17.0
+  - @dxos/plugin-markdown@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/plugin-connector@0.17.0
+  - @dxos/react-ui-menu@0.17.0
+  - @dxos/client@0.17.0
+  - @dxos/plugin-graph@0.17.0
+  - @dxos/plugin-review@0.17.0
+  - @dxos/app-graph@0.17.0
+  - @dxos/react-ui-masonry@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/echo-react@0.17.0
+  - @dxos/schema@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/graph@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/ui-theme@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

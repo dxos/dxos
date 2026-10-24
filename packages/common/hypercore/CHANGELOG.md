@@ -1,5 +1,20 @@
 # @dxos/hypercore
 
+## 0.17.0
+
+### Patch Changes
+
+- Updated dependencies [768db81]
+  - @dxos/keys@0.17.0
+  - @dxos/crypto@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/async@0.17.0
+  - @dxos/random-access-storage@0.17.0
+  - @dxos/invariant@0.17.0
+  - @dxos/node-std@0.17.0
+  - @dxos/typings@0.17.0
+  - @dxos/vendor-hypercore@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes

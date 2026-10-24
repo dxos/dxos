@@ -1,5 +1,40 @@
 # @dxos/compute-runtime
 
+## 0.17.0
+
+### Patch Changes
+
+- 853af68: `wrapFunctionHandler` now flushes ECHO writes when an operation exits with `Operation.runAgain()`, as it does on success. Before, a run that wrote a checkpoint and then asked to run again could lose those writes.
+- Updated dependencies [d65fd2a]
+- Updated dependencies [6f6547f]
+- Updated dependencies [68d1c38]
+- Updated dependencies [a70fb5a]
+- Updated dependencies [a245692]
+- Updated dependencies [ece15ab]
+- Updated dependencies [074e3e6]
+- Updated dependencies [a843e27]
+- Updated dependencies [de25be8]
+- Updated dependencies [2cebedc]
+- Updated dependencies [8d7d5e1]
+- Updated dependencies [768db81]
+- Updated dependencies [df65316]
+  - @dxos/edge-client@0.17.0
+  - @dxos/echo-client@0.17.0
+  - @dxos/echo@0.17.0
+  - @dxos/protocols@0.17.0
+  - @dxos/compute@0.17.0
+  - @dxos/keys@0.17.0
+  - @dxos/link@0.17.0
+  - @dxos/ai@0.17.0
+  - @dxos/operation@0.17.0
+  - @dxos/util@0.17.0
+  - @dxos/blob@0.17.0
+  - @dxos/context@0.17.0
+  - @dxos/effect@0.17.0
+  - @dxos/log@0.17.0
+  - @dxos/errors@0.17.0
+  - @dxos/invariant@0.17.0
+
 ## 0.16.0
 
 ### Patch Changes
