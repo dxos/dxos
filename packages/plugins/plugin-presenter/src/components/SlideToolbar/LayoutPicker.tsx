@@ -49,21 +49,17 @@ export type LayoutPickerProps = {
 export const LayoutPicker = ({ value, onChange }: LayoutPickerProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [open, setOpen] = useState(false);
-  const options = useMemo(
-    () => LAYOUTS.map((layout) => ({ value: layout, label: t(`layout.${layout}.label`, { defaultValue: layout }) })),
-    [t],
-  );
+  const options = useMemo(() => LAYOUTS.map((layout) => ({ value: layout, label: t(`layout.${layout}.label`) })), [t]);
   return (
     <Popover.Root open={open} onOpenChange={({ open }) => setOpen(open)}>
       <Popover.Trigger asChild>
         <Button.Root
           data-testid='presenter.slide-toolbar.layout'
           icon='ph--layout--regular'
+          iconOnly
           variant='ghost'
           label={t('slide-layout.label')}
-        >
-          {t(`layout.${value}.label`, { defaultValue: value })}
-        </Button.Root>
+        />
       </Popover.Trigger>
       {/* The grid is wider than a popover's default cap, so the cap is lifted to the viewport. */}
       <Popover.Content classNames='max-w-[calc(100vw-1rem)] overflow-auto'>
