@@ -40,7 +40,7 @@ import {
 import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { DataService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
-import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
+import { type JsonKeyOptions, type MaybePromise, markMilestone } from '@dxos/util';
 
 import { type ClientEdgeAPI, createClientEdgeAPI, createEdgeIdentity } from '../edge/index.ts';
 import { type MeshProxy } from '../mesh/mesh-proxy.ts';
@@ -404,6 +404,7 @@ export class Client {
     }
 
     performance.mark('client.initialize:called');
+    markMilestone('client.initializing');
     log('initializing client');
     const { createClientServices, IFrameManager, ShellManager } = await import('../services/index.ts');
     const { Runtime_Client_ServicesMode, Runtime_Client_Storage_SqliteMode } =
@@ -485,6 +486,7 @@ export class Client {
     this._initialized = true;
     this._initializedTrigger.wake();
     performance.mark('client.initialize:completed');
+    markMilestone('client.ready');
     performance.measure('client.initialize', 'client.initialize:called', 'client.initialize:completed');
     log('initialized client');
     return this;

@@ -100,7 +100,12 @@ export const CreateConnectionPanel = ({
   const sharedAccountNote = considered?.kind === 'user' && members.length > 1 && (
     <Banner.Root valence='warning' data-testid='create-connection-panel.shared-account'>
       <Banner.Title>{t('user-connection-shared.title')}</Banner.Title>
-      <Banner.Body>{t('user-connection-shared.message')}</Banner.Body>
+      {/* An MCP server lets every member's agent write as this account, not just sync through it. */}
+      <Banner.Body>
+        {considered.mcp
+          ? t('user-connection-shared-mcp.message', { service: considered.label ?? considered.id })
+          : t('user-connection-shared.message')}
+      </Banner.Body>
     </Banner.Root>
   );
 

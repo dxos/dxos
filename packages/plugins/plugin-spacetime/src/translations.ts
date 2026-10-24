@@ -43,6 +43,7 @@ export const translations = [
         'tool.extrude.label': 'Extrude',
 
         'template.label': 'Object type',
+        'hue.label': 'Colour',
 
         'action.add-object.label': 'Add object',
         'action.delete-object.label': 'Delete object',

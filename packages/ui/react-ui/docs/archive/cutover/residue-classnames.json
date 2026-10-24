@@ -154,7 +154,7 @@
           "line": 204,
           "column": 45,
           "reason": "dx-document on ScrollArea.Viewport: the prop exists only on other hosts",
-          "snippet": "'dx-document gap-4 divide-y divide-subdued-separator'"
+          "snippet": "'dx-document gap-4 divide-y divide-separator-subtle'"
         },
         {
           "transform": "classnames",

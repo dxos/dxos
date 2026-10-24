@@ -103,6 +103,9 @@
       "path": "../plugin-mermaid"
     },
     {
+      "path": "../plugin-presenter"
+    },
+    {
       "path": "../plugin-sheet"
     },
     {

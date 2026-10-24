@@ -433,6 +433,9 @@
       "path": "packages/plugins/plugin-code/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-code-graph/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-commerce/tsconfig.json"
     },
     {

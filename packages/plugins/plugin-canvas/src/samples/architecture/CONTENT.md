@@ -6,7 +6,7 @@ and link them, and a sheet of plugin metrics with a bar chart and a pie chart.
 - Code: `partial.ts`, exported as `Architecture.Partial` from `@dxos/plugin-canvas/Architecture`. Diagram sources are `plugin-canvas/docs/diagrams/*.dx`,
   precompiled to `compiled.json`.
 - Requires: nothing
-- Provides: `drawings.<id>` for each diagram below, `docs.composer`, `docs.dxos`, `docs.edge`, `metrics`
+- Provides: `drawings.<id>` for each diagram below, `docs.composer`, `docs.dxos`, `docs.edge`, `echo`, `metrics`
 - Clock: unused
 - Used by: `ArchitectureSpace.makeTemplate` (`org.dxos.plugin.canvas.template.architecture`) and
   `FieldstoneSpace.makeTemplate` (plugin-debug)
@@ -45,17 +45,22 @@ and link them, and a sheet of plugin metrics with a bar chart and a pie chart.
     end to end".
   - **EDGE**: embeds the `edge` drawing; a mermaid sequence diagram "A device connecting".
   - Each has a `## Reading the code` section. Links use space-relative `echo:///<id>` URIs.
+- 1 `Markdown.Document` **ECHO** (`echo.md`, built by `echo-deck.ts`): a 29-slide presenter deck explaining ECHO from
+  the foundations: types and JSON Schema, Automerge and DXOS's extensions to it, spaces and credentials, queries,
+  feeds, P2P (MESH), EDGE on Cloudflare, schema migration and agents. Slides use `<v-clicks>` reveal steps and
+  highlighted code excerpts from the repository, and embed the `composer-echo`, `edge`, `edge-subduction` and
+  `composer-data` drawings, whose `{{id}}` placeholders become space-relative URIs.
 - 1 `Sheet.Sheet` **Plugin metrics** (`metrics.ts`): columns Plugin, PRs, Tests, Closed issues, Open issues; 20 rows, one per real
   `packages/plugins` package, with made-up figures. Two charts on the sheet, both in its Charts companion: `bar` over
   `A1:E21`, `header`, `horizontal` and `stacked`, so plugins run down the y axis and the four measures stack into one bar
   along the x axis; and `pie` over `A1:B9`, `header`, the eight busiest plugins' share of merged PRs.
-- 1 `Collection` "Architecture" on the space root, in order: Composer, DXOS, EDGE (docs), Overview,
+- 1 `Collection` "Architecture" on the space root, in order: Composer, DXOS, EDGE (docs), ECHO (deck), Overview,
   CF Workers (drawings), Plugin metrics (sheet).
 
 ## Checks
 
 - 12 drawings, every canvas `readonly`.
-- The Architecture collection's labels are `Composer, DXOS, EDGE, Overview, CF Workers, Plugin metrics`.
+- The Architecture collection's labels are `Composer, DXOS, EDGE, ECHO, Overview, CF Workers, Plugin metrics`.
 - The metrics sheet is 21 rows by 5 columns with a horizontal bar chart over `A1:E21` and a pie chart over `A1:B9`.
 - Every drill-down box in `composer` and `edge` is a frame linked to the right child drawing.
 - Boxes sit on the lattice.

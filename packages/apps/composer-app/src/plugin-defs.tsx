@@ -24,6 +24,7 @@ import * as ChessPlugin from '@dxos/plugin-chess/ChessPlugin';
 import * as ClaudePlugin from '@dxos/plugin-claude/ClaudePlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as CloudflarePlugin from '@dxos/plugin-cloudflare/CloudflarePlugin';
+import * as CodeGraphPlugin from '@dxos/plugin-code-graph/CodeGraphPlugin';
 import * as CodePlugin from '@dxos/plugin-code/CodePlugin';
 import * as CommercePlugin from '@dxos/plugin-commerce/CommercePlugin';
 import * as ConductorPlugin from '@dxos/plugin-conductor/ConductorPlugin';
@@ -133,6 +134,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     CanvasPlugin.meta.profile.key,
     TldrawPlugin.meta.profile.key,
     ExcalidrawPlugin.meta.profile.key,
+    PresenterPlugin.meta.profile.key,
     TablePlugin.meta.profile.key,
     ThreadPlugin.meta.profile.key,
 
@@ -151,6 +153,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       BookmarksPlugin.meta.profile.key,
       CallsPlugin.meta.profile.key,
       CodePlugin.meta.profile.key,
+      CodeGraphPlugin.meta.profile.key,
       CommercePlugin.meta.profile.key,
       CrmPlugin.meta.profile.key,
       DebugPlugin.meta.profile.key,
@@ -270,6 +273,8 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     ClaudePlugin.make(),
     CloudflarePlugin.make(),
     CodePlugin.make(),
+    // Reads code-index through a `vite dev` route (see its vite plugin below in vite.config.ts); inert in a build.
+    CodeGraphPlugin.make(),
     CommercePlugin.make(),
     ConductorPlugin.make(),
     CrmPlugin.make(),

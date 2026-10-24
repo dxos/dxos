@@ -344,7 +344,7 @@ export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>, co
     Credentials,
     Effect.gen(function* () {
       const connection = yield* Database.load(connectionRef);
-      const accessToken = yield* Database.load(connection.accessToken);
+      const accessToken = yield* Database.load(Connection.getAccessToken(connection));
       const db = Obj.getDatabase(connection);
       if (!db) {
         return yield* Effect.fail(new ConnectorSync.DatabaseMissingError());

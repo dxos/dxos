@@ -828,6 +828,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       namespace,
     );
     this.#feeds.set(feedUri, handle);
+    this._feedHandleCreated.emit(handle);
     return handle;
   }
 
@@ -859,6 +860,13 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   _knownFeedHandles(): Iterable<FeedHandle> {
     return this.#feeds.values();
   }
+
+  /**
+   * @internal
+   * Fires when a feed handle is instantiated, so a live query over all feeds can watch a feed first written
+   * after it started.
+   */
+  readonly _feedHandleCreated = new Event<FeedHandle>();
 
   /**
    * Disposes and drops the cached feed handle for a feed (its live working-set / core cache). A

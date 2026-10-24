@@ -9,7 +9,7 @@ import * as Card from '@dxos/react-ui/Card';
 
 import { type MediaArtifact } from '#types';
 
-import { useMediaArtifactCoverSource } from '../../hooks/index.ts';
+import { useMediaArtifactCoverSource } from '../../hooks/useMediaArtifactCoverSource.ts';
 
 export type MediaArtifactCardProps = {
   subject: MediaArtifact.MediaArtifact;

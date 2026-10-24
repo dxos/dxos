@@ -6,6 +6,7 @@ export {
   type CompiledQuery,
   type CompiledRow,
   type CompileOptions,
+  MAX_EDGES_PER_ROW,
   type PlanSubquery,
   SqlPlanCompiler,
   compilePlan,

@@ -13,6 +13,7 @@ export default defineConfig({
     'capabilities': 'src/capabilities/index.ts',
     'components': 'src/components/index.ts',
     'containers': 'src/containers/index.ts',
+    'StudioHooks': 'src/hooks/StudioHooks.ts',
     'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
     'surfaces': 'src/surfaces.ts',
