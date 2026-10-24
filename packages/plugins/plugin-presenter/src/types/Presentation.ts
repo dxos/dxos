@@ -11,6 +11,7 @@ import { Text } from '@dxos/schema';
 
 import { meta } from '#meta';
 
+import { splitSlides } from '../markdown/split.ts';
 import * as SlideTheme from './SlideTheme.ts';
 
 /** Key of the presenter skill, attached to the Presentation type. */
@@ -24,8 +25,8 @@ export class Presentation extends Type.makeObject<Presentation>(DXN.make('org.dx
     name: Schema.optional(Schema.String),
     /** Sections in slide order; owned `Text` targets are parented to the presentation. */
     sections: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Annotation.FormInputAnnotation.set(false)),
-    /** Overrides the first slide's `theme:` headmatter for every slide, linked objects included. */
-    theme: Schema.optional(SlideTheme.Settings),
+    /** Overrides the first slide's `theme:` headmatter for every slide, linked objects included; edited by `PresentationProperties`. */
+    theme: Schema.optional(SlideTheme.Settings).pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--presentation--regular', hue: 'orange' }),
@@ -55,6 +56,12 @@ export const make = ({ name, slides = [] }: { name?: string; slides?: string[] }
   }
   return presentation;
 };
+
+/**
+ * A presentation from one Slidev markdown document: a slide per `---`, each keeping its own frontmatter.
+ */
+export const makeFromMarkdown = ({ name, markdown }: { name?: string; markdown: string }): Presentation =>
+  make({ name, slides: splitSlides(markdown) });
 
 /**
  * Whether the target is an owned slide, read from its parent so one array keeps the order.

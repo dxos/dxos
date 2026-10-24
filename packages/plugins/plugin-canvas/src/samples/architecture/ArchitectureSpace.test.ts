@@ -83,6 +83,7 @@ describe('ArchitectureSpace', () => {
       'Composer',
       'DXOS',
       'EDGE',
+      'ECHO',
       'Overview',
       'CF Workers',
       'Plugin metrics',

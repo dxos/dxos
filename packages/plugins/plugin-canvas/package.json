@@ -157,6 +157,7 @@
     "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-mermaid": "workspace:*",
+    "@dxos/plugin-presenter": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-tldraw": "workspace:*",
     "@dxos/random": "workspace:*",

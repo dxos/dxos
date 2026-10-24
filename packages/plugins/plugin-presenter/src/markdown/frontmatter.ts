@@ -51,6 +51,7 @@ const fields = {
   backgroundOpacity: Schema.Number.check(Schema.isBetween({ minimum: 0, maximum: 1 })),
   backgroundPosition: Schema.String,
   bleed: Schema.Literals(BLEED_SIDES),
+  hide: Schema.Boolean,
   theme: Schema.String,
 };
 
@@ -66,6 +67,8 @@ export const SlideFrontmatter = Schema.Struct({
   backgroundPosition: Schema.optionalKey(fields.backgroundPosition),
   /** DXOS: the outer column on this side reaches the slide's edges, with no padding (`two-cols`, `three-cols`). */
   bleed: Schema.optionalKey(fields.bleed),
+  /** The slide is left out when the deck is presented; it still shows in the grid. */
+  hide: Schema.optionalKey(fields.hide),
   /** Deck theme; read only from the first slide (Slidev headmatter). */
   theme: Schema.optionalKey(fields.theme),
 });

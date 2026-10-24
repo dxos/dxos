@@ -6,6 +6,7 @@ import * as Atom from 'effect/reactivity/Atom';
 
 import { Obj } from '@dxos/echo';
 
+import { isHiddenSlide } from '#markdown';
 import { type Presentation } from '#types';
 
 import { type SlideSource, toSlideSources } from './SlideSource.ts';
@@ -25,4 +26,24 @@ export const slideSourcesAtom = Atom.family((presentation: Presentation.Presenta
     });
     return toSlideSources(presentation, targets);
   }),
+);
+
+/**
+ * The positions, in {@link slideSourcesAtom}'s slides, of those shown when the deck is presented: every slide but those
+ * whose frontmatter sets `hide: true`, re-evaluated as their text changes. Positions rather than slides, since an object
+ * linked twice yields two slides with one id.
+ */
+export const presentedPositionsAtom = Atom.family((presentation: Presentation.Presentation): Atom.Atom<number[]> =>
+  Atom.make((get) =>
+    get(slideSourcesAtom(presentation)).flatMap((source, position) => {
+      switch (source.kind) {
+        case 'text':
+          return isHiddenSlide(get(Obj.atomProperty(source.text, 'content'))) ? [] : [position];
+        case 'markdown':
+          return isHiddenSlide(source.content) ? [] : [position];
+        default:
+          return [position];
+      }
+    }),
+  ),
 );

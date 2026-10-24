@@ -622,3 +622,15 @@ export const makeNotFound = (): AppGraphNode.NodeArg<null> => ({
     disposition: 'hidden',
   },
 });
+
+//
+// Context menu.
+//
+
+/** Names the graph node an element shows, so right-clicking it opens that node's actions as the app's context menu. */
+export const CONTEXT_MENU_ATTRIBUTE = 'data-dx-context';
+
+/** Props that make an element open the context menu of the graph node `id`. */
+export const contextMenuProps = (id: string): Record<typeof CONTEXT_MENU_ATTRIBUTE, string> => ({
+  [CONTEXT_MENU_ATTRIBUTE]: id,
+});

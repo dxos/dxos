@@ -131,10 +131,13 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   // A section is a drawing shown inside another object (a document's embed), so it is only looked at, never edited,
   // and shows the drawing alone: no palette and no inspectors.
   const section = role === AppSurface.Section.role;
+  // A slide shows the drawing as a picture: read-only like a section, and with no toolbar or panels at all.
+  const slide = role === AppSurface.Slide.role;
+  const embedded = section || slide;
   // Only the main article draws the canvas chrome (top edge, grid, guides); elsewhere it is the bare drawing.
   const article = role === AppSurface.Article.role;
   const newer = CanvasFormat.isNewerScene(canvas.schema);
-  const readonly = (viewReadonly ?? record?.readonly ?? false) || section || newer;
+  const readonly = (viewReadonly ?? record?.readonly ?? false) || embedded || newer;
   const handleInspectorsChange = useCallback(
     (mode: InspectorMode) => updateViewState((state) => ({ ...state, floating: mode === 'floating' })),
     [updateViewState],
@@ -204,8 +207,8 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   return (
     // A section takes the document's width and has no height of its own (read-only, it has no dock), so its height
     // follows from the drawing's 3:2 frame.
-    <Panel.Root role={role} classNames={section ? 'w-full aspect-[3/2]' : undefined}>
-      {newer && !section && (
+    <Panel.Root role={role} classNames={section ? 'w-full aspect-[3/2]' : slide ? 'bg-transparent' : undefined}>
+      {newer && !embedded && (
         <Panel.Header>
           <NewerFormatBanner />
         </Panel.Header>
@@ -229,11 +232,12 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               background={look.background}
               backgroundGrid={article ? look.backgroundGrid : 'none'}
               // Both write the canvas record, which a newer plugin's format keeps read-only here.
-              onThemeChange={section || newer ? undefined : handleThemeChange}
-              onBackgroundGridChange={section || newer ? undefined : handleBackgroundGridChange}
+              onThemeChange={embedded || newer ? undefined : handleThemeChange}
+              onBackgroundGridChange={embedded || newer ? undefined : handleBackgroundGridChange}
               readonly={readonly}
+              transparent={slide}
               // A newer plugin's format stays read-only here, so the toggle that would unlock it is not offered.
-              onReadonlyChange={section || newer ? undefined : handleReadonlyChange}
+              onReadonlyChange={embedded || newer ? undefined : handleReadonlyChange}
               initialCamera={savedCamera}
               onCameraChange={handleCameraChange}
               initialDisplay={{ snap, guides: article && guides, fit }}
@@ -247,7 +251,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
             >
               <Canvas.Viewport liveDepth={settings.liveDepth} />
               {/* Unset means shown: settings saved before the default existed hold neither key. */}
-              {(settings.showToolbar ?? true) && (
+              {!slide && (settings.showToolbar ?? true) && (
                 <>
                   <Canvas.Navigation />
                   <Canvas.Actions />
@@ -255,7 +259,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
                   {!section && <Canvas.Theme />}
                 </>
               )}
-              {!section && (
+              {!embedded && (
                 <>
                   {(settings.showPalette ?? true) && <Canvas.Tools />}
                   <Canvas.Properties

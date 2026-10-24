@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
@@ -73,6 +73,21 @@ const DefaultStory = ({ slide: index = 0 }: { slide?: number }) => {
   );
 };
 
+/** The editor on the second section after the first section's slide is deleted, which leaves its ref behind. */
+const DeletedFirstStory = () => {
+  const { space } = useClientStory();
+  const [presentation] = useQuery(space?.db, Filter.type(Presentation.Presentation));
+  const texts = useQuery(space?.db, Filter.type(Text.Text));
+  const first = presentation?.sections[0];
+  const deleted = first && texts.find((text) => Ref.hasEntityId(text.id)(first));
+  useEffect(() => {
+    if (deleted) {
+      space?.db.remove(deleted);
+    }
+  }, [deleted, space]);
+  return <DefaultStory slide={1} />;
+};
+
 const meta = {
   title: 'plugins/plugin-presenter/containers/SlideEditorArticle',
   render: DefaultStory,
@@ -116,6 +131,17 @@ const preview = (canvasElement: HTMLElement) =>
   within(within(canvasElement).getByTestId('presenter.slide-editor.preview'));
 
 /** A two-column slide; typing at its end adds to the right column of the slide shown below. */
+/** A section whose slide was deleted is no slide to go back to, so on what is now the first slide, Previous is off. */
+export const DeletedSection: Story = {
+  render: DeletedFirstStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const previous = await canvas.findByTestId('presenter.slide-toolbar.previous', undefined, LOAD_TIMEOUT);
+    await waitFor(() => expect(previous).toBeDisabled());
+    await expect(canvas.getByTestId('presenter.slide-toolbar.next')).toBeEnabled();
+  },
+};
+
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

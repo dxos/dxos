@@ -8,11 +8,13 @@ import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { Database, Ref } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as Presentation from '@dxos/plugin-presenter/Presentation';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
 
 import { DIAGRAM_COMMANDS } from './compiled.ts';
 import { loadDiagramDrawings } from './diagrams.ts';
 import { type Docs, makeDocs } from './docs.ts';
+import { makeEchoDeck } from './echo-deck.ts';
 import { makePluginMetrics } from './metrics.ts';
 import { architectureDiagrams } from './sets.ts';
 
@@ -20,13 +22,15 @@ export type Provides = {
   /** Every diagram's drawing, by diagram id. */
   readonly drawings: ReadonlyMap<string, Drawing.Drawing>;
   readonly docs: Docs;
+  /** The ECHO presentation, embedding the data-stack and EDGE drawings. */
+  readonly echo: Presentation.Presentation;
   /** Per-plugin LOC, PRs and tests, with a bar chart of them. */
   readonly metrics: Sheet.Sheet;
 };
 
 /** Composer and EDGE as nested canvas drawings, with the three documents that introduce them and a sheet of plugin metrics. Spec: `CONTENT.md`. */
 export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('architecture', {
-  schemas: [Drawing.Drawing, Drawing.Canvas, Markdown.Document, Sheet.Sheet, Sheet.Chart],
+  schemas: [Drawing.Drawing, Drawing.Canvas, Markdown.Document, Presentation.Presentation, Sheet.Sheet, Sheet.Chart],
   run: () =>
     Effect.gen(function* () {
       const { db } = yield* Database.Service;
@@ -44,11 +48,12 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('archi
       for (const doc of [docs.composer, docs.dxos, docs.edge]) {
         yield* Database.add(doc);
       }
+      const echo = yield* Database.add(makeEchoDeck(Object.fromEntries(drawings)));
       const metrics = yield* Database.add(makePluginMetrics());
       yield* SampleSpace.collection(
         'Architecture',
-        [docs.composer, docs.dxos, docs.edge, composer, edge, metrics].map((object) => Ref.make(object)),
+        [docs.composer, docs.dxos, docs.edge, echo, composer, edge, metrics].map((object) => Ref.make(object)),
       );
-      return { drawings, docs, metrics };
+      return { drawings, docs, echo, metrics };
     }),
 });

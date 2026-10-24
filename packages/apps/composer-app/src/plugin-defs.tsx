@@ -134,6 +134,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     CanvasPlugin.meta.profile.key,
     TldrawPlugin.meta.profile.key,
     ExcalidrawPlugin.meta.profile.key,
+    PresenterPlugin.meta.profile.key,
     TablePlugin.meta.profile.key,
     ThreadPlugin.meta.profile.key,
 

@@ -16,6 +16,7 @@ import * as Position from '@dxos/util/Position';
 import {
   DocumentArticle,
   PresentationArticle,
+  PresentationProperties,
   SlideArticle,
   SlideEditorArticle,
   SlidePreviewArticle,
@@ -67,6 +68,12 @@ export default Capability.makeModule(() =>
         ),
         component: SlidePreviewArticle,
         props: ({ role, data: { companionTo } }) => ({ role, subject: companionTo }),
+      }),
+      Surface.create({
+        id: 'presentationProperties',
+        filter: AppSurface.object(AppSurface.ObjectProperties, Presentation.Presentation),
+        component: PresentationProperties,
+        props: ({ data: { subject } }) => ({ presentation: subject }),
       }),
       Surface.create({
         id: 'slide',

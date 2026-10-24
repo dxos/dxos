@@ -10,19 +10,22 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import { Obj } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { slideSourcesAtom } from '#deck';
+import { isHiddenSlide } from '#markdown';
 import { meta } from '#meta';
 import { Presentation } from '#types';
 
-import { createSectionsExtension, firstHeading } from './app-graph-builder.ts';
+import { createSectionsExtension, createSlideActionsExtension, firstHeading } from './app-graph-builder.ts';
 
 const ROOT_ID = 'root';
 
@@ -61,6 +64,7 @@ describe('presentation sections', () => {
       }),
     );
     AppGraphBuilder.addExtension(graphBuilder, Effect.runSync(createSectionsExtension()));
+    AppGraphBuilder.addExtension(graphBuilder, Effect.runSync(createSlideActionsExtension()));
 
     const graph = graphBuilder.graph;
     const presentationId = `${ROOT_ID}/${presentation.id}`;
@@ -71,8 +75,38 @@ describe('presentation sections', () => {
 
     const children = () => registry.get(graph.connections(presentationId, 'child'));
     const parent = () => Option.getOrUndefined(AppGraph.getNode(graph, presentationId));
-    return { db, registry, graphBuilder, presentation, notes, children, parent };
+    return { db, registry, graph, graphBuilder, presentation, notes, children, parent };
   };
+
+  test('an owned slide toggles hidden from its node, and a linked object has no such action', async ({ expect }) => {
+    const { registry, graph, graphBuilder, presentation, notes, children } = await setup();
+    const [slide] = children();
+    const owned = presentation.sections[0].target;
+    if (!slide || !Obj.instanceOf(Text.Text, owned)) {
+      throw new Error('The first section is not an owned slide.');
+    }
+    const toggle = () =>
+      registry
+        .get(graph.actions(slide.id))
+        .filter(AppGraphNode.isAction)
+        .find(({ id }) => id.endsWith(`/${meta.profile.key}.toggle-hidden`));
+    AppGraph.expandSync(graph, slide.id, 'action');
+    await AppGraphBuilder.flush(graphBuilder);
+    const hide = toggle();
+    if (!hide) {
+      throw new Error('The slide has no toggle-hidden action.');
+    }
+    expect(hide.properties.label).toEqual(['hide-slide.label', { ns: meta.profile.key }]);
+    await EffectEx.runPromise(hide.data());
+    expect(isHiddenSlide(owned.content)).toBe(true);
+    await AppGraphBuilder.flush(graphBuilder);
+    expect(toggle()?.properties.label).toEqual(['show-slide.label', { ns: meta.profile.key }]);
+
+    const linked = children().find((child) => child.data.id === notes.id);
+    AppGraph.expandSync(graph, linked?.id ?? '', 'action');
+    await AppGraphBuilder.flush(graphBuilder);
+    expect(registry.get(graph.actions(linked?.id ?? '')).some(({ id }) => id.endsWith('.toggle-hidden'))).toBe(false);
+  });
 
   const sectionIds = (presentation: Presentation.Presentation) => presentation.sections.map((ref) => ref.target?.id);
 

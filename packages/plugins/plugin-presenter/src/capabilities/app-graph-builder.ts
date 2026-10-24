@@ -20,6 +20,7 @@ import { Text } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
 import { slideSourcesAtom } from '#deck';
+import { applyEdit, isHiddenSlide, setFrontmatter } from '#markdown';
 import { meta } from '#meta';
 import { Presentation, PresenterOperation, SlideEditorViewState } from '#types';
 
@@ -110,6 +111,38 @@ export const createSlidePreviewExtension = () =>
       ]),
   });
 
+/** An owned slide can be hidden from (or shown in) the presentation, from the navtree and the context menu. */
+export const createSlideActionsExtension = () =>
+  AppGraphBuilder.createExtension({
+    id: 'slideActions',
+    match: (node) =>
+      Obj.instanceOf(Text.Text, node.data) && Obj.instanceOf(Presentation.Presentation, Obj.getParent(node.data))
+        ? Option.some(node.data)
+        : Option.none(),
+    actions: (text, get) => {
+      const hidden = isHiddenSlide(get(Obj.atomProperty(text, 'content')));
+      return Effect.succeed([
+        {
+          id: `${meta.profile.key}.toggle-hidden`,
+          data: () =>
+            Effect.sync(() => {
+              const content = text.content;
+              const edit = setFrontmatter(content, { hide: isHiddenSlide(content) ? undefined : true });
+              Obj.update(text, (text) => {
+                text.content = applyEdit(content, edit);
+              });
+            }),
+          properties: {
+            label: [hidden ? 'show-slide.label' : 'hide-slide.label', { ns: meta.profile.key }],
+            icon: hidden ? 'ph--eye--regular' : 'ph--eye-slash--regular',
+            disposition: 'list-item',
+            testId: 'presenter.toggle-hidden',
+          },
+        },
+      ]);
+    },
+  });
+
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const companionExtensions = yield* AppGraphBuilder.createExtension({
@@ -159,11 +192,13 @@ export default Capability.makeModule(
 
     const sectionsExtensions = yield* createSectionsExtension();
     const slidePreviewExtensions = yield* createSlidePreviewExtension();
+    const slideActionsExtensions = yield* createSlideActionsExtension();
 
     return Capability.contribute(AppCapabilities.AppGraphBuilder, [
       ...companionExtensions,
       ...sectionsExtensions,
       ...slidePreviewExtensions,
+      ...slideActionsExtensions,
     ]);
   }),
 );
