@@ -8,8 +8,9 @@ import React from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { ContextMenuRoot } from '../containers/ContextMenuRoot/index.ts';
 import { meta } from '#meta';
+
+import { ContextMenuRoot } from '../containers/ContextMenuRoot/index.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

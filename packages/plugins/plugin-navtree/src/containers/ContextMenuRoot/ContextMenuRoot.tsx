@@ -46,7 +46,9 @@ export const ContextMenuRoot = () => {
 
   const handleClose = useCallback(() => setTarget(undefined), []);
 
-  return target ? <NodeContextMenu key={`${target.id}:${target.x}:${target.y}`} {...target} onClose={handleClose} /> : null;
+  return target ? (
+    <NodeContextMenu key={`${target.id}:${target.x}:${target.y}`} {...target} onClose={handleClose} />
+  ) : null;
 };
 
 ContextMenuRoot.displayName = 'ContextMenuRoot';
