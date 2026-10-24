@@ -12,7 +12,7 @@ import { SlideTheme } from '#types';
 
 import { MarkdownSlide } from '../MarkdownSlide/index.ts';
 import { Slide } from '../Slide/index.ts';
-import { SlideThemeProvider } from './SlideTheme.tsx';
+import { SlideThemeProvider, useSlideThemeStyle } from './SlideTheme.tsx';
 
 const CONTENT = [
   '# Local-first',
@@ -50,6 +50,61 @@ const DefaultStory = ({ themes }: StoryProps) => (
             </SlideThemeProvider>
           </div>
         </figure>
+      ))}
+    </div>
+  </div>
+);
+
+const SPECIMEN_TITLE = 'The quick brown fox jumps over the lazy dog';
+
+const SPECIMEN_TEXT =
+  'Local-first software keeps your data on your own devices, syncs it peer to peer, and still lets a whole team ' +
+  'work on it together. Numbers 0123456789, and punctuation: “quotes”, (brackets) & ampersands.';
+
+const SPECIMEN_CODE = "const space = await client.spaces.create({ name: 'Demo' }); // 0O 1lI";
+
+type SpecimenProps = { label: string; settings: SlideTheme.Settings; code?: boolean };
+
+/** One font's sample: a title and a paragraph in it (or a line of code), loaded on demand as a deck would. */
+const Specimen = ({ label, settings, code }: SpecimenProps) => (
+  <SlideThemeProvider settings={settings}>
+    <SpecimenText label={label} code={code} />
+  </SlideThemeProvider>
+);
+
+const SpecimenText = ({ label, code }: Pick<SpecimenProps, 'label' | 'code'>) => {
+  const style = useSlideThemeStyle();
+  const family = code ? 'var(--slide-font-mono)' : 'var(--slide-font-body)';
+  return (
+    <section data-font={label} style={style} className='flex flex-col gap-3 py-8 border-b border-separator'>
+      <div className='text-xs text-description font-mono'>{label}</div>
+      {code ? (
+        <pre className='m-0 text-lg whitespace-pre-wrap' style={{ fontFamily: family }}>
+          {SPECIMEN_CODE}
+        </pre>
+      ) : (
+        <>
+          <h2 className='m-0 text-4xl' style={{ fontFamily: 'var(--slide-font-heading)' }}>
+            {SPECIMEN_TITLE}
+          </h2>
+          <p className='m-0 text-lg leading-relaxed' style={{ fontFamily: family }}>
+            {SPECIMEN_TEXT}
+          </p>
+        </>
+      )}
+    </section>
+  );
+};
+
+/** Every text font, then every code font, in one scrolling list. */
+const FontSpecimensStory = () => (
+  <div className='size-full overflow-y-auto'>
+    <div className='flex flex-col px-8 max-w-[56rem] mx-auto'>
+      {SlideTheme.FONTS.map((font) => (
+        <Specimen key={font} label={`font: ${font}`} settings={{ font }} />
+      ))}
+      {SlideTheme.MONO_FONTS.map((monoFont) => (
+        <Specimen key={monoFont} label={`monoFont: ${monoFont}`} settings={{ monoFont }} code />
       ))}
     </div>
   </div>
@@ -110,3 +165,14 @@ export const All: Story = {
 export const Overrides: Story = { args: { themes: OVERRIDES } };
 
 export const Fonts: Story = { args: { themes: FONTS } };
+
+/** The same title and paragraph in each text font, and a line of code in each code font. */
+export const FontSpecimens: Story = {
+  args: { themes: [] },
+  render: () => <FontSpecimensStory />,
+  play: async ({ canvasElement }) => {
+    await expect(canvasElement.querySelectorAll('[data-font]')).toHaveLength(
+      SlideTheme.FONTS.length + SlideTheme.MONO_FONTS.length,
+    );
+  },
+};
