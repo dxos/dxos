@@ -4,9 +4,24 @@
 
 // @import-as-namespace
 
-import { type Color, ColorPicker as ColorPickerPrimitive, parseColor } from '@ark-ui/react/color-picker';
+import {
+  type Color,
+  ColorPicker as ColorPickerPrimitive,
+  parseColor,
+  useColorPickerContext as useArkColorPickerContext,
+} from '@ark-ui/react/color-picker';
 import { Portal } from '@ark-ui/react/portal';
-import React, { type PropsWithChildren, type ReactNode, forwardRef, useMemo } from 'react';
+import React, {
+  type KeyboardEvent,
+  type PropsWithChildren,
+  type ReactNode,
+  forwardRef,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { createContext } from '@dxos/react-hooks';
 import { mx } from '@dxos/ui-theme';
@@ -196,6 +211,7 @@ const ColorPickerTrigger = ({
               </Tabs.Content>
               <Tabs.Content value='swatches' classNames='pt-2'>
                 <Swatches
+                  value={value}
                   hues={hues ?? DEFAULT_HUES}
                   tones={tones ?? DEFAULT_TONES}
                   onPick={(next) => {
@@ -212,40 +228,91 @@ const ColorPickerTrigger = ({
   );
 };
 
-type SwatchesProps = { hues: SwatchHue[]; tones: number[]; onPick: (color: string) => void };
+type SwatchesProps = {
+  hues: SwatchHue[];
+  tones: number[];
+  /** The current color, outlined when it is one of the swatches. */
+  value?: string;
+  onPick: (color: string) => void;
+};
 
 /**
  * One row per hue, one column per tone; a pick writes the tone's resolved color, since a value must not be a `var()`.
  * The grid is the wheel's width whatever the tone count, and rows stay one swatch tall, so fewer tones widen the cells.
+ * A radio group: arrow keys move between swatches, Enter picks and closes the popover, Escape closes it unchanged.
  */
-const Swatches = ({ hues, tones, onPick }: SwatchesProps) => (
-  <div
-    className='grid w-48 gap-0.5'
-    style={{ gridTemplateColumns: `repeat(${tones.length}, minmax(0, 1fr))`, gridAutoRows: '1rem' }}
-  >
-    {hues.flatMap((hue) =>
-      tones.map((tone) => {
-        const name = `--color-${hue}-${tone}`;
-        return (
-          <button
-            key={name}
-            type='button'
-            title={`${hue}-${tone}`}
-            aria-label={`${hue}-${tone}`}
-            className='dx-focus-ring rounded-xs'
-            style={{ backgroundColor: `var(${name})` }}
-            onClick={(event) => {
-              const resolved = getComputedStyle(event.currentTarget).getPropertyValue(name).trim();
-              if (resolved) {
-                onPick(resolved);
-              }
-            }}
-          />
-        );
-      }),
-    )}
-  </div>
-);
+const Swatches = ({ hues, tones, value, onPick }: SwatchesProps) => {
+  const { setOpen } = useArkColorPickerContext();
+  const gridRef = useRef<HTMLDivElement>(null);
+  const names = useMemo(() => hues.flatMap((hue) => tones.map((tone) => `${hue}-${tone}`)), [hues, tones]);
+
+  // The swatches' colors as values: a stored color is a resolved string, so the selection is found by comparing them.
+  const [resolved, setResolved] = useState<string[]>([]);
+  useLayoutEffect(() => {
+    const style = gridRef.current && getComputedStyle(gridRef.current);
+    setResolved(style ? names.map((name) => style.getPropertyValue(`--color-${name}`).trim()) : []);
+  }, [names]);
+
+  const selected = value === undefined ? -1 : resolved.indexOf(value);
+  const [active, setActive] = useState(0);
+  useEffect(() => {
+    if (selected >= 0) {
+      setActive(selected);
+    }
+  }, [selected]);
+
+  const focus = (index: number) => {
+    setActive(index);
+    gridRef.current?.querySelectorAll<HTMLButtonElement>('button')[index]?.focus();
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const columns = tones.length;
+    const last = names.length - 1;
+    const step: Record<string, number> = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -columns, ArrowDown: columns };
+    if (event.key in step) {
+      event.preventDefault();
+      focus(Math.min(last, Math.max(0, active + step[event.key])));
+    } else if (event.key === 'Home' || event.key === 'End') {
+      event.preventDefault();
+      focus(event.key === 'Home' ? 0 : last);
+    } else if (event.key === 'Enter' && resolved[active]) {
+      event.preventDefault();
+      onPick(resolved[active]);
+      setOpen(false);
+    }
+  };
+
+  return (
+    <div
+      ref={gridRef}
+      role='radiogroup'
+      className='grid w-48 gap-0.5'
+      style={{ gridTemplateColumns: `repeat(${tones.length}, minmax(0, 1fr))`, gridAutoRows: '1rem' }}
+      onKeyDown={handleKeyDown}
+    >
+      {names.map((name, index) => (
+        <button
+          key={name}
+          type='button'
+          role='radio'
+          aria-checked={index === selected}
+          aria-label={name}
+          title={name}
+          // Roving focus: Tab enters the grid at the current (or selected) swatch, and arrows move within it.
+          tabIndex={index === active ? 0 : -1}
+          className='dx-focus-ring rounded-xs'
+          style={{
+            backgroundColor: `var(--color-${name})`,
+            ...(index === selected && { outline: '2px solid var(--color-fg)', outlineOffset: '1px' }),
+          }}
+          onFocus={() => setActive(index)}
+          onClick={() => resolved[index] && onPick(resolved[index])}
+        />
+      ))}
+    </div>
+  );
+};
 
 ColorPickerTrigger.displayName = 'ColorPicker.Trigger';
 

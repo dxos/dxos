@@ -68,8 +68,37 @@ export const Swatch: Story = {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'Pick color' }));
     await userEvent.click(await screen.findByRole('tab', { name: 'Swatches' }));
-    await userEvent.click(await screen.findByRole('button', { name: 'red-600' }));
+    await userEvent.click(await screen.findByRole('radio', { name: 'red-600' }));
     await waitFor(() => expect(canvas.getByTestId('color.value').textContent).toMatch(/^(oklch|#|rgb)/));
-    await expect(screen.queryByRole('button', { name: 'red-500' })).toBeNull();
+    await expect(screen.queryByRole('radio', { name: 'red-500' })).toBeNull();
+  },
+};
+
+/** The current swatch is checked; arrows move between swatches, Enter picks and closes, Escape closes unchanged. */
+export const Keyboard: Story = {
+  args: { tones: [400, 600] },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const value = () => canvas.getByTestId('color.value').textContent;
+    await userEvent.click(canvas.getByRole('button', { name: 'Pick color' }));
+    await userEvent.click(await screen.findByRole('tab', { name: 'Swatches' }));
+    await userEvent.click(await screen.findByRole('radio', { name: 'red-600' }));
+    await waitFor(() => expect(screen.getByRole('radio', { name: 'red-600' })).toHaveAttribute('aria-checked', 'true'));
+    const picked = value();
+
+    // Down a row (one hue per row) from red-600 is orange-600; Enter picks it and closes the popover.
+    await userEvent.keyboard('{ArrowDown}');
+    await expect(screen.getByRole('radio', { name: 'orange-600' })).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(value()).not.toBe(picked));
+    await waitFor(() => expect(screen.queryByRole('radio', { name: 'orange-600' })).toBeNull());
+
+    // Escape closes without changing the value.
+    const kept = value();
+    await userEvent.click(canvas.getByRole('button', { name: 'Pick color' }));
+    await userEvent.click(await screen.findByRole('tab', { name: 'Swatches' }));
+    await expect(await screen.findByRole('radio', { name: 'orange-600' })).toHaveAttribute('aria-checked', 'true');
+    await userEvent.keyboard('{Escape}');
+    await expect(value()).toBe(kept);
   },
 };
