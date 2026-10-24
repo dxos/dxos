@@ -469,8 +469,12 @@ const useCollapse = (menu: MenuActions, units: MenuItem[], rows: RefObject<(HTML
     if (elements.length === 0) {
       return;
     }
-    const overflowing = elements.some((row) => row.scrollWidth > row.clientWidth + 1);
     const width = frameOf(elements[0]).clientWidth;
+    // A toolbar not laid out yet (a closed drawer, a hidden panel) has no width to fit; it is measured once it has one.
+    if (width === 0) {
+      return;
+    }
+    const overflowing = elements.some((row) => row.scrollWidth > row.clientWidth + 1);
     if (overflowing && count < collapsible.length) {
       thresholds.current[count] = width;
       setCount(count + 1);

@@ -19,7 +19,11 @@ export type ToolbarPlacement = {
   row?: number;
   /** Order within its zone or group; contributors interleave with the owner's items by it. */
   order?: number;
-  /** Moves into the overflow menu when the row is too narrow; higher ranks go first, none never moves. */
+  /**
+   * Rank for moving into the overflow menu when the row is too narrow: ranked items go first, higher ranks first; once
+   * they are all in the menu, unranked items follow, last first, so the row always fits. A `custom` or `text` item, or a
+   * group holding one, never moves.
+   */
   collapse?: number;
 };
 
