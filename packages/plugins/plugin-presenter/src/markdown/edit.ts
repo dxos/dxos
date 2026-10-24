@@ -5,7 +5,7 @@
 import * as Yaml from 'yaml';
 
 import { COLUMN_SLOTS } from './frontmatter.ts';
-import { type SlotName } from './remark-slidev.ts';
+import { SLOT_MARKER, type SlotName, isSlotName } from './remark-slidev.ts';
 
 /** A text replacement in a slide's markdown, with where the cursor should land afterwards. */
 export type SlideEdit = { from: number; to: number; insert: string; cursor: number };
@@ -45,6 +45,16 @@ export const SNIPPETS = {
   click: '<v-click>\n\n|\n\n</v-click>\n',
   clicks: '<v-clicks>\n\n- |\n\n</v-clicks>\n',
 } as const;
+
+/**
+ * The slot the cursor is in: the last slot marker on a line of its own before `offset`, else `default`. Read from the
+ * source, so a blank line after a column's last block still belongs to that column.
+ */
+export const slotBefore = (content: string, offset: number): SlotName => {
+  const lines = content.slice(0, offset).split('\n').reverse();
+  const name = lines.map((line) => SLOT_MARKER.exec(line.trim())?.[1]).find((name) => name !== undefined);
+  return name !== undefined && isSlotName(name) ? name : 'default';
+};
 
 /**
  * The marker that starts the column after the cursor's `slot` in a column layout, with the cursor below it; outside any

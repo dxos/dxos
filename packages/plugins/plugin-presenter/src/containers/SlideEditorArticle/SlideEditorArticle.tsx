@@ -45,7 +45,7 @@ import {
   notesEdit,
   parseSlide,
   setFrontmatter,
-  slotAtOffset,
+  slotBefore,
   surfaceSnippet,
 } from '#markdown';
 import { Presentation, PresenterOperation, SlideEditorViewState, SlideViewState } from '#types';
@@ -281,8 +281,8 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
 
 /** The marker for the column after the cursor's, in the slide's column layout (`two-cols` when it has none). */
 const nextColumn = (content: string, cursor: number): string => {
-  const slide = parseSlide(content);
-  return columnSnippet(isColumnLayout(slide.layout) ? slide.layout : 'two-cols', slotAtOffset(slide, cursor));
+  const { layout } = parseSlide(content);
+  return columnSnippet(isColumnLayout(layout) ? layout : 'two-cols', slotBefore(content, cursor));
 };
 
 /** The entity id a section's ref points at. */

@@ -11,6 +11,7 @@ import {
   insertSnippet,
   notesEdit,
   setFrontmatter,
+  slotBefore,
   surfaceSnippet,
 } from './edit.ts';
 import { parseSlide } from './parse.ts';
@@ -52,6 +53,14 @@ describe('columnSnippet', () => {
     expect(columnSnippet('three-cols', 'middle')).toBe('\n::right::\n\n|');
     expect(columnSnippet('two-by-two', 'right')).toBe('\n::bottom-left::\n\n|');
     expect(columnSnippet('two-by-two', undefined)).toBe('\n::right::\n\n|');
+  });
+
+  test("the cursor's slot is the last marker before it, so trailing blank lines stay in their column", () => {
+    const content = '---\nlayout: three-cols\n---\none\n\n::middle::\n\ntwo\n\n\n';
+    expect(slotBefore(content, content.length)).toBe('middle');
+    expect(columnSnippet('three-cols', slotBefore(content, content.length))).toBe('\n::right::\n\n|');
+    expect(slotBefore('# Title\n\n', 8)).toBe('default');
+    expect(slotBefore('a\n\n::bottom-left::\n\nb\n', 20)).toBe('bottom-left');
   });
 
   test('from the last column it starts the last one again', () => {

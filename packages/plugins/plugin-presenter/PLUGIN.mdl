@@ -194,10 +194,11 @@ component MarkdownSlide
 component SlideLayouts
   desc: |
     The layouts a slide's `layout` names: default, cover, center, section, intro, end, fact, statement, quote,
-    two-cols, two-cols-header, image, image-left, image-right, full, none. An unknown name renders with
-    default and is reported as a validation issue.
+    two-cols, two-cols-header, three-cols, two-by-two, image, image-left, image-right, full, none. three-cols
+    fills `default`, `middle` and `right`; two-by-two fills `default`, `right`, `bottom-left` and `bottom-right`.
+    An unknown name renders with default and is reported as a validation issue.
   props:
-    slots: { default, left, right }
+    slots: { default, left, middle, right, bottom-left, bottom-right }
     frontmatter: SlideFrontmatter
 ```
 

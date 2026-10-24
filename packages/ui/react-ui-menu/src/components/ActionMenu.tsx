@@ -172,8 +172,19 @@ const ActionSubMenu = ({ menu, group }: { menu: MenuActions; group: MenuItemGrou
 /** A toolbar's named group may be declared for others to extend and left empty; a menu then omits it. */
 const NamedGroupSubMenu = ({ menu, group }: { menu: MenuActions; group: MenuItemGroup<MenuItemChrome> }) => {
   const items = useMenuItems(menu, group);
-  return items?.length ? <ActionSubMenu menu={menu} group={group} /> : null;
+  return items?.some(isMenuRow) ? <ActionSubMenu menu={menu} group={group} /> : null;
 };
+
+/**
+ * Whether an item renders as a menu row: a label belongs to a toolbar row (a menu has its own title), and a menu cannot
+ * host a control its contributor renders itself.
+ */
+const isMenuRow = (item: MenuItem): boolean =>
+  isMenuGroup(item) ||
+  (!isSeparator(item) &&
+    !item.properties?.hidden &&
+    item.properties?.variant !== 'text' &&
+    item.properties?.variant !== 'custom');
 
 type Segment = { kind: 'item'; item: MenuItem } | { kind: 'radio'; id: string; actions: MenuAction[] };
 
@@ -211,9 +222,7 @@ const ActionMenuEntry = ({ menu, item, group }: { menu: MenuActions; item: MenuI
     );
   }
   const action = item as MenuAction;
-  // A label belongs to a toolbar row (a menu has its own title), and a menu cannot host a control its contributor
-  // renders itself.
-  if (action.properties?.hidden || action.properties?.variant === 'text' || action.properties?.variant === 'custom') {
+  if (!isMenuRow(action)) {
     return null;
   }
   return isCheckable(action) ? (
@@ -225,7 +234,7 @@ const ActionMenuEntry = ({ menu, item, group }: { menu: MenuActions; item: MenuI
 
 const OverflowSection = ({ menu, group }: { menu: MenuActions; group: MenuItemGroup }) => {
   const items = useMenuItems(menu, group);
-  if (!items?.length) {
+  if (!items?.some(isMenuRow)) {
     return null;
   }
   return (
