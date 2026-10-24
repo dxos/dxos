@@ -196,7 +196,8 @@ const ActionMenuEntry = ({ menu, item, group }: { menu: MenuActions; item: MenuI
     return <ActionSubMenu menu={menu} group={item as MenuItemGroup<MenuItemChrome>} />;
   }
   const action = item as MenuAction;
-  if (action.properties?.hidden) {
+  // A label belongs to a toolbar row; a menu has its own title.
+  if (action.properties?.hidden || action.properties?.variant === 'text') {
     return null;
   }
   return isCheckable(action) ? (

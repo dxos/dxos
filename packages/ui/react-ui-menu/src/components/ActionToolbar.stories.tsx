@@ -116,17 +116,58 @@ export const SwitchToolbar: Story = {
   },
 };
 
-/** `ActionToolbar` renders its own children after the graph items: here a filter input trails the actions. */
-export const TrailingChildren: Story = {
+/**
+ * Another component extends a toolbar it does not own through `customActions`: a label, its own control (`custom`), an
+ * action in the owner's named group, and an item in the overflow menu.
+ */
+export const CustomActions: Story = {
   render: () => {
-    const registry = useContext(RegistryContext);
-    const menu = useMemo(() => createNestedActionsResolver({ registry }), [registry]);
-
-    return (
-      <ActionToolbar {...menu} alwaysActive>
-        <Input.Root placeholder='Filter…' aria-label='Filter' />
-      </ActionToolbar>
+    const menu = useMenuBuilder(
+      () =>
+        MenuBuilder.make()
+          .group('edit', { label: 'Edit' }, (group) =>
+            group.action('undo', { label: 'Undo', icon: 'ph--arrow-counter-clockwise--regular' }, () => {}),
+          )
+          .build(),
+      [],
     );
+    const customActions = useMemo(
+      () =>
+        Atom.make(() =>
+          MenuBuilder.make()
+            .text('title', { label: 'Document', testId: 'title' })
+            .subgraph(
+              MenuBuilder.extend('edit', (group) =>
+                group.action('redo', { label: 'Redo', icon: 'ph--arrow-clockwise--regular' }, () => {}),
+              ),
+            )
+            .custom('filter', { label: 'Filter', placement: { zone: 'end' } }, () => (
+              <Input.Root placeholder='Filter…' aria-label='Filter' />
+            ))
+            .subgraph(
+              MenuBuilder.extend(TOOLBAR_OVERFLOW_ID, (group) =>
+                group.action('export', { label: 'Export', icon: 'ph--export--regular' }, () => {}),
+              ),
+            )
+            .build(),
+        ),
+      [],
+    );
+
+    return <ActionToolbar {...menu} customActions={customActions} alwaysActive />;
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(() => expect(canvas.getByTestId('title')).toHaveTextContent('Document'));
+    const buttons = [...canvas.getByRole('toolbar').querySelectorAll('button')].map((button) =>
+      button.getAttribute('aria-label'),
+    );
+    await expect(buttons.slice(0, 2)).toEqual(['Undo', 'Redo']);
+    await expect(canvas.getByRole('textbox', { name: 'Filter' })).toBeVisible();
+    await userEvent.click(canvas.getByTestId('toolbar.overflow'));
+    await expect(await within(document.body).findByRole('menuitem', { name: 'Export' })).toBeVisible();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(within(document.body).queryByRole('menu')).toBeNull());
   },
 };
 
@@ -150,10 +191,14 @@ export const EmbeddedMenu: Story = {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole('button', { name: 'More' }));
     const body = within(document.body);
-    // Every root item of the nested fixture is a group, so each is a submenu trigger.
-    const triggers = await body.findAllByRole('menuitem');
+    // Every root item of the nested fixture is a group, so each enabled one is a submenu trigger.
+    const triggers = (await body.findAllByRole('menuitem')).filter(
+      (trigger) => trigger.getAttribute('aria-disabled') !== 'true',
+    );
     await expect(triggers.length).toBeGreaterThan(0);
-    await expect(triggers[0]).toHaveAttribute('aria-haspopup', 'menu');
+    for (const trigger of triggers) {
+      await expect(trigger).toHaveAttribute('aria-haspopup', 'menu');
+    }
   },
 };
 

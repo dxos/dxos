@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Atom from 'effect/reactivity/Atom';
 import React, {
   type ButtonHTMLAttributes,
   type ForwardedRef,
   Fragment,
-  type ReactNode,
   type RefObject,
   forwardRef,
   useCallback,
@@ -35,13 +35,14 @@ import {
 
 import { translationKey } from '#translations';
 
-import { TOOLBAR_OVERFLOW_ID } from '../builder.ts';
-import { useMenuActions, useMenuItems } from '../hooks/index.ts';
+import { TOOLBAR_OVERFLOW_ID, defaultOverflowGroup } from '../builder.ts';
+import { type ActionGraphProps, useMenuActions, useMenuItems } from '../hooks/index.ts';
 import {
   type MenuAction,
   type MenuActions,
   type MenuItem,
   type MenuItemGroup,
+  type MenuItemsAccessor,
   isMenuGroup,
   isSeparator,
 } from '../types.ts';
@@ -320,6 +321,19 @@ const ToggleGroupToolbarItem = ({
   );
 };
 
+const TextToolbarItem = ({ action }: { action: MenuAction }) => {
+  const { t } = Hooks.useTranslation(translationKey);
+  const { label, hidden, testId, classNames } = action.properties;
+  if (hidden) {
+    return null;
+  }
+  return (
+    <Toolbar.Text classNames={classNames} {...(testId && { 'data-testid': testId })}>
+      {Theme.toLocalizedString(label, t)}
+    </Toolbar.Text>
+  );
+};
+
 /** One menu item rendered as its toolbar control (button, toggle, switch, dropdown, toggle group or custom). */
 export const MenuToolbarItem = ({ menu, item }: ItemProps<{ item: MenuItem }>) => {
   if (isSeparator(item)) {
@@ -343,6 +357,8 @@ export const MenuToolbarItem = ({ menu, item }: ItemProps<{ item: MenuItem }>) =
     case 'custom':
       // The contributor owns the rendered element (interactions the action model cannot express).
       return action.properties.render ? <>{action.properties.render()}</> : null;
+    case 'text':
+      return <TextToolbarItem action={action} />;
     default:
       return <ActionToolbarItem menu={menu} action={action} />;
   }
@@ -390,14 +406,7 @@ const InlineGroup = ({ menu, group, separated }: ItemProps<{ group: MenuItemGrou
 };
 
 /** The ⋮ menu: groups collapsed out of the rows (as submenus), then the overflow group's own and contributed items. */
-const OverflowMenu = ({ menu, group, collapsed }: ItemProps<{ group?: MenuItemGroup; collapsed: MenuItem[] }>) =>
-  group ? (
-    <OverflowGroupMenu menu={menu} group={group} collapsed={collapsed} />
-  ) : (
-    <OverflowMenuTrigger menu={menu} actions={collapsed} />
-  );
-
-const OverflowGroupMenu = ({ menu, group, collapsed }: ItemProps<{ group: MenuItemGroup; collapsed: MenuItem[] }>) => {
+const OverflowMenu = ({ menu, group, collapsed }: ItemProps<{ group: MenuItemGroup; collapsed: MenuItem[] }>) => {
   const items = useMenuItems(menu, group);
   const actions = useMemo(() => [...collapsed, ...byOrder(items ?? [])], [collapsed, items]);
   return <OverflowMenuTrigger menu={menu} actions={actions} testId={group.properties.testId} />;
@@ -425,8 +434,9 @@ const OverflowMenuTrigger = ({ menu, actions, testId }: ItemProps<{ actions: Men
 const frameOf = (row: HTMLElement): HTMLElement =>
   row.parentElement?.classList.contains('dx-toolbar-scroll') ? row.parentElement : row;
 
-/** A menu cannot show a control the contributor renders itself, so such an item never leaves the row. */
-const isMenuable = (item: MenuItem): boolean => !isSeparator(item) && item.properties.variant !== 'custom';
+/** A menu cannot show a control the contributor renders itself, or a label, so such items never leave the row. */
+const isMenuable = (item: MenuItem): boolean =>
+  !isSeparator(item) && item.properties.variant !== 'custom' && item.properties.variant !== 'text';
 
 /**
  * Moves items into the overflow menu while any row is too narrow, so the toolbar fills its container without
@@ -491,44 +501,78 @@ const setRef = <T,>(ref: ForwardedRef<T>, value: T | null) => {
 //
 
 export type ActionToolbarProps = Partial<MenuActions> &
-  Omit<Toolbar.RootProps, 'disabled'> & {
+  Omit<Toolbar.RootProps, 'disabled' | 'children'> & {
     /** The toolbar is dimmed (still operable) while this attendable lacks attention, unless `alwaysActive`. */
     attendableId?: string;
     alwaysActive?: boolean;
-    /** Hand-written controls before the graph's items (the children follow them). */
-    start?: ReactNode;
+    /**
+     * Items another component adds to this toolbar, merged with its own group by group: root items follow the owner's,
+     * and `MenuBuilder.extend(groupId, …)` adds to a named group.
+     */
+    customActions?: Atom.Atom<ActionGraphProps>;
   };
+
+/** Each group's items from `base`, then from `extra`, so a second graph extends the first group by group. */
+const mergeItems = (base: MenuItemsAccessor, extra: MenuItemsAccessor): MenuItemsAccessor => {
+  const atoms = new Map<string, Atom.Atom<MenuItem[] | null>>();
+  return (group) => {
+    const key = group?.id ?? '';
+    let atom = atoms.get(key);
+    if (!atom) {
+      atom = Atom.make((get) => {
+        const own = get(base(group));
+        const added = get(extra(group));
+        return own || added ? [...(own ?? []), ...(added ?? [])] : null;
+      });
+      atoms.set(key, atom);
+    }
+    return atom;
+  };
+};
 
 /**
  * A toolbar driven from a `MenuActions`. Each item's `placement` puts it in the start or end zone of a row; a
  * plain named group renders inline and others extend it (`MenuBuilder.extend`); the overflow menu (⋮,
  * `TOOLBAR_OVERFLOW_ID`) ends the first row and takes collapsible items while a row is too narrow. One row renders as a
- * single `Toolbar.Root` (which takes the props and ref); more stack one per row. `start` and the children frame the
- * first row's items.
+ * single `Toolbar.Root` (which takes the props and ref); more stack one per row. Hand-written controls join the graph as
+ * `custom` items (`MenuBuilder.custom`), labels as `text` items.
  */
 export const ActionToolbar = Util.composable<HTMLDivElement, ActionToolbarProps>(
   (
-    { items, contributions, onAction, caller, iconSize, attendableId, alwaysActive, start, children, ...props },
+    // Controls join the graph as `custom` items, so `children` are dropped rather than rendered.
+    {
+      items,
+      contributions,
+      onAction,
+      caller,
+      iconSize,
+      attendableId,
+      alwaysActive,
+      customActions,
+      children: _,
+      ...props
+    },
     forwardedRef,
   ) => {
     // Called unconditionally (hooks), used only when no source was spread in.
     const standalone = useMenuActions();
+    const custom = useMenuActions(customActions);
     const menu = useMemo<MenuActions>(
       () => ({
-        items: items ?? standalone.items,
+        items: customActions ? mergeItems(items ?? standalone.items, custom.items) : (items ?? standalone.items),
         contributions: contributions ?? standalone.contributions,
         onAction,
         caller,
         iconSize,
       }),
-      [items, contributions, onAction, caller, iconSize, standalone],
+      [items, contributions, onAction, caller, iconSize, standalone, customActions, custom],
     );
     const { hasAttention } = useAttention(attendableId);
 
     const rootItems = useMenuItems(menu);
-    const overflow = rootItems?.find(
-      (item): item is MenuItemGroup => isMenuGroup(item) && item.id === TOOLBAR_OVERFLOW_ID,
-    );
+    const overflow =
+      rootItems?.find((item): item is MenuItemGroup => isMenuGroup(item) && item.id === TOOLBAR_OVERFLOW_ID) ??
+      defaultOverflowGroup;
     const units = useMemo(() => (rootItems ?? []).filter((item) => item.id !== TOOLBAR_OVERFLOW_ID), [rootItems]);
     const rows = useRef<(HTMLElement | null)[]>([]);
     const collapsed = useCollapse(units, rows);
@@ -558,7 +602,6 @@ export const ActionToolbar = Util.composable<HTMLDivElement, ActionToolbarProps>
             first && setRef(forwardedRef, element);
           }}
         >
-          {first && start}
           {zones.map(({ name, items }, index) => (
             <Fragment key={name}>
               {/* A gap pushes the end zone to the far right. */}
@@ -572,7 +615,6 @@ export const ActionToolbar = Util.composable<HTMLDivElement, ActionToolbarProps>
               )}
             </Fragment>
           ))}
-          {first && children}
           {first && <OverflowMenu menu={menu} group={overflow} collapsed={collapsed} />}
         </Toolbar.Root>
       );

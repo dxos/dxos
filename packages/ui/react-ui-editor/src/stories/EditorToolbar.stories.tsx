@@ -7,6 +7,8 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { useMemo } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import { withAttention } from '@dxos/react-ui-attention/testing';
 import { MenuBuilder, TOOLBAR_OVERFLOW_ID } from '@dxos/react-ui-menu';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
@@ -24,8 +26,6 @@ import { translations } from '#translations';
 
 import { Editor, EDITOR_TOOLBAR_INSERT_GROUP } from '../components/index.ts';
 import { type UseTextEditorProps } from '../hooks/index.ts';
-
-type StoryArgs = { placeholder?: string; viewMode?: EditorViewMode; extended?: boolean } & UseTextEditorProps;
 
 /** What a consumer adds without owning the toolbar: an insert action in the editor's insert group, and a menu item. */
 const consumerActions = Atom.make(() =>
@@ -47,8 +47,14 @@ const consumerActions = Atom.make(() =>
     .build(),
 );
 
+const DOCUMENT_ID = 'document';
+
+type StoryArgs = { placeholder?: string; viewMode?: EditorViewMode; extended?: boolean } & UseTextEditorProps;
+
 const DefaultStory = ({ autoFocus, initialValue, placeholder, viewMode = 'source', extended }: StoryArgs) => {
   const themeMode = Hooks.useThemeMode();
+  // The toolbar and editor are one attendable, so focus in either (or in a menu the toolbar opens) keeps it attended.
+  const attentionAttrs = useAttentionAttributes(DOCUMENT_ID);
 
   const extensions = useMemo(
     () => [
@@ -72,12 +78,18 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder, viewMode = 'source
 
   return (
     <Editor.Root extensions={extensions} viewMode={viewMode}>
-      <Editor.Content>
-        <Editor.Toolbar classNames='dx-document' customActions={extended ? consumerActions : undefined} />
-        <div className='dx-expand dx-document dx-base-surface'>
-          <Editor.View autoFocus={autoFocus} initialValue={initialValue} selectionEnd />
-        </div>
-      </Editor.Content>
+      <div className='contents' {...attentionAttrs}>
+        <Editor.Content>
+          <Editor.Toolbar
+            classNames='dx-document'
+            attendableId={DOCUMENT_ID}
+            customActions={extended ? consumerActions : undefined}
+          />
+          <div className='dx-expand dx-document dx-base-surface'>
+            <Editor.View autoFocus={autoFocus} initialValue={initialValue} selectionEnd />
+          </div>
+        </Editor.Content>
+      </div>
     </Editor.Root>
   );
 };
@@ -85,7 +97,7 @@ const DefaultStory = ({ autoFocus, initialValue, placeholder, viewMode = 'source
 const meta = {
   title: 'ui/react-ui-editor/EditorToolbar',
   render: DefaultStory,
-  decorators: [withRegistry, withTheme(), withLayout({ layout: 'column' })],
+  decorators: [withAttention(DOCUMENT_ID), withRegistry, withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
     translations,

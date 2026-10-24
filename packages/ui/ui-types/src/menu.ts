@@ -46,7 +46,8 @@ export type MenuItemChrome = {
 
 // TODO(burdon): Narrow MenuActionProperties to a discriminated union.
 export type MenuActionChrome = MenuItemChrome & {
-  variant?: 'action' | 'primary' | 'toggle' | 'switch' | 'custom';
+  /** `text` is a plain label (a panel's name) that takes the free space; it is not an item and never collapses. */
+  variant?: 'action' | 'primary' | 'toggle' | 'switch' | 'custom' | 'text';
   value?: string;
   checked?: boolean;
   /**

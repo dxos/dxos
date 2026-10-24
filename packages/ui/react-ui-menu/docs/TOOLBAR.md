@@ -23,13 +23,16 @@ Toolbars and menus share one model, built with `MenuBuilder`; a toolbar is one r
 
 - **Named groups.** The owner declares groups (`formatting`, `blocks`, `tools`, …). A plain group (no `variant`)
   renders inline in a toolbar as a cluster of controls and as a submenu in a menu.
-- **Extension.** Another component adds to a named group with `MenuBuilder.extend(groupId, …)` and merges the result
-  into the owner's graph; it may also add its own group with a placement. The owner needs no knowledge of review,
-  transcription or presenter.
+- **Extension.** Another component adds to a named group with `MenuBuilder.extend(groupId, …)` and passes the graph
+  as `customActions` (on `ActionToolbar` and on every wrapper of it), which merges it group by group; it may also add
+  its own group with a placement. The owner needs no knowledge of review, transcription or presenter.
+- **Own controls.** A toolbar has no `children`: a hand-written control is a `custom` item (`MenuBuilder.custom`) and a
+  label a `text` item (`MenuBuilder.text`), placed and extended like any other item; neither moves into the menu.
 - **Overflow.** Every toolbar ends with an overflow menu (⋮), the named group `TOOLBAR_OVERFLOW_ID`, which others
   extend like any group. It renders only when it has items (its own, contributed or collapsed).
-- **Narrow.** While a row is too narrow, whole groups move into the overflow menu as submenus, by collapse rank; each
-  comes back once the toolbar is wider than when it collapsed.
+- **Narrow.** While a row is too narrow, items move into the overflow menu (groups as submenus): ranked ones first,
+  highest rank first, then the rest, last first, so the toolbar fills its container without overflowing it. Each comes
+  back once the toolbar is wider than when it collapsed.
 
 An item or group carries an optional `placement` (`ToolbarPlacement` on `MenuItemChrome`, ignored by menus):
 
