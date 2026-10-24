@@ -90,3 +90,16 @@ only move forward, which is what render.mjs does.
   comment" is the comment range highlight, which is also what reviewers see.
 - **Window contract reused (`window.grid`).** render.mjs hard-codes it; reusing it keeps render.mjs
   unchanged.
+- **Comments anchor by editor cursors, not offsets.** `CommentOperation.Create`'s `range` is checked
+  against the stored text, which can lag the actor's view by a replication round; the actor passes
+  `Cursor.getCursorFromRange` on its current selection as `anchor` instead.
+- **Presence without focus.** Only one editor on a page can be focused and awareness publishes only
+  while focused, so the harness contributes an extension (via `MarkdownCapabilities.ExtensionProvider`)
+  that publishes the selection itself and draws a steady caret in the actor's hue.
+- **Fixed in ECHO, not worked around.** `RefImpl`'s Effect `Equal` compared URIs only, so the global
+  `refFamily` atom cache gave every in-page client the first client's ref and all four editors bound
+  to one `Text`. Equality now includes resolver and target (hash stays URI-only). The story is a
+  regression check: an edit in one actor's editor reaches the others only by replication.
+- **Real-time playback runs on a timer, and React may detach the scene.** rAF is suspended in a hidden
+  tab, and StrictMode unmounts and remounts the decorator; `Scene.open()` resumes playback and
+  reinstalls `window.grid`.

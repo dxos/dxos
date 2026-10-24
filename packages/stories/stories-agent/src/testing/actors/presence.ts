@@ -22,11 +22,12 @@ export const actorPresence = (hue: string): Extension => [
       provider.update({ anchor: converter.toCursor(anchor), head: converter.toCursor(head, -1) });
     };
 
-    // After the first render pass, so the awareness extension's own initial (empty) publish lands first.
-    queueMicrotask(publish);
+    // Silent until the actor first places its caret, so idle actors show no caret parked at the start.
+    let placed = false;
     return {
       update: (update: ViewUpdate) => {
-        if (update.selectionSet || update.docChanged) {
+        placed ||= update.transactions.some((tr) => tr.isUserEvent('select') || tr.isUserEvent('input'));
+        if (placed && (update.selectionSet || update.docChanged)) {
           publish();
         }
       },
@@ -34,8 +35,13 @@ export const actorPresence = (hue: string): Extension => [
   }),
   // Shows the selection and caret as a focused editor does.
   EditorView.editorAttributes.of({ class: 'cm-focused' }),
+  // ...but not the caret of an actor yet to place one, which would sit at the document start.
+  EditorView.editorAttributes.compute(['selection'], (state) => ({
+    class: state.selection.main.head === 0 ? 'actor-idle' : '',
+  })),
   EditorView.theme({
     '.cm-cursorLayer': { animation: 'none !important' },
+    '&.actor-idle .cm-cursorLayer': { display: 'none' },
     '.cm-cursor': { borderLeftWidth: '2px', borderLeftColor: `var(--color-${hue}-border)` },
   }),
 ];

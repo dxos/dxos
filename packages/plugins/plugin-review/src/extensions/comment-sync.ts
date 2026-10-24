@@ -78,6 +78,9 @@ export const commentSync = (
   const { registry, stateAtom } = store;
   const objectId = Obj.getURI(doc);
   const query = db.query(Query.select(Filter.id(doc.id)).targetOf(AnchoredTo.AnchoredTo));
+  // A replicated anchor can arrive before its thread; `getAnchors` skips it until the thread resolves,
+  // and the anchor query does not notify again when it does, so thread arrivals re-read the anchors.
+  const threads = db.query(Filter.type(Thread.Thread));
 
   // TODO(burdon): Externalize ECHO?
   // Get current anchors by combining query results with store drafts, scoped to the review branch so
@@ -151,9 +154,11 @@ export const commentSync = (
         // Subscribe to both query changes and store state changes. `comments()` primes the initial read
         // itself (after this returns), so no manual first `sink()` is needed here.
         const unsubQuery = query.subscribe(sink);
+        const unsubThreads = threads.subscribe(sink);
         const unsubStore = registry.subscribe(stateAtom, sink);
         return () => {
           unsubQuery();
+          unsubThreads();
           unsubStore();
         };
       },

@@ -203,7 +203,7 @@ export class Scene {
     try {
       // A timer rather than rAF, which a hidden tab suspends.
       const start = performance.now() - this.clock.now;
-      while (!this.#disposed && this.clock.now < this.flow.duration) {
+      while (!this.#disposed && (this.#phase !== 'done' || this.clock.now < this.flow.duration)) {
         await new Promise((resolve) => setTimeout(resolve, 16));
         await this.clock.advanceTo(performance.now() - start);
       }

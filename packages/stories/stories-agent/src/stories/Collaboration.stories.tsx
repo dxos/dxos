@@ -35,18 +35,37 @@ type Story = StoryObj<typeof meta>;
  */
 export const Markdown: Story = {
   decorators: [withActors({ flow: markdownFlow })],
-  play: async ({ canvasElement }) => {
-    // Every actor's editor converges on the finished text.
+  tags: ['!test'],
+};
+
+/**
+ * The same scene stepped through scene time as fast as it settles, as the frame renderer does: every
+ * actor's editor converges on the finished text, and Dev's three threads reach every actor.
+ */
+export const TestMarkdown: Story = {
+  decorators: [withActors({ flow: markdownFlow })],
+  args: { stepped: true },
+  play: async () => {
+    await waitFor(() => expect(window.grid).toBeDefined(), { timeout: 45_000 });
+    const grid = window.grid;
+    // Coarse steps: each seek waits for replication, and the test only needs the end state.
+    for (let ms = 0; grid && ms <= grid.total; ms += 500) {
+      await grid.seek(ms);
+    }
+
     await waitFor(
-      () => {
-        const editors = [...canvasElement.querySelectorAll('.cm-content')];
-        expect(editors).toHaveLength(markdownFlow.actors.length);
-        for (const editor of editors) {
-          expect(editor.textContent).toContain('Mobile apps ship in the same release.');
-          expect(editor.textContent).toContain('a fortnight later');
+      async () => {
+        // The actors' article editors, not the comment composers, which are editors too.
+        const views = window.actorScene?.views ?? [];
+        await expect(views).toHaveLength(markdownFlow.actors.length);
+        for (const view of views) {
+          const text = view?.state.doc.toString();
+          await expect(text).toContain('Mobile apps ship in the same release.');
+          await expect(text).toContain('a fortnight later');
+          await expect(view?.dom.querySelectorAll('.cm-comment').length).toBeGreaterThanOrEqual(3);
         }
       },
-      { timeout: 90_000 },
+      { timeout: 10_000 },
     );
   },
 };

@@ -15,7 +15,7 @@ projects:
     tasks: .agents/projects/multi-actor/TASKS.md
     design: .agents/projects/multi-actor/DESIGN.md
     prs: [14053]
-    resume: 'Build the prototype per DESIGN.md.'
+    resume: 'Phase 1 done: markdown story recorded (temp/collab). NEXT: a second article (sheet or kanban) on the same harness.'
   - name: autocue-ui
     status: active
     user: burdon
