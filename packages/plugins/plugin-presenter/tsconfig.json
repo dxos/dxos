@@ -43,6 +43,15 @@
       "path": "../../core/compute/agent-runtime"
     },
     {
+      "path": "../../core/compute/ai"
+    },
+    {
+      "path": "../../core/compute/assistant"
+    },
+    {
+      "path": "../../core/compute/assistant-toolkit"
+    },
+    {
       "path": "../../core/compute/compute"
     },
     {
@@ -106,6 +115,9 @@
       "path": "../../ui/ui-theme"
     },
     {
+      "path": "../plugin-assistant"
+    },
+    {
       "path": "../plugin-client"
     },
     {
@@ -118,7 +130,22 @@
       "path": "../plugin-markdown"
     },
     {
+      "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-projects"
+    },
+    {
+      "path": "../plugin-routine"
+    },
+    {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-studio"
+    },
+    {
+      "path": "../plugin-tasks"
     },
     {
       "path": "../plugin-testing"

@@ -33,7 +33,9 @@ export const SlidePreview = ({ subject }: SlidePreviewProps) => {
   const step = sync.cursor === undefined ? undefined : stepAtOffset(parsed, sync.cursor);
   const activeSlot =
     sync.cursor !== undefined && hasSlots(parsed.layout) ? slotAtOffset(parsed, sync.cursor) : undefined;
-  const source = useMemo((): SlideSource => ({ kind: 'text', id: subject.id, text: subject }), [subject]);
+  // With its Slide, so the slide's own fields (its image) render too.
+  const slide = Presentation.getSlide(subject);
+  const source = useMemo((): SlideSource => ({ kind: 'text', id: subject.id, text: subject, slide }), [subject, slide]);
   // The slide is previewed in its deck's theme: the presentation's, else its first slide's headmatter.
   const presentation = Presentation.getPresentation(subject);
   const [theme] = useObject(presentation, 'theme');

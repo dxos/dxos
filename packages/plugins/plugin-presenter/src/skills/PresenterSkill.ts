@@ -24,6 +24,7 @@ export const make = (): Skill.Skill =>
         PresenterOperation.AddSection,
         PresenterOperation.ListLayouts,
         PresenterOperation.PresentObject,
+        PresenterOperation.GenerateSlideImage,
       ],
     }),
     instructions: Template.make({
@@ -53,6 +54,9 @@ export const make = (): Skill.Skill =>
         Use ${Operation.toolName(PresenterOperation.AddSection)} to add a slide to an existing presentation, or to link an
         existing object as a slide.
         Present a presentation only when asked, with ${Operation.toolName(PresenterOperation.PresentObject)}.
+        When you are beside a slide (its Slide object is in your context) and asked for a picture on it, call
+        ${Operation.toolName(PresenterOperation.GenerateSlideImage)} with that slide and a short visual description;
+        it places the image in the slide's layout, so do not edit the slide's markdown to add it.
       `,
     }),
     agentCanEnable: true,

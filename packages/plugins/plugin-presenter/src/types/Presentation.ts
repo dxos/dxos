@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
+import * as MediaArtifact from '@dxos/plugin-studio/MediaArtifact';
 import { Text } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -32,7 +33,7 @@ export class Slide extends Type.makeObject<Slide>(DXN.make('org.dxos.type.slide'
     /** Speaker notes, for any content. */
     notes: Schema.optional(Ref.Ref(Text.Text)).pipe(Annotation.FormInputAnnotation.set(false)),
     /** The image a layout places (cover and image layouts): a generated media artifact. */
-    image: Schema.optional(Ref.Ref(Obj.Unknown)).pipe(Annotation.FormInputAnnotation.set(false)),
+    image: Schema.optional(Ref.Ref(MediaArtifact.MediaArtifact)).pipe(Annotation.FormInputAnnotation.set(false)),
   }).pipe(
     Annotation.LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--rectangle--regular', hue: 'orange' }),

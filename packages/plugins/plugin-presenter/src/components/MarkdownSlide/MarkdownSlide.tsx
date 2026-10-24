@@ -39,6 +39,8 @@ export type MarkdownSlideProps = Util.ThemedClassName<{
   activeSlot?: SlotName;
   /** Called with the `[start, end]` source offsets of the clicked element. */
   onSourceClick?: (range: [start: number, end: number]) => void;
+  /** The slide's own image (a generated artifact's URL), placed as frontmatter `image:` would be, over it. */
+  image?: string;
 }>;
 
 /**
@@ -51,8 +53,13 @@ export const MarkdownSlide = ({
   renderSurface,
   activeSlot,
   onSourceClick,
+  image,
 }: MarkdownSlideProps) => {
   const parsed = useMemo(() => parseSlide(content), [content]);
+  const frontmatter = useMemo(
+    () => (image ? { ...parsed.frontmatter, image } : parsed.frontmatter),
+    [parsed.frontmatter, image],
+  );
 
   const slots = useMemo((): Record<SlotName, ReactNode> => {
     const current = step ?? Number.POSITIVE_INFINITY;
@@ -105,11 +112,11 @@ export const MarkdownSlide = ({
       style={themeStyle}
       onClick={onSourceClick ? handleClick : undefined}
     >
-      <SlideBackground frontmatter={parsed.frontmatter} layout={parsed.layout} />
+      <SlideBackground frontmatter={frontmatter} layout={parsed.layout} />
       <div className='relative size-full'>
         <RenderSurfaceContext.Provider value={renderSurface}>
           <ActiveSlotContext.Provider value={outlinedSlot}>
-            <Layout slots={slots} frontmatter={parsed.frontmatter} />
+            <Layout slots={slots} frontmatter={frontmatter} />
           </ActiveSlotContext.Provider>
         </RenderSurfaceContext.Provider>
       </div>
