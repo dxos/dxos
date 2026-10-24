@@ -101,7 +101,10 @@ layout: two-cols
     "type": "object",
     "properties": {
       "name": { "type": "string" },
-      "targetDate": { "type": "string", "format": "date" }
+      "targetDate": {
+        "type": "string",
+        "format": "date"
+      }
     },
     "required": ["name"]
   }

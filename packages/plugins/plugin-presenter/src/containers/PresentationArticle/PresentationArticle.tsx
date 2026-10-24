@@ -125,30 +125,29 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
           {!fullscreen && (
             <Panel.Header>
               <Toolbar.Root>
-                {/* A split button: the plus adds a slide, the caret picks the layout it adds. */}
-                <Button.Group compact>
-                  <Button.Root
-                    data-testid='presenter.add-slide'
-                    icon='ph--plus--regular'
-                    iconOnly
-                    variant='ghost'
-                    label={t('add-slide.label')}
-                    onClick={handleAddSlide}
-                  />
-                  <LayoutPicker
-                    value={newSlideLayout}
-                    onChange={setNewSlideLayout}
-                    trigger={
-                      <Button.Root
-                        data-testid='presenter.add-slide.layout'
-                        icon='ph--caret-down--regular'
-                        iconOnly
-                        variant='ghost'
-                        label={t('add-slide-layout.label')}
-                      />
-                    }
-                  />
-                </Button.Group>
+                {/* A split button (the caret picks the layout the plus adds), unwrapped so the toolbar sees an icon button first. */}
+                <Button.Root
+                  data-testid='presenter.add-slide'
+                  icon='ph--plus--regular'
+                  iconOnly
+                  variant='ghost'
+                  label={t('add-slide.label')}
+                  onClick={handleAddSlide}
+                />
+                <LayoutPicker
+                  value={newSlideLayout}
+                  onChange={setNewSlideLayout}
+                  trigger={
+                    <Button.Root
+                      data-testid='presenter.add-slide.layout'
+                      icon='ph--caret-down--regular'
+                      iconOnly
+                      variant='ghost'
+                      label={t('add-slide-layout.label')}
+                    />
+                  }
+                />
+
                 <SectionPicker presentation={subject} />
                 <div className='grow' />
                 <Deck.PlayButton />
