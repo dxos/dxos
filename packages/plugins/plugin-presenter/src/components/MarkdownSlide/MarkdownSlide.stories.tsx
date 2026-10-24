@@ -271,6 +271,27 @@ export const Code: Story = {
   },
 };
 
+/** `{lines:true}` numbers the lines, alongside a highlighted line. */
+export const CodeLineNumbers: Story = {
+  args: {
+    content: [
+      '# Code with line numbers',
+      '',
+      '```ts {2}{lines:true}',
+      'const values = [1, 2, 3];',
+      'const sum = values.reduce((total, value) => total + value, 0);',
+      'console.log(sum);',
+      '```',
+    ].join('\n'),
+  },
+  play: async ({ canvasElement }) => {
+    await query(canvasElement, 'pre span.token', 5_000);
+    const numbers = [...canvasElement.querySelectorAll('pre .linenumber')].map((element) => element.textContent);
+    await expect(numbers).toEqual(['1', '2', '3']);
+    await expect(canvasElement.querySelectorAll('pre .bg-hover-surface')).toHaveLength(1);
+  },
+};
+
 export const Clicks: Story = {
   args: {
     step: 1,

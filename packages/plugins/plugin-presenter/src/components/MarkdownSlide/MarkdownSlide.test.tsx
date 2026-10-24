@@ -7,7 +7,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, test } from 'vitest';
 
 import { SlideThemeProvider } from '../SlideTheme/index.ts';
-import { MarkdownSlide, parseLineHighlights } from './MarkdownSlide.tsx';
+import { MarkdownSlide, parseLineHighlights, parseLineNumbers } from './MarkdownSlide.tsx';
 import { backgroundStyle } from './SlideBackground.tsx';
 
 const render = (content: string, step?: number) =>
@@ -219,5 +219,19 @@ describe('parseLineHighlights', () => {
     expect(parseLineHighlights('{2-100000000}', 3)).toEqual(new Set([2, 3]));
     expect(parseLineHighlights('{1-100000000}')?.size).toBeLessThanOrEqual(10_000);
     expect(parseLineHighlights('{5}', 3)).toBeUndefined();
+  });
+});
+
+describe('parseLineNumbers', () => {
+  test("reads Slidev's `{lines:true}` option, alone or after line ranges", ({ expect }) => {
+    expect(parseLineNumbers('{lines:true}')).toBe(true);
+    expect(parseLineNumbers('{2}{lines:true}')).toBe(true);
+    expect(parseLineNumbers('{2}')).toBe(false);
+    expect(parseLineNumbers(undefined)).toBe(false);
+  });
+
+  test('the option block is not read as line ranges', ({ expect }) => {
+    expect(parseLineHighlights('{lines:true}')).toBeUndefined();
+    expect(parseLineHighlights('{2}{lines:true}')).toEqual(new Set([2]));
   });
 });

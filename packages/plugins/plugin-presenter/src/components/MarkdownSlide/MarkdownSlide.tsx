@@ -176,6 +176,7 @@ const CodeBlock = ({ language, meta, source = '', 'data-source': dataSource }: S
     const lines = parseLineHighlights(meta, source.replace(/\n$/, '').split('\n').length);
     return lines && lineHighlightRenderer(lines);
   }, [meta, source]);
+  const lineNumbers = parseLineNumbers(meta);
   return (
     <div data-source={dataSource} className='contents'>
       <SyntaxHighlighter
@@ -185,7 +186,9 @@ const CodeBlock = ({ language, meta, source = '', 'data-source': dataSource }: S
         classNames={mx(theme.nodes.pre, theme.nodes.code)}
         PreTag='pre'
         renderer={renderer}
-        wrapLines={renderer !== undefined}
+        // Numbers are drawn per row, which needs the source split into rows.
+        showLineNumbers={lineNumbers}
+        wrapLines={renderer !== undefined || lineNumbers}
       >
         {source.replace(/\n$/, '')}
       </SyntaxHighlighter>
@@ -210,7 +213,8 @@ export const parseLineHighlights = (
   lineCount = MAX_HIGHLIGHT_LINE,
 ): Set<number> | undefined => {
   const last = Math.min(lineCount, MAX_HIGHLIGHT_LINE);
-  const ranges = meta && /\{([^}]*)\}/.exec(meta)?.[1].split('|')[0].trim();
+  // The first `{…}` that is not an option block such as `{lines:true}`.
+  const ranges = meta && /\{([^}:]*)\}/.exec(meta)?.[1].split('|')[0].trim();
   if (!ranges || ranges === '*' || ranges === 'all') {
     return undefined;
   }
@@ -225,6 +229,10 @@ export const parseLineHighlights = (
   }
   return lines.size > 0 ? lines : undefined;
 };
+
+/** Whether a fence's meta turns on line numbers, as Slidev's `{lines:true}` option does. */
+export const parseLineNumbers = (meta: string | undefined): boolean =>
+  meta !== undefined && /\{[^}]*\blines\s*:\s*true\b[^}]*\}/.test(meta);
 
 //
 // hast preparation: click visibility, theme classes and custom elements.

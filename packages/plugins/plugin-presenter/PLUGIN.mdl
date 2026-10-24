@@ -365,7 +365,7 @@ feat F-6: Markdown Slides
     when: a slide's frontmatter YAML is malformed
     then: the body still renders, the frontmatter is ignored and a validation issue is reported
   req F-6.5: Raw HTML other than `v-click`, `v-clicks`, `v-after`, `Surface` and `br` is escaped, never rendered or executed; URLs with unsafe schemes are not followed.
-  req F-6.6: A fenced code block renders highlighted; a `{2,4-5}` meta marks the lines that stay emphasised.
+  req F-6.6: A fenced code block renders highlighted; a `{2,4-5}` meta marks the lines that stay emphasised, and Slidev's `{lines:true}` option numbers the lines.
   req F-6.7: In the preview companion `---` splits slides except inside a fenced code block, and a leading frontmatter block is slide metadata.
   req F-6.8: A deck has one theme, `default`, `light`, `dark` or `serif`, named by the first slide's `theme:` headmatter; `default` follows the app's light/dark mode and `light`/`dark` force one, code highlighting included.
   req F-6.9: A Presentation's `theme` setting names the theme and may override its accent, background and text colors, its text font (`mono`, `sans`, `rounded`, `serif`, `display`) and its code font (`jetbrains`, `fira`, `plex`, `system`); it wins over headmatter, and linked object slides are painted with it too.
