@@ -46,7 +46,7 @@ import {
   notesEdit,
   parseSlide,
   setFrontmatter,
-  slotAtOffset,
+  slotBefore,
   surfaceSnippet,
 } from '#markdown';
 import { meta } from '#meta';
@@ -261,7 +261,7 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
           case 'column': {
             // The next region of the layout after the one holding the caret; the last region has none.
             const parsed = parseSlide(content);
-            const slot = nextSlot(parsed.layout, slotAtOffset(parsed, cursor));
+            const slot = nextSlot(parsed.layout, slotBefore(content, cursor));
             return slot
               ? insertSnippet(content, cursor, columnSnippet(slot))
               : { from: cursor, to: cursor, insert: '', cursor };

@@ -3,7 +3,8 @@
 //
 
 import { type LayoutName } from './frontmatter.ts';
-import { type SlotName } from './remark-slidev.ts';
+import { type SlotName, SLOTS } from './remark-slidev.ts';
+import { slideTokens } from './tokens.ts';
 
 /**
  * The slots of each layout with more than one, in reading order; content before the first marker goes to `default`.
@@ -28,4 +29,17 @@ export const nextSlot = (layout: LayoutName, slot: SlotName | undefined): SlotNa
   const current = slot === 'left' && !order.includes('left') ? 'default' : (slot ?? 'default');
   const index = order.indexOf(current);
   return index < 0 ? undefined : order[index + 1];
+};
+
+/**
+ * The region the caret at `offset` is in: the last slot marker before it (fenced code excluded), or the first region
+ * when none precedes it. Read from the markers rather than from rendered content, so a blank line or the marker line
+ * itself still counts as being in that region.
+ */
+export const slotBefore = (content: string, offset: number): SlotName | undefined => {
+  const marker = slideTokens(content)
+    .filter((token) => token.kind === 'slot' && token.from < offset)
+    .at(-1);
+  const name = marker && /::([a-z-]+)::/.exec(content.slice(marker.from, marker.to))?.[1];
+  return SLOTS.find((slot) => slot === name);
 };

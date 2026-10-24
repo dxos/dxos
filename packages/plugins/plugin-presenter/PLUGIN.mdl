@@ -178,9 +178,9 @@ component SlideRenderer
 component MarkdownSlide
   desc: |
     Renders one slide of the Slidev markdown subset on the 2560x1440 canvas: per-slide frontmatter
-    (`layout`, `image`, `background`, `class`, `backgroundVideo`, `backgroundOpacity`, `backgroundPosition`, and
-    `theme` on the first slide; `title` is parsed and reserved, not rendered),
-    `::left::` / `::right::` / `::default::` slots,
+    (`layout`, `image`, `background`, `class`, `backgroundVideo`, `backgroundOpacity`, `backgroundPosition`,
+    `bleed`, and `theme` on the first slide; `title` is parsed and reserved, not rendered),
+    `::default::` / `::left::` / `::middle::` / `::right::` / `::bottom-left::` / `::bottom-right::` slots,
     `<v-click>`, `<v-clicks>` (`depth`, `every`) and `<v-after>` click steps, highlighted code blocks with
     static line ranges, and notes. All other raw HTML is escaped, never rendered. Elements with a later click
     step stay laid out but invisible. `class:` accepts only Tailwind utilities already generated.
@@ -194,10 +194,11 @@ component MarkdownSlide
 component SlideLayouts
   desc: |
     The layouts a slide's `layout` names: default, cover, center, section, intro, end, fact, statement, quote,
-    two-cols, two-cols-header, image, image-left, image-right, full, none. An unknown name renders with
-    default and is reported as a validation issue.
+    two-cols, two-cols-header, three-cols, grid (2 × 2), image, image-left, image-right, full, none. An unknown
+    name renders with default and is reported as a validation issue. `bleed: left | right` takes the outer column
+    of `two-cols` or `three-cols` to the slide's edges.
   props:
-    slots: { default, left, right }
+    slots: { default, left, middle, right, bottom-left, bottom-right }
     frontmatter: SlideFrontmatter
 ```
 
@@ -355,8 +356,8 @@ feat F-4: Presentation Deck
 ```mdl
 feat F-6: Markdown Slides
 
-  req F-6.1: A slide is written in a strict Slidev subset: per-slide frontmatter `layout`, `image`, `background`, `class`, `title` (and the DXOS keys of F-8.1 and the `theme` headmatter of F-6.8); slots `::left::`, `::right::`, `::default::`, and for the DXOS layouts `three-cols` and `grid` (2 × 2) also `::middle::`, `::bottom-left::` and `::bottom-right::`; notes as the slide's last HTML comment.
-  req F-6.2: The layouts are default, cover, center, section, intro, end, fact, statement, quote, two-cols, two-cols-header, image, image-left, image-right, full and none.
+  req F-6.1: A slide is written in a strict Slidev subset: per-slide frontmatter `layout`, `image`, `background`, `class`, `title` (and the DXOS keys of F-8.1 and F-8.5 and the `theme` headmatter of F-6.8); slots `::left::`, `::right::`, `::default::`, and for the DXOS layouts `three-cols` and `grid` (2 × 2) also `::middle::`, `::bottom-left::` and `::bottom-right::`; notes as the slide's last HTML comment.
+  req F-6.2: The layouts are default, cover, center, section, intro, end, fact, statement, quote, two-cols, two-cols-header, three-cols, grid, image, image-left, image-right, full and none.
   req F-6.3:
     when: a slide names an unknown layout
     then: it renders with default, no error is shown, and a validation issue is reported
@@ -1154,6 +1155,22 @@ decision D-54: A column bleeds to the slide's edges by a per-slide frontmatter k
   affects: [F-8.5, MarkdownSlide]
   why: The user asked to optionally drop the padding around an embedded object; a column is the unit the padding belongs to, and frontmatter is where a slide's layout is already set.
   rejected: `<Surface … bleed />`, which would need negative margins matched to each layout's padding.
+```
+
+```mdl
+decision D-55: Slides offer a three-column layout and a 2 × 2 layout. [D-53] records how they were filled in.
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [F-6.1, F-6.2]
+  why: Content often splits three ways or into a grid of four, which two columns cannot hold.
+```
+
+```mdl
+decision D-56: A slide can drop the padding around an embedded object, so the object reaches the slide's edges. [D-54] records how it was filled in.
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [F-8.5]
+  why: An embedded object (a drawing, a map, an image) reads better edge to edge than inset in a padded column.
 ```
 
 ---

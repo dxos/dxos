@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { hasSlots, nextSlot } from './slots.ts';
+import { hasSlots, nextSlot, slotBefore } from './slots.ts';
 
 describe('nextSlot', () => {
   test('follows the reading order of each layout and stops after the last region', () => {
@@ -28,5 +28,34 @@ describe('nextSlot', () => {
     expect(nextSlot('cover', 'default')).toBeUndefined();
     expect(hasSlots('cover')).toBe(false);
     expect(hasSlots('three-cols')).toBe(true);
+  });
+});
+
+describe('slotBefore', () => {
+  const content = [
+    '---',
+    'layout: three-cols',
+    '---',
+    '',
+    'One',
+    '',
+    '::middle::',
+    '',
+    'Two',
+    '',
+    '',
+    '```',
+    '::right::',
+    '```',
+  ].join('\n');
+
+  test('the last marker before the caret, even on a blank line or the marker line', () => {
+    expect(slotBefore(content, content.indexOf('One'))).toBeUndefined();
+    expect(slotBefore(content, content.indexOf('Two') + 4)).toBe('middle');
+    expect(slotBefore(content, content.indexOf('::middle::') + 10)).toBe('middle');
+  });
+
+  test('a marker inside fenced code is text, not a region', () => {
+    expect(slotBefore(content, content.length)).toBe('middle');
   });
 });
