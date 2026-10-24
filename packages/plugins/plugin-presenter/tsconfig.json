@@ -22,6 +22,9 @@
       "path": "../../common/diagram"
     },
     {
+      "path": "../../common/effect"
+    },
+    {
       "path": "../../common/keys"
     },
     {
@@ -32,6 +35,9 @@
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/agent-runtime"
     },
     {
       "path": "../../core/compute/compute"
@@ -56,6 +62,9 @@
     },
     {
       "path": "../../sdk/app-toolkit"
+    },
+    {
+      "path": "../../sdk/client-protocol"
     },
     {
       "path": "../../sdk/react-client"
