@@ -35,7 +35,7 @@ import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { FeedStore } from '@dxos/feed';
 import { IndexEngine, type IndexingResult, type IndexTransactionLimits } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
-import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
+import { EID, EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 import { type DataService, type FeedService } from '@dxos/protocols/rpc';
@@ -63,7 +63,7 @@ import { DeletionResolver } from './deletion.ts';
 import { FeedDataSource } from './feed-data-source.ts';
 import { type IndexRequestReason, IndexScheduler } from './index-scheduler.ts';
 import { IndexStatusTracker, countIndexBacklog, readFeedPin } from './index-status.ts';
-import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
+import { type InvalidationHint, canonicalTypename, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
 import { LocalFeedServiceImpl } from './local-feed-service.ts';
 import { type QueryDebounceOptions, QueryServiceImpl } from './query-service.ts';
 import {
@@ -1313,8 +1313,25 @@ export class EchoHost extends Resource {
       return true;
     });
     if (this.#unindexedDocuments.classify(documentId, !indexed) && !indexed) {
-      this._queryService.invalidateQueries({ spaceIds: new Set([spaceId]) });
+      this._queryService.invalidateQueries(await this.#documentHint(spaceId, documentId));
     }
+  }
+
+  /** The queries a document's objects can affect, as narrow as the hint an index pass over it would give. */
+  async #documentHint(spaceId: SpaceId, documentId: DocumentId): Promise<InvalidationHint> {
+    using lease = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, documentId, {
+      fetchFromNetwork: false,
+    });
+    const objects = Object.entries(lease?.doc()?.objects ?? {});
+    const typeUris = objects.map(([, structure]) => structure.system?.type?.['/']);
+    return {
+      spaceIds: new Set([spaceId]),
+      objectIds: new Set(objects.map(([objectId]) => objectId).filter((objectId) => EntityId.isValid(objectId))),
+      // An untyped object can match any type-less query, so the hint stays open on types.
+      typenames: typeUris.every((uri) => uri !== undefined)
+        ? new Set(typeUris.map((uri) => canonicalTypename(uri)))
+        : undefined,
+    };
   }
 
   #spaceOfDocument(documentId: DocumentId): SpaceId | undefined {
