@@ -92,7 +92,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    for (const label of ['Theme', 'Accent color', 'Background color', 'Text color', 'Font', 'Code font']) {
+    for (const label of ['Base', 'Accent color', 'Background color', 'Text color', 'Font', 'Code font']) {
       await expect(await canvas.findByText(label, undefined, { timeout: 10_000 })).toBeVisible();
     }
     await expect(canvas.getByText('mono (default)')).toBeVisible();

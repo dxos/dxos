@@ -21,7 +21,7 @@ import { Presentation, SlideTheme } from '#types';
 /** Related settings side by side: the theme and its accent, the two colors, the two fonts. */
 const TEMPLATE = `
   <grid cols="2">
-    <field name="name"/>
+    <field name="base"/>
     <field name="accent"/>
     <field name="background"/>
     <field name="foreground"/>
@@ -53,20 +53,20 @@ export type PresentationPropertiesProps = { presentation: Presentation.Presentat
 export const PresentationProperties = ({ presentation }: PresentationPropertiesProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [theme] = useObject(presentation, 'theme');
-  const name = SlideTheme.isName(theme?.name) ? theme.name : undefined;
+  const base = SlideTheme.isName(theme?.base) ? theme.base : undefined;
 
   // Unset, each field shows what the theme supplies rather than the field's description, which reads as a value.
   const fieldOverrides = useMemo<Record<string, FormFieldOverride>>(() => {
     const color = { placeholder: t('theme-color.placeholder') };
     return {
-      name: { placeholder: 'default' },
+      base: { placeholder: 'default' },
       accent: color,
       background: color,
       foreground: color,
-      font: { placeholder: t('default-font.placeholder', { font: SlideTheme.defaultFont(name) }) },
+      font: { placeholder: t('default-font.placeholder', { font: SlideTheme.defaultFont(base) }) },
       monoFont: { placeholder: t('default-font.placeholder', { font: SlideTheme.DEFAULT_MONO_FONT }) },
     };
-  }, [t, name]);
+  }, [t, base]);
 
   const handleSave = useCallback(
     (next: SlideTheme.Settings) =>
