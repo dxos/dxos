@@ -78,6 +78,7 @@ export const CanvasRoot = ({
   margin = DEFAULT_MARGIN,
   readonly = false,
   onReadonlyChange,
+  transparent = false,
   inspectors = 'floating',
   onInspectorsChange,
   themes = defaultThemeRegistry,
@@ -495,6 +496,7 @@ export const CanvasRoot = ({
       baseProjection={baseProjection}
       capabilities={capabilities}
       readonly={readonly}
+      transparent={transparent}
       onReadonlyChange={onReadonlyChange}
       nodeRegistry={nodeRegistry}
       linkRegistry={linkRegistry}
@@ -551,12 +553,15 @@ export const CanvasRoot = ({
                   {/* The canvas beside the dock, which docked inspectors move into; with none docked, it takes no space.
             Clipped rather than hidden: a hidden box still scrolls, so focusing content embedded in a node (an editor's
             caret) would scroll the whole canvas to reveal it, out from under the camera. */}
-                  <div className={mx('relative flex dx-fill overflow-clip bg-base-surface', classNames)}>
+                  <div
+                    className={mx('relative flex dx-fill overflow-clip', !transparent && 'bg-base-surface', classNames)}
+                  >
                     <div
                       ref={rootRef}
                       tabIndex={0}
                       className={mx(
-                        '@container/canvas relative grow h-full overflow-clip outline-none touch-none select-none bg-base-surface',
+                        '@container/canvas relative grow h-full overflow-clip outline-none touch-none select-none',
+                        !transparent && 'bg-base-surface',
                         // A theme with a mode takes it over the app's, for everything over the canvas.
                         look.tone === 'dark' && 'dark',
                         tool.kind === 'hand' && 'cursor-grab',

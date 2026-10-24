@@ -235,6 +235,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               onThemeChange={embedded || newer ? undefined : handleThemeChange}
               onBackgroundGridChange={embedded || newer ? undefined : handleBackgroundGridChange}
               readonly={readonly}
+              transparent={slide}
               // A newer plugin's format stays read-only here, so the toggle that would unlock it is not offered.
               onReadonlyChange={embedded || newer ? undefined : handleReadonlyChange}
               initialCamera={savedCamera}

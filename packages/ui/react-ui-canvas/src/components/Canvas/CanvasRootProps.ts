@@ -65,6 +65,8 @@ export type CanvasRootProps = Util.ThemedClassName<{
    * whatever the projection would allow.
    */
   readonly?: boolean;
+  /** Draws no surface under the scene, so what is behind the canvas (e.g. a slide) shows through. */
+  transparent?: boolean;
   /** Called when the palette's read-only toggle is pressed; the toggle shows only when given, as the host owns `readonly`. */
   onReadonlyChange?: (readonly: boolean) => void;
   /** Where the inspectors (properties, layers, about) sit: floating over the canvas (the default), or docked in a column beside it. */

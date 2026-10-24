@@ -39,7 +39,7 @@ export const ViewportBackground = ({
   focus,
   backgroundBounds,
 }: ViewportBackgroundProps) => {
-  const { store, readonly, projection, grid } = useCanvasServices('Canvas.Viewport');
+  const { store, readonly, transparent, projection, grid } = useCanvasServices('Canvas.Viewport');
   const { displayScene, bounds, measured } = useCanvasGesture('Canvas.Viewport');
   const tools = useCanvasTools('Canvas.Viewport');
   const { childFrame } = useCanvasNavigation('Canvas.Viewport').commands;
@@ -90,7 +90,7 @@ export const ViewportBackground = ({
 
   return (
     <>
-      {gpuWashes ? (
+      {transparent ? null : gpuWashes ? (
         <WashCanvas background={look.background} field={field} camera={camera} />
       ) : (
         <BackgroundFill background={look.background} />

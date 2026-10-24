@@ -8,6 +8,8 @@ import { useResizeDetector } from 'react-resize-detector';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
+import { slideThemeClasses, useSlideThemeStyle } from '../SlideTheme/SlideTheme.tsx';
+
 export type SlideCanvasProps = Util.ThemedClassName<
   PropsWithChildren<{
     /** Inset the slide, with rounded corners, in a solid void that shows on every side, so the slide's own background reads as distinct from what surrounds it. */
@@ -20,6 +22,7 @@ export type SlideCanvasProps = Util.ThemedClassName<
  */
 export const SlideCanvas = ({ children, classNames, inset }: SlideCanvasProps) => {
   const [props, setProps] = useState({});
+  const themeStyle = useSlideThemeStyle();
   const {
     ref: containerRef,
     width,
@@ -44,9 +47,11 @@ export const SlideCanvas = ({ children, classNames, inset }: SlideCanvasProps) =
       className={mx(
         'flex grow relative overflow-hidden',
         // The radius is in canvas pixels, scaled with the slide, and applies only to this slide, not to slides embedded in it.
-        inset ? 'bg-transparent [&>div>[data-slide]]:rounded-[32px]' : 'dx-attention-surface',
+        // Outside the inset view the space around a letterboxed slide takes the slide's own background, so it shows no bands.
+        inset ? 'bg-transparent [&>div>[data-slide]]:rounded-[32px]' : slideThemeClasses,
         classNames,
       )}
+      style={inset ? undefined : themeStyle}
     >
       <div className={mx('dx-expand absolute')} style={props}>
         {!!width && !!height && children}
