@@ -23,6 +23,10 @@ const sample = (layout: LayoutName): string => {
       return `${head}# Left\n\n- Point\n- Point\n\n::right::\n\n# Right\n\n- Point`;
     case 'two-cols-header':
       return `${head}# Header\n\n::left::\n\n- Left\n\n::right::\n\n- Right`;
+    case 'three-cols':
+      return `${head}# One\n\n- Point\n\n::middle::\n\n# Two\n\n- Point\n\n::right::\n\n# Three\n\n- Point`;
+    case 'two-by-two':
+      return `${head}# One\n\n::right::\n\n# Two\n\n::bottom-left::\n\n# Three\n\n::bottom-right::\n\n# Four`;
     case 'quote':
       return `${head}> A quotation.`;
     case 'fact':

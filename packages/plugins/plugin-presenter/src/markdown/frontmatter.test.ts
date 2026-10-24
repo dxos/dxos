@@ -50,6 +50,6 @@ describe('parseFrontmatter', () => {
   });
 
   test('lists 16 layouts', () => {
-    expect(LAYOUTS).toHaveLength(16);
+    expect(LAYOUTS).toHaveLength(18);
   });
 });

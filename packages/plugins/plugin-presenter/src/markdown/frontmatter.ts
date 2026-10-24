@@ -6,6 +6,8 @@ import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import * as Yaml from 'yaml';
 
+import { type SlotName } from './remark-slidev.ts';
+
 /** Layout names supported by the Slidev subset. */
 export const LAYOUTS = [
   'default',
@@ -19,6 +21,8 @@ export const LAYOUTS = [
   'quote',
   'two-cols',
   'two-cols-header',
+  'three-cols',
+  'two-by-two',
   'image',
   'image-left',
   'image-right',
@@ -27,6 +31,21 @@ export const LAYOUTS = [
 ] as const;
 
 export type LayoutName = (typeof LAYOUTS)[number];
+
+/**
+ * The slots of each column layout, in reading order; the first is `default` (which also takes `::left::` content,
+ * except in `two-cols-header`, where `default` is the header).
+ */
+export const COLUMN_SLOTS = {
+  'two-cols': ['default', 'right'],
+  'two-cols-header': ['default', 'left', 'right'],
+  'three-cols': ['default', 'middle', 'right'],
+  'two-by-two': ['default', 'right', 'bottom-left', 'bottom-right'],
+} as const satisfies Partial<Record<LayoutName, readonly SlotName[]>>;
+
+/** Whether a layout has more than one column, so a column break means something. */
+export const isColumnLayout = (layout: LayoutName): layout is keyof typeof COLUMN_SLOTS =>
+  Object.hasOwn(COLUMN_SLOTS, layout);
 
 /** A problem found while parsing or validating a slide; the slide still renders. */
 export type SlideIssue = {

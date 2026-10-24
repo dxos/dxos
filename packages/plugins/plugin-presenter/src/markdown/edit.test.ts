@@ -4,7 +4,15 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { SNIPPETS, applyEdit, insertSnippet, notesEdit, setFrontmatter, surfaceSnippet } from './edit.ts';
+import {
+  SNIPPETS,
+  applyEdit,
+  columnSnippet,
+  insertSnippet,
+  notesEdit,
+  setFrontmatter,
+  surfaceSnippet,
+} from './edit.ts';
 import { parseSlide } from './parse.ts';
 
 describe('setFrontmatter', () => {
@@ -34,6 +42,20 @@ describe('setFrontmatter', () => {
   test('sets numbers as numbers', () => {
     const content = applyEdit('', setFrontmatter('', { backgroundOpacity: 0.5 }));
     expect(parseSlide(content).frontmatter.backgroundOpacity).toBe(0.5);
+  });
+});
+
+describe('columnSnippet', () => {
+  test("starts the column after the cursor's", () => {
+    expect(columnSnippet('two-cols', 'default')).toBe('\n::right::\n\n|');
+    expect(columnSnippet('three-cols', 'default')).toBe('\n::middle::\n\n|');
+    expect(columnSnippet('three-cols', 'middle')).toBe('\n::right::\n\n|');
+    expect(columnSnippet('two-by-two', 'right')).toBe('\n::bottom-left::\n\n|');
+    expect(columnSnippet('two-by-two', undefined)).toBe('\n::right::\n\n|');
+  });
+
+  test('from the last column it starts the last one again', () => {
+    expect(columnSnippet('two-by-two', 'bottom-right')).toBe('\n::bottom-right::\n\n|');
   });
 });
 

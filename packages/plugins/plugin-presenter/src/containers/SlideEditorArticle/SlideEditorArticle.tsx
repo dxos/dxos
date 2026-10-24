@@ -39,10 +39,13 @@ import {
   LAYOUTS,
   type SlideEdit,
   SNIPPETS,
+  columnSnippet,
   insertSnippet,
+  isColumnLayout,
   notesEdit,
   parseSlide,
   setFrontmatter,
+  slotAtOffset,
   surfaceSnippet,
 } from '#markdown';
 import { Presentation, PresenterOperation, SlideEditorViewState, SlideViewState } from '#types';
@@ -162,7 +165,7 @@ const SlideEditorToolbars = ({ subject, attendableId, previewMode }: SlideEditor
   const { objects, onObjectsOpenChange, onInsertObject, ...actions } = useSlideActions(subject, attendableId, view);
   const insertActions = useSlideInsertActions({
     onInsert: actions.onInsert,
-    columns: parsed.layout === 'two-cols' || parsed.layout === 'two-cols-header',
+    columns: isColumnLayout(parsed.layout),
     objects,
     onObjectsOpenChange,
     onInsertObject,
@@ -247,7 +250,9 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
       apply((content) => setFrontmatter(content, { layout: layout === 'default' ? undefined : layout }), false),
     onInsert: (insert: SlideInsert) =>
       apply((content, cursor) =>
-        insert === 'notes' ? notesEdit(content) : insertSnippet(content, cursor, SNIPPETS[insert]),
+        insert === 'notes'
+          ? notesEdit(content)
+          : insertSnippet(content, cursor, insert === 'column' ? nextColumn(content, cursor) : SNIPPETS[insert]),
       ),
     onBackgroundChange: (background: BackgroundSettings) =>
       apply((content) => setFrontmatter(content, background), false),
@@ -272,6 +277,12 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
           }
         : undefined,
   };
+};
+
+/** The marker for the column after the cursor's, in the slide's column layout (`two-cols` when it has none). */
+const nextColumn = (content: string, cursor: number): string => {
+  const slide = parseSlide(content);
+  return columnSnippet(isColumnLayout(slide.layout) ? slide.layout : 'two-cols', slotAtOffset(slide, cursor));
 };
 
 /** The entity id a section's ref points at. */

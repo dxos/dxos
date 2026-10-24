@@ -10,7 +10,7 @@ import { EID } from '@dxos/keys';
 import { type SlideIssue } from './frontmatter.ts';
 
 /** Content regions of a slide, selected by `::name::` markers. */
-export const SLOTS = ['default', 'left', 'right'] as const;
+export const SLOTS = ['default', 'left', 'middle', 'right', 'bottom-left', 'bottom-right'] as const;
 
 export type SlotName = (typeof SLOTS)[number];
 
@@ -73,7 +73,7 @@ const PHRASING_PARENTS = new Set([
 const COMMENT = /^<!--((?:(?!-->)[\s\S])*)-->$/;
 const TAG = /<!--[\s\S]*?-->|<(\/?)([A-Za-z][A-Za-z0-9-]*)((?:[^>"']|"[^"]*"|'[^']*')*)>/g;
 const ATTRIBUTE = /([A-Za-z_:][\w:.-]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
-const SLOT_MARKER = /^::([a-z]+)::$/;
+const SLOT_MARKER = /^::([a-z]+(?:-[a-z]+)*)::$/;
 const URL_SCHEME = /^([a-z][a-z0-9+.-]*):/i;
 const SAFE_SCHEMES = new Set(['http', 'https', 'mailto', 'echo']);
 const DATA_IMAGE = /^data:image\//i;
@@ -159,9 +159,12 @@ const transformSlide = (tree: Root): SlidevData => {
   const clicks = assignSteps(body.children, 0);
 
   const slots: Record<SlotName, Root> = {
-    default: { type: 'root', children: [] },
-    left: { type: 'root', children: [] },
-    right: { type: 'root', children: [] },
+    'default': { type: 'root', children: [] },
+    'left': { type: 'root', children: [] },
+    'middle': { type: 'root', children: [] },
+    'right': { type: 'root', children: [] },
+    'bottom-left': { type: 'root', children: [] },
+    'bottom-right': { type: 'root', children: [] },
   };
   let slot: SlotName = 'default';
   for (const node of body.children) {

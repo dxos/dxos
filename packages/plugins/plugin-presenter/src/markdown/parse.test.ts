@@ -49,6 +49,18 @@ describe('parseSlide', () => {
     expect(textOf(slide.slots.default)).not.toContain('hidden');
   });
 
+  test('three-cols and two-by-two split into their named slots', () => {
+    const three = parseSlide('---\nlayout: three-cols\n---\none\n\n::middle::\n\ntwo\n\n::right::\n\nthree');
+    expect(three.layout).toBe('three-cols');
+    expect(textOf(three.slots.middle)).toContain('two');
+    expect(textOf(three.slots.right)).toContain('three');
+
+    const grid = parseSlide('---\nlayout: two-by-two\n---\na\n\n::bottom-left::\n\nc\n\n::bottom-right::\n\nd');
+    expect(textOf(grid.slots['bottom-left'])).toContain('c');
+    expect(textOf(grid.slots['bottom-right'])).toContain('d');
+    expect(textOf(grid.slots['bottom-right'])).not.toContain('::bottom-right::');
+  });
+
   test('::right:: splits into default and right', () => {
     const slide = parseSlide('---\nlayout: two-cols\n---\n# Left\n\nleft text\n\n::right::\n\nright text');
     expect(slide.layout).toBe('two-cols');

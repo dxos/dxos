@@ -4,6 +4,9 @@
 
 import * as Yaml from 'yaml';
 
+import { COLUMN_SLOTS } from './frontmatter.ts';
+import { type SlotName } from './remark-slidev.ts';
+
 /** A text replacement in a slide's markdown, with where the cursor should land afterwards. */
 export type SlideEdit = { from: number; to: number; insert: string; cursor: number };
 
@@ -41,8 +44,20 @@ export const setFrontmatter = (content: string, patch: Record<string, string | n
 export const SNIPPETS = {
   click: '<v-click>\n\n|\n\n</v-click>\n',
   clicks: '<v-clicks>\n\n- |\n\n</v-clicks>\n',
-  column: '\n::right::\n\n|',
 } as const;
+
+/**
+ * The marker that starts the column after the cursor's `slot` in a column layout, with the cursor below it; outside any
+ * slot the cursor is in the first column, and from the last column it starts the last one again.
+ */
+export const columnSnippet = (layout: keyof typeof COLUMN_SLOTS, slot: SlotName | undefined): string => {
+  const slots: readonly SlotName[] = COLUMN_SLOTS[layout];
+  // `::left::` content renders in the first column, except under `two-cols-header`'s header.
+  const current = slot === 'left' && layout !== 'two-cols-header' ? 'default' : slot;
+  const index = Math.max(0, current === undefined ? 0 : slots.indexOf(current));
+  const next = slots[Math.min(index + 1, slots.length - 1)];
+  return `\n::${next}::\n\n|`;
+};
 
 /** An embedded-object tag for the object's ECHO URI. */
 export const surfaceSnippet = (uri: string) => `<Surface ref="${uri}" />\n|`;

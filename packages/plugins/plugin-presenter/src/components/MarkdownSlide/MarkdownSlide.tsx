@@ -61,13 +61,20 @@ export const MarkdownSlide = ({
       hasContent(parsed.slots[slot])
         ? toJsxRuntime(prepareRoot(parsed.slots[slot], current), { Fragment, jsx, jsxs, components })
         : null;
-    return { default: render('default'), left: render('left'), right: render('right') };
+    return {
+      'default': render('default'),
+      'left': render('left'),
+      'middle': render('middle'),
+      'right': render('right'),
+      'bottom-left': render('bottom-left'),
+      'bottom-right': render('bottom-right'),
+    };
   }, [parsed, step]);
 
   const themeStyle = useSlideThemeStyle();
   const Layout = layouts[parsed.layout];
-  // `two-cols` renders its `::left::` content inside the default column.
-  const outlinedSlot = parsed.layout === 'two-cols' && activeSlot === 'left' ? 'default' : activeSlot;
+  // Column layouts other than `two-cols-header` render their `::left::` content inside the default column.
+  const outlinedSlot = activeSlot === 'left' && parsed.layout !== 'two-cols-header' ? 'default' : activeSlot;
 
   const handleClick = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
