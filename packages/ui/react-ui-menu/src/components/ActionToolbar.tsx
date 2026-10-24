@@ -448,9 +448,17 @@ const isMenuable = (item: MenuItem): boolean =>
 const useCollapse = (menu: MenuActions, units: MenuItem[], rows: RefObject<(HTMLElement | null)[]>): MenuItem[] => {
   const registry = useContext(RegistryContext);
   const collapsible = useMemo(() => {
-    // A named group collapses as a submenu, which can only hold what a menu shows.
-    const canCollapse = (item: MenuItem) =>
-      isMenuable(item) && (!isPlainGroup(item) || (registry.get(menu.items(item)) ?? []).every(isMenuable));
+    // A named group collapses as a submenu, which can only hold what a menu shows; an empty one takes no room to free.
+    const canCollapse = (item: MenuItem) => {
+      if (!isMenuable(item)) {
+        return false;
+      }
+      if (!isPlainGroup(item)) {
+        return true;
+      }
+      const children = registry.get(menu.items(item)) ?? [];
+      return children.length > 0 && children.every(isMenuable);
+    };
     const ranked = units
       .map((item, index) => ({ item, rank: placementOf(item).collapse, index }))
       .filter(({ item, rank }) => rank !== undefined && canCollapse(item))
