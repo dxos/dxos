@@ -61,6 +61,8 @@ describe('columnSnippet', () => {
     expect(columnSnippet('three-cols', slotBefore(content, content.length))).toBe('\n::right::\n\n|');
     expect(slotBefore('# Title\n\n', 8)).toBe('default');
     expect(slotBefore('a\n\n::bottom-left::\n\nb\n', 20)).toBe('bottom-left');
+    // An unknown marker is content, as the parser reads it, so the slot before it still holds the cursor.
+    expect(slotBefore('a\n\n::middle::\n\n::unknown::\n\nb\n', 30)).toBe('middle');
   });
 
   test('from the last column it starts the last one again', () => {

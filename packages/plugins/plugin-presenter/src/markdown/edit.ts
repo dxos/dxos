@@ -47,13 +47,17 @@ export const SNIPPETS = {
 } as const;
 
 /**
- * The slot the cursor is in: the last slot marker on a line of its own before `offset`, else `default`. Read from the
+ * The slot the cursor is in: the last known slot marker on a line of its own before `offset`, else `default`. Read from the
  * source, so a blank line after a column's last block still belongs to that column.
  */
 export const slotBefore = (content: string, offset: number): SlotName => {
+  // Only known names start a slot, as in the parser; an unknown marker stays content of the slot before it.
   const lines = content.slice(0, offset).split('\n').reverse();
-  const name = lines.map((line) => SLOT_MARKER.exec(line.trim())?.[1]).find((name) => name !== undefined);
-  return name !== undefined && isSlotName(name) ? name : 'default';
+  return (
+    lines
+      .map((line) => SLOT_MARKER.exec(line.trim())?.[1])
+      .find((name): name is SlotName => !!name && isSlotName(name)) ?? 'default'
+  );
 };
 
 /**
