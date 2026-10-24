@@ -40,7 +40,7 @@ import { log } from '@dxos/log';
 import { FeedProtocol } from '@dxos/protocols';
 import { type DataService, type FeedService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
-import { countWork, defaultMap } from '@dxos/util';
+import { countWork, defaultMap, markMilestone } from '@dxos/util';
 
 import {
   AutomergeHost,
@@ -208,6 +208,10 @@ export class EchoHost extends Resource {
 
   /** Invalidates a pending full-text flush that a later write has superseded. */
   #ftsFlushGeneration = 0;
+
+  /** Whether the first index pass, and the first pass that left nothing behind, are marked on the timeline. */
+  #indexingMarked = false;
+  #caughtUpMarked = false;
 
   readonly #secondaryIndexLock = new Mutex();
 
@@ -1631,6 +1635,10 @@ export class EchoHost extends Resource {
       return undefined;
     }
     const startedAt = performance.now();
+    if (!this.#indexingMarked) {
+      this.#indexingMarked = true;
+      markMilestone('indexing.started');
+    }
 
     try {
       const combinedResult = _makeEmptyMergedResult();
@@ -1750,6 +1758,10 @@ export class EchoHost extends Resource {
 
       if (!this._ctx.disposed && this.isOpen) {
         await this.indexStatus.afterPass(combinedResult);
+      }
+      if (combinedResult.drained && !this.#caughtUpMarked) {
+        this.#caughtUpMarked = true;
+        markMilestone('indexing.caught-up');
       }
 
       return {
