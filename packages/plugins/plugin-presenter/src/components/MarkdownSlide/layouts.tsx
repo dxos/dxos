@@ -150,7 +150,8 @@ const TwoByTwoLayout = ({ slots }: LayoutProps) => (
 const ImageLayout = ({ slots }: LayoutProps) => (
   <Frame name='image' className={mx('flex flex-col', theme.padding)}>
     {slots.default && <div data-scrim aria-hidden className='dx-cover pointer-events-none bg-scrim-surface' />}
-    <Slot name='default' className='relative'>
+    {/* Grows, so an embedded object with no height of its own fills the slide below the text. */}
+    <Slot name='default' className='relative grow'>
       {slots.default}
     </Slot>
   </Frame>

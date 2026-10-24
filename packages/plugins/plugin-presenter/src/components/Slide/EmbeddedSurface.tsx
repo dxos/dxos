@@ -12,6 +12,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import { Text } from '@dxos/schema';
 
 import { meta } from '#meta';
+import { Presentation } from '#types';
 
 import { MarkdownSlide, type SlideSurfaceRole } from '../MarkdownSlide/index.ts';
 import { SlideCanvas } from './canvas.tsx';
@@ -78,6 +79,14 @@ export const EmbeddedSurface = ({ uri, role, db }: EmbeddedSurfaceProps) => {
     if (ancestors.includes(object.id) || ancestors.length > MAX_EMBED_DEPTH) {
       return <Placeholder testId='presenter.embedded-surface.recursive' label='recursive-embed.label' />;
     }
+    // A Slide (e.g. another deck's) shows its content.
+    if (Obj.instanceOf(Presentation.Slide, object)) {
+      return (
+        <EmbedAncestor id={object.id}>
+          <EmbeddedSlideObject slide={object} role={role} />
+        </EmbedAncestor>
+      );
+    }
     // A Text is a slide's own markdown (e.g. another deck's owned slide); its surfaces are text editors, not slides.
     if (Obj.instanceOf(Text.Text, object)) {
       return <EmbeddedTextSlide text={object} />;
@@ -92,6 +101,19 @@ export const EmbeddedSurface = ({ uri, role, db }: EmbeddedSurfaceProps) => {
     return <Placeholder testId='presenter.embedded-surface.missing' label='missing-object.label' />;
   }
   return <Pending />;
+};
+
+/** A slide's content: its markdown as a slide, or the linked object through its slide surface. */
+const EmbeddedSlideObject = ({ slide, role }: { slide: Presentation.Slide; role: SlideSurfaceRole }) => {
+  const content = useResolveRef(slide.content);
+  if (!content || Obj.isDeleted(content)) {
+    return <Pending />;
+  }
+  return Obj.instanceOf(Text.Text, content) ? (
+    <EmbeddedTextSlide text={content} />
+  ) : (
+    <ObjectSurface object={content} role={role} />
+  );
 };
 
 /** Renders an embedded Text as a scaled slide; its own `<Surface>`s stay placeholders so a self-reference cannot recurse. */

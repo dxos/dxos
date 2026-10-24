@@ -10,14 +10,14 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { Text } from '@dxos/schema';
 import * as Position from '@dxos/util/Position';
 
 import {
   DocumentArticle,
   PresentationArticle,
+  PresentationProperties,
   SlideArticle,
-  SlideEditorArticle,
+  SlideObjectArticle,
   SlidePreviewArticle,
 } from '#containers';
 import { meta } from '#meta';
@@ -51,22 +51,25 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'slideEditor',
-        // First, so an owned slide opens here rather than in the markdown plugin's general `Text` article.
-        position: Position.first,
-        filter: AppSurface.object(AppSurface.Article, Text.Text, ({ subject }) =>
-          Obj.instanceOf(Presentation.Presentation, Obj.getParent(subject)),
-        ),
-        component: SlideEditorArticle,
+        // A slide opens as its markdown in the slide editor, or as the linked object's own article.
+        filter: AppSurface.object(AppSurface.Article, Presentation.Slide),
+        component: SlideObjectArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       Surface.create({
         id: 'slidePreview',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, SlideEditorViewState.COMPANION_VARIANT),
-          AppSurface.companion(AppSurface.Article, Text.Text),
+          AppSurface.companion(AppSurface.Article, Presentation.Slide),
         ),
         component: SlidePreviewArticle,
         props: ({ role, data: { companionTo } }) => ({ role, subject: companionTo }),
+      }),
+      Surface.create({
+        id: 'presentationProperties',
+        filter: AppSurface.object(AppSurface.ObjectProperties, Presentation.Presentation),
+        component: PresentationProperties,
+        props: ({ data: { subject } }) => ({ presentation: subject }),
       }),
       Surface.create({
         id: 'slide',

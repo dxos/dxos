@@ -10,6 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as MediaArtifact from '@dxos/plugin-studio/MediaArtifact';
 
 import * as Presentation from './Presentation.ts';
 
@@ -112,4 +113,27 @@ export const PresentObject = Operation.make({
     object: Ref.Ref(Obj.Unknown).annotate({ description: 'The presentation or markdown document to present.' }),
   }),
   output: Schema.Void,
+});
+
+export const GenerateSlideImage = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.presenter.generateSlideImage'),
+    name: 'Generate slide image',
+    description:
+      "Generates an image for a slide from a prompt and places it in the slide's layout (a markdown slide without an " +
+      'image layout switches to `layout: image`). Returns the generated media artifact, or an error.',
+    icon: 'ph--image--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    slide: Ref.Ref(Presentation.Slide).annotate({ description: 'The slide to give an image.' }),
+    prompt: Schema.String.annotate({ description: 'What the image shows.' }),
+    provider: Schema.optional(Schema.String).annotate({
+      description: 'The image provider id; the first configured one when absent.',
+    }),
+  }),
+  output: Schema.Struct({
+    artifact: Ref.Ref(MediaArtifact.MediaArtifact),
+    error: Schema.optional(Schema.String),
+  }),
 });

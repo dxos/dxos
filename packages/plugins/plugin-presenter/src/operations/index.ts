@@ -13,4 +13,5 @@ export const PresenterOperationHandlerSet = OperationHandlerSet.lazy([
   PresenterOperation.AddSection.pipe(Operation.lazyHandler(() => import('./add-section.ts'))),
   PresenterOperation.ListLayouts.pipe(Operation.lazyHandler(() => import('./list-layouts.ts'))),
   PresenterOperation.PresentObject.pipe(Operation.lazyHandler(() => import('./present-object.ts'))),
+  PresenterOperation.GenerateSlideImage.pipe(Operation.lazyHandler(() => import('./generate-slide-image.ts'))),
 ]);

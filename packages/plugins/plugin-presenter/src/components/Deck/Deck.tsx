@@ -28,7 +28,7 @@ import { useDeckTheme, useSlideClicks } from '#hooks';
 import { meta } from '#meta';
 import { type SlideTheme, SlideViewState } from '#types';
 
-import { PageNumber as PageNumberComponent, Pager as PagerComponent } from '../Pager/index.ts';
+import { ExitButton, PageNumber as PageNumberComponent, Pager as PagerComponent } from '../Pager/index.ts';
 import { PresentationShell } from '../PresentationShell/index.ts';
 import { Slide } from '../Slide/index.ts';
 import { SlideGrid } from '../SlideGrid/index.ts';
@@ -338,17 +338,11 @@ DeckContent.displayName = 'Deck.Content';
 // Viewport
 //
 
-type DeckViewportProps = {
-  /** Offered when the deck is empty. */
-  onAddSlide?: () => void;
-};
-
 /**
  * The current slide: inset in a void inline, full-bleed with an auto-hiding pager in fullscreen, where Escape exits.
  */
-const DeckViewport = Util.composable<HTMLDivElement, DeckViewportProps>(({ onAddSlide, ...props }, forwardedRef) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const { count, slide, step, fullscreen, setFullscreen, themeSettings, attendableId, focusRef } =
+const DeckViewport = Util.composable<HTMLDivElement>((props, forwardedRef) => {
+  const { slide, step, fullscreen, setFullscreen, themeSettings, attendableId, focusRef } =
     useDeckContext('Deck.Viewport');
   const ref = useComposedRefs<HTMLDivElement>(forwardedRef, focusRef);
   const handleExit = useCallback(() => setFullscreen(false), [setFullscreen]);
@@ -365,18 +359,12 @@ const DeckViewport = Util.composable<HTMLDivElement, DeckViewportProps>(({ onAdd
     >
       <div className='dx-cover flex flex-col'>
         <SlideThemeProvider settings={themeSettings}>
-          {count === 0 ? (
-            <div className='flex grow items-center justify-center'>
-              {onAddSlide && <Button.Root label={t('add-slide.label')} onClick={onAddSlide} />}
-            </div>
-          ) : (
-            slide && (
-              <Slide.Root key={slide.id} source={slide} attendableId={attendableId} step={step}>
-                <Slide.Frame inset={!fullscreen}>
-                  <Slide.Content />
-                </Slide.Frame>
-              </Slide.Root>
-            )
+          {slide && (
+            <Slide.Root key={slide.id} source={slide} attendableId={attendableId} step={step}>
+              <Slide.Frame inset={!fullscreen}>
+                <Slide.Content />
+              </Slide.Frame>
+            </Slide.Root>
           )}
         </SlideThemeProvider>
       </div>
@@ -431,8 +419,16 @@ const Overlay = () => {
     >
       <DeckPager />
       <DeckPageNumber />
+      <DeckExit />
     </div>
   );
+};
+
+/** Ends the fullscreen pager row: leaves fullscreen. */
+const DeckExit = () => {
+  const { setFullscreen } = useDeckContext('Deck.Viewport');
+  const handleExit = useCallback(() => setFullscreen(false), [setFullscreen]);
+  return <ExitButton onExit={handleExit} />;
 };
 
 //
@@ -442,36 +438,50 @@ const Overlay = () => {
 type DeckGridProps = {
   /** Moves a slide; without it the thumbnails cannot be dragged. */
   onMove?: (from: number, to: number) => void;
+  /** Opens a slide on double-click; without it a double-click presents from that slide. */
+  onOpen?: (index: number) => void;
+  /** Adds a slide from a ghost tile after the last one; without it there is no ghost. */
+  onAddSlide?: () => void;
+  /** The graph node a tile shows, so right-clicking it opens that node's actions. */
+  contextMenuId?: (source: SlideSource) => string | undefined;
 };
 
 /**
- * Every slide as a thumbnail; the current one is selected, and a double-click presents from it.
+ * Every slide as a thumbnail; the current one is selected, and a double-click opens it (or presents from it).
  */
-const DeckGrid = Util.composable<HTMLDivElement, DeckGridProps>(({ onMove, ...props }, forwardedRef) => {
-  const { slides, index, setIndex, setFullscreen, themeSettings, focusRef } = useDeckContext('Deck.Grid');
-  const ref = useComposedRefs<HTMLDivElement>(forwardedRef, focusRef);
-  return (
-    <div
-      {...Util.composableProps(props, { classNames: 'flex grow outline-none' })}
-      ref={ref}
-      tabIndex={-1}
-      data-testid='presenter.deck'
-    >
-      <SlideThemeProvider settings={themeSettings}>
-        <SlideGrid
-          slides={slides}
-          index={index}
-          onIndexChange={setIndex}
-          onMove={onMove}
-          onPresent={(slideIndex) => {
-            setIndex(slideIndex);
-            setFullscreen(true);
-          }}
-        />
-      </SlideThemeProvider>
-    </div>
-  );
-});
+const DeckGrid = Util.composable<HTMLDivElement, DeckGridProps>(
+  ({ onMove, onOpen, onAddSlide, contextMenuId, ...props }, forwardedRef) => {
+    const { slides, index, setIndex, setFullscreen, themeSettings, focusRef } = useDeckContext('Deck.Grid');
+    const ref = useComposedRefs<HTMLDivElement>(forwardedRef, focusRef);
+    return (
+      <div
+        {...Util.composableProps(props, { classNames: 'flex grow outline-none' })}
+        ref={ref}
+        tabIndex={-1}
+        data-testid='presenter.deck'
+      >
+        <SlideThemeProvider settings={themeSettings}>
+          <SlideGrid
+            slides={slides}
+            index={index}
+            onIndexChange={setIndex}
+            onMove={onMove}
+            onAdd={onAddSlide}
+            contextMenuId={contextMenuId}
+            onPresent={(slideIndex) => {
+              setIndex(slideIndex);
+              if (onOpen) {
+                onOpen(slideIndex);
+              } else {
+                setFullscreen(true);
+              }
+            }}
+          />
+        </SlideThemeProvider>
+      </div>
+    );
+  },
+);
 
 DeckGrid.displayName = 'Deck.Grid';
 
@@ -479,7 +489,7 @@ DeckGrid.displayName = 'Deck.Grid';
 // Pager
 //
 
-/** Previous, next, first and last slide buttons. */
+/** First, previous, next and last slide buttons. */
 const DeckPager = () => {
   const { index, count, setIndex } = useDeckContext('Deck.Pager');
   return <PagerComponent index={index} count={count} onChange={setIndex} />;
@@ -500,26 +510,26 @@ const DeckPageNumber = () => {
 DeckPageNumber.displayName = 'Deck.PageNumber';
 
 //
-// FullscreenButton
+// PlayButton
 //
 
-/** Presents the deck fullscreen. */
-const DeckFullscreenButton = () => {
+/** Presents the deck from the current slide. */
+const DeckPlayButton = () => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { setFullscreen } = useDeckContext('Deck.FullscreenButton');
+  const { setFullscreen } = useDeckContext('Deck.PlayButton');
   return (
     <Button.Root
-      data-testid='presenter.fullscreen'
-      icon='ph--arrows-out--regular'
+      data-testid='presenter.play'
+      icon='ph--presentation--regular'
       iconOnly
       variant='ghost'
-      label={t('fullscreen.label')}
+      label={t('toggle-presentation.label')}
       onClick={() => setFullscreen(true)}
     />
   );
 };
 
-DeckFullscreenButton.displayName = 'Deck.FullscreenButton';
+DeckPlayButton.displayName = 'Deck.PlayButton';
 
 //
 // Exports
@@ -527,13 +537,13 @@ DeckFullscreenButton.displayName = 'Deck.FullscreenButton';
 
 export {
   DeckContent as Content,
-  DeckFullscreenButton as FullscreenButton,
   DeckGrid as Grid,
   DeckPageNumber as PageNumber,
   DeckPager as Pager,
+  DeckPlayButton as PlayButton,
   DeckRoot as Root,
   DeckViewport as Viewport,
   useDeckContext,
 };
 
-export type { DeckGridProps as GridProps, DeckRootProps as RootProps, DeckViewportProps as ViewportProps };
+export type { DeckGridProps as GridProps, DeckRootProps as RootProps };

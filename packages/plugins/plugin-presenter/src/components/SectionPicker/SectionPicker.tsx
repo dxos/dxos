@@ -2,15 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
-import { Obj, Ref } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
+import { Obj } from '@dxos/echo';
 import { ObjectPicker } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { useObjectOptions } from '#hooks';
+import { useObjectOptions, usePresentationDeck } from '#hooks';
 import { meta } from '#meta';
 import { Presentation } from '#types';
 
@@ -24,10 +23,15 @@ export type SectionPickerProps = {
 export const SectionPicker = ({ presentation }: SectionPickerProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [open, setOpen] = useState(false);
-  const [sections] = useObject(presentation, 'sections');
+  // Objects a slide already shows are not offered again.
+  const slides = usePresentationDeck(presentation);
+  const linked = useMemo(
+    () => new Set(slides.flatMap((slide) => (slide.kind === 'object' ? [slide.object.id] : []))),
+    [slides],
+  );
   const include = useCallback(
-    (object: Obj.Unknown) => object.id !== presentation.id && !sections.some(Ref.hasEntityId(object.id)),
-    [presentation, sections],
+    (object: Obj.Unknown) => object.id !== presentation.id && !linked.has(object.id),
+    [presentation, linked],
   );
   const options = useObjectOptions(open ? Obj.getDatabase(presentation) : undefined, include);
 

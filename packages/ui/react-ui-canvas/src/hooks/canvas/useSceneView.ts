@@ -57,6 +57,8 @@ export type UseSceneViewOptions = {
   fitTarget: Bounds;
   /** Least gap between that frame and each viewport edge, in scene units. */
   inset: number;
+  /** Highest zoom a fit reaches; 1:1 (`NOMINAL_ZOOM`) unless the view should enlarge a small scene to fill it. */
+  fitZoom?: number;
   /** The `Canvas.Root` props of the same names. */
   initialCamera?: Camera;
   initialDisplay?: Partial<SceneDisplay>;
@@ -95,6 +97,7 @@ export const useSceneView = ({
   time,
   fitTarget,
   inset,
+  fitZoom = NOMINAL_ZOOM,
   initialCamera,
   initialDisplay,
   onDisplayChange,
@@ -163,17 +166,17 @@ export const useSceneView = ({
       const element = rootRef.current;
       const size = element ? { width: element.clientWidth, height: element.clientHeight } : viewport;
       fittedRef.current = { scene: sceneId, key: `${size.width}x${size.height}:${refitKey ?? ''}` };
-      setCamera(fitBounds(fitTarget, size, inset, NOMINAL_ZOOM));
+      setCamera(fitBounds(fitTarget, size, inset, fitZoom));
     }
-  }, [fitting, measured, viewport, fitTarget, inset, setCamera, sceneId, refitKey]);
+  }, [fitting, measured, viewport, fitTarget, inset, fitZoom, setCamera, sceneId, refitKey]);
   // Keyed on values, not identities: the scene and the camera helpers are rebuilt on unrelated renders, and each rerun
   // would restart the debounce before it fires. The latest helpers and frame are read when it does.
   const fitLatestRef = useRef({
     animateTo,
     isAnimating,
-    frame: () => fitBounds(fitTarget, viewport, inset, NOMINAL_ZOOM),
+    frame: () => fitBounds(fitTarget, viewport, inset, fitZoom),
   });
-  fitLatestRef.current = { animateTo, isAnimating, frame: () => fitBounds(fitTarget, viewport, inset, NOMINAL_ZOOM) };
+  fitLatestRef.current = { animateTo, isAnimating, frame: () => fitBounds(fitTarget, viewport, inset, fitZoom) };
   useEffect(() => {
     const fitted = fittedRef.current;
     if (!fitting || !measured || !fitted) {

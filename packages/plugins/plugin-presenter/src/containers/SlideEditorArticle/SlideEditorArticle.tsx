@@ -5,6 +5,7 @@
 import { type EditorView, EditorView as NaturalEditorView, type ViewUpdate } from '@codemirror/view';
 import { useAtomSet, useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
@@ -26,14 +27,15 @@ import {
   createBasicExtensions,
   createMarkdownExtensions,
   createThemeExtensions,
+  decorateMarkdown,
   documentSlots,
   editorClassNames,
-  folding,
   formattingListener,
   scrollbarAutohide,
 } from '@dxos/ui-editor';
 
 import { type BackgroundSettings, type SlideInsert, SlideToolbar, useSlideInsertActions } from '#components';
+import { type SlideSource, slideSourcesAtom } from '#deck';
 import { slideEditorSyncAtom, useObjectOptions } from '#hooks';
 import {
   LAYOUTS,
@@ -121,10 +123,13 @@ const SlideEditorContent = ({ subject }: SlideEditorContentProps) => {
       // The markdown editor's document slots, so the slide reads at the same measure and margins.
       createThemeExtensions({ themeMode, slots: documentSlots }),
       createMarkdownExtensions(),
+      // Fenced code reads as the markdown editor shows it (a shaded block, its fences hidden until the caret enters);
+      // the rest stays source, since `decorateMarkdown` would draw a slide's `---` frontmatter fences as rules.
+      decorateMarkdown({ nodes: ['FencedCode'] }),
       slideHighlight(),
       slideCompletion({ describeLayout: (layout) => t(`layout.${layout}.label`) }),
-      // As the markdown editor: the fold gutter (which also sets the text's inset) and the auto-hiding scrollbar.
-      folding(),
+      // A slide is too short to fold; the inset the markdown editor's fold gutter gives its text is kept.
+      NaturalEditorView.theme({ '.cm-content': { paddingInlineStart: '32px' } }),
       scrollbarAutohide(),
       automerge(Doc.createAccessor(subject, ['content'])),
       formattingListener((formatting: EditorToolbarState) =>
@@ -199,14 +204,19 @@ const SlideEditorToolbars = ({ subject, attendableId, previewMode }: SlideEditor
   );
 };
 
+/** Stands in for the slides of a slide with no presentation. */
+const NO_SLIDES = Atom.make<SlideSource[]>([]);
+
 /** Toolbar callbacks: each edit is one change to the editor (one undo step), the rest are navigation. */
 const useSlideActions = (subject: Text.Text, attendableId: string | undefined, view: EditorView | undefined) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const { update } = useViewStateActions(SlideEditorViewState.aspect, SlideEditorViewState.CONTEXT);
-  const parent = Obj.getParent(subject);
-  const presentation = Obj.instanceOf(Presentation.Presentation, parent) ? parent : undefined;
-  const [sections] = useObject(presentation, 'sections');
-  const position = sections?.findIndex((ref) => sectionId(ref.uri) === subject.id) ?? -1;
+  const presentation = Presentation.getPresentation(subject);
+  // The deck's slides: a slide whose content was deleted is no slide to move to.
+  const slides = useAtomValue(
+    useMemo(() => (presentation ? slideSourcesAtom(presentation) : NO_SLIDES), [presentation]),
+  );
+  const position = slides.findIndex((slide) => slide.kind === 'text' && slide.text.id === subject.id);
   const { set: setSlideIndex } = useViewStateActions(
     SlideViewState.aspect,
     presentation ? Obj.getURI(presentation) : undefined,
@@ -236,9 +246,8 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
 
   const open = useCallback(
     (index: number) => {
-      const target = sections?.[index];
+      const id = slides[index]?.id;
       const db = Obj.getDatabase(subject);
-      const id = target && sectionId(target.uri);
       if (!presentation || !db || !id) {
         return;
       }
@@ -247,7 +256,7 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
         workspace: GraphPath.getSpacePath(db.spaceId),
       });
     },
-    [invokePromise, presentation, sections, subject],
+    [invokePromise, presentation, slides, subject],
   );
 
   return {
@@ -284,7 +293,7 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
       });
     },
     onPrevious: position > 0 ? () => open(position - 1) : undefined,
-    onNext: sections && position >= 0 && position < sections.length - 1 ? () => open(position + 1) : undefined,
+    onNext: position >= 0 && position < slides.length - 1 ? () => open(position + 1) : undefined,
     onPresent:
       presentation && position >= 0
         ? () => {
@@ -293,10 +302,4 @@ const useSlideActions = (subject: Text.Text, attendableId: string | undefined, v
           }
         : undefined,
   };
-};
-
-/** The entity id a section's ref points at. */
-const sectionId = (uri: string): string | undefined => {
-  const eid = EID.tryParse(uri);
-  return eid ? EID.getEntityId(eid) : undefined;
 };

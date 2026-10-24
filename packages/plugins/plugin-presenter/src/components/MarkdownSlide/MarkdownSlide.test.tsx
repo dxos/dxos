@@ -57,7 +57,7 @@ describe('MarkdownSlide', () => {
       '</v-clicks>',
     ].join('\n');
     const markup = render(content, 1);
-    expect(markup.match(/<div data-surface="echo:\/\/\/[AB]"[^>]*>/g)).toEqual([
+    expect(markup.match(/<div data-embed="echo:\/\/\/[AB]"[^>]*>/g)).toEqual([
       expect.stringMatching(/data-step="1"(?![^>]*invisible)/),
       expect.stringMatching(/data-step="2"[^>]*class="[^"]*invisible/),
     ]);
@@ -151,7 +151,7 @@ describe('MarkdownSlide', () => {
 
   test('surface renders a placeholder without a renderer', ({ expect }) => {
     const markup = render('<Surface ref="echo:///01J00000000000000000000000" role="card" />');
-    expect(markup).toContain('data-surface="echo:///01J00000000000000000000000"');
+    expect(markup).toContain('data-embed="echo:///01J00000000000000000000000"');
     expect(markup).toContain('data-role="card"');
   });
 
