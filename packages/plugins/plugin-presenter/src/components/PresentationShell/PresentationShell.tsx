@@ -13,13 +13,10 @@ import React, {
 
 import { useComposedRefs } from '@dxos/react-hooks';
 import * as Util from '@dxos/react-ui/Util';
-import { mx } from '@dxos/ui-theme';
 
 export type PresentationShellProps = PropsWithChildren<{
   /** Fade-in/out duration (ms). */
   fadeDuration?: number;
-  /** Duration the [ESC] hint remains visible (ms). */
-  hintDuration?: number;
   /** Whether the presentation is fullscreen. */
   fullscreen?: boolean;
   /** Invoked once the exit fade-out has completed. */
@@ -30,14 +27,12 @@ export type PresentationShellProps = PropsWithChildren<{
 
 /**
  * Wraps presentation content with a fade-in/out transition and, when fullscreen, an ESC handler
- * that exits in a single keypress (intercepting before the deck's handler) plus a transient [ESC]
- * caption shown on enter.
+ * that exits in a single keypress (intercepting before the deck's handler).
  */
 export const PresentationShell = Util.composable<HTMLDivElement, PresentationShellProps>(
-  ({ children, fadeDuration = 300, hintDuration = 3000, fullscreen = true, onExit, ...props }, forwardedRef) => {
+  ({ children, fadeDuration = 300, fullscreen = true, onExit, ...props }, forwardedRef) => {
     const [visible, setVisible] = useState(false);
     const [exiting, setExiting] = useState(false);
-    const [showHint, setShowHint] = useState(true);
     const rootRef = useRef<HTMLDivElement>(null);
     const ref = useComposedRefs<HTMLDivElement>(forwardedRef, rootRef);
     const exitTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -58,12 +53,6 @@ export const PresentationShell = Util.composable<HTMLDivElement, PresentationShe
         rootRef.current?.focus({ preventScroll: true });
       }
     }, [fullscreen]);
-
-    // Hide the hint after the configured duration.
-    useEffect(() => {
-      const timer = setTimeout(() => setShowHint(false), hintDuration);
-      return () => clearTimeout(timer);
-    }, [hintDuration]);
 
     const handleExit = useCallback(() => {
       if (exitingRef.current) {
@@ -109,16 +98,6 @@ export const PresentationShell = Util.composable<HTMLDivElement, PresentationShe
         ref={ref}
       >
         {children}
-        {fullscreen && (
-          <div
-            className={mx(
-              'absolute top-4 left-4 z-[300] transition-opacity duration-500',
-              showHint && !exiting ? 'opacity-100' : 'opacity-0',
-            )}
-          >
-            <span className='rounded-sm bg-white/10 px-2 py-1 font-mono text-sm text-white/70'>[ESC]</span>
-          </div>
-        )}
       </div>
     );
   },

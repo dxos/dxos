@@ -11,11 +11,9 @@ export type PagerProps = {
   index?: number;
   count?: number;
   onChange?: (index: number) => void;
-  /** Adds an exit button after the others (e.g. to leave fullscreen); none without it. */
-  onExit?: () => void;
 };
 
-export const Pager = ({ index = 0, count = 0, onChange, onExit }: PagerProps) => {
+export const Pager = ({ index = 0, count = 0, onChange }: PagerProps) => {
   const handleChangeIndex = (dir: number) => {
     const next = index + dir;
     if (next >= 0 && next < count) {
@@ -72,19 +70,6 @@ export const Pager = ({ index = 0, count = 0, onChange, onExit }: PagerProps) =>
         classNames='p-0'
         onClick={() => onChange?.(count - 1)}
       />
-      {onExit && (
-        <Button.Root
-          data-testid='presenter.pager.exit'
-          icon='ph--x--regular'
-          iconSize='xl'
-          label='Exit'
-          iconOnly
-          showTooltip={false}
-          variant='ghost'
-          classNames='p-0'
-          onClick={onExit}
-        />
-      )}
     </Layout.Flex>
   );
 };
@@ -106,3 +91,22 @@ export const PageNumber = ({ index = 0, count = 1 }: PageNumberProps) => {
     </Layout.Flex>
   );
 };
+
+export type ExitButtonProps = {
+  onExit: () => void;
+};
+
+/** Ends the pager row: leaves fullscreen. */
+export const ExitButton = ({ onExit }: ExitButtonProps) => (
+  <Button.Root
+    data-testid='presenter.pager.exit'
+    icon='ph--x--regular'
+    iconSize='xl'
+    label='Exit'
+    iconOnly
+    showTooltip={false}
+    variant='ghost'
+    classNames='p-0 text-neutral-500'
+    onClick={onExit}
+  />
+);
