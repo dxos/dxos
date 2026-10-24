@@ -275,14 +275,14 @@ describe('Feed', () => {
 
       const queryResult = yield* Feed.query(feed, Filter.type(TestSchema.Person));
       const called = new Event();
-      const calledOnce = called.waitForCount(1);
       const unsubscribe = queryResult.subscribe(() => called.emit());
+      // The local append is in the results before the index answers with the rest of the feed.
+      const calledWithBoth = called.waitForCondition(() => queryResult.results.length === 2);
 
       const bob = Obj.make(TestSchema.Person, { name: 'bob' });
       yield* Feed.append(feed, [bob]);
 
-      yield* Effect.promise(() => calledOnce);
-      expect(queryResult.results).toHaveLength(2);
+      yield* Effect.promise(() => calledWithBoth);
       expect(queryResult.results.map((person) => person.name).sort()).toEqual(['alice', 'bob']);
       unsubscribe();
     }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
@@ -617,6 +617,34 @@ describe('Feed', () => {
 
       await expect(db.flush()).rejects.toThrow('disposed with 1 unsent writes');
       await db.flush();
+    });
+
+    test('a write made while an append notifies is stored after that append', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const feed = db.add(Feed.make({ name: 'people' }));
+      const john = Obj.make(TestSchema.Person, { name: 'john' });
+
+      // A live feed query hears the append inside it, and its subscriber answers with a second write.
+      const query = db.query(Query.select(Filter.type(TestSchema.Person)).from(feed));
+      onTestFinished(
+        query.subscribe(() => {
+          if (query.results.some((person) => person.id === john.id) && john.name === 'john') {
+            Obj.update(john, (john) => {
+              john.name = 'john v2';
+            });
+            void db.appendToFeed(feed, [john]);
+          }
+        }),
+      );
+      await db.appendToFeed(feed, [john]);
+      await db.flush();
+      await db.evictFeedHandle(feed);
+
+      const feedUri = Feed.getFeedUri(feed);
+      invariant(feedUri, 'Expected the feed to have a URI once added to the database.');
+      const results = await db.query(Query.select(Filter.everything()).from(FeedScope.feed(feedUri))).run();
+      expect(results.map((person) => (person as TestSchema.Person).name)).toEqual(['john v2']);
     });
 
     test('disposing the feed handle flushes a same-tick update instead of dropping it', async ({ expect }) => {

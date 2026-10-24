@@ -23,6 +23,8 @@ import { hotkeyStore, setHotkeyScope } from '@dxos/react-focus/store';
 import { NavTreePlugin } from '#plugin';
 import { NavTreeCapabilities } from '#types';
 
+await Harness.preload({ plugins: [NavTreePlugin()] });
+
 const OBJECT_SEGMENT = 'object';
 const OBJECT_TYPE = 'example.com.type.object';
 

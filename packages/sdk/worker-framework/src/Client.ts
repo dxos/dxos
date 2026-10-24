@@ -7,7 +7,7 @@ import { type Context, ContextDisposedError, Resource } from '@dxos/context';
 import { withContext } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import type { MaybePromise } from '@dxos/util';
+import { type MaybePromise, markMilestone } from '@dxos/util';
 
 import { WorkerNotTerminableError, WorkerTerminationError } from './errors.ts';
 import { DisplaceChannel, type TerminateRequest } from './internal/displace-channel.ts';
@@ -729,6 +729,7 @@ export class Connection extends Resource {
 
       if (this.#isInitialConnection) {
         performance.mark('worker-connection:session-ready');
+        markMilestone('worker.connected');
         this.#isInitialConnection = false;
         this.#initialConnection.wake();
       } else {
@@ -911,6 +912,7 @@ class LeaderSession extends Resource {
     log('leader-session: creating worker');
     this.#worker = this.#createWorker();
     performance.mark('worker-connection:spawned');
+    markMilestone('worker.spawned');
     const listening = new Trigger();
     const ready = new Trigger<WorkerProtocol.DedicatedWorkerMessage & { type: 'ready' }>();
     this.#worker.onmessage = (event: MessageEvent<WorkerProtocol.DedicatedWorkerMessage>) => {

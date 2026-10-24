@@ -40,7 +40,7 @@ import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
 import * as Theme from '@dxos/react-ui/Theme';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
-import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
+import { getHostPlatform, markMilestone, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
 import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs.tsx';
 import { initAutomergeWasm, initEchoHostWasm } from './util/automerge-wasm.ts';
@@ -415,6 +415,7 @@ const main = async () => {
     extra?: Record<string, string | number | boolean | undefined>,
   ) => {
     startupMark(endMark);
+    markMilestone(`app.${endMark}`);
     startupMeasure('total', 'main:start', endMark);
     const summary = { ...captureStartupSummary(), ...extra };
     void observability

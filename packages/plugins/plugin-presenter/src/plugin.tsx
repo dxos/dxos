@@ -12,6 +12,7 @@ import {
   PluginAsset,
   ReactSurface,
   Schema,
+  SkillDefinition,
   Translations,
 } from '#capabilities';
 import { meta } from '#meta';
@@ -27,6 +28,7 @@ export const PresenterPlugin = Plugin.define(meta).pipe(
   Plugin.addModule(PluginAsset),
   Plugin.addModule(ReactSurface),
   Plugin.addModule(Schema),
+  Plugin.addModule(SkillDefinition),
   Plugin.addModule(Translations),
   Plugin.make,
 );

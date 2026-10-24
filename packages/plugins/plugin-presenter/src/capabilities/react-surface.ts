@@ -13,9 +13,15 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import * as Position from '@dxos/util/Position';
 
-import { DocumentArticle, PresentationArticle, SlideArticle, SlideEditorArticle } from '#containers';
+import {
+  DocumentArticle,
+  PresentationArticle,
+  SlideArticle,
+  SlideEditorArticle,
+  SlidePreviewArticle,
+} from '#containers';
 import { meta } from '#meta';
-import { Presentation } from '#types';
+import { Presentation, SlideEditorViewState } from '#types';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -52,6 +58,15 @@ export default Capability.makeModule(() =>
         ),
         component: SlideEditorArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+      }),
+      Surface.create({
+        id: 'slidePreview',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, SlideEditorViewState.COMPANION_VARIANT),
+          AppSurface.companion(AppSurface.Article, Text.Text),
+        ),
+        component: SlidePreviewArticle,
+        props: ({ role, data: { companionTo } }) => ({ role, subject: companionTo }),
       }),
       Surface.create({
         id: 'slide',

@@ -60,38 +60,52 @@ type Story = StoryObj<typeof meta>;
 
 const LOAD_TIMEOUT = { timeout: 10_000 };
 
+const tile = (canvas: ReturnType<typeof within>, index: number) =>
+  canvas.findByTestId(`presenter.slide-grid.${index}`, undefined, LOAD_TIMEOUT);
+
+/** Every slide is a thumbnail; adding a slide adds a tile. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByText('1 / 4', undefined, LOAD_TIMEOUT)).toBeVisible();
+    await tile(canvas, 3);
+    await expect(canvas.queryByTestId('presenter.slide-grid.4')).toBeNull();
     await userEvent.click(canvas.getByRole('button', { name: 'Add slide' }));
-    await expect(await canvas.findByText('1 / 5')).toBeVisible();
+    await tile(canvas, 4);
   },
 };
 
-/** Arrow keys turn the page on mount, with no click into the deck first. */
+/** Arrow keys move the current slide on mount, with no click into the grid first. */
 export const FocusOnMount: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await canvas.findByText('1 / 4', undefined, LOAD_TIMEOUT);
+    await expect(await tile(canvas, 0)).toHaveAttribute('aria-selected', 'true');
     await waitFor(() => expect(canvas.getByTestId('presenter.deck')).toHaveFocus());
     await userEvent.keyboard('{ArrowRight}');
-    await expect(await canvas.findByText('2 / 4')).toBeVisible();
+    await waitFor(async () => expect(await tile(canvas, 1)).toHaveAttribute('aria-selected', 'true'));
   },
 };
 
-/** The toolbar button enters fullscreen; ESC returns inline with the keys still live. */
+/** The toolbar button presents fullscreen; ESC returns to the grid with the keys still live. */
 export const Fullscreen: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await canvas.findByText('1 / 4', undefined, LOAD_TIMEOUT);
+    await tile(canvas, 3);
     await userEvent.click(canvas.getByTestId('presenter.fullscreen'));
     await expect(await canvas.findByTestId('presenter.overlay')).toBeInTheDocument();
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(canvas.queryByTestId('presenter.overlay')).toBeNull());
     await waitFor(() => expect(canvas.getByTestId('presenter.deck')).toHaveFocus());
     await userEvent.keyboard('{ArrowRight}');
-    await expect(await canvas.findByText('2 / 4')).toBeVisible();
+    await waitFor(async () => expect(await tile(canvas, 1)).toHaveAttribute('aria-selected', 'true'));
+  },
+};
+
+/** Double-clicking a thumbnail presents from that slide. */
+export const PresentFromTile: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.dblClick(await tile(canvas, 2));
+    await expect(await canvas.findByText('3 / 4')).toBeInTheDocument();
   },
 };
 
@@ -99,13 +113,15 @@ export const Fullscreen: Story = {
 export const LinkSection: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await canvas.findByText('1 / 4', undefined, LOAD_TIMEOUT);
+    await tile(canvas, 3);
     await userEvent.click(canvas.getByTestId('presenter.section-picker'));
     const option = await screen.findByRole('option', { name: /Appendix/ }, { timeout: 5_000 });
-    await expect(screen.queryByRole('option', { name: /Notes/ })).toBeNull();
-    await expect(screen.queryByRole('option', { name: /Demo/ })).toBeNull();
+    // Scoped to the picker, since the grid's thumbnails are options too.
+    const picker = within(option.closest<HTMLElement>('[role="listbox"]') ?? document.body);
+    await expect(picker.queryByRole('option', { name: /Notes/ })).toBeNull();
+    await expect(picker.queryByRole('option', { name: /Demo/ })).toBeNull();
     await userEvent.click(option);
-    await expect(await canvas.findByText('1 / 5')).toBeVisible();
+    await tile(canvas, 4);
   },
 };
 
@@ -116,7 +132,7 @@ export const Unattended: Story = {
     const canvas = within(canvasElement);
     const input = await canvas.findByTestId('other-input');
     await waitFor(() => expect(input).toHaveFocus());
-    await canvas.findByText('1 / 4', undefined, LOAD_TIMEOUT);
+    await tile(canvas, 3);
     await new Promise((resolve) => setTimeout(resolve, 300));
     await expect(input).toHaveFocus();
     await expect(canvas.getByTestId('presenter.deck')).not.toHaveFocus();

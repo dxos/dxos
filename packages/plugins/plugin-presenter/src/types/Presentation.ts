@@ -5,10 +5,16 @@
 import * as Schema from 'effect/Schema';
 
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
+import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 
 import { meta } from '#meta';
+
+import * as SlideTheme from './SlideTheme.ts';
+
+/** Key of the presenter skill, attached to the Presentation type. */
+export const SKILL_KEY = 'org.dxos.skill.presenter';
 
 /**
  * An ordered deck of sections; each section is an owned markdown `Text` or a link to any ECHO object.
@@ -18,10 +24,13 @@ export class Presentation extends Type.makeObject<Presentation>(DXN.make('org.dx
     name: Schema.optional(Schema.String),
     /** Sections in slide order; owned `Text` targets are parented to the presentation. */
     sections: Schema.Array(Ref.Ref(Obj.Unknown)).pipe(Annotation.FormInputAnnotation.set(false)),
+    /** Overrides the first slide's `theme:` headmatter for every slide, linked objects included. */
+    theme: Schema.optional(SlideTheme.Settings),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--presentation--regular', hue: 'orange' }),
     Annotation.UserType.set({ tags: [Collection.ItemTag] }),
+    Skill.SkillsAnnotation.set([SKILL_KEY]),
     // Its navtree node lists `sections`; owned slides are deleted only through the undoable space Delete.
     AppAnnotation.ContainerAnnotation.set({
       property: 'sections',

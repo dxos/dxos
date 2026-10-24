@@ -427,7 +427,6 @@ const TESTING_ENTRY_ONLY: Record<string, string[]> = {
 };
 
 const BUNDLER_RESOLVED: Record<string, string[]> = {
-  'packages/plugins/plugin-presenter': ['marked'],
   // The app's import map is built from its direct dependencies, and plugins loaded by URL import
   // these bare; nothing in the app imports them, but without the declaration they have no entry.
   'packages/apps/composer-app': [

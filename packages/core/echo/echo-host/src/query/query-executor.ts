@@ -3,7 +3,12 @@
 //
 
 import * as A from '@automerge/automerge';
-import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
+import {
+  type DocumentId,
+  interpretAsDocumentId,
+  isValidAutomergeUrl,
+  isValidDocumentId,
+} from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/sql/SqlClient';
 
@@ -28,16 +33,24 @@ import {
   ATTR_RELATION_SOURCE,
   ATTR_RELATION_TARGET,
   ATTR_TYPE,
+  objectStructureFromJson,
   objectStructureToJson,
 } from '@dxos/echo/internal';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
-import { type EntityMeta, type IndexEngine, type QueueRef, type QueueWindow, type ReverseRef } from '@dxos/index-core';
+import {
+  type EntityMeta,
+  type IndexEngine,
+  type ObjectSnapshot,
+  type QueueRef,
+  type QueueWindow,
+  type ReverseRef,
+} from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { type QueryService } from '@dxos/protocols/rpc';
-import { chunkArray, compositeKey, getDeep, isNonNullable } from '@dxos/util';
+import { chunkArray, compositeKey, countWork, getDeep, isNonNullable } from '@dxos/util';
 
 import type { AutomergeHost } from '../automerge/index.ts';
 import type { SpaceStateManager } from '../db-host/index.ts';
@@ -55,7 +68,7 @@ import { type GroupAggregates, GroupBy, type GroupKeyValue, compareCodeUnits } f
 import { isSaved } from './object-state.ts';
 import { QueryPlan } from './plan.ts';
 import { QueryPlanner, filterContainsInQuery } from './query-planner.ts';
-import { type CompiledRow, compilePlan, planDeclinedByCompiler } from './sql/index.ts';
+import { type CompiledRow, MAX_EDGES_PER_ROW, compilePlan, planDeclinedByCompiler } from './sql/index.ts';
 
 /**
  * Which evaluation path a plan targets: `memory` leaves every step for the executor to evaluate in
@@ -156,6 +169,21 @@ type QueryItem = {
   recordId?: number;
 
   backing?: { heads: readonly string[]; json: string };
+
+  /** Heads of the document the item was read at, which the row ships as its version. */
+  heads?: readonly string[];
+
+  /** A feed item's global block position, which the row ships as its version. */
+  position?: number | null;
+
+  /** How a traversal reached the item, one path per derivation; absent outside traversals. */
+  paths?: readonly (readonly QueryService.PathEdge[])[];
+
+  /** Set when some derivation of the item could not be stated, so its paths are not shipped. */
+  derivationUnknown?: boolean;
+
+  /** Each member of a collapsed group with its share of the scalar aggregates; set by `AggregateStep`. */
+  manifest?: readonly QueryService.ManifestEntry[];
 };
 
 /** Parsed once per index row: an order step reads it on every comparison. */
@@ -186,6 +214,34 @@ const QueryItem = Object.freeze({
           updatedAt: meta.updatedAt,
         }
       : null,
+
+  /** The state the item was read at, as a row ships it; undefined when the item does not know it. */
+  getVersion: (item: QueryItem): QueryService.RowVersion | undefined => {
+    if (item.documentId && item.heads) {
+      return { kind: 'automerge', documentId: item.documentId, heads: [...item.heads] };
+    }
+    if (item.queueId && typeof item.position === 'number') {
+      return { kind: 'feed', insertionId: item.position };
+    }
+    return undefined;
+  },
+
+  /** An item for a document object read from the index's copy, which carries its version and backing. */
+  fromSnapshot: (meta: EntityMeta, documentId: DocumentId, snapshot: ObjectSnapshot): QueryItem => ({
+    objectId: meta.objectId,
+    documentId,
+    spaceId: meta.spaceId,
+    queueId: null,
+    queueNamespace: null,
+    doc: objectStructureFromJson(JSON.parse(snapshot.json), { createdAt: meta.createdAt ?? undefined }),
+    data: null,
+    rank: 1,
+    createdAt: meta.createdAt,
+    updatedAt: meta.updatedAt,
+    recordId: meta.recordId,
+    backing: snapshot.heads ? { heads: snapshot.heads, json: snapshot.json } : undefined,
+    heads: snapshot.version,
+  }),
 
   /**
    * Checks if the item is deleted.
@@ -709,6 +765,7 @@ export class QueryExecutor extends Resource {
   readonly #includeAllFeeds: boolean;
   private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
   private _lastResultSet: QueryItem[] = [];
+  #truncated: 'paths' | 'manifest' | undefined = undefined;
   #changeResultSet: ChangeItem[] | undefined;
   readonly #planner: QueryPlanner;
   readonly #mode: QueryExecutorMode;
@@ -796,9 +853,22 @@ export class QueryExecutor extends Resource {
     return !this.#scopes.isSimple || this.#scopes.readsFeeds;
   }
 
+  /** What the last {@link getResults} left out to stay within its byte budget. */
+  get truncated(): 'paths' | 'manifest' | undefined {
+    return this.#truncated;
+  }
+
   async getResults(): Promise<QueryService.QueryResult[]> {
+    this.#truncated = undefined;
     if (this.#changeResultSet) {
       return changeResults(this.#changeResultSet);
+    }
+    const shipPaths = withinBudget(this._lastResultSet.map((item) => item.paths));
+    const shipManifests = withinBudget(this._lastResultSet.map((item) => item.manifest));
+    if (!shipPaths) {
+      this.#truncated = 'paths';
+    } else if (!shipManifests) {
+      this.#truncated = 'manifest';
     }
     // Computed over the final (post-filter) result set so counts always match shipped records.
     const groupCounts = new Map<string, number>();
@@ -812,7 +882,11 @@ export class QueryExecutor extends Resource {
 
     const results = this._lastResultSet.map((item): QueryService.QueryResult => {
       if (item.result !== undefined) {
-        return item.result;
+        return {
+          ...item.result,
+          ...(shipPaths && item.paths && !item.derivationUnknown && { paths: item.paths.map((path) => [...path]) }),
+          ...(shipManifests && item.manifest && { manifest: [...item.manifest] }),
+        };
       }
       const serializedGroupKey = item.groupKey !== undefined ? GroupBy.serializeGroupKey(item.groupKey) : undefined;
       if (item.collapsed !== undefined && serializedGroupKey !== undefined) {
@@ -823,6 +897,7 @@ export class QueryExecutor extends Resource {
           groupKey: serializedGroupKey,
           groupCount: item.collapsed.size,
           aggregates: JSON.stringify(item.aggregates ?? {}),
+          manifest: shipManifests && item.manifest ? [...item.manifest] : undefined,
         };
       }
       return {
@@ -842,6 +917,8 @@ export class QueryExecutor extends Resource {
         heads: item.backing ? [...item.backing.heads] : undefined,
         createdAt: item.backing ? (item.createdAt ?? undefined) : undefined,
         updatedAt: item.backing ? (item.updatedAt ?? undefined) : undefined,
+        version: QueryItem.getVersion(item),
+        paths: shipPaths && item.paths && !item.derivationUnknown ? item.paths.map((path) => [...path]) : undefined,
       };
     });
     return this.#withBacking(results, this._lastResultSet);
@@ -1675,49 +1752,46 @@ export class QueryExecutor extends Resource {
       details: JSON.stringify(step.traversal),
     };
 
-    const newWorkingSet: QueryItem[] = [];
+    // Every item reached, with the edge that reached it; items reached more than once are merged below.
+    const reached: { item: QueryItem; from: QueryItem; edge: TraversalEdge | undefined }[] = [];
 
     switch (step.traversal._tag) {
       case 'ReferenceTraversal': {
         switch (step.traversal.direction) {
           case 'outgoing': {
             invariant(step.traversal.property !== null, 'Outgoing reference traversal requires a property');
-            const property = EscapedPropPath.unescape(step.traversal.property);
+            const escapedProperty = step.traversal.property;
+            const property = EscapedPropPath.unescape(escapedProperty);
 
-            const refs = workingSet
-              .flatMap((item) => {
-                const ref = QueryItem.getProperty(item, property);
-                const refs = Array.isArray(ref) ? ref : [ref];
-                return refs.map((ref) => {
-                  try {
-                    return isEncodedReference(ref)
-                      ? {
-                          ref: EncodedReference.toURI(ref),
-                          spaceId: item.spaceId,
-                        }
-                      : null;
-                  } catch {
-                    log.warn('invalid reference', { ref: ref['/'] });
-                    return null;
-                  }
-                });
-              })
-              .filter(isNonNullable);
+            const refs = workingSet.flatMap((item) => {
+              const ref = QueryItem.getProperty(item, property);
+              const refs = Array.isArray(ref) ? ref : [ref];
+              return refs.flatMap((ref) => {
+                try {
+                  return isEncodedReference(ref) ? [{ ref: EncodedReference.toURI(ref), from: item }] : [];
+                } catch {
+                  log.warn('invalid reference', { ref: ref['/'] });
+                  return [];
+                }
+              });
+            });
 
             const beginLoad = performance.now();
             const items = await Promise.all(
-              refs.map(({ ref, spaceId }) => this._loadReferencedTarget(ref, { sourceSpaceId: spaceId })),
+              refs.map(({ ref, from }) => this._loadReferencedTarget(ref, { sourceSpaceId: from.spaceId })),
             );
             trace.documentLoadTime += performance.now() - beginLoad;
-
-            newWorkingSet.push(...items.filter(isNonNullable));
-            trace.objectCount = newWorkingSet.length;
-
+            items.forEach((item, index) => {
+              const { from } = refs[index];
+              if (item) {
+                reached.push({ item, from, edge: { kind: 'ref', property: escapedProperty, holder: from } });
+              }
+            });
             break;
           }
           case 'incoming': {
             const beginIndexQuery = performance.now();
-            const metas = await this._queryIncomingReferencesFromSqlIndex(workingSet, step.traversal.property);
+            const { metas, referrers } = await this.#queryIncomingReferences(workingSet, step.traversal.property);
             trace.indexHits += metas.length;
             trace.indexQueryTime += performance.now() - beginIndexQuery;
 
@@ -1726,9 +1800,14 @@ export class QueryExecutor extends Resource {
             trace.documentsLoaded += results.length;
             trace.documentLoadTime += performance.now() - documentLoadStart;
 
-            newWorkingSet.push(...results.filter(isNonNullable));
-            trace.objectCount = newWorkingSet.length;
-
+            results.forEach((item, index) => {
+              if (!item) {
+                return;
+              }
+              for (const { anchor, propPath } of referrers.get(metas[index].recordId) ?? []) {
+                reached.push({ item, from: anchor, edge: { kind: 'incoming-ref', property: propPath, holder: item } });
+              }
+            });
             break;
           }
         }
@@ -1738,41 +1817,35 @@ export class QueryExecutor extends Resource {
         switch (step.traversal.direction) {
           case 'relation-to-source':
           case 'relation-to-target': {
-            const refs = workingSet
-              .map((item) => {
-                const dxn =
-                  step.traversal.direction === 'relation-to-source'
-                    ? QueryItem.getRelationSource(item)
-                    : QueryItem.getRelationTarget(item);
-                if (!dxn) {
-                  return null;
-                }
-                return {
-                  ref: dxn,
-                  spaceId: item.spaceId,
-                };
-              })
-              .filter(isNonNullable);
+            const toSource = step.traversal.direction === 'relation-to-source';
+            const refs = workingSet.flatMap((item) => {
+              const dxn = toSource ? QueryItem.getRelationSource(item) : QueryItem.getRelationTarget(item);
+              return dxn ? [{ ref: dxn, from: item }] : [];
+            });
 
             const beginLoad = performance.now();
             const items = await Promise.all(
-              refs.map(({ ref, spaceId }) => this._loadFromDXN(ref, { sourceSpaceId: spaceId })),
+              refs.map(({ ref, from }) => this._loadFromDXN(ref, { sourceSpaceId: from.spaceId })),
             );
             trace.documentLoadTime += performance.now() - beginLoad;
-
-            newWorkingSet.push(...items.filter(isNonNullable));
-            trace.objectCount = newWorkingSet.length;
-
+            items.forEach((item, index) => {
+              const { from } = refs[index];
+              if (item) {
+                reached.push({
+                  item,
+                  from,
+                  edge: { kind: toSource ? 'relation-source' : 'relation-target', holder: from },
+                });
+              }
+            });
             break;
           }
 
           case 'source-to-relation':
           case 'target-to-relation': {
+            const endpoint = step.traversal.direction === 'source-to-relation' ? 'source' : 'target';
             const beginIndexQuery = performance.now();
-            const metas = await this._queryRelationsFromSqlIndex(
-              workingSet,
-              step.traversal.direction === 'source-to-relation' ? 'source' : 'target',
-            );
+            const metas = await this._queryRelationsFromSqlIndex(workingSet, endpoint);
             trace.indexHits += metas.length;
             trace.indexQueryTime += performance.now() - beginIndexQuery;
 
@@ -1781,9 +1854,18 @@ export class QueryExecutor extends Resource {
             trace.documentsLoaded += results.length;
             trace.documentLoadTime += performance.now() - documentLoadStart;
 
-            newWorkingSet.push(...results.filter(isNonNullable));
-            trace.objectCount = newWorkingSet.length;
-
+            const anchors = itemsById(workingSet);
+            results.forEach((item, index) => {
+              const anchorId = entityIdOf(endpoint === 'source' ? metas[index].source : metas[index].target);
+              const from = anchorId !== undefined ? anchors.get(anchorId) : undefined;
+              if (item && from) {
+                reached.push({
+                  item,
+                  from,
+                  edge: { kind: endpoint === 'source' ? 'relation-source' : 'relation-target', holder: item },
+                });
+              }
+            });
             break;
           }
         }
@@ -1793,30 +1875,25 @@ export class QueryExecutor extends Resource {
         switch (step.traversal.direction) {
           case 'to-parent': {
             // Traverse from child to parent using the parent reference in the document.
-            const refs = workingSet
-              .map((item) => {
-                if (!item.doc) {
-                  return null; // TODO(dmaretskyi): Queue items not supported here.
-                }
-                const ref = EntityStructure.getParent(item.doc);
-                if (!EncodedReference.isEncodedReference(ref)) {
-                  return null;
-                }
-                return {
-                  ref: EncodedReference.toURI(ref),
-                  spaceId: item.spaceId,
-                };
-              })
-              .filter(isNonNullable);
+            const refs = workingSet.flatMap((item) => {
+              if (!item.doc) {
+                return []; // TODO(dmaretskyi): Queue items not supported here.
+              }
+              const ref = EntityStructure.getParent(item.doc);
+              return EncodedReference.isEncodedReference(ref) ? [{ ref: EncodedReference.toURI(ref), from: item }] : [];
+            });
 
             const beginLoad = performance.now();
             const items = await Promise.all(
-              refs.map(({ ref, spaceId }) => this._loadFromDXN(ref, { sourceSpaceId: spaceId })),
+              refs.map(({ ref, from }) => this._loadFromDXN(ref, { sourceSpaceId: from.spaceId })),
             );
             trace.documentLoadTime += performance.now() - beginLoad;
-
-            newWorkingSet.push(...items.filter(isNonNullable));
-            trace.objectCount = newWorkingSet.length;
+            items.forEach((item, index) => {
+              const { from } = refs[index];
+              if (item) {
+                reached.push({ item, from, edge: { kind: 'parent', holder: from } });
+              }
+            });
             break;
           }
 
@@ -1851,8 +1928,18 @@ export class QueryExecutor extends Resource {
             trace.documentsLoaded += results.filter(isNonNullable).length;
             trace.documentLoadTime += performance.now() - documentLoadStart;
 
-            newWorkingSet.push(...results.filter(isNonNullable));
-            trace.objectCount = newWorkingSet.length;
+            const anchors = itemsById(workingSet);
+            results.forEach((item, index) => {
+              const meta = allMetas[index];
+              // A feed's items name it by queue id; a document child names its parent.
+              const parentId = entityIdOf(meta.parent) ?? (meta.queueId ? meta.queueId : undefined);
+              const from = parentId !== undefined ? anchors.get(parentId) : undefined;
+              if (item && from) {
+                reached.push({ item, from, edge: { kind: 'child', holder: item } });
+              } else if (item) {
+                reached.push({ item, from: item, edge: undefined });
+              }
+            });
             break;
           }
         }
@@ -1862,6 +1949,8 @@ export class QueryExecutor extends Resource {
         throw new Error(`Unknown traversal type: ${(step.traversal as any)._tag}`);
     }
 
+    const newWorkingSet = mergeReached(reached);
+    trace.objectCount = newWorkingSet.length;
     return { workingSet: newWorkingSet, trace };
   }
 
@@ -2014,7 +2103,7 @@ export class QueryExecutor extends Resource {
     );
     const groupedWorkingSet = step.aggregates.some((aggregate) => aggregate.kind === 'items')
       ? stamped
-      : GroupBy.collapseGroups(stamped, serializeItemGroupKey);
+      : withManifests(GroupBy.collapseGroups(stamped, serializeItemGroupKey), stamped, step.aggregates);
 
     return {
       workingSet: groupedWorkingSet,
@@ -2154,22 +2243,44 @@ export class QueryExecutor extends Resource {
     );
   }
 
+  /** The objects referencing each anchor through `property`, with the anchors and property paths each references them by. */
+  async #queryIncomingReferences(
+    workingSet: readonly QueryItem[],
+    property: EscapedPropPath | null,
+  ): Promise<{ metas: readonly EntityMeta[]; referrers: Map<number, { anchor: QueryItem; propPath: string }[]> }> {
+    const queryPath = property === null ? null : EscapedPropPath.unescape(property);
+    const rowsByAnchor = await Promise.all(
+      workingSet.map(async (anchor) => ({
+        anchor,
+        rows: await this._runInRuntime(
+          this._indexEngine.queryReverseRef({ targetDXN: QueryExecutor._anchorTargetDxn(anchor) }),
+        ),
+      })),
+    );
+    const referrers = new Map<number, { anchor: QueryItem; propPath: string }[]>();
+    for (const { anchor, rows } of rowsByAnchor) {
+      for (const row of rows) {
+        if (
+          queryPath !== null &&
+          !QueryExecutor._matchesReferencePropertyPath(EscapedPropPath.unescape(row.propPath), queryPath)
+        ) {
+          continue;
+        }
+        const list = referrers.get(row.recordId) ?? [];
+        list.push({ anchor, propPath: row.propPath });
+        referrers.set(row.recordId, list);
+      }
+    }
+    const metas = await this._runInRuntime(this._indexEngine.lookupByRecordIds([...referrers.keys()]));
+    return { metas, referrers };
+  }
+
   private static _anchorTargetDxn(item: QueryItem): EID.EID {
     // Queue items are indexed with fully-qualified DXNs; local `echo:/<id>` anchors miss them.
     if (item.queueId != null) {
       return EID.make({ spaceId: item.spaceId, entityId: item.objectId });
     }
     return EID.make({ entityId: item.objectId });
-  }
-
-  private async _queryIncomingReferencesFromSqlIndex(
-    workingSet: QueryItem[],
-    property: EscapedPropPath | null,
-  ): Promise<readonly EntityMeta[]> {
-    return this._queryIncomingReferencesByTarget(
-      workingSet.map((item) => QueryExecutor._anchorTargetDxn(item)),
-      property,
-    );
   }
 
   /**
@@ -2266,11 +2377,15 @@ export class QueryExecutor extends Resource {
             (await this._automergeHost.getStoredHeads(documentIds)).map((heads, index) => [documentIds[index], heads]),
           )
         : new Map<DocumentId, A.Heads | undefined>();
+    const snapshots = await this.#readCurrentSnapshots(metas, documentIds);
     return await Promise.all(
       metas.map(async (meta) => {
-        // Branch 1: Document-backed object.
+        // Branch 1: Document-backed object, from the index's copy when it was read at the stored heads.
         if (meta.documentId) {
-          return this._loadFromAutomerge(meta, storedHeads.get(meta.documentId as DocumentId));
+          const snapshot = snapshots.get(meta.recordId);
+          return snapshot && isValidDocumentId(meta.documentId)
+            ? QueryItem.fromSnapshot(meta, meta.documentId, snapshot)
+            : this._loadFromAutomerge(meta, storedHeads.get(meta.documentId as DocumentId));
         }
 
         // Branch 2: Queue-backed object.
@@ -2325,12 +2440,47 @@ export class QueryExecutor extends Resource {
               createdAt: typeof createdAt === 'number' ? createdAt : null,
               updatedAt: null,
               backing: text !== undefined ? { heads, json: text } : undefined,
+              heads,
             },
           ];
         });
       }),
     );
     return { documentIds: new Set(sources.map(({ documentId }) => documentId)), items: items.flat() };
+  }
+
+  /**
+   * The index's copies of the document objects among `metas` that were read at their document's current heads,
+   * keyed by record id: the heads in memory when the document is loaded, its stored heads otherwise. Such a copy
+   * is the document's own state, so it stands in for loading the document.
+   */
+  async #readCurrentSnapshots(
+    metas: readonly EntityMeta[],
+    documentIds: readonly DocumentId[],
+  ): Promise<Map<number, ObjectSnapshot>> {
+    const documentMetas = new Map(metas.filter((meta) => meta.documentId).map((meta) => [meta.recordId, meta]));
+    if (documentMetas.size === 0) {
+      return new Map();
+    }
+    const [snapshots, heads] = await Promise.all([
+      this._runInRuntime(this._indexEngine.querySnapshots([...documentMetas.keys()])).catch((err) => {
+        log.warn('index snapshots could not be read; loading the documents', { err });
+        return [];
+      }),
+      this._automergeHost.getHeads([...documentIds]),
+    ]);
+    const currentHeads = new Map<string, A.Heads | undefined>(
+      documentIds.map((documentId, index) => [documentId, heads[index]]),
+    );
+    const current = new Map<number, ObjectSnapshot>();
+    for (const snapshot of snapshots) {
+      const meta = documentMetas.get(snapshot.recordId);
+      if (meta?.documentId && isSaved(currentHeads.get(meta.documentId), snapshot.version)) {
+        current.set(snapshot.recordId, snapshot);
+      }
+    }
+    countWork('echo.querySnapshotHits', current.size);
+    return current;
   }
 
   private async _loadQueueSnapshotMap(metas: readonly EntityMeta[]): Promise<Map<number, unknown>> {
@@ -2369,6 +2519,7 @@ export class QueryExecutor extends Resource {
       rank: 1,
       createdAt: meta.createdAt,
       updatedAt: meta.updatedAt,
+      position: meta.queuePosition,
     };
   }
 
@@ -2392,6 +2543,7 @@ export class QueryExecutor extends Resource {
     if (!object) {
       return null;
     }
+    countWork('echo.queryDocumentLoads');
     const json = objectStructureToJson(meta.objectId, object);
     const heads = A.getHeads(doc);
     const text = isSaved(storedHeads, heads) ? backingJson(doc, object, json) : undefined;
@@ -2407,6 +2559,8 @@ export class QueryExecutor extends Resource {
       createdAt: meta.createdAt,
       updatedAt: meta.updatedAt,
       backing: text !== undefined ? { heads, json: text } : undefined,
+      heads,
+      recordId: meta.recordId,
     };
   }
 
@@ -2484,15 +2638,21 @@ export class QueryExecutor extends Resource {
         // DXN traversal results are not sourced from the meta index; timestamps are unavailable.
         createdAt: null,
         updatedAt: null,
+        heads: A.getHeads(dbDirectory),
       };
     }
 
     const link = DatabaseDirectory.getLink(dbDirectory, objectId);
-    if (!link) {
+    if (!link || !isValidAutomergeUrl(link)) {
       return null;
     }
 
-    using lease = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, link as AutomergeUrl, {
+    const fromIndex = await this.#loadFromIndexCopy(spaceId, objectId, interpretAsDocumentId(link));
+    if (fromIndex) {
+      return fromIndex;
+    }
+
+    using lease = await this._automergeHost.loadDoc<DatabaseDirectory>(this._ctx, link, {
       fetchFromNetwork: false,
     });
     if (!lease) {
@@ -2504,6 +2664,7 @@ export class QueryExecutor extends Resource {
       return null;
     }
 
+    countWork('echo.queryDocumentLoads');
     return {
       objectId,
       documentId: lease.documentId,
@@ -2516,7 +2677,26 @@ export class QueryExecutor extends Resource {
       // DXN traversal results are not sourced from the meta index; timestamps are unavailable.
       createdAt: null,
       updatedAt: null,
+      heads: A.getHeads(lease.doc()),
     };
+  }
+
+  /**
+   * The index's copy of an object in the document the space directory places it in, when the index read it
+   * at that document's stored heads; null when the document has to be loaded.
+   */
+  async #loadFromIndexCopy(spaceId: SpaceId, objectId: EntityId, documentId: DocumentId): Promise<QueryItem | null> {
+    const meta = await this._runInRuntime(this._indexEngine.lookupByObjectId({ objectId, spaceId, queueId: '' })).catch(
+      (err) => {
+        log.warn('index row could not be read; loading the document', { objectId, err });
+        return null;
+      },
+    );
+    if (!meta || meta.documentId !== documentId) {
+      return null;
+    }
+    const snapshot = (await this.#readCurrentSnapshots([meta], [documentId])).get(meta.recordId);
+    return snapshot ? QueryItem.fromSnapshot(meta, documentId, snapshot) : null;
   }
 
   /**
@@ -2828,7 +3008,9 @@ const compiledRowToItem = (row: CompiledRow): QueryItem => {
           heads: row.heads !== null ? JSON.parse(row.heads) : undefined,
           createdAt: row.heads !== null ? (row.createdAt ?? undefined) : undefined,
           updatedAt: row.heads !== null ? (row.updatedAt ?? undefined) : undefined,
+          version: compiledRowVersion(row),
         };
+  const paths = row.edges !== null ? pathsFromEdges(row.objectId, parseEdges(row.edges)) : undefined;
   return {
     objectId: row.objectId,
     spaceId: row.spaceId,
@@ -2842,7 +3024,145 @@ const compiledRowToItem = (row: CompiledRow): QueryItem => {
     updatedAt: row.updatedAt,
     recordId: row.recordId,
     result,
+    ...(paths === null ? { derivationUnknown: true } : paths && { paths }),
+    ...(row.manifest !== null && { manifest: parseCompiledManifest(row.manifest) }),
   };
+};
+
+/** The state a compiled row was read at: its document's index heads, or its feed block's position. */
+const compiledRowVersion = (row: {
+  documentId: string;
+  queueId: string;
+  versionHeads: string | null;
+  queuePosition: number | null;
+}): QueryService.RowVersion | undefined => {
+  if (row.queueId !== '') {
+    return row.queuePosition !== null ? { kind: 'feed', insertionId: row.queuePosition } : undefined;
+  }
+  if (row.documentId !== '' && row.versionHeads !== null) {
+    return { kind: 'automerge', documentId: row.documentId, heads: parseStringArray(JSON.parse(row.versionHeads)) };
+  }
+  return undefined;
+};
+
+const parseStringArray = (value: unknown): string[] =>
+  Array.isArray(value) ? value.filter((entry): entry is string => typeof entry === 'string') : [];
+
+const PATH_EDGE_KINDS: readonly QueryService.PathEdge['kind'][] = [
+  'ref',
+  'incoming-ref',
+  'relation-source',
+  'relation-target',
+  'parent',
+  'child',
+];
+
+const isPathEdgeKind = (value: unknown): value is QueryService.PathEdge['kind'] =>
+  PATH_EDGE_KINDS.some((kind) => kind === value);
+
+type HopEdge = QueryService.PathEdge & { hop: number };
+
+/** A compiled row's edges, or undefined past {@link MAX_EDGES_PER_ROW}, where the row's derivation is unknown. */
+const parseEdges = (text: string): HopEdge[] | undefined => {
+  const parsed: unknown = JSON.parse(text);
+  if (!Array.isArray(parsed) || parsed.length > MAX_EDGES_PER_ROW) {
+    return undefined;
+  }
+  return parsed.flatMap((raw: unknown): HopEdge[] => {
+    if (typeof raw !== 'object' || raw === null) {
+      return [];
+    }
+    const { hop, from, to, kind, property, holder, holderHeads } = Object.fromEntries(Object.entries(raw));
+    if (
+      typeof hop !== 'number' ||
+      typeof from !== 'string' ||
+      typeof to !== 'string' ||
+      typeof holder !== 'string' ||
+      !isPathEdgeKind(kind)
+    ) {
+      return [];
+    }
+    return [
+      {
+        hop,
+        from,
+        to,
+        kind,
+        ...(typeof property === 'string' && { property }),
+        holder,
+        ...(Array.isArray(holderHeads) && { holderHeads: parseStringArray(holderHeads) }),
+      },
+    ];
+  });
+};
+
+/**
+ * The derivations of a row reached by a traversal chain, rebuilt from its edges by walking back from the
+ * last hop to the first. Null when the edges were cut off or the derivations exceed
+ * {@link MAX_PATHS_PER_ITEM}, as the in-memory traversal leaves such a derivation unknown.
+ */
+const pathsFromEdges = (
+  objectId: string,
+  edges: readonly HopEdge[] | undefined,
+): QueryService.PathEdge[][] | null | undefined => {
+  if (edges === undefined) {
+    return null;
+  }
+  const last = edges.reduce((max, edge) => Math.max(max, edge.hop), 0);
+  if (last === 0) {
+    return undefined;
+  }
+  const into = new Map<string, HopEdge[]>();
+  for (const edge of edges) {
+    const key = `${edge.hop}:${edge.to}`;
+    into.set(key, [...(into.get(key) ?? []), edge]);
+  }
+  const paths = new Map<string, QueryService.PathEdge[]>();
+  let overflow = false;
+  const walk = (hop: number, to: string, suffix: readonly QueryService.PathEdge[]): void => {
+    for (const { hop: _hop, ...edge } of into.get(`${hop}:${to}`) ?? []) {
+      if (overflow) {
+        return;
+      }
+      const path = [edge, ...suffix];
+      if (hop > 1) {
+        walk(hop - 1, edge.from, path);
+        continue;
+      }
+      const key = path.map(({ from, to, kind, property }) => `${from}>${to}:${kind}:${property ?? ''}`).join('|');
+      if (!paths.has(key) && paths.size >= MAX_PATHS_PER_ITEM) {
+        overflow = true;
+        return;
+      }
+      paths.set(key, path);
+    }
+  };
+  walk(last, objectId, []);
+  return overflow ? null : paths.size > 0 ? [...paths.values()] : undefined;
+};
+
+/** A compiled collapsed group's members, each with its version and share of the scalar aggregates. */
+const parseCompiledManifest = (text: string): QueryService.ManifestEntry[] => {
+  const parsed: unknown = JSON.parse(text);
+  if (!Array.isArray(parsed)) {
+    return [];
+  }
+  return parsed.flatMap((raw: unknown): QueryService.ManifestEntry[] => {
+    if (typeof raw !== 'object' || raw === null) {
+      return [];
+    }
+    const { id, documentId, heads, position, contribution } = Object.fromEntries(Object.entries(raw));
+    if (typeof id !== 'string') {
+      return [];
+    }
+    const version: QueryService.RowVersion | undefined =
+      typeof documentId === 'string' && documentId !== '' && Array.isArray(heads)
+        ? { kind: 'automerge', documentId, heads: parseStringArray(heads) }
+        : typeof position === 'number'
+          ? { kind: 'feed', insertionId: position }
+          : undefined;
+    return [{ id, ...(version && { version }), contribution: JSON.stringify(contribution ?? {}) }];
+  });
 };
 
 /**
@@ -2851,6 +3171,10 @@ const compiledRowToItem = (row: CompiledRow): QueryItem => {
  * item the steps built is compared on the fields `getResults` derives the record from.
  */
 const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
+  // A client drops a hit by its paths and adjusts a group by its manifest, so stale evidence must be resent.
+  if (evidenceKey(a) !== evidenceKey(b)) {
+    return false;
+  }
   if (a.result !== undefined || b.result !== undefined) {
     return (
       a.result?.id === b.result?.id &&
@@ -2879,6 +3203,11 @@ const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
     _serializeCollapsed(a) === _serializeCollapsed(b)
   );
 };
+
+const evidenceKey = (item: QueryItem): string =>
+  item.paths === undefined && item.manifest === undefined && !item.derivationUnknown
+    ? ''
+    : JSON.stringify([item.derivationUnknown ?? false, item.paths ?? null, item.manifest ?? null]);
 
 const STORED_CHANGES_CONCURRENCY = 16;
 
@@ -2910,4 +3239,122 @@ const withoutUnindexed = (metas: readonly EntityMeta[], unindexed: UnindexedRead
       !unindexed.documentIds.has(meta.documentId) &&
       !(meta.queueId === '' && read.has(compositeKey(meta.spaceId, meta.objectId))),
   );
+};
+
+/**
+ * Bytes of paths, or of manifests, one answer may carry: a mailbox-scale traversal would otherwise ship a
+ * derivation DAG per hit, and the client retains every answer for the life of its subscription.
+ */
+const DERIVATION_BUDGET_BYTES = 256 * 1024;
+
+/** Whether the derivations of one answer fit {@link DERIVATION_BUDGET_BYTES}, measured as they encode. */
+const withinBudget = (derivations: readonly (readonly unknown[] | undefined)[]): boolean => {
+  let bytes = 0;
+  for (const derivation of derivations) {
+    if (derivation === undefined) {
+      continue;
+    }
+    bytes += JSON.stringify(derivation).length;
+    if (bytes > DERIVATION_BUDGET_BYTES) {
+      return false;
+    }
+  }
+  return true;
+};
+
+/** One traversal hop, before it is attributed to the two items it joins. */
+type TraversalEdge = { kind: QueryService.PathEdge['kind']; property?: string; holder: QueryItem };
+
+/** Derivations kept per item: enough to revalidate a hit, bounded for a hub that every anchor reaches. */
+const MAX_PATHS_PER_ITEM = 16;
+
+const itemKey = (item: QueryItem): string => `${item.spaceId}:${item.queueId ?? ''}:${item.objectId}`;
+
+const itemsById = (items: readonly QueryItem[]): Map<string, QueryItem> =>
+  new Map(items.map((item) => [item.objectId, item]));
+
+const entityIdOf = (raw: string | null): EntityId | undefined => {
+  const eid = raw ? EID.tryParse(raw) : undefined;
+  return eid ? EID.getEntityId(eid) : undefined;
+};
+
+/**
+ * One item per object reached, carrying every derivation that reached it: each path of the item it was
+ * reached from, extended by the hop. A derivation that cannot be stated, or one past the per-item bound,
+ * leaves the item's derivation unknown, since a client that saw only some paths could drop a hit an
+ * unlisted path still reaches.
+ */
+const mergeReached = (
+  reached: readonly { item: QueryItem; from: QueryItem; edge: TraversalEdge | undefined }[],
+): QueryItem[] => {
+  const merged = new Map<string, { item: QueryItem; paths: Map<string, QueryService.PathEdge[]>; unknown: boolean }>();
+  for (const { item, from, edge } of reached) {
+    const key = itemKey(item);
+    let entry = merged.get(key);
+    if (!entry) {
+      entry = { item, paths: new Map(), unknown: false };
+      merged.set(key, entry);
+    }
+    if (!edge || from.derivationUnknown) {
+      entry.unknown = true;
+      continue;
+    }
+    const hop: QueryService.PathEdge = {
+      from: from.objectId,
+      to: item.objectId,
+      kind: edge.kind,
+      ...(edge.property !== undefined && { property: edge.property }),
+      holder: edge.holder.objectId,
+      ...(edge.holder.heads && { holderHeads: [...edge.holder.heads] }),
+    };
+    for (const prefix of from.paths ?? [[]]) {
+      const path = [...prefix, hop];
+      const pathKey = path.map(({ from, to, kind, property }) => `${from}>${to}:${kind}:${property ?? ''}`).join('|');
+      if (!entry.paths.has(pathKey) && entry.paths.size >= MAX_PATHS_PER_ITEM) {
+        entry.unknown = true;
+        break;
+      }
+      entry.paths.set(pathKey, path);
+    }
+  }
+  return [...merged.values()].map(({ item, paths, unknown }) =>
+    unknown ? { ...item, paths: undefined, derivationUnknown: true } : { ...item, paths: [...paths.values()] },
+  );
+};
+
+/**
+ * Attaches to each collapsed group the members it stands for, each with its share of the group's scalar
+ * aggregates, so a client holding a member can swap the share for its local value. A group built from bare
+ * index rows, whose values were never read, ships without one.
+ */
+const withManifests = (
+  collapsed: readonly QueryItem[],
+  members: readonly QueryItem[],
+  aggregates: readonly QueryAST.GroupAggregate[],
+): QueryItem[] => {
+  const scalar = aggregates.filter(
+    (aggregate): aggregate is Extract<QueryAST.GroupAggregate, { kind: 'count' | 'sum' | 'min' | 'max' }> =>
+      aggregate.kind === 'count' || aggregate.kind === 'sum' || aggregate.kind === 'min' || aggregate.kind === 'max',
+  );
+  // A count needs no member values, so a group of bare index rows can still list its members.
+  const readsValues = scalar.some((aggregate) => aggregate.kind !== 'count');
+  if (scalar.length === 0 || (readsValues && members.some((member) => !member.doc && !member.data))) {
+    return [...collapsed];
+  }
+  const byGroup = new Map<string, QueryService.ManifestEntry[]>();
+  for (const member of members) {
+    const key = serializeItemGroupKey(member);
+    const contribution: Record<string, unknown> = {};
+    for (const aggregate of scalar) {
+      contribution[aggregate.name] =
+        aggregate.kind === 'count'
+          ? 1
+          : GroupBy.coerceKeyComponent(QueryItem.getAggregateProperty(member, aggregate.property));
+    }
+    const version = QueryItem.getVersion(member);
+    const list = byGroup.get(key) ?? [];
+    list.push({ id: member.objectId, ...(version && { version }), contribution: JSON.stringify(contribution) });
+    byGroup.set(key, list);
+  }
+  return collapsed.map((item) => ({ ...item, manifest: byGroup.get(serializeItemGroupKey(item)) }));
 };

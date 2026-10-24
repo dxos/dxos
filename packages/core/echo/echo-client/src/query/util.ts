@@ -258,3 +258,33 @@ const findFromClause = (query: QueryAST.Query): QueryAST.QueryFromClause | null 
   });
   return found;
 };
+
+/** Whether a space scope of the query also selects every feed of its space (`includeFeeds`). */
+export const queryIncludesAllFeeds = (query: QueryAST.Query): boolean => {
+  let includes = false;
+  QueryAST.visit(query, (node) => {
+    if (
+      node.type === 'from' &&
+      node.from._tag === 'scope' &&
+      node.from.scopes.some((scope) => scope._tag === 'space' && scope.includeAllFeeds === true)
+    ) {
+      includes = true;
+    }
+  });
+  return includes;
+};
+
+/** The feed URIs the query's scopes name explicitly. */
+export const getTargetFeedsForQuery = (query: QueryAST.Query): string[] => {
+  const feeds = new Set<string>();
+  QueryAST.visit(query, (node) => {
+    if (node.type === 'from' && node.from._tag === 'scope') {
+      for (const scope of node.from.scopes) {
+        if (scope._tag === 'feed') {
+          feeds.add(scope.feedUri);
+        }
+      }
+    }
+  });
+  return [...feeds];
+};

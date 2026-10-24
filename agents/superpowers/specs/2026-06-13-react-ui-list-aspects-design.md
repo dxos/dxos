@@ -366,7 +366,7 @@ Deferred (out of scope this PR, contracts fit):
 ```tsx
 <div className='grid grid-cols-[min-content_1fr_min-content] items-start gap-1 pb-1'>
   <DragHandle />
-  <div className='flex flex-col border border-subdued-separator rounded-sm'>
+  <div className='flex flex-col border border-separator-subtle rounded-sm'>
     {' '}
     {/* 1px borders */}
     <div className='flex items-center'>
@@ -398,7 +398,7 @@ Problems:
   }}
 >
   <DragHandle />
-  <div className='ring-1 ring-subdued-separator rounded-sm flex flex-col col-span-[…]'>
+  <div className='ring-1 ring-separator-subtle rounded-sm flex flex-col col-span-[…]'>
     <div className='flex items-center min-h-[var(--dx-rail-item)]'>
       <Title /> {actions} {expandable && <ExpandCaret />}
     </div>
