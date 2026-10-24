@@ -21592,15 +21592,6 @@ importers:
 
   packages/stories/stories-agent:
     dependencies:
-      '@bufbuild/protobuf':
-        specifier: 'catalog:'
-        version: 2.11.0
-      '@codemirror/state':
-        specifier: 'catalog:'
-        version: 6.7.6
-      '@codemirror/view':
-        specifier: 'catalog:'
-        version: 6.43.13
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -21628,12 +21619,6 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
-      '@dxos/echo-react':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-react
-      '@dxos/invariant':
-        specifier: workspace:*
-        version: link:../../common/invariant
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
@@ -21649,24 +21634,9 @@ importers:
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../plugins/plugin-assistant
-      '@dxos/plugin-client':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-client
       '@dxos/plugin-discord':
         specifier: workspace:*
         version: link:../../plugins/plugin-discord
-      '@dxos/plugin-markdown':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-markdown
-      '@dxos/plugin-review':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-review
-      '@dxos/plugin-space':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-space
-      '@dxos/plugin-testing':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-testing
       '@dxos/plugin-thread':
         specifier: workspace:*
         version: link:../../plugins/plugin-thread
@@ -21679,24 +21649,15 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
-      '@dxos/react-ui-attention':
-        specifier: workspace:*
-        version: link:../../ui/react-ui-attention
       '@dxos/react-ui-debug':
         specifier: workspace:*
         version: link:../../ui/react-ui-debug
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
-      '@dxos/schema':
-        specifier: workspace:*
-        version: link:../../sdk/schema
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
-      '@dxos/ui-editor':
-        specifier: workspace:*
-        version: link:../../ui/ui-editor
       effect:
         specifier: 4.0.4
         version: 4.0.4
@@ -21706,16 +21667,56 @@ importers:
       react-dom:
         specifier: ~19.2.7
         version: 19.2.7(react@19.2.7)
+
     devDependencies:
+      '@bufbuild/protobuf':
+        specifier: 'catalog:'
+        version: 2.11.0
+      '@codemirror/state':
+        specifier: 'catalog:'
+        version: 6.7.6
+      '@codemirror/view':
+        specifier: 'catalog:'
+        version: 6.43.13
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
+      '@dxos/invariant':
+        specifier: workspace:*
+        version: link:../../common/invariant
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-client
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../../plugins/plugin-connector
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-markdown
+      '@dxos/plugin-review':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-review
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../../plugins/plugin-routine
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-space
+      '@dxos/plugin-testing':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-testing
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
       '@dxos/storybook-testing':
         specifier: workspace:*
         version: link:../storybook-testing
+      '@dxos/ui-editor':
+        specifier: workspace:*
+        version: link:../../ui/ui-editor
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1))
