@@ -45,9 +45,12 @@ export const ContextMenuRoot = () => {
     };
     // The node may not be in the graph yet (its parent never expanded), and its actions are built on demand, so both
     // are asked for as the pointer arrives, ready by the time it right-clicks.
+    // Expanded on an earlier event, so a flush has since run and the graph's actions for it can be trusted.
+    const expanded = new Set<string>();
     const expand = (id: string) => {
       AppGraph.expandPath(graph, id);
       AppGraph.expandSync(graph, id, 'action');
+      expanded.add(id);
     };
     const handlePointerOver = (event: PointerEvent) => {
       const id = targetId(event);
@@ -60,9 +63,11 @@ export const ContextMenuRoot = () => {
       if (!id) {
         return;
       }
+      const settled = expanded.has(id);
       expand(id);
-      // A node with no actions (yet) leaves the browser's own menu, rather than suppressing it to show nothing.
-      if (listActions(graph, id).length === 0) {
+      // A node known to have no actions leaves the browser's own menu; one expanded only now (a right-click with no
+      // hover first, e.g. the menu key) opens the menu, which fills in once its actions are built.
+      if (settled && listActions(graph, id).length === 0) {
         return;
       }
       event.preventDefault();
