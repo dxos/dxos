@@ -98,7 +98,7 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
   // A new slide is added last, made current and opened for editing.
   const handleAddSlide = useCallback(() => {
     const text = Presentation.addSlide(subject, newSlideContent(newSlideLayout));
-    setIndex(slides.length);
+    setIndex(slides.length, slides.length + 1);
     openSection(text.id);
   }, [subject, newSlideLayout, slides.length, setIndex, openSection]);
 

@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
-import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
@@ -18,6 +18,17 @@ export const CONTEXT_MENU = 'contextMenu';
 
 type Target = { id: string; x: number; y: number };
 
+/** The node's list actions as the graph holds them now, groups flattened, as the navtree's row menu lists them. */
+const listActions = (graph: AppGraph.ReadableGraph, id: string): AppGraphNode.Action[] => {
+  const actions = AppGraph.getActions(graph, id).filter((action) => !AppGraphNode.hasDisposition(action, 'item'));
+  const groupedActions = Object.fromEntries(
+    actions
+      .filter((action) => !AppGraphNode.isAction(action))
+      .map((group) => [group.id, AppGraph.getActions(graph, group.id)]),
+  );
+  return getListActions({ actions, groupedActions });
+};
+
 /**
  * The app's context menu: right-clicking an element marked with {@link AppNode.contextMenuProps} opens the actions of
  * the graph node it names, the same list the navtree shows for that node. Unmarked elements keep the browser's menu.
@@ -27,21 +38,42 @@ export const ContextMenuRoot = () => {
   const [target, setTarget] = useState<Target>();
 
   useEffect(() => {
-    const handleContextMenu = (event: MouseEvent) => {
+    const targetId = (event: Event) => {
       const element =
         event.target instanceof Element ? event.target.closest(`[${AppNode.CONTEXT_MENU_ATTRIBUTE}]`) : null;
-      const id = element?.getAttribute(AppNode.CONTEXT_MENU_ATTRIBUTE);
+      return element?.getAttribute(AppNode.CONTEXT_MENU_ATTRIBUTE) ?? undefined;
+    };
+    // The node may not be in the graph yet (its parent never expanded), and its actions are built on demand, so both
+    // are asked for as the pointer arrives, ready by the time it right-clicks.
+    const expand = (id: string) => {
+      AppGraph.expandPath(graph, id);
+      AppGraph.expandSync(graph, id, 'action');
+    };
+    const handlePointerOver = (event: PointerEvent) => {
+      const id = targetId(event);
+      if (id) {
+        expand(id);
+      }
+    };
+    const handleContextMenu = (event: MouseEvent) => {
+      const id = targetId(event);
       if (!id) {
         return;
       }
+      expand(id);
+      // A node with no actions (yet) leaves the browser's own menu, rather than suppressing it to show nothing.
+      if (listActions(graph, id).length === 0) {
+        return;
+      }
       event.preventDefault();
-      // The node may not be in the graph yet (its parent never expanded), and its actions are built on demand.
-      AppGraph.expandPath(graph, id);
-      AppGraph.expandSync(graph, id, 'action');
       setTarget({ id, x: event.clientX, y: event.clientY });
     };
+    document.addEventListener('pointerover', handlePointerOver);
     document.addEventListener('contextmenu', handleContextMenu);
-    return () => document.removeEventListener('contextmenu', handleContextMenu);
+    return () => {
+      document.removeEventListener('pointerover', handlePointerOver);
+      document.removeEventListener('contextmenu', handleContextMenu);
+    };
   }, [graph]);
 
   const handleClose = useCallback(() => setTarget(undefined), []);
