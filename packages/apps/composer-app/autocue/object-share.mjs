@@ -135,7 +135,7 @@ const STOPWATCH = ({ text, spaceId, stages }) => {
   globalThis.shareOpenTiming = { timeOrigin: performance.timeOrigin, reached };
   const panel = document.createElement('div');
   panel.style.cssText =
-    'position:fixed;right:16px;bottom:44px;z-index:2147483647;pointer-events:none;padding:12px 16px;' +
+    'position:fixed;left:50%;transform:translateX(-50%);bottom:32px;z-index:2147483647;pointer-events:none;padding:12px 16px;' +
     'border-radius:10px;background:rgba(10,12,16,0.82);color:#f2f2f2;font:14px/1.6 ui-monospace,Menlo,monospace;' +
     'min-width:260px;box-shadow:0 4px 24px rgba(0,0,0,0.4)';
   const seconds = (ms) => `${(ms / 1000).toFixed(1)} s`;
@@ -162,7 +162,11 @@ const STOPWATCH = ({ text, spaceId, stages }) => {
       performance.mark(`share-stage:${key}`);
     }
   };
-  const check = () => {
+  const checkRendered = () => {
+    const root = document.querySelector('[data-testid="composer.markdownRoot"]');
+    mark('rendered', !!root && root.textContent.includes(text));
+  };
+  const tick = () => {
     const client = globalThis.dxos?.client;
     let space;
     try {
@@ -173,8 +177,7 @@ const STOPWATCH = ({ text, spaceId, stages }) => {
     mark('joined', !!space);
     // `SpaceState.SPACE_READY`.
     mark('ready', space?.state.get() === 3);
-    const root = document.querySelector('[data-testid="composer.markdownRoot"]');
-    mark('rendered', !!root && root.textContent.includes(text));
+    checkRendered();
     // The script runs before the document has a body, and boot may replace what the body holds.
     if (!panel.isConnected && document.body) {
       document.body.append(panel);
@@ -185,8 +188,9 @@ const STOPWATCH = ({ text, spaceId, stages }) => {
       observer.disconnect();
     }
   };
-  const interval = setInterval(check, 100);
-  const observer = new MutationObserver(check);
+  const interval = setInterval(tick, 100);
+  // Only marks: a redraw here would itself be a mutation the observer sees, and loop.
+  const observer = new MutationObserver(checkRendered);
   observer.observe(document, { subtree: true, childList: true, characterData: true });
 };
 
