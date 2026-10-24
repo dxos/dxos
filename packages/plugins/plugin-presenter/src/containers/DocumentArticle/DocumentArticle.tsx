@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
@@ -12,7 +12,8 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Deck } from '#components';
-import { useDocumentDeck, useIsPresenting, useSetPresenting, useSlideIndex } from '#hooks';
+import { useDocumentDeck, useIsPresenting, usePresentedIndex, useSetPresenting, useSlideIndex } from '#hooks';
+import { isHiddenSlide } from '#markdown';
 
 export type DocumentArticleProps = AppSurface.ObjectArticleProps<Markdown.Document>;
 
@@ -23,6 +24,15 @@ export const DocumentArticle = ({ role, subject: document, attendableId }: Docum
   const slides = useDocumentDeck(document);
   const [index, setIndex] = useSlideIndex(Obj.getURI(document), slides.length);
   const fullscreen = useIsPresenting(document);
+  // Presenting leaves out slides whose frontmatter sets `hide: true`; the preview still shows every slide.
+  const positions = useMemo(
+    () =>
+      slides.flatMap((slide, position) =>
+        slide.kind === 'markdown' && isHiddenSlide(slide.content) ? [] : [position],
+      ),
+    [slides],
+  );
+  const presented = usePresentedIndex(slides, positions, index, setIndex);
   const setPresenting = useSetPresenting(document);
   // Only the attended article takes focus, so the editor beside the preview keeps its caret.
   const { hasAttention } = useAttention(attendableId);
@@ -36,9 +46,9 @@ export const DocumentArticle = ({ role, subject: document, attendableId }: Docum
 
   return (
     <Deck.Root
-      slides={slides}
-      index={index}
-      onIndexChange={setIndex}
+      slides={fullscreen ? presented.slides : slides}
+      index={fullscreen ? presented.index : index}
+      onIndexChange={fullscreen ? presented.onIndexChange : setIndex}
       fullscreen={fullscreen}
       onFullscreenChange={handleFullscreenChange}
       attendableId={attendableId}

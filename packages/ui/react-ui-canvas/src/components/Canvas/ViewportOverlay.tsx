@@ -26,7 +26,7 @@ export type ViewportOverlayProps = {
 
 /** Over the scene: the grain, the shield that takes the pointer while the camera moves, and the menu a gesture opens. */
 export const ViewportOverlay = ({ camera, look }: ViewportOverlayProps) => {
-  const { registry, atoms, store, capabilities, objectActions } = useCanvasServices('Canvas.Viewport');
+  const { registry, atoms, store, capabilities, objectActions, transparent } = useCanvasServices('Canvas.Viewport');
   const { displayScene, navigating, removePoint, menu, closeMenu, menuAnchorRef } = useCanvasGesture('Canvas.Viewport');
   const selectionAspect = useCanvasSelection('Canvas.Viewport');
   const editingAspect = useCanvasEditing('Canvas.Viewport');
@@ -48,7 +48,10 @@ export const ViewportOverlay = ({ camera, look }: ViewportOverlayProps) => {
 
   return (
     <>
-      <GrainOverlay background={look.background} offset={{ x: camera.x * camera.zoom, y: camera.y * camera.zoom }} />
+      {/* Transparent draws no surface, so no grain over it either. */}
+      {!transparent && (
+        <GrainOverlay background={look.background} offset={{ x: camera.x * camera.zoom, y: camera.y * camera.zoom }} />
+      )}
       {/* Wheel events still bubble to the root through the shield, so a zoom keeps zooming. */}
       {navigating && <div className='dx-cover' data-testid='navigation-shield' />}
       <span

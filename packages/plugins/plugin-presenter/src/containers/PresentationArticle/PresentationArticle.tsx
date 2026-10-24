@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
@@ -18,7 +18,14 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Deck, LayoutPicker, SectionPicker } from '#components';
 import { type SlideSource } from '#deck';
-import { useIsPresenting, usePresentationDeck, usePresentedPositions, useSetPresenting, useSlideIndex } from '#hooks';
+import {
+  useIsPresenting,
+  usePresentationDeck,
+  usePresentedIndex,
+  usePresentedPositions,
+  useSetPresenting,
+  useSlideIndex,
+} from '#hooks';
 import { type LayoutName } from '#markdown';
 import { meta } from '#meta';
 import { Presentation } from '#types';
@@ -41,20 +48,7 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
   // Presenting leaves out hidden slides; the stored index stays a position in the whole deck, as the grid shows it.
   // Positions, not ids: an object linked twice yields two slides with one id.
   const positions = usePresentedPositions(subject);
-  const presented = useMemo(() => positions.flatMap((position) => slides[position] ?? []), [positions, slides]);
-  const presentedIndex = useMemo(() => {
-    const next = positions.findIndex((position) => position >= index);
-    return next >= 0 ? next : positions.length - 1;
-  }, [positions, index]);
-  const handlePresentedIndexChange = useCallback(
-    (next: number) => {
-      const position = positions[next];
-      if (position !== undefined) {
-        setIndex(position);
-      }
-    },
-    [positions, setIndex],
-  );
+  const presented = usePresentedIndex(slides, positions, index, setIndex);
   const setPresenting = useSetPresenting(subject);
   // Only the attended article takes focus, so opening one unattended (or a reload) leaves the caret where it is.
   const { hasAttention } = useAttention(attendableId);
@@ -117,9 +111,9 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
 
   return (
     <Deck.Root
-      slides={fullscreen ? presented : slides}
-      index={fullscreen ? presentedIndex : index}
-      onIndexChange={fullscreen ? handlePresentedIndexChange : setIndex}
+      slides={fullscreen ? presented.slides : slides}
+      index={fullscreen ? presented.index : index}
+      onIndexChange={fullscreen ? presented.onIndexChange : setIndex}
       fullscreen={fullscreen}
       onFullscreenChange={handleFullscreenChange}
       attendableId={attendableId}
