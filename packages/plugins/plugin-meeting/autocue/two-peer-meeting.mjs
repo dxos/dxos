@@ -295,7 +295,7 @@ export const steps = [
     name: 'Alice starts transcription and opens the transcript',
     subtitle: `${SUBTITLE} · step 4`,
     run: async ({ peers: { alice, bob } }) => {
-      await alice.click(alice.page.getByRole('button', { name: 'Start transcription' }).first());
+      await alice.click(`${PLANK} [data-testid="meeting.toolbar.transcription"]`);
       for (const peer of [alice, bob]) {
         const transcript = peer.page.locator(`${COMPANION} button[aria-label="Transcript"]`).first();
         if (!(await transcript.isVisible().catch(() => false))) {

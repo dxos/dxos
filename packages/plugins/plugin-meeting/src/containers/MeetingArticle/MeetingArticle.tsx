@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
@@ -30,6 +32,10 @@ const TAB_ICONS: Record<MeetingTab, string> = {
 
 export type MeetingArticleProps = AppSurface.ObjectArticleProps<Meeting.Meeting>;
 
+/** Stand-ins for the call manager's atoms, read unconditionally while the calls plugin is off. */
+const NOT_JOINED = Atom.make(false);
+const NO_ROOM = Atom.make<string | undefined>(undefined);
+
 /**
  * Hub view for a meeting: a toolbar of tabs (notes / transcript / summary) over a single content
  * area that renders the selected component as an article surface.
@@ -54,6 +60,17 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
   const handleGenerateSummary = useCallback(async () => {
     await invokePromise(MeetingOperation.Summarize, { meeting });
   }, [invokePromise, meeting]);
+
+  // Transcription is toggled from the meeting while in its own call, which has no channel to carry the toggle.
+  const callManager = Hooks.useCapabilities(CallsCapabilities.Manager)[0];
+  const joined = useAtomValue(callManager?.joinedAtom ?? NOT_JOINED);
+  const roomId = useAtomValue(callManager?.roomIdAtom ?? NO_ROOM);
+  const transcriptionEnabled = useAtomValue(callManager?.transcriptionEnabledAtom ?? NOT_JOINED);
+  const inCall = joined && roomId === Obj.getURI(meeting);
+
+  const handleToggleTranscription = useCallback(async () => {
+    await invokePromise(MeetingOperation.SetTranscription, { meeting, enabled: !transcriptionEnabled });
+  }, [invokePromise, meeting, transcriptionEnabled]);
 
   // Toolbar tabs (single-select toggle group) + a generate/regenerate-summary action.
   const menuActions = useMenuBuilder(
@@ -85,6 +102,24 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
             },
           ),
         )
+        .subgraph(
+          inCall &&
+            ((builder) =>
+              builder.action(
+                'transcription',
+                {
+                  label: [
+                    transcriptionEnabled ? 'stop-transcription.label' : 'start-transcription.label',
+                    { ns: meta.profile.key },
+                  ],
+                  icon: 'ph--subtitles--regular',
+                  checked: transcriptionEnabled,
+                  disposition: 'toolbar',
+                  testId: 'meeting.toolbar.transcription',
+                },
+                () => void handleToggleTranscription(),
+              )),
+        )
         .separator()
         .menu('more', (group) => [
           group.action(
@@ -97,7 +132,7 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
           ),
         ])
         .build(),
-    [tab, tabs, hasSummary, handleGenerateSummary],
+    [tab, tabs, hasSummary, handleGenerateSummary, inCall, transcriptionEnabled, handleToggleTranscription],
   );
 
   const callData = useMemo(

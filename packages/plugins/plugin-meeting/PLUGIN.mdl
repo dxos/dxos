@@ -58,6 +58,7 @@ component MeetingArticle
   actions:
     generateSummary() → void          # invokes op:Summarize
     regenerateSummary() → void        # same as generateSummary; label differs
+    toggleTranscription() → void      # invokes op:SetTranscription; offered while in this meeting's own call
   layout: |
     ┌─────────────────────────┐
     │  Notes section          │
@@ -139,6 +140,19 @@ op HandlePayload
 ```
 
 ```mdl
+op SetTranscription
+  key: org.dxos.operation.meeting.setTranscription
+  desc: Turns transcription on or off for everyone in the meeting's call, announcing the meeting, its Transcript feed and the flag as one call activity.
+  input:
+    meeting: Meeting
+    enabled: boolean
+  output: void
+  effects: [calls:activity]
+  requires: [CallsCapabilities.Manager]
+  note: Both toggles invoke it, the channel call's and the one on MeetingArticle's toolbar.
+```
+
+```mdl
 op Summarize
   key: org.dxos.operation.meeting.summarize
   desc: Reads transcript and notes content from the active Meeting, sends them to the AI model, and writes the resulting markdown back to meeting.summary.
@@ -204,8 +218,8 @@ feat F-3: Real-Time Transcription
 
   req F-3.6:
     when: the user is in a Meeting's own call (started from its Call tab)
-    then: the meeting's toolbar offers Start transcription (Stop once on), which turns transcription on or off for
-      everyone in the call and binds the meeting's Transcript feed, as the channel call's toggle does
+    then: MeetingArticle's toolbar offers Start transcription (Stop once on), which invokes op:SetTranscription, as the
+      channel call's toggle does
 ```
 
 ```mdl
@@ -576,6 +590,16 @@ decision D-9: A Meeting's own call offers the Start/Stop transcription toggle on
   for: user:mykola-vrmchk
   affects: [F-3.6, QA-3]
   why: The toggle existed only on channel calls, so a call started from a Meeting's Call tab could not turn transcription on; QA-3 found it.
+  source: https://github.com/dxos/dxos/pull/14186
+```
+
+```mdl
+decision D-10: The meeting's transcription toggle sits in MeetingArticle's own toolbar, and both toggles (channel call and meeting) share op:SetTranscription. Fills in [D-9].
+  date: 2026-10-24
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-3.6, MeetingArticle, SetTranscription]
+  why: MeetingArticle builds its own toolbar, so an action on the meeting's graph node showed only in the plank heading's menu, where QA-3 could not find it.
   source: https://github.com/dxos/dxos/pull/14186
 ```
 
