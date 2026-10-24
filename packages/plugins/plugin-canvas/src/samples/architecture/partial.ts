@@ -13,6 +13,7 @@ import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import { DIAGRAM_COMMANDS } from './compiled.ts';
 import { loadDiagramDrawings } from './diagrams.ts';
 import { type Docs, makeDocs } from './docs.ts';
+import { makeEchoDeck } from './echo-deck.ts';
 import { makePluginMetrics } from './metrics.ts';
 import { architectureDiagrams } from './sets.ts';
 
@@ -20,6 +21,8 @@ export type Provides = {
   /** Every diagram's drawing, by diagram id. */
   readonly drawings: ReadonlyMap<string, Drawing.Drawing>;
   readonly docs: Docs;
+  /** The ECHO presentation, embedding the data-stack and EDGE drawings. */
+  readonly echo: Markdown.Document;
   /** Per-plugin LOC, PRs and tests, with a bar chart of them. */
   readonly metrics: Sheet.Sheet;
 };
@@ -44,11 +47,12 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('archi
       for (const doc of [docs.composer, docs.dxos, docs.edge]) {
         yield* Database.add(doc);
       }
+      const echo = yield* Database.add(makeEchoDeck(Object.fromEntries(drawings)));
       const metrics = yield* Database.add(makePluginMetrics());
       yield* SampleSpace.collection(
         'Architecture',
-        [docs.composer, docs.dxos, docs.edge, composer, edge, metrics].map((object) => Ref.make(object)),
+        [docs.composer, docs.dxos, docs.edge, echo, composer, edge, metrics].map((object) => Ref.make(object)),
       );
-      return { drawings, docs, metrics };
+      return { drawings, docs, echo, metrics };
     }),
 });
