@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
 import React, {
   type ButtonHTMLAttributes,
@@ -10,6 +11,7 @@ import React, {
   type RefObject,
   forwardRef,
   useCallback,
+  useContext,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -443,16 +445,28 @@ const isMenuable = (item: MenuItem): boolean =>
  * overflowing it: ranked items first (highest rank first), then the rest, last first. Each comes back once the toolbar
  * is wider than when it collapsed, so hidden items are never measured.
  */
-const useCollapse = (units: MenuItem[], rows: RefObject<(HTMLElement | null)[]>): MenuItem[] => {
+const useCollapse = (menu: MenuActions, units: MenuItem[], rows: RefObject<(HTMLElement | null)[]>): MenuItem[] => {
+  const registry = useContext(RegistryContext);
   const collapsible = useMemo(() => {
+    // A named group collapses as a submenu, which can only hold what a menu shows; an empty one takes no room to free.
+    const canCollapse = (item: MenuItem) => {
+      if (!isMenuable(item)) {
+        return false;
+      }
+      if (!isPlainGroup(item)) {
+        return true;
+      }
+      const children = registry.get(menu.items(item)) ?? [];
+      return children.length > 0 && children.every(isMenuable);
+    };
     const ranked = units
       .map((item, index) => ({ item, rank: placementOf(item).collapse, index }))
-      .filter(({ rank }) => rank !== undefined)
+      .filter(({ item, rank }) => rank !== undefined && canCollapse(item))
       .sort((a, b) => (b.rank ?? 0) - (a.rank ?? 0) || b.index - a.index)
       .map(({ item }) => item);
-    const rest = units.filter((item) => placementOf(item).collapse === undefined && isMenuable(item)).reverse();
+    const rest = units.filter((item) => placementOf(item).collapse === undefined && canCollapse(item)).reverse();
     return [...ranked, ...rest];
-  }, [units]);
+  }, [registry, menu, units]);
 
   const [count, setCount] = useState(0);
   const thresholds = useRef<number[]>([]);
@@ -463,8 +477,12 @@ const useCollapse = (units: MenuItem[], rows: RefObject<(HTMLElement | null)[]>)
     if (elements.length === 0) {
       return;
     }
-    const overflowing = elements.some((row) => row.scrollWidth > row.clientWidth + 1);
     const width = frameOf(elements[0]).clientWidth;
+    // A toolbar not laid out yet (a closed drawer, a hidden panel) has no width to fit; it is measured once it has one.
+    if (width === 0) {
+      return;
+    }
+    const overflowing = elements.some((row) => row.scrollWidth > row.clientWidth + 1);
     if (overflowing && count < collapsible.length) {
       thresholds.current[count] = width;
       setCount(count + 1);
@@ -575,7 +593,7 @@ export const ActionToolbar = Util.composable<HTMLDivElement, ActionToolbarProps>
       defaultOverflowGroup;
     const units = useMemo(() => (rootItems ?? []).filter((item) => item.id !== TOOLBAR_OVERFLOW_ID), [rootItems]);
     const rows = useRef<(HTMLElement | null)[]>([]);
-    const collapsed = useCollapse(units, rows);
+    const collapsed = useCollapse(menu, units, rows);
 
     const rowCount = Math.max(1, ...units.map((item) => (placementOf(item).row ?? 0) + 1));
     const zone = (row: number, zone: ToolbarZone) =>

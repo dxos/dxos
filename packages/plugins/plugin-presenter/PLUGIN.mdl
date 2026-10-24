@@ -1209,6 +1209,14 @@ decision D-61: LXGW WenKai joins the text fonts, loaded on demand and kept out o
   why: It covers Chinese text, which none of the other fonts do; on the web its size is paid only by decks that use it.
 ```
 
+```mdl
+decision D-62: Add two layouts beyond Slidev's built-ins: three-cols (slots `default`, `::middle::`, `::right::`) and two-by-two (`default`, `::right::`, `::bottom-left::`, `::bottom-right::`); "Start next column" inserts the marker of the column after the cursor's. Recorded on dxos/dxos#14188 as D-53; renumbered when merged, and [D-55] records the same request.
+  date: 2026-10-24
+  by: user:richburdon
+  affects: [F-6.2]
+  why: Comparison and quadrant slides need more than two columns.
+```
+
 ---
 
 ## Appendix: Extension Definitions

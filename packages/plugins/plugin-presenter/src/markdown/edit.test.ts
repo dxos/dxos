@@ -4,7 +4,15 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { SNIPPETS, applyEdit, insertSnippet, notesEdit, setFrontmatter, surfaceSnippet } from './edit.ts';
+import {
+  SNIPPETS,
+  applyEdit,
+  columnSnippet,
+  insertSnippet,
+  notesEdit,
+  setFrontmatter,
+  surfaceSnippet,
+} from './edit.ts';
 import { parseSlide } from './parse.ts';
 
 describe('setFrontmatter', () => {
@@ -34,6 +42,12 @@ describe('setFrontmatter', () => {
   test('sets numbers as numbers', () => {
     const content = applyEdit('', setFrontmatter('', { backgroundOpacity: 0.5 }));
     expect(parseSlide(content).frontmatter.backgroundOpacity).toBe(0.5);
+  });
+});
+
+describe('columnSnippet', () => {
+  test('starts the given slot with the cursor below its marker', () => {
+    expect(columnSnippet('bottom-left')).toBe('\n::bottom-left::\n\n|');
   });
 });
 

@@ -73,7 +73,7 @@ const PHRASING_PARENTS = new Set([
 const COMMENT = /^<!--((?:(?!-->)[\s\S])*)-->$/;
 const TAG = /<!--[\s\S]*?-->|<(\/?)([A-Za-z][A-Za-z0-9-]*)((?:[^>"']|"[^"]*"|'[^']*')*)>/g;
 const ATTRIBUTE = /([A-Za-z_:][\w:.-]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
-const SLOT_MARKER = /^::([a-z-]+)::$/;
+export const SLOT_MARKER = /^::([a-z]+(?:-[a-z]+)*)::$/;
 const URL_SCHEME = /^([a-z][a-z0-9+.-]*):/i;
 const SAFE_SCHEMES = new Set(['http', 'https', 'mailto', 'echo']);
 const DATA_IMAGE = /^data:image\//i;
@@ -85,7 +85,7 @@ type Token =
 
 const isContainerTag = (name: string): name is ContainerTag => Object.hasOwn(CONTAINER_TAGS, name);
 
-const isSlotName = (name: string): name is SlotName => SLOTS.some((slot) => slot === name);
+export const isSlotName = (name: string): name is SlotName => SLOTS.some((slot) => slot === name);
 
 const isSurfaceRole = (role: string): role is SurfaceRole => SURFACE_ROLES.some((value) => value === role);
 

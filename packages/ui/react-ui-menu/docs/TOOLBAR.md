@@ -31,17 +31,18 @@ Toolbars and menus share one model, built with `MenuBuilder`; a toolbar is one r
 - **Overflow.** Every toolbar ends with an overflow menu (⋮), the named group `TOOLBAR_OVERFLOW_ID`, which others
   extend like any group. It renders only when it has items (its own, contributed or collapsed).
 - **Narrow.** While a row is too narrow, items move into the overflow menu (groups as submenus): ranked ones first,
-  highest rank first, then the rest, last first, so the toolbar fills its container without overflowing it. Each comes
-  back once the toolbar is wider than when it collapsed.
+  highest rank first, then the rest, last first, so the toolbar fills its container without overflowing it. A `custom`
+  or `text` item, a group holding one, and an empty group never move. Each comes back once the toolbar is wider than
+  when it collapsed.
 
 An item or group carries an optional `placement` (`ToolbarPlacement` on `MenuItemChrome`, ignored by menus):
 
-| Field      | Meaning                                                                                             |
-| ---------- | --------------------------------------------------------------------------------------------------- |
-| `zone`     | `start` (left) or `end` (right) of its row.                                                         |
-| `row`      | Row of a multi-row toolbar; `0` is the first.                                                       |
-| `order`    | Order within its zone or group, so a contributor interleaves with the owner's items.                |
-| `collapse` | Rank for moving into the overflow menu when the row is too narrow; higher goes first; none = never. |
+| Field      | Meaning                                                                                                                |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `zone`     | `start` (left) or `end` (right) of its row.                                                                            |
+| `row`      | Row of a multi-row toolbar; `0` is the first.                                                                          |
+| `order`    | Order within its zone or group, so a contributor interleaves with the owner's items.                                   |
+| `collapse` | Rank for moving into the overflow menu when the row is too narrow; higher goes first, then unranked items, last first. |
 
 Each row is one `Toolbar.Root` laid out as `start | gap | end`, with the overflow menu last in row 0.
 The `ui/react-ui-menu/ActionToolbar` stories cover `Groups`, `Extended` (contributions and two rows), `Narrow` and `AsMenu`.
