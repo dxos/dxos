@@ -25,7 +25,7 @@ export const Pager = ({ index = 0, count = 0, onChange }: PagerProps) => {
   const atEnd = count === 0 || index >= count - 1;
 
   return (
-    <Layout.Flex align='center' classNames='text-neutral-500'>
+    <Layout.Flex align='center' classNames='text-neutral-500 select-none'>
       <Button.Root
         icon='ph--caret-double-left--regular'
         iconSize='xl'
@@ -81,7 +81,7 @@ export type PageNumberProps = {
 
 export const PageNumber = ({ index = 0, count = 1 }: PageNumberProps) => {
   return (
-    <Layout.Flex align='center' classNames='text-neutral-500 text-2xl tabular-nums'>
+    <Layout.Flex align='center' classNames='text-neutral-500 text-2xl tabular-nums select-none'>
       <div>
         {count === 0 ? 0 : index + 1} / {count}
       </div>
