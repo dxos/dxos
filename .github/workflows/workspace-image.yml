@@ -1,0 +1,270 @@
+name: Workspace Image
+
+# Experiment: a snapshot of the workspace (source, .git, every node_modules) as one read-only filesystem
+# image in R2, mounted under overlayfs at $GITHUB_WORKSPACE, so a job fetches only the commits since and
+# installs only the lockfile delta. No Docker: the job stays on the bare runner.
+#
+# `bench` brings one main commit to a built state per variant: `baseline` is today's checkout and setup;
+# `squashfs` and `erofs` mount the image; `tar` extracts the same tree with zstd as the small-file-write
+# control.
+
+permissions:
+  contents: read
+  packages: write
+
+on:
+  schedule:
+    - cron: '41 4 * * *'
+  push:
+    branches:
+      - main
+      # TODO(dmaretskyi): Remove before merging; builds from this branch produce the measurements.
+      - claude/workspace-image-mount
+    paths:
+      - .github/workflows/workspace-image.yml
+      - .github/actions/setup/action.yml
+  workflow_dispatch:
+
+env:
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+  # TODO(dmaretskyi): R2 (`agent-artifacts`) once CI has a key that can write it; the `R2_*` secrets CI holds
+  # are denied there. Until then the images are OCI artifacts in the public `gh-actions` package, pulled
+  # anonymously over plain HTTPS, still without Docker.
+  ARTIFACT_REPO: ghcr.io/dxos/gh-actions
+  # Pinned: on an overlay the workspace is its own filesystem, and pnpm then picks a store on it, which no
+  # longer matches node_modules/.modules.yaml and makes it recreate node_modules from scratch.
+  npm_config_store_dir: /home/runner/.local/share/pnpm/store
+  ORAS_VERSION: 1.2.3
+
+concurrency:
+  group: workspace-image-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    outputs:
+      image-sha: ${{ steps.shas.outputs.image }}
+      bench-sha: ${{ steps.shas.outputs.bench }}
+    steps:
+      # Exactly Check's clone, so a job's checkout reuses it instead of re-cloning.
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      # Off main the snapshot is 20 commits back (about a day of main), so the bench pays a nightly
+      # snapshot's typical drift rather than none.
+      - name: Resolve commits
+        id: shas
+        run: |
+          bench=$(git rev-parse HEAD)
+          if [ "$GITHUB_REF" = refs/heads/main ]; then image=$bench; else image=$(git rev-parse HEAD~20); fi
+          git checkout --quiet --detach "$image"
+          echo "bench=$bench" >> "$GITHUB_OUTPUT"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          echo "image $image, bench $bench"
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      # Source, .git and node_modules only at this point: untracked leftovers and the certificates the setup
+      # action wrote must not ship. The stat settings keep the index valid once inodes and ctimes change.
+      - name: Strip to source and dependencies
+        run: |
+          git clean -ffdxq -e node_modules
+          git config core.checkStat minimal
+          git config core.trustctime false
+          du -sh --apparent-size . .git
+
+      # Outputs and moon's local cache ship with the image, so unchanged projects hit locally. The certificates
+      # exist only for this step.
+      - name: Build into moon's local cache
+        run: |
+          mkdir -p .moon/certs
+          printf '%s\n' "$MOON_CACHE_CA_PEM" > .moon/certs/ca.pem
+          printf '%s\n' "$MOON_CACHE_CLIENT_PEM" > .moon/certs/client.pem
+          printf '%s\n' "$MOON_CACHE_CLIENT_KEY" > .moon/certs/client.key
+          moon exec --on-failure continue :build || echo "::warning:::build failed; shipping the partial cache"
+          rm -rf .moon/certs
+          du -sh .moon/cache
+
+      # node and pnpm on PATH from the image, since `moon setup` installs them without proto's bins.
+      - name: Link toolchain binaries
+        run: |
+          proto regen --bin
+          ls "$HOME/.proto/bin"
+
+      - name: Install image tools
+        run: |
+          sudo apt-get update -qq
+          sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends squashfs-tools erofs-utils zstd >/dev/null
+
+      # One image holds all three trees a job would otherwise rebuild: the workspace, proto's toolchain and
+      # moon's home. Bind mounts gather them under one root.
+      - name: Build images
+        run: |
+          sudo mkdir -p /mnt/img /mnt/stage/ws /mnt/stage/proto /mnt/stage/moon && sudo chown "$(id -u):$(id -g)" /mnt/img
+          mkdir -p "$HOME/.moon"
+          sudo mount --bind "$GITHUB_WORKSPACE" /mnt/stage/ws
+          sudo mount --bind "$HOME/.proto" /mnt/stage/proto
+          sudo mount --bind "$HOME/.moon" /mnt/stage/moon
+          du -sh --apparent-size /mnt/stage/*
+          SECONDS=0
+          mksquashfs /mnt/stage /mnt/img/workspace.sqfs -comp zstd -Xcompression-level 3 -noappend -no-progress -quiet
+          echo "squashfs: ${SECONDS}s"; SECONDS=0
+          mkfs.erofs -zlz4hc /mnt/img/workspace.erofs /mnt/stage >/dev/null
+          echo "erofs: ${SECONDS}s"; SECONDS=0
+          tar -C /mnt/stage -cf - ws proto moon | zstd -3 -T0 -q -o /mnt/img/workspace.tar.zst
+          echo "tar.zst: ${SECONDS}s"
+          ls -la /mnt/img
+          df -h / /mnt
+
+      - name: Install oras
+        run: |
+          curl -fsSL "https://github.com/oras-project/oras/releases/download/v${ORAS_VERSION}/oras_${ORAS_VERSION}_linux_amd64.tar.gz" |
+            sudo tar -xz -C /usr/local/bin oras
+
+      - name: Upload images
+        env:
+          IMAGE_SHA: ${{ steps.shas.outputs.image }}
+        run: |
+          echo "${{ secrets.GH_DXOS_BOT_PAT }}" | oras login ghcr.io -u dxos-bot --password-stdin
+          cd /mnt/img
+          for ext in sqfs erofs tar.zst; do
+            SECONDS=0
+            oras push --no-tty "$ARTIFACT_REPO:ws-${IMAGE_SHA:0:12}-${ext//./-}" "workspace.$ext:application/octet-stream" >/dev/null
+            echo "workspace.$ext: uploaded in ${SECONDS}s"
+          done
+
+  bench:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [baseline, squashfs, erofs, tar]
+        drift: [20]
+        # The snapshot's own commit: what the image saves before main moves on.
+        include:
+          - variant: squashfs
+            drift: 0
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      # Inline because a local action needs the checkout this replaces. Any failure here leaves an empty
+      # workspace and the job carries on down today's path.
+      - name: Mount workspace image
+        id: mount
+        if: ${{ matrix.variant != 'baseline' }}
+        continue-on-error: true
+        env:
+          VARIANT: ${{ matrix.variant }}
+          IMAGE_SHA: ${{ needs.build.outputs.image-sha }}
+        run: |
+          set -euo pipefail
+          case "$VARIANT" in squashfs) ext=sqfs ;; erofs) ext=erofs ;; tar) ext=tar.zst ;; esac
+          sudo mkdir -p /mnt/ws && sudo chown "$(id -u):$(id -g)" /mnt/ws
+          # Plain curl in 8 parallel ranges: `oras pull` is one stream and took 6–35 s where this takes 3–6 s.
+          repo=${ARTIFACT_REPO#ghcr.io/}
+          token=$(curl -fsS "https://ghcr.io/token?scope=repository:$repo:pull" | jq -r .token)
+          blob=$(curl -fsS -H "Authorization: Bearer $token" -H 'Accept: application/vnd.oci.image.manifest.v1+json' \
+            "https://ghcr.io/v2/$repo/manifests/ws-${IMAGE_SHA:0:12}-${ext//./-}" | jq -r '.layers[0] | "\(.digest) \(.size)"')
+          digest=${blob% *}; size=${blob#* }
+          # Each range lands at its own offset in one preallocated file, so there is no join afterwards. A broken
+          # transfer fails curl (`-f`, or exit 18 on a short read), and a corrupt image fails the mount, which falls back below.
+          out="/mnt/ws/workspace.$ext"
+          fallocate -l "$size" "$out"
+          start=$(date +%s.%N)
+          parts=8; chunk=$(( (size + parts - 1) / parts )); pids=()
+          for i in $(seq 0 $((parts - 1))); do
+            from=$((i * chunk)); to=$(( from + chunk - 1 < size - 1 ? from + chunk - 1 : size - 1 ))
+            ( curl -fsSL -H "Authorization: Bearer $token" -r "$from-$to" "https://ghcr.io/v2/$repo/blobs/$digest" |
+                dd of="$out" bs=4M iflag=fullblock oflag=seek_bytes seek="$from" conv=notrunc status=none ) &
+            pids+=($!)
+          done
+          for pid in "${pids[@]}"; do wait "$pid"; done
+          printf 'download: %.1fs, %d MB\n' "$(echo "$(date +%s.%N) - $start" | bc)" $((size / 1000000))
+          SECONDS=0
+          if [ "$VARIANT" = tar ]; then
+            mkdir -p /mnt/ws/x
+            zstd -dc -T0 /mnt/ws/workspace.tar.zst | tar -xf - -C /mnt/ws/x
+            rm /mnt/ws/workspace.tar.zst
+            # Renames, not copies: /mnt and $HOME share the root filesystem.
+            find /mnt/ws/x/ws -mindepth 1 -maxdepth 1 -exec mv -t "$GITHUB_WORKSPACE" {} +
+            rm -rf "$HOME/.proto" "$HOME/.moon"
+            mv /mnt/ws/x/proto "$HOME/.proto"
+            mv /mnt/ws/x/moon "$HOME/.moon"
+            echo "extract: ${SECONDS}s"
+          else
+            mkdir -p /mnt/ws/lower
+            sudo mount -t "$VARIANT" -o loop,ro "/mnt/ws/workspace.$ext" /mnt/ws/lower
+            for pair in "ws:$GITHUB_WORKSPACE" "proto:$HOME/.proto" "moon:$HOME/.moon"; do
+              name=${pair%%:*}; target=${pair#*:}
+              mkdir -p "/mnt/ws/upper/$name" "/mnt/ws/work/$name" "$target"
+              sudo mount -t overlay overlay \
+                -o "lowerdir=/mnt/ws/lower/$name,upperdir=/mnt/ws/upper/$name,workdir=/mnt/ws/work/$name" "$target"
+            done
+            echo "mount: ${SECONDS}s"
+          fi
+
+      - name: Fall back to a clean workspace
+        if: ${{ steps.mount.outcome == 'failure' }}
+        run: |
+          echo "::warning::Workspace image unavailable; using the normal checkout."
+          for target in "$GITHUB_WORKSPACE" "$HOME/.proto" "$HOME/.moon" /mnt/ws/lower; do
+            sudo umount "$target" 2>/dev/null || true
+          done
+          find "$GITHUB_WORKSPACE" -mindepth 1 -delete
+
+      # `clean: false`, or checkout's `git clean -ffdx` deletes every node_modules.
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ matrix.drift == 0 && needs.build.outputs.image-sha || needs.build.outputs.bench-sha }}
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+          clean: false
+
+      - name: Report snapshot drift
+        if: ${{ steps.mount.outcome == 'success' }}
+        env:
+          IMAGE_SHA: ${{ needs.build.outputs.image-sha }}
+        run: |
+          echo "$(git rev-list --count "$IMAGE_SHA..HEAD") commits behind, $(git diff --name-only "$IMAGE_SHA" HEAD | wc -l) files changed"
+          echo "lockfile changed: $(git diff --quiet "$IMAGE_SHA" HEAD -- pnpm-lock.yaml && echo no || echo yes)"
+          echo "snapshot age: $(( ($(date +%s) - $(git show -s --format=%ct "$IMAGE_SHA")) / 3600 ))h"
+
+      # The checkout above moved .github to main's; take this branch's setup action back so every variant runs
+      # the same one, with the `prebuilt` input.
+      - name: Use this branch's setup action
+        run: |
+          git fetch --no-tags --depth=1 origin "$GITHUB_SHA"
+          git checkout "$GITHUB_SHA" -- .github/actions/setup
+          git reset -q -- .github/actions/setup
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.mount.outcome == 'success' && 'true' || 'false' }}
+
+      - name: Build
+        run: moon exec --on-failure continue :build || true
+
+      # Every dependency file once, cold: where a compressed image would cost.
+      - name: Read node_modules
+        run: |
+          SECONDS=0
+          bytes=$(find node_modules/.pnpm -type f -print0 | xargs -0 cat | wc -c)
+          echo "read $((bytes / 1000000)) MB in ${SECONDS}s"
+
+      # A real suite: the passthrough argument changes the task's hash, so this one runs while its
+      # dependencies still come from cache.
+      - name: Test (client)
+        run: moon run client:test -- --reporter=dot || true
