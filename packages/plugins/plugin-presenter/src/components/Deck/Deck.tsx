@@ -417,8 +417,9 @@ const Overlay = () => {
       }}
       className='absolute bottom-4 left-1/2 z-[300] flex -translate-x-1/2 items-center gap-4 rounded-md bg-black/50 px-4 py-1 text-white transition-opacity duration-500 data-[visible=false]:opacity-0 data-[visible=false]:pointer-events-none'
     >
-      <DeckPager />
+      {/* The page number first, so the exit button ends the row. */}
       <DeckPageNumber />
+      <DeckPager exit />
     </div>
   );
 };
@@ -481,10 +482,16 @@ DeckGrid.displayName = 'Deck.Grid';
 // Pager
 //
 
-/** Previous, next, first and last slide buttons. */
-const DeckPager = () => {
-  const { index, count, setIndex } = useDeckContext('Deck.Pager');
-  return <PagerComponent index={index} count={count} onChange={setIndex} />;
+type DeckPagerProps = {
+  /** Ends with an exit button that leaves fullscreen. */
+  exit?: boolean;
+};
+
+/** Previous, next, first and last slide buttons, and optionally one that exits fullscreen. */
+const DeckPager = ({ exit }: DeckPagerProps) => {
+  const { index, count, setIndex, setFullscreen } = useDeckContext('Deck.Pager');
+  const handleExit = useCallback(() => setFullscreen(false), [setFullscreen]);
+  return <PagerComponent index={index} count={count} onChange={setIndex} onExit={exit ? handleExit : undefined} />;
 };
 
 DeckPager.displayName = 'Deck.Pager';
@@ -538,4 +545,4 @@ export {
   useDeckContext,
 };
 
-export type { DeckGridProps as GridProps, DeckRootProps as RootProps };
+export type { DeckGridProps as GridProps, DeckPagerProps as PagerProps, DeckRootProps as RootProps };

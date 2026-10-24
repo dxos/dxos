@@ -115,6 +115,18 @@ export const Fullscreen: Story = {
   },
 };
 
+/** The fullscreen pager ends with an exit button, which returns to the grid. */
+export const ExitButton: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await tile(canvas, 3);
+    await userEvent.click(canvas.getByTestId('presenter.play'));
+    await userEvent.click(await canvas.findByTestId('presenter.pager.exit'));
+    await waitFor(() => expect(canvas.queryByTestId('presenter.overlay')).toBeNull());
+    await tile(canvas, 0);
+  },
+};
+
 /** Double-clicking a thumbnail opens that slide rather than presenting it. */
 export const OpenFromTile: Story = {
   play: async ({ canvasElement }) => {
