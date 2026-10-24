@@ -63,6 +63,8 @@ describe('columnSnippet', () => {
     expect(slotBefore('a\n\n::bottom-left::\n\nb\n', 20)).toBe('bottom-left');
     // An unknown marker is content, as the parser reads it, so the slot before it still holds the cursor.
     expect(slotBefore('a\n\n::middle::\n\n::unknown::\n\nb\n', 30)).toBe('middle');
+    // A marker-like prefix of a longer line is content, so the cursor after it is still in the first column.
+    expect(slotBefore('a\n\n::middle::text\n', 13)).toBe('default');
   });
 
   test('from the last column it starts the last one again', () => {
