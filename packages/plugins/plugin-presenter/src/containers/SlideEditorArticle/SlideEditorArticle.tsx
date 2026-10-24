@@ -124,7 +124,6 @@ const SlideEditorContent = ({ subject }: SlideEditorContentProps) => {
       createMarkdownExtensions(),
       slideHighlight(),
       slideCompletion({ describeLayout: (layout) => t(`layout.${layout}.label`) }),
-      slideCompletion({ describeLayout: (layout) => t(`layout.${layout}.label`) }),
       // A slide is too short to fold; the inset the markdown editor's fold gutter gives its text is kept.
       NaturalEditorView.theme({ '.cm-content': { paddingInlineStart: '32px' } }),
       scrollbarAutohide(),

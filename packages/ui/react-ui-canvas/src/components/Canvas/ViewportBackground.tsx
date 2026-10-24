@@ -83,9 +83,10 @@ export const ViewportBackground = ({
     () => ({
       ...look.background,
       ...((snapGridDrawn || dotsDrawn || latticeScene) && { grid: 'none' as const }),
-      ...(gpuWashes && { washes: [] }),
+      // Transparent draws no surface, so it draws no washes either, though the grid stays.
+      ...((gpuWashes || transparent) && { washes: [] }),
     }),
-    [snapGridDrawn, dotsDrawn, latticeScene, gpuWashes, look.background],
+    [snapGridDrawn, dotsDrawn, latticeScene, gpuWashes, transparent, look.background],
   );
 
   return (

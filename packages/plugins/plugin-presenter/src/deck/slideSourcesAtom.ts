@@ -29,19 +29,20 @@ export const slideSourcesAtom = Atom.family((presentation: Presentation.Presenta
 );
 
 /**
- * The slides shown when the deck is presented: every slide but those whose frontmatter sets `hide: true`, re-evaluated
- * as their text changes.
+ * The positions, in {@link slideSourcesAtom}'s slides, of those shown when the deck is presented: every slide but those
+ * whose frontmatter sets `hide: true`, re-evaluated as their text changes. Positions rather than slides, since an object
+ * linked twice yields two slides with one id.
  */
-export const presentedSlidesAtom = Atom.family((presentation: Presentation.Presentation): Atom.Atom<SlideSource[]> =>
+export const presentedPositionsAtom = Atom.family((presentation: Presentation.Presentation): Atom.Atom<number[]> =>
   Atom.make((get) =>
-    get(slideSourcesAtom(presentation)).filter((source) => {
+    get(slideSourcesAtom(presentation)).flatMap((source, position) => {
       switch (source.kind) {
         case 'text':
-          return !isHiddenSlide(get(Obj.atomProperty(source.text, 'content')));
+          return isHiddenSlide(get(Obj.atomProperty(source.text, 'content'))) ? [] : [position];
         case 'markdown':
-          return !isHiddenSlide(source.content);
+          return isHiddenSlide(source.content) ? [] : [position];
         default:
-          return true;
+          return [position];
       }
     }),
   ),

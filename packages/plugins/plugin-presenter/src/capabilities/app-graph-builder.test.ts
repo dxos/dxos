@@ -102,7 +102,7 @@ describe('presentation sections', () => {
     await AppGraphBuilder.flush(graphBuilder);
     expect(toggle()?.properties.label).toEqual(['show-slide.label', { ns: meta.profile.key }]);
 
-    const linked = children().find((child) => child.data === notes);
+    const linked = children().find((child) => child.data.id === notes.id);
     AppGraph.expandSync(graph, linked?.id ?? '', 'action');
     await AppGraphBuilder.flush(graphBuilder);
     expect(registry.get(graph.actions(linked?.id ?? '')).some(({ id }) => id.endsWith('.toggle-hidden'))).toBe(false);

@@ -18,7 +18,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Deck, LayoutPicker, SectionPicker } from '#components';
 import { type SlideSource } from '#deck';
-import { useIsPresenting, usePresentationDeck, usePresentedSlides, useSetPresenting, useSlideIndex } from '#hooks';
+import { useIsPresenting, usePresentationDeck, usePresentedPositions, useSetPresenting, useSlideIndex } from '#hooks';
 import { type LayoutName } from '#markdown';
 import { meta } from '#meta';
 import { Presentation } from '#types';
@@ -39,15 +39,21 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
   const [index, setIndex] = useSlideIndex(Obj.getURI(subject), slides.length);
   const fullscreen = useIsPresenting(subject);
   // Presenting leaves out hidden slides; the stored index stays a position in the whole deck, as the grid shows it.
-  const presented = usePresentedSlides(subject);
+  // Positions, not ids: an object linked twice yields two slides with one id.
+  const positions = usePresentedPositions(subject);
+  const presented = useMemo(() => positions.flatMap((position) => slides[position] ?? []), [positions, slides]);
   const presentedIndex = useMemo(() => {
-    const ids = new Set(presented.map((slide) => slide.id));
-    const next = slides.slice(index).find((slide) => ids.has(slide.id));
-    return next ? presented.findIndex((slide) => slide.id === next.id) : presented.length - 1;
-  }, [presented, slides, index]);
+    const next = positions.findIndex((position) => position >= index);
+    return next >= 0 ? next : positions.length - 1;
+  }, [positions, index]);
   const handlePresentedIndexChange = useCallback(
-    (next: number) => setIndex(slides.findIndex((slide) => slide.id === presented[next]?.id)),
-    [presented, slides, setIndex],
+    (next: number) => {
+      const position = positions[next];
+      if (position !== undefined) {
+        setIndex(position);
+      }
+    },
+    [positions, setIndex],
   );
   const setPresenting = useSetPresenting(subject);
   // Only the attended article takes focus, so opening one unattended (or a reload) leaves the caret where it is.

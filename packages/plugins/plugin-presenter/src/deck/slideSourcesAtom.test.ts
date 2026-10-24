@@ -5,14 +5,14 @@
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Collection } from '@dxos/echo';
+import { Collection, Obj, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 
 import { Presentation } from '#types';
 
-import { slideSourcesAtom } from './slideSourcesAtom.ts';
+import { presentedPositionsAtom, slideSourcesAtom } from './slideSourcesAtom.ts';
 
 describe('slideSourcesAtom', () => {
   let builder: EchoTestBuilder;
@@ -71,5 +71,17 @@ describe('slideSourcesAtom', () => {
     const [first, second] = registry.get(atom).map((source) => source.id);
     Presentation.move(presentation, 0, 1);
     expect(registry.get(atom).map((source) => source.id)).toEqual([second, first]);
+  });
+
+  test('presented positions skip hidden slides and keep an object linked twice at both places', async ({ expect }) => {
+    const { db, presentation, registry } = await setup(['a', '---\nhide: true\n---\n\nb', 'c']);
+    const doc = db.add(Markdown.make({ content: 'x' }));
+    Obj.update(presentation, (presentation) => {
+      presentation.sections.push(Ref.make(doc), Ref.make(doc));
+    });
+    await db.flush({ indexes: true });
+    const positions = presentedPositionsAtom(presentation);
+    registry.subscribe(positions, () => {});
+    await expect.poll(() => registry.get(positions)).toEqual([0, 2, 3, 4]);
   });
 });
