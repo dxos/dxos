@@ -8,7 +8,7 @@ import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
-import { type Database, Feed } from '@dxos/echo';
+import { type Database, Feed, type Obj } from '@dxos/echo';
 import { Reducer, Trajectory, Transcript } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
 
@@ -23,6 +23,14 @@ export { type ReadRange, readItems } from './trajectory-items.ts';
  * still hold (a typed query for an unregistered type matches nothing).
  */
 export const types = [Trajectory.Event, ...Legacy.types] as const;
+
+/**
+ * A new conversation feed. Its indexing is off: the agent and the chat read the feed in local order rather than
+ * through the index, so indexing every event would cost each write for nothing; the host answers its queries from
+ * the feed store.
+ */
+export const makeFeed = (props: Obj.MakeProps<typeof Feed.Feed> = {}): Feed.Feed =>
+  Feed.make({ ...props, indexing: { enabled: false } });
 
 /**
  * Every event in `feed`, legacy records converted in place, in local order.

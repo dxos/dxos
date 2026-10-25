@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
@@ -91,7 +92,7 @@ export const ensureParticipantChat = Effect.fnUntraced(function* (
 
   const primary = yield* Agent.loadChat(agent);
   const location = remote ?? primary?.remote;
-  const feed = yield* Database.add(Feed.make());
+  const feed = yield* Database.add(TrajectoryStore.makeFeed());
   const draft = Chat.make({
     [Obj.Meta]: { keys: [key] },
     [Obj.Parent]: agent,

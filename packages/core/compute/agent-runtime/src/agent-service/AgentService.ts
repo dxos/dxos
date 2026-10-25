@@ -11,7 +11,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Semaphore from 'effect/Semaphore';
 
 import { SessionConfig } from '@dxos/ai';
-import { AiContext, type HarnessControlRpcs } from '@dxos/assistant';
+import { AiContext, type HarnessControlRpcs, TrajectoryStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Process from '@dxos/compute/Process';
@@ -54,7 +54,7 @@ export const createSession: (
     // By registry URI unless the skill is a space copy, so the registry stays the one pristine copy.
     const skills = (opts?.skills ?? []).map(Skill.makeRef);
 
-    const feed = yield* Database.add(Feed.make());
+    const feed = yield* Database.add(TrajectoryStore.makeFeed());
     const runtime = yield* Effect.context<Database.Service>();
     const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
 

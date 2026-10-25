@@ -4,6 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
@@ -80,7 +81,7 @@ export const ensureChannelChat = Effect.fnUntraced(function* ({
   // Read before the new chat exists: `Agent.loadChat` resolves the agent's latest chat.
   const bindings = yield* loadAgentBindings(agent);
 
-  const feed = yield* Database.add(Feed.make());
+  const feed = yield* Database.add(TrajectoryStore.makeFeed());
   const chat = yield* Database.add(
     Chat.make({
       [Obj.Meta]: { keys: direct ? [key, AgentChannels.directKey(channel.id)] : [key] },

@@ -15,6 +15,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { IdentityDid } from '@dxos/keys';
 
 import type * as Harness from '../session/Harness.ts';
+import * as TrajectoryStore from '../session/TrajectoryStore.ts';
 import { HarnessContextError } from '../util/errors.ts';
 import * as Chat from './Chat.ts';
 
@@ -196,7 +197,7 @@ export const makeInitialized = (
         enabled: props.enabled ?? true,
       }),
     );
-    const feed = yield* Database.add(Feed.make());
+    const feed = yield* Database.add(TrajectoryStore.makeFeed());
     const runtime = yield* Effect.context<Database.Service>();
     const contextBinder = yield* EffectEx.acquireReleaseResource(() => new AiContextRuntime.Binder({ feed, runtime }));
     const agentSkill = Ref.isRef(skill) ? skill : Ref.make(yield* Database.add(Obj.clone(skill, { deep: 'all' })));
@@ -249,7 +250,7 @@ export const resetChatHistory = (agent: Agent): Effect.Effect<void, EchoError.En
       .filter((object) => !Obj.instanceOf(Chat.Chat, object))
       .map((object) => Ref.make(object));
 
-    const feed = yield* Database.add(Feed.make());
+    const feed = yield* Database.add(TrajectoryStore.makeFeed());
     const contextBinder = yield* EffectEx.acquireReleaseResource(() => new AiContextRuntime.Binder({ feed, runtime }));
 
     const chat = yield* Database.add(
