@@ -50,6 +50,10 @@
     padding-block: var(--dx-gap-size);
     gap: var(--dx-gap-size);
   }
+  /* Root `tileWidth`: as many columns as fit at that width, so tiles reflow with the container instead of stretching. */
+  .dx-listbox-content.dx-container[data-tiles='auto'] {
+    grid-template-columns: repeat(auto-fill, minmax(min(var(--dx-tile-width), 100%), 1fr)) !important;
+  }
   .dx-listbox-content[data-tiles] > * {
     grid-column: auto;
   }

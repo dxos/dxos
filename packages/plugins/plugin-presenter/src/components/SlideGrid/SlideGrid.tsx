@@ -3,27 +3,30 @@
 //
 
 import React, { useCallback, useMemo } from 'react';
-import { useResizeDetector } from 'react-resize-detector';
 
 import * as AppNode from '@dxos/app-toolkit/AppNode';
+import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Listbox, type ReorderListController, useReorderItem, useReorderList } from '@dxos/react-ui-list';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import { mx } from '@dxos/ui-theme';
 
-import { type SlideSource } from '#deck';
+import { type SlideSource, firstHeading } from '#deck';
 import { meta } from '#meta';
+import { type SlideViewState } from '#types';
 
 import { Slide } from '../Slide/index.ts';
 
-/** Narrowest thumbnail before the grid drops a column (px). */
-const TILE_MIN_WIDTH = 240;
+/** Narrowest thumbnail at each grid size before the grid drops a column (px). */
+const TILE_WIDTH: Record<SlideViewState.GridSize, number> = { small: 200, large: 360 };
 
 export type SlideGridProps = {
   slides: SlideSource[];
   /** The current slide, shown selected. */
   index: number;
+  /** Thumbnail size (default `small`). */
+  size?: SlideViewState.GridSize;
   onIndexChange: (index: number) => void;
   /** Invoked on double-click to present from that slide. */
   onPresent?: (index: number) => void;
@@ -43,6 +46,7 @@ type Tile = { key: string; index: number; source: SlideSource };
 export const SlideGrid = ({
   slides,
   index,
+  size = 'small',
   onIndexChange,
   onPresent,
   onMove,
@@ -50,8 +54,6 @@ export const SlideGrid = ({
   contextMenuId,
 }: SlideGridProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { ref, width } = useResizeDetector({ refreshMode: 'debounce', refreshRate: 100, handleHeight: false });
-  const columns = Math.max(1, Math.floor((width ?? 0) / TILE_MIN_WIDTH));
   // An object linked twice yields two slides with one id, so options are keyed by position.
   const items = useMemo(
     () => slides.map((_, slideIndex) => ({ value: String(slideIndex), label: String(slideIndex + 1) })),
@@ -86,47 +88,44 @@ export const SlideGrid = ({
     }
   };
 
+  // The listbox reflows tiles of this width as the article resizes, so they never stretch then snap back.
   return (
-    <div ref={ref} className='flex flex-col dx-grow'>
-      {!!width && (
-        <Listbox.Root
-          items={items}
-          tiles={columns}
-          value={String(index)}
-          onValueChange={select}
-          onHighlightChange={select}
-          classNames='dx-grow'
-        >
-          <Listbox.Viewport>
-            <Listbox.Content aria-label={t('slide-grid.label')} data-testid='presenter.slide-grid' classNames='p-4'>
-              {tiles.map((tile) => (
-                <SlideTile
-                  key={tile.key}
-                  tile={tile}
-                  controller={controller}
-                  draggable={!!onMove}
-                  onPresent={onPresent}
-                  contextMenuId={contextMenuId?.(tile.source)}
-                />
-              ))}
-              {onAdd && (
-                <div className='flex flex-col p-1 gap-1'>
-                  <button
-                    type='button'
-                    data-testid='presenter.slide-grid.add'
-                    aria-label={t('add-slide.label')}
-                    className='flex aspect-video items-center justify-center rounded-sm border border-dashed border-separator text-description hover:bg-hover-surface'
-                    onClick={onAdd}
-                  >
-                    <Icon.Icon icon='ph--plus--regular' size='md' />
-                  </button>
-                </div>
-              )}
-            </Listbox.Content>
-          </Listbox.Viewport>
-        </Listbox.Root>
-      )}
-    </div>
+    <Listbox.Root
+      items={items}
+      tileWidth={TILE_WIDTH[size]}
+      value={String(index)}
+      onValueChange={select}
+      onHighlightChange={select}
+      classNames='dx-grow'
+    >
+      <Listbox.Viewport>
+        <Listbox.Content aria-label={t('slide-grid.label')} data-testid='presenter.slide-grid' classNames='p-4'>
+          {tiles.map((tile) => (
+            <SlideTile
+              key={tile.key}
+              tile={tile}
+              controller={controller}
+              draggable={!!onMove}
+              onPresent={onPresent}
+              contextMenuId={contextMenuId?.(tile.source)}
+            />
+          ))}
+          {onAdd && (
+            <div className='flex flex-col p-1 gap-1'>
+              <button
+                type='button'
+                data-testid='presenter.slide-grid.add'
+                aria-label={t('add-slide.label')}
+                className='flex aspect-video items-center justify-center rounded-sm border border-dashed border-separator text-description hover:bg-hover-surface'
+                onClick={onAdd}
+              >
+                <Icon.Icon icon='ph--plus--regular' size='md' />
+              </button>
+            </div>
+          )}
+        </Listbox.Content>
+      </Listbox.Viewport>
+    </Listbox.Root>
   );
 };
 
@@ -144,6 +143,7 @@ const SlideTile = ({ tile, controller, draggable, onPresent, contextMenuId }: Sl
   const { rowRef, handleRef, isDragging } = useReorderItem(controller, tile.key);
   const [slide] = useObject(tile.source.kind === 'markdown' ? undefined : tile.source.slide);
   const hidden = slide?.hidden === true;
+  const label = useSlideLabel(tile.source);
   // The whole tile is the drag handle.
   const ref = useCallback(
     (node: HTMLDivElement | null) => {
@@ -174,7 +174,29 @@ const SlideTile = ({ tile, controller, draggable, onPresent, contextMenuId }: Sl
         </Slide.Root>
         {hidden && <Icon.Icon icon='ph--eye-slash--regular' size='md' classNames='absolute top-1 end-1' />}
       </div>
-      <Listbox.ItemText tone='muted' classNames='text-sm tabular-nums' />
+      <Listbox.ItemText tone='muted' classNames='text-sm'>
+        <span className='tabular-nums'>{tile.index + 1}</span>
+        {label && <span className='ms-2'>{label}</span>}
+      </Listbox.ItemText>
     </Listbox.Item>
   );
+};
+
+/** A slide's caption: its title, else its first heading (or the linked object's label). */
+const useSlideLabel = (source: SlideSource): string | undefined => {
+  const [title] = useObject(source.kind === 'markdown' ? undefined : source.slide, 'title');
+  const [content] = useObject(source.kind === 'text' ? source.text : undefined, 'content');
+  if (title) {
+    return title;
+  }
+  switch (source.kind) {
+    case 'text':
+      return firstHeading(content ?? '');
+    case 'markdown':
+      return firstHeading(source.content);
+    case 'object':
+      return Obj.getLabel(source.object);
+    default:
+      return undefined;
+  }
 };

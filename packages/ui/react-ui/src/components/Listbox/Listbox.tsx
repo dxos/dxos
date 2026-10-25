@@ -14,6 +14,7 @@ import React, {
   createContext,
   forwardRef,
   useContext,
+  useEffect,
   useId,
   useMemo,
   useRef,
@@ -51,7 +52,12 @@ type RootContextValue = {
   items: readonly ListboxOption[];
   selectionMode: ListboxSelectionMode;
   columns?: string;
+  /** Whether items lay out as tiles (a fixed `tiles` count or an auto-fill `tileWidth`). */
+  tiled: boolean;
   tiles?: number;
+  tileWidth?: number;
+  /** Set by Content from the columns it renders under `tileWidth`, so the arrow keys move by what is on screen. */
+  setColumnCount: (count: number) => void;
   virtual?: VirtualMode;
   /** Set by Content when it windows its rows; zag calls it to bring a highlighted row it has not mounted into view. */
   scrollToIndexRef: RefObject<((index: number) => void) | null>;
@@ -99,6 +105,11 @@ type ListboxRootProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'd
    */
   tiles?: number;
   /**
+   * Lays the items out as tiles at least this many pixels wide, as many columns as fit. The grid reflows as its container
+   * resizes, every tile keeping one width, and the arrow keys move by the columns on screen. Ignored with `tiles`.
+   */
+  tileWidth?: number;
+  /**
    * Long lists: `fixed` windows equal-height rows, `measured` windows rows of any height, `variable` defers off-screen
    * rows (`content-visibility`). Ignored for `tiles`.
    */
@@ -125,6 +136,7 @@ const ListboxRoot = forwardRef<HTMLDivElement, ListboxRootProps>(
       loopFocus,
       columns,
       tiles,
+      tileWidth: tileWidthProp,
       virtual: virtualProp,
       size,
       children,
@@ -132,8 +144,11 @@ const ListboxRoot = forwardRef<HTMLDivElement, ListboxRootProps>(
     },
     forwardedRef,
   ) => {
+    const tileWidth = tiles ? undefined : tileWidthProp;
+    const tiled = !!tiles || !!tileWidth;
+    const [columnCount, setColumnCount] = useState(1);
     // Windowing counts rows of one item each, which a tile grid does not have.
-    const virtual = tiles ? undefined : virtualProp;
+    const virtual = tiled ? undefined : virtualProp;
     const collection = useMemo(() => {
       const options = {
         items: [...items],
@@ -142,14 +157,14 @@ const ListboxRoot = forwardRef<HTMLDivElement, ListboxRootProps>(
         isItemDisabled: (item: ListboxOption) => item.disabled ?? false,
       };
       // A grid collection gives zag the column count it moves by on ArrowUp and ArrowDown.
-      return tiles
-        ? createGridCollection<ListboxOption>({ ...options, columnCount: tiles })
+      return tiled
+        ? createGridCollection<ListboxOption>({ ...options, columnCount: tiles ?? columnCount })
         : createListCollection<ListboxOption>(options);
-    }, [items, tiles]);
+    }, [items, tiled, tiles, columnCount]);
     const scrollToIndexRef = useRef<((index: number) => void) | null>(null);
     const context = useMemo<RootContextValue>(
-      () => ({ items, selectionMode, columns, tiles, virtual, scrollToIndexRef }),
-      [items, selectionMode, columns, tiles, virtual],
+      () => ({ items, selectionMode, columns, tiled, tiles, tileWidth, setColumnCount, virtual, scrollToIndexRef }),
+      [items, selectionMode, columns, tiled, tiles, tileWidth, virtual],
     );
 
     return (
@@ -235,6 +250,30 @@ type ListboxContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> &
   Pick<ContainerProps, 'gutter' | 'gap' | 'padBlock'>;
 
 /**
+ * Reports the columns an auto-fill tile grid renders, read from its computed tracks rather than recomputed from the
+ * width, so the arrow keys and the layout cannot disagree.
+ */
+const useAutoColumns = (
+  element: HTMLElement | null,
+  tileWidth: number | undefined,
+  setColumnCount: (count: number) => void,
+) => {
+  useEffect(() => {
+    if (!element || !tileWidth) {
+      return;
+    }
+    const measure = () => {
+      const tracks = getComputedStyle(element).gridTemplateColumns.split(' ').filter(Boolean).length;
+      setColumnCount(Math.max(1, tracks));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [element, tileWidth, setColumnCount]);
+};
+
+/**
  * The listbox element: zag's content props with the grid keyboard in front of them, a Container's attributes so a
  * `Viewport`'s slot merges onto it, and the Root's `virtual` windowing over its direct children (the rows). Under a
  * `Viewport` it is the scrolling element (`inset` gutter by default); otherwise its host scrolls and the rows inherit the
@@ -243,7 +282,7 @@ type ListboxContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> &
 const ListboxContent = composable<HTMLDivElement, ContainerProps & Omit<ComponentPropsWithoutRef<'div'>, 'className'>>(
   ({ gutter, gap, padBlock, onKeyDown, onFocus, onBlur, children, ...props }, forwardedRef) => {
     const api = useListboxContext();
-    const { columns, tiles, virtual, scrollToIndexRef } = useRootContext('Content');
+    const { columns, tiled, tileWidth, setColumnCount, virtual, scrollToIndexRef } = useRootContext('Content');
     const inViewport = useContext(ViewportContext);
     const [element, setElement] = useState<HTMLDivElement | null>(null);
     const rows = Children.toArray(children);
@@ -251,6 +290,7 @@ const ListboxContent = composable<HTMLDivElement, ContainerProps & Omit<Componen
     scrollToIndexRef.current = isWindowed(virtual) ? windowing.scrollToIndex : null;
     const ref = useComposedRefs<HTMLDivElement>(forwardedRef, setElement, windowing.listRef);
     useRowTabStops(element);
+    useAutoColumns(element, tileWidth, setColumnCount);
 
     const { style, ...attributes } = containerAttributes({
       gutter: gutter ?? (inViewport ? 'inset' : 'inherit'),
@@ -274,8 +314,13 @@ const ListboxContent = composable<HTMLDivElement, ContainerProps & Omit<Componen
         data-scope='listbox'
         data-part='content'
         data-virtual={virtual}
-        data-tiles={tiles ? '' : undefined}
-        style={{ ...contentProps.style, ...style, ...ownStyle }}
+        data-tiles={tileWidth ? 'auto' : tiled ? '' : undefined}
+        style={{
+          ...contentProps.style,
+          ...style,
+          ...(tileWidth ? { '--dx-tile-width': `${tileWidth}px` } : {}),
+          ...ownStyle,
+        }}
         className={className}
         onFocus={(event) => {
           contentProps.onFocus?.(event);
@@ -291,7 +336,7 @@ const ListboxContent = composable<HTMLDivElement, ContainerProps & Omit<Componen
             return;
           }
           // Tiles move across with ArrowLeft and ArrowRight, which the row keyboard would take to enter a row's controls.
-          if (!tiles && handleGridKeyDown(event)) {
+          if (!tiled && handleGridKeyDown(event)) {
             return;
           }
           contentProps.onKeyDown?.(event);
@@ -375,13 +420,13 @@ const ListboxItem = forwardRef<HTMLDivElement, ListboxItemProps>(
     forwardedRef,
   ) => {
     const api = useListboxContext();
-    const { columns, tiles, selectionMode } = useRootContext('Item');
+    const { columns, tiled, selectionMode } = useRootContext('Item');
     const textId = useId();
     const row = useMemo(() => ({ textId }), [textId]);
     // Under Root `columns` the row is a subgrid of the Content's tracks (theme); otherwise it has its own template.
     // A tile is laid out by the theme as a column of its parts, so it takes no row template.
     const { style: columnsStyle, ...attributes } = containerAttributes(
-      columns || tiles ? {} : { columns: 'var(--dx-item-columns)' },
+      columns || tiled ? {} : { columns: 'var(--dx-item-columns)' },
     );
     const itemProps = api.getItemProps({ item, highlightOnHover });
     const content = children ?? (
@@ -405,7 +450,7 @@ const ListboxItem = forwardRef<HTMLDivElement, ListboxItemProps>(
             data-selectable={selectionMode === 'none' ? undefined : ''}
             style={{ ...columnsStyle, ...style }}
             className={mx(
-              tiles
+              tiled
                 ? [recipes.row(), recipes.listboxTile()]
                 : [recipes.container(), recipes.row(), recipes.listboxItem()],
               classNames,
