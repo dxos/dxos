@@ -340,7 +340,9 @@ export const usePointerMachine = ({
       if (event.target !== event.currentTarget) {
         return;
       }
-      if (event.button === 1 || currentTool.kind === 'hand') {
+      // A touchscreen has no wheel or middle button, so a finger on empty canvas pans rather than drawing a marquee.
+      const touchPan = event.pointerType === 'touch' && currentTool.kind === 'select';
+      if (event.button === 1 || currentTool.kind === 'hand' || touchPan) {
         startDrag({ kind: 'pan', last: { x: event.clientX, y: event.clientY } }, event);
       } else if (event.button !== 0) {
         return;
