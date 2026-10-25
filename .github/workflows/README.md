@@ -8,9 +8,14 @@ even on a public repository, so no workflow asks for one. Composite actions live
 ## Check
 
 [`check.yml`](check.yml) is the build/test pipeline. A draft PR runs `check` (lint, build, types), the
-node tests and `boot-budget`. A ready PR and the merge queue add the browser and storybook tests, which
-gate the merge, and e2e on Chromium, Firefox and WebKit, which reports without gating. Pushes to main run nothing: main
-moves to the commit the merge queue tested.
+node tests and `boot-budget`. A ready PR adds the browser and storybook tests, which gate the merge, and
+e2e on Chromium, Firefox and WebKit, which reports without gating.
+
+The merge queue runs only what can block a merge: `check` and the cells behind `test`. A push to main
+runs only e2e. Main moves to the commit the queue tested, so the queue's `check` and `test` results are
+the ones shown on it. Push runs never cancel each other: GitHub keeps one pending run and replaces it with
+each newer push, so a burst of merges gets one e2e run on its newest commit, and a red run names a range
+of commits rather than one.
 
 Each suite reports through one check whatever its shard count: `test` gates the node, browser and `native` cells,
 `e2e` the e2e cells. A gate fails if any of its cells failed or was cancelled, or `plan` failed; a skipped

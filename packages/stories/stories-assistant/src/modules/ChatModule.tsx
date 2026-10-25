@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
@@ -15,10 +16,10 @@ import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import * as Chat from '@dxos/plugin-assistant/Chat';
 import * as AssistantHooks from '@dxos/plugin-assistant/Hooks';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
+import { MenuBuilder } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Popover from '@dxos/react-ui/Popover';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { ExecutionGraphModule } from '@dxos/storybook-testing/modules';
 import { Person } from '@dxos/types';
 
@@ -88,6 +89,27 @@ const ChatModuleContainer = ({
   const [viewValue] = useObject(chat, 'viewType');
   const view = Assistant.ChatViews.find((value) => value === viewValue);
 
+  const title = sender ? `${sender.name} · ${chat?.name ?? ''}` : (chat?.name ?? '');
+  const customActions = useMemo(
+    () =>
+      Atom.make(() =>
+        MenuBuilder.make()
+          .text('title', { label: title, classNames: 'text-fg-subtle' })
+          .custom('logs', { label: 'Logs' }, () => (
+            <Popover.Root>
+              <Popover.Trigger asChild>
+                <Button.Root icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
+              </Popover.Trigger>
+              <Popover.Content>
+                <ExecutionGraphModule />
+              </Popover.Content>
+            </Popover.Root>
+          ))
+          .build(),
+      ),
+    [title],
+  );
+
   // Once per chat for the panel's life: each story load seeds a fresh space, so a remount is the only repeat.
   const prompted = useRef(new Set<string>());
   useEffect(() => {
@@ -107,19 +129,7 @@ const ChatModuleContainer = ({
     <Chat.Root chat={chat} chatModel={chatModel}>
       <Panel.Root data-testid={participant ? `chat-panel-${participant}` : undefined}>
         <Panel.Header>
-          <Chat.Toolbar attendableId={chat.id} alwaysActive switcher={switcher}>
-            <Toolbar.Text classNames='text-fg-subtle'>
-              {sender ? `${sender.name} · ${chat?.name ?? ''}` : chat?.name}
-            </Toolbar.Text>
-            <Popover.Root>
-              <Popover.Trigger asChild>
-                <Button.Root icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
-              </Popover.Trigger>
-              <Popover.Content>
-                <ExecutionGraphModule />
-              </Popover.Content>
-            </Popover.Root>
-          </Chat.Toolbar>
+          <Chat.Toolbar attendableId={chat.id} alwaysActive switcher={switcher} customActions={customActions} />
         </Panel.Header>
         <Panel.Body asChild>
           <Chat.Content>

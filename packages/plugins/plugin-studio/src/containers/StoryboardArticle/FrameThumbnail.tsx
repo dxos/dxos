@@ -9,7 +9,7 @@ import { useObject, useResolveRef } from '@dxos/echo-react';
 import { FramePreview } from '#components';
 import { type Frame } from '#types';
 
-import { useMediaArtifactCoverSource } from '../../hooks/index.ts';
+import { useMediaArtifactCoverSource } from '../../hooks/useMediaArtifactCoverSource.ts';
 
 export type FrameThumbnailProps = {
   frame: Frame.Frame;

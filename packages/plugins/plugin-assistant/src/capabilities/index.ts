@@ -8,6 +8,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ConnectorEvents from '@dxos/plugin-connector/ConnectorEvents';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
@@ -35,7 +36,10 @@ export const AgentRuntime = AppCapability.layerSpec(() => import('./agent-servic
 });
 export const Agents = Capability.lazyModule(
   'Agents',
-  { provides: [AssistantCapabilities.Agent], activatesOn: ActivationEvents.Startup },
+  {
+    provides: [AssistantCapabilities.Agent, AssistantCapabilities.CodeModeAvailable],
+    activatesOn: ActivationEvents.Startup,
+  },
   () => import('./agents.ts'),
 );
 export const SlashCommands = Capability.lazyModule(
@@ -62,6 +66,16 @@ export const AutomationTemplates = Capability.lazyModule(
   'AutomationTemplates',
   { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
   () => import('./automation-templates.ts'),
+);
+export const McpServer = AppCapability.mcpServer(() => import('./mcp-server.ts'));
+export const McpServerRegistry = Capability.lazyModule(
+  'McpServerRegistry',
+  {
+    requires: [ClientCapabilities.Client, Capabilities.AtomRegistry, AppCapabilities.McpServer],
+    provides: [],
+    environments: ['browser', 'node', 'tauri'],
+  },
+  () => import('./mcp-server-registry.ts'),
 );
 export const Schema = AppCapability.schema(() => import('./schema-defs.ts'));
 export const SubjectContext = Capability.lazyModule(

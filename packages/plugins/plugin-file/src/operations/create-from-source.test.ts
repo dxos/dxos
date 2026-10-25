@@ -20,6 +20,8 @@ import { FileCapabilities, FileOperation } from '#types';
 import { MAX_INLINE_SOURCE_BYTES } from './create-from-source.ts';
 import { FileReadError, FileTooLargeError } from './create.ts';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), FilePlugin()] });
+
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
 /** Chunked because spreading a megabyte of bytes into `fromCharCode` overflows the call stack. */

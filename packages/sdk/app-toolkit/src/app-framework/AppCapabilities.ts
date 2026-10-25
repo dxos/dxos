@@ -23,6 +23,7 @@ import type { Database, Obj, Type } from '@dxos/echo';
 import type * as Retention from '@dxos/graph/Retention';
 import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';
+import type { Connection } from '@dxos/link';
 import { Progress } from '@dxos/progress';
 import type { AnchoredTo } from '@dxos/types';
 import * as Position from '@dxos/util/Position';
@@ -251,6 +252,14 @@ export const Toolkit = Capability$.make<Toolkit>()('org.dxos.app-framework.capab
 export const SkillDefinition = Capability$.make<Skill.Definition>()(
   'org.dxos.app-framework.capability.skillDefinition',
 );
+
+/**
+ * An MCP server a plugin ships, needing no credential. It is synced into the registry, where every
+ * chat lists it off until the chat or its agent turns it on; nothing is written to a space.
+ *
+ * @category Capability
+ */
+export const McpServer = Capability$.make<Connection.Builtin>()('org.dxos.app-framework.capability.mcpServer');
 
 /**
  * A static asset bundled with a plugin's published package, exposed for

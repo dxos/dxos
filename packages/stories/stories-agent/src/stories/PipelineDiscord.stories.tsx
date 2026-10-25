@@ -96,7 +96,6 @@ export const Setup: Story = {
 };
 
 let fakeBrain: FakeBrain | undefined;
-let stopRunner: (() => void) | undefined;
 
 /** The timeline's rows; the timeline is a `Logger.List`, whose rows are listbox options. */
 const timelineRows = (timeline: HTMLElement) => within(timeline).queryAllByRole('option');
@@ -136,8 +135,6 @@ export const Scripted: Story = {
   beforeEach: () => {
     fakeBrain = installFakeBrain();
     return () => {
-      stopRunner?.();
-      stopRunner = undefined;
       fakeBrain?.restore();
       fakeBrain = undefined;
     };
@@ -147,7 +144,7 @@ export const Scripted: Story = {
     onReady: async ({ db, invoker }) => {
       await setupDiscordAgent({ db, invoker, applicationId: '1234567890', channelId: '987654321', guildId: '555' });
       addDiscordConnection(db);
-      stopRunner = startFakeBackIndexRunner(db);
+      return startFakeBackIndexRunner(db);
     },
   }),
   args: { layout: [[StoryRole.PipelineDiscord], [companion('brain')]] },

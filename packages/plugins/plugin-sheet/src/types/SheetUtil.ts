@@ -67,6 +67,29 @@ export const initialize = (
   }
 };
 
+/** A cell value as a row of plain data holds it; empty values are left out of the sheet. */
+export type RowValue = string | number | boolean | null | undefined;
+
+/**
+ * Sheet cells in A1 notation for rows of values, the first row at A1. A string of digits is stored as text (with a
+ * leading apostrophe), so a bare year stays a label rather than becoming a number.
+ */
+export const cellsFromRows = (rows: readonly (readonly RowValue[])[]): Record<string, Sheet.CellValue> =>
+  Object.fromEntries(
+    rows.flatMap((row, rowIndex) =>
+      row.flatMap((value, col) =>
+        value == null
+          ? []
+          : [
+              [
+                addressToA1Notation({ row: rowIndex, col }),
+                { value: typeof value === 'string' && /^\d+$/.test(value) ? `'${value}` : value },
+              ],
+            ],
+      ),
+    ),
+  );
+
 /**
  * E.g., "A1" => "CA2@CB3".
  */

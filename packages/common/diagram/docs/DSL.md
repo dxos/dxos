@@ -7,10 +7,13 @@ for a wire format and hopeless for a source format: a scene in a git diff is a w
 which a moved box and a rewritten diagram look the same. The DSL exists so a diagram can be
 reviewed, hand-edited, and blamed like code.
 
-It is a **serialization of the scene**, not a second graph language. Every construct maps onto one
-`WorldObject`, `Element`, or `Command`, and nothing in it computes a layout. The dialects
-(`mermaid.ts`, `uml.ts`) remain the way to author a diagram _without_ coordinates; the DSL is what
-their output becomes once you want to keep it.
+The language has two layers. The **scene statements** are a serialization of the scene: every one
+maps onto one `WorldObject`, `Element`, or `Command`, and nothing in them computes a layout. The
+**semantic statements** (`diagram`, `group`, `node`, `edge`, `note`, `fragment`) state intent with no
+coordinates, and a layout engine turns them into scene commands; see
+[Semantic statements](#semantic-statements). The semantic layer is how a diagram is authored without
+coordinates. The mermaid dialects (`mermaid.ts`, `uml.ts`) are deprecated; the converter turns an
+existing mermaid source into DSL text.
 
 ## Example
 
@@ -124,11 +127,37 @@ There is deliberately no inline nested-scene form. Inventing one would not round
 `scene.ts` has nowhere to put it: a portal names a target, and the target is a separate `Scene`.
 Nesting is expressed by two documents and a DXN between them, and the renderer resolves it.
 
+## Semantic statements
+
+`diagram kind=` picks the engine. Each kind reads the same `node`, `edge` and `group` statements and
+gives them its own meaning. The full reference an agent reads is the drawing skill
+(`plugin-illustrator/src/skills/DrawingSkill.ts`); this table is the map.
+
+| Kind                  | Nodes                                                       | Edges                                                                | Engine                               |
+| --------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------------ |
+| `structure` (default) | boxes on a grid; `shape=`                                   | routed connectors; relationship words set markers                    | `semantic-engine.ts`                 |
+| `sequence`            | participants, as columns in declaration order; `role=actor` | messages, as rows in source order: `->`, `calls`, `returns`, `sends` | `sequence-engine.ts`                 |
+| `dataflow`            | `role=process` (default), `store`, `external`               | flows of named data                                                  | `semantic-engine.ts` + `dataflow.ts` |
+
+A sequence diagram also reads two statements no other kind does:
+
+- `note A "…"`, `note A:left "…"`, `note A, B "…"` — a note beside one participant or over several.
+- `fragment alt|opt|loop|par|break|critical ["guard"] { … } [else ["guard"] { … }]*` — a combined
+  fragment around messages, notes and other fragments.
+
+`note`, `fragment` and `else` are contextual keywords (`@extend` in the grammar): they start a
+statement or a section, and stay ordinary names everywhere else. Documents that used `note` as an
+element id before the sequence kind existed still parse, and the printer does not quote them.
+
+A sequence diagram's timeline lines (lifelines, dividers, the frames around grouped participants)
+are `line` elements with `guide=true`. `Diagnostics` does not count a guide as a connector, so a
+lifeline crossing every message is not a crossing.
+
 ## What the grammar leaves out
 
-- **Layout.** No implicit placement, no `A --> B` that invents coordinates. Every number in a
-  document was chosen by whoever (or whatever) wrote it. A diagram you want laid out for you is a
-  mermaid source; run it through the converter to get a DSL document back.
+- **Layout in the scene layer.** A scene statement never invents a coordinate: every number in it
+  was chosen by whoever (or whatever) wrote it. A diagram you want laid out for you is written in
+  the semantic statements.
 - **Expressions and variables.** No arithmetic, no `$width`, no reuse. A scene is data; a
   templating layer over it would defeat the diffability that motivates the format.
 - **Comments in the round trip.** Comments parse and are dropped on print, because the model has

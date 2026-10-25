@@ -850,4 +850,293 @@ describe('IndexEngine', () => {
       }, Effect.provide(TestLayer)),
     );
   });
+
+  describe('feeds', () => {
+    const FEED_TYPE = DXN.make('org.dxos.type.feed', '0.1.0');
+
+    /** Feed blocks pushed in order; one namespace cursor counts how many were read. */
+    class QueueMockDataSource implements IndexDataSource {
+      readonly sourceName = 'queue-mock-source';
+      readonly #blocks: IndexerObject[] = [];
+
+      push(objects: IndexerObject[]) {
+        this.#blocks.push(...objects);
+      }
+
+      getChangedObjects(
+        _ctx: Context,
+        cursors: DataSourceCursor[],
+        opts?: { objects?: boolean },
+      ): Effect.Effect<{ objects: IndexerObject[]; cursors: DataSourceCursor[]; more: boolean }> {
+        return Effect.sync(() => {
+          if (opts?.objects === false) {
+            return { objects: [], cursors: [], more: false };
+          }
+          const read = Number(cursors.find((cursor) => cursor.resourceId === 'data')?.cursor ?? 0);
+          return {
+            objects: this.#blocks.slice(read),
+            cursors: [{ spaceId: null, resourceId: 'data', cursor: this.#blocks.length }],
+            more: false,
+          };
+        });
+      }
+    }
+
+    const makeItem = (
+      spaceId: SpaceId,
+      queueId: EntityId,
+      block: { insertionId: number | null; position?: number },
+      data: { id?: EntityId; title: string },
+    ): IndexerObject => ({
+      spaceId,
+      queueId,
+      queueNamespace: 'data',
+      documentId: null,
+      recordId: null,
+      queuePosition: block.position ?? null,
+      queueInsertionId: block.insertionId,
+      createdAt: null,
+      updatedAt: Date.now(),
+      data: { id: data.id ?? EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: data.title },
+    });
+
+    const feedRows = (engine: IndexEngine, spaceId: SpaceId, queueId: EntityId) =>
+      engine.queryAll({ spaceIds: [], queues: [{ spaceId, queueId }] });
+
+    it.effect(
+      'indexing a Feed object records its options intent, with the data namespace by default',
+      Effect.fnUntraced(function* () {
+        const { engine, metaIndex } = yield* setup;
+        const spaceId = SpaceId.random();
+        const feedId = EntityId.random();
+        const dataSource = new MockIndexDataSource();
+        dataSource.push([
+          {
+            spaceId,
+            documentId: 'doc-feed',
+            queueId: null,
+            queueNamespace: null,
+            recordId: null,
+            createdAt: null,
+            updatedAt: Date.now(),
+            data: { id: feedId, [ATTR_TYPE]: FEED_TYPE, name: 'log', retention: { maxLength: 5 } },
+          },
+        ]);
+        yield* engine.update(Context.default(), dataSource, { spaceId: null });
+
+        expect(yield* metaIndex.query({ spaceId, typeDXN: FEED_TYPE })).toHaveLength(1);
+        const { maxId, intents } = yield* engine.takeFeedOptionsIntents();
+        expect(intents).toEqual([
+          { kind: 'feed-options', spaceId, feedId, namespace: 'data', options: { retention: { maxLength: 5 } } },
+        ]);
+
+        yield* engine.clearFeedOptionsIntents(spaceId, feedId, maxId);
+        expect((yield* engine.takeFeedOptionsIntents()).intents).toEqual([]);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'records the data namespace for a Feed object whose namespace is not a known one',
+      Effect.fnUntraced(function* () {
+        const { engine } = yield* setup;
+        const spaceId = SpaceId.random();
+        const feedId = EntityId.random();
+        const dataSource = new MockIndexDataSource();
+        dataSource.push([
+          {
+            spaceId,
+            documentId: 'doc-feed',
+            queueId: null,
+            queueNamespace: null,
+            recordId: null,
+            createdAt: null,
+            updatedAt: Date.now(),
+            data: { id: feedId, [ATTR_TYPE]: FEED_TYPE, namespace: 'other', retention: { maxLength: 5 } },
+          },
+        ]);
+        yield* engine.update(Context.default(), dataSource, { spaceId: null });
+
+        const { intents } = yield* engine.takeFeedOptionsIntents();
+        expect(intents).toEqual([
+          { kind: 'feed-options', spaceId, feedId, namespace: 'data', options: { retention: { maxLength: 5 } } },
+        ]);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'a queue bounded by updatedSince excludes its older rows before the window limit',
+      Effect.fnUntraced(function* () {
+        const { engine } = yield* setup;
+        const spaceId = SpaceId.random();
+        const queueId = EntityId.random();
+        const source = new QueueMockDataSource();
+        // Ascending ids put the expired rows first in natural order, where an unbounded page would take them.
+        const ids = Array.from({ length: 4 }, () => EntityId.random()).sort();
+        source.push(
+          ids.map((id, index) => ({
+            ...makeItem(spaceId, queueId, { insertionId: index + 1 }, { id, title: `item ${index}` }),
+            updatedAt: index < 2 ? 1_000 : 5_000,
+          })),
+        );
+        yield* engine.update(Context.default(), source, { spaceId: null });
+
+        const rows = yield* engine.queryAll({
+          spaceIds: [],
+          queues: [{ spaceId, queueId, updatedSince: 2_000 }],
+          window: { kind: 'natural', direction: 'asc', limit: 2 },
+        });
+        expect(rows.map((row) => row.objectId)).toEqual(ids.slice(2));
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'drops invalid options fields and skips feed items and deleted Feed objects',
+      Effect.fnUntraced(function* () {
+        const { engine } = yield* setup;
+        const spaceId = SpaceId.random();
+        const feedId = EntityId.random();
+        const documents = new MockIndexDataSource();
+        const makeFeed = (documentId: string, data: Record<string, unknown>): IndexerObject => ({
+          spaceId,
+          documentId,
+          queueId: null,
+          queueNamespace: null,
+          recordId: null,
+          createdAt: null,
+          updatedAt: Date.now(),
+          data: { id: EntityId.random(), [ATTR_TYPE]: FEED_TYPE, ...data },
+        });
+        documents.push([
+          makeFeed('doc-1', {
+            id: feedId,
+            namespace: 'trace',
+            indexing: { enabled: false },
+            retention: { maxLength: -1 },
+          }),
+          makeFeed('doc-2', { '@deleted': true, 'retention': { maxLength: 3 } }),
+        ]);
+        yield* engine.update(Context.default(), documents, { spaceId: null });
+
+        const items = new QueueMockDataSource();
+        items.push([
+          {
+            ...makeItem(spaceId, EntityId.random(), { insertionId: 1 }, { title: 'nested' }),
+            data: { id: EntityId.random(), [ATTR_TYPE]: FEED_TYPE },
+          },
+        ]);
+        yield* engine.update(Context.default(), items, { spaceId: null });
+
+        const { intents } = yield* engine.takeFeedOptionsIntents();
+        expect(intents).toEqual([
+          { kind: 'feed-options', spaceId, feedId, namespace: 'trace', options: { indexing: { enabled: false } } },
+        ]);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'deleteFeedObjects removes every index row of one feed and leaves other feeds',
+      Effect.fnUntraced(function* () {
+        const { engine } = yield* setup;
+        const spaceId = SpaceId.random();
+        const feedA = EntityId.random();
+        const feedB = EntityId.random();
+        const source = new QueueMockDataSource();
+        source.push([
+          makeItem(spaceId, feedA, { insertionId: 1 }, { title: 'hello one' }),
+          makeItem(spaceId, feedA, { insertionId: 2 }, { title: 'hello two' }),
+          makeItem(spaceId, feedB, { insertionId: 3 }, { title: 'hello three' }),
+        ]);
+        yield* engine.update(Context.default(), source, { spaceId: null });
+        yield* engine.updateSecondaryIndexes(Context.default());
+
+        expect(yield* engine.deleteFeedObjects({ spaceId, queueId: feedA })).toBe(2);
+        expect(yield* feedRows(engine, spaceId, feedA)).toEqual([]);
+        expect(yield* feedRows(engine, spaceId, feedB)).toHaveLength(1);
+
+        const sql = yield* SqlClient.SqlClient;
+        expect(yield* sql`SELECT recordId FROM objectSnapshot`).toHaveLength(1);
+        const text = yield* engine.queryText({
+          query: 'hello',
+          spaceId: [spaceId],
+          includeAllQueues: true,
+          queues: null,
+        });
+        expect(text.map((row) => row.queueId)).toEqual([feedB]);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'purgeFeedBlocks removes a row only when its current block was trimmed',
+      Effect.fnUntraced(function* () {
+        const { engine } = yield* setup;
+        const spaceId = SpaceId.random();
+        const feedId = EntityId.random();
+        const liveId = EntityId.random();
+        const source = new QueueMockDataSource();
+        source.push([
+          makeItem(spaceId, feedId, { insertionId: 1 }, { id: liveId, title: 'v1' }),
+          makeItem(spaceId, feedId, { insertionId: 2 }, { title: 'other' }),
+          makeItem(spaceId, feedId, { insertionId: 3 }, { id: liveId, title: 'v2' }),
+        ]);
+        yield* engine.update(Context.default(), source, { spaceId: null });
+
+        // The live object's older block is gone, but its newer one still backs the row.
+        expect(
+          yield* engine.purgeFeedBlocks({
+            spaceId,
+            queueId: feedId,
+            blocks: [
+              { insertionId: 1, position: null },
+              { insertionId: 2, position: null },
+            ],
+          }),
+        ).toBe(1);
+        expect((yield* feedRows(engine, spaceId, feedId)).map((row) => row.objectId)).toEqual([liveId]);
+
+        expect(
+          yield* engine.purgeFeedBlocks({ spaceId, queueId: feedId, blocks: [{ insertionId: 3, position: null }] }),
+        ).toBe(1);
+        expect(yield* feedRows(engine, spaceId, feedId)).toEqual([]);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'purgeFeedBlocks matches a row that predates queueInsertionId by its position',
+      Effect.fnUntraced(function* () {
+        const { engine } = yield* setup;
+        const spaceId = SpaceId.random();
+        const feedId = EntityId.random();
+        const source = new QueueMockDataSource();
+        source.push([makeItem(spaceId, feedId, { insertionId: null, position: 7 }, { title: 'legacy' })]);
+        yield* engine.update(Context.default(), source, { spaceId: null });
+
+        expect(
+          yield* engine.purgeFeedBlocks({ spaceId, queueId: feedId, blocks: [{ insertionId: 99, position: 8 }] }),
+        ).toBe(0);
+        expect(
+          yield* engine.purgeFeedBlocks({ spaceId, queueId: feedId, blocks: [{ insertionId: 99, position: 7 }] }),
+        ).toBe(1);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'a seeded cursor is read by the next pass and deleted once it stands at the finished value',
+      Effect.fnUntraced(function* () {
+        const { engine } = yield* setup;
+        const spaceId = SpaceId.random();
+        const tracker = new IndexTracker(yield* SqlClient.SqlClient);
+        yield* engine.seedCursor({ sourceName: 'queue', spaceId, resourceId: 'backfill/data/feed', cursor: '' });
+        const seeded = yield* tracker.queryCursorsBySource({ sourceName: 'queue' });
+        expect([...seeded.keys()].sort()).toEqual([...IndexEngine.primaryIndexNames].sort());
+
+        const finish = { sourceName: 'queue', spaceId, resourceIds: ['backfill/data/feed'], cursor: 'done' };
+        yield* engine.deleteFinishedCursors(finish);
+        expect((yield* tracker.queryCursorsBySource({ sourceName: 'queue' })).size).toBe(2);
+
+        yield* engine.seedCursor({ sourceName: 'queue', spaceId, resourceId: 'backfill/data/feed', cursor: 'done' });
+        yield* engine.deleteFinishedCursors(finish);
+        expect((yield* tracker.queryCursorsBySource({ sourceName: 'queue' })).size).toBe(0);
+      }, Effect.provide(TestLayer)),
+    );
+  });
 });

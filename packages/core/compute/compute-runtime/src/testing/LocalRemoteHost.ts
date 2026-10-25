@@ -176,6 +176,7 @@ export const makeHost = (options: Options): Effect.Effect<Host> =>
               inputCounts.set(pid, (inputCounts.get(pid) ?? 0) + 1);
               applied.push({ pid, input: decoded });
               yield* handle.submitInput(decoded);
+              yield* handle.runUntilSettled().pipe(Effect.catchDefect(() => Effect.void));
             }),
         ),
 
