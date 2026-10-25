@@ -9,6 +9,7 @@ import * as Card from '@dxos/react-ui/Card';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
+import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 
@@ -96,7 +97,7 @@ export const CommandBar = ({ open, onOpenChange, pending, outcome, onSubmit, dra
       data-testid='code-graph-command'
       aria-busy={pending}
     >
-      <div className='flex items-center gap-1 p-1'>
+      <Layout.Flex align='center' gap='xs' classNames='p-1'>
         <Icon.Icon
           icon={pending ? 'ph--spinner--regular' : 'ph--terminal-window--regular'}
           classNames={['shrink-0 mx-1', pending && 'animate-spin']}
@@ -127,26 +128,26 @@ export const CommandBar = ({ open, onOpenChange, pending, outcome, onSubmit, dra
           label={t('command-close.label')}
           onClick={() => onOpenChange(false)}
         />
-      </div>
+      </Layout.Flex>
       {outcome && (
-        <div className='px-3 pb-2 text-sm flex flex-col gap-0.5' data-testid='code-graph-command-outcome'>
-          <div className='flex gap-2 text-description'>
+        <Layout.Flex column gap='xs' classNames='px-3 pb-2 text-sm' data-testid='code-graph-command-outcome'>
+          <Layout.Flex gap='sm' classNames='text-description'>
             <span className='truncate'>{outcome.command}</span>
             {outcome.elapsedMs !== undefined && (
               <span className='ml-auto shrink-0 tabular-nums'>{(outcome.elapsedMs / 1000).toFixed(1)}s</span>
             )}
-          </div>
+          </Layout.Flex>
           {outcome.error ? (
-            <div className='text-error-text'>{outcome.error}</div>
+            <p className='text-error-text'>{outcome.error}</p>
           ) : (
-            outcome.message && <div>{outcome.message}</div>
+            outcome.message && <p>{outcome.message}</p>
           )}
           {outcome.trailer && (
-            <div className='text-description' data-testid='code-graph-command-trailer'>
+            <p className='text-description' data-testid='code-graph-command-trailer'>
               {outcome.trailer}
-            </div>
+            </p>
           )}
-        </div>
+        </Layout.Flex>
       )}
     </Card.Root>
   );

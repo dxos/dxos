@@ -226,13 +226,14 @@ export const run = Effect.fn('CodeGraphCommand.run')(function* (
  * {@link run} with the command model and the default decision model from the AI service. Without a decision model
  * the command still runs, and stops after its first turn whose actions all succeed.
  */
-export const runWithAiService = (graph: CodeGraph.CodeGraph, command: string, options: Omit<Options, 'judge'> = {}) =>
-  Effect.gen(function* () {
-    const judge = yield* resolveJudge;
-    return yield* run(graph, command, { ...options, judge }).pipe(
-      Effect.provide(AiService.languageModel(COMMAND_MODEL)),
-    );
-  });
+export const runWithAiService = Effect.fn('CodeGraphCommand.runWithAiService')(function* (
+  graph: CodeGraph.CodeGraph,
+  command: string,
+  options: Omit<Options, 'judge'> = {},
+) {
+  const judge = yield* resolveJudge;
+  return yield* run(graph, command, { ...options, judge }).pipe(Effect.provide(AiService.languageModel(COMMAND_MODEL)));
+});
 
 const resolveJudge = Effect.gen(function* () {
   const context = yield* Layer.build(AiService.decisionModel(AiModel.defaultDecisionModel)).pipe(Effect.option);
