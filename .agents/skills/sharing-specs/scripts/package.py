@@ -21,6 +21,7 @@ Writes <out dir>/page.html plus the build's files, adjusted for the artifact pub
   - the page selects the first story by rewriting its own query (an artifact link carries no query),
   - tabs switch stories through Storybook's preview channel (links cannot leave the artifact frame),
   - <html>/<head>/<body> wrappers are removed (the publisher adds its own skeleton),
+  - pinch-zoom is re-enabled (the theme's root `touch-action: pan-x pan-y` blocks it on touch devices),
   - control bytes and U+FFFD in JS become escapes, and the icon sprite loses its DOCTYPE
     (the publisher rejects both),
   - GitHub avatars are downloaded into avatars/ and the bundle points at them (no external images),
@@ -105,6 +106,9 @@ buttons = '\n'.join(
 )
 tab_bar = f"""
 <style>
+  /* The theme's layered `:root {{ touch-action: pan-x pan-y }}` suits the app shell but leaves a spec page unzoomable
+     on iPad; an unlayered rule outranks it. */
+  :root {{ touch-action: manipulation; }}
   #spec-tabs {{ position: fixed; inset: 0 0 auto; z-index: 1000; display: flex; gap: 2px; height: 40px; align-items: stretch;
     padding: 0 max(12px, env(safe-area-inset-right, 0px)) 0 max(12px, env(safe-area-inset-left, 0px));
     background: #111318; border-bottom: 1px solid #2a2f3a; font: 500 13px/1 system-ui, sans-serif; overflow-x: auto; }}
