@@ -2,14 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
+import { flow } from 'effect/Function';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import { describe, expectTypeOf, test } from 'vitest';
+import { describe, test } from 'vitest';
 
 import { DXN, EntityId } from '@dxos/keys';
 
+import * as Annotation from './Annotation.ts';
 import * as Entity from './Entity.ts';
 import * as Filter from './Filter.ts';
-import * as internal from './internal/index.ts';
 import * as JsonSchema from './JsonSchema.ts';
 import * as Obj from './Obj.ts';
 import * as Ref from './Ref.ts';
@@ -284,61 +286,28 @@ describe('Type', () => {
     });
   });
 
+  // Type-level behavior is covered by `Type.tst.ts`.
   describe('makeObject with struct fields', () => {
-    class Labeled extends Type.makeObject<Labeled>(DXN.make('com.example.type.labeled', '0.1.0'))(
-      {
-        label: Schema.String,
-        count: Schema.optional(Schema.Number),
-      },
-      internal.LabelAnnotation.set(['label']),
-    ) {}
-
-    class Plain extends Type.makeObject<Plain>(DXN.make('com.example.type.plain', '0.1.0'))({
-      name: Schema.String,
-    }) {}
-
-    class FromStruct extends Type.makeObject<FromStruct>(DXN.make('com.example.type.fromStruct', '0.1.0'))(
-      Schema.Struct({ label: Schema.String, count: Schema.optional(Schema.Number) }),
-    ) {}
-
-    test('fields form infers the same instance type as Schema.Struct form', () => {
-      expectTypeOf<Type.InstanceType<typeof Labeled>>().toEqualTypeOf<Type.InstanceType<typeof FromStruct>>();
-      expectTypeOf<Type.InstanceType<typeof Labeled>>().toHaveProperty('label').toEqualTypeOf<string>();
-      expectTypeOf<Type.InstanceType<typeof Labeled>>().toHaveProperty('count').toEqualTypeOf<number | undefined>();
-      expectTypeOf<Type.InstanceType<typeof Plain>>().toHaveProperty('name').toEqualTypeOf<string>();
-    });
-
-    test('schema form still works when piped', () => {
-      const Piped = Schema.Struct({ label: Schema.String }).pipe(
-        Type.makeObject(DXN.make('com.example.type.piped', '0.1.0')),
-      );
-      expectTypeOf<Type.InstanceType<typeof Piped>>().toHaveProperty('label').toEqualTypeOf<string>();
-    });
-
-    test('annotate receives the struct schema', () => {
-      Type.makeObject(DXN.make('com.example.type.annotateArg', '0.1.0'))({ name: Schema.String }, (schema) => {
-        expectTypeOf(schema).toEqualTypeOf<Schema.Struct<{ name: typeof Schema.String }>>();
-        return schema;
-      });
-    });
-
-    test('rejects invalid fields and props at compile time', () => {
-      // Never invoked: only the type errors are under test.
-      const _check = () => {
-        // @ts-expect-error field values must be schemas.
-        Type.makeObject(DXN.make('com.example.type.badField', '0.1.0'))({ name: 'not a schema' });
-        // @ts-expect-error `label` must be a string.
-        Obj.make(Labeled, { label: 1 });
-        // @ts-expect-error the annotate function must return a schema.
-        Type.makeObject(DXN.make('com.example.type.badAnnotate', '0.1.0'))({ name: Schema.String }, () => 'x');
-      };
-    });
-
     test('builds the struct and applies the annotations', ({ expect }) => {
+      class Labeled extends Type.makeObject<Labeled>(DXN.make('com.example.type.labeled', '0.1.0'))(
+        { label: Schema.String },
+        flow(Annotation.LabelAnnotation.set(['label']), Annotation.DescriptionAnnotation.set('A labeled type.')),
+      ) {}
+
       const obj = Obj.make(Labeled, { label: 'Hello' });
       expect(obj.label).toBe('Hello');
       expect(Obj.getLabel(obj)).toBe('Hello');
+      expect(Option.getOrUndefined(Annotation.DescriptionAnnotation.get(Type.getSchema(Labeled)))).toBe(
+        'A labeled type.',
+      );
       expect(Type.getTypename(Labeled)).toBe('com.example.type.labeled');
+    });
+
+    test('accepts fields without an annotate function', ({ expect }) => {
+      class Plain extends Type.makeObject<Plain>(DXN.make('com.example.type.plain', '0.1.0'))({
+        name: Schema.String,
+      }) {}
+
       expect(Obj.make(Plain, { name: 'Test' }).name).toBe('Test');
     });
   });

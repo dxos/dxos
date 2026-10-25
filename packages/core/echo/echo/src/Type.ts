@@ -160,7 +160,7 @@ export const makeObject: {
  */
 // A single generic signature (not overloads) so that `Schema.Struct(...).pipe(Type.makeObject(dxn))` still infers.
 export type MakeObject<Self> = <
-  Input extends Schema.Top | Schema.Struct.Fields,
+  const Input extends Schema.Top | Schema.Struct.Fields,
   _Schema extends Schema.Top = ToSchema<Input>,
 >(
   input: Input,
