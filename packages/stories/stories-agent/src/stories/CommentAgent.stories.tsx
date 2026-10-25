@@ -299,7 +299,7 @@ const TRANSLATE = '@kai translate this into japanese';
  */
 export const Markdown: Story = {
   decorators: fakeDecorators(markdownSubject),
-  play: replyAndAwaitAgent({ text: TRANSLATE, reply: new RegExp(FAKE_REPLY) }),
+  play: replyAndAwaitAgent({ text: TRANSLATE, reply: new RegExp(`^${FAKE_REPLY}$`) }),
 };
 
 /**
@@ -310,7 +310,7 @@ export const Markdown: Story = {
  */
 export const Canvas: Story = {
   decorators: fakeDecorators(canvasSubject),
-  play: replyAndAwaitAgent({ text: '@kai hello', reply: new RegExp(FAKE_REPLY) }),
+  play: replyAndAwaitAgent({ text: '@kai hello', reply: new RegExp(`^${FAKE_REPLY}$`) }),
 };
 
 /**
