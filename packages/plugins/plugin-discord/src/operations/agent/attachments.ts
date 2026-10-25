@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 
 import { digestHex } from '@dxos/blob';
-import { Blob, Database, type Ref } from '@dxos/echo';
-import { type File } from '@dxos/types';
+import { Blob, Database, Obj, type Ref } from '@dxos/echo';
+import { File } from '@dxos/types';
 
 import { DiscordBot } from '#types';
 
@@ -25,6 +25,9 @@ export const resolveAttachments = Effect.fnUntraced(function* (
     const file = yield* Database.load(ref).pipe(
       Effect.mapError((cause) => new DiscordBot.DiscordBotError({ message: `No such file: ${ref.uri}.`, cause })),
     );
+    if (!Obj.instanceOf(File.File, file)) {
+      return yield* Effect.fail(new DiscordBot.DiscordBotError({ message: `${ref.uri} is not a File.` }));
+    }
     const blob = yield* Database.load(file.data).pipe(
       Effect.mapError(
         (cause) => new DiscordBot.DiscordBotError({ message: `The file ${file.name ?? ref.uri} has no data.`, cause }),
@@ -44,8 +47,17 @@ export const resolveAttachments = Effect.fnUntraced(function* (
         }),
       );
     }
+    const uri = blob.data.uri;
+    const key = yield* Effect.try({
+      try: () => digestHex(uri),
+      catch: (cause) =>
+        new DiscordBot.DiscordBotError({
+          message: `The file ${file.name ?? ref.uri} has a malformed blob URI.`,
+          cause,
+        }),
+    });
     attachments.push({
-      key: digestHex(blob.data.uri),
+      key,
       name: file.name ?? 'file',
       ...(blob.type ? { type: blob.type } : {}),
       size: blob.size,

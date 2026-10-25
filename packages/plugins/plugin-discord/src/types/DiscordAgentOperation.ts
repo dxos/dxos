@@ -45,9 +45,9 @@ export const Reply = Operation.make({
       Schema.String.annotate({ description: 'A message id (`message` in the header) to reply to.' }),
     ),
     files: Schema.optional(
-      Schema.Array(Ref.Ref(File.File)).annotate({
+      Schema.Array(Ref.Ref(File.File)).check(Schema.isMaxLength(DiscordBot.MAX_ATTACHMENTS)).annotate({
         description:
-          'Files to attach (images, videos, documents up to 10 MB each), as references to File objects in the space.',
+          'Files to attach (at most 10, images, videos, documents up to 10 MB each), as references to File objects in the space.',
       }),
     ),
   }),
@@ -70,9 +70,9 @@ export const DirectMessage = Operation.make({
     }),
     text: Schema.String.annotate({ description: 'The message, in Discord markdown.' }),
     files: Schema.optional(
-      Schema.Array(Ref.Ref(File.File)).annotate({
+      Schema.Array(Ref.Ref(File.File)).check(Schema.isMaxLength(DiscordBot.MAX_ATTACHMENTS)).annotate({
         description:
-          'Files to attach (images, videos, documents up to 10 MB each), as references to File objects in the space.',
+          'Files to attach (at most 10, images, videos, documents up to 10 MB each), as references to File objects in the space.',
       }),
     ),
   }),
