@@ -2,11 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ComponentPropsWithoutRef, forwardRef, useEffect, useId, useState } from 'react';
+import React, { type ComponentPropsWithoutRef, forwardRef, useContext, useEffect, useId, useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
+import { TranslationsContext } from '../../providers/ThemeProvider/TranslationsContext.ts';
 import { recipes } from '../../recipes.ts';
 import {
   type DateLike,
@@ -54,10 +55,17 @@ const useTick = (date: DateLike, interval: (date: DateLike) => number | undefine
  * {@link formatRelative} kept current: `5 minutes ago` becomes `6 minutes ago` without the caller re-rendering. For
  * text composed into a larger string; a standalone label is a {@link Timestamp} with `variant='relative'`.
  */
-export const useRelativeTime = (date: DateLike | undefined, { now, justNow }: FormatRelativeOptions = {}): string => {
+export const useRelativeTime = (
+  date: DateLike | undefined,
+  { now, justNow, locale }: FormatRelativeOptions = {},
+): string => {
+  const appLocale = useAppLocale();
   useTick(date ?? Number.NaN, relativeInterval, date !== undefined && now === undefined);
-  return date === undefined ? '' : formatRelative(date, { now, justNow });
+  return date === undefined ? '' : formatRelative(date, { now, justNow, locale: locale ?? appLocale });
 };
+
+/** The app's locale, so a label matches the language of the translated text around it. */
+const useAppLocale = (): string | undefined => useContext(TranslationsContext).dtLocale.code;
 
 export type TimestampProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'time'>, 'children' | 'dateTime'>> & {
   /** The instant shown, as an ISO string, a Unix timestamp in milliseconds, or a Date. */
@@ -82,9 +90,10 @@ export const Timestamp = forwardRef<HTMLTimeElement, TimestampProps>(
     const generatedId = useId();
     const id = idProp ?? generatedId;
     const relative = variant === 'relative';
+    const locale = useAppLocale();
     useTick(date, relative ? relativeInterval : compactInterval, now === undefined);
 
-    const text = relative ? formatRelative(date, { now, justNow }) : formatCompact(date, { now });
+    const text = relative ? formatRelative(date, { now, justNow, locale }) : formatCompact(date, { now });
     if (!text) {
       return null;
     }

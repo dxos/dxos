@@ -35,7 +35,6 @@
     "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-debug": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/types": "workspace:*",

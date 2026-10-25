@@ -40,6 +40,7 @@ The following extension dialects are used in this document.
 | `op`        | `org.dxos.mdl.op@1.0`          |
 | `service`   | `org.dxos.mdl.service@1.0`     |
 | `test`      | `org.dxos.mdl.test@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
 
 ## External types & capabilities
 
@@ -286,13 +287,15 @@ op Restore
 op DeleteMessage
   key: org.dxos.operation.review.deleteMessage
   desc: Delete a single message from a thread. Undoable via RestoreMessage.
-  input: { anchor: AnchoredTo, subject: Obj.Any, messageId: String }
-  output: { message?: Message, messageIndex?: Number }
+  input: { anchor: AnchoredTo, subject: Obj.Any, message: Message }
+  output: { message?: Message }
 
 op RestoreMessage
   key: org.dxos.operation.review.restoreMessage
   desc: Inverse of DeleteMessage.
-  input: { anchor: AnchoredTo, message: Message, messageIndex: Number }
+  input: { anchor: AnchoredTo, message: Message }
+  note: Re-appends the message to the thread's feed with its id; the thread reads messages in `created` order, so it
+    returns to its place.
 
 op SetResolved
   key: org.dxos.operation.review.setResolved
@@ -311,7 +314,11 @@ op Select
 op RespondToThread
   key: org.dxos.operation.review.respondToThread
   desc: Run one agent turn against a thread. Scheduled by AddMessage when the gate passes.
-  input: { thread: Ref<Thread>, subject: Ref<Obj.Any> }
+  input: { thread: Ref<Thread>, subject: Ref<Obj.Any>, messageId: ObjectId }
+  note: |
+    Writes a pending reply in the agent's name, runs the turn through `AppCapabilities.CommentAgentRunner` (3-minute
+    timeout), then removes the pending reply, or rewrites it as a failure notice when the turn fails. An edit that
+    collapsed the thread's anchored range is re-anchored to the changed text.
 
 op SetAgentConfig
   key: org.dxos.operation.review.setAgentConfig
@@ -622,7 +629,12 @@ test QA-1: Comment on a document, reply, and resolve
       invoke: org.dxos.operation.review.addMessage { subject: $given.doc, anchor: $created.anchor, sender: $given.identity, text: "please fix this" }
       capture: added
       expect: the message appears in the thread, promoting it from staged to active
-      assert: return $result.thread.messages.some((m) => m.id === $added.message?.id)
+      assert: |
+        const { Filter, Obj, Query } = window.__DXOS__;
+        const db = Obj.getDatabase($given.doc);
+        const [thread] = await db.query(Filter.id($created.threadId)).run();
+        const messages = await db.query(Query.select(Filter.everything()).from(await thread.feed.load())).run();
+        return messages.some((message) => message.blocks.some((block) => block.text === 'please fix this'));
 
     - name: Resolve the thread
       do: Click the checkmark on the thread header.
@@ -650,4 +662,11 @@ decision D-2: Comment threads keep their messages in a feed the thread owns (`Th
   date: 2026-10-25
   by: user:richburdon
   affects: [F-6.1, F-6.2, CommentAgentRunner]
+```
+
+```mdl
+decision D-3: While an agent turn runs the thread shows a pending reply in the agent's name, which the reply replaces; an agent edit that replaces the anchored text keeps the comment on the edited text; `@`-mentions complete from the agent and the space's members and render as atomic pills in the mentioned actor's hue.
+  date: 2026-10-25
+  by: user:richburdon
+  affects: [RespondToThread, F-6.2]
 ```

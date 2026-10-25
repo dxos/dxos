@@ -6,8 +6,10 @@ import { HighlightStyle, StreamLanguage, syntaxHighlighting } from '@codemirror/
 import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
-import { type MentionPillsOptions, mentionPills, tags } from '@dxos/ui-editor';
+import { mentionPills, tags } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
+
+import { type Mention } from './types.ts';
 
 /**
  * Highlights leading slash-commands (e.g. `/resolve`) in the message composer; `@mention`s render as atomic pills
@@ -47,9 +49,12 @@ const theme = EditorView.theme({
   },
 });
 
-export const command = (options?: MentionPillsOptions): Extension => [
+export const command = ({ mentions }: { mentions?: readonly Mention[] } = {}): Extension => [
   parser,
   syntaxHighlighting(styles),
-  mentionPills(options),
+  mentionPills({
+    names: mentions?.map(({ name }) => name),
+    hue: (name) => mentions?.find((mention) => mention.name.toLowerCase() === name.toLowerCase())?.hue,
+  }),
   theme,
 ];

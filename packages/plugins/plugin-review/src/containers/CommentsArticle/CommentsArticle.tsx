@@ -21,7 +21,7 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
 import { type Space, getSpace } from '@dxos/react-client/echo';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
+import { type Mention, type MessageMetadata, type ObjectTileComponent } from '@dxos/react-ui-thread';
 import * as Banner from '@dxos/react-ui/Banner';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
@@ -36,7 +36,7 @@ import { AnchoredTo, type Message as MessageType, Thread } from '@dxos/types';
 import { hoverableControls, hoverableFocusedWithinControls, mx, toHue } from '@dxos/ui-theme';
 import { hexToHue } from '@dxos/util';
 
-import { CommentThread, type CommentThreadProps, type Mention, Suggestions } from '#components';
+import { CommentThread, type CommentThreadProps, Suggestions } from '#components';
 import { type SuggestionGroup, useStatus } from '#hooks';
 import { meta } from '#meta';
 import { AgentIdentity, CommentCapabilities, CommentOperation, ReviewCapabilities } from '#types';

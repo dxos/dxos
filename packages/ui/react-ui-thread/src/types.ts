@@ -48,6 +48,9 @@ export type MessageCallbacks = {
 };
 
 /** Shared context provided by `Thread.Root` to its message tiles. */
+/** An actor that can be `@`-mentioned: the name completed after `@`, and their avatar's hue. */
+export type Mention = { name: string; hue?: string };
+
 export type ThreadContextValue = {
   /** The selected message, accented in the list. */
   currentMessageId?: string;
@@ -59,6 +62,6 @@ export type ThreadContextValue = {
   identityDid?: string;
   /** When true, the author may edit their own text messages in place. */
   editable?: boolean;
-  /** The palette hue of the actor an `@name` refers to, so a mention pill matches their avatar. */
-  mentionHue?: (name: string) => string | undefined;
+  /** Actors an `@name` can refer to: a mention of one renders as a single pill in their avatar's hue. */
+  mentions?: readonly Mention[];
 } & MessageCallbacks;

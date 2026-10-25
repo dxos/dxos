@@ -34,7 +34,7 @@ export const mention = ({ debug, names }: MentionOptions): Extension =>
     icons: false,
     override: [
       (context: CompletionContext): CompletionResult | null => {
-        const match = context.matchBefore(/@(\w+)?/);
+        const match = context.matchBefore(MENTION_START);
         if (!match || (match.from === match.to && !context.explicit)) {
           return null;
         }
@@ -51,17 +51,33 @@ export const mention = ({ debug, names }: MentionOptions): Extension =>
   });
 
 export type MentionPillsOptions = {
+  /** Names a mention may span, so a completed `@Jane Doe` is one pill; any other `@word` is matched up to the word. */
+  names?: readonly string[];
   /** The palette hue of the actor a name refers to, so a pill matches their avatar; blue when unknown. */
   hue?: (name: string) => string | undefined;
+};
+
+/** An `@` that starts a mention: not inside a word, so an email address is left alone. */
+const MENTION_START = /(?<![\w.@])@(\w+)?/;
+
+const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** Listed names first, longest first, so `@Jane Doe` wins over `@Jane`; case-insensitive, as completion is. */
+const mentionPattern = (names: readonly string[] = []): RegExp => {
+  const listed = [...names]
+    .sort((left, right) => right.length - left.length)
+    .map(escapeRegExp)
+    .join('|');
+  return new RegExp(`(?<![\\w.@])@(${listed ? `(?:${listed})(?!\\w)|` : ''}\\w+)`, 'gi');
 };
 
 /**
  * Replaces each `@mention` with a pill widget — the same atomic-widget recipe as `hashtag`, so the cursor steps over a
  * mention and one delete removes it.
  */
-export const mentionPills = ({ hue }: MentionPillsOptions = {}): Extension => {
+export const mentionPills = ({ names, hue }: MentionPillsOptions = {}): Extension => {
   const matcher = new MatchDecorator({
-    regexp: /@(\w+)/g,
+    regexp: mentionPattern(names),
     decoration: (match) => Decoration.replace({ widget: new MentionWidget(match[0], hue?.(match[1]) ?? 'blue') }),
   });
 

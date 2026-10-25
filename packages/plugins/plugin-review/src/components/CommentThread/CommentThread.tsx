@@ -7,6 +7,7 @@ import React, { type MouseEvent as ReactMouseEvent, useCallback, useMemo } from 
 import { Obj, Relation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import {
+  type Mention,
   Message as MessageComponent,
   type MessageMetadata,
   Thread,
@@ -35,9 +36,6 @@ const useRelationSource = <T extends Relation.Unknown>(relation: T): Relation.So
     return undefined;
   }
 };
-
-/** An actor that can be `@`-mentioned: the name completed after `@`, and their avatar's hue. */
-export type Mention = { name: string; hue?: string };
 
 export type CommentThreadProps = Pick<ThreadStatusProps, 'activity'> & {
   anchor: AnchoredTo.AnchoredTo;
@@ -104,10 +102,6 @@ export const CommentThread = ({
   const feedMessages = useThreadMessages(thread);
   const mentionExtension = useMemo(
     () => (mentions?.length ? mention({ names: mentions.map(({ name }) => name) }) : undefined),
-    [mentions],
-  );
-  const mentionHue = useCallback(
-    (name: string) => mentions?.find((candidate) => candidate.name.toLowerCase() === name.toLowerCase())?.hue,
     [mentions],
   );
   const loadedMessages = messages ?? feedMessages;
@@ -231,7 +225,7 @@ export const CommentThread = ({
       components={components}
       identityDid={identityDid}
       getMetadata={getMetadata}
-      mentionHue={mentionHue}
+      mentions={mentions}
       onMessageDelete={onMessageDelete ? handleMessageDelete : undefined}
       onAcceptProposal={onAcceptProposal ? handleAcceptProposal : undefined}
     >

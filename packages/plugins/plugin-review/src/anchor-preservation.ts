@@ -28,7 +28,7 @@ export const snapshotAnchor = async (
   const relations: AnchoredTo.AnchoredTo[] = await db
     .query(Query.select(Filter.id(thread.id)).sourceOf(AnchoredTo.AnchoredTo))
     .run();
-  const relation = relations.find((relation) => Relation.getTarget(relation) === subject);
+  const relation = relations.find((relation) => Relation.getTarget(relation).id === subject.id);
   if (!relation?.anchor) {
     return undefined;
   }

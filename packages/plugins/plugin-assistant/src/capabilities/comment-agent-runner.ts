@@ -43,9 +43,10 @@ export default Capability.makeModule(
               { name: thread.name, feed },
               { spaceId },
             );
-            // Parented to the thread, so it is deleted with the thread and stays out of the space's chat lists.
-            Obj.setParent(object, thread);
             chat = db.add(object);
+            // The thread's companion: parented to it (and referenced from it), so it is deleted with the thread and
+            // stays out of the space's chat lists.
+            Chat.linkCompanion({ chat, subject: thread });
           }
           yield* invoker.invoke(AssistantOperation.BindChatContext, { chat, subject }, { spaceId });
 
@@ -76,7 +77,7 @@ const resolveAnchorText = async (
   const anchors: AnchoredTo.AnchoredTo[] = await db
     .query(Query.select(Filter.id(thread.id)).sourceOf(AnchoredTo.AnchoredTo))
     .run();
-  const anchor = anchors.find((anchor) => Relation.getTarget(anchor) === subject)?.anchor;
+  const anchor = anchors.find((anchor) => Relation.getTarget(anchor).id === subject.id)?.anchor;
   const resolver = resolvers.find(({ key }) => key === Obj.getTypename(subject));
   return anchor ? resolver?.getText(subject, anchor) : undefined;
 };
