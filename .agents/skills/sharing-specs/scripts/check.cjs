@@ -4,7 +4,8 @@
 
 // Serve the packaged directory, then: node check.cjs http://localhost:<port>/page.html <tab count> <files.json>
 // Loads the page in headless Chromium, clicks every tab, waits for the spec editor and for every ```diagram
-// fence it reaches to render, fails on a spec under specs/ that did not load, and writes the Artifact `files` map
+// fence it reaches to render, opens every side-panel view, fails on a spec under specs/ that did not load or a view
+// that crashed, and writes the Artifact `files` map
 // of exactly the files the page requested.
 
 const fs = require('node:fs');
@@ -77,13 +78,29 @@ void (async () => {
     for (const text of await page.locator('.cm-diagram-preview-error').allTextContents()) {
       renderErrors.add(text);
     }
+    // Each side-panel view mounts only when opened, so a view that crashes the story shows only when clicked.
+    const brokenViews = [];
+    const views = page.locator('[data-testid^="spec-article.view."]');
+    for (let view = 0; view < (await views.count()); view++) {
+      const testId = await views.nth(view).getAttribute('data-testid');
+      await views.nth(view).click();
+      await page.waitForTimeout(1_500);
+      if ((await page.locator('[data-testid="spec-article.panel"]').count()) === 0) {
+        brokenViews.push(testId.replace('spec-article.view.', ''));
+        await page.locator('#spec-tabs button').nth(tab).click();
+        await page.waitForTimeout(3_000);
+      }
+    }
+    if ((await views.count()) > 0) {
+      await views.first().click();
+    }
     const label = await page.locator('#spec-tabs button').nth(tab).textContent();
     console.log(
       `tab ${tab + 1} (${label}): diagrams seen ${diagrams}, render errors ${renderErrors.size}, ` +
-        `fences without a preview ${unrendered}` +
+        `fences without a preview ${unrendered}, broken views ${brokenViews.length ? brokenViews.join(', ') : 'none'}` +
         (reachedBottom ? '' : ', stopped before the end of the spec'),
     );
-    failed ||= renderErrors.size > 0 || unrendered > 0 || !reachedBottom;
+    failed ||= renderErrors.size > 0 || unrendered > 0 || !reachedBottom || brokenViews.length > 0;
   }
 
   const files = {};

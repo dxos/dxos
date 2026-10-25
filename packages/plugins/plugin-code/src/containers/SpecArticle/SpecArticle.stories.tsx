@@ -10,6 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
+import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Spec } from '@dxos/types';
 
@@ -46,6 +47,8 @@ const meta = {
   title: 'plugins/plugin-code/containers/SpecArticle',
   render: (args: { content?: string }) => <DefaultStory {...args} />,
   decorators: [
+    // The Review view's verdict list is a Mosaic stack.
+    withMosaic(),
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     // The article reads the identity and invokes operations, so it needs the client and the plugin manager.
