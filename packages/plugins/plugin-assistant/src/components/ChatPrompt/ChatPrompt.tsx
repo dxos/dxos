@@ -19,6 +19,7 @@ import React, {
 } from 'react';
 
 import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as ObjectCombobox from '@dxos/app-toolkit/ObjectCombobox';
 import { type AiContext } from '@dxos/assistant';
 import type * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
@@ -27,6 +28,7 @@ import { type Event } from '@dxos/async';
 import * as Project from '@dxos/compute/Project';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
+import * as ConnectorAuth from '@dxos/plugin-connector/ConnectorAuth';
 import * as SearchOperation from '@dxos/plugin-search/SearchOperation';
 import {
   ChatEditor,
@@ -49,7 +51,6 @@ import { AssistantPreset } from '#types';
 
 import { type ChatModel, getChatModelState } from '../../chat-model/index.ts';
 import { type ChatEvent } from '../Chat/index.ts';
-import { McpServersDialog } from '../McpServers/index.ts';
 import { attachmentAnchors, dropAnchor, insertAtAnchor, placeAnchor } from './attachment-anchors.ts';
 import { ChatActions, type ChatActionsProps } from './ChatActions.tsx';
 import { ChatAddMenu } from './ChatAddMenu.tsx';
@@ -78,9 +79,9 @@ export type ChatPromptProps = Merge<
     slashCommands?: readonly SlashCommand.SlashCommand[];
     event: Event<ChatEvent>;
     drawers?: ChatActionsProps['drawers'];
-    /** The prompt's graph node, which is what contributed actions are filed under. */
+    /** Attention id of the surface: scopes the toolbar and pivots the panels the prompt opens. */
     attendableId?: string;
-    /** Toolbar actions other plugins filed on this chat's node (see `ChatActions`). */
+    /** Actions other plugins filed on this prompt's node (see `ChatActions`). */
     customActions?: Atom.Atom<ActionGraphProps>;
     /**
      * The graph node those actions were filed on. Keys the dictation session, because the mic that
@@ -146,9 +147,8 @@ export const ChatPrompt = ({
   }, [event]);
 
   const fallbackDocId = useId();
-  // The node the mic action was filed on, which is what it keys the recording session by. A chat
-  // rendered as a companion is a companion node, not the chat object's own, so the object id is only
-  // the fallback for a prompt rendered outside a plank.
+  // The prompt node the mic action was filed on, which is what it keys the recording session by. The
+  // object id is only the fallback for a prompt rendered outside the app graph.
   const docId = nodeId ?? (chat ? Obj.getURI(chat) : fallbackDocId);
   useChatVoiceInput(docId, editorRef);
 
@@ -284,7 +284,16 @@ export const ChatPrompt = ({
     }
   }, [invokePromise, handleMention, db, t]);
 
-  const [mcpServersOpen, setMcpServersOpen] = useState(false);
+  // The space's connections are managed in its settings, opened beside this chat rather than in place of it.
+  const handleManageConnections = useCallback(() => {
+    if (db) {
+      void invokePromise(LayoutOperation.Open, {
+        subject: [ConnectorAuth.connectionsSubject(db.spaceId)],
+        pivotId: attendableId,
+        disposition: 'add',
+      });
+    }
+  }, [invokePromise, db, attendableId]);
   const handleCommands = useCallback(() => {
     const view = editorRef.current?.view;
     if (view) {
@@ -406,11 +415,12 @@ export const ChatPrompt = ({
                 <>
                   <ChatAddMenu
                     db={db}
+                    context={context}
                     disabled={!context}
                     onAddFiles={attachFile ? () => fileInputRef.current?.click() : undefined}
                     onAddObject={() => void handleAddObject()}
                     onCommands={handleCommands}
-                    onManageMcpServers={() => setMcpServersOpen(true)}
+                    onManageConnections={handleManageConnections}
                   />
                   <ChatAgentPicker
                     chat={chat}
@@ -424,7 +434,6 @@ export const ChatPrompt = ({
               }
             />
             <input hidden type='file' multiple onChange={handleFileChange} ref={fileInputRef} />
-            <McpServersDialog db={db} open={mcpServersOpen} onOpenChange={setMcpServersOpen} />
           </>
         )}
       </div>

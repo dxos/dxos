@@ -67,6 +67,12 @@ export interface IndexerObject {
   heads?: readonly string[];
 
   /**
+   * Heads of the document {@link data} was read at, whether or not the object can be backed: the version a
+   * query compares to the document's current heads to answer from the snapshot. Defaults to {@link heads}.
+   */
+  version?: readonly string[];
+
+  /**
    * The document's Automerge bytes, kept with {@link heads} by a host whose document store is too slow
    * to read on every query; a host that reads its own store per row leaves this out.
    */

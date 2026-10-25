@@ -19,13 +19,37 @@
   ],
   "references": [
     {
+      "path": "../../common/diagram"
+    },
+    {
+      "path": "../../common/effect"
+    },
+    {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/keys"
+    },
+    {
+      "path": "../../common/log"
     },
     {
       "path": "../../common/random"
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/agent-runtime"
+    },
+    {
+      "path": "../../core/compute/ai"
+    },
+    {
+      "path": "../../core/compute/assistant"
+    },
+    {
+      "path": "../../core/compute/assistant-toolkit"
     },
     {
       "path": "../../core/compute/compute"
@@ -52,10 +76,16 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/client-protocol"
+    },
+    {
       "path": "../../sdk/react-client"
     },
     {
       "path": "../../sdk/schema"
+    },
+    {
+      "path": "../../sdk/types"
     },
     {
       "path": "../../ui/react-primitives/react-hooks"
@@ -73,19 +103,55 @@
       "path": "../../ui/react-ui-form"
     },
     {
+      "path": "../../ui/react-ui-list"
+    },
+    {
+      "path": "../../ui/react-ui-menu"
+    },
+    {
+      "path": "../../ui/react-ui-syntax-highlighter"
+    },
+    {
       "path": "../../ui/ui-editor"
     },
     {
       "path": "../../ui/ui-theme"
     },
     {
+      "path": "../plugin-assistant"
+    },
+    {
+      "path": "../plugin-client"
+    },
+    {
       "path": "../plugin-deck"
+    },
+    {
+      "path": "../plugin-file"
+    },
+    {
+      "path": "../plugin-illustrator"
     },
     {
       "path": "../plugin-markdown"
     },
     {
+      "path": "../plugin-preview"
+    },
+    {
+      "path": "../plugin-projects"
+    },
+    {
+      "path": "../plugin-routine"
+    },
+    {
       "path": "../plugin-space"
+    },
+    {
+      "path": "../plugin-studio"
+    },
+    {
+      "path": "../plugin-tasks"
     },
     {
       "path": "../plugin-testing"

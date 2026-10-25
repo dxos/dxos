@@ -89,6 +89,12 @@ export type SnapshotState = Omit<ObjectSnapshot, 'root' | 'handle'> & {
 export type TargetRefreshScope = { target: object; key: string };
 
 /**
+ * {@link ObjectCore.isDeleted} verdicts by remaining depth, valid only while no core changes — that is,
+ * within one synchronous read.
+ */
+export type DeletionMemo = Map<ObjectCore, boolean[]>;
+
+/**
  *
  */
 // TODO(burdon): Comment.
@@ -892,7 +898,25 @@ export class ObjectCore {
     this._setRaw([META_NAMESPACE], this.encode(meta));
   }
 
-  isDeleted(remainingDepth: number = 10): boolean {
+  /**
+   * Whether the entity is deleted, itself or through a strong dependency up to `remainingDepth` hops away.
+   * A `memo` shares verdicts across one synchronous read, so siblings walk their common ancestors once.
+   */
+  isDeleted(remainingDepth: number = 10, memo?: DeletionMemo): boolean {
+    const cached = memo?.get(this)?.[remainingDepth];
+    if (cached !== undefined) {
+      return cached;
+    }
+    const deleted = this.#computeIsDeleted(remainingDepth, memo);
+    if (memo) {
+      const byDepth = memo.get(this) ?? [];
+      byDepth[remainingDepth] = deleted;
+      memo.set(this, byDepth);
+    }
+    return deleted;
+  }
+
+  #computeIsDeleted(remainingDepth: number, memo: DeletionMemo | undefined): boolean {
     const value = this.getRaw([SYSTEM_NAMESPACE, 'deleted']);
     const ownDeleted = typeof value === 'boolean' ? value : false;
     if (ownDeleted) {
@@ -903,13 +927,13 @@ export class ObjectCore {
       // An entity is transitively deleted when one of its strong dependencies is deleted: a child
       // when its parent is removed, or a relation when either endpoint is removed — a dangling
       // relation has no valid graph edge, so it is treated as deleted and excluded from queries.
-      if (this._isReferencedCoreDeleted(this.getParent(), remainingDepth)) {
+      if (this._isReferencedCoreDeleted(this.getParent(), remainingDepth, memo)) {
         return true;
       }
       if (this.getKind() === EntityKind.Relation) {
         if (
-          this._isReferencedCoreDeleted(this.getSource(), remainingDepth) ||
-          this._isReferencedCoreDeleted(this.getTarget(), remainingDepth)
+          this._isReferencedCoreDeleted(this.getSource(), remainingDepth, memo) ||
+          this._isReferencedCoreDeleted(this.getTarget(), remainingDepth, memo)
         ) {
           return true;
         }
@@ -932,7 +956,11 @@ export class ObjectCore {
    * redirects and judges deletion at the survivor, so relations and children anchored at a merge
    * loser stay visible while the survivor lives.
    */
-  private _isReferencedCoreDeleted(ref: EncodedReference | undefined, remainingDepth: number): boolean {
+  private _isReferencedCoreDeleted(
+    ref: EncodedReference | undefined,
+    remainingDepth: number,
+    memo: DeletionMemo | undefined,
+  ): boolean {
     if (!ref || !this.entityManager) {
       return false;
     }
@@ -943,7 +971,7 @@ export class ObjectCore {
       return false;
     }
     const core = this._resolveMergeRedirect(this.entityManager.getObjectCoreById(entityId, this.#dependencyLookup));
-    return core != null && core.isDeleted(remainingDepth - 1);
+    return core != null && core.isDeleted(remainingDepth - 1, memo);
   }
 
   /**

@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { findSymbolLine } from '../CodeView/symbol.ts';
-import { parseReview, reviewAnnotations, statusOf, summarizeReview } from './review.ts';
+import { declarationSnippet, findSymbolLine } from '../CodeView/symbol.ts';
+import { parseReview, reviewAnnotations, statusOf, summarizeReview, walkthroughOf } from './review.ts';
 import { buildDefinitionGraph } from './spec-model.ts';
 
 const fence = (body: string) => ['```mdl', body, '```'].join('\n');
@@ -43,6 +43,7 @@ describe('review', () => {
         summary: 'The action is registered.',
         evidence: ['github:dxos/dxos/packages/plugins/plugin-x/src/a.ts#openThing'],
         tests: ['github:dxos/dxos/packages/plugins/plugin-x/src/a.test.ts#opens'],
+        walkthrough: [],
       },
       {
         id: 'F-1.2',
@@ -50,6 +51,7 @@ describe('review', () => {
         summary: 'No picker yet.',
         evidence: [],
         tests: [],
+        walkthrough: [],
         note: 'Nothing calls the dialog.',
       },
     ]);
@@ -80,6 +82,36 @@ describe('review', () => {
       ['partial', 'untested'],
       ['missing', undefined],
     ]);
+  });
+
+  test("a walkthrough is the reviewer's steps, or one per evidence key when there are several", ({ expect }) => {
+    const review = parseReview(
+      [
+        fence(
+          [
+            'verdict op1: Ok.',
+            '  status: done',
+            '  evidence: [github:o/r/a.ts#A, github:o/r/b.ts#B]',
+            '  walkthrough:',
+            '    - The operation is declared with its schema. github:o/r/a.ts#A',
+            '    - The handler resolves the checkout',
+            '      and creates the object. github:o/r/b.ts#B',
+          ].join('\n'),
+        ),
+        fence(['verdict op2: Ok.', '  status: done', '  evidence: [github:o/r/a.ts#A, github:o/r/c.ts]'].join('\n')),
+        fence(['verdict type1: Ok.', '  status: done', '  evidence: [github:o/r/a.ts#T]'].join('\n')),
+      ].join('\n\n'),
+    );
+    const [explicit, derived, single] = review.verdicts.map(walkthroughOf);
+    expect(explicit).toEqual([
+      { text: 'The operation is declared with its schema', key: 'github:o/r/a.ts#A' },
+      { text: 'The handler resolves the checkout and creates the object', key: 'github:o/r/b.ts#B' },
+    ]);
+    expect(derived).toEqual([
+      { text: '', key: 'github:o/r/a.ts#A' },
+      { text: '', key: 'github:o/r/c.ts' },
+    ]);
+    expect(single).toBeUndefined();
   });
 
   test('a feature takes the worst status of its requirements', ({ expect }) => {
@@ -180,5 +212,24 @@ describe('symbol lookup', () => {
     expect(findSymbolLine(source, 'make')).toBe(9);
     expect(findSymbolLine(source, 'Spec.make')).toBe(4);
     expect(findSymbolLine(source, 'Missing')).toBeUndefined();
+  });
+
+  test('a snippet runs from the declaration to where its brackets close', ({ expect }) => {
+    expect(declarationSnippet(source, 'Spec.make')).toEqual({
+      line: 4,
+      lines: ['  static make(): Spec {', '    return new Spec();', '  }'],
+      truncated: false,
+    });
+    expect(declarationSnippet(source, 'make')).toEqual({
+      line: 9,
+      lines: ['export const make = () => Spec.make();'],
+      truncated: false,
+    });
+    expect(declarationSnippet(source, 'Missing')).toBeUndefined();
+    // No symbol: the file's opening lines, after the copyright header.
+    expect(declarationSnippet(['//', '// Copyright', '//', '', 'import a;', 'a();'].join('\n'))).toMatchObject({
+      line: 5,
+      lines: ['import a;', 'a();'],
+    });
   });
 });

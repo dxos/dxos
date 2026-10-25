@@ -4,13 +4,12 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
-import { Filter, Obj, Ref } from '@dxos/echo';
-import { useObject, useQuery } from '@dxos/echo-react';
+import { Obj } from '@dxos/echo';
 import { ObjectPicker } from '@dxos/react-ui-form';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
+import { useObjectOptions, usePresentationDeck } from '#hooks';
 import { meta } from '#meta';
 import { Presentation } from '#types';
 
@@ -24,45 +23,26 @@ export type SectionPickerProps = {
 export const SectionPicker = ({ presentation }: SectionPickerProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [open, setOpen] = useState(false);
-  // Whole-space query runs only while the popup is open so a mounted deck does not watch every object.
-  const objects = useQuery(open ? Obj.getDatabase(presentation) : undefined, Filter.everything());
-  const [sections] = useObject(presentation, 'sections');
-  const candidates = useMemo(
-    () =>
-      TypeOptions.filterListedObjects(objects).filter(
-        (object) => object.id !== presentation.id && !sections.some(Ref.hasEntityId(object.id)),
-      ),
-    [objects, sections, presentation],
+  // Objects a slide already shows are not offered again.
+  const slides = usePresentationDeck(presentation);
+  const linked = useMemo(
+    () => new Set(slides.flatMap((slide) => (slide.kind === 'object' ? [slide.object.id] : []))),
+    [slides],
   );
-  const options = useMemo(
-    () =>
-      candidates
-        .map((object) => {
-          const typename = Obj.getTypename(object) ?? '';
-          return {
-            id: object.id,
-            // Same fallback as the navtree, so an unnamed object reads the same in both places.
-            label:
-              Obj.getLabel(object) ||
-              t('object-name.placeholder', { ns: typename, defaultValue: '' }) ||
-              t('untitled-object.label', {
-                type: t('typename.label', { ns: typename, defaultValue: typename }) ?? typename,
-              }) ||
-              object.id,
-          };
-        })
-        .sort((a, b) => a.label.localeCompare(b.label)),
-    [candidates, t],
+  const include = useCallback(
+    (object: Obj.Unknown) => object.id !== presentation.id && !linked.has(object.id),
+    [presentation, linked],
   );
+  const options = useObjectOptions(open ? Obj.getDatabase(presentation) : undefined, include);
 
   const handleSelect = useCallback(
     (id: string | undefined) => {
-      const object = candidates.find((candidate) => candidate.id === id);
-      if (object) {
-        Presentation.link(presentation, object);
+      const option = options.find((candidate) => candidate.id === id);
+      if (option) {
+        Presentation.link(presentation, option.object);
       }
     },
-    [candidates, presentation],
+    [options, presentation],
   );
 
   return (

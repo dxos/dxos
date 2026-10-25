@@ -33,7 +33,7 @@ export const githubConnection = (): Effect.Effect<
       if (!connection.connectorId || !GITHUB_CONNECTOR_IDS.includes(connection.connectorId)) {
         continue;
       }
-      const accessToken = yield* Database.load(connection.accessToken);
+      const accessToken = yield* Database.load(Connection.getAccessToken(connection));
       if (accessToken.token) {
         return { connection, accessToken };
       }

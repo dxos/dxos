@@ -4,7 +4,7 @@
 
 import { EditorSelection } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
-import React, { forwardRef, useCallback, useMemo, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
@@ -32,6 +32,7 @@ import {
   createMarkdownExtensions,
   createThemeExtensions,
   decorateMarkdown,
+  diffView,
   documentSlots,
   editorClassNames,
 } from '@dxos/ui-editor';
@@ -47,6 +48,7 @@ import {
   type DefinitionModel,
   ReviewPanel,
   buildChangelogGraph,
+  citedFiles,
   decisionGutter,
   parseReview,
   reviewGutter,
@@ -64,7 +66,14 @@ import {
 } from '#sync';
 import { CodeOperation } from '#types';
 
-import { fileKey, useLocalTexts, useResolvedPath, useSpecSyncState } from './useSpecSources.ts';
+import {
+  type DiffAgainst,
+  fileKey,
+  useLocalTexts,
+  useResolvedPath,
+  useSpecDiff,
+  useSpecSyncState,
+} from './useSpecSources.ts';
 
 /** What the panel beside the spec shows. */
 const VIEWS = ['definitions', 'review', 'code', 'decisions', 'data', 'api'] as const;
@@ -82,6 +91,14 @@ const VIEW_ICON: Record<View, string> = {
 
 const isView = (value: string): value is View => (VIEWS as readonly string[]).includes(value);
 
+const isDiffAgainst = (value: string): value is DiffAgainst => value === 'base' || value === 'head';
+
+/** Lines of unchanged context kept around each change when unchanged runs are folded. */
+const FOLD_CONTEXT = 3;
+
+/** A remote-tracking ref as people say it: `origin/main` is `main`. */
+const shortRef = (ref: string): string => ref.replace(/^origin\//, '');
+
 /** A declaration line (`feat F-1: …`, `  req F-1.2: …`, `type Scene`) for the given id. */
 const declarationOf = (id: string) =>
   new RegExp(`^\\s*[a-z]+\\s+${id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*(?::|$)`);
@@ -95,6 +112,10 @@ export type SpecArticleProps = Omit<AppSurface.ObjectArticleProps<Spec.Spec>, 's
   sourceKey?: string;
   /** Force read-only mode. Defaults to read-only for static content and editable when editing a Spec. */
   readOnly?: boolean;
+  /** Base text that diff mode compares with, for hosts that cannot run git; git's base wins when both exist. */
+  base?: string;
+  /** Opens in diff mode against this base. */
+  defaultDiff?: DiffAgainst;
 };
 
 /**
@@ -104,7 +125,10 @@ export type SpecArticleProps = Omit<AppSurface.ObjectArticleProps<Spec.Spec>, 's
  * Each ```diagram fence is drawn in place of its source until the selection enters it.
  */
 export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
-  ({ role, subject: spec, content, sourceKey, attendableId, readOnly = spec == null }, forwardedRef) => {
+  (
+    { role, subject: spec, content, sourceKey, attendableId, readOnly = spec == null, base, defaultDiff },
+    forwardedRef,
+  ) => {
     const { t } = Hooks.useTranslation(meta.profile.key);
     const themeMode = Hooks.useThemeMode();
     const identity = useIdentity();
@@ -143,15 +167,30 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
         ].filter(isTruthy),
       [reviewKey, spec, key, codeTarget, ownText],
     );
-    const texts = useLocalTexts(related);
+    // The code a review cites, for the declarations its chips and walkthroughs show.
+    const [codeKeys, setCodeKeys] = useState<readonly string[]>([]);
+    const texts = useLocalTexts(useMemo(() => [...related, ...codeKeys], [related, codeKeys]));
     const text = (!spec && key && texts.get(fileKey(key))) || ownText;
     const reviewText = reviewKey ? texts.get(reviewKey) : undefined;
     const review = useMemo(() => (reviewText ? parseReview(reviewText) : undefined), [reviewText]);
+    const citedKey = useMemo(() => (review ? citedFiles(review).join('\n') : ''), [review]);
+    useEffect(() => setCodeKeys(citedKey ? citedKey.split('\n') : []), [citedKey]);
+    const read = useCallback((target: SourceKey) => texts.get(fileKey(target)), [texts]);
+    // Cards render on hover, so the gutter reads through a ref instead of rebuilding the editor on each file change.
+    const textsRef = useRef(texts);
+    useLayoutEffect(() => {
+      textsRef.current = texts;
+    }, [texts]);
+    const readLatest = useCallback((target: SourceKey) => textsRef.current.get(fileKey(target)), []);
     const specs = useMemo(
       () => new Map([...texts].filter(([raw]) => raw.endsWith('.mdl') && raw !== reviewKey)),
       [texts, reviewKey],
     );
     const codePath = useResolvedPath(codeTarget);
+
+    const { git, diff, setDiff, baseText, available: diffAvailable } = useSpecDiff(key, { base, defaultDiff });
+    const [fold, setFold] = useState(false);
+    const pullRequest = git?.pullRequest;
 
     // A spec with no changelog has none; slicing from -1 would make the whole body the "changelog".
     const changelogStart = text.search(/^## Changelog/m);
@@ -260,8 +299,15 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
                 setView('review');
               },
               onOpen: (target) => void open(target),
+              read: readLatest,
             }),
           diagramPreview(),
+          baseText !== undefined &&
+            diffView({
+              original: baseText,
+              orientation: 'changes',
+              collapseUnchanged: fold ? FOLD_CONTEXT : undefined,
+            }),
           // Live two-way binding only when editing an ECHO Spec; static content is rendered via `value`.
           spec &&
             target &&
@@ -272,7 +318,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
               identity,
             }),
         ].filter(isTruthy),
-      [identity, space, spec?.id, target, themeMode, readOnly, decisions, review, open],
+      [identity, space, spec?.id, target, themeMode, readOnly, decisions, review, open, readLatest, baseText, fold],
     );
 
     const syncEntry = spec ? sync.specs[spec.id] : undefined;
@@ -312,6 +358,73 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
                         />
                       ))}
                     </Toolbar.ToggleGroup>
+                    {diffAvailable && (
+                      <>
+                        <Toolbar.Separator />
+                        <Toolbar.ToggleGroup
+                          type='single'
+                          value={diff ?? ''}
+                          onValueChange={(value) => setDiff(isDiffAgainst(value) ? value : undefined)}
+                          aria-label={t('spec-diff.label')}
+                        >
+                          <ToggleGroup.Item
+                            value='base'
+                            icon='ph--git-diff--regular'
+                            label={t('spec-diff.base.label', { base: shortRef(git?.base ?? 'base') })}
+                            disabled={git !== undefined && !git.mergeBase}
+                            iconOnly
+                            data-testid='spec-article.diff.base'
+                          />
+                          {git && (
+                            <ToggleGroup.Item
+                              value='head'
+                              icon='ph--git-commit--regular'
+                              label={t('spec-diff.head.label')}
+                              iconOnly
+                              data-testid='spec-article.diff.head'
+                            />
+                          )}
+                        </Toolbar.ToggleGroup>
+                        {diff && (
+                          <Toolbar.ToggleGroup
+                            type='single'
+                            value={fold ? 'fold' : ''}
+                            onValueChange={(value) => setFold(value === 'fold')}
+                            aria-label={t('spec-diff.fold.label')}
+                          >
+                            <ToggleGroup.Item
+                              value='fold'
+                              icon='ph--arrows-in-line-vertical--regular'
+                              label={t('spec-diff.fold.label')}
+                              iconOnly
+                              data-testid='spec-article.diff.fold'
+                            />
+                          </Toolbar.ToggleGroup>
+                        )}
+                      </>
+                    )}
+                    {pullRequest ? (
+                      <Toolbar.Link
+                        href={pullRequest.url}
+                        title={`${pullRequest.title} (${git?.branch} → ${pullRequest.base})`}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          void openExternalUrl(pullRequest.url);
+                        }}
+                        data-testid='spec-article.pull-request'
+                      >
+                        <Tag.Tag hue='info'>
+                          <Icon.Icon icon='ph--git-pull-request--regular' size='xs' />#{pullRequest.number}
+                        </Tag.Tag>
+                      </Toolbar.Link>
+                    ) : (
+                      git?.branch && (
+                        <Tag.Tag title={`${git.branch} → ${shortRef(git.base)}`} data-testid='spec-article.branch'>
+                          <Icon.Icon icon='ph--git-branch--regular' size='xs' />
+                          {git.branch}
+                        </Tag.Tag>
+                      )
+                    )}
                     {key && (
                       <Toolbar.Text classNames='font-mono text-xs'>
                         <span title={formatSourceKey(key)}>{key.path.split('/').slice(-2).join('/')}</span>
@@ -332,7 +445,13 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
                 </Panel.Header>
                 <Panel.Body classNames='relative' data-testid='spec-article.panel' data-view={view}>
                   {view === 'definitions' && (
-                    <DefinitionGraph content={text} specs={specs} review={review} onActivate={activate} />
+                    <DefinitionGraph
+                      content={text}
+                      base={baseText}
+                      specs={specs}
+                      review={review}
+                      onActivate={activate}
+                    />
                   )}
                   {view === 'review' && (
                     <ReviewPanel
@@ -341,6 +460,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
                       selected={selectedVerdict}
                       onSelect={selectVerdict}
                       onOpenCode={(target) => void open(target)}
+                      read={read}
                     />
                   )}
                   {view === 'code' &&

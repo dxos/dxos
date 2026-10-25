@@ -31,6 +31,9 @@ const REVIEWED_KINDS = new Set([
   'test',
 ]);
 
+/** A walkthrough says where things are; more steps than this retells the code. */
+const MAX_WALKTHROUGH = 5;
+
 /** Kinds judged on whether automation exercises them rather than on whether code implements them. */
 const EXERCISE_KINDS = new Set(['scenario', 'test']);
 
@@ -213,6 +216,34 @@ export const checkReview = Effect.fnUntraced(function* (reviewPath: string) {
         errors.push(`${at}: a test key names the test file only, without #: ${key}`);
       } else if (file && !(yield* exists(file))) {
         errors.push(`${at}: test file not found: ${key}`);
+      }
+    }
+    // Each step is `- <sentence>. github:<key>`; the joined field holds them as `- ` separated items.
+    const steps = (field(body, 'walkthrough') ?? '')
+      .split(/(?:^|\s)-\s+/)
+      .map((step) => step.trim())
+      .filter(Boolean);
+    if (steps.length > MAX_WALKTHROUGH) {
+      errors.push(`${at}: ${id} has ${steps.length} walkthrough steps; keep it to ${MAX_WALKTHROUGH}`);
+    }
+    if (steps.length > 0 && evidence.length < 2) {
+      warnings.push(`${at}: ${id} has one implementation; its code chip already shows it, so drop the walkthrough`);
+    }
+    for (const step of steps) {
+      const key = step.match(/(github:\S+)\s*$/)?.[1];
+      if (!key) {
+        errors.push(`${at}: walkthrough step does not end with a github: key: ${step}`);
+        continue;
+      }
+      const { file, symbol, error } = yield* resolveKey(key);
+      if (error) {
+        errors.push(`${at}: ${error}`);
+      } else if (file && !(yield* exists(file))) {
+        errors.push(`${at}: walkthrough file not found: ${key}`);
+      } else if (file && symbol) {
+        if (!declares(yield* fs.readFileString(file), symbol.split('.').pop() ?? symbol)) {
+          errors.push(`${at}: no declaration of ${symbol} in ${key.split('#')[0]} (walkthrough)`);
+        }
       }
     }
   }
