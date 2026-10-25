@@ -233,7 +233,14 @@ const TextBlock = ({
     // While editing, the editor owns its content and its authorisation: pinning both keeps an incoming
     // `text` update or member-list refresh from rebuilding the view being typed in. `editing` is
     // itself a dep, so the flip still rebuilds.
-    [editing, editing ? undefined : text, editing ? undefined : isAuthor, themeMode, handleDocumentChange, mentions],
+    [
+      editing,
+      editing ? undefined : text,
+      editing ? undefined : isAuthor,
+      themeMode,
+      handleDocumentChange,
+      editing ? undefined : mentions,
+    ],
   );
 
   useEffect(() => {
