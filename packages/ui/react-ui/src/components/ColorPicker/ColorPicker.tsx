@@ -188,7 +188,8 @@ const ColorPickerTrigger = ({
             data-surface='popup'
             className={mx(recipes.popup(), recipes.popoverContent(), 'p-2')}
           >
-            <Tabs.Root defaultValue={views[0]} size='sm'>
+            {/* Keyed by the views, so a change of views starts again on the first one rather than keeping a missing tab. */}
+            <Tabs.Root key={views.join()} defaultValue={views[0]} size='sm'>
               <Toolbar.Root size='sm'>
                 {views.length > 1 && (
                   <Tabs.List aria-label={label}>

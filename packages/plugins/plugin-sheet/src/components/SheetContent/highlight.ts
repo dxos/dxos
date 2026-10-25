@@ -34,7 +34,7 @@ const toneOf = (color: string): number | undefined => {
   return tones.get(color);
 };
 
-// The lightness of an `oklch()` color, as a fraction; a 500 tone sits near 0.62 to 0.77 depending on the hue.
+// The lightness of an `oklch()` color, as a fraction.
 const OKLCH = /^oklch\(\s*([\d.]+)(%?)/i;
 
 /** A highlight's lightness, when the color is not one of the theme's tones (e.g. stored from another palette). */
@@ -43,7 +43,7 @@ const lightnessOf = (color: string): number | undefined => {
   return match ? Number(match[1]) / (match[2] ? 100 : 1) : undefined;
 };
 
-/** The text color for a highlighted cell: by its theme tone, else by its lightness; other colors keep the grid's own. */
+/** The text color for a highlighted cell: by its theme tone, else by contrast; other colors keep the grid's own. */
 export const highlightForeground = (background: string | undefined): string | undefined => {
   if (!background) {
     return undefined;
@@ -53,5 +53,11 @@ export const highlightForeground = (background: string | undefined): string | un
     return tone > 500 ? LIGHT_TEXT : DARK_TEXT;
   }
   const lightness = lightnessOf(background);
-  return lightness === undefined ? undefined : lightness > 0.7 ? DARK_TEXT : LIGHT_TEXT;
+  if (lightness === undefined) {
+    return undefined;
+  }
+  // Relative luminance from OKLCH lightness (exact for a neutral color, close for others), then whichever text color
+  // has the higher WCAG contrast against it.
+  const luminance = lightness ** 3;
+  return (luminance + 0.05) / 0.05 >= 1.05 / (luminance + 0.05) ? DARK_TEXT : LIGHT_TEXT;
 };
