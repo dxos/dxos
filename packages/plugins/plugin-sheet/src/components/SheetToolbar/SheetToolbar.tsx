@@ -11,7 +11,6 @@ import { useObject } from '@dxos/echo-react';
 import {
   type ActionGraphProps,
   ActionToolbar,
-  createGapSeparator,
   graphActions,
   isToolbarAction,
   useMenuActions,
@@ -26,8 +25,8 @@ import { useSheetContext } from '../SheetRoot/index.ts';
 
 const NO_FORMATTING: Formatting = { styles: [] };
 
-/** The toolbar's own actions are the formatting sections; contributed actions follow a gap, at the toolbar's end. */
-const TRAILING_ACTIONS = Atom.make<ActionGraphProps>(createGapSeparator());
+/** The toolbar's own actions are the formatting sections; this graph is empty, so the action toolbar holds only contributed ones. */
+const NO_ACTIONS = Atom.make<ActionGraphProps>({ nodes: [], edges: [] });
 
 export type SheetToolbarProps = {};
 
@@ -58,7 +57,7 @@ export const SheetToolbar = Util.composable<HTMLDivElement, SheetToolbarProps>((
     () => Atom.make((get) => graphActions(graph, get, attendableId, { filter: isToolbarAction })),
     [graph, attendableId],
   );
-  const menuActions = useMenuActions(TRAILING_ACTIONS);
+  const menuActions = useMenuActions(NO_ACTIONS);
 
   return (
     <div {...Util.composableProps(props, { classNames: 'flex items-center min-w-0' })} ref={forwardedRef}>
@@ -70,7 +69,13 @@ export const SheetToolbar = Util.composable<HTMLDivElement, SheetToolbarProps>((
           testId='grid.toolbar'
         />
       </Toolbar.Root>
-      <ActionToolbar {...menuActions} attendableId={attendableId} customActions={customActions} />
+      {/* Contributed actions (e.g. comment) sit at the toolbar's end. */}
+      <ActionToolbar
+        {...menuActions}
+        attendableId={attendableId}
+        customActions={customActions}
+        classNames='justify-end'
+      />
     </div>
   );
 });
