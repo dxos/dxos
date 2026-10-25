@@ -1,0 +1,160 @@
+---
+id: org.dxos.feed
+name: Feed
+version: 0.1.0
+---
+
+`@dxos/feed` is the feed store: the SQLite tables that hold every feed's blocks, on a device
+(`EchoHost`) and on EDGE (the `FeedSpace` Durable Object, `db-service/src/worker/feed-space`). This
+spec covers the store's side of a feed's **indexing and retention options**: how it keeps them and
+how it enforces retention.
+
+The options are fields of the `Feed` ECHO object (`packages/core/echo/echo/SPEC.mdl` [F-7]). The
+store never reads that object; the indexer carries them down as a feed-options intent and calls
+`setFeedOptions` (`packages/core/echo/index-core/SPEC.mdl` [F-2]). What the indexer does with a
+feed whose indexing is disabled is in that spec too [F-3].
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term       | URI                         |
+| ---------- | --------------------------- |
+| `feat`     | `org.dxos.mdl.feat@1.0`     |
+| `scenario` | `org.dxos.mdl.scenario@1.0` |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+
+## Features
+
+```mdl
+feat F-1: Options in the feed store
+
+  req F-1.1:
+    when: FeedStore.setFeedOptions({ spaceId, feedId, namespace, indexing, retention }) is called
+    then: the options are stored on the feed's row of the feeds table (a new migration adds the
+          column), creating the row when the feed has no blocks yet, and getFeedOptions returns them
+
+  req F-1.2:
+    when: setFeedOptions is called with the options already stored
+    then: it changes nothing and trims nothing
+
+  req F-1.3:
+    when: a feed has no stored options
+    then: indexing is enabled and only the host's own limits apply (see [F-2.6])
+
+  req F-1.4:
+    when: feeds sync between a device and EDGE
+    then: options are not part of the sync protocol; each store learns them only from its own
+          index pass of the Feed object
+
+  req F-1.5:
+    when: FeedSpace (EDGE) receives setFeedOptions from the Indexer DO
+    then: it is a public RPC method listed in the DO's rpcMethods and applies the options to the
+          space's FeedStore in one transaction
+```
+
+```mdl
+feat F-2: Retention
+
+  req F-2.1:
+    when: a feed has retention.maxLength = N
+    then: after every append, every sync pull and every options apply, the store keeps at most the
+          N newest blocks of the feed and deletes the rest in the same transaction
+
+  req F-2.2:
+    when: a feed has retention.maxAge = D
+    then: query and subscribe never return a block whose timestamp is older than now - D, from the
+          moment it expires; the store deletes such blocks at the next append, pull, options apply,
+          store open, or (on EDGE) Durable Object alarm
+
+  req F-2.3:
+    when: both limits are set
+    then: a block is dropped when it breaks either limit
+
+  req F-2.4:
+    when: a sync pull brings in blocks that the local retention would drop
+    then: they are dropped in the same transaction that inserts them, and the pull does not request
+          them again
+
+  req F-2.5:
+    when: retention would delete a block that holds the newest version of a live feed object
+    then: the block is still deleted; retention trims by position and does not compact superseded
+          versions (that is the separate compaction work in .agents/projects/feed-live-objects)
+
+  req F-2.6:
+    when: a trace-namespace feed on EDGE has stored options
+    then: the limit is the smaller of retention.maxLength and config.queues.maxTraceQueueItems;
+          with no maxLength, maxTraceQueueItems applies as it does today
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: Retention by length
+  given: a feed with 10 items and retention { maxLength: 5 }, applied
+  when: 3 more items are appended
+  then:
+    - Feed.query(feed) returns the 5 newest items
+    - countBlocks for the feed is 5
+```
+
+```mdl
+scenario T-2: Retention by age
+  given: a feed with retention { maxAge: 1 hour } and items appended 2 hours and 10 minutes ago
+  when: Feed.query(feed) runs, before any trim
+  then:
+    - only the item from 10 minutes ago is returned
+    - after the next append the 2-hour-old block is gone from the store
+```
+
+```mdl
+scenario T-3: EDGE applies the same options
+  given: a feed with retention { maxLength: 2 } replicated to EDGE
+  when: EDGE's Indexer DO applies the feed's options intent
+  then:
+    - FeedSpace.setFeedOptions stores the options and the EDGE store keeps 2 blocks
+    - a device that pulls the feed from EDGE stores at most 2 blocks
+```
+
+## Changelog
+
+```mdl
+decision D-1: Retention is a maximum length and/or a maximum age.
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [F-2]
+```
+
+```mdl
+decision D-2: Indexing and retention options set on the Feed ECHO object flow down to the feed in the feed store.
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [F-1]
+```
+
+```mdl
+decision D-3: Options live on the feeds row of each store and are not part of feed sync. Fills in [D-2].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.1, F-1.4]
+  why: The Feed object already replicates; a second path for the same value could disagree with it.
+```
+
+```mdl
+decision D-4: Retention trims on append, pull, options apply and store open; expired items are hidden from reads at once and deleted lazily. Fills in [D-1].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.1, F-2.2, F-2.4]
+  why: Age expires with no write to trigger a trim, so reads must filter; deleting lazily keeps the cost on paths that already write.
+```
+
+```mdl
+decision D-5: On EDGE, the trace-feed limit maxTraceQueueItems stays a cap; a feed's maxLength can lower it, not raise it. Fills in [D-1].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.6]
+  why: The config value bounds EDGE storage cost, which a space member must not be able to lift by editing an object.
+```

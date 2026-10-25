@@ -15,11 +15,16 @@ import { Spec } from '@dxos/types';
 
 import { translations } from '#translations';
 
+import ECHO_SPEC from '../../../../../core/echo/echo/SPEC.mdl?spec';
+import FEED_SPEC from '../../../../../core/echo/feed/SPEC.mdl?spec';
+import INDEX_CORE_SPEC from '../../../../../core/echo/index-core/SPEC.mdl?spec';
 import CHESS_1_MDL from '../../../../../reflect/deus/lang/examples/chess-1.mdl?raw';
 import CONNECTOR_EVENTS_MDL from '../../../../plugin-connector/spec/EVENTS.mdl?raw';
 import GITHUB_FILE_SYNC_MDL from '../../../../plugin-github/spec/FILE-SYNC.mdl?raw';
 import GITHUB_SYNC_MDL from '../../../../plugin-github/spec/SYNC.mdl?raw';
 import PLUGIN_CODE_MDL from '../../../PLUGIN.mdl?raw';
+import { type SpecFile, useSpecTexts } from '../../testing/index.ts';
+import ECHO_BASE_MDL from './__fixtures__/echo.base.mdl?raw';
 import PLUGIN_CODE_BASE_MDL from './__fixtures__/plugin-code.base.mdl?raw';
 import { SpecArticle } from './SpecArticle.tsx';
 
@@ -105,4 +110,29 @@ export const Diff: Story = {
       defaultDiff='base'
     />
   ),
+};
+
+/** A spec in diff mode against its text on main; an empty base shows a spec new on the branch as all added. */
+const DiffStory = ({ file, base }: { file: SpecFile; base: string }) => {
+  const texts = useSpecTexts({ content: file });
+  if (!texts?.content) {
+    return <Loading />;
+  }
+
+  return <SpecArticle role='article' attendableId='story' content={texts.content} base={base} defaultDiff='base' />;
+};
+
+/** The `Feed` object's indexing and retention options, against `@dxos/echo`'s spec on main. */
+export const FeedOptionsObject: Story = {
+  render: () => <DiffStory file={ECHO_SPEC} base={ECHO_BASE_MDL} />,
+};
+
+/** Indexer intents, the feed-options kind and feeds with indexing disabled, a spec new on the branch. */
+export const FeedOptionsIndexer: Story = {
+  render: () => <DiffStory file={INDEX_CORE_SPEC} base='' />,
+};
+
+/** The feed store keeping the options and enforcing retention, a spec new on the branch. */
+export const FeedOptionsStore: Story = {
+  render: () => <DiffStory file={FEED_SPEC} base='' />,
 };
