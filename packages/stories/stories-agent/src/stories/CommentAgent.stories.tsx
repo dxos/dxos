@@ -4,9 +4,11 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
+import { userEvent, waitFor, within } from 'storybook/test';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
-import { type Database, Filter, type Obj, type Type } from '@dxos/echo';
+import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import { type Database, type Obj } from '@dxos/echo';
 import * as CanvasType from '@dxos/plugin-canvas/Canvas';
 import * as CanvasPlugin from '@dxos/plugin-canvas/CanvasPlugin';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
@@ -25,7 +27,16 @@ import { Cell, type ModuleLayout, UpdateCompanionStubPlugin, addToRootCollection
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 
 import { StorySettingsToolbar } from '../modules/index.ts';
-import { ModuleContainer, createDecorators, storyConfig, storyParameters } from '../testing/index.ts';
+import {
+  type DecoratorsProps,
+  FAKE_REPLY,
+  ModuleContainer,
+  createDecorators,
+  edgeFake,
+  fakeCommentAgent,
+  storyConfig,
+  storyParameters,
+} from '../testing/index.ts';
 
 type StoryArgs = {
   /** Keeps the profile (space, threads, hidden chats) across reloads; a change reboots the story. */
@@ -57,20 +68,22 @@ const meta: Meta<StoryArgs> = {
   },
   argTypes: { persistent: { control: 'boolean' } },
   args: { persistent: false },
-  tags: ['!test'],
 };
 
 export default meta;
 
 type Story = StoryObj<StoryArgs>;
 
-/** The objects a comment can be left on, the review plugin that owns the threads, and the space it persists them in. */
-const commentPlugins = () => [
+/**
+ * The objects a comment can be left on, the review plugin that owns the threads, and the space it persists them in.
+ * Without an `agentRunner` the review plugin uses the one the assistant contributes.
+ */
+const commentPlugins = (agentRunner?: AppCapabilities.CommentAgentRunner) => [
   SpacePlugin.make({}),
   MarkdownPlugin.make(),
   IllustratorPlugin.make(),
   CanvasPlugin.make(),
-  ReviewPlugin.make(),
+  ReviewPlugin.make({ agentRunner }),
   UpdateCompanionStubPlugin(),
 ];
 
@@ -93,24 +106,23 @@ const commentLayout = (space: Space, object: Obj.Unknown): ModuleLayout => {
 };
 
 /**
- * Leaves an opening comment on the space's object of `type`, so the story starts with a thread to reply to: on the
- * text `range` when given (a highlighted span in a document), else on the object as a whole.
+ * Leaves an opening comment on `subject`, so the story starts with a thread to reply to: on the text `range` when given
+ * (a highlighted span in a document), else on the object as a whole.
  */
 const seedComment = async ({
   db,
   invoker,
-  type,
+  subject,
   text,
   range,
 }: {
   db: Database.Database;
   invoker: Capabilities.OperationInvoker;
-  type: Type.AnyObj;
+  subject: Obj.Unknown;
   text: string;
   range?: { from: number; to: number };
 }) => {
   await db.flush({ indexes: true });
-  const [subject] = await db.query(Filter.type(type)).run();
   await invoker.invokePromise(
     CommentOperation.Create,
     { subject, ...(range ? { range } : { anchor: Date.now().toString() }), text, sender: { name: 'Alice' } },
@@ -121,51 +133,137 @@ const seedComment = async ({
 const RELEASE_NOTES = '# Release notes\n\nComment threads now run on feeds, and the assistant answers them.\n';
 const COMMENTED = 'the assistant answers them';
 
+type Subject = Pick<DecoratorsProps, 'onInit' | 'onReady'>;
+
 /**
- * A comment on a Markdown document, answered by the assistant with the markdown skills, on the EDGE the toolbar picks.
- * Setup: the package README (local EDGE, or pick dev in the toolbar).
+ * The story's object, created in `onInit` and commented on in `onReady`. Handed over directly rather than queried,
+ * since a query right after boot can miss an object the index has not caught up with.
+ */
+const makeSubject = ({
+  create,
+  text,
+  range,
+}: {
+  create: (space: Space) => Obj.Unknown;
+  text: string;
+  range?: { from: number; to: number };
+}): Subject => {
+  let subject: Obj.Unknown | undefined;
+  return {
+    onInit: async ({ space }) => {
+      subject = create(space);
+      return commentLayout(space, subject);
+    },
+    onReady: async ({ db, invoker }) => {
+      if (subject) {
+        await seedComment({ db, invoker, subject, text, range });
+      }
+    },
+  };
+};
+
+/** A Markdown document with a comment anchored to a phrase. */
+const markdownSubject = () =>
+  makeSubject({
+    create: (space) => space.db.add(MarkdownType.make({ name: 'Release notes', content: RELEASE_NOTES })),
+    text: 'Is this clear enough for users?',
+    range: { from: RELEASE_NOTES.indexOf(COMMENTED), to: RELEASE_NOTES.indexOf(COMMENTED) + COMMENTED.length },
+  });
+
+/** A canvas drawing with a comment on the whole diagram. */
+const canvasSubject = () =>
+  makeSubject({
+    create: (space) => {
+      const canvas = space.db.add(Drawing.makeCanvas({ schema: CanvasType.SCENE_SCHEMA }));
+      return space.db.add(Drawing.make({ name: 'Architecture', canvas }));
+    },
+    text: 'Can we show where EDGE fits in?',
+  });
+
+/** No EDGE and no agent stack: the fake runner answers, so the story runs offline. */
+const fakeDecorators = (subject: Subject) =>
+  createDecorators<StoryArgs>({
+    config: edgeFake,
+    agents: false,
+    plugins: commentPlugins(fakeCommentAgent),
+    types: commentTypes,
+    ...subject,
+  });
+
+/** The assistant answers through the review plugin's default (mention) mode, on the EDGE the toolbar picks. */
+const liveDecorators = (subject: Subject) =>
+  createDecorators<StoryArgs>(({ args }) => ({
+    config: storyConfig({ persistent: args.persistent }),
+    plugins: commentPlugins(),
+    types: commentTypes,
+    ...subject,
+  }));
+
+/** Replies `@Kai …` in the seeded thread and waits for the fake assistant's answer. */
+const replyWithMention = async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+  const canvas = within(canvasElement);
+  const thread = await canvas.findByTestId('thread', undefined, { timeout: 30_000 });
+  const composer = await waitFor(
+    () => {
+      const editors = thread.querySelectorAll<HTMLElement>('[contenteditable="true"]');
+      const editor = editors[editors.length - 1];
+      if (!editor) {
+        throw new Error('reply composer not rendered');
+      }
+      return editor;
+    },
+    { timeout: 30_000 },
+  );
+  await userEvent.click(composer);
+  await userEvent.keyboard('@Kai hello{Enter}');
+  await canvas.findByText(new RegExp(FAKE_REPLY), undefined, { timeout: 30_000 });
+};
+
+/**
+ * A comment on a Markdown document, answered by a fake assistant (no EDGE).
+ *
+ * Try:
+ * 1. Reply `@Kai hello`: the fake assistant answers in the thread.
+ * 2. Reply without `@Kai`: nothing answers (the comment agent mode is `mention`).
+ * 3. Select text and click the toolbar's comment button: a new thread anchored to the selection opens.
+ */
+export const Markdown: Story = {
+  decorators: fakeDecorators(markdownSubject()),
+  play: replyWithMention,
+};
+
+/**
+ * A comment on a canvas drawing, answered by a fake assistant (no EDGE).
+ *
+ * Try:
+ * 1. Reply `@Kai hello`: the fake assistant answers in the thread.
+ */
+export const Canvas: Story = {
+  decorators: fakeDecorators(canvasSubject()),
+  play: replyWithMention,
+};
+
+/**
+ * A comment on a Markdown document, answered by the real assistant with the markdown skills. Pick an EDGE in the
+ * toolbar (see the package README).
  *
  * Try:
  * 1. Reply `@Kai summarise this document in one sentence`: Kai answers in the thread.
  * 2. Reply `@Kai add a closing paragraph`: Kai edits the document and says what it changed.
- * 3. Select text and click the toolbar's comment button: a new thread anchored to the selection opens.
- * 4. Reply without `@Kai`: nothing answers (the default comment agent mode is `mention`).
  */
-export const Markdown: Story = {
-  decorators: createDecorators<StoryArgs>(({ args }) => ({
-    config: storyConfig({ persistent: args.persistent }),
-    plugins: commentPlugins(),
-    types: commentTypes,
-    onInit: async ({ space }) =>
-      commentLayout(space, space.db.add(MarkdownType.make({ name: 'Release notes', content: RELEASE_NOTES }))),
-    onReady: ({ db, invoker }) =>
-      seedComment({
-        db,
-        invoker,
-        type: MarkdownType.Document,
-        text: 'Is this clear enough for users?',
-        range: { from: RELEASE_NOTES.indexOf(COMMENTED), to: RELEASE_NOTES.indexOf(COMMENTED) + COMMENTED.length },
-      }),
-  })),
+export const MarkdownAgent: Story = {
+  decorators: liveDecorators(markdownSubject()),
+  tags: ['!test'],
 };
 
 /**
- * A comment on a canvas drawing, answered by the assistant with the illustrator's skills.
+ * A comment on a canvas drawing, answered by the real assistant with the illustrator's skills.
  *
  * Try:
  * 1. Reply `@Kai add a box labelled Edge connected to a box labelled Client`: Kai draws them and says so.
  * 2. Reply `@Kai what is this diagram about?`: Kai answers in the thread.
  */
-export const Canvas: Story = {
-  decorators: createDecorators<StoryArgs>(({ args }) => ({
-    config: storyConfig({ persistent: args.persistent }),
-    plugins: commentPlugins(),
-    types: commentTypes,
-    onInit: async ({ space }) => {
-      const canvas = space.db.add(Drawing.makeCanvas({ schema: CanvasType.SCENE_SCHEMA }));
-      return commentLayout(space, space.db.add(Drawing.make({ name: 'Architecture', canvas })));
-    },
-    onReady: ({ db, invoker }) =>
-      seedComment({ db, invoker, type: Drawing.Drawing, text: 'Can we show where EDGE fits in?' }),
-  })),
+export const CanvasAgent: Story = {
+  decorators: liveDecorators(canvasSubject()),
+  tags: ['!test'],
 };
