@@ -264,7 +264,8 @@ export const Canvas: Story = {
  * A comment on a Markdown document, answered by the real assistant with the markdown skills. Pick an EDGE in the
  * toolbar (see the package README).
  *
- * The play replies `@kai translate this into japanese` and waits for Kai's answer; a turn takes up to a minute.
+ * The play replies `@kai translate this into japanese` and waits for Kai to translate the commented phrase in place
+ * and say so; a turn takes up to a minute.
  *
  * Try:
  * 1. Reply `@Kai summarise this document in one sentence`: Kai answers in the thread.
@@ -272,7 +273,18 @@ export const Canvas: Story = {
  */
 export const MarkdownAgent: Story = {
   decorators: liveDecorators(markdownSubject()),
-  play: replyAndAwaitAgent({ text: TRANSLATE, timeout: 120_000 }),
+  play: async (context) => {
+    await replyAndAwaitAgent({ text: TRANSLATE, timeout: 120_000 })(context);
+    // A translation is an edit in place: the anchored English phrase leaves the document.
+    await waitFor(
+      () => {
+        if (context.canvasElement.querySelector('.cm-content')?.textContent?.includes(COMMENTED)) {
+          throw new Error('the commented phrase was not translated in place');
+        }
+      },
+      { timeout: 30_000 },
+    );
+  },
   tags: ['!test'],
 };
 

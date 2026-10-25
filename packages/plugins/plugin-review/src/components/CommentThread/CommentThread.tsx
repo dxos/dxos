@@ -96,13 +96,7 @@ export const CommentThread = ({
   const threadUri = thread ? Obj.getURI(thread) : undefined;
   const [status] = useObject(thread, 'status');
   const feedMessages = useThreadMessages(thread);
-  const mentionExtension = useMemo(
-    () =>
-      mentions?.length
-        ? mention({ onSearch: (text) => mentions.filter((name) => name.toLowerCase().startsWith(text)) })
-        : undefined,
-    [mentions],
-  );
+  const mentionExtension = useMemo(() => (mentions?.length ? mention({ names: mentions }) : undefined), [mentions]);
   const loadedMessages = messages ?? feedMessages;
 
   const handleAttend = useCallback(() => onAttend?.(anchor), [onAttend, anchor]);
