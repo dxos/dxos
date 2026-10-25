@@ -444,7 +444,7 @@ export class SqlPlanCompiler {
         const target = canonicalTag(filter.tag);
         // A tag is an encoded reference or (legacy) a bare URI; both sides compare by entity id.
         return sql`EXISTS (SELECT 1 FROM json_each(d.snapshot, ${tagsPath}) t
-          WHERE ${localIdOfUri(sql, sql`COALESCE(json_extract(t.value, '$."/"'), t.value)`)} = ${target})`;
+          WHERE ${localIdOfUri(sql, tagUriOf(sql, sql`t`))} = ${target})`;
       }
       case 'annotation': {
         // Keys are matched with `json_each` rather than a JSON path, which cannot address every key
@@ -741,9 +741,9 @@ export class SqlPlanCompiler {
         FROM ${sql.literal(this.#peekName('sdep'))} x JOIN ${docRow(sql, 'p')} ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId
         WHERE x.depth < ${MAX_DEPTH_FOR_STRONG_DEP_TRACING} AND ${extra} ${depId} IS NOT NULL`;
     const relation = (row: Fragment) => sql`${row}.entityKind = 'relation' AND`;
-    // Tags live in the snapshot's meta, one dependency per element: an encoded reference or (legacy) a bare URI.
+    // Tags live in the snapshot's meta, one dependency per element.
     const tagsPath = jsonPathLiteral(sql, [ATTR_META, 'tags']);
-    const tagId = localIdOfLocalUri(sql, sql`COALESCE(json_extract(t.value, '$."/"'), t.value)`);
+    const tagId = localIdOfLocalUri(sql, tagUriOf(sql, sql`t`));
     const seedTags = sql`SELECT w.recordId, m.spaceId, ${tagId} AS depId, 1 AS depth
         FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectSnapshot d ON d.recordId = w.recordId, json_each(d.snapshot, ${tagsPath}) t
         WHERE m.queueId = '' AND ${tagId} IS NOT NULL`;
@@ -1533,6 +1533,13 @@ const structuralMatch = (sql: SqlClient.SqlClient, element: Fragment, operand: R
 /** `objectMeta` aliased for a document-row point lookup by (space, queue, object), with the index pinned. */
 const docRow = (sql: SqlClient.SqlClient, alias: string): Fragment =>
   sql`objectMeta ${sql.literal(alias)} INDEXED BY ${sql.literal(INDEX_SPACE_QUEUE_OBJECT)}`;
+
+/**
+ * The URI of one `json_each` element of `meta.tags`: an encoded reference, or (legacy) a bare URI, whose
+ * text `json_extract` would reject as malformed JSON — so the element's type picks the read.
+ */
+const tagUriOf = (sql: SqlClient.SqlClient, element: Fragment): Fragment =>
+  sql`CASE ${element}.type WHEN 'object' THEN json_extract(${element}.value, '$."/"') WHEN 'text' THEN ${element}.value END`;
 
 /** The entity id of an `echo:` URI (the text after its last slash), `NULL` for any other text. */
 const localIdOfUri = (sql: SqlClient.SqlClient, uri: Fragment): Fragment =>

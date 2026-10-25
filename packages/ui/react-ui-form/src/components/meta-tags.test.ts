@@ -8,9 +8,10 @@ import { describe, test } from 'vitest';
 import { Obj, Ref, Tag } from '@dxos/echo';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
+import { EID, URI } from '@dxos/keys';
 
 import { Organization } from '../testing/schema.ts';
-import { META_TAGS_KEY, filterTagCandidates, partitionMetaTags, withMetaTags } from './meta-tags.ts';
+import { META_TAGS_KEY, filterTagCandidates, partitionMetaTags, resolveMetaTags, withMetaTags } from './meta-tags.ts';
 
 // A feed-host schema whose own `tags` field is a `TagIndex` record (tagId -> objectId[]), not an
 // array — mirrors plugin-commerce `Search`, plugin-inbox `Mailbox`, plugin-magazine `Subscription`.
@@ -113,5 +114,16 @@ describe('partitionMetaTags', () => {
 
   test('no tags is a no-op', ({ expect }) => {
     expect(partitionMetaTags([])).toEqual({ editable: [], preserved: [] });
+  });
+});
+
+describe('resolveMetaTags', () => {
+  test('resolves a picker ref built from a bare URI through the database', ({ expect }) => {
+    const tag = Tag.make({ label: 'Reading' });
+    const db = { getObjectById: (id: string) => (id === tag.id ? tag : undefined) };
+    // The ref picker selects by id, so its refs have no target of their own to read.
+    const picked = Ref.fromURI(URI.make(EID.make({ entityId: tag.id })));
+    expect(resolveMetaTags([picked], db)).toEqual([tag]);
+    expect(resolveMetaTags([picked], undefined)).toEqual([]);
   });
 });

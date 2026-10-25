@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Tag } from '@dxos/echo';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
+import { EID } from '@dxos/keys';
 
 import { omitId } from '../util/index.ts';
 
@@ -80,9 +81,17 @@ export const partitionMetaTags = (tags: readonly Tag.Tag[]): { editable: Tag.Tag
   return { editable, preserved };
 };
 
-/** The tags a form's ref picker selected, as the {@link Tag} objects `meta.tags` holds. */
-export const resolveMetaTags = (refs: readonly Ref.Ref<Tag.Tag>[]): Tag.Tag[] =>
+/**
+ * The tags a form's ref picker selected, as the {@link Tag} objects `meta.tags` holds. Looked up in the
+ * database: the picker builds its refs from bare URIs, whose `target` has no resolver to read through.
+ */
+export const resolveMetaTags = (
+  refs: readonly Ref.Ref<Tag.Tag>[],
+  db: { getObjectById: (id: string) => unknown } | undefined,
+): Tag.Tag[] =>
   refs.flatMap((ref) => {
-    const tag = ref.target;
+    const eid = EID.tryParse(ref.uri);
+    const entityId = eid ? EID.getEntityId(eid) : undefined;
+    const tag = entityId ? db?.getObjectById(entityId) : undefined;
     return isTag(tag) ? [tag] : [];
   });
