@@ -7,6 +7,7 @@ import { type Locator, type Page, expect } from '@playwright/test';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { type SpaceId } from '@dxos/keys';
 
+import { describeReplication, waitForReplication } from '../perf/replication.ts';
 import { defineScenario, invokeInPage } from '../perf/scenario.ts';
 
 /** Restated from `@dxos/compute`, whose module graph does not load under Playwright. */
@@ -145,6 +146,11 @@ defineScenario({
     // The session the stages open starts empty, while every other chat in the space has history.
     const projectId = await createProject(page, spaceId, 'Perf session project');
     await openProject(page, spaceId, projectId);
+    // The seeded chats replicate to EDGE in the background; waiting here keeps that I/O out of the stages.
+    const replication = await waitForReplication(page, spaceId, { timeoutMs: 180_000 });
+    if (replication.outcome === 'timeout') {
+      throw new Error(describeReplication(replication));
+    }
     opened = { spaceId, projectId };
   },
   stages: async ({ page, stage, budget }) => {
