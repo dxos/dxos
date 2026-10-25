@@ -142,7 +142,7 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
                       disabled={!selectedIndex || ranges.some(({ range }) => range === selectedIndex)}
                       onClick={() => handleUseSelection(range)}
                     />
-                    <SystemButton.Remove onClick={() => handleDelete(range)} />
+                    <SystemButton.Remove variant='ghost' onClick={() => handleDelete(range)} />
                   </OrderedList.Item>
                 ))}
               </OrderedList.Content>
