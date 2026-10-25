@@ -306,7 +306,7 @@ const meta = {
                 }
                 if (context.parameters?.ambientReview) {
                   const text = yield* Effect.promise(() => doc.content.load());
-                  seedComments(defaultSpace, doc, text, [COMMENT_ANCHOR]);
+                  yield* Effect.promise(() => seedComments(defaultSpace, doc, text, [COMMENT_ANCHOR]));
                 }
                 yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
               }),

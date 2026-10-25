@@ -18,7 +18,7 @@ import { bindChatDefaults, contributesPluginManager } from '../util/default-skil
 
 const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = AssistantOperation.CreateChat.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ name, instructions }) {
+    Effect.fnUntraced(function* ({ name, instructions, feed: feedProp }) {
       const registry = yield* Capability.get(Capabilities.AtomRegistry);
       const { db } = yield* Database.Service;
 
@@ -26,7 +26,7 @@ const handler: Operation.WithHandler<typeof AssistantOperation.CreateChat> = Ass
       // because the default bindings below are written immediately, and `Feed.query` asserts a stored feed.
       // TODO(wittjosiah): Defer binding until the caller has added the chat, so the feed can stay in
       //  memory too — nothing needs to write to a feed before its chat is in the database.
-      const feed = db.add(Feed.make());
+      const feed = feedProp ?? db.add(Feed.make());
       const chat = Chat.make({ name, feed: Ref.make(feed), instructions });
 
       const pluginManager = contributesPluginManager(yield* Capability.getAll(AppCapabilities.SkillDefinition));
