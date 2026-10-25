@@ -35,8 +35,15 @@ export const useSpeechCommand = (onCommand: (command: string) => void): SpeechCo
   const words = useRef<string[]>([]);
   const onCommandRef = useRef(onCommand);
   onCommandRef.current = onCommand;
+  // Set by `stop`: the worker still delivers the stream's closing result, which must not run as a command.
+  const discard = useRef(false);
 
   const onResult = useCallback((committed: Whistle.WhistleWord[], pending: string, ended: boolean) => {
+    if (discard.current) {
+      words.current = [];
+      setHeard(undefined);
+      return;
+    }
     words.current.push(...committed.map(({ word }) => word));
     const text = [...words.current, pending.trim()].join(' ').replace(/\s+/g, ' ').trim();
     if (ended) {
@@ -60,6 +67,7 @@ export const useSpeechCommand = (onCommand: (command: string) => void): SpeechCo
   });
 
   const stop = useCallback(() => {
+    discard.current = true;
     words.current = [];
     setHeard(undefined);
     setActive(false);
@@ -68,7 +76,12 @@ export const useSpeechCommand = (onCommand: (command: string) => void): SpeechCo
   const toggle = useCallback(() => {
     words.current = [];
     setHeard(undefined);
-    setActive((value) => !value);
+    setActive((value) => {
+      if (!value) {
+        discard.current = false;
+      }
+      return !value;
+    });
   }, []);
 
   return {
