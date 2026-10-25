@@ -11,10 +11,12 @@ export const Thread = {
     const inlineButton = plankLocator.getByTestId('comments.comment.add');
     const overflow = plankLocator.getByTestId('toolbar.overflow');
     await expect(inlineButton.or(overflow).first()).toBeVisible();
-    if (!(await inlineButton.isVisible())) {
+    const inline = await inlineButton.isVisible();
+    if (!inline) {
       await overflow.click();
     }
-    const addButton = page.getByTestId('comments.comment.add').first();
+    // The opened menu is the only portalled one, so outside the plank only its item can match.
+    const addButton = inline ? inlineButton : page.getByRole('menu').getByTestId('comments.comment.add');
     // The button's disabled state is driven by aspect, which updates via a
     // debounce after a CodeMirror selection dispatch. Wait until it is enabled.
     await expect(addButton).toBeEnabled();
