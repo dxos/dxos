@@ -1463,7 +1463,11 @@ export class DxGrid extends LitElement {
       aria-colindex=${col}
       aria-rowindex=${row}
       data-testid=${`${plane}.${col}.${row}`}
-      style="grid-column:${visCol + 1};grid-row:${visRow + 1}"
+      style=${styleMap({
+        gridColumn: `${visCol + 1}`,
+        gridRow: `${visRow + 1}`,
+        backgroundColor: cell?.background,
+      })}
     >
       <div role="none" class="dx-grid__cell__content">${cell?.value}${accessory}</div>
       ${

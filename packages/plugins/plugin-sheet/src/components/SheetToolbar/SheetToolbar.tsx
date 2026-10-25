@@ -2,89 +2,76 @@
 // Copyright 2024 DXOS.org
 //
 
-import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
-import type * as Registry from 'effect/reactivity/AtomRegistry';
-import React, { useContext, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-toolkit/Hooks';
-import { type CompleteCellRange } from '@dxos/compute-hyperformula';
+import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import {
   type ActionGraphProps,
   ActionToolbar,
   createGapSeparator,
-  createLineSeparator,
   graphActions,
   isToolbarAction,
   useMenuActions,
 } from '@dxos/react-ui-menu';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Util from '@dxos/react-ui/Util';
 
-import { type SheetModel } from '../../model/index.ts';
+import { SheetUtil } from '#types';
+
+import { type Formatting, FormattingToolbar, formattingAt, writeFormatting } from '../FormattingToolbar/index.ts';
 import { useSheetContext } from '../SheetRoot/index.ts';
-import { createAlign, useAlignState } from './align.ts';
-import { createStyle, useStyleState } from './style.ts';
-import { type ToolbarStateAtom, useToolbarState } from './useToolbarState.ts';
 
-type ToolbarActionsContext = {
-  model: SheetModel;
-  stateAtom: ToolbarStateAtom;
-  registry: Registry.AtomRegistry;
-  cursorFallbackRange?: CompleteCellRange;
-};
+const NO_FORMATTING: Formatting = { styles: [] };
 
-const createToolbarActions = ({
-  model,
-  stateAtom,
-  registry,
-  cursorFallbackRange,
-}: ToolbarActionsContext): Atom.Atom<ActionGraphProps> => {
-  return Atom.make((get) => {
-    const state = get(stateAtom);
-    const context = { model, state, stateAtom, registry, cursorFallbackRange };
-    const align = createAlign(context);
-    const style = createStyle(context);
-    // The alignment and style toggles are separate groups, so a line divides them.
-    const line = createLineSeparator('align-style');
-    const gap = createGapSeparator();
-
-    const graph: ActionGraphProps = {
-      nodes: [...align.nodes, ...line.nodes, ...style.nodes, ...gap.nodes],
-      edges: [...align.edges, ...line.edges, ...style.edges, ...gap.edges],
-    };
-
-    return graph;
-  });
-};
+/** The toolbar's own actions are the formatting sections; contributed actions follow a gap, at the toolbar's end. */
+const TRAILING_ACTIONS = Atom.make<ActionGraphProps>(createGapSeparator());
 
 export type SheetToolbarProps = {};
 
+/**
+ * The formatting sections for the selected cells (showing what applies at the cursor), then any toolbar actions other
+ * plugins contribute for the sheet.
+ */
 export const SheetToolbar = Util.composable<HTMLDivElement, SheetToolbarProps>((props, forwardedRef) => {
   const { attendableId, model, cursorFallbackRange } = useSheetContext();
-  const stateAtom = useToolbarState({});
-  const registry = useContext(RegistryContext);
-  useAlignState(stateAtom);
-  useStyleState(stateAtom);
+  const [ranges] = useObject(model.sheet, 'ranges');
+  const formatting = useMemo(
+    () => (cursorFallbackRange ? formattingAt(model.sheet, cursorFallbackRange.from) : NO_FORMATTING),
+    [model.sheet, ranges, cursorFallbackRange],
+  );
+
+  const handleChange = useCallback(
+    (key: string, values: string[]) => {
+      if (cursorFallbackRange) {
+        const range = SheetUtil.rangeToIndex(model.sheet, cursorFallbackRange);
+        Obj.update(model.sheet, (sheet) => writeFormatting(sheet, range, key, values));
+      }
+    },
+    [model.sheet, cursorFallbackRange],
+  );
 
   const { graph } = Hooks.useAppGraph();
-  const customActions = useMemo(() => {
-    return Atom.make((get) => graphActions(graph, get, attendableId, { filter: isToolbarAction }));
-  }, [graph, attendableId]);
-
-  const actionsCreator = useMemo(
-    () => createToolbarActions({ model, stateAtom, registry, cursorFallbackRange }),
-    [model, stateAtom, registry, cursorFallbackRange],
+  const customActions = useMemo(
+    () => Atom.make((get) => graphActions(graph, get, attendableId, { filter: isToolbarAction })),
+    [graph, attendableId],
   );
-  const menuActions = useMenuActions(actionsCreator);
+  const menuActions = useMenuActions(TRAILING_ACTIONS);
 
   return (
-    <ActionToolbar
-      {...menuActions}
-      attendableId={attendableId}
-      customActions={customActions}
-      {...Util.composableProps(props)}
-      ref={forwardedRef}
-    />
+    <div {...Util.composableProps(props, { classNames: 'flex items-center min-w-0' })} ref={forwardedRef}>
+      <Toolbar.Root classNames='w-auto shrink-0'>
+        <FormattingToolbar
+          formatting={formatting}
+          onChange={handleChange}
+          disabled={!cursorFallbackRange}
+          testId='grid.toolbar'
+        />
+      </Toolbar.Root>
+      <ActionToolbar {...menuActions} attendableId={attendableId} customActions={customActions} />
+    </div>
   );
 });
 
