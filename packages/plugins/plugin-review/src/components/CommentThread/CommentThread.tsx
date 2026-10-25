@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type MouseEvent as ReactMouseEvent, useCallback } from 'react';
+import React, { type MouseEvent as ReactMouseEvent, useCallback, useMemo } from 'react';
 
 import { Obj, Relation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -19,6 +19,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { type AnchoredTo, type Message, Thread as ThreadType } from '@dxos/types';
+import { mention } from '@dxos/ui-editor';
 import { hoverableControlItem } from '@dxos/ui-theme';
 
 import { useThreadMessages } from '#hooks';
@@ -45,6 +46,8 @@ export type CommentThreadProps = Pick<ThreadStatusProps, 'activity'> & {
   authorMetadata: MessageMetadata;
   /** The local identity DID (decides message editability). */
   identityDid?: string;
+  /** Names the composer completes after `@` (space members and the comment agent). */
+  mentions?: string[];
   current?: boolean;
   /** Resolve a message author's presentational metadata; supplied by the container (space-aware). */
   getMetadata: (message: Message.Message) => MessageMetadata;
@@ -74,6 +77,7 @@ export const CommentThread = ({
   components,
   authorMetadata,
   identityDid,
+  mentions,
   current,
   getMetadata,
   onAttend,
@@ -92,6 +96,13 @@ export const CommentThread = ({
   const threadUri = thread ? Obj.getURI(thread) : undefined;
   const [status] = useObject(thread, 'status');
   const feedMessages = useThreadMessages(thread);
+  const mentionExtension = useMemo(
+    () =>
+      mentions?.length
+        ? mention({ onSearch: (text) => mentions.filter((name) => name.toLowerCase().startsWith(text)) })
+        : undefined,
+    [mentions],
+  );
   const loadedMessages = messages ?? feedMessages;
 
   const handleAttend = useCallback(() => onAttend?.(anchor), [onAttend, anchor]);
@@ -240,6 +251,7 @@ export const CommentThread = ({
           {...authorMetadata}
           placeholder={t('message.placeholder')}
           autoFocus={status === 'staged'}
+          extensions={mentionExtension}
           onSend={handleComment}
         />
 

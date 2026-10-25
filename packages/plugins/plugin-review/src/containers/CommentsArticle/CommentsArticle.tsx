@@ -135,6 +135,17 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     },
     [members, agentIdentity],
   );
+  // The agent first: it is the mention a comment most often needs.
+  const mentions = useMemo(
+    () =>
+      [
+        agentIdentity?.name,
+        ...members
+          .filter((member) => member.did !== identity?.did)
+          .map((member) => getMessageMetadata(undefined, member).authorName),
+      ].filter((name): name is string => !!name),
+    [agentIdentity, members, identity],
+  );
   const authorMetadata = useMemo<MessageMetadata>(
     () => getMessageMetadata(subjectId, identity ?? undefined),
     [subjectId, identity],
@@ -504,6 +515,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
               getMetadata={getMetadata}
               authorMetadata={authorMetadata}
               identityDid={identity?.did}
+              mentions={mentions}
               current={currentThreadId === thread.id}
               onAttend={handleAttend}
               onActivate={handleActivate}

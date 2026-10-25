@@ -199,37 +199,47 @@ const liveDecorators = (subject: Subject) =>
     ...subject,
   }));
 
-/** Replies `@Kai …` in the seeded thread and waits for the fake assistant's answer. */
-const replyWithMention = async ({ canvasElement }: { canvasElement: HTMLElement }) => {
-  const canvas = within(canvasElement);
-  const thread = await canvas.findByTestId('thread', undefined, { timeout: 30_000 });
-  const composer = await waitFor(
-    () => {
-      const editors = thread.querySelectorAll<HTMLElement>('[contenteditable="true"]');
-      const editor = editors[editors.length - 1];
-      if (!editor) {
-        throw new Error('reply composer not rendered');
-      }
-      return editor;
-    },
-    { timeout: 30_000 },
-  );
-  await userEvent.click(composer);
-  await userEvent.keyboard('@Kai hello{Enter}');
-  await canvas.findByText(new RegExp(FAKE_REPLY), undefined, { timeout: 30_000 });
-};
+/**
+ * Replies `text` in the seeded thread and waits for the agent's answer: `reply` matches the fake assistant's text, or,
+ * when omitted, any message authored by Kai (the real agent's wording is not fixed).
+ */
+const replyAndAwaitAgent =
+  ({ text, reply, timeout = 30_000 }: { text: string; reply?: RegExp; timeout?: number }) =>
+  async ({ canvasElement }: { canvasElement: HTMLElement }) => {
+    const canvas = within(canvasElement);
+    const thread = await canvas.findByTestId('thread', undefined, { timeout: 30_000 });
+    const composer = await waitFor(
+      () => {
+        const editors = thread.querySelectorAll<HTMLElement>('[contenteditable="true"]');
+        const editor = editors[editors.length - 1];
+        if (!editor) {
+          throw new Error('reply composer not rendered');
+        }
+        return editor;
+      },
+      { timeout: 30_000 },
+    );
+    await userEvent.click(composer);
+    await userEvent.keyboard(`${text}{Enter}`);
+    await (reply
+      ? canvas.findByText(reply, undefined, { timeout })
+      : canvas.findByText('Kai', { exact: true }, { timeout }));
+  };
+
+/** The comment that once went unanswered: a lowercase mention asking for an edit of the anchored text. */
+const TRANSLATE = '@kai translate this into japanese';
 
 /**
  * A comment on a Markdown document, answered by a fake assistant (no EDGE).
  *
  * Try:
- * 1. Reply `@Kai hello`: the fake assistant answers in the thread.
+ * 1. Reply `@kai translate this into japanese` (the play does): the fake assistant answers in the thread.
  * 2. Reply without `@Kai`: nothing answers (the comment agent mode is `mention`).
  * 3. Select text and click the toolbar's comment button: a new thread anchored to the selection opens.
  */
 export const Markdown: Story = {
   decorators: fakeDecorators(markdownSubject()),
-  play: replyWithMention,
+  play: replyAndAwaitAgent({ text: TRANSLATE, reply: new RegExp(FAKE_REPLY) }),
 };
 
 /**
@@ -240,12 +250,14 @@ export const Markdown: Story = {
  */
 export const Canvas: Story = {
   decorators: fakeDecorators(canvasSubject()),
-  play: replyWithMention,
+  play: replyAndAwaitAgent({ text: '@kai hello', reply: new RegExp(FAKE_REPLY) }),
 };
 
 /**
  * A comment on a Markdown document, answered by the real assistant with the markdown skills. Pick an EDGE in the
  * toolbar (see the package README).
+ *
+ * The play replies `@kai translate this into japanese` and waits for Kai's answer; a turn takes up to a minute.
  *
  * Try:
  * 1. Reply `@Kai summarise this document in one sentence`: Kai answers in the thread.
@@ -253,6 +265,7 @@ export const Canvas: Story = {
  */
 export const MarkdownAgent: Story = {
   decorators: liveDecorators(markdownSubject()),
+  play: replyAndAwaitAgent({ text: TRANSLATE, timeout: 120_000 }),
   tags: ['!test'],
 };
 
