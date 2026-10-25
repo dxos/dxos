@@ -284,7 +284,9 @@ const awaitAgent = (canvasElement: HTMLElement, replied: () => boolean, timeout:
   waitFor(
     () => {
       if (!replied() || within(canvasElement).queryByText(PENDING)) {
-        throw new Error('the agent has not replied yet');
+        // The thread's text, since the default DOM dump is cut off before the companion.
+        const thread = canvasElement.querySelector('[data-testid="thread"]')?.textContent ?? '(no thread)';
+        throw new Error(`the agent has not replied yet: ${thread}`);
       }
     },
     { timeout },
@@ -317,7 +319,16 @@ export const Markdown: Story = {
  */
 export const Canvas: Story = {
   decorators: fakeDecorators(canvasSubject),
-  play: replyAndAwaitAgent({ text: '@kai hello', reply: new RegExp(`^${FAKE_REPLY}$`) }),
+  // The seeded comment mentions Kai, so its turn settles first; a reply posted mid-turn would race it.
+  play: async (context) => {
+    const reply = new RegExp(`^${FAKE_REPLY}$`);
+    await awaitAgent(
+      context.canvasElement,
+      () => within(context.canvasElement).queryAllByText(reply).length > 0,
+      30_000,
+    );
+    await replyAndAwaitAgent({ text: '@kai hello', reply })(context);
+  },
 };
 
 /**
