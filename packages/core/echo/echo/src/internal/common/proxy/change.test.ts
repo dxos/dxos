@@ -2,15 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
-import { describe, test } from 'vitest';
+import { beforeEach, describe, test } from 'vitest';
 
 import * as Obj from '../../../Obj.ts';
 import * as Relation from '../../../Relation.ts';
 import * as Tag from '../../../Tag.ts';
 import { TestSchema } from '../../../testing/index.ts';
 
-// One Tag object per label, so a test can name the same tag twice; compared by label.
-const tagsByLabel = new Map<string, Tag.Tag>();
+// One Tag object per label within a test, so a test can name the same tag twice; compared by label.
+let tagsByLabel = new Map<string, Tag.Tag>();
+beforeEach(() => {
+  tagsByLabel = new Map();
+});
 const tag = (label: string): Tag.Tag => {
   const existing = tagsByLabel.get(label) ?? Tag.make({ label });
   tagsByLabel.set(label, existing);
