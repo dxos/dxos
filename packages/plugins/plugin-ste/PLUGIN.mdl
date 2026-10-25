@@ -90,6 +90,7 @@ test QA-1: Rewrite a procedure in STE
       expect: |
         the chat shows a VerifySimplifiedTechnicalEnglish tool call, and the answer has no "should",
         no semicolon, no contraction and no "has been"
+```
 
 ## Changelog
 
