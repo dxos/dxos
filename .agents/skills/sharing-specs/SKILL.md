@@ -128,16 +128,24 @@ The title is the artifact's name (2–4 words, no "spec viewer: …" suffix).
 
 ## 5. Check it before publishing
 
-Serve the packaged directory and run the check. It clicks every tab in headless Chromium, scrolls
-each spec so every diagram mounts, fails on a render error, a page error or a spec under `specs/` that
-did not load, and writes the exact `files` map the page needs (the bundle, its CSS, two automerge
-`.wasm`, fonts, `icons.svg`, `index.json`, and one `specs/….mdl` per spec the tabs show):
+Serve the packaged directory's **parent** and load the page under its directory name: the artifact host
+serves the page under a path, so a root-relative URL (`/icons.svg`) breaks there, and serving the
+directory itself as `/` would hide that. The check clicks every tab in headless Chromium, scrolls each
+spec so every diagram mounts, opens every side-panel view (Review, Code, Decision graph, …), and fails
+on a render error, a page error, a view that crashes the story, an icon whose symbol never loaded, a
+request outside the page's directory, or a spec under `specs/` that did not load. It writes the exact
+`files` map the page needs (the bundle, its CSS, two automerge `.wasm`, fonts, `icons.svg`,
+`index.json`, and every `specs/…` file the tabs fetched, bases and reviews included):
 
 ```bash
-(cd <scratchpad>/spec-artifact && python3 -m http.server 6113 &)
+(cd <scratchpad> && python3 -m http.server 6113 &)
 NODE_PATH=node_modules node .agents/skills/sharing-specs/scripts/check.cjs \
-  http://localhost:6113/page.html 2 <scratchpad>/spec-files.json
+  http://localhost:6113/spec-artifact/page.html <tab count> <scratchpad>/spec-files.json
 ```
+
+`package.py` already makes the icon loader's URLs page-relative and adds every `ph--…` icon the bundle
+names to `icons.svg` from `@phosphor-icons/core`, printing how many it added; an icon it reports as
+not found shows blank in the page.
 
 Kill the server by its PID afterwards; `pkill -f` on a pattern also matches your own shell.
 

@@ -171,6 +171,37 @@ for script in glob.glob('**/*.js', recursive=True):
     data = data.replace('�'.encode(), b'\\uFFFD')
     open(script, 'wb').write(data)
 
+# The icon loader fetches `/icons.svg`, then `/phosphor/…` per missing icon. Root-relative paths miss the artifact's
+# files, so they become page-relative, and every icon the bundle names joins the sprite so none needs a per-icon fetch.
+ICON_ROOTS = {rb'`/icons.svg`': rb'`icons.svg`', rb'`/phosphor`': rb'`phosphor`', rb'`/px-icons`': rb'`px-icons`'}
+ICON_NAME = rb'ph--([a-z0-9-]+?)--(regular|bold|fill|duotone|light|thin)\b'
+icon_names = set()
+for script in glob.glob('**/*.js', recursive=True):
+    data = open(script, 'rb').read()
+    icon_names.update(re.findall(ICON_NAME, data))
+    for old, new in ICON_ROOTS.items():
+        data = data.replace(old, new)
+    open(script, 'wb').write(data)
+if os.path.exists('icons.svg'):
+    sprite = open('icons.svg', encoding='utf-8').read()
+    phosphor = glob.glob(os.path.join(specs.repo_root(), 'node_modules/.pnpm/@phosphor-icons+core@*/node_modules/'
+                                      '@phosphor-icons/core/assets'))
+    added, unknown = 0, []
+    for name, variant in sorted((name.decode(), variant.decode()) for name, variant in icon_names):
+        icon_id = f'ph--{name}--{variant}'
+        if f'id="{icon_id}"' in sprite:
+            continue
+        source = phosphor and os.path.join(phosphor[0], variant, f'{name}.svg' if variant == 'regular' else f'{name}-{variant}.svg')
+        if not source or not os.path.exists(source):
+            unknown.append(icon_id)
+            continue
+        body = re.search(r'(?s)<svg[^>]*>(.*)</svg>', open(source, encoding='utf-8').read()).group(1)
+        end = sprite.rindex('</svg>')
+        sprite = f'{sprite[:end]}<symbol viewBox="0 0 256 256" id="{icon_id}" fill="currentColor">{body}</symbol>{sprite[end:]}'
+        added += 1
+    open('icons.svg', 'w', encoding='utf-8').write(sprite)
+    print(f'icons: {added} added to the sprite' + (f'; not found: {", ".join(unknown)}' if unknown else ''))
+
 for sprite in glob.glob('**/*.svg', recursive=True):
     text = open(sprite, encoding='utf-8', errors='surrogateescape').read()
     open(sprite, 'w', encoding='utf-8', errors='surrogateescape').write(re.sub(r'<!DOCTYPE[^>]*>', '', text, count=1))
