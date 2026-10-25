@@ -58,7 +58,7 @@ for (const { indexing, queryExecutor } of MODES) {
       if (items.length > 0) {
         await db.appendToFeed(feed, [...items]);
       }
-      await settle(db);
+      await db.flush({ secondaryIndexes: true });
       const feedUri = Feed.getFeedUri(feed);
       invariant(feedUri, 'feed has no URI');
       return { peer, db, reader, feed, feedUri, scope: Scope.feed(feedUri) };
@@ -106,7 +106,7 @@ for (const { indexing, queryExecutor } of MODES) {
       test('excludes space objects', async ({ expect }) => {
         const { db, reader, scope } = await setup(tasks(['feed-1', 'feed-2']));
         db.add(Obj.make(TestSchema.Task, { title: 'space-only' }));
-        await settle(db);
+        await db.flush({ secondaryIndexes: true });
         const results = await reader.query(Query.select(Filter.type(TestSchema.Task)).from(scope)).run();
         expect(results.map(label).sort()).toEqual(['feed-1', 'feed-2']);
       });
@@ -117,7 +117,7 @@ for (const { indexing, queryExecutor } of MODES) {
           .query(Query.select(Filter.everything()).orderBy(Order.natural()).from(scope))
           .run();
         await db.deleteFromFeed(feed, [first]);
-        await settle(db);
+        await db.flush({ secondaryIndexes: true });
         const results = await reader
           .query(Query.select(Filter.everything()).orderBy(Order.natural()).from(scope))
           .run();
@@ -128,7 +128,7 @@ for (const { indexing, queryExecutor } of MODES) {
         const item = Obj.make(TestSchema.Task, { title: 'draft' });
         const { db, reader, feed, scope } = await setup([item]);
         await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { id: item.id, title: 'final' })]);
-        await settle(db);
+        await db.flush({ secondaryIndexes: true });
         const results = await reader.query(Query.select(Filter.type(TestSchema.Task)).from(scope)).run();
         expect(results.map(label)).toEqual(['final']);
       });
@@ -297,7 +297,7 @@ for (const { indexing, queryExecutor } of MODES) {
         const { db, reader, feed, scope } = await setup(tasks(['a', 'b']));
         const cursors = await readAll(reader, scope);
         await db.appendToFeed(feed, tasks(['c']));
-        await settle(db);
+        await db.flush({ secondaryIndexes: true });
         const after = await reader.query(Query.select(Filter.feedCursor({ begin: cursors[1] })).from(scope)).run();
         expect(after.map(label)).toEqual(['c']);
       });
@@ -311,7 +311,7 @@ for (const { indexing, queryExecutor } of MODES) {
         await expect.poll(() => query.results.map(label)).toEqual(['a']);
 
         await db.appendToFeed(feed, tasks(['b']));
-        await settle(db);
+        await db.flush({ secondaryIndexes: true });
         await expect.poll(() => query.results.map(label).sort()).toEqual(['a', 'b']);
         unsubscribe();
       });
@@ -324,13 +324,10 @@ for (const { indexing, queryExecutor } of MODES) {
         await expect.poll(() => query.results.map(label)).toEqual(['draft']);
 
         await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { id: item.id, title: 'final' })]);
-        await settle(db);
+        await db.flush({ secondaryIndexes: true });
         await expect.poll(() => query.results.map(label)).toEqual(['final']);
         unsubscribe();
       });
     });
   });
 }
-
-/** Writes the Feed object's change, then waits for the index pass that applies it to the store. */
-const settle = (db: EchoDatabase) => db.flush({ secondaryIndexes: true });
