@@ -622,7 +622,7 @@ test QA-1: Comment on a document, reply, and resolve
       capture: created
       expect: a staged comment thread appears in the CommentsArticle companion, anchored to the
         selection
-      assert: return !!$result.thread
+      assert: return !!$result.threadId
 
     - name: Add a message
       do: Type "please fix this" and press Enter to send.

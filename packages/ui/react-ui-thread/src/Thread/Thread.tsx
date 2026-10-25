@@ -470,6 +470,9 @@ const ThreadTextbox = ({ placeholder, autoFocus, disabled, extensions, onSend, .
       autoFocus={autoFocus}
       disabled={disabled}
       extensions={editorExtensions}
+      // A rebuild (a new mention list, a theme change) starts from the draft rather than dropping it.
+      initialValue={messageRef.current}
+      selectionEnd
       onSend={handleSend}
     />
   );

@@ -57,8 +57,11 @@ export type MentionPillsOptions = {
   hue?: (name: string) => string | undefined;
 };
 
-/** An `@` that starts a mention: not inside a word, so an email address is left alone. */
-const MENTION_START = /(?<![\w.@])@(\w+)?/;
+/**
+ * An `@` that starts a mention, with the name typed so far: not inside a word (so an email address is left alone), and
+ * the name may hold spaces and any letters, so `@Jane D` or `@José` keeps narrowing the list.
+ */
+const MENTION_START = /(?<![\p{L}\p{N}_.@])@([\p{L}\p{N}_][\p{L}\p{N}_ ]*)?/u;
 
 const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -68,7 +71,10 @@ const mentionPattern = (names: readonly string[] = []): RegExp => {
     .sort((left, right) => right.length - left.length)
     .map(escapeRegExp)
     .join('|');
-  return new RegExp(`(?<![\\w.@])@(${listed ? `(?:${listed})(?!\\w)|` : ''}\\w+)`, 'gi');
+  return new RegExp(
+    `(?<![\\p{L}\\p{N}_.@])@(${listed ? `(?:${listed})(?![\\p{L}\\p{N}_])|` : ''}[\\p{L}\\p{N}_]+)`,
+    'giu',
+  );
 };
 
 /**
