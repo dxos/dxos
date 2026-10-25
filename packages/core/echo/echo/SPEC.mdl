@@ -503,8 +503,9 @@ feat F-7: Feed options
   req F-7.3:
     when: `retention` is set
     then: it holds `maxLength` (a count of items, an integer of at least 1) and/or `maxAge` (a
-          Duration measured from an item's append timestamp); with both set, an item is dropped
-          when it breaks either limit; `retention: {}` means nothing is trimmed
+          positive number of milliseconds measured from an item's append timestamp; setRetention
+          takes a Duration and converts it); with both set, an item is dropped when it breaks
+          either limit; `retention: {}` means nothing is trimmed
 
   req F-7.4:
     when: Feed.setIndexing or Feed.setRetention is called
@@ -638,6 +639,15 @@ decision D-8: Setting an option returns once the object change is applied locall
   for: user:dmaretskyi
   affects: [F-7.4]
   why: The store applies options on its own index pass, possibly on another device (EDGE); waiting would make a property write depend on the network.
+```
+
+```mdl
+decision D-9: `maxAge` is stored as milliseconds; Feed.setRetention takes a Duration and converts it. Fills in [D-6].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-7.3]
+  why: ECHO stores plain JSON in the object, and an Effect Duration is a class instance that does not survive that.
 ```
 
 ---
