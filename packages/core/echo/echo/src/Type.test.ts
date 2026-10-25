@@ -308,6 +308,13 @@ describe('Type', () => {
       expectTypeOf<Type.InstanceType<typeof Plain>>().toHaveProperty('name').toEqualTypeOf<string>();
     });
 
+    test('schema form still works when piped', () => {
+      const Piped = Schema.Struct({ label: Schema.String }).pipe(
+        Type.makeObject(DXN.make('com.example.type.piped', '0.1.0')),
+      );
+      expectTypeOf<Type.InstanceType<typeof Piped>>().toHaveProperty('label').toEqualTypeOf<string>();
+    });
+
     test('annotate receives the struct schema', () => {
       Type.makeObject(DXN.make('com.example.type.annotateArg', '0.1.0'))({ name: Schema.String }, (schema) => {
         expectTypeOf(schema).toEqualTypeOf<Schema.Struct<{ name: typeof Schema.String }>>();

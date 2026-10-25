@@ -158,14 +158,23 @@ export const makeObject: {
 /**
  * Second stage of {@link makeObject}: takes a schema, or struct fields plus an optional annotation pipe.
  */
-export interface MakeObject<Self> {
-  <_Schema extends Schema.Top>(schema: _Schema): ObjClass<Self, Schema.Schema.Type<_Schema>, {}>;
-  <Fields extends Schema.Struct.Fields>(fields: Fields): ObjClass<Self, Schema.Struct.Type<Fields>, {}>;
-  <Fields extends Schema.Struct.Fields, _Schema extends Schema.Top>(
-    fields: Fields,
-    annotate: (schema: Schema.Struct<Fields>) => _Schema,
-  ): ObjClass<Self, Schema.Schema.Type<_Schema>, {}>;
-}
+// A single generic signature (not overloads) so that `Schema.Struct(...).pipe(Type.makeObject(dxn))` still infers.
+export type MakeObject<Self> = <
+  Input extends Schema.Top | Schema.Struct.Fields,
+  _Schema extends Schema.Top = ToSchema<Input>,
+>(
+  input: Input,
+  annotate?: (schema: ToSchema<Input>) => _Schema,
+) => ObjClass<Self, Schema.Schema.Type<_Schema>, {}>;
+
+/**
+ * Schema for the input of {@link MakeObject}: a schema as is, or struct fields wrapped in `Schema.Struct`.
+ */
+export type ToSchema<Input> = Input extends Schema.Top
+  ? Input
+  : Input extends Schema.Struct.Fields
+    ? Schema.Struct<Input>
+    : never;
 
 //
 // Type — the ECHO entity that holds a schema and metadata.
