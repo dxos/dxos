@@ -92,21 +92,34 @@ const commentLayout = (space: Space, object: Obj.Unknown): ModuleLayout => {
   return [[Cell.article(object)], [Cell.companion(object, 'comments')]];
 };
 
-/** Leaves an opening comment on the space's object of `type`, so the companion shows a thread to reply to. */
-const seedComment = async (
-  db: Database.Database,
-  invoker: Capabilities.OperationInvoker,
-  type: Type.AnyObj,
-  text: string,
-) => {
+/**
+ * Leaves an opening comment on the space's object of `type`, so the story starts with a thread to reply to: on the
+ * text `range` when given (a highlighted span in a document), else on the object as a whole.
+ */
+const seedComment = async ({
+  db,
+  invoker,
+  type,
+  text,
+  range,
+}: {
+  db: Database.Database;
+  invoker: Capabilities.OperationInvoker;
+  type: Type.AnyObj;
+  text: string;
+  range?: { from: number; to: number };
+}) => {
   await db.flush({ indexes: true });
   const [subject] = await db.query(Filter.type(type)).run();
   await invoker.invokePromise(
     CommentOperation.Create,
-    { subject, anchor: Date.now().toString(), text, sender: { name: 'Alice' } },
+    { subject, ...(range ? { range } : { anchor: Date.now().toString() }), text, sender: { name: 'Alice' } },
     { spaceId: db.spaceId },
   );
 };
+
+const RELEASE_NOTES = '# Release notes\n\nComment threads now run on feeds, and the assistant answers them.\n';
+const COMMENTED = 'the assistant answers them';
 
 /**
  * A comment on a Markdown document, answered by the assistant with the markdown skills, on the EDGE the toolbar picks.
@@ -124,16 +137,15 @@ export const Markdown: Story = {
     plugins: commentPlugins(),
     types: commentTypes,
     onInit: async ({ space }) =>
-      commentLayout(
-        space,
-        space.db.add(
-          MarkdownType.make({
-            name: 'Release notes',
-            content: '# Release notes\n\nComment threads now run on feeds, and the assistant answers them.\n',
-          }),
-        ),
-      ),
-    onReady: ({ db, invoker }) => seedComment(db, invoker, MarkdownType.Document, 'Is this clear enough for users?'),
+      commentLayout(space, space.db.add(MarkdownType.make({ name: 'Release notes', content: RELEASE_NOTES }))),
+    onReady: ({ db, invoker }) =>
+      seedComment({
+        db,
+        invoker,
+        type: MarkdownType.Document,
+        text: 'Is this clear enough for users?',
+        range: { from: RELEASE_NOTES.indexOf(COMMENTED), to: RELEASE_NOTES.indexOf(COMMENTED) + COMMENTED.length },
+      }),
   })),
 };
 
@@ -153,6 +165,7 @@ export const Canvas: Story = {
       const canvas = space.db.add(Drawing.makeCanvas({ schema: CanvasType.SCENE_SCHEMA }));
       return commentLayout(space, space.db.add(Drawing.make({ name: 'Architecture', canvas })));
     },
-    onReady: ({ db, invoker }) => seedComment(db, invoker, Drawing.Drawing, 'Can we show where EDGE fits in?'),
+    onReady: ({ db, invoker }) =>
+      seedComment({ db, invoker, type: Drawing.Drawing, text: 'Can we show where EDGE fits in?' }),
   })),
 };
