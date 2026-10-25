@@ -17,6 +17,7 @@ import { type Obj, Query } from '@dxos/echo';
 import {
   BACKED_OBJECT_LIMIT,
   DatabaseDirectory,
+  EchoFeedCodec,
   EncodedReference,
   type EntityPropPath,
   EntityStructure,
@@ -27,6 +28,7 @@ import {
   isEncodedReference,
 } from '@dxos/echo-protocol';
 import {
+  ATTR_DELETED,
   ATTR_META,
   ATTR_PARENT,
   ATTR_RELATION_SOURCE,
@@ -36,6 +38,7 @@ import {
   objectStructureToJson,
 } from '@dxos/echo/internal';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
+import { type FeedOptions, type FeedStore } from '@dxos/feed';
 import {
   type EntityMeta,
   type IndexEngine,
@@ -84,7 +87,15 @@ type QueryExecutorOptions = {
   sql?: SqlClient.SqlClient;
   /** Whether the client already holds a document; its rows ship without JSON and stored changes. */
   holds?: (documentId: DocumentId) => boolean;
+  /**
+   * The feed store, read for the feeds whose indexing is disabled (they have no index rows) and for
+   * the `maxAge` an index row of a feed item is checked against. Absent, every feed is read from the index.
+   */
+  feedStore?: FeedStore;
 };
+
+/** A feed whose indexing is disabled, which a run reads from the feed store instead of the index. */
+type StoreFeed = { spaceId: SpaceId; feedNamespace: string };
 
 type QueryExecutionResult = {
   /**
@@ -746,6 +757,11 @@ export class QueryExecutor extends Resource {
 
   /** The uncompiled steps until the first execution, which swaps in the compiled plan. */
   private _plan: QueryPlan.Plan;
+  /** The steps before compilation, run instead of a compiled plan when a feed in scope has no index rows. */
+  readonly #uncompiledPlan: QueryPlan.Plan;
+  readonly #feedStore: FeedStore | undefined;
+  /** Feeds the current run reads from the feed store, keyed by feed id; set at the top of every run. */
+  #storeFeeds = new Map<string, StoreFeed>();
   #scopes: QueryScopes;
   readonly #includeAllFeeds: boolean;
   private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
@@ -788,8 +804,10 @@ export class QueryExecutor extends Resource {
 
     this.#holds = options.holds ?? (() => false);
     this.#mode = options.executor ?? 'memory';
+    this.#feedStore = options.feedStore;
     this.#planner = new QueryPlanner();
     const plan = this.#planner.createPlan(this._query);
+    this.#uncompiledPlan = plan;
     const planSubquery = (query: QueryAST.Query) => this.#planner.createPlan(query);
     this._plan =
       this.#mode === 'sql' && options.sql !== undefined && !planDeclinedByCompiler(plan, planSubquery)
@@ -1061,10 +1079,14 @@ export class QueryExecutor extends Resource {
   /** Runs the plan, then drops items whose strong dependencies cannot be resolved from local state. */
   private async _resolveWorkingSet(): Promise<{ workingSet: QueryItem[]; trace: ExecutionTrace }> {
     try {
-      const { workingSet, trace } = await this._execPlan(this._plan, []);
+      this.#storeFeeds = await this.#readStoreFeeds();
+      // A compiled statement reads only the index, which holds nothing of a disabled feed.
+      const plan = this.#storeFeeds.size > 0 ? this.#uncompiledPlan : this._plan;
+      const { workingSet: planned, trace } = await this._execPlan(plan, []);
+      const workingSet = await this.#withoutExpired(planned);
       // A compiled plan resolved these in SQL. Keyed on the plan rather than the mode, because a plan
       // the compiler declined runs step by step even under `sql` and needs the filter.
-      if (this.compiled) {
+      if (plan.steps.some((step) => step._tag === 'SqlStep')) {
         return { workingSet, trace };
       }
       // Unresolvable items never reach the client, where hydration would fail or stall on them.
@@ -1073,6 +1095,124 @@ export class QueryExecutor extends Resource {
       // An idle reactive query keeps its executor, which would otherwise hold these items until its next run.
       this.#dependencyCache.clear();
     }
+  }
+
+  /** Each space's stored feed options, or none when the store cannot say; a read failure answers from the index. */
+  async #listFeedOptions(spaceId: SpaceId): Promise<Map<string, FeedOptions>> {
+    const feedStore = this.#feedStore;
+    if (!feedStore) {
+      return new Map();
+    }
+    return this._runInRuntime(feedStore.listFeedOptions(spaceId)).catch((err) => {
+      log.warn('feed options could not be read; answering feeds from the index', { spaceId, err });
+      return new Map<string, FeedOptions>();
+    });
+  }
+
+  /** The feeds the plan scopes to whose indexing is disabled, keyed by feed id. */
+  async #readStoreFeeds(): Promise<Map<string, StoreFeed>> {
+    const storeFeeds = new Map<string, StoreFeed>();
+    const feedStore = this.#feedStore;
+    const feedRefs = extractQueueRefs(extractFeedUris(this.#uncompiledPlan)) ?? [];
+    if (!feedStore || feedRefs.length === 0) {
+      return storeFeeds;
+    }
+    const spaceIds = new Set(
+      feedRefs.flatMap((ref) => (ref.spaceId !== undefined && SpaceId.isValid(ref.spaceId) ? [ref.spaceId] : [])),
+    );
+    for (const spaceId of spaceIds) {
+      const options = await this.#listFeedOptions(spaceId);
+      for (const ref of feedRefs) {
+        if (ref.spaceId === spaceId && options.get(ref.queueId)?.indexing?.enabled === false) {
+          const feedNamespace = await this._runInRuntime(feedStore.getFeedNamespace({ spaceId, feedId: ref.queueId }));
+          if (feedNamespace !== undefined) {
+            storeFeeds.set(ref.queueId, { spaceId, feedNamespace });
+          }
+        }
+      }
+    }
+    return storeFeeds;
+  }
+
+  /**
+   * Drops feed items whose block is past its feed's `maxAge`: the store hides them at once but deletes
+   * them, and so their index rows, only at its next trim.
+   */
+  async #withoutExpired(workingSet: QueryItem[]): Promise<QueryItem[]> {
+    const spaceIds = new Set(workingSet.flatMap((item) => (item.queueId !== null ? [item.spaceId] : [])));
+    if (!this.#feedStore || spaceIds.size === 0) {
+      return workingSet;
+    }
+    const maxAges = new Map<string, number>();
+    for (const spaceId of spaceIds) {
+      for (const [feedId, options] of await this.#listFeedOptions(spaceId)) {
+        if (options.retention?.maxAge !== undefined) {
+          maxAges.set(`${spaceId}/${feedId}`, options.retention.maxAge);
+        }
+      }
+    }
+    if (maxAges.size === 0) {
+      return workingSet;
+    }
+    const now = Date.now();
+    return workingSet.filter((item) => {
+      // A collapsed group stands for members the row does not list, so it cannot drop one of them.
+      const maxAge =
+        item.queueId !== null && item.groupKey === undefined
+          ? maxAges.get(`${item.spaceId}/${item.queueId}`)
+          : undefined;
+      return maxAge === undefined || item.updatedAt === null || item.updatedAt >= now - maxAge;
+    });
+  }
+
+  /**
+   * The current items of the store-read feeds `queues` names, one per object id at its latest block.
+   * A partial block (a removal tombstone) keeps the body of the block before it, as the index does.
+   */
+  async #readStoreFeedItems(queues: readonly string[]): Promise<QueryItem[]> {
+    const feedStore = this.#feedStore;
+    if (!feedStore) {
+      return [];
+    }
+    const items: QueryItem[] = [];
+    for (const ref of extractQueueRefs(queues) ?? []) {
+      const feed = this.#storeFeeds.get(ref.queueId);
+      if (!feed || (ref.spaceId !== undefined && ref.spaceId !== feed.spaceId) || !EntityId.isValid(ref.queueId)) {
+        continue;
+      }
+      const { blocks } = await this._runInRuntime(
+        feedStore.query({
+          spaceId: feed.spaceId,
+          feedNamespace: feed.feedNamespace,
+          query: { feedIds: [ref.queueId] },
+        }),
+      );
+      const byId = new Map<string, QueryItem>();
+      for (const block of [...blocks].sort((left, right) => (left.insertionId ?? 0) - (right.insertionId ?? 0))) {
+        const data = EchoFeedCodec.decodeBlock(block);
+        const previous = typeof data.id === 'string' ? byId.get(data.id)?.data : undefined;
+        const merged = data[ATTR_TYPE] === undefined && previous ? { ...previous, ...data } : data;
+        if (!isObjectJSON(merged)) {
+          continue;
+        }
+        const objectId = merged.id;
+        byId.set(objectId, {
+          objectId,
+          spaceId: feed.spaceId,
+          queueId: ref.queueId,
+          queueNamespace: feed.feedNamespace,
+          documentId: null,
+          doc: null,
+          data: merged,
+          rank: 1,
+          createdAt: block.timestamp,
+          updatedAt: block.timestamp,
+          position: block.position,
+        });
+      }
+      items.push(...byId.values());
+    }
+    return items;
   }
 
   private async _execPlan(plan: QueryPlan.Plan, workingSet: QueryItem[]): Promise<StepExecutionResult> {
@@ -1150,7 +1290,9 @@ export class QueryExecutor extends Resource {
 
     const execSpaceScopes = step.scope.filter((s): s is QueryAST.SpaceScope => s._tag === 'space');
     const spaces = execSpaceScopes.map((s) => s.spaceId as SpaceId);
-    const queues = step.scope.filter((s): s is QueryAST.FeedScope => s._tag === 'feed').map((s) => String(s.feedUri));
+    const scopedQueues = step.scope
+      .filter((s): s is QueryAST.FeedScope => s._tag === 'feed')
+      .map((s) => String(s.feedUri));
     const allQueuesFromSpaces = execSpaceScopes.some((s) => s.includeAllFeeds === true);
 
     const trace: ExecutionTrace = {
@@ -1159,6 +1301,23 @@ export class QueryExecutor extends Resource {
       details: JSON.stringify(step.selector),
       beginTs: performance.now(),
     };
+
+    // A feed with indexing disabled has no index rows, so its items come from the store, selected here.
+    const isStoreFeed = (feedUri: string) => {
+      const ref = extractQueueRefs([feedUri])?.[0];
+      return ref !== undefined && this.#storeFeeds.has(ref.queueId);
+    };
+    const storeQueues = scopedQueues.filter(isStoreFeed);
+    const queues = scopedQueues.filter((feedUri) => !isStoreFeed(feedUri));
+    if (storeQueues.length > 0) {
+      const storeItems = selectStoreItems(step, await this.#readStoreFeedItems(storeQueues));
+      workingSet.push(...storeItems);
+      trace.documentsLoaded += storeItems.length;
+      if (queues.length === 0 && spaces.length === 0) {
+        trace.objectCount = workingSet.length;
+        return { workingSet, trace };
+      }
+    }
 
     switch (step.selector._tag) {
       case 'WildcardSelector': {
@@ -2756,6 +2915,86 @@ export class QueryExecutor extends Resource {
 const extractSpaceIdFromQueue = (feedUri: string): SpaceId | undefined => {
   const echoUri = EID.tryParse(feedUri);
   return echoUri ? EID.getSpaceId(echoUri) : undefined;
+};
+
+/** A decoded feed block carrying a valid object id, which is all a feed item's JSON is checked for. */
+const isObjectJSON = (value: Record<string, unknown>): value is Obj.JSON =>
+  typeof value.id === 'string' && EntityId.isValid(value.id);
+
+/** Every feed URI any select step of the plan (subplans included) scopes to. */
+const extractFeedUris = (plan: QueryPlan.Plan): string[] =>
+  plan.steps.flatMap((step) => {
+    switch (step._tag) {
+      case 'SelectStep':
+        return step.scope.flatMap((scope) => (scope._tag === 'feed' ? [String(scope.feedUri)] : []));
+      case 'UnionStep':
+        return step.plans.flatMap(extractFeedUris);
+      case 'SetDifferenceStep':
+        return [...extractFeedUris(step.source), ...extractFeedUris(step.exclude)];
+      default:
+        return [];
+    }
+  });
+
+/**
+ * The store-read feed items a select step picks, as the index would have answered it: by selector,
+ * then the step's feed window. Text and reference selectors match nothing, since they are answered
+ * from indexes a disabled feed is not in.
+ */
+const selectStoreItems = (step: QueryPlan.SelectStep, items: readonly QueryItem[]): QueryItem[] => {
+  const { selector } = step;
+  const selected = items.filter((item) => {
+    const data = item.data;
+    if (!data) {
+      return false;
+    }
+    switch (selector._tag) {
+      case 'WildcardSelector':
+        return true;
+      case 'IdSelector':
+        return selector.objectIds.includes(item.objectId);
+      case 'TypeSelector': {
+        const matches = selector.typename.some((typename) =>
+          filterMatchObjectJSON({ type: 'object', typename, props: {} }, data),
+        );
+        return matches !== selector.inverted;
+      }
+      case 'TimestampSelector': {
+        const updatedAt = item.updatedAt ?? 0;
+        const createdAt = item.createdAt ?? 0;
+        return (
+          (selector.updatedAfter === undefined || updatedAt > selector.updatedAfter) &&
+          (selector.updatedBefore === undefined || updatedAt < selector.updatedBefore) &&
+          (selector.createdAfter === undefined || createdAt > selector.createdAfter) &&
+          (selector.createdBefore === undefined || createdAt < selector.createdBefore)
+        );
+      }
+      default:
+        return false;
+    }
+  });
+
+  const window = extractQueueWindow(step);
+  if (window === undefined) {
+    return selected;
+  }
+  if (window.kind === 'cursor') {
+    return selected
+      .filter(
+        (item) =>
+          typeof item.position === 'number' &&
+          item.position > window.after &&
+          (window.before === undefined || item.position < window.before),
+      )
+      .sort((left, right) => (left.position ?? 0) - (right.position ?? 0))
+      .slice(0, window.limit);
+  }
+  const sorted = selected
+    .filter((item) => window.deleted === undefined || (item.data?.[ATTR_DELETED] === true) === window.deleted)
+    .sort((left, right) => compareCodeUnits(left.objectId, right.objectId));
+  const ordered = window.direction === 'desc' ? sorted.reverse() : sorted;
+  const skip = window.skip ?? 0;
+  return ordered.slice(skip, skip + window.limit);
 };
 
 /** Bound below every assigned position, which start at 0. */
