@@ -24,7 +24,7 @@ import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import { ViewModel } from '@dxos/schema';
-import { Cell } from '@dxos/storybook-testing';
+import { Cell, addToRootCollection } from '@dxos/storybook-testing';
 import { Employer, HasConnection, HasSubject, Message, Organization, Person, Pipeline, ProfileOf } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -33,7 +33,6 @@ import {
   ModuleContainer,
   ResearchInputQueue,
   addTestData,
-  addToRootCollection,
   createDecorators,
   createTestMailbox,
   loadMockInbox,

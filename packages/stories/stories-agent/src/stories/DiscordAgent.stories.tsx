@@ -31,7 +31,7 @@ type StoryArgs = DiscordBotArgs & {
 };
 
 const meta: Meta<StoryArgs> = {
-  title: 'stories/stories-agent/AgentDiscord',
+  title: 'stories/stories-agent/DiscordAgent',
   render: ModuleContainer,
   // The bot monitor renders `@dxos/react-ui-debug`'s Logger, so its namespace must be registered.
   parameters: { ...storyParameters, translations: [...storyParameters.translations, ...debugTranslations] },

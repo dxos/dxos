@@ -32,7 +32,7 @@ type StoryArgs = {
 };
 
 const meta: Meta<StoryArgs> = {
-  title: 'stories/stories-agent/PipelineDiscord',
+  title: 'stories/stories-agent/DiscordPipeline',
   render: ModuleContainer,
   // The pipeline's timeline renders `@dxos/react-ui-debug`'s Logger, so its namespace must be registered.
   parameters: { ...storyParameters, translations: [...storyParameters.translations, ...debugTranslations] },

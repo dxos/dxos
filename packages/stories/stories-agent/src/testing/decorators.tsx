@@ -25,7 +25,7 @@ import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 import { type Config } from '@dxos/react-client';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
-import { createStoryDecorators, makeModuleSurfacesPlugin } from '@dxos/storybook-testing';
+import { type StoryDecoratorsProps, createStoryDecorators, makeModuleSurfacesPlugin } from '@dxos/storybook-testing';
 import { HasSubject, Organization, Person, ProfileOf } from '@dxos/types';
 
 import { moduleSurfaces } from '../modules/index.ts';
@@ -65,6 +65,8 @@ export type DecoratorsProps = {
   plugins?: Plugin.Plugin[];
   /** Types a story's objects need beyond the agent stack's. */
   types?: Type.AnyEntity[];
+  /** Creates the story's objects during client init and returns the module layout that shows them. */
+  onInit?: StoryDecoratorsProps['onInit'];
   /** Seeds the space through plugin operations once it is available; a returned function runs on teardown. */
   onReady: (props: {
     db: Database.Database;
@@ -75,8 +77,9 @@ export type DecoratorsProps = {
 /** Props, or a function of the story's args, so a story's config (e.g. `persistent`) can follow its Controls. */
 export type DecoratorsInput<Args> = DecoratorsProps | ((context: { args: Args }) => DecoratorsProps);
 
-const makeDecoratorProps = ({ config, plugins = [], types = [], onReady }: DecoratorsProps) => ({
+const makeDecoratorProps = ({ config, plugins = [], types = [], onInit, onReady }: DecoratorsProps) => ({
   ...(config ? { config } : {}),
+  ...(onInit ? { onInit } : {}),
   // Skill definitions ride the assistant's start event; without it the agent's skill rows render blank labels.
   setupEvents: [AppActivationEvents.AssistantStart],
   types: [...TYPES, ...types],
