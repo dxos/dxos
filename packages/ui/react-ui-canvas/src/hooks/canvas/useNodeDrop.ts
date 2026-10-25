@@ -64,7 +64,7 @@ export const useNodeDrop = ({
           setDrag(dragAt(type, location.current.input));
         }
       },
-      onDragLeave: cancelDrag,
+      onDragLeave: () => cancelDrag(),
       // Placed where it is released: the last drag-over can lag the pointer by a step.
       onDrop: ({ source, location }) => {
         const type = nodeDragType(source.data);
