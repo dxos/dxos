@@ -34,8 +34,24 @@ const toneOf = (color: string): number | undefined => {
   return tones.get(color);
 };
 
-/** The text color for a cell highlighted with a theme swatch; other colors keep the grid's own text color. */
+// The lightness of an `oklch()` color, as a fraction; a 500 tone sits near 0.62 to 0.77 depending on the hue.
+const OKLCH = /^oklch\(\s*([\d.]+)(%?)/i;
+
+/** A highlight's lightness, when the color is not one of the theme's tones (e.g. stored from another palette). */
+const lightnessOf = (color: string): number | undefined => {
+  const match = OKLCH.exec(color);
+  return match ? Number(match[1]) / (match[2] ? 100 : 1) : undefined;
+};
+
+/** The text color for a highlighted cell: by its theme tone, else by its lightness; other colors keep the grid's own. */
 export const highlightForeground = (background: string | undefined): string | undefined => {
-  const tone = background ? toneOf(background) : undefined;
-  return tone === undefined ? undefined : tone > 500 ? LIGHT_TEXT : DARK_TEXT;
+  if (!background) {
+    return undefined;
+  }
+  const tone = toneOf(background);
+  if (tone !== undefined) {
+    return tone > 500 ? LIGHT_TEXT : DARK_TEXT;
+  }
+  const lightness = lightnessOf(background);
+  return lightness === undefined ? undefined : lightness > 0.7 ? DARK_TEXT : LIGHT_TEXT;
 };
