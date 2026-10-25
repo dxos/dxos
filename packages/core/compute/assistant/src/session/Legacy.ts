@@ -147,22 +147,34 @@ const fromMessage = (message: Message.Message, reachable: ReadonlySet<string>): 
 
 const fromBinding = (binding: AiContext.Binding): Trajectory.Event[] => {
   const sender: Trajectory.Sender = { role: 'event', name: 'context' };
+  const on = binding.connections?.added ?? [];
+  const off = binding.connections?.removed ?? [];
   const bind =
-    binding.skills.added.length > 0 || binding.objects.added.length > 0
+    binding.skills.added.length > 0 || binding.objects.added.length > 0 || on.length > 0
       ? [
           Trajectory.make({
             id: binding.id,
-            payload: { _tag: 'contextBind', skills: binding.skills.added, objects: binding.objects.added },
+            payload: {
+              _tag: 'contextBind',
+              skills: binding.skills.added,
+              objects: binding.objects.added,
+              ...(on.length > 0 ? { connections: on } : {}),
+            },
             sender,
           }),
         ]
       : [];
   const unbind =
-    binding.skills.removed.length > 0 || binding.objects.removed.length > 0
+    binding.skills.removed.length > 0 || binding.objects.removed.length > 0 || off.length > 0
       ? [
           Trajectory.make({
             id: binding.id,
-            payload: { _tag: 'contextUnbind', skills: binding.skills.removed, objects: binding.objects.removed },
+            payload: {
+              _tag: 'contextUnbind',
+              skills: binding.skills.removed,
+              objects: binding.objects.removed,
+              ...(off.length > 0 ? { connections: off } : {}),
+            },
             sender,
           }),
         ]

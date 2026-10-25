@@ -24,6 +24,7 @@ import type { ContentBlock } from '@dxos/types';
 
 import { AGENT_PROCESS_KEY, type AgentInput, AgentProcess, type AgentProcessDefinition } from './agent-process.ts';
 import { type DelegationStrategy } from './delegation-strategy.ts';
+import { type McpEndpointOf } from './mcp-servers.ts';
 import { type ThreadingOptions } from './thread-scheduler.ts';
 import { type MakeTurnProducer } from './turn-producer.ts';
 
@@ -119,6 +120,8 @@ export interface Options {
   resident?: boolean;
   /** Light threads for processes spawned from now on (see `AgentProcessOptions.threading`). */
   threading?: () => ThreadingOptions | undefined;
+  /** The MCP server a connection exposes (see `AgentProcessOptions.mcpEndpoint`). */
+  mcpEndpoint?: McpEndpointOf;
 }
 
 /**
@@ -200,6 +203,7 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
           delegationStrategy: opts?.delegationStrategy,
           resident: opts?.resident,
           threading: opts?.threading,
+          mcpEndpoint: opts?.mcpEndpoint,
         });
 
       /**

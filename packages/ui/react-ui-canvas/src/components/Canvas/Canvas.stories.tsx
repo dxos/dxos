@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
-import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fireEvent, screen, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
@@ -281,6 +281,15 @@ export const View: Story = {
     await userEvent.click(await canvas.findByTestId('portal-open'));
     await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeEnabled(), { timeout: 5_000 });
     await waitFor(() => expect(canvasElement.querySelector('[data-node-id="b"]')).not.toBeNull());
+    // 3. The background's menu offers Back there, which returns to the root.
+    const viewport = await canvas.findByTestId('scene-view');
+    const { left, top } = viewport.getBoundingClientRect();
+    await fireEvent.contextMenu(viewport, { clientX: left + 8, clientY: top + 8 });
+    const back = await screen.findByTestId('menu-back');
+    const items = [...(back.closest('[role="menu"]')?.querySelectorAll('[role="menuitem"]') ?? [])];
+    // Keyboard, since zag ignores the synthetic pointer events a test can send.
+    await userEvent.keyboard('{ArrowDown}'.repeat(items.indexOf(back) + 1) + '{Enter}');
+    await waitFor(() => expect(canvas.getByTestId('toolbar-up')).toBeDisabled(), { timeout: 5_000 });
   },
 };
 

@@ -42,7 +42,15 @@ const TypeCard = ({ type, types }: { type: DataTypeModel; types: ReadonlySet<str
     >
       <Card.Header>
         <Layout.Block rail='start'>
-          <Icon.Icon icon={type.stored ? 'ph--database--regular' : 'ph--cube--regular'} />
+          <Icon.Icon
+            icon={
+              type.stored === 'table'
+                ? 'ph--table--regular'
+                : type.stored
+                  ? 'ph--database--regular'
+                  : 'ph--cube--regular'
+            }
+          />
         </Layout.Block>
         <Card.Title truncate classNames='font-mono'>
           {type.id}
@@ -57,6 +65,11 @@ const TypeCard = ({ type, types }: { type: DataTypeModel; types: ReadonlySet<str
               <Tag.Tag>{t('data-model.embedded.label')}</Tag.Tag>
             )}
             {type.typename && <Tag.Tag classNames='font-mono'>{type.typename}</Tag.Tag>}
+            {type.store && (
+              <Tag.Tag classNames='font-mono max-w-full truncate' title={type.store}>
+                {type.store}
+              </Tag.Tag>
+            )}
           </Layout.Flex>
         </Card.Row>
         {type.variants.length > 0 && (

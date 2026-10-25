@@ -14,8 +14,12 @@ import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 import { TestSqliteLayer as TestLayer } from '../testing/index.ts';
 import activityInit from './activity/0001_init.sql?raw';
 import { MIGRATIONS as ACTIVITY } from './activity/index.ts';
+import convergenceKeyIntentsInit from './convergence-key-intents/0001_init.sql?raw';
+import { MIGRATIONS as CONVERGENCE_KEY_INTENTS } from './convergence-key-intents/index.ts';
 import entityMetaInit from './entity-meta/0001_init.sql?raw';
 import { MIGRATIONS as ENTITY_META, MIGRATIONS_TABLE as ENTITY_META_TABLE } from './entity-meta/index.ts';
+import feedOptionsIntentsInit from './feed-options-intents/0001_init.sql?raw';
+import { MIGRATIONS as FEED_OPTIONS_INTENTS } from './feed-options-intents/index.ts';
 import ftsInit from './fts/0001_init.sql?raw';
 import { MIGRATIONS as FTS } from './fts/index.ts';
 import objectSnapshotInit from './object-snapshot/0001_init.sql?raw';
@@ -27,7 +31,9 @@ import { MIGRATIONS as TRACKER } from './tracker/index.ts';
 
 const STORES = [
   { name: 'activity', init: activityInit, manifest: ACTIVITY },
+  { name: 'convergence-key-intents', init: convergenceKeyIntentsInit, manifest: CONVERGENCE_KEY_INTENTS },
   { name: 'entity-meta', init: entityMetaInit, manifest: ENTITY_META },
+  { name: 'feed-options-intents', init: feedOptionsIntentsInit, manifest: FEED_OPTIONS_INTENTS },
   { name: 'fts', init: ftsInit, manifest: FTS },
   { name: 'object-snapshot', init: objectSnapshotInit, manifest: OBJECT_SNAPSHOT },
   { name: 'reverse-ref', init: reverseRefInit, manifest: REVERSE_REF },
@@ -62,6 +68,7 @@ const DESIRED_COLUMNS = [
   'parent',
   'parentId',
   'queueId',
+  'queueInsertionId',
   'queueNamespace',
   'queuePosition',
   'recordId',

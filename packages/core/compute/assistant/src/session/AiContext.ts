@@ -37,10 +37,22 @@ export class Binding extends Type.makeObject<Binding>(DXN.make('org.dxos.type.co
       added: Schema.Array(Ref.Ref(Obj.Unknown)),
       removed: Schema.Array(Ref.Ref(Obj.Unknown)),
     }),
+
+    /**
+     * Connections whose MCP server the conversation turns on or off. A connection never named here
+     * follows the space default, which is on.
+     */
+    connections: Schema.optional(
+      Schema.Struct({
+        added: Schema.Array(Ref.Ref(Obj.Unknown)),
+        removed: Schema.Array(Ref.Ref(Obj.Unknown)),
+      }),
+    ),
   }),
 ) {}
 /**
- * One change to the bound skills and objects: a legacy `Binding` record, or a `contextBind`/`contextUnbind` event.
+ * One change to the bound skills, objects and connections: a legacy `Binding` record, or a
+ * `contextBind`/`contextUnbind` event.
  */
 type BindingDelta = {
   readonly skills: {
@@ -48,6 +60,10 @@ type BindingDelta = {
     readonly removed: readonly Ref.Ref<Skill.Skill>[];
   };
   readonly objects: {
+    readonly added: readonly Ref.Ref<Obj.Unknown>[];
+    readonly removed: readonly Ref.Ref<Obj.Unknown>[];
+  };
+  readonly connections?: {
     readonly added: readonly Ref.Ref<Obj.Unknown>[];
     readonly removed: readonly Ref.Ref<Obj.Unknown>[];
   };
@@ -67,9 +83,21 @@ const toDeltas = (items: readonly Obj.Unknown[]): BindingDelta[] =>
     const payload = item.payload;
     switch (payload._tag) {
       case 'contextBind':
-        return [{ skills: { added: payload.skills, removed: [] }, objects: { added: payload.objects, removed: [] } }];
+        return [
+          {
+            skills: { added: payload.skills, removed: [] },
+            objects: { added: payload.objects, removed: [] },
+            connections: { added: payload.connections ?? [], removed: [] },
+          },
+        ];
       case 'contextUnbind':
-        return [{ skills: { added: [], removed: payload.skills }, objects: { added: [], removed: payload.objects } }];
+        return [
+          {
+            skills: { added: [], removed: payload.skills },
+            objects: { added: [], removed: payload.objects },
+            connections: { added: [], removed: payload.connections ?? [] },
+          },
+        ];
       default:
         return [];
     }
@@ -78,16 +106,33 @@ const toDeltas = (items: readonly Obj.Unknown[]): BindingDelta[] =>
 /**
  * The events recording a binding change: one bind for what it adds, one unbind for what it removes.
  */
-const toEvents = ({ skills, objects }: BindingDelta): Trajectory.Event[] => {
+const toEvents = ({ skills, objects, connections }: BindingDelta): Trajectory.Event[] => {
   const sender: Trajectory.Sender = { role: 'event', name: 'context' };
+  const on = connections?.added ?? [];
+  const off = connections?.removed ?? [];
   return [
-    ...(skills.added.length > 0 || objects.added.length > 0
-      ? [Trajectory.make({ payload: { _tag: 'contextBind', skills: skills.added, objects: objects.added }, sender })]
-      : []),
-    ...(skills.removed.length > 0 || objects.removed.length > 0
+    ...(skills.added.length > 0 || objects.added.length > 0 || on.length > 0
       ? [
           Trajectory.make({
-            payload: { _tag: 'contextUnbind', skills: skills.removed, objects: objects.removed },
+            payload: {
+              _tag: 'contextBind',
+              skills: skills.added,
+              objects: objects.added,
+              ...(on.length > 0 ? { connections: on } : {}),
+            },
+            sender,
+          }),
+        ]
+      : []),
+    ...(skills.removed.length > 0 || objects.removed.length > 0 || off.length > 0
+      ? [
+          Trajectory.make({
+            payload: {
+              _tag: 'contextUnbind',
+              skills: skills.removed,
+              objects: objects.removed,
+              ...(off.length > 0 ? { connections: off } : {}),
+            },
             sender,
           }),
         ]
@@ -144,6 +189,7 @@ export type BinderOptions = {
 export class Binder extends Resource {
   private readonly _skills = Atom.make<Skill.Skill[]>([]).pipe(Atom.keepAlive);
   private readonly _objects = Atom.make<Obj.Unknown[]>([]).pipe(Atom.keepAlive);
+  private readonly _connections = Atom.make<ReadonlyMap<URI.URI, boolean>>(new Map()).pipe(Atom.keepAlive);
   private readonly _registry: AtomRegistry.AtomRegistry;
   private readonly _feed: Feed.Feed;
   private readonly _runtime: Context.Context<Database.Service>;
@@ -190,6 +236,18 @@ export class Binder extends Resource {
   }
 
   /**
+   * Connections the conversation has turned on (`true`) or off (`false`), keyed by local ECHO URI.
+   * One absent from the map follows the space default.
+   */
+  get connections(): Atom.Atom<ReadonlyMap<URI.URI, boolean>> {
+    return this._connections;
+  }
+
+  getConnections(): ReadonlyMap<URI.URI, boolean> {
+    return this._registry.get(this._connections);
+  }
+
+  /**
    * Gets the current skills value.
    */
   getSkills(): Skill.Skill[] {
@@ -217,6 +275,13 @@ export class Binder extends Resource {
     return this._registry.subscribe(this._objects, () => cb(this._registry.get(this._objects)));
   }
 
+  /**
+   * Subscribe to changes in connection states.
+   */
+  subscribeConnections(cb: (connections: ReadonlyMap<URI.URI, boolean>) => void): () => void {
+    return this._registry.subscribe(this._connections, () => cb(this._registry.get(this._connections)));
+  }
+
   protected override async _open(): Promise<void> {
     if (this._hold) {
       this.#pending = [];
@@ -237,10 +302,12 @@ export class Binder extends Resource {
     invariant(Obj.getDatabase(this._feed), 'The feed must be stored before its bindings are flushed.');
     this.#pending = undefined;
     const { skills, objects } = reduce(held);
-    if (skills.size > 0 || objects.size > 0) {
+    const connections = connectionChanges(held);
+    if (skills.size > 0 || objects.size > 0 || connections.added.length > 0 || connections.removed.length > 0) {
       await this._append({
         skills: { added: [...skills], removed: [] },
         objects: { added: [...objects], removed: [] },
+        connections,
       });
     }
   }
@@ -308,6 +375,7 @@ export class Binder extends Resource {
       return;
     }
 
+    this._registry.set(this._connections, connectionStates(deltas));
     const bindings = reduce(deltas);
     this.#bound = {
       skills: new Set([...bindings.skills].map((ref) => refKey(ref.uri))),
@@ -358,6 +426,7 @@ export class Binder extends Resource {
     // Reset atoms to empty state.
     this._registry.set(this._skills, []);
     this._registry.set(this._objects, []);
+    this._registry.set(this._connections, new Map());
   }
 
   async bind({ skills, objects }: BindingProps): Promise<void> {
@@ -420,6 +489,20 @@ export class Binder extends Resource {
     });
   }
 
+  /** Turns a connection's MCP server on or off for this conversation. */
+  async setConnection(connection: Ref.Ref<Obj.Unknown>, enabled: boolean): Promise<void> {
+    const key = refKey(connection.uri);
+    if (this.getConnections().get(key) === enabled) {
+      return;
+    }
+    this._registry.set(this._connections, new Map([...this.getConnections(), [key, enabled]]));
+    await this._write({
+      skills: { added: [], removed: [] },
+      objects: { added: [], removed: [] },
+      connections: enabled ? { added: [connection], removed: [] } : { added: [], removed: [connection] },
+    });
+  }
+
   private async _write(binding: BindingDelta): Promise<void> {
     if (this.#pending) {
       this.#pending.push(binding);
@@ -446,6 +529,7 @@ export class Binder extends Resource {
     if (generation !== this.#heldGeneration) {
       return;
     }
+    this._registry.set(this._connections, connectionStates(held));
     this._registry.set(this._skills, resolvedSkills);
     this._registry.set(this._objects, resolvedObjects);
   }
@@ -565,6 +649,67 @@ const reduce = (items: readonly BindingDelta[]): Bindings =>
       return context;
     }),
   );
+
+/**
+ * Each connection a conversation has turned on or off, keyed by local ECHO URI; the latest binding
+ * that names it wins. Callers pass deltas in local order, as the feed query reads them.
+ */
+export const connectionStates = (items: readonly BindingDelta[]): ReadonlyMap<URI.URI, boolean> => {
+  const states = new Map<URI.URI, boolean>();
+  for (const { connections } of items) {
+    connections?.added.forEach((ref) => states.set(refKey(ref.uri), true));
+    connections?.removed.forEach((ref) => states.set(refKey(ref.uri), false));
+  }
+  return states;
+};
+
+/**
+ * Whether a connection's MCP server is on in a conversation with these states. A space's connection
+ * is on unless turned off; a built-in server (keyed in the registry) is off unless turned on.
+ */
+export const isConnectionOn = (states: ReadonlyMap<URI.URI, boolean>, connection: Obj.Unknown): boolean =>
+  states.get(connectionKey(connection)) ?? Obj.getMeta(connection).key === undefined;
+
+/**
+ * The ref a binding records a connection by. A built-in server is a registry object made afresh in
+ * each process, so it is named by its key, which every process shares.
+ */
+export const connectionRef = (connection: Obj.Unknown): Ref.Ref<Obj.Unknown> =>
+  Obj.getMeta(connection).key !== undefined
+    ? Ref.fromURI(Obj.getURI(connection, { prefer: 'named' }))
+    : Ref.make(connection);
+
+const connectionKey = (connection: Obj.Unknown): URI.URI => refKey(connectionRef(connection).uri);
+
+/** The net connection changes of held bindings, as one binding writes them. */
+const connectionChanges = (
+  items: readonly BindingDelta[],
+): { added: Ref.Ref<Obj.Unknown>[]; removed: Ref.Ref<Obj.Unknown>[] } => {
+  const latest = new Map<URI.URI, { ref: Ref.Ref<Obj.Unknown>; enabled: boolean }>();
+  for (const { connections } of items) {
+    connections?.added.forEach((ref) => latest.set(refKey(ref.uri), { ref, enabled: true }));
+    connections?.removed.forEach((ref) => latest.set(refKey(ref.uri), { ref, enabled: false }));
+  }
+  const changes = [...latest.values()];
+  return {
+    added: changes.filter(({ enabled }) => enabled).map(({ ref }) => ref),
+    removed: changes.filter(({ enabled }) => !enabled).map(({ ref }) => ref),
+  };
+};
+
+/**
+ * The connections a conversation's feed has turned on or off, read once (see {@link connectionStates}).
+ */
+export const boundConnections = (
+  feed: Feed.Feed,
+): Effect.Effect<ReadonlyMap<URI.URI, boolean>, never, Database.Service> =>
+  Feed.query(
+    feed,
+    Filter.and(
+      Filter.or(Filter.type(Binding), Filter.type(Trajectory.Event)),
+      Filter.feedCursor({ begin: Feed.START, order: 'local' }),
+    ),
+  ).run.pipe(Effect.map((items) => connectionStates(toDeltas(items))));
 
 /**
  * The objects a conversation's feed currently binds, read once: for a reader that needs the bound

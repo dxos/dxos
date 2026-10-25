@@ -130,6 +130,11 @@ export type PromptCancel = Schema.Schema.Type<typeof PromptCancel>;
 const ContextDelta = {
   skills: Schema.Array(Ref.Ref(Skill.Skill)),
   objects: Schema.Array(Ref.Ref(Obj.Unknown)),
+  /**
+   * Connections whose MCP server the conversation turns on (`contextBind`) or off (`contextUnbind`); one never
+   * named follows the space default.
+   */
+  connections: Schema.optional(Schema.Array(Ref.Ref(Obj.Unknown))),
 };
 
 export const ContextBind = Schema.TaggedStruct('contextBind', ContextDelta);

@@ -26,10 +26,12 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import { Sequence } from '@dxos/conductor';
 import { Database, Filter, Obj, Type } from '@dxos/echo';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
+import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { Attention } from '@dxos/react-ui-attention/types';
 import { AI_ACTION_ICON } from '@dxos/ui-types';
 import * as Position from '@dxos/util/Position';
@@ -52,6 +54,29 @@ const whenNonChatObject = GraphNodeMatcher.whenAll(
     ),
   ),
 );
+
+/**
+ * Match the nodes whose surface renders a chat prompt: a chat, an agent (whose article is its chat), the
+ * assistant companion (which has no chat until one is provisioned) and a space's home.
+ */
+const whenPromptHost = GraphNodeMatcher.whenAny(
+  AppNodeMatcher.whenEchoTypeMatches(Chat.Chat),
+  AppNodeMatcher.whenEchoTypeMatches(Agent.Agent),
+  (node: AppGraphNode.Node) =>
+    node.type === AppNode.PLANK_COMPANION_TYPE &&
+    GraphNode.segmentId(node.id) === Attention.linkedSegment(ASSISTANT_COMPANION_VARIANT)
+      ? Option.some(node)
+      : Option.none(),
+  GraphNodeMatcher.whenNodeType(SpaceSchema.SPACE_HOME_NODE_TYPE),
+);
+
+/** A prompt node under every node that hosts a chat prompt, where other plugins file prompt actions. */
+export const createPromptExtension = () =>
+  AppGraphBuilder.createExtension({
+    id: 'prompt',
+    match: whenPromptHost,
+    connector: () => Effect.succeed([AppNode.makePrompt()]),
+  });
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -195,6 +220,8 @@ export default Capability.makeModule(
             ];
           }).pipe(Effect.orDie),
       }),
+
+      createPromptExtension(),
 
       AppGraphBuilder.createExtension({
         id: 'invocations',

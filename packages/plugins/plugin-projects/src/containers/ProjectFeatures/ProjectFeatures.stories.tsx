@@ -177,8 +177,6 @@ export const RemoveFromProject: Story = {
 
 /** The toolbar's add button creates a feature named from the query and puts it in the project. */
 export const CreateFeature: Story = {
-  // TODO(wittjosiah): Flaky in CI (fails intermittently); fix and re-enable.
-  tags: ['!test'],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(() => expect(canvas.getAllByTestId('feature-card')).toHaveLength(8), { timeout: 10_000 });
@@ -236,7 +234,7 @@ export const EditInline: Story = {
     const card = within(element);
     await openCardMenu(element);
     await userEvent.click(await screen.findByTestId('feature-card.edit'));
-    const name = card.getByTestId('feature-card.name.input');
+    const name = await card.findByTestId('feature-card.name.input');
     await userEvent.clear(name);
     await userEvent.type(name, 'Smart inbox{Enter}');
     const description = card.getByTestId('feature-card.description.input');
@@ -265,7 +263,7 @@ export const CanvasRename: Story = {
     }
     await openCardMenu(node);
     await userEvent.click(await screen.findByTestId('feature-card.edit'));
-    const name = within(node).getByTestId('feature-card.name.input');
+    const name = await within(node).findByTestId('feature-card.name.input');
     await userEvent.clear(name);
     // Backspace inside the field must edit the text, not delete the selected box.
     await userEvent.type(name, 'Smart inbox{Backspace}x{Enter}');

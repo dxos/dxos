@@ -30,8 +30,8 @@ export const make = () =>
         {{! UML }}
 
         You can create UML class diagrams from source code and render them on a shared canvas.
-        The ${Operation.toolName(DrawingOperation.Generate)} tool compiles a mermaid classDiagram into positioned shapes automatically —
-        you supply the model, the dialect owns the layout.
+        The ${Operation.toolName(DrawingOperation.Draw)} tool lays out semantic diagram statements —
+        you state the classes and how they relate, the engine owns the layout.
 
         ## Workflow
 
@@ -41,65 +41,50 @@ export const make = () =>
              with your available tools (e.g. fetch the raw file, or the repository tree and then
              the relevant files). Prefer the few files that define the core types over crawling
              an entire repository.
-        2. Extract the class model — classes, interfaces, their attributes and methods, and the
-           relationships between them: inheritance (extends), realization (implements),
-           composition/aggregation (owned fields), association (references), and dependency
-           (parameter/return types). Keep it to the essential types; a readable diagram has
-           fewer than ~15 classes.
-        3. Express the model as a mermaid classDiagram, e.g.:
+        2. Extract the class model — classes, interfaces, and the relationships between them:
+           inheritance (extends), realization (implements), composition/aggregation (owned
+           fields), association (references), and dependency (parameter/return types). Keep it to
+           the essential types; a readable diagram has fewer than ~15 classes.
+        3. Express the model as semantic statements, one \`node\` per class and one relationship
+           word per edge, e.g.:
            \`\`\`
-           classDiagram
-             direction TB
-             class Animal {
-               <<abstract>>
-               +name: string
-               +move() void
-             }
-             Animal <|-- Dog
-             Serializable <|.. Dog
-             Owner "1" o-- "*" Dog : owns
-             Dog ..> Bone : chews
+           node Animal "Animal" ref="src/animal.ts"
+           node Dog
+           node Serializable "«interface» Serializable"
+           node Owner
+           node Bone
+           edge Dog extends Animal
+           edge Dog implements Serializable
+           edge Owner one-to-many Dog "owns"
+           edge Dog depends-on Bone "chews"
            \`\`\`
-           Supported: class blocks with members, <<stereotypes>>, ~T~ generics, and the
-           relation arrows <|-- (inheritance), <|.. / ..|> (realization), *-- (composition),
-           o-- (aggregation), --> (association), ..> (dependency), with optional
-           "cardinalities" and : labels.
-        4. If no drawing exists in context, create one first; then call generate with the
-           mermaid source. Generation replaces the managed diagram — layout is automatic.
-        5. Read the \`diagnostics\` in the result. Every \`error\` (nodes overlapping, a connector
-           drawn through a node, a label that does not fit) means the picture is wrong: shorten
-           labels, drop or split nodes, or reduce edges, then generate again. \`warning\`s
+        4. If no drawing exists in context, create one first; then call
+           ${Operation.toolName(DrawingOperation.Draw)} with the statements. Layout is automatic.
+        5. Read \`problems\` and \`diagnostics\` in the result. Every \`error\` (nodes overlapping, a
+           connector drawn through a node, a label that does not fit) means the picture is wrong:
+           shorten labels, drop or split nodes, or reduce edges, then draw again. \`warning\`s
            (crossings, bends) are quality hints — fewer is better, zero is not required.
         6. For manual touch-ups afterwards (moving a class, restyling an element), read the
            scene and apply targeted edit commands; each class is a world object whose id is the
-           class name, with title/attributes/methods elements.
+           node id.
 
-        ## Block diagrams
-
-        The same tool compiles a mermaid \`flowchart\` (TB or LR) for architecture and data-flow
-        diagrams: \`subgraph id [Label] … end\` groups, \`Id[Label]\` nodes, \`A --> B\` and
-        \`A -->|label| B\` edges. Add \`%% ref <Id> <target>\` lines to say what a node depicts:
-        an ECHO object reference opens when the node is activated; a URL or path is kept on the
-        node for tooling. Keep to ~14 nodes and 3 groups; split a larger system into several
-        drawings.
-
-        Relation kinds draw with UML markers: \`B ..|> A\` (implements, dashed hollow triangle),
-        \`A -.-> B\` (creates), \`A o--> B\` (owns or contains), \`A --{ B\` (has many) and
-        \`B --|> A\` (extends); a plain \`-->\` is a dependency or call.
+        ${Operation.toolName(DrawingOperation.Generate)} still compiles a mermaid classDiagram, which
+        can show each class's attributes and methods. It is DEPRECATED: use it only when the user
+        asks for members in the boxes, and say that the semantic statements cannot show them yet.
 
         ## Refining a diagram
 
-        After each ${Operation.toolName(DrawingOperation.Generate)}, call
+        After each ${Operation.toolName(DrawingOperation.Draw)}, call
         ${Operation.toolName(DrawingOperation.Score)} and improve the diagram over several rounds
         (about five, or until the overall score stops rising). Each round, say in one line what the
-        scores and diagnostics showed and what you are changing, then regenerate. Change only what is
+        scores and diagnostics showed and what you are changing, then draw again. Change only what is
         true of the code:
 
         - Label each box with a component name alone; put caveats ("no cap", limits) on edges.
         - Keep every box at one level of abstraction: services and modules, not their fields, caches,
           limits or data types.
         - Remove crossings, overlapping arrows and overlapping labels: reorder declarations, move a
-          node to another group, switch TB/LR, or drop an edge that restates another.
+          node to another group, switch the flow, or drop an edge that restates another.
         - Groups should hold what depends on each other; dependencies should run one way between them.
         - Keep the best-scoring version; if a change lowers the score, go back.
 
@@ -108,7 +93,7 @@ export const make = () =>
         ## Drawing it yourself
 
         The same tool takes scene statements, in which you choose every coordinate. For a graph,
-        prefer the semantic statements above, or ${Operation.toolName(DrawingOperation.Generate)}.
+        prefer the semantic statements above.
         Reach for coordinates when the picture is not a graph: a precise arrangement, a free-form illustration, a
         figure with circles, arcs or text you place yourself, or a fix to one object of a diagram
         that generation otherwise got right.
@@ -150,13 +135,12 @@ export const make = () =>
           \`remove elements <objectId> <elementId>…\`.
 
         Read \`problems\` in the result first — each carries a line and column, and a single
-        \`error\` means nothing was applied at all. Then read \`diagnostics\` exactly as for
-        generation.
+        \`error\` means nothing was applied at all. Then read \`diagnostics\` as above.
 
         When asked for the diagram source rather than a canvas rendering (e.g. to embed in a
-        markdown document), return a mermaid classDiagram in a fenced mermaid block — that is the
-        portable form and needs no coordinates. If the DSL is what was asked for, by name or by
-        asking for a \`diagram\` fenced block or positioned source, return the DSL instead.
+        markdown document), return the semantic statements in a fenced \`diagram\` block: Composer
+        and the spec viewer lay it out where it is embedded, and it needs no coordinates. Do not
+        return mermaid; it is deprecated.
       `,
     }),
   });

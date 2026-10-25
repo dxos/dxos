@@ -26,3 +26,7 @@ tasks:
       - 'package.json'
     outputs:
       - dist/
+  # The bundle is `build.mjs`'s output, so dependents' tests key on it as well.
+  source-hash:
+    inputs:
+      - build.mjs

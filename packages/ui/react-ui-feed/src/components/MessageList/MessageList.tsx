@@ -448,7 +448,7 @@ const MessageListRoot = ({
       // which visibly moves a reader who has not moved (seen on submit while pinned).
       const scroller = scrollerRef.current;
       if (scroller && scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop <= 32) {
-        follow.onNavigate(model.count - 1);
+        follow.pin();
         return;
       }
 

@@ -32,7 +32,6 @@ import {
 import * as Chat from '@dxos/assistant/Chat';
 import { OperationProcess } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
-import * as McpServer from '@dxos/compute/McpServer';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
@@ -41,14 +40,14 @@ import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Reducer, type Trajectory } from '@dxos/trajectory';
 import { Actor, ContentBlock, Message } from '@dxos/types';
 import { markWork, trim } from '@dxos/util';
 
+import { mcpServerTypes } from '../mcp-server-types.ts';
 import { type DelegationStrategy } from './delegation-strategy.ts';
-import { loadSpaceMcpServers } from './mcp-servers.ts';
+import { type McpEndpointOf, loadMcpServers } from './mcp-servers.ts';
 import { type ThreadingOptions, runLanes, tenantOf } from './thread-scheduler.ts';
 import { type MakeTurnProducer, type TurnProducer, makeAiSessionTurnProducer } from './turn-producer.ts';
 
@@ -101,6 +100,12 @@ export interface AgentProcessOptions {
    * opens a light thread and runs in parallel instead of waiting (see `trajectory/LIGHT-THREADS.mdl`).
    */
   threading?: () => ThreadingOptions | undefined;
+
+  /**
+   * The MCP server a connection exposes. Defaults to the endpoint the connection stores itself, which
+   * only a custom MCP connection has; a host that knows the connector registry resolves the rest.
+   */
+  mcpEndpoint?: McpEndpointOf;
 }
 
 export const AGENT_PROCESS_KEY = 'org.dxos.testing.process.agent';
@@ -197,8 +202,8 @@ export const AgentProcess = (options: AgentProcessOptions) =>
     // registers exactly these with the process's database, and a typed query for a type it does
     // not know matches nothing. Without them a hosted agent reads its own skill bindings back
     // empty and runs every turn with an EMPTY TOOLKIT — the model can only answer in prose.
-    // `McpServer` and `AccessToken` are read each turn to connect the space's MCP servers.
-    types: [Chat.Chat, Feed.Feed, ...TrajectoryStore.types, Skill.Skill, McpServer.McpServer, AccessToken.AccessToken],
+    // `mcpServerTypes` (bindings among them) are read each turn to connect the MCP servers.
+    types: [Chat.Chat, Feed.Feed, ...TrajectoryStore.types, Skill.Skill, ...mcpServerTypes],
     services: [
       Database.Service,
       OpaqueToolkit.OpaqueToolkitProvider,
@@ -502,19 +507,12 @@ export const AgentProcess = (options: AgentProcessOptions) =>
           /** Another agent sharing the chat that runs this turn; the process's own when absent. */
           tenant?: { producer: TurnProducer; model?: DXN.DXN };
         }) {
-          // The MCP servers are read concurrently with the writes below: neither depends on the
-          // other, and each is a round trip to the database that the turn would otherwise wait on in series.
-          const [mcpServers] = yield* Effect.all(
-            [
-              loadSpaceMcpServers(),
-              Effect.gen(function* () {
-                log('begin request', { prompt });
-                log('trace agent request begin');
-                yield* Trace.write(Trace.AgentRequestBegin, {});
-              }),
-            ],
-            { concurrency: 'unbounded' },
-          );
+          log('begin request', { prompt });
+          log('trace agent request begin');
+          yield* Trace.write(Trace.AgentRequestBegin, {});
+          const mcpContext = yield* Effect.context<
+            Database.Service | Registry.Service | Credential.CredentialsService
+          >();
           markWork('agent.turn-begin');
           yield* (tenant?.producer ?? session)
             .runTurn({
@@ -524,7 +522,7 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
               // toolkit: AsynchronousExectionToolkit,
               system: options.systemPrompt,
-              mcpServers,
+              mcpServers: loadMcpServers({ feed, endpointOf: options.mcpEndpoint }).pipe(Effect.provide(mcpContext)),
               source:
                 dequeued === undefined
                   ? undefined

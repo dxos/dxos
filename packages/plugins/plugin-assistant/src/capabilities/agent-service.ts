@@ -11,6 +11,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Process from '@dxos/compute/Process';
+import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
 import { AssistantCapabilities, AssistantOptions } from '#types';
@@ -58,6 +59,8 @@ const makeAgentServiceSpec = (codeModeTurnProducer: AssistantOptions.AssistantPl
                 .map((agent) => ({ name: agent.id, makeTurnProducer: agent.makeTurnProducer }));
               return { limit: values.parallelThreadLimit, ...(tenants.length > 0 ? { tenants } : {}) };
             },
+            mcpEndpoint: (connection) =>
+              ConnectorSpec.mcpEndpoint(manager.getAll(ConnectorSpec.Connector).flat(), connection),
           });
         }),
       ),
