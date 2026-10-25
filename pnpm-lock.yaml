@@ -6474,6 +6474,9 @@ importers:
       '@dxos/context':
         specifier: workspace:*
         version: link:../../../common/context
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../echo
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect

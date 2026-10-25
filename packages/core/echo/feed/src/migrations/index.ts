@@ -8,6 +8,7 @@ import init from './0001_init.sql?raw';
 import blockEncryption from './0002_block_encryption.sql?raw';
 import syncStateServerToken from './0003_sync_state_server_token.sql?raw';
 import syncStateBlocksToPull from './0004_sync_state_blocks_to_pull.sql?raw';
+import feedOptions from './0005_feed_options.sql?raw';
 
 /**
  * Feed store migrations, keyed `<id>_<name>` as `@effect/sql`'s `Migrator.fromRecord` expects.
@@ -25,6 +26,7 @@ export const MIGRATIONS = {
   '0002_block_encryption': SqlMigrations.apply(blockEncryption),
   '0003_sync_state_server_token': SqlMigrations.apply(syncStateServerToken),
   '0004_sync_state_blocks_to_pull': SqlMigrations.apply(syncStateBlocksToPull),
+  '0005_feed_options': SqlMigrations.apply(feedOptions),
 };
 
 /**

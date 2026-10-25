@@ -66,7 +66,7 @@ service FeedOptionsIntentStore
     IndexEngine pass-throughs (takeFeedOptionsIntents, clearFeedOptionsIntents).
   ops:
     migrate() → void
-    record(intents: FeedOptionsIntent[]) → void                       # inside the index-row transaction [F-1.2]
+    record(intents: FeedOptionsIntent[]) → void                       # inside the index-row transaction, replacing the feed's row [F-1.2]
     take() → { maxId: number; intents: FeedOptionsIntent[] }         # newest per (spaceId, feedId) [F-2.2]
     clear(spaceId: SpaceId, feedId: string, upToId: number) → void   # rows up to upToId only [F-1.3]
   note: |
@@ -179,12 +179,15 @@ feat F-3: Feeds with indexing disabled
 
   req F-3.4:
     when: Feed.query(feed) runs on a feed with indexing disabled
-    then: it returns the feed's items, read from the feed store through FeedService.queryFeed
+    then: it returns the feed's items: the host query executor reads that feed's blocks from the
+          feed store and matches them in memory instead of reading the index
 
   req F-3.5:
     when: options that re-enable indexing are applied
     then: every block the feed still retains is indexed — EDGE resets that feed's own cursor;
-          EchoHost, whose feed cursor is per (space, namespace), runs a one-off backfill of the feed
+          EchoHost, whose feed cursor is per (space, namespace), runs a one-off backfill cursor
+          (`backfill/<namespace>/<feedId>`) that reads the feed to its end while the namespace
+          cursor skips it, then is deleted
 
   req F-3.6:
     when: an item is appended on EDGE to a feed with indexing disabled
@@ -198,7 +201,13 @@ feat F-4: Retention in the index
   req F-4.1:
     when: the feed store deletes blocks by retention
     then: their rows are removed from every index in the next index pass, so no query returns an
-          item the store no longer holds
+          item the store no longer holds; a row is removed only when the block it was last written
+          from (objectMeta.queueInsertionId) was trimmed, so a live feed object whose newer block
+          survives keeps its row
+
+  req F-4.2:
+    when: an index-answered query returns items of a feed with retention.maxAge
+    then: items whose block timestamp is older than now - maxAge are left out, before any trim
 ```
 
 ## Acceptance
@@ -313,6 +322,52 @@ decision D-8: Feed-options intents are rows of a new `feedOptionsIntents` table,
   why: The row carries the options themselves, so the consumer needs no second read of the object; recording a row per indexing of a Feed object stays cheap because take() collapses them.
   rejected:
     - "Upsert one row per feed: a concurrent record during apply would overwrite the row that clear() is about to delete, losing the newer options."
+```
+
+```mdl
+decision D-9: For a feed with indexing disabled, the host query executor reads the feed store and matches in memory, because Feed.query is answered from the index and would otherwise return nothing once the feed's rows are purged. Supersedes the FeedService.queryFeed wording of [D-6].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.4]
+  supersedes: D-6
+  why: Feed.query goes through Database.query with a feed scope, which the executor answers from objectMeta; reading the store keeps the item set without indexing it.
+```
+
+```mdl
+decision D-10: An entity-meta row records the insertion id of the block it was last written from, and retention removes a row only when that block was trimmed; rows written before the column existed fall back to matching by position. Fills in [D-7].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.1]
+  why: A live feed object re-appends whole under the same id, so deleting by object id would remove objects whose older versions were trimmed.
+```
+
+```mdl
+decision D-11: Applying an intent runs the index side first (purge on disable, backfill seed on re-enable) and is idempotent, so a crash before the intent is cleared is redone on retry; a failing intent stays pending and is retried on every pass. Fills in [D-4] and [D-5].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.4, F-2.3, F-3.2, F-3.5]
+  why: The store's `changed` is false on a retry, so the index side cannot key off it.
+```
+
+```mdl
+decision D-12: Index-answered feed queries drop items older than maxAge, using objectMeta.updatedAt, which holds the block timestamp. Fills in [D-7].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.2]
+  why: Reads must hide expired items before the lazy trim deletes them (org.dxos.feed [F-2.2]), and the index already stores the block time.
+```
+
+```mdl
+decision D-13: record() deletes the feed's pending row before inserting the new one, so feedOptionsIntents holds at most one row per Feed object. Refines [D-8].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [feedOptionsIntents, FeedOptionsIntentStore, F-2.2]
+  why: A row per indexing grows with the object's edit history while applies keep failing; the replacement row takes a new AUTOINCREMENT id, so the race D-8 rejected an upsert for cannot erase it.
 ```
 
 ---
