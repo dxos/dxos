@@ -11,6 +11,7 @@ import {
   AgentIdentityModule,
   AgentRunner,
   AppGraphBuilder,
+  CommentsSettings,
   CommentState,
   HistoryGraph,
   HistorySurface,
@@ -42,6 +43,7 @@ export type ReviewPluginOptions = {
 export const ReviewPlugin = Plugin.define<ReviewPluginOptions>(meta).pipe(
   Plugin.addModule(AgentIdentityModule),
   Plugin.addModule(AppGraphBuilder),
+  Plugin.addModule(CommentsSettings),
   Plugin.addModule(CommentState),
   Plugin.addModule(HistoryGraph),
   Plugin.addModule(HistorySurface),

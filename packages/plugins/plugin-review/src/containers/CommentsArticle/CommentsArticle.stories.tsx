@@ -32,7 +32,6 @@ import { DXN } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
@@ -44,7 +43,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { ReviewPlugin, type ReviewPluginOptions } from '#plugin';
 import { translations } from '#translations';
-import { AgentIdentity, CommentCapabilities } from '#types';
+import { AgentIdentity, CommentCapabilities, Settings } from '#types';
 
 import { textOf } from '../../should-trigger-agent.ts';
 import { ReviewStoryLayout, SAMPLE_CONTENT, STORY_AGENT_NAME, seedAgentSuggestions } from '../../testing/index.ts';
@@ -177,11 +176,11 @@ const StoryGraphPlugin = Plugin.define(
 
 type StoryArgs = {
   /**
-   * Sets the Markdown plugin's `commentAgentMode` setting so newly-created
+   * Sets the review plugin's `commentAgentMode` setting so newly-created
    * comment threads on the seeded doc are stamped with the matching agent
    * config by CommentOperation.Create.
    */
-  agentMode?: Markdown.Settings['commentAgentMode'];
+  agentMode?: Settings.Settings['commentAgentMode'];
   /** Seed three anchored comment threads over known phrases in the document. */
   seedComments?: boolean;
   /** Seed a suggestion branch authored by the story agent (deterministic; no LLM). */
@@ -201,16 +200,13 @@ const DefaultStory = ({ agentMode }: StoryArgs) => {
     }
   }, [graph, attendableId]);
 
-  // Push the variant's `agentMode` into the markdown plugin settings so that
+  // Push the variant's `agentMode` into the review plugin settings so that
   // CommentOperation.Create stamps new threads with the matching agent config.
-  const markdownSettings = Hooks.useCapability(MarkdownCapabilities.Settings);
+  const reviewSettings = Hooks.useCapability(CommentCapabilities.Settings);
   const registry = Hooks.useCapability(Capabilities.AtomRegistry);
   useEffect(() => {
-    if (!markdownSettings) {
-      return;
-    }
-    registry.set(markdownSettings, { ...registry.get(markdownSettings), commentAgentMode: agentMode ?? 'off' });
-  }, [markdownSettings, registry, agentMode]);
+    registry.set(reviewSettings, { ...registry.get(reviewSettings), commentAgentMode: agentMode ?? 'off' });
+  }, [reviewSettings, registry, agentMode]);
 
   return <ReviewStoryLayout attendableId={attendableId} />;
 };

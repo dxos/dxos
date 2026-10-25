@@ -510,6 +510,10 @@ feat F-6: Per-thread agent
     AgentIdentity.name; responses append as assistant messages; runner errors never lose the user's
     message.
 
+  req F-6.2: A new thread on any subject takes its agent config from the `commentAgentMode` setting
+    (`off` | `auto` | `mention`, default `mention`); `off` creates a user-only thread. A thread saved
+    without a config follows the current setting.
+
 feat F-7: Independence & testability
 
   req F-7.1: The plugin MUST NOT import other plugins' source; all cross-plugin wiring is via
@@ -631,3 +635,11 @@ test QA-1: Comment on a document, reply, and resolve
       expect: the thread no longer appears in the companion
 ```
 
+## Changelog
+
+```mdl
+decision D-1: The `commentAgentMode` setting moves here from plugin-markdown and applies to comment threads on every subject, not only Markdown documents; the default is `mention`.
+  date: 2026-10-25
+  by: user:richburdon
+  affects: [F-6.2]
+```

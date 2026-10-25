@@ -111,7 +111,7 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
       const identities = yield* Capability.getAll(AgentIdentity.AgentIdentity);
       const identity = identities[0];
       // A thread saved without an agent config (created before the setting was on) follows the current setting.
-      const agent = thread.agent ?? (yield* commentAgentConfig(subject));
+      const agent = thread.agent ?? (yield* commentAgentConfig());
       if (identity && shouldTriggerAgent(thread, message, identity.name, agent)) {
         yield* Operation.schedule(CommentOperation.RespondToThread, {
           thread: Ref.make(thread),
