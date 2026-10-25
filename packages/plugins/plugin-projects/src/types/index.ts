@@ -3,6 +3,7 @@
 //
 
 export * as Feature from './Feature.ts';
+export * as FeatureLink from './FeatureLink.ts';
 export * as FeatureOperation from './FeatureOperation.ts';
 export * as FeatureMapView from './FeatureMapView.ts';
 export * as ProjectCapabilities from './ProjectCapabilities.ts';

@@ -29,6 +29,26 @@ export const StatusOptions: Task.Option<Status>[] = [
 ];
 
 //
+// Code links
+//
+
+/** What a `@feature` tag documents: a `describe` block, a single test, or any other symbol. */
+export const CodeLinkKind = Schema.Literals(['suite', 'test', 'code']);
+export type CodeLinkKind = Schema.Schema.Type<typeof CodeLinkKind>;
+
+/** A place in the repository whose JSDoc cites the feature with a `@feature` tag. */
+export const CodeLink = Schema.Struct({
+  /** Repo path of the file. */
+  path: Schema.String,
+  /** 1-based line of the tag. */
+  line: Schema.Number,
+  /** The symbol the comment documents: a test or suite title, or a declaration name. */
+  symbol: Schema.optional(Schema.String),
+  kind: CodeLinkKind,
+});
+export type CodeLink = Schema.Schema.Type<typeof CodeLink>;
+
+//
 // Feature
 //
 
@@ -81,6 +101,12 @@ export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.fe
      */
     project: Schema.optional(Ref.Ref(Project.Project).pipe(Annotation.FormInputAnnotation.set(false))),
 
+    /**
+     * The code that cites this feature with a `@feature` tag, as last imported from a scan of the repository; held
+     * here so the feature map reads it without the repository.
+     */
+    code: Schema.optional(Schema.Array(CodeLink).pipe(Annotation.FormInputAnnotation.set(false))),
+
     /** Where the user dragged the card on its project's canvas; a feature without one is laid out automatically. */
     position: Schema.optional(Position.pipe(Annotation.FormInputAnnotation.set(false))),
   }).pipe(
@@ -128,6 +154,16 @@ export const findDependencyCycle = (
   return visit(target, [target]);
 };
 
+/**
+ * The DXN that names the feature in code: its `meta.key` with its mnemonic, e.g.
+ * `dxn:network.dxos.team.features.mcp.codeMode#ABC123`. Undefined when the feature has no valid `meta.key`.
+ */
+export const getLink = (feature: Feature | Obj.Snapshot<Feature>): DXN.DXN | undefined => {
+  const key = Obj.getMeta(feature).key;
+  const name = key ? DXN.tryMake(`dxn:${key}`) : undefined;
+  return name && DXN.withMnemonic(DXN.withoutMnemonic(name), Obj.getMnemonic(feature));
+};
+
 /** Repository that relative spec paths resolve against. */
 export const DEFAULT_SPEC_REPOSITORY = 'https://github.com/dxos/dxos';
 
@@ -137,6 +173,10 @@ export const DEFAULT_SPEC_REPOSITORY = 'https://github.com/dxos/dxos';
  */
 export const getSpecUrl = (spec: string, repository = DEFAULT_SPEC_REPOSITORY): string =>
   /^https?:\/\//.test(spec) ? spec : `${repository}/blob/main/${getSpecPath(spec)}`;
+
+/** Where a code link opens on GitHub: its file on the default branch, at its line. */
+export const getCodeUrl = (link: Pick<CodeLink, 'path' | 'line'>, repository = DEFAULT_SPEC_REPOSITORY): string =>
+  `${repository}/blob/main/${link.path.replace(/^\/+/, '')}#L${link.line}`;
 
 /** A repo spec path without its block anchor or leading slashes. */
 export const getSpecPath = (spec: string): string => spec.replace(/#.*$/, '').replace(/^\/+/, '');

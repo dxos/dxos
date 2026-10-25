@@ -19,6 +19,7 @@ const feature = (id: string, props: Partial<FeatureModel> = {}): FeatureModel =>
   status: 'prototype',
   specs: [],
   subfeatures: [],
+  code: [],
   dependsOn: [],
   tasks: [],
   showcases: [],
