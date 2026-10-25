@@ -936,6 +936,60 @@ describe('IndexEngine', () => {
     );
 
     it.effect(
+      'records the data namespace for a Feed object whose namespace is not a known one',
+      Effect.fnUntraced(function* () {
+        const { engine } = yield* setup;
+        const spaceId = SpaceId.random();
+        const feedId = EntityId.random();
+        const dataSource = new MockIndexDataSource();
+        dataSource.push([
+          {
+            spaceId,
+            documentId: 'doc-feed',
+            queueId: null,
+            queueNamespace: null,
+            recordId: null,
+            createdAt: null,
+            updatedAt: Date.now(),
+            data: { id: feedId, [ATTR_TYPE]: FEED_TYPE, namespace: 'other', retention: { maxLength: 5 } },
+          },
+        ]);
+        yield* engine.update(Context.default(), dataSource, { spaceId: null });
+
+        const { intents } = yield* engine.takeFeedOptionsIntents();
+        expect(intents).toEqual([
+          { kind: 'feed-options', spaceId, feedId, namespace: 'data', options: { retention: { maxLength: 5 } } },
+        ]);
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
+      'a queue bounded by updatedSince excludes its older rows before the window limit',
+      Effect.fnUntraced(function* () {
+        const { engine } = yield* setup;
+        const spaceId = SpaceId.random();
+        const queueId = EntityId.random();
+        const source = new QueueMockDataSource();
+        // Ascending ids put the expired rows first in natural order, where an unbounded page would take them.
+        const ids = Array.from({ length: 4 }, () => EntityId.random()).sort();
+        source.push(
+          ids.map((id, index) => ({
+            ...makeItem(spaceId, queueId, { insertionId: index + 1 }, { id, title: `item ${index}` }),
+            updatedAt: index < 2 ? 1_000 : 5_000,
+          })),
+        );
+        yield* engine.update(Context.default(), source, { spaceId: null });
+
+        const rows = yield* engine.queryAll({
+          spaceIds: [],
+          queues: [{ spaceId, queueId, updatedSince: 2_000 }],
+          window: { kind: 'natural', direction: 'asc', limit: 2 },
+        });
+        expect(rows.map((row) => row.objectId)).toEqual(ids.slice(2));
+      }, Effect.provide(TestLayer)),
+    );
+
+    it.effect(
       'drops invalid options fields and skips feed items and deleted Feed objects',
       Effect.fnUntraced(function* () {
         const { engine } = yield* setup;

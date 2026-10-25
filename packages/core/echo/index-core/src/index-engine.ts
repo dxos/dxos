@@ -243,7 +243,11 @@ const feedOptionsIntents = (
       kind: 'feed-options',
       spaceId: obj.spaceId,
       feedId,
-      namespace: typeof data.namespace === 'string' ? data.namespace : DEFAULT_FEED_NAMESPACE,
+      // Replicated data may carry any string; only a namespace the Feed schema admits names a feed's storage.
+      namespace: Option.getOrElse(
+        Schema.decodeUnknownOption(Feed.Namespace)(data.namespace),
+        () => DEFAULT_FEED_NAMESPACE,
+      ),
       options: {
         ...(indexing !== undefined ? { indexing } : {}),
         ...(retention !== undefined ? { retention } : {}),

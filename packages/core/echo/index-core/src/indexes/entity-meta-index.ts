@@ -158,7 +158,20 @@ export interface EntityMeta extends Schema.Schema.Type<typeof EntityMeta> {}
 export interface QueueRef {
   readonly queueId: string;
   readonly spaceId?: string;
+  /**
+   * Excludes the queue's rows last updated before this time (unix ms), which its retention has expired:
+   * excluded in the read so that a page limit counts only live rows.
+   */
+  readonly updatedSince?: number;
 }
+
+/** The {@link QueueRef.updatedSince} bound over the `updatedAt` column (optionally qualified). */
+export const buildQueueExpiryCondition = (
+  sql: SqlClient.SqlClient,
+  queue: QueueRef,
+  column: Statement.Fragment = sql`updatedAt`,
+): Statement.Fragment =>
+  queue.updatedSince !== undefined ? sql` AND (${column} IS NULL OR ${column} >= ${queue.updatedSince})` : sql``;
 
 /** One source a read selects from: a whole space, or one queue. */
 export type SourceRef = { readonly spaceId: string } | { readonly queue: QueueRef };
@@ -210,8 +223,8 @@ const buildSourceRefsCondition = (
       sql.or(
         queues.map((queue) =>
           queue.spaceId !== undefined
-            ? sql`(spaceId = ${queue.spaceId} AND queueId = ${queue.queueId})`
-            : sql`queueId = ${queue.queueId}`,
+            ? sql`(spaceId = ${queue.spaceId} AND queueId = ${queue.queueId}${buildQueueExpiryCondition(sql, queue)})`
+            : sql`(queueId = ${queue.queueId}${buildQueueExpiryCondition(sql, queue)})`,
         ),
       ),
     );

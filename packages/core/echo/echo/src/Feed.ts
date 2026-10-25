@@ -31,6 +31,10 @@ import * as Type from './Type.ts';
 // Options
 //
 
+/** The namespaces a feed can store its data under; `data` is the default. */
+export const Namespace = Schema.Literals(['data', 'trace']);
+export type Namespace = Schema.Schema.Type<typeof Namespace>;
+
 /**
  * Indexing options for a feed. Absent on a feed means indexing is enabled.
  *
@@ -92,7 +96,7 @@ export class Feed extends Type.makeObject<Feed>(DXN.make('org.dxos.type.feed', '
      * - `data`: Data feed (default).
      * - `trace`: Trace feed.
      */
-    namespace: Schema.optional(Schema.Literals(['data', 'trace'])),
+    namespace: Schema.optional(Namespace),
 
     /**
      * Earliest item a pending rewind discards — set when a soft fork is decided but not yet expressed,

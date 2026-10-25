@@ -137,4 +137,35 @@ describe('feed options', () => {
     await settle(db);
     expect(await storedBlocks()).toBe(2);
   });
+
+  // feed T-2: the expired rows are excluded before the page limit, which would otherwise count them.
+  for (const queryExecutor of ['sql', 'memory'] as const) {
+    test(`a limited query over a feed with maxAge returns a full page of live items (${queryExecutor})`, async ({
+      expect,
+    }) => {
+      await using peer = await builder.createPeer({
+        types: [Feed.Feed, TestSchema.Task],
+        assignQueuePositions: true,
+        queryExecutor,
+      });
+      const { db, reader, feed } = await openSpace(peer);
+      await EffectEx.runPromise(Feed.setRetention(feed, { maxAge: Duration.millis(MAX_AGE_MS) }));
+      await settle(db);
+
+      // Many expired items, so a page cut before the age filter would almost surely hold some.
+      await appendTasks(
+        db,
+        feed,
+        Array.from({ length: 10 }, (_, index) => `old ${index}`),
+      );
+      await settle(db);
+      await sleep(MAX_AGE_MS * 0.6);
+      await appendTasks(db, feed, ['new 0', 'new 1']);
+      await settle(db);
+      await sleep(MAX_AGE_MS * 0.6);
+
+      const page = await reader.query(Query.select(Filter.type(TestSchema.Task)).limit(2).from(feed)).run();
+      expect(page.map((task) => task.title).sort()).toEqual(['new 0', 'new 1']);
+    });
+  }
 });

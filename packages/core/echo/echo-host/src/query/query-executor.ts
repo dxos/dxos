@@ -64,7 +64,13 @@ import { type GroupAggregates, GroupBy, type GroupKeyValue, compareCodeUnits } f
 import { isSaved } from './object-state.ts';
 import { QueryPlan } from './plan.ts';
 import { QueryPlanner, filterContainsInQuery } from './query-planner.ts';
-import { type CompiledRow, MAX_EDGES_PER_ROW, compilePlan, planDeclinedByCompiler } from './sql/index.ts';
+import {
+  type CompiledRow,
+  MAX_EDGES_PER_ROW,
+  compilePlan,
+  planDeclinedByCompiler,
+  withFeedCutoffs,
+} from './sql/index.ts';
 
 /**
  * Which evaluation path a plan targets: `memory` leaves every step for the executor to evaluate in
@@ -762,6 +768,10 @@ export class QueryExecutor extends Resource {
   readonly #feedStore: FeedStore | undefined;
   /** Feeds the current run reads from the feed store, keyed by feed id; set at the top of every run. */
   #storeFeeds = new Map<string, StoreFeed>();
+  /** Per feed in scope with a `maxAge` (keyed `<spaceId>/<feedId>`), the time its rows expire before; set every run. */
+  #feedCutoffs = new Map<string, number>();
+  /** Recompiles the plan with this run's feed cutoffs; absent when the plan was not compiled. */
+  readonly #compile: ((feedCutoffs: ReadonlyMap<string, number>) => QueryPlan.Plan) | undefined;
   #scopes: QueryScopes;
   readonly #includeAllFeeds: boolean;
   private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
@@ -809,10 +819,12 @@ export class QueryExecutor extends Resource {
     const plan = this.#planner.createPlan(this._query);
     this.#uncompiledPlan = plan;
     const planSubquery = (query: QueryAST.Query) => this.#planner.createPlan(query);
-    this._plan =
-      this.#mode === 'sql' && options.sql !== undefined && !planDeclinedByCompiler(plan, planSubquery)
-        ? compilePlan(options.sql, plan, planSubquery).plan
-        : plan;
+    const sql = options.sql;
+    this.#compile =
+      this.#mode === 'sql' && sql !== undefined && !planDeclinedByCompiler(plan, planSubquery)
+        ? (feedCutoffs) => compilePlan(sql, plan, planSubquery, { feedCutoffs }).plan
+        : undefined;
+    this._plan = this.#compile?.(new Map()) ?? plan;
     this.#scopes = extractScopes(this._plan);
     this.#includeAllFeeds = extractIncludeAllFeeds(this._plan);
   }
@@ -1079,11 +1091,18 @@ export class QueryExecutor extends Resource {
   /** Runs the plan, then drops items whose strong dependencies cannot be resolved from local state. */
   private async _resolveWorkingSet(): Promise<{ workingSet: QueryItem[]; trace: ExecutionTrace }> {
     try {
-      this.#storeFeeds = await this.#readStoreFeeds();
-      // A compiled statement reads only the index, which holds nothing of a disabled feed.
-      const plan = this.#storeFeeds.size > 0 ? this.#uncompiledPlan : this._plan;
+      const now = Date.now();
+      ({ storeFeeds: this.#storeFeeds, feedCutoffs: this.#feedCutoffs } = await this.#readScopedFeeds(now));
+      // A compiled statement reads only the index, which holds nothing of a disabled feed; the cutoffs are
+      // bound into the statement, so a run with any recompiles it.
+      const plan =
+        this.#storeFeeds.size > 0
+          ? this.#uncompiledPlan
+          : this.#feedCutoffs.size > 0
+            ? (this.#compile?.(this.#feedCutoffs) ?? this._plan)
+            : this._plan;
       const { workingSet: planned, trace } = await this._execPlan(plan, []);
-      const workingSet = await this.#withoutExpired(planned);
+      const workingSet = await this.#withoutExpired(planned, now);
       // A compiled plan resolved these in SQL. Keyed on the plan rather than the mode, because a plan
       // the compiler declined runs step by step even under `sql` and needs the filter.
       if (plan.steps.some((step) => step._tag === 'SqlStep')) {
@@ -1109,13 +1128,19 @@ export class QueryExecutor extends Resource {
     });
   }
 
-  /** The feeds the plan scopes to whose indexing is disabled, keyed by feed id. */
-  async #readStoreFeeds(): Promise<Map<string, StoreFeed>> {
+  /**
+   * Of the feeds the plan scopes to, those whose indexing is disabled, keyed by feed id, and the
+   * retention cutoff of those with a `maxAge`, keyed `<spaceId>/<feedId>`.
+   */
+  async #readScopedFeeds(
+    now: number,
+  ): Promise<{ storeFeeds: Map<string, StoreFeed>; feedCutoffs: Map<string, number> }> {
     const storeFeeds = new Map<string, StoreFeed>();
+    const feedCutoffs = new Map<string, number>();
     const feedStore = this.#feedStore;
     const feedRefs = extractQueueRefs(extractFeedUris(this.#uncompiledPlan)) ?? [];
     if (!feedStore || feedRefs.length === 0) {
-      return storeFeeds;
+      return { storeFeeds, feedCutoffs };
     }
     const spaceIds = new Set(
       feedRefs.flatMap((ref) => (ref.spaceId !== undefined && SpaceId.isValid(ref.spaceId) ? [ref.spaceId] : [])),
@@ -1123,6 +1148,10 @@ export class QueryExecutor extends Resource {
     for (const spaceId of spaceIds) {
       const options = await this.#listFeedOptions(spaceId);
       for (const ref of feedRefs) {
+        const maxAge = ref.spaceId === spaceId ? options.get(ref.queueId)?.retention?.maxAge : undefined;
+        if (maxAge !== undefined) {
+          feedCutoffs.set(`${spaceId}/${ref.queueId}`, now - maxAge);
+        }
         if (ref.spaceId === spaceId && options.get(ref.queueId)?.indexing?.enabled === false) {
           const feedNamespace = await this._runInRuntime(feedStore.getFeedNamespace({ spaceId, feedId: ref.queueId }));
           if (feedNamespace !== undefined) {
@@ -1131,14 +1160,16 @@ export class QueryExecutor extends Resource {
         }
       }
     }
-    return storeFeeds;
+    return { storeFeeds, feedCutoffs };
   }
 
   /**
    * Drops feed items whose block is past its feed's `maxAge`: the store hides them at once but deletes
-   * them, and so their index rows, only at its next trim.
+   * them, and so their index rows, only at its next trim. A feed scope's read already excludes them;
+   * this catches the rows no read could bound — reached by a traversal, a space's all-feeds scope, or
+   * an unqualified feed URI.
    */
-  async #withoutExpired(workingSet: QueryItem[]): Promise<QueryItem[]> {
+  async #withoutExpired(workingSet: QueryItem[], now: number): Promise<QueryItem[]> {
     const spaceIds = new Set(workingSet.flatMap((item) => (item.queueId !== null ? [item.spaceId] : [])));
     if (!this.#feedStore || spaceIds.size === 0) {
       return workingSet;
@@ -1154,7 +1185,6 @@ export class QueryExecutor extends Resource {
     if (maxAges.size === 0) {
       return workingSet;
     }
-    const now = Date.now();
     return workingSet.filter((item) => {
       // A collapsed group stands for members the row does not list, so it cannot drop one of them.
       const maxAge =
@@ -1322,7 +1352,7 @@ export class QueryExecutor extends Resource {
     switch (step.selector._tag) {
       case 'WildcardSelector': {
         const beginIndexQuery = performance.now();
-        const queueRefs = extractQueueRefs(queues);
+        const queueRefs = withFeedCutoffs(extractQueueRefs(queues), this.#feedCutoffs);
         const metas = await this._queryAllFromSqlIndex(
           spaces,
           allQueuesFromSpaces,
@@ -1390,7 +1420,7 @@ export class QueryExecutor extends Resource {
 
       case 'TypeSelector': {
         const beginIndexQuery = performance.now();
-        const queueRefs = extractQueueRefs(queues);
+        const queueRefs = withFeedCutoffs(extractQueueRefs(queues), this.#feedCutoffs);
         const metas = await this._queryTypesFromSqlIndex(
           spaces,
           step.selector.typename,
@@ -1419,7 +1449,7 @@ export class QueryExecutor extends Resource {
 
       case 'TimestampSelector': {
         const beginIndexQuery = performance.now();
-        const queueRefs = extractQueueRefs(queues);
+        const queueRefs = withFeedCutoffs(extractQueueRefs(queues), this.#feedCutoffs);
         const metas = await this._runInRuntime(
           this._indexEngine.queryByTimeRange({
             spaceIds: spaces,
@@ -1486,7 +1516,7 @@ export class QueryExecutor extends Resource {
         // Full-text search using SQLite FTS5, optionally scoped by type.
         const beginIndexQuery = performance.now();
         invariant(spaces.length <= 1, 'Multiple spaces are not supported for full-text search');
-        const queueRefs = extractQueueRefs(queues);
+        const queueRefs = withFeedCutoffs(extractQueueRefs(queues), this.#feedCutoffs);
         const textResults = await this._runInRuntime(
           this._indexEngine.queryText({
             query: step.selector.text,

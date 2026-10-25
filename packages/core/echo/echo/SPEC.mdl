@@ -342,7 +342,7 @@ module Feed
     sync / getSyncState: (...) => ...  # replication control and state.
     cursor / next / nextOption: ...    # cursor navigation.
     IndexingOptions: schema            # { enabled: boolean }.
-    RetentionOptions: schema           # { maxLength?: number; maxAge?: Duration }.
+    RetentionOptions: schema           # { maxLength?: number; maxAge?: number (ms) }; setRetention takes a Duration.
     setIndexing: (feed, opts) => Effect   # write `indexing` on the feed object.
     setRetention: (feed, opts) => Effect  # write `retention` on the feed object.
     getFeedUri: (feed) => URI          # feed URI.
@@ -648,6 +648,15 @@ decision D-9: `maxAge` is stored as milliseconds; Feed.setRetention takes a Dura
   for: user:dmaretskyi
   affects: [F-7.3]
   why: ECHO stores plain JSON in the object, and an Effect Duration is a class instance that does not survive that.
+```
+
+```mdl
+decision D-10: The Feed module's api lists maxAge as milliseconds, matching F-7.3. Fills in [D-9].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [Feed]
+  why: The api still listed maxAge as a Duration after D-9 stored it as milliseconds, so the spec contradicted itself.
 ```
 
 ---
