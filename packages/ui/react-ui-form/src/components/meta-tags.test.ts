@@ -93,36 +93,25 @@ describe('partitionMetaTags', () => {
     [Obj.Meta]: { keys: [{ source: Tag.CANONICAL_ORIGIN, id: 'starred' }] },
     label: 'Starred',
   });
-  const spaceTags = [userTag, gmailTag, canonicalTag];
 
   test('holds provider tags back and leaves the rest editable', ({ expect }) => {
-    const refs = [Ref.make(userTag), Ref.make(gmailTag), Ref.make(canonicalTag)];
-    const { editable, preserved } = partitionMetaTags(refs, spaceTags);
+    const { editable, preserved } = partitionMetaTags([userTag, gmailTag, canonicalTag]);
 
     // Canonical tags stay editable — only a foreign provider owns membership.
-    expect(editable.map((ref) => ref.uri)).toEqual([Ref.make(userTag).uri, Ref.make(canonicalTag).uri]);
-    expect(preserved.map((ref) => ref.uri)).toEqual([Ref.make(gmailTag).uri]);
+    expect(editable).toEqual([userTag, canonicalTag]);
+    expect(preserved).toEqual([gmailTag]);
   });
 
   test('a save that writes back only `editable` would drop the provider tag (why `preserved` exists)', ({ expect }) => {
-    const refs = [Ref.make(userTag), Ref.make(gmailTag)];
-    const { editable, preserved } = partitionMetaTags(refs, spaceTags);
+    const tags = [userTag, gmailTag];
+    const { editable, preserved } = partitionMetaTags(tags);
 
     // What a naive handler would persist, versus the correct merge.
     expect(editable.length).toBe(1);
-    expect([...preserved, ...editable].map((ref) => ref.uri).sort()).toEqual(refs.map((ref) => ref.uri).sort());
-  });
-
-  test('an unresolvable tag stays editable rather than being silently held back', ({ expect }) => {
-    // A ref whose target is not among the space's tags (not yet replicated): treated as editable, so a
-    // missing candidate never makes a user tag un-removable.
-    const orphan = Ref.make(Tag.make({ label: 'Elsewhere' }));
-    const { editable, preserved } = partitionMetaTags([orphan], spaceTags);
-    expect(editable.map((ref) => ref.uri)).toEqual([orphan.uri]);
-    expect(preserved).toEqual([]);
+    expect([...preserved, ...editable]).toEqual([gmailTag, userTag]);
   });
 
   test('no tags is a no-op', ({ expect }) => {
-    expect(partitionMetaTags([], spaceTags)).toEqual({ editable: [], preserved: [] });
+    expect(partitionMetaTags([])).toEqual({ editable: [], preserved: [] });
   });
 });

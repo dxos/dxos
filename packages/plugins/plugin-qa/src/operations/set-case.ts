@@ -20,6 +20,7 @@ const handler: Operation.WithHandler<typeof QaOperation.SetCase> = QaOperation.S
   Operation.withHandler(
     Effect.fnUntraced(function* ({ plan: planRef, key, title, description, steps, tags }) {
       const plan = yield* Database.load(planRef);
+      const resolvedTags = tags ? yield* Effect.forEach(tags, (tag) => Database.load(tag)) : undefined;
       const existing = yield* findCase(plan, key);
       if (existing) {
         Obj.update(existing, (existing) => {
@@ -30,12 +31,12 @@ const handler: Operation.WithHandler<typeof QaOperation.SetCase> = QaOperation.S
           }
         });
 
-        applyTags(existing, tags);
+        applyTags(existing, resolvedTags);
         return { case: Ref.make(existing), created: false };
       }
 
       const created = yield* Database.add(TestCase.make({ key, title, description, steps: steps ? [...steps] : [] }));
-      applyTags(created, tags);
+      applyTags(created, resolvedTags);
       Obj.update(plan, (plan) => {
         plan.cases.push(Ref.make(created));
       });
@@ -48,11 +49,12 @@ const handler: Operation.WithHandler<typeof QaOperation.SetCase> = QaOperation.S
 export default handler;
 
 /** Tags live in the object's meta, so they are set there rather than as a field on the case. */
-const applyTags = (testCase: TestCase.TestCase, tags: readonly Ref.Ref<Tag.Tag>[] | undefined): void => {
+const applyTags = (testCase: TestCase.TestCase, tags: readonly Tag.Tag[] | undefined): void => {
   if (!tags) {
     return;
   }
 
-  const meta = Obj.getMeta(testCase);
-  meta.tags = [...tags];
+  Obj.update(testCase, (testCase) => {
+    Obj.getMeta(testCase).tags = [...tags];
+  });
 };

@@ -724,7 +724,7 @@ export class SqlPlanCompiler {
   }
 
   /**
-   * Drops document rows whose strong dependencies (schema object, relation endpoints, parent) are
+   * Drops document rows whose strong dependencies (schema object, relation endpoints, parent, tags) are
    * absent from the space's indexed documents, transitively, so they never reach a client that
    * could not hydrate them. Cross-space dependencies are not gated, as `ObjectCore` does not gate them.
    */
@@ -741,6 +741,16 @@ export class SqlPlanCompiler {
         FROM ${sql.literal(this.#peekName('sdep'))} x JOIN ${docRow(sql, 'p')} ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId
         WHERE x.depth < ${MAX_DEPTH_FOR_STRONG_DEP_TRACING} AND ${extra} ${depId} IS NOT NULL`;
     const relation = (row: Fragment) => sql`${row}.entityKind = 'relation' AND`;
+    // Tags live in the snapshot's meta, one dependency per element: an encoded reference or (legacy) a bare URI.
+    const tagsPath = jsonPathLiteral(sql, [ATTR_META, 'tags']);
+    const tagId = localIdOfLocalUri(sql, sql`COALESCE(json_extract(t.value, '$."/"'), t.value)`);
+    const seedTags = sql`SELECT w.recordId, m.spaceId, ${tagId} AS depId, 1 AS depth
+        FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectSnapshot d ON d.recordId = w.recordId, json_each(d.snapshot, ${tagsPath}) t
+        WHERE m.queueId = '' AND ${tagId} IS NOT NULL`;
+    const recurseTags = sql`SELECT x.recordId, x.spaceId, ${tagId} AS depId, x.depth + 1
+        FROM ${sql.literal(this.#peekName('sdep'))} x JOIN ${docRow(sql, 'p')} ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId
+        JOIN objectSnapshot pd ON pd.recordId = p.recordId, json_each(pd.snapshot, ${tagsPath}) t
+        WHERE x.depth < ${MAX_DEPTH_FOR_STRONG_DEP_TRACING} AND ${tagId} IS NOT NULL`;
     const sdep = this.#define(
       'sdep',
       sql.join(
@@ -751,10 +761,12 @@ export class SqlPlanCompiler {
         seedFrom(sql`m.parentId`, sql``),
         seedFrom(sql`m.sourceId`, relation(sql`m`)),
         seedFrom(sql`m.targetId`, relation(sql`m`)),
+        seedTags,
         recurseWith(typeId(sql`p`), sql``),
         recurseWith(sql`p.parentId`, sql``),
         recurseWith(sql`p.sourceId`, relation(sql`p`)),
         recurseWith(sql`p.targetId`, relation(sql`p`)),
+        recurseTags,
       ]),
     );
     return this.#define(

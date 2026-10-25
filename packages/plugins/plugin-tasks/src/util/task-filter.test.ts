@@ -30,7 +30,7 @@ const makeTask = (
   if (tagged.length > 0) {
     Obj.update(task, (task) => {
       for (const tag of tagged) {
-        Obj.addTag(task, Ref.make(tag));
+        Obj.addTag(task, tag);
       }
     });
   }
