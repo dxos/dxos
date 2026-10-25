@@ -18869,6 +18869,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -18915,9 +18918,6 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
-      '@dxos/echo-react':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-react
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -21653,24 +21653,9 @@ importers:
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../plugins/plugin-assistant
-      '@dxos/plugin-canvas':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-canvas
       '@dxos/plugin-discord':
         specifier: workspace:*
         version: link:../../plugins/plugin-discord
-      '@dxos/plugin-illustrator':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-illustrator
-      '@dxos/plugin-markdown':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-markdown
-      '@dxos/plugin-review':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-review
-      '@dxos/plugin-space':
-        specifier: workspace:*
-        version: link:../../plugins/plugin-space
       '@dxos/plugin-thread':
         specifier: workspace:*
         version: link:../../plugins/plugin-thread
@@ -21705,15 +21690,30 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/plugin-canvas':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-canvas
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugins/plugin-client
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../../plugins/plugin-connector
+      '@dxos/plugin-illustrator':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-illustrator
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-markdown
+      '@dxos/plugin-review':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-review
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../../plugins/plugin-routine
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-space
       '@dxos/storybook-testing':
         specifier: workspace:*
         version: link:../storybook-testing

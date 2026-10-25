@@ -265,7 +265,14 @@ const replyAndAwaitAgent =
       reply ? canvas.queryAllByText(reply).length : canvas.queryAllByText('Kai', { exact: true }).length;
     const before = replies();
     await userEvent.click(composer);
-    await userEvent.keyboard(`${text}{Enter}`);
+    await userEvent.keyboard(text);
+    // Enter accepts an open `@` completion instead of sending, so wait for the popup to close on the typed text.
+    await waitFor(() => {
+      if (canvasElement.ownerDocument.querySelector('.cm-tooltip-autocomplete')) {
+        throw new Error('mention completion still open');
+      }
+    });
+    await userEvent.keyboard('{Enter}');
     await awaitAgent(canvasElement, () => replies() > before, timeout);
   };
 
