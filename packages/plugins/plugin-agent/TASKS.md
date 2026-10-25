@@ -1,6 +1,6 @@
 # plugin-agent — Tasks
 
-_Resume: Phase 3 — approve M0 (child feed per private thread, THREADS.md), then M2 on `@dxos/brain`. In flight: one feed item per fact; GoalCompiler UI fixes + Datalog highlighting. Uncommitted: none. Last: `FactTuple` removed (`RDF.Fact` with tagged `Term` is the only fact type); goal state projected into the index._
+_Resume: Phase 3 — approve M0 (child feed per private thread, private-threads.md), then M2 on `@dxos/brain`. In flight: one feed item per fact; GoalCompiler UI fixes + Datalog highlighting. Uncommitted: none. Last: `FactTuple` removed (`RDF.Fact` with tagged `Term` is the only fact type); goal state projected into the index._
 
 Composer project: **Agents** (DXOS space). Design: [docs/DESIGN.md](./docs/DESIGN.md), brain: [docs/BRAIN.md](./docs/BRAIN.md), ontology:
 [docs/ONTOLOGY.md](./docs/ONTOLOGY.md), facts: [docs/FACTS.md](./docs/FACTS.md), testing:
@@ -70,4 +70,4 @@ in-memory trigger registry ("durable triggers").
 
 ### References
 
-- dxos/dxos#13590 (Phases 1–2), dxos/edge#1226 (Discord bot), dxos/dxos#13762 (BRAIN.md), dxos/dxos#13766 (M1, packages), [docs/THREADS.md](./docs/THREADS.md).
+- dxos/dxos#13590 (Phases 1–2), dxos/edge#1226 (Discord bot), dxos/dxos#13762 (BRAIN.md), dxos/dxos#13766 (M1, packages), [private-threads.md](../../core/echo/echo/docs/feeds/private-threads.md).

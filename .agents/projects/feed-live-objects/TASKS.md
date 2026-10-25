@@ -5,12 +5,12 @@ over the full feed; results hydrate via the identity map). Uncommitted: none.
 Last: roadmap re-staged 2026-08-04 around the query-shaped model; no stage
 code exists yet._
 
-PR **#12235** (branch `t3code/edb619e9`). See DESIGN.md for architecture.
+PR **#12235** (branch `t3code/edb619e9`). See [live-objects.md](../../../packages/core/echo/echo/docs/feeds/live-objects.md) for architecture.
 
 ## Status
 
 **All three PRs merged**: #12235 (implementation, `7b270f2e`), #12368 and #12391
-(roadmap docs). Remaining work is the staged roadmap below (see DESIGN.md
+(roadmap docs). Remaining work is the staged roadmap below (see live-objects.md
 "Roadmap"), each stage its own PR.
 
 **No stage code exists** — verified at `fcdd424a`: `insertionId` appears only in
@@ -119,7 +119,7 @@ previously mutated in memory silently.
       all of them go through `Obj.update` or `useObject`'s updater. So the
       opt-out-free change reaches no existing mutation path.
 
-## Roadmap stages (see DESIGN.md "Roadmap"; re-staged 2026-08-04)
+## Roadmap stages (see live-objects.md "Roadmap"; re-staged 2026-08-04)
 
 Primary focus: scaling feeds. The feed is the replication method, not an order
 consumers see — display is domain-order everywhere (email and chat alike), and

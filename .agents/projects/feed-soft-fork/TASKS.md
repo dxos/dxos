@@ -1,6 +1,6 @@
 # Feed soft fork — TASKS
 
-Design: [DESIGN.md](./DESIGN.md). Branch `claude/feed-soft-fork-94c32e`. PR
+Design: [soft-fork.md](../../../packages/core/echo/echo/docs/feeds/soft-fork.md). Branch `claude/feed-soft-fork-94c32e`. PR
 [#12387](https://github.com/dxos/dxos/pull/12387) (preview
 `pr-12387-composer-main.dxos.workers.dev`).
 
@@ -18,7 +18,7 @@ Design: [DESIGN.md](./DESIGN.md). Branch `claude/feed-soft-fork-94c32e`. PR
 
 ## Backlog
 
-Rationale for each in DESIGN.md "Deferred".
+Rationale for each in soft-fork.md "Deferred".
 
 - [ ] `Feed.branches(items)` — enumerate leaves for a "N other versions"
       affordance.

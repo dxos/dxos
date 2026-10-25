@@ -1,7 +1,7 @@
 # Agent Brain — design
 
 Status: draft 2 (2026-10-07). The design is settled except private threads (M0, see
-[THREADS.md](./THREADS.md)); the M1 spike is done and `@dxos/datalog` and `@dxos/brain` are built.
+[private-threads.md](../../../core/echo/echo/docs/feeds/private-threads.md)); the M1 spike is done and `@dxos/datalog` and `@dxos/brain` are built.
 Builds on [ONTOLOGY.md](./ONTOLOGY.md) (draft 3) and [DESIGN.md](./DESIGN.md), which describe the agent
 as built in PR #13590.
 
@@ -38,7 +38,7 @@ asked.
   action) are the only part hardcoded, and a goal-pattern document teaches the judgment.
 - **State on the goal, history in its feed:** status and a one-line situation on the object; actions
   and judgments recorded as tuples that other goals can match.
-- **Judgment runs in private threads** — recommended as a child feed per thread (THREADS.md, M0):
+- **Judgment runs in private threads** — recommended as a child feed per thread (private-threads.md, M0):
   session goals under the session, durable goals under a background session per owning actor.
 
 ## The brain stack
@@ -92,7 +92,7 @@ Source: [diagrams/brain-flows.dx](./diagrams/brain-flows.dx), rendered with plug
 4. The judgment, the action and the new status are appended to the goal's own feed as `RDF.Fact`s
    and the situation is rewritten — so they are facts other goals can match, and the loop continues.
 
-**Threads.** A private thread is a child feed of a session ([THREADS.md](./THREADS.md)): the session's
+**Threads.** A private thread is a child feed of a session ([private-threads.md](../../../core/echo/echo/docs/feeds/private-threads.md)): the session's
 history merged by feed position with the thread's own, hidden from every reader of the chat by
 construction. A session goal's thread lives under the session; a durable goal's thread lives under the
 background session of its owning actor, which the EDGE Durable Object maintains. Promoting a goal
@@ -459,7 +459,7 @@ depends on how long it lives:
 - **A session goal can be promoted to a durable one** ("keep watching this after we're done"); its
   thread moves with it.
 
-How a private thread is represented is analysed in [THREADS.md](./THREADS.md). ECHO Feeds' existing
+How a private thread is represented is analysed in [private-threads.md](../../../core/echo/echo/docs/feeds/private-threads.md). ECHO Feeds' existing
 soft fork (per-item lineage) cannot carry threads as is; the recommendation is a **child feed per
 thread**, whose history is the session feed merged with the thread feed by feed position. It hides
 threads by construction, isolates their queue, alarms and rewind, is found through existing indexes
@@ -488,7 +488,7 @@ plugin-agent owns the brain's interface (`src/types/BrainService.ts`): `readSour
 
 | #   | Milestone                   | Status | Delivers                                                                                                                                                                                         | Demo                                                                                                                        |
 | --- | --------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| M0  | Private threads             | Design | A child feed per thread; a position-ordered merge with the session's history; `getSession(chat, { thread })` under its own process key (THREADS.md)                                              | A chat with a hidden thread the agent reasons in; the thread shows only in a debug view                                     |
+| M0  | Private threads             | Design | A child feed per thread; a position-ordered merge with the session's history; `getSession(chat, { thread })` under its own process key (private-threads.md)                                      | A chat with a hidden thread the agent reasons in; the thread shows only in a debug view                                     |
 | M1  | Goal compilation spike      | Done   | Compiled the eight goals to Datalog, SPARQL and N3; measured validity, correctness, replay vs read-back, portability ("M1 findings")                                                             | The results tables below                                                                                                    |
 | —   | Engine and brain packages   | Built  | `@dxos/datalog`, `@dxos/brain` with the eight scenarios as tests; pipeline-rdf `RDF.Vocab` / `RDF.Mapping` / `RDF.Predicate` exported and illocution preserved; GoalCompiler story (in progress) | GoalCompiler story: goal text → rules → replay                                                                              |
 | M2  | Facts and goals, in-process | Next   | `readSource` writes one `RDF.Fact` per feed item with pass markers (done); `Goal` directives with feeds; the in-process brain on `@dxos/brain`; judgment in the session's private thread         | AgentPlayground: "keep me informed" and "get Dima to help" (refusal, then commitment); goals and sub-goals in the Goals tab |
@@ -529,7 +529,7 @@ spike code was throwaway, its scenarios now live in `@dxos/brain/testing`).
 
 ## Open questions
 
-1. **Private threads** ([THREADS.md](./THREADS.md)): approve the child-feed design for M0, or extend
+1. **Private threads** ([private-threads.md](../../../core/echo/echo/docs/feeds/private-threads.md)): approve the child-feed design for M0, or extend
    Feeds' soft fork into real branches.
 2. **plugin-brain:** whether its per-space fact store and the agent's brain merge, or the brain stays
    per agent and reads the same feeds (settle in M2).

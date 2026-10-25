@@ -1,6 +1,6 @@
 # Private threads — analysis
 
-Status: analysis for milestone M0 of [BRAIN.md](./BRAIN.md) (2026-10-07); the design choice is open.
+Status: analysis for milestone M0 of [BRAIN.md](../../../../../plugins/plugin-agent/docs/BRAIN.md) (2026-10-07); the design choice is open.
 
 ## Requirement
 
@@ -22,7 +22,7 @@ thread must:
 ### Soft fork: per-item lineage in a Feed
 
 The only "threading" in ECHO Feeds is a soft fork for rewind-and-continue, added in PR #12387
-(design: `.agents/projects/feed-soft-fork/DESIGN.md`).
+(design: [soft-fork.md](./soft-fork.md)).
 
 - An item may name an explicit parent in `@meta` under the foreign key `org.dxos.key.feed-parent`
   (`PARENT_KEY`, `packages/core/echo/echo/src/Feed.ts`); an item without one continues from the item

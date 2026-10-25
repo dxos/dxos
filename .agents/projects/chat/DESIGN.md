@@ -4,7 +4,7 @@ Native, thread-first channels on ECHO feeds. Strategy: the Bluesky-DM move —
 ship the small first-party thing on infrastructure we own; defer federation.
 External large-scale sources enter as processed signals via connectors; Matrix
 and other external backends are a long-term concern (see Appendix). Feed-layer
-dependencies live in `.agents/projects/feed-live-objects/DESIGN.md` "Roadmap".
+dependencies live in `packages/core/echo/echo/docs/feeds/live-objects.md` "Roadmap".
 
 ## Model
 

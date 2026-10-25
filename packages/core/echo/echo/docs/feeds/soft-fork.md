@@ -90,7 +90,7 @@ immediately the tip on your own device, and peers converge once positions land.
 Timestamps across peers are not trustworthy.
 
 Note that most consumers today re-sort by `created` after querying (e.g.
-[`SessionLoader`](../../../packages/core/compute/assistant/src/session/SessionLoader.ts)).
+[`SessionLoader`](../../../../../../packages/core/compute/assistant/src/session/SessionLoader.ts)).
 Callers must pass items **in append order** to the resolver; sorting by
 `created` first would corrupt the walk.
 
@@ -99,11 +99,11 @@ Callers must pass items **in append order** to the resolver; sorting by
 ### Lineage lives in item `@meta`, as a foreign key
 
 `EntityMeta` has a generic `keys: ForeignKey[]` slot
-([`meta.ts`](../../../packages/core/echo/echo/src/internal/common/types/meta.ts))
+([`meta.ts`](../../../../../../packages/core/echo/echo/src/internal/common/types/meta.ts))
 that is serialized into the block payload as `@meta` and therefore replicates
 with the item and is immutable per block. Precedent: `KEY_QUEUE_POSITION` is
 injected into exactly this slot
-([`echo-feed-codec.ts`](../../../packages/core/echo/echo-protocol/src/echo-feed-codec.ts)).
+([`echo-feed-codec.ts`](../../../../../../packages/core/echo/echo-protocol/src/echo-feed-codec.ts)).
 
 Source string: `org.dxos.key.feed-parent`. A foreign key rather than a
 `meta.annotations` entry — foreign keys are already the "identity pointer" slot
@@ -115,7 +115,7 @@ and survive the whole-object re-append that backs `Obj.update`.
 free. It is not:
 
 1. `sequence` is `max(sequence in feed) + 1` **per feed, not per actor**
-   ([`feed-store.ts`](../../../packages/core/echo/feed/src/feed-store.ts)), and
+   ([`feed-store.ts`](../../../../../../packages/core/echo/feed/src/feed-store.ts)), and
    the unique index is `(feedPrivateId, sequence, actorId)`. Two concurrent
    writers therefore **already fork the block chain**, and the read path ignores
    it. A block parent pointer cannot distinguish a deliberate fork from a
@@ -149,8 +149,8 @@ before or after the items it describes. There is no way to order the two.
 
 Feeds have **two** read paths: `FeedHandle` polls and dedupes client-side, but a
 feed query with `orderBy`/`limit` routes through the host indexer
-([`index-query-source-provider.ts`](../../../packages/core/echo/echo-client/src/client/index-query-source-provider.ts),
-[`ordered-feed-query.test.ts`](../../../packages/core/echo/echo-client/src/query/ordered-feed-query.test.ts)).
+([`index-query-source-provider.ts`](../../../../../../packages/core/echo/echo-client/src/client/index-query-source-provider.ts),
+[`ordered-feed-query.test.ts`](../../../../../../packages/core/echo/echo-client/src/query/ordered-feed-query.test.ts)).
 `limit` is applied **server-side**. Filtering branches transparently inside
 `Feed.query` would therefore truncate first and filter second — `limit(20)`
 would return fewer than 20 items and a chain with holes in it.
@@ -199,7 +199,7 @@ the documented contract.
 
 ## API
 
-Added to [`Feed.ts`](../../../packages/core/echo/echo/src/Feed.ts):
+Added to [`Feed.ts`](../../../../../../packages/core/echo/echo/src/Feed.ts):
 
 ```ts
 /** Foreign-key source for an item's explicit lineage parent. */
@@ -258,14 +258,14 @@ const { items, shallow } = Feed.history(messages);
 
 ## Testing
 
-- [`Feed.test.ts`](../../../packages/core/echo/echo/src/Feed.test.ts) — pure
+- [`Feed.test.ts`](../../../../../../packages/core/echo/echo/src/Feed.test.ts) — pure
   unit tests, no database, matching the DB-free tests already in that package:
   `getParent`/`setParent` round-trip; the `M1..M5(M3)` and `M6(M4)` worked
   examples; no-lineage feeds resolve to the identity; `head` override; absent
   parent truncates; malformed parent truncates rather than falling through to the
   predecessor; forward reference / cycle terminates; empty input.
 - A DB-backed round-trip in
-  [`feed.test.ts`](../../../packages/core/echo/echo-client/src/feed/feed.test.ts)
+  [`feed.test.ts`](../../../../../../packages/core/echo/echo-client/src/feed/feed.test.ts)
   proving the parent key survives append → query → dedupe.
 
 ## Prior art
@@ -273,19 +273,19 @@ const { items, shallow } = Feed.history(messages);
 - **Hard fork** already exists: `ForkChat` creates a new `Feed` and appends a
   `SessionLink` cutoff; `SessionLoader.reifyHistory` splices the source feed's
   history back in at read time
-  ([`fork-chat.ts`](../../../packages/plugins/plugin-assistant/src/operations/fork-chat.ts),
-  [`SessionLoader.ts`](../../../packages/core/compute/assistant/src/session/SessionLoader.ts)).
+  ([`fork-chat.ts`](../../../../../../packages/plugins/plugin-assistant/src/operations/fork-chat.ts),
+  [`SessionLoader.ts`](../../../../../../packages/core/compute/assistant/src/session/SessionLoader.ts)).
   Soft fork is the same user intent without the copy, and the two are
   independent: a soft-forked feed can still be hard-forked.
 - **Feed deletion** is already a tombstone append (`{ id, '@deleted': true }`)
-  resolved on read ([`local-feed-service.ts`](../../../packages/core/echo/echo-host/src/db-host/local-feed-service.ts)),
+  resolved on read ([`local-feed-service.ts`](../../../../../../packages/core/echo/echo-host/src/db-host/local-feed-service.ts)),
   so read-time resolution over an append-only log is an established pattern here.
 
 ## Gotchas
 
 - **`Message.parentMessage` is not this**, and it is about to carry a third
   meaning. Today it means tool-call / sub-agent nesting in
-  [`execution-graph.ts`](../../../packages/core/compute/assistant/src/util/execution-graph.ts);
+  [`execution-graph.ts`](../../../../../../packages/core/compute/assistant/src/util/execution-graph.ts);
   the `chat` work-stream plans to retype it `Ref(Message)` and use it for
   **replies**. Fork lineage is a fourth relationship and stays in `@meta` —
   coordinate with `chat` before either touches the other, since a single field
