@@ -238,7 +238,7 @@ const createLayout = (lookup: NodeLookup): DynamicOptions => ({
   pitch: { width: 320, height: 320 },
   createNode: (node, props) =>
     lookup(node.id)?.kind === 'block' ? createBlockNode({ ...props, size: BLOCK_SIZE }) : createDecisionNode(props),
-  link: { type: 'line' },
+  link: { type: 'smart' },
 });
 
 const toGraph = (model: ChangelogGraphModel, label: (kind: ChangelogEdgeKind) => string): GraphModel => ({

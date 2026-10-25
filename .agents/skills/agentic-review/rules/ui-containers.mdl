@@ -209,6 +209,105 @@ rule container-story-with-fixtures: Every container has a story driven by realis
   severity: warn
 ```
 
+```mdl
+rule scroll-list-pads-and-gaps: A scrolling list of cards is padded by its viewport and spaced by its list, so no card touches another or the edge
+  Cards stacked flush against each other and against the panel edge read as
+  one striped block: the borders merge, the current card's highlight bleeds
+  into its neighbours, and the scrollbar overlaps the cards. The spacing has
+  one owner per axis: the `ScrollArea.Viewport` pads the content (`p-2`), and
+  the list between the cards (`gap-2` on the Mosaic `Stack`, the `gap` of a
+  `Layout.Flex` or virtual stack). A card never adds its own outer margin to
+  make room. Flag a `ScrollArea.Viewport` with no padding that holds a stack
+  or list of cards, a non-draggable Mosaic `Stack` of cards with no gap, and
+  a card or tile that sets an outer margin (`m-*`, `my-*`, `mb-*`) to space
+  itself from its siblings. Do NOT flag a draggable Mosaic `Stack`, whose
+  placeholders already space the tiles; a `Listbox` or `Form`, which own
+  their padding (see the composer-ui skill); or rows that are not cards.
+  scope: repo
+  files:
+    - packages/plugins/**/*.tsx
+    - packages/ui/**/*.tsx
+  grep: ScrollArea\.Viewport|Mosaic\.Stack|Card\.Root|CardTile\.
+  unit: file
+  context: imports
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule card-content-in-middle-column: A card whose header uses the rails is a `grid` card, so its rows start in the middle column under the title
+  A `Card.Header` that puts an icon in `Layout.Block rail='start'` and a menu
+  in `rail='end'` starts its title in the middle column. Without `grid` on
+  `Card.Root`, the card is a plain padded column: its `Card.Row`s start at the
+  left edge, under the icon instead of under the title, so the body text and
+  the title do not line up. `grid` makes the card a rail container and every
+  Header, Row and Section a subgrid of it, so all text starts at one content
+  edge. Flag a `Card.Root` without `grid` whose `Card.Header` uses
+  `rail='start'` or `rail='end'` blocks and which also has `Card.Row` or
+  `Card.Section` content. Do NOT flag a card with only a header, or a card
+  whose rows set their own `icon` and so already align with the header.
+  scope: repo
+  files:
+    - packages/plugins/**/*.tsx
+    - packages/ui/**/*.tsx
+  grep: rail='(start|end)'
+  unit: file
+  context: imports
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule empty-container-uses-empty: A container with nothing to show renders `Status.Empty`, not a hand-styled message
+  Every empty state in the app (no items, no selection, no result, nothing
+  opened yet) should look the same: a centred message in the secondary text
+  colour, with an optional icon, announced as a status. A hand-rolled
+  `<Layout.Flex center classNames='text-description'>` or
+  `<div className='p-4 text-description'>` picks its own padding, colour,
+  alignment and size, so each panel's empty state looks different, and none
+  of them is announced to assistive tech. Render
+  `<Status.Empty icon=… classNames='dx-fill'>{t('…empty…')}</Status.Empty>`
+  from `@dxos/react-ui/Status` instead (a composite's own `Empty` part is
+  built on it). Flag an early return or branch that renders only a
+  translated "empty", "no …", "nothing …" or "select/click … to …" message in
+  a `Layout.Flex`, `div` or `span` styled by hand. Do NOT flag a `Banner`
+  that carries an action, an error message, a loading indicator, or an
+  `emptyMessage` prop passed to a component that renders its own empty state.
+  scope: repo
+  files:
+    - packages/plugins/**/*.tsx
+    - packages/ui/**/*.tsx
+  grep: \.empty|empty\.|Empty|no-.*\.(label|message)
+  unit: file
+  context: imports
+  system-one: on
+  severity: warn
+```
+
+```mdl
+rule diagram-links-are-smart: A diagram built in code draws its connectors as `smart` links
+  A `line`, `curve` or `spline` link runs straight from port to port, so in
+  a laid-out diagram it crosses the cards between its ends and hides their
+  text. A `smart` link routes through the lattice gutters (or around the
+  boxes when there is no lattice) and picks the ports that bend least, so
+  arrows never cross a card. Flag a `link: { type: 'line' | 'curve' |
+  'spline' }` passed to `createDynamicProjection` or to a dynamic layout's
+  options, and a link created by code for a generated diagram with one of
+  those types. Do NOT flag a link a user drew on a free canvas, the link-type
+  picker itself, or tests of the other link types.
+  scope: repo
+  files:
+    - packages/plugins/**/*.ts
+    - packages/plugins/**/*.tsx
+    - packages/ui/**/*.ts
+    - packages/ui/**/*.tsx
+  grep: type:\s*'(line|curve|spline)'
+  unit: file
+  context: imports
+  system-one: on
+  severity: warn
+```
+
 ## Appendix
 
 ```mdl

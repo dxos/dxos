@@ -32,6 +32,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
+import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -545,7 +546,9 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
                         onOpenExternal={codePath ? openExternal : undefined}
                       />
                     ) : (
-                      <Layout.Flex classNames='p-4 text-description'>{t('code-view.empty.label')}</Layout.Flex>
+                      <Status.Empty classNames='dx-fill' data-testid='code-view.empty'>
+                        {t('code-view.empty.label')}
+                      </Status.Empty>
                     ))}
                   {view === 'decisions' && <ChangelogGraph content={changelog} selected={selectedDecision} />}
                   {view === 'data' && <DataModelGraph content={text} />}

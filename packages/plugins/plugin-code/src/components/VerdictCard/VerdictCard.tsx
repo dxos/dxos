@@ -56,6 +56,7 @@ export const VerdictCard = Util.composable<HTMLDivElement, VerdictCardProps>(
     return (
       <Card.Root
         {...props}
+        grid
         selected={current}
         data-testid='verdict-card'
         data-verdict={id}
