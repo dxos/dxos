@@ -121,19 +121,18 @@ const PURGE_BATCHES_PER_PASS = 10;
 const isIndexingDisabled = (options: FeedOptions | undefined): boolean => options?.indexing?.enabled === false;
 
 /** Repeats a bounded trim until it reports nothing left past a limit. */
-const trimUntilDone = <E, R>(
+const trimUntilDone = Effect.fnUntraced(function* <E, R>(
   trim: Effect.Effect<TrimResult, E, R>,
   first: TrimResult = { deleted: 0, more: true },
-): Effect.Effect<number, E, R> =>
-  Effect.gen(function* () {
-    let result = first;
-    let deleted = result.deleted;
-    while (result.more) {
-      result = yield* trim;
-      deleted += result.deleted;
-    }
-    return deleted;
-  });
+) {
+  let result = first;
+  let deleted = result.deleted;
+  while (result.more) {
+    result = yield* trim;
+    deleted += result.deleted;
+  }
+  return deleted;
+});
 
 /** Feeds whose index rows a pass changed outside the index legs, as a hint unconstrained by type or object. */
 type FeedChanges = { spaceIds: Set<SpaceId>; queueIds: Set<EntityId> };

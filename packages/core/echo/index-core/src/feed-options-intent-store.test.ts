@@ -66,6 +66,25 @@ describe('FeedOptionsIntentStore', () => {
   );
 
   it.effect(
+    'recording a feed again replaces its pending row',
+    Effect.fnUntraced(function* () {
+      const store = yield* setup;
+      const sql = yield* SqlClient.SqlClient;
+      const spaceId = SpaceId.random();
+      const feedId = EntityId.random();
+      for (const maxLength of [10, 5, 2]) {
+        yield* store.record([makeIntent(spaceId, feedId, { retention: { maxLength } })]);
+      }
+
+      const rows = yield* sql<{ count: number }>`SELECT COUNT(*) AS count FROM feedOptionsIntents`;
+      expect(rows[0]?.count).toBe(1);
+      const { maxId, intents } = yield* store.take();
+      expect(maxId).toBe(3);
+      expect(intents).toEqual([makeIntent(spaceId, feedId, { retention: { maxLength: 2 } })]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
     'clear removes only the named feed',
     Effect.fnUntraced(function* () {
       const store = yield* setup;

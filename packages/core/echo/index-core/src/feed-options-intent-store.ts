@@ -47,12 +47,16 @@ export class FeedOptionsIntentStore {
   /**
    * Durably queues feed options to apply. Runs inside the transaction that commits the Feed objects'
    * index rows (see `IndexEngine.#writeTransaction`).
+   *
+   * Replaces the feed's pending row, so the table holds at most one row per Feed object however often
+   * it is re-indexed; the new row takes a larger id, so a concurrent `clear` up to the old id keeps it.
    */
   record = Effect.fn('FeedOptionsIntentStore.record')(
     (intents: readonly FeedOptionsIntent[]): Effect.Effect<void, SqlError.SqlError> =>
       Effect.gen({ self: this }, function* () {
         const sql = this.#sql;
         for (const { spaceId, feedId, namespace, options } of intents) {
+          yield* sql`DELETE FROM feedOptionsIntents WHERE spaceId = ${spaceId} AND feedId = ${feedId}`;
           yield* sql`INSERT INTO feedOptionsIntents (spaceId, feedId, namespace, options) VALUES (${spaceId}, ${feedId}, ${namespace}, ${JSON.stringify(options)})`;
         }
       }),

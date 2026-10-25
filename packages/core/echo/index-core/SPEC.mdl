@@ -66,7 +66,7 @@ service FeedOptionsIntentStore
     IndexEngine pass-throughs (takeFeedOptionsIntents, clearFeedOptionsIntents).
   ops:
     migrate() → void
-    record(intents: FeedOptionsIntent[]) → void                       # inside the index-row transaction [F-1.2]
+    record(intents: FeedOptionsIntent[]) → void                       # inside the index-row transaction, replacing the feed's row [F-1.2]
     take() → { maxId: number; intents: FeedOptionsIntent[] }         # newest per (spaceId, feedId) [F-2.2]
     clear(spaceId: SpaceId, feedId: string, upToId: number) → void   # rows up to upToId only [F-1.3]
   note: |
@@ -359,6 +359,15 @@ decision D-12: Index-answered feed queries drop items older than maxAge, using o
   for: user:dmaretskyi
   affects: [F-4.2]
   why: Reads must hide expired items before the lazy trim deletes them (org.dxos.feed [F-2.2]), and the index already stores the block time.
+```
+
+```mdl
+decision D-13: record() deletes the feed's pending row before inserting the new one, so feedOptionsIntents holds at most one row per Feed object. Refines [D-8].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [feedOptionsIntents, FeedOptionsIntentStore, F-2.2]
+  why: A row per indexing grows with the object's edit history while applies keep failing; the replacement row takes a new AUTOINCREMENT id, so the race D-8 rejected an upsert for cannot erase it.
 ```
 
 ---

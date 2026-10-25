@@ -1,8 +1,8 @@
 --
 -- Write-ahead intents to apply a Feed object's indexing and retention options to the feed store.
--- One row is recorded for every indexing of a Feed object, in the transaction that writes its index
--- rows; the host applies the newest row per feed and deletes the rows up to the id it read, so a row
--- recorded while it applies survives.
+-- Each indexing of a Feed object replaces the feed's row with a new one, in the transaction that
+-- writes its index rows; the host applies the newest row per feed and deletes the rows up to the id it
+-- read, so a row recorded while it applies survives.
 --
 -- Immutable: recorded in `feed_options_intent_migrations` and never re-run.
 --
