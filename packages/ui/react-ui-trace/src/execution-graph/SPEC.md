@@ -50,8 +50,10 @@ flattens via `Trace.flatten` (`Trace.ts#L178`) so every event inherits its messa
 | `triggerId`      | No (carried in `SpanMeta`)               | —                                                                            |
 | `toolCallId`     | No (carried in `SpanMeta`)               | —                                                                            |
 | `runtimeName`    | No (carried in `SpanMeta`)               | —                                                                            |
+| `thread`         | Yes                                      | Light thread of the process's turn; with `pid`, keys the span (§5.5).        |
+| `parentThread`   | Yes                                      | Light thread of the parent's turn that spawned the process (§5.5).           |
 
-Only `pid` and `parentPid` participate in graph topology. The remaining fields are
+Only `pid`, `parentPid`, `thread` and `parentThread` participate in graph topology. The remaining fields are
 forwarded as `SpanMeta` for downstream display but never branch or anchor logic.
 
 `isEphemeral` is preserved on `FlatEvent` but is not consulted; ephemeral events
@@ -172,7 +174,7 @@ Dropped events (non-`presentEvent` types or filtered roles) never appear in
 4. **Linear scan** the (possibly trimmed) stream:
    - Pid-less event → push onto root.
    - Begin event with pid `P`, parentPid `Q`:
-     - Parent span = `openSpans.get(Q)` if `Q` is defined and open, else root.
+     - Parent span = the open span of `Q` in `parentThread` (§5.5) if `Q` is defined and open, else root.
      - Allocate a fresh id `${P}#${spanCounter++}` and create the span.
      - Push the begin event as the span's first event.
      - **`openSpans.set(P, newSpan)`** — supersedes any previously open span for
@@ -205,6 +207,30 @@ a lane.
 
 Test reference: `span-tree.test.ts#L80` ('sequential agent requests in one process
 become sibling spans').
+
+### 5.5 Concurrent light threads of one process
+
+An agent with parallel threads on runs several turns at once in one process, so
+its begin/end pairs interleave. The writing fiber stamps each event with
+`meta.thread` (`Trace.CurrentThread`), and every process it spawns carries
+`meta.parentThread`. `openSpans` is keyed by `spanKey(pid, thread)` —
+`${pid}/${thread}`, or `pid` when there is no thread — so each thread has its own
+open span:
+
+- An end event closes the span of its own pid and thread, not the newest.
+- A begin event's parent is the open span of `parentPid` in `parentThread`;
+  failing that, the parent pid's most recently opened open span, then its last
+  span.
+- A middle event with no thread (written outside a turn) attaches to the pid's
+  most recently opened open span.
+
+Data without `thread` keys by pid alone, so §5.1 is unchanged for it. In the
+graph, each thread is a branch of its own (§6), and a run of thread siblings is
+emitted in time order (§8.8).
+
+Test references: `span-tree.test.ts` ('light threads of one process are concurrent
+sibling spans, each with its own tools'), `execution-graph.test.ts` ('light
+threads of one agent fork lanes of their own and merge back as each ends').
 
 ### 5.2 `eventLimit` semantics
 
@@ -278,7 +304,9 @@ child is not force-closed just because its parent timed out.
 `execution-graph.ts#L263`. Pure function on a span:
 
 1. `span === null` or `span.id === ROOT_SPAN_ID` → `MAIN_BRANCH = 'main'`.
-2. Else → `span.meta.pid ?? span.id`.
+2. Else → `span.meta.pid ?? span.id`, suffixed `/${span.meta.thread}` when the
+   span has a thread (§5.5), so concurrent threads of one process get lanes of
+   their own.
 
 Consequence: sequential same-pid sibling spans share a branch (their `meta.pid`
 matches). Spans whose meta lacks a `pid` (synthetic / unusual cases) fall back to
@@ -407,6 +435,18 @@ emitted any middle commits, walking the parent's shared branch topologically
 could land on a commit belonging to an unrelated sibling B (a different top-level
 span sharing `main`). Structural anchoring guarantees the fork edge attaches to
 A's identity (`A.begin`) regardless of B's interleaving. Commit `ff8db16d9c`.
+
+### 8.8 Concurrent thread siblings
+
+Children are otherwise emitted depth-first (a span's begin events, its child
+subtrees, then its other events), which would draw concurrent threads one after
+another. A run of consecutive children that carry `meta.thread` is instead
+emitted by `emitThreadCommits`: the events of every thread in the run and their
+child subtrees (each at its first event) are merged by timestamp and emitted in
+that order, so the lanes are open side by side. A finished threaded span with content is never collapsed by
+`collapseCompletedSpans`, so the lanes stay visible after they end. A threaded span does not draw
+the process-wide running indicator (§10), whose branch is the bare pid; while
+running, its last commit shimmers instead.
 
 ## 9. Commit id format (`formatCommitId`)
 

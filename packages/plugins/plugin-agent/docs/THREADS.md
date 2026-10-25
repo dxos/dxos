@@ -19,6 +19,10 @@ thread must:
 
 ## What exists today
 
+> A chat feed now holds `Trajectory.Event`s ([`@dxos/trajectory`](../../../core/compute/trajectory/README.md)),
+> which carry threads natively. The `Binding`, `Alarm`, `SessionLink` records and queue annotations described
+> below are legacy records: the loader converts them to events in memory and nothing writes them any more.
+
 ### Soft fork: per-item lineage in a Feed
 
 The only "threading" in ECHO Feeds is a soft fork for rewind-and-continue, added in PR #12387

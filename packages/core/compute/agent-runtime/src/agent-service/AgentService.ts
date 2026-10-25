@@ -11,7 +11,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Semaphore from 'effect/Semaphore';
 
 import { SessionConfig } from '@dxos/ai';
-import { AiContext, type HarnessControlRpcs } from '@dxos/assistant';
+import { AiContext, type HarnessControlRpcs, TrajectoryStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Process from '@dxos/compute/Process';
@@ -25,6 +25,7 @@ import type { ContentBlock } from '@dxos/types';
 import { AGENT_PROCESS_KEY, type AgentInput, AgentProcess, type AgentProcessDefinition } from './agent-process.ts';
 import { type DelegationStrategy } from './delegation-strategy.ts';
 import { type McpEndpointOf } from './mcp-servers.ts';
+import { type ThreadingOptions } from './thread-scheduler.ts';
 import { type MakeTurnProducer } from './turn-producer.ts';
 
 /** Live handle to a spawned agent process, carrying its `HarnessControl` RPC surface. */
@@ -53,7 +54,7 @@ export const createSession: (
     // By registry URI unless the skill is a space copy, so the registry stays the one pristine copy.
     const skills = (opts?.skills ?? []).map(Skill.makeRef);
 
-    const feed = yield* Database.add(Feed.make());
+    const feed = yield* Database.add(TrajectoryStore.makeFeed());
     const runtime = yield* Effect.context<Database.Service>();
     const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
 
@@ -117,6 +118,8 @@ export interface Options {
   processes?: () => readonly AgentProcessDefinition[];
   /** Keep each session's process resident between turns (see `AgentProcessOptions.resident`). */
   resident?: boolean;
+  /** Light threads for processes spawned from now on (see `AgentProcessOptions.threading`). */
+  threading?: () => ThreadingOptions | undefined;
   /** The MCP server a connection exposes (see `AgentProcessOptions.mcpEndpoint`). */
   mcpEndpoint?: McpEndpointOf;
 }
@@ -199,6 +202,7 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
           enableToolBackgrounding: opts?.enableToolBackgrounding,
           delegationStrategy: opts?.delegationStrategy,
           resident: opts?.resident,
+          threading: opts?.threading,
           mcpEndpoint: opts?.mcpEndpoint,
         });
 
@@ -441,7 +445,11 @@ const makeSession = (
     Effect.flatMap(isFinished, (finished) =>
       finished
         ? resubmit(prompt, options)
-        : process.submitInput(options?.sender ? { prompt, sender: options.sender } : prompt),
+        : process.submitInput(options?.sender ? { prompt, sender: options.sender } : prompt).pipe(
+            // A process that finishes while the input is persisted skips its handler, dropping the prompt;
+            // once the handler starts the process cannot finish before it, so terminal here means dropped.
+            Effect.andThen(() => (Process.isTerminal(process.status.state) ? resubmit(prompt, options) : Effect.void)),
+          ),
     ),
   // Derived from the process's status atom, written on the app-wide registry the UI reads.
   running: Atom.make(

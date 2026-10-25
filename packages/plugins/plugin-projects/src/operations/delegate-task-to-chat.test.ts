@@ -9,10 +9,10 @@ import { describe, test } from 'vitest';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
-import { AiContext } from '@dxos/assistant';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
+import { Database, DXN, Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
@@ -183,8 +183,10 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     );
 
     const feed = await chat.feed.load();
-    const bindings = await space.db.query(Query.select(Filter.type(AiContext.Binding)).from(feed)).run();
-    const bound = bindings.flatMap((binding) => binding.skills.added.map((ref) => ref.uri));
+    const events = await EffectEx.runPromise(TrajectoryStore.read(feed).pipe(Effect.provide(Database.layer(space.db))));
+    const bound = events.flatMap((event) =>
+      event.payload._tag === 'contextBind' ? event.payload.skills.map((ref) => ref.uri) : [],
+    );
     expect(bound).toContain(studioSkill);
     // The delegation set still comes along, and the shared project skill is bound once.
     expect(bound).toContain(Skill.registryURI('org.dxos.skill.planning'));

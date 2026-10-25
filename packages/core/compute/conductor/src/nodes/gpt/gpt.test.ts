@@ -7,10 +7,11 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { AiService } from '@dxos/ai';
+import { TrajectoryStore } from '@dxos/assistant';
 import type * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
-import { type Database, Feed, Filter, Obj, Ref, type Registry } from '@dxos/echo';
+import { type Database, Feed, Ref, type Registry } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { registryLayerNoop } from '@dxos/echo/testing';
@@ -45,7 +46,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
       >;
     beforeEach(async (ctx) => {
       builder = await new EchoTestBuilder().open();
-      ({ db } = await builder.createDatabase());
+      ({ db } = await builder.createDatabase({ types: [Feed.Feed, ...TrajectoryStore.types] }));
       testLayer = Layer.mergeAll(
         createTestServices({ db, logging: { enabled: ENABLE_LOGGING } }),
         AiService.notAvailable,
@@ -83,12 +84,8 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
       Effect.fnUntraced(
         function* () {
           const conversation = db.add(Feed.make());
-          yield* Feed.append(conversation, [
-            Obj.make(Message.Message, {
-              created: new Date().toISOString(),
-              sender: { role: 'user' },
-              blocks: [{ _tag: 'text', text: 'I have 10 apples in my bag' }],
-            }),
+          yield* TrajectoryStore.appendMessages(conversation, [
+            Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: 'I have 10 apples in my bag' }] }),
           ]).pipe(Effect.provide(testLayer));
           const input: GptInput = {
             prompt: 'I have twice as many oranges as apples. How many oranges do I have?',
@@ -104,9 +101,7 @@ describe.runIf(process.env.DX_RUN_SLOW_TESTS === '1')('gptNode', () => {
           expect(typeof output.text).toBe('string');
           expect(output.text.length).toBeGreaterThan(10);
 
-          const conversationMessages = yield* Feed.query(conversation, Filter.type(Message.Message)).run.pipe(
-            Effect.provide(testLayer),
-          );
+          const conversationMessages = yield* TrajectoryStore.messages(conversation).pipe(Effect.provide(testLayer));
           log.info('conversationMessages', { conversationMessages });
           expect(conversationMessages.at(-1)?.sender.role).toEqual('assistant');
         },

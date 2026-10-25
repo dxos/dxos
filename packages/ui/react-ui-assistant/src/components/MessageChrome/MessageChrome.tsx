@@ -17,7 +17,8 @@ import { getStyles, mx } from '@dxos/ui-theme';
 import { stringToFallback } from '@dxos/util';
 
 import { translationKey } from '../../translations.ts';
-import { type DeliveryStatus, getDelivery, isUnread } from '../../types.ts';
+import { type DeliveryStatus, type ThreadLane, getDelivery, isUnread } from '../../types.ts';
+import { LaneHeader } from '../../widgets/index.ts';
 import { formatTime } from './format-time.ts';
 
 //
@@ -43,6 +44,8 @@ type MessageChromeContextValue = {
   showAuthors?: boolean;
   /** Resolves a prompt's sender to a profile (e.g. a space member); the sender's own fields are the fallback. */
   getAuthor?: (sender: Actor.Actor) => MessageAuthor | undefined;
+  /** The lane a message belongs to, when the chat ran several at once; its gutter wears the lane's colour. */
+  getLane?: (message: Message.Message) => ThreadLane | undefined;
 };
 
 /** How a prompt's author is shown. */
@@ -337,15 +340,25 @@ const reveal =
 
 // Bleeds into the gutter by its own inset, so a selection highlight frames the text rather than
 // ending flush against it while the text keeps the column's alignment.
-const Row = ({ children, classNames, streaming }: PropsWithChildren<{ classNames?: string; streaming?: boolean }>) => (
+const Row = ({
+  children,
+  classNames,
+  streaming,
+  lane,
+}: PropsWithChildren<{ classNames?: string; streaming?: boolean; lane?: string }>) => (
   <div
     className={mx('group/message relative -mx-2 px-2 py-2 rounded-md', classNames)}
     data-streaming={streaming || undefined}
+    data-lane={lane}
     data-testid='feed.message'
   >
     {children}
   </div>
 );
+
+/** A row standing for a lane working in the background (its card), which frames itself. */
+const isLaneRow = (message: Message.Message): boolean =>
+  message.blocks.length === 1 && message.blocks[0]._tag === 'text' && /^<lane>/.test(message.blocks[0].text);
 
 const promptReveal = mx('justify-end', reveal);
 
@@ -354,6 +367,7 @@ const promptReveal = mx('justify-end', reveal);
  * of machinery alone (a synthetic prompt, a tool run) would otherwise reserve a blank toolbar line.
  */
 const hasToolbar = (message: Message.Message): boolean =>
+  !isLaneRow(message) &&
   message.blocks.some(
     (block) =>
       block._tag === 'stats' || (block._tag === 'text' && block.disposition !== 'synthetic' && !!block.text.trim()),
@@ -369,15 +383,25 @@ const hasToolbar = (message: Message.Message): boolean =>
  * bubble's edge.
  */
 export const MessageChrome = ({ message, selected, children }: MessageChromeProps) => {
-  const { streaming, userHue, showAuthors } = useMessageChromeContext(MESSAGE_CHROME_NAME);
+  const { streaming, userHue, showAuthors, getLane } = useMessageChromeContext(MESSAGE_CHROME_NAME);
   const prompt = isPrompt(message);
   const delivery = prompt ? getDelivery(message) : undefined;
   const author = useAuthor(message.sender);
   const showAuthor = prompt && showAuthors && !!author;
   const hue = showAuthor ? author.hue : userHue;
+  // The gutter runs down every row of a lane, so the requests a chat ran side by side read apart.
+  const lane = getLane?.(message);
 
   return (
-    <Row classNames={mx(selected && 'bg-hover-surface')} streaming={streaming}>
+    <Row
+      classNames={mx(
+        selected && 'bg-hover-surface',
+        lane && mx('border-s-2 rounded-s-none ps-3', getStyles(lane.hue).border),
+      )}
+      streaming={streaming}
+      lane={lane?.id}
+    >
+      {lane?.first === message.id && <LaneHeader lane={lane} classNames='pb-2' />}
       {prompt ? (
         <div className='min-w-0 flex flex-col items-end'>
           <div className='max-w-[70%] min-w-0'>

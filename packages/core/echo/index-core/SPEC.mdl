@@ -182,6 +182,11 @@ feat F-3: Feeds with indexing disabled
     then: it returns the feed's items: the host query executor reads that feed's blocks from the
           feed store and matches them in memory instead of reading the index
 
+  req F-3.7:
+    when: a local-order feed cursor (`Filter.feedCursor({ order: 'local' })`) reads a feed with indexing disabled
+    then: items are ordered and bounded by the insertion id of the block each was last written from, and each
+          carries that id as its local cursor, so `Feed.getLocalCursor` resumes a read after it
+
   req F-3.5:
     when: options that re-enable indexing are applied
     then: every block the feed still retains is indexed — EDGE resets that feed's own cursor;
@@ -368,6 +373,17 @@ decision D-13: record() deletes the feed's pending row before inserting the new 
   for: user:dmaretskyi
   affects: [feedOptionsIntents, FeedOptionsIntentStore, F-2.2]
   why: A row per indexing grows with the object's edit history while applies keep failing; the replacement row takes a new AUTOINCREMENT id, so the race D-8 rejected an upsert for cannot erase it.
+```
+
+```mdl
+decision D-14: A feed read from the store orders a local-order cursor by block insertion id, the store's counterpart of the index's recordId. Fills in [D-9].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.7]
+  why: Conversation feeds run with indexing off and read only in local order; the store path otherwise fell through to id order with no limit and returned nothing. A cursor taken while the feed was indexed names a recordId, so a reader that kept one must check the item at it, as the trajectory checkpoint cache does.
+  rejected:
+    - "Read a disabled feed by position: a replica's unpushed blocks have none, and local order is what the agent resumes from."
 ```
 
 ---

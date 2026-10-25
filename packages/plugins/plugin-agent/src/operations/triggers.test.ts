@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Evaluator from '@dxos/brain/Evaluator';
@@ -326,18 +327,17 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
 const recordedQuotes = Effect.fnUntraced(function* (agent: Agent.Agent, chat: Chat.Chat) {
   const brainService = yield* BrainService.BrainService;
   const feed = yield* Database.load(chat.feed);
-  const messages = [...(yield* Feed.query(feed, Filter.type(Message.Message)).run)].sort(
-    (left, right) => Feed.getPosition(left) - Feed.getPosition(right),
-  );
+  const messages = yield* TrajectoryStore.messages(feed);
+  const { db } = yield* Database.Service;
   const facts = yield* Effect.forEach(messages, (message) =>
-    brainService.query(agent.id, { source: Obj.getURI(message) }),
+    brainService.query(agent.id, { source: EID.make({ spaceId: db.spaceId, entityId: message.id }) }),
   );
   return facts.flat().map(({ assertion }) => assertion.quote);
 });
 
 const texts = Effect.fnUntraced(function* (chat: Chat.Chat) {
   const feed = yield* Database.load(chat.feed);
-  const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+  const messages = yield* TrajectoryStore.messages(feed);
   return messages.map((message) => Message.extractText(message));
 });
 

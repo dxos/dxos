@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
+import { TrajectoryStore } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
@@ -276,7 +277,7 @@ const settle = Effect.fnUntraced(function* (chat: Chat.Chat) {
 /** The updates the agent wrote in the chat. */
 const updates = (chat: Chat.Chat) =>
   Database.load(chat.feed).pipe(
-    Effect.flatMap((feed) => Feed.query(feed, Filter.type(Message.Message)).run),
+    Effect.flatMap((feed) => TrajectoryStore.messages(feed)),
     Effect.map((messages) =>
       messages
         .filter((message) => message.sender.role === 'assistant')

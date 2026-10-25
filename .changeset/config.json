@@ -218,6 +218,7 @@
       "@dxos/timeframe",
       "@dxos/toolbox",
       "@dxos/tracing",
+      "@dxos/trajectory",
       "@dxos/types",
       "@dxos/typings",
       "@dxos/ui",

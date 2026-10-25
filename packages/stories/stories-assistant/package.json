@@ -29,6 +29,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-agent": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
+    "@dxos/plugin-claude": "workspace:*",
     "@dxos/plugin-explorer": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/plugin-space": "workspace:*",

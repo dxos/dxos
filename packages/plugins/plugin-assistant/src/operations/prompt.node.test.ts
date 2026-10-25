@@ -6,12 +6,13 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
+import { TrajectoryStore } from '@dxos/assistant';
 import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
-import { Database, Feed, Filter, Ref } from '@dxos/echo';
+import { Database, Feed, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { EntityId } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -19,7 +20,6 @@ import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
-import { Message } from '@dxos/types';
 
 import { AssistantPlugin } from '#plugin';
 
@@ -46,9 +46,7 @@ describe('Agent prompt (composer plugin harness)', () => {
         Effect.gen(function* () {
           const feed = yield* Database.add(Feed.make());
 
-          const messageCountBefore = yield* Feed.query(feed, Filter.type(Message.Message)).run.pipe(
-            Effect.map(Array.length),
-          );
+          const messageCountBefore = yield* TrajectoryStore.messages(feed).pipe(Effect.map(Array.length));
 
           const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed) }));
           const instructions = yield* Database.add(
@@ -70,9 +68,7 @@ describe('Agent prompt (composer plugin harness)', () => {
             { spaceId: defaultSpace.id },
           );
 
-          const messageCountAfter = yield* Feed.query(feed, Filter.type(Message.Message)).run.pipe(
-            Effect.map(Array.length),
-          );
+          const messageCountAfter = yield* TrajectoryStore.messages(feed).pipe(Effect.map(Array.length));
 
           expect(messageCountAfter).toBeGreaterThan(messageCountBefore);
           expect(result).toBe('ack');

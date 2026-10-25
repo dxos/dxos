@@ -12,7 +12,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { KEY_QUEUE_POSITION } from '@dxos/echo-protocol';
+import { KEY_FEED_LOCAL_ORDER, KEY_QUEUE_POSITION } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId } from '@dxos/keys';
 
@@ -400,6 +400,18 @@ export const getPosition = (item: Entity.Unknown | Entity.Snapshot): number => {
  */
 export const getCursor = (item: Entity.Unknown | Entity.Snapshot): Cursor | undefined => {
   const key = internal.getKeys(item, KEY_QUEUE_POSITION).at(0)?.id;
+  return key !== undefined ? Cursor.make(key) : undefined;
+};
+
+/**
+ * The item's local {@link Cursor}: the order this replica indexed it in, which sync never changes. Pass it to
+ * `Filter.feedCursor({ begin, order: 'local' })` to resume after this item; `undefined` on an item not read from a
+ * feed query.
+ *
+ * @performance O(k) in the item foreign-key count.
+ */
+export const getLocalCursor = (item: Entity.Unknown | Entity.Snapshot): Cursor | undefined => {
+  const key = internal.getKeys(item, KEY_FEED_LOCAL_ORDER).at(0)?.id;
   return key !== undefined ? Cursor.make(key) : undefined;
 };
 

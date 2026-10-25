@@ -8,11 +8,11 @@ import * as Effect from 'effect/Effect';
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { LanguageModelFixture } from '@dxos/ai/testing';
-import { AiContext } from '@dxos/assistant';
+import { AiContext, TrajectoryStore } from '@dxos/assistant';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
@@ -68,7 +68,7 @@ describe('Planning skill', { tags: ['model-fixture'] }, () => {
         // the next alarm before it returns, so the process is never idle between turns.
         yield* agent.waitForCompletion();
 
-        const messages = yield* Feed.query(agent.feed, Filter.type(Message.Message)).run;
+        const messages = yield* TrajectoryStore.messages(agent.feed);
         expect(messages.some((message) => Message.extractText(message).includes(REMINDER))).toBe(true);
 
         // The reminder is only worth firing if it actually drives the plan to completion.
@@ -96,7 +96,7 @@ describe('Planning skill', { tags: ['model-fixture'] }, () => {
         // no settle window — the hook decides inside the turn handler, so completion is past it, and
         // the sibling case above is the control that proves completion does not precede the hook.
 
-        const messages = yield* Feed.query(agent.feed, Filter.type(Message.Message)).run;
+        const messages = yield* TrajectoryStore.messages(agent.feed);
         expect(messages.some((message) => Message.extractText(message).includes(REMINDER))).toBe(false);
 
         const tasks = yield* Chat.loadTasks(chat);

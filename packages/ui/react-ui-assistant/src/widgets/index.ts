@@ -13,3 +13,4 @@ export * from './SuggestionWidget.ts';
 export * from './SummaryWidget.tsx';
 export * from './SyntheticWidget.tsx';
 export * from './ToolWidget.tsx';
+export * from './LaneWidget.tsx';

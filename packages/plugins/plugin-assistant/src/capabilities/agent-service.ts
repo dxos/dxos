@@ -44,6 +44,21 @@ const makeAgentServiceSpec = (codeModeTurnProducer: AssistantOptions.AssistantPl
             delegationStrategy: strategies[0],
             makeTurnProducer: (options) => resolveTurnProducer(manager, codeMode)(options),
             processes: () => manager.getAll(AssistantCapabilities.AgentProcess),
+            // Read when a process spawns, so the setting applies to agents started after it changes.
+            threading: () => {
+              const [settings] = manager.getAll(AssistantCapabilities.Settings);
+              const [registry] = manager.getAll(Capabilities.AtomRegistry);
+              const values = settings && registry?.get(settings);
+              if (!values?.parallelThreads) {
+                return undefined;
+              }
+              const shared = new Set(values.parallelThreadAgents ?? []);
+              const tenants = manager
+                .getAll(AssistantCapabilities.Agent)
+                .filter((agent) => shared.has(agent.id))
+                .map((agent) => ({ name: agent.id, makeTurnProducer: agent.makeTurnProducer }));
+              return { limit: values.parallelThreadLimit, ...(tenants.length > 0 ? { tenants } : {}) };
+            },
             mcpEndpoint: (connection) =>
               ConnectorSpec.mcpEndpoint(manager.getAll(ConnectorSpec.Connector).flat(), connection),
           });

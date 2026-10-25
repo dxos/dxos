@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
+import { Trajectory } from '@dxos/trajectory';
 import { Message } from '@dxos/types';
 
 import * as AiSession from './AiSession.ts';
@@ -162,9 +163,11 @@ describe('AiSession.Session.getHistory', () => {
 //
 
 describe('AiSession.Session rewind', () => {
-  const TestLayer = TestDatabaseLayer({ types: [Feed.Feed, Message.Message, SessionLink.SessionLink] });
+  const TestLayer = TestDatabaseLayer({
+    types: [Feed.Feed, Message.Message, SessionLink.SessionLink, Trajectory.Event],
+  });
 
-  it.effect("parents the turn's first message to what precedes the rewind", () =>
+  it.effect('a pending rewind becomes a rewind event and the history continues from before it', () =>
     Effect.gen(function* () {
       const { db } = yield* Database.Service;
       const feed = db.add(Feed.make());
@@ -173,63 +176,35 @@ describe('AiSession.Session rewind', () => {
       const answer = makeMessage('answer', 'assistant');
       const abandoned = makeMessage('abandoned');
       yield* Feed.append(feed, [first, answer, abandoned]);
-
       Obj.update(feed, (feed) => {
         feed.rewindFrom = abandoned.id;
       });
 
       const runtime = yield* Effect.context<Database.Service>();
       const session = new AiSession.Session({ feed, runtime });
-
-      // `rewindFrom` names the earliest discarded message, so the continuation parents to the one
-      // before it. Stands in for the request loop: `onOutput` is the single funnel every persisted
-      // message passes through, and the retry is this turn's first.
-      const retry = makeMessage('retry');
-      yield* Effect.promise(() => session.appendTurnMessage(retry));
-
-      expect(Feed.getParent(retry)).toBe(answer.id);
-      // Consumed: a second message in the same turn chains implicitly, not onto the parent again.
+      yield* session.applyPendingRewind();
       expect(feed.rewindFrom).toBeUndefined();
 
-      const followUp = makeMessage('follow up', 'assistant');
-      yield* Effect.promise(() => session.appendTurnMessage(followUp));
-      expect(Feed.getParent(followUp)).toBeUndefined();
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  it.effect('leaves messages unparented when no rewind is pending', () =>
-    Effect.gen(function* () {
-      const { db } = yield* Database.Service;
-      const feed = db.add(Feed.make());
-      const runtime = yield* Effect.context<Database.Service>();
-      const session = new AiSession.Session({ feed, runtime });
-
-      const message = makeMessage('plain');
-      yield* Effect.promise(() => session.appendTurnMessage(message));
-      expect(Feed.getParent(message)).toBeUndefined();
-    }).pipe(Effect.provide(TestLayer)),
-  );
-
-  it.effect('the resolved history follows the fork once the continuation lands', () =>
-    Effect.gen(function* () {
-      const { db } = yield* Database.Service;
-      const feed = db.add(Feed.make());
-
-      const first = makeMessage('first');
-      const answer = makeMessage('answer', 'assistant');
-      const abandoned = makeMessage('abandoned');
-      yield* Feed.append(feed, [first, answer, abandoned]);
-      Obj.update(feed, (feed) => {
-        feed.rewindFrom = abandoned.id;
-      });
-
-      const runtime = yield* Effect.context<Database.Service>();
-      const session = new AiSession.Session({ feed, runtime });
-      const retry = makeMessage('retry');
+      const retry = makeMessage('retry', 'assistant');
       yield* Effect.promise(() => session.appendTurnMessage(retry));
 
       const history = yield* Effect.promise(() => session.getHistory());
       expect(history.map((message) => message.id)).toEqual([first.id, answer.id, retry.id]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('without a pending rewind the history keeps every message', () =>
+    Effect.gen(function* () {
+      const { db } = yield* Database.Service;
+      const feed = db.add(Feed.make());
+      const runtime = yield* Effect.context<Database.Service>();
+      const session = new AiSession.Session({ feed, runtime });
+
+      yield* session.applyPendingRewind();
+      const message = makeMessage('plain', 'assistant');
+      yield* Effect.promise(() => session.appendTurnMessage(message));
+      const history = yield* Effect.promise(() => session.getHistory());
+      expect(history.map((item) => item.id)).toEqual([message.id]);
     }).pipe(Effect.provide(TestLayer)),
   );
 });

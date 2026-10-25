@@ -12,14 +12,21 @@ import { Database, DXN, Feed, Obj, Query, Ref, Type } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { Text } from '@dxos/schema';
+import { Trajectory } from '@dxos/trajectory';
 
 import * as AiContext from './AiContext.ts';
 
 const TypeA = Type.makeObject(DXN.make('org.dxos.type.a', '0.1.0'))(Schema.Struct({}));
 const TypeB = Type.makeObject(DXN.make('org.dxos.type.b', '0.1.0'))(Schema.Struct({}));
 
+/** The binding changes a binder wrote to `feed`. */
+const bindingEvents = (feed: Feed.Feed) =>
+  Effect.map(Feed.query(feed, Query.type(Trajectory.Event)).run, (events) =>
+    events.filter((event) => event.payload._tag === 'contextBind' || event.payload._tag === 'contextUnbind'),
+  );
+
 describe('AiContext.Binder', () => {
-  const TestLayer = TestDatabaseLayer({ types: [Feed.Feed, TypeA, TypeB, Skill.Skill, Text.Text] });
+  const TestLayer = TestDatabaseLayer({ types: [Feed.Feed, TypeA, TypeB, Skill.Skill, Text.Text, Trajectory.Event] });
 
   // A skill the user authored in a space has no registry key; it used to be dropped on the way in,
   // which made the picker's toggle a silent no-op (DX-1248).
@@ -95,7 +102,7 @@ describe('AiContext.Binder', () => {
       const held = binder.getObjects();
 
       yield* Database.add(feed);
-      const beforeFlush = yield* Feed.query(feed, Query.type(AiContext.Binding)).run;
+      const beforeFlush = yield* bindingEvents(feed);
       yield* Effect.promise(() => binder.flush());
       yield* Effect.promise(() => binder.close());
 
@@ -199,7 +206,10 @@ describe('AiContext.Binder', () => {
     })
       .pipe(
         Effect.provide(
-          TestDatabaseLayer({ types: [Feed.Feed, TypeA, TypeB, Skill.Skill, Text.Text], registry: [registered] }),
+          TestDatabaseLayer({
+            types: [Feed.Feed, TypeA, TypeB, Skill.Skill, Text.Text, Trajectory.Event],
+            registry: [registered],
+          }),
         ),
       )
       .pipe(Effect.runPromise);
@@ -218,7 +228,7 @@ describe('AiContext.Binder', () => {
 
       // The binder's query is private; any query result shares its prototype, which is where `run` lives.
       const probe = yield* Effect.promise(() =>
-        RuntimeProvider.runPromise(Effect.succeed(runtime))(Feed.query(feed, Query.type(AiContext.Binding))),
+        RuntimeProvider.runPromise(Effect.succeed(runtime))(Feed.query(feed, Query.type(Trajectory.Event))),
       );
       const run = vi
         .spyOn(Object.getPrototypeOf(probe), 'run')
@@ -246,7 +256,7 @@ describe('AiContext.Binder', () => {
       yield* Effect.promise(() => agent.open());
 
       const probe = yield* Effect.promise(() =>
-        RuntimeProvider.runPromise(Effect.succeed(runtime))(Feed.query(feed, Query.type(AiContext.Binding))),
+        RuntimeProvider.runPromise(Effect.succeed(runtime))(Feed.query(feed, Query.type(Trajectory.Event))),
       );
       const run = vi.spyOn(Object.getPrototypeOf(probe), 'run');
       yield* Effect.promise(() => agent.sync());
@@ -293,7 +303,7 @@ describe('AiContext.Binder', () => {
       yield* Effect.promise(() => binder.bind(props()));
       yield* Effect.promise(() => binder.close());
 
-      const bindings = yield* Feed.query(feed, Query.type(AiContext.Binding)).run;
+      const bindings = yield* bindingEvents(feed);
       expect(bindings).toHaveLength(1);
     })
       .pipe(Effect.provide(TestLayer))
@@ -313,7 +323,7 @@ describe('AiContext.Binder', () => {
       yield* Effect.promise(() => binder.bind({ skills: [skill] }));
       yield* Effect.promise(() => binder.close());
 
-      const bindings = yield* Feed.query(feed, Query.type(AiContext.Binding)).run;
+      const bindings = yield* bindingEvents(feed);
       expect(bindings).toHaveLength(3);
     })
       .pipe(Effect.provide(TestLayer))

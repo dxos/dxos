@@ -8,10 +8,11 @@ import * as Exit from 'effect/Exit';
 import * as Result from 'effect/Result';
 
 import type * as Capability from '@dxos/app-framework/Capability';
+import { TrajectoryStore } from '@dxos/assistant';
 import type * as Agent from '@dxos/assistant/Agent';
 import type * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, Obj, Ref } from '@dxos/echo';
 import * as ChannelBackend from '@dxos/plugin-thread/ChannelBackend';
 import * as ThreadOperation from '@dxos/plugin-thread/ThreadOperation';
 import { Channel, Message, Person, Task } from '@dxos/types';
@@ -145,7 +146,7 @@ const roleIn = (relay: Relay.Relay, party: Obj.Unknown): 'recipient' | 'requeste
 const appendToChat = (agent: Agent.Agent, chat: Chat.Chat, text: string, properties?: Record<string, unknown>) =>
   Effect.gen(function* () {
     const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
-    yield* Feed.append(feed, [
+    yield* TrajectoryStore.appendMessages(feed, [
       Message.make({
         sender: { role: 'assistant', name: agent.name },
         blocks: [{ _tag: 'text', text }],

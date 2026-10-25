@@ -8,19 +8,19 @@ import * as EArray from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
-import * as Order from 'effect/Order';
 import * as Atom from 'effect/reactivity/Atom';
 import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 
 import * as Skill from '@dxos/compute/Skill';
 import { Resource } from '@dxos/context';
-import { Database, DXN, Feed, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
+import { Database, DXN, Feed, Filter, Obj, type QueryResult, Ref, Type } from '@dxos/echo';
 import * as AtomEx from '@dxos/effect/AtomEx';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { EID, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { Trajectory } from '@dxos/trajectory';
 import { ComplexSet, isNonNullable } from '@dxos/util';
 
 /**
@@ -50,6 +50,96 @@ export class Binding extends Type.makeObject<Binding>(DXN.make('org.dxos.type.co
     ),
   }),
 ) {}
+/**
+ * One change to the bound skills, objects and connections: a legacy `Binding` record, or a
+ * `contextBind`/`contextUnbind` event.
+ */
+type BindingDelta = {
+  readonly skills: {
+    readonly added: readonly Ref.Ref<Skill.Skill>[];
+    readonly removed: readonly Ref.Ref<Skill.Skill>[];
+  };
+  readonly objects: {
+    readonly added: readonly Ref.Ref<Obj.Unknown>[];
+    readonly removed: readonly Ref.Ref<Obj.Unknown>[];
+  };
+  readonly connections?: {
+    readonly added: readonly Ref.Ref<Obj.Unknown>[];
+    readonly removed: readonly Ref.Ref<Obj.Unknown>[];
+  };
+};
+
+/**
+ * The binding changes among a feed's items, in the order given (local order, as the query reads them).
+ */
+const toDeltas = (items: readonly Obj.Unknown[]): BindingDelta[] =>
+  items.flatMap((item): BindingDelta[] => {
+    if (Obj.instanceOf(Binding, item)) {
+      return [item];
+    }
+    if (!Obj.instanceOf(Trajectory.Event, item)) {
+      return [];
+    }
+    const payload = item.payload;
+    switch (payload._tag) {
+      case 'contextBind':
+        return [
+          {
+            skills: { added: payload.skills, removed: [] },
+            objects: { added: payload.objects, removed: [] },
+            connections: { added: payload.connections ?? [], removed: [] },
+          },
+        ];
+      case 'contextUnbind':
+        return [
+          {
+            skills: { added: [], removed: payload.skills },
+            objects: { added: [], removed: payload.objects },
+            connections: { added: [], removed: payload.connections ?? [] },
+          },
+        ];
+      default:
+        return [];
+    }
+  });
+
+/**
+ * The events recording a binding change: one bind for what it adds, one unbind for what it removes.
+ */
+const toEvents = ({ skills, objects, connections }: BindingDelta): Trajectory.Event[] => {
+  const sender: Trajectory.Sender = { role: 'event', name: 'context' };
+  const on = connections?.added ?? [];
+  const off = connections?.removed ?? [];
+  return [
+    ...(skills.added.length > 0 || objects.added.length > 0 || on.length > 0
+      ? [
+          Trajectory.make({
+            payload: {
+              _tag: 'contextBind',
+              skills: skills.added,
+              objects: objects.added,
+              ...(on.length > 0 ? { connections: on } : {}),
+            },
+            sender,
+          }),
+        ]
+      : []),
+    ...(skills.removed.length > 0 || objects.removed.length > 0 || off.length > 0
+      ? [
+          Trajectory.make({
+            payload: {
+              _tag: 'contextUnbind',
+              skills: skills.removed,
+              objects: objects.removed,
+              ...(off.length > 0 ? { connections: off } : {}),
+            },
+            sender,
+          }),
+        ]
+      : []),
+  ];
+};
+
 export type BindingProps = Partial<{
   skills: Ref.Ref<Skill.Skill>[];
   objects: Ref.Ref<Obj.Unknown>[];
@@ -105,7 +195,7 @@ export class Binder extends Resource {
   private readonly _runtime: Context.Context<Database.Service>;
   private readonly _hold: boolean;
 
-  #bindingsQuery: QueryResult.QueryResult<Binding> | undefined;
+  #bindingsQuery: QueryResult.QueryResult<Obj.Unknown> | undefined;
 
   /** {@link bindingWriteCount} at the last read of the bindings query. */
   #readWrites = 0;
@@ -116,7 +206,7 @@ export class Binder extends Resource {
    */
   #bound = { skills: new Set<URI.URI>(), objects: new Set<URI.URI>() };
 
-  #pending?: Binding[];
+  #pending?: BindingDelta[];
 
   /** Bumped by each held write, so only the latest resolution of the held bindings lands. */
   #heldGeneration = 0;
@@ -214,19 +304,24 @@ export class Binder extends Resource {
     const { skills, objects } = reduce(held);
     const connections = connectionChanges(held);
     if (skills.size > 0 || objects.size > 0 || connections.added.length > 0 || connections.removed.length > 0) {
-      await this._append(
-        Obj.make(Binding, {
-          skills: { added: [...skills], removed: [] },
-          objects: { added: [...objects], removed: [] },
-          connections,
-        }),
-      );
+      await this._append({
+        skills: { added: [...skills], removed: [] },
+        objects: { added: [...objects], removed: [] },
+        connections,
+      });
     }
   }
 
   private async _follow(): Promise<void> {
+    // Local order: a removal has to fold after the addition it undoes, and that order never changes under the fold.
     const bindingsQuery = await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
-      Feed.query(this._feed, Query.type(Binding)),
+      Feed.query(
+        this._feed,
+        Filter.and(
+          Filter.or(Filter.type(Binding), Filter.type(Trajectory.Event)),
+          Filter.feedCursor({ begin: Feed.START, order: 'local' }),
+        ),
+      ),
     );
     this.#bindingsQuery = bindingsQuery;
 
@@ -250,7 +345,7 @@ export class Binder extends Resource {
   async sync(): Promise<void> {
     const writes = bindingWriteCount(this._feed);
     if (this.#bindingsQuery && writes !== this.#readWrites) {
-      let results: Binding[];
+      let results: Obj.Unknown[];
       try {
         results = await this.#bindingsQuery.run();
       } catch (error) {
@@ -273,22 +368,22 @@ export class Binder extends Resource {
     }
   }
 
-  private async _updateBindings(items: Binding[]): Promise<void> {
-    // Skip update if no items - preserve existing state set by bind().
-    if (items.length === 0) {
+  private async _updateBindings(items: readonly Obj.Unknown[]): Promise<void> {
+    const deltas = toDeltas(items);
+    // Skip update if no bindings - preserve existing state set by bind().
+    if (deltas.length === 0) {
       return;
     }
 
-    const ordered = inAppendOrder(items);
-    this._registry.set(this._connections, connectionStates(ordered));
-    const bindings = reduce(ordered);
+    this._registry.set(this._connections, connectionStates(deltas));
+    const bindings = reduce(deltas);
     this.#bound = {
       skills: new Set([...bindings.skills].map((ref) => refKey(ref.uri))),
       objects: new Set([...bindings.objects].map((ref) => refKey(ref.uri))),
     };
 
     log('_updateBindings', {
-      items: items.length,
+      items: deltas.length,
       skillRefs: [...bindings.skills].map((ref) => ({ uri: ref.uri, available: ref.isAvailable })),
     });
 
@@ -355,18 +450,10 @@ export class Binder extends Resource {
     this._registry.set(this._objects, nextObjects);
 
     log('bind', { skills: addedSkills.length, objects: addedObjects.length });
-    await this._write(
-      Obj.make(Binding, {
-        skills: {
-          added: addedSkills,
-          removed: [],
-        },
-        objects: {
-          added: addedObjects,
-          removed: [],
-        },
-      }),
-    );
+    await this._write({
+      skills: { added: addedSkills, removed: [] },
+      objects: { added: addedObjects, removed: [] },
+    });
   }
 
   async unbind({ skills, objects }: BindingProps): Promise<void> {
@@ -396,18 +483,10 @@ export class Binder extends Resource {
     }
 
     log('unbind', { skills: skills?.length, objects: objects?.length });
-    await this._write(
-      Obj.make(Binding, {
-        skills: {
-          added: [],
-          removed: skills ?? [],
-        },
-        objects: {
-          added: [],
-          removed: objects ?? [],
-        },
-      }),
-    );
+    await this._write({
+      skills: { added: [], removed: skills ?? [] },
+      objects: { added: [], removed: objects ?? [] },
+    });
   }
 
   /** Turns a connection's MCP server on or off for this conversation. */
@@ -417,16 +496,14 @@ export class Binder extends Resource {
       return;
     }
     this._registry.set(this._connections, new Map([...this.getConnections(), [key, enabled]]));
-    await this._write(
-      Obj.make(Binding, {
-        skills: { added: [], removed: [] },
-        objects: { added: [], removed: [] },
-        connections: enabled ? { added: [connection], removed: [] } : { added: [], removed: [connection] },
-      }),
-    );
+    await this._write({
+      skills: { added: [], removed: [] },
+      objects: { added: [], removed: [] },
+      connections: enabled ? { added: [connection], removed: [] } : { added: [], removed: [connection] },
+    });
   }
 
-  private async _write(binding: Binding): Promise<void> {
+  private async _write(binding: BindingDelta): Promise<void> {
     if (this.#pending) {
       this.#pending.push(binding);
       await this._resolveHeld(this.#pending);
@@ -439,7 +516,7 @@ export class Binder extends Resource {
    * Sets the atoms from the held bindings. Their refs have no feed query to hydrate them, so each is
    * resolved against the database, which also spans the registry.
    */
-  private async _resolveHeld(held: Binding[]): Promise<void> {
+  private async _resolveHeld(held: BindingDelta[]): Promise<void> {
     const generation = ++this.#heldGeneration;
     const { db } = Context.get(this._runtime, Database.Service);
     const { skills, objects } = reduce(held);
@@ -457,8 +534,8 @@ export class Binder extends Resource {
     this._registry.set(this._objects, resolvedObjects);
   }
 
-  private async _append(binding: Binding): Promise<void> {
-    await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(Feed.append(this._feed, [binding]));
+  private async _append(binding: BindingDelta): Promise<void> {
+    await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(Feed.append(this._feed, toEvents(binding)));
     countBindingWrite(this._feed);
   }
 
@@ -550,9 +627,9 @@ export class Binder extends Resource {
  * Reduces bindings into the sets of skills and objects they leave bound.
  *
  * Order-sensitive: a later removal must fold after the addition it undoes, so callers pass items
- * in append order (see {@link inAppendOrder}).
+ * in local order.
  */
-const reduce = (items: Binding[]): Bindings =>
+const reduce = (items: readonly BindingDelta[]): Bindings =>
   Function.pipe(
     items,
     EArray.reduce(new Bindings(), (context, { skills, objects }) => {
@@ -575,9 +652,9 @@ const reduce = (items: Binding[]): Bindings =>
 
 /**
  * Each connection a conversation has turned on or off, keyed by local ECHO URI; the latest binding
- * that names it wins. Callers pass items in append order (see {@link inAppendOrder}).
+ * that names it wins. Callers pass deltas in local order, as the feed query reads them.
  */
-export const connectionStates = (items: readonly Binding[]): ReadonlyMap<URI.URI, boolean> => {
+export const connectionStates = (items: readonly BindingDelta[]): ReadonlyMap<URI.URI, boolean> => {
   const states = new Map<URI.URI, boolean>();
   for (const { connections } of items) {
     connections?.added.forEach((ref) => states.set(refKey(ref.uri), true));
@@ -606,7 +683,7 @@ const connectionKey = (connection: Obj.Unknown): URI.URI => refKey(connectionRef
 
 /** The net connection changes of held bindings, as one binding writes them. */
 const connectionChanges = (
-  items: readonly Binding[],
+  items: readonly BindingDelta[],
 ): { added: Ref.Ref<Obj.Unknown>[]; removed: Ref.Ref<Obj.Unknown>[] } => {
   const latest = new Map<URI.URI, { ref: Ref.Ref<Obj.Unknown>; enabled: boolean }>();
   for (const { connections } of items) {
@@ -626,14 +703,26 @@ const connectionChanges = (
 export const boundConnections = (
   feed: Feed.Feed,
 ): Effect.Effect<ReadonlyMap<URI.URI, boolean>, never, Database.Service> =>
-  Feed.query(feed, Query.type(Binding)).run.pipe(Effect.map((items) => connectionStates(inAppendOrder(items))));
+  Feed.query(
+    feed,
+    Filter.and(
+      Filter.or(Filter.type(Binding), Filter.type(Trajectory.Event)),
+      Filter.feedCursor({ begin: Feed.START, order: 'local' }),
+    ),
+  ).run.pipe(Effect.map((items) => connectionStates(toDeltas(items))));
 
 /**
  * The objects a conversation's feed currently binds, read once: for a reader that needs the bound
  * set at one moment without holding a {@link Binder} open.
  */
 export const boundObjects = (feed: Feed.Feed): Effect.Effect<Ref.Ref<Obj.Unknown>[], never, Database.Service> =>
-  Feed.query(feed, Query.type(Binding)).run.pipe(Effect.map((items) => [...reduce(inAppendOrder(items)).objects]));
+  Feed.query(
+    feed,
+    Filter.and(
+      Filter.or(Filter.type(Binding), Filter.type(Trajectory.Event)),
+      Filter.feedCursor({ begin: Feed.START, order: 'local' }),
+    ),
+  ).run.pipe(Effect.map((items) => [...reduce(toDeltas(items)).objects]));
 
 /** The entity id an ECHO URI names; none for any other URI. */
 const entityIdOf = (uri: URI.URI): string | undefined => {
@@ -648,12 +737,3 @@ const refKey = (uri: URI.URI): URI.URI => {
   const echoUri = EID.tryParse(uri);
   return echoUri ? EID.toLocal(echoUri) : uri;
 };
-
-/**
- * Bindings in the order they were appended, which is the order the fold has to see them: a query
- * returns an unordered set, so an unsorted fold can apply a removal before the addition it undoes
- * and silently keep the object bound. Server-assigned position is authoritative; a locally-written
- * block has none yet and sorts last, which is correct — it is the newest.
- */
-const inAppendOrder = (items: readonly Binding[]): Binding[] =>
-  EArray.sort(items, Order.mapInput(Order.Number, Feed.getPosition));

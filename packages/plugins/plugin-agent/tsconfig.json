@@ -64,6 +64,9 @@
       "path": "../../core/compute/pipeline-rdf"
     },
     {
+      "path": "../../core/compute/trajectory"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

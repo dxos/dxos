@@ -13,6 +13,7 @@ import { loadMcpServers } from '@dxos/agent-runtime';
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import {
   AiSession,
+  TrajectoryStore,
   getOperationFromTool,
   makeToolExecutionService,
   makeToolResolverFromOperations,
@@ -103,7 +104,7 @@ export default AgentOperation.RunInstructions.pipe(
           invariant(Obj.instanceOf(Chat.Chat, chat), 'Expected Chat object.');
           feed = yield* Database.load(chat.feed);
         } else {
-          feed = yield* Database.add(Feed.make());
+          feed = yield* Database.add(TrajectoryStore.makeFeed());
         }
 
         const resultSink = yield* Deferred.make<unknown, PromptError>();

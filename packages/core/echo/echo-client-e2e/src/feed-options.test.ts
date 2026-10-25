@@ -82,6 +82,80 @@ describe('feed options', () => {
     await expect.poll(async () => (await searchText(reader, 'hello')).length, { timeout: 5_000 }).toBe(3);
   });
 
+  test('a feed created with indexing disabled reads in local order and resumes after a local cursor', async ({
+    expect,
+  }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task], assignQueuePositions: true });
+    const spaceKey = PublicKey.random();
+    const db = await peer.createDatabase(spaceKey);
+    const reader = await peer.openDatabase(spaceKey, undefined, { client: await peer.createClient() });
+    const feed = db.add(Feed.make({ name: 'log', indexing: { enabled: false } }));
+    // Appended one at a time, newest first by id, so local order and id order disagree.
+    const tasks = ['d', 'c', 'b', 'a'].map((title) => Obj.make(TestSchema.Task, { title }));
+    for (const task of [...tasks].reverse()) {
+      await db.appendToFeed(feed, [task]);
+    }
+    await settle(db);
+    const feedUri = Feed.getFeedUri(feed);
+    invariant(feedUri, 'feed has no URI');
+    const read = (filter: Filter.Any, limit?: number) => {
+      const query = Query.select(filter);
+      return reader.query((limit === undefined ? query : query.limit(limit)).from(Scope.feed(feedUri))).run();
+    };
+
+    const all = await read(Filter.feedCursor({ begin: Feed.START, order: 'local' }));
+    expect(all.map((task) => task.title)).toEqual(['a', 'b', 'c', 'd']);
+    const cursors = all.map((task) => Feed.getLocalCursor(task));
+    expect(cursors.every((cursor) => cursor !== undefined)).toBe(true);
+    expect((await read(Filter.feedCursor({ begin: cursors[1], order: 'local' }))).map((task) => task.title)).toEqual([
+      'c',
+      'd',
+    ]);
+    expect((await read(Filter.feedCursor({ begin: cursors[0], order: 'local' }), 2)).map((task) => task.title)).toEqual(
+      ['b', 'c'],
+    );
+    expect(
+      (
+        await read(Filter.and(Filter.type(TestSchema.Task), Filter.feedCursor({ begin: Feed.START, order: 'local' })))
+      ).map((task) => task.title),
+    ).toEqual(['a', 'b', 'c', 'd']);
+  });
+
+  test('a local-order read of several types over a feed with indexing disabled keeps append order across types', async ({
+    expect,
+  }) => {
+    await using peer = await builder.createPeer({
+      types: [Feed.Feed, TestSchema.Task, TestSchema.Person],
+      assignQueuePositions: true,
+    });
+    const spaceKey = PublicKey.random();
+    const db = await peer.createDatabase(spaceKey);
+    const reader = await peer.openDatabase(spaceKey, undefined, { client: await peer.createClient() });
+    const feed = db.add(Feed.make({ name: 'log', indexing: { enabled: false } }));
+    await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 'first' })]);
+    await db.appendToFeed(feed, [Obj.make(TestSchema.Person, { name: 'second' })]);
+    await db.appendToFeed(feed, [Obj.make(TestSchema.Task, { title: 'third' })]);
+    await settle(db);
+    const feedUri = Feed.getFeedUri(feed);
+    invariant(feedUri, 'feed has no URI');
+
+    const items = await reader
+      .query(
+        Query.select(
+          Filter.and(
+            Filter.or(Filter.type(TestSchema.Task), Filter.type(TestSchema.Person)),
+            Filter.feedCursor({ begin: Feed.START, order: 'local' }),
+          ),
+        ).from(Scope.feed(feedUri)),
+      )
+      .run();
+    expect(items.map((item) => (Obj.instanceOf(TestSchema.Task, item) ? item.title : item.name))).toEqual([
+      'first',
+      'second',
+      'third',
+    ]);
+  });
+
   test('a space query that includes feeds returns the items of a feed with indexing disabled', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task], assignQueuePositions: true });
     const { db, reader, feed } = await openSpace(peer);
