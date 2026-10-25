@@ -9,6 +9,7 @@ import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
+import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 import { mx } from '@dxos/ui-theme';
 
@@ -174,9 +175,9 @@ export const DataModelGraph = ({ content }: DataModelGraphProps) => {
 
   if (model.types.length === 0) {
     return (
-      <Layout.Flex center grow classNames='text-description' data-testid='data-model.empty'>
+      <Status.Empty classNames='dx-fill' data-testid='data-model.empty'>
         {t('data-model.empty.message')}
-      </Layout.Flex>
+      </Status.Empty>
     );
   }
 
