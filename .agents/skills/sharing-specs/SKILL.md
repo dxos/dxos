@@ -5,8 +5,9 @@ description: >-
   editor with inline plugin-illustrator diagrams beside its decision graph), one tab per spec, that
   teammates open in claude.ai and comment on. Use when asked to share, publish, show or circulate a
   spec or design for review, to make a spec "pretty" or commentable, to put a storybook story in an
-  artifact, or to update or answer comments on a spec artifact made this way. Builds a narrowed static
-  storybook, packages it with `scripts/package.py`, checks it with `scripts/check.cjs`, and publishes
+  artifact, or to update or answer comments on a spec artifact made this way. Pulls a prebuilt viewer from R2
+  (`scripts/storybook-cache.ts`, so no storybook build) or builds one, packages it with `scripts/package.py`
+  (any spec, optionally diffed against a git ref and with its review), checks it with `scripts/check.cjs`, and publishes
   it with the Artifact tool — no Worker, no preview environment. A spec edit republishes on its own
   with `scripts/update_specs.py`, without a rebuild.
 ---
@@ -26,6 +27,21 @@ Storybook's shell (`index.html` embeds the story in an iframe, and an artifact l
 string or `#/path`), so `package.py` publishes the story page itself (`iframe.html`) with a tab bar
 that switches stories through Storybook's preview channel.
 
+## 0. Start from the cached build
+
+A prebuilt viewer lives in the `agent-artifacts` R2 bucket, refreshed by the **Storybook Specs Cache**
+workflow whenever main changes viewer code. Pull it before anything else; it replaces §2–§3 for any spec:
+
+```bash
+bun .agents/skills/sharing-specs/scripts/storybook-cache.ts pull tools/storybook-react/out/storybook-specs
+```
+
+It prints the cached commit and the viewer files (code under `packages/` or `tools/storybook-react/`, not
+specs) that changed since. When none did, or none of them is something the page must show, skip to §4 and
+use `--spec` tabs. Build (§3) only when the branch changes the viewer itself; push that build under the
+branch's name (`storybook-cache.ts push <build dir> --ref <branch>`) so later sessions on the branch pull
+it with `--ref <branch>`.
+
 ## 1. Write the spec with its diagrams inside
 
 - Follow the `mdl` skill: every change adds a `## Changelog` decision; a person's words go in a
@@ -34,7 +50,10 @@ that switches stories through Storybook's preview channel.
   spec"). Group nodes by package or service. Render it once with
   `moon run plugin-illustrator:render-diagrams` and look at the PNG before you publish.
 
-## 2. Add a story per spec
+## 2. Add a story per spec (only for a page a `--spec` tab cannot show)
+
+A `--spec` tab (§4) renders any spec through the generic `AnySpec` story, with no story of its own. Add a
+story only for a view `AnySpec` lacks, such as `SpecChangelog`:
 
 Add one story to `packages/plugins/plugin-code/src/components/SpecChangelog/SpecChangelog.stories.tsx`:
 
@@ -88,6 +107,19 @@ python3 .agents/skills/sharing-specs/scripts/package.py tools/storybook-react/ou
   --tab "2 · File sync=${P}git-hub-file-sync"
 ```
 
+For a spec, pass `--spec "Label=<repo path>"` instead of `--tab`: the page renders it through the
+`AnySpec` story, so the spec needs no story and the build need not be newer than the spec. `--base <git ref>`
+opens every `--spec` tab in diff mode against that ref (`--base origin/main` shows what the branch
+changed; a spec new on the branch shows as all added). A `<SPEC>.review.mdl` beside a spec ships with it,
+so the Review view shows its verdicts. The two tab forms mix, in argv order:
+
+```bash
+python3 .agents/skills/sharing-specs/scripts/package.py tools/storybook-react/out/storybook-specs <scratchpad>/spec-artifact \
+  --title "Feed Options Specs" --base origin/main \
+  --spec "1 · Feed object=packages/core/echo/echo/SPEC.mdl" \
+  --spec "2 · Feed store=packages/core/echo/feed/SPEC.mdl"
+```
+
 It writes `page.html` and adjusts the build for the artifact publisher, which otherwise refuses it:
 raw control bytes and U+FFFD in the bundle become escapes, and the icon sprite loses its `DOCTYPE`. It
 also copies every spec in `specs/manifest.json` from the working tree, so packaging an old build picks
@@ -96,16 +128,24 @@ The title is the artifact's name (2–4 words, no "spec viewer: …" suffix).
 
 ## 5. Check it before publishing
 
-Serve the packaged directory and run the check. It clicks every tab in headless Chromium, scrolls
-each spec so every diagram mounts, fails on a render error, a page error or a spec under `specs/` that
-did not load, and writes the exact `files` map the page needs (the bundle, its CSS, two automerge
-`.wasm`, fonts, `icons.svg`, `index.json`, and one `specs/….mdl` per spec the tabs show):
+Serve the packaged directory's **parent** and load the page under its directory name: the artifact host
+serves the page under a path, so a root-relative URL (`/icons.svg`) breaks there, and serving the
+directory itself as `/` would hide that. The check clicks every tab in headless Chromium, scrolls each
+spec so every diagram mounts, opens every side-panel view (Review, Code, Decision graph, …), and fails
+on a render error, a page error, a view that crashes the story, an icon whose symbol never loaded, a
+request outside the page's directory, or a spec under `specs/` that did not load. It writes the exact
+`files` map the page needs (the bundle, its CSS, two automerge `.wasm`, fonts, `icons.svg`,
+`index.json`, and every `specs/…` file the tabs fetched, bases and reviews included):
 
 ```bash
-(cd <scratchpad>/spec-artifact && python3 -m http.server 6113 &)
+(cd <scratchpad> && python3 -m http.server 6113 &)
 NODE_PATH=node_modules node .agents/skills/sharing-specs/scripts/check.cjs \
-  http://localhost:6113/page.html 2 <scratchpad>/spec-files.json
+  http://localhost:6113/spec-artifact/page.html <tab count> <scratchpad>/spec-files.json
 ```
+
+`package.py` already makes the icon loader's URLs page-relative and adds every `ph--…` icon the bundle
+names to `icons.svg` from `@phosphor-icons/core`, printing how many it added; an icon it reports as
+not found shows blank in the page.
 
 Kill the server by its PID afterwards; `pkill -f` on a pattern also matches your own shell.
 
