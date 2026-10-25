@@ -160,7 +160,11 @@ const runCodeModeTurn = ({
               timeout: options.timeout,
             });
             const system = yield* formatSystemPrompt({
-              system: [dialect.instructions({ operations, types: yield* registeredTypes }), options.system, params.system]
+              system: [
+                dialect.instructions({ operations, types: yield* registeredTypes }),
+                options.system,
+                params.system,
+              ]
                 .filter(isPresent)
                 .join('\n\n'),
               skills,

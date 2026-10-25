@@ -111,9 +111,9 @@ describe('feed options', () => {
       'c',
       'd',
     ]);
-    expect(
-      (await read(Filter.feedCursor({ begin: cursors[0], order: 'local' }), 2)).map((task) => task.title),
-    ).toEqual(['b', 'c']);
+    expect((await read(Filter.feedCursor({ begin: cursors[0], order: 'local' }), 2)).map((task) => task.title)).toEqual(
+      ['b', 'c'],
+    );
     expect(
       (
         await read(Filter.and(Filter.type(TestSchema.Task), Filter.feedCursor({ begin: Feed.START, order: 'local' })))
