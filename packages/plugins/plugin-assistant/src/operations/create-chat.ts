@@ -10,7 +10,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AiContext, TrajectoryStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Feed, Ref } from '@dxos/echo';
+import { Database, Ref } from '@dxos/echo';
 
 import { AssistantOperation } from '#types';
 

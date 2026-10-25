@@ -13,10 +13,10 @@ import { loadMcpServers } from '@dxos/agent-runtime';
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import {
   AiSession,
+  TrajectoryStore,
   getOperationFromTool,
   makeToolExecutionService,
   makeToolResolverFromOperations,
-  TrajectoryStore,
 } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Credential from '@dxos/compute/Credential';

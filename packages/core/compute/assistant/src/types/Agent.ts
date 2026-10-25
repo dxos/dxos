@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import type * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Skill from '@dxos/compute/Skill';
-import { Annotation, Database, DXN, type Error as EchoError, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Database, DXN, type Error as EchoError, Filter, Obj, Ref, Type } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { IdentityDid } from '@dxos/keys';
 

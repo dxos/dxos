@@ -10,7 +10,7 @@ import { expect } from 'vitest';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import { AiContext, AiSession, TrajectoryStore } from '@dxos/assistant';
 import * as Credential from '@dxos/compute/Credential';
-import { Database, Feed, Filter, Obj, Ref, Registry } from '@dxos/echo';
+import { Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { AccessToken, Connection } from '@dxos/link';

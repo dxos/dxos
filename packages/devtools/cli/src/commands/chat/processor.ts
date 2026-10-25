@@ -16,7 +16,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import { type Space } from '@dxos/client/echo';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, Entity, Feed, Filter, Obj, Ref } from '@dxos/echo';
+import { Database, Entity, Filter, Obj, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
