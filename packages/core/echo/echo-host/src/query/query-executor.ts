@@ -48,7 +48,7 @@ import {
   type ReverseRef,
 } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
-import { EID, EntityId, SpaceId, type URI } from '@dxos/keys';
+import { EID, EntityId, SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { type QueryService } from '@dxos/protocols/rpc';
@@ -383,7 +383,8 @@ const QueryItem = Object.freeze({
 
   /**
    * EIDs of objects this item strongly depends on: the schema object (when the type is an
-   * ECHO object reference), relation source/target, and the parent. Mirrors
+   * ECHO object reference), relation source/target, the parent, and the tags (read from the
+   * document only: an index row carries no meta). Mirrors
    * `ObjectCore.getStrongDependencies` on the client. Queue items hydrate from indexed
    * snapshots and don't gate on dependency loads, so they report no strong deps.
    */
@@ -419,6 +420,10 @@ const QueryItem = Object.freeze({
       push(EntityStructure.getRelationTarget(item.doc));
     }
     push(EntityStructure.getParent(item.doc));
+    for (const tag of EntityStructure.getTags(item.doc)) {
+      // A legacy tag is a bare URI rather than an encoded reference.
+      push(typeof tag === 'string' ? EncodedReference.fromURI(URI.make(tag)) : tag);
+    }
     return res;
   },
 });
