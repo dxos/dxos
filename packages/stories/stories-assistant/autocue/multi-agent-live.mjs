@@ -12,7 +12,7 @@ import { join } from 'node:path';
  * @mdl packages/core/compute/trajectory/LIGHT-THREADS.mdl test QA-3
  * @app storybook via `DX_STORIES=plugins/plugin-assistant,stories/stories-assistant moon run storybook-react:serve`
  *   on :9009, story `stories-stories-assistant-multitenantthreads--live` in isolation mode with
- *   `&helperPort=<port>&helperToken=<token>&cwd=<folder>` appended; the agent helper (plugin-code
+ *   `&helperPort=<port>&helperToken=<token>&cwd=<folder>` appended; the agent helper (plugin-claude
  *   `src/agent-helper/server.ts`) serves `claude-code` on that port with `ANTHROPIC_API_KEY` set, and `<folder>` is a
  *   git repo holding only `notes.txt`. Set `DEMO_CWD` to the same folder so the flow can check the files on disk.
  */

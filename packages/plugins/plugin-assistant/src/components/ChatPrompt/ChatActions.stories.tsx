@@ -15,21 +15,29 @@ import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { type ChatEvent } from '../Chat/index.ts';
+import { type ChatDrawer, type ChatEvent } from '../Chat/index.ts';
 import { ChatActions, type ChatActionsProps } from './ChatActions.tsx';
 
-type StoryArgs = Pick<ChatActionsProps, 'processing' | 'canSend' | 'tasksVisible' | 'debug' | 'customActions'>;
+type StoryArgs = Pick<ChatActionsProps, 'processing' | 'canSend' | 'debug' | 'customActions'> & {
+  drawer?: ChatDrawer;
+};
 
-const DefaultStory = ({ tasksVisible: initialTasksVisible, ...args }: StoryArgs) => {
-  // Held here rather than fixed by args so the toggle can be clicked and seen to change.
-  const [tasksVisible, setTasksVisible] = useState(initialTasksVisible);
+const DefaultStory = ({ drawer: initialDrawer, ...args }: StoryArgs) => {
+  const [drawer, setDrawer] = useState(initialDrawer);
   const handleEvent = (event: ChatEvent) => {
-    if (event.type === 'toggle-tasks') {
-      setTasksVisible((visible) => !visible);
+    if (event.type === 'set-drawer') {
+      setDrawer(event.drawer);
     }
   };
 
-  return <ChatActions {...args} tasksVisible={tasksVisible} onSend={() => {}} onEvent={handleEvent} />;
+  return (
+    <ChatActions
+      {...args}
+      drawers={{ available: ['tasks', 'context'], open: drawer }}
+      onSend={() => {}}
+      onEvent={handleEvent}
+    />
+  );
 };
 
 const meta = {
@@ -45,25 +53,25 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { canSend: true, tasksVisible: true },
+  args: { canSend: true, drawer: 'tasks' },
 };
 
 /** Mid-turn: the same control the reader just sent with is now the one that stops it. */
 export const Processing: Story = {
-  args: { processing: true, canSend: false, tasksVisible: true },
+  args: { processing: true, canSend: false, drawer: 'tasks' },
 };
 
-export const TasksHidden: Story = {
-  args: { canSend: true, tasksVisible: false },
+export const DrawersClosed: Story = {
+  args: { canSend: true },
 };
 
 /** Nothing typed yet: the send control is present but inert. */
 export const Empty: Story = {
-  args: { canSend: false, tasksVisible: true },
+  args: { canSend: false, drawer: 'tasks' },
 };
 
 export const SendIsOneControl: Story = {
-  args: { canSend: true, tasksVisible: true },
+  args: { canSend: true, drawer: 'tasks' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -77,7 +85,7 @@ export const SendIsOneControl: Story = {
 };
 
 export const StopReplacesSendWhileProcessing: Story = {
-  args: { processing: true, canSend: false, tasksVisible: true },
+  args: { processing: true, canSend: false, drawer: 'tasks' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     // Same control, same handle — the mode is what changed.
@@ -95,7 +103,7 @@ export const StopReplacesSendWhileProcessing: Story = {
  * reader just typed.
  */
 export const SendWhileProcessingWithText: Story = {
-  args: { processing: true, canSend: true, tasksVisible: true },
+  args: { processing: true, canSend: true, drawer: 'tasks' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const send = await canvas.findByTestId('assistant.send', {}, { timeout: 10_000 });
@@ -104,14 +112,18 @@ export const SendWhileProcessingWithText: Story = {
   },
 };
 
-export const TaskToggleFlips: Story = {
-  args: { canSend: true, tasksVisible: true },
+export const DrawerTogglesAreExclusive: Story = {
+  args: { canSend: true, drawer: 'tasks' },
   play: async ({ canvasElement, userEvent }) => {
     const canvas = within(canvasElement);
-    const toggle = await canvas.findByTestId('assistant.toggle-tasks', {}, { timeout: 10_000 });
-    await expect(toggle).toHaveAttribute('aria-pressed', 'true');
-    await userEvent.click(toggle);
+    const tasks = await canvas.findByTestId('assistant.toggle-tasks', {}, { timeout: 10_000 });
+    const context = canvas.getByTestId('assistant.toggle-context');
+    await expect(tasks).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.click(context);
+    await expect(canvas.getByTestId('assistant.toggle-context')).toHaveAttribute('aria-pressed', 'true');
     await expect(canvas.getByTestId('assistant.toggle-tasks')).toHaveAttribute('aria-pressed', 'false');
+    await userEvent.click(canvas.getByTestId('assistant.toggle-context'));
+    await expect(canvas.getByTestId('assistant.toggle-context')).toHaveAttribute('aria-pressed', 'false');
   },
 };
 
@@ -134,7 +146,7 @@ const plainContributedActions = Atom.make<ActionGraphProps>({
  * commentable objects.
  */
 export const ContributedPlainAction: Story = {
-  args: { canSend: true, tasksVisible: true },
+  args: { canSend: true, drawer: 'tasks' },
   render: (args) => <DefaultStory {...args} customActions={plainContributedActions} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { type ItemContent } from '@dxos/react-ui-feed';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { createRenderer, linkBareObjectUris } from './renderer.ts';
+import { createRenderer, linkBareObjectUris, parseMentions } from './renderer.ts';
 
 describe('createRenderer', () => {
   test('a run of tool calls is one panel', ({ expect }) => {
@@ -124,6 +124,14 @@ describe('createRenderer', () => {
     expect(text).not.toContain('the selection');
   });
 
+  test('a mention in a prompt renders as its name, not as link markup', ({ expect }) => {
+    const text = renderUser(
+      userMessage([ContentBlock.Text.make({ text: 'compare [Q4 \\[draft\\]](echo:///01ABC) <now>' })]),
+    );
+
+    expect(text).toBe('<prompt>compare Q4 [draft] &lt;now&gt;</prompt>');
+  });
+
   // `collapseToolRuns` keeps the first message's identity, and the previous turn's trailing `stats`
   // message starts the run — so an alarm turn's synthetic prompt lands on an assistant-role message.
   // Keyed on the role, it rendered as the model's own prose with the panel frame gone.
@@ -211,5 +219,18 @@ describe('linkBareObjectUris', () => {
     const text =
       'Use `echo://SPACE1/OBJ1` and [x](echo://SPACE1/OBJ1)\n\n```\necho://SPACE1/OBJ1\n```\n\n~~~\n@echo://SPACE1/OBJ1\n~~~';
     expect(linkBareObjectUris(text, label)).toBe(text);
+  });
+});
+
+describe('parseMentions', () => {
+  test('finds each object link with its label, and ignores other links', ({ expect }) => {
+    expect(
+      parseMentions(
+        'compare [Q4 \\[draft\\]](echo:///01ABC) with [the docs](https://dxos.org) and [Spec](dxn:echo:@:01DEF)',
+      ),
+    ).toEqual([
+      { label: 'Q4 [draft]', uri: 'echo:///01ABC' },
+      { label: 'Spec', uri: 'dxn:echo:@:01DEF' },
+    ]);
   });
 });

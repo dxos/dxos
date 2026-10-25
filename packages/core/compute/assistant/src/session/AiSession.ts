@@ -74,6 +74,12 @@ export type RunProps<R = never> = {
    * thread's prompt, and it gets the tools for waiting on the threads beside it.
    */
   thread?: Trajectory.EventId;
+
+  /**
+   * Whether the turn may delegate to subagents (`thread_delegate`), which run in background threads; set by a host
+   * that schedules lanes. Turns that may delegate also get `thread_wait`.
+   */
+  delegation?: boolean;
 };
 
 export type TurnSource = TrajectoryStore.TurnSource;
@@ -251,11 +257,13 @@ export class Session extends Resource {
       const turn = yield* this.#beginTurn(params.model, params.thread);
       begun = turn;
       const turnToolkit =
-        params.thread === undefined
+        params.thread === undefined && !params.delegation
           ? params.toolkit
           : OpaqueToolkit.merge(
               ...(params.toolkit ? [params.toolkit] : []),
-              ThreadToolkit.make(this._feed, turn, Context.get(this._runtime, Database.Service).db),
+              ThreadToolkit.make(this._feed, turn, Context.get(this._runtime, Database.Service).db, {
+                delegate: params.delegation,
+              }),
             );
       const prompt = { source: params.source, resumed, written: false };
       markWork('session.history-loaded');

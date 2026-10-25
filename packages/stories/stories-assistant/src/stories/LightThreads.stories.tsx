@@ -3,14 +3,21 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, within } from 'storybook/test';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Operation from '@dxos/compute/Operation';
 
 import { StoryRole } from '../modules/index.ts';
-import { Calculate, CalculatorSkill, ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
+import {
+  Calculate,
+  CalculatorSkill,
+  ModuleContainer,
+  createDecorators,
+  storyParameters,
+  submitPrompt,
+} from '../testing/index.ts';
 
 const { text, reasoning, toolCall } = ScriptedLanguageModel;
 
@@ -31,7 +38,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** The prompts the demo sends, in order: a long job, then requests that arrive while it runs. */
-export const PROMPTS = {
+const PROMPTS = {
   research: 'Research the factorials of 5 to 9 and summarise them.',
   quick: 'Meanwhile, what is 17 × 23?',
   capital: 'And what is the capital of Australia?',
@@ -130,19 +137,6 @@ const script: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
   return { parts: [text('Done.')] };
 };
 
-/** Types a prompt into the chat editor and submits it. */
-const submitPrompt = async (canvasElement: HTMLElement, value: string) => {
-  const canvas = within(canvasElement);
-  const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
-  const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
-  if (!editor) {
-    throw new Error('Chat editor not found.');
-  }
-  await userEvent.click(editor);
-  await userEvent.type(editor, value, { delay: 15 });
-  await userEvent.keyboard('{Enter}');
-};
-
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
@@ -169,10 +163,12 @@ export const Scripted: Story = {
     await submitPrompt(canvasElement, PROMPTS.dependent);
 
     // The research went to the background as soon as the next prompt arrived.
-    await expect(await canvas.findByTestId('chat.lane-card', {}, { timeout: 30_000 })).toBeVisible();
-    await canvas.findByText(/17 × 23 = 391/, {}, { timeout: 30_000 });
+    const [card] = await canvas.findAllByTestId('chat.lane-card', {}, { timeout: 30_000 });
+    await expect(card).toBeVisible();
+    // An answer can show twice (in its lane and where it lands), so any match counts.
+    await canvas.findAllByText(/17 × 23 = 391/, {}, { timeout: 30_000 });
     // The translation waits for the research, then answers from it.
-    await canvas.findByText(/chacun est le précédent/, {}, { timeout: 60_000 });
+    await canvas.findAllByText(/chacun est le précédent/, {}, { timeout: 60_000 });
     const headers = await canvas.findAllByTestId('chat.lane-header');
     await expect(headers.length).toBeGreaterThanOrEqual(2);
   },

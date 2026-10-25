@@ -197,7 +197,8 @@ export type Lane = {
   /**
    * Whether a newer lane of the same owner opened while this one ran: the reader moved on to the newer request, so
    * this one works in the background from then on. Another owner's lane does not background it; agents talking to the
-   * reader at once stay side by side.
+   * reader at once stay side by side. A delegated subagent (a `fresh` thread on main) is in the background from the
+   * start.
    */
   readonly backgrounded?: boolean;
 };
@@ -267,6 +268,8 @@ const openLane = (
     created: event.created,
     ...lane,
     ...(running.length > 0 ? { overlapped: true } : {}),
+    // A fresh thread on main is a delegated subagent: the reader never asked it anything, so it works out of view.
+    ...(lane.kind === 'fresh' ? { backgrounded: true } : {}),
   });
   return true;
 };

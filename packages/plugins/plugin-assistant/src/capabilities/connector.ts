@@ -107,6 +107,7 @@ export default Capability.makeModule(
         id: ANTHROPIC_PROVIDER_ID,
         source: ANTHROPIC_SOURCE,
         label: 'Anthropic',
+        kind: 'custom',
         credentialForm: makeCredentialForm({
           schema: AnthropicTokenForm,
           source: ANTHROPIC_SOURCE,
@@ -118,6 +119,7 @@ export default Capability.makeModule(
         id: DEEPSEEK_PROVIDER_ID,
         source: DEEPSEEK_SOURCE,
         label: 'DeepSeek',
+        kind: 'custom',
         credentialForm: makeCredentialForm({
           schema: DeepSeekTokenForm,
           source: DEEPSEEK_SOURCE,

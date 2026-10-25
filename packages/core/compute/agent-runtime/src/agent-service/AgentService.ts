@@ -441,7 +441,11 @@ const makeSession = (
     Effect.flatMap(isFinished, (finished) =>
       finished
         ? resubmit(prompt, options)
-        : process.submitInput(options?.sender ? { prompt, sender: options.sender } : prompt),
+        : process.submitInput(options?.sender ? { prompt, sender: options.sender } : prompt).pipe(
+            // A process that finishes while the input is persisted skips its handler, dropping the prompt;
+            // once the handler starts the process cannot finish before it, so terminal here means dropped.
+            Effect.andThen(() => (Process.isTerminal(process.status.state) ? resubmit(prompt, options) : Effect.void)),
+          ),
     ),
   // Derived from the process's status atom, written on the app-wide registry the UI reads.
   running: Atom.make(

@@ -25,6 +25,7 @@ export default Capability.makeModule(
         // Nominal default; the real `AccessToken.source` (host) is captured by the credential form.
         source: JMAP_DEFAULT_HOST,
         label: 'JMAP Mail',
+        kind: 'user',
         // Non-OAuth: host + email + Bearer API token, validated against the live session on submit.
         credentialForm: jmapCredentialForm,
         sync: {

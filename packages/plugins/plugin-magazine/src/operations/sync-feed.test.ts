@@ -4,16 +4,21 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, vi } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Ref, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 
 import { MagazineOperationHandlerSet } from '#operations';
 import { FeedOperation, Subscription } from '#types';
+
+import syncFeed from './sync-feed.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -139,6 +144,68 @@ describe('SyncFeed', () => {
         const items = yield* Feed.query(echoFeed, Filter.type(Subscription.Post)).run;
         expect(items).toHaveLength(1);
         expect(items[0].link).toBe('https://example.com/shared');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.withStubbedFetch,
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'progress totals only the posts a sync adds and completes at that count',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const subscriptionFeed = yield* Database.add(
+          Subscription.makeSubscription({ name: 'feed', url: 'https://example.com/rss' }),
+        );
+        yield* Database.flush();
+        yield* Operation.invoke(FeedOperation.SyncFeed, { feed: Ref.make(subscriptionFeed) });
+
+        // Upstream publishes one more post; the two already synced must not count toward the total.
+        const xmlWithNewPost = RSS_XML.replace(
+          '<item>',
+          `<item>
+      <title>Post C</title>
+      <link>https://example.com/c</link>
+      <guid>post-c</guid>
+      <description>C body</description>
+      <pubDate>Fri, 03 Apr 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>`,
+        );
+        vi.stubGlobal(
+          'fetch',
+          vi.fn(async () => new Response(xmlWithNewPost, { headers: { 'content-type': 'application/xml' } })),
+        );
+
+        const statusUpdates: Trace.PayloadType<typeof Trace.StatusUpdate>[] = [];
+        const traceLayer = Trace.testTraceService().pipe(
+          Layer.provide(
+            Layer.succeed(Trace.TraceSink, {
+              write: (message) => {
+                for (const event of Trace.flatten(message)) {
+                  if (Trace.isOfType(Trace.StatusUpdate, event)) {
+                    statusUpdates.push(event.data);
+                  }
+                }
+              },
+            }),
+          ),
+        );
+        // The operation runtime traces to the test layer's own sink, so call the handler directly to capture.
+        yield* syncFeed.handler({ feed: Ref.make(subscriptionFeed) }).pipe(Effect.provide(traceLayer));
+
+        const progressKey = FeedOperation.createSyncProgressKey(subscriptionFeed);
+        expect(statusUpdates.every((update) => update.progress?.key === progressKey)).toBe(true);
+        const totals = statusUpdates
+          .map((update) => update.progress?.total)
+          .filter((total): total is number => total !== undefined);
+        expect(totals).toEqual([1, 1]);
+        const counts = statusUpdates
+          .map((update) => update.progress?.current)
+          .filter((current): current is number => current !== undefined);
+        expect(counts.at(-1)).toBe(1);
+        expect(statusUpdates.at(-1)?.message).toBe(Progress.STATUS_COMPLETE);
       },
       Effect.provide(TestLayer),
       TestHelpers.withStubbedFetch,

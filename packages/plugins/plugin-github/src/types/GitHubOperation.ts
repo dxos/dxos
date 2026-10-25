@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
+import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, DXN, Obj, Ref } from '@dxos/echo';
@@ -38,6 +39,7 @@ export const GetGitHubRepositories = Operation.make({
   },
   input: ConnectorSpec.GetSyncTargetsInput,
   output: ConnectorSpec.GetSyncTargetsOutput,
+  services: [Credential.CredentialsService],
 });
 
 /**
@@ -95,6 +97,7 @@ export const SyncGitHubRepositories = Operation.make({
       comments: Schema.Number,
     }),
   }),
+  services: [Trace.TraceService, Credential.CredentialsService],
 }).pipe(Operation.visible);
 
 /**
@@ -112,7 +115,7 @@ export const ImportPullRequest = Operation.make({
     description: 'Add a pull request to the space, named by its URL or as owner/repo#number.',
     icon: 'ph--git-pull-request--regular',
   },
-  services: [Database.Service],
+  services: [Database.Service, Credential.CredentialsService],
   input: Schema.Struct({
     /** A github.com pull request URL, or `owner/repo#123`. */
     reference: Schema.String,
@@ -182,7 +185,7 @@ export const GenerateWalkthrough = Operation.make({
   types: [Walkthrough.Walkthrough, PullRequest.PullRequest],
   // `AiService` must be declared, not merely provided: the invoker builds the runtime from THIS list
   // and `Layer.orDie` clears a layer's error channel, never its requirement.
-  services: [Trace.TraceService, AiService.AiService],
+  services: [Trace.TraceService, AiService.AiService, Credential.CredentialsService],
 }).pipe(Operation.visible);
 
 /**
@@ -214,6 +217,7 @@ export const SubmitPullRequestApproval = Operation.make({
     commented: Schema.Boolean,
   }),
   types: [PullRequest.PullRequest],
+  services: [Credential.CredentialsService],
 });
 
 /** Post a conversation comment on a pull request, as the space's GitHub connection. */
@@ -233,6 +237,7 @@ export const AddPullRequestComment = Operation.make({
     url: Schema.String.pipe(Schema.optional),
   }),
   types: [PullRequest.PullRequest],
+  services: [Credential.CredentialsService],
 });
 
 /** Post a review comment on one line of a pull request's diff, as the space's GitHub connection. */
@@ -258,6 +263,7 @@ export const AddPullRequestReviewComment = Operation.make({
     url: Schema.String.pipe(Schema.optional),
   }),
   types: [PullRequest.PullRequest],
+  services: [Credential.CredentialsService],
 });
 
 /**
@@ -279,6 +285,7 @@ export const SyncPullRequest = Operation.make({
     updated: Schema.Array(Schema.String),
   }),
   types: [PullRequest.PullRequest],
+  services: [Credential.CredentialsService],
 }).pipe(Operation.mutation('write'));
 
 /**
@@ -294,7 +301,7 @@ export const RefreshPullRequests = Operation.make({
     description: 'Refresh every open pull request in the space from GitHub.',
     icon: 'ph--arrows-clockwise--regular',
   },
-  services: [Database.Service],
+  services: [Database.Service, Credential.CredentialsService],
   input: Schema.Struct({}),
   output: Schema.Struct({
     /** Open pull requests read from GitHub. */
@@ -370,6 +377,7 @@ export const GetPullRequestStatus = Operation.make({
     approvals: Schema.Number,
   }),
   types: [PullRequest.PullRequest],
+  services: [Credential.CredentialsService],
 });
 
 /**
@@ -391,6 +399,7 @@ export const GetPullRequestDiff = Operation.make({
     diff: Schema.String,
   }),
   types: [PullRequest.PullRequest],
+  services: [Credential.CredentialsService],
 });
 
 /**

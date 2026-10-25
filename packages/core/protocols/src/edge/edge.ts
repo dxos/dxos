@@ -350,6 +350,9 @@ export const InitiateOAuthFlowRequestSchema = Schema.Struct({
   spaceId: Schema.String.pipe(Schema.refine(SpaceId.isValid)), // TODO(burdon): Use SpaceId.
   accessTokenId: Schema.String,
   scopes: Schema.mutable(Schema.Array(Schema.String)),
+  // Whose identity the grant acts as: the authorizing user (default) or DXOS's registered app. For
+  // GitHub an app grant is an App installation rather than an OAuth grant.
+  kind: Schema.optional(Schema.Literals(['user', 'app'])),
   // Set to true if we don't want periodic token refreshes in background, for cases like account connect
   noRefresh: Schema.optional(Schema.Boolean),
   // Provider-specific (user handle or did for atproto) hint for auth server resolution

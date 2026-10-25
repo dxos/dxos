@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# System packages, Node, pnpm and Playwright's native dependencies, shared by both CI environments: the
-# GitHub Actions container (`Dockerfile`) and the Depot CI image (`.depot/workflows/ci-image.yml`).
+# System packages, Node, pnpm and Playwright's native dependencies for the GitHub Actions container
+# (`Dockerfile`).
 # Runs as root.
 #
 # Node and pnpm only bootstrap CI: the setup action runs `pnpm install` before any moon task, so these

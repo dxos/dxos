@@ -4,21 +4,24 @@
 
 // @import-as-namespace
 
+import * as Instructions from '@dxos/compute/Instructions';
+import * as Project from '@dxos/compute/Project';
 import { type Database, Ref, Relation } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { File, Milestone, PullRequest, Task } from '@dxos/types';
 
-import { Feature, FeatureMap, Showcase } from '#types';
+import { Feature, Showcase } from '#types';
 
 import { type FeatureModel } from '../components/FeatureCard/feature.ts';
 import { SAMPLE_FEATURES } from '../components/FeatureCard/testing.ts';
 
-/** The types a database needs to hold a seeded map. */
+/** The types a database needs to hold a seeded project. */
 export const types = [
   Feature.Feature,
   Feature.DependsOn,
   Feature.Implements,
-  FeatureMap.FeatureMap,
+  Project.Project,
+  Instructions.Instructions,
   Showcase.Showcase,
   Showcase.Demonstrates,
   Task.Task,
@@ -31,12 +34,13 @@ export const types = [
 /**
  * Writes card models into a database as the objects and relations they are derived from — features with
  * their subfeatures, `DependsOn`, tasks and milestones with `Implements`, and showcases with `Demonstrates` —
- * and a map listing the top-level features. Ids in the models are only keys within the seed.
+ * all in one project. Ids in the models are only keys within the seed.
  */
 export const seed = (
   db: Database.Database,
   { name = 'Inbox and agents', features = SAMPLE_FEATURES }: { name?: string; features?: readonly FeatureModel[] } = {},
-): FeatureMap.FeatureMap => {
+): Project.Project => {
+  const project = db.add(Project.make({ name }));
   const objects = new Map<string, Feature.Feature>();
   for (const model of features) {
     const feature = db.add(
@@ -46,6 +50,7 @@ export const seed = (
         status: model.status,
         specs: [...model.specs],
         subfeatures: model.subfeatures.map((subfeature) => ({ ...subfeature })),
+        project: Ref.make(project),
       }),
     );
     objects.set(model.id, feature);
@@ -90,5 +95,5 @@ export const seed = (
     }
   }
 
-  return db.add(FeatureMap.make({ name, features: [...objects.values()].map((feature) => Ref.make(feature)) }));
+  return project;
 };

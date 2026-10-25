@@ -5,22 +5,16 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Obj, Ref } from '@dxos/echo';
+import { Database } from '@dxos/echo';
 
 import { Feature, FeatureOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof FeatureOperation.Create> = FeatureOperation.Create.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ name, description, status = 'planned', specs, map: mapRef }) {
+    Effect.fn(function* ({ name, description, status = 'planned', specs, project }) {
       const feature = yield* Database.add(
-        Feature.make({ name, description, status, specs: specs ? [...specs] : undefined }),
+        Feature.make({ name, description, status, specs: specs ? [...specs] : undefined, project }),
       );
-      if (mapRef) {
-        const map = yield* Database.load(mapRef);
-        Obj.update(map, (map) => {
-          map.features.push(Ref.make(feature));
-        });
-      }
       yield* Database.flush();
       return { feature };
     }),

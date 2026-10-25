@@ -43,21 +43,26 @@ const titleOf = (messages: readonly Message.Message[]): string | undefined => {
   return value.length === 0 ? undefined : value.length > 80 ? `${value.slice(0, 79)}…` : value;
 };
 
-/** Rows reused while their text is unchanged, so a lane's card keeps its identity until its lane moves. */
-const rows = new Map<string, Message.Message>();
+/**
+ * Lane rows kept between arrangements of one chat: a row is reused while its text is unchanged, so a lane's card keeps
+ * its identity until its lane moves, and a row is not an event, so it keeps an id of its own, stable for the lane.
+ */
+export type LaneRowCache = {
+  readonly rows: Map<string, Message.Message>;
+  readonly ids: Map<string, string>;
+};
 
-/** Row ids by lane and kind: a row is not an event, so it gets an id of its own, stable for the lane. */
-const rowIds = new Map<string, string>();
+export const makeLaneRowCache = (): LaneRowCache => ({ rows: new Map(), ids: new Map() });
 
-const laneRow = (key: string, created: string, text: string): Message.Message => {
-  const cached = rows.get(key);
+const laneRow = (cache: LaneRowCache, key: string, created: string, text: string): Message.Message => {
+  const cached = cache.rows.get(key);
   if (cached && cached.blocks[0]?._tag === 'text' && cached.blocks[0].text === text) {
     return cached;
   }
-  const id = rowIds.get(key) ?? EntityId.random();
-  rowIds.set(key, id);
+  const id = cache.ids.get(key) ?? EntityId.random();
+  cache.ids.set(key, id);
   const row = Message.make({ id, created, sender: { role: 'assistant' }, blocks: [{ _tag: 'text', text }] });
-  rows.set(key, row);
+  cache.rows.set(key, row);
   return row;
 };
 
@@ -77,6 +82,7 @@ export const arrangeLanes = ({
   lanes,
   laneOf: laneOfMessage,
   delivery,
+  cache = makeLaneRowCache(),
 }: {
   messages: readonly Message.Message[];
   tail: number;
@@ -85,6 +91,8 @@ export const arrangeLanes = ({
   laneOf: ReadonlyMap<string, string>;
   /** A prompt's row is keyed by its outbox id; its delivery names the message it became. */
   delivery?: ReadonlyMap<string, { entryId?: string; turnId?: string }>;
+  /** Rows kept from the chat's previous arrangement; a fresh cache when absent. */
+  cache?: LaneRowCache;
 }): LaneArrangement => {
   const laneOf = (id: string): string | undefined => {
     const row = delivery?.get(id);
@@ -164,7 +172,7 @@ export const arrangeLanes = ({
           lane: { ...toThreadLane(lane), first: undefined },
           lines: (buckets.get(lane.id) ?? []).flatMap(toLines).slice(-CARD_LINES),
         };
-        arranged.push(laneRow(`lane:${lane.id}`, lane.created, laneTag(data)));
+        arranged.push(laneRow(cache, `lane:${lane.id}`, lane.created, laneTag(data)));
       }
       if (finals.get(lane.id) === message.id) {
         shown(lane, message);
@@ -172,5 +180,13 @@ export const arrangeLanes = ({
     }
   }
 
+  // Only the lanes in this chat keep rows, so the cache is bounded by the chat rather than growing with every lane.
+  const live = new Set(lanes.map((lane) => `lane:${lane.id}`));
+  for (const key of cache.rows.keys()) {
+    if (!live.has(key)) {
+      cache.rows.delete(key);
+      cache.ids.delete(key);
+    }
+  }
   return { messages: [...arranged, ...messages.slice(messages.length - tail)], lanes: chrome };
 };

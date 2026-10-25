@@ -7,9 +7,9 @@ import { lazy } from 'react';
 
 import { type FeatureArticleProps } from './FeatureArticle/index.ts';
 import { type FeatureCardContentProps } from './FeatureCardContent/index.ts';
-import { type FeatureMapArticleProps } from './FeatureMapArticle/index.ts';
 import { type MoveTaskDialogProps } from './MoveTaskDialog/index.ts';
 import { type ProjectBranchArticleProps } from './ProjectBranchArticle/index.ts';
+import { type ProjectFeaturesProps } from './ProjectFeatures/index.ts';
 import { type ShowcaseArticleProps } from './ShowcaseArticle/index.ts';
 import { type ShowcaseCardContentProps } from './ShowcaseCardContent/index.ts';
 
@@ -21,8 +21,9 @@ export const FeatureCardContent: ComponentType<FeatureCardContentProps> = lazy((
   import('./FeatureCardContent/index.ts').then((module) => ({ default: module.FeatureCardContent })),
 );
 
-export const FeatureMapArticle: ComponentType<FeatureMapArticleProps> = lazy(() =>
-  import('./FeatureMapArticle/index.ts').then((module) => ({ default: module.FeatureMapArticle })),
+// Lazy: the canvas engine is large, and only the Features tab needs it.
+export const ProjectFeatures: ComponentType<ProjectFeaturesProps> = lazy(() =>
+  import('./ProjectFeatures/index.ts').then((module) => ({ default: module.ProjectFeatures })),
 );
 
 export const ProjectArticle: ComponentType<any> = lazy(() =>
