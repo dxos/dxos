@@ -227,7 +227,7 @@ rule scroll-list-pads-and-gaps: A scrolling list of cards is padded by its viewp
   files:
     - packages/plugins/**/*.tsx
     - packages/ui/**/*.tsx
-  grep: ScrollArea\.Viewport
+  grep: ScrollArea\.Viewport|Mosaic\.Stack|Card\.Root|CardTile\.
   unit: file
   context: imports
   system-one: on
