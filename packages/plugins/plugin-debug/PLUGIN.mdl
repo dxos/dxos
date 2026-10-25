@@ -488,6 +488,101 @@ test QA-9: Hello Worker — the agent finishes the spec, plans the work and ship
       expect: every task but the claim done or in review, and the Worker URL and its response filed on the project
 ```
 
+```mdl
+test QA-10: Shogi Plugin — the agent finishes the spec, plans the work and publishes the plugin to the registry
+  desc: |
+    The Shogi Plugin template run on camera: Hello Worker's shape with the plugin toolchain's ending. The space holds
+    a partial spec, the project's feature map and three planning tasks; one chat assigned all three completes the
+    spec in Composer, draws it on the canvas, files the implementation as tasks of its own linked to the features,
+    and works them in a sandbox on EDGE until `dx registry publish --private` uploads the plugin. Nothing is loaded by
+    URL: the reader installs Shogi from Plugins → Registry, opens its Board page and plays 7g-7f. Recorded by
+    autocue/shogi-plugin.mjs.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists, on a fresh profile, associated with an account on an EDGE that runs registry-service and whose AI and sandbox services serve the chosen model
+    - Composer is a production bundle built with a plugin toolchain (`DX_PLUGIN_TOOLCHAIN_COMMIT` naming a commit pkg.pr.new has published), so the template is offered
+    - plugin-debug, Code and Sandbox are enabled (dev-only defaults); Illustrator and Canvas are on by default
+    - no plugin named "Shogi" is installed
+  steps:
+    - name: Create a space from the Shogi Plugin template
+      do: Add a space and pick the "Shogi Plugin" template.
+      expect: the space opens with the "Shogi" project in the navtree
+    - name: Open the project and its tasks
+      do: Open the project and its Tasks tab.
+      expect: three todo tasks, "Complete the spec", "Draw the proposed architecture", "Plan the implementation as tasks"
+    - name: Open the feature map and the spec
+      do: Open the Features tab as Kanban, then "Board" and its spec row.
+      expect: four planned features; the spec renders in Composer with F-1 written and F-2 to F-4 only named
+    - name: Assign the planning tasks to the agent
+      do: Back on Tasks, tick all three and assign them to the agent.
+      expect: the Gantt opens with one band for the chat and a lane for each task
+    - name: Watch the spec fill in
+      do: Wait for "Complete the spec", then open the spec.
+      expect: the spec has a `feat` block for each of F-2 to F-4 and a new Changelog decision
+    - name: Open the diagram from the project
+      do: Wait for the diagram task, then open the project's Overview and the drawing.
+      expect: a drawing of the sandbox on EDGE, the plugin's build, the private registry and Composer installing it
+    - name: Watch the plan become tasks
+      do: Back on Tasks, wait for the plan task.
+      expect: new implementation tasks under the plan, each linked on the feature map; the install is assigned to you
+    - name: Watch the plugin publish
+      do: Wait for the agent's implementation tasks.
+      expect: every task but the install done or in review, and the chat reports an `Uploaded:` line
+    - name: Install Shogi from the registry
+      do: Open Plugins, then Registry, find the Shogi card and click Install.
+      expect: Shogi is listed without being loaded by URL, and installing it enables and activates it
+    - name: Open the board and play a move
+      do: Click Board under the Shogi group, then the pawn on 7g and the square 7f.
+      expect: the board shows the starting position, then sente's pawn on 7f
+```
+
+```mdl
+test QA-11: World Clock Plugin — the agent finishes the spec, plans the work and publishes the plugin to the registry
+  desc: |
+    QA-10's run for the plugin the Composer Plugin project template builds, so it compares with that template's World
+    Clock runs (plugin-projects QA-2). The space holds a partial spec, the project's feature map and three planning
+    tasks; one chat assigned all three completes the spec in Composer, draws it, files the implementation as tasks of
+    its own and works them in a sandbox on EDGE until `dx registry publish --private` uploads the plugin. The reader
+    installs World Clock from Plugins → Registry, opens its Clocks page and adds two timezones. Recorded by
+    autocue/world-clock-plugin.mjs.
+  actors: human
+  status: unverified
+  given:
+    - QA-10's given, with no plugin named "World Clock" installed
+  steps:
+    - name: Create a space from the World Clock Plugin template
+      do: Add a space and pick the "World Clock Plugin" template.
+      expect: the space opens with the "World Clock" project in the navtree
+    - name: Open the project and its tasks
+      do: Open the project and its Tasks tab.
+      expect: three todo tasks, "Complete the spec", "Draw the proposed architecture", "Plan the implementation as tasks"
+    - name: Open the feature map and the spec
+      do: Open the Features tab as Kanban, then "Clocks page" and its spec row.
+      expect: four planned features; the spec renders in Composer with F-1 written and F-2 to F-4 only named
+    - name: Assign the planning tasks to the agent
+      do: Back on Tasks, tick all three and assign them to the agent.
+      expect: the Gantt opens with one band for the chat and a lane for each task
+    - name: Watch the spec fill in
+      do: Wait for "Complete the spec", then open the spec.
+      expect: the spec has a `feat` block for each of F-2 to F-4 and a new Changelog decision
+    - name: Open the diagram from the project
+      do: Wait for the diagram task, then open the project's Overview and the drawing.
+      expect: a drawing of the sandbox on EDGE, the plugin's build, the private registry and Composer installing it
+    - name: Watch the plan become tasks
+      do: Back on Tasks, wait for the plan task.
+      expect: new implementation tasks under the plan, each linked on the feature map; the install is assigned to you
+    - name: Watch the plugin publish
+      do: Wait for the agent's implementation tasks.
+      expect: every task but the install done or in review, and the chat reports an `Uploaded:` line
+    - name: Install World Clock from the registry
+      do: Open Plugins, then Registry, find the World Clock card and click Install.
+      expect: World Clock is listed without being loaded by URL, and installing it enables and activates it
+    - name: Open the Clocks page and add two timezones
+      do: Click Clocks under the World Clock group, then add Asia/Tokyo and Europe/London with the plus card.
+      expect: the page shows the map above three ticking clock cards and the plus card
+```
+
 ## Changelog
 
 Every change to this spec adds a decision, newest last. See `lang/changelog.mdl` for the attribution rules.
@@ -507,4 +602,38 @@ decision D-2: The take assigns all three planning tasks to one chat and never sh
   affects: [QA-9]
   why: One chat keeps the spec it wrote in its context when it plans and builds; the claim URL is a bearer credential for the account.
   rejected: Stopping before the deploy, as the take did before, which would not show the Worker answering.
+```
+
+```mdl
+decision D-3: [QA-10] records the Shogi Plugin template the same way, ending in the private plugin registry: the assistant completes the spec, draws it, files the implementation as tasks and works them until the plugin is published, and I install it from Plugins → Registry and play a move.
+  date: 2026-10-22
+  by: user:dmaretskyi
+  affects: [QA-10]
+```
+
+```mdl
+decision D-4: The Shogi Plugin template is offered only where the toolchain exists, scopes the game to moves, captures and promotion, and ends the take on a move the spec's test ids make clickable. Fills in [D-3].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-10]
+  why: The brief pins the plugin to the commit and EDGE the app was built for, so without both there is nothing to publish to; drops would roughly double the rules an agent must get right in one run.
+  rejected: Chess, which plugin-chess already contributes, so an agent-built one would collide with it in the registry list and in its ids.
+```
+
+```mdl
+decision D-5: [QA-11] records the World Clock plugin the same way as [QA-10], from a feature map and a spec in Composer, so it compares with the Composer Plugin template's World Clock runs.
+  date: 2026-10-22
+  by: user:dmaretskyi
+  affects: [QA-11]
+```
+
+```mdl
+decision D-6: QA-10 and QA-11 share one plugin template (`src/samples/plugin`) and one flow (`autocue/plugin-template.mjs`); each plugin supplies its spec, features, brief and finale. Fills in [D-5].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-10, QA-11]
+  why: The run around a plugin is the same for every plugin, so a second copy would drift from the first.
+  rejected: Adding the feature map and spec to the Composer Plugin project template, whose tasks are the World Clock build steps written out and which plugin-projects QA-1 and QA-2 already record.
 ```

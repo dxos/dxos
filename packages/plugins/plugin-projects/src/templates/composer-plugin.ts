@@ -52,7 +52,7 @@ const DXOS_PACKAGES = [
 export const GUIDE = 'docs/src/content/docs/docs/composer/publishing-plugins.md';
 
 /** pnpm checks `engines` against a node it cannot find under bun alone, and would skip rolldown's native binding. */
-const NPMRC = 'node-version=24.11.1\n';
+export const NPMRC = 'node-version=24.11.1\n';
 
 /** The run's brief; `outcome` is how the built plugin reaches this app. */
 const parentInstructions = (outcome: string): string => `Build the Composer plugin described by the task list in \
@@ -94,17 +94,25 @@ export const writePlugin = (folder: string, build: string, extra = ''): TaskSeed
   estimate: 's',
 });
 
+/** The plugin a `package.json` is for: its npm name and the `@dxos/*` packages it imports. */
+export type PluginPackage = { name: string; packages: readonly string[] };
+
+const WORLD_CLOCK_PACKAGE: PluginPackage = { name: 'world-clock', packages: DXOS_PACKAGES };
+
 /** The `package.json` that installs what the host was built from, so the plugin compiles against the API it runs on. */
-export const packageJson = ({ commit, versions }: PluginToolchain): string =>
+export const packageJson = (
+  { commit, versions }: PluginToolchain,
+  { name, packages }: PluginPackage = WORLD_CLOCK_PACKAGE,
+): string =>
   JSON.stringify(
     {
-      name: 'world-clock',
+      name,
       version: '0.1.0',
       private: true,
       type: 'module',
       dependencies: {
         ...Object.fromEntries(
-          DXOS_PACKAGES.map((name) => [`@dxos/${name}`, `https://pkg.pr.new/@dxos/${name}@${commit}`]),
+          packages.map((dxosPackage) => [`@dxos/${dxosPackage}`, `https://pkg.pr.new/@dxos/${dxosPackage}@${commit}`]),
         ),
         'effect': versions.effect,
         'react': versions.react,
@@ -228,7 +236,8 @@ export const makeComposerPlugin = (variant: Variant): ProjectCapabilities.Templa
 
 const decodeToolchain = Schema.decodeUnknownOption(Schema.fromJsonString(PluginToolchain));
 
-const readToolchain = (): PluginToolchain | undefined => {
+/** The toolchain composer-app's build stamped, or nothing in a build that could not read one. */
+export const readToolchain = (): PluginToolchain | undefined => {
   const stamped = import.meta.env?.VITE_DX_PLUGIN_TOOLCHAIN;
   return stamped ? Option.getOrUndefined(decodeToolchain(stamped)) : undefined;
 };
