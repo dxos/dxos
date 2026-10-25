@@ -17,11 +17,10 @@ import { resolveAttachments } from './attachments.ts';
 
 const KEY = 'ab'.repeat(32);
 
-const addFile = (name: string, blob: Parameters<typeof Blob.make>[0]) =>
-  Effect.gen(function* () {
-    const data = yield* Database.add(Blob.make(blob));
-    return yield* Database.add(File.make({ name, data: Ref.make(data) }));
-  });
+const addFile = Effect.fnUntraced(function* (name: string, blob: Parameters<typeof Blob.make>[0]) {
+  const data = yield* Database.add(Blob.make(blob));
+  return yield* Database.add(File.make({ name, data: Ref.make(data) }));
+});
 
 const TestLayer = TestDatabaseLayer({ types: [File.File, Blob.Blob] });
 

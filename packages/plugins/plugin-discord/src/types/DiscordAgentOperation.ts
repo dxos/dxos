@@ -20,13 +20,6 @@ import * as DiscordBot from './DiscordBot.ts';
 
 const agent = Ref.Ref(Agent.Agent).annotate({ description: 'The agent acting.' });
 
-const files = Schema.optional(
-  Schema.Array(Ref.Ref(File.File)).annotate({
-    description:
-      'Files to attach (images, videos, documents up to 10 MB each), as references to File objects in the space.',
-  }),
-);
-
 const Posted = Schema.Struct({
   channel: Schema.String.annotate({ description: 'The Discord channel (or DM) it was posted in.' }),
   message: Schema.optional(Schema.String.annotate({ description: 'The id of the message posted.' })),
@@ -51,7 +44,12 @@ export const Reply = Operation.make({
     replyTo: Schema.optional(
       Schema.String.annotate({ description: 'A message id (`message` in the header) to reply to.' }),
     ),
-    files,
+    files: Schema.optional(
+      Schema.Array(Ref.Ref(File.File)).annotate({
+        description:
+          'Files to attach (images, videos, documents up to 10 MB each), as references to File objects in the space.',
+      }),
+    ),
   }),
   output: Posted,
 });
@@ -71,7 +69,12 @@ export const DirectMessage = Operation.make({
       description: 'The person: their Discord user id (`from` in the header), @username, or name as you know them.',
     }),
     text: Schema.String.annotate({ description: 'The message, in Discord markdown.' }),
-    files,
+    files: Schema.optional(
+      Schema.Array(Ref.Ref(File.File)).annotate({
+        description:
+          'Files to attach (images, videos, documents up to 10 MB each), as references to File objects in the space.',
+      }),
+    ),
   }),
   output: Posted,
 });
