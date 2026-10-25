@@ -82,6 +82,18 @@ describe('feed options', () => {
     await expect.poll(async () => (await searchText(reader, 'hello')).length, { timeout: 5_000 }).toBe(3);
   });
 
+  test('a space query that includes feeds returns the items of a feed with indexing disabled', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task], assignQueuePositions: true });
+    const { db, reader, feed } = await openSpace(peer);
+    await appendTasks(db, feed, ['one', 'two']);
+    await EffectEx.runPromise(Feed.setIndexing(feed, { enabled: false }));
+    await settle(db);
+    const tasks = await reader
+      .query(Query.select(Filter.type(TestSchema.Task)).from(reader, { includeFeeds: true }))
+      .run();
+    expect(tasks.map((task) => task.title).sort()).toEqual(['one', 'two']);
+  });
+
   // index-core T-4.
   test('an item retention trims leaves the text index', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Task], assignQueuePositions: true });

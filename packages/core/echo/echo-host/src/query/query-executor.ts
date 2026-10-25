@@ -686,27 +686,24 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
   return scopes;
 };
 
-/** True when any select step (including those nested in UnionStep/SetDifferenceStep subplans) scopes the owning space with {@link QueryAST.SpaceScope.includeAllFeeds}. */
-const extractIncludeAllFeeds = (plan: QueryPlan.Plan): boolean => {
-  for (const step of plan.steps) {
-    if (step._tag === 'SelectStep') {
-      for (const scope of step.scope) {
-        if (scope._tag === 'space' && scope.includeAllFeeds === true) {
-          return true;
-        }
+/** The spaces any select step (including those nested in UnionStep/SetDifferenceStep subplans) scopes with {@link QueryAST.SpaceScope.includeAllFeeds}. */
+const extractAllFeedsSpaces = (plan: QueryPlan.Plan): Set<SpaceId> =>
+  new Set(
+    plan.steps.flatMap((step): SpaceId[] => {
+      switch (step._tag) {
+        case 'SelectStep':
+          return step.scope.flatMap((scope) =>
+            scope._tag === 'space' && scope.includeAllFeeds === true ? [scope.spaceId as SpaceId] : [],
+          );
+        case 'UnionStep':
+          return step.plans.flatMap((subplan) => [...extractAllFeedsSpaces(subplan)]);
+        case 'SetDifferenceStep':
+          return [...extractAllFeedsSpaces(step.source), ...extractAllFeedsSpaces(step.exclude)];
+        default:
+          return [];
       }
-    } else if (step._tag === 'UnionStep') {
-      if (step.plans.some((subplan) => extractIncludeAllFeeds(subplan))) {
-        return true;
-      }
-    } else if (step._tag === 'SetDifferenceStep') {
-      if (extractIncludeAllFeeds(step.source) || extractIncludeAllFeeds(step.exclude)) {
-        return true;
-      }
-    }
-  }
-  return false;
-};
+    }),
+  );
 
 const setsOverlap = <T>(a: ReadonlySet<T>, b: ReadonlySet<T>): boolean => {
   const [smaller, larger]: [ReadonlySet<T>, ReadonlySet<T>] = a.size <= b.size ? [a, b] : [b, a];
@@ -773,7 +770,7 @@ export class QueryExecutor extends Resource {
   /** Recompiles the plan with this run's feed cutoffs; absent when the plan was not compiled. */
   readonly #compile: ((feedCutoffs: ReadonlyMap<string, number>) => QueryPlan.Plan) | undefined;
   #scopes: QueryScopes;
-  readonly #includeAllFeeds: boolean;
+  readonly #allFeedsSpaces: ReadonlySet<SpaceId>;
   private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
   private _lastResultSet: QueryItem[] = [];
   #truncated: 'paths' | 'manifest' | undefined = undefined;
@@ -826,7 +823,7 @@ export class QueryExecutor extends Resource {
         : undefined;
     this._plan = this.#compile?.(new Map()) ?? plan;
     this.#scopes = extractScopes(this._plan);
-    this.#includeAllFeeds = extractIncludeAllFeeds(this._plan);
+    this.#allFeedsSpaces = extractAllFeedsSpaces(plan);
   }
 
   get queryId(): string {
@@ -1129,8 +1126,9 @@ export class QueryExecutor extends Resource {
   }
 
   /**
-   * Of the feeds the plan scopes to, those whose indexing is disabled, keyed by feed id, and the
-   * retention cutoff of those with a `maxAge`, keyed `<spaceId>/<feedId>`.
+   * Of the feeds the plan scopes to — by name, or as every feed of a space — those whose indexing is
+   * disabled, keyed by feed id, and the retention cutoff of the named ones with a `maxAge`, keyed
+   * `<spaceId>/<feedId>`.
    */
   async #readScopedFeeds(
     now: number,
@@ -1139,24 +1137,39 @@ export class QueryExecutor extends Resource {
     const feedCutoffs = new Map<string, number>();
     const feedStore = this.#feedStore;
     const feedRefs = extractQueueRefs(extractFeedUris(this.#uncompiledPlan)) ?? [];
-    if (!feedStore || feedRefs.length === 0) {
+    if (!feedStore || (feedRefs.length === 0 && this.#allFeedsSpaces.size === 0)) {
       return { storeFeeds, feedCutoffs };
     }
-    const spaceIds = new Set(
-      feedRefs.flatMap((ref) => (ref.spaceId !== undefined && SpaceId.isValid(ref.spaceId) ? [ref.spaceId] : [])),
-    );
+    const spaceIds = new Set([
+      ...this.#allFeedsSpaces,
+      ...feedRefs.flatMap((ref) => (ref.spaceId !== undefined && SpaceId.isValid(ref.spaceId) ? [ref.spaceId] : [])),
+    ]);
+    const addStoreFeed = async (spaceId: SpaceId, feedId: string) => {
+      const feedNamespace = await this._runInRuntime(feedStore.getFeedNamespace({ spaceId, feedId }));
+      if (feedNamespace !== undefined) {
+        storeFeeds.set(feedId, { spaceId, feedNamespace });
+      }
+    };
     for (const spaceId of spaceIds) {
       const options = await this.#listFeedOptions(spaceId);
+      if (this.#allFeedsSpaces.has(spaceId)) {
+        for (const [feedId, feedOptions] of options) {
+          if (feedOptions.indexing?.enabled === false) {
+            await addStoreFeed(spaceId, feedId);
+          }
+        }
+      }
       for (const ref of feedRefs) {
         const maxAge = ref.spaceId === spaceId ? options.get(ref.queueId)?.retention?.maxAge : undefined;
         if (maxAge !== undefined) {
           feedCutoffs.set(`${spaceId}/${ref.queueId}`, now - maxAge);
         }
-        if (ref.spaceId === spaceId && options.get(ref.queueId)?.indexing?.enabled === false) {
-          const feedNamespace = await this._runInRuntime(feedStore.getFeedNamespace({ spaceId, feedId: ref.queueId }));
-          if (feedNamespace !== undefined) {
-            storeFeeds.set(ref.queueId, { spaceId, feedNamespace });
-          }
+        if (
+          ref.spaceId === spaceId &&
+          !storeFeeds.has(ref.queueId) &&
+          options.get(ref.queueId)?.indexing?.enabled === false
+        ) {
+          await addStoreFeed(spaceId, ref.queueId);
         }
       }
     }
@@ -1196,16 +1209,16 @@ export class QueryExecutor extends Resource {
   }
 
   /**
-   * The current items of the store-read feeds `queues` names, one per object id at its latest block.
+   * The current items of the store-read feeds `refs` names, one per object id at its latest block.
    * A partial block (a removal tombstone) keeps the body of the block before it, as the index does.
    */
-  async #readStoreFeedItems(queues: readonly string[]): Promise<QueryItem[]> {
+  async #readStoreFeedItems(refs: readonly QueueRef[]): Promise<QueryItem[]> {
     const feedStore = this.#feedStore;
     if (!feedStore) {
       return [];
     }
     const items: QueryItem[] = [];
-    for (const ref of extractQueueRefs(queues) ?? []) {
+    for (const ref of refs) {
       const feed = this.#storeFeeds.get(ref.queueId);
       if (!feed || (ref.spaceId !== undefined && ref.spaceId !== feed.spaceId) || !EntityId.isValid(ref.queueId)) {
         continue;
@@ -1337,10 +1350,19 @@ export class QueryExecutor extends Resource {
       const ref = extractQueueRefs([feedUri])?.[0];
       return ref !== undefined && this.#storeFeeds.has(ref.queueId);
     };
-    const storeQueues = scopedQueues.filter(isStoreFeed);
+    const allFeedsSpaces = new Set(execSpaceScopes.flatMap((s) => (s.includeAllFeeds === true ? [s.spaceId] : [])));
+    const storeRefs = new Map<string, QueueRef>([
+      ...[...this.#storeFeeds]
+        .filter(([, feed]) => allFeedsSpaces.has(feed.spaceId))
+        .map(([queueId, feed]): [string, QueueRef] => [queueId, { queueId, spaceId: feed.spaceId }]),
+      ...(extractQueueRefs(scopedQueues.filter(isStoreFeed)) ?? []).map((ref): [string, QueueRef] => [
+        ref.queueId,
+        ref,
+      ]),
+    ]);
     const queues = scopedQueues.filter((feedUri) => !isStoreFeed(feedUri));
-    if (storeQueues.length > 0) {
-      const storeItems = selectStoreItems(step, await this.#readStoreFeedItems(storeQueues));
+    if (storeRefs.size > 0) {
+      const storeItems = selectStoreItems(step, await this.#readStoreFeedItems([...storeRefs.values()]));
       workingSet.push(...storeItems);
       trace.documentsLoaded += storeItems.length;
       if (queues.length === 0 && spaces.length === 0) {
@@ -2680,7 +2702,7 @@ export class QueryExecutor extends Resource {
     if (fromSpace) {
       return fromSpace;
     }
-    if (!this.#includeAllFeeds) {
+    if (this.#allFeedsSpaces.size === 0) {
       return null;
     }
 
@@ -3380,6 +3402,8 @@ const _sameResult = (a: QueryItem, b: QueryItem): boolean => {
     a.documentId === b.documentId &&
     a.queueId === b.queueId &&
     a.queueNamespace === b.queueNamespace &&
+    // A feed item read from the store has no record yet; a new block for it moves its version.
+    (a.queueId === null || (a.position === b.position && a.updatedAt === b.updatedAt)) &&
     // A property edit can move an item between groups without changing its flat position
     // (e.g. the last item of group A becomes the first item of group B at the same index).
     _serializeOptionalGroupKey(a.groupKey) === _serializeOptionalGroupKey(b.groupKey) &&
