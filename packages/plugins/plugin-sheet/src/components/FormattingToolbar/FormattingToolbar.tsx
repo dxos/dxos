@@ -22,8 +22,11 @@ const HIGHLIGHT_VIEWS: ColorPicker.View[] = ['swatches'];
 
 export type FormattingToolbarProps = {
   formatting: Formatting;
-  /** Sets a key's values on the cells the toolbar formats (none clears it). */
-  onChange: (key: string, values: string[]) => void;
+  /**
+   * Sets a key's values on the cells the toolbar formats (none clears it); `managed` names the only values of the key the
+   * toolbar controls, so others (e.g. a table's header style) are kept.
+   */
+  onChange: (key: string, values: string[], managed?: string[]) => void;
   disabled?: boolean;
   /** Prefixes each control's test id as `<testId>.<key>.<value>`. */
   testId?: string;
@@ -61,7 +64,7 @@ export const FormattingToolbar = ({ formatting, onChange, disabled, testId }: Fo
         type='multiple'
         disabled={disabled}
         value={formatting.styles}
-        onValueChange={(values) => onChange(SheetRange.styleKey, values)}
+        onValueChange={(values) => onChange(SheetRange.styleKey, values, Object.keys(STYLE_ICONS))}
       >
         {Object.entries(STYLE_ICONS).map(([value, icon]) => (
           <ToggleGroup.Item

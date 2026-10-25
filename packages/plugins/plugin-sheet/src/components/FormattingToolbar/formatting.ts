@@ -60,19 +60,30 @@ export const formattingByRange = (ranges: readonly Sheet.Range[]): FormattedRang
 export const formattingAt = (sheet: Sheet.Sheet, address: CellAddress): Formatting =>
   fold(sheet.ranges.filter(({ range }) => inRange(SheetUtil.rangeFromIndex(sheet, range), address)));
 
-/** Replaces a cell range's entries for one key, keeping every other range and key in place; call within `Obj.update`. */
+/**
+ * Replaces a cell range's entries for one key, keeping every other range and key in place; call within `Obj.update`.
+ * The new entries take the place of the first replaced one, so the range keeps its precedence against overlapping
+ * ranges. `managed` limits which of the key's values are replaced (a toggle owns some styles, not all).
+ */
 export const writeFormatting = (
   sheet: Obj.Mutable<Sheet.Sheet>,
   range: string,
   key: string,
   values: readonly string[],
+  managed?: readonly string[],
 ) => {
+  const replaced = (entry: Sheet.Range) =>
+    entry.range === range && entry.key === key && (!managed || managed.includes(entry.value));
+  const at = sheet.ranges.findIndex(replaced);
   for (let index = sheet.ranges.length - 1; index >= 0; index--) {
-    if (sheet.ranges[index].range === range && sheet.ranges[index].key === key) {
+    if (replaced(sheet.ranges[index])) {
       sheet.ranges.splice(index, 1);
     }
   }
-  for (const value of values) {
-    sheet.ranges.push({ range, key, value });
+  const entries = values.map((value) => ({ range, key, value }));
+  if (at < 0) {
+    sheet.ranges.push(...entries);
+  } else {
+    sheet.ranges.splice(at, 0, ...entries);
   }
 };

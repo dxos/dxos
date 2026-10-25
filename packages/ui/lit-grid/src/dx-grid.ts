@@ -1466,8 +1466,9 @@ export class DxGrid extends LitElement {
       style=${styleMap({
         gridColumn: `${visCol + 1}`,
         gridRow: `${visRow + 1}`,
-        backgroundColor: cell?.background,
-        color: cell?.foreground,
+        // Important: a cell's own colors outrank its classes' (e.g. a sheet header's important background).
+        backgroundColor: cell?.background && `${cell.background} !important`,
+        color: cell?.foreground && `${cell.foreground} !important`,
       })}
     >
       <div role="none" class="dx-grid__cell__content">${cell?.value}${accessory}</div>

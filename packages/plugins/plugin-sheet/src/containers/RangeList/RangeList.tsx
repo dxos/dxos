@@ -64,8 +64,8 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
   );
 
   const setFormatting = useCallback(
-    (range: string, key: string, values: readonly string[]) =>
-      updateSheet((sheet) => writeFormatting(sheet, range, key, values)),
+    (range: string, key: string, values: readonly string[], managed?: readonly string[]) =>
+      updateSheet((sheet) => writeFormatting(sheet, range, key, values, managed)),
     [updateSheet],
   );
 
@@ -122,13 +122,16 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
               <OrderedList.Content gutter='none' aria-label={t('range-list.heading')}>
                 {items.map(({ range, ...formatting }) => (
                   <OrderedList.Item key={range} id={range} canDrag={false} data-testid={`range.${getPosition(range)}`}>
-                    <OrderedList.ItemText classNames='font-mono cursor-pointer' onClick={() => handleSelect(range)}>
-                      {getPosition(range)}
+                    <OrderedList.ItemText>
+                      {/* A button, so the range is reachable and activatable from the keyboard as well as the pointer. */}
+                      <button type='button' className='font-mono cursor-pointer' onClick={() => handleSelect(range)}>
+                        {getPosition(range)}
+                      </button>
                     </OrderedList.ItemText>
                     <Toolbar.Root size='sm'>
                       <FormattingToolbar
                         formatting={formatting}
-                        onChange={(key, values) => setFormatting(range, key, values)}
+                        onChange={(key, values, managed) => setFormatting(range, key, values, managed)}
                       />
                     </Toolbar.Root>
                     <Button.Root
@@ -136,7 +139,8 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
                       iconOnly
                       icon='ph--selection-plus--regular'
                       label={t('use-selection.label')}
-                      disabled={!selectedIndex || selectedIndex === range}
+                      // A selection that already has formatting of its own is not a target: moving onto it would merge two rows.
+                      disabled={!selectedIndex || ranges.some(({ range }) => range === selectedIndex)}
                       onClick={() => handleUseSelection(range)}
                     />
                     <SystemButton.Remove onClick={() => handleDelete(range)} />

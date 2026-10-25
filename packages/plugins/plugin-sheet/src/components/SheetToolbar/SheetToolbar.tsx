@@ -44,10 +44,10 @@ export const SheetToolbar = Util.composable<HTMLDivElement, SheetToolbarProps>((
   );
 
   const handleChange = useCallback(
-    (key: string, values: string[]) => {
+    (key: string, values: string[], managed?: string[]) => {
       if (cursorFallbackRange) {
         const range = SheetUtil.rangeToIndex(model.sheet, cursorFallbackRange);
-        Obj.update(model.sheet, (sheet) => writeFormatting(sheet, range, key, values));
+        Obj.update(model.sheet, (sheet) => writeFormatting(sheet, range, key, values, managed));
       }
     },
     [model.sheet, cursorFallbackRange],
