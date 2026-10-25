@@ -1455,6 +1455,33 @@ export class FeedStore {
     }).pipe(Effect.withSpan('FeedStore.listFeedOptions'), SpanAttributes.annotateSpace(spaceId));
 
   /**
+   * Spaces holding a feed with stored options, which a host trims at open with {@link trimAll}.
+   */
+  listSpacesWithOptions = (): Effect.Effect<string[], SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql<{ spaceId: string }>`
+        SELECT DISTINCT spaceId FROM feeds WHERE options IS NOT NULL ORDER BY spaceId
+      `;
+      return rows.map((row) => row.spaceId);
+    }).pipe(Effect.withSpan('FeedStore.listSpacesWithOptions'));
+
+  /**
+   * The namespace a feed's blocks are stored under, or undefined when the store has no row for it.
+   */
+  getFeedNamespace = (feed: {
+    spaceId: string;
+    feedId: string;
+  }): Effect.Effect<string | undefined, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const [row] = yield* sql<{ feedNamespace: string | null }>`
+        SELECT feedNamespace FROM feeds WHERE spaceId = ${feed.spaceId} AND feedId = ${feed.feedId}
+      `;
+      return row?.feedNamespace ?? undefined;
+    }).pipe(Effect.withSpan('FeedStore.getFeedNamespace'), SpanAttributes.annotateSpace(feed.spaceId));
+
+  /**
    * Deletes, oldest first by insertion id, at most {@link TRIM_LIMIT} blocks of the feed that break
    * its `maxLength` (or the host cap) or `maxAge` at `now`, in one transaction; `more` reports that
    * blocks past a limit remain. Every partial trim is a prefix of the full one, so repeated and

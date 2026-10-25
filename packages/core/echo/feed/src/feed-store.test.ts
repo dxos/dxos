@@ -1312,6 +1312,21 @@ describe('FeedStore retention', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('lists the spaces with stored options and reads a feed namespace', () =>
+    Effect.gen(function* () {
+      const store = new FeedStore({ localActorId: ALICE, assignPositions: true });
+      yield* store.migrate();
+      const spaceId = SpaceId.random();
+      const feed = { spaceId, feedId: EntityId.random(), feedNamespace: 'trace' };
+      expect(yield* store.listSpacesWithOptions()).toEqual([]);
+      expect(yield* store.getFeedNamespace(feed)).toBeUndefined();
+
+      yield* store.setFeedOptions({ ...feed, options: { retention: { maxLength: 3 } } });
+      expect(yield* store.listSpacesWithOptions()).toEqual([spaceId]);
+      expect(yield* store.getFeedNamespace(feed)).toBe('trace');
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('setFeedOptions with the stored options changes nothing and trims nothing', () =>
     Effect.gen(function* () {
       const store = new FeedStore({ localActorId: ALICE, assignPositions: true });
