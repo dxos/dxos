@@ -12,6 +12,8 @@ export {
 export { IndexedObjectSource } from './indexed-object-source.ts';
 export { type IndexCursor, IndexTracker } from './index-tracker.ts';
 export { ConvergenceKeyIntentStore } from './convergence-key-intent-store.ts';
+export { FeedOptionsIntentStore } from './feed-options-intent-store.ts';
+export { type ConvergenceKeyIntent, type FeedOptionsIntent, type IndexerIntent } from './indexer-intent.ts';
 export { ActivityIndex, type ActivityRow } from './indexes/activity-index.ts';
 export { type ChangeSummary, type DocumentActivity, type Index, type IndexerObject } from './indexes/interface.ts';
 export { FtsIndex, type FtsQuery, buildFtsCondition } from './indexes/fts-index.ts';
