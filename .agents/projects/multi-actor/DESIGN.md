@@ -103,3 +103,7 @@ only move forward, which is what render.mjs does.
 - **Real-time playback runs on a timer, and React may detach the scene.** rAF is suspended in a hidden
   tab, and StrictMode unmounts and remounts the decorator; `Scene.open()` resumes playback and
   reinstalls `window.grid`.
+- **Sixteen actors render as one 8K wall, then cut.** One stepped pass at 7680x4320 gives every actor a native
+  1920x1080 quadrant on the same scene timeline (16 separate passes would replay the scene 16 times); the Grid
+  then reads the cut clips from `temp/collab/team/` through its `clipsDir` prop, and its `tail` holds the
+  revealed wall with every clip playing on.

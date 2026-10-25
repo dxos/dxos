@@ -24,6 +24,8 @@ export type ActorBinding = {
   view: EditorView;
   /** Creates a comment thread on `anchor` (a `from:to` cursor pair) with a first message, authored by this actor. */
   comment: (anchor: string, text: string) => Promise<void>;
+  /** Adds a message, authored by this actor, to the thread anchored on `phrase`; false if there is none yet. */
+  reply: (phrase: string, text: string) => Promise<boolean>;
 };
 
 export type Target = { after: string } | { before: string } | { end: true };
@@ -132,6 +134,17 @@ export class Actor {
     // edits others made meanwhile; offsets would be checked against the stored text, which can lag the view.
     const { state } = this.binding.view;
     await this.binding.comment(Cursor.getCursorFromRange(state, state.selection.main), text);
+    await this.pause(400);
+  }
+
+  /** Replies to the comment thread on `phrase`, waiting for another actor to open it if need be. */
+  async reply(phrase: string, text: string, { poll = 250, timeout = 60_000 } = {}): Promise<void> {
+    for (let waited = 0; !(await this.binding.reply(phrase, text)); waited += poll) {
+      if (waited >= timeout) {
+        throw new Error(`${this.spec.name} found no thread on "${phrase}"`);
+      }
+      await this.clock.sleep(poll);
+    }
     await this.pause(400);
   }
 

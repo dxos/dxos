@@ -15,7 +15,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import { Obj, Query } from '@dxos/echo';
+import { Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
 import { ClientPluginManager } from '@dxos/plugin-client/testing';
@@ -34,6 +34,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import { Loading } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
+import { Cursor } from '@dxos/ui-editor';
 
 import { type ActorSpec } from './actor.ts';
 import { type ActorFlow } from './flow.ts';
@@ -90,6 +91,8 @@ const useScene = (scene: Scene) => useSyncExternalStore(scene.subscribe, () => `
 
 export type WithActorsProps = {
   flow: ActorFlow;
+  /** Shows each actor's name bar; off for clips that are framed by something else (the autocue Grid). */
+  bars?: boolean;
 };
 
 /** Story args the harness reads; autocue's renderer sets `stepped` from the URL. */
@@ -102,7 +105,7 @@ export type ActorStoryArgs = {
  * Story decorator: one client per actor of `flow`, each with its own identity and plugin app, all in one
  * shared space; the story renders once per actor, in a 2x2 (or N-cell) stage.
  */
-export const withActors = ({ flow }: WithActorsProps): Decorator<ActorStoryArgs> => {
+export const withActors = ({ flow, bars = true }: WithActorsProps): Decorator<ActorStoryArgs> => {
   return (Story, { args }) => {
     const mode: SceneMode = args.stepped ? 'stepped' : 'realtime';
     const scene = useMemo(() => new Scene(flow, mode), [mode]);
@@ -115,12 +118,15 @@ export const withActors = ({ flow }: WithActorsProps): Decorator<ActorStoryArgs>
     const columns = Math.ceil(Math.sqrt(flow.actors.length));
     return (
       <div
-        className='dx-cover grid gap-px bg-separator overflow-hidden'
+        className={`dx-cover grid overflow-hidden ${bars ? 'gap-px bg-separator' : ''}`}
         style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gridAutoRows: 'minmax(0, 1fr)' }}
       >
         {flow.actors.map((spec, index) => (
-          <div key={index} className='grid grid-rows-[auto_minmax(0,1fr)] min-h-0 min-w-0 bg-base-surface'>
-            <ActorBar spec={spec} phase={scene.phase} />
+          <div
+            key={index}
+            className={`grid min-h-0 min-w-0 bg-base-surface ${bars ? 'grid-rows-[auto_minmax(0,1fr)]' : 'grid-rows-[minmax(0,1fr)]'}`}
+          >
+            {bars && <ActorBar spec={spec} phase={scene.phase} />}
             <ClientProvider services={scene.services[index]}>
               <ClientPluginManager
                 id={`actor-${index}`}
@@ -174,7 +180,7 @@ export const ActorArticle = () => {
   const { invokePromise } = Hooks.useOperationInvoker();
 
   useEffect(() => {
-    if (!doc || !id) {
+    if (!doc || !id || !space) {
       return;
     }
 
@@ -196,11 +202,32 @@ export const ActorArticle = () => {
               throw error;
             }
           },
+          reply: async (phrase, text) => {
+            // The thread whose anchor spans `phrase` in this actor's own view.
+            const anchors = await space.db.query(Query.select(Filter.id(doc.id)).targetOf(AnchoredTo.AnchoredTo)).run();
+            const anchor = anchors.find((candidate) => {
+              const range = candidate.anchor && Cursor.getRangeFromCursor(entry.view.state, candidate.anchor);
+              return range && entry.view.state.sliceDoc(range.from, range.to) === phrase;
+            });
+            if (!anchor) {
+              return false;
+            }
+            const { error } = await invokePromise(CommentOperation.AddMessage, {
+              subject: doc,
+              anchor,
+              sender: { role: 'user', name: spec.name },
+              text,
+            });
+            if (error) {
+              throw error;
+            }
+            return true;
+          },
         });
       }
     }, 100);
     return () => clearInterval(timer);
-  }, [doc, id, editorViews, invokePromise, scene, index, spec]);
+  }, [doc, id, space, editorViews, invokePromise, scene, index, spec]);
 
   const articleData = useMemo(() => ({ subject: doc, attendableId: id ?? 'actor' }), [doc, id]);
   const companionData = useMemo(

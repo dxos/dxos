@@ -109,3 +109,24 @@ export const ShiftOverviewClips: Story = { args: { ...shiftArgs('clips'), overvi
 
 /** The zoomed-out 3x3 with its columns all drifting down slowly and continuously, each at a different speed. */
 export const ShiftDriftClips: Story = { args: { ...shiftArgs('clips'), overview: true, drift: 0.2 } };
+
+/**
+ * The 16-actor collaboration scene (`stories-agent` Collaboration › Team), one clip per actor: opens full frame on the
+ * actor in column 2, row 3, who starts writing first, then zooms out to all sixteen editing the same launch plan.
+ * Clips are read from `temp/collab/team/` (see `.agents/projects/multi-actor/DESIGN.md`).
+ */
+export const Collaboration: Story = {
+  args: {
+    cols: 4,
+    rows: 4,
+    gap: 12,
+    tour: [[1, 2]],
+    hold: 12_000,
+    pan: 0,
+    duration: 5_000,
+    tail: 14_000,
+    clipsDir: '../../../../../temp/collab/team/',
+    controls: true,
+    stepped: false,
+  },
+};

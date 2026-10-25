@@ -11,6 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ActorArticle, type ActorStoryArgs, withActors } from '../testing/actors/index.ts';
 import { markdownFlow } from './flows/markdown.ts';
+import { teamFlow } from './flows/team.ts';
 
 const meta = {
   title: 'stories/stories-agent/Collaboration',
@@ -45,7 +46,7 @@ export const Markdown: Story = {
 export const TestMarkdown: Story = {
   decorators: [withActors({ flow: markdownFlow })],
   args: { stepped: true },
-  play: async () => {
+  play: async ({ canvasElement }) => {
     await waitFor(() => expect(window.grid).toBeDefined(), { timeout: 45_000 });
     const grid = window.grid;
     // Coarse steps: each seek waits for replication, and the test only needs the end state.
@@ -64,8 +65,20 @@ export const TestMarkdown: Story = {
           await expect(text).toContain('a fortnight later');
           await expect(view?.dom.querySelectorAll('.cm-comment').length).toBeGreaterThanOrEqual(3);
         }
+        // Ben's answers reach the comments panels.
+        await expect(canvasElement.textContent).toContain('Design partners first');
+        await expect(canvasElement.textContent).toContain('iOS is in review');
       },
       { timeout: 10_000 },
     );
   },
+};
+
+/**
+ * Sixteen actors on one launch plan, with no name bars: rendered at four times 1920x1080 and cut into one clip per
+ * actor, which the autocue Grid zooms out across.
+ */
+export const Team: Story = {
+  decorators: [withActors({ flow: teamFlow, bars: false })],
+  tags: ['!test'],
 };

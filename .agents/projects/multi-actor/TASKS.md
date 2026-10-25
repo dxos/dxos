@@ -1,6 +1,6 @@
 # Multi-actor collaboration harness — Tasks
 
-_Resume: Phase 2 — a second article (sheet or kanban) on the same harness. Uncommitted: none. Last: first recording (temp/collab/markdown\*.mp4, copied to /Volumes/SSD1/Media/Showcase/collab)._
+_Resume: Phase 2: a second article (sheet or kanban) on the same harness. Uncommitted: none. Last: first recording (temp/collab/markdown\*.mp4, copied to /Volumes/SSD1/Media/Showcase/collab)._
 
 ## Phase 1: Markdown prototype
 
@@ -25,5 +25,5 @@ into one clip per actor.
 
 - [ ] Generalize `ActorArticle`/`ActorBinding` beyond markdown (an article-specific binding per flow).
 - [ ] Canvas, sheet, table, kanban flows on the same harness.
-- [ ] Assemble the clips in the autocue Grid.
-- [ ] Render the per-actor clips at 1920x1080 directly (a one-cell stage per actor) instead of cropping quadrants.
+- [x] **Replies and staggering** — `actor.reply(phrase, text)` (AddMessage on the thread anchored on the phrase); the markdown flow staggers Ada and Ben and has Ben answer Dev's threads.
+- [x] **16 actors in the Grid** — `flows/team.ts` (8 writers, 4 editors, 4 reviewers, writers answer); `Team` story without name bars rendered at 7680x4320 and cut into 16 1920x1080 clips (`temp/collab/team/`); Grid gains `clipsDir` and `tail`; `tools/autocue/Grid › Collaboration` zooms out from column 2, row 3.

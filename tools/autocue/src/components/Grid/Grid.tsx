@@ -107,6 +107,10 @@ export type GridProps = {
   border?: Border;
   /** Fades the frame out as a cell grows to fill the view, so a close-up shows the clip edge to edge. */
   borderFade?: boolean;
+  /** Where the clips are read from, relative to this module; unset is the showcase's `temp/grid-zoom/`. */
+  clipsDir?: string;
+  /** Time held on the whole grid after the zoom-out, in ms, with every clip playing on. */
+  tail?: number;
 };
 
 declare global {
@@ -151,6 +155,8 @@ const slide =
 type TileProps = {
   /** The clip's file name, without extension; unset draws `label` on a tone instead. */
   clip?: string;
+  /** The folder `clip` is read from. */
+  clipsDir: string;
   /** Shown when the clip is missing or unset. */
   label: string;
   /** Picks the numbered tile's tone. */
@@ -168,7 +174,7 @@ type TileProps = {
   playing: boolean;
 };
 
-const Tile = ({ clip, label, index, bounds, onLoad, playing, border, strength = 1, meta }: TileProps) => {
+const Tile = ({ clip, clipsDir, label, index, bounds, onLoad, playing, border, strength = 1, meta }: TileProps) => {
   const [failed, setFailed] = useState(false);
   const video = useRef<HTMLVideoElement>(null);
   // `autoPlay` only applies on mount, so pausing the story pauses the clip directly.
@@ -186,7 +192,7 @@ const Tile = ({ clip, label, index, bounds, onLoad, playing, border, strength = 
     }
   }, [clip]);
   // A non-literal URL so Vite resolves it at runtime instead of bundling a file that only exists locally.
-  const src = useMemo(() => new URL(`${CLIPS_DIR}${clip}.mp4`, import.meta.url).href, [clip]);
+  const src = useMemo(() => new URL(`${clipsDir}${clip}.mp4`, import.meta.url).href, [clipsDir, clip]);
   const frame = border && borderLayout(border, bounds.width, index, strength);
   const body = (
     <>
@@ -291,6 +297,8 @@ export const Grid = ({
   onEnded,
   border,
   borderFade = false,
+  clipsDir = CLIPS_DIR,
+  tail = 0,
 }: GridProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const viewport = useViewport(ref);
@@ -403,25 +411,28 @@ export const Grid = ({
       const last = step === cameras.length - 1;
       const focus = `${col},${row}`;
       const cell = cells.find((cell) => cell.id === focus);
+      if (!last || !cell) {
+        return [
+          { ms: holds[step], focus, camera: from },
+          { ms: pan, move: slide(from, cameras[step + 1]) },
+        ];
+      }
+      const reveal = REVEALS[variant]({
+        from,
+        cells,
+        focus: cell,
+        tour: tour.map(([col, row]) => `${col},${row}`),
+        extent,
+        viewport,
+        gap,
+        cols,
+        rows,
+        duration,
+      });
       return [
-        { ms: last ? Math.max(0, holds[step] - overlap) : holds[step], focus, camera: from },
-        last && cell
-          ? {
-              ms: duration,
-              reveal: REVEALS[variant]({
-                from,
-                cells,
-                focus: cell,
-                tour: tour.map(([col, row]) => `${col},${row}`),
-                extent,
-                viewport,
-                gap,
-                cols,
-                rows,
-                duration,
-              }),
-            }
-          : { ms: pan, move: slide(from, cameras[step + 1]) },
+        { ms: Math.max(0, holds[step] - overlap), focus, camera: from },
+        { ms: duration, reveal },
+        ...(Number(tail) > 0 ? [{ ms: Number(tail), reveal: () => reveal(duration) }] : []),
       ];
     });
   }, [
@@ -445,17 +456,18 @@ export const Grid = ({
     overview,
     drift,
     driftAfter,
+    tail,
   ]);
   const total = shots.reduce((sum, shot) => sum + shot.ms, 0);
 
   // The recording each clip file copies, written by `layout.mjs`; without it every file counts as its own recording.
   const [recordings, setRecordings] = useState<Record<string, string>>();
   useEffect(() => {
-    void fetch(new URL(`${CLIPS_DIR}layout.json`, import.meta.url).href)
+    void fetch(new URL(`${clipsDir}layout.json`, import.meta.url).href)
       .then((response) => (response.ok ? response.json() : undefined))
       .then(setRecordings)
       .catch(() => {});
-  }, []);
+  }, [clipsDir]);
   /** A drift's clips, re-dealt so no recording repeats in a column; otherwise each cell's own. */
   const clipOf = useMemo(() => {
     const columns = shots.find((shot) => shot.columns)?.columns;
@@ -683,6 +695,7 @@ export const Grid = ({
               <Tile
                 key={cell.id}
                 clip={clipOf.get(cell.id)}
+                clipsDir={clipsDir}
                 label={cell.label}
                 index={index}
                 bounds={bounds}
