@@ -6,6 +6,7 @@ import { type Locator, type Page, expect } from '@playwright/test';
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { type SpaceId } from '@dxos/keys';
+import { PERF_OFFLINE } from '@dxos/perf-harness';
 
 import { describeReplication, waitForReplication } from '../perf/replication.ts';
 import { defineScenario, invokeInPage } from '../perf/scenario.ts';
@@ -147,9 +148,12 @@ defineScenario({
     const projectId = await createProject(page, spaceId, 'Perf session project');
     await openProject(page, spaceId, projectId);
     // The seeded chats replicate to EDGE in the background; waiting here keeps that I/O out of the stages.
-    const replication = await waitForReplication(page, spaceId, { timeoutMs: 180_000 });
-    if (replication.outcome === 'timeout') {
-      throw new Error(describeReplication(replication));
+    // `--offline` leaves no EDGE peer to wait for.
+    if (!PERF_OFFLINE) {
+      const replication = await waitForReplication(page, spaceId, { timeoutMs: 180_000 });
+      if (replication.outcome === 'timeout') {
+        throw new Error(describeReplication(replication));
+      }
     }
     opened = { spaceId, projectId };
   },
