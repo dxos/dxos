@@ -58,7 +58,11 @@ export const FormFieldSet = ({
   const canCollapse = !!collapsible && showLabel && Children.toArray(children).length > 0;
   const helper = description && <Fieldset.HelperText>{description}</Fieldset.HelperText>;
   const legend = showLabel && (
-    <Fieldset.Legend size={nested ? undefined : 'md'} variant={nested ? undefined : 'section'}>
+    <Fieldset.Legend
+      size={nested ? undefined : 'md'}
+      variant={nested ? undefined : 'section'}
+      data-nested={nested ? '' : undefined}
+    >
       {label}
       {actions}
       {canCollapse && (

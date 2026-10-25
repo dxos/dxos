@@ -500,7 +500,7 @@ export const ThemeHeadmatter: Story = {
 
 /** A Presentation-style `theme` setting wins over headmatter. */
 export const ThemeOverride: Story = {
-  render: () => <ThemedStory theme={{ name: 'dark', accent: '#f97316' }} />,
+  render: () => <ThemedStory theme={{ base: 'dark', accent: '#f97316' }} />,
   play: async ({ canvasElement }) => {
     await waitFor(() =>
       expect(canvasElement.querySelector<HTMLElement>('[data-slide]')?.style.colorScheme).toBe('dark'),

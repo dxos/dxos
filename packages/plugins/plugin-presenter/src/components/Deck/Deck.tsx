@@ -93,7 +93,7 @@ type DeckRootProps = PropsWithChildren<{
   onIndexChange: (index: number) => void;
   fullscreen?: boolean;
   onFullscreenChange?: (fullscreen: boolean) => void;
-  /** Deck theme; without a name, the first slide's `theme:` headmatter applies. */
+  /** Deck theme; without a base theme, the first slide's `theme:` headmatter applies. */
   theme?: SlideTheme.Settings;
   attendableId?: string;
   /** Focus the deck on mount, so keys work without a click; it is refocused after every fullscreen toggle regardless. */
