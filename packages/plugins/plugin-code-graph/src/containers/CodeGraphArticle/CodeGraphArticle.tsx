@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
@@ -279,7 +279,13 @@ export const CodeGraphArticle = ({ role, subject, attendableId }: CodeGraphArtic
           )}
           <CommandBar
             open={command.open}
-            onOpenChange={command.setOpen}
+            onOpenChange={(open) => {
+              command.setOpen(open);
+              // The microphone toggle lives in the bar, so closing the bar must not leave it listening.
+              if (!open) {
+                speech.stop();
+              }
+            }}
             pending={command.pending}
             outcome={command.outcome}
             onSubmit={command.run}
@@ -477,8 +483,14 @@ const useCommand = (subject: CodeGraph.CodeGraph, invokePromise: Invoke) => {
   const [pending, setPending] = useState(false);
   const [outcome, setOutcome] = useState<CommandOutcome>();
   const spaceId = Obj.getDatabase(subject)?.spaceId;
+  // A ref, not the `pending` state, so a spoken command arriving mid-run is refused before the next render.
+  const running = useRef(false);
   const run = useCallback(
     (text: string) => {
+      if (running.current) {
+        return;
+      }
+      running.current = true;
       setPending(true);
       setOutcome({ command: text });
       const started = performance.now();
@@ -490,7 +502,10 @@ const useCommand = (subject: CodeGraph.CodeGraph, invokePromise: Invoke) => {
             ...(data ? { message: data.message, trailer: data.trailer } : { error: error?.message ?? 'Failed.' }),
           }),
         )
-        .finally(() => setPending(false));
+        .finally(() => {
+          running.current = false;
+          setPending(false);
+        });
     },
     [invokePromise, subject, spaceId],
   );

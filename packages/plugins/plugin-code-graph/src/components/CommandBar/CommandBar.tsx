@@ -44,10 +44,15 @@ export const CommandBar = ({ open, onOpenChange, pending, outcome, onSubmit, dra
   const [value, setValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // A spoken command fills the field as it is heard and clears it once it runs; typed text survives a microphone toggle.
+  const previousDraft = useRef(draft);
   useEffect(() => {
     if (draft !== undefined) {
       setValue(draft);
+    } else if (previousDraft.current !== undefined) {
+      setValue('');
     }
+    previousDraft.current = draft;
   }, [draft]);
 
   useEffect(() => {

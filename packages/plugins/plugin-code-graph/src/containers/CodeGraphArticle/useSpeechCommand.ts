@@ -21,6 +21,7 @@ export type SpeechCommand = {
   /** What has been heard of the current command. */
   heard?: string;
   toggle: () => void;
+  stop: () => void;
 };
 
 /**
@@ -58,6 +59,12 @@ export const useSpeechCommand = (onCommand: (command: string) => void): SpeechCo
     onResult,
   });
 
+  const stop = useCallback(() => {
+    words.current = [];
+    setHeard(undefined);
+    setActive(false);
+  }, []);
+
   const toggle = useCallback(() => {
     words.current = [];
     setHeard(undefined);
@@ -70,5 +77,6 @@ export const useSpeechCommand = (onCommand: (command: string) => void): SpeechCo
     error: whistle.error,
     heard,
     toggle,
+    stop,
   };
 };

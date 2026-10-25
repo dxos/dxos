@@ -226,14 +226,16 @@ export const run = Effect.fn('CodeGraphCommand.run')(function* (
  * {@link run} with the command model and the default decision model from the AI service. Without a decision model
  * the command still runs, and stops after its first turn whose actions all succeed.
  */
-export const runWithAiService = Effect.fn('CodeGraphCommand.runWithAiService')(function* (
-  graph: CodeGraph.CodeGraph,
-  command: string,
-  options: Omit<Options, 'judge'> = {},
-) {
-  const judge = yield* resolveJudge;
-  return yield* run(graph, command, { ...options, judge }).pipe(Effect.provide(AiService.languageModel(COMMAND_MODEL)));
-});
+export const runWithAiService = Effect.fn('CodeGraphCommand.runWithAiService')(
+  function* (graph: CodeGraph.CodeGraph, command: string, options: Omit<Options, 'judge'> = {}) {
+    const judge = yield* resolveJudge;
+    return yield* run(graph, command, { ...options, judge }).pipe(
+      Effect.provide(AiService.languageModel(COMMAND_MODEL)),
+    );
+  },
+  // The judge is called from inside `run`, so the decision model's scope stays open until the command ends.
+  Effect.scoped,
+);
 
 const resolveJudge = Effect.gen(function* () {
   const context = yield* Layer.build(AiService.decisionModel(AiModel.defaultDecisionModel)).pipe(Effect.option);
@@ -242,7 +244,7 @@ const resolveJudge = Effect.gen(function* () {
     return undefined;
   }
   return decisionJudge(yield* DecisionModel.DecisionModel.pipe(Effect.provide(context.value)));
-}).pipe(Effect.scoped);
+});
 
 /** Carries out one action; a refused query or an over-full graph is reported to the model, not raised. */
 const apply = (graph: CodeGraph.CodeGraph, action: Action, budget: number): Effect.Effect<ActionResult> =>
