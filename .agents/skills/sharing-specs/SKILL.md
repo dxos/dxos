@@ -6,7 +6,7 @@ description: >-
   teammates open in claude.ai and comment on. Use when asked to share, publish, show or circulate a
   spec or design for review, to make a spec "pretty" or commentable, to put a storybook story in an
   artifact, or to update or answer comments on a spec artifact made this way. Pulls a prebuilt viewer from R2
-  (`scripts/storybook-cache.mjs`, so no storybook build) or builds one, packages it with `scripts/package.py`
+  (`scripts/storybook-cache.ts`, so no storybook build) or builds one, packages it with `scripts/package.py`
   (any spec, optionally diffed against a git ref and with its review), checks it with `scripts/check.cjs`, and publishes
   it with the Artifact tool — no Worker, no preview environment. A spec edit republishes on its own
   with `scripts/update_specs.py`, without a rebuild.
@@ -33,13 +33,13 @@ A prebuilt viewer lives in the `agent-artifacts` R2 bucket, refreshed by the **S
 workflow whenever main changes viewer code. Pull it before anything else; it replaces §2–§3 for any spec:
 
 ```bash
-node .agents/skills/sharing-specs/scripts/storybook-cache.mjs pull tools/storybook-react/out/storybook-specs
+bun .agents/skills/sharing-specs/scripts/storybook-cache.ts pull tools/storybook-react/out/storybook-specs
 ```
 
 It prints the cached commit and the viewer files (code under `packages/` or `tools/storybook-react/`, not
 specs) that changed since. When none did, or none of them is something the page must show, skip to §4 and
 use `--spec` tabs. Build (§3) only when the branch changes the viewer itself; push that build under the
-branch's name (`storybook-cache.mjs push <build dir> --ref <branch>`) so later sessions on the branch pull
+branch's name (`storybook-cache.ts push <build dir> --ref <branch>`) so later sessions on the branch pull
 it with `--ref <branch>`.
 
 ## 1. Write the spec with its diagrams inside

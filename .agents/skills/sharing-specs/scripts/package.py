@@ -14,7 +14,7 @@ Usage:
     --spec "2 · Feed store=packages/core/echo/feed/SPEC.mdl"
 
 `--tab` shows a story by id; `--spec` shows any spec through the generic `AnySpec` story, so it needs no story of
-its own and no rebuild (a cached build works: `storybook-cache.mjs pull`). `--base <ref>` opens every `--spec` tab in
+its own and no rebuild (a cached build works: `storybook-cache.ts pull`). `--base <ref>` opens every `--spec` tab in
 diff mode against the spec's text at that git ref (empty when the spec is new). The two forms mix, in argv order.
 
 Writes <out dir>/page.html plus the build's files, adjusted for the artifact publisher:

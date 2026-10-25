@@ -1,12 +1,12 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 //
 // Copyright 2026 DXOS.org
 //
 
 // A prebuilt spec-viewer storybook in the `agent-artifacts` R2 bucket, so sharing a spec needs no storybook build.
 //
-//   storybook-cache.mjs push <build dir> [--ref main]      # upload a build of the current commit
-//   storybook-cache.mjs pull <out dir> [--ref main]        # download the newest build for a ref
+//   storybook-cache.ts push <build dir> [--ref main]      # upload a build of the current commit
+//   storybook-cache.ts pull <out dir> [--ref main]        # download the newest build for a ref
 //
 // A build holds code only: `package.py --spec` ships the specs beside the page, so a cached build renders any spec
 // written after it. `pull` lists the viewer code changed since the cached commit; rebuild only when that matters.
@@ -27,23 +27,24 @@ const PREFIX = 'storybook/specs';
 const VIEWER_INPUTS = ['packages/', 'tools/storybook-react/', 'pnpm-lock.yaml'];
 const NOT_VIEWER_INPUT = /\.(mdl|md)$|\.test\.tsx?$|\/playwright\//;
 
-const fail = (message) => {
+const fail = (message: string): never => {
   console.error(message);
   process.exit(1);
 };
 
-const git = (...args) => execFileSync('git', ['-C', ROOT, ...args], { encoding: 'utf8' }).trim();
+const git = (...args: string[]): string => execFileSync('git', ['-C', ROOT, ...args], { encoding: 'utf8' }).trim();
 
-const refKey = (ref) => `${PREFIX}/refs/${ref.replace(/[^A-Za-z0-9._-]/g, '--')}.json`;
+const refKey = (ref: string): string => `${PREFIX}/refs/${ref.replace(/[^A-Za-z0-9._-]/g, '--')}.json`;
 
-const changedViewerFiles = (commit) =>
+const changedViewerFiles = (commit: string): string[] =>
   [...new Set([...git('diff', '--name-only', commit, 'HEAD').split('\n'), ...git('diff', '--name-only').split('\n')])]
     .filter(Boolean)
     .filter((file) => VIEWER_INPUTS.some((input) => file.startsWith(input)) && !NOT_VIEWER_INPUT.test(file));
 
-const upload = (file, key) => execFileSync('node', [UPLOAD, file, '--key', key], { stdio: 'inherit' });
+const upload = (file: string, key: string): void =>
+  void execFileSync('node', [UPLOAD, file, '--key', key], { stdio: 'inherit' });
 
-const push = (build, ref) => {
+const push = (build: string, ref: string): void => {
   const commit = git('rev-parse', 'HEAD');
   const dirty = git('status', '--porcelain', '--', ...VIEWER_INPUTS)
     .split('\n')
@@ -75,13 +76,15 @@ const push = (build, ref) => {
   }
 };
 
-const pull = async (out, ref) => {
+type Pointer = { commit: string; url: string; builtAt: string };
+
+const pull = async (out: string, ref: string): Promise<void> => {
   // The pointer is overwritten in place, so the query keeps an intermediate cache from serving an old one.
   const response = await fetch(`${PUBLIC_BASE}/${refKey(ref)}?t=${Date.now()}`);
   if (!response.ok) {
     fail(`no cached build for ${ref} (${response.status}); build one (sharing-specs §3) and push it`);
   }
-  const { commit, url, builtAt } = await response.json();
+  const { commit, url, builtAt }: Pointer = await response.json();
   const archive = await fetch(url);
   if (!archive.ok) {
     fail(`${url}: ${archive.status}`);
@@ -123,7 +126,7 @@ const [command, dir] = process.argv.slice(2);
 const refIndex = process.argv.indexOf('--ref');
 const ref = refIndex > 0 ? process.argv[refIndex + 1] : 'main';
 if (!dir || !['push', 'pull'].includes(command)) {
-  fail('usage: storybook-cache.mjs push <build dir> [--ref main] [--allow-dirty] | pull <out dir> [--ref main]');
+  fail('usage: storybook-cache.ts push <build dir> [--ref main] [--allow-dirty] | pull <out dir> [--ref main]');
 }
 if (command === 'push') {
   push(dir, ref);
