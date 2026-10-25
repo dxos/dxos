@@ -154,7 +154,7 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
                 <div className='grow' />
                 <Button.Root
                   data-testid='presenter.grid-size'
-                  icon={gridSize === 'large' ? 'ph--squares-four--regular' : 'ph--square--regular'}
+                  icon={gridSize === 'large' ? 'ph--grid-four--regular' : 'ph--grid-nine--regular'}
                   iconOnly
                   variant='ghost'
                   label={t(gridSize === 'large' ? 'grid-size-small.label' : 'grid-size-large.label')}

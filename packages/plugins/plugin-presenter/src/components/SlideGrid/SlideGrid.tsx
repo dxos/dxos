@@ -18,8 +18,11 @@ import { type SlideViewState } from '#types';
 
 import { Slide } from '../Slide/index.ts';
 
-/** Narrowest thumbnail at each grid size before the grid drops a column (px). */
-const TILE_WIDTH: Record<SlideViewState.GridSize, number> = { small: 200, large: 360 };
+/** Thumbnail width bounds at each grid size (px): the grid drops a column below `min` and stops growing at `max`. */
+const TILE_WIDTH: Record<SlideViewState.GridSize, { min: number; max: number }> = {
+  small: { min: 200, max: 300 },
+  large: { min: 360, max: 540 },
+};
 
 export type SlideGridProps = {
   slides: SlideSource[];

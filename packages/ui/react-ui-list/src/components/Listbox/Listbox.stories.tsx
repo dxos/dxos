@@ -249,7 +249,9 @@ const TilesStory = ({ tileWidth }: { tileWidth?: number }) => {
       )}
       <Listbox.Root
         items={items}
-        {...(tileWidth ? { tileWidth: large ? tileWidth * 2 : tileWidth } : { tiles: 4 })}
+        {...(tileWidth
+          ? { tileWidth: { min: tileWidth * (large ? 2 : 1), max: tileWidth * (large ? 3 : 1.5) } }
+          : { tiles: 4 })}
         value={selected}
         onValueChange={setSelected}
         classNames='dx-grow'

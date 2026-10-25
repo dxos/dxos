@@ -48,6 +48,9 @@ type ListboxOption = {
 /** `none` keeps zag's focus, keyboard and typeahead with no selection (AUDIT §6 group B: every list runs the machine). */
 type ListboxSelectionMode = 'single' | 'multiple' | 'extended' | 'none';
 
+/** Bounds of a responsive tile's width, in pixels. */
+export type TileWidth = { min: number; max?: number };
+
 type RootContextValue = {
   items: readonly ListboxOption[];
   selectionMode: ListboxSelectionMode;
@@ -55,7 +58,7 @@ type RootContextValue = {
   /** Whether items lay out as tiles (a fixed `tiles` count or an auto-fill `tileWidth`). */
   tiled: boolean;
   tiles?: number;
-  tileWidth?: number;
+  tileWidth?: TileWidth;
   /** Set by Content from the columns it renders under `tileWidth`, so the arrow keys move by what is on screen. */
   setColumnCount: (count: number) => void;
   virtual?: VirtualMode;
@@ -105,10 +108,11 @@ type ListboxRootProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'd
    */
   tiles?: number;
   /**
-   * Lays the items out as tiles at least this many pixels wide, as many columns as fit. The grid reflows as its container
-   * resizes, every tile keeping one width, and the arrow keys move by the columns on screen. Ignored with `tiles`.
+   * Lays the items out as tiles between `min` and `max` pixels wide (`max` defaults to filling the row): as many columns
+   * as fit at `min`, each as wide as the row allows up to `max`. The grid reflows as its container resizes, and the
+   * arrow keys move by the columns on screen. Ignored with `tiles`.
    */
-  tileWidth?: number;
+  tileWidth?: TileWidth;
   /**
    * Long lists: `fixed` windows equal-height rows, `measured` windows rows of any height, `variable` defers off-screen
    * rows (`content-visibility`). Ignored for `tiles`.
@@ -250,27 +254,33 @@ type ListboxContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> &
   Pick<ContainerProps, 'gutter' | 'gap' | 'padBlock'>;
 
 /**
- * Reports the columns an auto-fill tile grid renders, read from its computed tracks rather than recomputed from the
- * width, so the arrow keys and the layout cannot disagree.
+ * Sizes a `tileWidth` grid: the columns that fit at the minimum width, written to the content's `--dx-tile-count` from
+ * the resize callback (before paint, so the layout never lags its container) and reported for the arrow keys. CSS alone
+ * cannot do this: `auto-fill` counts columns by a definite maximum, so tiles could never shrink below it.
  */
 const useAutoColumns = (
   element: HTMLElement | null,
-  tileWidth: number | undefined,
+  tileWidth: TileWidth | undefined,
   setColumnCount: (count: number) => void,
 ) => {
+  const min = tileWidth?.min;
   useEffect(() => {
-    if (!element || !tileWidth) {
+    if (!element || !min) {
       return;
     }
     const measure = () => {
-      const tracks = getComputedStyle(element).gridTemplateColumns.split(' ').filter(Boolean).length;
-      setColumnCount(Math.max(1, tracks));
+      const style = getComputedStyle(element);
+      const width = element.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+      const gap = parseFloat(style.columnGap) || 0;
+      const count = Math.max(1, Math.floor((width + gap) / (min + gap)));
+      element.style.setProperty('--dx-tile-count', String(count));
+      setColumnCount(count);
     };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(element);
     return () => observer.disconnect();
-  }, [element, tileWidth, setColumnCount]);
+  }, [element, min, setColumnCount]);
 };
 
 /**
@@ -318,7 +328,7 @@ const ListboxContent = composable<HTMLDivElement, ContainerProps & Omit<Componen
         style={{
           ...contentProps.style,
           ...style,
-          ...(tileWidth ? { '--dx-tile-width': `${tileWidth}px` } : {}),
+          ...(tileWidth?.max ? { '--dx-tile-max': `${tileWidth.max}px` } : {}),
           ...ownStyle,
         }}
         className={className}
