@@ -9,7 +9,7 @@ group review "plugin-review" {
   node Thread "Thread" ref="packages/sdk/types/src/types/Thread.ts"
   node AnchoredTo "AnchoredTo" ref="packages/sdk/types/src/types/AnchoredTo.ts"
   node Settings "Review Settings" ref="packages/plugins/plugin-review/src/types/Settings.ts"
-  node Runner "AgentRunner (cap)" ref="packages/plugins/plugin-review/src/types/CommentCapabilities.ts"
+  node Runner "Runner (toolkit)" ref="packages/sdk/app-toolkit/src/app-framework/AppCapabilities.ts"
 }
 group assistant "plugin-assistant" {
   node CommentRunner "Comment runner" ref="packages/plugins/plugin-assistant/src/capabilities/index.ts"
