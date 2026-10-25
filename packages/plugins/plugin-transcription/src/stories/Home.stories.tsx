@@ -29,13 +29,13 @@ import * as ScrollContainer from '@dxos/react-ui/ScrollContainer';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
+import { WHISTLE_AUDIO_CONSTRAINTS } from '../whistle/capture.ts';
+import { type AssistantConfig, NEEDLE_MODEL_URL, type NeedleCall, type WhistleWord } from '../whistle/protocol.ts';
+import { usePushToTalk } from '../whistle/usePushToTalk.ts';
+import { type UseWhistleResult, type WhistleAnswer, useWhistle } from '../whistle/useWhistle.ts';
+import { Waveform } from '../whistle/Waveform.tsx';
 import { FloorPlan } from './home/FloorPlan.tsx';
 import { HOME_SYSTEM, HOME_TOOLS, type HomeState, applyCall, formatCall, initialHome } from './home/home.ts';
-import { WHISTLE_AUDIO_CONSTRAINTS } from './whistle/capture.ts';
-import { type AssistantConfig, NEEDLE_MODEL_URL, type NeedleCall, type WhistleWord } from './whistle/protocol.ts';
-import { usePushToTalk } from './whistle/usePushToTalk.ts';
-import { type UseWhistleResult, type WhistleAnswer, useWhistle } from './whistle/useWhistle.ts';
-import { Waveform } from './whistle/Waveform.tsx';
 
 const ASSISTANT: AssistantConfig = { modelUrl: NEEDLE_MODEL_URL, tools: HOME_TOOLS, system: HOME_SYSTEM };
 

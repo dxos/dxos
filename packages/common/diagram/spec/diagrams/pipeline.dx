@@ -1,0 +1,13 @@
+diagram kind=dataflow
+node Author "Author or agent" role=external
+node Read "Dsl.read" ref="packages/common/diagram/src/dsl/parse.ts"
+node Layout "Engine by kind" ref="packages/common/diagram/src/dsl/compile.ts"
+node Apply "Variant builder" ref="packages/common/diagram/src/content.ts"
+node Store "Drawing.Canvas" role=store ref="packages/plugins/plugin-illustrator/src/types/Drawing.ts"
+node Check "Diagnostics" ref="packages/common/diagram/src/diagnostics.ts"
+edge Author -> Read ".dx source"
+edge Read -> Layout "Semantic.Diagram"
+edge Layout -> Apply "Scene.Command[]"
+edge Apply -> Store "records"
+edge Store -> Check "scene"
+edge Check -> Author "report"

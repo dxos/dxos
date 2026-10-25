@@ -158,6 +158,7 @@
     "@dxos/plugin-spotlight": "workspace:*",
     "@dxos/plugin-stack": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
+    "@dxos/plugin-ste": "workspace:*",
     "@dxos/plugin-stream-deck": "workspace:*",
     "@dxos/plugin-studio": "workspace:*",
     "@dxos/plugin-support": "workspace:*",

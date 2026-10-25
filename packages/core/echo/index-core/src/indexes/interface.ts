@@ -37,6 +37,12 @@ export interface IndexerObject {
   queuePosition?: number | null;
 
   /**
+   * Local insertion id of the feed block this object was read from, which retention names a deleted
+   * block by. Set only for queue objects read from a local store; null otherwise.
+   */
+  queueInsertionId?: number | null;
+
+  /**
    * Record id from the objectMeta index.
    * `Null` before the object is stored in the EntityMetaIndex.
    * Enriched by the IndexEngine after the object is stored in the EntityMetaIndex.

@@ -24,7 +24,7 @@ import { describe, test } from 'vitest';
 import { fixtureExists, fixturePath } from '@dxos/fixtures';
 
 const REPLAY = join(
-  resolve(dirname(fileURLToPath(import.meta.url)), '../../../../../..'),
+  resolve(dirname(fileURLToPath(import.meta.url)), '../../../../..'),
   '.agents/skills/audio-view/scripts/whistle-replay.mjs',
 );
 

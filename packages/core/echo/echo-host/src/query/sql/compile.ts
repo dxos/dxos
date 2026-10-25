@@ -158,6 +158,7 @@ export class SqlPlanCompiler {
   readonly #hops: Relation[] = [];
   /** Whether a traversal ran inside a union branch or subquery, whose derivations the chain cannot state. */
   #nestedTraversal = false;
+  #feedCutoffs: ReadonlyMap<string, number> = new Map();
 
   constructor(sql: SqlClient.SqlClient, planSubquery: PlanSubquery) {
     this.#sql = sql;
@@ -166,6 +167,7 @@ export class SqlPlanCompiler {
 
   compile(plan: QueryPlan.Plan, options: CompileOptions = {}): CompiledQuery {
     const sql = this.#sql;
+    this.#feedCutoffs = options.feedCutoffs ?? new Map();
     this.#includeAllFeeds = planIncludesAllFeeds(plan);
     let root = this.#compilePlan(plan, undefined);
     if (options.strongDependencyFilter !== false) {
@@ -254,7 +256,10 @@ export class SqlPlanCompiler {
     const spaces = spaceScopes.map((scope) => scope.spaceId as SpaceId);
     const queues = step.scope.filter((scope): scope is QueryAST.FeedScope => scope._tag === 'feed');
     const includeAllQueues = spaceScopes.some((scope) => scope.includeAllFeeds === true);
-    const queueRefs = extractQueueRefs(queues.map((scope) => String(scope.feedUri)));
+    const queueRefs = withFeedCutoffs(
+      extractQueueRefs(queues.map((scope) => String(scope.feedUri))),
+      this.#feedCutoffs,
+    );
     const scope = buildSourceCondition(sql, spaces, includeAllQueues, queueRefs);
     const window = buildQueueWindow(sql, extractQueueWindow(step));
 
@@ -1304,6 +1309,8 @@ export type CompileOptions = {
    * executor mirrors the client-side gate so dependency-broken objects never reach it.
    */
   strongDependencyFilter?: boolean;
+  /** Per feed (keyed `<spaceId>/<feedId>`), the time (unix ms) before which its rows have expired. */
+  feedCutoffs?: ReadonlyMap<string, number>;
 };
 
 /**
@@ -1573,6 +1580,16 @@ const extractQueueRefs = (queues: readonly string[]): QueueRef[] | null => {
   }
   return refs;
 };
+
+/**
+ * Bounds each space-qualified queue by its feed's retention cutoff, so the read (and the page limit
+ * after it) never counts an expired row. An unqualified queue names no space whose options apply.
+ */
+export const withFeedCutoffs = (refs: QueueRef[] | null, feedCutoffs: ReadonlyMap<string, number>): QueueRef[] | null =>
+  refs?.map((ref) => {
+    const updatedSince = ref.spaceId !== undefined ? feedCutoffs.get(`${ref.spaceId}/${ref.queueId}`) : undefined;
+    return updatedSince !== undefined ? { ...ref, updatedSince } : ref;
+  }) ?? null;
 
 /** Bound below every assigned position, which start at 0. */
 const BEFORE_FIRST_POSITION = -1;

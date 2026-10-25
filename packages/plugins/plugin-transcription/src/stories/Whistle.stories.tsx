@@ -30,13 +30,13 @@ import * as ScrollContainer from '@dxos/react-ui/ScrollContainer';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { WHISTLE_AUDIO_CONSTRAINTS } from './whistle/capture.ts';
-import { type WhistleWord } from './whistle/protocol.ts';
-import { Recording } from './whistle/recording.ts';
-import { usePlayback } from './whistle/usePlayback.ts';
-import { usePushToTalk } from './whistle/usePushToTalk.ts';
-import { type UseWhistleResult, useWhistle } from './whistle/useWhistle.ts';
-import { Waveform } from './whistle/Waveform.tsx';
+import { WHISTLE_AUDIO_CONSTRAINTS } from '../whistle/capture.ts';
+import { type WhistleWord } from '../whistle/protocol.ts';
+import { Recording } from '../whistle/recording.ts';
+import { usePlayback } from '../whistle/usePlayback.ts';
+import { usePushToTalk } from '../whistle/usePushToTalk.ts';
+import { type UseWhistleResult, useWhistle } from '../whistle/useWhistle.ts';
+import { Waveform } from '../whistle/Waveform.tsx';
 
 /** Terms Whistle is biased towards by default: DXOS names it would otherwise hear as ordinary words. */
 const DXOS_KEYWORDS = [

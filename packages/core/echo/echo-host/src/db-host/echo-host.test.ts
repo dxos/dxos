@@ -97,7 +97,7 @@ describe('EchoHost index status', () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
     const spaceId = SpaceId.random();
-    const first = new EchoHost({ runtime });
+    const first = new EchoHost({ runtime, assignQueuePositions: true });
     await first.open(Context.default());
     for (let i = 0; i < 3; i++) {
       await first.createDoc<DatabaseDirectory>({
@@ -179,7 +179,7 @@ describe('EchoHost index status', () => {
   test('counts the stored feed blocks of its spaces as the rebuild when it opens', async () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
-    const first = new EchoHost({ runtime });
+    const first = new EchoHost({ runtime, assignQueuePositions: true });
     await first.open(Context.default());
     const root = await first.createSpaceRoot(Context.default(), PublicKey.random());
     const spaceId = root.doc()!.access!.spaceId!;
@@ -586,6 +586,82 @@ describe('EchoHost index failures', () => {
       sql<{ cursor: string }>`SELECT cursor FROM indexCursor WHERE sourceName = 'queue' AND spaceId = ${spaceId}`,
     );
     expect(cursors.map(({ cursor }) => cursor)).not.toContain('foreign|5');
+  });
+});
+
+describe('EchoHost feed options', () => {
+  const FEED_TYPE = DXN.make('org.dxos.type.feed', '0.1.0');
+
+  /** A Feed object in its own document, and `count` blocks appended to the feed it names. */
+  const saveFeed = async (
+    host: EchoHost,
+    runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>,
+    spaceId: SpaceId,
+    data: Record<string, unknown>,
+    count: number,
+  ) => {
+    const feedId = EntityId.random();
+    await host.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceId },
+      objects: { [feedId]: EntityStructure.makeObject({ type: FEED_TYPE, data }) },
+      links: {},
+    });
+    await host.flush(Context.default());
+    await RuntimeProvider.runPromise(runtime)(
+      host.feedStore.appendLocal(
+        Array.from({ length: count }, () => ({
+          spaceId,
+          feedId,
+          feedNamespace: FeedProtocol.WellKnownNamespaces.data,
+          data: EchoFeedCodec.encode({ id: EntityId.random() }),
+        })),
+      ),
+    );
+    return { spaceId, feedId, feedNamespace: FeedProtocol.WellKnownNamespaces.data };
+  };
+
+  // Positions are assigned locally because a replica never trims a block it has not pushed.
+  test('an index pass applies the options of an indexed Feed object to the store and clears the intent', async () => {
+    const { host, runtime, spaceId } = await setup({ assignQueuePositions: true });
+    const feed = await saveFeed(host, runtime, spaceId, { retention: { maxLength: 2 } }, 4);
+    await host.updateIndexes();
+
+    const run = RuntimeProvider.runPromise(runtime);
+    expect(await run(host.feedStore.getFeedOptions(feed))).toEqual({ retention: { maxLength: 2 } });
+    expect(await run(host.feedStore.countBlocks(feed))).toBe(2);
+    expect((await run(host.indexEngine.takeFeedOptionsIntents())).intents).toEqual([]);
+  });
+
+  // T-1: the intent is the only record of the change once the cursor has passed the Feed object.
+  test('an intent whose apply failed is applied by the startup pass after a restart', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const run = RuntimeProvider.runPromise(runtime);
+    const spaceId = SpaceId.random();
+
+    const first = new EchoHost({ runtime, assignQueuePositions: true });
+    await first.open(Context.default());
+    const feed = await saveFeed(first, runtime, spaceId, { retention: { maxLength: 1 } }, 3);
+    vi.spyOn(first.feedStore, 'setFeedOptions').mockReturnValue(
+      Effect.fail(
+        new SqlError.SqlError({ reason: new SqlError.UnknownError({ cause: undefined, message: 'disk I/O error' }) }),
+      ),
+    );
+    await first.updateIndexes();
+    expect((await run(first.indexEngine.takeFeedOptionsIntents())).intents).toHaveLength(1);
+    expect(await run(first.feedStore.countBlocks(feed))).toBe(3);
+    await first.close();
+
+    const second = new EchoHost({ runtime, assignQueuePositions: true });
+    await second.open(Context.default());
+    onTestFinished(async () => {
+      await second.close();
+    });
+    await second.updateIndexes();
+    expect(await run(second.feedStore.getFeedOptions(feed))).toEqual({ retention: { maxLength: 1 } });
+    expect(await run(second.feedStore.countBlocks(feed))).toBe(1);
+    expect((await run(second.indexEngine.takeFeedOptionsIntents())).intents).toEqual([]);
   });
 });
 
@@ -999,7 +1075,10 @@ const idLookupRequest = (
 });
 
 const setup = async (
-  options: Pick<EchoHostProps, 'indexTransactionLimits' | 'indexRecountInterval' | 'queryExecutor'> = {},
+  options: Pick<
+    EchoHostProps,
+    'indexTransactionLimits' | 'indexRecountInterval' | 'queryExecutor' | 'assignQueuePositions'
+  > = {},
 ) => {
   const { runtime, dispose } = createTestSqliteRuntime();
   const host = new EchoHost({ runtime, ...options });
