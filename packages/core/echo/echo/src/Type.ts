@@ -126,11 +126,19 @@ export type AnyObj = Obj<unknown>;
  * declaration emit: structural expansion (which can pull in unnameable union
  * members from referenced schemas) is replaced by a reference to the class.
  *
+ * The second call takes either a schema, or struct fields (wrapped in `Schema.Struct`) with an optional function
+ * that pipes annotations onto the struct.
+ *
  * @example
  * ```ts
  * export class Person extends Type.makeObject<Person>(DXN.make('com.example.type.myType', '0.1.0'))(Schema.Struct({
  *   name: Schema.String,
  * })) {}
+ *
+ * export class Tag extends Type.makeObject<Tag>(DXN.make('com.example.type.tag', '0.1.0'))(
+ *   { label: Schema.String },
+ *   Annotation.LabelAnnotation.set(['label']),
+ * ) {}
  * ```
  *
  * @performance O(schema size) once at definition time; builds the type entity eagerly, so call it at module scope, not
@@ -138,13 +146,26 @@ export type AnyObj = Obj<unknown>;
  */
 // TODO(burdon): Require { typename, version } in options.
 export const makeObject: {
-  <Self>(
-    dxn: DXN.DXN,
-    options?: { id?: EntityId },
-  ): <_Schema extends Schema.Top>(schema: _Schema) => ObjClass<Self, Schema.Schema.Type<_Schema>, {}>;
+  <Self>(dxn: DXN.DXN, options?: { id?: EntityId }): MakeObject<Self>;
   // Boundary cast: overload implementation bodies cannot access outer generic params (`Self`),
   // so TypeScript cannot verify that makeObjectType's return matches the declared ObjClass<Self,…>.
-} = (dxn, options) => (schema) => internal.makeObjectType(dxn, schema, options) as any;
+} = (dxn, options) =>
+  ((schemaOrFields: Schema.Top | Schema.Struct.Fields, annotate?: (schema: Schema.Top) => Schema.Top) => {
+    const schema = Schema.isSchema(schemaOrFields) ? schemaOrFields : Schema.Struct(schemaOrFields);
+    return internal.makeObjectType(dxn, annotate ? annotate(schema) : schema, options);
+  }) as any;
+
+/**
+ * Second stage of {@link makeObject}: takes a schema, or struct fields plus an optional annotation pipe.
+ */
+export interface MakeObject<Self> {
+  <_Schema extends Schema.Top>(schema: _Schema): ObjClass<Self, Schema.Schema.Type<_Schema>, {}>;
+  <Fields extends Schema.Struct.Fields>(fields: Fields): ObjClass<Self, Schema.Struct.Type<Fields>, {}>;
+  <Fields extends Schema.Struct.Fields, _Schema extends Schema.Top>(
+    fields: Fields,
+    annotate: (schema: Schema.Struct<Fields>) => _Schema,
+  ): ObjClass<Self, Schema.Schema.Type<_Schema>, {}>;
+}
 
 //
 // Type — the ECHO entity that holds a schema and metadata.
