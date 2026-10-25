@@ -1,6 +1,6 @@
 # Comment threads on feeds
 
-Status: PROPOSED. Stage 1 is agreed; stages 2 and 3 are direction, not yet designed in detail.
+Status: stage 1 IMPLEMENTED; stages 2 and 3 are direction, not yet designed in detail.
 
 ## Problem
 
@@ -19,11 +19,11 @@ should share one conversation model instead of keeping two.
 Review and chat share the **feed of `Message`s**, not the `Chat`. Each conversation container is a
 thin object that owns (or points at) a feed and adds only what its role needs.
 
-| Container           | Adds to the feed                                      | Owner of the AI turn                                    |
-| ------------------- | ----------------------------------------------------- | ------------------------------------------------------- |
-| `Thread` (comments) | subject anchor (`AnchoredTo`), `status`, `agent` mode | plugin-assistant, via `CommentCapabilities.AgentRunner` |
-| `Channel`           | `backend` (local feed, email, Bluesky, …)             | plugin-agent relays                                     |
-| `Chat`              | `session` (model), `instructions`, `tasks`, `remote`  | `AgentService`                                          |
+| Container           | Adds to the feed                                      | Owner of the AI turn                                       |
+| ------------------- | ----------------------------------------------------- | ---------------------------------------------------------- |
+| `Thread` (comments) | subject anchor (`AnchoredTo`), `status`, `agent` mode | plugin-assistant, via `AppCapabilities.CommentAgentRunner` |
+| `Channel`           | `backend` (local feed, email, Bluesky, …)             | plugin-agent relays                                        |
+| `Chat`              | `session` (model), `instructions`, `tasks`, `remote`  | `AgentService`                                             |
 
 `Thread` and `Chat` stay separate types: merging them would put model and task fields on every
 comment, and anchors on every chat.
@@ -41,8 +41,8 @@ comment, and anchors on every chat.
   to the subject.
 - **SubjectContext** — the assistant's per-type contributions that bind skills (the drawing skill for
   a diagram, the Markdown skill for a document).
-- **AgentRunner** — capability defined by plugin-review, implemented by plugin-assistant; review
-  never imports the assistant.
+- **CommentAgentRunner** — capability in `@dxos/app-toolkit`, contributed by plugin-assistant; neither
+  plugin depends on the other.
 - **Review Settings** — `commentAgentMode` (`off` | `auto` | `mention`, default `mention`) decides
   which threads get the agent and when it answers.
 - **Root feed** (stage 2, dashed) — one per subject; thread and chat feeds become its branches.
@@ -51,29 +51,29 @@ comment, and anchors on every chat.
 
 1. **`Thread` 0.3.0 owns a `Feed`.**
    - `messages` is replaced by `feed: Ref<Feed>` with `SetParent`, so deleting a thread deletes its
-     feed.
-   - The feed is created when a staged thread is first persisted.
-   - An ECHO migration from 0.2.0 creates the feed and appends the existing messages in order.
+     feed. `Thread.make` creates the feed, and adding the thread to a database adds it too.
+   - `Thread.messagesQuery`, `Thread.sortMessages` and `Thread.loadMessages` read it. Messages are
+     ordered by `created`, not by feed position, because an edit or re-append takes a new position.
+   - The `threadMessagesToFeed` migration (plugin-review) moves 0.2.0 threads' messages into a new
+     feed, keeping each message's id.
 2. **Operations write to the feed.**
-   - `AddMessage` calls `Feed.append`.
-   - `DeleteMessage` marks the message deleted rather than calling `Feed.remove`. A re-append for
-     undo would take a new position (`Feed.append` assigns one from the position authority, with no
-     way to re-insert), so a removed message would come back at the end.
-   - `RestoreMessage` clears the mark.
-3. **Readers query the feed.** `CommentsArticle`, `comment-sync`, `react-ui-thread`, plugin-sheet's
-   `thread-ranges` and the debug snapshot switch from `thread.messages` to a reactive feed query,
-   hiding deleted messages.
-4. **`Chat.feed` may be unowned.** Ownership (`SetParent`) becomes optional so a chat can run on a
-   feed another object owns. Assistant chats still own theirs.
-5. **plugin-assistant contributes the comment runner.**
-   - For a thread with the agent on, it creates the hidden `Chat` (parented to the thread, marked so
-     chat lists skip it), points it at the thread's feed and binds the subject with
-     `BindChatContext`.
-   - Each turn runs through `RunPromptInChat`, and the reply lands in the thread's feed.
-   - plugin-review keeps the trigger decision (`shouldTriggerAgent`) and deletes its own runner and
-     its Markdown imports.
-6. **The comment UI shows the final reply.** Tool calls and permission requests land in the feed;
-   the comment UI hides them in stage 1.
+   - `AddMessage` saves a staged thread first, then calls `Feed.append`. A comment carries
+     `role: 'user'`, which the agent reads it as.
+   - `DeleteMessage` calls `Feed.remove`; `RestoreMessage` re-appends the message under its own id
+     and `created`, so the send-order sort puts it back in place (`src/thread-feed.test.ts`).
+3. **Readers query the feed.** The comments companion (`useThreadMessages`), plugin-thread's
+   `ThreadArticle` and the debug snapshot read the feed. The companion shows only messages with a
+   visible block, which hides the agent's synthetic prompts, reasoning and tool traffic.
+4. **`Chat.feed` may be unowned.** `SetParent.set({ override: false })`: a chat claims a feed only
+   when nothing else owns it, so a thread keeps its feed while a chat runs on it.
+5. **plugin-assistant runs the turns.**
+   - `AddMessage` schedules `RespondToThread` when `shouldTriggerAgent` passes and a runner is
+     contributed.
+   - The runner finds or creates the thread's chat with `CreateChat { feed }`, parented to the thread
+     so the Chats section (which skips parented chats) never lists it, binds the subject with
+     `BindChatContext`, and runs `RunPromptInChat` with a synthetic prompt naming the object and the
+     anchored text (`AppCapabilities.AnchorResolver`).
+   - plugin-review's own runner, its Markdown prompt and its two text-edit tools are deleted.
 
 ## Stage 2 — one root feed per subject
 
@@ -90,10 +90,8 @@ directly.
 
 ## Open items
 
-1. How a message is marked deleted: a field on `Message`, or an appended retraction item, depending
-   on whether feed items can be updated in place.
-2. Whether the Markdown skill can replace an anchored range; today's `editAnchoredRange` tool has no
-   equivalent there.
-3. What marks a hidden chat so chat lists and search skip it (a `Feed.kind`, a `viewType`, or a meta
-   key).
-4. Cost of one feed and one agent session per thread in a busy document.
+1. Whether the Markdown skill can replace an anchored range; the deleted `editAnchoredRange` tool has
+   no equivalent there yet.
+2. Cost of one feed and one agent session per thread in a busy document.
+3. Tool calls and permission requests are hidden in the comment UI; a turn that waits on a permission
+   request shows nothing until it is answered elsewhere.

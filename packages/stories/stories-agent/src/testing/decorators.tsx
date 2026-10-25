@@ -3,6 +3,7 @@
 //
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
+import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import { type Database, type Type } from '@dxos/echo';
 import * as AgentChannels from '@dxos/plugin-agent/AgentChannels';
@@ -60,6 +61,10 @@ const TYPES: Type.AnyEntity[] = [
 export type DecoratorsProps = {
   /** The client config; the live stories use {@link storyConfig}. */
   config?: Config;
+  /** Plugins a story adds to the agent stack (e.g. the objects it comments on). */
+  plugins?: Plugin.Plugin[];
+  /** Types a story's objects need beyond the agent stack's. */
+  types?: Type.AnyEntity[];
   /** Seeds the space through plugin operations once it is available; a returned function runs on teardown. */
   onReady: (props: {
     db: Database.Database;
@@ -70,11 +75,11 @@ export type DecoratorsProps = {
 /** Props, or a function of the story's args, so a story's config (e.g. `persistent`) can follow its Controls. */
 export type DecoratorsInput<Args> = DecoratorsProps | ((context: { args: Args }) => DecoratorsProps);
 
-const makeDecoratorProps = ({ config, onReady }: DecoratorsProps) => ({
+const makeDecoratorProps = ({ config, plugins = [], types = [], onReady }: DecoratorsProps) => ({
   ...(config ? { config } : {}),
   // Skill definitions ride the assistant's start event; without it the agent's skill rows render blank labels.
   setupEvents: [AppActivationEvents.AssistantStart],
-  types: TYPES,
+  types: [...TYPES, ...types],
   plugins: [
     AssistantPlugin.make(),
     ThreadPlugin.make(),
@@ -83,6 +88,7 @@ const makeDecoratorProps = ({ config, onReady }: DecoratorsProps) => ({
     // Copies the plugins' skill definitions into the client registry, which resolves an agent's bound skills.
     RoutinePlugin.make(),
     DiscordPlugin.make(),
+    ...plugins,
     makeModuleSurfacesPlugin('org.dxos.plugin.stories-agent.modules', moduleSurfaces),
     StorySetupPlugin({ onReady }),
   ],

@@ -6,8 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj, Ref, Relation } from '@dxos/echo';
+import { Database, Feed, Obj, Ref, Relation } from '@dxos/echo';
 import { batchEvents } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
@@ -29,13 +30,11 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
       const db = Obj.getDatabase(subject);
       invariant(db, 'Database not found');
 
+      // A comment is the user's turn, so it carries the role an agent reading the thread's feed expects.
       const message = Obj.make(Message.Message, {
         created: new Date().toISOString(),
-        sender,
+        sender: { ...sender, role: sender.role ?? 'user' },
         blocks: [{ _tag: 'text', text }],
-      });
-      Obj.update(thread, (thread) => {
-        thread.messages.push(Ref.make(message));
       });
 
       const state = registry.get(stateAtom);
@@ -94,12 +93,15 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
         });
       }
 
+      // Appended only once the thread is saved, because a feed accepts items only when it is in a database.
+      const feed = yield* Effect.promise(() => thread.feed.load());
+      yield* Feed.append(feed, [message]).pipe(Effect.provide(Database.layer(db)));
+
       yield* Operation.schedule(ObservabilityOperation.SendEvent, {
         name: 'comments.message.add',
         properties: {
           spaceId: db.spaceId,
           threadId: thread.id,
-          threadLength: thread.messages.length,
           messageId: message.id,
           messageLength: text.length,
         },
@@ -110,12 +112,14 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
       // user's message commit returns immediately and the agent runs out-of-band.
       const identities = yield* Capability.getAll(AgentIdentity.AgentIdentity);
       const identity = identities[0];
+      const runners = yield* Capability.getAll(AppCapabilities.CommentAgentRunner);
       // A thread saved without an agent config (created before the setting was on) follows the current setting.
       const agent = thread.agent ?? (yield* commentAgentConfig());
-      if (identity && shouldTriggerAgent(thread, message, identity.name, agent)) {
+      if (identity && runners.length > 0 && shouldTriggerAgent(thread, message, identity.name, agent)) {
         yield* Operation.schedule(CommentOperation.RespondToThread, {
           thread: Ref.make(thread),
           subject: Ref.make(subject),
+          messageId: message.id,
         });
       }
     }),

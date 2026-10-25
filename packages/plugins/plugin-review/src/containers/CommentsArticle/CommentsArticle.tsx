@@ -39,7 +39,7 @@ import { hexToHue } from '@dxos/util';
 import { CommentThread, type CommentThreadProps, Suggestions } from '#components';
 import { type SuggestionGroup, useStatus } from '#hooks';
 import { meta } from '#meta';
-import { CommentCapabilities, CommentOperation, ReviewCapabilities } from '#types';
+import { AgentIdentity, CommentCapabilities, CommentOperation, ReviewCapabilities } from '#types';
 
 import { commentsViewAspect } from '../../capabilities/comments-view-state.ts';
 import { currentObjectId, findCommentConfig, getMessageMetadata } from '../../util/index.ts';
@@ -117,6 +117,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   // author metadata resolved against members, and the local author's composer metadata.
   const space = getSpace(subject);
   const members = useMembers(space?.id);
+  const [agentIdentity] = Hooks.useCapabilities(AgentIdentity.AgentIdentity);
   const getMetadata = useCallback(
     (message: MessageType.Message) => {
       const senderIdentity = members.find(
@@ -125,9 +126,14 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
           (message.sender.identityKey && member.identityKey === message.sender.identityKey),
       );
 
-      return getMessageMetadata(Obj.getURI(message), senderIdentity, message.sender);
+      // The assistant writes replies with no name of its own; they are the comment agent's.
+      const sender =
+        message.sender.role === 'assistant' && !message.sender.name
+          ? { ...message.sender, name: agentIdentity?.name }
+          : message.sender;
+      return getMessageMetadata(Obj.getURI(message), senderIdentity, sender);
     },
-    [members],
+    [members, agentIdentity],
   );
   const authorMetadata = useMemo<MessageMetadata>(
     () => getMessageMetadata(subjectId, identity ?? undefined),
@@ -335,7 +341,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   );
 
   const handleMessageDelete = useCallback(
-    (anchor: AnchoredTo.AnchoredTo, message: Ref.Ref<MessageType.Message>) =>
+    (anchor: AnchoredTo.AnchoredTo, message: MessageType.Message) =>
       invokePromise(CommentOperation.DeleteMessage, {
         anchor,
         subject,
@@ -345,11 +351,9 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   );
 
   const handleAcceptProposal = useCallback(
-    async (anchor: AnchoredTo.AnchoredTo, messageId: string) => {
+    async (anchor: AnchoredTo.AnchoredTo, message: MessageType.Message) => {
       const thread = Relation.getSource(anchor) as Thread.Thread;
-      const messageIndex = thread.messages.findIndex(Ref.hasEntityId(messageId));
-      const message = thread.messages[messageIndex]?.target;
-      const proposal = message?.blocks.find((block) => block._tag === 'proposal');
+      const proposal = message.blocks.find((block) => block._tag === 'proposal');
       if (!proposal || !anchor.anchor) {
         return;
       }

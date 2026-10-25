@@ -245,13 +245,14 @@ service HistoryProvider
 ```
 
 ```mdl
-service AgentRunner
+service CommentAgentRunner
   desc: |
-    Capability that executes one agent turn for a thread + subject. Default implementation performs
-    one LanguageModel.generateText call with edit tools registered per turn (editAnchoredRange,
-    updateDocument). Stub implementations are used in storybook + tests.
+    `AppCapabilities.CommentAgentRunner` (@dxos/app-toolkit): executes one agent turn for a thread +
+    subject after the triggering message is in the thread's feed. plugin-assistant contributes it
+    (a hidden chat per thread, running on the thread's feed, bound to the subject); stories and tests
+    pass a stub through `ReviewPluginOptions.agentRunner`. Without one the agent never fires.
   methods:
-    run(input: { thread: Thread, subject: Obj.Any }) -> Effect<void>
+    run(input: { thread: Thread, subject: Obj.Any, message: Message }) -> Effect<void>
 ```
 
 ## Operations
@@ -642,4 +643,11 @@ decision D-1: The `commentAgentMode` setting moves here from plugin-markdown and
   date: 2026-10-25
   by: user:richburdon
   affects: [F-6.2]
+```
+
+```mdl
+decision D-2: Comment threads keep their messages in a feed the thread owns (`Thread` 0.3.0, migrated from 0.2.0), and plugin-assistant runs agent turns on that feed through `AppCapabilities.CommentAgentRunner`; the plugin's own LLM runner is deleted. Design: `docs/COMMENT-FEEDS.md`.
+  date: 2026-10-25
+  by: user:richburdon
+  affects: [F-6.1, F-6.2, CommentAgentRunner]
 ```

@@ -32,14 +32,10 @@ export default Capability.makeModule(
         operation: CommentOperation.DeleteMessage,
         inverse: CommentOperation.RestoreMessage,
         deriveContext: (input, output) => {
-          if (!output.message || output.messageIndex === undefined) {
+          if (!output.message) {
             return;
           }
-          return {
-            anchor: input.anchor,
-            message: output.message,
-            messageIndex: output.messageIndex,
-          };
+          return { anchor: input.anchor, message: output.message };
         },
         message: ['message-deleted.label', { ns: meta.profile.key }],
       }),

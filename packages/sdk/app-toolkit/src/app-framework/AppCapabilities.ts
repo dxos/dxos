@@ -25,7 +25,7 @@ import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';
 import type { Connection } from '@dxos/link';
 import { Progress } from '@dxos/progress';
-import type { AnchoredTo } from '@dxos/types';
+import type { AnchoredTo, Message, Thread } from '@dxos/types';
 import * as Position from '@dxos/util/Position';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
@@ -377,6 +377,25 @@ export type CommentConfig = Readonly<{
  * @category Capability
  */
 export const CommentConfig = Capability$.make<CommentConfig>()('org.dxos.app-framework.capability.commentConfig');
+
+/**
+ * Runs one agent turn on a comment thread, after the triggering `message` is already in the thread's feed.
+ * Contributed by the assistant, so the review plugin owns threads without depending on any AI stack.
+ */
+export type CommentAgentRunner = Readonly<{
+  run: (input: {
+    thread: Thread.Thread;
+    subject: Obj.Unknown;
+    message: Message.Message;
+  }) => Effect$.Effect<void, Error, Capability$.Service>;
+}>;
+
+/**
+ * @category Capability
+ */
+export const CommentAgentRunner = Capability$.make<CommentAgentRunner>()(
+  'org.dxos.app-framework.capability.commentAgentRunner',
+);
 
 /**
  * Where an object of a tagged type goes when it is created without a target. Keyed by a tag on the
