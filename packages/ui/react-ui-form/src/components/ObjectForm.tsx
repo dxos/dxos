@@ -88,7 +88,7 @@ const useObjectFormModel = ({ object, snapshot, db }: ObjectFormModelOptions) =>
       if (changedPaths.some(isTagPath)) {
         Obj.update(object, (object) => {
           // This replaces `tags`, so restore the provider-owned ones held out of the form.
-          Obj.getMeta(object).tags = [...preservedTags, ...resolveMetaTags(metaTags ?? [], db)];
+          Obj.getMeta(object).tags = [...preservedTags, ...resolveMetaTags(metaTags ?? [], db, tags)];
         });
       }
 
@@ -101,7 +101,7 @@ const useObjectFormModel = ({ object, snapshot, db }: ObjectFormModelOptions) =>
         });
       }
     },
-    [object, preservedTags, db],
+    [object, preservedTags, db, tags],
   );
 
   return { values, handleCreate, handleChange };

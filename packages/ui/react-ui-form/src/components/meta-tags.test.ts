@@ -126,4 +126,11 @@ describe('resolveMetaTags', () => {
     expect(resolveMetaTags([picked], db)).toEqual([tag]);
     expect(resolveMetaTags([picked], undefined)).toEqual([]);
   });
+
+  test('keeps a held tag the database lookup misses (deleted or from another space)', ({ expect }) => {
+    const tag = Tag.make({ label: 'Archived' });
+    const db = { getObjectById: () => undefined };
+    const picked = Ref.fromURI(URI.make(EID.make({ entityId: tag.id })));
+    expect(resolveMetaTags([picked], db, [tag])).toEqual([tag]);
+  });
 });

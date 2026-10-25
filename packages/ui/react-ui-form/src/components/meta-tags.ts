@@ -82,16 +82,21 @@ export const partitionMetaTags = (tags: readonly Tag.Tag[]): { editable: Tag.Tag
 };
 
 /**
- * The tags a form's ref picker selected, as the {@link Tag} objects `meta.tags` holds. Looked up in the
- * database: the picker builds its refs from bare URIs, whose `target` has no resolver to read through.
+ * The tags a form's ref picker selected, as the {@link Tag} objects `meta.tags` holds. The picker builds
+ * its refs from bare URIs, whose `target` has no resolver to read through, so each is matched against the
+ * tags the object already holds (which keeps a deleted or cross-space tag the database lookup would miss),
+ * then looked up in the database.
  */
 export const resolveMetaTags = (
   refs: readonly Ref.Ref<Tag.Tag>[],
   db: { getObjectById: (id: string) => unknown } | undefined,
+  held: readonly Tag.Tag[] = [],
 ): Tag.Tag[] =>
   refs.flatMap((ref) => {
     const eid = EID.tryParse(ref.uri);
     const entityId = eid ? EID.getEntityId(eid) : undefined;
-    const tag = entityId ? db?.getObjectById(entityId) : undefined;
+    const tag = entityId
+      ? (held.find((candidate) => candidate.id === entityId) ?? db?.getObjectById(entityId))
+      : undefined;
     return isTag(tag) ? [tag] : [];
   });
