@@ -271,11 +271,17 @@ export class SqlPlanCompiler {
           break;
         }
         const typeCondition = buildTypeDxnCondition(sql, step.selector.typename);
-        // Pinned: the planner otherwise seeks `(spaceId, queueId)` and scans the space's documents
-        // for the type. An inverted select cannot seek the type index, so it is left free.
+        // Pinned: over a space the planner otherwise seeks `(spaceId, queueId)` and scans the space's
+        // documents for the type. One feed is the exception: the type index would read that type in
+        // every feed of the space (a chat's messages among every chat's), where the feed seek reads
+        // only its rows. An inverted select cannot seek the type index, so it is left free.
+        const index =
+          spaces.length === 0 && queueRefs?.length === 1 && queueRefs[0].spaceId !== undefined
+            ? INDEX_SPACE_QUEUE_OBJECT
+            : INDEX_SPACE_TYPE;
         base = step.selector.inverted
           ? sql`SELECT m.recordId, m.objectId, m.spaceId, 1.0 AS rank FROM objectMeta m WHERE ${scope} AND NOT (${typeCondition})${window}`
-          : sql`SELECT m.recordId, m.objectId, m.spaceId, 1.0 AS rank FROM objectMeta m INDEXED BY ${sql.literal(INDEX_SPACE_TYPE)} WHERE ${scope} AND (${typeCondition})${window}`;
+          : sql`SELECT m.recordId, m.objectId, m.spaceId, 1.0 AS rank FROM objectMeta m INDEXED BY ${sql.literal(index)} WHERE ${scope} AND (${typeCondition})${window}`;
         break;
       }
       case 'IdSelector': {

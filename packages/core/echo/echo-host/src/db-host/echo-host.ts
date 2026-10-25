@@ -86,6 +86,24 @@ const CLOSURE_YIELD_INTERVAL = 32;
 
 const AUTOMATIC_GARBAGE_COLLECTION = false;
 
+const AUTOMERGE_URL_PREFIX = 'automerge:';
+
+/**
+ * The document id a link spells, without validating it: for matching against ids already known to be
+ * valid, where a `parseAutomergeUrl` checksum per link would cost more than the lookup it guards.
+ */
+const linkedDocumentIdText = (url: string): string => {
+  if (!url.startsWith(AUTOMERGE_URL_PREFIX)) {
+    return '';
+  }
+  // `parseAutomergeUrl` takes the id verbatim up to a sub-document path (`/`) or heads (`#`).
+  let end = AUTOMERGE_URL_PREFIX.length;
+  while (end < url.length && url[end] !== '/' && url[end] !== '#') {
+    end++;
+  }
+  return url.slice(AUTOMERGE_URL_PREFIX.length, end);
+};
+
 /**
  * Idle window before the second indexing step re-tokenizes what the first one wrote, and the
  * ceiling an unbroken write stream cannot push it past. A typing burst then costs one rebuild
@@ -987,15 +1005,26 @@ export class EchoHost extends Resource {
     await this.#wipeRetiredDocuments(spaceId, DatabaseDirectory.getRetiredDocuments(directory));
     this.#restoreLostRetirements(spaceId, root);
 
+    // Keyed by the id as it is spelled in a link, so the scan below compares strings: decoding every link
+    // (a base58check checksum each) on every directory change saturated the worker on large spaces.
+    const candidates = new Map<string, DocumentId>();
+    for (const [documentId, record] of this._automergeHost.quarantinedDocuments) {
+      if (record.reason === 'load-failed') {
+        candidates.set(documentId, documentId);
+      }
+    }
+    for (const documentId of this.#historyCandidates.keys()) {
+      candidates.set(documentId, documentId);
+    }
+    if (candidates.size === 0) {
+      return;
+    }
+
     const unloadable = new Map<DocumentId, string[]>();
     const bloated = new Map<DocumentId, string[]>();
     for (const [objectId, link] of Object.entries(directory.links ?? {})) {
-      const url = link.toString();
-      if (!isValidAutomergeUrl(url)) {
-        continue;
-      }
-      const documentId = interpretAsDocumentId(url);
-      if (directory.retired?.[documentId] !== undefined) {
+      const documentId = candidates.get(linkedDocumentIdText(link.toString()));
+      if (documentId === undefined || directory.retired?.[documentId] !== undefined) {
         continue;
       }
       if (this._automergeHost.quarantinedDocuments.get(documentId)?.reason === 'load-failed') {
