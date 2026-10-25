@@ -32,6 +32,7 @@ import {
   FAKE_REPLY,
   ModuleContainer,
   createDecorators,
+  defaultEdgeEnvironment,
   edgeFake,
   fakeCommentAgent,
   storyConfig,
@@ -190,14 +191,20 @@ const fakeDecorators = (subject: Subject) =>
     ...subject,
   });
 
-/** The assistant answers through the review plugin's default (mention) mode, on the EDGE the toolbar picks. */
+/**
+ * The assistant answers through the review plugin's default (mention) mode, on the EDGE the toolbar picks: dev until
+ * one is chosen, since without a reachable EDGE the agent's model calls fail and no reply ever appears.
+ */
 const liveDecorators = (subject: Subject) =>
-  createDecorators<StoryArgs>(({ args }) => ({
-    config: storyConfig({ persistent: args.persistent }),
-    plugins: commentPlugins(),
-    types: commentTypes,
-    ...subject,
-  }));
+  createDecorators<StoryArgs>(({ args }) => {
+    defaultEdgeEnvironment('dev');
+    return {
+      config: storyConfig({ persistent: args.persistent }),
+      plugins: commentPlugins(),
+      types: commentTypes,
+      ...subject,
+    };
+  });
 
 /**
  * Replies `text` in the seeded thread and waits for the agent's answer: `reply` matches the fake assistant's text, or,
