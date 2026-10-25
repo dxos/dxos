@@ -124,10 +124,10 @@ export const Slide = {
   play: async ({ canvasElement }: { canvasElement: HTMLElement }) => {
     const slide = await within(canvasElement).findByTestId('slide', undefined, { timeout: 10_000 });
     await waitFor(
-      () => {
+      async () => {
         const scale = Number(slide.querySelector('[data-fit-scale]')?.getAttribute('data-fit-scale'));
-        expect(scale).toBeGreaterThan(0);
-        expect(scale).toBeLessThan(1);
+        await expect(scale).toBeGreaterThan(0);
+        await expect(scale).toBeLessThan(1);
       },
       { timeout: 10_000 },
     );

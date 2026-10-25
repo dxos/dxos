@@ -26,7 +26,8 @@ export type AlignAction = { key: SheetRange.AlignKey; value: SheetRange.AlignVal
 
 export type AlignState = { [SheetRange.alignKey]: SheetRange.AlignValue | undefined };
 
-const aligns: Record<SheetRange.AlignValue, string> = {
+/** The alignment icons, shared by the toolbar and the formatting list. */
+export const ALIGN_ICONS: Record<SheetRange.AlignValue, string> = {
   start: 'ph--text-align-left--regular',
   center: 'ph--text-align-center--regular',
   end: 'ph--text-align-right--regular',
@@ -67,7 +68,7 @@ type AlignActionsContext = {
 };
 
 const createAlignActions = ({ model, state, stateAtom, registry, cursorFallbackRange }: AlignActionsContext) =>
-  Object.entries(aligns).map(([alignValue, icon]) => {
+  Object.entries(ALIGN_ICONS).map(([alignValue, icon]) => {
     return createMenuAction<AlignAction>(
       `${SheetRange.alignKey}--${alignValue}`,
       () => {

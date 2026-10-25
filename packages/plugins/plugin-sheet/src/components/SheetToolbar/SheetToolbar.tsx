@@ -13,6 +13,7 @@ import {
   type ActionGraphProps,
   ActionToolbar,
   createGapSeparator,
+  createLineSeparator,
   graphActions,
   isToolbarAction,
   useMenuActions,
@@ -43,11 +44,13 @@ const createToolbarActions = ({
     const context = { model, state, stateAtom, registry, cursorFallbackRange };
     const align = createAlign(context);
     const style = createStyle(context);
+    // The alignment and style toggles are separate groups, so a line divides them.
+    const line = createLineSeparator('align-style');
     const gap = createGapSeparator();
 
     const graph: ActionGraphProps = {
-      nodes: [...align.nodes, ...style.nodes, ...gap.nodes],
-      edges: [...align.edges, ...style.edges, ...gap.edges],
+      nodes: [...align.nodes, ...line.nodes, ...style.nodes, ...gap.nodes],
+      edges: [...align.edges, ...line.edges, ...style.edges, ...gap.edges],
     };
 
     return graph;

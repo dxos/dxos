@@ -26,20 +26,21 @@ export type StyleState = Partial<Record<SheetRange.StyleValue, boolean>>;
 
 export type StyleAction = { key: SheetRange.StyleKey; value: SheetRange.StyleValue };
 
-const styles: Record<SheetRange.StyleValue, string> = {
+/** The style icons, shared by the toolbar and the formatting list. */
+export const STYLE_ICONS: Record<SheetRange.StyleValue, string> = {
   header: 'ph--rows--regular',
   highlight: 'ph--highlighter--regular',
   softwrap: 'ph--paragraph--regular',
 };
 
-const isStyleValue = (value: string): value is SheetRange.StyleValue => value in styles;
+const isStyleValue = (value: string): value is SheetRange.StyleValue => value in STYLE_ICONS;
 
 export const useStyleState = (stateAtom: ToolbarStateAtom) => {
   const registry = useContext(RegistryContext);
   const { cursorFallbackRange, model } = useSheetContext();
 
   useEffect(() => {
-    const state: StyleState = Object.fromEntries(Object.keys(styles).map((value) => [value, false]));
+    const state: StyleState = Object.fromEntries(Object.keys(STYLE_ICONS).map((value) => [value, false]));
     if (cursorFallbackRange && model.sheet.ranges) {
       model.sheet.ranges
         .filter(
@@ -61,7 +62,7 @@ const createStyleGroup = (state: StyleState) => {
   return createMenuItemGroup('style', {
     variant: 'toggleGroup',
     selectCardinality: 'multiple',
-    value: Object.keys(styles)
+    value: Object.keys(STYLE_ICONS)
       .filter((key) => !!state[key as SheetRange.StyleValue])
       .map((styleValue) => `style--${styleValue}`),
   } as ToolbarMenuActionGroupProperties);
@@ -76,7 +77,7 @@ type StyleActionsContext = {
 };
 
 const createStyleActions = ({ model, state, stateAtom, registry, cursorFallbackRange }: StyleActionsContext) =>
-  Object.entries(styles).map(([styleValue, icon]) => {
+  Object.entries(STYLE_ICONS).map(([styleValue, icon]) => {
     return createMenuAction<StyleAction>(
       `style--${styleValue}`,
       () => {
