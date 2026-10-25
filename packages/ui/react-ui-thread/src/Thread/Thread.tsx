@@ -3,7 +3,6 @@
 //
 
 import { format } from 'date-fns/format';
-import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import { type Locale } from 'date-fns/locale';
 import { startOfDay } from 'date-fns/startOfDay';
 import React, {
@@ -26,6 +25,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Typography from '@dxos/react-ui/Typography';
 import * as Util from '@dxos/react-ui/Util';
 import { type Message as MessageType } from '@dxos/types';
 import { type Extension, createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
@@ -161,7 +161,7 @@ export type ThreadHeaderProps = Omit<
  */
 const ThreadHeader = Util.composable<HTMLDivElement, ThreadHeaderProps>(
   ({ title, timestamp, detached, current, controls, onSelect, ...props }, forwardedRef) => {
-    const { t, dtLocale } = Hooks.useTranslation(translationKey);
+    const { t } = Hooks.useTranslation(translationKey);
     const { focusComposer } = useThreadContext('Thread.Header');
     const handleSelect = useCallback(() => {
       onSelect?.();
@@ -200,12 +200,7 @@ const ThreadHeader = Util.composable<HTMLDivElement, ThreadHeaderProps>(
               detached && 'line-through decoration-1',
             )}
           >
-            {title ||
-              (timestamp ? (
-                <time dateTime={timestamp}>
-                  {formatDistanceToNow(new Date(timestamp), { addSuffix: true, locale: dtLocale })}
-                </time>
-              ) : null)}
+            {title || (timestamp ? <Typography.Timestamp date={timestamp} variant='relative' /> : null)}
           </p>
         </div>
         {controls}

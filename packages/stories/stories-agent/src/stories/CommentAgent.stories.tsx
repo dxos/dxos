@@ -8,6 +8,7 @@ import { userEvent, waitFor, within } from 'storybook/test';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Database, type Obj, Ref } from '@dxos/echo';
 import * as CanvasType from '@dxos/plugin-canvas/Canvas';
 import * as CanvasPlugin from '@dxos/plugin-canvas/CanvasPlugin';
@@ -48,19 +49,20 @@ type StoryArgs = {
 const meta: Meta<StoryArgs> = {
   title: 'stories/stories-agent/CommentAgent',
   // The layout is the runtime one `onInit` returns.
-  render: () => (
+  render: (_args, { parameters }) => (
     <Panel.Root>
       <Panel.Header>
         <StorySettingsToolbar />
       </Panel.Header>
       {/* `ModuleContainer` pins itself to its nearest positioned ancestor, so the body is that ancestor. */}
       <Panel.Body classNames='relative'>
-        <ModuleContainer />
+        <ModuleContainer columns={parameters.columns} />
       </Panel.Body>
     </Panel.Root>
   ),
   parameters: {
     ...storyParameters,
+    columns: '2fr_1fr',
     translations: [
       ...storyParameters.translations,
       ...illustratorTranslations,
@@ -99,12 +101,16 @@ const commentTypes = [
 ];
 
 /**
- * The object's article and its comments companion, each in its own module. Filing the object in the root collection
- * gives it the app-graph node the article toolbar's comment action attaches to.
+ * The object's article, its comments companion and, with the real agent, the assistant's trace, each in its own module.
+ * Filing the object in the root collection gives it the app-graph node the article toolbar's comment action attaches to.
  */
-const commentLayout = (space: Space, object: Obj.Unknown): ModuleLayout => {
+const commentLayout = (space: Space, object: Obj.Unknown, trace: boolean): ModuleLayout => {
   addToRootCollection(space, [object]);
-  return [[Cell.article(object)], [Cell.companion(object, 'comments')]];
+  return [
+    [Cell.article(object)],
+    [Cell.companion(object, 'comments')],
+    ...(trace ? [[AppSurface.deckCompanion('trace')]] : []),
+  ];
 };
 
 /**
@@ -137,6 +143,9 @@ const COMMENTED = 'the assistant answers them';
 
 type Subject = Pick<DecoratorsProps, 'onInit' | 'onReady'>;
 
+/** Builds a story's subject; `trace` adds the assistant's trace column, which only the real agent's stack provides. */
+type SubjectFactory = (options: { trace: boolean }) => Subject;
+
 /**
  * The story's object, created in `onInit` and commented on in `onReady`. Handed over directly rather than queried,
  * since a query right after boot can miss an object the index has not caught up with.
@@ -146,7 +155,9 @@ const makeSubject = <T extends Obj.Unknown>({
   prepare,
   text,
   range,
+  trace,
 }: {
+  trace: boolean;
   create: (space: Space) => T;
   /** Fills the object through its plugin's operations before the comment is left on it. */
   prepare?: (props: { db: Database.Database; invoker: Capabilities.OperationInvoker; subject: T }) => Promise<void>;
@@ -157,7 +168,7 @@ const makeSubject = <T extends Obj.Unknown>({
   return {
     onInit: async ({ space }) => {
       subject = create(space);
-      return commentLayout(space, subject);
+      return commentLayout(space, subject, trace);
     },
     onReady: async ({ db, invoker }) => {
       if (subject) {
@@ -169,20 +180,24 @@ const makeSubject = <T extends Obj.Unknown>({
 };
 
 /** A Markdown document with a comment anchored to a phrase. */
-const markdownSubject = () =>
+const markdownSubject: SubjectFactory = ({ trace }) =>
   makeSubject({
+    trace,
     create: (space) => space.db.add(MarkdownType.make({ name: 'Release notes', content: RELEASE_NOTES })),
     text: 'Is this clear enough for users?',
     range: { from: RELEASE_NOTES.indexOf(COMMENTED), to: RELEASE_NOTES.indexOf(COMMENTED) + COMMENTED.length },
   });
 
-/** A canvas drawing with a comment on the whole diagram. */
 /** An instruction to the agent, so a story with the real agent starts with a turn in progress. */
 const CANVAS_INSTRUCTION = '@kai add a box C connected from B';
 
+/** `A → B` with boxes sized to the canvas's 64px major grid, so every edge lands on a grid line. */
+const CANVAS_SOURCE = 'diagram box=128x128\nnode A "A"\nnode B "B" right-of A\nedge A -> B';
+
 /** A canvas drawing of `A → B`, with a comment asking the agent to extend it. */
-const canvasSubject = () =>
+const canvasSubject: SubjectFactory = ({ trace }) =>
   makeSubject({
+    trace,
     create: (space) => {
       const canvas = space.db.add(Drawing.makeCanvas({ schema: CanvasType.SCENE_SCHEMA }));
       return space.db.add(Drawing.make({ name: 'Architecture', canvas }));
@@ -190,35 +205,38 @@ const canvasSubject = () =>
     prepare: async ({ db, invoker, subject }) => {
       await invoker.invokePromise(
         DrawingOperation.Draw,
-        { drawing: Ref.make(subject), source: 'node A "A"\nnode B "B" right-of A\nedge A -> B' },
+        { drawing: Ref.make(subject), source: CANVAS_SOURCE },
         { spaceId: db.spaceId },
       );
     },
     text: CANVAS_INSTRUCTION,
   });
 
+/** Article, comments and trace. */
+const TRACE_COLUMNS = '2fr_1fr_1fr';
+
 /** No EDGE and no agent stack: the fake runner answers, so the story runs offline. */
-const fakeDecorators = (subject: Subject) =>
+const fakeDecorators = (subject: SubjectFactory) =>
   createDecorators<StoryArgs>({
     config: edgeFake,
     agents: false,
     plugins: commentPlugins(fakeCommentAgent),
     types: commentTypes,
-    ...subject,
+    ...subject({ trace: false }),
   });
 
 /**
  * The assistant answers through the review plugin's default (mention) mode, on the EDGE the toolbar picks: dev until
  * one is chosen, since without a reachable EDGE the agent's model calls fail and no reply ever appears.
  */
-const liveDecorators = (subject: Subject) =>
+const liveDecorators = (subject: SubjectFactory) =>
   createDecorators<StoryArgs>(({ args }) => {
     defaultEdgeEnvironment('dev');
     return {
       config: storyConfig({ persistent: args.persistent }),
       plugins: commentPlugins(),
       types: commentTypes,
-      ...subject,
+      ...subject({ trace: true }),
     };
   });
 
@@ -280,7 +298,7 @@ const TRANSLATE = '@kai translate this into japanese';
  * 3. Select text and click the toolbar's comment button: a new thread anchored to the selection opens.
  */
 export const Markdown: Story = {
-  decorators: fakeDecorators(markdownSubject()),
+  decorators: fakeDecorators(markdownSubject),
   play: replyAndAwaitAgent({ text: TRANSLATE, reply: new RegExp(FAKE_REPLY) }),
 };
 
@@ -291,7 +309,7 @@ export const Markdown: Story = {
  * 1. Reply `@Kai hello`: the fake assistant answers in the thread.
  */
 export const Canvas: Story = {
-  decorators: fakeDecorators(canvasSubject()),
+  decorators: fakeDecorators(canvasSubject),
   play: replyAndAwaitAgent({ text: '@kai hello', reply: new RegExp(FAKE_REPLY) }),
 };
 
@@ -307,7 +325,8 @@ export const Canvas: Story = {
  * 2. Reply `@Kai add a closing paragraph`: Kai edits the document and says what it changed.
  */
 export const MarkdownAgent: Story = {
-  decorators: liveDecorators(markdownSubject()),
+  decorators: liveDecorators(markdownSubject),
+  parameters: { columns: TRACE_COLUMNS },
   play: async (context) => {
     await replyAndAwaitAgent({ text: TRANSLATE, timeout: 120_000 })(context);
     // A translation is an edit in place: the anchored English phrase leaves the document, and the comment stays on the
@@ -336,7 +355,8 @@ export const MarkdownAgent: Story = {
  * 2. Reply `@Kai what is this diagram about?`: Kai answers in the thread.
  */
 export const CanvasAgent: Story = {
-  decorators: liveDecorators(canvasSubject()),
+  decorators: liveDecorators(canvasSubject),
+  parameters: { columns: TRACE_COLUMNS },
   // The seeded comment is the instruction; the play only waits for Kai's reply to it.
   play: async ({ canvasElement }) => {
     await awaitAgent(
