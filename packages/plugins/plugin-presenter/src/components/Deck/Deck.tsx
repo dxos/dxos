@@ -415,7 +415,7 @@ const Overlay = () => {
         clearTimeout(timer.current);
         timer.current = setTimeout(() => setVisible(false), OVERLAY_IDLE_DURATION);
       }}
-      className='absolute bottom-4 left-1/2 z-[300] flex -translate-x-1/2 items-center gap-4 rounded-md bg-black/50 px-4 py-1 text-white transition-opacity duration-500 data-[visible=false]:opacity-0 data-[visible=false]:pointer-events-none'
+      className='absolute bottom-4 left-1/2 z-[300] flex -translate-x-1/2 items-center gap-4 rounded-md border border-separator bg-modal-surface px-4 py-1 shadow-sm transition-opacity duration-500 data-[visible=false]:opacity-0 data-[visible=false]:pointer-events-none'
     >
       <DeckPager />
       <DeckPageNumber />
