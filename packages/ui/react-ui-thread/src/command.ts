@@ -6,7 +6,7 @@ import { HighlightStyle, StreamLanguage, syntaxHighlighting } from '@codemirror/
 import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
-import { mentionPills, tags } from '@dxos/ui-editor';
+import { type MentionPillsOptions, mentionPills, tags } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
 /**
@@ -47,4 +47,9 @@ const theme = EditorView.theme({
   },
 });
 
-export const command: Extension = [parser, syntaxHighlighting(styles), mentionPills(), theme];
+export const command = (options?: MentionPillsOptions): Extension => [
+  parser,
+  syntaxHighlighting(styles),
+  mentionPills(options),
+  theme,
+];

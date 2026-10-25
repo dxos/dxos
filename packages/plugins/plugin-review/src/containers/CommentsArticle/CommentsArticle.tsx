@@ -36,7 +36,7 @@ import { AnchoredTo, type Message as MessageType, Thread } from '@dxos/types';
 import { hoverableControls, hoverableFocusedWithinControls, mx, toHue } from '@dxos/ui-theme';
 import { hexToHue } from '@dxos/util';
 
-import { CommentThread, type CommentThreadProps, Suggestions } from '#components';
+import { CommentThread, type CommentThreadProps, type Mention, Suggestions } from '#components';
 import { type SuggestionGroup, useStatus } from '#hooks';
 import { meta } from '#meta';
 import { AgentIdentity, CommentCapabilities, CommentOperation, ReviewCapabilities } from '#types';
@@ -136,14 +136,17 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     [members, agentIdentity],
   );
   // The agent first: it is the mention a comment most often needs.
-  const mentions = useMemo(
+  // Each with the hue its avatar takes (the same metadata resolution), so a mention pill reads as that actor.
+  const mentions = useMemo<Mention[]>(
     () =>
       [
-        agentIdentity?.name,
+        getMessageMetadata(undefined, undefined, { name: agentIdentity?.name }),
         ...members
           .filter((member) => member.did !== identity?.did)
-          .map((member) => getMessageMetadata(undefined, member).authorName),
-      ].filter((name): name is string => !!name),
+          .map((member) => getMessageMetadata(undefined, member)),
+      ].flatMap(({ authorName, authorAvatarProps }) =>
+        authorName ? [{ name: authorName, hue: authorAvatarProps?.hue }] : [],
+      ),
     [agentIdentity, members, identity],
   );
   const authorMetadata = useMemo<MessageMetadata>(

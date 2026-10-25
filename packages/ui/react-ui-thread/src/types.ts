@@ -59,4 +59,6 @@ export type ThreadContextValue = {
   identityDid?: string;
   /** When true, the author may edit their own text messages in place. */
   editable?: boolean;
+  /** The palette hue of the actor an `@name` refers to, so a mention pill matches their avatar. */
+  mentionHue?: (name: string) => string | undefined;
 } & MessageCallbacks;

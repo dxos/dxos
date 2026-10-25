@@ -59,6 +59,7 @@ const ThreadRoot = ({
   components,
   identityDid,
   editable,
+  mentionHue,
   onMessageDelete,
   onAcceptProposal,
   onAcceptChange,
@@ -81,6 +82,7 @@ const ThreadRoot = ({
       components={components ?? {}}
       identityDid={identityDid}
       editable={editable}
+      mentionHue={mentionHue}
       registerComposerFocus={registerComposerFocus}
       focusComposer={focusComposer}
       onMessageDelete={onMessageDelete}
@@ -427,7 +429,7 @@ export type ThreadTextboxProps = MessageMetadata & {
 const ThreadTextbox = ({ placeholder, autoFocus, disabled, extensions, onSend, ...metadata }: ThreadTextboxProps) => {
   const { t } = Hooks.useTranslation(translationKey);
   const themeMode = Hooks.useThemeMode();
-  const { registerComposerFocus } = useThreadContext('Thread.Textbox');
+  const { registerComposerFocus, mentionHue } = useThreadContext('Thread.Textbox');
   const composerRef = useRef<{ focus: () => void } | null>(null);
   const messageRef = useRef('');
   const [count, setCount] = useState(0);
@@ -444,10 +446,10 @@ const ThreadTextbox = ({ placeholder, autoFocus, disabled, extensions, onSend, .
         createBasicExtensions({ placeholder: placeholder ?? t('message.placeholder') }),
         createThemeExtensions({ themeMode }),
         listener({ onChange: ({ text }) => (messageRef.current = text) }),
-        command,
+        command({ hue: mentionHue }),
         extensions,
       ].filter(Boolean) as Extension[],
-    [themeMode, placeholder, t, extensions, count],
+    [themeMode, placeholder, t, extensions, count, mentionHue],
   );
 
   const handleSend = useCallback(() => {

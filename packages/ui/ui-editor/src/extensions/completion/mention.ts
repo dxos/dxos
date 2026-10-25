@@ -50,20 +50,30 @@ export const mention = ({ debug, names }: MentionOptions): Extension =>
     ],
   });
 
+export type MentionPillsOptions = {
+  /** The palette hue of the actor a name refers to, so a pill matches their avatar; blue when unknown. */
+  hue?: (name: string) => string | undefined;
+};
+
 /**
  * Replaces each `@mention` with a pill widget — the same atomic-widget recipe as `hashtag`, so the cursor steps over a
  * mention and one delete removes it.
  */
-export const mentionPills = (): Extension =>
-  ViewPlugin.fromClass(
+export const mentionPills = ({ hue }: MentionPillsOptions = {}): Extension => {
+  const matcher = new MatchDecorator({
+    regexp: /@(\w+)/g,
+    decoration: (match) => Decoration.replace({ widget: new MentionWidget(match[0], hue?.(match[1]) ?? 'blue') }),
+  });
+
+  return ViewPlugin.fromClass(
     class {
       mentions: DecorationSet;
       constructor(view: EditorView) {
-        this.mentions = mentionMatcher.createDeco(view);
+        this.mentions = matcher.createDeco(view);
       }
 
       update(update: ViewUpdate) {
-        this.mentions = mentionMatcher.updateDeco(update, this.mentions);
+        this.mentions = matcher.updateDeco(update, this.mentions);
       }
     },
     {
@@ -71,25 +81,24 @@ export const mentionPills = (): Extension =>
       provide: (plugin) => EditorView.atomicRanges.of((view) => view.plugin(plugin)?.mentions ?? Decoration.none),
     },
   );
+};
 
 class MentionWidget extends WidgetType {
-  constructor(private readonly _text: string) {
+  constructor(
+    private readonly _text: string,
+    private readonly _hue: string,
+  ) {
     super();
   }
 
   override eq(other: MentionWidget): boolean {
-    return other._text === this._text;
+    return other._text === this._text && other._hue === this._hue;
   }
 
   toDOM(): HTMLSpanElement {
     const span = document.createElement('span');
-    span.className = mx('dx-tag dx-tag-inline dx-tag-blue mx-0.5');
+    span.className = mx('dx-tag dx-tag-inline mx-0.5', `dx-tag-${this._hue}`);
     span.textContent = this._text;
     return span;
   }
 }
-
-const mentionMatcher = new MatchDecorator({
-  regexp: /@\w+/g,
-  decoration: (match) => Decoration.replace({ widget: new MentionWidget(match[0]) }),
-});

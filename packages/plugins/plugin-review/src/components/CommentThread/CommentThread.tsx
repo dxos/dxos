@@ -36,6 +36,9 @@ const useRelationSource = <T extends Relation.Unknown>(relation: T): Relation.So
   }
 };
 
+/** An actor that can be `@`-mentioned: the name completed after `@`, and their avatar's hue. */
+export type Mention = { name: string; hue?: string };
+
 export type CommentThreadProps = Pick<ThreadStatusProps, 'activity'> & {
   anchor: AnchoredTo.AnchoredTo;
   /** Messages to show in place of the thread's feed, for a host with no database (a story). */
@@ -46,8 +49,11 @@ export type CommentThreadProps = Pick<ThreadStatusProps, 'activity'> & {
   authorMetadata: MessageMetadata;
   /** The local identity DID (decides message editability). */
   identityDid?: string;
-  /** Names the composer completes after `@` (space members and the comment agent). */
-  mentions?: string[];
+  /**
+   * Actors the composer completes after `@` (space members and the comment agent), with the hue of each one's avatar
+   * that their mention pills take.
+   */
+  mentions?: Mention[];
   current?: boolean;
   /** Resolve a message author's presentational metadata; supplied by the container (space-aware). */
   getMetadata: (message: Message.Message) => MessageMetadata;
@@ -96,7 +102,14 @@ export const CommentThread = ({
   const threadUri = thread ? Obj.getURI(thread) : undefined;
   const [status] = useObject(thread, 'status');
   const feedMessages = useThreadMessages(thread);
-  const mentionExtension = useMemo(() => (mentions?.length ? mention({ names: mentions }) : undefined), [mentions]);
+  const mentionExtension = useMemo(
+    () => (mentions?.length ? mention({ names: mentions.map(({ name }) => name) }) : undefined),
+    [mentions],
+  );
+  const mentionHue = useCallback(
+    (name: string) => mentions?.find((candidate) => candidate.name.toLowerCase() === name.toLowerCase())?.hue,
+    [mentions],
+  );
   const loadedMessages = messages ?? feedMessages;
 
   const handleAttend = useCallback(() => onAttend?.(anchor), [onAttend, anchor]);
@@ -218,6 +231,7 @@ export const CommentThread = ({
       components={components}
       identityDid={identityDid}
       getMetadata={getMetadata}
+      mentionHue={mentionHue}
       onMessageDelete={onMessageDelete ? handleMessageDelete : undefined}
       onAcceptProposal={onAcceptProposal ? handleAcceptProposal : undefined}
     >
