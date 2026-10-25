@@ -404,7 +404,9 @@ export const ClickStepsEdited: Story = {
     await userEvent.keyboard('{ArrowRight}{ArrowRight}');
     await waitFor(() => expect(hidden()).toBe(1));
     await userEvent.click(canvas.getByTestId('replace-slide'));
-    await expect(await canvas.findByRole('heading', { name: 'After' })).toBeVisible();
+    // The replaced slide remounts under a fresh frame, which shows once its size is measured.
+    const after = await canvas.findByRole('heading', { name: 'After' });
+    await waitFor(() => expect(after).toBeVisible());
     await waitFor(() => expect(hidden()).toBe(3));
   },
 };
