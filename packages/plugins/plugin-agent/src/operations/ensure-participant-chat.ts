@@ -10,7 +10,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { Message, Person } from '@dxos/types';
+import { Person } from '@dxos/types';
 
 import { AgentOperation, ChatParticipant, Mode } from '#types';
 
@@ -40,7 +40,7 @@ const latestOf = Effect.fnUntraced(function* (chats: readonly Chat.Chat[]) {
         const feed = yield* Database.load(chat.feed);
         // A chat hosted on EDGE may not have its messages on this device yet, and would read as empty.
         yield* Feed.sync(feed, { shouldPush: false }).pipe(Effect.timeoutOption(FEED_SYNC_TIMEOUT), Effect.exit);
-        const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+        const messages = yield* TrajectoryStore.messages(feed);
         // Compared as instants: an ISO timestamp may carry any offset.
         const last = messages.reduce((newest, message) => Math.max(newest, Date.parse(message.created) || 0), 0);
         return { chat, last };
