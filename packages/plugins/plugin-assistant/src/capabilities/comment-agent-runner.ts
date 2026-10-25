@@ -18,7 +18,8 @@ import { CommentThreadNotPersistedError } from '../errors.ts';
 
 /**
  * Runs a comment thread's agent turns as ordinary assistant turns: one chat per thread, parented to the thread and
- * running on the thread's own feed, with the commented object bound so its type's skills apply.
+ * running on the thread's own feed, with the commented object bound so its type's skills apply. A run returns once the
+ * turn has settled.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -52,7 +53,7 @@ export default Capability.makeModule(
           const anchorText = yield* Effect.promise(() => resolveAnchorText(thread, subject, resolvers));
           yield* invoker.invoke(
             AssistantOperation.RunPromptInChat,
-            { chat, disposition: 'synthetic', prompt: commentPrompt({ subject, message, anchorText }) },
+            { chat, disposition: 'synthetic', prompt: commentPrompt({ subject, message, anchorText }), wait: true },
             { spaceId },
           );
         }),

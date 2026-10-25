@@ -161,6 +161,11 @@ export const RunPromptInChat = Operation.make({
      * @default 'user'
      */
     disposition: Schema.optional(ContentBlock.Disposition),
+    /**
+     * Returns once the turn has settled (its reply is complete) rather than as soon as the prompt is submitted, for a
+     * caller that acts on the outcome (the comment agent clears its pending message).
+     */
+    wait: Schema.optional(Schema.Boolean),
   }),
   output: Schema.Void,
 });

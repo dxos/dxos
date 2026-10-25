@@ -3,6 +3,7 @@
 //
 
 import { format } from 'date-fns/format';
+import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import { type Locale } from 'date-fns/locale';
 import { startOfDay } from 'date-fns/startOfDay';
 import React, {
@@ -140,6 +141,8 @@ export type ThreadHeaderProps = Omit<
   ComposableProps<{
     /** Snippet text rendered inside a `<p>` (a string, not a DOM element). */
     title?: string;
+    /** When the thread was started (ISO); shown relative ("5 minutes ago") in place of a missing `title`. */
+    timestamp?: string;
     detached?: boolean;
     /** Whether this is the current/selected thread; accents the title. */
     current?: boolean;
@@ -157,8 +160,8 @@ export type ThreadHeaderProps = Omit<
  * controls (which use the same template) — no grid is leaked in from the caller.
  */
 const ThreadHeader = Util.composable<HTMLDivElement, ThreadHeaderProps>(
-  ({ title, detached, current, controls, onSelect, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(translationKey);
+  ({ title, timestamp, detached, current, controls, onSelect, ...props }, forwardedRef) => {
+    const { t, dtLocale } = Hooks.useTranslation(translationKey);
     const { focusComposer } = useThreadContext('Thread.Header');
     const handleSelect = useCallback(() => {
       onSelect?.();
@@ -197,7 +200,12 @@ const ThreadHeader = Util.composable<HTMLDivElement, ThreadHeaderProps>(
               detached && 'line-through decoration-1',
             )}
           >
-            {title}
+            {title ||
+              (timestamp ? (
+                <time dateTime={timestamp}>
+                  {formatDistanceToNow(new Date(timestamp), { addSuffix: true, locale: dtLocale })}
+                </time>
+              ) : null)}
           </p>
         </div>
         {controls}

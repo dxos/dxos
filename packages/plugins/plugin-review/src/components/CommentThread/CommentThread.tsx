@@ -197,12 +197,19 @@ export const CommentThread = ({
         detached
         current={current}
         title={thread.name}
+        timestamp={loadedMessages[0]?.created}
         onSelect={handleActivate}
         controls={headerControls}
       />
     </Tooltip.Trigger>
   ) : (
-    <Thread.Header current={current} title={thread.name} onSelect={handleActivate} controls={headerControls} />
+    <Thread.Header
+      current={current}
+      title={thread.name}
+      timestamp={loadedMessages[0]?.created}
+      onSelect={handleActivate}
+      controls={headerControls}
+    />
   );
 
   return (

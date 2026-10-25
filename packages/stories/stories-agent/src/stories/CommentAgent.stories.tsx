@@ -8,10 +8,11 @@ import { userEvent, waitFor, within } from 'storybook/test';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { type Database, type Obj } from '@dxos/echo';
+import { type Database, type Obj, Ref } from '@dxos/echo';
 import * as CanvasType from '@dxos/plugin-canvas/Canvas';
 import * as CanvasPlugin from '@dxos/plugin-canvas/CanvasPlugin';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import * as DrawingOperation from '@dxos/plugin-illustrator/DrawingOperation';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { translations as illustratorTranslations } from '@dxos/plugin-illustrator/translations';
 import * as MarkdownType from '@dxos/plugin-markdown/Markdown';
@@ -140,16 +141,19 @@ type Subject = Pick<DecoratorsProps, 'onInit' | 'onReady'>;
  * The story's object, created in `onInit` and commented on in `onReady`. Handed over directly rather than queried,
  * since a query right after boot can miss an object the index has not caught up with.
  */
-const makeSubject = ({
+const makeSubject = <T extends Obj.Unknown>({
   create,
+  prepare,
   text,
   range,
 }: {
-  create: (space: Space) => Obj.Unknown;
+  create: (space: Space) => T;
+  /** Fills the object through its plugin's operations before the comment is left on it. */
+  prepare?: (props: { db: Database.Database; invoker: Capabilities.OperationInvoker; subject: T }) => Promise<void>;
   text: string;
   range?: { from: number; to: number };
 }): Subject => {
-  let subject: Obj.Unknown | undefined;
+  let subject: T | undefined;
   return {
     onInit: async ({ space }) => {
       subject = create(space);
@@ -157,6 +161,7 @@ const makeSubject = ({
     },
     onReady: async ({ db, invoker }) => {
       if (subject) {
+        await prepare?.({ db, invoker, subject });
         await seedComment({ db, invoker, subject, text, range });
       }
     },
@@ -172,13 +177,24 @@ const markdownSubject = () =>
   });
 
 /** A canvas drawing with a comment on the whole diagram. */
+/** An instruction to the agent, so a story with the real agent starts with a turn in progress. */
+const CANVAS_INSTRUCTION = '@kai add a box C connected from B';
+
+/** A canvas drawing of `A → B`, with a comment asking the agent to extend it. */
 const canvasSubject = () =>
   makeSubject({
     create: (space) => {
       const canvas = space.db.add(Drawing.makeCanvas({ schema: CanvasType.SCENE_SCHEMA }));
       return space.db.add(Drawing.make({ name: 'Architecture', canvas }));
     },
-    text: 'Can we show where EDGE fits in?',
+    prepare: async ({ db, invoker, subject }) => {
+      await invoker.invokePromise(
+        DrawingOperation.Draw,
+        { drawing: Ref.make(subject), source: 'node A "A"\nnode B "B" right-of A\nedge A -> B' },
+        { spaceId: db.spaceId },
+      );
+    },
+    text: CANVAS_INSTRUCTION,
   });
 
 /** No EDGE and no agent stack: the fake runner answers, so the story runs offline. */
@@ -226,12 +242,31 @@ const replyAndAwaitAgent =
       },
       { timeout: 30_000 },
     );
+    // Counted before posting, since the seeded comment may already have a reply.
+    const replies = () =>
+      reply ? canvas.queryAllByText(reply).length : canvas.queryAllByText('Kai', { exact: true }).length;
+    const before = replies();
     await userEvent.click(composer);
     await userEvent.keyboard(`${text}{Enter}`);
-    await (reply
-      ? canvas.findByText(reply, undefined, { timeout })
-      : canvas.findByText('Kai', { exact: true }, { timeout }));
+    await awaitAgent(canvasElement, () => replies() > before, timeout);
   };
+
+/**
+ * Waits for the agent's reply: `replied` holds, and the pending message (posted in Kai's name while a turn runs) has
+ * given way to the real one.
+ */
+const awaitAgent = (canvasElement: HTMLElement, replied: () => boolean, timeout: number) =>
+  waitFor(
+    () => {
+      if (!replied() || within(canvasElement).queryByText(PENDING)) {
+        throw new Error('the agent has not replied yet');
+      }
+    },
+    { timeout },
+  );
+
+/** The pending message plugin-review shows while the agent works. */
+const PENDING = /Working on it/;
 
 /** The comment that once went unanswered: a lowercase mention asking for an edit of the anchored text. */
 const TRANSLATE = '@kai translate this into japanese';
@@ -275,11 +310,15 @@ export const MarkdownAgent: Story = {
   decorators: liveDecorators(markdownSubject()),
   play: async (context) => {
     await replyAndAwaitAgent({ text: TRANSLATE, timeout: 120_000 })(context);
-    // A translation is an edit in place: the anchored English phrase leaves the document.
+    // A translation is an edit in place: the anchored English phrase leaves the document, and the comment stays on the
+    // text that replaced it.
     await waitFor(
       () => {
         if (context.canvasElement.querySelector('.cm-content')?.textContent?.includes(COMMENTED)) {
           throw new Error('the commented phrase was not translated in place');
+        }
+        if (!context.canvasElement.querySelector('.cm-comment')?.textContent) {
+          throw new Error('the comment lost its range');
         }
       },
       { timeout: 30_000 },
@@ -289,13 +328,22 @@ export const MarkdownAgent: Story = {
 };
 
 /**
- * A comment on a canvas drawing, answered by the real assistant with the illustrator's skills.
+ * A canvas drawing of `A → B` whose seeded comment asks Kai to add `C`: the real assistant answers it on load with the
+ * illustrator's skills (pick an EDGE in the toolbar; dev by default).
  *
  * Try:
- * 1. Reply `@Kai add a box labelled Edge connected to a box labelled Client`: Kai draws them and says so.
+ * 1. Wait for Kai: C appears on the canvas, connected from B, and Kai says so in one line.
  * 2. Reply `@Kai what is this diagram about?`: Kai answers in the thread.
  */
 export const CanvasAgent: Story = {
   decorators: liveDecorators(canvasSubject()),
+  // The seeded comment is the instruction; the play only waits for Kai's reply to it.
+  play: async ({ canvasElement }) => {
+    await awaitAgent(
+      canvasElement,
+      () => within(canvasElement).queryAllByText('Kai', { exact: true }).length > 0,
+      120_000,
+    );
+  },
   tags: ['!test'],
 };
