@@ -21,6 +21,17 @@ into one clip per actor.
 - [x] **Stepped play test** — `TestMarkdown` seeks the scene to the end and checks every actor converges with all three comments.
 - [x] **Record** — `render.mjs --story stories-stories-agent-collaboration--markdown` (27s, 60 fps, 2x supersample), cropped to four 960x540 clips.
 
+## Phase 3: ECHO design scene
+
+Sixteen actors build the template's ECHO design document from its outline; plan in `ECHO-SCENE.md`.
+
+- [x] **Target document** — `ECHO design` in the DXOS Architecture template: eight chapters, three new ECHO diagrams (`echo-model`, `echo-sync`, `echo-query`) and an `ECHO benchmarks` sheet; template tests updated.
+- [x] **Construction plan** — `ECHO-SCENE.md`: outline derived from the target, 16-actor roster, timeline, harness work.
+- [ ] **Review** — the user reviews the document and plan.
+- [ ] **Harness surfaces** — canvas (`CanvasOperation.Apply`), sheet (`SheetOperation.SetValues`), chat (scripted model), object and cell comments, chapter scroll.
+- [ ] **outline/steps from the target** — and a test that playing the steps on the outline reproduces it.
+- [ ] **Record** — 8K wall, 16 clips, Grid zoom-out.
+
 ## Phase 2: Other articles
 
 - [ ] Generalize `ActorArticle`/`ActorBinding` beyond markdown (an article-specific binding per flow).
