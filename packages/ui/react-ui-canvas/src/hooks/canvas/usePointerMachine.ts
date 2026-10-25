@@ -150,10 +150,10 @@ export type PointerMachine = {
   onBackgroundPointerDown: (event: PointerEvent) => void;
   onPointerMove: (event: PointerEvent) => void;
   /** Ends the gesture in flight; `event` is the release (absent for a drop from outside the canvas). */
-  onPointerUp: (event?: { clientX: number; clientY: number }) => void;
+  onPointerUp: (event?: { clientX: number; clientY: number; pointerId?: number; pointerType?: string }) => void;
   onContextMenu: (event: MouseEvent) => void;
-  /** A gesture abandoned (Escape, a drag leaving the canvas). */
-  cancelDrag: () => void;
+  /** A gesture abandoned (Escape, a drag leaving the canvas, or `event`, a cancelled pointer). */
+  cancelDrag: (event?: { pointerId?: number; pointerType?: string }) => void;
   updateHover: (point: Point | undefined) => void;
 
   /** Element handlers, threaded to the layer and the control frame. */
@@ -236,8 +236,25 @@ export const usePointerMachine = ({
 
   const setDrag = useCallback((next: Drag | undefined) => registry.set(atoms.drag, next), [registry, atoms.drag]);
 
+  const dragPointerRef = useRef<number | undefined>(undefined);
+  // A second finger would otherwise restart or feed the gesture the first one is driving, so the view jumps; a drawing
+  // placed vertex by vertex is exempt, since each of its presses is a new pointer.
+  const isOtherTouch = useCallback(
+    (event: { pointerId?: number; pointerType?: string }) => {
+      const current = registry.get(atoms.drag);
+      return (
+        event.pointerType === 'touch' &&
+        current !== undefined &&
+        current.kind !== 'vertices' &&
+        event.pointerId !== dragPointerRef.current
+      );
+    },
+    [registry, atoms.drag],
+  );
+
   const startDrag = useCallback(
     (next: Drag, event: PointerEvent) => {
+      dragPointerRef.current = event.pointerId;
       interactedRef.current = true;
       cancelAnimation();
       // A gesture has no hover: the pointer is captured, so the highlight would stick to where it began.
@@ -326,6 +343,9 @@ export const usePointerMachine = ({
 
   const onBackgroundPointerDown = useCallback(
     (event: PointerEvent) => {
+      if (isOtherTouch(event)) {
+        return;
+      }
       const currentTool = registry.get(atoms.tool);
       const point = toScene(event);
       const drawing = registry.get(atoms.drag);
@@ -340,7 +360,9 @@ export const usePointerMachine = ({
       if (event.target !== event.currentTarget) {
         return;
       }
-      if (event.button === 1 || currentTool.kind === 'hand') {
+      // A touchscreen has no wheel or middle button, so a finger on empty canvas pans rather than drawing a marquee.
+      const touchPan = event.pointerType === 'touch' && currentTool.kind === 'select';
+      if (event.button === 1 || currentTool.kind === 'hand' || touchPan) {
         startDrag({ kind: 'pan', last: { x: event.clientX, y: event.clientY } }, event);
       } else if (event.button !== 0) {
         return;
@@ -383,6 +405,7 @@ export const usePointerMachine = ({
       nodeRegistry,
       onDrawingPointerDown,
       setDrag,
+      isOtherTouch,
     ],
   );
 
@@ -751,6 +774,9 @@ export const usePointerMachine = ({
 
   const onPointerMove = useCallback(
     (event: PointerEvent) => {
+      if (isOtherTouch(event)) {
+        return;
+      }
       const current = registry.get(atoms.drag);
       if (!current) {
         if (!isNavigating()) {
@@ -866,6 +892,7 @@ export const usePointerMachine = ({
       isNavigating,
       capabilities.create,
       rootRef,
+      isOtherTouch,
     ],
   );
 
@@ -969,13 +996,22 @@ export const usePointerMachine = ({
   );
 
   /** A gesture abandoned (Escape, a drag leaving the canvas): its pending node is dropped with it. */
-  const cancelDrag = useCallback(() => {
-    pendingRef.current = undefined;
-    setDrag(undefined);
-  }, [setDrag]);
+  const cancelDrag = useCallback(
+    (event?: { pointerId?: number; pointerType?: string }) => {
+      if (event && isOtherTouch(event)) {
+        return;
+      }
+      pendingRef.current = undefined;
+      setDrag(undefined);
+    },
+    [setDrag, isOtherTouch],
+  );
 
   const onPointerUp = useCallback(
-    (event?: { clientX: number; clientY: number }) => {
+    (event?: { clientX: number; clientY: number; pointerId?: number; pointerType?: string }) => {
+      if (event && isOtherTouch(event)) {
+        return;
+      }
       const raw = registry.get(atoms.drag);
       // A drawing placed vertex by vertex outlasts each press.
       if (!raw || raw.kind === 'vertices') {
@@ -1145,6 +1181,7 @@ export const usePointerMachine = ({
       snapMinor,
       activate,
       rootRef,
+      isOtherTouch,
     ],
   );
 
