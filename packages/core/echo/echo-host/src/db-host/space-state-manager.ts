@@ -25,7 +25,7 @@ import { log } from '@dxos/log';
 import { type DocumentLease } from '../automerge/document-lease.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/space-state/index.ts';
 import { DatabaseRoot } from './database-root.ts';
-import { partitionBySyncScope, type ScopedDocuments } from './sync-scope.ts';
+import { type ScopedDocuments, partitionBySyncScope } from './sync-scope.ts';
 
 export type SpaceStateManagerProps = {
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
