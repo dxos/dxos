@@ -41,9 +41,29 @@ export type Pin = ({ kind: 'point'; x: number; y: number } | { kind: 'cell'; col
   range: Range;
 };
 
+/**
+ * What a diagram depicts, which picks its layout: `structure` places boxes on the grid, `sequence`
+ * draws participants as columns and messages as rows in source order, `dataflow` places processes,
+ * stores and external entities on the grid like `structure`.
+ */
+export type DiagramKind = 'structure' | 'sequence' | 'dataflow';
+export const DIAGRAM_KINDS: readonly DiagramKind[] = ['structure', 'sequence', 'dataflow'];
+
+/** What a node stands for: `actor` in a sequence diagram; `process`, `store` or `external` in a data-flow diagram. */
+export type Role = 'actor' | 'process' | 'store' | 'external';
+export const ROLES: readonly Role[] = ['actor', 'process', 'store', 'external'];
+
+/** The roles each diagram kind accepts; a data-flow node without one is a process. */
+export const ROLES_BY_KIND: Readonly<Record<DiagramKind, readonly Role[]>> = {
+  structure: [],
+  sequence: ['actor'],
+  dataflow: ['process', 'store', 'external'],
+};
+
 export type Node = {
   id: string;
   label: string;
+  role?: Role;
   group?: string;
   ref?: string;
   pin?: Pin;
@@ -123,9 +143,23 @@ export type EdgeStyle = {
   color?: Scene.Color;
 };
 
+/**
+ * A sequence message: `call` is synchronous and opens an activation on its target, `send` is
+ * asynchronous, `return` answers the innermost open call. A plain `->` is a call without activation.
+ */
+export type Message = 'call' | 'send' | 'return';
+
+/** Message words an edge may use in a sequence diagram in place of `->`. */
+export const MESSAGES: Readonly<Record<string, Message>> = {
+  calls: 'call',
+  sends: 'send',
+  returns: 'return',
+};
+
 export type Edge = EdgeStyle & {
   /** Scene id of the connector, unique in the diagram. */
   id: string;
+  message?: Message;
   from: End;
   to: End;
   label?: string;
@@ -152,7 +186,34 @@ export type Bus = {
 
 export type Size = { w: number; h: number };
 
+/** A note in a sequence diagram: beside one participant, or over the span of several. */
+export type Note = {
+  id: string;
+  over: readonly string[];
+  side: 'left' | 'right' | 'over';
+  text: string;
+  color?: Scene.Color;
+  range: Range;
+};
+
+/** UML combined-fragment operators. */
+export type FragmentKind = 'alt' | 'opt' | 'loop' | 'par' | 'break' | 'critical';
+export const FRAGMENT_KINDS: readonly FragmentKind[] = ['alt', 'opt', 'loop', 'par', 'break', 'critical'];
+
+/** One operand of a fragment: its guard and what happens under it. */
+export type Section = { guard?: string; steps: Step[]; range: Range };
+
+/** A combined fragment around part of a sequence; `alt` and `par` take several sections, split by `else`. */
+export type Fragment = { id: string; kind: FragmentKind; sections: Section[]; range: Range };
+
+/** One entry of a sequence diagram's timeline, in source order. */
+export type Step =
+  | { kind: 'message'; edge: string }
+  | { kind: 'note'; note: Note }
+  | { kind: 'fragment'; fragment: Fragment };
+
 export type Diagram = {
+  kind: DiagramKind;
   flow: Flow;
   origin: Scene.Point;
   /** Cell pitch (box plus gutter), in scene units; measured from the boxes when absent. */
@@ -168,9 +229,12 @@ export type Diagram = {
   busLabels: Map<string, string>;
   /** Whether any statement said how to place or route — when none did, the mermaid engine's search is also tried. */
   hinted: boolean;
+  /** Messages, notes and fragments in source order; what a sequence diagram draws top to bottom. */
+  timeline: Step[];
 };
 
 export const empty = (): Diagram => ({
+  kind: 'structure',
   flow: 'down',
   origin: { x: 0, y: 0 },
   nodes: [],
@@ -178,6 +242,7 @@ export const empty = (): Diagram => ({
   edges: [],
   busLabels: new Map(),
   hinted: false,
+  timeline: [],
 });
 
 /** The key edges share a trunk under. */

@@ -36,13 +36,28 @@ export const AgentRuntime = AppCapability.layerSpec(() => import('./agent-servic
 });
 export const Agents = Capability.lazyModule(
   'Agents',
-  { provides: [AssistantCapabilities.Agent], activatesOn: ActivationEvents.Startup },
+  {
+    provides: [AssistantCapabilities.Agent, AssistantCapabilities.CodeModeAvailable],
+    activatesOn: ActivationEvents.Startup,
+  },
   () => import('./agents.ts'),
 );
 export const SlashCommands = Capability.lazyModule(
   'SlashCommands',
   { provides: [AssistantCapabilities.SlashCommands], activatesOn: ActivationEvents.Startup },
   () => import('./slash-commands.ts'),
+);
+// Present from startup so a comment posted before the assistant UI opens can still be answered. Headless hosts
+// (EDGE) provide no operation invoker and host no comment UI.
+export const CommentAgentRunner = Capability.lazyModule(
+  'CommentAgentRunner',
+  {
+    requires: [Capabilities.OperationInvoker],
+    provides: [AppCapabilities.CommentAgentRunner],
+    activatesOn: ActivationEvents.Startup,
+    environments: ['browser', 'node', 'tauri'],
+  },
+  () => import('./comment-agent-runner.ts'),
 );
 export const AiContext = AppCapability.layerSpec(() => import('./ai-context.ts'), {
   name: 'AiContext',

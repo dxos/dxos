@@ -702,13 +702,10 @@ export const scrollCommentIntoView = (
 // rounding each would pinch the interior edges into notches on a multi-line comment.
 const styles = EditorView.theme({
   // The layer only paints the background; text colour comes from the inline mark, which wraps exactly
-  // the comment text. `!important` and the descendant selector win over markdown syntax-highlight tokens
-  // nested inside the range.
+  // the comment text. Light in both themes, since the highlight fill is a mid-tone hue (500/600) in both.
+  // `!important` and the descendant selector win over markdown syntax-highlight tokens nested inside the range.
   '.cm-comment, .cm-comment *': {
-    color: 'var(--color-teal-fg) !important',
-  },
-  '.cm-comment[data-current="1"], .cm-comment[data-current="1"] *': {
-    color: 'var(--color-orange-fg) !important',
+    color: 'var(--color-neutral-50) !important',
   },
   '.cm-comment': {
     cursor: 'pointer',

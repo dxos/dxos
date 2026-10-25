@@ -25,6 +25,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Typography from '@dxos/react-ui/Typography';
 import * as Util from '@dxos/react-ui/Util';
 import { type Message as MessageType } from '@dxos/types';
 import { type Extension, createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
@@ -58,6 +59,7 @@ const ThreadRoot = ({
   components,
   identityDid,
   editable,
+  mentions,
   onMessageDelete,
   onAcceptProposal,
   onAcceptChange,
@@ -80,6 +82,7 @@ const ThreadRoot = ({
       components={components ?? {}}
       identityDid={identityDid}
       editable={editable}
+      mentions={mentions}
       registerComposerFocus={registerComposerFocus}
       focusComposer={focusComposer}
       onMessageDelete={onMessageDelete}
@@ -140,6 +143,8 @@ export type ThreadHeaderProps = Omit<
   ComposableProps<{
     /** Snippet text rendered inside a `<p>` (a string, not a DOM element). */
     title?: string;
+    /** When the thread was started (ISO); shown relative ("5 minutes ago") in place of a missing `title`. */
+    timestamp?: string;
     detached?: boolean;
     /** Whether this is the current/selected thread; accents the title. */
     current?: boolean;
@@ -157,7 +162,7 @@ export type ThreadHeaderProps = Omit<
  * controls (which use the same template) — no grid is leaked in from the caller.
  */
 const ThreadHeader = Util.composable<HTMLDivElement, ThreadHeaderProps>(
-  ({ title, detached, current, controls, onSelect, ...props }, forwardedRef) => {
+  ({ title, timestamp, detached, current, controls, onSelect, ...props }, forwardedRef) => {
     const { t } = Hooks.useTranslation(translationKey);
     const { focusComposer } = useThreadContext('Thread.Header');
     const handleSelect = useCallback(() => {
@@ -197,7 +202,7 @@ const ThreadHeader = Util.composable<HTMLDivElement, ThreadHeaderProps>(
               detached && 'line-through decoration-1',
             )}
           >
-            {title}
+            {title || (timestamp ? <Typography.Timestamp date={timestamp} variant='relative' /> : null)}
           </p>
         </div>
         {controls}
@@ -424,7 +429,7 @@ export type ThreadTextboxProps = MessageMetadata & {
 const ThreadTextbox = ({ placeholder, autoFocus, disabled, extensions, onSend, ...metadata }: ThreadTextboxProps) => {
   const { t } = Hooks.useTranslation(translationKey);
   const themeMode = Hooks.useThemeMode();
-  const { registerComposerFocus } = useThreadContext('Thread.Textbox');
+  const { registerComposerFocus, mentions } = useThreadContext('Thread.Textbox');
   const composerRef = useRef<{ focus: () => void } | null>(null);
   const messageRef = useRef('');
   const [count, setCount] = useState(0);
@@ -441,10 +446,10 @@ const ThreadTextbox = ({ placeholder, autoFocus, disabled, extensions, onSend, .
         createBasicExtensions({ placeholder: placeholder ?? t('message.placeholder') }),
         createThemeExtensions({ themeMode }),
         listener({ onChange: ({ text }) => (messageRef.current = text) }),
-        command,
+        command({ mentions }),
         extensions,
       ].filter(Boolean) as Extension[],
-    [themeMode, placeholder, t, extensions, count],
+    [themeMode, placeholder, t, extensions, count, mentions],
   );
 
   const handleSend = useCallback(() => {
@@ -465,6 +470,9 @@ const ThreadTextbox = ({ placeholder, autoFocus, disabled, extensions, onSend, .
       autoFocus={autoFocus}
       disabled={disabled}
       extensions={editorExtensions}
+      // A rebuild (a new mention list, a theme change) starts from the draft rather than dropping it.
+      initialValue={messageRef.current}
+      selectionEnd
       onSend={handleSend}
     />
   );

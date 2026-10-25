@@ -57,10 +57,10 @@ export const isColor = (value: unknown): value is string => typeof value === 'st
 const Color = Schema.String.pipe(Schema.check(Schema.isPattern(COLOR_PATTERN)));
 
 /**
- * A deck's theme: a built-in name plus optional overrides of its colors and its text and code fonts.
+ * A deck's theme: a built-in base theme plus optional overrides of its colors and its text and code fonts.
  */
 export const Settings = Schema.Struct({
-  name: Schema.optional(Schema.Literals(NAMES)).annotate({ title: 'Theme' }),
+  base: Schema.optional(Schema.Literals(NAMES)).annotate({ title: 'Base' }),
   accent: Schema.optional(Color).annotate({ title: 'Accent color' }),
   background: Schema.optional(Color).annotate({ title: 'Background color' }),
   foreground: Schema.optional(Color).annotate({ title: 'Text color' }),

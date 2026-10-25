@@ -73,7 +73,6 @@ type Settings
     numberedHeadings?: boolean
     folding?: boolean
     editorInputMode?: string    # default | vim | vscode
-    commentAgentMode?: off | auto | mention
     diffView?: DiffView         # branch compare variant (default suggest)
     experimental?: boolean
     debug?: boolean
@@ -276,12 +275,8 @@ feat F-7: Comments
 
   req F-7.1: Editor supports anchored comment threads on text ranges (via plugin-comments'
     ExtensionProvider).
-  req F-7.2:
-    when: settings.commentAgentMode is `auto`
-    then: every new user message in a thread triggers the comment agent
-  req F-7.3:
-    when: settings.commentAgentMode is `mention`
-    then: agent responds only when the message contains its @name
+  req F-7.2: Whether the comment agent answers a thread follows plugin-review's `commentAgentMode`
+    setting, which applies to comment threads on every subject.
 
 feat F-8: Versioning (checkpoints, branches, merge)
 
@@ -581,6 +576,13 @@ decision D-2: The flow spec is `autocue/AUTOCUE.mdl`, beside the flows that reco
   affects: [QA-4, QA-5]
   why: Upper case matches the repo's other spec files (SPEC.mdl, STORIES.mdl); keeping the ids leaves `markdown QA-4` and the flows' `@mdl` headers addressing the same tests.
   rejected: A lower-case `autocue.mdl` at the plugin root.
+```
+
+```mdl
+decision D-3: The `commentAgentMode` setting moves to plugin-review, which applies it to comment threads on every subject; the default stays `mention`.
+  date: 2026-10-25
+  by: user:richburdon
+  affects: [F-7.2]
 ```
 
 ---

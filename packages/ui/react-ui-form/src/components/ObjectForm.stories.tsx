@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { Filter, Obj, Ref, Tag } from '@dxos/echo';
+import { Filter, Obj, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -32,7 +32,7 @@ const DefaultStory = ({ component = 'form' }: StoryArgs) => {
   const footer = (
     <Panel.Footer>
       <Typography.Text truncate data-testid='object'>
-        {JSON.stringify({ ...snapshot, tags: Obj.getMeta(person).tags.map((tag) => tag.target?.label) })}
+        {JSON.stringify({ ...snapshot, tags: Obj.getMeta(person).tags.map((tag) => tag.label) })}
       </Typography.Text>
     </Panel.Footer>
   );
@@ -78,7 +78,7 @@ const meta = {
           }),
         );
         Obj.update(person, (person) => {
-          Obj.getMeta(person).tags = [Ref.make(tag)];
+          Obj.getMeta(person).tags = [tag];
         });
       },
     }),

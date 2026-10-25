@@ -4,7 +4,17 @@
 
 import { EditorSelection } from '@codemirror/state';
 import { EditorView, ViewPlugin } from '@codemirror/view';
-import React, { forwardRef, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  type KeyboardEvent,
+  type PointerEvent,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
@@ -91,6 +101,11 @@ const VIEW_ICON: Record<View, string> = {
 
 const isView = (value: string): value is View => (VIEWS as readonly string[]).includes(value);
 
+/** Bounds and keyboard step of the editor's share of the width, so neither side can be dragged shut. */
+const MIN_SPLIT = 0.2;
+const MAX_SPLIT = 0.8;
+const SPLIT_STEP = 0.05;
+
 const isDiffAgainst = (value: string): value is DiffAgainst => value === 'base' || value === 'head';
 
 /** Lines of unchanged context kept around each change when unchanged runs are folded. */
@@ -114,6 +129,8 @@ export type SpecArticleProps = Omit<AppSurface.ObjectArticleProps<Spec.Spec>, 's
   readOnly?: boolean;
   /** Base text that diff mode compares with, for hosts that cannot run git; git's base wins when both exist. */
   base?: string;
+  /** Review text (`<SPEC>.review.mdl`), for hosts that cannot read the checkout; the checkout's review wins. */
+  review?: string;
   /** Opens in diff mode against this base. */
   defaultDiff?: DiffAgainst;
 };
@@ -126,7 +143,17 @@ export type SpecArticleProps = Omit<AppSurface.ObjectArticleProps<Spec.Spec>, 's
  */
 export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
   (
-    { role, subject: spec, content, sourceKey, attendableId, readOnly = spec == null, base, defaultDiff },
+    {
+      role,
+      subject: spec,
+      content,
+      sourceKey,
+      attendableId,
+      readOnly = spec == null,
+      base,
+      review: staticReview,
+      defaultDiff,
+    },
     forwardedRef,
   ) => {
     const { t } = Hooks.useTranslation(meta.profile.key);
@@ -148,6 +175,32 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     const reviewKey = key && formatSourceKey(reviewKeyOf(key));
 
     const [view, setView] = useState<View>('definitions');
+    // The editor's share of the width; the divider between it and the panel drags it.
+    const [split, setSplit] = useState(0.5);
+    const splitRef = useRef<HTMLDivElement>(null);
+    const handleSplitPointerDown = useCallback((event: PointerEvent<HTMLDivElement>) => {
+      const bounds = splitRef.current?.getBoundingClientRect();
+      if (!bounds) {
+        return;
+      }
+      const divider = event.currentTarget;
+      divider.setPointerCapture(event.pointerId);
+      const handleMove = (move: globalThis.PointerEvent) =>
+        setSplit(Math.min(MAX_SPLIT, Math.max(MIN_SPLIT, (move.clientX - bounds.left) / bounds.width)));
+      const handleUp = () => {
+        divider.removeEventListener('pointermove', handleMove);
+        divider.removeEventListener('pointerup', handleUp);
+      };
+      divider.addEventListener('pointermove', handleMove);
+      divider.addEventListener('pointerup', handleUp);
+    }, []);
+    const handleSplitKeyDown = useCallback((event: KeyboardEvent<HTMLDivElement>) => {
+      const step = event.key === 'ArrowLeft' ? -SPLIT_STEP : event.key === 'ArrowRight' ? SPLIT_STEP : 0;
+      if (step !== 0) {
+        event.preventDefault();
+        setSplit((current) => Math.min(MAX_SPLIT, Math.max(MIN_SPLIT, current + step)));
+      }
+    }, []);
     const [codeTarget, setCodeTarget] = useState<SourceKey>();
     const [selectedVerdict, setSelectedVerdict] = useState<string>();
     const [selectedDecision, setSelectedDecision] = useState<string>();
@@ -171,7 +224,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     const [codeKeys, setCodeKeys] = useState<readonly string[]>([]);
     const texts = useLocalTexts(useMemo(() => [...related, ...codeKeys], [related, codeKeys]));
     const text = (!spec && key && texts.get(fileKey(key))) || ownText;
-    const reviewText = reviewKey ? texts.get(reviewKey) : undefined;
+    const reviewText = (reviewKey ? texts.get(reviewKey) : undefined) ?? staticReview;
     const review = useMemo(() => (reviewText ? parseReview(reviewText) : undefined), [reviewText]);
     const citedKey = useMemo(() => (review ? citedFiles(review).join('\n') : ''), [review]);
     useEffect(() => setCodeKeys(citedKey ? citedKey.split('\n') : []), [citedKey]);
@@ -334,11 +387,21 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
         <Panel.Root role={role} ref={forwardedRef}>
           <Panel.Header>{!readOnly && <Editor.Toolbar role={role} attendableId={attendableId} />}</Panel.Header>
           <Panel.Body>
-            <Layout.Grid cols={['fill', 'fill']} grow classNames='divide-x divide-separator'>
+            <Layout.Grid ref={splitRef} cols={[split, 'min', 1 - split]} grow>
               {/* Scrolls the editor, which sizes to its content. */}
               <div className='relative overflow-auto' data-testid='spec-article.spec'>
                 <Editor.View classNames={editorClassNames(role)} value={spec ? undefined : text} />
               </div>
+              <div
+                role='separator'
+                aria-orientation='vertical'
+                aria-valuenow={Math.round(split * 100)}
+                tabIndex={0}
+                className='w-1.5 cursor-col-resize border-x border-transparent bg-separator bg-clip-content px-0.5 hover:bg-accent-surface focus-visible:bg-accent-surface'
+                onPointerDown={handleSplitPointerDown}
+                onKeyDown={handleSplitKeyDown}
+                data-testid='spec-article.divider'
+              />
               <Panel.Root>
                 <Panel.Header>
                   <Toolbar.Root>
@@ -354,6 +417,8 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
                           value={value}
                           icon={VIEW_ICON[value]}
                           label={t(`spec-view.${value}.label`)}
+                          // Only the open view is labelled, so the toolbar fits a half-width panel.
+                          iconOnly={value !== view}
                           data-testid={`spec-article.view.${value}`}
                         />
                       ))}

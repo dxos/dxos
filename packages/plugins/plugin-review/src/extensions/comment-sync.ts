@@ -153,10 +153,23 @@ export const commentSync = (
       subscribe: (sink) => {
         // Subscribe to both query changes and store state changes. `comments()` primes the initial read
         // itself (after this returns), so no manual first `sink()` is needed here.
-        const unsubQuery = query.subscribe(sink);
+        // The query reports which anchors exist, not edits to one, so each anchor is watched too: an anchor
+        // moved outside the editor (re-pointed after an agent's edit) must redraw.
+        let unsubAnchors: (() => void)[] = [];
+        const watchAnchors = () => {
+          unsubAnchors.forEach((unsubscribe) => unsubscribe());
+          unsubAnchors = query.results.map((anchor) => Relation.subscribe(anchor, sink));
+        };
+        const unsubQuery = query.subscribe(() => {
+          watchAnchors();
+          sink();
+        });
+        // After subscribing: a query exposes `results` only while it has a subscriber.
+        watchAnchors();
         const unsubThreads = threads.subscribe(sink);
         const unsubStore = registry.subscribe(stateAtom, sink);
         return () => {
+          unsubAnchors.forEach((unsubscribe) => unsubscribe());
           unsubQuery();
           unsubThreads();
           unsubStore();

@@ -101,3 +101,18 @@ export const expand = (value: string): string => {
       return value;
   }
 };
+
+/** The shorthand {@link expand} reads back unchanged, so a prompt lists boxes in fewer tokens. */
+export const compact = (iri: string): string => {
+  for (const [prefix, namespace] of [
+    ['file', FILE],
+    ['pkg', PACKAGE],
+    ['module', MODULE],
+    ['deus', DEUS],
+  ] as const) {
+    if (iri.startsWith(namespace)) {
+      return `${prefix}:${iri.slice(namespace.length)}`;
+    }
+  }
+  return iri;
+};

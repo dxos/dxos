@@ -15,6 +15,7 @@ import { Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import type * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
+import { type FeedStore } from '@dxos/feed';
 import { type IndexEngine } from '@dxos/index-core';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -62,6 +63,9 @@ export type QueryServiceProps = {
 
   /** Whether any of a client's data subscriptions holds a document. */
   holdsDocument?: (subscriptionIds: readonly string[], documentId: DocumentId) => boolean;
+
+  /** Read for feeds with indexing disabled and for feed retention; see the query executor's `feedStore`. */
+  feedStore?: FeedStore;
 };
 
 /**
@@ -348,6 +352,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         sql: this._params.sql(),
         spaceStateManager: this._params.spaceStateManager,
         holds: (documentId) => this._params.holdsDocument?.(subscriptionIds, documentId) ?? false,
+        feedStore: this._params.feedStore,
       }),
       dirty: true,
       open: false,
