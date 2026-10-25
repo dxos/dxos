@@ -15,12 +15,7 @@ import { Message, Thread } from '@dxos/types';
 import { AgentIdentity, CommentOperation } from '#types';
 
 import { restoreAnchor, snapshotAnchor } from '../anchor-preservation.ts';
-
-/** Shown in the thread from the moment the agent starts until its reply lands. */
-export const PENDING_TEXT = 'Working on it…';
-
-/** Replaces the pending message when the turn fails or never settles (e.g. no reachable model). */
-export const FAILED_TEXT = 'Sorry, I couldn’t respond.';
+import { FAILED_TEXT, PENDING_TEXT } from '../util/pending.ts';
 
 /** A turn this long without settling is treated as failed, so the thread never waits on it forever. */
 const TURN_TIMEOUT = '3 minutes';
