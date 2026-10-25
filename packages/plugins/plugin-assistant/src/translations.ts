@@ -188,6 +188,8 @@ export const translations: Theme.Resource[] = [
         'model-picker.models.label': 'Models',
         'model-picker.environment.label': 'Agent runs on',
         'send.label': 'Send',
+        'prompt-options.label': 'Prompt options',
+        'prompt-controls.label': 'Prompt controls',
         'cancel-processing.button': 'Stop processing',
         'tasks-drawer.label': 'Tasks',
         'context-drawer.label': 'Context',

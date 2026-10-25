@@ -420,15 +420,14 @@ const useRequestTiming = ({ active }: { active: boolean }) => {
 
 const CHAT_TOOLBAR_NAME = 'Chat.Toolbar';
 
-type ChatToolbarProps = Pick<ActionToolbarProps, 'attendableId' | 'alwaysActive'> &
-  PropsWithChildren<{
-    companionTo?: Obj.Unknown;
-    /** Scopes the chat switcher; defaults to the companion chats of `companionTo`. */
-    switcher?: ChatSwitcher;
-  }>;
+type ChatToolbarProps = Pick<ActionToolbarProps, 'attendableId' | 'alwaysActive' | 'customActions'> & {
+  companionTo?: Obj.Unknown;
+  /** Scopes the chat switcher; defaults to the companion chats of `companionTo`. */
+  switcher?: ChatSwitcher;
+};
 
 const ChatToolbar = Util.composable<HTMLDivElement, ChatToolbarProps>(
-  ({ children, attendableId, alwaysActive, companionTo, switcher, ...props }, forwardedRef) => {
+  ({ attendableId, alwaysActive, customActions, companionTo, switcher, ...props }, forwardedRef) => {
     const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
     const menuActions = useChatToolbarActions({ chat, companionTo, switcher });
 
@@ -437,11 +436,10 @@ const ChatToolbar = Util.composable<HTMLDivElement, ChatToolbarProps>(
         {...menuActions}
         attendableId={attendableId}
         alwaysActive={alwaysActive}
+        customActions={customActions}
         {...Util.composableProps(props)}
         ref={forwardedRef}
-      >
-        {children}
-      </ActionToolbar>
+      />
     );
   },
 );

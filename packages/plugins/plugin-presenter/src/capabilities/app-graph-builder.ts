@@ -20,7 +20,7 @@ import { isNonNullable } from '@dxos/util';
 
 import { slideSourcesAtom } from '#deck';
 import { meta } from '#meta';
-import { Presentation, PresenterOperation } from '#types';
+import { Presentation, PresenterOperation, SlideEditorViewState } from '#types';
 
 import { isPresenting } from '../paths.ts';
 
@@ -68,17 +68,21 @@ export const createSectionsExtension = () =>
       return Effect.succeed(
         get(slideSourcesAtom(presentation))
           .map((source, position) => {
-            if (source.kind === 'pending') {
+            if (source.kind === 'pending' || source.kind === 'markdown' || !source.slide) {
               return undefined;
             }
-            const object = source.kind === 'text' ? source.text : source.object;
-            const node = AppNode.makeObject({ get, db, object, navigable: true });
-            if (!node || source.kind !== 'text') {
+            // The node is the Slide, so opening it opens the slide (and its companion assistant has the slide).
+            const node = AppNode.makeObject({ get, db, object: source.slide, navigable: true });
+            if (!node) {
               return node;
             }
 
-            const label: Translations.Label = get(Obj.atomProperty(source.text, 'name')) ||
-              firstHeading(get(Obj.atomProperty(source.text, 'content'))) || [
+            const title = get(Obj.atomProperty(source.slide, 'title'));
+            const label: Translations.Label = title ||
+              (source.kind === 'text'
+                ? get(Obj.atomProperty(source.text, 'name')) ||
+                  firstHeading(get(Obj.atomProperty(source.text, 'content')))
+                : Obj.getLabel(source.object)) || [
                 'slide-fallback.label',
                 { ns: meta.profile.key, count: position + 1 },
               ];
@@ -86,6 +90,56 @@ export const createSectionsExtension = () =>
           })
           .filter(isNonNullable),
       );
+    },
+  });
+
+/** An owned slide's companion shows the rendered slide beside its editor. */
+export const createSlidePreviewExtension = () =>
+  AppGraphBuilder.createExtension({
+    id: 'slidePreview',
+    relation: AppNode.companion,
+    // Only a markdown slide has an editor to preview beside.
+    match: (node) => {
+      const content = Obj.instanceOf(Presentation.Slide, node.data) ? node.data.content.target : undefined;
+      return Obj.instanceOf(Presentation.Slide, node.data) && content && Presentation.isOwnedContent(node.data, content)
+        ? Option.some(node.data)
+        : Option.none();
+    },
+    connector: () =>
+      Effect.succeed([
+        AppNode.makeCompanion({
+          variant: SlideEditorViewState.COMPANION_VARIANT,
+          label: ['slide-preview.label', { ns: meta.profile.key }],
+          icon: 'ph--presentation--regular',
+          data: SlideEditorViewState.COMPANION_VARIANT,
+        }),
+      ]),
+  });
+
+/** A slide can be hidden from (or shown in) the presentation, from the navtree and the context menu. */
+export const createSlideActionsExtension = () =>
+  AppGraphBuilder.createExtension({
+    id: 'slideActions',
+    match: (node) => (Obj.instanceOf(Presentation.Slide, node.data) ? Option.some(node.data) : Option.none()),
+    actions: (slide, get) => {
+      const hidden = get(Obj.atomProperty(slide, 'hidden')) === true;
+      return Effect.succeed([
+        {
+          id: `${meta.profile.key}.toggle-hidden`,
+          data: () =>
+            Effect.sync(() =>
+              Obj.update(slide, (slide) => {
+                slide.hidden = !slide.hidden || undefined;
+              }),
+            ),
+          properties: {
+            label: [hidden ? 'show-slide.label' : 'hide-slide.label', { ns: meta.profile.key }],
+            icon: hidden ? 'ph--eye--regular' : 'ph--eye-slash--regular',
+            disposition: 'list-item',
+            testId: 'presenter.toggle-hidden',
+          },
+        },
+      ]);
     },
   });
 
@@ -137,7 +191,14 @@ export default Capability.makeModule(
     });
 
     const sectionsExtensions = yield* createSectionsExtension();
+    const slidePreviewExtensions = yield* createSlidePreviewExtension();
+    const slideActionsExtensions = yield* createSlideActionsExtension();
 
-    return Capability.contribute(AppCapabilities.AppGraphBuilder, [...companionExtensions, ...sectionsExtensions]);
+    return Capability.contribute(AppCapabilities.AppGraphBuilder, [
+      ...companionExtensions,
+      ...sectionsExtensions,
+      ...slidePreviewExtensions,
+      ...slideActionsExtensions,
+    ]);
   }),
 );

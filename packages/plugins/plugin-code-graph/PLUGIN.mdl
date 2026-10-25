@@ -36,6 +36,7 @@ type CodeGraph
   fields:
     name?: string
     layout?: Layout
+    grouped?: boolean        # frame boxes by package (illustrator layout and drawing)
     nodes: Node[]
     edges: Edge[]
 
@@ -95,7 +96,7 @@ op remove
 
 op setLayout
   key: org.dxos.operation.codeGraph.setLayout
-  desc: Chooses the layout, and optionally forgets dragged positions.
+  desc: Chooses the layout, optionally forgets dragged positions, and optionally turns grouping by package on or off.
 
 op runCommand
   key: org.dxos.operation.codeGraph.runCommand
@@ -106,12 +107,12 @@ op runCommand
 
 ```mdl
 component CodeGraphArticle
-  desc: The article surface. A toolbar picks the layout and resets positions; the body is the canvas or the drawing, with a details panel for the selected box.
+  desc: The article surface. A toolbar picks the layout, groups by package and resets positions; the body is the canvas or the drawing, with a details panel for the selected box and the same panel as a card on hover.
   props:
     subject: CodeGraph
 
 component CodeGraphCanvas
-  desc: react-ui-canvas's dynamic projection with one box per resource, as plugin-projects' FeatureCanvas uses it. Arrangement and an overlay of positions place the boxes.
+  desc: react-ui-canvas's dynamic projection with one box per resource, as plugin-projects' FeatureCanvas uses it. Arrangement and an overlay of positions place the boxes. A box shows a symbol's own name and a coloured tag of its kind from the index. Package frames are the canvas's own diagram nodes, on a backdrop layer under the boxes and arrows.
 
 component CodeGraphDiagram
   desc: plugin-illustrator's SceneSvg drawing of the semantic layout, read-only, with package frames and routed arrows.
@@ -138,7 +139,7 @@ feat F-2: The assistant shapes the graph
   req F-2.4: An addition that would take a graph past 300 boxes fails whole with `LimitError`.
 
 feat F-3: Two layouts on one canvas
-  req F-3.1: The illustrator layout solves the graph as semantic DSL and places canvas boxes at the solved centres, framing boxes by package when there are 2 to 6 packages.
+  req F-3.1: The illustrator layout solves the graph as semantic DSL and places canvas boxes at the solved centres; when the graph is grouped it frames each package's boxes, the package box included, in a tinted frame titled with the package's name, one colour per package.
   req F-3.2: The force layout uses the canvas's own force arrangement; rank uses its fewest-crossings arrangement.
   req F-3.3: Dragging a box saves only its position; boxes the user did not move stay under the layout.
   req F-3.4: The diagram layout renders the illustrator's full drawing with SceneSvg.
@@ -326,14 +327,24 @@ decision D-8: A graph holds at most 300 boxes; an addition past that fails whole
 ```
 
 ```mdl
-decision D-9: A single-command mode, apart from Composer's agent, runs typed or spoken commands with a model that sees the graph and may only add SPARQL results or remove boxes by a text filter; a decision model judges between turns whether to stop, and an addition past N boxes adds the first N with a trailer summarising the rest.
+decision D-9: Grouping by package is a saved switch on the graph, and the canvas draws the frames with its own diagram nodes on a backdrop layer. Fills in [D-5].
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.1]
+  why: Implicit framing for 2 to 6 packages left no way to see a graph by package, or to turn frames off; the canvas already draws the illustrator's tinted group frames, and a layer under the arrows keeps them from covering the arrows.
+  rejected: A frame view of the plugin's own; framing only when there are few packages.
+```
+
+```mdl
+decision D-10: A single-command mode, apart from Composer's agent, runs typed or spoken commands with a model that sees the graph and may only add SPARQL results or remove boxes by a text filter; a decision model judges between turns whether to stop, and an addition past N boxes adds the first N with a trailer summarising the rest.
   date: 2026-10-23
   by: user:dmaretskyi
   affects: [CommandBar, F-5]
 ```
 
 ```mdl
-decision D-10: The command loop asks for one structured step per turn (actions and a sentence) from Claude Haiku rather than running a tool-calling agent; the judge is the AI service's default decision model. Fills in [D-9].
+decision D-11: The command loop asks for one structured step per turn (actions and a sentence) from Claude Haiku rather than running a tool-calling agent; the judge is the AI service's default decision model. Fills in [D-10].
   date: 2026-10-23
   by: agent:claude-code
   for: user:dmaretskyi
@@ -343,7 +354,7 @@ decision D-10: The command loop asks for one structured step per turn (actions a
 ```
 
 ```mdl
-decision D-11: A command adds at most 40 boxes; a failed or empty action earns a turn without the judge, a turn that only removed boxes ends the command without it, and with no decision model a command stops after its first successful turn. Fills in [D-9].
+decision D-12: A command adds at most 40 boxes; a failed or empty action earns a turn without the judge, a turn that only removed boxes ends the command without it, and with no decision model a command stops after its first successful turn. Fills in [D-10].
   date: 2026-10-23
   by: agent:claude-code
   for: user:dmaretskyi
@@ -352,7 +363,7 @@ decision D-11: A command adds at most 40 boxes; a failed or empty action earns a
 ```
 
 ```mdl
-decision D-12: Whistle moves from plugin-transcription's stories to `@dxos/plugin-transcription/Whistle` so the command bar can use it. Fills in [D-9].
+decision D-13: Whistle moves from plugin-transcription's stories to `@dxos/plugin-transcription/Whistle` so the command bar can use it. Fills in [D-10].
   date: 2026-10-23
   by: agent:claude-code
   for: user:dmaretskyi

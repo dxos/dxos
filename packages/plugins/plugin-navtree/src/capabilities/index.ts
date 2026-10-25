@@ -17,6 +17,8 @@ import { translations } from '#translations';
 import { NavTreeCapabilities } from '#types';
 
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
+// Listens on `document` for right-clicks on elements that name a graph node.
+export const ContextMenu = AppCapability.reactRoot(() => import('./context-menu.tsx'));
 export const Expose = Capability.inlineModule(
   'expose',
   { requires: [AppCapabilities.AppGraph, AppCapabilities.Layout, Capabilities.OperationInvoker], provides: [] },

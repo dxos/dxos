@@ -119,6 +119,7 @@
     "@dxos/plugin-tasks": "workspace:*",
     "@dxos/react-list": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-masonry": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },

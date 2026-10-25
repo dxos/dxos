@@ -5,7 +5,7 @@
 import { parseMdlBlocks } from '@dxos/deus/extension';
 import type * as Tag from '@dxos/react-ui/Tag';
 
-import { parseSourceKey } from '#sync';
+import { formatSourceKey, parseSourceKey } from '#sync';
 
 import { type Annotation, parseFields } from './spec-model.ts';
 
@@ -38,7 +38,46 @@ export type Verdict = {
   evidence: string[];
   /** `github:` keys of the tests that exercise the item; empty when the review names none. */
   tests: string[];
+  /** Where each part of the item is implemented, in reading order; empty when the review gives none. */
+  walkthrough: WalkthroughStep[];
   note?: string;
+};
+
+/** One segment of a walkthrough: a sentence and the `github:` key of the code it describes. */
+export type WalkthroughStep = { text: string; key: string };
+
+/** At most this many segments: a walkthrough says where things are, it does not retell the code. */
+export const MAX_WALKTHROUGH = 5;
+
+/** `- a` items, a line without the dash continuing the item above it. */
+const listItems = (lines: readonly string[]): string[] =>
+  lines.reduce<string[]>(
+    (items, line) =>
+      line.startsWith('-')
+        ? [...items, line.replace(/^-\s*/, '')]
+        : items.length > 0
+          ? [...items.slice(0, -1), `${items[items.length - 1]} ${line}`]
+          : items,
+    [],
+  );
+
+/** `- <sentence>. github:<key>`, the key last; a step with no key is dropped. */
+const parseStep = (item: string): WalkthroughStep[] => {
+  const match = item.match(/^(.*?)\s*(github:\S+)\s*$/);
+  return match ? [{ text: match[1].replace(/[\s.:—-]+$/, '').trim(), key: match[2] }] : [];
+};
+
+/**
+ * The walkthrough shown for a verdict: the reviewer's, or one segment per evidence key when the item is implemented
+ * in more than one place. Undefined for a single implementation, whose code chip already shows its declaration.
+ */
+export const walkthroughOf = (verdict: Verdict): WalkthroughStep[] | undefined => {
+  if (verdict.walkthrough.length > 0) {
+    return verdict.walkthrough.slice(0, MAX_WALKTHROUGH);
+  }
+  return verdict.evidence.length > 1
+    ? verdict.evidence.slice(0, MAX_WALKTHROUGH).map((key) => ({ text: '', key }))
+    : undefined;
 };
 
 export type ReviewModel = {
@@ -99,6 +138,7 @@ export const parseReview = (text: string): ReviewModel => {
           ...(title && { summary: title }),
           evidence: list('evidence'),
           tests: list('tests'),
+          walkthrough: listItems(fields.get('walkthrough')?.lines ?? []).flatMap(parseStep),
           ...(note && { note }),
         },
       ];
@@ -130,3 +170,15 @@ export const summarizeReview = (review: ReviewModel): { status: VerdictStatus; c
     status,
     count: review.verdicts.filter((verdict) => verdict.status === status).length,
   })).filter(({ count }) => count > 0);
+
+/** The files a review cites (evidence, tests and walkthrough steps), without fragments and in a stable order. */
+export const citedFiles = (review: ReviewModel): string[] =>
+  [
+    ...new Set(
+      review.verdicts
+        .flatMap(({ evidence, tests, walkthrough }) => [...evidence, ...tests, ...walkthrough.map(({ key }) => key)])
+        .map(parseSourceKey)
+        .filter((key) => key !== undefined)
+        .map((key) => formatSourceKey(key, false)),
+    ),
+  ].sort();
