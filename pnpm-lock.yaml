@@ -16107,9 +16107,6 @@ importers:
       '@codemirror/view':
         specifier: 'catalog:'
         version: 6.43.13
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../../core/compute/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
