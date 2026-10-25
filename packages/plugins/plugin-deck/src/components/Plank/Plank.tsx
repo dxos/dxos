@@ -20,6 +20,7 @@ import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import * as Breadcrumb from '@dxos/react-ui/Breadcrumb';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import * as Main from '@dxos/react-ui/Main';
 import * as Popover from '@dxos/react-ui/Popover';
 import * as Theme from '@dxos/react-ui/Theme';
@@ -215,9 +216,9 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
         <Pane.Content>
           {node.data === undefined ? (
             // A plank with no subject: the URL named it and nothing has resolved it yet, so there is
-            // no Article to ask for. The same shell stands in until the Article's own module lands,
-            // so the plank does not change under the reader on the way there.
-            PLANK_LOADING
+            // no Article to ask for. A plugin that knows something about the id may stand in; the
+            // same empty shell shows otherwise, so the plank does not change under the reader.
+            <PlankPending attendableId={attendableId} nodeId={node.id} />
           ) : (
             <Surface.Surface
               key={node.id}
@@ -235,3 +236,13 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
 );
 
 Plank.displayName = 'Plank';
+
+/** The shell {@link PLANK_LOADING} draws, holding whatever the pending-article role offers for the node. */
+const PlankPending = ({ attendableId, nodeId }: AppSurface.PendingArticleData) => {
+  const data = useMemo<AppSurface.PendingArticleData>(() => ({ attendableId, nodeId }), [attendableId, nodeId]);
+  return (
+    <Layout.Flex column classNames='dx-attention-surface'>
+      <Surface.Surface type={AppSurface.PendingArticle} data={data} limit={1} placeholder={null} />
+    </Layout.Flex>
+  );
+};

@@ -159,6 +159,7 @@ export const getCorePlugins = ({
       observability: true,
       shareBoot,
       shareableLinkOrigin: origin,
+      edgeUrl: config.values.runtime?.services?.edge?.url,
       // plugin-onboarding owns invitation URL params in Composer.
       invitationUrlHandler: false,
     }),

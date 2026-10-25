@@ -4,13 +4,20 @@
 
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { Trigger, chain } from '@dxos/async';
+import { Trigger, chain, waitForCondition } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { getCredentialAssertion } from '@dxos/credentials';
 import { raise } from '@dxos/debug';
 import { invariant } from '@dxos/invariant';
 import { AlreadyJoinedError } from '@dxos/protocols';
 import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
-import { Invitation, Invitation_Kind, Invitation_State } from '@dxos/protocols/buf/dxos/client/invitation_pb';
+import {
+  Invitation,
+  Invitation_AuthMethod,
+  Invitation_Kind,
+  Invitation_State,
+  Invitation_Type,
+} from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
 import { type ServiceContext, createIdentity, createPeers } from '../testing/index.ts';
 import { acceptInvitation, createInvitation, performInvitation } from '../testing/invitation-utils.ts';
@@ -40,6 +47,43 @@ describe('services/space-invitations-protocol', () => {
 
     await peer.dataSpaceManager?.waitUntilSpaceReady(space.key);
     await space.close(new Context());
+  });
+
+  test('a delegated invitation writes the objects it shares beside it', async () => {
+    const [host] = await chain<ServiceContext>([createIdentity, closeAfterTest])(createPeers(1));
+    const space = await host.dataSpaceManager!.createSpace(new Context());
+    await host.dataSpaceManager!.waitUntilSpaceReady(space.key);
+
+    const delegate = async (sharedObjectIds?: string[]) =>
+      (
+        await createInvitation(host, {
+          kind: Invitation_Kind.SPACE,
+          spaceKey: fromPublicKey(space.key),
+          type: Invitation_Type.DELEGATED,
+          authMethod: Invitation_AuthMethod.KNOWN_PUBLIC_KEY,
+          multiUse: true,
+          sharedObjectIds,
+        })
+      ).get();
+    const scoped = await delegate(['object-1', 'object-2']);
+    const unscoped = await delegate();
+
+    const credentialsOf = (
+      type: 'dxos.halo.invitations.DelegateSpaceInvitation' | 'dxos.halo.invitations.DelegatedInvitationScope',
+    ) => space.inner.spaceState.getCredentialsOfType(type);
+    await waitForCondition({
+      condition: () => credentialsOf('dxos.halo.invitations.DelegateSpaceInvitation').length === 2,
+    });
+    const scopes = credentialsOf('dxos.halo.invitations.DelegatedInvitationScope');
+    expect(scopes).toHaveLength(1);
+    const assertion = getCredentialAssertion(scopes[0]);
+    invariant(assertion.$typeName === 'dxos.halo.invitations.DelegatedInvitationScope');
+    expect(assertion.invitationId).toBe(scoped.invitationId);
+    expect(assertion.invitationId).not.toBe(unscoped.invitationId);
+    expect(assertion.objectIds).toEqual(['object-1', 'object-2']);
+    // EDGE applies a scope only when the inviter wrote it.
+    const [invitationCredential] = credentialsOf('dxos.halo.invitations.DelegateSpaceInvitation');
+    expect(toPublicKey(scopes[0].issuer)?.toHex()).toBe(toPublicKey(invitationCredential.issuer)?.toHex());
   });
 
   test('invitation with no auth', async () => {

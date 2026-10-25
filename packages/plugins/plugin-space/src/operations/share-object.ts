@@ -57,6 +57,7 @@ const handler: Operation.WithHandler<typeof SpaceOperation.ShareObject> = SpaceO
       const invitation = yield* createDelegatedInvitation(space, {
         role: role === 'viewer' ? SpaceMember_Role.READER : SpaceMember_Role.EDITOR,
         target: Obj.getURI(object),
+        sharedObjectIds: objects,
       });
       url.searchParams.set(
         SpaceOperation.SHARE_PARAM,
@@ -78,11 +79,12 @@ export default handler;
 
 /**
  * Creates a delegated, multi-use invitation — written to the space's control feed, so EDGE redeems it with no member
- * online — and resolves with its code once it is live.
+ * online, and serves the shared objects to the link before its holder joins — and resolves with its code once it is
+ * live.
  */
 const createDelegatedInvitation = (
   space: Space,
-  { role, target }: { role: SpaceMember_Role; target: string },
+  { role, target, sharedObjectIds }: { role: SpaceMember_Role; target: string; sharedObjectIds: string[] },
 ): Effect.Effect<string, SpaceOperationError> =>
   Effect.gen(function* () {
     const { InvitationEncoder, Invitation_AuthMethod, Invitation_State, Invitation_Type } = yield* Effect.promise(
@@ -94,6 +96,7 @@ const createDelegatedInvitation = (
       multiUse: true,
       role,
       target,
+      sharedObjectIds,
     });
     const failed = [
       Invitation_State.ERROR,

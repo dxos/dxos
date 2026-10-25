@@ -12,7 +12,7 @@ import { Obj } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import * as Position from '@dxos/util/Position';
 
-import { EditableMarkdownCard, MarkdownCard, MarkdownSettings } from '#containers';
+import { EditableMarkdownCard, MarkdownCard, MarkdownPreview, MarkdownSettings } from '#containers';
 import { meta } from '#meta';
 import { Markdown } from '#types';
 
@@ -55,6 +55,15 @@ export default Capability.makeModule(() =>
           role,
           ref,
         }),
+      }),
+      Surface.create({
+        id: 'surface.objectPreview',
+        filter: Surface.makeFilter(
+          AppSurface.ObjectPreview,
+          (data) => Obj.instanceOf(Markdown.Document, data.subject) || Obj.instanceOf(Text.Text, data.subject),
+        ),
+        component: MarkdownPreview,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
       Surface.create({
         id: 'surface.pluginSettings',

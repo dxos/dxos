@@ -89,6 +89,18 @@ message DelegateSpaceInvitation {
   bool multi_use = 7;
 }
 
+/**
+ * Objects a delegated space invitation shares. A credential of its own because a signature covers every field of
+ * its assertion: a new field on `DelegateSpaceInvitation` would make readers that predate it reject the invitation.
+ */
+message DelegatedInvitationScope {
+  /// The `invitation_id` of the `DelegateSpaceInvitation` this scopes; both credentials have the same issuer.
+  string invitation_id = 1;
+
+  /// Objects whoever holds the invitation's guest key may read from EDGE before joining.
+  repeated string object_ids = 2;
+}
+
 message CancelDelegatedInvitation {
   dxos.keys.PublicKey credential_id = 1;
 }

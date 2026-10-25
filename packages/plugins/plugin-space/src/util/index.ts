@@ -6,6 +6,7 @@ export * from './collection-path.ts';
 export * from './object-form.ts';
 export * from './settings-space.ts';
 export * from './share-payload.ts';
+export * from './share-preview.ts';
 export * from './share-scope.ts';
 export * from './space-display.ts';
 export * from './space-template.ts';

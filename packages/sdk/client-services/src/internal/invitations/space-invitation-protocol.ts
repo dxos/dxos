@@ -7,6 +7,7 @@ import { create } from '@bufbuild/protobuf';
 import { type Context } from '@dxos/context';
 import {
   createCancelDelegatedSpaceInvitationCredential,
+  createDelegatedInvitationScopeCredential,
   createDelegatedSpaceInvitationCredential,
   credentialIdOf,
   credentialOfPayload,
@@ -33,7 +34,10 @@ import {
   Invitation_Type,
 } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 import { type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
-import { DelegateSpaceInvitationSchema } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
+import {
+  DelegatedInvitationScopeSchema,
+  DelegateSpaceInvitationSchema,
+} from '@dxos/protocols/buf/dxos/halo/invitations_pb';
 import {
   type AdmissionRequest,
   AdmissionRequestSchema,
@@ -152,7 +156,20 @@ export class SpaceInvitationProtocol implements InvitationProtocol {
       }),
     );
 
-    await writeMessages(space.inner.controlPipeline.writer, [credential]);
+    const scope =
+      invitation.sharedObjectIds.length > 0
+        ? [
+            await createDelegatedInvitationScopeCredential(
+              this._signingContext.credentialSigner,
+              space.key,
+              create(DelegatedInvitationScopeSchema, {
+                invitationId: invitation.invitationId,
+                objectIds: invitation.sharedObjectIds,
+              }),
+            ),
+          ]
+        : [];
+    await writeMessages(space.inner.controlPipeline.writer, [credential, ...scope]);
     return credentialIdOf(credentialOfPayload(credential));
   }
 

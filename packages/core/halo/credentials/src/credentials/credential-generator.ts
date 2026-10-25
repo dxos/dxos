@@ -25,6 +25,8 @@ import {
 } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import {
   CancelDelegatedInvitationSchema,
+  type DelegatedInvitationScope,
+  DelegatedInvitationScopeSchema,
   type DelegateSpaceInvitation,
   DelegateSpaceInvitationSchema,
 } from '@dxos/protocols/buf/dxos/halo/invitations_pb';
@@ -273,6 +275,25 @@ export const createDelegatedSpaceInvitationCredential = async (
       guestKey: invitation.guestKey,
       expiresOn: invitation.expiresOn,
       multiUse: invitation.multiUse,
+    }),
+  });
+  return credentialPayload(credential);
+};
+
+/**
+ * @param signer - credential issuer; the same as the issuer of the invitation it scopes.
+ * @param subject - key of the space the invitation is for.
+ */
+export const createDelegatedInvitationScopeCredential = async (
+  signer: CredentialSigner,
+  subject: PublicKey,
+  scope: DelegatedInvitationScope,
+): Promise<FeedMessage_Payload> => {
+  const credential = await signer.createCredential({
+    subject,
+    assertion: create(DelegatedInvitationScopeSchema, {
+      invitationId: scope.invitationId,
+      objectIds: scope.objectIds,
     }),
   });
   return credentialPayload(credential);

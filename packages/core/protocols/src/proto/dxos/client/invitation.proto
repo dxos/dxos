@@ -177,4 +177,7 @@ message Invitation {
 
   /// Id of a the space to join (only present if kind is SPACE).
   optional string space_id = 19;
+
+  /// Objects a DELEGATED space invitation shares; written to the control feed as a `DelegatedInvitationScope`.
+  repeated string shared_object_ids = 20;
 }

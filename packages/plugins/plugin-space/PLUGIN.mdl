@@ -483,11 +483,14 @@ feat F-2: Membership and Sharing
   req F-2.5: Every object has a Share action that opens a share dialog (op:SpaceOperation.OpenShareObject) listing the people with access, the general access setting with a role, and a Copy link button. With the Viewer role selected the dialog says that Viewer is not enforced and anyone with the link can still edit.
   req F-2.6:
     when: user copies a link with general access set to anyone with the link
-    then: op:SpaceOperation.ShareObject creates a delegated multi-use invitation, and the link carries it with the object's scope (the object, every object it references or links to, the space properties, and each of these objects' strong dependencies — its parent and a type stored in the space — without the dependencies' own references) and the plugins that render that scope
+    then: op:SpaceOperation.ShareObject creates a delegated multi-use invitation, writes the scope beside it in the control feed as a credential EDGE reads, and the link carries the invitation with the object's scope (the object, every object it references or links to, the space properties, and each of these objects' strong dependencies — its parent and a type stored in the space — without the dependencies' own references) and the plugins that render that scope
   req F-2.7:
     when: someone opens a share link
-    then: a member lands on the object; a non-member joins in the background without a dialog, replicates only the scope, has the plugins enabled, and lands on the object as soon as the space is listed, its plank loading while the space finishes opening; a browser with no identity gets one first, with no welcome screen, and creates its own spaces only once the shared space is ready; a browser that has never run Composer starts with only the core plugins and those the link names
+    then: a member lands on the object; a non-member joins in the background without a dialog, replicates only the scope, has the plugins enabled, and lands on the object, whose plank opens at once and shows the first look (F-2.9) until the space has opened; a browser with no identity gets one first, with no welcome screen, and creates its own spaces only once the shared space is ready; a browser that has never run Composer starts with only the core plugins and those the link names
   req F-2.8: A space joined through a share link replicates only the documents of its scope; the guest's own client enforces this, and EDGE does not.
+  req F-2.9:
+    when: someone opens a share link that carries an invitation
+    then: before the guest has an identity, the app reads the scope's objects from EDGE (`POST /db/spaces/<id>/shared-objects`), signed with the invitation's guest key, and the object's plank shows the object as EDGE last indexed it, read-only, until the joined space's object replaces it in place; a type with no preview of its own shows the object's name; a failed read loses only the first look
 ```
 
 ```mdl
@@ -723,7 +726,7 @@ test QA-2: Register a schema and add a typed relation
 test QA-3: Share one document of a space with a fresh browser
   desc: Object sharing end to end — the link joins a guest with no identity and replicates only what the shared document needs.
   actors: human
-  covers: [F-2.5, F-2.6, F-2.7, F-2.8]
+  covers: [F-2.5, F-2.6, F-2.7, F-2.8, F-2.9]
   status: unverified
   given:
     - host: a booted app with an identity and a space holding ten documents, one of which links to another
@@ -858,6 +861,29 @@ decision D-12: The object's plank opens once the space is listed, the article su
   rejected:
     - Open the object once the space is ready — the surfaces start loading only after the slowest step.
     - Skip the identity's own spaces for a guest — the guest has nowhere to create their own objects later.
+```
+
+```mdl
+decision D-13: A share link's first look is the shared objects' JSON read from EDGE's index, not their Automerge bytes, and the invitation's scope is a credential of its own written beside the invitation. Fills in [D-11].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-2.6, F-2.7, F-2.9]
+  why: EDGE's index holds both for each object, so neither costs EDGE more; what differs is what the guest can use. The guest has no database for the space until membership lands, and ECHO places Automerge-backed objects only into an open space database, so bytes could not become the live object; the live document arrives through Subduction after the join regardless. The JSON renders at once, without loading Automerge, and is the object's current state rather than its history. A credential's signature covers every field of its assertion, so a scope field on the invitation itself would make an EDGE or a client that predates it reject the invitation, and share links would stop joining until every EDGE was updated; a credential of a new type is skipped by them and leaves the join as it was.
+  rejected:
+    - Serve the Automerge bytes — the guest could load them only into a space database it does not have yet, and the live document syncs once it does.
+    - Add the scope to `DelegateSpaceInvitation` — every deployed EDGE would reject new share invitations until it was updated.
+```
+
+```mdl
+decision D-14: The share link's handler returns as soon as it has started the first look and enabled the link's plugins, so URL projection opens the object's plank at once; the identity, the join and the object's opening run detached. Supersedes the plank-opening part of [D-12].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-2.7, F-2.9]
+  why: Projection waits on every navigation handler, and the handler waited for the guest's identity, so the plank appeared only once the identity existed — later than EDGE's answer in a measured run (6.8 s against 5.0 s), leaving the first look nowhere to show. The plank keeps the URL's `<type>+<id>` id until the space opens, so a first look is found by its space and object ids rather than by the plank's id.
+  rejected:
+    - Open the plank from the first look itself — projection then replaces it with the URL's own plank once the handler returns, and the plank mounts twice.
 ```
 
 ---

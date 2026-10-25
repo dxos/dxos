@@ -114,6 +114,7 @@ let openedAt;
 
 /** The stages of opening the link that the stopwatch shows, in the order they happen. */
 const STAGES = [
+  ['firstLook', 'First look from EDGE'],
   ['client', 'Composer started'],
   ['identity', 'Identity created'],
   ['joined', 'Joined the space'],
@@ -163,7 +164,12 @@ const STOPWATCH = ({ text, spaceId, stages }) => {
     }
   };
   const checkRendered = () => {
-    const root = document.querySelector('[data-testid="composer.markdownRoot"]');
+    const preview = document.querySelector('[data-testid="markdown.preview"]');
+    mark('firstLook', !!preview && preview.textContent.includes(text));
+    // The live article, not the first look, which renders with the same editor.
+    const root = [...document.querySelectorAll('[data-testid="composer.markdownRoot"]')].find(
+      (element) => !element.closest('[data-testid="markdown.preview"]'),
+    );
     mark('rendered', !!root && root.textContent.includes(text));
   };
   const tick = () => {
@@ -213,6 +219,54 @@ const timeOpening = async (page) => {
     }
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
+};
+
+/** The share link's payload, as `encodeSharePayload` in plugin-space wrote it. */
+const decodeSharePayload = async (link) => {
+  const encoded = new URL(link).searchParams.get('share').replaceAll('-', '+').replaceAll('_', '/');
+  const bytes = Uint8Array.from(atob(encoded), (char) => char.charCodeAt(0));
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return JSON.parse(await new Response(stream).text());
+};
+
+/**
+ * Answers Bob's first-look read as EDGE's `shared-objects` route would, for a bundle pointed at an EDGE that does not
+ * serve it yet: from the same EDGE's query endpoint, so the answer still costs one EDGE round trip for the same
+ * objects. It checks neither the signature nor the scope, which EDGE's own tests cover.
+ */
+const serveSharedObjects = async (context, link) => {
+  const { spaceId, objects } = await decodeSharePayload(link);
+  const query = {
+    type: 'from',
+    query: { type: 'select', filter: { type: 'object', typename: null, id: objects, props: {} } },
+    from: { _tag: 'scope', scopes: [{ _tag: 'space', spaceId }] },
+  };
+  await context.route('**/db/spaces/*/shared-objects', async (route) => {
+    const response = await route.fetch({
+      url: route
+        .request()
+        .url()
+        .replace(/shared-objects$/, 'exec-query'),
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      postData: JSON.stringify({ query: JSON.stringify(query) }),
+    });
+    const { data } = await response.json();
+    await route.fulfill({
+      headers: { 'access-control-allow-origin': '*' },
+      json: {
+        success: true,
+        data: {
+          objects: data.results.map(({ id, documentId, documentJson, heads }) => ({
+            id,
+            documentId,
+            documentJson,
+            heads: heads ?? [],
+          })),
+        },
+      },
+    });
+  });
 };
 
 export const steps = [
@@ -315,6 +369,9 @@ export const steps = [
     subtitle: 'QA-3 step 3: Open the link on the guest',
     run: async ({ peers: { alice, bob } }) => {
       await alice.click(alice.page.getByTestId('share-object-dialog.done'));
+      if (process.env.SHARED_OBJECTS_VIA_QUERY) {
+        await serveSharedObjects(bob.context, shareLink);
+      }
       await bob.context.addInitScript(STOPWATCH, {
         text: SHARED_TEXT,
         spaceId: new URL(shareLink).pathname.split('/')[2],

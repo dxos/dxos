@@ -381,6 +381,29 @@ export const Slide: Role.Role<SectionData<any>> = Role.make('org.dxos.role.slide
 /** Role token for the `tabpanel` role. Shares the article data shape. */
 export const Tabpanel: Role.Role<ArticleData<any>> = Role.make('org.dxos.role.tabpanel');
 
+/**
+ * Role token for the content of a plank whose graph node has not resolved yet: a plugin that knows something about
+ * the node id (e.g. a share link's first look) stands in until the node and its article arrive.
+ */
+export const PendingArticle: Role.Role<PendingArticleData> = Role.make('org.dxos.role.pendingArticle');
+
+export type PendingArticleData = {
+  attendableId: string;
+  /** The node the plank is waiting for. */
+  nodeId: string;
+};
+
+/**
+ * Role token for a read-only rendering of an object that is not a live ECHO object: decoded with `Obj.fromJSON` from
+ * data read elsewhere (e.g. from EDGE before its space is joined), so nothing written to it is kept.
+ */
+export const ObjectPreview: Role.Role<ObjectPreviewData> = Role.make('org.dxos.role.objectPreview');
+
+export type ObjectPreviewData<Subject = unknown> = {
+  attendableId: string;
+  subject: Subject;
+};
+
 /** Roles whose data contract requires a string `attendableId`. */
 const ATTENDABLE_ROLES = new Set([Article.role, Section.role, Tabpanel.role]);
 

@@ -154,6 +154,7 @@ export const translations = [
         'share-object-failed.title': 'Could not create the share link',
         'share-link-opening.title': 'Opening shared object…',
         'share-link-failed.title': 'Could not open the shared object',
+        'object-preview.untitled': 'Untitled',
         'empty-space.message': 'No documents',
         'empty-tree.message': 'No spaces',
         'unnamed-space.label': 'New space',

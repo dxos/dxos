@@ -23,14 +23,14 @@ import { SpaceOperation } from '#types';
 
 import { JoinByKeyError, NoIdentityError } from '../../errors.ts';
 import { readJoinSpaceKey } from './join-space-key.ts';
-import { handleShareLink } from './share-link-handler.ts';
+import { type ShareLinkOptions, handleShareLink } from './share-link-handler.ts';
 
 export type NavigationHandlerOptions = {
   invitationProp?: string;
   /** Set false when another plugin (e.g. plugin-onboarding) owns the invitation URL param. */
   invitationUrlHandler?: boolean;
   joinSpaceKeyProp?: string;
-};
+} & ShareLinkOptions;
 
 /**
  * NavigationHandlers for space invitation URL params.
@@ -41,6 +41,7 @@ export default Capability.makeModule(
     invitationProp = 'spaceInvitationCode',
     invitationUrlHandler = true,
     joinSpaceKeyProp = 'spaceKey',
+    edgeUrl,
   }: NavigationHandlerOptions = {}) {
     const capabilities = yield* Capability.Service;
     const operationService = yield* Capabilities.OperationInvoker;
@@ -105,17 +106,19 @@ export default Capability.makeModule(
         Effect.provideService(Operation.Service, operationService),
       );
 
-    // Spaces a share link is joining: the link's own URL names the workspace, which the navtree would otherwise call
-    // missing until the join lands.
-    const joining = new Set<string>();
+    // Spaces a share link is joining, each with the object it shares: the link's own URL names the workspace and the
+    // object, which would otherwise read as missing until the join lands — the invitation's scope vouches for both.
+    const joining = new Map<string, string>();
     const joiningLoader: AppCapabilities.NavigationTargetLoader = {
       id: `${meta.profile.key}/share-link`,
       load: ({ spaceId, entityId }) =>
-        Effect.succeed(entityId === undefined && joining.has(spaceId) ? 'exists' : 'unknown'),
+        Effect.succeed(
+          joining.has(spaceId) && (entityId === undefined || entityId === joining.get(spaceId)) ? 'exists' : 'unknown',
+        ),
     };
 
     const shareLinkHandler: AppCapabilities.NavigationHandler = (url: URL) =>
-      handleShareLink(url, joining).pipe(
+      handleShareLink(url, joining, { edgeUrl }).pipe(
         Effect.provideService(Capability.Service, capabilities),
         Effect.provideService(Operation.Service, operationService),
       );

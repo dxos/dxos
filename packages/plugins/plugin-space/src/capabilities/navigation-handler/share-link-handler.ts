@@ -22,7 +22,13 @@ import { meta } from '#meta';
 import { SpaceOperation } from '#types';
 
 import { SpaceOperationError } from '../../operations/errors.ts';
-import { type SharePayload, decodeSharePayload } from '../../util/index.ts';
+import {
+  type SharePayload,
+  decodeSharePayload,
+  readSharePreview,
+  sharePreviewKey,
+  sharePreviewsAtom,
+} from '../../util/index.ts';
 
 /** How long a fresh browser may take to create its identity (onboarding does that for a share link). */
 const IDENTITY_TIMEOUT = 60_000;
@@ -33,14 +39,21 @@ const EXTEND_TIMEOUT = 5_000;
 /** How long a background join may take to produce a ready space before it gives up and says so. */
 const SPACE_TIMEOUT = 180_000;
 
+export type ShareLinkOptions = {
+  /** EDGE's URL, so the first look is read before the client has initialized; the client's config otherwise. */
+  edgeUrl?: string;
+};
+
 /**
  * Opens an object share link (`?share=`): turns on the plugins it names, then — for a member — extends a partial space's sync scope and leaves the path to URL projection; for anyone
- * else, joins the space in the background replicating only the shared objects, then opens the object. The link's
- * space is in `joining` until that attempt ends.
+ * else, joins the space in the background replicating only the shared objects, then opens the object. Meanwhile the
+ * object's plank shows it as EDGE last indexed it. `joining` maps the link's space to its object until that attempt
+ * ends.
  */
 export const handleShareLink = (
   url: URL,
-  joining: Set<string>,
+  joining: Map<string, string>,
+  { edgeUrl }: ShareLinkOptions = {},
 ): Effect.Effect<void, never, Capability.Service | Operation.Service> =>
   Effect.gen(function* () {
     const encoded = url.searchParams.get(SpaceOperation.SHARE_PARAM);
@@ -53,24 +66,33 @@ export const handleShareLink = (
     if (!SpaceId.isValid(spaceId)) {
       return yield* Effect.fail(new SpaceOperationError({ message: 'The link names no valid space.' }));
     }
-    joining.add(spaceId);
-    const settled = Effect.sync(() => joining.delete(spaceId));
-    yield* enablePlugins(payload.plugins);
-
+    joining.set(spaceId, payload.objectId);
     const client = yield* Capability.get(ClientCapabilities.Client);
-    yield* Effect.tryPromise(() => client.waitUntilInitialized({ timeout: INITIALIZE_TIMEOUT })).pipe(
-      Effect.tapError(() => settled),
+    // Detached and first: it needs no identity, so it can be on screen before the join below has begun.
+    yield* Effect.forkDetach(showFirstLook(client, spaceId, payload, edgeUrl));
+    yield* enablePlugins(payload.plugins);
+    // Before the identity: the first look renders with the same plugins' surfaces.
+    yield* Effect.forkDetach(preloadArticleSurfaces);
+    // Detached: URL projection waits on every handler, and the object's plank should open now to show the first look
+    // while the guest gets an identity and joins.
+    yield* Effect.forkDetach(
+      openShared(client, spaceId, payload).pipe(
+        Effect.ensuring(Effect.sync(() => joining.delete(spaceId))),
+        Effect.catch(reportFailure),
+      ),
     );
-    yield* waitForIdentity(client).pipe(
-      Effect.timeout(IDENTITY_TIMEOUT),
-      Effect.tapError(() => settled),
-    );
+  }).pipe(Effect.catch(reportFailure));
+
+/** For a member, widens a partial space's sync scope; for anyone else, joins with the link's scope and opens the object. */
+const openShared = (client: Client, spaceId: SpaceId, payload: SharePayload) =>
+  Effect.gen(function* () {
+    yield* Effect.tryPromise(() => client.waitUntilInitialized({ timeout: INITIALIZE_TIMEOUT }));
+    yield* waitForIdentity(client).pipe(Effect.timeout(IDENTITY_TIMEOUT));
     // Kept until now: onboarding reads it from the address bar, after this handler starts, to create the identity.
     removeQueryParam(SpaceOperation.SHARE_PARAM);
 
     const existing = client.spaces.get(spaceId);
     if (existing) {
-      yield* settled;
       // A member who joined through another link replicates only that link's objects; a full member is unaffected.
       yield* Effect.tryPromise(() => existing.internal.extendSyncScope(payload.objects)).pipe(
         Effect.timeout(EXTEND_TIMEOUT),
@@ -81,7 +103,6 @@ export const handleShareLink = (
 
     const invitation = payload.invitation;
     if (!invitation) {
-      yield* settled;
       return yield* Effect.fail(new SpaceOperationError({ message: 'The link is only for members of its space.' }));
     }
     yield* Operation.invoke(LayoutOperation.AddToast, {
@@ -90,12 +111,8 @@ export const handleShareLink = (
       title: ['share-link-opening.title', { ns: meta.profile.key }],
       duration: 15_000,
     });
-    // Detached: URL projection waits on every handler, and the app should render while the join runs.
-    yield* Effect.forkDetach(preloadArticleSurfaces);
-    yield* Effect.forkDetach(
-      joinAndOpen(client, invitation, spaceId, payload).pipe(Effect.ensuring(settled), Effect.catch(reportFailure)),
-    );
-  }).pipe(Effect.catch(reportFailure));
+    yield* joinAndOpen(client, invitation, spaceId, payload);
+  });
 
 const reportFailure = (error: unknown): Effect.Effect<void, never, Operation.Service> =>
   Effect.gen(function* () {
@@ -107,6 +124,49 @@ const reportFailure = (error: unknown): Effect.Effect<void, never, Operation.Ser
       description: error instanceof Error ? error.message : String(error),
     }).pipe(Effect.ignore);
   });
+
+/**
+ * Puts the shared object, as EDGE read it, in the plank its path names, until the space is joined and the object
+ * itself replaces it. A link only members can open has no invitation to read with, and a failed read only costs the
+ * first look, so neither is reported.
+ */
+const showFirstLook = (
+  client: Client,
+  spaceId: SpaceId,
+  payload: SharePayload,
+  edgeUrl: string | undefined,
+): Effect.Effect<void, never, Capability.Service> =>
+  Effect.gen(function* () {
+    const code = payload.invitation;
+    if (!code) {
+      return;
+    }
+    const { InvitationEncoder } = yield* Effect.promise(() => import('@dxos/client/invitations'));
+    const invitation = yield* Effect.try({
+      try: () => InvitationEncoder.decode(code),
+      catch: (cause) => new SpaceOperationError({ cause }),
+    });
+    const url = edgeUrl ?? (yield* configuredEdgeUrl(client));
+    if (!url) {
+      return;
+    }
+    const preview = yield* readSharePreview({ edgeUrl: url, spaceId, objectId: payload.objectId, invitation });
+    if (!preview) {
+      return;
+    }
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    registry.update(sharePreviewsAtom, (previews) => ({
+      ...previews,
+      [sharePreviewKey(spaceId, payload.objectId)]: preview,
+    }));
+  }).pipe(Effect.catch((error) => Effect.sync(() => log.warn('share link first look not shown', { error }))));
+
+/** EDGE's URL from the client's config, which exists once the client has initialized. */
+const configuredEdgeUrl = (client: Client): Effect.Effect<string | undefined, SpaceOperationError> =>
+  Effect.tryPromise({
+    try: () => client.waitUntilInitialized({ timeout: INITIALIZE_TIMEOUT }),
+    catch: (cause) => new SpaceOperationError({ cause }),
+  }).pipe(Effect.map(() => client.config.get('runtime.services.edge.url')));
 
 /** Turns on the link's plugins that this build has and has not enabled; an unknown id is skipped. */
 const enablePlugins = Effect.fnUntraced(function* (ids: readonly string[]) {

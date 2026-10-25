@@ -32,11 +32,13 @@ export const ObjectMasonryArticle: ComponentType<ObjectMasonryArticleProps> = la
   import('./ObjectMasonry/index.ts').then(({ ObjectMasonryArticle }) => ({ default: ObjectMasonryArticle })),
 );
 export const ObjectFormDialog: ComponentType<any> = lazy(() => import('./ObjectFormDialog/index.ts'));
+export const ObjectPreviewFallback: ComponentType<any> = lazy(() => import('./ObjectPreviewFallback/index.ts'));
 export const RecordArticle: ComponentType<any> = lazy(() => import('./RecordArticle/index.ts'));
 export const RelatedArticle: ComponentType<any> = lazy(() => import('./RelatedArticle/index.ts'));
 export const RenamePopover: ComponentType<any> = lazy(() => import('./RenamePopover/index.ts'));
 export const SchemaContainer: ComponentType<any> = lazy(() => import('./SchemaContainer/index.ts'));
 export const ShareObjectDialog: ComponentType<any> = lazy(() => import('./ShareObjectDialog/index.ts'));
+export const SharePreviewArticle: ComponentType<any> = lazy(() => import('./SharePreviewArticle/index.ts'));
 export const SmallPresenceLive: ComponentType<any> = lazy(() => import('./SmallPresenceLive/index.ts'));
 export const SpacePresence: ComponentType<any> = lazy(() => import('./SpacePresence/index.ts'));
 export const SpaceHomeArticle: ComponentType<any> = lazy(() => import('./SpaceHomeArticle/index.ts'));
