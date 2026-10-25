@@ -9,11 +9,12 @@ import { expect } from 'vitest';
 import { AgentService } from '@dxos/agent-runtime';
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import { Database, Feed, Filter } from '@dxos/echo';
+import { TrajectoryStore } from '@dxos/assistant';
+import { Database } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { AccessToken, Connection } from '@dxos/link';
 import { startTestServer } from '@dxos/mcp-client/testing';
-import { type ContentBlock, Message } from '@dxos/types';
+import { type ContentBlock } from '@dxos/types';
 
 import { EffectDialect } from './dialect-effect.ts';
 import { PlainDialect } from './dialect-plain.ts';
@@ -52,7 +53,7 @@ describe('code mode', () => {
           yield* session.submitPrompt('What is the weather in Paris?');
           yield* session.waitForCompletion();
 
-          const messages = yield* Feed.query(session.feed, Filter.type(Message.Message)).run;
+          const messages = yield* TrajectoryStore.history(session.feed);
           const results = messages
             .flatMap((message) => message.blocks)
             .filter((block): block is ContentBlock.ToolResult => block._tag === 'toolResult');
