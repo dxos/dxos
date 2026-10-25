@@ -201,6 +201,7 @@ export const makeIdb = (
         acquirer,
         compiler,
         transactionAcquirer,
+        driver: 'sqlite-wasm',
         spanAttributes: [
           ...(options.spanAttributes ? Object.entries(options.spanAttributes) : []),
           [ATTR_DB_SYSTEM_NAME, 'sqlite'],
