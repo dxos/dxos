@@ -74,10 +74,11 @@ tab_bar = f"""
   #spec-tabs button:hover {{ color: #e5e7eb; }}
   #spec-tabs button:focus-visible {{ outline: 2px solid #60a5fa; outline-offset: -2px; }}
   #spec-tabs button[aria-selected="true"] {{ color: #f3f4f6; border-bottom-color: #60a5fa; }}
-  /* Full-screen stories render into a fixed, inset-0 wrapper, so it is moved below the tab bar rather than padded. */
-  #storybook-root > .fixed.inset-0 {{ top: 40px !important; }}
+  /* Full-screen stories render into a fixed, inset-0 wrapper — directly or under `display: contents` decorators,
+     which padding cannot reach — so the outermost one is moved below the tab bar rather than padded. */
+  #storybook-root .fixed.inset-0:not(.fixed.inset-0 .fixed.inset-0) {{ top: 40px !important; }}
   #storybook-root {{ padding-top: 40px; box-sizing: border-box; }}
-  #storybook-root:has(> .fixed.inset-0) {{ padding-top: 0; }}
+  #storybook-root:has(.fixed.inset-0) {{ padding-top: 0; }}
 </style>
 <nav id="spec-tabs" role="tablist" aria-label="Stories">
 {buttons}

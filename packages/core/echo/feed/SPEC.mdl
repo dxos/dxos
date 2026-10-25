@@ -23,6 +23,70 @@ The following extension dialects are used in this document.
 | `feat`     | `org.dxos.mdl.feat@1.0`     |
 | `scenario` | `org.dxos.mdl.scenario@1.0` |
 | `decision` | `org.dxos.mdl.decision@1.0` |
+| `service`  | `org.dxos.mdl.service@1.0`  |
+| `table`    | `org.dxos.mdl.table@1.0`    |
+
+## Concepts
+
+```mdl
+service FeedStore
+  desc: |
+    The feed store over one SQLite database (`packages/core/echo/feed/src/feed-store.ts`). Every op is an
+    Effect that requires SqlClient. EchoHost owns one per device; on EDGE each FeedSpace DO owns one per space.
+    Only the ops this spec touches are listed; `# new` marks the ones it adds.
+  ops:
+    append(request: AppendRequest) → AppendResult                # sync push/pull; trims after insert [F-2.1, F-2.4]
+    appendLocal(messages: LocalMessage[]) → Block[]              # local writes; trims after insert [F-2.1]
+    query(request: QueryRequest) → QueryResponse                 # hides blocks past maxAge [F-2.2]
+    subscribe(request: SubscribeRequest) → Stream<Block>         # hides blocks past maxAge [F-2.2]
+    countBlocks(feed: FeedKey) → number
+    deleteOldestBlocks(feed: FeedKey, count: number) → number
+    setFeedOptions(feed: FeedKey, options: FeedOptions) → void   # new; stores and trims [F-1.1, F-1.2]
+    getFeedOptions(feed: FeedKey) → FeedOptions | undefined      # new [F-1.1]
+    trim(feed: FeedKey, now: Timestamp) → number                 # new; applies both limits, returns blocks deleted [F-2.3]
+    trimAll(spaceId: SpaceId, now: Timestamp) → number           # new; every feed of a space, at open and on alarm [F-2.2]
+  note: |
+    FeedKey is { spaceId, feedNamespace, feedId }. FeedOptions is { indexing?: IndexingOptions; retention?:
+    RetentionOptions } from @dxos/echo Feed (`echo/SPEC.mdl` [F-7]).
+```
+
+```mdl
+table feeds: One feed of a space, in one namespace.
+  store: packages/core/echo/feed/src/migrations
+  columns:
+    feedPrivateId: INTEGER PRIMARY KEY AUTOINCREMENT  # local row id; blocks reference it
+    spaceId: TEXT
+    feedId: TEXT                                      # the Feed object's entity id
+    feedNamespace?: TEXT                              # data | trace
+    options?: TEXT                                    # json FeedOptions; NULL = defaults [F-1.3]
+  key: feedPrivateId
+  unique:
+    - (spaceId, feedId)
+  new: options
+```
+
+```mdl
+table blocks: One block (item) of a feed, in append order.
+  store: packages/core/echo/feed/src/migrations
+  columns:
+    insertionId: INTEGER PRIMARY KEY AUTOINCREMENT    # local append order
+    feedPrivateId: INTEGER REFERENCES feeds(feedPrivateId)
+    position?: INTEGER                                # assigned by the position authority; NULL until acknowledged
+    sequence: INTEGER
+    actorId: TEXT
+    prevSequence?: INTEGER
+    prevActorId?: TEXT
+    timestamp: INTEGER                                # append time, ms since epoch; maxAge is measured from it
+    data: BLOB
+    encryptionKeyId?: TEXT
+    iv?: BLOB
+  key: insertionId
+  unique:
+    - (feedPrivateId, position)
+  indexes:
+    - idx_blocks_feedPrivateId_timestamp(feedPrivateId, timestamp): trim and hide by maxAge without a scan [F-2.2]
+  new: idx_blocks_feedPrivateId_timestamp
+```
 
 ## Features
 
@@ -31,8 +95,8 @@ feat F-1: Options in the feed store
 
   req F-1.1:
     when: FeedStore.setFeedOptions({ spaceId, feedId, namespace, indexing, retention }) is called
-    then: the options are stored on the feed's row of the feeds table (a new migration adds the
-          column), creating the row when the feed has no blocks yet, and getFeedOptions returns them
+    then: the options are stored in table:feeds.options (a new migration adds the column), creating
+          the row when the feed has no blocks yet, and getFeedOptions returns them
 
   req F-1.2:
     when: setFeedOptions is called with the options already stored
@@ -157,4 +221,66 @@ decision D-5: On EDGE, the trace-feed limit maxTraceQueueItems stays a cap; a fe
   for: user:dmaretskyi
   affects: [F-2.6]
   why: The config value bounds EDGE storage cost, which a space member must not be able to lift by editing an object.
+```
+
+```mdl
+decision D-6: The options are one nullable JSON column, `feeds.options`, where NULL means the defaults. Fills in [D-3].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [feeds, F-1.1, F-1.3]
+  why: The store reads the options as one value on every trim; JSON keeps a later option from needing another migration, and NULL keeps existing rows valid with no backfill.
+  rejected:
+    - "One column per option (maxLength, maxAge, indexingEnabled): every new option is an ALTER, and the store never queries by them."
+```
+
+```mdl
+decision D-7: FeedStore gains setFeedOptions, getFeedOptions, trim and trimAll; retention runs through trim, which deleteOldestBlocks and a new timestamp index serve. Fills in [D-1] and [D-2].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [FeedStore, blocks, F-2.2, F-2.3]
+  why: One trim op keeps both limits in one place for append, pull, apply, open and alarm; without an index on (feedPrivateId, timestamp), age trimming scans the feed.
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext service
+  uri: org.dxos.mdl.service@1.0
+  desc: An external or system-level dependency providing named operations.
+  fields:
+    desc?: Prose
+    loading?: eager | lazy
+    ops?: OpMap                 # name(params) → ReturnType
+    errors?: ErrorMap
+    note?: Prose
+```
+
+```mdl
+ext table
+  uri: org.dxos.mdl.table@1.0
+  desc: |
+    A SQL table a component owns. The identifier is the table name; the inline prose is what one row
+    is. Columns, keys and indexes are the schema after the spec's changes.
+  fields:
+    store: Prose                # the database and migration set, as a repo path
+    columns: FieldMap           # `name[?]: SQLTYPE [constraint …]  # meaning`; `?` allows NULL
+    key?: Prose                 # the primary key, as a column list
+    unique?: ProseList          # other unique keys, as column lists
+    indexes?: ProseList         # `name(columns): why a query needs it`
+    new?: Prose                 # `table`, or the columns this spec adds
+  inline-prose: true
+  syntax: |
+    table feeds: One feed of a space, by namespace.
+      store: packages/core/echo/feed/src/migrations
+      columns:
+        feedPrivateId: INTEGER PRIMARY KEY AUTOINCREMENT  # local row id; blocks reference it
+        spaceId: TEXT
+        feedId: TEXT                                      # the Feed object's entity id
+        options?: TEXT                                    # json FeedOptions; NULL = defaults
+      key: feedPrivateId
+      new: options
 ```

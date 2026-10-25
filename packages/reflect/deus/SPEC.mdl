@@ -19,7 +19,14 @@ only for the spec changelog.
 
 ```mdl
 feat F-1: Attributed decision log
-  A spec carries a `## Changelog` of `decision` blocks (`lang/changelog.mdl`) that traces how it
+  A spec carries a ````mdl
+feat F-6: SQL tables
+  req F-6.1: The `table` block (`lang/sql.mdl`, `org.dxos.mdl.table@1.0`) declares a SQL table a component owns: its columns with SQLite storage classes and SQL constraints, its keys and indexes, and the migration set it lives in.
+  req F-6.2: A `table` states the schema after the spec's changes; `new:` marks the table or the columns the spec adds.
+  req F-6.3: A `table` is a spec item that requirements cite as `table:<name>` or `table:<name>.<column>`, and `deus lint` knows the block type.
+```
+
+## Changelog` of `decision` blocks (`lang/changelog.mdl`) that traces how it
   came to say what it says, with decisions made by people kept apart from decisions made by agents.
 
   req F-1.1: Each decision names exactly one decider in `by:`, typed `user:<handle>` (GitHub username or email) or `agent:<name>`.
@@ -357,4 +364,22 @@ decision D-32: `pnpm deus` runs `bin/deus.ts` with `node --conditions=source`, a
   for: user:dmaretskyi
   affects: [F-5.3, F-5.4]
   why: CI runs the changelog check before anything is built. Grammar fixtures carry example tests that are not runnable plans, the same trap the dialect exclusion already avoids.
+```
+
+```mdl
+decision D-33: Deus has a block type for SQL tables.
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [F-6]
+```
+
+```mdl
+decision D-34: The block is `table` in a new `lang/sql.mdl` dialect, with `store`, `columns`, `key`, `unique`, `indexes` and `new`; columns use SQLite storage classes, `?` for nullable, and SQL constraints. Fills in [D-33].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-6.1, F-6.2, F-6.3]
+  why: Every SQL store in the repo is SQLite with numbered migrations, so the storage classes and the migration directory say exactly what the DDL says; `new:` lets a review check that a migration adds what the spec promises.
+  rejected:
+    - "Extend `db` from the standard dialect: it describes a whole persistence layer and has no field definition to extend."
 ```
