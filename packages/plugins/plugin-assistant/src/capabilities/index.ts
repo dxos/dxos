@@ -36,7 +36,10 @@ export const AgentRuntime = AppCapability.layerSpec(() => import('./agent-servic
 });
 export const Agents = Capability.lazyModule(
   'Agents',
-  { provides: [AssistantCapabilities.Agent], activatesOn: ActivationEvents.Startup },
+  {
+    provides: [AssistantCapabilities.Agent, AssistantCapabilities.CodeModeAvailable],
+    activatesOn: ActivationEvents.Startup,
+  },
   () => import('./agents.ts'),
 );
 export const SlashCommands = Capability.lazyModule(

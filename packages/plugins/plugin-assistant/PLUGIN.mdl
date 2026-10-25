@@ -284,7 +284,7 @@ feat F-5: Tool Execution
   req F-5.4: Code mode is on by default and opt-out via `Settings.disableCodeMode`; the host supplies the engine
              through the `codeModeTurnProducer` plugin option, and without it the setting has no effect.
   req F-5.5:
-    when: Settings.disableCodeMode is not set, the host supplied a code-mode producer, and no AgentTurnProducer is contributed
+    when: Settings.disableCodeMode is false or absent, the host supplied a code-mode producer, and no AgentTurnProducer is contributed
     then: agent processes spawned afterwards run turns through the code-mode producer (one `eval` tool)
           instead of AiSession
 ```

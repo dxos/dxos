@@ -78,6 +78,12 @@ export const AgentTurnProducer = Capability.make<MakeTurnProducer>()(
 );
 
 /**
+ * Present when the host supplied `codeModeTurnProducer`, since without it code mode never runs whatever
+ * `Settings.disableCodeMode` says.
+ */
+export const CodeModeAvailable = Capability.make<true>()(`${meta.profile.key}.capability.codeModeAvailable`);
+
+/**
  * Whether an agent can run on this device; one that cannot is still listed, with the reason as a
  * short lowercase phrase shown after its name.
  */
