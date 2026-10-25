@@ -14,8 +14,11 @@ import { SheetRange } from '#types';
 
 import { ALIGN_ICONS, type Formatting, STYLE_ICONS } from './formatting.ts';
 
-/** A highlight's tones: light enough to read text over, dark enough to show on the grid, in either theme. */
-const HIGHLIGHT_TONES = [300, 400, 500, 600, 700, 800, 900];
+/** A highlight's tones; text over them is black up to 500 and white beyond. */
+const HIGHLIGHT_TONES = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+
+/** Only theme swatches, so a highlight is always a tone the text color can be chosen for. */
+const HIGHLIGHT_VIEWS: ColorPicker.View[] = ['swatches'];
 
 export type FormattingToolbarProps = {
   formatting: Formatting;
@@ -76,7 +79,7 @@ export const FormattingToolbar = ({ formatting, onChange, disabled, testId }: Fo
         disabled={disabled}
         onValueChange={(color) => onChange(SheetRange.highlightKey, color && SheetRange.isColor(color) ? [color] : [])}
       >
-        <ColorPicker.Trigger label={t('range-value.highlight.label')} tones={HIGHLIGHT_TONES} />
+        <ColorPicker.Trigger label={t('range-value.highlight.label')} tones={HIGHLIGHT_TONES} views={HIGHLIGHT_VIEWS} />
       </ColorPicker.Root>
     </>
   );

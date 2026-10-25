@@ -137,6 +137,11 @@ const DEFAULT_TONES = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
 /** The rows the swatches offer by default: neutral, then every theme hue. */
 const DEFAULT_HUES: SwatchHue[] = ['neutral', ...allHues];
 
+/** A popover view: the saturation/brightness area with a hue slider, or the theme swatch grid. */
+type ColorPickerView = 'wheel' | 'swatches';
+
+const DEFAULT_VIEWS: ColorPickerView[] = ['wheel', 'swatches'];
+
 type ColorPickerTriggerProps = ThemedClassName<{
   label?: string;
   /** Names the button at the end of the tab row that clears the value back to unset. */
@@ -145,6 +150,8 @@ type ColorPickerTriggerProps = ThemedClassName<{
   hues?: SwatchHue[];
   /** Columns of the swatch grid: theme tones (e.g. `500`), light to dark. */
   tones?: number[];
+  /** The views the popover offers, as tabs; with one, it shows that view alone (e.g. swatches only). Both by default. */
+  views?: ColorPickerView[];
 }>;
 
 /**
@@ -157,6 +164,7 @@ const ColorPickerTrigger = ({
   resetLabel = 'Reset',
   hues,
   tones,
+  views = DEFAULT_VIEWS,
 }: ColorPickerTriggerProps) => {
   const { value, onValueChange, onValueCommit } = useColorPickerContext(COLOR_PICKER_NAME);
   return (
@@ -180,12 +188,18 @@ const ColorPickerTrigger = ({
             data-surface='popup'
             className={mx(recipes.popup(), recipes.popoverContent(), 'p-2')}
           >
-            <Tabs.Root defaultValue='wheel' size='sm'>
+            <Tabs.Root defaultValue={views[0]} size='sm'>
               <Toolbar.Root size='sm'>
-                <Tabs.List aria-label={label}>
-                  <Tabs.Trigger value='wheel' icon='ph--palette--regular' label='Wheel' iconOnly />
-                  <Tabs.Trigger value='swatches' icon='ph--swatches--regular' label='Swatches' iconOnly />
-                </Tabs.List>
+                {views.length > 1 && (
+                  <Tabs.List aria-label={label}>
+                    {views.includes('wheel') && (
+                      <Tabs.Trigger value='wheel' icon='ph--palette--regular' label='Wheel' iconOnly />
+                    )}
+                    {views.includes('swatches') && (
+                      <Tabs.Trigger value='swatches' icon='ph--swatches--regular' label='Swatches' iconOnly />
+                    )}
+                  </Tabs.List>
+                )}
                 <Toolbar.Separator variant='gap' />
                 <Button
                   variant='ghost'
@@ -199,27 +213,31 @@ const ColorPickerTrigger = ({
                   }}
                 />
               </Toolbar.Root>
-              <Tabs.Content value='wheel' classNames='flex flex-col gap-2 pt-2'>
-                <ColorPickerPrimitive.Area className='relative size-48 rounded-sm overflow-hidden'>
-                  <ColorPickerPrimitive.AreaBackground className='size-full' />
-                  <ColorPickerPrimitive.AreaThumb className='size-3 rounded-full border-2 border-white shadow' />
-                </ColorPickerPrimitive.Area>
-                <ColorPickerPrimitive.ChannelSlider channel='hue' className='relative h-3 w-48'>
-                  <ColorPickerPrimitive.ChannelSliderTrack className='h-full rounded-full' />
-                  <ColorPickerPrimitive.ChannelSliderThumb className='size-3 -translate-y-1/2 rounded-full border-2 border-white shadow' />
-                </ColorPickerPrimitive.ChannelSlider>
-              </Tabs.Content>
-              <Tabs.Content value='swatches' classNames='pt-2'>
-                <Swatches
-                  value={value}
-                  hues={hues ?? DEFAULT_HUES}
-                  tones={tones ?? DEFAULT_TONES}
-                  onPick={(next) => {
-                    onValueChange?.(next);
-                    onValueCommit?.(next);
-                  }}
-                />
-              </Tabs.Content>
+              {views.includes('wheel') && (
+                <Tabs.Content value='wheel' classNames='flex flex-col gap-2 pt-2'>
+                  <ColorPickerPrimitive.Area className='relative size-48 rounded-sm overflow-hidden'>
+                    <ColorPickerPrimitive.AreaBackground className='size-full' />
+                    <ColorPickerPrimitive.AreaThumb className='size-3 rounded-full border-2 border-white shadow' />
+                  </ColorPickerPrimitive.Area>
+                  <ColorPickerPrimitive.ChannelSlider channel='hue' className='relative h-3 w-48'>
+                    <ColorPickerPrimitive.ChannelSliderTrack className='h-full rounded-full' />
+                    <ColorPickerPrimitive.ChannelSliderThumb className='size-3 -translate-y-1/2 rounded-full border-2 border-white shadow' />
+                  </ColorPickerPrimitive.ChannelSlider>
+                </Tabs.Content>
+              )}
+              {views.includes('swatches') && (
+                <Tabs.Content value='swatches' classNames='pt-2'>
+                  <Swatches
+                    value={value}
+                    hues={hues ?? DEFAULT_HUES}
+                    tones={tones ?? DEFAULT_TONES}
+                    onPick={(next) => {
+                      onValueChange?.(next);
+                      onValueCommit?.(next);
+                    }}
+                  />
+                </Tabs.Content>
+              )}
             </Tabs.Root>
           </ColorPickerPrimitive.Content>
         </ColorPickerPrimitive.Positioner>
@@ -346,7 +364,7 @@ export { ColorPickerInput as Input, ColorPickerRoot as Root, ColorPickerTrigger 
 
 export { DEFAULT_HUES, DEFAULT_TONES };
 
-export type { SwatchHue };
+export type { SwatchHue, ColorPickerView as View };
 
 export type {
   ColorPickerInputProps as InputProps,

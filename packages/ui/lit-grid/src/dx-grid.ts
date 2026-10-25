@@ -1467,6 +1467,7 @@ export class DxGrid extends LitElement {
         gridColumn: `${visCol + 1}`,
         gridRow: `${visRow + 1}`,
         backgroundColor: cell?.background,
+        color: cell?.foreground,
       })}
     >
       <div role="none" class="dx-grid__cell__content">${cell?.value}${accessory}</div>

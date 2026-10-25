@@ -76,6 +76,10 @@ export type DxGridCellValue = {
    */
   background?: string;
   /**
+   * A CSS color for the cell's text, to keep it readable over `background`.
+   */
+  foreground?: string;
+  /**
    * `data-refs` attribute to apply to the gridcell element.
    */
   dataRefs?: string;

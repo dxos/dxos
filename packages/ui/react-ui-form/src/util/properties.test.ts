@@ -75,7 +75,9 @@ describe('getFormProperties', () => {
     expect(names).not.toContain('userId');
   });
 
-  test('filters out optional fields whose optional wrapper is annotated FormInputAnnotation.set(false)', ({ expect }) => {
+  test('filters out optional fields whose optional wrapper is annotated FormInputAnnotation.set(false)', ({
+    expect,
+  }) => {
     // `Schema.optional(T).pipe(FormInputAnnotation.set(false))` annotates the `T | undefined` union, not `T`.
     const TestSchema = Type.makeObject(DXN.make('org.dxos.test.optionalWrapperHidden', '0.1.0'))(
       Schema.Struct({

@@ -406,9 +406,12 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
     <div ref={forwardedRef} {...Util.composableProps(props, { classNames: 'relative min-h-0' })}>
       <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
       {fit ? (
-        // Inert on a slide: the grid is a picture of the used range, not something to edit or scroll.
         <FitBox width={natural.width} height={natural.height}>
-          <div className='dx-cover pointer-events-none'>{grid}</div>
+          {/* Inert, not only pointer-proof: no cell takes focus, so no key or clipboard edit reaches the sheet. The grid is
+              uncapped by the viewport so it renders every cell of its natural size before the box scales it. */}
+          <div inert className='dx-cover [&_.dx-grid]:max-w-none! [&_.dx-grid]:max-h-none!'>
+            {grid}
+          </div>
         </FitBox>
       ) : (
         grid

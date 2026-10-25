@@ -15,6 +15,9 @@ const ROW_HEADER_SIZE = 48;
 /** The used range: one past the last row and column holding a value, at least one of each. */
 export const useUsedExtent = (sheet: Sheet.Sheet): { rows: number; columns: number } => {
   const [cells] = useObject(sheet, 'cells');
+  // A cell's position comes from the axis orders, so inserting a row or column before it moves it.
+  const [rowOrder] = useObject(sheet, 'rows');
+  const [columnOrder] = useObject(sheet, 'columns');
   return useMemo(() => {
     let rows = 1;
     let columns = 1;
@@ -29,7 +32,7 @@ export const useUsedExtent = (sheet: Sheet.Sheet): { rows: number; columns: numb
       }
     }
     return { rows, columns };
-  }, [sheet, cells]);
+  }, [sheet, cells, rowOrder, columnOrder]);
 };
 
 /** The grid's size at 1:1 for the first `rows` × `columns`, headers included. */
