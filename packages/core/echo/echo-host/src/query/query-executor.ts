@@ -1366,6 +1366,9 @@ export class QueryExecutor extends Resource {
       workingSet.push(...storeItems);
       trace.documentsLoaded += storeItems.length;
       if (queues.length === 0 && spaces.length === 0) {
+        if (step.limit !== undefined && workingSet.length > step.limit) {
+          workingSet = workingSet.slice(0, step.limit);
+        }
         trace.objectCount = workingSet.length;
         return { workingSet, trace };
       }
