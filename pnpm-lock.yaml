@@ -11439,6 +11439,9 @@ importers:
       '@dxos/assistant':
         specifier: workspace:*
         version: link:../../core/compute/assistant
+      '@dxos/blob':
+        specifier: workspace:*
+        version: link:../../core/echo/blob
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute

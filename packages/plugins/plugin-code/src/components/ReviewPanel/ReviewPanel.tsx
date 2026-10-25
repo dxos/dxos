@@ -10,6 +10,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 
 import { meta } from '#meta';
@@ -53,10 +54,10 @@ export const ReviewPanel = ({ review, reviewKey, selected, onSelect, onOpenCode,
 
   if (!review) {
     return (
-      <Layout.Flex column gap='sm' classNames='p-4 text-description' data-testid='review-panel.empty'>
-        <span>{t('review-panel.empty.label')}</span>
-        {reviewKey && <code className='text-xs'>{reviewKey}</code>}
-      </Layout.Flex>
+      <Status.Empty icon='ph--seal-check--regular' classNames='dx-fill' data-testid='review-panel.empty'>
+        {t('review-panel.empty.label')}
+        {reviewKey && <code className='block text-xs'>{reviewKey}</code>}
+      </Status.Empty>
     );
   }
 
@@ -75,8 +76,10 @@ export const ReviewPanel = ({ review, reviewKey, selected, onSelect, onOpenCode,
         <Focus.Group asChild>
           <Mosaic.Container asChild currentId={selected} onCurrentChange={handleCurrentChange}>
             <ScrollArea.Root orientation='vertical' classNames='grow'>
-              <ScrollArea.Viewport>
+              {/* The viewport pads the list and the stack spaces the cards, so each card keeps its own frame. */}
+              <ScrollArea.Viewport classNames='p-2'>
                 <Mosaic.Stack
+                  classNames='gap-2'
                   Tile={VerdictTile}
                   items={verdicts}
                   getId={(verdict: Verdict) => verdict.id}
