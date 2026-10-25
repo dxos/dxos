@@ -11,4 +11,5 @@ export {
   SqlPlanCompiler,
   compilePlan,
   planDeclinedByCompiler,
+  withFeedCutoffs,
 } from './compile.ts';

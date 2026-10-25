@@ -24,6 +24,7 @@ export const make = (): Skill.Skill =>
         PresenterOperation.AddSection,
         PresenterOperation.ListLayouts,
         PresenterOperation.PresentObject,
+        PresenterOperation.GenerateSlideImage,
       ],
     }),
     instructions: Template.make({
@@ -47,10 +48,15 @@ export const make = (): Skill.Skill =>
         Keep slides short: a heading and a few points each. Turn each top-level heading or bullet of an outline into a
         slide, and use the first slide as a title slide (${'`layout: cover`'}).
 
-        If a tool returns issues, it saved nothing: fix the slides they name and call the same tool again with every
-        slide. Use ${Operation.toolName(PresenterOperation.AddSection)} to add a slide to an existing presentation, or to
-        link an existing object as a slide.
+        If a tool returns issues, it saved nothing: fix what they name and call the same tool again, with every slide for
+        ${Operation.toolName(PresenterOperation.CreatePresentation)} and with only the corrected slide for
+        ${Operation.toolName(PresenterOperation.AddSection)}.
+        Use ${Operation.toolName(PresenterOperation.AddSection)} to add a slide to an existing presentation, or to link an
+        existing object as a slide.
         Present a presentation only when asked, with ${Operation.toolName(PresenterOperation.PresentObject)}.
+        When you are beside a slide (its Slide object is in your context) and asked for a picture on it, call
+        ${Operation.toolName(PresenterOperation.GenerateSlideImage)} with that slide and a short visual description;
+        it places the image in the slide's layout, so do not edit the slide's markdown to add it.
       `,
     }),
     agentCanEnable: true,

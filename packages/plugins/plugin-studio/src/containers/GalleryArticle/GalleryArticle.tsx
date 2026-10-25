@@ -24,7 +24,7 @@ import { GalleryImage } from '#components';
 import { meta } from '#meta';
 import { MediaArtifact } from '#types';
 
-import { useMediaArtifactCoverSource } from '../../hooks/index.ts';
+import { useMediaArtifactCoverSource } from '../../hooks/useMediaArtifactCoverSource.ts';
 
 const isArtifact = Obj.instanceOf(MediaArtifact.MediaArtifact);
 

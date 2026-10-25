@@ -17,6 +17,7 @@ export const KIND_STYLE: Record<string, { icon: string; hue: Tag.TagHue }> = {
   capability: { icon: 'ph--puzzle-piece--regular', hue: 'indigo' },
   module: { icon: 'ph--package--regular', hue: 'indigo' },
   db: { icon: 'ph--database--regular', hue: 'red' },
+  table: { icon: 'ph--table--regular', hue: 'red' },
   // External nodes: a code symbol, or another spec whose text is not at hand.
   code: { icon: 'ph--file-code--regular', hue: 'amber' },
   spec: { icon: 'ph--file-text--regular', hue: 'violet' },

@@ -158,7 +158,20 @@ export interface EntityMeta extends Schema.Schema.Type<typeof EntityMeta> {}
 export interface QueueRef {
   readonly queueId: string;
   readonly spaceId?: string;
+  /**
+   * Excludes the queue's rows last updated before this time (unix ms), which its retention has expired:
+   * excluded in the read so that a page limit counts only live rows.
+   */
+  readonly updatedSince?: number;
 }
+
+/** The {@link QueueRef.updatedSince} bound over the `updatedAt` column (optionally qualified). */
+export const buildQueueExpiryCondition = (
+  sql: SqlClient.SqlClient,
+  queue: QueueRef,
+  column: Statement.Fragment = sql`updatedAt`,
+): Statement.Fragment =>
+  queue.updatedSince !== undefined ? sql` AND (${column} IS NULL OR ${column} >= ${queue.updatedSince})` : sql``;
 
 /** One source a read selects from: a whole space, or one queue. */
 export type SourceRef = { readonly spaceId: string } | { readonly queue: QueueRef };
@@ -210,8 +223,8 @@ const buildSourceRefsCondition = (
       sql.or(
         queues.map((queue) =>
           queue.spaceId !== undefined
-            ? sql`(spaceId = ${queue.spaceId} AND queueId = ${queue.queueId})`
-            : sql`queueId = ${queue.queueId}`,
+            ? sql`(spaceId = ${queue.spaceId} AND queueId = ${queue.queueId}${buildQueueExpiryCondition(sql, queue)})`
+            : sql`(queueId = ${queue.queueId}${buildQueueExpiryCondition(sql, queue)})`,
         ),
       ),
     );
@@ -591,7 +604,7 @@ export class EntityMetaIndex implements Index {
         objects,
         (object) =>
           Effect.gen({ self: this }, function* () {
-            const { spaceId, queueId, queueNamespace, documentId, data, queuePosition } = object;
+            const { spaceId, queueId, queueNamespace, documentId, data, queuePosition, queueInsertionId } = object;
 
             // Extract metadata (Logic emulating Echo APIs as strict imports are unavailable).
             const castData = data;
@@ -712,7 +725,8 @@ export class EntityMetaIndex implements Index {
                     convergenceKey = ${convergenceKey},
                     annotations = ${annotations},
                     updatedAt = ${updatedAtTimestamp},
-                    queuePosition = ${queuePosition ?? null}
+                    queuePosition = ${queuePosition ?? null},
+                    queueInsertionId = ${queueInsertionId ?? null}
                   WHERE recordId = ${existing[0].recordId}
                 `;
             } else {
@@ -720,13 +734,13 @@ export class EntityMetaIndex implements Index {
                   INSERT INTO objectMeta (
                     objectId, queueId, queueNamespace, spaceId, documentId,
                     entityKind, typeDXN, deleted, source, target, parent, parentId, sourceId, targetId,
-                    convergenceKey, annotations, version, createdAt, updatedAt, queuePosition
+                    convergenceKey, annotations, version, createdAt, updatedAt, queuePosition, queueInsertionId
                   ) VALUES (
                     ${objectId}, ${queueId ?? ''}, ${queueNamespace ?? ''}, ${spaceId}, ${documentId ?? ''},
                     ${entityKind}, ${typeDXN}, ${deleted},
                     ${source}, ${target}, ${parent}, ${parentId}, ${sourceId}, ${targetId},
                     ${convergenceKey}, ${annotations}, ${version},
-                    ${createdAtTimestamp}, ${updatedAtTimestamp}, ${queuePosition ?? null}
+                    ${createdAtTimestamp}, ${updatedAtTimestamp}, ${queuePosition ?? null}, ${queueInsertionId ?? null}
                   )
                 `;
             }
@@ -824,6 +838,48 @@ export class EntityMetaIndex implements Index {
           rows.forEach((row) => recordIds.add(row.recordId));
         }
 
+        return [...recordIds];
+      }),
+  );
+
+  /** Record ids of every row of one feed's items. */
+  selectFeedRecordIds = Effect.fn('EntityMetaIndex.selectFeedRecordIds')(
+    (query: { spaceId: SpaceId; queueId: string }): Effect.Effect<number[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
+        const rows = yield* sql<{
+          recordId: number;
+        }>`SELECT recordId FROM objectMeta WHERE spaceId = ${query.spaceId} AND queueId = ${query.queueId}`;
+        return rows.map((row) => row.recordId);
+      }),
+  );
+
+  /**
+   * Record ids of a feed's rows whose current block is one of `blocks`. A row written before
+   * `queueInsertionId` existed is matched by its block's position instead, which is unique per feed.
+   */
+  selectRecordIdsForBlocks = Effect.fn('EntityMetaIndex.selectRecordIdsForBlocks')(
+    (query: {
+      spaceId: SpaceId;
+      queueId: string;
+      blocks: readonly { insertionId: number; position: number | null }[];
+    }): Effect.Effect<number[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
+        const recordIds = new Set<number>();
+        for (const chunk of chunkArray(query.blocks.map((block) => block.insertionId))) {
+          const rows = yield* sql<{
+            recordId: number;
+          }>`SELECT recordId FROM objectMeta WHERE spaceId = ${query.spaceId} AND queueId = ${query.queueId} AND ${sql.in('queueInsertionId', chunk)}`;
+          rows.forEach((row) => recordIds.add(row.recordId));
+        }
+        const positions = query.blocks.flatMap((block) => (block.position === null ? [] : [block.position]));
+        for (const chunk of chunkArray(positions)) {
+          const rows = yield* sql<{
+            recordId: number;
+          }>`SELECT recordId FROM objectMeta WHERE spaceId = ${query.spaceId} AND queueId = ${query.queueId} AND queueInsertionId IS NULL AND ${sql.in('queuePosition', chunk)}`;
+          rows.forEach((row) => recordIds.add(row.recordId));
+        }
         return [...recordIds];
       }),
   );

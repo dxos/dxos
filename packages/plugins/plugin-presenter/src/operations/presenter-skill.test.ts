@@ -24,9 +24,10 @@ EntityId.dangerouslyDisableRandomness();
 
 const slideContents = Effect.fnUntraced(function* (presentation: Presentation.Presentation) {
   const contents: string[] = [];
-  for (const section of presentation.sections) {
-    const target = yield* Database.load(section);
-    contents.push(Obj.instanceOf(Text.Text, target) ? target.content : '');
+  for (const ref of presentation.slides) {
+    const slide = yield* Database.load(ref);
+    const content = yield* Database.load(slide.content);
+    contents.push(Obj.instanceOf(Text.Text, content) ? content.content : '');
   }
   return contents;
 });
@@ -95,8 +96,8 @@ describe('PresenterSkill operations', () => {
           presentation: Ref.make(presentation),
           object: Ref.make(document),
         });
-        const last = yield* Database.load(presentation.sections[presentation.sections.length - 1]);
-        expect(last.id).toBe(document.id);
+        const last = yield* Database.load(presentation.slides[presentation.slides.length - 1]);
+        expect(last.content.target?.id).toBe(document.id);
 
         const neither = yield* Operation.invoke(PresenterOperation.AddSection, {
           presentation: Ref.make(presentation),
@@ -104,14 +105,14 @@ describe('PresenterSkill operations', () => {
         expect(neither.issues).toHaveLength(1);
 
         // A bad slide is not added, and its problem is numbered where it would have landed (appended, past the end).
-        const count = presentation.sections.length;
+        const count = presentation.slides.length;
         const bad = yield* Operation.invoke(PresenterOperation.AddSection, {
           presentation: Ref.make(presentation),
           content: '---\nlayout: nope\n---\n# Bad',
           index: 100,
         });
         expect(bad.issues).toEqual([expect.stringMatching(new RegExp(`^Slide ${count + 1}: `))]);
-        expect(presentation.sections).toHaveLength(count);
+        expect(presentation.slides).toHaveLength(count);
       },
       WithProperties,
       Effect.provide(OperationTestLayer),

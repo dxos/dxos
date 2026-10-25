@@ -15,5 +15,6 @@ export const CodeGraphOperationHandlerSet = OperationHandlerSet.lazy([
   CodeGraphOperation.AddFromQuery.pipe(Operation.lazyHandler(() => import('./add-from-query.ts'))),
   CodeGraphOperation.AddNeighbors.pipe(Operation.lazyHandler(() => import('./add-neighbors.ts'))),
   CodeGraphOperation.Remove.pipe(Operation.lazyHandler(() => import('./remove.ts'))),
+  CodeGraphOperation.RunCommand.pipe(Operation.lazyHandler(() => import('./run-command.ts'))),
   CodeGraphOperation.SetLayout.pipe(Operation.lazyHandler(() => import('./set-layout.ts'))),
 ]);

@@ -286,6 +286,34 @@ and the deck preview in their companion (Q11); the slide tools may move into tha
 - _Agent call:_ toolbar edits are plain text changes through the editor view (one undo step each), and the
   frontmatter is rewritten through the YAML parser so comments and key order survive.
 
+### 9. Slides as objects _(user, 2026-10-24)_
+
+A section was always one slide, so `Presentation.sections: Ref<Obj>[]` becomes `slides: Ref<Slide>[]`, and the
+slide becomes an object of its own:
+
+```ts
+Presentation@0.2.0 { name?, description?, slides: Ref<Slide>[], theme? }
+Slide@0.1.0 { content: Ref<Obj>, title?, hidden?, notes?: Ref<Text>, image?: Ref<MediaArtifact> }
+```
+
+- **Ownership** _(user)_: Presentation → Slide → owned `Text`. Removing a slide deletes the Slide and its own Text;
+  a linked object is only unlinked.
+- **Metadata** _(user)_: what applies to any content lives on the Slide (`hidden`, `notes`, `image`, `title`), so a
+  linked object can be hidden or given an image; `layout` and `background` stay in markdown frontmatter, and an
+  export writes the Slide fields back as frontmatter (`hide:`, `image:`, notes comment).
+- **Image** _(user)_: a ref to a plugin-studio `MediaArtifact`, generated with `StudioOperation.Generate`; the slide
+  background resolves the artifact to its image. `GenerateSlideImage(slide, prompt)` is the skill's slide tool; a
+  markdown slide whose layout places no image switches to `layout: image`.
+- **Assistant context** _(user)_: opening a slide opens its `Slide`, so the chat companion's subject is the Slide and
+  `SkillsAnnotation` on the type enables the presenter skill; the skill reaches the content and the presentation
+  from it.
+- **Migration** _(agent call)_: `Presentation@0.1.0 → 0.2.0` wraps each section in a new `Slide` (its `Text` re-parented
+  to the Slide) and lifts `hide: true` into `hidden`; creating the Slides needs the migration's `onMigration` hook,
+  since `transform` only rewrites the object's own data.
+- **Prototype** _(user)_: a story of the slide editor beside the assistant companion, with a mocked AI service whose
+  scripted reply calls the real `GenerateSlideImage`, and a stub image provider; the play asserts `slide.image` is
+  set and the preview shows the image.
+
 ## Phases
 
 1. **Presentation type + runtime** — schema, create action, app-graph folder and children, "Add to presentation"

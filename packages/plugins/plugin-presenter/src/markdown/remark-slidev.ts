@@ -99,7 +99,10 @@ const parseAttributes = (source: string): Record<string, string> => {
   return attributes;
 };
 
-/** True for relative/fragment URLs and allowlisted schemes; `data:image/*` only where it is an image source. */
+/**
+ * True for relative/fragment URLs and allowlisted schemes; `data:image/*` and `blob:` only where it is an image source
+ * (an object URL is minted by this origin, e.g. for a stored file, and an image cannot run script).
+ */
 export const isSafeUrl = (url: string, image: boolean): boolean => {
   // Browsers ignore control characters and spaces when reading a scheme, so `java\tscript:` must not slip past.
   const normalized = [...url].filter((char) => char.charCodeAt(0) > 0x20 && char.charCodeAt(0) !== 0x7f).join('');
@@ -107,7 +110,10 @@ export const isSafeUrl = (url: string, image: boolean): boolean => {
   if (scheme === undefined) {
     return true;
   }
-  return SAFE_SCHEMES.has(scheme.toLowerCase()) || (image && DATA_IMAGE.test(normalized));
+  return (
+    SAFE_SCHEMES.has(scheme.toLowerCase()) ||
+    (image && (DATA_IMAGE.test(normalized) || scheme.toLowerCase() === 'blob'))
+  );
 };
 
 const sanitizeUrl = (node: RootContent, issues: SlideIssue[]) => {

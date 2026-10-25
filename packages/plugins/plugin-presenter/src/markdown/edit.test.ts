@@ -9,6 +9,7 @@ import {
   applyEdit,
   columnSnippet,
   insertSnippet,
+  isHiddenSlide,
   notesEdit,
   setFrontmatter,
   surfaceSnippet,
@@ -42,6 +43,14 @@ describe('setFrontmatter', () => {
   test('sets numbers as numbers', () => {
     const content = applyEdit('', setFrontmatter('', { backgroundOpacity: 0.5 }));
     expect(parseSlide(content).frontmatter.backgroundOpacity).toBe(0.5);
+  });
+});
+
+describe('isHiddenSlide', () => {
+  test('reads `hide: true` from the frontmatter only', () => {
+    expect(isHiddenSlide('---\nhide: true\n---\n\n# Slide')).toBe(true);
+    expect(isHiddenSlide('---\nhide: false\n---\n\n# Slide')).toBe(false);
+    expect(isHiddenSlide('# Slide\n\nhide: true')).toBe(false);
   });
 });
 

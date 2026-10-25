@@ -10,6 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
+import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Spec } from '@dxos/types';
 
@@ -20,6 +21,7 @@ import CONNECTOR_EVENTS_MDL from '../../../../plugin-connector/spec/EVENTS.mdl?r
 import GITHUB_FILE_SYNC_MDL from '../../../../plugin-github/spec/FILE-SYNC.mdl?raw';
 import GITHUB_SYNC_MDL from '../../../../plugin-github/spec/SYNC.mdl?raw';
 import PLUGIN_CODE_MDL from '../../../PLUGIN.mdl?raw';
+import { useSpecTexts } from '../../testing/index.ts';
 import PLUGIN_CODE_BASE_MDL from './__fixtures__/plugin-code.base.mdl?raw';
 import { SpecArticle } from './SpecArticle.tsx';
 
@@ -45,6 +47,8 @@ const meta = {
   title: 'plugins/plugin-code/containers/SpecArticle',
   render: (args: { content?: string }) => <DefaultStory {...args} />,
   decorators: [
+    // The Review view's verdict list is a Mosaic stack.
+    withMosaic(),
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     // The article reads the identity and invokes operations, so it needs the client and the plugin manager.
@@ -105,4 +109,55 @@ export const Diff: Story = {
       defaultDiff='base'
     />
   ),
+};
+
+/** The spec a packaged page selects for its open tab (sharing-specs `package.py --spec`); unset outside one. */
+type SpecTab = { path: string; base: boolean; review: boolean };
+
+const readSpecTab = (): SpecTab | undefined => {
+  const tab: unknown = Reflect.get(globalThis, '__DX_SPEC_TAB__');
+  if (typeof tab !== 'object' || tab === null) {
+    return undefined;
+  }
+  const path: unknown = Reflect.get(tab, 'path');
+  return typeof path === 'string'
+    ? { path, base: Reflect.get(tab, 'base') === true, review: Reflect.get(tab, 'review') === true }
+    : undefined;
+};
+
+const SpecTabStory = ({ tab }: { tab: SpecTab }) => {
+  const texts = useSpecTexts({
+    content: { path: tab.path, text: '' },
+    base: tab.base ? { path: `@base/${tab.path}`, text: '' } : undefined,
+    review: tab.review ? { path: tab.path.replace(/\.mdl$/, '.review.mdl'), text: '' } : undefined,
+  });
+  if (!texts?.content) {
+    return <Loading />;
+  }
+
+  return (
+    <SpecArticle
+      role='article'
+      attendableId='story'
+      content={texts.content}
+      base={tab.base ? texts.base : undefined}
+      review={texts.review}
+      defaultDiff={tab.base ? 'base' : undefined}
+    />
+  );
+};
+
+/**
+ * Any spec, chosen by the packaged page at runtime rather than imported into the bundle, so one cached static build
+ * renders every spec; without a packaged page it shows plugin-code's own spec.
+ */
+export const AnySpec: Story = {
+  render: () => {
+    const tab = readSpecTab();
+    return tab ? (
+      <SpecTabStory tab={tab} />
+    ) : (
+      <SpecArticle role='article' attendableId='story' content={PLUGIN_CODE_MDL} />
+    );
+  },
 };

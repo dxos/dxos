@@ -5,9 +5,11 @@
 // @import-as-namespace
 
 import * as Context from 'effect/Context';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { KEY_QUEUE_POSITION } from '@dxos/echo-protocol';
@@ -24,6 +26,53 @@ import * as Query from './Query.ts';
 import type * as QueryResult from './QueryResult.ts';
 import * as Scope from './Scope.ts';
 import * as Type from './Type.ts';
+
+//
+// Options
+//
+
+/** The namespaces a feed can store its data under; `data` is the default. */
+export const Namespace = Schema.Literals(['data', 'trace']);
+export type Namespace = Schema.Schema.Type<typeof Namespace>;
+
+/**
+ * Indexing options for a feed. Absent on a feed means indexing is enabled.
+ *
+ * A struct rather than a bare boolean so later options (which indexes to build) need no migration.
+ */
+export const IndexingOptions = Schema.Struct({
+  /** When false, the feed's items are not indexed at all; there is no partial mode. */
+  enabled: Schema.Boolean,
+});
+export type IndexingOptions = Schema.Schema.Type<typeof IndexingOptions>;
+
+/**
+ * Retention options for a feed. With both limits set, an item is dropped when it breaks either;
+ * an empty struct (or no `retention` on the feed) trims nothing.
+ *
+ * Live feed objects persist every `Obj.update` as a whole-object re-append, so superseded blocks are
+ * trimmed by these limits like any other block; retention does not compact them.
+ */
+export const RetentionOptions = Schema.Struct({
+  /** Maximum number of items kept; the oldest beyond it are dropped. */
+  maxLength: Schema.Int.pipe(Schema.check(Schema.isGreaterThanOrEqualTo(1)), Schema.optional),
+
+  /**
+   * Maximum age of an item in milliseconds, measured from its append timestamp.
+   * Milliseconds rather than a `Duration` because ECHO stores plain JSON; {@link setRetention} converts.
+   */
+  maxAge: Schema.Finite.pipe(Schema.check(Schema.isGreaterThan(0)), Schema.optional),
+});
+export type RetentionOptions = Schema.Schema.Type<typeof RetentionOptions>;
+
+/**
+ * A feed's indexing and retention options, as the indexer carries them down to the feed store.
+ */
+export const FeedOptions = Schema.Struct({
+  indexing: Schema.optional(IndexingOptions),
+  retention: Schema.optional(RetentionOptions),
+});
+export type FeedOptions = Schema.Schema.Type<typeof FeedOptions>;
 
 /**
  * Runtime schema for a Feed object.
@@ -47,7 +96,7 @@ export class Feed extends Type.makeObject<Feed>(DXN.make('org.dxos.type.feed', '
      * - `data`: Data feed (default).
      * - `trace`: Trace feed.
      */
-    namespace: Schema.optional(Schema.Literals(['data', 'trace'])),
+    namespace: Schema.optional(Namespace),
 
     /**
      * Earliest item a pending rewind discards — set when a soft fork is decided but not yet expressed,
@@ -62,6 +111,12 @@ export class Feed extends Type.makeObject<Feed>(DXN.make('org.dxos.type.feed', '
      * order relative to the blocks.
      */
     rewindFrom: Schema.optional(Obj.ID.pipe(internal.FormInputAnnotation.set(false))),
+
+    /** Indexing options; absent means indexing is enabled. Set with {@link setIndexing}. */
+    indexing: IndexingOptions.pipe(internal.FormInputAnnotation.set(false), Schema.optional),
+
+    /** Retention options; absent means nothing is trimmed. Set with {@link setRetention}. */
+    retention: RetentionOptions.pipe(internal.FormInputAnnotation.set(false), Schema.optional),
   }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--rows--regular', hue: 'yellow' })),
 ) {}
 
@@ -103,18 +158,13 @@ export const CursorAnnotation: Annotation.Annotation<Cursor> = Annotation.make({
 export const START: Cursor = Cursor.make('');
 
 /**
- * Retention options for a feed.
- *
- * Live feed objects persist every `Obj.update` as a whole-object re-append reusing the object's id
- * (see `EchoFeedCodec.encode`), so superseded blocks accumulate indefinitely — retention/compaction
- * of those superseded blocks (driven by these options, once implemented) is the reclaim mechanism.
- * TODO(wittjosiah): Implement when feed retention is supported (see `setRetention` below and
- * `FeedStore.appendLocal`).
+ * Input to {@link setRetention}: {@link RetentionOptions} with `maxAge` as any Duration input.
  */
-export interface RetentionOptions {
-  /** Retain items after this cursor position. */
-  // TODO(wittjosiah): Use FeedCursor from @dxos/feed?
-  cursor?: string;
+export interface SetRetentionOptions {
+  /** Maximum number of items kept; an integer of at least 1. */
+  maxLength?: number;
+  /** Maximum age of an item, measured from its append timestamp; must be positive and finite. */
+  maxAge?: Duration.Input;
 }
 
 /**
@@ -528,16 +578,61 @@ export const getSyncState = (feed: Feed): Effect.Effect<SyncState, never, Databa
   );
 
 /**
- * Sets the local retention policy for a feed.
- * Currently stubbed — feeds do not yet support retention.
+ * Sets the feed's indexing options on the feed object, in one change.
+ *
+ * Returns once the change is applied locally; the store stops indexing on its own index pass, which
+ * may run on another device.
  *
  * @example
  * ```ts
- * yield* Feed.setRetention(feed, { count: 1000 });
+ * yield* Feed.setIndexing(feed, { enabled: false });
  * ```
  *
- * @performance O(1); currently a no-op.
+ * @performance O(1); one object change.
  */
-// TODO(dmaretskyi): Implement when feed retention is supported.
-export const setRetention = (_feed: Feed, _options: RetentionOptions): Effect.Effect<void, never, Database.Service> =>
-  Effect.void;
+export const setIndexing = (feed: Feed, options: IndexingOptions): Effect.Effect<void, Schema.SchemaError> =>
+  Schema.decodeUnknownEffect(IndexingOptions)(options).pipe(
+    Effect.map((indexing) =>
+      Obj.update(feed, (feed) => {
+        feed.indexing = indexing;
+      }),
+    ),
+    Effect.asVoid,
+    Effect.withSpan('Feed.setIndexing'),
+  );
+
+/**
+ * Sets the feed's retention options on the feed object, in one change.
+ *
+ * Fails with the schema error, leaving the object unchanged, when `maxLength` is not an integer of
+ * at least 1 or `maxAge` is not a positive, finite duration. Returns once the change is applied
+ * locally; the store trims on its own index pass, which may run on another device.
+ *
+ * @example
+ * ```ts
+ * yield* Feed.setRetention(feed, { maxLength: 1000, maxAge: Duration.days(7) });
+ * ```
+ *
+ * @performance O(1); one object change.
+ */
+export const setRetention = (feed: Feed, options: SetRetentionOptions): Effect.Effect<void, Schema.SchemaError> =>
+  Schema.decodeUnknownEffect(RetentionOptions)({
+    // Keys are omitted rather than set to undefined, which ECHO does not store.
+    ...(options.maxLength !== undefined ? { maxLength: options.maxLength } : {}),
+    ...(options.maxAge !== undefined ? { maxAge: durationToMillis(options.maxAge) } : {}),
+  }).pipe(
+    Effect.map((retention) =>
+      Obj.update(feed, (feed) => {
+        feed.retention = retention;
+      }),
+    ),
+    Effect.asVoid,
+    Effect.withSpan('Feed.setRetention'),
+  );
+
+/** An unparseable duration maps to NaN so the schema, not this conversion, reports it. */
+const durationToMillis = (input: Duration.Input): number =>
+  Duration.fromInput(input).pipe(
+    Option.map(Duration.toMillis),
+    Option.getOrElse(() => Number.NaN),
+  );

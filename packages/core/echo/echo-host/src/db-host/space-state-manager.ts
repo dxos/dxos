@@ -25,7 +25,7 @@ import { log } from '@dxos/log';
 import { type DocumentLease } from '../automerge/document-lease.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/space-state/index.ts';
 import { DatabaseRoot } from './database-root.ts';
-import { partitionBySyncScope } from './sync-scope.ts';
+import { partitionBySyncScope, type ScopedDocuments } from './sync-scope.ts';
 
 export type SpaceStateManagerProps = {
   runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
@@ -265,6 +265,9 @@ export class SpaceStateManager extends Resource {
 
     this._perSpaceContext.set(spaceId, ctx);
 
+    // Each check runs on every directory change, and decoding a url costs a base58check SHA-256; the
+    // ids of links seen by the previous check are reused, so the cache holds only the current links.
+    let linkedIds = new Map<AutomergeUrl, DocumentId>();
     const documentListCheckScheduler = new UpdateScheduler(
       ctx,
       async () => {
@@ -276,10 +279,20 @@ export class SpaceStateManager extends Resource {
           .map((url) => interpretAsDocumentId(url));
         const scope = this._syncScopes.get(spaceId);
         const directory = root.doc();
-        const { inScope, outOfScope } =
-          scope && directory
-            ? partitionBySyncScope(directory, scope)
-            : { inScope: root.getAllLinkedDocuments().map((url) => interpretAsDocumentId(url)), outOfScope: {} };
+        let inScope: DocumentId[];
+        let outOfScope: ScopedDocuments['outOfScope'] = {};
+        if (scope && directory) {
+          ({ inScope, outOfScope } = partitionBySyncScope(directory, scope));
+        } else {
+          inScope = [];
+          const nextLinkedIds = new Map<AutomergeUrl, DocumentId>();
+          for (const url of root.getAllLinkedDocuments()) {
+            const documentId = linkedIds.get(url) ?? interpretAsDocumentId(url);
+            nextLinkedIds.set(url, documentId);
+            inScope.push(documentId);
+          }
+          linkedIds = nextLinkedIds;
+        }
         const documentIds = [root.documentId, ...anchorIds, ...inScope];
         const list = { documentIds, outOfScope };
         if (!isEqual(list, this._lastSpaceDocumentList.get(spaceId))) {

@@ -4,26 +4,33 @@
 
 import React from 'react';
 
+import { useObject } from '@dxos/echo-react';
 import * as Panel from '@dxos/react-ui/Panel';
-import { type Text } from '@dxos/schema';
+
+import { Presentation } from '#types';
 
 import { SlidePreview } from './SlidePreview.tsx';
 
 export type SlidePreviewArticleProps = {
   role?: string;
   /** The slide being edited in the plank this companion belongs to. */
-  subject: Text.Text;
+  subject: Presentation.Slide;
 };
 
 /**
  * The slide editor's companion: the rendered slide at full height beside its editor, following its cursor.
  */
-export const SlidePreviewArticle = ({ role, subject }: SlidePreviewArticleProps) => (
-  <Panel.Root role={role}>
-    <Panel.Body classNames='flex'>
-      <SlidePreview subject={subject} />
-    </Panel.Body>
-  </Panel.Root>
-);
+export const SlidePreviewArticle = ({ role, subject: slide }: SlidePreviewArticleProps) => {
+  const [content] = useObject(slide, 'content');
+  const [loaded] = useObject(content);
+  const text = loaded ? content.target : undefined;
+  return (
+    <Panel.Root role={role}>
+      <Panel.Body classNames='flex'>
+        {text && Presentation.isOwnedContent(slide, text) && <SlidePreview subject={text} />}
+      </Panel.Body>
+    </Panel.Root>
+  );
+};
 
 SlidePreviewArticle.displayName = 'SlidePreviewArticle';

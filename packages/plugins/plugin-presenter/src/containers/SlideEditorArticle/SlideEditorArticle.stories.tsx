@@ -3,12 +3,13 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Filter, Ref } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
+import { useResolveRef } from '@dxos/echo-react';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { useQuery } from '@dxos/react-client/echo';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
@@ -48,6 +49,8 @@ const COLUMNS = ['# Plan', '', '- Design', '- Build', '', '::right::', '', '# Sh
   '\n',
 );
 
+const CODE = ['# Code', '', '```ts', 'const answer = 42;', '```'].join('\n');
+
 const CLICKS = ['# Clicks', '', '<v-clicks>', '', '- one', '- two', '- three', '', '</v-clicks>'].join('\n');
 
 /** Edits the presentation's slide at `slide` (default: the first, a two-column slide). */
@@ -58,9 +61,9 @@ const DefaultStory = ({ slide: index = 0 }: { slide?: number }) => {
   const attentionAttributes = useAttentionAttributes(ATTENDED_ID);
   const { space } = useClientStory();
   const [presentation] = useQuery(space?.db, Filter.type(Presentation.Presentation));
-  const texts = useQuery(space?.db, Filter.type(Text.Text));
-  const section = presentation?.sections[index];
-  const slide = section && texts.find((text) => Ref.hasEntityId(text.id)(section));
+  const slideObject = useResolveRef(presentation?.slides[index]);
+  const content = useResolveRef(slideObject?.content);
+  const slide = content && Obj.instanceOf(Text.Text, content) ? content : undefined;
   if (!slide) {
     return <Loading />;
   }
@@ -73,6 +76,20 @@ const DefaultStory = ({ slide: index = 0 }: { slide?: number }) => {
   );
 };
 
+/** The editor on the second slide after the first slide's content is deleted, which leaves its slide behind. */
+const DeletedFirstStory = () => {
+  const { space } = useClientStory();
+  const [presentation] = useQuery(space?.db, Filter.type(Presentation.Presentation));
+  const first = useResolveRef(presentation?.slides[0]);
+  const deleted = useResolveRef(first?.content);
+  useEffect(() => {
+    if (deleted) {
+      space?.db.remove(deleted);
+    }
+  }, [deleted, space]);
+  return <DefaultStory slide={1} />;
+};
+
 const meta = {
   title: 'plugins/plugin-presenter/containers/SlideEditorArticle',
   render: DefaultStory,
@@ -80,12 +97,12 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withClientProvider({
-      types: [Presentation.Presentation, Text.Text, Markdown.Document],
+      types: [Presentation.Presentation, Presentation.Slide, Text.Text, Markdown.Document],
       createIdentity: true,
       createSpace: true,
       onCreateSpace: async ({ space }) => {
         const presentation = space.db.add(
-          Presentation.make({ name: 'Demo', slides: [TWO_COLS, '# Two', CLICKS, '', COLUMNS] }),
+          Presentation.make({ name: 'Demo', slides: [TWO_COLS, '# Two', CLICKS, '', COLUMNS, CODE] }),
         );
         Presentation.link(presentation, space.db.add(Markdown.make({ name: 'Notes', content: '# Notes' })));
         await space.db.flush({ indexes: true });
@@ -116,6 +133,28 @@ const preview = (canvasElement: HTMLElement) =>
   within(within(canvasElement).getByTestId('presenter.slide-editor.preview'));
 
 /** A two-column slide; typing at its end adds to the right column of the slide shown below. */
+/** A section whose slide was deleted is no slide to go back to, so on what is now the first slide, Previous is off. */
+export const DeletedSection: Story = {
+  render: DeletedFirstStory,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const previous = await canvas.findByTestId('presenter.slide-toolbar.previous', undefined, LOAD_TIMEOUT);
+    await waitFor(() => expect(previous).toBeDisabled());
+    await expect(canvas.getByTestId('presenter.slide-toolbar.next')).toBeEnabled();
+  },
+};
+
+/** Fenced code is decorated as in the markdown editor: its lines are a shaded block. */
+export const CodeBlock: Story = {
+  args: { slide: 5 },
+  play: async ({ canvasElement }) => {
+    await waitFor(
+      () => expect(canvasElement.querySelectorAll('.cm-codeblock-line').length).toBeGreaterThan(0),
+      LOAD_TIMEOUT,
+    );
+  },
+};
+
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

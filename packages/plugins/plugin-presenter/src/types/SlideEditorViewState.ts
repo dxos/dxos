@@ -16,8 +16,8 @@ export type PreviewMode = (typeof PREVIEW_MODES)[number];
 export const State = Schema.Struct({
   /** Where the slide editor shows the rendered slide. */
   previewMode: Schema.Literals(PREVIEW_MODES),
-  /** Height of the editor pane in the split, in rem. */
-  splitSize: Schema.Number,
+  /** Height of the editor pane in the split, in rem; unset until the user drags it, so the panes split evenly. */
+  splitSize: Schema.optional(Schema.Number),
 }).mapFields(Struct.map(Schema.mutableKey));
 
 export type State = Schema.Schema.Type<typeof State>;
@@ -27,7 +27,7 @@ export const aspect: ViewState.Aspect<State> = ViewState.define<State>({
   key: 'presenter-slide-editor',
   backend: 'local',
   schema: State,
-  defaultValue: () => ({ previewMode: 'split', splitSize: 20 }),
+  defaultValue: () => ({ previewMode: 'split' }),
 });
 
 /** The view-state context for the editor layout: one for all slides, so a choice carries from slide to slide. */

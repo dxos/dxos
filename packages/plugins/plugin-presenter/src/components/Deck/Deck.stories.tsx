@@ -27,10 +27,10 @@ import { translations } from '#translations';
 
 import * as Deck from './Deck.tsx';
 
-type DeckPanelProps = Omit<Deck.RootProps, 'children'> & { onAddSlide?: () => void };
+type DeckPanelProps = Omit<Deck.RootProps, 'children'>;
 
 /** The single-slide deck as `DocumentArticle` composes it: toolbar, viewport and pager; fullscreen is the slide alone. */
-const DeckPanel = ({ onAddSlide, ...props }: DeckPanelProps) => (
+const DeckPanel = (props: DeckPanelProps) => (
   <Deck.Root {...props}>
     <Panel.Root asChild>
       <Deck.Content>
@@ -38,12 +38,12 @@ const DeckPanel = ({ onAddSlide, ...props }: DeckPanelProps) => (
           <Panel.Header>
             <Toolbar.Root>
               <div className='grow' />
-              <Deck.FullscreenButton />
+              <Deck.PlayButton />
             </Toolbar.Root>
           </Panel.Header>
         )}
         <Panel.Body asChild>
-          <Deck.Viewport onAddSlide={onAddSlide} />
+          <Deck.Viewport />
         </Panel.Body>
         {!props.fullscreen && (
           <Panel.Footer>
@@ -226,25 +226,13 @@ export const Default: Story = {
 
 export const Empty: Story = {
   decorators: [withEmptyPlugins],
-  args: { count: 0, onAddSlide: fn() },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await waitFor(() => expect(canvas.getByText('Add slide')).toBeVisible());
-    await expect(await canvas.findByText('0 / 0')).toBeVisible();
-    for (const label of ['Jump to first', 'Previous', 'Next', 'Jump to last']) {
-      await expect(canvas.getByLabelText(label)).toBeDisabled();
-    }
-  },
-};
-
-/** Without `onAddSlide` the empty deck offers no button that would do nothing. */
-export const EmptyReadonly: Story = {
-  decorators: [withEmptyPlugins],
   args: { count: 0 },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText('0 / 0')).toBeVisible();
-    await expect(canvas.queryByText('Add slide')).toBeNull();
+    for (const label of ['Jump to first', 'Previous', 'Next', 'Jump to last']) {
+      await expect(canvas.getByLabelText(label)).toBeDisabled();
+    }
   },
 };
 
@@ -275,7 +263,7 @@ export const Fullscreen: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const overlay = await canvas.findByTestId('presenter.overlay');
-    await expect(canvas.queryByTestId('presenter.fullscreen')).toBeNull();
+    await expect(canvas.queryByTestId('presenter.play')).toBeNull();
     const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
     await sleep(1500);
     window.dispatchEvent(new PointerEvent('pointermove'));

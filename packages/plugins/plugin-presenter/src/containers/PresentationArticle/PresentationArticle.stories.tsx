@@ -63,14 +63,29 @@ const LOAD_TIMEOUT = { timeout: 10_000 };
 const tile = (canvas: ReturnType<typeof within>, index: number) =>
   canvas.findByTestId(`presenter.slide-grid.${index}`, undefined, LOAD_TIMEOUT);
 
-/** Every slide is a thumbnail; adding a slide adds a tile. */
+/** Every slide is a thumbnail; the toolbar's add button and the ghost tile after the last slide each add a tile. */
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await tile(canvas, 3);
     await expect(canvas.queryByTestId('presenter.slide-grid.4')).toBeNull();
-    await userEvent.click(canvas.getByRole('button', { name: 'Add slide' }));
+    await userEvent.click(canvas.getByTestId('presenter.add-slide'));
     await tile(canvas, 4);
+    await userEvent.click(canvas.getByTestId('presenter.slide-grid.add'));
+    await tile(canvas, 5);
+  },
+};
+
+/** Each tile names its slide's graph node, so the app's context menu (plugin-navtree) shows that node's actions. */
+export const SlideMenu: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const first = await tile(canvas, 0);
+    await waitFor(() => expect(first.getAttribute('data-dx-context')).toMatch(/\/[^/]+$/));
+    const ids = [0, 1, 2, 3].map((index) =>
+      canvas.getByTestId(`presenter.slide-grid.${index}`).getAttribute('data-dx-context'),
+    );
+    await expect(new Set(ids).size).toBe(4);
   },
 };
 
@@ -90,7 +105,7 @@ export const Fullscreen: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await tile(canvas, 3);
-    await userEvent.click(canvas.getByTestId('presenter.fullscreen'));
+    await userEvent.click(canvas.getByTestId('presenter.play'));
     await expect(await canvas.findByTestId('presenter.overlay')).toBeInTheDocument();
     await userEvent.keyboard('{Escape}');
     await waitFor(() => expect(canvas.queryByTestId('presenter.overlay')).toBeNull());
@@ -100,12 +115,25 @@ export const Fullscreen: Story = {
   },
 };
 
-/** Double-clicking a thumbnail presents from that slide. */
-export const PresentFromTile: Story = {
+/** The fullscreen pager ends with an exit button, which returns to the grid. */
+export const ExitButton: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await tile(canvas, 3);
+    await userEvent.click(canvas.getByTestId('presenter.play'));
+    await userEvent.click(await canvas.findByTestId('presenter.pager.exit'));
+    await waitFor(() => expect(canvas.queryByTestId('presenter.overlay')).toBeNull());
+    await tile(canvas, 0);
+  },
+};
+
+/** Double-clicking a thumbnail opens that slide rather than presenting it. */
+export const OpenFromTile: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.dblClick(await tile(canvas, 2));
-    await expect(await canvas.findByText('3 / 4')).toBeInTheDocument();
+    await waitFor(async () => expect(await tile(canvas, 2)).toHaveAttribute('aria-selected', 'true'));
+    await expect(canvas.queryByTestId('presenter.overlay')).toBeNull();
   },
 };
 

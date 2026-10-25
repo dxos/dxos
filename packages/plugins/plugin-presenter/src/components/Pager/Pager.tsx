@@ -91,3 +91,22 @@ export const PageNumber = ({ index = 0, count = 1 }: PageNumberProps) => {
     </Layout.Flex>
   );
 };
+
+export type ExitButtonProps = {
+  onExit: () => void;
+};
+
+/** Ends the pager row: leaves fullscreen. */
+export const ExitButton = ({ onExit }: ExitButtonProps) => (
+  <Button.Root
+    data-testid='presenter.pager.exit'
+    icon='ph--x--regular'
+    iconSize='xl'
+    label='Exit'
+    iconOnly
+    showTooltip={false}
+    variant='ghost'
+    classNames='p-0 text-neutral-500'
+    onClick={onExit}
+  />
+);

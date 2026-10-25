@@ -15,7 +15,9 @@ import * as Util from '@dxos/react-ui/Util';
 import { type Text } from '@dxos/schema';
 
 import { type SlideSource } from '#deck';
+import { useSlideImage } from '#hooks';
 import { meta } from '#meta';
+import { type Presentation } from '#types';
 
 import { MarkdownSlide, type MarkdownSlideProps } from '../MarkdownSlide/index.ts';
 import { SlideThemeScope } from '../SlideTheme/index.ts';
@@ -92,7 +94,7 @@ const SlideContent = () => {
     case 'text':
       return (
         <EmbedAncestor id={source.text.id}>
-          <TextContent text={source.text} {...options} />
+          <TextContent text={source.text} slide={source.slide} {...options} />
         </EmbedAncestor>
       );
     case 'markdown':
@@ -112,19 +114,25 @@ const SlideContent = () => {
 
 SlideContent.displayName = 'Slide.Content';
 
-const TextContent = ({ text, ...options }: { text: Text.Text } & MarkdownOptions) => {
+const TextContent = ({
+  text,
+  slide,
+  ...options
+}: { text: Text.Text; slide?: Presentation.Slide } & MarkdownOptions) => {
   const [content] = useObject(text, 'content');
+  const image = useSlideImage(slide);
   // Refs resolve against the owner's database so space-relative `echo:///<id>` refs find their target.
-  return <MarkdownContent content={content} db={Obj.getDatabase(text)} {...options} />;
+  return <MarkdownContent content={content} db={Obj.getDatabase(text)} image={image} {...options} />;
 };
 
 const MarkdownContent = ({
   content,
   db,
+  image,
   ...options
-}: { content: string | undefined; db?: Database.Database } & MarkdownOptions) => {
+}: { content: string | undefined; db?: Database.Database; image?: string } & MarkdownOptions) => {
   const renderSurface = useSurfaceRenderer(db);
-  return <MarkdownSlide content={content ?? ''} renderSurface={renderSurface} {...options} />;
+  return <MarkdownSlide content={content ?? ''} renderSurface={renderSurface} image={image} {...options} />;
 };
 
 const PendingContent = () => {
