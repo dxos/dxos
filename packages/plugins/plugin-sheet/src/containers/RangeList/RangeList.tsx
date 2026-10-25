@@ -38,8 +38,8 @@ export type RangeListProps = {
 };
 
 /**
- * The sheet's formatted cell ranges, each with a toolbar of its alignment, styles and highlight. Clicking a range selects
- * it in the sheet; a row can take the sheet's selection as its range, or be removed.
+ * The sheet's formatted cell ranges, each with a toolbar of its alignment, styles and highlight. Selecting a row selects
+ * its range in the sheet; a row can take the sheet's selection as its range, or be removed.
  */
 export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
@@ -116,18 +116,17 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
             getId={({ range }) => range}
             getLabel={({ range }) => getPosition(range)}
             columns={COLUMNS}
+            // Selectable, so a row hovers, and a click or Enter selects its range in the sheet; the selected row is the
+            // one whose range the sheet has selected.
+            value={selectedIndex ?? ''}
+            onValueChange={handleSelect}
           >
             {({ items }) => (
               // The form row supplies the gutters, so the list's columns take its full width.
               <OrderedList.Content gutter='none' aria-label={t('range-list.heading')}>
                 {items.map(({ range, ...formatting }) => (
                   <OrderedList.Item key={range} id={range} canDrag={false} data-testid={`range.${getPosition(range)}`}>
-                    <OrderedList.ItemText>
-                      {/* A button, so the range is reachable and activatable from the keyboard as well as the pointer. */}
-                      <button type='button' className='font-mono cursor-pointer' onClick={() => handleSelect(range)}>
-                        {getPosition(range)}
-                      </button>
-                    </OrderedList.ItemText>
+                    <OrderedList.ItemText classNames='font-mono'>{getPosition(range)}</OrderedList.ItemText>
                     <Toolbar.Root size='sm'>
                       <FormattingToolbar
                         formatting={formatting}
