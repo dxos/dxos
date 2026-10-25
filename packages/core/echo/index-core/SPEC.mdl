@@ -7,7 +7,7 @@ version: 0.1.0
 `@dxos/index-core` is the ECHO indexer: `IndexEngine` reads entities from data sources (Automerge
 documents, feed blocks), writes them to SQLite indexes (objectSnapshot, reverseRef, fts, activity)
 and advances one cursor per source. Two hosts run it: `EchoHost` on a device, and EDGE's Indexer
-Durable Object (`db-service/src/worker/indexer/indexer.ts`).
+Durable Object in db-service.
 
 The indexer is also the one component that reads every object of a space. So it records **indexer
 intents**: durable follow-up work that another component must do because of something the indexer
@@ -15,8 +15,8 @@ saw. An intent commits in the transaction that writes the index rows, so it comm
 the cursor that passes the object, and a crash cannot lose it. This spec defines the intent
 mechanism, its two kinds — convergence-key (existing) and feed-options (new) — and how the indexer
 treats a feed's indexing and retention options. The store side of those options is in
-`packages/core/echo/feed/SPEC.mdl`; the `Feed` object fields are in
-`packages/core/echo/echo/SPEC.mdl` [F-7].
+`org.dxos.feed`; the `Feed` object fields are in
+`org.dxos.echo` [F-7].
 
 ```diagram
 diagram flow=down
@@ -61,7 +61,7 @@ The following extension dialects are used in this document.
 ```mdl
 service FeedOptionsIntentStore
   desc: |
-    The feed-options intent log in the index database (`index-core/src/feed-options-intent-store.ts`), the
+    The feed-options intent log in the index database, the
     sibling of ConvergenceKeyIntentStore. IndexEngine records into it; the host takes and clears through
     IndexEngine pass-throughs (takeFeedOptionsIntents, clearFeedOptionsIntents).
   ops:
@@ -76,7 +76,7 @@ service FeedOptionsIntentStore
 
 ```mdl
 table feedOptionsIntents: One pending "apply this feed's options" intent.
-  store: packages/core/echo/index-core/src/migrations/feed-options-intents
+  store: index database (feed_options_intent_migrations)
   columns:
     id: INTEGER PRIMARY KEY AUTOINCREMENT   # monotonic; clear() is bounded by it
     spaceId: TEXT
@@ -91,7 +91,7 @@ table feedOptionsIntents: One pending "apply this feed's options" intent.
 
 ```mdl
 table convergenceKeyIntents: One pending "check this key's group for duplicates" intent.
-  store: packages/core/echo/index-core/src/migrations/convergence-key-intents
+  store: index database (convergence_key_intent_migrations)
   columns:
     id: INTEGER PRIMARY KEY AUTOINCREMENT
     spaceId: TEXT
@@ -338,7 +338,7 @@ ext table
     A SQL table a component owns. The identifier is the table name; the inline prose is what one row
     is. Columns, keys and indexes are the schema after the spec's changes.
   fields:
-    store: Prose                # the database and migration set, as a repo path
+    store: Prose                # the database, and its migration-history table in parentheses
     columns: FieldMap           # `name[?]: SQLTYPE [constraint …]  # meaning`; `?` allows NULL
     key?: Prose                 # the primary key, as a column list
     unique?: ProseList          # other unique keys, as column lists
@@ -347,7 +347,7 @@ ext table
   inline-prose: true
   syntax: |
     table feeds: One feed of a space, by namespace.
-      store: packages/core/echo/feed/src/migrations
+      store: feed store (feed_migrations)
       columns:
         feedPrivateId: INTEGER PRIMARY KEY AUTOINCREMENT  # local row id; blocks reference it
         spaceId: TEXT

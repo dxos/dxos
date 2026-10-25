@@ -5,13 +5,13 @@ version: 0.1.0
 ---
 
 `@dxos/feed` is the feed store: the SQLite tables that hold every feed's blocks, on a device
-(`EchoHost`) and on EDGE (the `FeedSpace` Durable Object, `db-service/src/worker/feed-space`). This
+(`EchoHost`) and on EDGE (the `FeedSpace` Durable Object in EDGE's db-service). This
 spec covers the store's side of a feed's **indexing and retention options**: how it keeps them and
 how it enforces retention.
 
-The options are fields of the `Feed` ECHO object (`packages/core/echo/echo/SPEC.mdl` [F-7]). The
+The options are fields of the `Feed` ECHO object (`org.dxos.echo` [F-7]). The
 store never reads that object; the indexer carries them down as a feed-options intent and calls
-`setFeedOptions` (`packages/core/echo/index-core/SPEC.mdl` [F-2]). What the indexer does with a
+`setFeedOptions` (`org.dxos.index-core` [F-2]). What the indexer does with a
 feed whose indexing is disabled is in that spec too [F-3].
 
 ## Extensions
@@ -31,7 +31,7 @@ The following extension dialects are used in this document.
 ```mdl
 service FeedStore
   desc: |
-    The feed store over one SQLite database (`packages/core/echo/feed/src/feed-store.ts`). Every op is an
+    The feed store over one SQLite database. Every op is an
     Effect that requires SqlClient. EchoHost owns one per device; on EDGE each FeedSpace DO owns one per space.
     Only the ops this spec touches are listed; `# new` marks the ones it adds.
   ops:
@@ -43,16 +43,16 @@ service FeedStore
     deleteOldestBlocks(feed: FeedKey, count: number) → number
     setFeedOptions(feed: FeedKey, options: FeedOptions) → void   # new; stores and trims [F-1.1, F-1.2]
     getFeedOptions(feed: FeedKey) → FeedOptions | undefined      # new [F-1.1]
-    trim(feed: FeedKey, now: Timestamp) → number                 # new; applies both limits, returns blocks deleted [F-2.3]
-    trimAll(spaceId: SpaceId, now: Timestamp) → number           # new; every feed of a space, at open and on alarm [F-2.2]
+    trim(feed: FeedKey, now: Timestamp) → TrimResult             # new; both limits, at most TRIM_LIMIT blocks per call [F-2.3, F-2.7]
+    trimAll(spaceId: SpaceId, now: Timestamp) → TrimResult       # new; every feed of a space, at open and on alarm, same bound [F-2.2, F-2.7]
   note: |
-    FeedKey is { spaceId, feedNamespace, feedId }. FeedOptions is { indexing?: IndexingOptions; retention?:
-    RetentionOptions } from @dxos/echo Feed (`echo/SPEC.mdl` [F-7]).
+    FeedKey is { spaceId, feedNamespace, feedId }. TrimResult is { deleted: number; more: boolean }. FeedOptions is { indexing?: IndexingOptions; retention?:
+    RetentionOptions } from the @dxos/echo Feed module (`org.dxos.echo` [F-7]).
 ```
 
 ```mdl
 table feeds: One feed of a space, in one namespace.
-  store: packages/core/echo/feed/src/migrations
+  store: feed store (feed_migrations)
   columns:
     feedPrivateId: INTEGER PRIMARY KEY AUTOINCREMENT  # local row id; blocks reference it
     spaceId: TEXT
@@ -67,7 +67,7 @@ table feeds: One feed of a space, in one namespace.
 
 ```mdl
 table blocks: One block (item) of a feed, in append order.
-  store: packages/core/echo/feed/src/migrations
+  store: feed store (feed_migrations)
   columns:
     insertionId: INTEGER PRIMARY KEY AUTOINCREMENT    # local append order
     feedPrivateId: INTEGER REFERENCES feeds(feedPrivateId)
@@ -142,13 +142,25 @@ feat F-2: Retention
 
   req F-2.5:
     when: retention would delete a block that holds the newest version of a live feed object
-    then: the block is still deleted; retention trims by position and does not compact superseded
-          versions (that is the separate compaction work in .agents/projects/feed-live-objects)
+    then: the block is still deleted; retention trims in insertion order and does not compact superseded
+          versions (compacting superseded versions of live feed objects is separate work)
 
   req F-2.6:
     when: a trace-namespace feed on EDGE has stored options
     then: the limit is the smaller of retention.maxLength and config.queues.maxTraceQueueItems;
           with no maxLength, maxTraceQueueItems applies as it does today
+
+  req F-2.7:
+    when: trim or trimAll runs
+    then: it deletes at most TRIM_LIMIT blocks (10,000) in one transaction, in insertion order (blocks.insertionId) oldest first, and returns
+          more = true when blocks past a limit remain; the host calls it again until more is false —
+          EchoHost at once, EDGE from the FeedSpace alarm — so one call never exceeds a Durable
+          Object's CPU or storage-transaction limits
+
+  req F-2.8:
+    when: trim runs again with the same options and clock, or runs concurrently with another trim
+    then: it deletes nothing further than the limits require; repeated and interrupted calls converge
+          on the same retained blocks
 ```
 
 ## Acceptance
@@ -266,7 +278,7 @@ ext table
     A SQL table a component owns. The identifier is the table name; the inline prose is what one row
     is. Columns, keys and indexes are the schema after the spec's changes.
   fields:
-    store: Prose                # the database and migration set, as a repo path
+    store: Prose                # the database, and its migration-history table in parentheses
     columns: FieldMap           # `name[?]: SQLTYPE [constraint …]  # meaning`; `?` allows NULL
     key?: Prose                 # the primary key, as a column list
     unique?: ProseList          # other unique keys, as column lists
@@ -275,7 +287,7 @@ ext table
   inline-prose: true
   syntax: |
     table feeds: One feed of a space, by namespace.
-      store: packages/core/echo/feed/src/migrations
+      store: feed store (feed_migrations)
       columns:
         feedPrivateId: INTEGER PRIMARY KEY AUTOINCREMENT  # local row id; blocks reference it
         spaceId: TEXT
@@ -283,4 +295,31 @@ ext table
         options?: TEXT                                    # json FeedOptions; NULL = defaults
       key: feedPrivateId
       new: options
+```
+
+```mdl
+decision D-8: Trim has a high upper limit per call, so it does not break Cloudflare, and stays idempotent.
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [FeedStore, F-2.7, F-2.8]
+```
+
+```mdl
+decision D-9: The limit is 10,000 blocks per call, deleted oldest first in one transaction; trim reports `more`, and the host repeats it (EchoHost at once, EDGE from the FeedSpace alarm). Fills in [D-8].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [FeedStore, F-2.7]
+  why: Deleting oldest first keeps every partial trim a valid prefix of the full one, which is what makes repeating it idempotent; 10,000 small rows is well inside one Durable Object request, and a first trim after enabling retention on a large feed can otherwise delete millions.
+  rejected:
+    - "Delete everything in one call: unbounded CPU and transaction size on a large feed."
+```
+
+```mdl
+decision D-10: "Oldest" means lowest blocks.insertionId — local insertion order — for maxLength trimming, not the position the authority assigned. Fills in [D-1].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.5, F-2.7]
+  why: A block has no position until the authority acknowledges it, so position cannot order every block; insertionId always exists and is what deleteOldestBlocks already uses. The two orders can differ on a replica, which the review of this spec flagged.
 ```

@@ -50,11 +50,12 @@ const reviewOrientationTheme = EditorView.theme({
  * addition stands out; removed lines stay in place, faded and struck through, so they read as gone.
  */
 const changesOrientationTheme = EditorView.theme({
+  // An inserted line carries both tints, so together they add up to one surface and the syntax colours stay legible.
   '&.cm-merge-b .cm-changedLine': {
-    backgroundColor: 'oklch(from var(--color-cm-diff-add-surface) l c h / calc(alpha * 0.6))',
+    backgroundColor: 'oklch(from var(--color-cm-diff-add-surface) l c h / calc(alpha * 0.4))',
   },
   '&.cm-merge-b .cm-changedText': {
-    background: 'var(--color-cm-diff-add-surface)',
+    background: 'oklch(from var(--color-cm-diff-add-surface) l c h / calc(alpha * 0.6))',
     borderRadius: '2px',
   },
   '& .cm-deletedChunk': {

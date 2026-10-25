@@ -114,6 +114,8 @@ export type SpecArticleProps = Omit<AppSurface.ObjectArticleProps<Spec.Spec>, 's
   readOnly?: boolean;
   /** Base text that diff mode compares with, for hosts that cannot run git; git's base wins when both exist. */
   base?: string;
+  /** Review text (`<SPEC>.review.mdl`), for hosts that cannot read the checkout; the checkout's review wins. */
+  review?: string;
   /** Opens in diff mode against this base. */
   defaultDiff?: DiffAgainst;
 };
@@ -126,7 +128,17 @@ export type SpecArticleProps = Omit<AppSurface.ObjectArticleProps<Spec.Spec>, 's
  */
 export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
   (
-    { role, subject: spec, content, sourceKey, attendableId, readOnly = spec == null, base, defaultDiff },
+    {
+      role,
+      subject: spec,
+      content,
+      sourceKey,
+      attendableId,
+      readOnly = spec == null,
+      base,
+      review: staticReview,
+      defaultDiff,
+    },
     forwardedRef,
   ) => {
     const { t } = Hooks.useTranslation(meta.profile.key);
@@ -171,7 +183,7 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
     const [codeKeys, setCodeKeys] = useState<readonly string[]>([]);
     const texts = useLocalTexts(useMemo(() => [...related, ...codeKeys], [related, codeKeys]));
     const text = (!spec && key && texts.get(fileKey(key))) || ownText;
-    const reviewText = reviewKey ? texts.get(reviewKey) : undefined;
+    const reviewText = (reviewKey ? texts.get(reviewKey) : undefined) ?? staticReview;
     const review = useMemo(() => (reviewText ? parseReview(reviewText) : undefined), [reviewText]);
     const citedKey = useMemo(() => (review ? citedFiles(review).join('\n') : ''), [review]);
     useEffect(() => setCodeKeys(citedKey ? citedKey.split('\n') : []), [citedKey]);
@@ -354,6 +366,8 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
                           value={value}
                           icon={VIEW_ICON[value]}
                           label={t(`spec-view.${value}.label`)}
+                          // Only the open view is labelled, so the toolbar fits a half-width panel.
+                          iconOnly={value !== view}
                           data-testid={`spec-article.view.${value}`}
                         />
                       ))}

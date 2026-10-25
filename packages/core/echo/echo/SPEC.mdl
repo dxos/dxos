@@ -488,7 +488,7 @@ feat F-7: Feed options
   desc: |
     A feed's indexing and retention options are fields of its `Feed` object, so they replicate,
     version and merge like any other property. The feed store never reads the object; the indexer
-    carries the options down to it (`packages/core/echo/feed/SPEC.mdl`).
+    carries the options down to it (`org.dxos.feed`, `org.dxos.index-core`).
 
   req F-7.1:
     when: a Feed object is read

@@ -34,8 +34,9 @@ schema; a `table` is a store-level SQL table that is not an ECHO object.
     `REFERENCES <table>(<column>)`.
 - **`key:`** names the primary key, and `unique:` any other unique keys, as column lists.
 - **`indexes:`** has one line per secondary index: `name(columns)` and why a query needs it.
-- **`store:`** names the database and migration set the table lives in, as a repo path
-  (`packages/core/echo/feed/src/migrations`), so the reader knows which migrations change it.
+- **`store:`** names the database the table lives in and, in parentheses, its migration-history table
+  (`feed store (feed_migrations)`), so the reader knows which migrations change it. A spec names
+  components and specs, never file paths: the code moves, the names stay.
 - **`new:`** marks a table or columns the spec adds: `table` for a new table, or the list of new
   columns. A spec review checks that a migration adds each of them.
 - A `table` is a spec item: a requirement cites it as `table:feeds` or a column as
@@ -51,7 +52,7 @@ ext table
     A SQL table a component owns. The identifier is the table name; the inline prose is what one row
     is. Columns, keys and indexes are the schema after the spec's changes.
   fields:
-    store: Prose                # the database and migration set, as a repo path
+    store: Prose                # the database, and its migration-history table in parentheses
     columns: FieldMap           # `name[?]: SQLTYPE [constraint …]  # meaning`; `?` allows NULL
     key?: Prose                 # the primary key, as a column list
     unique?: ProseList          # other unique keys, as column lists
@@ -60,7 +61,7 @@ ext table
   inline-prose: true
   syntax: |
     table feeds: One feed of a space, by namespace.
-      store: packages/core/echo/feed/src/migrations
+      store: feed store (feed_migrations)
       columns:
         feedPrivateId: INTEGER PRIMARY KEY AUTOINCREMENT  # local row id; blocks reference it
         spaceId: TEXT
