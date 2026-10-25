@@ -26,6 +26,7 @@ export const translations = [
         'plugin.name': 'Presenter',
         'toggle-presentation.label': 'Present',
         'slide-pending.label': 'Loading…',
+        'theme-group.label': 'Theme',
         'theme-color.placeholder': 'From theme',
         'default-font.placeholder': '{{font}} (default)',
         'add-slide.label': 'Add slide',

@@ -95,6 +95,10 @@ export const Default: Story = {
     for (const label of ['Base', 'Accent color', 'Background color', 'Text color', 'Font', 'Code font']) {
       await expect(await canvas.findByText(label, undefined, { timeout: 10_000 })).toBeVisible();
     }
+    // The theme's fields are one nested group, not loose fields of the presentation.
+    const group = canvas.getByTestId('presentation.theme');
+    await expect(within(group).getByText('Base')).toBeVisible();
+    await expect(within(group).getByText('Code font')).toBeVisible();
     await expect(canvas.getByText('mono (default)')).toBeVisible();
     await expect(canvas.getByText('jetbrains (default)')).toBeVisible();
     // An adorned input puts its test id on the frame around it.

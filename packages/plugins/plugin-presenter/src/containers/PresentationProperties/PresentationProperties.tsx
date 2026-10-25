@@ -86,7 +86,10 @@ export const PresentationProperties = ({ presentation }: PresentationPropertiesP
       autoSave
       onSave={handleSave}
     >
-      <Form.Layout template={TEMPLATE} fieldMap={FIELD_MAP} />
+      {/* The theme is one sub-object, so its fields sit in one nested group, as the form shows any nested object. */}
+      <Form.FieldSet label={t('theme-group.label')} nested collapsible data-testid='presentation.theme'>
+        <Form.Layout template={TEMPLATE} fieldMap={FIELD_MAP} />
+      </Form.FieldSet>
     </Form.Root>
   );
 };
