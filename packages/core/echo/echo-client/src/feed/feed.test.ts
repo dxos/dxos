@@ -2,6 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import { pipe } from 'effect/Function';
@@ -307,8 +308,40 @@ describe('Feed', () => {
     }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
   });
 
-  // TODO(wittjosiah): Implement when queue retention is supported.
-  test.todo('setRetention configures feed retention policy');
+  test('feed options are object fields that replicate to another client', async ({ expect }) => {
+    const [spaceKey] = PublicKey.randomSequence();
+    await using peer = await builder.createPeer({ types: [Feed.Feed] });
+    await using db1 = await peer.createDatabase(spaceKey);
+    const sevenDays = Duration.toMillis(Duration.days(7));
+
+    const feed = await Effect.gen(function* () {
+      const feed = yield* Database.add(Obj.make(Feed.Feed, { name: 'log' }));
+      yield* Feed.setRetention(feed, { maxLength: 100, maxAge: Duration.days(7) });
+      yield* Feed.setIndexing(feed, { enabled: false });
+      yield* Database.flush();
+      return feed;
+    }).pipe(Effect.provide(Database.layer(db1)), EffectEx.runAndForwardErrors);
+
+    expect(feed.retention).toEqual({ maxLength: 100, maxAge: sevenDays });
+    expect(feed.indexing?.enabled).toBe(false);
+    expect(Obj.toJSON(feed)).toMatchObject({
+      retention: { maxLength: 100, maxAge: sevenDays },
+      indexing: { enabled: false },
+    });
+
+    const exit = await Effect.runPromiseExit(Feed.setRetention(feed, { maxLength: 0 }));
+    expect(Exit.isFailure(exit)).toBe(true);
+    expect(feed.retention).toEqual({ maxLength: 100, maxAge: sevenDays });
+
+    const rootUrl = db1.rootUrl;
+    invariant(rootUrl);
+    await using client2 = await peer.createClient();
+    await using db2 = await peer.openDatabase(spaceKey, rootUrl, { client: client2 });
+    const [replica] = await db2.query(Filter.id(feed.id)).run();
+    invariant(Obj.instanceOf(Feed.Feed, replica));
+    expect(replica.retention).toEqual({ maxLength: 100, maxAge: sevenDays });
+    expect(replica.indexing).toEqual({ enabled: false });
+  });
 
   describe('Live updates', () => {
     test('append retries after a failed insertIntoFeed RPC and eventually succeeds', async ({ expect }) => {
