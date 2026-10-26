@@ -34,7 +34,8 @@ export const TakePlayer = ({ take, autoPlay, onEnded }: TakePlayerProps) => {
   // (download, speed) that the status bar does not want.
   return (
     <audio
-      className='h-10 w-full'
+      // The browser's controls draw a rounded panel of their own, reachable only through its pseudo-elements.
+      className='h-10 w-full rounded-none [&::-webkit-media-controls-enclosure]:rounded-none [&::-webkit-media-controls-panel]:rounded-none'
       src={src}
       controls
       controlsList='nodownload noplaybackrate noremoteplayback'

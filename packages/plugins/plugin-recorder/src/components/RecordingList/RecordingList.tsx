@@ -147,6 +147,8 @@ export const RecordingList = <T extends RecordingItem>({
                 data-testid='recorder.item'
                 data-main={item.main ? 'true' : undefined}
                 data-recorded={item.duration !== undefined ? 'true' : undefined}
+                // As tall as the toolbar, so the list reads at the toolbar's rhythm.
+                classNames='min-h-(--dx-toolbar-size)'
                 // A row's controls keep their presses from the list, so a press on one selects its row here.
                 onClickCapture={() => item.id !== value && onValueChange?.(item.id)}
                 // The list keeps the keyboard after a press on a row's button, so the arrows go on from this row.

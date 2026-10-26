@@ -455,3 +455,10 @@ decision D-32: The presentation companion's rows show a circle (a check circle w
   supersedes: D-31
   affects: [PresentationRecordingsArticle, RecordingsPanel]
 ```
+
+```mdl
+decision D-33: The list rows are as tall as the toolbar, and the status bar player has square corners.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [RecordingsPanel]
+```
