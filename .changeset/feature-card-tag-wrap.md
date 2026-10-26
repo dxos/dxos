@@ -1,5 +1,5 @@
 ---
-'@dxos/plugin-projects': patch
+'@dxos/plugin-projects': minor
 ---
 
-Feature card tags that wrap onto a second line keep the same spacing above and below as a single line.
+The project Features tab shows its filter on a second toolbar row, with the statuses as toggleable tags in their card colours; wrapped feature card tags keep their spacing, and the planned status has its own colour.
