@@ -73,20 +73,20 @@ the 60s source render, 3s earlier than in `ECHO.m4v`). About 25 words fits a 10s
 2. **Monolithic Agents** (13–23s, 30 words)
 
    - Today we grant agents coarse-grained access to everything, with no audit and limited control.
-   - REDO: As agents run continuously, across both private and enterprise data, that becomes more dangerous every day.
-     - Variant A (14 words): That is risky, and it doesn't scale: always-on agents need scoped access, not all-or-nothing.
-     - Variant B (18 words): It's risky, and it breaks down for always-on agents, which need the right data, not all of it.
-     - Variant C (14 words): That approach is risky, and it simply doesn't work for agents that run continuously.
-     - Variant D (15 words): It doesn't scale: for always-on agents, all-or-nothing access is both too risky and too blunt.
+   - This approach is risky, and it simply doesn't work for agents that run continuously with evolving requirements.
 
 3. **ECHO Graph Database** (23–33s, 24 words)
 
    - ECHO DB takes a fundamentally different approach.
-   - It brings all your data into a single logical graph, so teams and agents can work from a shared context.
+   - REDO: It brings all your data into a single logical graph, so teams and agents can work from a shared context.
+     - Variant A (19 words): It brings enterprise, team and personal data into a single logical graph, so people and agents share one context.
+     - Variant B (20 words): Enterprise, team and personal data live in a single logical graph, so people and agents work from a shared context.
+     - Variant C (18 words): It brings enterprise, team and personal data together into a single logical graph that people and agents share.
+     - Variant D (18 words): It unifies enterprise, team and personal data in one logical graph, a shared context for people and agents.
 
 4. **ECHO Hypergraph** (33–43s, 30 words)
 
-   - That graph is partitioned into interconnected secure spaces.
+   - The graph is partitioned into interconnected secure spaces.
    - REDO: Share each one with the colleagues and agents who need it, even across organizations, and every agent sees only what its task requires.
      - Variant A (16 words): Each space is shared with exactly the colleagues and agents who need it, even across organizations.
      - Variant B (17 words): Spaces can be shared with colleagues, partners and agents, so each one sees only what it needs.
