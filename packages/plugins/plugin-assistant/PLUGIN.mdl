@@ -49,7 +49,7 @@ type Settings
     chatView?: ChatView
     modelProvider?: ModelProvider
     modelDefaults?: ModelDefaults
-    codeMode?: boolean
+    disableCodeMode?: boolean
     reportStruggles?: boolean
     tracePanelDebug?: boolean
 ```
@@ -281,10 +281,10 @@ feat F-5: Tool Execution
   req F-5.3:
     when: AI invokes a tool during a conversation
     then: operation is dispatched via the compute runtime and result returned to the model
-  req F-5.4: Code mode is opt-in via `Settings.codeMode`, off by default; the host supplies the engine
+  req F-5.4: Code mode is on by default and opt-out via `Settings.disableCodeMode`; the host supplies the engine
              through the `codeModeTurnProducer` plugin option, and without it the setting has no effect.
   req F-5.5:
-    when: Settings.codeMode is enabled, the host supplied a code-mode producer, and no AgentTurnProducer is contributed
+    when: Settings.disableCodeMode is false or absent, the host supplied a code-mode producer, and no AgentTurnProducer is contributed
     then: agent processes spawned afterwards run turns through the code-mode producer (one `eval` tool)
           instead of AiSession
 ```
@@ -677,6 +677,24 @@ decision D-16: A connection's name in a tool prefix is its own name, or its endp
   rejected:
     - Prefix only tools whose names clash: a tool's name then changed whenever another server came or went.
     - Keep the last set of servers read when a read fails: the agent process ends with each turn, so the set never outlived one.
+```
+
+```mdl
+decision D-17: Every chat prompt reads the buttons other plugins add to it from a hidden prompt node under the node that hosts it: a chat, the assistant companion, or a space's home. The prompt node is keyed by its host, not its chat, so a draft chat that is stored or replaced keeps the same buttons and the same dictation session. Contributors file app-graph actions on it with the `prompt` disposition. Fills in [D-2].
+  date: 2026-10-23
+  by: user:wittjosiah
+  affects: [QA-3]
+  why: Most prompts have a draft chat with no graph node, so actions filed on the chat's node, the microphone among them, never reached them. Graph actions keep one way for a plugin to add a button to another plugin's surface. The command palette does not list a prompt node's actions yet: it walks only the attended node and its ancestors.
+  rejected:
+    - A surface role for prompt buttons: a contribution would be a component, not an action other parts of the app can list.
+    - An `ObjectAction` capability: it has no custom render, which the microphone needs, and keeps actions out of the app graph. `ObjectAction` is deprecated in favour of graph actions.
+```
+
+```mdl
+decision D-18: Code mode is the default turn engine; the setting becomes `disableCodeMode`, an opt-out.
+  date: 2026-10-23
+  by: user:dmaretskyi
+  affects: [F-5.4, F-5.5]
 ```
 
 ---

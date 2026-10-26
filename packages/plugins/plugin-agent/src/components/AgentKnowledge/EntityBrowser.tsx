@@ -78,6 +78,15 @@ const EntityBrowserColumn = forwardRef<HTMLDivElement, ColumnProps>(
     }, [stackElement, selection?.cardId, onChoose]);
     const menuActions = useMenuBuilder(() => {
       const builder = MenuBuilder.make().root({ label: ['entity-browser-actions.label', { ns: meta.profile.key }] });
+      builder.custom('filter', { label: ['entity-browser-filter.placeholder', { ns: meta.profile.key }] }, () => (
+        <Field.Root>
+          <Input.Root
+            placeholder={t('entity-browser-filter.placeholder')}
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+          />
+        </Field.Root>
+      ));
       if (onClose) {
         builder.action(
           'close',
@@ -91,7 +100,7 @@ const EntityBrowserColumn = forwardRef<HTMLDivElement, ColumnProps>(
         );
       }
       return builder.build();
-    }, [onClose]);
+    }, [onClose, filter, t]);
 
     const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
       if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
@@ -103,19 +112,7 @@ const EntityBrowserColumn = forwardRef<HTMLDivElement, ColumnProps>(
     return (
       <Panel.Root data-testid='entity-browser-column'>
         <Panel.Header>
-          <ActionToolbar
-            {...menuActions}
-            alwaysActive
-            start={
-              <Field.Root>
-                <Input.Root
-                  placeholder={t('entity-browser-filter.placeholder')}
-                  value={filter}
-                  onChange={(event) => setFilter(event.target.value)}
-                />
-              </Field.Root>
-            }
-          />
+          <ActionToolbar {...menuActions} alwaysActive />
         </Panel.Header>
         <Panel.Body asChild>
           <ScrollArea.Root orientation='vertical'>

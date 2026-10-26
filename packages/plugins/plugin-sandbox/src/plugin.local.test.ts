@@ -23,6 +23,8 @@ import { Sandbox, SandboxOperation } from '#types';
 import { SANDBOX_BACKEND_ENV } from './services/layer.ts';
 import { canRunLocalSandboxes } from './testing/probe.ts';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), SandboxPlugin()] });
+
 const unavailable = !(await canRunLocalSandboxes());
 
 // Read when the plugin's layer spec is first built, so set before the app starts.

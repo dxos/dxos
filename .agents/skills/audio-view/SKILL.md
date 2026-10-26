@@ -55,7 +55,7 @@ transcribes room tone as "Thank you.". `--no-gate` decodes from the first sample
 
 ## Evals over the fixtures
 
-`packages/plugins/plugin-transcription/src/stories/whistle/fixtures.test.ts` replays the agents-scope `whistle-*`
+`packages/plugins/plugin-transcription/src/whistle/fixtures.test.ts` replays the agents-scope `whistle-*`
 fixtures in both pass modes, bounds WER and words committed in silence, and logs keyword recall. It is tagged `manual` and
 skips without the fixtures:
 
@@ -63,7 +63,7 @@ skips without the fixtures:
 for name in whistle-silence whistle-one-two-three whistle-echo-query-a whistle-echo-query-b; do
   moon run fixtures:pull -- $name --scope agents
 done
-DX_RUN_MANUAL_TESTS=1 moon run plugin-transcription:test -- src/stories/whistle/fixtures.test.ts
+DX_RUN_MANUAL_TESTS=1 moon run plugin-transcription:test -- src/whistle/fixtures.test.ts
 ```
 
 ## How to read the results

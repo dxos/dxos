@@ -53,3 +53,47 @@ the computed layout are saved, so the layout still owns every box the user did n
 - The illustrator draws frames for 2–6 packages only, because the engine keeps more groups poorly.
 - No production path: a deployed Composer has no dev server. A Tauri-native path (a sidecar or a Rust
   command over the same store) would be the next step.
+
+## Single commands
+
+A command bar on the article (a floating button, or `/`) runs one short command — "clear the graph", "show me
+the ECHO package exports", "what depends on the identity service" — without the chat assistant. It is built for
+latency: one model round trip in the common case.
+
+| Piece     | Where                                                    | Job                                                                                      |
+| --------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Loop      | `src/command/Command.ts`                                 | Turns of Claude Haiku answering a `Step` (actions + one sentence) with `generateObject`. |
+| Filter    | `src/command/Filter.ts`                                  | The remove filter: `*`, `kind:<kind>`, `/regex/`, text; `\|` for alternatives.           |
+| Budget    | `src/command/Budget.ts`                                  | Caps a command at 40 new boxes and summarises the rest as a trailer.                     |
+| Operation | `RunCommand`, `src/operations/run-command.ts`            | Loads the graph and runs the loop with the AI service's models.                          |
+| Bar       | `src/components/CommandBar/`, `CodeGraphArticle`         | The field, the outcome line and the trailer; the microphone toggle.                      |
+| Speech    | `useSpeechCommand`, `@dxos/plugin-transcription/Whistle` | Whistle on the device; each pause ends a spoken command.                                 |
+
+Before the first turn, `src/command/Grounding.ts` looks up what the command names: packages by name, bare name or
+path directory (from a package list loaded once per page, which the article requests on open), and exported symbols
+by exact `deus:canonicalName` or `deus:name` (`Identity.Service`, `Obj.update`). The model gets the matches as exact
+IRIs, so it does not guess names with `CONTAINS`. The lookup takes about 10 ms on a warm index and is skipped after
+1.5 s.
+
+Each turn the model sees the graph (boxes in `pkg:`/`file:` shorthand, up to 120 listed), the matches and the
+command, and may only `add` the rows of a SPARQL SELECT or `remove` boxes by a filter. After a turn:
+
+1. no actions → stop;
+2. an action failed or a query returned no rows → another turn, with the error, without asking;
+3. the turn only removed boxes → stop;
+4. otherwise the decision model (`Model.defaultDecisionModel`, System One by default) answers "is the command
+   done?" and the loop stops at ≥ 0.5. Without a decision model the loop stops here.
+
+At most three turns. A query may return up to 1000 rows; the first boxes that fit the 40-box budget (and the
+300-box graph cap) are drawn, and the rest become the trailer ("+57 not shown: 57 files in packages/sdk/client-services
+(40), …, e.g. …"), which the bar shows and the next turn reads.
+
+Every step (lookup, model call, add, remove, judge) is timed and returned as `trace` on the operation's output, and
+logged as `code graph command step`. The bar's verbose toggle lists the steps of the last command with their times,
+token or row counts, and the SPARQL or filter each ran.
+
+Where the time goes: a model call through EDGE takes about 2–3 s even for a short answer, and is most of every
+command; a warm index answers in milliseconds. A command that needs a second turn takes twice as long, so the prompt
+and the lookup aim at one turn.
+
+The live tests in `src/command/Command.e2e.test.ts` run these commands headless against the real index and models.

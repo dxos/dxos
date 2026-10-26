@@ -68,12 +68,13 @@ const handler: Operation.WithHandler<typeof TurnReviewSkill.AnalyzeTurn> = TurnR
           return;
         }
 
+        const codeModeAvailable = yield* Capability.getAll(AssistantCapabilities.CodeModeAvailable);
         const binder = yield* Harness.binder;
         const feed = yield* Database.load(chat.feed);
         const header: TrajectoryHeader = {
           sessionId: Obj.getURI(feed, { prefer: 'absolute' }),
           model: chat.session?.model,
-          codeMode: settings.codeMode ?? false,
+          codeMode: codeModeAvailable.length > 0 && !settings.disableCodeMode,
           skills: binder
             .getSkills()
             .filter((skill) => Obj.getMeta(skill).key !== TurnReviewSkill.key)

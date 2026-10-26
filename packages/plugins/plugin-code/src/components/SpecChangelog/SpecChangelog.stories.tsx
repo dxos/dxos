@@ -14,6 +14,7 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 import { type SourceKey } from '#sync';
 import { translations } from '#translations';
 
+import ECHO_QUERY_SPEC from '../../../../../core/echo/echo-client/spec/QUERY.mdl?spec';
 import REVIEW_DIALECT from '../../../../../reflect/deus/lang/review.mdl?spec';
 import DEUS_SPEC from '../../../../../reflect/deus/SPEC.mdl?spec';
 import CALLS_SPEC from '../../../../plugin-calls/PLUGIN.mdl?spec';
@@ -218,4 +219,9 @@ export const GitHubFileSync: Story = {
 /** GitHub sync, part 3: connector event dispatch. */
 export const ConnectorEvents: Story = {
   args: { content: CONNECTOR_EVENTS_SPEC },
+};
+
+/** The ECHO query subsystem: the local engine, remote revalidation and the host index. */
+export const EchoQuery: Story = {
+  args: { content: ECHO_QUERY_SPEC },
 };

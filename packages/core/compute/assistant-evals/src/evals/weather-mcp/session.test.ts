@@ -28,6 +28,15 @@ import { toolInvocations } from '../../assertions.ts';
 import { OPENING_PROMPT, evaluateHandOff, seed } from './scenario.ts';
 import { startWorkerSpecServer } from './worker-spec-server.ts';
 
+await Harness.preload({
+  plugins: [
+    ClientPlugin.make({ types: [...WeatherSpace.make().schemas, Collection.Collection] }),
+    AssistantPlugin.make(),
+    RoutinePlugin.make(),
+    SpacePlugin.make({}),
+  ],
+});
+
 const BERLIN = { latitude: 52.52, longitude: 13.41 };
 
 const FORECAST = { current: { temperature_2m: 14.6, wind_speed_10m: 9.1 }, hourly: { temperature_2m: [14.6] } };

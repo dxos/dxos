@@ -28,8 +28,8 @@ const handler: Operation.WithHandler<typeof CommentOperation.Create> = CommentOp
       const stateAtom = yield* Capability.get(CommentCapabilities.State);
       const subjectId = Obj.getURI(subject);
 
-      // A thread on a Markdown document starts opted in (or not) per the user's `commentAgentMode` setting.
-      const agent = yield* commentAgentConfig(subject);
+      // A new thread starts opted in (or not) per the user's `commentAgentMode` setting.
+      const agent = yield* commentAgentConfig();
 
       const thread = Thread.make({ name, agent });
       const anchor = Relation.make(AnchoredTo.AnchoredTo, {

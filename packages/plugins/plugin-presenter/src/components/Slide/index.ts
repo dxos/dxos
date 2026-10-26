@@ -2,4 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Slide.tsx';
+export * as Slide from './Slide.tsx';
+export { EmbedAncestor } from './EmbeddedSurface.tsx';
