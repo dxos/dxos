@@ -56,7 +56,11 @@ export const agentOptions = ({ agents, availability, current }: AgentOptionsProp
     if (existing) {
       existing.placements.push(...placements);
       if (agent.variantOf === undefined) {
-        Object.assign(existing, { label: agent.label, icon: agent.icon, ...(agent.models && { models: agent.models }) });
+        Object.assign(existing, {
+          label: agent.label,
+          icon: agent.icon,
+          ...(agent.models && { models: agent.models }),
+        });
       }
     } else {
       options.set(key, {
