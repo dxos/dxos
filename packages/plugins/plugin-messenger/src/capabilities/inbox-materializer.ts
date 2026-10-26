@@ -13,7 +13,7 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SpaceInvitationOperation from '@dxos/app-toolkit/SpaceInvitationOperation';
 import { type Space, SpaceState } from '@dxos/client/echo';
-import { Filter } from '@dxos/echo';
+import { Filter, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { type Message, SpaceInvitationMessage } from '@dxos/types';
@@ -74,10 +74,33 @@ export default Capability.makeModule(
       notifier.show(describeMessage(message)).catch((error) => log.warn('failed to show notification', { error }));
     };
 
-    // From the feed rather than `onWritten`: another device of this identity often files the message first.
-    const viewAtom = Atom.make((get) => Notifications.deriveView(get, get(notificationsAtom)));
+    // From the feed rather than `onWritten`, since another device of this identity often files the message first.
+    // The query is subscribed directly: read as an atom through `deriveView`, it missed appended messages.
     const arrivals = makeArrivals({ since: Date.now(), key: Notifications.messageKey });
-    const unwatchArrivals = registry.subscribe(viewAtom, (view) => arrivals(view).forEach(notify));
+    let unwatchFeeds = () => {};
+    let generation = 0;
+    const watchFeeds = (containers: readonly Notifications.Notifications[]) => {
+      unwatchFeeds();
+      unwatchFeeds = () => {};
+      const current = ++generation;
+      const db = containers[0] && Obj.getDatabase(containers[0]);
+      if (!db) {
+        return;
+      }
+      void Promise.all(containers.map((container) => container.feed.load()))
+        .then((feeds) => {
+          if (current !== generation) {
+            return;
+          }
+          const query = db.query(Notifications.messagesQuery(feeds));
+          unwatchFeeds = query.subscribe(
+            () => arrivals(Notifications.view(query.runSync(), Notifications.readKeys(containers))).forEach(notify),
+            { fire: true },
+          );
+        })
+        .catch((error) => log.warn('failed to watch notifications', { error }));
+    };
+    const unwatchContainers = registry.subscribe(notificationsAtom, watchFeeds, { immediate: true });
 
     const materializer = startInboxMaterializer({
       client,
@@ -100,7 +123,9 @@ export default Capability.makeModule(
 
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
-        unwatchArrivals();
+        unwatchContainers();
+        generation++;
+        unwatchFeeds();
         materializer.stop();
       }),
     );
