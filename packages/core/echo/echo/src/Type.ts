@@ -150,10 +150,17 @@ export const makeObject: {
   // Boundary cast: overload implementation bodies cannot access outer generic params (`Self`),
   // so TypeScript cannot verify that makeObjectType's return matches the declared ObjClass<Self,…>.
 } = (dxn, options) =>
-  ((schemaOrFields: Schema.Top | Schema.Struct.Fields, annotate?: (schema: Schema.Top) => Schema.Top) => {
-    const schema = Schema.isSchema(schemaOrFields) ? schemaOrFields : Schema.Struct(schemaOrFields);
-    return internal.makeObjectType(dxn, annotate ? annotate(schema) : schema, options);
-  }) as any;
+  ((input: Schema.Top | Schema.Struct.Fields, annotate?: (schema: Schema.Top) => Schema.Top) =>
+    internal.makeObjectType(dxn, buildSchema(input, annotate), options)) as any;
+
+/** Wraps struct fields in `Schema.Struct` and applies the optional annotate function. */
+const buildSchema = (
+  input: Schema.Top | Schema.Struct.Fields,
+  annotate?: (schema: Schema.Top) => Schema.Top,
+): Schema.Top => {
+  const schema = Schema.isSchema(input) ? input : Schema.Struct(input);
+  return annotate ? annotate(schema) : schema;
+};
 
 /**
  * Second stage of {@link makeObject}: takes a schema, or struct fields plus an optional annotation pipe.
@@ -168,7 +175,7 @@ export type MakeObject<Self> = <
 ) => ObjClass<Self, Schema.Schema.Type<_Schema>, {}>;
 
 /**
- * Schema for the input of {@link MakeObject}: a schema as is, or struct fields wrapped in `Schema.Struct`.
+ * Schema for the input of {@link MakeObject} / {@link MakeRelation}: a schema as is, or struct fields wrapped in `Schema.Struct`.
  */
 export type ToSchema<Input> = Input extends Schema.Top
   ? Input
@@ -335,6 +342,11 @@ export type AnyRelation = Relation<unknown, unknown, unknown>;
  * class WorksFor extends Type.makeRelation<WorksFor>(DXN.make('com.example.type.worksFor', '0.1.0'))(
  *   { source: Person, target: Company },
  * )(Schema.Struct({ role: Schema.String })) {}
+ *
+ * // Like `makeObject`, the last call also takes struct fields and an optional annotate function.
+ * class Employs extends Type.makeRelation<Employs>(DXN.make('com.example.type.employs', '0.1.0'))(
+ *   { source: Company, target: Person },
+ * )({ role: Schema.String }, Annotation.LabelAnnotation.set(['role'])) {}
  * ```
  *
  * @performance O(schema size) once at definition time; builds the type entity eagerly, so call it at module scope, not
@@ -349,25 +361,36 @@ export const makeRelation: {
      * see `Type.makeObject` for the workerd motivation.
      */
     id?: EntityId;
-  }) => <_Schema extends Schema.Top>(
-    schema: _Schema,
-  ) => RelationClass<
-    Self,
-    Schema.Schema.Type<_Schema>,
-    SourceInstance & EntityModule.OfKind<typeof EntityModule.Kind.Object>,
-    TargetInstance & EntityModule.OfKind<typeof EntityModule.Kind.Object>,
-    {}
-  >;
-} = (dxn) => (opts) => (schema) =>
+  }) => MakeRelation<Self, SourceInstance, TargetInstance>;
+} = (dxn) => (opts) =>
   // Boundary cast: makeRelationType erases generic params since the constructor/prototype
   // wiring cannot thread them through the type system.
-  internal.makeRelationType({
-    dxn,
-    source: opts.source,
-    target: opts.target,
-    schema,
-    id: opts.id,
-  }) as any;
+  ((input: Schema.Top | Schema.Struct.Fields, annotate?: (schema: Schema.Top) => Schema.Top) =>
+    internal.makeRelationType({
+      dxn,
+      source: opts.source,
+      target: opts.target,
+      schema: buildSchema(input, annotate),
+      id: opts.id,
+    })) as any;
+
+/**
+ * Last stage of {@link makeRelation}: takes a schema, or struct fields plus an optional annotation pipe.
+ */
+// A single generic signature (not overloads); see {@link MakeObject}.
+export type MakeRelation<Self, SourceInstance, TargetInstance> = <
+  const Input extends Schema.Top | Schema.Struct.Fields,
+  _Schema extends Schema.Top = ToSchema<Input>,
+>(
+  input: Input,
+  annotate?: (schema: ToSchema<Input>) => _Schema,
+) => RelationClass<
+  Self,
+  Schema.Schema.Type<_Schema>,
+  SourceInstance & EntityModule.OfKind<typeof EntityModule.Kind.Object>,
+  TargetInstance & EntityModule.OfKind<typeof EntityModule.Kind.Object>,
+  {}
+>;
 
 /**
  * Type that represents any ECHO type-kind entity — a `Type.Type` meta-schema

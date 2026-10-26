@@ -311,4 +311,27 @@ describe('Type', () => {
       expect(Obj.make(Plain, { name: 'Test' }).name).toBe('Test');
     });
   });
+
+  describe('makeRelation with struct fields', () => {
+    test('builds the struct and applies the annotations', ({ expect }) => {
+      class Employs extends Type.makeRelation<Employs>(DXN.make('com.example.type.employs', '0.1.0'))({
+        source: TestSchema.Organization,
+        target: TestSchema.Person,
+      })(
+        { role: Schema.String },
+        flow(Annotation.LabelAnnotation.set(['role']), Annotation.DescriptionAnnotation.set('Employs a person.')),
+      ) {}
+
+      const org = Obj.make(TestSchema.Organization, { name: 'DXOS' });
+      const person = Obj.make(TestSchema.Person, { name: 'Alice' });
+      const rel = Relation.make(Employs, { [Relation.Source]: org, [Relation.Target]: person, role: 'Engineer' });
+      expect(rel.role).toBe('Engineer');
+      expect(Relation.getSource(rel)).toBe(org);
+      expect(Relation.getTarget(rel)).toBe(person);
+      expect(Option.getOrUndefined(Annotation.LabelAnnotation.get(Type.getSchema(Employs)))).toEqual(['role']);
+      expect(Option.getOrUndefined(Annotation.DescriptionAnnotation.get(Type.getSchema(Employs)))).toBe(
+        'Employs a person.',
+      );
+    });
+  });
 });

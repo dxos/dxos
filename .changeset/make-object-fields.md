@@ -2,4 +2,4 @@
 '@dxos/echo': minor
 ---
 
-`Type.makeObject(dxn)` now also accepts struct fields directly, with an optional second argument that pipes annotations onto the struct: `Type.makeObject<Foo>(dxn)({ name: Schema.String }, LabelAnnotation.set(['name']))`.
+`Type.makeObject(dxn)` and `Type.makeRelation(dxn)(endpoints)` now also accept struct fields directly, with an optional second argument that transforms the struct, usually to add annotations: `Type.makeObject<Foo>(dxn)({ name: Schema.String }, flow(LabelAnnotation.set(['name']), DescriptionAnnotation.set('…')))`.

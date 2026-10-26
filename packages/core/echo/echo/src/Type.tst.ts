@@ -10,6 +10,8 @@ import { DXN } from '@dxos/keys';
 
 import * as Annotation from './Annotation.ts';
 import * as Obj from './Obj.ts';
+import * as Relation from './Relation.ts';
+import { TestSchema } from './testing/index.ts';
 import * as Type from './Type.ts';
 
 class Labeled extends Type.makeObject<Labeled>(DXN.make('com.example.type.labeled', '0.1.0'))(
@@ -92,5 +94,62 @@ describe('Type.makeObject', () => {
 
   it('rejects props that do not match the fields', () => {
     expect(Obj.make(Labeled, { label: 1 })).type.toRaiseError();
+  });
+});
+
+class Employs extends Type.makeRelation<Employs>(DXN.make('com.example.type.employs', '0.1.0'))({
+  source: TestSchema.Organization,
+  target: TestSchema.Person,
+})(
+  { role: Schema.String },
+  flow(Annotation.LabelAnnotation.set(['role']), Annotation.DescriptionAnnotation.set('Employs a person.')),
+) {}
+
+class EmploysFromStruct extends Type.makeRelation<EmploysFromStruct>(
+  DXN.make('com.example.type.employsFromStruct', '0.1.0'),
+)({
+  source: TestSchema.Organization,
+  target: TestSchema.Person,
+})(Schema.Struct({ role: Schema.String })) {}
+
+describe('Type.makeRelation', () => {
+  it('infers the same instance type from fields as from Schema.Struct', () => {
+    expect<Type.InstanceType<typeof Employs>>().type.toBe<Type.InstanceType<typeof EmploysFromStruct>>();
+    expect<Type.InstanceType<typeof Employs>['role']>().type.toBe<string>();
+  });
+
+  it('keeps the source and target types', () => {
+    expect<Relation.SourceOf<Type.InstanceType<typeof Employs>>>().type.toBe<
+      Relation.SourceOf<Type.InstanceType<typeof EmploysFromStruct>>
+    >();
+  });
+
+  it('accepts several annotations piped onto the struct', () => {
+    class Piped extends Type.makeRelation<Piped>(DXN.make('com.example.type.pipedRelation', '0.1.0'))({
+      source: TestSchema.Organization,
+      target: TestSchema.Person,
+    })({ role: Schema.String }, (schema) =>
+      schema.pipe(Annotation.LabelAnnotation.set(['role']), Annotation.DescriptionAnnotation.set('Piped.')),
+    ) {}
+    expect<Type.InstanceType<typeof Piped>['role']>().type.toBe<string>();
+  });
+
+  it('still infers when piped as a schema combinator', () => {
+    const Piped = Schema.Struct({ role: Schema.String }).pipe(
+      Type.makeRelation(DXN.make('com.example.type.pipedRelationSchema', '0.1.0'))({
+        source: TestSchema.Organization,
+        target: TestSchema.Person,
+      }),
+    );
+    expect<Type.InstanceType<typeof Piped>['role']>().type.toBe<string>();
+  });
+
+  it('rejects field values that are not schemas', () => {
+    expect(
+      Type.makeRelation(DXN.make('com.example.type.badRelation', '0.1.0'))({
+        source: TestSchema.Organization,
+        target: TestSchema.Person,
+      })({ role: 'not a schema' }),
+    ).type.toRaiseError('is not assignable');
   });
 });
