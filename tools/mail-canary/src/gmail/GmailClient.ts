@@ -28,6 +28,7 @@ const MessageRef = Schema.Struct({ id: Schema.String });
 const Profile = Schema.Struct({ emailAddress: Schema.String });
 const Label = Schema.Struct({ id: Schema.String, name: Schema.String });
 const LabelList = Schema.Struct({ labels: Schema.optional(Schema.Array(Label)) });
+const Empty = Schema.Struct({});
 
 /** Header values of one message, as `messages.get?format=metadata` returns them. */
 export type MessageMetadata = {
@@ -123,6 +124,18 @@ export class GmailClient {
       }
       const created = yield* this.#call(Label, '/labels', { method: 'POST', body: JSON.stringify({ name }) });
       return created.id;
+    });
+  }
+
+  /** Deletes every label whose name starts with `prefix`; its messages keep their other labels. */
+  deleteLabels(prefix: string): Effect.Effect<number, GmailError> {
+    return Effect.gen({ self: this }, function* () {
+      const { labels } = yield* this.#call(LabelList, '/labels');
+      const matching = (labels ?? []).filter((label) => label.name.startsWith(prefix));
+      yield* Effect.forEach(matching, (label) => this.#call(Empty, `/labels/${label.id}`, { method: 'DELETE' }), {
+        discard: true,
+      });
+      return matching.length;
     });
   }
 

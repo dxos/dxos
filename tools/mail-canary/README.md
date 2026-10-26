@@ -38,8 +38,8 @@ node scripts/01-build-pool.mjs --maildir ~/enron/maildir --out ~/enron/trial.mbo
 
 It drops duplicates by content (one custodian files the same mail in several folders, hence three
 custodians) and messages with no body, samples `--limit` (10,000) evenly over time, moves the dates
-into the year ending 40 days ago (margin over the 31-day check), drops `Bcc`, and records every folder a message was filed in as
-`X-Gmail-Labels: Enron/<custodian>/<folder>,...`. The corpus is real people's mail: keep it out of git.
+into the year ending 40 days ago (margin over the 31-day check), and drops `Bcc`. The corpus is real
+people's mail: keep it out of git.
 
 ### 02 Import the pool
 
@@ -58,8 +58,8 @@ node scripts/02-import-pool.mjs ~/enron/enron-pool.mbox # about 20 minutes, resu
   `mail-canary` (`GMAIL_REFRESH_TOKEN`), where a cloud session reads it through `gmail.env.tpl`, and
   all three values in the CI secrets.
 - An import puts each message in the mailbox without sending it: archived, never spam, labelled
-  `enron-pool` and with its folders, dated by its `Date` header. In the trial, check the dates are the
-  shifted ones (not 2001, not today) and the `Enron/...` labels are there; `purge` then trashes it.
+  `enron-pool` and nothing else, dated by its `Date` header. In the trial, check the dates are the
+  shifted ones (not 2001, not today); `purge` then trashes it.
 - After the import, the script fails unless the pool holds exactly the mbox, nothing is in the inbox
   and nothing is newer than 31 days. Every command refuses a grant for any account but
   `GMAIL_ACCOUNT` (default `test@braneframe.com`).

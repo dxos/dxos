@@ -10,16 +10,15 @@
 //
 // Samples `--limit` distinct messages evenly over the custodians' history and moves their dates into
 // `--span-days` ending `--end-days-ago` days back: older than the sync's 30-day window, which is what
-// keeps the canary space from syncing the pool. Every folder a message was filed in goes into
-// `X-Gmail-Labels`, which step 02 turns into Gmail labels.
+// keeps the canary space from syncing the pool.
 
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join, relative, sep } from 'node:path';
+import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
 import { readHeader, rewriteHeaders } from '../src/gmail/index.ts';
-import { FOLDER_HEADER, joinMbox } from '../src/pool/index.ts';
+import { joinMbox } from '../src/pool/index.ts';
 
 const DAY = 86_400_000;
 // Enron dates outside the corpus's years are corrupt (1979, 2044, ...); clamp them rather than drop the mail.
@@ -43,7 +42,7 @@ if (!args.maildir || !args.out) {
   process.exit(1);
 }
 
-/** Content key → the first file with that message, its date, and every folder it was filed in. */
+/** Content key → the first file with that message and its date. */
 const distinct = new Map();
 for (const custodian of args.custodian) {
   const files = readdirSync(join(args.maildir, custodian), { recursive: true, withFileTypes: true })
@@ -64,15 +63,10 @@ for (const custodian of args.custodian) {
         [readHeader(message, 'From'), readHeader(message, 'Date'), readHeader(message, 'Subject'), body].join('\0'),
       )
       .digest('hex');
-    const folder = `Enron/${relative(args.maildir, dirname(path)).split(sep).join('/')}`;
-    const date = Date.parse(readHeader(message, 'Date') ?? '');
-    const entry = distinct.get(key) ?? {
-      path,
-      date: Math.min(Math.max(date || EARLIEST, EARLIEST), LATEST),
-      folders: [],
-    };
-    entry.folders.push(folder);
-    distinct.set(key, entry);
+    if (!distinct.has(key)) {
+      const date = Date.parse(readHeader(message, 'Date') ?? '');
+      distinct.set(key, { path, date: Math.min(Math.max(date || EARLIEST, EARLIEST), LATEST) });
+    }
   }
 }
 
@@ -85,14 +79,11 @@ const end = Date.now() - Number(args['end-days-ago']) * DAY;
 const first = pool[0].date;
 const last = pool[pool.length - 1].date;
 const scale = (Number(args['span-days']) * DAY) / (last - first || 1);
-const messages = pool.map(({ path, date, folders }) =>
+const messages = pool.map(({ path, date }) =>
   rewriteHeaders(readFileSync(path, 'latin1'), {
     // Bcc would name recipients the original sender hid; it serves no test.
-    drop: ['Date', 'Bcc', FOLDER_HEADER],
-    add: [
-      `Date: ${new Date(end - (last - date) * scale).toUTCString().replace('GMT', '+0000')}`,
-      `${FOLDER_HEADER}: ${[...new Set(folders)].sort().join(',')}`,
-    ],
+    drop: ['Date', 'Bcc'],
+    add: [`Date: ${new Date(end - (last - date) * scale).toUTCString().replace('GMT', '+0000')}`],
   }),
 );
 writeFileSync(args.out, joinMbox(messages), 'latin1');
