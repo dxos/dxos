@@ -11,11 +11,12 @@ import * as Skill from '@dxos/compute/Skill';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
 import * as Feature from '@dxos/plugin-projects/Feature';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
+import * as SheetUtil from '@dxos/plugin-sheet/SheetUtil';
+import { universeTimeline, universeTimelineColors, universeTimelineOrder } from '@dxos/react-ui-plot/testing';
 import { Text } from '@dxos/schema';
 import { Outline, Spec, Task, TaskSet } from '@dxos/types';
 
 import specContent from '../../../assets/timeline/SPEC.mdl?raw';
-import { makeEvents } from '../presenter/partial.ts';
 
 //
 // The timeline chart's own feature map: what has been built (charts as objects, the timeline, slide embeds, the
@@ -125,7 +126,7 @@ const TASKS: readonly TaskSeed[] = [
   {
     title: 'Create a test fixture',
     description:
-      'A sheet of events, one per row (date, category, title, description, image), with a timeline chart of its range: the same sheet the Presenter space uses.',
+      'A sheet of events, one per row (date, category, title, description, image), with a timeline chart of its range: the history of the universe the Timeline stories use.',
     feature: 'timeline',
     fixture: true,
   },
@@ -162,6 +163,24 @@ const TASKS: readonly TaskSeed[] = [
 /** Steps that follow one another: the spec, the drawing of it, then its first phase. */
 const SEQUENCE = ['Complete the spec', 'Draw the proposed architecture', 'Implement phase 1 of the spec'];
 
+/** The test fixture: the Timeline stories' history of the universe as a sheet, with a timeline chart of it. */
+const makeFixture = (): Sheet.Sheet =>
+  Sheet.make({
+    name: 'Universe',
+    rows: universeTimeline.length + 20,
+    columns: 5,
+    cells: SheetUtil.cellsFromRows(universeTimeline),
+    charts: [
+      {
+        name: 'Universe timeline',
+        range: `A1:E${universeTimeline.length}`,
+        type: 'timeline',
+        header: true,
+        timeline: { order: [...universeTimelineOrder], colors: { ...universeTimelineColors } },
+      },
+    ],
+  });
+
 export type Provides = {
   project: Project.Project;
   features: Feature.Feature[];
@@ -189,8 +208,7 @@ export const Partial: SampleSpace.Partial<Provides> = SampleSpace.partial('timel
   ],
   run: () =>
     Effect.gen(function* () {
-      const { sheet: events } = makeEvents();
-      const fixture = yield* Database.add(events);
+      const fixture = yield* Database.add(makeFixture());
       const spec = yield* Database.add(
         Obj.make(Spec.Spec, {
           name: 'Timeline',
