@@ -17,7 +17,7 @@ Behaviour runs on DeepSeek: **V4 Pro** (`com.deepseek.model.deepseek-v4-pro.defa
 `eng-dev`, reverse-DNS item, field `credential`:
 
 ```
-op://eng-dev/com.deepseek/credential
+op://eng-dev/com.deepseek.platform/local/credential
 ```
 
 Scripts resolve it with `op run`, which prompts through the 1Password desktop app (CLI integration
