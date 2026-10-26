@@ -62,7 +62,7 @@ const maybeScrollIntoView = (element: HTMLElement): void => {
 const floatingClassNames = (position: string) =>
   mx(
     'absolute z-10 opacity-0 pointer-events-none transition-opacity',
-    'group-hover:opacity-100 group-hover:pointer-events-auto',
+    'group-hover/embed:opacity-100 group-hover/embed:pointer-events-auto',
     position,
   );
 
@@ -348,7 +348,7 @@ export const PreviewComponent = ({
     if (mode === 'section') {
       return (
         <div
-          className='group relative grid scroll-mt-16 outline-hidden whitespace-normal'
+          className='group/embed relative grid scroll-mt-16 outline-hidden whitespace-normal'
           style={sizeStyle(size, 'vertical')}
           {...frameProps}
           {...resizeAttributes}
@@ -386,6 +386,7 @@ export const PreviewComponent = ({
                 iconOnly
                 label='Open'
                 variant='ghost'
+                classNames='opacity-70 hover:opacity-100 hover:bg-transparent'
                 onClick={handleOpen}
               />
             </span>
