@@ -1,102 +1,163 @@
 //
-// Copyright 2023 DXOS.org
+// Copyright 2026 DXOS.org
 //
 
-import 'highlight.js/styles/github.css';
+// @import-as-namespace
 
-import { h } from 'hastscript';
-import React from 'react';
-import ReactMarkdown, { type Options as ReactMarkdownOptions } from 'react-markdown';
-import rehypeAddClasses from 'rehype-add-classes';
-import rehypeHighlight from 'rehype-highlight';
-import remarkFrontmatter from 'remark-frontmatter';
-import remarkParseFrontmatter from 'remark-parse-frontmatter';
+import React, { type PropsWithChildren, useMemo } from 'react';
 
-import styles from './styles.css?raw';
-import { theme } from './theme.ts';
+import { type Database, Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
+import { createContext } from '@dxos/react-hooks';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Util from '@dxos/react-ui/Util';
+import { type Text } from '@dxos/schema';
 
-export type SlideProps = {
-  content?: string;
-  classes?: Record<string, string>;
+import { type SlideSource } from '#deck';
+import { useSlideImage } from '#hooks';
+import { meta } from '#meta';
+import { type Presentation } from '#types';
+
+import { MarkdownSlide, type MarkdownSlideProps } from '../MarkdownSlide/index.ts';
+import { SlideThemeScope } from '../SlideTheme/index.ts';
+import { SlideCanvas } from './canvas.tsx';
+import { EmbedAncestor, EmbeddedSurface } from './EmbeddedSurface.tsx';
+import { ObjectSurface } from './ObjectSurface.tsx';
+
+// TODO(burdon): Factor the Deck and Slide families out to a react-ui-presenter package.
+
+/** Options for markdown slides: click step (default: all revealed), the outlined slot, and source clicks. */
+type MarkdownOptions = Pick<MarkdownSlideProps, 'step' | 'activeSlot' | 'onSourceClick'>;
+
+//
+// Root
+//
+
+type SlideContextValue = MarkdownOptions & {
+  source: SlideSource;
+  attendableId?: string;
 };
 
-export const Slide = ({ content = '', classes = theme.nodes }: SlideProps) => {
-  // TODO(thure): `rehype-highlight` ends up using `github.css` from `highlight.js`, but this does not appear to be
-  //  configurable. Find a way to remove the literal stylesheet here.
+const SLIDE_NAME = 'Slide';
+
+const [SlideProvider, useSlideContext] = createContext<SlideContextValue>(SLIDE_NAME);
+
+type SlideRootProps = PropsWithChildren<SlideContextValue>;
+
+/**
+ * One slide, whatever its source: owned markdown, a markdown string, a linked object, or one still loading. Headless:
+ * it renders only its parts, typically `Slide.Frame` around `Slide.Content`.
+ */
+const SlideRoot = ({ children, ...context }: SlideRootProps) => <SlideProvider {...context}>{children}</SlideProvider>;
+
+SlideRoot.displayName = 'Slide.Root';
+
+//
+// Frame
+//
+
+type SlideFrameProps = Util.ThemedClassName<
+  PropsWithChildren<{
+    /** Inset the slide in a solid void with rounded corners, so its own background reads as distinct. */
+    inset?: boolean;
+    /** Scale the canvas to fit (default); print lays it out at its nominal size instead. */
+    scaled?: boolean;
+  }>
+>;
+
+/**
+ * The 16:9 slide canvas, scaled to fit its container.
+ */
+const SlideFrame = ({ children, classNames, inset, scaled = true }: SlideFrameProps) =>
+  scaled ? (
+    <SlideCanvas inset={inset} classNames={classNames}>
+      {children}
+    </SlideCanvas>
+  ) : (
+    <div className='flex relative size-full'>{children}</div>
+  );
+
+SlideFrame.displayName = 'Slide.Frame';
+
+//
+// Content
+//
+
+/**
+ * Draws the slide's source: markdown in the Slidev subset, a linked object's `slide` surface, or a pending placeholder.
+ */
+const SlideContent = () => {
+  const { source, attendableId, ...options } = useSlideContext(SlideContent.displayName);
+  switch (source.kind) {
+    // The slide's own object counts as an ancestor, so a slide that embeds itself stops at one level.
+    case 'text':
+      return (
+        <EmbedAncestor id={source.text.id}>
+          <TextContent text={source.text} slide={source.slide} {...options} />
+        </EmbedAncestor>
+      );
+    case 'markdown':
+      return <MarkdownContent content={source.content} db={source.db} {...options} />;
+    case 'object':
+      return (
+        <EmbedAncestor id={source.object.id}>
+          <SlideThemeScope>
+            <ObjectSurface object={source.object} role='slide' attendableId={attendableId} />
+          </SlideThemeScope>
+        </EmbedAncestor>
+      );
+    case 'pending':
+      return <PendingContent />;
+  }
+};
+
+SlideContent.displayName = 'Slide.Content';
+
+const TextContent = ({
+  text,
+  slide,
+  ...options
+}: { text: Text.Text; slide?: Presentation.Slide } & MarkdownOptions) => {
+  const [content] = useObject(text, 'content');
+  const image = useSlideImage(slide);
+  // Refs resolve against the owner's database so space-relative `echo:///<id>` refs find their target.
+  return <MarkdownContent content={content} db={Obj.getDatabase(text)} image={image} {...options} />;
+};
+
+const MarkdownContent = ({
+  content,
+  db,
+  image,
+  ...options
+}: { content: string | undefined; db?: Database.Database; image?: string } & MarkdownOptions) => {
+  const renderSurface = useSurfaceRenderer(db);
+  return <MarkdownSlide content={content ?? ''} renderSurface={renderSurface} image={image} {...options} />;
+};
+
+const PendingContent = () => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
-    <>
-      <style>{styles}</style>
-      <ReactMarkdown
-        components={components}
-        // Markdown to HTML.
-        remarkPlugins={[[remarkFrontmatter, 'yaml'], remarkParseFrontmatter as any]}
-        // HTML processing.
-        rehypePlugins={[[rehypeAddClasses, classes], rehypeHighlight as any, slideLayout]}
-      >
-        {content}
-      </ReactMarkdown>
-    </>
+    <SlideThemeScope classNames='items-center justify-center gap-6 text-6xl'>
+      <Icon.Icon icon='ph--circle-notch--regular' spin classNames='size-16' />
+      <span>{t('slide-pending.label')}</span>
+    </SlideThemeScope>
   );
 };
 
 /**
- * Rehype plugin to format DOM based on frontmatter.
- * https://github.com/unifiedjs/unified#plugin
- * TODO(burdon): See tools/presenter: remarkPluginLayout
- * E.g., layout image from front-matter.
+ * Renders a slide's embedded `<Surface>`s against the owner's database; without one they stay placeholders.
  */
-const slideLayout =
-  (_options = {}) =>
-  (tree: any, file: any) => {
-    const {
-      data: { frontmatter = {} },
-    } = file;
+const useSurfaceRenderer = (db: Database.Database | undefined): MarkdownSlideProps['renderSurface'] =>
+  useMemo<MarkdownSlideProps['renderSurface']>(
+    () => (db ? ({ uri, role }) => <EmbeddedSurface uri={uri} role={role} db={db} /> : undefined),
+    [db],
+  );
 
-    let content = tree.children;
-    const { layout, image } = frontmatter;
-    if (image) {
-      const img = h('div', {
-        class: 'flex grow shrink-0 bg-cover bg-center bg-no-repeat',
-        style: {
-          backgroundImage: `url(${image})`,
-        },
-      });
+//
+// Exports
+//
 
-      switch (layout) {
-        case 'fullscreen': {
-          content = img;
-          break;
-        }
+export { SlideContent as Content, SlideFrame as Frame, SlideRoot as Root, useSlideContext, useSurfaceRenderer };
 
-        case 'columns': {
-          content = h('div', { class: 'flex grow grid grid-cols-2' }, [
-            h('div', { class: theme.padding }, [content]),
-            img,
-          ]);
-          break;
-        }
-
-        case 'rows': {
-          content = h('div', { class: 'flex grow flex-col' }, [
-            h('div', { class: theme.padding }, [content]),
-            h('div', { class: ['flex grow pt-0', theme.padding] }, [img]),
-          ]);
-          break;
-        }
-      }
-    } else {
-      content = h('div', { class: ['flex grow flex-col', theme.padding] }, [content]);
-    }
-
-    const root = h('div', { class: ['flex flex-col grow', theme.root] }, [content]);
-    tree.children = [root];
-  };
-
-const ImageWrapper = ({ node: _, ...props }: { node: any }) => {
-  const { alt = '', src } = props as { alt: string; src: string };
-  return <img alt={alt} src={src} />;
-};
-
-const components: ReactMarkdownOptions['components'] = {
-  img: ({ node, ...props }) => <ImageWrapper node={node} {...props} />,
-};
+export type { SlideFrameProps as FrameProps, SlideRootProps as RootProps };

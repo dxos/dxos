@@ -18,6 +18,8 @@ import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_p
 
 import { SpacePlugin } from '#plugin';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), SpacePlugin({})] });
+
 /**
  * Creating an identity must provision the spaces every profile starts with, wherever it happens:
  * Composer's welcome screen and the CLI's `dx account signup` both go through

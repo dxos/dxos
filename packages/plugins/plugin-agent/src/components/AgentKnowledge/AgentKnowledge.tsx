@@ -13,7 +13,6 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Status from '@dxos/react-ui/Status';
 import * as Tabs from '@dxos/react-ui/Tabs';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Typography from '@dxos/react-ui/Typography';
 import { type SpaceGraphEdge, SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
 
@@ -84,6 +83,28 @@ const AgentKnowledgeRoot = ({
   const [raw, setRaw] = useState(false);
   const menuActions = useMenuBuilder(() => {
     const builder = MenuBuilder.make().root({ label: ['agent-knowledge-actions.label', { ns: meta.profile.key }] });
+    // The tabs lead and the gap pushes the actions to the end.
+    builder
+      .custom('tabs', { label: ['agent-knowledge-actions.label', { ns: meta.profile.key }] }, () => (
+        <Tabs.List>
+          <Tabs.Trigger value='facts' data-testid='agent-knowledge-tab-facts'>
+            {t('agent-knowledge-facts.label')}
+          </Tabs.Trigger>
+          <Tabs.Trigger value='entities' data-testid='agent-knowledge-tab-entities'>
+            {t('agent-knowledge-entities.label')}
+          </Tabs.Trigger>
+          <Tabs.Trigger value='predicates' data-testid='agent-knowledge-tab-predicates'>
+            {t('agent-knowledge-predicates.label')}
+          </Tabs.Trigger>
+          <Tabs.Trigger value='goals' data-testid='agent-knowledge-tab-goals'>
+            {t('agent-knowledge-goals.label')}
+          </Tabs.Trigger>
+          <Tabs.Trigger value='graph' data-testid='agent-knowledge-tab-graph'>
+            {t('agent-knowledge-graph.label')}
+          </Tabs.Trigger>
+        </Tabs.List>
+      ))
+      .separator('gap');
     if (view === 'facts' || view === 'predicates') {
       builder.action(
         'raw',
@@ -112,39 +133,13 @@ const AgentKnowledgeRoot = ({
       );
     }
     return builder.build();
-  }, [view, raw, onReset]);
+  }, [view, raw, onReset, t]);
   const context = useMemo(() => ({ view, raw, brain }), [view, raw, brain]);
   return (
     <Tabs.Root asChild orientation='horizontal' value={view} onValueChange={(value) => isView(value) && setView(value)}>
       <Panel.Root role={role}>
         <Panel.Header>
-          <ActionToolbar
-            {...menuActions}
-            alwaysActive
-            // The tabs lead and the gap pushes the actions to the end.
-            start={
-              <>
-                <Tabs.List>
-                  <Tabs.Trigger value='facts' data-testid='agent-knowledge-tab-facts'>
-                    {t('agent-knowledge-facts.label')}
-                  </Tabs.Trigger>
-                  <Tabs.Trigger value='entities' data-testid='agent-knowledge-tab-entities'>
-                    {t('agent-knowledge-entities.label')}
-                  </Tabs.Trigger>
-                  <Tabs.Trigger value='predicates' data-testid='agent-knowledge-tab-predicates'>
-                    {t('agent-knowledge-predicates.label')}
-                  </Tabs.Trigger>
-                  <Tabs.Trigger value='goals' data-testid='agent-knowledge-tab-goals'>
-                    {t('agent-knowledge-goals.label')}
-                  </Tabs.Trigger>
-                  <Tabs.Trigger value='graph' data-testid='agent-knowledge-tab-graph'>
-                    {t('agent-knowledge-graph.label')}
-                  </Tabs.Trigger>
-                </Tabs.List>
-                <Toolbar.Separator variant='gap' />
-              </>
-            }
-          />
+          <ActionToolbar {...menuActions} alwaysActive />
         </Panel.Header>
         {/* Views render their own Panel.Body (rather than `Tabs.Content`, whose content mounts hidden for a frame,
             where the force graph would measure zero), so a list's ScrollArea is the body and gets its height. */}

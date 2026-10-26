@@ -40,7 +40,7 @@ import {
   MessageSchema as RouterMessageSchema,
 } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { trace } from '@dxos/tracing';
-import { bufferToArray, compositeKey } from '@dxos/util';
+import { bufferToArray, compositeKey, markMilestone } from '@dxos/util';
 
 import {
   type AutomergeReplicatorConnection,
@@ -127,6 +127,8 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
   private _context: AutomergeReplicatorContext | null = null;
   private _connectedSpaces = new Set<SpaceId>();
   private _connections = new Map<SpaceId, EdgeSubductionReplicatorConnection>();
+  /** Whether the first space connection has been marked on the timeline. */
+  #replicationMarked = false;
   /** Replaced connections whose async close is still settling; force-closed on disconnect. */
   private readonly _closingConnections = new Set<EdgeSubductionReplicatorConnection>();
 
@@ -282,6 +284,10 @@ export class EchoEdgeSubductionReplicator implements EdgeAutomergeReplicator {
       frameBatching: this._frameBatching,
       onRemoteConnected: async () => {
         log.trace('dxos.echo.edge.subduction-replicator.onRemoteConnected', { spaceId });
+        if (!this.#replicationMarked) {
+          this.#replicationMarked = true;
+          markMilestone('replication.connected', spaceId);
+        }
         this._context?.onConnectionOpen(connection);
       },
       onRemoteDisconnected: async () => {

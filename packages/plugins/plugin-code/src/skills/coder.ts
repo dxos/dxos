@@ -27,23 +27,11 @@ const operations = [
   CodeOperation.RunBuild,
 ];
 
-/**
- * URL of the introspect-mcp server. The agent uses its tools (list_packages,
- * get_package, list_symbols, find_symbol, get_symbol) to look up DXOS and
- * Composer APIs while authoring code.
- *
- * Addressed through the EDGE entrypoint, like every other service; a skill definition has no access
- * to the client config, so the environment is pinned here rather than resolved.
- * TODO(burdon): Make configurable via plugin Settings.
- */
-const INTROSPECT_MCP_URL = 'https://dxos.network/introspect/mcp';
-
 const make = () =>
   Skill.make({
     key: SKILL_KEY,
     name: 'Coder',
     tools: Skill.toolDefinitions({ operations }),
-    mcpServers: [{ url: INTROSPECT_MCP_URL, protocol: 'http' }],
     instructions: Template.make({
       source: trim`
         You are the Coder. You help the user author a DEUS specification (an .mdl
@@ -83,7 +71,10 @@ const make = () =>
           3. Use the introspect-mcp tools (list_packages, get_package,
              list_symbols, find_symbol, get_symbol) to look up DXOS / Composer
              APIs before writing code. Prefer reading existing plugin examples
-             over guessing API shapes.
+             over guessing API shapes. The tools come from the built-in DXOS
+             Introspect MCP server (\`org.dxos.mcp.introspect\`), which is off until
+             turned on: turn it on with the Skill Manager's set-mcp-connection when
+             you need them.
           4. Use ${tool(CodeOperation.ScaffoldProject)} to bootstrap a new project, then ${tool(CodeOperation.WriteFile)} to add
              files and overwrite as you iterate. Read before you re-write.
           5. After writing source, call ${tool(CodeOperation.BuildProject)}. Surface any diagnostics

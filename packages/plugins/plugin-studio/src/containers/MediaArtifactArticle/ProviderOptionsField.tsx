@@ -16,7 +16,7 @@ import { type OptionsLookup } from '@dxos/react-ui-form/annotations';
 
 import { type GenerationService } from '#types';
 
-import { loadProviderOptions } from '../../hooks/index.ts';
+import { loadProviderOptions } from '../../hooks/provider-options-cache.ts';
 import { ArtifactRefField, isArtifactRefField } from './ArtifactRefField.tsx';
 import { FileUrlField, fileUrlOptions } from './FileUrlField.tsx';
 

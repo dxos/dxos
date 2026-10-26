@@ -60,6 +60,12 @@ export const EffectDialect: Dialect = {
       Type,
       DXN,
       Operation,
+      // A tool with no operation behind it, such as an MCP server's, is called by its name instead.
+      Tools: Object.fromEntries(
+        operations.flatMap((operation) =>
+          operation.definition ? [] : [[operation.name, (input: unknown = {}) => operation.invoke(input)]],
+        ),
+      ),
 
       // Described against the code's own database, so a printed object carries the relations, children
       // and referrers around it — what the model cannot see by reading its fields.
@@ -133,6 +139,8 @@ export const EffectDialect: Dialect = {
     ${renderTypes(types, ({ dxn }) => dxn)}
 
     ${operations.some((operation) => operation.definition) ? renderEffectOperations(operations) : NO_OPERATIONS}
+
+    ${renderEffectTools(operations)}
   `,
 };
 
@@ -222,6 +230,21 @@ const renderEffectOperations = (operations: readonly SandboxOperation[]): string
 
   ${renderOperationList(operations)}
 `;
+
+/** The tools no operation backs, which `Tools` binds by name; nothing when there are none. */
+const renderEffectTools = (operations: readonly SandboxOperation[]): string => {
+  const tools = operations.filter((operation) => !operation.definition);
+  return tools.length === 0
+    ? ''
+    : trim`
+      ### Tools
+
+      The conversation's MCP servers add these. They are NOT tools here either: each is an effect on
+      \`Tools\`, taking one argument matching its input schema, and a failed call fails the program.
+
+      ${tools.map((tool) => renderOperation(tool, (name) => `yield* Tools[${JSON.stringify(name)}](input)`)).join('\n')}
+    `;
+};
 
 /** One line per operation backed by a definition, naming the DXN it resolves by. */
 const renderOperationList = (operations: readonly SandboxOperation[]): string =>

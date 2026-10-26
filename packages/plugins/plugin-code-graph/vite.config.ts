@@ -10,6 +10,7 @@ export default defineConfig({
     'CodeGraphPlugin': 'src/CodeGraphPlugin.ts',
     'capabilities': 'src/capabilities/index.ts',
     'client': 'src/client/index.ts',
+    'command': 'src/command/index.ts',
     'components': 'src/components/index.ts',
     'containers': 'src/containers/index.ts',
     'graph': 'src/graph/index.ts',

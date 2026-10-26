@@ -6,12 +6,14 @@ import { HighlightStyle, StreamLanguage, syntaxHighlighting } from '@codemirror/
 import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
-import { tags } from '@dxos/ui-editor';
+import { mentionPills, tags } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
+import { type Mention } from './types.ts';
+
 /**
- * Highlights leading slash-commands (e.g. `/resolve`) and `@mention` tags
- * (e.g. `@Kai`, anywhere) in the message composer.
+ * Highlights leading slash-commands (e.g. `/resolve`) in the message composer; `@mention`s render as atomic pills
+ * ({@link mentionPills}).
  * https://github.com/codemirror/stream-parser/blob/main/test/test-stream-parser.ts
  */
 const parser = StreamLanguage.define<{ count: number }>({
@@ -25,10 +27,6 @@ const parser = StreamLanguage.define<{ count: number }>({
     if (state.count === 1 && stream.match(/^\/\w+/)) {
       return 'tagName';
     }
-    // @mention (anywhere).
-    if (stream.match(/^@\w+/)) {
-      return 'labelName';
-    }
     stream.next();
     return null;
   },
@@ -38,10 +36,6 @@ const styles = HighlightStyle.define([
   {
     tag: tags.tagName,
     class: mx('dx-tag dx-tag-inline dx-tag-indigo mx-0.5'),
-  },
-  {
-    tag: tags.labelName,
-    class: mx('dx-tag dx-tag-inline dx-tag-blue mx-0.5'),
   },
 ]);
 
@@ -55,4 +49,12 @@ const theme = EditorView.theme({
   },
 });
 
-export const command: Extension = [parser, syntaxHighlighting(styles), theme];
+export const command = ({ mentions }: { mentions?: readonly Mention[] } = {}): Extension => [
+  parser,
+  syntaxHighlighting(styles),
+  mentionPills({
+    names: mentions?.map(({ name }) => name),
+    hue: (name) => mentions?.find((mention) => mention.name.toLowerCase() === name.toLowerCase())?.hue,
+  }),
+  theme,
+];

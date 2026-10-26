@@ -44,12 +44,14 @@ export type FieldModel = {
   comment?: string;
 };
 
-/** Why a type is taken to be persisted. */
-export type StoredReason = 'typename' | 'ref' | 'described';
+/** Why a type is taken to be persisted; `table` is a SQL table (`lang/sql.mdl`), stored by definition. */
+export type StoredReason = 'typename' | 'ref' | 'described' | 'table';
 
 export type DataTypeModel = {
   id: string;
   typename?: string;
+  /** A SQL table's database and migration-history table, from its `store:` field. */
+  store?: string;
   desc?: string;
   fields: (FieldModel & {
     /** Spec types the field's type names. */
@@ -357,14 +359,41 @@ export const selectDefinitions = (
 
 const REFERENCE_TYPE = /\bRef<\s*([\w.]+)\s*>/;
 
+/** A column's foreign key, `REFERENCES <table>(<column>)`. */
+const SQL_REFERENCE = /\bREFERENCES\s+([\w.]+)\s*\(/i;
+
 /**
- * The persisted part of a spec's `type` blocks. A type is a stored root when it declares an ECHO `typename`,
- * holds a `Ref<…>`, or its description says it is persisted; the types the roots embed are stored inside them.
+ * The persisted part of a spec's `type` and `table` blocks. A type is a stored root when it declares an ECHO
+ * `typename`, holds a `Ref<…>`, or its description says it is persisted; the types the roots embed are stored inside
+ * them. A table is always a stored root, its columns are its fields, and a `REFERENCES` column references a table.
  */
 export const buildDataModel = (text: string): DataModel => {
-  const blocks = parseMdlBlocks(text).filter(({ type, id }) => type === 'type' && id);
+  const parsed = parseMdlBlocks(text);
+  const blocks = parsed.filter(({ type, id }) => type === 'type' && id);
+  const tables = parsed.filter(({ type, id }) => type === 'table' && id);
   const ids = new Set(blocks.map(({ id }) => id));
-  const all = blocks.map((block): DataTypeModel => {
+  const tableIds = new Set(tables.map(({ id }) => id));
+  const tableModels = tables.map((block): DataTypeModel => {
+    const fields = parseFields(block.body);
+    const store = fields.get('store')?.inline;
+    return {
+      id: block.id,
+      ...(store && { store }),
+      ...(block.title && { desc: block.title }),
+      fields: (fields.get('columns')?.lines ?? [])
+        .map(parseField)
+        .filter((field): field is FieldModel => field !== undefined)
+        .map((field) => {
+          const target = field.type.match(SQL_REFERENCE)?.[1];
+          return { ...field, refs: target && tableIds.has(target) ? [target] : [], reference: target !== undefined };
+        }),
+      literals: [],
+      variants: [],
+      bases: [],
+      stored: 'table',
+    };
+  });
+  const typeModels = blocks.map((block): DataTypeModel => {
     const fields = parseFields(block.body);
     const desc = proseOf(fields.get('desc'));
     const typename = fields.get('typename')?.inline;
@@ -405,6 +434,7 @@ export const buildDataModel = (text: string): DataModel => {
     };
   });
 
+  const all = [...typeModels, ...tableModels];
   const byId = new Map(all.map((type) => [type.id, type]));
   const kept = new Set<string>();
   const visit = (id: string) => {

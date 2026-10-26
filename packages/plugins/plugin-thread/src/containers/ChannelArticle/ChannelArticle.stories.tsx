@@ -18,6 +18,7 @@ import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import { random } from '@dxos/random';
 import { Config } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
@@ -28,6 +29,38 @@ import { ThreadPlugin } from '#plugin';
 import { translations } from '#translations';
 
 import { ChannelArticle, type ChannelArticleProps } from './ChannelArticle.tsx';
+
+const MESSAGE_COUNT = 40;
+
+const SENDER_COUNT = 5;
+
+/**
+ * Messages from a handful of senders, in bursts a few minutes apart and hours between bursts, so the
+ * stack shows grouping, varied lengths and scrolling.
+ */
+const makeChannelMessages = (count: number): Message.Message[] => {
+  random.seed(1);
+  const senders = Array.from({ length: SENDER_COUNT }, () => ({
+    name: random.person.fullName(),
+    email: random.internet.email(),
+  }));
+  const start = Date.parse('2026-03-02T09:00:00.000Z');
+  let time = start;
+  return Array.from({ length: count }, (_, index) => {
+    time += index % 6 === 0 ? 3 * 60 * 60 * 1000 : random.number.int({ min: 1, max: 12 }) * 60 * 1000;
+    const text =
+      index === 0
+        ? 'Hello, channel.'
+        : index % 7 === 3
+          ? random.lorem.paragraphs({ min: 2, max: 3 })
+          : random.lorem.sentences({ min: 1, max: 3 });
+    return Message.make({
+      created: new Date(time).toISOString(),
+      sender: { role: 'user', ...random.helpers.arrayElement(senders) },
+      blocks: [{ _tag: 'text', text }],
+    });
+  });
+};
 
 // TODO(wittjosiah): Channel doesn't render full height.
 const DefaultStory = ({ roomId }: ChannelArticleProps) => {
@@ -77,14 +110,8 @@ const meta = {
               yield* Effect.promise(() => channel.backend.config.load());
               const feed = Channel.getFeed(channel);
               invariant(feed, 'Channel is not feed-backed');
-              const seed = [
-                Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: 'Hello, channel.' }] }),
-                Message.make({
-                  sender: { role: 'user' },
-                  blocks: [{ _tag: 'text', text: 'Messages are stored in the feed.' }],
-                }),
-              ];
-              yield* Feed.append(feed, seed).pipe(Effect.provide(Database.layer(defaultSpace.db)));
+              const messages = makeChannelMessages(MESSAGE_COUNT);
+              yield* Feed.append(feed, messages).pipe(Effect.provide(Database.layer(defaultSpace.db)));
             }),
         }),
         SpacePlugin({}),

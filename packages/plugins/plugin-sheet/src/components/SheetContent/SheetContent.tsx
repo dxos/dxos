@@ -49,6 +49,7 @@ import { SheetCapabilities, SheetOperation, SheetUtil } from '#types';
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions/index.ts';
 import { useSelectThreadOnCellFocus } from '../../integrations/index.ts';
 import { useSheetContext } from '../SheetRoot/index.ts';
+import { FitBox, naturalSize, useUsedExtent } from './fit.tsx';
 import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util.ts';
 
 const inertPosition: DxGridPosition = { plane: 'grid', col: 0, row: 0 };
@@ -79,9 +80,12 @@ const sheetRowDefault = {
   grid: { size: defaultRowSize, resizeable: true },
 };
 
-export type SheetContentProps = {};
+export type SheetContentProps = {
+  /** Shows the used range only, scaled down to fit the box (never past 1:1) and inert: a sheet on a slide. */
+  fit?: boolean;
+};
 
-export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((props, forwardedRef) => {
+export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>(({ fit, ...props }, forwardedRef) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const {
     id,
@@ -334,6 +338,8 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
   );
 
   const { columns, rows } = useSheetModelDxGridProps(dxGrid, model);
+  const extent = useUsedExtent(model.sheet);
+  const natural = useMemo(() => naturalSize(extent, { columns, rows }), [extent, columns, rows]);
 
   const extensions = useMemo(
     () => [
@@ -372,30 +378,44 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
 
   useSelectThreadOnCellFocus();
 
+  const grid = (
+    <Grid.Content
+      className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'
+      initialCells={initialCells}
+      limitColumns={fit ? extent.columns : (sheetColumns?.length ?? SheetUtil.DEFAULT_COLS)}
+      limitRows={fit ? extent.rows : (sheetRows?.length ?? SheetUtil.DEFAULT_ROWS)}
+      columns={columns}
+      rows={rows}
+      columnDefault={sheetColDefault}
+      rowDefault={sheetRowDefault}
+      activeRefs={activeRefs}
+      frozen={frozen}
+      overscroll='trap'
+      onAxisResize={handleAxisResize}
+      onSelect={handleSelect}
+      onFocus={handleFocus}
+      onWheelCapture={handleWheel}
+      onKeyDown={handleKeyDown}
+      onContextMenu={handleContextMenu}
+      onClick={handleClick}
+      ref={setDxGrid}
+    />
+  );
+
   return (
     <div ref={forwardedRef} {...Util.composableProps(props, { classNames: 'relative min-h-0' })}>
       <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
-      <Grid.Content
-        className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'
-        initialCells={initialCells}
-        limitColumns={sheetColumns?.length ?? SheetUtil.DEFAULT_COLS}
-        limitRows={sheetRows?.length ?? SheetUtil.DEFAULT_ROWS}
-        columns={columns}
-        rows={rows}
-        columnDefault={sheetColDefault}
-        rowDefault={sheetRowDefault}
-        activeRefs={activeRefs}
-        frozen={frozen}
-        overscroll='trap'
-        onAxisResize={handleAxisResize}
-        onSelect={handleSelect}
-        onFocus={handleFocus}
-        onWheelCapture={handleWheel}
-        onKeyDown={handleKeyDown}
-        onContextMenu={handleContextMenu}
-        onClick={handleClick}
-        ref={setDxGrid}
-      />
+      {fit ? (
+        <FitBox width={natural.width} height={natural.height}>
+          {/* Inert, not only pointer-proof: no cell takes focus, so no key or clipboard edit reaches the sheet. The grid is
+              uncapped by the viewport so it renders every cell of its natural size before the box scales it. */}
+          <div inert className='dx-cover [&_.dx-grid]:max-w-none! [&_.dx-grid]:max-h-none!'>
+            {grid}
+          </div>
+        </FitBox>
+      ) : (
+        grid
+      )}
       <Menu.Root
         open={!!contextMenuOpen}
         onOpenChange={({ open: nextOpen }) => setContextMenuOpen(nextOpen ? inertPosition : null)}

@@ -9,4 +9,4 @@ import { Presentation } from '#types';
 /**
  * Schemas this plugin registers, loaded on demand so they stay out of the plugin body's module graph.
  */
-export default [Presentation.Presentation, Text.Text];
+export default [Presentation.Presentation, Presentation.Slide, Text.Text];

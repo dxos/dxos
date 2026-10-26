@@ -10,6 +10,7 @@ import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
 
 import { SchemaAstId, SchemaId } from '../types/index.ts';
+import { EntityValueAnnotationId } from './symbols.ts';
 
 // TODO(burdon): Reconcile with @dxos/effect visit().
 
@@ -457,3 +458,13 @@ export const checkIdNotPresentOnSchema = (schema: Schema.Codec<any, any, any>) =
 
 // TODO(burdon): Reconcile with JsonPath.
 type KeyPath = readonly (string | number)[];
+
+/**
+ * Whether the AST describes an array of root entities held by identity (elements annotated with
+ * {@link EntityValueAnnotationId}).
+ */
+export const isEntityArrayAst = (ast: SchemaAST.AST): boolean => {
+  const arrayAst = unwrapArray(ast);
+  const elementAst = arrayAst?.rest[0];
+  return elementAst != null && SchemaAST.getAnnotation<boolean>(elementAst, EntityValueAnnotationId) === true;
+};

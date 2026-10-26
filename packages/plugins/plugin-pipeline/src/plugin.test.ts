@@ -10,6 +10,8 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 import { meta } from '#meta';
 import { PipelinePlugin } from '#plugin';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), PipelinePlugin()] });
+
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('PipelinePlugin', () => {

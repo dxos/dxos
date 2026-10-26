@@ -1,0 +1,413 @@
+---
+id: org.dxos.index-core
+name: IndexCore
+version: 0.1.0
+---
+
+`@dxos/index-core` is the ECHO indexer: `IndexEngine` reads entities from data sources (Automerge
+documents, feed blocks), writes them to SQLite indexes (objectSnapshot, reverseRef, fts, activity)
+and advances one cursor per source. Two hosts run it: `EchoHost` on a device, and EDGE's Indexer
+Durable Object in db-service.
+
+The indexer is also the one component that reads every object of a space. So it records **indexer
+intents**: durable follow-up work that another component must do because of something the indexer
+saw. An intent commits in the transaction that writes the index rows, so it commits no later than
+the cursor that passes the object, and a crash cannot lose it. This spec defines the intent
+mechanism, its two kinds — convergence-key (existing) and feed-options (new) — and how the indexer
+treats a feed's indexing and retention options. The store side of those options is in
+`org.dxos.feed`; the `Feed` object fields are in
+`org.dxos.echo` [F-7].
+
+```diagram
+diagram flow=down
+group echo "ECHO object" {
+  node FeedObj "Feed object" ref="packages/core/echo/echo/src/Feed.ts"
+}
+group index "@dxos/index-core" below echo {
+  node Engine "IndexEngine" ref="packages/core/echo/index-core/src/index-engine.ts"
+  node Intents "FeedOptionsIntents" right-of Engine ref="packages/core/echo/index-core/src/feed-options-intent-store.ts"
+}
+group hosts "Store hosts" below index {
+  node Host "EchoHost" ref="packages/core/echo/echo-host/src/db-host/echo-host.ts"
+  node Indexer "Indexer DO"
+  node Space "FeedSpace DO"
+  node Store "FeedStore" ref="packages/core/echo/feed/src/feed-store.ts"
+  node Source "FeedDataSource" ref="packages/core/echo/echo-host/src/db-host/feed-data-source.ts"
+}
+edge Engine -> FeedObj "indexes"
+edge Engine -> Intents "records"
+edge Host -> Intents "takes"
+edge Indexer -> Intents "takes"
+edge Host -> Store "setFeedOptions"
+edge Indexer -> Space "setFeedOptions"
+edge Space -> Store
+edge Source -> Store "reads options"
+```
+
+## Extensions
+
+The following extension dialects are used in this document.
+
+| Term       | URI                         |
+| ---------- | --------------------------- |
+| `feat`     | `org.dxos.mdl.feat@1.0`     |
+| `scenario` | `org.dxos.mdl.scenario@1.0` |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+| `service`  | `org.dxos.mdl.service@1.0`  |
+| `table`    | `org.dxos.mdl.table@1.0`    |
+
+## Concepts
+
+```mdl
+service FeedOptionsIntentStore
+  desc: |
+    The feed-options intent log in the index database, the
+    sibling of ConvergenceKeyIntentStore. IndexEngine records into it; the host takes and clears through
+    IndexEngine pass-throughs (takeFeedOptionsIntents, clearFeedOptionsIntents).
+  ops:
+    migrate() → void
+    record(intents: FeedOptionsIntent[]) → void                       # inside the index-row transaction, replacing the feed's row [F-1.2]
+    take() → { maxId: number; intents: FeedOptionsIntent[] }         # newest per (spaceId, feedId) [F-2.2]
+    clear(spaceId: SpaceId, feedId: string, upToId: number) → void   # rows up to upToId only [F-1.3]
+  note: |
+    FeedOptionsIntent is { spaceId, feedId, namespace, indexing?: IndexingOptions, retention?: RetentionOptions }.
+    IndexerIntent = ConvergenceKeyIntent | FeedOptionsIntent, tagged by `kind` [F-1.1].
+```
+
+```mdl
+table feedOptionsIntents: One pending "apply this feed's options" intent.
+  store: index database (feed_options_intent_migrations)
+  columns:
+    id: INTEGER PRIMARY KEY AUTOINCREMENT   # monotonic; clear() is bounded by it
+    spaceId: TEXT
+    feedId: TEXT                            # the Feed object's entity id
+    namespace: TEXT                         # data | trace
+    options: TEXT                           # json { indexing?, retention? } as read from the object
+  key: id
+  indexes:
+    - idx_feedOptionsIntents_feed(spaceId, feedId, id): take() picks the newest row per feed [F-2.2]
+  new: table
+```
+
+```mdl
+table convergenceKeyIntents: One pending "check this key's group for duplicates" intent.
+  store: index database (convergence_key_intent_migrations)
+  columns:
+    id: INTEGER PRIMARY KEY AUTOINCREMENT
+    spaceId: TEXT
+    convergenceKey: TEXT
+  key: id
+```
+
+## Features
+
+```mdl
+feat F-1: Indexer intents
+
+  desc: |
+    An intent means "this may need doing; do it", not "this is needed", so servicing one twice is
+    harmless and losing one is a bug.
+
+  req F-1.1:
+    when: an intent kind is defined
+    then: it is a member of the IndexerIntent tagged union in @dxos/index-core, with its own table
+          and migration set in the index database, and a record / take / clear store
+
+  req F-1.2:
+    when: IndexEngine derives intents from the objects of a batch
+    then: it records them in the transaction that writes those objects' index rows
+
+  req F-1.3:
+    when: take() runs
+    then: it returns the pending intents and the highest intent id it read; clear(…, upToId) removes
+          only rows up to that id, so an intent recorded while the consumer works survives
+
+  req F-1.4:
+    when: a consumer fails, or the host stops before clear()
+    then: the intents stay pending, and the next index pass — every host runs one at startup —
+          offers them again
+
+  req F-1.5:
+    when: an object with a non-empty @meta.convergenceKey is indexed
+    then: a convergence-key intent { spaceId, convergenceKey } is recorded, and EchoHost's
+          ConvergenceKeyMerger services it after the Automerge leg of the pass
+```
+
+```mdl
+feat F-2: Feed-options intent
+
+  req F-2.1:
+    when: IndexEngine indexes an object of type org.dxos.type.feed
+    then: it records a feed-options intent { spaceId, feedId, namespace, indexing, retention };
+          feedId is the Feed object's entity id and namespace defaults to data
+
+  req F-2.2:
+    when: several feed-options intents for one (spaceId, feedId) are pending
+    then: take() returns only the newest per feed
+
+  req F-2.3:
+    when: an index pass finishes its object leg on a device
+    then: EchoHost takes the pending feed-options intents, calls FeedStore.setFeedOptions for each,
+          and clears each once its apply has committed
+
+  req F-2.4:
+    when: an index pass finishes its object leg on EDGE
+    then: the Indexer DO takes the pending feed-options intents, calls setFeedOptions on the space's
+          FeedSpace DO for each, and clears each once the call has returned
+
+  req F-2.5:
+    when: a feed's options change and its intent is not applied yet
+    then: the feed is indexed and trimmed under its previous options; the store converges once the
+          intent is applied
+```
+
+```mdl
+feat F-3: Feeds with indexing disabled
+
+  req F-3.1:
+    when: FeedDataSource (EchoHost or EDGE) reads blocks of a feed whose stored options have
+          indexing.enabled = false
+    then: it skips them and still advances its cursor past them, so no index row is written for them
+
+  req F-3.2:
+    when: options that disable indexing are applied
+    then: the feed's existing rows are removed from every index in the next index pass
+
+  req F-3.3:
+    when: a query answered from the index runs (Filter.text, a type query over the space)
+    then: it returns no item of a feed with indexing disabled
+
+  req F-3.4:
+    when: Feed.query(feed) runs on a feed with indexing disabled
+    then: it returns the feed's items: the host query executor reads that feed's blocks from the
+          feed store and matches them in memory instead of reading the index
+
+  req F-3.5:
+    when: options that re-enable indexing are applied
+    then: every block the feed still retains is indexed — EDGE resets that feed's own cursor;
+          EchoHost, whose feed cursor is per (space, namespace), runs a one-off backfill cursor
+          (`backfill/<namespace>/<feedId>`) that reads the feed to its end while the namespace
+          cursor skips it, then is deleted
+
+  req F-3.6:
+    when: an item is appended on EDGE to a feed with indexing disabled
+    then: FeedSpace still notifies the Indexer DO, so function triggers on the feed keep firing;
+          only the index write is skipped
+```
+
+```mdl
+feat F-4: Retention in the index
+
+  req F-4.1:
+    when: the feed store deletes blocks by retention
+    then: their rows are removed from every index in the next index pass, so no query returns an
+          item the store no longer holds; a row is removed only when the block it was last written
+          from (objectMeta.queueInsertionId) was trimmed, so a live feed object whose newer block
+          survives keeps its row
+
+  req F-4.2:
+    when: an index-answered query returns items of a feed with retention.maxAge
+    then: items whose block timestamp is older than now - maxAge are left out, before any trim
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: An intent survives a crash before apply
+  given: a Feed object whose retention changed and was indexed, so a feed-options intent is recorded
+  when: the host stops before applying it, then starts again
+  then:
+    - the startup index pass applies the intent and clears it
+    - take() returns no feed-options intent afterwards
+```
+
+```mdl
+scenario T-2: A newer intent recorded during apply survives
+  given: a feed-options intent with id 7 taken by the host
+  when: the feed's options change again and intent 8 is recorded before clear(…, 7)
+  then: after clear(…, 7), take() returns intent 8
+```
+
+```mdl
+scenario T-3: Disable and re-enable indexing
+  given: a feed with 3 indexed items found by Filter.text('hello')
+  when: Feed.setIndexing(feed, { enabled: false }) runs and an index pass completes
+  then:
+    - Filter.text('hello') returns none of the feed's items
+    - Feed.query(feed) still returns all 3 items
+    - after Feed.setIndexing(feed, { enabled: true }) and an index pass, Filter.text('hello') finds them again
+```
+
+```mdl
+scenario T-4: Trimmed items leave the index
+  given: a feed with retention { maxLength: 5 } and 5 indexed items
+  when: 1 item is appended and an index pass completes
+  then: a text query for the oldest item returns nothing
+```
+
+## Changelog
+
+```mdl
+decision D-1: Indexing of a feed can be fully disabled.
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [F-3]
+```
+
+```mdl
+decision D-2: A feed's indexing and retention options, set on the Feed ECHO object, flow down to the feed store through a new kind of indexer intent.
+  date: 2026-10-25
+  by: user:dmaretskyi
+  affects: [F-2]
+```
+
+```mdl
+decision D-3: Convergence-key and feed-options intents are two kinds of one IndexerIntent union, each in its own table with the same record / take / clear contract. Fills in [D-2].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.1, F-1.3, F-1.4]
+  why: The convergence-key contract already guarantees that an indexed change cannot be forgotten across a crash; separate tables leave its migrations untouched.
+  rejected:
+    - "One intents table with a kind column: it needs a data migration of the convergence-key table for no behavioural gain."
+```
+
+```mdl
+decision D-4: The feed-options intent is recorded for every indexed Feed object, latest-wins per feed, and applied by whichever host owns the store — EchoHost directly, EDGE's Indexer DO through FeedSpace. Fills in [D-2].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2]
+  why: Both hosts run the same IndexEngine, so one producer serves both; only the current options matter, so older pending intents carry nothing.
+  rejected:
+    - "Have the feed store read the Feed object: EDGE's FeedSpace DO has no Automerge access."
+    - "Send options with each FeedService call, as namespace is today: EDGE would never see a change made while no one appends."
+```
+
+```mdl
+decision D-5: Disabling indexing skips the feed's blocks in FeedDataSource and purges its existing index rows; re-enabling backfills what the store still retains. Fills in [D-1].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.1, F-3.2, F-3.5]
+  why: FeedDataSource is where both hosts read feed blocks into the index; the device cursor is per namespace, so re-enabling needs its own backfill.
+```
+
+```mdl
+decision D-6: A feed with indexing disabled is still readable through Feed.query, and its function triggers on EDGE keep firing. Fills in [D-1].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.4, F-3.6]
+  why: "Indexing" is read as the search index only; Feed.query reads the store, and triggers are a separate consumer of the same notification.
+  rejected:
+    - "Make a disabled feed unreadable except by cursor: it breaks every reader of trace and log feeds."
+```
+
+```mdl
+decision D-7: Items deleted by retention are removed from every index. Fills in [D-2].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.1]
+  why: Today deleteOldestBlocks leaves index rows behind, so a query can return an item the store no longer has.
+```
+
+```mdl
+decision D-8: Feed-options intents are rows of a new `feedOptionsIntents` table, with the options as one JSON column and an index on (spaceId, feedId, id) for the newest-per-feed take. Fills in [D-3] and [D-4].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [feedOptionsIntents, FeedOptionsIntentStore, F-2.2]
+  why: The row carries the options themselves, so the consumer needs no second read of the object; recording a row per indexing of a Feed object stays cheap because take() collapses them.
+  rejected:
+    - "Upsert one row per feed: a concurrent record during apply would overwrite the row that clear() is about to delete, losing the newer options."
+```
+
+```mdl
+decision D-9: For a feed with indexing disabled, the host query executor reads the feed store and matches in memory, because Feed.query is answered from the index and would otherwise return nothing once the feed's rows are purged. Supersedes the FeedService.queryFeed wording of [D-6].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.4]
+  supersedes: D-6
+  why: Feed.query goes through Database.query with a feed scope, which the executor answers from objectMeta; reading the store keeps the item set without indexing it.
+```
+
+```mdl
+decision D-10: An entity-meta row records the insertion id of the block it was last written from, and retention removes a row only when that block was trimmed; rows written before the column existed fall back to matching by position. Fills in [D-7].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.1]
+  why: A live feed object re-appends whole under the same id, so deleting by object id would remove objects whose older versions were trimmed.
+```
+
+```mdl
+decision D-11: Applying an intent runs the index side first (purge on disable, backfill seed on re-enable) and is idempotent, so a crash before the intent is cleared is redone on retry; a failing intent stays pending and is retried on every pass. Fills in [D-4] and [D-5].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.4, F-2.3, F-3.2, F-3.5]
+  why: The store's `changed` is false on a retry, so the index side cannot key off it.
+```
+
+```mdl
+decision D-12: Index-answered feed queries drop items older than maxAge, using objectMeta.updatedAt, which holds the block timestamp. Fills in [D-7].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.2]
+  why: Reads must hide expired items before the lazy trim deletes them (org.dxos.feed [F-2.2]), and the index already stores the block time.
+```
+
+```mdl
+decision D-13: record() deletes the feed's pending row before inserting the new one, so feedOptionsIntents holds at most one row per Feed object. Refines [D-8].
+  date: 2026-10-25
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [feedOptionsIntents, FeedOptionsIntentStore, F-2.2]
+  why: A row per indexing grows with the object's edit history while applies keep failing; the replacement row takes a new AUTOINCREMENT id, so the race D-8 rejected an upsert for cannot erase it.
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext service
+  uri: org.dxos.mdl.service@1.0
+  desc: An external or system-level dependency providing named operations.
+  fields:
+    desc?: Prose
+    loading?: eager | lazy
+    ops?: OpMap                 # name(params) → ReturnType
+    errors?: ErrorMap
+    note?: Prose
+```
+
+```mdl
+ext table
+  uri: org.dxos.mdl.table@1.0
+  desc: |
+    A SQL table a component owns. The identifier is the table name; the inline prose is what one row
+    is. Columns, keys and indexes are the schema after the spec's changes.
+  fields:
+    store: Prose                # the database, and its migration-history table in parentheses
+    columns: FieldMap           # `name[?]: SQLTYPE [constraint …]  # meaning`; `?` allows NULL
+    key?: Prose                 # the primary key, as a column list
+    unique?: ProseList          # other unique keys, as column lists
+    indexes?: ProseList         # `name(columns): why a query needs it`
+    new?: Prose                 # `table`, or the columns this spec adds
+  inline-prose: true
+  syntax: |
+    table feeds: One feed of a space, by namespace.
+      store: feed store (feed_migrations)
+      columns:
+        feedPrivateId: INTEGER PRIMARY KEY AUTOINCREMENT  # local row id; blocks reference it
+        spaceId: TEXT
+        feedId: TEXT                                      # the Feed object's entity id
+        options?: TEXT                                    # json FeedOptions; NULL = defaults
+      key: feedPrivateId
+      new: options
+```
