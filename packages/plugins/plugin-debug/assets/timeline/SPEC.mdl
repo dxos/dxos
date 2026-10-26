@@ -90,7 +90,7 @@ events for a range of years and a set of categories and fills a sheet with them.
 
 ## Phases
 
-- Phase 1: F-1 and F-2, checked against the test fixture (the Presenter space's events sheet).
+- Phase 1: F-1 and F-2, checked against the test fixture (the history of the universe the Timeline stories use).
 - Phase 2: F-3 and F-4.
 - Phase 3: F-5.
 
@@ -129,4 +129,11 @@ decision D-2: The spec writes F-1 to F-4 from what is built, names F-5 and divid
   date: 2026-10-22
   by: agent:claude-code
   for: user:richburdon
+```
+
+```mdl
+decision D-3: The test fixture is the history of the universe the Timeline stories use, as a sheet with a timeline chart of it.
+  date: 2026-10-23
+  by: user:richburdon
+  affects: [F-2]
 ```

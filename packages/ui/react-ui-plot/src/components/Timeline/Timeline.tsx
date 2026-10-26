@@ -756,6 +756,7 @@ export const Timeline = ({
                       fill='currentColor'
                       fillOpacity={0.5}
                       fontWeight={600}
+                      style={{ fontVariantNumeric: 'tabular-nums' }}
                     >
                       {tick.label}
                     </text>
