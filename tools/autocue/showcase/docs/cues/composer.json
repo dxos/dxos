@@ -7,10 +7,11 @@
       "Your data is organized into collaborative workspaces and accessed via plugins.",
       "You can add comments to any object; and assign tasks to agents, which read and update data in real time.",
       "Documents can incorporate components from any plugin.",
-      "And plugins provide an extensive set of tools, skills and connectors.",
+      "And the plugin registry contains dozens of rich components, ready to drop into any workspace.",
+      "Plugins provide an extensive set of tools, skills and connectors.",
       "Documents, diagrams, tables, and kanbans are all objects in the same graph."
     ],
-    "text": "This is Composer: an extensible super-app for teams and their agents. Your data is organized into collaborative workspaces and accessed via plugins. You can add comments to any object; and assign tasks to agents, which read and update data in real time. Documents can incorporate components from any plugin. And plugins provide an extensive set of tools, skills and connectors. Documents, diagrams, tables, and kanbans are all objects in the same graph."
+    "text": "This is Composer: an extensible super-app for teams and their agents. Your data is organized into collaborative workspaces and accessed via plugins. You can add comments to any object; and assign tasks to agents, which read and update data in real time. Documents can incorporate components from any plugin. And the plugin registry contains dozens of rich components, ready to drop into any workspace. Plugins provide an extensive set of tools, skills and connectors. Documents, diagrams, tables, and kanbans are all objects in the same graph."
   },
   {
     "at": 46.5,
@@ -38,8 +39,8 @@
     "title": "Open and extensible",
     "lines": [
       "The entire platform is open and extensible.",
-      "It's built from over a hundred plugins that contribute interfaces, agent skills, and connectors to other systems."
+      "Your data, your apps, your agents, all in one place, and all under your control."
     ],
-    "text": "The entire platform is open and extensible. It's built from over a hundred plugins that contribute interfaces, agent skills, and connectors to other systems."
+    "text": "The entire platform is open and extensible. Your data, your apps, your agents, all in one place, and all under your control."
   }
 ]

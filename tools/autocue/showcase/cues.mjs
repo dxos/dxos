@@ -45,12 +45,12 @@ const parse = (markdown, heading) => {
   const script = rest.slice(0, rest.search(/\n#{1,6} /) >= 0 ? rest.search(/\n#{1,6} /) : undefined);
   // A bullet may wrap onto indented continuation lines, which join its first line.
   return [
-    ...script.matchAll(/^\d+\. \*\*([^*]+)\*\* \(at ([\d.]+)s[^)]*\)\n\n?((?: {3}- .*\n?(?: {5}\S.*\n?)*)+)/gm),
+    ...script.matchAll(/^\d+\. \*\*([^*]+)\*\*(?: \(at ([\d.]+)s[^)]*\))? *\n\n?((?: {3}- .*\n?(?: {5}\S.*\n?)*)+)/gm),
   ].map(([, title, at, body]) => {
     const lines = [...body.matchAll(/^ {3}- (.*(?:\n {5}\S.*)*)/gm)].map(([, line]) =>
       line.replace(/\s+/g, ' ').trim(),
     );
-    return { at: Number(at), title, lines, text: lines.join(' ') };
+    return { at: at === undefined ? undefined : Number(at), title, lines, text: lines.join(' ') };
   });
 };
 
@@ -62,6 +62,11 @@ for (const { name, doc, heading, offset, at, end } of SCRIPTS) {
     ...cue,
     at: at?.[index] ?? cue.at,
   }));
+  if (cues.some((cue) => cue.at === undefined)) {
+    throw new Error(
+      `${doc}: every item under ${heading} needs "(at Ns)" unless the script places its sections with \`at\``,
+    );
+  }
   if (cues.length === 0) {
     throw new Error(`${doc} has no "N. **Title** (at Ns)" items under ${heading}`);
   }
