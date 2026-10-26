@@ -122,7 +122,7 @@ assume the demo opens on a 4.5s title; the sections add up to 130s against the c
 stretches to the voice as for ECHO. Lines marked _(verify)_ make a claim to check against the cut.
 
 1. **Documents** (at 4.5s, 45s)
-   - This is Composer: one open, extensible super-app for teams and their agents.
+   - This is Composer: an extensible super-app for teams and their agents.
    - Your data is organized into collaborative workspaces and accessed via plugins.
    - You can add comments to any document, while the app manages the interactions between your team.
    - I can give a task to an agent, which reads and updates the data in real time.

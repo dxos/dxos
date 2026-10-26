@@ -3,7 +3,7 @@
     "at": 4.5,
     "title": "Documents",
     "lines": [
-      "This is Composer: one open, extensible super-app for teams and their agents.",
+      "This is Composer: an extensible super-app for teams and their agents.",
       "Your data is organized into collaborative workspaces and accessed via plugins.",
       "You can add comments to any document, while the app manages the interactions between your team.",
       "I can give a task to an agent, which reads and updates the data in real time.",
@@ -11,7 +11,7 @@
       "I can easily insert a spreadsheet, and open it to create or view a chart.",
       "Documents, drawings, sheets, and kanbans are all objects in the same graph."
     ],
-    "text": "This is Composer: one open, extensible super-app for teams and their agents. Your data is organized into collaborative workspaces and accessed via plugins. You can add comments to any document, while the app manages the interactions between your team. I can give a task to an agent, which reads and updates the data in real time. Documents can include components from any plugin. I can easily insert a spreadsheet, and open it to create or view a chart. Documents, drawings, sheets, and kanbans are all objects in the same graph."
+    "text": "This is Composer: an extensible super-app for teams and their agents. Your data is organized into collaborative workspaces and accessed via plugins. You can add comments to any document, while the app manages the interactions between your team. I can give a task to an agent, which reads and updates the data in real time. Documents can include components from any plugin. I can easily insert a spreadsheet, and open it to create or view a chart. Documents, drawings, sheets, and kanbans are all objects in the same graph."
   },
   {
     "at": 46.5,
