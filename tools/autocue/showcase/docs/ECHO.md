@@ -29,7 +29,7 @@ our data to be useful. That demands a new security model."
 - It grows again as those agents mix private data with enterprise data.
 - The more agents we run, the more dangerous this approach becomes.
 
-**Spoken (draft, 29 words):** "Today we grant agents coarse access to everything, with no audit and no control. As agents run
+**Spoken (draft, 30 words):** "Today we grant agents coarse access to everything, with no audit and no control. As agents run
 continuously, across both private and enterprise data, that becomes more dangerous every day."
 
 ## 3. ECHO Graph Database (23–33s)
