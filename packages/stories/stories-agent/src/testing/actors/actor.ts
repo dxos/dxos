@@ -258,14 +258,10 @@ export class Actor {
     const send = this.binding.root.querySelector<HTMLButtonElement>('[data-testid="assistant.send"]');
     invariant(send, `${this.spec.name} has no send button`);
     send.click();
-    // Real time, not scene time: the reply comes from the assistant's own request loop.
-    const start = performance.now();
-    while (!this.binding.root.textContent?.includes(expect)) {
-      if (performance.now() - start > timeout) {
-        throw new Error(`${this.spec.name} got no reply containing "${expect}"`);
-      }
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    }
+    // Polled on the scene clock, so stepping keeps moving while the assistant's request loop answers.
+    await this.until(() => this.binding.root.textContent?.includes(expect) ?? false, `a reply containing "${expect}"`, {
+      timeout,
+    });
     await this.pause(400);
   }
 

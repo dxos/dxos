@@ -2,11 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as LanguageModel from 'effect/ai/LanguageModel';
-import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
-
-import { type AiService } from '@dxos/ai';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Chat from '@dxos/assistant/Chat';
 import { addressFromA1Notation, addressToA1Notation } from '@dxos/compute-hyperformula';
@@ -339,15 +334,10 @@ const waitForText = async (actor: Parameters<ActorStep<EchoTarget>['run']>[0]['a
 };
 
 /** A scripted assistant: the model replies with each line in turn, split into words so the reply streams in. */
-const scriptedAssistant = (replies: string[]) => {
-  const model = Effect.runSync(
-    ScriptedLanguageModel.makeScriptedLanguageModel(
-      replies.map((reply) => ({ parts: reply.split(/(?<= )/).map((word) => ScriptedLanguageModel.text(word)) })),
-    ),
+const scriptedAssistant = (replies: string[]) =>
+  ScriptedLanguageModel.scriptedAiServiceMiddleware(
+    replies.map((reply) => ({ parts: reply.split(/(?<= )/).map((word) => ScriptedLanguageModel.text(word)) })),
   );
-  const layer = Layer.succeed(LanguageModel.LanguageModel, model);
-  return (upstream: AiService.Service): AiService.Service => ({ ...upstream, languageModel: () => layer });
-};
 
 const ACTORS: ActorSpec[] = [
   { name: 'Ada', hue: 'blue' },

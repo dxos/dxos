@@ -27,6 +27,12 @@ const { values } = parseArgs({
 const url = `${values.url}/iframe.html?${new URLSearchParams({ id: values.story, viewMode: 'story', args: 'stepped:!true' })}`;
 const browser = await chromium.launch({ headless: true, channel: 'chromium' });
 const page = await browser.newPage({ viewport: { width: Number(values.width), height: Number(values.height) } });
+const consoleErrors = new Set();
+page.on('console', (message) => {
+  if (message.type() === 'error' || message.type() === 'warning') {
+    consoleErrors.add(message.text().slice(0, 300));
+  }
+});
 const started = Date.now();
 const elapsed = () => `${((Date.now() - started) / 1_000).toFixed(0)}s`;
 await page.goto(url);
@@ -67,14 +73,24 @@ for (let ms = 0; ms <= total; ms += Number(values.step)) {
 }
 const final = await page.evaluate(() => {
   const status = window.actorScene?.status;
+  const chapters = (text) =>
+    text
+      .split(/\n(?=## )/)
+      .slice(1)
+      .map((chapter) => chapter.length)
+      .join(',');
   return (
     status && {
       errors: status.errors,
       converged: status.texts.every((text) => text === status.texts[0]),
       text: status.texts[0],
+      // Per editor: total length and each chapter's length, to see which writers' text reached whom.
+      lengths: status.texts.map((text) => `${text.length}: ${chapters(text)}`),
     }
   );
 });
 console.log(elapsed(), JSON.stringify({ errors: final?.errors, converged: final?.converged }));
+console.log(final?.lengths?.join('\n'));
+console.log([...consoleErrors].slice(0, 40).join('\n'));
 console.log(final?.text);
 await browser.close();
