@@ -4,7 +4,7 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
-import { expect, within } from 'storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -61,5 +61,9 @@ export const Test: Story = {
     // 2. A slide over its desired length is flagged; a slide with no take is marked unrecorded.
     await expect(rows[1].querySelector('[data-over="true"]')).not.toBeNull();
     await expect(rows[2].getAttribute('data-recorded')).toBeNull();
+    // 3. The arrow keys move the selection, not just the highlight.
+    await userEvent.click(rows[0]);
+    await userEvent.keyboard('{ArrowDown}');
+    await expect(rows[1]).toHaveAttribute('aria-selected', 'true');
   },
 };

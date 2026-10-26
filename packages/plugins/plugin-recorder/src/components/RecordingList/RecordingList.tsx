@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 
 import { Listbox } from '@dxos/react-ui-list';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -42,7 +42,7 @@ export type RecordingItem = {
 
 export type RecordingListProps = {
   items: RecordingItem[];
-  /** The current row, which the toolbar's actions and the status bar's player act on. */
+  /** The current (selected) row, which the toolbar's actions and the status bar's player act on; the arrow keys move it. */
   value?: string;
   onValueChange?: (id: string) => void;
   /** Accessible name of the list. */
@@ -56,14 +56,34 @@ export type RecordingListProps = {
  */
 export const RecordingList = ({ items, value, onValueChange, label }: RecordingListProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
+  const keyboard = useRef(false);
   const options = useMemo(
     () => items.map((item) => ({ value: item.id, label: item.title, description: item.description })),
     [items],
   );
 
   return (
-    <Listbox.Root items={options} value={value ?? ''} onValueChange={(id) => onValueChange?.(id)}>
-      <Listbox.Content aria-label={label} data-testid='recorder.list'>
+    <Listbox.Root
+      items={options}
+      value={value ?? ''}
+      onValueChange={(id) => onValueChange?.(id)}
+      // The current row is the selection: a keyboard move selects, while a pointer only highlights what it passes.
+      onHighlightChange={(id) => {
+        if (keyboard.current && id) {
+          onValueChange?.(id);
+        }
+      }}
+    >
+      <Listbox.Content
+        aria-label={label}
+        data-testid='recorder.list'
+        onKeyDownCapture={() => {
+          keyboard.current = true;
+        }}
+        onPointerMove={() => {
+          keyboard.current = false;
+        }}
+      >
         {items.map((item) => {
           const over = isOver(item.duration, item.desired);
           return (

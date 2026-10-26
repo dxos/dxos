@@ -101,9 +101,9 @@ component LevelMeter
 
 component RecordingsPanel
   desc: >
-    The layout both Recordings companions share: the toolbar, a RecordingList (a react-ui-list Listbox, so the
-    current row moves with the keyboard and scrolls into view), and the current row's player docked in the status
-    bar. The toolbar's actions act on the current row.
+    The layout both Recordings companions share: the toolbar, a RecordingList (a react-ui-list Listbox whose current
+    row is its selection: the arrow keys move it and it scrolls into view; a pointer only highlights), and the current
+    row's player docked in the status bar. The toolbar's actions act on the current row.
   props: { toolbar, statusbar, children }
 
 component SlideRecordingsArticle
@@ -336,4 +336,20 @@ decision D-17: The toolbar's actions act on the current row, rather than buttons
   for: user:richburdon
   affects: [RecordingsPanel, F-2.2]
   why: A Listbox row is one navigable item; a URL shared through studio's cache was revoked under the player, which then showed 0:00 / 0:00.
+```
+
+```mdl
+decision D-18: In both Recordings lists the current row is the selection.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [RecordingsPanel, F-2.4]
+```
+
+```mdl
+decision D-19: The arrow keys select as they move; a pointer only highlights the rows it passes. Fills in [D-18].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [RecordingsPanel]
+  why: Selecting on hover would switch the status bar's take as the mouse crosses the list.
 ```
