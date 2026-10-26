@@ -2,173 +2,234 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useState } from 'react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { type Ref } from '@dxos/echo';
-import { useObject } from '@dxos/echo-react';
+import { Obj } from '@dxos/echo';
 import * as Presentation from '@dxos/plugin-presenter/Presentation';
-import * as StudioHooks from '@dxos/plugin-studio/StudioHooks';
 import type * as Variant from '@dxos/plugin-studio/Variant';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Status from '@dxos/react-ui/Status';
 
-import { TakeList } from '#components';
+import { type RecordingItem, RecordingList, RecordingsPanel } from '#components';
 import { meta } from '#meta';
 import { RecorderCapabilities, RecorderOperation, Take } from '#types';
 
-import { useStartRecording } from '../../hooks/index.ts';
+import { useStartRecording, useTakeUrl } from '../../hooks/index.ts';
 import { downloadUrl, extension } from '../../recorder/index.ts';
-import PendingTakes from '../PendingTakes/index.ts';
 import TakePlayer from '../TakePlayer/index.ts';
 
 export type SlideRecordingsArticleProps = Pick<AppSurface.ArticleProps, 'role' | 'attendableId'> & {
   slide: Presentation.Slide;
 };
 
+/** A saved take as a row, with the live take the actions need. */
+type TakeRow = RecordingItem & { take?: Variant.Variant; contentType?: string };
+
 /**
- * A slide's takes (its companion), newest first. The toolbar records a new take of this slide; each take can be
- * played, downloaded, made the slide's main take, and deleted (undoably).
+ * A slide's takes (its companion), newest first, in the layout every Recordings companion shares. The toolbar records
+ * a new take of the slide and acts on the current take — play, make main, download, delete (undoably) — and the
+ * status bar plays it. An unsaved take is listed first, and the toolbar saves it again, downloads or discards it.
  */
 export const SlideRecordingsArticle = ({ role, attendableId, slide }: SlideRecordingsArticleProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const recorder = Hooks.useOptionalCapability(RecorderCapabilities.Recorder);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const presentation = Presentation.getPresentation(slide);
   const handleRecord = useStartRecording(recorder, presentation, slide);
-  const [takes] = useObject(slide, 'takes');
-  const [mainTake] = useObject(slide, 'mainTake');
-  const [desired] = useObject(slide, 'duration');
+  const saved = useSlideTakes(slide);
+  const pending = usePendingTakes(recorder, slide);
+  const items = useMemo(() => [...pending, ...saved], [pending, saved]);
 
-  const menuActions = useMenuBuilder(
-    (): ActionGraphProps =>
-      MenuBuilder.make()
-        .action(
-          'record',
-          {
-            label: ['record-slide.label', { ns: meta.profile.key }],
-            icon: 'ph--record--regular',
-            disposition: 'toolbar',
-            disabled: !recorder || !presentation,
-            testId: 'recorder.slide.record',
-          },
-          () => void handleRecord(),
-        )
-        .build(),
-    [handleRecord, recorder, presentation],
+  const [currentId, setCurrentId] = useState<string>();
+  const current = items.find((item) => item.id === currentId) ?? items[0];
+  // Bumped by Play so the status bar player remounts and starts.
+  const [play, setPlay] = useState<{ count: number; autoPlay: boolean }>({ count: 0, autoPlay: false });
+  const handlePlay = useCallback(
+    () => setPlay(({ count, autoPlay }) => ({ count: count + 1, autoPlay: !autoPlay })),
+    [],
   );
+  const src = useTakeUrl(current?.take);
 
-  const list = [...(takes ?? [])].reverse();
+  const handleDownload = useCallback(() => {
+    if (current?.error) {
+      recorder?.download(current.id);
+    } else if (src && current) {
+      downloadUrl(src, `${current.title}.${extension(current.contentType ?? '')}`);
+    }
+  }, [current, src, recorder]);
+
+  const handleDelete = useCallback(() => {
+    if (current?.error) {
+      recorder?.discard(current.id);
+    } else if (current?.take) {
+      void invokePromise(RecorderOperation.DeleteTake, { slide, take: current.take });
+    }
+  }, [current, recorder, invokePromise, slide]);
+
+  const menuActions = useMenuBuilder((): ActionGraphProps => {
+    const builder = MenuBuilder.make()
+      .action(
+        'record',
+        {
+          label: ['record-slide.label', { ns: meta.profile.key }],
+          icon: 'ph--record--regular',
+          disposition: 'toolbar',
+          disabled: !recorder || !presentation,
+          testId: 'recorder.slide.record',
+        },
+        () => void handleRecord(),
+      )
+      .separator()
+      .action(
+        'play',
+        {
+          label: [play.autoPlay ? 'stop-take.label' : 'play-take.label', { ns: meta.profile.key }],
+          icon: play.autoPlay ? 'ph--stop--regular' : 'ph--play--regular',
+          disposition: 'toolbar',
+          disabled: !current?.take,
+          testId: 'recorder.take.play',
+        },
+        handlePlay,
+      )
+      .action(
+        'select',
+        {
+          label: ['select-take.label', { ns: meta.profile.key }],
+          icon: 'ph--star--regular',
+          disposition: 'toolbar',
+          disabled: !current?.take || current.main,
+          testId: 'recorder.take.select',
+        },
+        () => current?.take && void invokePromise(RecorderOperation.SelectTake, { slide, take: current.take }),
+      )
+      .action(
+        'download',
+        {
+          label: ['download-take.label', { ns: meta.profile.key }],
+          icon: 'ph--download-simple--regular',
+          disposition: 'toolbar',
+          disabled: !current || (!current.error && !src),
+          testId: 'recorder.take.download',
+        },
+        handleDownload,
+      )
+      .action(
+        'delete',
+        {
+          label: [current?.error ? 'discard-take.label' : 'delete-take.label', { ns: meta.profile.key }],
+          icon: 'ph--trash--regular',
+          disposition: 'toolbar',
+          disabled: !current,
+          testId: 'recorder.take.delete',
+        },
+        handleDelete,
+      );
+    if (current?.error) {
+      builder.action(
+        'retry',
+        {
+          label: ['retry-save.label', { ns: meta.profile.key }],
+          icon: 'ph--arrow-clockwise--regular',
+          disposition: 'toolbar',
+          testId: 'recorder.take.retry',
+        },
+        () => void recorder?.retry(current.id),
+      );
+    }
+    return builder.build();
+  }, [
+    handleRecord,
+    recorder,
+    presentation,
+    play,
+    handlePlay,
+    current,
+    src,
+    invokePromise,
+    slide,
+    handleDownload,
+    handleDelete,
+  ]);
+
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
-        <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Panel.Header>
-      <Panel.Body asChild>
-        <ScrollArea.Root>
-          <ScrollArea.Viewport classNames='flex flex-col gap-2 p-3'>
-            {recorder && <PendingTakes recorder={recorder} slideId={slide.id} desired={desired} />}
-            {list.length === 0 ? (
-              <Status.Empty classNames='h-full'>{t('no-takes.message')}</Status.Empty>
-            ) : (
-              <TakeList.Root>
-                {list.map((take) => (
-                  <SavedTake
-                    key={take.uri}
-                    slide={slide}
-                    take={take}
-                    desired={desired}
-                    main={!!mainTake && mainTake.uri === take.uri}
-                  />
-                ))}
-              </TakeList.Root>
-            )}
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Body>
-    </Panel.Root>
+    <RecordingsPanel
+      role={role}
+      toolbar={<ActionToolbar {...menuActions} attendableId={attendableId} />}
+      statusbar={
+        <TakePlayer
+          key={`${current?.id}:${play.count}`}
+          take={current?.take}
+          autoPlay={play.autoPlay}
+          onEnded={() => setPlay(({ count }) => ({ count, autoPlay: false }))}
+        />
+      }
+    >
+      <RecordingList
+        label={t('slide-takes.label')}
+        items={items}
+        value={current?.id}
+        onValueChange={(id) => {
+          setCurrentId(id);
+          setPlay(({ count }) => ({ count: count + 1, autoPlay: false }));
+        }}
+      />
+    </RecordingsPanel>
   );
 };
 
 SlideRecordingsArticle.displayName = 'SlideRecordingsArticle';
 
-const SavedTake = ({
-  slide,
-  take,
-  desired,
-  main,
-}: {
-  slide: Presentation.Slide;
-  take: Ref.Ref<Variant.Variant>;
-  desired?: number;
-  main: boolean;
-}) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
-  const { invokePromise } = Hooks.useOperationInvoker();
-  const [loaded] = useObject(take);
-  const src = StudioHooks.useVariantSource(loaded ? { url: loaded.url, content: loaded.content } : undefined);
-  const [playing, setPlaying] = useState(false);
-  const target = take.target;
-  const log = Take.fromConfig(loaded?.config);
-  if (!loaded || !log || !target) {
-    return null;
-  }
-
-  const name = loaded.name ?? loaded.id;
-  return (
-    <TakeList.Item
-      take={{
-        id: loaded.id,
-        name,
-        duration: log.duration,
-        desired,
-        main,
-        video: log.source !== 'none',
-        // Mounted only while playing, so closing it stops playback.
-        player: playing ? <TakePlayer take={target} onEnded={() => setPlaying(false)} /> : undefined,
-      }}
-      actions={
-        <>
-          <Button.Root
-            data-testid='recorder.take.play'
-            icon={playing ? 'ph--stop--regular' : 'ph--play--regular'}
-            iconOnly
-            variant='ghost'
-            label={t(playing ? 'stop-take.label' : 'play-take.label')}
-            onClick={() => setPlaying((playing) => !playing)}
-          />
-          <Button.Root
-            data-testid='recorder.take.select'
-            icon={main ? 'ph--star--fill' : 'ph--star--regular'}
-            iconOnly
-            variant='ghost'
-            disabled={main}
-            label={t('select-take.label')}
-            onClick={() => void invokePromise(RecorderOperation.SelectTake, { slide, take: target })}
-          />
-          <Button.Root
-            data-testid='recorder.take.download'
-            icon='ph--download-simple--regular'
-            iconOnly
-            variant='ghost'
-            disabled={!src}
-            label={t('download-take.label')}
-            onClick={() => src && downloadUrl(src, `${name}.${extension(loaded.contentType ?? '')}`)}
-          />
-          <Button.Root
-            data-testid='recorder.take.delete'
-            icon='ph--trash--regular'
-            iconOnly
-            variant='ghost'
-            label={t('delete-take.label')}
-            onClick={() => void invokePromise(RecorderOperation.DeleteTake, { slide, take: target })}
-          />
-        </>
-      }
-    />
+/** The slide's saved takes, newest first. */
+const useSlideTakes = (slide: Presentation.Slide): TakeRow[] => {
+  const atom = useMemo(
+    () =>
+      Atom.make((get): TakeRow[] => {
+        const snapshot = get(Obj.atom(slide));
+        const mainUri = snapshot.mainTake?.uri;
+        return [...(snapshot.takes ?? [])].reverse().flatMap((ref): TakeRow[] => {
+          const take = get(Obj.atom(ref));
+          const takeLog = take ? Take.fromConfig(take.config) : undefined;
+          if (!take || !takeLog) {
+            return [];
+          }
+          return [
+            {
+              id: take.id,
+              title: take.name ?? take.id,
+              duration: takeLog.duration,
+              desired: snapshot.duration,
+              main: ref.uri === mainUri,
+              video: takeLog.source !== 'none',
+              take: ref.target,
+              contentType: take.contentType,
+            },
+          ];
+        });
+      }),
+    [slide],
   );
+  return useAtomValue(atom);
 };
+
+/** The slide's takes that could not be saved. */
+const usePendingTakes = (recorder: RecorderCapabilities.Recorder | undefined, slide: Presentation.Slide): TakeRow[] => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const state = useAtomValue(recorder?.state ?? EMPTY);
+  return state.pending
+    .filter((take) => take.slideId === slide.id)
+    .map((take) => ({
+      id: take.id,
+      title: take.name,
+      description: t('unsaved-take.message', { error: take.error }),
+      duration: take.log.duration,
+      desired: slide.duration,
+      video: take.log.source !== 'none',
+      error: true,
+    }));
+};
+
+const EMPTY = Atom.make<RecorderCapabilities.RecorderState>({ status: 'idle', pending: [] });

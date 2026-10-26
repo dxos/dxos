@@ -3,5 +3,5 @@
 //
 
 export * from './LevelMeter/index.ts';
-export * from './SlideTakesList/index.ts';
-export * from './TakeList/index.ts';
+export * from './RecordingList/index.ts';
+export * from './RecordingsPanel/index.ts';

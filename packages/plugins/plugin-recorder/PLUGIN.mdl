@@ -99,19 +99,27 @@ component LevelMeter
     and NO SIGNAL after 2s of digital silence.
   props: { peakDb?, holdDb?, rmsDb?, silent?, clip?, compact? }
 
+component RecordingsPanel
+  desc: >
+    The layout both Recordings companions share: the toolbar, a RecordingList (a react-ui-list Listbox, so the
+    current row moves with the keyboard and scrolls into view), and the current row's player docked in the status
+    bar. The toolbar's actions act on the current row.
+  props: { toolbar, statusbar, children }
+
 component SlideRecordingsArticle
   desc: >
-    The Recordings companion of a Slide. Its toolbar records a new take of the slide (the deck presents from it; the
-    recording ends when the reader leaves it). It lists unsaved takes (Save again, Download, Discard), then the
-    slide's takes, newest first, each with Play (inline), Select as main, Download and Delete (undoable), and its
-    length against the slide's desired length.
+    The Recordings companion of a Slide, on RecordingsPanel. The toolbar records a new take of the slide (the deck
+    presents from it; the recording ends when the reader leaves it) and acts on the current take: Play, Make main,
+    Download, Delete (undoable); an unsaved take adds Save again, and Delete discards it. Rows are the takes, newest
+    first, unsaved ones first, each with its length against the slide's desired length.
   props: { slide: Slide }
 
 component PresentationRecordingsArticle
   desc: >
-    The Recordings companion of a Presentation. Its toolbar records every slide (a take per slide), plays the main
-    takes in order, and downloads them as one WAV. It lists each presented slide with its main take's length against
-    its desired length, its take count, and Play; a slide opens from its row.
+    The Recordings companion of a Presentation, on RecordingsPanel. The toolbar records every slide (a take per
+    slide), plays the current slide's main take or every main take in order, downloads the main takes as one WAV, and
+    opens the current slide. Rows are the presented slides with their take count and main take's length against
+    their desired length.
   props: { presentation: Presentation }
 
 component RecorderSettings
@@ -134,12 +142,13 @@ feat F-1: Record
 
 feat F-2: Slide takes
   req F-2.1: A Slide has a Recordings companion listing its takes, newest first, with the main take marked.
-  req F-2.2: A take can be played in place, downloaded, made the main take, and deleted; a delete can be undone.
+  req F-2.2: The current take can be played, downloaded, made the main take, and deleted; a delete can be undone.
+  req F-2.4: Both Recordings companions share one layout: a toolbar, a keyboard-navigable list, and the current row's player in the status bar.
   req F-2.3: Each take shows its length against the slide's desired length, flagged when over.
 
 feat F-3: Presentation voice-over
   req F-3.1: A Presentation has a Recordings companion listing each presented slide with its main take's length against its desired length.
-  req F-3.2: Play plays the slides' main takes in order; a slide's own Play plays its main take.
+  req F-3.2: Play plays the current slide's main take; Play all plays every main take in slide order.
   req F-3.3: Download saves the main takes, in slide order, as one WAV file.
 
 feat F-4: Settings
@@ -311,4 +320,20 @@ decision D-15: Deleting a take is the DeleteTake operation, undone by RestoreTak
   for: user:richburdon
   affects: [DeleteTake, RestoreTake, F-2.2]
   why: The space's RemoveObjects unlinks only from collections, not from a slide's takes.
+```
+
+```mdl
+decision D-16: The slide and presentation Recordings companions use one layout, built on react-ui-list (the standard current row, up and down, scrolling), with the player in the status bar at the bottom.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [RecordingsPanel, SlideRecordingsArticle, PresentationRecordingsArticle, F-2.4]
+```
+
+```mdl
+decision D-17: The toolbar's actions act on the current row, rather than buttons on each row, and the status bar player reads a take's bytes into an object URL it owns. Fills in [D-16].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [RecordingsPanel, F-2.2]
+  why: A Listbox row is one navigable item; a URL shared through studio's cache was revoked under the player, which then showed 0:00 / 0:00.
 ```

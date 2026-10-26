@@ -15,24 +15,22 @@ import { log } from '@dxos/log';
 import type * as Presentation from '@dxos/plugin-presenter/Presentation';
 import type * as Variant from '@dxos/plugin-studio/Variant';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { type SlideTakesItem, SlideTakesList } from '#components';
+import { type RecordingItem, RecordingList, RecordingsPanel } from '#components';
 import { meta } from '#meta';
 import { RecorderCapabilities, Take } from '#types';
 
 import { useStartRecording } from '../../hooks/index.ts';
 import { downloadBlob, exportVoiceOver } from '../../recorder/index.ts';
-import PendingTakes from '../PendingTakes/index.ts';
 import TakePlayer from '../TakePlayer/index.ts';
 
 export type PresentationRecordingsArticleProps = Pick<AppSurface.ArticleProps, 'role' | 'attendableId'> & {
   presentation: Presentation.Presentation;
 };
 
-/** A presented slide with its main take, the read that voices it. */
-type VoicedSlide = SlideTakesItem & { take?: Variant.Variant };
+/** A presented slide as a row, with its main take: the read that voices it. */
+type SlideRow = RecordingItem & { take?: Variant.Variant };
 
 /** The first markdown heading of a slide's text, else its first line. */
 const headingOf = (content: string): string | undefined =>
@@ -42,34 +40,58 @@ const headingOf = (content: string): string | undefined =>
     .find((line) => line.length > 0 && !line.startsWith('---'));
 
 /**
- * The presentation's voice-over (its companion): every presented slide with its main take. The toolbar records the
- * whole presentation (split into a take per slide), plays the main takes in order, and downloads them as one file.
+ * The presentation's voice-over (its companion), in the layout every Recordings companion shares: each presented
+ * slide with its main take. The toolbar records every slide (a take per slide), plays the current slide or all of
+ * them in order, downloads the main takes as one file, and opens the current slide; the status bar plays.
  */
 export const PresentationRecordingsArticle = ({
   role,
   attendableId,
   presentation,
 }: PresentationRecordingsArticleProps) => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const recorder = Hooks.useOptionalCapability(RecorderCapabilities.Recorder);
   const { invokePromise } = Hooks.useOperationInvoker();
   const handleRecord = useStartRecording(recorder, presentation);
-  const slides = useVoicedSlides(presentation);
-  const voiced = useMemo(() => slides.filter((slide) => slide.take !== undefined), [slides]);
+  const items = useVoicedSlides(presentation, t);
+  const voiced = useMemo(() => items.filter((item) => item.take !== undefined), [items]);
 
-  // The slides queued to play, in order; the first is playing.
-  const [queue, setQueue] = useState<string[]>([]);
-  const playing = slides.find((slide) => slide.id === queue[0]);
-  const handlePlaySlide = useCallback((id: string) => setQueue((queue) => (queue[0] === id ? [] : [id])), []);
-  const handlePlayAll = useCallback(
-    () => setQueue((queue) => (queue.length > 0 ? [] : voiced.map((slide) => slide.id))),
-    [voiced],
+  const [currentId, setCurrentId] = useState<string>();
+  const current = items.find((item) => item.id === currentId) ?? items[0];
+  // `all` plays every voiced slide from the current one on; the count remounts the player so it starts again.
+  const [play, setPlay] = useState<{ count: number; autoPlay: boolean; all: boolean }>({
+    count: 0,
+    autoPlay: false,
+    all: false,
+  });
+  const stop = useCallback(() => setPlay(({ count }) => ({ count: count + 1, autoPlay: false, all: false })), []);
+  const handlePlay = useCallback(
+    () => setPlay(({ count, autoPlay }) => ({ count: count + 1, autoPlay: !autoPlay, all: false })),
+    [],
   );
+  const handlePlayAll = useCallback(() => {
+    if (play.autoPlay) {
+      stop();
+    } else {
+      setCurrentId(voiced[0]?.id);
+      setPlay(({ count }) => ({ count: count + 1, autoPlay: true, all: true }));
+    }
+  }, [play.autoPlay, voiced, stop]);
+  const handleEnded = useCallback(() => {
+    const next = play.all ? voiced[voiced.findIndex((item) => item.id === current?.id) + 1] : undefined;
+    if (next) {
+      setCurrentId(next.id);
+      setPlay(({ count }) => ({ count: count + 1, autoPlay: true, all: true }));
+    } else {
+      setPlay(({ count }) => ({ count, autoPlay: false, all: false }));
+    }
+  }, [play.all, voiced, current]);
 
   const [exporting, setExporting] = useState(false);
   const handleDownload = useCallback(async () => {
     setExporting(true);
     try {
-      const takes = voiced.flatMap((slide) => (slide.take ? [slide.take] : []));
+      const takes = voiced.flatMap((item) => (item.take ? [item.take] : []));
       downloadBlob(await exportVoiceOver(takes), `${presentation.name ?? 'presentation'} voice-over.wav`);
     } catch (err) {
       log.catch(err);
@@ -78,18 +100,15 @@ export const PresentationRecordingsArticle = ({
     }
   }, [voiced, presentation]);
 
-  const handleOpen = useCallback(
-    (id: string) => {
-      const db = Obj.getDatabase(presentation);
-      if (db) {
-        void invokePromise(LayoutOperation.Open, {
-          subject: [GraphPath.getCollectionObjectPath(GraphPath.getObjectPathFromObject(presentation), id)],
-          workspace: GraphPath.getSpacePath(db.spaceId),
-        });
-      }
-    },
-    [presentation, invokePromise],
-  );
+  const handleOpen = useCallback(() => {
+    const db = Obj.getDatabase(presentation);
+    if (db && current) {
+      void invokePromise(LayoutOperation.Open, {
+        subject: [GraphPath.getCollectionObjectPath(GraphPath.getObjectPathFromObject(presentation), current.id)],
+        workspace: GraphPath.getSpacePath(db.spaceId),
+      });
+    }
+  }, [presentation, current, invokePromise]);
 
   const menuActions = useMenuBuilder(
     (): ActionGraphProps =>
@@ -105,11 +124,23 @@ export const PresentationRecordingsArticle = ({
           },
           () => void handleRecord(),
         )
+        .separator()
         .action(
           'play',
           {
-            label: [queue.length > 0 ? 'stop-voice-over.label' : 'play-voice-over.label', { ns: meta.profile.key }],
-            icon: queue.length > 0 ? 'ph--stop--regular' : 'ph--play--regular',
+            label: [play.autoPlay && !play.all ? 'stop-take.label' : 'play-slide.label', { ns: meta.profile.key }],
+            icon: play.autoPlay && !play.all ? 'ph--stop--regular' : 'ph--play--regular',
+            disposition: 'toolbar',
+            disabled: !current?.take,
+            testId: 'recorder.presentation.play-slide',
+          },
+          handlePlay,
+        )
+        .action(
+          'play-all',
+          {
+            label: [play.all ? 'stop-voice-over.label' : 'play-voice-over.label', { ns: meta.profile.key }],
+            icon: play.all ? 'ph--stop-circle--regular' : 'ph--play-circle--regular',
             disposition: 'toolbar',
             disabled: voiced.length === 0,
             testId: 'recorder.presentation.play',
@@ -127,38 +158,69 @@ export const PresentationRecordingsArticle = ({
           },
           () => void handleDownload(),
         )
+        .action(
+          'open',
+          {
+            label: ['open-slide.label', { ns: meta.profile.key }],
+            icon: 'ph--arrow-square-out--regular',
+            disposition: 'toolbar',
+            disabled: !current,
+            testId: 'recorder.presentation.open',
+          },
+          handleOpen,
+        )
         .build(),
-    [handleRecord, recorder, queue.length, voiced.length, handlePlayAll, handleDownload, exporting],
+    [
+      handleRecord,
+      recorder,
+      play,
+      current,
+      handlePlay,
+      voiced.length,
+      handlePlayAll,
+      exporting,
+      handleDownload,
+      handleOpen,
+    ],
   );
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Header>
-        <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Panel.Header>
-      <Panel.Body asChild>
-        <ScrollArea.Root>
-          <ScrollArea.Viewport classNames='flex flex-col gap-2 p-3'>
-            {playing?.take && (
-              <TakePlayer key={playing.id} take={playing.take} onEnded={() => setQueue((queue) => queue.slice(1))} />
-            )}
-            {recorder && <PendingTakes recorder={recorder} />}
-            <SlideTakesList slides={slides} playing={queue[0]} onPlay={handlePlaySlide} onOpen={handleOpen} />
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Body>
-    </Panel.Root>
+    <RecordingsPanel
+      role={role}
+      toolbar={<ActionToolbar {...menuActions} attendableId={attendableId} />}
+      statusbar={
+        <TakePlayer
+          key={`${current?.id}:${play.count}`}
+          take={current?.take}
+          autoPlay={play.autoPlay}
+          onEnded={handleEnded}
+        />
+      }
+    >
+      <RecordingList
+        label={t('voice-over.label')}
+        items={items}
+        value={current?.id}
+        onValueChange={(id) => {
+          setCurrentId(id);
+          stop();
+        }}
+      />
+    </RecordingsPanel>
   );
 };
 
 PresentationRecordingsArticle.displayName = 'PresentationRecordingsArticle';
 
 /** The presented (not hidden) slides, each with its title, take count, desired length and main take. */
-const useVoicedSlides = (presentation: Presentation.Presentation): VoicedSlide[] => {
+const useVoicedSlides = (
+  presentation: Presentation.Presentation,
+  t: (key: string, options?: Record<string, unknown>) => string,
+): SlideRow[] => {
   const atom = useMemo(
     () =>
       Atom.make((get) =>
-        get(Obj.atomProperty(presentation, 'slides')).flatMap((ref): VoicedSlide[] => {
+        get(Obj.atomProperty(presentation, 'slides')).flatMap((ref, index): SlideRow[] => {
           const slide = get(Obj.atom(ref));
           if (!slide || slide.hidden) {
             return [];
@@ -170,16 +232,18 @@ const useVoicedSlides = (presentation: Presentation.Presentation): VoicedSlide[]
           return [
             {
               id: slide.id,
+              index,
               title: slide.title ?? headingOf(text) ?? (content ? Obj.getLabel(content) : undefined) ?? slide.id,
-              takes: slide.takes?.length ?? 0,
+              description: t('take-count.label', { count: slide.takes?.length ?? 0 }),
               duration: takeLog?.duration,
               desired: slide.duration,
+              video: takeLog ? takeLog.source !== 'none' : undefined,
               take: slide.mainTake?.target,
             },
           ];
         }),
       ),
-    [presentation],
+    [presentation, t],
   );
   return useAtomValue(atom);
 };
