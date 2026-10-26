@@ -2,43 +2,38 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
 import { meta } from '#meta';
-import { Recording } from '#types';
 
 export const translations = [
   {
     'en-US': {
-      [Type.getTypename(Recording.Recording)]: {
-        'typename.label': 'Recording',
-        'typename.label_zero': 'Recordings',
-        'typename.label_one': 'Recording',
-        'typename.label_other': 'Recordings',
-        'object-name.placeholder': 'New recording',
-        'rename-object.label': 'Rename recording',
-        'delete-object.label': 'Delete recording',
-        'object-deleted.label': 'Recording deleted',
-      },
       [meta.profile.key]: {
         'plugin.name': 'Recorder',
-        'record.label': 'Record a voice-over (starts the presentation)',
+        'record.label': 'Record the voice-over of every slide (starts the presentation)',
+        'record-slide.label': 'Record a new take of this slide',
+        'play-voice-over.label': 'Play the voice-over (the main take of each slide)',
+        'stop-voice-over.label': 'Stop',
+        'download-voice-over.label': 'Download the voice-over (the main take of each slide, as one file)',
+        'select-take.label': 'Make this the main take',
+        'main-take.label': 'Main',
+        'take-deleted.label': 'Take deleted',
+        'no-takes.message': 'No takes yet. Press Record to read this slide.',
+        'no-take.label': 'No take',
+        'take-count.label_zero': 'no takes',
+        'take-count.label_one': '1 take',
+        'take-count.label_other': '{{count}} takes',
         'record-failed.label': 'Recording could not start: {{error}}',
         'recording.label': 'REC',
         'slide-remaining.label': '{{time}} left on slide',
         'slide-over.label': '{{time}} over',
         'recordings.label': 'Recordings',
-        'no-recordings.message': 'No takes yet. Press Record in the presentation toolbar to record a voice-over.',
         'level-meter.label': 'Input level',
         'level.label': 'peak {{peak}} dB · level {{rms}} dB',
         'clip.label': 'CLIP',
         'no-signal.label': 'NO SIGNAL — is the mic muted?',
         'no-input.label': 'No input',
-        'cover-take.label': 'Chosen',
-        'slide-column.label': 'Slide',
-        'recorded-column.label': 'Recorded',
-        'desired-column.label': 'Desired',
         'unsaved-take.message': 'Not saved: {{error}}',
         'retry-save.label': 'Save again',
         'download-take.label': 'Download',

@@ -16,27 +16,22 @@ export const formatSeconds = (seconds: number): string => {
   return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
 };
 
-/** A slide's time in a take, against the length the deck wants for it. */
-export type TakeSlide = {
-  id: string;
-  title: string;
-  /** Seconds the take spent on the slide (all visits). */
-  seconds?: number;
-  /** Desired length, in seconds. */
-  duration?: number;
-};
+/** Over the desired length, compared as shown (whole seconds), so a row never reads 0:20 / 0:20 and flagged. */
+export const isOver = (seconds: number | undefined, desired: number | undefined): boolean =>
+  seconds !== undefined && desired !== undefined && Math.round(seconds) > Math.round(desired);
 
 export type TakeItem = {
   id: string;
   name: string;
   /** Length of the take, in seconds. */
   duration: number;
-  /** The artifact's chosen take. */
-  cover?: boolean;
-  /** What the take recorded besides the voice. */
+  /** The slide's desired length, in seconds. */
+  desired?: number;
+  /** The slide's main take. */
+  main?: boolean;
+  /** The take recorded a picture besides the voice. */
   video?: boolean;
-  slides: TakeSlide[];
-  /** The player for the take (a studio variant renderer). */
+  /** The inline player, while the take plays. */
   player?: ReactNode;
   /** Why the take is not saved yet. */
   error?: string;
@@ -44,9 +39,9 @@ export type TakeItem = {
 
 export type TakeListRootProps = PropsWithChildren;
 
-/** A presentation's takes, newest first. */
+/** A slide's takes, newest first. */
 const TakeListRoot = ({ children }: TakeListRootProps) => (
-  <ul className='flex flex-col gap-4' data-testid='recorder.takes'>
+  <ul className='flex flex-col gap-2' data-testid='recorder.takes'>
     {children}
   </ul>
 );
@@ -55,53 +50,28 @@ TakeListRoot.displayName = 'TakeList.Root';
 
 export type TakeListItemProps = { take: TakeItem; actions?: ReactNode };
 
-/**
- * One take: its player, and each slide's recorded length against its desired length, flagged when the take ran over.
- */
+/** One take: its name, length against the slide's desired length (flagged when over), main mark and actions. */
 const TakeListItem = ({ take, actions }: TakeListItemProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
+  const over = isOver(take.duration, take.desired);
   return (
-    <li className='flex flex-col gap-2 rounded-md border border-separator p-3' data-testid='recorder.take'>
+    <li
+      className={mx('flex flex-col gap-2 rounded-md border p-2', take.main ? 'border-accent-text' : 'border-separator')}
+      data-testid='recorder.take'
+      data-main={take.main}
+    >
       <div className='flex items-center gap-2'>
         <Icon.Icon icon={take.video ? 'ph--video-camera--regular' : 'ph--microphone--regular'} size='sm' />
         <span className='grow truncate font-medium'>{take.name}</span>
-        {take.cover && <span className='text-xs text-fg-subtle'>{t('cover-take.label')}</span>}
-        <span className='font-mono text-sm text-fg-muted'>{formatSeconds(take.duration)}</span>
+        {take.main && <span className='text-xs text-accent-text'>{t('main-take.label')}</span>}
+        <span className={mx('font-mono text-sm', over ? 'text-error-text' : 'text-fg-muted')}>
+          {formatSeconds(take.duration)}
+          {take.desired !== undefined && ` / ${formatSeconds(take.desired)}`}
+        </span>
         {actions}
       </div>
       {take.error && <p className='text-sm text-error-text'>{take.error}</p>}
       {take.player}
-      {take.slides.length > 0 && (
-        <table className='w-full text-sm'>
-          <thead className='text-fg-subtle'>
-            <tr>
-              <th className='text-start font-normal'>{t('slide-column.label')}</th>
-              <th className='w-16 text-end font-normal'>{t('recorded-column.label')}</th>
-              <th className='w-16 text-end font-normal'>{t('desired-column.label')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {take.slides.map((slide) => {
-              // Compared as shown (whole seconds), so a row never reads 0:20 / 0:20 and flagged.
-              const over =
-                slide.seconds !== undefined &&
-                slide.duration !== undefined &&
-                Math.round(slide.seconds) > Math.round(slide.duration);
-              return (
-                <tr key={slide.id} data-over={over}>
-                  <td className='truncate'>{slide.title}</td>
-                  <td className={mx('text-end font-mono', over && 'text-error-text')}>
-                    {slide.seconds === undefined ? '—' : formatSeconds(slide.seconds)}
-                  </td>
-                  <td className='text-end font-mono text-fg-muted'>
-                    {slide.duration === undefined ? '—' : formatSeconds(slide.duration)}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      )}
     </li>
   );
 };

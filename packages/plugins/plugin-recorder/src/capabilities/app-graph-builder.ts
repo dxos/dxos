@@ -18,11 +18,14 @@ import { RECORDINGS_COMPANION } from '../constants.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    // A presentation's takes sit beside it, as a companion, rather than as objects of their own in the navtree.
+    // Takes sit beside what they voice, as a companion: a slide's own takes, or the presentation's voice-over.
     const extensions = yield* AppGraphBuilder.createExtension({
       id: 'recordings',
       relation: AppNode.companion,
-      match: (node) => (Obj.instanceOf(Presentation.Presentation, node.data) ? Option.some(node.data) : Option.none()),
+      match: (node) =>
+        Obj.instanceOf(Presentation.Presentation, node.data) || Obj.instanceOf(Presentation.Slide, node.data)
+          ? Option.some(node.data)
+          : Option.none(),
       connector: () =>
         Effect.succeed([
           AppNode.makeCompanion({

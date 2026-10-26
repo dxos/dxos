@@ -18,7 +18,17 @@ Design: [DESIGN.md](DESIGN.md).
 - [ ] stories, tests, PLUGIN.mdl (QA + Changelog) for recorder; presenter/studio PLUGIN.mdl updates
 - [ ] verify in storybook; mic paths in Chrome
 
+## Phase 1b — per-slide takes
+
+- [x] presenter: `Slide.takes` + `Slide.mainTake`
+- [x] recorder: split a recording by slide (one MediaRecorder per slide); one-slide recordings
+- [x] recorder: 3-2-1 count-in
+- [x] recorder: slide companion (Record, play, select main, download, delete with undo)
+- [x] recorder: presentation companion (Record all, play and download the main takes)
+
 ## Later
+
+- [ ] Generate a slide's voice-over from its speaker notes with plugin-heygen (a generated take beside recorded ones)
 
 - [ ] Buffer take chunks in IndexedDB so a tab crash cannot lose a take
 - [ ] Phase 2: ffmpeg planner (trim, stretch, loudnorm) + EDGE container runner + Tauri sidecar runner

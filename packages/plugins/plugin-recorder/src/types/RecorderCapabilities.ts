@@ -23,39 +23,55 @@ export const Settings = Capability.makeSingleton<Atom.Writable<RecorderSettings.
 export type PendingTake = {
   id: string;
   name: string;
-  presentationId: string;
+  slideId: string;
   data: Blob;
   log: Take.Log;
   error: string;
 };
 
 export type RecorderState = {
-  status: 'idle' | 'starting' | 'recording' | 'saving';
-  /** The presentation being recorded. */
+  /** `counting` is the 3-2-1 count-in, with the inputs open and nothing recorded yet. */
+  status: 'idle' | 'starting' | 'counting' | 'recording';
+  /** Seconds left in the count-in. */
+  count?: number;
+  /** The presentation being recorded, and the one slide when only it is. */
   presentationId?: string;
-  /** `performance.now()` when the take started. */
+  slideId?: string;
+  /** `performance.now()` when recording began, after the count-in. */
   startedAt?: number;
   source?: Take.VideoSource;
-  /** The slide on screen while recording: when it came on (`performance.now()`) and its desired length (seconds). */
+  /** The slide being recorded: when its take began (`performance.now()`) and its desired length (seconds). */
   slide?: { id: string; startedAt: number; duration?: number };
-  /** Why the last take failed to start. */
+  /** Why the last recording failed to start. */
   error?: string;
   pending: readonly PendingTake[];
 };
 
-/** Records takes of a presentation; a service, since the toolbar that starts a take unmounts while it is presented. */
+/** What to record: every slide shown, or `slide` alone (the recording ends when the reader leaves it). */
+export type RecordScope = {
+  presentation: Presentation.Presentation;
+  slide?: Presentation.Slide;
+};
+
+/** The slide on screen, as the presenter reports it. */
+export type SlideMark = { slide?: Presentation.Slide; id: string; step: number };
+
+/**
+ * Records a presentation's voice-over, split by slide: each slide read becomes a take of that slide. A service,
+ * since the toolbar that starts a recording unmounts while the deck is presented.
+ */
 export interface Recorder {
   readonly state: Atom.Atom<RecorderState>;
   /** The live input, for a level meter, while recording. */
   readonly analyser: AnalyserNode | undefined;
   /**
-   * Acquires the inputs and starts a take; call it from the click that starts it (Chrome gates media and audio on it).
-   * Resolves false when the take could not start (the reason is in `state.error`).
+   * Opens the inputs, then counts in 3-2-1 and records; call it from the click that starts it (Chrome gates media
+   * and audio on it). Resolves false when the inputs could not open (the reason is in `state.error`).
    */
-  start(presentation: Presentation.Presentation): Promise<boolean>;
+  start(scope: RecordScope): Promise<boolean>;
   /** The slide on screen changed. */
-  mark(slide: { id: string; title?: string; step: number; duration?: number }): void;
-  /** Ends the take and saves it. */
+  mark(mark: SlideMark): void;
+  /** Ends the recording and saves its last take. */
   stop(): void;
   /** Saves a pending take again. */
   retry(id: string): Promise<void>;

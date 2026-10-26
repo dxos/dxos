@@ -21,8 +21,8 @@ export type RecordingOverlayProps = {
 };
 
 /**
- * Over a presentation being recorded: REC, the take's length and the level meter, so a muted mic (NO SIGNAL) or
- * clipping shows while there is still time to stop.
+ * Over a presentation being recorded: the 3-2-1 count-in, then REC, the recording's length, the time left on the
+ * slide, and the level meter, so a muted mic (NO SIGNAL) or clipping shows while there is still time to stop.
  */
 export const RecordingOverlay = ({ subject }: RecordingOverlayProps) => {
   const recorder = Hooks.useOptionalCapability(RecorderCapabilities.Recorder);
@@ -40,6 +40,19 @@ const RecordingOverlayInner = ({
   const recording = state.status === 'recording' && state.presentationId === subject.id;
   const level = useLevel(recording ? recorder.analyser : undefined);
   const now = useNow(recording);
+  if (state.status === 'counting' && state.presentationId === subject.id) {
+    return (
+      <div
+        data-testid='recorder.count-in'
+        aria-live='assertive'
+        className='pointer-events-none absolute inset-0 z-[300] flex items-center justify-center'
+      >
+        <span className='flex size-40 items-center justify-center rounded-full bg-black/60 font-mono text-8xl text-white'>
+          {state.count}
+        </span>
+      </div>
+    );
+  }
   if (!recording || state.startedAt === undefined) {
     return null;
   }

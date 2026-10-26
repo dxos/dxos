@@ -6,37 +6,27 @@
 
 import * as Schema from 'effect/Schema';
 
-/** What the take recorded besides the voice. */
+/** What a take records besides the voice. */
 export const VideoSource = Schema.Literals(['none', 'screen', 'camera']);
 export type VideoSource = Schema.Schema.Type<typeof VideoSource>;
 
-/** One visit to a slide, in seconds on the take's own clock. */
-export const Section = Schema.Struct({
-  /** The Slide's id. */
-  id: Schema.String,
-  title: Schema.optional(Schema.String),
-  start: Schema.Number,
-  end: Schema.Number,
-});
-export type Section = Schema.Schema.Type<typeof Section>;
-
-/** A click step revealed on a slide. */
+/** A click step revealed while the slide was read, in seconds from the start of the take. */
 export const Step = Schema.Struct({
-  id: Schema.String,
   step: Schema.Number,
   at: Schema.Number,
 });
 export type Step = Schema.Schema.Type<typeof Step>;
 
-/** The timeline of a take, kept in its Variant's `config` so post-processing can lay the voice onto a picture. */
+/** How a take was recorded, kept in its Variant's `config`. */
 export const Log = Schema.Struct({
-  sections: Schema.Array(Section),
-  steps: Schema.Array(Step),
   /** Length of the take, in seconds. */
   duration: Schema.Number,
+  steps: Schema.Array(Step),
   /** Label of the microphone. */
   device: Schema.optional(Schema.String),
   source: VideoSource,
+  /** Shared by the takes of one recording across the whole presentation. */
+  session: Schema.optional(Schema.String),
 });
 export type Log = Schema.Schema.Type<typeof Log>;
 
@@ -46,22 +36,6 @@ export const fromConfig = (config: unknown): Log | undefined => {
   return result._tag === 'Some' ? result.value : undefined;
 };
 
-/** Seconds spent on each slide across a take (a slide visited twice adds both visits), in order of first visit. */
-export const slideSeconds = (log: Pick<Log, 'sections'>): Map<string, number> => {
-  const totals = new Map<string, number>();
-  for (const { id, start, end } of log.sections) {
-    totals.set(id, (totals.get(id) ?? 0) + (end - start));
-  }
-  return totals;
-};
-
-/** Each slide a take showed, in order of first visit, with its title and the seconds spent on it. */
-export const summarize = (log: Pick<Log, 'sections'>): { id: string; title?: string; seconds: number }[] => {
-  const titles = new Map<string, string>();
-  for (const { id, title } of log.sections) {
-    if (title && !titles.has(id)) {
-      titles.set(id, title);
-    }
-  }
-  return [...slideSeconds(log)].map(([id, seconds]) => ({ id, title: titles.get(id), seconds }));
-};
+/** Takes are named by the time they started, so a name is never reused. */
+export const makeName = (date: Date): string =>
+  `take-${date.toISOString().slice(0, 19).replace(/[-:]/g, '').replace('T', '-')}`;

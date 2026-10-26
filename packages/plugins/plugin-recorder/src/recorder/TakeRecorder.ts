@@ -8,13 +8,17 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 import { log } from '@dxos/log';
 import type * as Presentation from '@dxos/plugin-presenter/Presentation';
 
-import { type RecorderCapabilities, type RecorderSettings, type Take } from '#types';
+import { type RecorderCapabilities, type RecorderSettings, Take } from '#types';
 
 import { PREFERRED_MICROPHONE, audioConstraints, pickDevice } from '../audio/devices.ts';
-import { type SlideMark, Timeline } from '../audio/timeline.ts';
+import { type Segment, Session } from '../audio/session.ts';
+import { extension } from './save-take.ts';
 
 const AUDIO_TYPES = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
 const VIDEO_TYPES = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'];
+
+/** Seconds counted in before recording begins. */
+export const COUNT_IN = 3;
 
 /** MediaRecorder flushes a chunk this often (ms), so a failure loses at most this much. */
 const TIMESLICE = 1000;
@@ -22,26 +26,23 @@ const TIMESLICE = 1000;
 /** The first type this browser records, else its default. */
 const pickMimeType = (types: string[]): string | undefined => types.find((type) => MediaRecorder.isTypeSupported(type));
 
-/** Takes are named by the time they started, so a name is never reused. */
-export const takeName = (date = new Date()): string =>
-  `take-${date.toISOString().slice(0, 19).replace(/[-:]/g, '').replace('T', '-')}`;
-
-export type SaveTake = (props: {
-  presentation: Presentation.Presentation;
-  name: string;
-  data: Blob;
-  log: Take.Log;
-}) => Promise<void>;
+export type SaveTake = (props: { slide: Presentation.Slide; name: string; data: Blob; log: Take.Log }) => Promise<void>;
 
 export type TakeRecorderProps = {
   registry: Registry.AtomRegistry;
   settings: () => RecorderSettings.Settings;
   save: SaveTake;
+  /** A one-slide recording ended because the reader left the slide. */
+  onDone?: (presentation: Presentation.Presentation) => void;
 };
 
+/** A slide's take being recorded: its own MediaRecorder over the shared stream. */
+type Recording = { slide: Presentation.Slide; recorder: MediaRecorder; chunks: Blob[]; startedAt: Date };
+
 /**
- * Records takes: acquires the microphone (and a screen or camera when set), runs a `MediaRecorder` over them, logs
- * the slides shown, and saves the take when it stops. A take that fails to save is kept in memory as pending.
+ * Records a presentation's voice-over split by slide. The inputs open in the click; a 3-2-1 count-in follows; then
+ * each slide shown gets its own `MediaRecorder` over the same stream, so every slide read is a self-contained take of
+ * that slide. A take that fails to save is kept in memory as pending.
  */
 export class TakeRecorder implements RecorderCapabilities.Recorder {
   readonly state = Atom.make<RecorderCapabilities.RecorderState>({ status: 'idle', pending: [] }).pipe(Atom.keepAlive);
@@ -49,25 +50,31 @@ export class TakeRecorder implements RecorderCapabilities.Recorder {
   readonly #registry: Registry.AtomRegistry;
   readonly #settings: () => RecorderSettings.Settings;
   readonly #save: SaveTake;
+  readonly #onDone?: (presentation: Presentation.Presentation) => void;
+  /** Pending takes' slides, kept out of the state atom since they are live objects. */
+  readonly #pendingSlides = new Map<string, Presentation.Slide>();
 
   #context?: AudioContext;
   #analyser?: AnalyserNode;
   #streams: MediaStream[] = [];
-  #recorder?: MediaRecorder;
-  #presentation?: Presentation.Presentation;
-  #timeline = new Timeline();
-  #startedAt = 0;
+  #stream?: MediaStream;
+  #mimeType?: string;
   #device?: string;
   #source: Take.VideoSource = 'none';
-  /** The log of the take being stopped, until its bytes arrive. */
-  #stoppingLog?: Take.Log;
-  /** Pending takes' presentations, kept out of the state atom since they are live objects. */
-  readonly #pendingPresentations = new Map<string, Presentation.Presentation>();
+  #presentation?: Presentation.Presentation;
+  #session = new Session();
+  #sessionId?: string;
+  #startedAt = 0;
+  #countdown?: ReturnType<typeof setInterval>;
+  /** The slide on screen, so the count-in knows where recording begins. */
+  #onScreen?: RecorderCapabilities.SlideMark;
+  #recording?: Recording;
 
-  constructor({ registry, settings, save }: TakeRecorderProps) {
+  constructor({ registry, settings, save, onDone }: TakeRecorderProps) {
     this.#registry = registry;
     this.#settings = settings;
     this.#save = save;
+    this.#onDone = onDone;
   }
 
   get analyser(): AnalyserNode | undefined {
@@ -86,7 +93,7 @@ export class TakeRecorder implements RecorderCapabilities.Recorder {
     return (performance.now() - this.#startedAt) / 1000;
   }
 
-  async start(presentation: Presentation.Presentation): Promise<boolean> {
+  async start({ presentation, slide }: RecorderCapabilities.RecordScope): Promise<boolean> {
     if (this.#current.status !== 'idle') {
       return false;
     }
@@ -96,7 +103,13 @@ export class TakeRecorder implements RecorderCapabilities.Recorder {
     this.#context = context;
     const settings = this.#settings();
     const source = settings.videoSource ?? 'none';
-    this.#update({ status: 'starting', presentationId: presentation.id, source, error: undefined });
+    this.#update({
+      status: 'starting',
+      presentationId: presentation.id,
+      slideId: slide?.id,
+      source,
+      error: undefined,
+    });
 
     try {
       // Screen capture needs the click's activation, so it is requested before the microphone prompt can use it up.
@@ -125,26 +138,16 @@ export class TakeRecorder implements RecorderCapabilities.Recorder {
       await context.resume();
       this.#analyser = analyser;
 
-      const stream = new MediaStream([...(video?.getVideoTracks() ?? []), ...audio.getAudioTracks()]);
-      const mimeType = pickMimeType(video ? VIDEO_TYPES : AUDIO_TYPES);
-      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
-      const chunks: Blob[] = [];
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunks.push(event.data);
-        }
-      };
-      recorder.onstop = () => void this.#finish(new Blob(chunks, { type: recorder.mimeType || mimeType }));
-      // Ending the browser's screen share ends the take.
+      this.#stream = new MediaStream([...(video?.getVideoTracks() ?? []), ...audio.getAudioTracks()]);
+      this.#mimeType = pickMimeType(video ? VIDEO_TYPES : AUDIO_TYPES);
+      // Ending the browser's screen share ends the recording.
       video?.getVideoTracks()[0]?.addEventListener('ended', () => this.stop());
-
-      this.#recorder = recorder;
       this.#presentation = presentation;
       this.#source = source;
-      this.#timeline = new Timeline();
-      recorder.start(TIMESLICE);
-      this.#startedAt = performance.now();
-      this.#update({ status: 'recording', startedAt: this.#startedAt });
+      this.#session = new Session({ slideId: slide?.id });
+      this.#sessionId = crypto.randomUUID();
+      this.#onScreen = undefined;
+      this.#countIn();
       return true;
     } catch (err) {
       log.catch(err);
@@ -152,6 +155,7 @@ export class TakeRecorder implements RecorderCapabilities.Recorder {
       this.#update({
         status: 'idle',
         presentationId: undefined,
+        slideId: undefined,
         slide: undefined,
         error: err instanceof Error ? err.message : String(err),
       });
@@ -159,78 +163,173 @@ export class TakeRecorder implements RecorderCapabilities.Recorder {
     }
   }
 
-  mark(slide: SlideMark): void {
-    const state = this.#current;
-    if (state.status !== 'recording') {
+  /** Counts down from {@link COUNT_IN}, then records from the slide on screen. */
+  #countIn(): void {
+    let count = COUNT_IN;
+    this.#update({ status: 'counting', count });
+    this.#countdown = setInterval(() => {
+      count -= 1;
+      if (count > 0) {
+        this.#update({ count });
+        return;
+      }
+      clearInterval(this.#countdown);
+      this.#countdown = undefined;
+      this.#startedAt = performance.now();
+      this.#update({ status: 'recording', count: undefined, startedAt: this.#startedAt });
+      if (this.#onScreen) {
+        this.#apply(this.#onScreen);
+      }
+    }, 1000);
+  }
+
+  mark(mark: RecorderCapabilities.SlideMark): void {
+    const { status } = this.#current;
+    if (status === 'counting') {
+      this.#onScreen = mark;
+    } else if (status === 'recording') {
+      this.#apply(mark);
+    }
+  }
+
+  #apply(mark: RecorderCapabilities.SlideMark): void {
+    const at = this.#clock();
+    const { closed, opened, done } = this.#session.mark(mark, at);
+    if (closed) {
+      this.#end(closed);
+    }
+    if (opened && mark.slide) {
+      this.#begin(mark.slide);
+    }
+    if (done) {
+      const presentation = this.#presentation;
+      this.#finish();
+      if (presentation) {
+        this.#onDone?.(presentation);
+      }
+    }
+  }
+
+  /** Starts the take of `slide`. */
+  #begin(slide: Presentation.Slide): void {
+    if (!this.#stream) {
       return;
     }
-    this.#timeline.mark(slide, this.#clock());
-    if (state.slide?.id !== slide.id || state.slide.duration !== slide.duration) {
+    const recorder = new MediaRecorder(this.#stream, this.#mimeType ? { mimeType: this.#mimeType } : undefined);
+    const recording: Recording = { slide, recorder, chunks: [], startedAt: new Date() };
+    recorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        recording.chunks.push(event.data);
+      }
+    };
+    recorder.start(TIMESLICE);
+    this.#recording = recording;
+    this.#update({ slide: { id: slide.id, startedAt: performance.now(), duration: slide.duration } });
+  }
+
+  /** Ends the take of the segment's slide and saves it once its bytes are flushed. */
+  #end(segment: Segment): void {
+    const recording = this.#recording;
+    this.#recording = undefined;
+    if (!recording || recording.slide.id !== segment.id) {
+      return;
+    }
+    const takeLog: Take.Log = {
+      duration: segment.end - segment.start,
+      steps: segment.steps,
+      source: this.#source,
+      ...(this.#device ? { device: this.#device } : {}),
+      ...(this.#sessionId ? { session: this.#sessionId } : {}),
+    };
+    const name = Take.makeName(recording.startedAt);
+    recording.recorder.onstop = () =>
+      void this.#store({
+        slide: recording.slide,
+        name,
+        data: new Blob(recording.chunks, { type: recording.recorder.mimeType || this.#mimeType }),
+        log: takeLog,
+      });
+    recording.recorder.stop();
+  }
+
+  async #store(take: { slide: Presentation.Slide; name: string; data: Blob; log: Take.Log }): Promise<void> {
+    try {
+      await this.#save(take);
+    } catch (err) {
+      log.catch(err);
+      this.#pendingSlides.set(take.name, take.slide);
       this.#update({
-        slide: {
-          id: slide.id,
-          startedAt: state.slide?.id === slide.id ? state.slide.startedAt : performance.now(),
-          duration: slide.duration,
-        },
+        pending: [
+          ...this.#current.pending,
+          {
+            id: take.name,
+            name: take.name,
+            slideId: take.slide.id,
+            data: take.data,
+            log: take.log,
+            error: err instanceof Error ? err.message : String(err),
+          },
+        ],
       });
     }
   }
 
   stop(): void {
-    if (this.#current.status !== 'recording' || !this.#recorder) {
-      return;
+    const { status } = this.#current;
+    if (status === 'recording') {
+      const last = this.#session.finish(this.#clock());
+      if (last) {
+        this.#end(last);
+      }
     }
-    this.#stoppingLog = {
-      ...this.#timeline.finish(this.#clock()),
-      source: this.#source,
-      ...(this.#device ? { device: this.#device } : {}),
-    };
-    this.#update({ status: 'saving', slide: undefined });
-    this.#recorder.stop();
+    if (status === 'counting' || status === 'recording') {
+      this.#finish();
+    }
   }
 
-  async #finish(data: Blob): Promise<void> {
-    const presentation = this.#presentation;
-    const takeLog = this.#stoppingLog;
-    this.#release();
-    if (!presentation || !takeLog) {
-      this.#update({ status: 'idle', presentationId: undefined });
-      return;
-    }
+  /** Closes the inputs; a take still flushing keeps its own recorder until it stops. */
+  #finish(): void {
+    clearInterval(this.#countdown);
+    this.#countdown = undefined;
+    // The last take's recorder stops asynchronously; the tracks end after it has flushed.
+    const streams = this.#streams;
+    const context = this.#context;
+    setTimeout(() => {
+      streams.forEach((stream) => stream.getTracks().forEach((track) => track.stop()));
+      void context?.close();
+    }, TIMESLICE);
+    this.#streams = [];
+    this.#context = undefined;
+    this.#analyser = undefined;
+    this.#stream = undefined;
+    this.#presentation = undefined;
+    this.#update({
+      status: 'idle',
+      count: undefined,
+      presentationId: undefined,
+      slideId: undefined,
+      startedAt: undefined,
+      slide: undefined,
+    });
+  }
 
-    const name = takeName(new Date(performance.timeOrigin + this.#startedAt));
-    try {
-      await this.#save({ presentation, name, data, log: takeLog });
-      this.#update({ status: 'idle', presentationId: undefined });
-    } catch (err) {
-      log.catch(err);
-      this.#update({
-        status: 'idle',
-        presentationId: undefined,
-        pending: [
-          ...this.#current.pending,
-          {
-            id: name,
-            name,
-            presentationId: presentation.id,
-            data,
-            log: takeLog,
-            error: err instanceof Error ? err.message : String(err),
-          },
-        ],
-      });
-      this.#pendingPresentations.set(name, presentation);
-    }
+  #release(): void {
+    this.#streams.forEach((stream) => stream.getTracks().forEach((track) => track.stop()));
+    this.#streams = [];
+    void this.#context?.close();
+    this.#context = undefined;
+    this.#analyser = undefined;
+    this.#stream = undefined;
   }
 
   async retry(id: string): Promise<void> {
     const take = this.#current.pending.find((take) => take.id === id);
-    const presentation = this.#pendingPresentations.get(id);
-    if (!take || !presentation) {
+    const slide = this.#pendingSlides.get(id);
+    if (!take || !slide) {
       return;
     }
     try {
-      await this.#save({ presentation, name: take.name, data: take.data, log: take.log });
+      await this.#save({ slide, name: take.name, data: take.data, log: take.log });
       this.discard(id);
     } catch (err) {
       log.catch(err);
@@ -244,32 +343,28 @@ export class TakeRecorder implements RecorderCapabilities.Recorder {
 
   download(id: string): void {
     const take = this.#current.pending.find((take) => take.id === id);
-    if (!take) {
-      return;
+    if (take) {
+      downloadBlob(take.data, `${take.name}.${extension(take.data.type)}`);
     }
-    const url = URL.createObjectURL(take.data);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `${take.name}.${take.data.type.includes('mp4') ? 'mp4' : 'webm'}`;
-    anchor.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   discard(id: string): void {
-    this.#pendingPresentations.delete(id);
+    this.#pendingSlides.delete(id);
     this.#update({ pending: this.#current.pending.filter((take) => take.id !== id) });
   }
-
-  #release(): void {
-    for (const stream of this.#streams) {
-      stream.getTracks().forEach((track) => track.stop());
-    }
-    this.#streams = [];
-    void this.#context?.close();
-    this.#context = undefined;
-    this.#analyser = undefined;
-    this.#recorder = undefined;
-    this.#presentation = undefined;
-    this.#stoppingLog = undefined;
-  }
 }
+
+/** Saves `data` as a file through the browser's download. */
+export const downloadBlob = (data: Blob, name: string): void => {
+  const url = URL.createObjectURL(data);
+  downloadUrl(url, name);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
+
+/** Saves the resource at `url` as a file through the browser's download. */
+export const downloadUrl = (url: string, name: string): void => {
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = name;
+  anchor.click();
+};

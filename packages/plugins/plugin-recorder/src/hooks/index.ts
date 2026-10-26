@@ -5,3 +5,4 @@
 export * from './useInputDevices.ts';
 export * from './useLevel.ts';
 export * from './useMicrophoneTest.ts';
+export * from './useStartRecording.ts';

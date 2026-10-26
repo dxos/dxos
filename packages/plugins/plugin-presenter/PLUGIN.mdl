@@ -55,6 +55,8 @@ type Slide
     notes?: Ref<Text>           # speaker notes for any slide
     image?: Ref<MediaArtifact>  # the image a layout places (cover and image layouts), from plugin-studio
     duration?: number           # desired length in seconds, shown against the time on the slide while presenting
+    takes?: Ref<Variant>[]      # recorded voice-over takes (plugin-recorder), owned by the slide
+    mainTake?: Ref<Variant>     # the take that voices the slide
 ```
 
 ```mdl
@@ -1425,6 +1427,13 @@ decision D-74: `PresentationEventHandler.onStop` fires a task after the presente
   for: user:richburdon
   affects: [PresentedOverlay, F-12.7]
   why: React's StrictMode remounts at once in development, which otherwise stopped a recording the moment it started.
+```
+
+```mdl
+decision D-75: A Slide has an array of takes (plugin-studio Variants, owned by the slide) and a main take, so each slide keeps its own voice-over recordings.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [Slide]
 ```
 
 ---

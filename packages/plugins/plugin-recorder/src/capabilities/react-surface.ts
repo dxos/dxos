@@ -11,7 +11,13 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Presentation from '@dxos/plugin-presenter/Presentation';
 import * as PresenterSurface from '@dxos/plugin-presenter/PresenterSurface';
 
-import { RecordButton, RecorderSettings, RecordingOverlay, RecordingsArticle } from '#containers';
+import {
+  PresentationRecordingsArticle,
+  RecordButton,
+  RecorderSettings,
+  RecordingOverlay,
+  SlideRecordingsArticle,
+} from '#containers';
 import { meta } from '#meta';
 
 import { RECORDINGS_COMPANION } from '../constants.ts';
@@ -32,13 +38,22 @@ export default Capability.makeModule(() =>
         props: ({ data: { subject } }) => ({ subject }),
       }),
       Surface.create({
-        id: 'recordings',
+        id: 'presentationRecordings',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, RECORDINGS_COMPANION),
           AppSurface.companion(AppSurface.Article, Presentation.Presentation),
         ),
-        component: RecordingsArticle,
+        component: PresentationRecordingsArticle,
         props: ({ role, data: { companionTo, attendableId } }) => ({ role, attendableId, presentation: companionTo }),
+      }),
+      Surface.create({
+        id: 'slideRecordings',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, RECORDINGS_COMPANION),
+          AppSurface.companion(AppSurface.Article, Presentation.Slide),
+        ),
+        component: SlideRecordingsArticle,
+        props: ({ role, data: { companionTo, attendableId } }) => ({ role, attendableId, slide: companionTo }),
       }),
       Surface.create({
         id: 'pluginSettings',

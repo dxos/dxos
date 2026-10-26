@@ -11,6 +11,8 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 - A cross-plugin toolbar slot: define a `Role.make(...)` in the host's `types/<X>Surface.ts`, render `<Surface.Surface type={Role} data={{ subject }} />` in the toolbar, and list the role id in the contributor's `AppCapability.surface({ roles })` so the surface activates on demand (`plugin-presenter` `PresenterSurface.Toolbar`).
 - A new plugin needs `pnpm exec dx-plugin gen` (writes the gitignored `src/capabilities/gen/*`) and a `.storybook/` (copy a sibling's; `manager-head.html`/`preview-head.html` are symlinks) before its vitest config loads.
 - `db.query(filter).run()` resolves to the object array, not `{ objects }`.
+- A running Composer dev server does not see a new `#imports` alias in a plugin's `package.json` (restart it) nor new capability modules until `pnpm exec dx-plugin gen` rewrites `src/capabilities/gen/*`; the plugin fails to load with `startupFailureKind: module-error` until both.
+- A list held on an object's own field (not a Collection) gets undo by a Delete/Restore operation pair plus `AppCapability.undoMappings` (kanban's pattern); space `RemoveObjects` only unlinks from Collections.
 
 ## 2026-10-23 — plugin-code-graph (new plugin)
 

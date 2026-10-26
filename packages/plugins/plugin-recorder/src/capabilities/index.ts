@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
@@ -24,6 +25,9 @@ export const Recorder = Capability.lazyModule(
   },
   () => import('./recorder.ts'),
 );
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
+  activatesOn: ActivationEvents.Idle,
+});
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.plugin.presenter.role.toolbar', 'org.dxos.plugin.presenter.role.overlay', 'org.dxos.role.article'],
 });
@@ -31,6 +35,7 @@ export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const Settings = AppCapability.settings(() => import('./settings.ts'), {
   provides: [RecorderCapabilities.Settings],
 });
+export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mappings.ts'));
 export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,

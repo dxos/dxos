@@ -73,25 +73,26 @@ slide's notes comment.
 
 ## plugin-recorder
 
-### Model
+### Model (decision 13)
 
 ```
-Presentation (plugin-presenter)
-      ▲ presentation
-      │
-Recording ── audio? ──► MediaArtifact{kind:'audio'}   (owned; variants = audio takes)
-          └─ video? ──► MediaArtifact{kind:'video'}   (owned; variants = video takes)
+Presentation
+  slides: Slide[]
+    takes?: Ref<Variant>[]     (owned, oldest first; one per read of the slide)
+    mainTake?: Ref<Variant>    (the read used when the voice-over plays or is exported)
 
-Variant (one per take): contentType audio/webm | video/webm, content Ref<File>,
-  config: { sections: [{ slide, title, start, end }], steps: [{ slide, step, at }], duration, device, source }
+Variant (a take): contentType audio/webm | video/webm, content Ref<File> (owned),
+  config: { duration, steps: [{ step, at }], device, source, session }
 ```
 
-- **`Recording`** (`org.dxos.type.recording`): `{ name?, presentation: Ref<Presentation>, audio?:
-Ref<MediaArtifact>, video?: Ref<MediaArtifact> }`. Created on the first take of a presentation; later takes
-  reuse the most recently created Recording for that presentation.
-- A take is a studio `Variant`; its timeline rides in `Variant.config`. Times are seconds on the take's own
-  clock. A section is a slide, logged by Slide id.
-- **plugin-studio change**: a default `audio/*` `VariantRenderer`.
+- A take is a plugin-studio `Variant` owned by its slide. No Recording or per-kind artifact: the slide is the home.
+- A recording across the presentation runs one `MediaRecorder` per slide over the same input stream, so every slide
+  read is a self-contained take of that slide (`session` ties the takes of one recording together).
+- A new take becomes the slide's main take; the user can select another.
+- Deleting a take is the `DeleteTake` operation, undone by `RestoreTake` (an undo mapping), which re-adds the take
+  and its file and restores its place and main mark.
+- The voice-over download decodes each main take and writes one WAV (compressed takes cannot be joined without
+  decoding); a video voice-over waits for phase 2's ffmpeg.
 
 ### Settings
 
@@ -100,32 +101,27 @@ surface lists the devices and has a Test microphone control with the level meter
 
 ### Flow
 
-1. The Record button (in `PresenterSurface.Toolbar`) is clicked. Inside the click: create the `AudioContext`,
-   `getUserMedia` (the chosen mic, processing off), and `getDisplayMedia` or the camera when a video source is
-   set.
-2. The recorder service starts the `MediaRecorder` and asks the presenter to present from the first slide.
-3. `onSlide` closes the previous section and opens the next. The overlay (`PresenterSurface.Overlay`) shows
-   REC, the elapsed time and the level meter, with NO SIGNAL / CLIP warnings.
-4. `onStop` (Escape, or the deck ends) stops the recorder. The take is saved: the bytes become a `File` via
-   `FileOperation.Create`, a `Variant` (named by timestamp) is appended to the Recording's artifact and made
-   its cover.
-5. If saving fails, the take stays in memory and the overlay/toolbar offers Retry and Save file.
-
-The recorder service is a capability (not a component), because the toolbar unmounts while the deck is
-presented.
+1. Record (the presenter toolbar, the presentation companion, or a slide companion) is clicked. Inside the click:
+   the `AudioContext`, the microphone (processing off), and the screen or camera when set.
+2. The deck presents from the first slide (or the recorded slide) and a 3-2-1 count-in shows over it.
+3. Recording begins on the slide on screen. Each slide change ends that slide's take and begins the next one's; a
+   one-slide recording ends when the reader leaves the slide, and the presentation closes.
+4. Escape (or the end of a one-slide recording) ends the last take. Each take is saved as it ends: a `File` via
+   `FileOperation.Create`, a `Variant` appended to the slide's `takes` and made main.
+5. A take that fails to save stays in memory with Save again, Download and Discard.
 
 ### Components
 
-| Component                      | Role                                                                                         |
-| ------------------------------ | -------------------------------------------------------------------------------------------- |
-| `LevelMeter`                   | Peak bar, peak-hold marker, dB readout, CLIP, NO SIGNAL. Pure props.                         |
-| `RecordButton` (container)     | The toolbar item.                                                                            |
-| `RecordingOverlay` (container) | REC indicator, time, meter while presenting.                                                 |
-| `RecorderSettings` (container) | Device pickers, video source, Test microphone.                                               |
-| `RecordingArticle` (container) | A Recording's takes: play each, and each slide's recorded length against its desired length. |
-
-Pure logic, tested without a browser: dB math and the silence detector (`level.ts`), the take timeline
-(`timeline.ts`: sections from slide events), device preference (`devices.ts`).
+| Component                                   | Role                                                                                                |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `LevelMeter`                                | Peak bar, peak-hold marker; a readout, or (compact) only the NO SIGNAL / CLIP warnings. Pure props. |
+| `TakeList`                                  | A slide's takes: name, length against the desired length, main mark, actions, inline player.        |
+| `SlideTakesList`                            | The voice-over slide by slide: each slide's main take length against its desired length.            |
+| `RecordButton` (container)                  | The presenter toolbar item: records the whole presentation.                                         |
+| `RecordingOverlay` (container)              | The count-in, then REC, time, time left on the slide, compact meter.                                |
+| `SlideRecordingsArticle` (container)        | A slide's companion: toolbar Record; takes with Play, Select, Download, Delete.                     |
+| `PresentationRecordingsArticle` (container) | The presentation's companion: toolbar Record, Play, Download; the slides.                           |
+| `RecorderSettings` (container)              | Device pickers, video source, Test microphone.                                                      |
 
 ### Picture sources (decision 3)
 
@@ -133,7 +129,7 @@ The deck is the only source in phase 1. The take timeline is source-neutral (sec
 the take clock), so a later `PictureSource` capability (an autocue video with gated playback, a canvas
 animation) logs the same shape.
 
-## Per-slide takes (proposal, 10-26)
+## Per-slide takes (superseded by decisions 13-14)
 
 The user asked how to record and re-record individual slides. Proposal: **comping**, as in audio editing — the
 voice-over is assembled from the best read of each slide, wherever it came from.

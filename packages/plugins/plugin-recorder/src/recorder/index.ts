@@ -3,5 +3,5 @@
 //
 
 export * from './save-take.ts';
+export * from './take-media.ts';
 export * from './TakeRecorder.ts';
-export * from './delete-take.ts';
