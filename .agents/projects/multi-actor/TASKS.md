@@ -27,9 +27,10 @@ Sixteen actors build the template's ECHO design document from its outline; plan 
 
 - [x] **Target document** — `ECHO design` in the DXOS Architecture template: eight chapters, three new ECHO diagrams (`echo-model`, `echo-sync`, `echo-query`) and an `ECHO benchmarks` sheet; template tests updated.
 - [x] **Construction plan** — `ECHO-SCENE.md`: outline derived from the target, 16-actor roster, timeline, harness work.
-- [ ] **Review** — the user reviews the document and plan.
-- [ ] **Harness surfaces** — canvas (`CanvasOperation.Apply`), sheet (`SheetOperation.SetValues`), chat (scripted model), object and cell comments, chapter scroll.
-- [ ] **outline/steps from the target** — and a test that playing the steps on the outline reproduces it.
+- [x] **Review** — approved; scripted assistant.
+- [x] **Harness surfaces** — any subject by name; canvas records, sheet cells, scripted chat (`ask`), CRDT edits (`edit`), object and cell-range comments, `pin(heading)`; seed with client, flow types and plugins.
+- [x] **outline/steps from the target** — `testing/flows/echo.ts`: seeds the template's own ECHO builders, strips to the outline, steps generated from the target blocks.
+- [ ] **Verify end to end** — `probe-scene.mjs` steps the scene; all 16 join in ~96s, stepping costs ~20-30s per scene second at 8K.
 - [ ] **Record** — 8K wall, 16 clips, Grid zoom-out.
 
 ## Phase 2: Other articles

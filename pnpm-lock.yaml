@@ -21721,6 +21721,15 @@ importers:
       '@codemirror/view':
         specifier: 'catalog:'
         version: 6.43.13
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
+      '@dxos/compute-hyperformula':
+        specifier: workspace:*
+        version: link:../../core/compute/compute-hyperformula
+      '@dxos/echo-doc':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-doc
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
@@ -21742,15 +21751,27 @@ importers:
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../../plugins/plugin-markdown
+      '@dxos/plugin-presenter':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-presenter
+      '@dxos/plugin-preview':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-preview
       '@dxos/plugin-review':
         specifier: workspace:*
         version: link:../../plugins/plugin-review
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../../plugins/plugin-routine
+      '@dxos/plugin-sheet':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-sheet
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../../plugins/plugin-space
+      '@dxos/plugin-tasks':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-tasks
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../../plugins/plugin-testing

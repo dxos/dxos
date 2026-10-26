@@ -10,8 +10,9 @@ import { translations as reviewTranslations } from '@dxos/plugin-review/translat
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { ActorArticle, type ActorStoryArgs, withActors } from '../testing/actors/index.ts';
-import { markdownFlow } from './flows/markdown.ts';
-import { teamFlow } from './flows/team.ts';
+import { echoFlow } from '../testing/flows/echo.ts';
+import { markdownFlow } from '../testing/flows/markdown.ts';
+import { teamFlow } from '../testing/flows/team.ts';
 
 const meta = {
   title: 'stories/stories-agent/Collaboration',
@@ -81,4 +82,52 @@ export const TestMarkdown: Story = {
 export const Team: Story = {
   decorators: [withActors({ flow: teamFlow, bars: false })],
   tags: ['!test'],
+};
+
+/**
+ * Sixteen actors build the ECHO design document of the DXOS Architecture template from its outline: writers,
+ * canvas builders, a sheet filler, reviewers and assistant users (plan: `.agents/projects/multi-actor/ECHO-SCENE.md`).
+ * No name bars: rendered at four times 1920x1080 and cut into one clip per actor for the autocue Grid.
+ */
+export const Echo: Story = {
+  decorators: [withActors({ flow: echoFlow, bars: false })],
+  tags: ['!test'],
+};
+
+/**
+ * The ECHO scene stepped to its end: every writer's view converges on the finished document, drafts edited away.
+ * Out of the CI run (sixteen clients take minutes to step through); `tools/autocue/showcase/probe-scene.mjs` runs it.
+ */
+export const TestEcho: Story = {
+  decorators: [withActors({ flow: echoFlow, bars: false })],
+  args: { stepped: true },
+  tags: ['!test'],
+  play: async () => {
+    await waitFor(
+      async () => {
+        // The scene's state in the failure message, so a stall says which actors never mounted.
+        const { phase, registered, progress, errors } = window.actorScene?.status ?? {};
+        await expect(window.grid, JSON.stringify({ phase, registered, progress, errors })).toBeDefined();
+      },
+      { timeout: 240_000 },
+    );
+    const grid = window.grid;
+    for (let ms = 0; grid && ms <= grid.total; ms += 1_000) {
+      await grid.seek(ms);
+    }
+    await waitFor(
+      async () => {
+        const status = window.actorScene?.status;
+        await expect(status?.errors).toEqual([]);
+        const texts = status?.texts ?? [];
+        await expect(texts).toHaveLength(9);
+        for (const text of texts) {
+          await expect(text).toBe(texts[0]);
+        }
+        await expect(texts[0]).toContain('is a chain of signed credentials rooted in the identity that created it');
+        await expect(texts[0]).toContain('Open questions:');
+      },
+      { timeout: 15_000 },
+    );
+  },
 };

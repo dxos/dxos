@@ -3,6 +3,7 @@
 //
 
 import { create } from '@bufbuild/protobuf';
+import { type EditorView } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -13,7 +14,6 @@ import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { Actor, type ActorBinding } from './actor.ts';
@@ -25,7 +25,7 @@ declare global {
     // The seek contract `tools/autocue/showcase/render.mjs` drives (shared with the autocue Grid).
     grid?: { total: number; seek: (ms: number) => Promise<void> };
     /** The running scene, for inspecting a recording from the console. */
-    actorScene?: Scene;
+    actorScene?: SceneView;
   }
 }
 
@@ -33,17 +33,41 @@ export type ScenePhase = 'joining' | 'ready' | 'playing' | 'done';
 
 export type SceneMode = 'realtime' | 'stepped';
 
+/** What an actor's view needs of its scene, whatever the scene builds towards. */
+export type SceneView = {
+  readonly phase: ScenePhase;
+  readonly spaceId: SpaceId | undefined;
+  /** The name of the document the writers edit. */
+  readonly documentName: string;
+  subscribe: (listener: () => void) => () => void;
+  register: (index: number, binding: ActorBinding) => void;
+  /** For the console and tests: each actor's client, document editor, and a snapshot of the scene. */
+  readonly clients: Client[];
+  readonly views: (EditorView | undefined)[];
+  readonly progress: Record<number, string>;
+  readonly status: {
+    phase: ScenePhase;
+    now: number;
+    registered: number[];
+    progress: Record<number, string>;
+    errors: string[];
+    texts: string[];
+  };
+};
+
 const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
 /**
  * One scripted scene: a client per actor on an in-memory network, a space the first actor creates and
  * the rest join by invitation, and the flow that runs once every actor's article is mounted.
  */
-export class Scene {
+export class Scene<T = unknown> implements SceneView {
   readonly clock = new VirtualClock();
   readonly services;
   /** Each actor's client once it has joined, for inspecting the scene from the console. */
   readonly clients: Client[] = [];
+  /** Where each actor's view is in mounting, for diagnosing a scene that never starts. */
+  readonly progress: Record<number, string> = {};
   /** Steps that failed, as `actor › step: error`. */
   readonly errors: string[] = [];
 
@@ -53,12 +77,14 @@ export class Scene {
   #phase: ScenePhase = 'joining';
   #listeners = new Set<() => void>();
   #disposed = false;
+  /** What the flow's `seed` returned, handed to every step. */
+  #target?: { value: T };
   #playing = false;
   /** The seek contract handed to the frame renderer in stepped mode. */
   readonly #seeker: NonNullable<Window['grid']>;
 
   constructor(
-    readonly flow: ActorFlow,
+    readonly flow: ActorFlow<T>,
     readonly mode: SceneMode,
   ) {
     const builder = new TestBuilder();
@@ -85,13 +111,18 @@ export class Scene {
       phase: this.#phase,
       now: Math.round(this.clock.now),
       registered: [...this.#bindings.keys()],
+      progress: this.progress,
       errors: this.errors,
-      texts: [...this.#bindings.values()].map((binding) => binding.view.state.doc.toString()),
+      texts: this.#texts(),
     };
   }
 
   get phase(): ScenePhase {
     return this.#phase;
+  }
+
+  get documentName(): string {
+    return this.flow.document.name;
   }
 
   get spaceId(): SpaceId | undefined {
@@ -122,6 +153,10 @@ export class Scene {
           ),
         );
       }
+      // The flow's schemas before anything creates objects of them; the client registers its configured types later.
+      if (scene.flow.types?.length) {
+        yield* Effect.promise(() => client.addTypes([...(scene.flow.types ?? [])]));
+      }
       if (!AppSpace.getSettingsSpace(client)) {
         yield* AppSpace.setupIdentitySpaces(client);
       }
@@ -129,7 +164,10 @@ export class Scene {
       if (index === 0) {
         const space = yield* Effect.promise(() => client.spaces.create({ name: scene.flow.document.name }));
         yield* Effect.promise(() => space.waitUntilReady());
-        space.db.add(Markdown.make(scene.flow.document));
+        const seeded = yield* Effect.tryPromise(() => scene.flow.seed({ client, space })).pipe(
+          Effect.tapError((error) => Effect.sync(() => scene.errors.push(`seed: ${String(error.cause ?? error)}`))),
+        );
+        scene.#target = { value: seeded };
         yield* Effect.promise(() => space.db.flush({ indexes: true }));
         scene.#setSpace(space.id);
         scene.#hostSpace.wake(space);
@@ -142,13 +180,13 @@ export class Scene {
   };
 
   /** Called by each actor's article once its editor is mounted; the flow starts when all are. */
-  register(index: number, binding: ActorBinding) {
+  register = (index: number, binding: ActorBinding) => {
     this.#bindings.set(index, binding);
     if (this.#phase === 'joining' && this.#bindings.size === this.flow.actors.length) {
       this.#setPhase('ready');
       void this.#start();
     }
-  }
+  };
 
   /** Attaches the scene to the page; React may detach and re-attach it, so playback resumes here. */
   open() {
@@ -175,7 +213,9 @@ export class Scene {
       invariant(binding, `actor ${index} has no editor`);
       return new Actor(index, spec, this.clock, binding);
     });
-    void runFlow(this.flow, actors, this.clock, ({ actor, step, error }) => {
+    const target = this.#target;
+    invariant(target, 'the scene started before its space was seeded');
+    void runFlow(this.flow, target.value, actors, this.clock, ({ actor, step, error }) => {
       this.errors.push(`${actor} › ${step}: ${String(error)}`);
     }).then(() => this.#setPhase('done'));
     this.#setPhase('playing');
@@ -216,13 +256,18 @@ export class Scene {
   async #replicated(timeout = 3_000) {
     const start = performance.now();
     while (performance.now() - start < timeout) {
-      const texts = [...this.#bindings.values()].map((binding) => binding.view.state.doc.toString());
+      const texts = this.#texts();
       if (texts.every((text) => text === texts[0])) {
         return;
       }
       await new Promise((resolve) => setTimeout(resolve, 10));
     }
     log.warn('actors did not converge before the frame');
+  }
+
+  /** Every document editor's text, in actor order. */
+  #texts(): string[] {
+    return [...this.#bindings.values()].flatMap((binding) => (binding.view ? [binding.view.state.doc.toString()] : []));
   }
 
   #setSpace(spaceId: SpaceId) {

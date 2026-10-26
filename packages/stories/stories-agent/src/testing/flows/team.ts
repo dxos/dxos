@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ActorFlow, type ActorSpec, type ActorStep } from '../../testing/actors/index.ts';
+import { type ActorFlow, type ActorSpec, type ActorStep, seedDocument } from '../actors/index.ts';
 
 type Section = {
   heading: string;
@@ -162,7 +162,7 @@ const REVIEWS: { reviewer: number; start: number; comments: { phrase: string; te
 
 const content = ['# Launch plan', ...SECTIONS.map(({ heading }) => `## ${heading}\n\n`)].join('\n\n');
 
-const writing = (): ActorStep[] =>
+const writing = (): ActorStep<void>[] =>
   SECTIONS.map(({ heading, writer, start, sentences, pauses }) => ({
     actor: writer,
     name: heading,
@@ -176,7 +176,7 @@ const writing = (): ActorStep[] =>
     },
   }));
 
-const editing = (): ActorStep[] =>
+const editing = (): ActorStep<void>[] =>
   CORRECTIONS.map(({ editor, start, fixes }) => ({
     actor: editor,
     name: 'Corrections',
@@ -190,7 +190,7 @@ const editing = (): ActorStep[] =>
     },
   }));
 
-const reviewing = (): ActorStep[] =>
+const reviewing = (): ActorStep<void>[] =>
   REVIEWS.map(({ reviewer, start, comments }) => ({
     actor: reviewer,
     name: 'Review',
@@ -205,7 +205,7 @@ const reviewing = (): ActorStep[] =>
   }));
 
 /** Each writer answers the comments on their section after they finish writing it. */
-const answering = (): ActorStep[] =>
+const answering = (): ActorStep<void>[] =>
   REVIEWS.flatMap(({ comments }) =>
     comments.flatMap(({ phrase, answer }) => {
       const section = SECTIONS.find(({ sentences }) => sentences.some((sentence) => sentence.includes(phrase)));
@@ -228,9 +228,10 @@ const answering = (): ActorStep[] =>
  * Sixteen people on one new launch plan: eight writers (one section each), four copy editors, four reviewers whose
  * comment threads the writers answer.
  */
-export const teamFlow: ActorFlow = {
+export const teamFlow: ActorFlow<void> = {
   actors: ACTORS,
-  document: { name: 'Launch plan', content },
+  document: { name: 'Launch plan' },
+  seed: seedDocument({ name: 'Launch plan', content }),
   duration: 48_000,
   steps: [...writing(), ...editing(), ...reviewing(), ...answering()],
 };

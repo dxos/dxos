@@ -78,8 +78,8 @@ export const commentSync = (
   const { registry, stateAtom } = store;
   const objectId = Obj.getURI(doc);
   const query = db.query(Query.select(Filter.id(doc.id)).targetOf(AnchoredTo.AnchoredTo));
-  // A replicated anchor can arrive before its thread; `getAnchors` skips it until the thread resolves,
-  // and the anchor query does not notify again when it does, so thread arrivals re-read the anchors.
+  // A replicated anchor can arrive before its thread; `getAnchors` skips it until the thread resolves, and the
+  // anchor query does not notify again when it does, so a thread arrival that resolves one re-reads the anchors.
   const threads = db.query(Filter.type(Thread.Thread));
 
   // TODO(burdon): Externalize ECHO?
@@ -166,7 +166,16 @@ export const commentSync = (
         });
         // After subscribing: a query exposes `results` only while it has a subscriber.
         watchAnchors();
-        const unsubThreads = threads.subscribe(sink);
+        // Only when a thread's arrival changes which anchors resolve: every other thread change (each message the
+        // agent posts) re-reading the comments resets the editor's comment state mid-conversation.
+        let resolved = getAnchors().length;
+        const unsubThreads = threads.subscribe(() => {
+          const count = getAnchors().length;
+          if (count !== resolved) {
+            resolved = count;
+            sink();
+          }
+        });
         const unsubStore = registry.subscribe(stateAtom, sink);
         return () => {
           unsubAnchors.forEach((unsubscribe) => unsubscribe());

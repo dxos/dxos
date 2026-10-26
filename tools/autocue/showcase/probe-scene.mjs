@@ -1,0 +1,80 @@
+#!/usr/bin/env node
+//
+// Copyright 2026 DXOS.org
+//
+
+/**
+ * Opens a stepped actor-scene story headless and reports how its scene gets on: who has joined, every few seconds,
+ * then how long each seek takes as it steps to the end, then the final status. For finding where a scene stalls
+ * before committing to a frame-by-frame render.
+ *
+ *   node probe-scene.mjs --story stories-stories-agent-collaboration--echo [--step 1000] [--width 1920 --height 1080]
+ */
+
+import { chromium } from '@playwright/test';
+import { parseArgs } from 'node:util';
+
+const { values } = parseArgs({
+  options: {
+    story: { type: 'string' },
+    url: { type: 'string', default: 'http://localhost:9009' },
+    step: { type: 'string', default: '1000' },
+    width: { type: 'string', default: '1920' },
+    height: { type: 'string', default: '1080' },
+  },
+});
+
+const url = `${values.url}/iframe.html?${new URLSearchParams({ id: values.story, viewMode: 'story', args: 'stepped:!true' })}`;
+const browser = await chromium.launch({ headless: true, channel: 'chromium' });
+const page = await browser.newPage({ viewport: { width: Number(values.width), height: Number(values.height) } });
+const started = Date.now();
+const elapsed = () => `${((Date.now() - started) / 1_000).toFixed(0)}s`;
+await page.goto(url);
+
+const status = () =>
+  page.evaluate(() => {
+    const status = window.actorScene?.status;
+    return (
+      status && {
+        phase: status.phase,
+        now: status.now,
+        registered: status.registered.length,
+        progress: status.progress,
+        errors: status.errors,
+      }
+    );
+  });
+
+for (;;) {
+  const ready = await page.evaluate(() => window.grid !== undefined);
+  if (ready) {
+    break;
+  }
+  console.log(elapsed(), JSON.stringify(await status()));
+  await page.waitForTimeout(5_000);
+}
+
+const total = await page.evaluate(() => window.grid.total);
+console.log(elapsed(), `joined; stepping ${total}ms`);
+for (let ms = 0; ms <= total; ms += Number(values.step)) {
+  const before = Date.now();
+  await page.evaluate((ms) => window.grid.seek(ms), ms);
+  const took = Date.now() - before;
+  if (ms % 10_000 === 0) {
+    const { errors = [] } = (await status()) ?? {};
+    console.log(elapsed(), `seek ${ms} took ${took}ms`, errors.length ? JSON.stringify(errors) : '');
+  }
+}
+const final = await page.evaluate(() => {
+  const status = window.actorScene?.status;
+  return (
+    status && {
+      errors: status.errors,
+      converged: status.texts.every((text) => text === status.texts[0]),
+      text: status.texts[0],
+    }
+  );
+});
+console.log(elapsed(), JSON.stringify({ errors: final?.errors, converged: final?.converged }));
+console.log(final?.text);
+await browser.close();

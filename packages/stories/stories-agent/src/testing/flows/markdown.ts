@@ -2,24 +2,22 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ActorFlow } from '../../testing/actors/index.ts';
+import { type ActorFlow, seedDocument } from '../actors/index.ts';
 
 /**
  * Four people on one new document. Ada and Ben write their own sections, starting and stopping seconds apart so
  * their typing overlaps only in part; Cleo copy edits the typos they leave; Dev reads along, highlighting phrases and
  * opening comment threads, which Ben answers once his section is done.
  */
-export const markdownFlow: ActorFlow = {
+export const markdownFlow: ActorFlow<void> = {
   actors: [
     { name: 'Ada', hue: 'blue', role: 'Writing the overview' },
     { name: 'Ben', hue: 'amber', role: 'Writing the timeline', companions: ['comments'] },
     { name: 'Cleo', hue: 'emerald', role: 'Copy editing' },
     { name: 'Dev', hue: 'rose', role: 'Reviewing', companions: ['comments'] },
   ],
-  document: {
-    name: 'Launch notes',
-    content: '# Launch notes\n\n## Overview\n\n\n\n## Timeline\n\n',
-  },
+  document: { name: 'Launch notes' },
+  seed: seedDocument({ name: 'Launch notes', content: '# Launch notes\n\n## Overview\n\n\n\n## Timeline\n\n' }),
   duration: 46_000,
   steps: [
     {
