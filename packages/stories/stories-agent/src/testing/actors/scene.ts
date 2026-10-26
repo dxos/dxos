@@ -11,7 +11,7 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
-import { InvitationEncoder, Invitation_AuthMethod, Invitation_State } from '@dxos/client/invitations';
+import { Invitation_AuthMethod, Invitation_State, InvitationEncoder } from '@dxos/client/invitations';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';

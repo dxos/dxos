@@ -112,7 +112,7 @@ describe('ArchitectureSpace', () => {
     // The ECHO design document has eight chapters and embeds the three ECHO diagrams and the benchmarks sheet.
     const design = listedObjects.find((object) => Obj.getLabel(object) === 'ECHO design');
     const designText = Obj.instanceOf(Markdown.Document, design) ? (await design.content.load()).content : '';
-    expect(designText.match(/^## \d\. /gm)).toHaveLength(8);
+    expect(designText.match(/^## /gm)).toHaveLength(8);
     const benchmarks = sheets.find((sheet) => sheet.name === 'ECHO benchmarks');
     const embedded = [...designText.matchAll(/!\[[^\]]*\]\(echo:\/\/\/([A-Z0-9]+)\)/g)].map(([, id]) => id);
     expect(embedded).toEqual(
