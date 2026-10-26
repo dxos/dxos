@@ -101,7 +101,11 @@ const burst = async (space: Space, queries: readonly Query.Any[], awaited: numbe
     // Polled: an answer that leaves the result unchanged (an empty one, say) emits no event.
     await asyncTimeout(
       (async () => {
-        while (watched.some((result) => result.sources.some((source) => source.state === 'pending'))) {
+        while (watched.some((result) => result.sources.some((source) => source.state !== 'answered'))) {
+          // A failed source never answers, and timing it as if it had would report a wait that never ended.
+          if (watched.some((result) => result.sources.some((source) => source.state === 'failed'))) {
+            throw new Error('a query source failed during the burst');
+          }
           await sleep(ANSWER_POLL_MS);
         }
       })(),

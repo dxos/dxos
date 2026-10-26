@@ -556,11 +556,13 @@ export const anonymizeSpaceArchiveFiles = (anonymizer: Anonymizer, files: Archiv
   const feedsPrefix = `${SpaceArchiveFileStructure.feeds}/`;
 
   return files.flatMap((file): ArchiveFile[] => {
-    if (file.path === SpaceArchiveFileStructure.metadata) {
-      // The exporter's DID names a real identity; everything else in the metadata is structural.
-      const anonymized = metadata?.exportedBy
-        ? { ...anonymizer.keep(metadata), exportedBy: anonymizer.string(metadata.exportedBy) }
-        : anonymizer.keep(metadata);
+    if (file.path === SpaceArchiveFileStructure.metadata && metadata) {
+      // The exporter's DID names a real identity; it stays out of `keep` so the residue scan still checks it.
+      const { exportedBy, ...structural } = metadata;
+      const anonymized = {
+        ...anonymizer.keep(structural),
+        ...(exportedBy && { exportedBy: anonymizer.string(exportedBy) }),
+      };
       return [{ path: file.path, content: encoder.encode(JSON.stringify(anonymized)) }];
     }
     if (file.path.startsWith(documentsPrefix) && file.path.endsWith('.bin')) {
