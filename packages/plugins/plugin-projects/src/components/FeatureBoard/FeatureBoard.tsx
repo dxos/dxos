@@ -28,8 +28,80 @@ import {
 
 const STATUSES: FeatureStatus[] = ['failing', 'planned', 'in-progress', 'prototype', 'operational'];
 
+/** Which cards the board shows: those matching the text, in any pressed status (none pressed shows every status). */
+export type FeatureFilter = {
+  query: string;
+  statuses: ReadonlySet<FeatureStatus>;
+};
+
+export const EMPTY_FEATURE_FILTER: FeatureFilter = { query: '', statuses: new Set() };
+
+/** The features a filter keeps, matching its text against the name and description. */
+export const filterFeatures = (features: readonly FeatureModel[], { query, statuses }: FeatureFilter) => {
+  const text = query.trim().toLowerCase();
+  return features.filter(
+    (feature) =>
+      (statuses.size === 0 || statuses.has(feature.status)) &&
+      (!text || `${feature.name} ${feature.description ?? ''}`.toLowerCase().includes(text)),
+  );
+};
+
+export type FeatureBoardFilterProps = {
+  features: readonly FeatureModel[];
+  value: FeatureFilter;
+  onValueChange: (value: FeatureFilter) => void;
+};
+
+/**
+ * The board's filter field and a toggle per status, rendered without a container so a host can place them in its own
+ * row or toolbar. The status counts are the toggles, so each says how many cards it adds.
+ */
+export const FeatureBoardFilter = ({ features, value, onValueChange }: FeatureBoardFilterProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const toggleStatus = (status: FeatureStatus, pressed: boolean) => {
+    const statuses = new Set(value.statuses);
+    if (pressed) {
+      statuses.add(status);
+    } else {
+      statuses.delete(status);
+    }
+    onValueChange({ ...value, statuses });
+  };
+
+  return (
+    <>
+      <Input.Root
+        placeholder={t('feature-board.filter.placeholder')}
+        aria-label={t('feature-board.filter.placeholder')}
+        value={value.query}
+        classNames='max-w-64'
+        data-testid='feature-board.filter'
+        onChange={(event) => onValueChange({ ...value, query: event.target.value })}
+      />
+      {STATUSES.map((status) => {
+        const count = features.filter((feature) => feature.status === status).length;
+        return (
+          count > 0 && (
+            <Button.Toggle
+              key={status}
+              variant='ghost'
+              icon={FEATURE_STATUS_STYLE[status].icon}
+              label={t('feature-board.status-count.label', { count, status: t(`feature-status.${status}.label`) })}
+              pressed={value.statuses.has(status)}
+              onPressedChange={(pressed) => toggleStatus(status, pressed)}
+              data-testid={`feature-board.status.${status}`}
+            />
+          )
+        );
+      })}
+    </>
+  );
+};
+
 export type FeatureBoardProps = {
   features: readonly FeatureModel[];
+  /** Controlled filter, for a host that shows {@link FeatureBoardFilter} itself; the board then renders none. */
+  filter?: FeatureFilter;
   /** Controlled selection; uncontrolled when omitted. */
   selectedId?: string;
   /** The card selected when the board opens, as for a link to one feature; the user can then select others. */
@@ -109,6 +181,7 @@ const FeatureTile = ({ data: feature }: { data: FeatureModel }) => {
  */
 export const FeatureBoard = ({
   features,
+  filter: filterProp,
   selectedId: selectedIdProp,
   defaultSelectedId,
   onSelect,
@@ -118,31 +191,12 @@ export const FeatureBoard = ({
   editingId,
   onEditingChange,
 }: FeatureBoardProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
   const [selectedIdState, setSelectedIdState] = useState<string | undefined>(defaultSelectedId);
   const selectedId = selectedIdProp ?? selectedIdState;
   const lookup = useMemo(() => makeFeatureLookup(features), [features]);
-  const [query, setQuery] = useState('');
-  // No status pressed shows every status.
-  const [statuses, setStatuses] = useState<ReadonlySet<FeatureStatus>>(new Set());
-  const toggleStatus = (status: FeatureStatus, pressed: boolean) =>
-    setStatuses((current) => {
-      const next = new Set(current);
-      if (pressed) {
-        next.add(status);
-      } else {
-        next.delete(status);
-      }
-      return next;
-    });
-  const shown = useMemo(() => {
-    const text = query.trim().toLowerCase();
-    return features.filter(
-      (feature) =>
-        (statuses.size === 0 || statuses.has(feature.status)) &&
-        (!text || `${feature.name} ${feature.description ?? ''}`.toLowerCase().includes(text)),
-    );
-  }, [features, query, statuses]);
+  const [filterState, setFilterState] = useState<FeatureFilter>(EMPTY_FEATURE_FILTER);
+  const filter = filterProp ?? filterState;
+  const shown = useMemo(() => filterFeatures(features, filter), [features, filter]);
 
   const handleSelect = (id: string | undefined) => {
     setSelectedIdState(id);
@@ -163,33 +217,11 @@ export const FeatureBoard = ({
 
   return (
     <Layout.Flex column gap='md' classNames='p-3 w-full' data-testid='feature-board'>
-      {/* The status counts are the filter's toggles, so each says how many cards it adds. */}
-      <Layout.Flex wrap gap='xs' classNames='items-center'>
-        <Input.Root
-          placeholder={t('feature-board.filter.placeholder')}
-          aria-label={t('feature-board.filter.placeholder')}
-          value={query}
-          classNames='max-w-64'
-          data-testid='feature-board.filter'
-          onChange={(event) => setQuery(event.target.value)}
-        />
-        {STATUSES.map((status) => {
-          const count = features.filter((feature) => feature.status === status).length;
-          return (
-            count > 0 && (
-              <Button.Toggle
-                key={status}
-                variant='ghost'
-                icon={FEATURE_STATUS_STYLE[status].icon}
-                label={t('feature-board.status-count.label', { count, status: t(`feature-status.${status}.label`) })}
-                pressed={statuses.has(status)}
-                onPressedChange={(pressed) => toggleStatus(status, pressed)}
-                data-testid={`feature-board.status.${status}`}
-              />
-            )
-          );
-        })}
-      </Layout.Flex>
+      {!filterProp && (
+        <Layout.Flex wrap gap='xs' classNames='items-center'>
+          <FeatureBoardFilter features={features} value={filterState} onValueChange={setFilterState} />
+        </Layout.Flex>
+      )}
       {/* The host scrolls the counts and the cards together, so the grid takes no scroll container of its own. */}
       {/* Escape clears the selection, from whichever tile holds focus. */}
       <div onKeyDown={(event) => event.key === 'Escape' && clear()}>
