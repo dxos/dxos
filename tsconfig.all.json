@@ -322,6 +322,9 @@
       "path": "packages/common/log-store-idb/tsconfig.json"
     },
     {
+      "path": "tools/mail-canary/tsconfig.json"
+    },
+    {
       "path": "packages/common/markdown/tsconfig.json"
     },
     {

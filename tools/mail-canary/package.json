@@ -1,0 +1,23 @@
+{
+  "name": "@dxos/mail-canary",
+  "version": "0.16.0",
+  "private": true,
+  "description": "Nightly end-to-end canary for Gmail sync on EDGE preview: seeds test@braneframe.com, waits for sync and checks the space's trace and mailbox feeds.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "type": "module",
+  "dependencies": {
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}
