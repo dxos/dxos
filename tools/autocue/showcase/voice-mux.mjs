@@ -10,7 +10,10 @@
  * `at`, so it lasts as long as the read; `--fit freeze` holds the frame at `at` instead. The voice is normalized to
  * -16 LUFS for the web.
  *
- * A section starts at the previous hold, or for the first one at `--lead` seconds: the first cue's time, read from
+ * A take that logs `sections` (`[{ start, end, seconds }]`, written when the prompter plays sections slowed) is fitted
+ * from those instead: each section's picture is stretched to its real length.
+ *
+ * Otherwise a section starts at the previous hold, or for the first one at `--lead` seconds: the first cue's time, read from
  * the prompter's `cues.json` beside the take when not given. The lead-in before it plays at normal speed.
  *
  *   node tools/autocue/showcase/voice-mux.mjs --video temp/voice/echo.mp4 --take temp/voice/echo-20261026-020432 \
@@ -38,7 +41,11 @@ if (!values.video || !values.take) {
 
 const take = values.take.replace(/\.(webm|json)$/, '');
 const out = values.out ?? `${take}.voiced.mp4`;
-const { video: name, holds = [] } = existsSync(`${take}.json`) ? JSON.parse(readFileSync(`${take}.json`, 'utf8')) : {};
+const {
+  video: name,
+  holds = [],
+  sections = [],
+} = existsSync(`${take}.json`) ? JSON.parse(readFileSync(`${take}.json`, 'utf8')) : {};
 const cuesFile = join(dirname(take), 'cues.json');
 const lead = Number(
   values.lead ?? (existsSync(cuesFile) ? (JSON.parse(readFileSync(cuesFile, 'utf8'))[name]?.[0]?.at ?? 0) : 0),
@@ -77,16 +84,32 @@ const segment = (start, end, extra) => {
   labels.push(label);
 };
 let cursor = 0;
-if (values.fit !== 'freeze' && cuts.length > 0 && lead > 0 && lead < cuts[0].at) {
-  segment(0, lead, 0);
-  cursor = lead;
-}
-for (const hold of cuts) {
-  segment(cursor, hold.at, hold.seconds);
-  cursor = hold.at;
+if (sections.length > 0) {
+  // A take that logs its sections (played slowed, then held) gives each section's real length directly.
+  for (const { start, end, seconds } of sections) {
+    segment(cursor, start, 0);
+    segment(start, Math.min(end, duration), Math.max(0, seconds - (Math.min(end, duration) - start)));
+    cursor = Math.min(end, duration);
+  }
+} else {
+  if (values.fit !== 'freeze' && cuts.length > 0 && lead > 0 && lead < cuts[0].at) {
+    segment(0, lead, 0);
+    cursor = lead;
+  }
+  for (const hold of cuts) {
+    segment(cursor, hold.at, hold.seconds);
+    cursor = hold.at;
+  }
 }
 segment(cursor, duration, 0);
-const total = duration + cuts.reduce((sum, hold) => sum + hold.seconds, 0);
+const total =
+  sections.length > 0
+    ? duration +
+      sections.reduce(
+        (sum, { start, end, seconds }) => sum + Math.max(0, seconds - (Math.min(end, duration) - start)),
+        0,
+      )
+    : duration + cuts.reduce((sum, hold) => sum + hold.seconds, 0);
 filters.push(`${labels.join('')}concat=n=${labels.length}:v=1:a=0[v]`);
 // Silence pads a voice that ends before the picture; the picture's length decides the output's.
 filters.push(`[1:a]loudnorm=I=-16:TP=-1.5:LRA=11,apad,atrim=end=${total.toFixed(3)}[a]`);
