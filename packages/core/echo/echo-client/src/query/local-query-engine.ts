@@ -9,7 +9,7 @@ import { type EntityStructure, type QueryAST } from '@dxos/echo-protocol';
 import { type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type ItemsUpdatedEvent } from '../core-db/index.ts';
+import { type DeletionMemo, type ItemsUpdatedEvent } from '../core-db/index.ts';
 import { isEchoObject } from '../echo-handler/index.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
 import { adjustGroups, withMembers } from './manifest-merge.ts';
@@ -409,10 +409,16 @@ export class LocalQueryEngine implements QueryContext {
       }
     }
     const lookup = coreLookup(views);
+    // The merge is synchronous, so no core changes under it; without the memo it costs entries × depth.
+    const memo: DeletionMemo = new Map();
     const kept: SourceEntry[] = [];
     for (const entry of remote) {
-      const verdict = judgeRemoteEntry(plan, entry, lookup, (id) =>
-        views.reduce<Entity.Unknown | undefined>((found, view) => found ?? view.feedLocalWrite(id), undefined),
+      const verdict = judgeRemoteEntry(
+        plan,
+        entry,
+        lookup,
+        (id) => views.reduce<Entity.Unknown | undefined>((found, view) => found ?? view.feedLocalWrite(id), undefined),
+        memo,
       );
       if (verdict !== 'drop') {
         kept.push(withVerdict(entry, verdict === 'verified'));
@@ -447,7 +453,7 @@ export class LocalQueryEngine implements QueryContext {
       if (!view.covers(query)) {
         continue;
       }
-      for (const match of view.matchLocal(plan, admit)) {
+      for (const match of view.matchLocal(plan, admit, memo)) {
         if (seen.has(match.id)) {
           continue;
         }
