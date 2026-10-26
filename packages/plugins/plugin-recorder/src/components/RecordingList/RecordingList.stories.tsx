@@ -83,7 +83,7 @@ export const Test: Story = {
     await userEvent.click(rows[0]);
     await userEvent.keyboard('{ArrowDown}');
     await expect(rows[1]).toHaveAttribute('aria-selected', 'true');
-    // 4. Every tile carries its own buttons.
+    // 4. Every row carries its own buttons.
     await expect(canvas.getAllByTestId('story.play')).toHaveLength(3);
   },
 };

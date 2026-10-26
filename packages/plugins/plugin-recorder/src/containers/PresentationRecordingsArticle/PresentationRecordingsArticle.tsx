@@ -42,7 +42,7 @@ const headingOf = (content: string): string | undefined =>
 
 /**
  * The presentation's voice-over (its companion), in the layout every Recordings companion shares: each presented
- * slide as a tile (its main take, with Play and Open). The toolbar records every slide (a take per
+ * slide as a row (its main take, with Play and Open). The toolbar records every slide (a take per
  * slide), plays every main take in order, and downloads them as one file; the status bar plays the current slide.
  */
 export const PresentationRecordingsArticle = ({
@@ -66,7 +66,7 @@ export const PresentationRecordingsArticle = ({
     all: false,
   });
   const stop = useCallback(() => setPlay(({ count }) => ({ count: count + 1, autoPlay: false, all: false })), []);
-  // A tile's Play plays its slide's main take, or stops it when it is the one playing.
+  // A row's Play plays its slide's main take, or stops it when it is the one playing.
   const handlePlay = useCallback(
     (id: string) => {
       if (play.autoPlay && current?.id === id) {

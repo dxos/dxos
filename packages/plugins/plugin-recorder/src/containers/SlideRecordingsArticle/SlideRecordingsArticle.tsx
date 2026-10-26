@@ -19,8 +19,7 @@ import { type RecordingItem, RecordingList, RecordingsPanel } from '#components'
 import { meta } from '#meta';
 import { RecorderCapabilities, RecorderOperation, Take } from '#types';
 
-import { useStartRecording, useTakeUrl } from '../../hooks/index.ts';
-import { downloadUrl, extension } from '../../recorder/index.ts';
+import { useStartRecording } from '../../hooks/index.ts';
 import TakePlayer from '../TakePlayer/index.ts';
 
 export type SlideRecordingsArticleProps = Pick<AppSurface.ArticleProps, 'role' | 'attendableId'> & {
@@ -28,12 +27,12 @@ export type SlideRecordingsArticleProps = Pick<AppSurface.ArticleProps, 'role' |
 };
 
 /** A saved take as a row, with the live take the actions need. */
-type TakeRow = RecordingItem & { take?: Variant.Variant; contentType?: string };
+type TakeRow = RecordingItem & { take?: Variant.Variant };
 
 /**
  * A slide's takes (its companion), newest first, in the layout every Recordings companion shares. The toolbar records
- * a new take of the slide and acts on the current take — download, delete (undoably); each tile's star makes it the main take,
- * and its Play plays it in the status bar. An unsaved take is listed first, and the toolbar saves it again, downloads or discards it.
+ * a new take of the slide (and saves an unsaved one again); each take's row has a star that makes it the main take,
+ * Play (in the status bar) and Delete (undoable; it discards an unsaved take, which is listed first).
  */
 export const SlideRecordingsArticle = ({ role, attendableId, slide }: SlideRecordingsArticleProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
@@ -49,7 +48,7 @@ export const SlideRecordingsArticle = ({ role, attendableId, slide }: SlideRecor
   const current = items.find((item) => item.id === currentId) ?? items[0];
   // Bumped by Play so the status bar player remounts and starts.
   const [play, setPlay] = useState<{ count: number; autoPlay: boolean }>({ count: 0, autoPlay: false });
-  // A tile's Play plays its take, or stops it when it is the one playing.
+  // A row's Play plays its take, or stops it when it is the one playing.
   const handlePlay = useCallback(
     (id: string) => {
       if (play.autoPlay && current?.id === id) {
@@ -61,60 +60,30 @@ export const SlideRecordingsArticle = ({ role, attendableId, slide }: SlideRecor
     },
     [play.autoPlay, current],
   );
-  const src = useTakeUrl(current?.take);
-
-  const handleDownload = useCallback(() => {
-    if (current?.error) {
-      recorder?.download(current.id);
-    } else if (src && current) {
-      downloadUrl(src, `${current.take?.name ?? current.id}.${extension(current.contentType ?? '')}`);
-    }
-  }, [current, src, recorder]);
-
-  const handleDelete = useCallback(() => {
-    if (current?.error) {
-      recorder?.discard(current.id);
-    } else if (current?.take) {
-      void invokePromise(RecorderOperation.DeleteTake, { slide, take: current.take });
-    }
-  }, [current, recorder, invokePromise, slide]);
+  // A saved take is deleted undoably; an unsaved one is discarded.
+  const handleDelete = useCallback(
+    (item: TakeRow) => {
+      if (item.error) {
+        recorder?.discard(item.id);
+      } else if (item.take) {
+        void invokePromise(RecorderOperation.DeleteTake, { slide, take: item.take });
+      }
+    },
+    [recorder, invokePromise, slide],
+  );
 
   const menuActions = useMenuBuilder((): ActionGraphProps => {
-    const builder = MenuBuilder.make()
-      .action(
-        'record',
-        {
-          label: ['record-slide.label', { ns: meta.profile.key }],
-          icon: 'ph--record--regular',
-          disposition: 'toolbar',
-          disabled: !recorder || !presentation,
-          testId: 'recorder.slide.record',
-        },
-        () => void handleRecord(),
-      )
-      .separator()
-      .action(
-        'download',
-        {
-          label: ['download-take.label', { ns: meta.profile.key }],
-          icon: 'ph--download-simple--regular',
-          disposition: 'toolbar',
-          disabled: !current || (!current.error && !src),
-          testId: 'recorder.take.download',
-        },
-        handleDownload,
-      )
-      .action(
-        'delete',
-        {
-          label: [current?.error ? 'discard-take.label' : 'delete-take.label', { ns: meta.profile.key }],
-          icon: 'ph--trash--regular',
-          disposition: 'toolbar',
-          disabled: !current,
-          testId: 'recorder.take.delete',
-        },
-        handleDelete,
-      );
+    const builder = MenuBuilder.make().action(
+      'record',
+      {
+        label: ['record-slide.label', { ns: meta.profile.key }],
+        icon: 'ph--record--regular',
+        disposition: 'toolbar',
+        disabled: !recorder || !presentation,
+        testId: 'recorder.slide.record',
+      },
+      () => void handleRecord(),
+    );
     if (current?.error) {
       builder.action(
         'retry',
@@ -128,7 +97,7 @@ export const SlideRecordingsArticle = ({ role, attendableId, slide }: SlideRecor
       );
     }
     return builder.build();
-  }, [handleRecord, recorder, presentation, current, src, invokePromise, slide, handleDownload, handleDelete]);
+  }, [handleRecord, recorder, presentation, current]);
 
   return (
     <RecordingsPanel
@@ -176,6 +145,14 @@ export const SlideRecordingsArticle = ({ role, attendableId, slide }: SlideRecor
               label={t(play.autoPlay && current?.id === item.id ? 'stop-take.label' : 'play-take.label')}
               onClick={() => handlePlay(item.id)}
             />
+            <Button.Root
+              data-testid='recorder.take.delete'
+              icon='ph--trash--regular'
+              iconOnly
+              variant='ghost'
+              label={t(item.error ? 'discard-take.label' : 'delete-take.label')}
+              onClick={() => handleDelete(item)}
+            />
           </>
         )}
       />
@@ -207,7 +184,6 @@ const useSlideTakes = (slide: Presentation.Slide): TakeRow[] => {
               main: ref.uri === mainUri,
               video: takeLog.source !== 'none',
               take: ref.target,
-              contentType: take.contentType,
             },
           ];
         });

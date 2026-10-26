@@ -17,11 +17,11 @@ export const formatSeconds = (seconds: number): string => {
   return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
 };
 
-/** Over the desired length, compared as shown (whole seconds), so a tile never reads 0:20 / 0:20 and flagged. */
+/** Over the desired length, compared as shown (whole seconds), so a row never reads 0:20 / 0:20 and flagged. */
 export const isOver = (seconds: number | undefined, desired: number | undefined): boolean =>
   seconds !== undefined && desired !== undefined && Math.round(seconds) > Math.round(desired);
 
-/** A tile: a take of a slide, or a slide of the presentation with its main take. */
+/** A row: a take of a slide, or a slide of the presentation with its main take. */
 export type RecordingItem = {
   id: string;
   title: string;
@@ -43,18 +43,18 @@ export type RecordingItem = {
 
 export type RecordingListProps<T extends RecordingItem = RecordingItem> = {
   items: T[];
-  /** The current (selected) tile, which the toolbar's actions and the status bar's player act on; the arrow keys move it. */
+  /** The current (selected) row, which the toolbar's actions and the status bar's player act on; the arrow keys move it. */
   value?: string;
   onValueChange?: (id: string) => void;
   /** Accessible name of the list. */
   label: string;
-  /** Buttons at the end of each tile's title line (play, open). */
+  /** Buttons at the end of each row (play, open). */
   renderActions?: (item: T) => ReactNode;
 };
 
 /**
- * The tiles of a Recordings companion, each one compact row (icon, label, time, buttons): a slide's takes, or a presentation's slides, keyboard navigable
- * (up and down move the current tile, which scrolls into view). Each tile shows its length against the desired
+ * The rows of a Recordings companion, a list with columns (icon, label, takes, length, desired, buttons): a slide's takes, or a presentation's slides, keyboard navigable
+ * (up and down move the current row, which scrolls into view). Each row shows its length against the desired
  * length, flagged when over, marks the main take, and carries its own buttons.
  */
 export const RecordingList = <T extends RecordingItem>({
@@ -66,6 +66,13 @@ export const RecordingList = <T extends RecordingItem>({
 }: RecordingListProps<T>) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const keyboard = useRef(false);
+  const columns = useMemo(
+    () => ({
+      description: items.some((item) => item.description),
+      desired: items.some((item) => item.desired !== undefined),
+    }),
+    [items],
+  );
   const options = useMemo(
     () => items.map((item) => ({ value: item.id, label: item.title, description: item.description })),
     [items],
@@ -76,7 +83,7 @@ export const RecordingList = <T extends RecordingItem>({
       items={options}
       value={value ?? ''}
       onValueChange={(id) => onValueChange?.(id)}
-      // The current tile is the selection: a keyboard move selects, while a pointer only highlights what it passes.
+      // The current row is the selection: a keyboard move selects, while a pointer only highlights what it passes.
       onHighlightChange={(id) => {
         if (keyboard.current && id) {
           onValueChange?.(id);
@@ -86,7 +93,6 @@ export const RecordingList = <T extends RecordingItem>({
       <Listbox.Content
         aria-label={label}
         data-testid='recorder.list'
-        classNames='flex flex-col gap-2 p-2'
         onKeyDownCapture={() => {
           keyboard.current = true;
         }}
@@ -103,7 +109,7 @@ export const RecordingList = <T extends RecordingItem>({
               data-testid='recorder.item'
               data-main={item.main ? 'true' : undefined}
               data-recorded={item.duration !== undefined ? 'true' : undefined}
-              classNames='flex items-center gap-2 rounded-sm border border-separator px-2 py-1'
+              classNames='flex items-center gap-2'
             >
               <Icon.Icon
                 size='sm'
@@ -122,9 +128,13 @@ export const RecordingList = <T extends RecordingItem>({
                 )}
                 {item.title}
               </Listbox.ItemText>
-              {item.description && (
+              {/* Fixed-width columns, so the take counts and lengths line up from row to row. */}
+              {columns.description && (
                 <span
-                  className={mx('shrink truncate text-xs', item.error ? 'text-error-text' : 'text-fg-subtle')}
+                  className={mx(
+                    'w-16 shrink-0 truncate text-end text-xs',
+                    item.error ? 'text-error-text' : 'text-fg-subtle',
+                  )}
                   title={item.description}
                 >
                   {item.description}
@@ -132,11 +142,15 @@ export const RecordingList = <T extends RecordingItem>({
               )}
               <span
                 data-over={over ? 'true' : undefined}
-                className={mx('shrink-0 font-mono text-xs', over ? 'text-error-text' : 'text-fg-muted')}
+                className={mx('w-12 shrink-0 text-end font-mono text-xs', over ? 'text-error-text' : 'text-fg-muted')}
               >
                 {item.duration === undefined ? t('no-take.label') : formatSeconds(item.duration)}
-                {item.desired !== undefined && ` / ${formatSeconds(item.desired)}`}
               </span>
+              {columns.desired && (
+                <span className='w-12 shrink-0 text-end font-mono text-xs text-fg-subtle'>
+                  {item.desired === undefined ? '' : formatSeconds(item.desired)}
+                </span>
+              )}
               {renderActions?.(item)}
             </Listbox.Item>
           );
