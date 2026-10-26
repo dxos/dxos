@@ -106,6 +106,18 @@ Three 20s tour shots and ~30 short shots recorded in Screen Studio, assembled in
       `tour-1..3` as tours, renders with a 20s hold (`render.mjs --hold`), writes `composite.mp4` to the folder.
 - [ ] **Record the shots** (user), then run `assemble.mjs --clips /Volumes/SSD1/Media/Showcase/2026-10-17`.
 
+## Phase 6: Narration and the recording plugin
+
+### Tasks
+
+- [ ] **Record the ECHO voice-over** with the prompter (`temp/voice`, script in `tools/autocue/showcase/docs/ECHO.md`,
+      synced by `tools/autocue/showcase/cues.mjs`); lay the take on `ECHO.m4v`, freezing the picture at each logged hold.
+- [ ] **Record the Composer demo voice-over** the same way (`docs/COMPOSER.md`, `docs/cues/composer.json`).
+- [ ] **Composite**: the voiced ECHO video, then the voiced Composer demo, one DXOS end card.
+- [ ] **Email Brad** with the composite (needs his address; attachments over Gmail's 25MB limit need compressing).
+- [ ] **Recording plugin**: a Composer plugin that works with plugin-studio to record audio and video — the prompter's
+      gated playback, holds, mic picker and level meter, as a plugin. After the recordings are done.
+
 ## Phase 3: Open issues
 
 ### Tasks
