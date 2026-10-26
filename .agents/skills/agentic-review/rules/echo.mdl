@@ -182,6 +182,32 @@ rule no-bare-ref-schema-alias: Declare a Ref field inline, not through a module-
   severity: warn
 ```
 
+```mdl
+rule renamed-operation-key-stays-resolvable: Renaming an operation key keeps persisted references working
+  Spaces store operation keys as `dxn:` refs (a trigger's `runnable`, a
+  Routine's `spec.runnable`), so changing or removing a key in
+  `Operation.make({ meta: { key } })` strands every stored reference to the old
+  key: its trigger throws `NoHandlerError` on each fire, forever. When the diff
+  changes or deletes an existing operation key, the same change must keep the
+  old key resolvable. If the input schema is unchanged, contribute
+  `Migration.defineRename({ from: <old>, to: <new> })` to
+  `ClientCapabilities.Migration`, which repoints the stored refs. If the input
+  schema also changed, a rename is not enough — the stored trigger input no
+  longer validates — so keep a non-`visible` operation under the old key with
+  the old input and register its handler. Flag a diff that changes or removes an
+  operation key with neither. Do not flag a newly added operation, a key only
+  ever used in tests, or an operation with `skipRegistry` that nothing persists.
+  Source: PostHog NoHandlerError for `dxn:org.dxos.plugin.inbox.operation.googleMailSync`, https://github.com/dxos/dxos/pull/14100.
+  scope: repo
+  files:
+    - packages/**/*.ts
+  grep: key:\s*DXN\.make\(
+  unit: file
+  context: diff
+  system-one: on
+  severity: error
+```
+
 ## Appendix
 
 ```mdl

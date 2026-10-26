@@ -569,7 +569,7 @@ const loadExpectedBinding = (
  * too, so a deleted target is answered by the index, not by the fallback that downloads every feed in the
  * space looking for it.
  */
-const hasTarget = (cursor: Cursor.ExternalCursor): Effect.Effect<boolean> =>
+export const hasTarget = (cursor: Cursor.ExternalCursor): Effect.Effect<boolean> =>
   Database.load(cursor.spec.target, { deleted: 'include' }).pipe(
     Effect.map((target) => !Obj.isDeleted(target)),
     Effect.catchTag('EntityNotFoundError', () => Effect.succeed(false)),
