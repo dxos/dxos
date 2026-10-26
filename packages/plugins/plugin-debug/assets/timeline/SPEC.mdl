@@ -132,7 +132,7 @@ decision D-2: The spec writes F-1 to F-4 from what is built, names F-5 and divid
 ```
 
 ```mdl
-decision D-5: The test fixture is the history of the universe the Timeline stories use, as a sheet with a timeline chart of it.
+decision D-3: The test fixture is the history of the universe the Timeline stories use, as a sheet with a timeline chart of it.
   date: 2026-10-23
   by: user:richburdon
   affects: [F-2]
