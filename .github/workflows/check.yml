@@ -93,9 +93,9 @@ jobs:
     runs-on: ubuntu-24.04
     # The scheduled run bypasses the cache: the compile gate takes about 24 minutes, then module structure
     # rebuilds every package again (another 12), before knip and the docs bundle.
-    # A warm PR or merge-queue run of this job finishes well inside 20 minutes, so a hung runner dies there rather than
-    # holding the queue; the forced or cold builds keep the long cap.
-    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 20 }}
+    # A warm PR or merge-queue run of this job has taken up to 27 minutes (merge queue), so a hung runner dies at 40
+    # rather than holding the queue; the forced or cold builds keep the long cap.
+    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 40 }}
     steps:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
@@ -490,9 +490,9 @@ jobs:
       packages: read
     runs-on: ubuntu-24.04
     # A forced nightly once rebuilt every dependency per shard here; a cell took 58 minutes.
-    # A warm PR or merge-queue run of this job finishes well inside 20 minutes, so a hung runner dies there rather than
-    # holding the queue; the forced or cold builds keep the long cap.
-    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 20 }}
+    # A warm PR or merge-queue run of this job has taken up to 27 minutes (merge queue), so a hung runner dies at 40
+    # rather than holding the queue; the forced or cold builds keep the long cap.
+    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 40 }}
     env:
       NODE_VERSION: '24.11.1'
       # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
@@ -615,9 +615,9 @@ jobs:
       packages: read
       actions: write
     runs-on: ubuntu-24.04
-    # A warm PR or merge-queue run of this job finishes well inside 20 minutes, so a hung runner dies there rather than
-    # holding the queue; the forced or cold builds keep the long cap.
-    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 20 }}
+    # A warm PR or merge-queue run of this job has taken up to 27 minutes (merge queue), so a hung runner dies at 40
+    # rather than holding the queue; the forced or cold builds keep the long cap.
+    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 40 }}
     steps:
       # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
       - name: Checkout the snapshot actions
@@ -683,9 +683,9 @@ jobs:
       actions: write
     runs-on: ubuntu-24.04
     # Covers a cold build: fork or Dependabot PRs with no remote cache.
-    # A warm PR or merge-queue run of this job finishes well inside 20 minutes, so a hung runner dies there rather than
-    # holding the queue; the forced or cold builds keep the long cap.
-    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 90 || 20 }}
+    # A warm PR or merge-queue run of this job has taken up to 27 minutes (merge queue), so a hung runner dies at 40
+    # rather than holding the queue; the forced or cold builds keep the long cap.
+    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 90 || 40 }}
     env:
       # The test phase; the build step overrides it.
       MOON_CONCURRENCY: 1
