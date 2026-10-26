@@ -10,7 +10,7 @@ import {
   type QueryEdgeStatusResponse,
   type EdgeStatus as SocketStatus,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import * as Icon from '@dxos/react-ui/Icon';
+import * as Button from '@dxos/react-ui/Button';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
@@ -228,7 +228,15 @@ const SpaceRows = ({ rows }: { rows: SpaceRow[] }) => (
         control={
           row.issues.length > 0 && (
             <Tooltip.Trigger asChild content={<SpaceIssues row={row} />}>
-              <Icon.Icon icon='ph--warning--regular' classNames='text-error-text' />
+              <Button.Root
+                variant='ghost'
+                size='sm'
+                icon='ph--warning--regular'
+                iconClassNames='text-error-text'
+                iconOnly
+                showTooltip={false}
+                label={row.issues.length === 1 ? '1 issue' : `${row.issues.length} issues`}
+              />
             </Tooltip.Trigger>
           )
         }
