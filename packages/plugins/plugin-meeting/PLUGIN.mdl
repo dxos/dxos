@@ -131,7 +131,7 @@ op HandlePayload
   desc: Processes an incoming call-layer meeting payload; resolves the Meeting and Transcript feed objects from ECHO and updates transcription state.
   input:
     meetingId?: string
-    transcriptDXN?: string
+    transcriptDxn?: string
     transcriptionEnabled?: boolean
   output: void
   effects: [echo:read]
@@ -296,7 +296,7 @@ scenario T-3: Clear active meeting
 ```mdl
 scenario T-4: Handle incoming payload
   given: a Meeting and Transcript feed exist in the space
-  when: op:HandlePayload is invoked with meetingId, transcriptDXN, and transcriptionEnabled: true
+  when: op:HandlePayload is invoked with meetingId, transcriptDxn, and transcriptionEnabled: true
   then:
     - state.activeMeeting resolves to the correct Meeting
     - the call manager's transcript feed is the resolved Feed

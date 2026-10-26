@@ -21,7 +21,7 @@ const handler: Operation.WithHandler<typeof MeetingOperation.HandlePayload> = Me
       const space = spaceId && client.spaces.get(spaceId);
       const meeting =
         objectId && space
-          ? yield* Effect.promise(() => space.db.query(Query.select(Filter.id(objectId))).first())
+          ? yield* Effect.promise(() => space.db.query(Query.select(Filter.id(objectId))).firstOrUndefined())
           : undefined;
       store.updateState((current) => ({
         ...current,
@@ -33,7 +33,7 @@ const handler: Operation.WithHandler<typeof MeetingOperation.HandlePayload> = Me
       const feedObjectId = echoUri ? EID.getEntityId(echoUri) : undefined;
       const feed =
         space && feedObjectId
-          ? yield* Effect.promise(() => space.db.query(Query.select(Filter.id(feedObjectId))).first())
+          ? yield* Effect.promise(() => space.db.query(Query.select(Filter.id(feedObjectId))).firstOrUndefined())
           : undefined;
       // A payload whose feed does not resolve here (a bare selection, or a feed not yet replicated) must not leave the
       // previous meeting's feed receiving segments.
