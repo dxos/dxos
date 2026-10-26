@@ -5,7 +5,7 @@
 import * as Array from 'effect/Array';
 import * as EffectContext from 'effect/Context';
 
-import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout, yieldOrContinue } from '@dxos/async';
+import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, unrefTimeout, yieldOrContinue } from '@dxos/async';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { Entity, Feed, type Hypergraph, Obj, Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
@@ -552,15 +552,21 @@ export class IndexQuerySource implements RemoteQuerySource {
 
     const load = await this._placeRows(ctx, records);
     const hydratedIntoFeedHandle = new Set<string>();
+    const deadline = new HydrationDeadline(this._params.hydrationTimeout ?? RECORD_HYDRATION_TIMEOUT);
     // Chunked so hydrating a large local result set is not one uninterrupted run of microtasks.
     const processedResults: (SourceEntry | null | typeof STALLED)[] = [];
-    for (const chunk of chunkArray([...records], HYDRATE_RECORDS_PER_YIELD_CHECK)) {
-      await yieldOrContinue('smooth');
-      processedResults.push(
-        ...(await Promise.all(
-          chunk.map((result) => this._hydrateRecord(ctx, query, start, result, hydratedIntoFeedHandle, load)),
-        )),
-      );
+    try {
+      for (const chunk of chunkArray([...records], HYDRATE_RECORDS_PER_YIELD_CHECK)) {
+        await yieldOrContinue('smooth');
+        const stall = deadline.arm().then((): typeof STALLED => STALLED);
+        processedResults.push(
+          ...(await Promise.all(
+            chunk.map((result) => this._hydrateRecord(ctx, query, start, result, hydratedIntoFeedHandle, load, stall)),
+          )),
+        );
+      }
+    } finally {
+      deadline.dispose();
     }
     const stalled = records.filter((_, index) => processedResults[index] === STALLED).map((record) => record.id);
     const results = processedResults.filter((entry) => entry !== STALLED).filter(isNonNullable);
@@ -645,6 +651,7 @@ export class IndexQuerySource implements RemoteQuerySource {
    * Hydrate one record under a bounded budget. Hydration reaches document loading, which waits on
    * replication and never settles while a document is unavailable; left unbounded it held the
    * caller's whole query open for as long as the index-query budget allowed.
+   * `stall` settles when the pass's {@link HydrationDeadline} expires.
    */
   private async _hydrateRecord(
     ctx: Context,
@@ -653,20 +660,15 @@ export class IndexQuerySource implements RemoteQuerySource {
     result: QueryService.QueryResult,
     hydratedIntoFeedHandle: Set<string>,
     load: RowLoader,
+    stall: Promise<typeof STALLED>,
   ): Promise<SourceEntry | null | typeof STALLED> {
-    const timeout = this._params.hydrationTimeout ?? RECORD_HYDRATION_TIMEOUT;
-    const hydration = this._filterMapResult(ctx, query, start, result, load, hydratedIntoFeedHandle);
-    // The abandoned hydration may still reject after the race has settled, which would surface as an
-    // unhandled rejection; the real outcome is already taken below.
-    hydration.catch(() => {});
-    // Compared by identity so a TimeoutError thrown from within hydration is not mistaken for ours.
-    const expired = new TimeoutError(timeout, 'index hit hydration');
     try {
-      return await asyncTimeout(hydration, timeout, expired);
+      // The race keeps a handler on the abandoned hydration, so its late rejection is not unhandled.
+      return await Promise.race([
+        this._filterMapResult(ctx, query, start, result, load, hydratedIntoFeedHandle),
+        stall,
+      ]);
     } catch (err) {
-      if (err === expired) {
-        return STALLED;
-      }
       if (err instanceof ContextDisposedError) {
         return null;
       }
@@ -865,6 +867,59 @@ export class IndexQuerySource implements RemoteQuerySource {
     this._streamCleanup?.();
     this._streamCleanup = undefined;
   }
+}
+
+/**
+ * The hydration budget of one pass, served by a single timer, since a timer per record costs ~1s of
+ * main thread per 30s in `setTimeout`/`clearTimeout` once reactive queries re-hydrate large results.
+ */
+class HydrationDeadline {
+  readonly #budget: number;
+  #due = 0;
+  #timer: ReturnType<typeof setTimeout> | undefined;
+  #expire: (() => void) | undefined;
+
+  constructor(budget: number) {
+    this.#budget = budget;
+  }
+
+  /**
+   * Starts a full budget for the records hydrated from now, as a per-record timer armed now would,
+   * and returns a promise that resolves when it runs out. Supersedes the previous call's budget.
+   */
+  arm(): Promise<void> {
+    this.#due = performance.now() + this.#budget;
+    const expired = new Promise<void>((resolve) => {
+      this.#expire = resolve;
+    });
+    // A running timer is moved forward on expiry rather than re-armed here.
+    if (this.#timer === undefined) {
+      this.#schedule(this.#budget);
+    }
+    return expired;
+  }
+
+  dispose(): void {
+    clearTimeout(this.#timer);
+    this.#timer = undefined;
+    this.#expire = undefined;
+  }
+
+  #schedule(delay: number): void {
+    this.#timer = setTimeout(this.#check, delay);
+    unrefTimeout(this.#timer);
+  }
+
+  #check = (): void => {
+    this.#timer = undefined;
+    const remaining = this.#due - performance.now();
+    if (remaining > 0) {
+      this.#schedule(remaining);
+      return;
+    }
+    this.#expire?.();
+    this.#expire = undefined;
+  };
 }
 
 /** Marks a record whose hydration outran its budget, as distinct from one that hydrated to nothing. */
