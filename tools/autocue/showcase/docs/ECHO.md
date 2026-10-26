@@ -127,19 +127,18 @@ stretches to the voice as for ECHO. Lines marked _(verify)_ make a claim to chec
    - You can add comments to any object; and assign tasks to agents, which read and update data in real time.
    - Documents can incorporate components from any plugin.
    - And plugins provide an extensive set of tools, skills and connectors.
-   - I can easily insert a spreadsheet, and open it to create or view a chart, or import data.
-   - Documents, drawings, sheets, and kanbans are all objects in the same graph.
+   - Documents, diagrams, tables, and kanbans are all objects in the same graph.
 
 2. **Agents** (at 49.5s, 15s)
-   - At DXOS we use Composer as a coding harness for frontier and open models.
+   - At DXOS we use Composer as a coding harness with both frontier and open models.
    - In fact, Composer's own development, including its plans, tasks and agents -- are all designed, developed and extended from inside the app.
 
 3. **Email, calendar, meetings and CRM** (at 64.5s, 60s)
-   - We run the rest of the business in it too.
-   - Email arrives in the same graph, so every message is linked to the people and organizations behind it.
+   - We run the rest of the business in Composer also.
+   - Email arrives in the same graph, so every message is linked to the appropriate people and organization objects.
    - And the CRM is simply another view of the same data, for people and agents alike.
    - The calendar holds our meetings; with automated summaries including links to generated artifacts.
-   - Meetings are captured, and agents turn them into notes and follow-ups.
+   - Meetings are captured, and agents turn them into notes, plans, and follow-ups.
 
 4. **Open and extensible** (at 124.5s, 10s)
    - The entire platform is open and extensible.
