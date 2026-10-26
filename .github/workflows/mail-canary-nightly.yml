@@ -1,10 +1,10 @@
 name: Mail canary nightly
 
 # End-to-end canary for Gmail sync on the deployed preview EDGE (tools/mail-canary/README.md).
-# It copies 100 Enron messages from the archived pool into test@braneframe.com, waits for the
+# It copies 100 Enron messages from the archived corpus into test@braneframe.com, waits for the
 # space's own sync trigger to pick them up, and checks the space's Execution Trace and mailbox feeds
 # for the last day: every run ended and succeeded, the trigger kept firing, and every copy arrived
-# once with the right content. The one-time setup (pool import, identity, space) is manual.
+# once with the right content. The one-time setup (corpus import, identity, space) is manual.
 #
 # It signs in to the canary identity with its recovery phrase on every run; nothing is cached
 # between runs, so no device key ever sits in an Actions cache a fork could read.
@@ -18,7 +18,7 @@ on:
     inputs:
       count:
         type: string
-        description: 'Messages to copy from the pool into the inbox'
+        description: 'Messages to copy from the corpus into the inbox'
         default: '100'
 
 permissions:

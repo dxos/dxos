@@ -11,7 +11,7 @@ import { describe, test } from 'vitest';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { GmailError } from '../gmail/index.ts';
-import { Pool } from './Pool.ts';
+import { Corpus } from './Corpus.ts';
 
 const mbox = (count: number) =>
   Array.from(
@@ -31,8 +31,8 @@ const fakeGmail = ({ failAt }: { failAt?: number } = {}) => {
     created,
     trashed,
     gmail: {
-      // The pool is archived and old, so only the bare label search finds it.
-      count: (query: string) => Effect.succeed(query === 'label:enron-pool' ? imported.length : 0),
+      // The corpus is archived and old, so only the bare label search finds it.
+      count: (query: string) => Effect.succeed(query === 'label:enron-corpus' ? imported.length : 0),
       listIds: () => Effect.succeed(imported.map((_, index) => `id-${index}`)),
       trash: (id: string) => Effect.sync(() => void trashed.push(id)),
       ensureLabel: (name: string) =>
@@ -54,38 +54,38 @@ const fakeGmail = ({ failAt }: { failAt?: number } = {}) => {
 };
 
 const writeMbox = (text: string): string => {
-  const mboxPath = join(mkdtempSync(join(tmpdir(), 'pool-')), 'pool.mbox');
+  const mboxPath = join(mkdtempSync(join(tmpdir(), 'corpus-')), 'corpus.mbox');
   writeFileSync(mboxPath, text);
   return mboxPath;
 };
 
-describe('Pool.import', () => {
-  test('imports every message archived under the pool label', async ({ expect }) => {
-    const dir = mkdtempSync(join(tmpdir(), 'pool-'));
-    writeFileSync(join(dir, 'pool.mbox'), mbox(120));
+describe('Corpus.import', () => {
+  test('imports every message archived under the corpus label', async ({ expect }) => {
+    const dir = mkdtempSync(join(tmpdir(), 'corpus-'));
+    writeFileSync(join(dir, 'corpus.mbox'), mbox(120));
     const { gmail, imported } = fakeGmail();
     const result = await EffectEx.runPromise(
-      new Pool(gmail).import({ mboxPath: join(dir, 'pool.mbox'), concurrency: 1 }),
+      new Corpus(gmail).import({ mboxPath: join(dir, 'corpus.mbox'), concurrency: 1 }),
     );
     expect(result).toEqual({ total: 120, imported: 120, skipped: 0 });
-    expect(imported[0]).toBe('0:label-enron-pool');
-    expect(readFileSync(join(dir, 'pool.mbox.imported'), 'utf8')).toBe('120');
+    expect(imported[0]).toBe('0:label-enron-corpus');
+    expect(readFileSync(join(dir, 'corpus.mbox.imported'), 'utf8')).toBe('120');
   });
 
   test('a rerun resumes after the last completed batch instead of importing twice', async ({ expect }) => {
-    const dir = mkdtempSync(join(tmpdir(), 'pool-'));
-    const mboxPath = join(dir, 'pool.mbox');
+    const dir = mkdtempSync(join(tmpdir(), 'corpus-'));
+    const mboxPath = join(dir, 'corpus.mbox');
     writeFileSync(mboxPath, mbox(120));
     const first = fakeGmail({ failAt: 75 });
-    await expect(EffectEx.runPromise(new Pool(first.gmail).import({ mboxPath, concurrency: 1 }))).rejects.toThrow(
+    await expect(EffectEx.runPromise(new Corpus(first.gmail).import({ mboxPath, concurrency: 1 }))).rejects.toThrow(
       'quota',
     );
     expect(readFileSync(`${mboxPath}.imported`, 'utf8')).toBe('50');
 
     const second = fakeGmail();
-    const result = await EffectEx.runPromise(new Pool(second.gmail).import({ mboxPath, concurrency: 1 }));
+    const result = await EffectEx.runPromise(new Corpus(second.gmail).import({ mboxPath, concurrency: 1 }));
     expect(result.imported).toBe(70);
-    expect(second.imported[0]).toBe('50:label-enron-pool');
+    expect(second.imported[0]).toBe('50:label-enron-corpus');
   });
 
   test('labels each message with its original folder and drops the folder header', async ({ expect }) => {
@@ -106,31 +106,31 @@ describe('Pool.import', () => {
       ].join('\n'),
     );
     const { gmail, imported, messages, created } = fakeGmail();
-    await EffectEx.runPromise(new Pool(gmail).import({ mboxPath }));
+    await EffectEx.runPromise(new Corpus(gmail).import({ mboxPath }));
     expect(imported).toEqual([
-      '0:label-enron-pool,label-Enron/kean-s/inbox',
-      '1:label-enron-pool,label-Enron/kean-s/inbox',
+      '0:label-enron-corpus,label-Enron/kean-s/inbox',
+      '1:label-enron-corpus,label-Enron/kean-s/inbox',
     ]);
-    expect(created).toEqual(['enron-pool', 'Enron/kean-s/inbox']);
+    expect(created).toEqual(['enron-corpus', 'Enron/kean-s/inbox']);
     expect(messages[0]).not.toContain('X-Gmail-Labels');
   });
 });
 
-describe('Pool.status', () => {
-  test('is ready only when the pool holds exactly the mbox', async ({ expect }) => {
+describe('Corpus.status', () => {
+  test('is ready only when the corpus holds exactly the mbox', async ({ expect }) => {
     const mboxPath = writeMbox(mbox(3));
     const { gmail } = fakeGmail();
-    const pool = new Pool(gmail);
-    await EffectEx.runPromise(pool.import({ mboxPath }));
-    expect(await EffectEx.runPromise(pool.status({ mboxPath }))).toMatchObject({ size: 3, expected: 3, ready: true });
-    expect(await EffectEx.runPromise(pool.status({ mboxPath: writeMbox(mbox(4)) }))).toMatchObject({ ready: false });
+    const corpus = new Corpus(gmail);
+    await EffectEx.runPromise(corpus.import({ mboxPath }));
+    expect(await EffectEx.runPromise(corpus.status({ mboxPath }))).toMatchObject({ size: 3, expected: 3, ready: true });
+    expect(await EffectEx.runPromise(corpus.status({ mboxPath: writeMbox(mbox(4)) }))).toMatchObject({ ready: false });
   });
 
-  test('purge trashes every pool message', async ({ expect }) => {
+  test('purge trashes every corpus message', async ({ expect }) => {
     const { gmail, trashed } = fakeGmail();
-    const pool = new Pool(gmail);
-    await EffectEx.runPromise(pool.import({ mboxPath: writeMbox(mbox(3)) }));
-    expect(await EffectEx.runPromise(pool.purge())).toBe(3);
+    const corpus = new Corpus(gmail);
+    await EffectEx.runPromise(corpus.import({ mboxPath: writeMbox(mbox(3)) }));
+    expect(await EffectEx.runPromise(corpus.purge())).toBe(3);
     expect(trashed).toEqual(['id-0', 'id-1', 'id-2']);
   });
 });

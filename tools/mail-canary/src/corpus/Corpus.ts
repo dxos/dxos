@@ -9,12 +9,12 @@ import { type GmailClient, GmailError, readHeader, rewriteHeaders } from '../gma
 import { splitMbox } from './mbox.ts';
 
 /** Label of the Enron messages imported once by steps 01–02. */
-export const POOL_LABEL = 'enron-pool';
+export const CORPUS_LABEL = 'enron-corpus';
 
 /** Header step 01 writes with the message's original folder (`Enron/<custodian>/<folder>`); GYB reads it too. */
 export const FOLDER_HEADER = 'X-Gmail-Labels';
 
-/** The sync's default look-back; the pool must stay older than this or the canary space would sync it. */
+/** The sync's default look-back; the corpus must stay older than this or the canary space would sync it. */
 const SYNC_WINDOW_DAYS = 30;
 
 // Gmail's simple upload takes 5 MB, and base64url grows a message by a third.
@@ -31,8 +31,8 @@ export type ImportOptions = {
 
 export type ImportResult = { readonly total: number; readonly imported: number; readonly skipped: number };
 
-export type PoolStatus = {
-  /** Messages under the pool label. */
+export type CorpusStatus = {
+  /** Messages under the corpus label. */
   readonly size: number;
   /** What the mbox should have put there, when one is given. */
   readonly expected?: number;
@@ -42,18 +42,18 @@ export type PoolStatus = {
   readonly ready: boolean;
 };
 
-type PoolGmail = Pick<GmailClient, 'count' | 'ensureLabel' | 'importMessage' | 'listIds' | 'trash'>;
+type CorpusGmail = Pick<GmailClient, 'count' | 'ensureLabel' | 'importMessage' | 'listIds' | 'trash'>;
 
-/** The Enron pool in the test account: imported once, then only read by the seeder. */
-export class Pool {
-  readonly #gmail: PoolGmail;
+/** The Enron corpus in the test account: imported once, then only read by the seeder. */
+export class Corpus {
+  readonly #gmail: CorpusGmail;
 
-  constructor(gmail: PoolGmail) {
+  constructor(gmail: CorpusGmail) {
     this.#gmail = gmail;
   }
 
   /**
-   * Imports every message of the mbox from step 01, archived, under the pool label and its original
+   * Imports every message of the mbox from step 01, archived, under the corpus label and its original
    * folder's label, with its internal date taken from the shifted `Date` header.
    */
   import({ mboxPath, concurrency = CONCURRENCY, onProgress }: ImportOptions): Effect.Effect<ImportResult, GmailError> {
@@ -62,7 +62,7 @@ export class Pool {
       // Counts the messages already imported, so a rerun resumes rather than duplicating.
       const progressPath = `${mboxPath}.imported`;
       const start = existsSync(progressPath) ? Number(readFileSync(progressPath, 'utf8').trim()) || 0 : 0;
-      const labelIds = new Map([[POOL_LABEL, yield* this.#gmail.ensureLabel(POOL_LABEL)]]);
+      const labelIds = new Map([[CORPUS_LABEL, yield* this.#gmail.ensureLabel(CORPUS_LABEL)]]);
 
       let skipped = 0;
       for (let offset = start; offset < messages.length; offset += BATCH) {
@@ -80,7 +80,7 @@ export class Pool {
               skipped++;
               return Effect.void;
             }
-            const labels = [POOL_LABEL, ...folderLabels(message)].flatMap((name) => labelIds.get(name) ?? []);
+            const labels = [CORPUS_LABEL, ...folderLabels(message)].flatMap((name) => labelIds.get(name) ?? []);
             return this.#gmail
               .importMessage(rewriteHeaders(message, { drop: [FOLDER_HEADER] }), labels)
               .pipe(Effect.asVoid);
@@ -95,13 +95,13 @@ export class Pool {
     });
   }
 
-  /** Counts the pool and checks it is ready for step 03; with `mboxPath`, also that it holds exactly that mbox. */
-  status({ mboxPath }: { mboxPath?: string } = {}): Effect.Effect<PoolStatus, GmailError> {
+  /** Counts the corpus and checks it is ready for step 03; with `mboxPath`, also that it holds exactly that mbox. */
+  status({ mboxPath }: { mboxPath?: string } = {}): Effect.Effect<CorpusStatus, GmailError> {
     return Effect.gen({ self: this }, function* () {
       const expected = mboxPath ? (yield* readMbox(mboxPath)).filter(isImportable).length : undefined;
-      const size = yield* this.#gmail.count(`label:${POOL_LABEL}`);
-      const inInbox = yield* this.#gmail.count(`label:${POOL_LABEL} in:inbox`);
-      const newerThanSyncWindow = yield* this.#gmail.count(`label:${POOL_LABEL} newer_than:${SYNC_WINDOW_DAYS + 1}d`);
+      const size = yield* this.#gmail.count(`label:${CORPUS_LABEL}`);
+      const inInbox = yield* this.#gmail.count(`label:${CORPUS_LABEL} in:inbox`);
+      const newerThanSyncWindow = yield* this.#gmail.count(`label:${CORPUS_LABEL} newer_than:${SYNC_WINDOW_DAYS + 1}d`);
       const ready =
         size > 0 && inInbox === 0 && newerThanSyncWindow === 0 && (expected === undefined || size === expected);
       return { size, expected, inInbox, newerThanSyncWindow, ready };
@@ -109,12 +109,12 @@ export class Pool {
   }
 
   /**
-   * Moves every pool message to Trash, which Gmail empties after 30 days; the grant's `gmail.modify`
+   * Moves every corpus message to Trash, which Gmail empties after 30 days; the grant's `gmail.modify`
    * scope cannot delete outright. For clearing a trial import before the full one.
    */
   purge(): Effect.Effect<number, GmailError> {
     return Effect.gen({ self: this }, function* () {
-      const ids = yield* this.#gmail.listIds(`label:${POOL_LABEL}`);
+      const ids = yield* this.#gmail.listIds(`label:${CORPUS_LABEL}`);
       yield* Effect.forEach(ids, (id) => this.#gmail.trash(id), { concurrency: CONCURRENCY, discard: true });
       return ids.length;
     });

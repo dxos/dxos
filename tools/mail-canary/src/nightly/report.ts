@@ -11,7 +11,7 @@ export type NightlyReport = Report & {
   readonly spaceId: string;
   readonly seeded: number;
   readonly trashed: number;
-  readonly poolSize: number;
+  readonly corpusSize: number;
   /** Minutes from seeding until every copy was in the mailbox feed; absent when they never all arrived. */
   readonly syncMinutes?: number;
 };
@@ -29,7 +29,7 @@ export const toEventProperties = (report: NightlyReport): Record<string, string 
     failureClasses: classes.join(','),
     failures: failures.length,
     seeded: report.seeded,
-    poolSize: report.poolSize,
+    corpusSize: report.corpusSize,
     syncMinutes: report.syncMinutes ?? -1,
     runsTotal: report.runs.total,
     runsFailed: report.runs.failed,
@@ -44,7 +44,7 @@ export const renderSummary = (report: NightlyReport): string => {
     `## Mail canary: ${report.ok ? 'passed' : 'FAILED'}`,
     '',
     `Space \`${report.spaceId}\`, ${report.startedAt} to ${report.finishedAt}. ` +
-      `Seeded ${report.seeded} of ${report.poolSize} pool messages, trashed ${report.trashed} old copies, ` +
+      `Seeded ${report.seeded} of ${report.corpusSize} corpus messages, trashed ${report.trashed} old copies, ` +
       (report.syncMinutes === undefined
         ? 'and the copies never all arrived.'
         : `and all copies arrived in ${report.syncMinutes} min.`),

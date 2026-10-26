@@ -5,13 +5,13 @@
 import * as Effect from 'effect/Effect';
 
 import { type SeededMessage } from '../checks/index.ts';
+import { CORPUS_LABEL } from '../corpus/index.ts';
 import { type GmailClient, type GmailError, rewriteHeaders } from '../gmail/index.ts';
-import { POOL_LABEL } from '../pool/index.ts';
 
 /** Label the canary puts on every copy, so it can find its own copies in Gmail. Sync ignores it. */
 export const SEED_LABEL = 'dx-seed';
 
-/** Header that maps a seeded copy back to the pool message it was copied from. */
+/** Header that maps a seeded copy back to the corpus message it was copied from. */
 export const SEED_HEADER = 'X-Dx-Seed';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -20,12 +20,12 @@ const DAY = 24 * 60 * 60 * 1000;
 const WRITE_CONCURRENCY = 4;
 
 export type SeedResult = {
-  readonly poolSize: number;
+  readonly corpusSize: number;
   /** Gmail ids of the copies, in the order they were seeded. */
   readonly seededIds: readonly string[];
 };
 
-/** Copies pool messages into the inbox as fresh mail for the sync to pick up, and cleans up old copies. */
+/** Copies corpus messages into the inbox as fresh mail for the sync to pick up, and cleans up old copies. */
 export class Seeder {
   readonly #gmail: GmailClient;
 
@@ -33,22 +33,22 @@ export class Seeder {
     this.#gmail = gmail;
   }
 
-  /** Copies `count` pool messages into the inbox as fresh `dx-seed` mail. */
+  /** Copies `count` corpus messages into the inbox as fresh `dx-seed` mail. */
   seed({ count, now }: { count: number; now: Date }): Effect.Effect<SeedResult, GmailError> {
     return Effect.gen({ self: this }, function* () {
-      const poolIds = yield* this.#gmail.listIds(`label:${POOL_LABEL}`);
+      const corpusIds = yield* this.#gmail.listIds(`label:${CORPUS_LABEL}`);
       const seedLabel = yield* this.#gmail.ensureLabel(SEED_LABEL);
       const nonce = now.toISOString().replace(/[^0-9]/g, '');
       const seededIds = yield* Effect.forEach(
-        pickPoolSlice(poolIds, count, now),
-        (poolId) =>
-          this.#gmail.getMessage(poolId).pipe(
-            Effect.map((message) => makeSeedCopy(message, { poolId, now, nonce })),
+        pickCorpusSlice(corpusIds, count, now),
+        (corpusId) =>
+          this.#gmail.getMessage(corpusId).pipe(
+            Effect.map((message) => makeSeedCopy(message, { corpusId, now, nonce })),
             Effect.flatMap((copy) => this.#gmail.insert(copy, ['INBOX', seedLabel])),
           ),
         { concurrency: WRITE_CONCURRENCY },
       );
-      return { poolSize: poolIds.length, seededIds };
+      return { corpusSize: corpusIds.length, seededIds };
     });
   }
 
@@ -83,33 +83,33 @@ export class Seeder {
 }
 
 /**
- * Rewrites a pool message into a fresh copy: a new `Date`, a new `Message-ID` and an `X-Dx-Seed`
- * header naming the pool message, with the body untouched. `Bcc` is dropped so a copy never names a
+ * Rewrites a corpus message into a fresh copy: a new `Date`, a new `Message-ID` and an `X-Dx-Seed`
+ * header naming the corpus message, with the body untouched. `Bcc` is dropped so a copy never names a
  * hidden recipient. The `Message-ID` must change because Gmail may drop an inserted message whose id it
  * has already seen, which would make the copy silently vanish.
  */
 export const makeSeedCopy = (
   message: string,
-  { poolId, now, nonce }: { poolId: string; now: Date; nonce: string },
+  { corpusId, now, nonce }: { corpusId: string; now: Date; nonce: string },
 ): string =>
   rewriteHeaders(message, {
     drop: ['Date', 'Message-ID', SEED_HEADER, 'Bcc'],
     add: [
       `Date: ${now.toUTCString().replace('GMT', '+0000')}`,
-      `Message-ID: <${poolId}.${nonce}@canary.dxos.org>`,
-      `${SEED_HEADER}: ${poolId}`,
+      `Message-ID: <${corpusId}.${nonce}@canary.dxos.org>`,
+      `${SEED_HEADER}: ${corpusId}`,
     ],
   });
 
 /**
- * Picks the pool messages for one night: a contiguous slice of the pool's ids, advanced by `count`
+ * Picks the corpus messages for one night: a contiguous slice of the corpus's ids, advanced by `count`
  * each day, so consecutive nights copy different mail and the run needs no stored cursor.
  */
-export const pickPoolSlice = (poolIds: readonly string[], count: number, now: Date): string[] => {
-  if (poolIds.length === 0) {
+export const pickCorpusSlice = (corpusIds: readonly string[], count: number, now: Date): string[] => {
+  if (corpusIds.length === 0) {
     return [];
   }
-  const sorted = [...poolIds].sort();
+  const sorted = [...corpusIds].sort();
   const offset = (Math.floor(now.getTime() / DAY) * count) % sorted.length;
   return Array.from({ length: Math.min(count, sorted.length) }, (_, index) => sorted[(offset + index) % sorted.length]);
 };

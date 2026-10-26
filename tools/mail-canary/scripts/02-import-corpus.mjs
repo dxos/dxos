@@ -3,16 +3,16 @@
 // Copyright 2026 DXOS.org
 //
 
-// Step 02: puts the pool from step 01 into the test account through the Gmail API.
+// Step 02: puts the corpus from step 01 into the test account through the Gmail API.
 //
-//   node scripts/02-import-pool.mjs auth     # once: browser consent; writes the grant to .secrets/mail-canary-gmail.env
-//   node scripts/02-import-pool.mjs <mbox>   # import (resumable), then check the pool holds exactly the mbox
-//   node scripts/02-import-pool.mjs purge    # trash the pool, to clear the 10-message trial
+//   node scripts/02-import-corpus.mjs auth     # once: browser consent; writes the grant to .secrets/mail-canary-gmail.env
+//   node scripts/02-import-corpus.mjs <mbox>   # import (resumable), then check the corpus holds exactly the mbox
+//   node scripts/02-import-corpus.mjs purge    # trash the corpus, to clear the 10-message trial
 //
 // The grant comes from GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET and GMAIL_REFRESH_TOKEN, else the .secrets
 // file, else (with a 1Password service account, as in the cloud sandbox) the references in gmail.env.tpl.
 // Run it before step 03: the sync fetches new mail by id with no date check, so an import into a
-// space that already syncs would pull the whole pool in.
+// space that already syncs would pull the whole corpus in.
 
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -21,8 +21,8 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { Corpus } from '../src/corpus/index.ts';
 import { GmailClient, canaryAccount, credentialsFromEnv, mintRefreshToken } from '../src/gmail/index.ts';
-import { Pool } from '../src/pool/index.ts';
 
 const SECRETS = fileURLToPath(new URL('../../../.secrets/mail-canary-gmail.env', import.meta.url));
 const [command] = process.argv.slice(2);
@@ -58,23 +58,23 @@ const importOrPurge = Effect.gen(function* () {
   const credentials = credentialsFromEnv();
   if (!command || !credentials) {
     return yield* Effect.fail(
-      new Error('usage: 02-import-pool.mjs auth | <mbox> | purge, with the grant set (see README)'),
+      new Error('usage: 02-import-corpus.mjs auth | <mbox> | purge, with the grant set (see README)'),
     );
   }
-  const pool = new Pool(yield* GmailClient.connect(credentials, canaryAccount()));
+  const corpus = new Corpus(yield* GmailClient.connect(credentials, canaryAccount()));
   if (command === 'purge') {
-    console.log(`trashed ${yield* pool.purge()} pool messages`);
+    console.log(`trashed ${yield* corpus.purge()} corpus messages`);
     return;
   }
-  const result = yield* pool.import({
+  const result = yield* corpus.import({
     mboxPath: command,
     onProgress: (imported, total) => console.error(`imported ${imported} / ${total}`),
   });
-  const status = yield* pool.status({ mboxPath: command });
+  const status = yield* corpus.status({ mboxPath: command });
   console.log(JSON.stringify({ ...result, ...status }, null, 2));
   if (!status.ready) {
     return yield* Effect.fail(
-      new Error('pool is not ready: it must hold exactly the mbox (purge a trial first), archived and 31+ days old'),
+      new Error('corpus is not ready: it must hold exactly the mbox (purge a trial first), archived and 31+ days old'),
     );
   }
 });
