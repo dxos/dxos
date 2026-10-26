@@ -26,7 +26,7 @@ drawing's ECHO objects and its DSL source in a `<metadata id="dx-payload">` elem
 back into Composer as an editable drawing. Pass `--plain` for a bare `.svg`. Never run SVGO's default
 preset over one: `removeMetadata` strips the payload.
 
-Mermaid (`.mmd`) still renders through the same task. Use it only for the existing corpus in
+Mermaid input is deprecated. `.mmd` still renders through the same task; use it only for the existing corpus in
 `docs/diagrams/`, which is the layout engine's eval set, or to compare engines.
 
 ## 1. Derive the graph from the code, not from memory
@@ -112,8 +112,35 @@ edge PM -> RPM:top "spawn on EDGE"
 - `diagram group node edge cell via bus compact` are reserved; quote them to use them as ids.
 - Give every node `ref="<repo-relative path>"` so the diagram can be checked against the code.
 
+### Sequence and data-flow diagrams
+
+`diagram kind=sequence` draws an interaction over time. Participants are the nodes, as columns in the
+order you declare them; messages are the edges, as rows in the order you write them, so the source
+order IS the layout and placement hints, sides, waypoints and buses are ignored with a warning.
+
+```
+diagram kind=sequence
+node User role=actor
+node App "Composer"
+node Router "EDGE router"
+edge User -> App "open space"
+edge App calls Router "query"
+edge Router returns App "objects"
+fragment loop "every 5s" { edge App sends Router "heartbeat" }
+note Router "merges local state"
+```
+
+`calls` opens an activation bar that the matching `returns` closes; `sends` is asynchronous; `->` is
+a plain message. `note A`, `note A:left`, `note A, B`, and `fragment alt|opt|loop|par|break|critical
+["guard"] { … } else ["guard"] { … }` (nestable) complete the vocabulary.
+
+`diagram kind=dataflow` places nodes like a structure diagram, but each has a `role`: `process` (the
+default, a bubble), `store` (a box with its D-number) or `external` (a shaded box). Label every edge
+with the data that flows. The report warns about data moving without a process, a process with no
+inputs or no outputs, and a store nobody reads.
+
 The full reference the in-app agent reads is the `uml` skill text in
-`packages/plugins/plugin-illustrator/src/skills/uml-skill.ts`. The Storybook bench, which shows the
+`packages/plugins/plugin-illustrator/src/skills/DrawingSkill.ts`. The Storybook bench, which shows the
 rendered diagram, its DSL and its scores side by side, is
 `plugins/plugin-illustrator/components/Constraints`.
 

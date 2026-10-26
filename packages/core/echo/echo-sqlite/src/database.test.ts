@@ -412,7 +412,7 @@ describe('SqliteDatabase', () => {
         Obj.make(TestSchema.Person, { name: 'Tagged', [Obj.Meta]: { keys: [{ source: 'crm', id: '42' }] } }),
       );
       Obj.update(person, (person) => {
-        Obj.getMeta(person).tags.push(Ref.make(tag));
+        Obj.getMeta(person).tags.push(tag);
       });
       db.add(Obj.make(TestSchema.Person, { name: 'Plain' }));
 

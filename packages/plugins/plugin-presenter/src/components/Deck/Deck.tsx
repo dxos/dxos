@@ -31,7 +31,7 @@ import { type SlideTheme, SlideViewState } from '#types';
 import { ExitButton, PageNumber as PageNumberComponent, Pager as PagerComponent } from '../Pager/index.ts';
 import { PresentationShell } from '../PresentationShell/index.ts';
 import { Slide } from '../Slide/index.ts';
-import { SlideGrid } from '../SlideGrid/index.ts';
+import { SlideGrid, type SlideGridProps } from '../SlideGrid/index.ts';
 import { SlideThemeProvider } from '../SlideTheme/index.ts';
 
 // TODO(burdon): Factor the Deck and Slide families out to a react-ui-presenter package.
@@ -93,7 +93,7 @@ type DeckRootProps = PropsWithChildren<{
   onIndexChange: (index: number) => void;
   fullscreen?: boolean;
   onFullscreenChange?: (fullscreen: boolean) => void;
-  /** Deck theme; without a name, the first slide's `theme:` headmatter applies. */
+  /** Deck theme; without a base theme, the first slide's `theme:` headmatter applies. */
   theme?: SlideTheme.Settings;
   attendableId?: string;
   /** Focus the deck on mount, so keys work without a click; it is refocused after every fullscreen toggle regardless. */
@@ -415,7 +415,7 @@ const Overlay = () => {
         clearTimeout(timer.current);
         timer.current = setTimeout(() => setVisible(false), OVERLAY_IDLE_DURATION);
       }}
-      className='absolute bottom-4 left-1/2 z-[300] flex -translate-x-1/2 items-center gap-4 rounded-md bg-black/50 px-4 py-1 text-white transition-opacity duration-500 data-[visible=false]:opacity-0 data-[visible=false]:pointer-events-none'
+      className='absolute bottom-4 left-1/2 z-[300] flex -translate-x-1/2 items-center gap-4 rounded-md border border-separator bg-modal-surface px-4 py-1 shadow-sm transition-opacity duration-500 data-[visible=false]:opacity-0 data-[visible=false]:pointer-events-none'
     >
       <DeckPager />
       <DeckPageNumber />
@@ -436,6 +436,8 @@ const DeckExit = () => {
 //
 
 type DeckGridProps = {
+  /** Thumbnail size (default `small`). */
+  size?: SlideGridProps['size'];
   /** Moves a slide; without it the thumbnails cannot be dragged. */
   onMove?: (from: number, to: number) => void;
   /** Opens a slide on double-click; without it a double-click presents from that slide. */
@@ -450,7 +452,7 @@ type DeckGridProps = {
  * Every slide as a thumbnail; the current one is selected, and a double-click opens it (or presents from it).
  */
 const DeckGrid = Util.composable<HTMLDivElement, DeckGridProps>(
-  ({ onMove, onOpen, onAddSlide, contextMenuId, ...props }, forwardedRef) => {
+  ({ size, onMove, onOpen, onAddSlide, contextMenuId, ...props }, forwardedRef) => {
     const { slides, index, setIndex, setFullscreen, themeSettings, focusRef } = useDeckContext('Deck.Grid');
     const ref = useComposedRefs<HTMLDivElement>(forwardedRef, focusRef);
     return (
@@ -464,6 +466,7 @@ const DeckGrid = Util.composable<HTMLDivElement, DeckGridProps>(
           <SlideGrid
             slides={slides}
             index={index}
+            size={size}
             onIndexChange={setIndex}
             onMove={onMove}
             onAdd={onAddSlide}

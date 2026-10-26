@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as Skill from '@dxos/compute/Skill';
-import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Collection, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import * as MediaArtifact from '@dxos/plugin-studio/MediaArtifact';
 import { Text } from '@dxos/schema';
 
@@ -47,7 +47,7 @@ export class Slide extends Type.makeObject<Slide>(DXN.make('org.dxos.type.slide'
 export class Presentation extends Type.makeObject<Presentation>(DXN.make('org.dxos.type.presentation', '0.2.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.String),
+    description: Schema.optional(Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Text))),
     /** Slides in order, each parented to the presentation. */
     slides: Schema.Array(Ref.Ref(Slide)).pipe(Annotation.FormInputAnnotation.set(false)),
     /** Overrides the first slide's `theme:` headmatter for every slide, linked objects included; edited by `PresentationProperties`. */

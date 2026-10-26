@@ -1463,7 +1463,14 @@ export class DxGrid extends LitElement {
       aria-colindex=${col}
       aria-rowindex=${row}
       data-testid=${`${plane}.${col}.${row}`}
-      style="grid-column:${visCol + 1};grid-row:${visRow + 1}"
+      style=${styleMap({
+        'gridColumn': `${visCol + 1}`,
+        'gridRow': `${visRow + 1}`,
+        // Important: a cell's own colors outrank its classes' (e.g. a sheet header's important background). Dash-case,
+        // since an important value is set through `style.setProperty`, which takes CSS property names.
+        'background-color': cell?.background && `${cell.background} !important`,
+        'color': cell?.foreground && `${cell.foreground} !important`,
+      })}
     >
       <div role="none" class="dx-grid__cell__content">${cell?.value}${accessory}</div>
       ${

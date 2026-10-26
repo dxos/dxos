@@ -404,7 +404,9 @@ export const ClickStepsEdited: Story = {
     await userEvent.keyboard('{ArrowRight}{ArrowRight}');
     await waitFor(() => expect(hidden()).toBe(1));
     await userEvent.click(canvas.getByTestId('replace-slide'));
-    await expect(await canvas.findByRole('heading', { name: 'After' })).toBeVisible();
+    // The replaced slide remounts under a fresh frame, which shows once its size is measured.
+    const after = await canvas.findByRole('heading', { name: 'After' });
+    await waitFor(() => expect(after).toBeVisible());
     await waitFor(() => expect(hidden()).toBe(3));
   },
 };
@@ -500,7 +502,7 @@ export const ThemeHeadmatter: Story = {
 
 /** A Presentation-style `theme` setting wins over headmatter. */
 export const ThemeOverride: Story = {
-  render: () => <ThemedStory theme={{ name: 'dark', accent: '#f97316' }} />,
+  render: () => <ThemedStory theme={{ base: 'dark', accent: '#f97316' }} />,
   play: async ({ canvasElement }) => {
     await waitFor(() =>
       expect(canvasElement.querySelector<HTMLElement>('[data-slide]')?.style.colorScheme).toBe('dark'),

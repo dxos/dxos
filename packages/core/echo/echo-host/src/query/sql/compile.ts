@@ -158,6 +158,7 @@ export class SqlPlanCompiler {
   readonly #hops: Relation[] = [];
   /** Whether a traversal ran inside a union branch or subquery, whose derivations the chain cannot state. */
   #nestedTraversal = false;
+  #feedCutoffs: ReadonlyMap<string, number> = new Map();
 
   constructor(sql: SqlClient.SqlClient, planSubquery: PlanSubquery) {
     this.#sql = sql;
@@ -166,6 +167,7 @@ export class SqlPlanCompiler {
 
   compile(plan: QueryPlan.Plan, options: CompileOptions = {}): CompiledQuery {
     const sql = this.#sql;
+    this.#feedCutoffs = options.feedCutoffs ?? new Map();
     this.#includeAllFeeds = planIncludesAllFeeds(plan);
     let root = this.#compilePlan(plan, undefined);
     if (options.strongDependencyFilter !== false) {
@@ -254,7 +256,10 @@ export class SqlPlanCompiler {
     const spaces = spaceScopes.map((scope) => scope.spaceId as SpaceId);
     const queues = step.scope.filter((scope): scope is QueryAST.FeedScope => scope._tag === 'feed');
     const includeAllQueues = spaceScopes.some((scope) => scope.includeAllFeeds === true);
-    const queueRefs = extractQueueRefs(queues.map((scope) => String(scope.feedUri)));
+    const queueRefs = withFeedCutoffs(
+      extractQueueRefs(queues.map((scope) => String(scope.feedUri))),
+      this.#feedCutoffs,
+    );
     const scope = buildSourceCondition(sql, spaces, includeAllQueues, queueRefs);
     const window = buildQueueWindow(sql, extractQueueWindow(step));
 
@@ -271,11 +276,17 @@ export class SqlPlanCompiler {
           break;
         }
         const typeCondition = buildTypeDxnCondition(sql, step.selector.typename);
-        // Pinned: the planner otherwise seeks `(spaceId, queueId)` and scans the space's documents
-        // for the type. An inverted select cannot seek the type index, so it is left free.
+        // Pinned: over a space the planner otherwise seeks `(spaceId, queueId)` and scans the space's
+        // documents for the type. One feed is the exception: the type index would read that type in
+        // every feed of the space (a chat's messages among every chat's), where the feed seek reads
+        // only its rows. An inverted select cannot seek the type index, so it is left free.
+        const index =
+          spaces.length === 0 && queueRefs?.length === 1 && queueRefs[0].spaceId !== undefined
+            ? INDEX_SPACE_QUEUE_OBJECT
+            : INDEX_SPACE_TYPE;
         base = step.selector.inverted
           ? sql`SELECT m.recordId, m.objectId, m.spaceId, 1.0 AS rank FROM objectMeta m WHERE ${scope} AND NOT (${typeCondition})${window}`
-          : sql`SELECT m.recordId, m.objectId, m.spaceId, 1.0 AS rank FROM objectMeta m INDEXED BY ${sql.literal(INDEX_SPACE_TYPE)} WHERE ${scope} AND (${typeCondition})${window}`;
+          : sql`SELECT m.recordId, m.objectId, m.spaceId, 1.0 AS rank FROM objectMeta m INDEXED BY ${sql.literal(index)} WHERE ${scope} AND (${typeCondition})${window}`;
         break;
       }
       case 'IdSelector': {
@@ -438,7 +449,7 @@ export class SqlPlanCompiler {
         const target = canonicalTag(filter.tag);
         // A tag is an encoded reference or (legacy) a bare URI; both sides compare by entity id.
         return sql`EXISTS (SELECT 1 FROM json_each(d.snapshot, ${tagsPath}) t
-          WHERE ${localIdOfUri(sql, sql`COALESCE(json_extract(t.value, '$."/"'), t.value)`)} = ${target})`;
+          WHERE ${localIdOfUri(sql, tagUriOf(sql, sql`t`))} = ${target})`;
       }
       case 'annotation': {
         // Keys are matched with `json_each` rather than a JSON path, which cannot address every key
@@ -718,7 +729,7 @@ export class SqlPlanCompiler {
   }
 
   /**
-   * Drops document rows whose strong dependencies (schema object, relation endpoints, parent) are
+   * Drops document rows whose strong dependencies (schema object, relation endpoints, parent, tags) are
    * absent from the space's indexed documents, transitively, so they never reach a client that
    * could not hydrate them. Cross-space dependencies are not gated, as `ObjectCore` does not gate them.
    */
@@ -735,6 +746,16 @@ export class SqlPlanCompiler {
         FROM ${sql.literal(this.#peekName('sdep'))} x JOIN ${docRow(sql, 'p')} ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId
         WHERE x.depth < ${MAX_DEPTH_FOR_STRONG_DEP_TRACING} AND ${extra} ${depId} IS NOT NULL`;
     const relation = (row: Fragment) => sql`${row}.entityKind = 'relation' AND`;
+    // Tags live in the snapshot's meta, one dependency per element.
+    const tagsPath = jsonPathLiteral(sql, [ATTR_META, 'tags']);
+    const tagId = localIdOfLocalUri(sql, tagUriOf(sql, sql`t`));
+    const seedTags = sql`SELECT w.recordId, m.spaceId, ${tagId} AS depId, 1 AS depth
+        FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectSnapshot d ON d.recordId = w.recordId, json_each(d.snapshot, ${tagsPath}) t
+        WHERE m.queueId = '' AND ${tagId} IS NOT NULL`;
+    const recurseTags = sql`SELECT x.recordId, x.spaceId, ${tagId} AS depId, x.depth + 1
+        FROM ${sql.literal(this.#peekName('sdep'))} x JOIN ${docRow(sql, 'p')} ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId
+        JOIN objectSnapshot pd ON pd.recordId = p.recordId, json_each(pd.snapshot, ${tagsPath}) t
+        WHERE x.depth < ${MAX_DEPTH_FOR_STRONG_DEP_TRACING} AND ${tagId} IS NOT NULL`;
     const sdep = this.#define(
       'sdep',
       sql.join(
@@ -745,10 +766,12 @@ export class SqlPlanCompiler {
         seedFrom(sql`m.parentId`, sql``),
         seedFrom(sql`m.sourceId`, relation(sql`m`)),
         seedFrom(sql`m.targetId`, relation(sql`m`)),
+        seedTags,
         recurseWith(typeId(sql`p`), sql``),
         recurseWith(sql`p.parentId`, sql``),
         recurseWith(sql`p.sourceId`, relation(sql`p`)),
         recurseWith(sql`p.targetId`, relation(sql`p`)),
+        recurseTags,
       ]),
     );
     return this.#define(
@@ -1286,6 +1309,8 @@ export type CompileOptions = {
    * executor mirrors the client-side gate so dependency-broken objects never reach it.
    */
   strongDependencyFilter?: boolean;
+  /** Per feed (keyed `<spaceId>/<feedId>`), the time (unix ms) before which its rows have expired. */
+  feedCutoffs?: ReadonlyMap<string, number>;
 };
 
 /**
@@ -1516,6 +1541,13 @@ const structuralMatch = (sql: SqlClient.SqlClient, element: Fragment, operand: R
 const docRow = (sql: SqlClient.SqlClient, alias: string): Fragment =>
   sql`objectMeta ${sql.literal(alias)} INDEXED BY ${sql.literal(INDEX_SPACE_QUEUE_OBJECT)}`;
 
+/**
+ * The URI of one `json_each` element of `meta.tags`: an encoded reference, or (legacy) a bare URI, whose
+ * text `json_extract` would reject as malformed JSON — so the element's type picks the read.
+ */
+const tagUriOf = (sql: SqlClient.SqlClient, element: Fragment): Fragment =>
+  sql`CASE ${element}.type WHEN 'object' THEN json_extract(${element}.value, '$."/"') WHEN 'text' THEN ${element}.value END`;
+
 /** The entity id of an `echo:` URI (the text after its last slash), `NULL` for any other text. */
 const localIdOfUri = (sql: SqlClient.SqlClient, uri: Fragment): Fragment =>
   sql`CASE WHEN ${uri} LIKE 'echo:%' THEN substr(${uri}, length(rtrim(${uri}, replace(${uri}, '/', ''))) + 1) ELSE ${uri} END`;
@@ -1548,6 +1580,16 @@ const extractQueueRefs = (queues: readonly string[]): QueueRef[] | null => {
   }
   return refs;
 };
+
+/**
+ * Bounds each space-qualified queue by its feed's retention cutoff, so the read (and the page limit
+ * after it) never counts an expired row. An unqualified queue names no space whose options apply.
+ */
+export const withFeedCutoffs = (refs: QueueRef[] | null, feedCutoffs: ReadonlyMap<string, number>): QueueRef[] | null =>
+  refs?.map((ref) => {
+    const updatedSince = ref.spaceId !== undefined ? feedCutoffs.get(`${ref.spaceId}/${ref.queueId}`) : undefined;
+    return updatedSince !== undefined ? { ...ref, updatedSince } : ref;
+  }) ?? null;
 
 /** Bound below every assigned position, which start at 0. */
 const BEFORE_FIRST_POSITION = -1;
