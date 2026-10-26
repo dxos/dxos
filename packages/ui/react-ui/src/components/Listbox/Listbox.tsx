@@ -14,8 +14,8 @@ import React, {
   createContext,
   forwardRef,
   useContext,
-  useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -264,7 +264,7 @@ const useAutoColumns = (
   setColumnCount: (count: number) => void,
 ) => {
   const min = tileWidth?.min;
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!element || !min) {
       return;
     }
