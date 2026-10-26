@@ -74,9 +74,10 @@ the 60s source render, 3s earlier than in `ECHO.m4v`). About 25 words fits a 10s
 
    - Today we grant agents coarse-grained access to everything, with no audit and limited control.
    - REDO: As agents run continuously, across both private and enterprise data, that becomes more dangerous every day.
-     - Variant A (14 words): As we scale up always-on agents, mixing personal and enterprise data, that risk compounds.
-     - Variant B (16 words): And as agents run around the clock across personal and company data, the risk only grows.
-     - Variant C (15 words): That is risky today, and riskier as always-on agents mix our private and enterprise data.
+     - Variant A (14 words): That is risky, and it doesn't scale: always-on agents need scoped access, not all-or-nothing.
+     - Variant B (18 words): It's risky, and it breaks down for always-on agents, which need the right data, not all of it.
+     - Variant C (14 words): That approach is risky, and it simply doesn't work for agents that run continuously.
+     - Variant D (15 words): It doesn't scale: for always-on agents, all-or-nothing access is both too risky and too blunt.
 
 3. **ECHO Graph Database** (23–33s, 24 words)
 
