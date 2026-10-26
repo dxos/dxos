@@ -1,11 +1,8 @@
 # ECHO video (60s): talking points
 
 Talking points for each slide of the ECHO explainer (`ECHO.m4v`, rendered from `temp/flow-60s.mp4` in the
-`data-molecule-animation` worktree), with a draft spoken line for each. A slide has about 10s, so about 25–30 words
-at a natural pace. Points marked _(verify)_ make a claim that needs checking against the code before it is spoken.
-
-The spoken lines as voiced live in [`cues/echo.json`](cues/echo.json) (times are in the 60s source render, 3s
-earlier than in `ECHO.m4v`); the drafts below are the starting point.
+`data-molecule-animation` worktree), and the spoken script under [Script](#script). Points marked _(verify)_ make a
+claim that needs checking against the code before it is spoken.
 
 ## 0. Open: DXOS (0–3s)
 
@@ -20,9 +17,6 @@ earlier than in `ECHO.m4v`); the drafts below are the starting point.
 - Second, agents are only as useful as the data they can reach: to be at their best, they need all of it.
 - Giving agents that access safely is essential, and it needs a new security model.
 
-**Spoken (draft, 29 words):** "SaaS has siloed our data for decades. It was a consequence of the old software economics.
-Now apps are easy to build, and agents need all of our data to be useful. That demands a new security model."
-
 ## 2. Monolithic Agents (13–23s)
 
 - Today users grant agents coarse-grained access: one all-or-nothing grant per app.
@@ -31,9 +25,6 @@ Now apps are easy to build, and agents need all of our data to be useful. That d
 - The risk grows as agents run continuously, rather than answering one prompt at a time.
 - It grows again as those agents mix private data with enterprise data.
 - The more agents we run, the more dangerous this approach becomes.
-
-**Spoken (draft, 30 words):** "Today we grant agents coarse access to everything, with no audit and no control. As agents run
-continuously, across both private and enterprise data, that becomes more dangerous every day."
 
 ## 3. ECHO Graph Database (23–33s)
 
@@ -44,9 +35,6 @@ continuously, across both private and enterprise data, that becomes more dangero
 - Local-first: the graph lives on your devices and works offline.
 - Changes from many people and agents merge automatically, in real time.
 
-**Spoken (draft, 24 words):** "ECHO takes a different approach. It brings all your data into a single logical graph, so people
-and agents work from the same context."
-
 ## 4. ECHO Hypergraph (33–43s)
 
 - The single graph is partitioned into secure containers, called spaces.
@@ -55,9 +43,6 @@ and agents work from the same context."
 - Spaces can span organizational boundaries: a space can be shared with a customer, a partner or a contractor.
 - Objects can reference each other across spaces, so the graph stays one logical whole.
 - Every change in a space is attributed to the person or agent who made it. _(verify)_
-
-**Spoken (draft, 30 words):** "That graph is partitioned into secure spaces. Share each one with the colleagues and agents who
-need it, even across organizations, and every agent sees only what its task requires."
 
 ## 5. Open and Extensible (43–60s)
 
@@ -73,7 +58,18 @@ need it, even across organizations, and every agent sees only what its task requ
 - "Sovereign Intelligence." Your data, your agents, your control.
 - Join the community at dxos.org/discord.
 
-## Current narration (for reference)
+## Script
+
+The spoken lines, one per slide; [`cues/echo.json`](cues/echo.json) is built from this section (its times are in
+the 60s source render, 3s earlier than in `ECHO.m4v`). About 25 words fits a 10s slide.
+
+1. **The Silo Problem** (3–13s, 38 words): "SaaS has siloed our data for decades. It was a consequence of the old software economics. Now apps are easy to build, and agents need all of our data to be useful. That demands a new security model."
+2. **Monolithic Agents** (13–23s, 30 words): "Today we grant agents coarse access to everything, with no audit and no control. As agents run continuously, across both private and enterprise data, that becomes more dangerous every day."
+3. **ECHO Graph Database** (23–33s, 24 words): "ECHO takes a different approach. It brings all your data into a single logical graph, so people and agents work from the same context."
+4. **ECHO Hypergraph** (33–43s, 30 words): "That graph is partitioned into secure spaces. Share each one with the colleagues and agents who need it, even across organizations, and every agent sees only what its task requires."
+5. **Open and Extensible** (43–60s, 36 words): "And because it's open, it keeps growing. New sources, new apps and new agents plug into the same graph, and you never give up control. DXOS is the operating system for people and agents working together."
+
+## Previous narration (for reference)
 
 The lines `flow-cues.json` speaks today, one per slide:
 

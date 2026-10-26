@@ -1,11 +1,11 @@
 [
   {
     "at": 0.5,
-    "text": "SaaS has siloed our data for decades. Now apps are easy to build, and agents need all our data. That demands a new security model."
+    "text": "SaaS has siloed our data for decades. It was a consequence of the old software economics. Now apps are easy to build, and agents need all of our data to be useful. That demands a new security model."
   },
   {
     "at": 10.5,
-    "text": "Today agents get coarse access to everything, with no audit and no control. As they run continuously, across private and enterprise data, the risk keeps growing."
+    "text": "Today we grant agents coarse access to everything, with no audit and no control. As agents run continuously, across both private and enterprise data, that becomes more dangerous every day."
   },
   {
     "at": 20.5,
@@ -13,7 +13,7 @@
   },
   {
     "at": 30.5,
-    "text": "That graph is partitioned into secure spaces, shared with the colleagues and agents who need them, even across organizations. Each agent sees only what its task requires."
+    "text": "That graph is partitioned into secure spaces. Share each one with the colleagues and agents who need it, even across organizations, and every agent sees only what its task requires."
   },
   {
     "at": 40.5,
