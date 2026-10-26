@@ -21,12 +21,6 @@ import { AgentIdentity, CommentCapabilities, CommentOperation } from '#types';
 import { commentAgentConfig } from '../comment-agent-config.ts';
 import { shouldTriggerAgent } from '../should-trigger-agent.ts';
 
-/**
- * Threads whose first save is in flight. A reply sent during that save waits for it, since the thread is not in the
- * database until the save ends and saving it twice made the loser undo the winner's save, deleting the thread.
- */
-const saving = new WeakMap<Thread.Thread, Deferred.Deferred<void>>();
-
 const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = CommentOperation.AddMessage.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ anchor, subject, sender, text }) {
@@ -44,9 +38,11 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
         blocks: [{ _tag: 'text', text }],
       });
 
-      // Made up front so that checking for an in-flight save and claiming one share a synchronous turn.
+      // A reply sent during the draft's save waits for it: the thread is not in the database until the save ends, and
+      // saving it twice made the second save undo the first, deleting the thread. Made up front so that checking for
+      // an in-flight save and claiming one share a synchronous turn.
       const done = yield* Deferred.make<void>();
-      const inFlight = saving.get(thread);
+      const inFlight = registry.get(stateAtom).saving?.[anchor.id];
       if (inFlight) {
         yield* Deferred.await(inFlight);
         if (!Obj.getDatabase(thread)) {
@@ -60,10 +56,14 @@ const handler: Operation.WithHandler<typeof CommentOperation.AddMessage> = Comme
       // The database association, not the draft entry, is the signal: the draft is only cleared at the end of a save.
       const alreadyPersisted = Obj.getDatabase(thread) !== undefined;
       if (draft && !alreadyPersisted) {
-        saving.set(thread, done);
+        registry.set(stateAtom, { ...state, saving: { ...state.saving, [anchor.id]: done } });
         const saved = yield* persistThread({ db, thread, subject, subjectId, draft, anchorId: anchor.id }).pipe(
           Effect.ensuring(
-            Effect.sync(() => saving.delete(thread)).pipe(Effect.andThen(Deferred.succeed(done, undefined))),
+            Effect.sync(() => {
+              const latest = registry.get(stateAtom);
+              const saving = Object.entries(latest.saving ?? {}).filter(([anchorId]) => anchorId !== anchor.id);
+              registry.set(stateAtom, { ...latest, saving: Object.fromEntries(saving) });
+            }).pipe(Effect.andThen(Deferred.succeed(done, undefined))),
           ),
         );
         if (!saved) {
