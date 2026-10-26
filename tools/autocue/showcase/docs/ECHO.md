@@ -126,8 +126,8 @@ stretches to the voice as for ECHO. Lines marked _(verify)_ make a claim to chec
    - Your data is organized into collaborative workspaces and accessed via plugins.
    - You can add comments to any object; and assign tasks to agents, which read and update data in real time.
    - Documents can incorporate components from any plugin.
-   - And the plugin registry contains dozens of rich components, ready to drop into any workspace.
-   - Plugins provide an extensive set of tools, skills and connectors.
+   - The plugin registry contains dozens of rich components, ready to drop into any workspace.
+   - And every plugin brings new tools, skills and connectors for your agents.
    - Documents, diagrams, tables, and kanbans are all objects in the same graph.
 
 2. **Agents**
