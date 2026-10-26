@@ -79,11 +79,7 @@ the 60s source render, 3s earlier than in `ECHO.m4v`). About 25 words fits a 10s
 
    - The ECHO Database takes a fundamentally different approach.
    - Enterprise, team and personal data live in a unified virtual semantic graph.
-   - NEW: Composer, a super app that replaces dozens of individual SaaS apps.
-     - Variant A (14 words): Composer is a super app on that graph, replacing dozens of separate SaaS tools.
-     - Variant B (12 words): And Composer, a single super app, replaces dozens of individual SaaS products.
-     - Variant C (15 words): On top of it, Composer is one super app that replaces dozens of SaaS apps.
-     - Variant D (16 words): Composer brings it all together in one super app, in place of dozens of SaaS tools.
+   - Composer brings it all together in one super app, replacing dozens of separate SaaS tools.
 
 4. **ECHO Hypergraph** (33–43s, 30 words)
 
