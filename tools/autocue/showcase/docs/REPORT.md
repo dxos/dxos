@@ -77,7 +77,7 @@ conductor    handpan      kanban       map          mermaid      sequencer
 
 `composite.mp4` (also `temp/composite/composite.mp4`), a frame every 6s:
 
-![composite](../../../temp/showcase/overnight/composite.png)
+![composite](../../../../temp/showcase/overnight/composite.png)
 
 Notes
 
@@ -93,8 +93,8 @@ Notes (all)
 
 ### composer
 
-![composer light](../../../temp/showcase/overnight/clips/light/composer.png)
-![composer dark](../../../temp/showcase/overnight/clips/dark/composer.png)
+![composer light](../../../../temp/showcase/overnight/clips/light/composer.png)
+![composer dark](../../../../temp/showcase/overnight/clips/dark/composer.png)
 
 Notes
 
@@ -102,8 +102,8 @@ Notes
 
 ### board
 
-![board light](../../../temp/showcase/overnight/clips/light/board.png)
-![board dark](../../../temp/showcase/overnight/clips/dark/board.png)
+![board light](../../../../temp/showcase/overnight/clips/light/board.png)
+![board dark](../../../../temp/showcase/overnight/clips/dark/board.png)
 
 Notes
 
@@ -111,8 +111,8 @@ Notes
 
 ### canvas
 
-![canvas light](../../../temp/showcase/overnight/clips/light/canvas.png)
-![canvas dark](../../../temp/showcase/overnight/clips/dark/canvas.png)
+![canvas light](../../../../temp/showcase/overnight/clips/light/canvas.png)
+![canvas dark](../../../../temp/showcase/overnight/clips/dark/canvas.png)
 
 Notes
 
@@ -123,8 +123,8 @@ Notes
 
 ### chess
 
-![chess light](../../../temp/showcase/overnight/clips/light/chess.png)
-![chess dark](../../../temp/showcase/overnight/clips/dark/chess.png)
+![chess light](../../../../temp/showcase/overnight/clips/light/chess.png)
+![chess dark](../../../../temp/showcase/overnight/clips/dark/chess.png)
 
 Notes
 
@@ -132,8 +132,8 @@ Notes
 
 ### code
 
-![code light](../../../temp/showcase/overnight/clips/light/code.png)
-![code dark](../../../temp/showcase/overnight/clips/dark/code.png)
+![code light](../../../../temp/showcase/overnight/clips/light/code.png)
+![code dark](../../../../temp/showcase/overnight/clips/dark/code.png)
 
 Notes
 
@@ -141,8 +141,8 @@ Notes
 
 ### conductor
 
-![conductor light](../../../temp/showcase/overnight/clips/light/conductor.png)
-![conductor dark](../../../temp/showcase/overnight/clips/dark/conductor.png)
+![conductor light](../../../../temp/showcase/overnight/clips/light/conductor.png)
+![conductor dark](../../../../temp/showcase/overnight/clips/dark/conductor.png)
 
 Notes
 
@@ -150,8 +150,8 @@ Notes
 
 ### excalidraw
 
-![excalidraw light](../../../temp/showcase/overnight/clips/light/excalidraw.png)
-![excalidraw dark](../../../temp/showcase/overnight/clips/dark/excalidraw.png)
+![excalidraw light](../../../../temp/showcase/overnight/clips/light/excalidraw.png)
+![excalidraw dark](../../../../temp/showcase/overnight/clips/dark/excalidraw.png)
 
 Notes
 
@@ -159,8 +159,8 @@ Notes
 
 ### explorer
 
-![explorer light](../../../temp/showcase/overnight/clips/light/explorer.png)
-![explorer dark](../../../temp/showcase/overnight/clips/dark/explorer.png)
+![explorer light](../../../../temp/showcase/overnight/clips/light/explorer.png)
+![explorer dark](../../../../temp/showcase/overnight/clips/dark/explorer.png)
 
 Notes
 
@@ -168,8 +168,8 @@ Notes
 
 ### handpan
 
-![handpan light](../../../temp/showcase/overnight/clips/light/handpan.png)
-![handpan dark](../../../temp/showcase/overnight/clips/dark/handpan.png)
+![handpan light](../../../../temp/showcase/overnight/clips/light/handpan.png)
+![handpan dark](../../../../temp/showcase/overnight/clips/dark/handpan.png)
 
 Notes
 
@@ -185,8 +185,8 @@ Notes
 
 ### kanban
 
-![kanban light](../../../temp/showcase/overnight/clips/light/kanban.png)
-![kanban dark](../../../temp/showcase/overnight/clips/dark/kanban.png)
+![kanban light](../../../../temp/showcase/overnight/clips/light/kanban.png)
+![kanban dark](../../../../temp/showcase/overnight/clips/dark/kanban.png)
 
 Notes
 
@@ -195,8 +195,8 @@ Notes
 
 ### map
 
-![map light](../../../temp/showcase/overnight/clips/light/map.png)
-![map dark](../../../temp/showcase/overnight/clips/dark/map.png)
+![map light](../../../../temp/showcase/overnight/clips/light/map.png)
+![map dark](../../../../temp/showcase/overnight/clips/dark/map.png)
 
 Notes
 
@@ -204,8 +204,8 @@ Notes
 
 ### markdown
 
-![markdown light](../../../temp/showcase/overnight/clips/light/markdown.png)
-![markdown dark](../../../temp/showcase/overnight/clips/dark/markdown.png)
+![markdown light](../../../../temp/showcase/overnight/clips/light/markdown.png)
+![markdown dark](../../../../temp/showcase/overnight/clips/dark/markdown.png)
 
 Notes
 
@@ -217,8 +217,8 @@ Notes
 
 ### mermaid
 
-![mermaid light](../../../temp/showcase/overnight/clips/light/mermaid.png)
-![mermaid dark](../../../temp/showcase/overnight/clips/dark/mermaid.png)
+![mermaid light](../../../../temp/showcase/overnight/clips/light/mermaid.png)
+![mermaid dark](../../../../temp/showcase/overnight/clips/dark/mermaid.png)
 
 Notes
 
@@ -226,8 +226,8 @@ Notes
 
 ### presenter
 
-![presenter light](../../../temp/showcase/overnight/clips/light/presenter.png)
-![presenter dark](../../../temp/showcase/overnight/clips/dark/presenter.png)
+![presenter light](../../../../temp/showcase/overnight/clips/light/presenter.png)
+![presenter dark](../../../../temp/showcase/overnight/clips/dark/presenter.png)
 
 Notes
 
@@ -235,8 +235,8 @@ Notes
 
 ### projects
 
-![projects light](../../../temp/showcase/overnight/clips/light/projects.png)
-![projects dark](../../../temp/showcase/overnight/clips/dark/projects.png)
+![projects light](../../../../temp/showcase/overnight/clips/light/projects.png)
+![projects dark](../../../../temp/showcase/overnight/clips/dark/projects.png)
 
 Notes
 
@@ -253,8 +253,8 @@ Notes
 
 ### sequencer
 
-![sequencer light](../../../temp/showcase/overnight/clips/light/sequencer.png)
-![sequencer dark](../../../temp/showcase/overnight/clips/dark/sequencer.png)
+![sequencer light](../../../../temp/showcase/overnight/clips/light/sequencer.png)
+![sequencer dark](../../../../temp/showcase/overnight/clips/dark/sequencer.png)
 
 Notes
 
@@ -262,8 +262,8 @@ Notes
 
 ### sheet
 
-![sheet light](../../../temp/showcase/overnight/clips/light/sheet.png)
-![sheet dark](../../../temp/showcase/overnight/clips/dark/sheet.png)
+![sheet light](../../../../temp/showcase/overnight/clips/light/sheet.png)
+![sheet dark](../../../../temp/showcase/overnight/clips/dark/sheet.png)
 
 Notes
 
@@ -271,8 +271,8 @@ Notes
 
 ### spacetime
 
-![spacetime light](../../../temp/showcase/overnight/clips/light/spacetime.png)
-![spacetime dark](../../../temp/showcase/overnight/clips/dark/spacetime.png)
+![spacetime light](../../../../temp/showcase/overnight/clips/light/spacetime.png)
+![spacetime dark](../../../../temp/showcase/overnight/clips/dark/spacetime.png)
 
 Notes
 
@@ -280,8 +280,8 @@ Notes
 
 ### table
 
-![table light](../../../temp/showcase/overnight/clips/light/table.png)
-![table dark](../../../temp/showcase/overnight/clips/dark/table.png)
+![table light](../../../../temp/showcase/overnight/clips/light/table.png)
+![table dark](../../../../temp/showcase/overnight/clips/dark/table.png)
 
 Notes
 
@@ -289,8 +289,8 @@ Notes
 
 ### tasks
 
-![tasks light](../../../temp/showcase/overnight/clips/light/tasks.png)
-![tasks dark](../../../temp/showcase/overnight/clips/dark/tasks.png)
+![tasks light](../../../../temp/showcase/overnight/clips/light/tasks.png)
+![tasks dark](../../../../temp/showcase/overnight/clips/dark/tasks.png)
 
 Notes
 
@@ -298,8 +298,8 @@ Notes
 
 ### terra
 
-![terra light](../../../temp/showcase/overnight/clips/light/terra.png)
-![terra dark](../../../temp/showcase/overnight/clips/dark/terra.png)
+![terra light](../../../../temp/showcase/overnight/clips/light/terra.png)
+![terra dark](../../../../temp/showcase/overnight/clips/dark/terra.png)
 
 Notes
 
@@ -307,8 +307,8 @@ Notes
 
 ### tldraw
 
-![tldraw light](../../../temp/showcase/overnight/clips/light/tldraw.png)
-![tldraw dark](../../../temp/showcase/overnight/clips/dark/tldraw.png)
+![tldraw light](../../../../temp/showcase/overnight/clips/light/tldraw.png)
+![tldraw dark](../../../../temp/showcase/overnight/clips/dark/tldraw.png)
 
 Notes
 
@@ -316,8 +316,8 @@ Notes
 
 ### uml
 
-![uml light](../../../temp/showcase/overnight/clips/light/uml.png)
-![uml dark](../../../temp/showcase/overnight/clips/dark/uml.png)
+![uml light](../../../../temp/showcase/overnight/clips/light/uml.png)
+![uml dark](../../../../temp/showcase/overnight/clips/dark/uml.png)
 
 Notes
 
@@ -325,8 +325,8 @@ Notes
 
 ### voxel
 
-![voxel light](../../../temp/showcase/overnight/clips/light/voxel.png)
-![voxel dark](../../../temp/showcase/overnight/clips/dark/voxel.png)
+![voxel light](../../../../temp/showcase/overnight/clips/light/voxel.png)
+![voxel dark](../../../../temp/showcase/overnight/clips/dark/voxel.png)
 
 Notes
 

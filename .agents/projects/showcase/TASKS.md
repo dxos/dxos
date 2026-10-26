@@ -125,4 +125,4 @@ Three 20s tour shots and ~30 short shots recorded in Screen Studio, assembled in
 ### References
 
 - PR: https://github.com/dxos/dxos/pull/14026
-- Rules and script table: `tools/autocue/showcase/SHOWCASE.md`
+- Rules and script table: `tools/autocue/showcase/docs/SHOWCASE.md`
