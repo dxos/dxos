@@ -59,6 +59,13 @@ const maybeScrollIntoView = (element: HTMLElement): void => {
   }
 };
 
+const floatingClassNames = (position: string) =>
+  mx(
+    'absolute z-10 opacity-0 pointer-events-none transition-opacity',
+    'group-hover:opacity-100 group-hover:pointer-events-auto',
+    position,
+  );
+
 export type PreviewComponentProps = WidgetProps<
   {
     /** The widget id, for reporting the target's state back to the editor. */
@@ -341,7 +348,7 @@ export const PreviewComponent = ({
     if (mode === 'section') {
       return (
         <div
-          className='relative grid scroll-mt-16 outline-hidden whitespace-normal'
+          className='group relative grid scroll-mt-16 outline-hidden whitespace-normal'
           style={sizeStyle(size, 'vertical')}
           {...frameProps}
           {...resizeAttributes}
@@ -363,22 +370,18 @@ export const PreviewComponent = ({
             <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
           </div>
 
-          <Layout.Flex align='center' justify='end' gap='xs' classNames='absolute bottom-1 right-1'>
+          {/* The tag and open button float below the box, shown on hover, so they never cover the surface. */}
+          <Layout.Flex
+            align='center'
+            justify='center'
+            gap='xs'
+            classNames={floatingClassNames('top-full left-1/2 -translate-x-1/2 pt-1')}
+          >
             <span className='dx-tag dx-tag-inline flex gap-1' data-hue='neutral'>
               {objectIcon && <Icon.Icon icon={objectIcon.icon} size='md' />}
               {objectLabel}
             </span>
-          </Layout.Flex>
-
-          <Layout.Flex align='center' justify='end' gap='xs' classNames='absolute top-1 right-1'>
-            <Button.Root
-              size='sm'
-              icon='ph--arrow-square-out--regular'
-              iconOnly
-              label='Open'
-              variant='ghost'
-              onClick={handleOpen}
-            />
+            <Button.Root size='md' icon='ph--arrow-square-out--regular' iconOnly label='Open' onClick={handleOpen} />
           </Layout.Flex>
 
           <ResizeHandle
