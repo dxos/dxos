@@ -100,7 +100,7 @@ export class GmailClient {
 
   /**
    * Imports a message as received mail: no inbox unless asked, never spam, and the internal date
-   * taken from its `Date` header, so an old corpus message stays outside the sync window.
+   * taken from its `Date` header, so an old pool message stays outside the sync window.
    */
   importMessage(message: string, labelIds: readonly string[]): Effect.Effect<string, GmailError> {
     return this.#post('/messages/import?internalDateSource=dateHeader&neverMarkSpam=true&processForCalendar=false', {

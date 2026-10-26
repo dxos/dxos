@@ -15,7 +15,7 @@ const report = (message: string): NightlyReport => ({
   spaceId: 'space',
   seeded: 100,
   trashed: 100,
-  corpusSize: 10_000,
+  poolSize: 10_000,
 });
 
 describe('renderSummary', () => {

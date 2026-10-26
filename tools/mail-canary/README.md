@@ -10,11 +10,11 @@ Design: the [Mail Sync Canary spec](https://claude.ai/artifact/GymNuUNJiiph2LuiD
 
 ## How it works
 
-- **Corpus (once).** 10,000 Enron messages sit in Gmail under the archived label `enron-corpus`, all older
+- **Pool (once).** 10,000 Enron messages sit in Gmail under the archived label `enron-pool`, all older
   than the sync's 30-day window. Their age, not a filter, keeps them out of the canary space.
 - **Canary space (once).** A preview identity owns a space bound to the test account with no filter,
   the default sync-back and the product's `*/10` remote sync trigger: the users' code path.
-- **Nightly.** CI copies 100 corpus messages into the inbox as fresh mail (label `dx-seed`), waits for
+- **Nightly.** CI copies 100 pool messages into the inbox as fresh mail (label `dx-seed`), waits for
   the space's own sync to pick them up, and checks the last 25 hours of the Execution Trace feed, so a
   failure between two nights is seen even if later runs succeeded.
 
@@ -22,18 +22,18 @@ Design: the [Mail Sync Canary spec](https://claude.ai/artifact/GymNuUNJiiph2LuiD
 
 | Step | Command                                         | Runs                 | Needs                       |
 | ---- | ----------------------------------------------- | -------------------- | --------------------------- |
-| 01   | `node scripts/01-build-corpus.mjs`                | once                 | the CMU Enron maildir       |
-| 02   | `node scripts/02-import-corpus.mjs`               | once, before step 03 | the canary's Gmail grant    |
+| 01   | `node scripts/01-build-pool.mjs`                | once                 | the CMU Enron maildir       |
+| 02   | `node scripts/02-import-pool.mjs`               | once, before step 03 | the canary's Gmail grant    |
 | 03   | `node scripts/03-setup-space.mjs`               | once                 | `dx` (bun), Composer        |
 | 04   | `moon run mail-canary:nightly`                  | nightly in CI        | the variables below         |
 
-### 01 Build the corpus
+### 01 Build the pool
 
 ```bash
 # CMU Enron corpus, https://www.cs.cmu.edu/~enron/ (443 MB); only these custodians are needed.
 tar -xzf enron_mail_20150507.tar.gz -C ~/enron maildir/kean-s maildir/dasovich-j maildir/kaminski-v
-node scripts/01-build-corpus.mjs --maildir ~/enron/maildir --out ~/enron/enron-corpus.mbox
-node scripts/01-build-corpus.mjs --maildir ~/enron/maildir --out ~/enron/trial.mbox --limit 10
+node scripts/01-build-pool.mjs --maildir ~/enron/maildir --out ~/enron/enron-pool.mbox
+node scripts/01-build-pool.mjs --maildir ~/enron/maildir --out ~/enron/trial.mbox --limit 10
 ```
 
 It drops duplicates by content (one custodian files the same mail in several folders, hence three
@@ -41,13 +41,13 @@ custodians) and messages with no body, samples `--limit` (10,000) evenly over ti
 into the year ending 31 days ago, drops `Bcc`, and records every folder a message was filed in as
 `X-Gmail-Labels: Enron/<custodian>/<folder>,...`. The corpus is real people's mail: keep it out of git.
 
-### 02 Import the corpus
+### 02 Import the pool
 
 ```bash
-GMAIL_CLIENT_ID=... GMAIL_CLIENT_SECRET=... node scripts/02-import-corpus.mjs auth
-node scripts/02-import-corpus.mjs ~/enron/trial.mbox      # then check label:enron-corpus in Gmail
-node scripts/02-import-corpus.mjs purge
-node scripts/02-import-corpus.mjs ~/enron/enron-corpus.mbox # about 20 minutes, resumable
+GMAIL_CLIENT_ID=... GMAIL_CLIENT_SECRET=... node scripts/02-import-pool.mjs auth
+node scripts/02-import-pool.mjs ~/enron/trial.mbox      # then check label:enron-pool in Gmail
+node scripts/02-import-pool.mjs purge
+node scripts/02-import-pool.mjs ~/enron/enron-pool.mbox # about 20 minutes, resumable
 ```
 
 - `auth` mints the canary's own grant (`gmail.modify`) with a browser consent as the test account and
@@ -56,14 +56,14 @@ node scripts/02-import-corpus.mjs ~/enron/enron-corpus.mbox # about 20 minutes, 
   into the CI secrets and 1Password (`eng-dev/com.google`, section `mail-canary`), where a cloud
   session reads them through `gmail.env.tpl`.
 - An import puts each message in the mailbox without sending it: archived, never spam, labelled
-  `enron-corpus` and with its folders, dated by its `Date` header. In the trial, check the dates are the
+  `enron-pool` and with its folders, dated by its `Date` header. In the trial, check the dates are the
   shifted ones (not 2001, not today) and the `Enron/...` labels are there; `purge` then trashes it.
-- After the import, the script fails unless the corpus holds exactly the mbox, nothing is in the inbox
+- After the import, the script fails unless the pool holds exactly the mbox, nothing is in the inbox
   and nothing is newer than 31 days. Every command refuses a grant for any account but
   `GMAIL_ACCOUNT` (default `test@braneframe.com`).
 
 **Import before step 03, never while the canary space exists:** the sync fetches new mail by id with
-no date check, so it would pull the whole corpus in.
+no date check, so it would pull the whole pool in.
 
 ### 03 Create the canary identity and space
 
@@ -81,7 +81,7 @@ prints its id (variable `MAIL_CANARY_SPACE_ID`) and the recovery phrase (secret
 ### 04 Nightly check
 
 `.github/workflows/mail-canary-nightly.yml` runs `moon run mail-canary:nightly` at 03:17 UTC. Each run
-trashes copies older than 2 days, seeds a new slice of the corpus, signs in with the recovery phrase in
+trashes copies older than 2 days, seeds a new slice of the pool, signs in with the recovery phrase in
 a throwaway `HOME`, polls the space through `dx eval` until every copy is synced (up to 45 minutes),
 runs the checks, and writes `report.json`, `summary.json` and `summary.md`.
 
@@ -113,8 +113,8 @@ Every run posts one `ci.mail-canary` PostHog event (`ciOk`, `ciFailedChecks`, `c
 ```text
 scripts/               steps 01–03
 src/gmail/             GmailClient (test account only), the grant and consent, header helpers
-src/corpus/              Corpus: import the mbox, check it is exact, purge a trial
-src/seed/              Seeder: copy corpus mail into the inbox, trash and list old copies
+src/pool/              Pool: import the mbox, check it is exact, purge a trial
+src/seed/              Seeder: copy pool mail into the inbox, trash and list old copies
 src/space/             SpaceReader: sign in with dx and snapshot the space through `dx eval`
 src/checks/            checks C1–C7 over one snapshot
 src/nightly/           Nightly: trash, seed, wait, check; the report and the live test

@@ -3,14 +3,14 @@
 // Copyright 2026 DXOS.org
 //
 
-// Step 01: turns Enron custodians' maildirs into the canary's corpus mbox.
+// Step 01: turns Enron custodians' maildirs into the canary's pool mbox.
 //
-//   node scripts/01-build-corpus.mjs --maildir ~/enron/maildir --out ~/enron/enron-corpus.mbox
-//   node scripts/01-build-corpus.mjs --maildir ~/enron/maildir --out ~/enron/trial.mbox --limit 10
+//   node scripts/01-build-pool.mjs --maildir ~/enron/maildir --out ~/enron/enron-pool.mbox
+//   node scripts/01-build-pool.mjs --maildir ~/enron/maildir --out ~/enron/trial.mbox --limit 10
 //
 // Samples `--limit` distinct messages evenly over the custodians' history and moves their dates into
 // `--span-days` ending `--end-days-ago` days back: older than the sync's 30-day window, which is what
-// keeps the canary space from syncing the corpus. Every folder a message was filed in goes into
+// keeps the canary space from syncing the pool. Every folder a message was filed in goes into
 // `X-Gmail-Labels`, which step 02 turns into Gmail labels.
 
 import { createHash } from 'node:crypto';
@@ -18,8 +18,8 @@ import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, sep } from 'node:path';
 import { parseArgs } from 'node:util';
 
-import { FOLDER_HEADER, joinMbox } from '../src/corpus/index.ts';
 import { readHeader, rewriteHeaders } from '../src/gmail/index.ts';
+import { FOLDER_HEADER, joinMbox } from '../src/pool/index.ts';
 
 const DAY = 86_400_000;
 // Enron dates outside the corpus's years are corrupt (1979, 2044, ...); clamp them rather than drop the mail.
@@ -38,7 +38,7 @@ const { values: args } = parseArgs({
   },
 });
 if (!args.maildir || !args.out) {
-  console.error('usage: 01-build-corpus.mjs --maildir <maildir> --out <mbox> [--limit 10000] [--custodian kean-s ...]');
+  console.error('usage: 01-build-pool.mjs --maildir <maildir> --out <mbox> [--limit 10000] [--custodian kean-s ...]');
   process.exit(1);
 }
 
@@ -75,16 +75,16 @@ for (const custodian of args.custodian) {
   }
 }
 
-// An even sample over time, so the corpus keeps the whole history rather than one folder or one month.
+// An even sample over time, so the pool keeps the whole history rather than one folder or one month.
 const sorted = [...distinct.values()].sort((left, right) => left.date - right.date);
 const count = Math.min(Number(args.limit) || sorted.length, sorted.length);
-const corpus = Array.from({ length: count }, (_, index) => sorted[Math.floor((index * sorted.length) / count)]);
+const pool = Array.from({ length: count }, (_, index) => sorted[Math.floor((index * sorted.length) / count)]);
 
 const end = Date.now() - Number(args['end-days-ago']) * DAY;
-const first = corpus[0].date;
-const last = corpus[corpus.length - 1].date;
+const first = pool[0].date;
+const last = pool[pool.length - 1].date;
 const scale = (Number(args['span-days']) * DAY) / (last - first || 1);
-const messages = corpus.map(({ path, date, folders }) =>
+const messages = pool.map(({ path, date, folders }) =>
   rewriteHeaders(readFileSync(path, 'latin1'), {
     // Bcc would name recipients the original sender hid; it serves no test.
     drop: ['Date', 'Bcc', FOLDER_HEADER],

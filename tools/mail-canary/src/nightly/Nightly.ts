@@ -12,7 +12,7 @@ import { type DxError, type SpaceReader } from '../space/index.ts';
 import { type NightlyReport } from './report.ts';
 
 export type NightlyOptions = {
-  /** Corpus messages to copy into the inbox. */
+  /** Pool messages to copy into the inbox. */
   readonly count: number;
   /** How long to wait for every copy to reach the mailbox feed. */
   readonly syncTimeout: Duration.Input;
@@ -51,7 +51,7 @@ export class Nightly {
       const startedAt = new Date();
       const since = startedAt.getTime() - Duration.toMillis(window);
       const trashed = yield* this.#seeder.trash();
-      const { corpusSize, seededIds } = yield* this.#seeder.seed({ count, now: startedAt });
+      const { poolSize, seededIds } = yield* this.#seeder.seed({ count, now: startedAt });
 
       const deadline = startedAt.getTime() + Duration.toMillis(syncTimeout);
       let snapshot: SpaceSnapshot = yield* this.#space.snapshot({ since });
@@ -78,7 +78,7 @@ export class Nightly {
         spaceId: this.#space.spaceId,
         seeded: seededIds.length,
         trashed,
-        corpusSize,
+        poolSize,
         syncMinutes,
       };
     });

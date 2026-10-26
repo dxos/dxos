@@ -3,4 +3,4 @@
 //
 
 export * from './mbox.ts';
-export * from './Corpus.ts';
+export * from './Pool.ts';
