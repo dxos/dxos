@@ -60,6 +60,10 @@ export const ContextMenuRoot = () => {
         return;
       }
       event.preventDefault();
+      // Inside a menu (this one, a dropdown, a submenu), a right-click opens nothing.
+      if (event.target instanceof Element && event.target.closest('[role="menu"], [role="menubar"]')) {
+        return;
+      }
       const id = targetId(event);
       if (id && !expanded.has(id)) {
         // Not hovered first (e.g. the menu key): the menu opens now and fills in once the node's actions are built.
