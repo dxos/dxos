@@ -120,7 +120,7 @@ const openShared = (client: Client, spaceId: SpaceId, target: ShareTarget, paylo
 
 /**
  * Makes the shared object the whole view: the navigation sidebar collapses at once, and the companion closes once the
- * link's workspace is the active deck, since a new deck opens it by default.
+ * link's plank is in its deck, since a new deck opens it by default and the close navigates to the deck's planks.
  */
 const focusSharedObject = (spaceId: SpaceId): Effect.Effect<void, never, Capability.Service | Operation.Service> =>
   Effect.all(
@@ -132,13 +132,16 @@ const focusSharedObject = (spaceId: SpaceId): Effect.Effect<void, never, Capabil
         const registry = yield* Capability.get(Capabilities.AtomRegistry);
         const layout = yield* Capability.get(AppCapabilities.Layout);
         yield* Effect.callback<void>((resume) => {
-          const isShared = () => GraphPath.getWorkspaceToken(registry.get(layout).workspace) === spaceId;
-          if (isShared()) {
+          const plankShown = () => {
+            const { workspace, active } = registry.get(layout);
+            return GraphPath.getWorkspaceToken(workspace) === spaceId && active.length > 0;
+          };
+          if (plankShown()) {
             resume(Effect.void);
             return;
           }
           const unsubscribe = registry.subscribe(layout, () => {
-            if (isShared()) {
+            if (plankShown()) {
               resume(Effect.void);
             }
           });
