@@ -8,7 +8,8 @@ version: 0.1.0
 
 Status: Rich agreed the requirements on 2026-10-25. This document also gives a review of the trajectory
 design (dxos/dxos#13782) and a counter-proposal. The counter-proposal is for discussion with Dima. The
-code does not implement this design yet.
+code does not implement this design yet. Rich and Dima reviewed the design on 2026-10-26. The decisions of
+that review are in the changelog ([D-2] to [D-20]).
 
 This document combines the previous design documents for feeds. The source documents are in
 [`feeds/`](./feeds), beside this document. Each source document gives all of its reasons:
@@ -68,20 +69,30 @@ feat F-1: Model
   req F-1.3: Rewrite. You can upsert an item by id, atomically. A reader sees the old version or the
     new version. A reader never sees the two versions, and a reader never sees no version. Use an
     upsert to edit a message, for a reply that replaces its pending line, and to stream partial output.
+    The feed accepts an update of an object only on the branch of the object. A change on a different
+    branch is a fork, and it must merge back into the main branch [D-12].
 
   req F-1.4: Logical removal. You can remove a branch from reads, indexes and sync. Its items stay in
     the log until retention removes them.
 
   req F-1.5: Rewind. A resume from an earlier item creates a branch at that point and removes the old
     branch [F-1.4]. Rewind is not a separate mechanism.
+
+  req F-1.6: Owner. A branch has an owner [D-8].
+
+  req F-1.7: Agent branches. An agent creates a new branch when the owner of the base branch is a
+    different device [D-9].
 ```
 
 ```mdl
 feat F-2: Read, index and sync
 
-  req F-2.1: Index a subset. The index holds all branches, or a subset of branches that you select.
-    A query can have a scope of a set of branches and a time range. The query gives the newest items
-    first, and it applies the limit after the branch filter.
+  req F-2.1: Index all or main. Indexing is a separate layer, and a feed can have no index. The index
+    of a feed holds all branches or only the main branch. It does not hold a selected subset of
+    branches. The default is the main branch only [D-10]. A feed of messages from people indexes all
+    branches. A feed whose items mutate objects indexes only the main branch [D-11]. A query can have a
+    scope of a set of branches and a time range. The query gives the newest items first, and it applies
+    the limit after the branch filter.
 
   req F-2.2: Changed heads. Each branch has a head. One cheap call gives the heads that changed since
     cursor C. The call does not scan items. Triggers use this call.
@@ -97,6 +108,19 @@ feat F-2: Read, index and sync
 feat F-3: Uses
 
   req F-3.1: AI chat, comments and messaging all use this model.
+
+  req F-3.2: Feed kinds. There are three kinds of feed: feeds that mutate objects (upserts), feeds of
+    messages from people, and feeds of AI history (trajectories). One feed does not mix these kinds
+    [D-13].
+
+  req F-3.3: A feed for each object. At the application level, an object (a document, a spreadsheet, a
+    canvas) has a ref to a feed, as a chat has a ref to a feed. The comments plugin operates on the feed
+    of the object. The target is one feed for the comments of an object and one feed for its agent
+    operations. ECHO does not give each object a feed yet [D-14]. A feed for each object is independent
+    of the branches in a feed [D-16].
+
+  req F-3.4: One logical session. An object has one logical session, and the session has branches. The
+    application can create separate sessions, but it does not have to [D-15].
 ```
 
 ```mdl
@@ -118,8 +142,16 @@ feat F-4: Cross-cutting
     parent. No code does this yet.
 ```
 
-Open question: can a branch **merge** back into its parent? Light threads and subagents do this. Or does
-a child only post a result item to the parent, and then close?
+Merge and close. Forks come first. Merge and close are a follow-up [D-2]. These points are agreed:
+
+- Close and merge are two different operations. A branch can close without a merge. Then its parent does
+  not know that the branch closed [D-3].
+- A merge tells the parent branch that the branch was finalized into it. The core does nothing with a
+  merge. A reader sees the merge message when it iterates the parent [D-3].
+- A merge folds in one branch at a time, and the merge sits on the main line [D-4].
+
+Open: does a reader of the main line see branch messages and merge messages, but not always close
+messages? Rich thinks so, and he will write this part out.
 
 ## What exists
 
@@ -260,6 +292,8 @@ reducers. ECHO gives it indexing, partial sync and a policy for each branch.
      branch. If the key is absent, the item is in the root branch.
    - `org.dxos.key.feed-fork`, only on the first item of a branch: the parent branch and the fork item.
 
+   The branch id is the id of the base block of the branch [D-6]. The fork point is a flag [D-5].
+
    Each item states its membership, as with the lineage of soft fork. Thus the system never
    misattributes a writer that did not see a fork. The truth replicates with the blocks that it
    describes. There are no new ECHO objects.
@@ -270,7 +304,8 @@ reducers. ECHO gives it indexing, partial sync and a policy for each branch.
    item. It does not change the branch of the item.
 
 3. **Index by branch.** The indexer stores the branch id in a column on feed items (an `echo-sqlite`
-   migration). The indexer obeys the `indexing` value of each branch. `Scope.feed` (below) pushes the
+   migration). The indexer obeys the index mode of the feed: all branches or the main branch [F-2.1],
+   [D-17]. `Scope.feed` (below) pushes the
    branch filter and the time filter into SQL, thus `limit` applies after them. Newest first is an
    `orderBy`.
 
@@ -298,11 +333,13 @@ reducers. ECHO gives it indexing, partial sync and a policy for each branch.
    into `@meta`. `threadMerge`, `threadWait` and the turn semantics stay as trajectory events. Reducers
    read one branch and its ancestors. They do not filter the full feed.
 
+10. **Cursors.** A cursor is `(branch, pos)`. A cursor can contain branch points [D-7].
+
 ```mdl
 module Feed
   desc: Proposed members of the Feed module (items 2 and 4 above).
   api:
-    branches: Record<BranchId, { removed?, indexing?, retention?, name? }>  # only branch policy, never membership or heads.
+    branches: Record<BranchId, { removed?, retention?, name? }>  # only branch policy, never membership or heads.
     heads: (feed, { since }) => branches whose heads moved                   # for triggers, and for reducers that decide what to fold again.
 ```
 
@@ -320,10 +357,16 @@ module Scope
 2. Chat feeds have indexing off because no code read them through the index. With a branch column and
    push-down, do you want an index for chat feeds again? Or do you want no index for chat feeds, and an
    index only for comment branches and channel branches?
+
+   Answer: the index of a feed holds all branches or only the main branch, and the default is the main
+   branch [F-2.1]. Dima thinks about no index for trajectory feeds, because a reducer builds the state of
+   the conversation.
 3. Soft fork rejected block-level lineage. Is a block-level branch id (item 5 of the proposal) an
    acceptable wire change? The reasons are different: a lineage edge on blocks mixed races with forks,
    but a branch id does not.
 4. Is merge a concept of the feed layer, or does merge stay a trajectory event?
+
+   Answer: the core does nothing with a merge [D-3]. Merge and close are a follow-up [D-2].
 5. Can a `Message` be directly in a trajectory feed? Or must an event always wrap the content? Comments
    and channels need `Message` objects that other code reads, edits and indexes.
 
@@ -335,6 +378,141 @@ decision D-1: The requirements [F-1] to [F-4] are agreed.
   by: user:richburdon
   affects: [F-1, F-2, F-3, F-4]
   source: https://github.com/dxos/dxos/commit/caacb31de6bcee8329a90cafeed41a9a5fcff44a
+```
+
+```mdl
+decision D-2: Forks come first. Merge and close are a follow-up.
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-1]
+```
+
+```mdl
+decision D-3: Close and merge are two different operations. A branch can close without a merge, and then its parent does not know that it closed. A merge tells the parent branch that the branch was finalized into it. The core does nothing with a merge; a reader sees the merge message when it iterates the parent.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [F-1]
+```
+
+```mdl
+decision D-4: A merge folds in one branch at a time, and the merge sits on the main line.
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-1]
+```
+
+```mdl
+decision D-5: The fork point is a flag.
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-1.2]
+```
+
+```mdl
+decision D-6: The branch id is the id of the base block of the branch.
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-1.2]
+```
+
+```mdl
+decision D-7: A cursor is (branch, pos), and a cursor can contain branch points.
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-2.2, F-2.4]
+```
+
+```mdl
+decision D-8: A branch has an owner.
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-1.6]
+```
+
+```mdl
+decision D-9: An agent creates a new branch when the base branch is owned by a different device.
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-1.7]
+```
+
+```mdl
+decision D-10: The index of a feed holds either all branches or only the main branch, never a selected subset; the default is the main branch only, and a feed of messages from people indexes all branches.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [F-2.1]
+```
+
+```mdl
+decision D-11: Indexing all branches makes sense only for feeds of messages; a feed whose items mutate objects (upserts) indexes only the main branch.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [F-2.1]
+```
+
+```mdl
+decision D-12: The feed accepts an update of an object only on the branch of the object; a change on a different branch is a fork, which must merge back into the main branch.
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-1.3]
+```
+
+```mdl
+decision D-13: Feeds that mutate objects, feeds of messages from people and feeds of AI history (trajectories) are not mixed in one feed.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [F-3.2]
+```
+
+```mdl
+decision D-14: At the application level, an object (a document, a spreadsheet, a canvas) has a ref to a feed, as a chat session has; the comments plugin operates on the feed of the object, with one feed for comments and one for agent operations. ECHO does not give every object a feed yet.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [F-3.3]
+```
+
+```mdl
+decision D-15: An object has one logical session with branches, not many sessions; the application can still create separate sessions.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [F-3.4]
+  why: Separate sessions for one object multiply today, which is wasteful and confuses the user.
+```
+
+```mdl
+decision D-16: A feed for each object is independent of branches in a feed.
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-3.3]
+```
+
+```mdl
+decision D-17: `Feed.branches` no longer holds an `indexing` value for each branch; the indexer reads one index mode of the feed (all branches or the main branch). Fills in [D-10].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.1]
+  why: '[D-10] rules out a selected subset of branches, so a per-branch indexing flag can express a state the design forbids.'
+  rejected:
+    - Keep per-branch `indexing` and validate that it is all on or only main on; two sources of truth for one setting.
+```
+
+```mdl
+decision D-18: Approve [D-10].
+  date: 2026-10-26
+  by: user:dmaretskyi
+```
+
+```mdl
+decision D-19: Approve [D-12].
+  date: 2026-10-26
+  by: user:richburdon
+```
+
+```mdl
+decision D-20: Approve [D-16].
+  date: 2026-10-26
+  by: user:richburdon
 ```
 
 ## Appendix: Extension Definitions

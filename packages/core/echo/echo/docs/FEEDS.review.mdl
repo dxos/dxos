@@ -22,7 +22,7 @@ retention for each branch. Indexing, retention and sync apply only to a full fee
 The trajectory design (#13782) is not on `main`. The `Thread` 0.3.0 comment feeds (#14206) are also not
 on `main`. Thus `Trajectory.Event` and `threadOpen` have no code in this checkout.
 
-Of 20 items: 2 done, 0 untested, 5 partial, 1 diverged, 12 missing. These three findings are the most
+Of 25 items: 1 done, 0 untested, 7 partial, 1 diverged, 16 missing. These three findings are the most
 important:
 
 - **Rewind is a separate mechanism.** [F-1.5] tells that a rewind is a branch and a removal. The code
@@ -61,10 +61,11 @@ verdict F-1.2: Soft fork gives a lineage for each item in one feed. There are no
 ```
 
 ```mdl
-verdict F-1.3: Obj.update appends the full object again by id. The index keeps the latest block.
-  status: done
+verdict F-1.3: Obj.update appends the full object again by id. The update limit for each branch is missing.
+  status: partial
   evidence: [github:dxos/dxos/packages/core/echo/echo/src/Obj.ts#update]
   tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed.test.ts]
+  note: The upsert works. There are no branches, thus the feed cannot refuse an update on a different branch.
 ```
 
 ```mdl
@@ -86,7 +87,19 @@ verdict F-1.5: Rewind is a separate mechanism, not a branch plus removal.
 ```
 
 ```mdl
-verdict F-2.1: Indexing is on or off for a full feed. A query cannot have a scope of branches.
+verdict F-1.6: Branches have no owner.
+  status: missing
+  note: There are no branches, thus there is no branch owner. We searched the Feed module and the feed store.
+```
+
+```mdl
+verdict F-1.7: No agent creates a branch.
+  status: missing
+  note: There are no feed branches for an agent to create.
+```
+
+```mdl
+verdict F-2.1: Indexing is on or off for a full feed. There is no main-only mode, and a query cannot have a scope of branches.
   status: missing
   evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#IndexingOptions, github:dxos/dxos/packages/core/echo/echo/src/Scope.ts#feed]
   note: |
@@ -126,6 +139,29 @@ verdict F-2.4: The EDGE position exists. The only local order is insertionId, an
 verdict F-3.1: AI chat, comments and messaging do not use one model.
   status: missing
   note: '`Chat`, `Thread` and `Channel` are separate ECHO types. Each type has its own feed and shape.'
+```
+
+```mdl
+verdict F-3.2: No rule keeps feed kinds apart.
+  status: missing
+  note: |
+    No code marks a feed as a mutation feed, a message feed or a trajectory feed. The comment feeds of
+    #14206 put messages and a hidden agent chat in one feed, and #14206 is not on main.
+```
+
+```mdl
+verdict F-3.3: A chat has a ref to a feed; documents, spreadsheets and canvases do not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/compute/assistant/src/types/Chat.ts#Chat]
+  note: |
+    `Chat.feed` is a ref to the feed of the chat. No document, spreadsheet or canvas type has a feed
+    ref, and the comments plugin does not use a feed of the object.
+```
+
+```mdl
+verdict F-3.4: An object can have many sessions, each with its own feed.
+  status: missing
+  note: Each `Chat` owns its own feed, thus each new session for an object is a new feed with no branches.
 ```
 
 ```mdl
