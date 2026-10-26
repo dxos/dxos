@@ -152,7 +152,7 @@ feat F-4: Inspect a box
 feat F-5: Single commands
   req F-5.1: A command bar, apart from the chat assistant, takes one typed or spoken command and runs it with RunCommand.
   req F-5.2: The command model sees the graph as it is and may only add the rows of a SPARQL SELECT or remove boxes matching a text filter (`*`, `kind:<kind>`, `/regex/`, or text).
-  req F-5.3: Between turns a decision model judges whether the command is done; a failed or empty action earns another turn without asking, and a turn that only removed boxes ends the command; at most 3 turns.
+  req F-5.3: Between turns a decision model (the space's default, Clef on Workers AI unless configured) judges whether the command is done; a failed or empty action earns another turn without asking, and a turn that only removed boxes ends the command; at most 3 turns.
   req F-5.4: A command adds at most 40 boxes; the rest are left out and summarised in a trailer (counts by kind and package, and a few names) shown to the user and the model.
   req F-5.5: Speaking uses Whistle on the device: with the microphone on, each pause ends a command.
   req F-5.6: Before the first model call, the packages and exported symbols the command names are looked up in the index and given to the model as exact IRIs; the lookup is skipped after 1.5 s.
@@ -389,4 +389,12 @@ decision D-15: RunCommand returns a trace of timed steps, and the command bar sh
   by: user:dmaretskyi
   affects: [F-5.7, CommandBar]
   why: A slow or wrong command could not be explained from the outcome line; the trace shows where the time went and which query the model ran.
+```
+
+```mdl
+decision D-16: The judge is the space's default decision model, which is Cloudflare's Clef unless configured, and Code Graph depends on the TypeSafe plugin so that a decision model is always there. Fills in [D-11].
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-5.3]
+  why: With TypeSafe off (it defaults on only in dev builds) no resolver served decision models, so every command stopped after its first turn; Clef answers through EDGE with no key, in about 0.3 s once signed in.
 ```
