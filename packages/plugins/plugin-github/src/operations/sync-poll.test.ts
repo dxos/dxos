@@ -306,16 +306,20 @@ describe('plugin-github polling sync (spec/SYNC.mdl)', () => {
 
   test('T-5: a Task the earlier sync made for a pull request is replaced by a PullRequest', async ({ expect }) => {
     const { db, github, poll, pullRequests } = await setup();
-    const legacy = db.add(
-      Task.make({ [Obj.Meta]: { keys: [{ source: GITHUB_SOURCE, id: '2' }] }, title: 'Pull 2', status: 'todo' }),
-    );
     const issueSet = db.add(
       TaskSet.make({ [Obj.Meta]: { keys: [{ source: GITHUB_SOURCE, id: '1234' }] }, name: 'dxos/composer' }),
+    );
+    const legacy = db.add(
+      Task.make({
+        [Obj.Meta]: { keys: [{ source: GITHUB_SOURCE, id: '2' }] },
+        [Obj.Parent]: issueSet,
+        title: 'Pull 2',
+        status: 'todo',
+      }),
     );
     Obj.update(issueSet, (issueSet) => {
       issueSet.tasks.push(Ref.make(legacy));
     });
-    Obj.setParent(legacy, issueSet);
     github.items = [pull(2, '2026-10-01T11:00:00Z')];
     github.details.set(2, detail(2));
 

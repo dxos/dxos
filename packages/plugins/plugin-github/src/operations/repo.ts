@@ -41,28 +41,27 @@ export const findRepo = (owner: string, name: string) =>
  * id first, since a renamed or transferred repository keeps it, then by coordinates. A match by
  * coordinates gains the id, so the binding and the sync find it by key from then on.
  */
-export const ensureRepo = (repo: RepoDescriptor) =>
-  Effect.gen(function* () {
-    const repos = yield* Database.query(Filter.type(Repo.Repo)).run;
-    const byKey = repos.find((candidate) => Obj.getKeys(candidate, GITHUB_SOURCE).some((key) => key.id === repo.id));
-    if (byKey) {
-      return byKey;
-    }
-    const byCoordinates = repos.find((candidate) => candidate.owner === repo.owner && candidate.name === repo.name);
-    if (byCoordinates) {
-      Obj.update(byCoordinates, (byCoordinates) => {
-        Obj.getMeta(byCoordinates).keys.push({ source: GITHUB_SOURCE, id: repo.id });
-      });
-      return byCoordinates;
-    }
-    return yield* Database.add(
-      Repo.make({
-        owner: repo.owner,
-        name: repo.name,
-        url: repo.url,
-        description: repo.description,
-        defaultBranch: repo.defaultBranch,
-        [Obj.Meta]: { keys: [{ source: GITHUB_SOURCE, id: repo.id }] },
-      }),
-    );
-  });
+export const ensureRepo = Effect.fn('ensureRepo')(function* (repo: RepoDescriptor) {
+  const repos = yield* Database.query(Filter.type(Repo.Repo)).run;
+  const byKey = repos.find((candidate) => Obj.getKeys(candidate, GITHUB_SOURCE).some((key) => key.id === repo.id));
+  if (byKey) {
+    return byKey;
+  }
+  const byCoordinates = repos.find((candidate) => candidate.owner === repo.owner && candidate.name === repo.name);
+  if (byCoordinates) {
+    Obj.update(byCoordinates, (byCoordinates) => {
+      Obj.getMeta(byCoordinates).keys.push({ source: GITHUB_SOURCE, id: repo.id });
+    });
+    return byCoordinates;
+  }
+  return yield* Database.add(
+    Repo.make({
+      owner: repo.owner,
+      name: repo.name,
+      url: repo.url,
+      description: repo.description,
+      defaultBranch: repo.defaultBranch,
+      [Obj.Meta]: { keys: [{ source: GITHUB_SOURCE, id: repo.id }] },
+    }),
+  );
+});
