@@ -37,6 +37,8 @@ export default Capability.makeModule(
       icon: 'px--anthropic--regular',
       credentials,
       mode,
+      // Read by the ACP adapter in the sandbox as Agent SDK options; the picker's models come from the local entry.
+      sessionMeta: (model) => (model ? { claudeCode: { options: { model } } } : undefined),
     });
     return Capability.contribute(AssistantCapabilities.Agent, {
       ...agent,

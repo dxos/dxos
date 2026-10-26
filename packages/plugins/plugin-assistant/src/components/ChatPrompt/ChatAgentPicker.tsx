@@ -60,8 +60,29 @@ export const ChatAgentPicker = ({ chat, started, presets, preset, onPresetChange
     [placements, harness, option, select],
   );
 
+  const [session] = useObject(chat, 'session');
+  const agentModels = option?.models ?? [];
+  const agentModel = agentModels.find(({ id }) => id === session?.agentModel);
+
+  const handleAgentModelChange = useCallback(
+    (value: string) => {
+      if (chat) {
+        Obj.update(chat, (chat) => {
+          chat.session = { ...chat.session, agentModel: value || undefined };
+        });
+      }
+    },
+    [chat],
+  );
+
   const agentLabel = option?.label ?? harness;
-  const label = option?.ownModel || !model ? agentLabel : `${agentLabel} · ${model.label}`;
+  const label = option?.ownModel
+    ? agentModel
+      ? `${agentLabel} · ${agentModel.label}`
+      : agentLabel
+    : !model
+      ? agentLabel
+      : `${agentLabel} · ${model.label}`;
 
   return (
     <Menu.Root>
@@ -113,6 +134,31 @@ export const ChatAgentPicker = ({ chat, started, presets, preset, onPresetChange
                       (started === true && placement.harness !== harness),
                   }}
                   data-testid={`assistant.environment.${placement.location}`}
+                />
+              ))}
+            </Menu.RadioItemGroup>
+          </>
+        )}
+
+        {agentModels.length > 0 && (
+          <>
+            <Menu.Separator />
+            <Menu.RadioItemGroup
+              value={agentModel?.id ?? ''}
+              onValueChange={({ value }) => handleAgentModelChange(value)}
+            >
+              <Menu.ItemGroupLabel>
+                {started ? t('agent-model-locked.message') : t('model-picker.models.label')}
+              </Menu.ItemGroupLabel>
+              <Menu.RadioItem
+                item={{ value: '', label: t('agent-model-default.label'), disabled: started }}
+                data-testid='assistant.agent-models.default'
+              />
+              {agentModels.map(({ id, label }) => (
+                <Menu.RadioItem
+                  key={id}
+                  item={{ value: id, label, disabled: started }}
+                  data-testid={`assistant.agent-models.${id}`}
                 />
               ))}
             </Menu.RadioItemGroup>
