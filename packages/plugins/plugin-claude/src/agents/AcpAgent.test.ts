@@ -122,6 +122,8 @@ describe('AcpAgent', () => {
         ['assistant', 'stats'],
       ]);
       expect(written.filter(({ key }) => key === Trace.RequestPhase.key).map(({ payload }) => payload)).toMatchObject([
+        { phase: 'building-toolkit' },
+        { phase: 'contacting-provider' },
         { phase: 'calling-tool', detail: 'Preparing file…' },
         { phase: 'calling-tool', detail: 'Write note.txt' },
       ]);
