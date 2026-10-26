@@ -773,6 +773,15 @@ decision D-4: Discovery and sync list `/installation/repositories` for an instal
 
 ---
 
+```mdl
+decision D-5: F-4 and F-5 now describe the polling sync of [SYNC.mdl](spec/SYNC.mdl): a binding targets a Repo, issues stay Tasks in the TaskSet keyed like the Repo, and pull requests are PullRequests.
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4, F-5]
+  why: SYNC.mdl states that it replaces F-4 and F-5 once implemented; this change implements it.
+```
+
 ## Appendix: Extension Definitions
 
 Extension block types used in this document are defined below using
@@ -839,13 +848,4 @@ ext op
     effects?: EffectList        # echo:read | echo:write | http | fs | ...
     requires?: ServiceList      # injected service dependencies
     note?: Prose                # implementation guidance (non-normative)
-```
-
-```mdl
-decision D-5: F-4 and F-5 now describe the polling sync of [SYNC.mdl](spec/SYNC.mdl): a binding targets a Repo, issues stay Tasks in the TaskSet keyed like the Repo, and pull requests are PullRequests.
-  date: 2026-10-26
-  by: agent:claude-code
-  for: user:dmaretskyi
-  affects: [F-4, F-5]
-  why: SYNC.mdl states that it replaces F-4 and F-5 once implemented; this change implements it.
 ```
