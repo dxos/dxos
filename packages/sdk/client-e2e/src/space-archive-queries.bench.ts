@@ -38,6 +38,8 @@ const ARCHIVE_PATH = process.env.DX_SPACE_ARCHIVE;
 const FEED_ID = process.env.DX_SPACE_ARCHIVE_FEED ?? '01M5V6F7A7K6N3RY0QZR891BMG';
 const CHAT_FEED_ID = process.env.DX_SPACE_ARCHIVE_CHAT_FEED ?? '01M5V4JZH2T2MZ3K7G88MGVTA5';
 const ANSWER_TIMEOUT_MS = 60_000;
+/** How often a burst checks for answers; it bounds the burst rows' resolution. */
+const ANSWER_POLL_MS = 1;
 const RUN_OPTIONS = { time: 1_000, warmupIterations: 3 };
 // Every burst iteration subscribes the whole set; a small fixed sample count keeps the rows bounded.
 const BURST_OPTIONS = { iterations: 10, time: 0, warmupIterations: 2, warmupTime: 0 };
@@ -100,7 +102,7 @@ const burst = async (space: Space, queries: readonly Query.Any[], awaited: numbe
     await asyncTimeout(
       (async () => {
         while (watched.some((result) => result.sources.some((source) => source.state === 'pending'))) {
-          await sleep(1);
+          await sleep(ANSWER_POLL_MS);
         }
       })(),
       ANSWER_TIMEOUT_MS,
