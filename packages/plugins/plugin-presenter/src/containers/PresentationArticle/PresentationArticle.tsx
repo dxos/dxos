@@ -5,6 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -29,7 +30,9 @@ import {
 } from '#hooks';
 import { type LayoutName } from '#markdown';
 import { meta } from '#meta';
-import { Presentation } from '#types';
+import { Presentation, PresenterSurface } from '#types';
+
+import PresentedOverlay from '../PresentedOverlay/index.ts';
 
 /** Content of a slide created from the toolbar, with its `layout:` unless that is the default. */
 const newSlideContent = (layout: LayoutName = 'default'): string =>
@@ -152,6 +155,7 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
 
                 <SectionPicker presentation={subject} />
                 <div className='grow' />
+                <Surface.Surface type={PresenterSurface.Toolbar} data={{ subject }} />
                 <Button.Root
                   data-testid='presenter.grid-size'
                   icon={gridSize === 'large' ? 'ph--grid-four--regular' : 'ph--grid-nine--regular'}
@@ -167,7 +171,9 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
           {/* Inline, the article is the grid of slides, ending in a ghost tile that adds one; presenting shows one slide. */}
           <Panel.Body asChild>
             {fullscreen ? (
-              <Deck.Viewport />
+              <Deck.Viewport>
+                <PresentedOverlay presentation={subject} />
+              </Deck.Viewport>
             ) : (
               <Deck.Grid
                 size={gridSize}

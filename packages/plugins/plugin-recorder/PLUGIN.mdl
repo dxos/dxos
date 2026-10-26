@@ -1,0 +1,214 @@
+---
+id: org.dxos.plugin.recorder
+name: RecorderPlugin
+version: 0.1.0
+---
+
+Records the voice-over of a plugin-presenter deck while it is presented. The reader presses Record in the
+presentation's toolbar; the deck presents from its first slide, the presenter shows each slide's speaker notes
+(subtitles or a notes window, a presenter setting), and every slide change is logged against the take's own
+clock. When the presentation ends, the take is saved as a plugin-studio `Variant` and listed, with each slide's
+recorded length against its desired length, in the presentation's Recordings companion.
+
+## Extensions
+
+| Term        | URI                          |
+| ----------- | ---------------------------- |
+| `type`      | `org.dxos.mdl.type@1.0`      |
+| `feat`      | `org.dxos.mdl.feat@1.0`      |
+| `component` | `org.dxos.mdl.component@1.0` |
+| `test`      | `org.dxos.mdl.test@1.0`      |
+| `decision`  | `org.dxos.mdl.decision@1.0`  |
+
+## Types
+
+```mdl
+type Recording
+  desc: >
+    The takes recorded for a presentation (typename org.dxos.type.recording), parented to it. Each take is a
+    Variant of one of its owned MediaArtifacts, by kind.
+  fields:
+    name?: string
+    presentation: Ref<Presentation>
+    audio?: Ref<MediaArtifact>        # kind 'audio': voice-only takes
+    video?: Ref<MediaArtifact>        # kind 'video': takes with a screen or camera picture
+```
+
+```mdl
+type Take.Log
+  desc: >
+    A take's timeline, held in its Variant's `config`. Times are seconds on the take's own clock; a section is one
+    visit to a slide.
+  fields:
+    sections: { id, title?, start, end }[]   # id is the Slide's id
+    steps: { id, step, at }[]                # click steps revealed
+    duration: number
+    device?: string                          # microphone label
+    source: none | screen | camera
+```
+
+```mdl
+type RecorderSettings
+  fields:
+    audioInput?: string               # microphone deviceId; unset prefers a /shure/i device, else the first
+    videoSource?: none | screen | camera
+    videoInput?: string               # camera deviceId
+```
+
+## Components
+
+```mdl
+component RecordButton
+  desc: >
+    The presenter toolbar item (PresenterSurface.Toolbar). Inside its click it creates the AudioContext, opens the
+    microphone (processing off) and the screen or camera when set, starts the take, then presents the deck from its
+    first slide. It is disabled while a take starts, records or saves, and shows why the last start failed.
+  props: { subject: Presentation }
+
+component RecordingOverlay
+  desc: >
+    Over a deck being recorded (PresenterSurface.Overlay): REC, the take's length, and the level meter, so a muted
+    microphone or clipping shows while there is time to stop.
+  props: { subject: Presentation }
+
+component LevelMeter
+  desc: >
+    Peak meter over -60..0 dBFS: the target band -12..-3 marked, a peak-hold marker for 1.5s, CLIP above -1 dBFS,
+    and NO SIGNAL after 2s of digital silence.
+  props: { peakDb?, holdDb?, rmsDb?, silent?, clip?, compact? }
+
+component RecordingsArticle
+  desc: >
+    The Recordings companion of a Presentation: unsaved takes (with Save again, Save as a file, Discard), then each
+    saved take, newest first, with its player (studio VariantRenderer) and each slide's recorded length against the
+    slide's desired length, flagged when over.
+  props: { presentation: Presentation }
+
+component RecorderSettings
+  desc: The plugin settings: microphone and camera pickers, the video source, and Test microphone with the meter.
+```
+
+## Features
+
+```mdl
+feat F-1: Record a voice-over
+  req F-1.1: A Presentation's toolbar has a Record item; pressing it starts a take and presents the deck from its first slide.
+  req F-1.2: The microphone is opened with echo cancellation, noise suppression and auto gain off.
+  req F-1.3: Each slide change and click step while presenting is logged in the take's timeline.
+  req F-1.4: Leaving the presentation ends the take and saves it as a new Variant, named by its start time; no take is overwritten.
+  req F-1.5: A take that cannot be saved stays listed with Save again, Save as a file and Discard.
+  req F-1.6: While recording, the presented deck shows REC, the take's length and the level meter, with NO SIGNAL and CLIP warnings.
+
+feat F-2: Takes
+  req F-2.1: A Presentation has a Recordings companion listing its takes, newest first, each with a player.
+  req F-2.2: Each take lists every slide it showed with its recorded length and the slide's desired length; a slide over its desired length is flagged.
+  req F-2.3: The latest take of each kind is its artifact's cover.
+
+feat F-3: Settings
+  req F-3.1: The settings choose the microphone, the video source (none, screen, camera) and the camera.
+  req F-3.2: Test microphone opens the chosen microphone on the level meter without recording.
+  req F-3.3: With no microphone chosen, a device whose label matches /shure/i is preferred.
+```
+
+## QA
+
+```mdl
+test QA-1: Record a voice-over of a presentation
+  desc: The primary journey — record a take while presenting a deck, then find it in the Recordings companion.
+  actors: human
+  covers: [F-1.1, F-1.3, F-1.4, F-1.6, F-2.1, F-2.2]
+  status: unverified
+  given:
+    - an identity exists
+    - space: a space is open
+    - a Presentation named "QA Recording" with two slides, each with speaker notes; the first slide's Duration is 5
+    - Recorder settings: video source None; a working microphone
+    - the presenter's Speaker notes setting is Subtitles
+  steps:
+    - name: Start the take
+      do: Open "QA Recording" and press Record in its toolbar; allow the microphone.
+      expect: the deck presents from slide 1, REC and a moving level meter show top-left, and slide 1's notes show as subtitles
+      note: NO `invoke` — the take must start inside a click (the media prompt and the AudioContext need it).
+    - name: Read and advance
+      do: Read the first slide's notes for more than 5 seconds, press →, read the second slide's notes.
+      expect: the subtitles change to slide 2's notes
+    - name: End the take
+      do: Press Escape.
+      expect: the presentation closes; REC is gone
+    - name: Find the take
+      do: Open the presentation's Recordings companion.
+      expect: one take, named take-<date>-<time>, with a player; slide 1's recorded length is flagged over its 0:05
+  after:
+    - name: Delete the recording
+      do: Delete the "QA Recording" presentation (its Recording is parented to it).
+      expect: the presentation and its takes are gone
+```
+
+## Changelog
+
+```mdl
+decision D-1: A new plugin records a presentation's voice-over from a script, working with plugin-studio; a take is stored as a studio MediaArtifact.
+  date: 2026-10-25
+  by: user:richburdon
+  affects: [Recording]
+```
+
+```mdl
+decision D-2: The plugin is named plugin-recorder; post-processing (trim, stretch, mux, loudness) runs on native ffmpeg, as an EDGE compute operation and as a desktop sidecar; video is a screen capture with a camera overlay, leaving room for other picture sources (autocue videos, canvas animations, presenter decks); plugin-presenter is the harness for the script.
+  date: 2026-10-25
+  by: user:richburdon
+  affects: [Recording, F-1]
+```
+
+```mdl
+decision D-3: plugin-recorder adds a toolbar item to the presenter that starts the presentation and records its voice-over, and has settings to choose the microphone and the video source and to test the microphone.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [RecordButton, RecorderSettings, F-1.1, F-3]
+```
+
+```mdl
+decision D-4: A Recording is parented to its Presentation and owns one MediaArtifact per kind (audio, video); each take is a Variant with its timeline in `config`, so no take type of its own exists. Fills in [D-1].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Recording, Take.Log]
+  why: Studio's Variant is already "one produced alternative with the request that made it"; a take is exactly that.
+  rejected: A Take ECHO type beside Variant, which would duplicate studio's media model.
+```
+
+```mdl
+decision D-5: A take's timeline is on the take's own clock, one section per slide visit keyed by Slide id, with click steps logged apart; recording starts with the presentation, with no hold before the first slide. Fills in [D-3].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Take.Log, F-1.3]
+  why: A deck has no picture timeline of its own, and ids survive slide reorders where positions do not.
+```
+
+```mdl
+decision D-6: The recorder is a capability service rather than state in the toolbar item, and follows the presentation through presenter's PresentationEventHandler. Fills in [D-3].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [RecordButton, F-1.3, F-1.4]
+  why: The toolbar unmounts while the deck is presented; presenter must not depend on the recorder.
+```
+
+```mdl
+decision D-7: A take that fails to save stays in memory with Save again and Save as a file; buffering it to IndexedDB is deferred. Takes are listed in a Recordings companion of the Presentation, not as navtree objects. Fills in [D-3].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [RecordingsArticle, F-1.5, F-2.1]
+  why: A take is the one thing the workflow must never lose; a companion keeps takes beside the deck they voice.
+```
+
+```mdl
+decision D-8: Phase 1 records one video source (screen or camera); the camera overlay on a screen capture, post-processing, and other picture sources are later phases. Fills in [D-2].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-1, RecorderSettings]
+  why: Compositing the overlay needs a canvas pipeline; post-processing needs the EDGE and desktop runners.
+```

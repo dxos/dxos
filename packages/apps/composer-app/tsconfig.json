@@ -352,6 +352,9 @@
       "path": "../../plugins/plugin-qa"
     },
     {
+      "path": "../../plugins/plugin-recorder"
+    },
+    {
       "path": "../../plugins/plugin-registry"
     },
     {

@@ -340,8 +340,9 @@ DeckContent.displayName = 'Deck.Content';
 
 /**
  * The current slide: inset in a void inline, full-bleed with an auto-hiding pager in fullscreen, where Escape exits.
+ * Children draw over the slide (speaker notes, another plugin's overlay).
  */
-const DeckViewport = Util.composable<HTMLDivElement>((props, forwardedRef) => {
+const DeckViewport = Util.composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   const { slide, step, fullscreen, setFullscreen, themeSettings, attendableId, focusRef } =
     useDeckContext('Deck.Viewport');
   const ref = useComposedRefs<HTMLDivElement>(forwardedRef, focusRef);
@@ -369,6 +370,7 @@ const DeckViewport = Util.composable<HTMLDivElement>((props, forwardedRef) => {
         </SlideThemeProvider>
       </div>
       {fullscreen && <Overlay />}
+      {children}
     </PresentationShell>
   );
 });

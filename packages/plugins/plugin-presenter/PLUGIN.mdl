@@ -54,6 +54,7 @@ type Slide
     hidden?: boolean            # left out when presenting; replaces frontmatter `hide:`
     notes?: Ref<Text>           # speaker notes for any slide
     image?: Ref<MediaArtifact>  # the image a layout places (cover and image layouts), from plugin-studio
+    duration?: number           # desired length in seconds, shown against the time on the slide while presenting
 ```
 
 ```mdl
@@ -63,6 +64,14 @@ type SlideViewState
     keyed by the Presentation's (or previewed document's) URI. Never syncs to collaborators.
   fields:
     index: number               # zero-based index of the slide this user is viewing; clamped to the deck on read
+```
+
+```mdl
+type PresenterSettings
+  desc: |
+    The plugin's settings (`PresenterSettings.Settings`, persisted per device).
+  fields:
+    notes?: off | subtitles | window   # where speaker notes show while presenting; default off
 ```
 
 ```mdl
@@ -261,6 +270,38 @@ component SlideArticle
   props:
     document: Markdown.Document
 ```
+
+```mdl
+component SpeakerNotes
+  desc: |
+    A composite: `SpeakerNotes.Subtitles` shows the current slide's notes over the bottom of a presented slide;
+    `SpeakerNotes.Prompter` is the speaker's view: the slide's notes large (one line per bullet or sentence), its
+    position, the time on the slide against its desired length (flagged when over), and the next slide's notes.
+  props:
+    lines: string[]             # Subtitles, Prompter
+    title?: string              # Prompter
+    next?: { title?, lines }    # Prompter
+    index: number               # Prompter
+    count: number               # Prompter
+    elapsed: number             # Prompter; seconds on the slide
+    duration?: number           # Prompter; the slide's desired length
+```
+
+```mdl
+component PresentedOverlay
+  desc: |
+    Drawn over a presented Presentation (inside `Deck.Viewport`): the speaker notes as the `notes` setting asks —
+    subtitles, or a second browser window (a portal, so it shares the app's state; keys pressed there move the deck;
+    a refused popup offers a button to open it) — the `PresenterSurface.Overlay` slot, and the
+    `PresentationEventHandler` callbacks: start on mount, stop on unmount, and every slide or click-step change.
+  props:
+    presentation: Presentation
+```
+
+Extension points: `PresenterSurface.Toolbar` (data `{ subject: Presentation }`) adds items to a Presentation's
+toolbar before the play button; `PresenterSurface.Overlay` draws over the presented deck; the
+`PresentationEventHandler` capability (`onStart`, `onSlide({ presentation, slide?, id, title?, index, step })`,
+`onStop`) follows a presentation. Another plugin (the recorder) uses them; presenter depends on none of them.
 
 ## Operations
 
@@ -480,6 +521,22 @@ feat F-11: Slides as Objects
     then: it calls `GenerateSlideImage`, and the slide shows the generated image in its layout
   req F-11.5: An image is held as a ref to a plugin-studio `MediaArtifact`, which the slide background resolves to its image.
   req F-11.6: Presentations of version 0.1.0 migrate in place: each section becomes a `Slide`, and a markdown slide's `hide: true` becomes `hidden`.
+```
+
+```mdl
+feat F-12: Speaker Notes
+
+  req F-12.1: A slide's speaker notes are its `notes` text, else the markdown slide's trailing notes comment; they are read one line per bullet or paragraph, split again after each sentence.
+  req F-12.2:
+    when: the `notes` setting is `subtitles` and a Presentation is presented
+    then: the current slide's notes show over the bottom of the slide
+  req F-12.3:
+    when: the `notes` setting is `window` and a Presentation is presented
+    then: a second window shows the current slide's notes, the time on the slide against its desired length, and the next slide's notes; it closes when the presentation ends
+  req F-12.4: Arrow keys and Space pressed in the notes window move the deck as they do in the deck.
+  req F-12.5: When the browser refuses the notes window, the deck shows a button that opens it.
+  req F-12.6: A slide has an optional desired length (`duration`, seconds), edited with its other properties.
+  req F-12.7: Other plugins add toolbar items and overlays through `PresenterSurface.Toolbar` and `PresenterSurface.Overlay`, and follow a presentation through `PresentationEventHandler`.
 ```
 
 ## Acceptance
@@ -1322,6 +1379,43 @@ decision D-69: The prototype is a story of a slide beside the assistant companio
   by: user:richburdon
   affects: [F-11.3, F-11.4]
   why: It shows the slide-scoped assistant end to end without a network, with only the model's reply scripted.
+```
+
+```mdl
+decision D-70: plugin-presenter displays speaker notes while presenting; a plugin setting chooses a separate window or subtitles over the presented slide. Each slide has a field for its desired length. Supersedes the deferral of [D-8].
+  date: 2026-10-26
+  by: user:richburdon
+  supersedes: D-8
+  affects: [PresenterSettings, Slide, F-12]
+```
+
+```mdl
+decision D-71: The plugin has a Settings module again, holding only the `notes` setting. Fills in [D-70].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  supersedes: D-10
+  affects: [PresenterSettings]
+  why: [D-70] asks for a plugin setting; [D-10] removed the module along with the collection-deck setting it held.
+```
+
+```mdl
+decision D-72: The notes window is a React portal into `window.open`, carrying the app's stylesheets and theme, with the deck's keys forwarded from it; subtitles are fixed white on black like video captions. Fills in [D-70].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [PresentedOverlay, SpeakerNotes, F-12.3, F-12.4]
+  why: A portal keeps one React tree, so the notes follow the deck's state with no messaging between windows.
+  rejected: A separate route opened in the window, which would need its own client and a channel to the deck.
+```
+
+```mdl
+decision D-73: Presenter offers `PresenterSurface.Toolbar`, `PresenterSurface.Overlay` and the `PresentationEventHandler` capability, so plugin-recorder can add a Record item, draw its indicator over the deck and follow the slides without presenter depending on it. Fills in [D-70].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [F-12.7, PresentedOverlay]
+  why: The recorder needs the deck's slide changes and a place in its toolbar; the dependency must point from recorder to presenter.
 ```
 
 ---
