@@ -1,0 +1,28 @@
+diagram flow=right
+group host "Inviter" {
+  node Dialog "Share dialog" ref="packages/plugins/plugin-space/src/containers/ShareObjectDialog/ShareObjectDialog.tsx"
+  node ShareOp "ShareObject op" ref="packages/plugins/plugin-space/src/operations/share-object.ts"
+  node Protocol "Invitation protocol" ref="packages/sdk/client-services/src/internal/invitations/space-invitation-protocol.ts"
+}
+group cloud "EDGE db-service" {
+  node SSM "SpaceStateMachine" ref="edge:packages/services/db-service/src/worker/space/space-state-machine.ts"
+  node Route "shared-objects route" ref="edge:packages/services/db-service/src/worker/api-handler/shared-objects.ts"
+  node Indexer "Indexer" ref="edge:packages/services/db-service/src/worker/indexer/indexer.ts"
+  node Join "join route" ref="edge:packages/services/db-service/src/worker/api-handler/invitation.ts"
+}
+group guest "Guest browser" {
+  node Handler "Share link handler" ref="packages/plugins/plugin-space/src/capabilities/navigation-handler/share-link-handler.ts"
+  node Plank "Plank first look" ref="packages/plugins/plugin-space/src/containers/SharePreviewArticle/SharePreviewArticle.tsx"
+  node Client "Space join" ref="packages/sdk/client/src/echo/space-list.ts"
+  node Guard "Scope guard" ref="packages/core/echo/echo-host/src/db-host/space-state-manager.ts"
+}
+edge Dialog -> ShareOp "copy link"
+edge ShareOp -> Protocol "delegate"
+edge Protocol -> SSM "invitation, scope"
+edge Handler -> Route "signed read"
+edge Route -> SSM "grant"
+edge Route -> Indexer "readObjects"
+edge Handler -> Plank "first look"
+edge Handler -> Client "join"
+edge Client -> Join "redeem"
+edge Client -> Guard "syncScope"
