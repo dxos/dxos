@@ -20,10 +20,12 @@ import * as FeatureLink from '../src/types/FeatureLink.ts';
 const root = execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
 const paths = execFileSync(
   'git',
-  ['ls-files', '--', ...(process.argv.length > 2 ? process.argv.slice(2) : ['.']), ':(glob)**/*.ts', ':(glob)**/*.tsx'],
+  // NUL-separated, since git quotes unusual paths in its line output; extensions are filtered below because
+  // extra pathspecs would widen the scope rather than narrow it.
+  ['ls-files', '-z', '--', ...(process.argv.length > 2 ? process.argv.slice(2) : ['.'])],
   { cwd: root, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 },
 )
-  .split('\n')
+  .split('\0')
   .filter((path) => /\.tsx?$/.test(path));
 
 const links: FeatureLink.Link[] = [];

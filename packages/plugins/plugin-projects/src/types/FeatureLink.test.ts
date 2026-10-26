@@ -132,3 +132,14 @@ describe('Feature.getLink', () => {
     expect(Feature.getLink(feature)).toBe(`dxn:network.dxos.team.features.mcp.codeMode#${Obj.getMnemonic(feature)}`);
   });
 });
+
+describe('Feature.getCodeUrl', () => {
+  test('opens the file at its line, encoding each path segment', ({ expect }) => {
+    expect(Feature.getCodeUrl({ path: 'src/a.test.ts', line: 3 })).toBe(
+      'https://github.com/dxos/dxos/blob/main/src/a.test.ts#L3',
+    );
+    expect(Feature.getCodeUrl({ path: '/src/a#b?.ts', line: 1 })).toBe(
+      'https://github.com/dxos/dxos/blob/main/src/a%23b%3F.ts#L1',
+    );
+  });
+});

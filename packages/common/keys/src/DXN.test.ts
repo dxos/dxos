@@ -241,6 +241,11 @@ describe('DXN mnemonic suffix', () => {
     expect(() => DXN.withMnemonic(plain, 'bad')).toThrow();
   });
 
+  test('NameSchema rejects a name with a mnemonic', ({ expect }) => {
+    expect(Schema.is(DXN.NameSchema)('network.dxos.team.features.mcp.codeMode')).toBe(true);
+    expect(Schema.is(DXN.NameSchema)('network.dxos.team.features.mcp.codeMode#ABC123')).toBe(false);
+  });
+
   test('make never builds a DXN with a mnemonic', ({ expect }) => {
     const nsid: string = 'network.dxos.team.features.mcp.codeMode#ABC123';
     expect(() => DXN.make(nsid)).toThrow();

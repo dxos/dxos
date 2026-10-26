@@ -147,7 +147,10 @@ export type Name<T extends string> = [string] extends [T]
  * helper). Named `NameSchema` because a value cannot share the generic `Name` type's name.
  */
 export const NameSchema: Schema.Codec<string, string> = Schema.String.pipe(
-  Schema.refine((value): value is string => DXN_SPEC_REGEXP.test(`dxn:${value}`), { message: 'Invalid NSID name' }),
+  // The full grammar admits a mnemonic suffix, which a name must never carry.
+  Schema.refine((value): value is string => !value.includes('#') && DXN_SPEC_REGEXP.test(`dxn:${value}`), {
+    message: 'Invalid NSID name',
+  }),
   Schema.annotate({ title: 'DXN.Name', description: 'NSID name (the dxn: prefix omitted)' }),
 );
 

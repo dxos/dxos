@@ -176,7 +176,7 @@ export const getSpecUrl = (spec: string, repository = DEFAULT_SPEC_REPOSITORY): 
 
 /** Where a code link opens on GitHub: its file on the default branch, at its line. */
 export const getCodeUrl = (link: Pick<CodeLink, 'path' | 'line'>, repository = DEFAULT_SPEC_REPOSITORY): string =>
-  `${repository}/blob/main/${link.path.replace(/^\/+/, '')}#L${link.line}`;
+  `${repository}/blob/main/${link.path.replace(/^\/+/, '').split('/').map(encodeURIComponent).join('/')}#L${link.line}`;
 
 /** A repo spec path without its block anchor or leading slashes. */
 export const getSpecPath = (spec: string): string => spec.replace(/#.*$/, '').replace(/^\/+/, '');

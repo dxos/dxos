@@ -171,11 +171,11 @@ scenario T-2: A renamed key keeps its links
 test QA-1: Cite a feature from code
   desc: |
     A feature on the map shows the DXN that code cites it by and the tests and code that cite it; a feature with
-    no key offers to set one. Walked by the autocue flow `packages/plugins/plugin-projects/autocue/feature-links.mjs`
+    no key offers to set one. Walked by the autocue flow `plugin-projects/feature-links`
     against the ProjectFeatures and FeatureArticle stories, whose seed gives "Provider sync" a key and three code
     links.
   actors: human
-  status: passing            # 2026-10-25, recorded by autocue/feature-links.mjs
+  status: passing            # 2026-10-25, recorded by the plugin-projects/feature-links flow
   given:
     - storybook serves plugin-projects
     - the seeded "Provider sync" feature has the key `org.dxos.plugin.inbox.feature.providerSync` and three code links
