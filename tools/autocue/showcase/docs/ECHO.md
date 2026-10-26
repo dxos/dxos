@@ -84,15 +84,16 @@ the 60s source render, 3s earlier than in `ECHO.m4v`). About 25 words fits a 10s
 4. **ECHO Hypergraph** (33–43s, 33 words)
 
    - The graph is partitioned into interconnected workspaces; enabling teams and agents to work within a secure shared context.
-   - Workspaces adapt to the work, drawing in data from different sources as each task requires.
-     - Variant A (20 words): A project might start with a few documents, then pull in email threads, customer records and code as it grows.
-     - Variant B (18 words): Start a project with a brief; as it grows, bring in the mail, tickets and spreadsheets it needs.
-     - Variant C (17 words): A workspace grows with its project: first a plan, then the customer's email, then the sales pipeline.
-     - Variant D (18 words): As a project moves from idea to launch, its workspace pulls in new sources: mail, CRM, code, analytics.
-     - Variant E (18 words): Today a workspace holds a design doc; next month, the same workspace holds the contracts, tickets and invoices.
+   - Workspaces adapt to the work, drawing in data from different sources as the projects and tasks evolve.
 
 5. **Open and Extensible** (43–60s, 34 words)
 
-   - REDO: And because it's open, it keeps growing.
-   - REDO: New sources, new apps and new agents plug into the same graph, and you never give up control.
+   - REDO: open and extensible, by your teams and by third parties.
+     - Variant A (19 words): It's open and extensible, so your teams and third parties can build new apps, agents and integrations on it.
+     - Variant B (18 words): Anyone can extend it: your own teams, and third-party developers, build plugins and agents on the same graph.
+     - Variant C (17 words): Open by design, it lets teams and third parties extend it with their own apps and agents.
+   - REDO: secure, scalable and cost-effective, on Cloudflare Workers.
+     - Variant A (10 words): And it runs on Cloudflare Workers: secure, scalable and cost-effective.
+     - Variant B (17 words): Its cloud services run on Cloudflare Workers, so they are secure, scale on demand and stay cost-effective.
+     - Variant C (13 words): Backed by Cloudflare Workers, it is secure, it scales, and it is cost-effective.
    - DXOS is the operating system for the new enterprise.
