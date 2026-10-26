@@ -32,6 +32,6 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-presenter',
     icon: { key: 'ph--presentation--regular', hue: 'indigo' },
     spec: 'PLUGIN.mdl',
-    tags: ['alpha'],
+    tags: ['beta'],
   },
 });

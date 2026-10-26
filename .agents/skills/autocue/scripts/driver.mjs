@@ -323,8 +323,8 @@ const speedChanges = [];
 
 /**
  * The caption and title are the `tools/autocue` Frame, in overlay mode over the recorded page. `update` names only
- * what changes: `caption` / `header` (`{ title, subtitle }`, or null to clear) and `open` (ms to
- * hold the title as a centred panel before it moves to the header).
+ * what changes: `caption` / `header` (`{ title, subtitle }`, or null to clear), `captionPosition` (`top`, `middle` or
+ * `bottom`), and `open` (ms to hold the title as a centred panel before it moves to the header).
  */
 const updateFrame = async (update) => {
   await injectModule(page, FRAME_MODULE, '__autocueFrame');
@@ -349,6 +349,9 @@ const updateFrame = async (update) => {
       }
       if ('header' in update) {
         frame.setHeader(update.header ?? undefined);
+      }
+      if (update.captionPosition) {
+        frame.setCaptionPosition(update.captionPosition);
       }
       if ('caption' in update) {
         frame.setCaption(update.caption ?? undefined);
@@ -894,7 +897,11 @@ const handlers = {
   },
   caption: async (command) => {
     if (options.captions !== 'off') {
-      await updateFrame({ caption: { title: command.value, subtitle: command.subtitle } });
+      // `position` moves this caption and the ones after it, so it can clear what the step shows.
+      await updateFrame({
+        caption: { title: command.value, subtitle: command.subtitle },
+        captionPosition: command.position,
+      });
     }
     timeline.push({
       ms: Date.now() - started,

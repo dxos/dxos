@@ -77,7 +77,7 @@ describe('contact group sync against a mock People API', () => {
     // Contacts bindings are targetless: the cursor targets the connection itself.
     const binding = db.add(
       Cursor.makeExternal({
-        source: connection.accessToken,
+        source: Ref.make(accessToken),
         target: Ref.make(connection),
         externalId: GROUP_RESOURCE_NAME,
         label: 'Friends',

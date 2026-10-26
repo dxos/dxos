@@ -282,6 +282,13 @@ feat F-8: Claude Code on this computer
     then: |
       Composer's operations are offered as the `composer` MCP server, scoped to
       the chat's space; its read-only tools run without asking
+
+  req F-8.5:
+    when: Claude Code runs a turn in a chat with MCP connections switched on
+    then: |
+      each connection's MCP server is offered to the session, a connection's
+      credential never appearing in Claude Code's configuration; switching
+      one on or off reloads the session from the next turn
 ```
 
 ```mdl
@@ -613,6 +620,25 @@ decision D-5: QA-4 and QA-5 describe the agent picker and the "Assign to Claude 
   for: user:wittjosiah
   affects: [F-9.1, QA-4, QA-5]
   why: The steps used the removed options popover and the old "(cloud)" label of the task action.
+```
+
+```mdl
+decision D-6: Claude Code gets the chat's MCP connections, the same servers a chat run by Composer's own agent connects.
+  date: 2026-10-22
+  by: user:wittjosiah
+  affects: [F-8.5]
+```
+
+```mdl
+decision D-7: A connection with no credential is offered to Claude Code by its URL; one with a credential is served through the agent helper's relay, where the page adds the credential to each request, and the agent presents the session's Composer token. A credentialed server that streams over SSE is not offered, since the relay answers with whole bodies. A changed set of servers reloads the session; a refreshed credential does not. Fills in [D-6].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:wittjosiah
+  affects: [F-8.5]
+  why: Claude Code's MCP config travels on its command line, which any user on the machine can read, and an agent takes its MCP servers only when a session opens or reloads.
+  rejected:
+    - Put the credential in the server's headers: it would be readable on the command line.
+    - Give each credential its own environment variable: the helper passes the agent one token, and a credential refreshed mid-session would still be stale.
 ```
 
 ---

@@ -29,12 +29,12 @@ import { FeatureArticle } from './FeatureArticle.tsx';
 
 const FEATURE_NAME = 'Provider sync';
 
-type StoryArgs = { role: string; attendableId: string };
+type StoryArgs = { role: string; attendableId: string; name?: string };
 
-const DefaultStory = ({ role, attendableId }: StoryArgs) => {
+const DefaultStory = ({ role, attendableId, name = FEATURE_NAME }: StoryArgs) => {
   const [space] = useSpaces();
   const features = useQuery(space?.db, Filter.type(Feature.Feature));
-  const feature = features.find((feature) => feature.name === FEATURE_NAME);
+  const feature = features.find((feature) => feature.name === name);
   if (!feature) {
     return <Loading data={{ db: !!space?.db, feature: !!feature }} />;
   }
@@ -149,5 +149,39 @@ export const OpenSpec: Story = {
       await expect(row.textContent).toMatch(/plugin-inbox\/PLUGIN\.mdl/);
     }
     await userEvent.click(canvas.getAllByTestId('feature-card.spec')[0]);
+  },
+};
+
+/** The DXN code cites the feature by, and the tests and code that cite it, each linking to GitHub at its line. */
+export const CodeLinks: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const link = await canvas.findByTestId('feature-card.link', undefined, { timeout: 10_000 });
+    await expect(link.textContent).toMatch(/^dxn:org\.dxos\.plugin\.inbox\.feature\.providerSync#[0-9A-Z]{6}$/);
+    await waitFor(() => expect(canvas.getAllByTestId('feature-card.code')).toHaveLength(3), { timeout: 10_000 });
+    const [suite] = canvas.getAllByTestId('feature-card.code');
+    await expect(suite.closest('a')?.getAttribute('href')).toBe(
+      'https://github.com/dxos/dxos/blob/main/packages/plugins/plugin-inbox/src/sync/gmail-sync.test.ts#L24',
+    );
+    await expect(canvas.queryByTestId('feature-article.set-key')).toBeNull();
+  },
+};
+
+/** A feature without a key shows no DXN and offers a field to set one. */
+export const WithoutKey: Story = {
+  args: { name: 'OAuth tokens' },
+};
+
+/** A feature without a key offers to set one; once set, the article shows the DXN to cite it by. */
+export const SetKey: Story = {
+  args: { name: 'OAuth tokens' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = await canvas.findByTestId('feature-article.set-key', undefined, { timeout: 10_000 });
+    await expect(canvas.queryByTestId('feature-card.link')).toBeNull();
+    await userEvent.type(input, 'org.dxos.plugin.connector.feature.oauthTokens{Enter}');
+    const link = await canvas.findByTestId('feature-card.link', undefined, { timeout: 5_000 });
+    await expect(link.textContent).toMatch(/^dxn:org\.dxos\.plugin\.connector\.feature\.oauthTokens#[0-9A-Z]{6}$/);
+    await waitFor(() => expect(canvas.queryByTestId('feature-article.set-key')).toBeNull());
   },
 };

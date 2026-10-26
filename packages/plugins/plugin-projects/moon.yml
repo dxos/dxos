@@ -31,3 +31,9 @@ tasks:
       - /pnpm-lock.yaml
     options:
       timeout: 60
+  scan-feature-links:
+    # Prints every `@feature` tag in the repository as the input of the importFeatureLinks operation.
+    command: bun $projectRoot/scripts/scan-feature-links.ts
+    options:
+      cache: false
+      runInCI: false

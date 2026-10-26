@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Obj, type Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 
@@ -20,12 +20,9 @@ export type SheetChartsProps = {
   model: SheetModel;
 };
 
-// One empty list for a sheet without charts, so the charts subscription is not rebuilt on every render.
-const NO_CHARTS: readonly Ref.Ref<Sheet.Chart>[] = [];
-
 /** The sheet's charts in the charts companion; shares the sheet's selection through the `Selection` view state. */
 export const SheetCharts = ({ attendableId, sheet, model }: SheetChartsProps) => {
-  const [{ charts: refs = NO_CHARTS } = {}] = useObject(sheet);
+  const [{ charts: refs = [] } = {}] = useObject(sheet);
   const charts = useObjects(refs);
   const getValues = useRangeValues(model);
   const contextId = Obj.getURI(sheet);

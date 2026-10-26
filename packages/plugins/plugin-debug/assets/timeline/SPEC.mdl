@@ -125,28 +125,10 @@ decision D-1: The Timeline Project template files a spec for the timeline as a p
 ```
 
 ```mdl
-decision D-2: F-1 to F-4 are written from what is already built. Fills in [D-1].
+decision D-2: The spec writes F-1 to F-4 from what is built, names F-5 and divides the work into three phases; the project's features cite its blocks. Fills in [D-1].
   date: 2026-10-22
   by: agent:claude-code
   for: user:richburdon
-  why: The project tracks work that exists; its requirements are the behavior the code has.
-```
-
-```mdl
-decision D-3: F-5, the research skill, is named but not written. Fills in [D-1].
-  date: 2026-10-22
-  by: agent:claude-code
-  for: user:richburdon
-  why: Nothing is built yet and where it lives is undecided, so writing it is a task on the project.
-  rejected: Writing F-5 now, ahead of that decision.
-```
-
-```mdl
-decision D-4: The work divides into three phases: F-1 and F-2, then F-3 and F-4, then F-5. Fills in [D-1].
-  date: 2026-10-22
-  by: agent:claude-code
-  for: user:richburdon
-  why: Each phase needs the one before it: charts must be objects before they embed, and the research skill fills a timeline.
 ```
 
 ```mdl
