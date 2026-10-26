@@ -5,11 +5,12 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Surface from '@dxos/app-framework/Surface';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Obj } from '@dxos/echo';
 
-import { sharePreviewKeyOfNode, sharePreviewsAtom } from '../../util/index.ts';
+import { getSharePreviewHeading, sharePreviewKeyOfNode, sharePreviewsAtom } from '../../util/index.ts';
 
 export type SharePreviewArticleProps = AppSurface.PendingArticleData;
 
@@ -19,14 +20,15 @@ export type SharePreviewArticleProps = AppSurface.PendingArticleData;
  */
 export const SharePreviewArticle = ({ attendableId, nodeId }: SharePreviewArticleProps) => {
   const previews = useAtomValue(sharePreviewsAtom);
+  const types = Hooks.useCapabilities(AppCapabilities.Schema);
   const key = sharePreviewKeyOfNode(nodeId);
   const preview = key ? previews[key] : undefined;
   const data = useMemo<AppSurface.ObjectPreviewData | undefined>(
     () => preview && { attendableId, subject: preview.subject },
     [attendableId, preview],
   );
-  const label = preview && Obj.getLabel(preview.subject);
-  AppSurface.usePendingHeading(preview && label ? { label, icon: Obj.getIcon(preview.subject)?.icon } : undefined);
+  const heading = useMemo(() => preview && getSharePreviewHeading(preview.subject, types.flat()), [preview, types]);
+  AppSurface.usePendingHeading(heading);
   return data ? <Surface.Surface type={AppSurface.ObjectPreview} data={data} limit={1} /> : null;
 };
 

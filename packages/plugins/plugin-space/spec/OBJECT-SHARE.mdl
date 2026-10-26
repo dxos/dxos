@@ -564,12 +564,12 @@ decision D-17: A plank keeps its pending stand-in over the article that replaces
 ```
 
 ```mdl
-decision D-18: When the deck navigates, a plank the URL names that has not resolved keeps the URL's pair. The share-link handler applies the focused layout off the first look's path and closes the companion once the link's plank is in its deck, the markdown first look reserves the article's toolbar row and fold gutter, and a stand-in titles the plank before its first paint. Fills in [D-15].
+decision D-18: When the deck navigates, a plank the URL names that has not resolved keeps the URL's pair. The share-link handler applies the focused layout off the first look's path and closes the companion once the link's plank is in its deck, the markdown first look reserves the article's toolbar row and fold gutter, and a stand-in titles the plank, from its type's label and icon, before its first paint. Fills in [D-15].
   date: 2026-10-26
   by: agent:claude-code
   for: user:mykola-vrmchk
   affects: [F-2.7, F-4.4, F-4.8]
-  why: The demo after D-16 and D-17 showed three seams. The plank vanished from boot until the join: closing the companion navigates to the deck's planks, and a plank whose node has not resolved has no URL binding, so the close dropped it until the join opened it again. The live article's toolbar and gutter pushed the text down and right at the swap. A remounted plank painted one frame titled "Loading…" before the stand-in's effect titled it.
+  why: The demo after D-16 and D-17 showed four seams. The plank vanished from boot until the join: closing the companion navigates to the deck's planks, and a plank whose node has not resolved has no URL binding, so the close dropped it until the join opened it again. The live article's toolbar and gutter pushed the text down and right at the swap. A remounted plank painted one frame titled "Loading…" before the stand-in's effect titled it. The heading said "Loading…" throughout: a first look is decoded with no schema, so `Obj.getLabel` found no title, which now comes from the enabled plugins' type with the first look's typename.
   rejected:
     - Render the article's live toolbar in the first look — its actions would edit text that the article then discards.
 ```

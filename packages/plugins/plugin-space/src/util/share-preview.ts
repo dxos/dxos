@@ -3,12 +3,14 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import { Context } from '@dxos/context';
-import { Obj } from '@dxos/echo';
+import { Annotation, Obj, Type } from '@dxos/echo';
 import { StaticRefResolver } from '@dxos/echo/internal';
 import { EID, type SpaceId } from '@dxos/keys';
 import { type SharedObject, getSharedObjectsChallenge } from '@dxos/protocols';
@@ -19,6 +21,25 @@ import { SpaceOperationError } from '../operations/errors.ts';
 /** A share link's first look: the shared object as EDGE's index last read it, decoded but not live. */
 export type SharePreview = {
   subject: Obj.Unknown;
+};
+
+/**
+ * A first look's title and icon. It is decoded with no schema, so they come from the type with its typename among
+ * `types`, the types the enabled plugins contribute.
+ */
+export const getSharePreviewHeading = (
+  subject: Obj.Unknown,
+  types: readonly Type.AnyEntity[],
+): AppSurface.PendingHeading | undefined => {
+  const typename = Obj.getTypename(subject);
+  const type = types.find((candidate) => Type.getTypename(candidate) === typename);
+  const schema = type && Type.getSchema(type);
+  const label = Obj.getLabel(subject) ?? (schema && Annotation.getLabelWithSchema(schema, subject));
+  if (!label) {
+    return undefined;
+  }
+  const icon = schema && Option.getOrUndefined(Annotation.IconAnnotation.get(schema));
+  return { label, icon: (Obj.getIcon(subject) ?? icon)?.icon };
 };
 
 /** First looks by {@link sharePreviewKey}, until the object itself resolves in its plank. */
