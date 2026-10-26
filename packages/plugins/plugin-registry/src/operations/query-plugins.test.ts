@@ -11,6 +11,8 @@ import { meta } from '#meta';
 import { RegistryOperation } from '#operations';
 import { RegistryPlugin } from '#plugin';
 
+await Harness.preload({ plugins: [RegistryPlugin()] });
+
 describe('RegistryOperation.QueryPlugins', () => {
   test('lists the installed plugins on both axes', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({ plugins: [RegistryPlugin()] });

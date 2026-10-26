@@ -399,9 +399,9 @@ const entityAccessor: FilterRecordAccessor<AnyEntity> = {
       key: meta.key,
       version: meta.version,
       annotations: meta.annotations,
-      // Lazy: meta tags surface as `Ref`s on a live proxy and only the `tag` arm needs them encoded.
+      // Lazy: meta tags surface as entities on a live proxy and only the `tag` arm needs their ids.
       get tags() {
-        return meta.tags.map((tag: any) => (typeof tag?.encode === 'function' ? tag.encode() : tag));
+        return meta.tags.map((tag) => tag.id);
       },
     };
   },

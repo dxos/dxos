@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import * as Record from 'effect/Record';
 
 import { type MakeTurnProducer, type TurnProducer, type TurnRequest } from '@dxos/agent-runtime';
-import { callTool } from '@dxos/ai';
+import { type OpaqueToolkit, callTool } from '@dxos/ai';
 import { AiRequest, AiSession, createToolkit, formatSystemPrompt, getOperationFromTool } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
@@ -119,50 +119,59 @@ const runCodeModeTurn = ({
     });
 
     const maxTurns = options.maxTurns ?? Number.POSITIVE_INFINITY;
-    for (let turn = 0; ; turn++) {
-      yield* Effect.promise(() => session.context.sync());
-      const skills = session.context.getSkills();
-      const operations = yield* projectOperations(skills);
-      labelCall = labelEvalCall(operations);
-      const toolkit = makeEvalToolkit({
-        dialect,
-        sandbox,
-        runtime,
-        operations,
-        skills: skills.flatMap((skill) => Obj.getMeta(skill).key ?? []),
-        maxOutput: options.maxOutput,
-        timeout: options.timeout,
-      });
-      const system = yield* formatSystemPrompt({
-        system: [dialect.instructions({ operations, types: yield* registeredTypes }), options.system, params.system]
-          .filter(isPresent)
-          .join('\n\n'),
-        skills,
-        objects: session.context.getObjects(),
-        instructions,
-      }).pipe(Effect.orDie);
-
-      const { done, finishReason } = yield* request.runAgentTurn({
-        system,
-        toolkit,
-      });
-      if (done) {
-        break;
-      }
-      // Checked before the pause branch below: a provider that keeps pausing would otherwise
-      // re-issue the request forever, since a paused turn skips the rest of the loop.
-      if (turn + 1 >= maxTurns) {
-        yield* request.submitNotice(
-          `Stopped after ${maxTurns} turns without a final answer. Report what you established and what is left.`,
+    // Each iteration is scoped so the MCP connections it opens close before the next opens its own.
+    const runIteration = (turn: number) =>
+      Effect.gen(function* () {
+        yield* Effect.promise(() => session.context.sync());
+        const skills = session.context.getSkills();
+        // An MCP tool has no operation behind it, so it reaches the code as a call the dialect binds by name.
+        const mcps = yield* AiSession.connectMcpServers(
+          params.mcpServers ? yield* AiSession.readMcpServers(params.mcpServers) : [],
         );
-        break;
-      }
-      // A paused server-tool turn resumes with another request and no local tool execution.
-      if (finishReason === 'pause') {
-        continue;
-      }
-      yield* request.runTools({ toolkit });
-    }
+        const operations = yield* projectOperations(skills, mcps);
+        labelCall = labelEvalCall(operations);
+        const toolkit = makeEvalToolkit({
+          dialect,
+          sandbox,
+          runtime,
+          operations,
+          skills: skills.flatMap((skill) => Obj.getMeta(skill).key ?? []),
+          maxOutput: options.maxOutput,
+          timeout: options.timeout,
+        });
+        const system = yield* formatSystemPrompt({
+          system: [dialect.instructions({ operations, types: yield* registeredTypes }), options.system, params.system]
+            .filter(isPresent)
+            .join('\n\n'),
+          skills,
+          objects: session.context.getObjects(),
+          instructions,
+        }).pipe(Effect.orDie);
+
+        const { done, finishReason } = yield* request.runAgentTurn({
+          system,
+          toolkit,
+        });
+        if (done) {
+          return 'done' as const;
+        }
+        // Checked before the pause branch below: a provider that keeps pausing would otherwise
+        // re-issue the request forever, since a paused turn skips the rest of the loop.
+        if (turn + 1 >= maxTurns) {
+          yield* request.submitNotice(
+            `Stopped after ${maxTurns} turns without a final answer. Report what you established and what is left.`,
+          );
+          return 'done' as const;
+        }
+        // A paused server-tool turn resumes with another request and no local tool execution.
+        if (finishReason === 'pause') {
+          return 'continue' as const;
+        }
+        yield* request.runTools({ toolkit });
+        return 'continue' as const;
+      }).pipe(Effect.scoped);
+
+    for (let turn = 0; (yield* runIteration(turn)) !== 'done'; turn++) {}
 
     return [...request.pending];
   }).pipe(
@@ -220,12 +229,15 @@ const registeredTypes: Effect.Effect<SandboxType[], never, Database.Service> = E
 );
 
 /**
- * Projects the skills' tools into callable operations. Resolution goes through the ordinary toolkit
+ * Projects the skills' tools, and those of the turn's MCP servers, into callable operations. Resolution goes through the ordinary toolkit
  * path, so an operation reachable in code mode is exactly the one a tool-calling agent would reach —
  * same registry, same handlers, same invocation options.
  */
-export const projectOperations = Effect.fnUntraced(function* (skills: readonly Skill.Skill[]) {
-  const skillToolkit = yield* createToolkit({ skills });
+export const projectOperations = Effect.fnUntraced(function* (
+  skills: readonly Skill.Skill[],
+  opaqueToolkits: readonly OpaqueToolkit.OpaqueToolkit[] = [],
+) {
+  const skillToolkit = yield* createToolkit({ skills, opaqueToolkits });
   const handlers = yield* skillToolkit.handlers;
   return Record.toEntries(skillToolkit.toolkit.tools).map(([name, tool]): SandboxOperation => ({
     name,

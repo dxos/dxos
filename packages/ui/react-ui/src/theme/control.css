@@ -987,9 +987,11 @@
     line-height: var(--dx-line-height);
   }
   /* The toolbar's ScrollArea frame takes the place the toolbar would, and never sizes it without its items. */
+  /* Fills its container; beside siblings in a row it shrinks to what is left, but a column cannot squeeze its height. */
   .dx-scroll-root.dx-toolbar-scroll {
-    flex-shrink: 0;
     width: 100%;
+    min-width: 0;
+    min-height: fit-content;
     container-type: normal;
   }
   .dx-toolbar > .dx-control:not([data-square]),

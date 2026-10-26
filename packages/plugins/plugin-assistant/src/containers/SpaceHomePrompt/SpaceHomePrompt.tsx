@@ -9,6 +9,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext } from '@dxos/assistant';
 import type * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
@@ -21,7 +22,7 @@ import { type Space, useRegistry } from '@dxos/react-client/echo';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { type ChatEvent, ChatPrompt } from '#components';
-import { bindMentions, usePresets, useSkills } from '#hooks';
+import { bindMentions, usePresets, usePromptActions, useSkills } from '#hooks';
 import { meta } from '#meta';
 import { AssistantCapabilities } from '#types';
 
@@ -57,6 +58,7 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
   const skills = useSkills({ registry, db: space?.db });
   const slashCommands = useMemo(() => makeSkillCommands(skills), [skills]);
   const event = useDraftSend({ space, draft, context, slashCommands, onSent: startNewDraft });
+  const prompt = usePromptActions(space && GraphPath.getSpaceHomePath(space.id));
 
   if (!space) {
     return null;
@@ -71,6 +73,8 @@ export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
       context={context}
       slashCommands={slashCommands}
       event={event}
+      customActions={prompt.actions}
+      nodeId={prompt.nodeId}
       preset={preset?.id}
       placeholder={t('space-home.prompt.placeholder')}
     />

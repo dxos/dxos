@@ -9,6 +9,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Listbox from '@dxos/react-ui/Listbox';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Status from '@dxos/react-ui/Status';
 import * as Tag from '@dxos/react-ui/Tag';
 import { mx } from '@dxos/ui-theme';
 
@@ -149,14 +150,14 @@ export const DecisionLog = ({ content, selected }: DecisionLogProps) => {
 
   if (groups.length === 0) {
     return (
-      <Layout.Flex center grow classNames='text-description' data-testid='decision-log.empty'>
+      <Status.Empty classNames='dx-fill' data-testid='decision-log.empty'>
         {t('decision-log.empty.message')}
-      </Layout.Flex>
+      </Status.Empty>
     );
   }
 
   return (
-    <ScrollArea.Root orientation='vertical' data-testid='decision-log'>
+    <ScrollArea.Root orientation='vertical' classNames='dx-fill' data-testid='decision-log'>
       <ScrollArea.Viewport>
         <Layout.Flex column gap='lg' classNames='p-4'>
           {groups.map((group) => (

@@ -17,6 +17,8 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { RoutinePlugin } from '#plugin';
 
+await Harness.preload({ plugins: [ClientPlugin.make({ types: [Feed.Feed] }), RoutinePlugin()] });
+
 /**
  * Resolve the per-space {@link TriggerDispatcher} from the harness'
  * process-manager runtime. The `LayerStack` caches dispatchers per

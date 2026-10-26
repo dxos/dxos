@@ -17,6 +17,8 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 import { SpacePlugin } from '#plugin';
 import { SpaceOperation } from '#types';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), SpacePlugin({})] });
+
 describe('SpaceOperation.Create', () => {
   // `updateSpace` commits the preference on the host, so what can fail afterwards is only the local
   // snapshot catching up; the space must come back regardless, since the preference converges on its own.

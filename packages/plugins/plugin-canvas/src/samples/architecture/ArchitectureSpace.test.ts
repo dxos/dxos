@@ -10,6 +10,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
+import * as Presentation from '@dxos/plugin-presenter/Presentation';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import * as SheetUtil from '@dxos/plugin-sheet/SheetUtil';
 
@@ -83,16 +84,23 @@ describe('ArchitectureSpace', () => {
       'Composer',
       'DXOS',
       'EDGE',
+      'ECHO',
       'Overview',
       'CF Workers',
       'Plugin metrics',
     ]);
 
+    // The ECHO deck carries a description and its own theme.
+    const deck = listedObjects.find((object) => Obj.instanceOf(Presentation.Presentation, object));
+    expect(deck?.description).toMatch(/^ECHO, the DXOS object database/);
+    expect(deck?.theme).toEqual({ accent: '#0891b2', font: 'space-grotesk', monoFont: 'fira' });
+
     // The metrics sheet charts every plugin row as one stacked horizontal bar, one series per measure.
     const [metrics] = await db.query(Filter.type(Sheet.Sheet)).run();
     expect(metrics?.rows).toHaveLength(21);
     expect(metrics?.columns).toHaveLength(5);
-    expect(metrics?.charts).toEqual([
+    const charts = await Promise.all((metrics?.charts ?? []).map((ref) => ref.load()));
+    expect(charts).toEqual([
       expect.objectContaining({ range: 'A1:E21', type: 'bar', horizontal: true, stacked: true }),
     ]);
     expect(metrics && unstyledHeaders(metrics)).toEqual([]);

@@ -33,7 +33,7 @@ const AutomergeStory = ({ value, ...props }: CellEditorProps) => {
   const cell = 'A1';
   const [object, setObject] = useState<Sheet.Sheet>();
   useAsyncEffect(async () => {
-    const client = new Client({ types: [Sheet.Sheet] });
+    const client = new Client({ types: [Sheet.Sheet, Sheet.Chart] });
     await client.initialize();
     await client.halo.createIdentity();
     const space = await client.spaces.create();

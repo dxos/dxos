@@ -23,7 +23,7 @@ import {
 import { EID, type EntityId, type SpaceId, type URI } from '@dxos/keys';
 import { getDeep, visitValues } from '@dxos/util';
 
-import type { ObjectCore } from '../core-db/index.ts';
+import type { DeletionMemo, ObjectCore } from '../core-db/index.ts';
 import { aggregateNeedsIndex } from './util.ts';
 
 export type WorkingSetItem = {
@@ -40,8 +40,8 @@ export type WorkingSetItem = {
 };
 
 const WorkingSetItem = Object.freeze({
-  isDeleted(item: WorkingSetItem): boolean {
-    return item.core.isDeleted();
+  isDeleted(item: WorkingSetItem, memo?: DeletionMemo): boolean {
+    return item.core.isDeleted(undefined, memo);
   },
 
   getProperty(item: WorkingSetItem, property: EntityPropPath): unknown {
@@ -93,7 +93,7 @@ const WorkingSetItem = Object.freeze({
 export type WorkingSetDataProvider = {
   spaceId: SpaceId;
   allCores(): ObjectCore[];
-  getCoreById(id: EntityId, load?: boolean): ObjectCore | undefined;
+  getCoreById(id: EntityId): ObjectCore | undefined;
   areStrongDepsSatisfied(core: ObjectCore): boolean;
   areStrongDepsResolved(core: ObjectCore): boolean;
 };
@@ -105,6 +105,9 @@ export type WorkingSetDataProvider = {
  * Returns null when the plan requires index capabilities (TextSelector, TimestampSelector).
  */
 export class WorkingSetQueryExecutor {
+  /** Set for the duration of one {@link tryExecute}, which is synchronous, so no core changes under it. */
+  #deletionMemo: DeletionMemo | undefined = undefined;
+
   constructor(private readonly _provider: WorkingSetDataProvider) {}
 
   /**
@@ -112,7 +115,14 @@ export class WorkingSetQueryExecutor {
    * Returns null if the plan requires SQL index access.
    */
   tryExecute(plan: QueryPlan.Plan): WorkingSetItem[] | null {
-    return this._execPlan(plan, []);
+    // Items under one parent share its deletion walk; without the memo a scan costs items × depth.
+    const outer = this.#deletionMemo;
+    this.#deletionMemo = new Map();
+    try {
+      return this._execPlan(plan, []);
+    } finally {
+      this.#deletionMemo = outer;
+    }
   }
 
   private _execPlan(plan: QueryPlan.Plan, ws: WorkingSetItem[]): WorkingSetItem[] | null {
@@ -204,7 +214,7 @@ export class WorkingSetQueryExecutor {
         }
         case 'IdSelector': {
           for (const id of step.selector.objectIds) {
-            const core = this._provider.getCoreById(id, true);
+            const core = this._provider.getCoreById(id);
             // Resolved, not satisfied: an id selector names one object the caller already holds an
             // id for, so a dependency that is settled unreachable must still surface it. Requiring
             // satisfaction here left an object that `getObjectById` returns unloadable by its own
@@ -319,7 +329,7 @@ export class WorkingSetQueryExecutor {
 
   private _execFilterDeletedStep(step: QueryPlan.FilterDeletedStep, ws: WorkingSetItem[]): WorkingSetItem[] | null {
     const expected = step.mode === 'only-deleted';
-    return ws.filter((item) => WorkingSetItem.isDeleted(item) === expected);
+    return ws.filter((item) => WorkingSetItem.isDeleted(item, this.#deletionMemo) === expected);
   }
 
   private _execTraverseStep(step: QueryPlan.TraverseStep, ws: WorkingSetItem[]): WorkingSetItem[] | null {

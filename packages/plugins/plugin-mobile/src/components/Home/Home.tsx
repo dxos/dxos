@@ -87,13 +87,6 @@ const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
     return () => unregisterItem(data.id);
   }, [data.id, handleSelect, registerItem, unregisterItem]);
 
-  // Scroll into view when selected.
-  useEffect(() => {
-    if (isSelected && cardRef.current) {
-      cardRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    }
-  }, [isSelected]);
-
   return (
     <Card.Root
       role='button'

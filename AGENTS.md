@@ -368,6 +368,11 @@ Do not paste real credential values into any shell command, and do not paste the
 
 ## Where things live
 
+- **Diagrams, anywhere** — Artifact pages, PR bodies, docs: plugin-illustrator `.dx` renders →
+  `drawing-diagrams` skill. This overrides the harness's `artifact-diagramming` skill: never
+  hand-author `<svg>` or Mermaid.
+- **Sharing a spec with the team** — Composer's spec viewer (inline diagrams, decision graph) as a
+  commentable Claude Artifact → `sharing-specs` skill (`.agents/skills/sharing-specs/SKILL.md`).
 - **Cloud sandbox / Claude Code on the web** — hooks that don't run, missing tooling, and the
   HTTPS egress proxy → `cloud-sandbox` skill (`.agents/skills/cloud-sandbox/SKILL.md`).
 - **`.agents/` vs `agents/`** — `.agents/` (dot) holds agent **control state**
@@ -398,6 +403,8 @@ Do not paste real credential values into any shell command, and do not paste the
   `scripts/publish-package.mjs` → `npm-publishing` skill (`.agents/skills/npm-publishing/SKILL.md`).
 - **Credentials (API keys, tokens, passwords)** — the `op` CLI in remote sessions only, `.secrets/` otherwise →
   `1password` skill (`.agents/skills/1password/SKILL.md`).
+- **Private test fixtures** (real recordings, inboxes) — encrypted in R2, shared with agents via the agents key in
+  1Password `eng-dev` → `private-fixtures` skill (`.agents/skills/private-fixtures/SKILL.md`).
 - **Flaky test quarantining** — investigating a flaky/red CI run or setting up
   Trunk test uploads → `trunk-quarantine` skill
   (`.agents/skills/trunk-quarantine/SKILL.md`); adding the Trunk MCP server →

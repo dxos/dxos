@@ -19,7 +19,6 @@ import * as entityInternal from './internal/Entity/index.ts';
 import * as internal from './internal/index.ts';
 import * as objInternal from './internal/Obj/index.ts';
 import * as Obj from './Obj.ts';
-import type * as Ref from './Ref.ts';
 import type * as Tag from './Tag.ts';
 import * as Type from './Type.ts';
 
@@ -538,9 +537,9 @@ export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => in
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  *
- * @performance O(t) in the tag count; dedupes by ref URI before appending.
+ * @performance O(t) in the tag count; dedupes by tag id before appending.
  */
-export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.addTag(entity, tag);
+export const addTag = (entity: Mutable<Unknown>, tag: Tag.Tag): void => internal.addTag(entity, tag);
 
 /**
  * Remove a tag from the relation.
@@ -551,7 +550,7 @@ export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void =>
  *
  * @performance O(t) in the tag count.
  */
-export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.removeTag(entity, tag);
+export const removeTag = (entity: Mutable<Unknown>, tag: Tag.Tag): void => internal.removeTag(entity, tag);
 
 /**
  * Check if the relation is deleted.

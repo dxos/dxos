@@ -62,7 +62,15 @@ describe('devtools graph extension', () => {
     const { expand, getNode, devtoolsNodeId } = await setup();
     expect(Devtools.getNodePath(Devtools.id)).toBe(devtoolsNodeId);
     await expand(Devtools.getNodePath(Devtools.Echo.id));
-    for (const id of [Devtools.AppGraph, Devtools.Echo.id, Devtools.Echo.Space, Devtools.Echo.Feeds]) {
+    await expand(Devtools.getNodePath(Devtools.Agent.id));
+    for (const id of [
+      Devtools.AppGraph,
+      Devtools.Echo.id,
+      Devtools.Echo.Space,
+      Devtools.Echo.Feeds,
+      Devtools.Agent.id,
+      Devtools.Agent.Halo,
+    ]) {
       expect(getNode(Devtools.getNodePath(id))).not.toBeNull();
     }
   });

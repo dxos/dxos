@@ -3,7 +3,7 @@
 //
 
 import * as Schema from 'effect/Schema';
-import { type PRNG, type ULIDFactory, monotonicFactory } from 'ulidx';
+import { type PRNG, type ULIDFactory, decodeTime, monotonicFactory } from 'ulidx';
 
 import { withStatics } from './schema-statics.ts';
 
@@ -77,6 +77,12 @@ export interface EntityIdClass extends Schema.Codec<EntityId, string> {
    * ```
    */
   'deterministic'(...seed: (string | number)[]): EntityId;
+
+  /**
+   * When the id was generated (ms since epoch), read from its ULID time component.
+   * A {@link deterministic} id reads as 0.
+   */
+  'getTimestamp'(id: EntityId): number;
 
   /**
    * WARNING: To be used only within tests.
@@ -184,6 +190,8 @@ export const EntityId: EntityIdClass = withStatics(EntityIdSchema, {
     }
     return (time + rand) as EntityId;
   },
+
+  getTimestamp: (id: EntityId): number => decodeTime(id),
 
   dangerouslyDisableRandomness: (): void => {
     factory = monotonicFactory(makeTestPRNG());
