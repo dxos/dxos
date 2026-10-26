@@ -89,10 +89,10 @@ const INSTRUCTIONS = trim`
     to connect, then wait. Do not retry in the same turn.
 
   ## MCP servers
-  - A server is registered as an object in the space, with the transport as \`http\` — Streamable
+  - A server is added to the space as an MCP connection, with the transport as \`http\` — Streamable
     HTTP. \`sse\` is the deprecated transport and is there for servers that have not migrated.
-  - Its key replicates in plaintext to everyone in the space. Register a key the server can rotate,
-    and never one that authorises anything beyond it.
+  - Its key is readable by everyone in the space. Use a key the server can rotate, and never one
+    that authorises anything beyond it.
   - A chat that does not list a registered server's tools has failed to connect. That is a URL,
     transport or handshake fault to diagnose — not a model that declined to use them.
   - Prove the tool was actually called. An answer a model could have produced from its own knowledge
@@ -135,7 +135,7 @@ const INSTRUCTIONS = trim`
 export type SkillResult = { skill: Skill.Skill };
 
 /** The development-preferences skill, as a space object a project's instructions can bind. */
-export const DevelopmentSkill: SampleSpace.Phase<SkillResult> = SampleSpace.phase('skill', {
+export const DevelopmentSkill: SampleSpace.Partial<SkillResult> = SampleSpace.partial('skill', {
   schemas: [Skill.Skill, Text.Text],
   run: () =>
     Effect.gen(function* () {

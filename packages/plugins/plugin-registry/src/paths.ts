@@ -9,6 +9,9 @@ export const REGISTRY_ID = 'dxos:registry';
 // segment (`category/<name>`); the graph builder, the category surfaces and `getCategoryPredicate` all
 // use the name directly.
 
+/** Qualified graph path to a registry category node (e.g. `bundled`). */
+export const getCategoryPath = (category: string): string => `root/${REGISTRY_ID}/${category}`;
+
 /** Segment of the hidden node the plugin nodes hang off, apart from the categories. */
 export const PLUGINS_SEGMENT = 'plugins';
 

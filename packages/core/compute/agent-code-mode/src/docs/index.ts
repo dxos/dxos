@@ -37,6 +37,11 @@ const FILES = [
     load: () => import('./operations.md?raw'),
   },
   {
+    name: 'printing.md',
+    covers: 'How objects print: fields, refs, relations, children, referrers, and the code that fetches them.',
+    load: () => import('./printing.md?raw'),
+  },
+  {
     name: 'errors.md',
     covers: 'Failures, `Effect.result`, and the mistakes that cost a call.',
     load: () => import('./errors.md?raw'),

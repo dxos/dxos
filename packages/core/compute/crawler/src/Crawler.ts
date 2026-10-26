@@ -131,6 +131,7 @@ const advance = (
           channelId: thread.threadId,
           threadId: thread.threadId,
           parentMessageId: thread.parentMessageId,
+          rootId: target.rootId ?? target.id,
           depth: target.depth + 1,
           status: 'pending' as const,
         })),

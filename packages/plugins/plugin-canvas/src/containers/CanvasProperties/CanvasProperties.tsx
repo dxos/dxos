@@ -8,10 +8,10 @@ import React, { useCallback, useMemo } from 'react';
 import { useObject } from '@dxos/echo-react';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { DEFAULT_GRID } from '@dxos/react-ui-canvas/scene';
-import { Form } from '@dxos/react-ui-form';
+import { Form, type FormFieldOverride } from '@dxos/react-ui-form';
 
 import { canvasRecordOf, deleteStyleClass, readStyles, styleClassUses, updateCanvasRecord, writeStyles } from '#model';
-import { Canvas } from '#types';
+import { Canvas, Settings } from '#types';
 
 import { StyleClassList } from './StyleClassList.tsx';
 
@@ -28,7 +28,37 @@ const CanvasPropertiesSchema = Schema.Struct({
       description: 'Spacing of the minor grid, in px.',
     }),
   ),
+  theme: Schema.optional(
+    Settings.ThemeChoice.annotate({
+      title: 'Theme',
+      description: "How this drawing is drawn, for everyone; unset, each viewer's default.",
+    }),
+  ),
+  styleSet: Schema.optional(
+    Settings.StyleSetChoice.annotate({
+      title: 'Style set',
+      description: "Shapes and links in another style set than the theme's.",
+    }),
+  ),
+  background: Schema.optional(
+    Settings.BackgroundChoice.annotate({
+      title: 'Background',
+      description: "Another background than the theme's.",
+    }),
+  ),
 });
+
+/** Unset, a select shows nothing rather than its description, which reads as a value. */
+const FIELD_OVERRIDES: Record<string, FormFieldOverride> = {
+  theme: { placeholder: '' },
+  styleSet: { placeholder: '' },
+  background: { placeholder: '' },
+};
+
+/** A stored id as a built-in choice; an id this host does not know (from a newer one) shows as unset. */
+const isThemeChoice = Schema.is(Settings.ThemeChoice);
+const isStyleSetChoice = Schema.is(Settings.StyleSetChoice);
+const isBackgroundChoice = Schema.is(Settings.BackgroundChoice);
 
 type CanvasPropertiesValues = Schema.Schema.Type<typeof CanvasPropertiesSchema>;
 
@@ -39,7 +69,13 @@ export const CanvasProperties = ({ drawing }: CanvasPropertiesProps) => {
   const [canvas, updateCanvas] = useObject(drawing.canvas);
   const values = useMemo<CanvasPropertiesValues>(() => {
     const record = canvas ? canvasRecordOf(canvas.content) : undefined;
-    return { lattice: record?.lattice, grid: record?.grid ?? DEFAULT_GRID };
+    return {
+      lattice: record?.lattice,
+      grid: record?.grid ?? DEFAULT_GRID,
+      theme: isThemeChoice(record?.theme) ? record.theme : undefined,
+      styleSet: isStyleSetChoice(record?.styleSet) ? record.styleSet : undefined,
+      background: isBackgroundChoice(record?.background) ? record.background : undefined,
+    };
   }, [canvas]);
   const handleSave = useCallback(
     (next: CanvasPropertiesValues) =>
@@ -47,6 +83,9 @@ export const CanvasProperties = ({ drawing }: CanvasPropertiesProps) => {
         updateCanvasRecord(canvas.content, {
           lattice: next.lattice || undefined,
           grid: next.grid === DEFAULT_GRID ? undefined : next.grid,
+          theme: next.theme,
+          styleSet: next.styleSet,
+          background: next.background,
         });
       }),
     [updateCanvas],
@@ -76,13 +115,20 @@ export const CanvasProperties = ({ drawing }: CanvasPropertiesProps) => {
     [updateCanvas],
   );
 
-  if (!canvas || canvas.schema !== Canvas.SCENE_SCHEMA) {
+  // A newer plugin's format is read-only here, and every control below writes the canvas.
+  if (!canvas || !Canvas.isSceneSchema(canvas.schema) || Canvas.isNewerScene(canvas.schema)) {
     return null;
   }
 
   return (
     <>
-      <Form.Root schema={CanvasPropertiesSchema} values={values} autoSave onSave={handleSave}>
+      <Form.Root
+        schema={CanvasPropertiesSchema}
+        values={values}
+        fieldOverrides={FIELD_OVERRIDES}
+        autoSave
+        onSave={handleSave}
+      >
         <Form.Fields />
       </Form.Root>
       <StyleClassList classes={classes} uses={uses} onRename={handleRename} onDelete={handleDelete} />

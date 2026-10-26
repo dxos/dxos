@@ -274,6 +274,24 @@ export const setupPage = async (browser: Browser | BrowserContext, options: Setu
   }
 };
 
+/**
+ * Opens `url` once and waits for `ready`, so Storybook's on-demand compile of the story (about 50 s on a
+ * 4 vCPU runner) is paid outside every test's own budget. Call from `test.beforeAll` after raising its
+ * timeout with `test.setTimeout`.
+ */
+export const warmStory = async (
+  browser: Browser,
+  url: string,
+  ready: (page: Page) => Promise<unknown>,
+): Promise<void> => {
+  const { page, close } = await setupPage(browser, { url });
+  try {
+    await ready(page);
+  } finally {
+    await close();
+  }
+};
+
 export const storybookUrl = (storyId: string, port = 9009) =>
   `http://localhost:${port}/iframe.html?id=${storyId}&viewMode=story`;
 

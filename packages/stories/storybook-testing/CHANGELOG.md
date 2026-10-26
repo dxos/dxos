@@ -1,5 +1,114 @@
 # @dxos/storybook-testing
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/devtools@0.16.0
+  - @dxos/assistant@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/client@0.16.0
+  - @dxos/react-client@0.16.0
+  - @dxos/plugin-client@0.16.0
+  - @dxos/plugin-explorer@0.16.0
+  - @dxos/plugin-testing@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-graph@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-attention@0.16.0
+  - @dxos/react-ui-chat@0.16.0
+  - @dxos/react-ui-debug@0.16.0
+  - @dxos/react-ui-list@0.16.0
+  - @dxos/react-ui-masonry@0.16.0
+  - @dxos/react-ui-query@0.16.0
+  - @dxos/react-ui-syntax-highlighter@0.16.0
+  - @dxos/react-ui-trace@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/compute-runtime@0.16.0
+  - @dxos/link@0.16.0
+  - @dxos/ai@0.16.0
+  - @dxos/echo-query@0.16.0
+  - @dxos/plugin-graph@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/ui-theme@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [5490cbc]
+- Updated dependencies [6488905]
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [1eaa8b4]
+- Updated dependencies [019891d]
+- Updated dependencies [5bbc891]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [b82150a]
+- Updated dependencies [cd70a43]
+- Updated dependencies [0d81167]
+- Updated dependencies [45ab961]
+- Updated dependencies [71fc002]
+- Updated dependencies [1b33a84]
+- Updated dependencies [16bde33]
+- Updated dependencies [5e3e00c]
+- Updated dependencies [d250ed2]
+- Updated dependencies [5162e12]
+- Updated dependencies [55bdf55]
+- Updated dependencies [ed1039a]
+- Updated dependencies [37edd53]
+- Updated dependencies [098a536]
+- Updated dependencies [25af912]
+- Updated dependencies [7b47951]
+- Updated dependencies [8190cc5]
+- Updated dependencies [e398906]
+- Updated dependencies [60ef4ec]
+- Updated dependencies [2b6a93a]
+  - @dxos/compute-runtime@0.15.0
+  - @dxos/assistant@0.15.0
+  - @dxos/react-ui@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/devtools@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/ai@0.15.0
+  - @dxos/plugin-client@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/echo-query@0.15.0
+  - @dxos/client@0.15.0
+  - @dxos/react-ui-chat@0.15.0
+  - @dxos/react-ui-query@0.15.0
+  - @dxos/react-ui-trace@0.15.0
+  - @dxos/plugin-explorer@0.15.0
+  - @dxos/plugin-testing@0.15.0
+  - @dxos/app-graph@0.15.0
+  - @dxos/react-client@0.15.0
+  - @dxos/react-ui-attention@0.15.0
+  - @dxos/react-ui-debug@0.15.0
+  - @dxos/react-ui-list@0.15.0
+  - @dxos/react-ui-masonry@0.15.0
+  - @dxos/react-ui-syntax-highlighter@0.15.0
+  - @dxos/plugin-graph@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/ui-theme@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

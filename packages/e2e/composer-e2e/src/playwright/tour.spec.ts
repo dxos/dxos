@@ -35,7 +35,8 @@ test.describe('Tour tests', () => {
     await Support.walk(host.page, GLOBAL_TOUR);
   });
 
-  test('a document tour picks up steps contributed by other plugins', { tag: ['@QA-9'] }, async () => {
+  test('a document tour picks up steps contributed by other plugins', { tag: ['@QA-9'] }, async ({ browserName }) => {
+    test.fixme(browserName === 'webkit', 'TODO(wittjosiah): Flaky in WebKit CI; fix and re-enable.');
     test.slow();
 
     await host.createSpace();

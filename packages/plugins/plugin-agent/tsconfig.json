@@ -34,6 +34,9 @@
       "path": "../../common/keys"
     },
     {
+      "path": "../../common/log"
+    },
+    {
       "path": "../../common/util"
     },
     {
@@ -62,6 +65,9 @@
     },
     {
       "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-client"
     },
     {
       "path": "../../core/echo/echo-react"
@@ -127,10 +133,16 @@
       "path": "../../ui/ui-theme"
     },
     {
+      "path": "../plugin-client"
+    },
+    {
       "path": "../plugin-explorer"
     },
     {
       "path": "../plugin-markdown"
+    },
+    {
+      "path": "../plugin-space"
     },
     {
       "path": "../plugin-thread"

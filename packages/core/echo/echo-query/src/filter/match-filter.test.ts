@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Filter, Obj, Ref, Relation, Tag } from '@dxos/echo';
+import { Filter, Obj, Relation, Tag } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
 import { QueryBuilder } from '../parser/index.ts';
@@ -40,7 +40,7 @@ const makeTask = (props: { title: string; description?: string }, tagged: Tag.Ta
   if (tagged.length > 0) {
     Obj.update(task, (task) => {
       for (const tag of tagged) {
-        Obj.addTag(task, Ref.make(tag));
+        Obj.addTag(task, tag);
       }
     });
   }

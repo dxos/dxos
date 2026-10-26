@@ -1,0 +1,7 @@
+version: 1
+
+# Local-first and single-device: no EDGE services are configured, so the app needs no origin allow-listing.
+runtime:
+  client:
+    storage:
+      persistent: true

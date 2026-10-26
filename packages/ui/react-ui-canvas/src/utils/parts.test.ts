@@ -5,11 +5,15 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { type NodeRegistry, defaultNodeRegistry } from '../model/registry.ts';
-import { nodeBase } from '../model/types.ts';
-import { SceneBuilder } from './builder.ts';
+import { ViewBuilder } from '../builder/index.ts';
+import { defaultNodeRegistry } from '../components/index.ts';
+import { CLASSIC_LOOK, type NodeRegistry, nodeBase } from '../model/index.ts';
 import { isMultiline, nodeParts, nodeTitle, partText, partValues } from './parts.ts';
-import { frameClasses, hueClasses, resolveStyle } from './style.ts';
+import { cornerRadius, frameClasses, hueClasses, resolveStyle } from './style.ts';
+
+// These pin the canvas's original classes, so they draw in its classic look rather than the default theme's.
+const classicFrame = (node: Parameters<typeof frameClasses>[0], selected: boolean, hovered = false) =>
+  frameClasses(node, selected, hovered, false, CLASSIC_LOOK);
 
 describe('parts', () => {
   const box = { x: 0, y: 0, width: 256, height: 128 };
@@ -30,11 +34,11 @@ describe('parts', () => {
     },
   };
   const {
-    scenes: [{ nodes }],
-  } = SceneBuilder.scene('s', [
-    SceneBuilder.rect('r', box),
-    SceneBuilder.note('n', box),
-    SceneBuilder.node('list', 'l', box).properties({ title: 'Todo', items: ['buy milk'] }),
+    views: [{ nodes }],
+  } = ViewBuilder.view('s', [
+    ViewBuilder.rect('r', box),
+    ViewBuilder.note('n', box),
+    ViewBuilder.node('list', 'l', box).properties({ title: 'Todo', items: ['buy milk'] }),
   ]).build(registry);
   const rect = nodes.r;
   const note = nodes.n;
@@ -60,27 +64,27 @@ describe('parts', () => {
   });
 
   test('frame classes follow the style', ({ expect }) => {
-    expect(frameClasses(rect, false)).toEqual(['bg-base-surface', '', 'border-separator', '', 'rounded-sm']);
-    expect(frameClasses(rect, true)[2]).toBe('border-focus');
-    expect(frameClasses(rect, false, true)[2]).toBe('border-focus/50');
+    expect(classicFrame(rect, false)).toEqual(['bg-base-surface', '', 'border-separator', '', 'rounded-sm']);
+    expect(classicFrame(rect, true)[2]).toBe('border-focus');
+    expect(classicFrame(rect, false, true)[2]).toBe('border-focus/50');
     const styled = { ...rect, style: { hue: 'teal', rounded: true, fill: false, border: false } };
-    expect(frameClasses(styled, false)).toEqual(['', 'text-teal-fg', 'border-transparent', '', 'rounded-2xl']);
+    expect(classicFrame(styled, false)).toEqual(['', 'text-teal-fg', 'border-transparent', '', 'rounded-2xl']);
     // A guide is dashed and unfilled whatever fill and border say.
     const guide = { ...rect, style: { guide: true, border: false } };
-    expect(frameClasses(guide, false)).toEqual(['', '', 'border-separator', 'border-dashed', 'rounded-sm']);
+    expect(classicFrame(guide, false)).toEqual(['', '', 'border-separator', 'border-dashed', 'rounded-sm']);
   });
 
   test('a scene shape showing its contents is opaque even in outline', ({ expect }) => {
-    const { scenes } = SceneBuilder.scene('s', [
-      SceneBuilder.scene('open')
+    const { views } = ViewBuilder.view('s', [
+      ViewBuilder.view('open')
         .at(box)
         .properties({ style: { hue: 'green', tone: 0 } }),
-      SceneBuilder.scene('closed')
+      ViewBuilder.view('closed')
         .at(box)
         .properties({ label: 'Closed', style: { hue: 'green', tone: 0 } }),
     ]).build();
-    expect(frameClasses(scenes[0].nodes.open, false)[0]).toBe('bg-base-surface');
-    expect(frameClasses(scenes[0].nodes.closed, false)[0]).toBe('bg-transparent');
+    expect(classicFrame(views[0].nodes.open, false)[0]).toBe('bg-base-surface');
+    expect(classicFrame(views[0].nodes.closed, false)[0]).toBe('bg-transparent');
   });
 
   test('every tone keeps the hue border; tone 0 drops the fill, unset is tone 2', ({ expect }) => {
@@ -111,9 +115,20 @@ describe('parts', () => {
     expect(hueClasses(undefined, 3)).toEqual(hueClasses(undefined));
   });
 
-  test('an unset fill or border resolves to drawn', ({ expect }) => {
-    expect(resolveStyle(undefined)).toEqual({ fill: true, border: true });
-    expect(resolveStyle({ hue: 'orange' })).toEqual({ hue: 'orange', fill: true, border: true });
-    expect(resolveStyle({ fill: false, border: false })).toEqual({ fill: false, border: false });
+  test('an unset fill, border or corner resolves to drawn', ({ expect }) => {
+    expect(resolveStyle(undefined)).toEqual({ fill: true, border: true, rounded: true });
+    expect(resolveStyle({ hue: 'orange' })).toEqual({ hue: 'orange', fill: true, border: true, rounded: true });
+    expect(resolveStyle({ fill: false, border: false, rounded: false })).toEqual({
+      fill: false,
+      border: false,
+      rounded: false,
+    });
+  });
+
+  test("rounded's two states always differ: off is square, on is the look's rounded corner", ({ expect }) => {
+    const tokens = { radius: 'sm', roundedRadius: '2xl' } as const;
+    expect(cornerRadius({ rounded: false }, tokens)).toBe('none');
+    expect(cornerRadius({ rounded: true }, tokens)).toBe('2xl');
+    expect(cornerRadius(undefined, tokens)).toBe('sm');
   });
 });

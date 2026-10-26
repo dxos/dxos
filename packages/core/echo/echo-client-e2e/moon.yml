@@ -20,3 +20,19 @@ tasks:
     command: node src/bench-score/cli.ts score --results ../../../../test-results/echo-bench/results.json
     options:
       cache: false
+  # The retention suites (the `memory` tag), which `test` skips. DX_DEBUG_LEAKS un-skips the tag and runs
+  # them with `--expose-gc` in one non-isolated fork, so the script starts a vitest process per suite or
+  # test: a shared process would leave a later test measuring an earlier one's WASM, which is never
+  # returned to the OS. Both suites gate a fix: the feed one the change that made feed objects
+  # collectable, the automerge one the change that made ECHO objects and their documents collectable.
+  # Do NOT silence a failure with `test.fails`, which would also swallow an unrelated crash (the WASM
+  # allocator abort these suites can provoke looks identical to an assertion failure from outside).
+  test-memory:
+    extends: test
+    command: bash scripts/test-memory.sh
+    env:
+      DX_DEBUG_LEAKS: '1'
+    inputs:
+      - scripts/test-memory.sh
+    options:
+      mergeArgs: replace

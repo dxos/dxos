@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { edgeConsoleUrl } from './constants.ts';
+import { KAI_APPLICATION_IDS, edgeConsoleUrl, kaiApplicationId } from './constants.ts';
 
 describe('edgeConsoleUrl', () => {
   test('names the environment the EDGE URL belongs to', ({ expect }) => {
@@ -23,5 +23,17 @@ describe('edgeConsoleUrl', () => {
     expect(edgeConsoleUrl('https://edge.example.com')).toBeUndefined();
     expect(edgeConsoleUrl('not a url')).toBeUndefined();
     expect(edgeConsoleUrl(undefined)).toBeUndefined();
+  });
+});
+
+describe('kaiApplicationId', () => {
+  test('picks the Kai of the EDGE the URL belongs to', ({ expect }) => {
+    expect(kaiApplicationId('https://dev.dxos.network/')).toBe(KAI_APPLICATION_IDS.dev);
+    expect(kaiApplicationId('http://localhost:8787')).toBe(KAI_APPLICATION_IDS.local);
+  });
+
+  test('has no Kai for a custom or missing EDGE', ({ expect }) => {
+    expect(kaiApplicationId('https://edge.example.com')).toBeUndefined();
+    expect(kaiApplicationId(undefined)).toBeUndefined();
   });
 });

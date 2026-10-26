@@ -1,5 +1,65 @@
 # @dxos/protocols
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/async@0.16.0
+  - @dxos/context@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/timeframe@0.16.0
+  - @dxos/util@0.16.0
+
+## 0.15.0
+
+### Minor Changes
+
+- 0420f87: The EDGE websocket supports credit-based flow control, negotiated as the `edge-ws-v2` subprotocol.
+  A client no longer runs arbitrarily far ahead of a router that cannot keep up, which previously
+  drove the router into resets that silently dropped in-flight messages while the socket stayed open.
+  Credit is per service channel, so a stalled replication sync no longer blocks presence or
+  invitations on the same connection.
+
+  `EdgeClient.createStream({ serviceId })` returns a `WritableStream<Message>` whose writes resolve
+  only once their bytes reach the socket, so `writer.ready` reports whether EDGE is keeping up and
+  `pipeTo` slows its source instead of buffering without bound. `EdgeClient.send` is unchanged and
+  still returns without waiting.
+
+  Credit is counted in bytes and in messages. `EDGE_FLOW_CONTROL_MAX_MESSAGES` bounds the messages one
+  channel may have unacknowledged, since a byte window alone admits thousands of small replication
+  frames and each is its own request downstream. `EDGE_FLOW_CONTROL_MAX_CONNECTION_MESSAGES` bounds the
+  whole connection, since a channel is one space and a reconnect's feed burst across many spaces would
+  otherwise put thousands of messages in flight to one router. A receiver rebuilt mid-connection asks
+  for the sender's totals and rebases onto them, so a channel never stalls on grants counted from zero.
+
+  EDGE can pause one channel whose replicator is overloaded: the client starts no new message on it
+  until the pause ends, while its other channels keep flowing and the connection stays up.
+  `EdgeClient.pausedUntil(serviceId)` reports a pause in effect.
+
+  `WebSocketMuxer.receiveFrame` and `consumed` expose the credit loop to a muxer's owner, and `pause`
+  lets it pause a peer's channel; `receiveData` keeps its signature for callers without flow control.
+
+- 37edd53: Service-RPC timeouts name the call that timed out, e.g. `RPC timeout: DataService.getDocumentHeads`, instead of `RPC timeout: call`.
+
+  - `@dxos/protocols`: `runServiceCall` now takes `(runtime, client, tag, payload, options?)` and uses the tag as the timeout label; payload and result types come from the client method. The old effect form is `runServiceEffect(runtime, effect, { label, timeout? })`, with `label` required.
+  - `@dxos/devtools`: the Indexer card logs a failed heads comparison as a warning instead of reporting an exception for every space on every poll.
+
+### Patch Changes
+
+- ef9aea9: Errors are now matched by their declared name rather than the class name, so `ProtocolError` and `UnknownProtocolError` decode correctly, stale trigger references park, and the inbox AI gate recognizes a missing model in minified builds. `@dxos/eslint-plugin-rules` adds `no-error-class-name` to flag `SomeError.name` and `constructor.name === '…Error'` checks.
+- Updated dependencies [1e9c017]
+  - @dxos/async@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/timeframe@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

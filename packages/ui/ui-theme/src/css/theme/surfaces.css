@@ -33,11 +33,11 @@
    *
    * These are private (--dx-*) knobs — use named surface tokens in components, not these directly.
    */
-  --dx-surface-sunken: light-dark(var(--color-neutral-150), var(--color-neutral-950));
-  --dx-surface-chrome: light-dark(var(--color-neutral-100), var(--color-neutral-925));
-  --dx-surface-base: light-dark(oklch(0.98 0.001 190), var(--color-neutral-900));
-  --dx-surface-raised: light-dark(oklch(0.99 0.001 190), var(--color-neutral-850));
-  --dx-surface-overlay: light-dark(oklch(0.995 0.001 190), var(--color-neutral-800));
+  --dx-surface-sunken: light-dark(oklch(0.986 0.001 190), var(--color-neutral-950));
+  --dx-surface-chrome: light-dark(oklch(0.986 0.001 190), var(--color-neutral-925));
+  --dx-surface-base: light-dark(oklch(0.989 0.001 190), var(--color-neutral-900));
+  --dx-surface-raised: light-dark(oklch(1 0 0), var(--color-neutral-850));
+  --dx-surface-overlay: light-dark(oklch(1 0 0), var(--color-neutral-800));
   --dx-surface-popup: light-dark(oklch(1 0 0), var(--color-neutral-775));
 
   /**
@@ -52,8 +52,8 @@
    * dark keeps the deck's depth, while light sits higher, because near white the same ladder step
    * reads much heavier than it does near black.
    */
-  --color-l0-surface: light-dark(oklch(0.935 0.001 190), var(--dx-surface-sunken));
-  --color-r0-surface: light-dark(oklch(0.935 0.001 190), var(--dx-surface-sunken));
+  --color-l0-surface: light-dark(oklch(0.966 0.001 190), var(--dx-surface-sunken));
+  --color-r0-surface: light-dark(oklch(0.966 0.001 190), var(--dx-surface-sunken));
 
   /* Translucent dimming layer; tracks the lowest level rather than a raw neutral. */
   --color-scrim-surface: light-dark(
@@ -67,11 +67,11 @@
 
   --color-sidebar-surface: var(--dx-surface-chrome);
   --color-header-surface: var(--dx-surface-chrome);
-  --color-l1-surface: light-dark(oklch(0.955 0.001 190), var(--dx-surface-chrome));
-  --color-r1-surface: light-dark(oklch(0.955 0.001 190), var(--dx-surface-chrome));
+  --color-l1-surface: light-dark(oklch(0.986 0.001 190), var(--dx-surface-chrome));
+  --color-r1-surface: light-dark(oklch(0.986 0.001 190), var(--dx-surface-chrome));
   /* The sidebars' landmark edges, lifted from the expanded sidebar tone and fixed rather than
      surface-derived, so a collapsed sidebar (which wears the rail's darker tone) keeps the same line
-     as the expanded one. L1 takes `subdued-separator`'s lift; R1, `separator`'s. */
+     as the expanded one. L1 takes `separator-subtle`'s lift; R1, `separator`'s. */
   --color-l1-separator: oklch(
     from var(--color-l1-surface) calc(l + var(--dx-lift) * var(--dx-attenuate-separator) * 0.089) c h
   );
@@ -132,7 +132,9 @@
   --color-group-surface: oklch(
     from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-well) * 0.05) c h
   );
-  --color-input-surface: var(--color-group-surface);
+  --color-input-surface: oklch(
+    from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-input) * 0.05) c h
+  );
   --color-focus-surface: var(--color-group-surface);
 
   /* Subtle alternate of group-surface for zebra striping (e.g. calendar months). */
@@ -167,7 +169,7 @@
   /*
    * Separators. Fixed neutrals collided with the surfaces they divide once the ladder inverted:
    * in light mode `separator` was neutral-200, the same value as the base canvas, and
-   * `subdued-separator` matched the sidebar exactly — both invisible. The offsets below reproduce
+   * `separator-subtle` matched the sidebar exactly — both invisible. The offsets below reproduce
    * the dark-mode appearance they had (0.166 / 0.115 / 0.089 / 0.064 above the base surface) and
    * mirror it in light.
    */

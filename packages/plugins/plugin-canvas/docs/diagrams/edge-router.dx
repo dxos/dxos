@@ -1,19 +1,19 @@
 diagram @ -128,-64 flow=down box=256x128 grid=384x192
 group api "edge worker" {
-  node Api "Hono API" ref="edge/packages/services/edge/src/api.ts"
+  node Api "Hono API" ref="edge/packages/services/edge/src/api.ts" color=blue
   node Proxy "service proxy" ref="edge/packages/services/edge/src/service-proxy.ts"
-  node Backups "backups API" ref="edge/packages/services/edge/src/backups/api.ts"
+  node Backups "backups API" ref="edge/packages/services/edge/src/backups/api.ts" color=green
   node Admin "admin / KMS" ref="edge/packages/services/edge/src/admin.ts"
   node DataMgmt "data management" ref="edge/packages/services/edge/src/data-management"
   node Purge "purge orchestr." ref="edge/packages/services/edge/src/purge-orchestrator.ts"
 }
 group router "router" {
   node RouterApi "WS /inbox API" ref="edge/packages/services/router/src/worker/api.ts"
-  node RouterDO "RouterObject" ref="edge/packages/services/router/src/worker/router/router.ts"
-  node SwarmDO "SwarmObject" ref="edge/packages/services/router/src/worker/swarm/swarm.ts"
+  node RouterDO "RouterObject" ref="edge/packages/services/router/src/worker/router/router.ts" color=orange
+  node SwarmDO "SwarmObject" ref="edge/packages/services/router/src/worker/swarm/swarm.ts" color=orange
   node Inbox "Inbox" ref="edge/packages/services/router/src/worker/inbox/inbox.ts"
 }
-group ext "Services" {
+group ext "Services" color=light-violet {
   node Services "db / hub / kms ..." ref="edge/packages/services"
 }
 edge Api -> RouterApi "mount /"

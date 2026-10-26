@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../packages/ui/brand"
+    },
+    {
+      "path": "../../packages/ui/react-ui"
+    },
+    {
+      "path": "../../packages/ui/react-ui-canvas"
+    },
+    {
+      "path": "../../packages/ui/ui-theme"
+    }
+  ]
+}

@@ -1,5 +1,41 @@
 # @dxos/feed-store
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/async@0.16.0
+  - @dxos/crypto@0.16.0
+  - @dxos/debug@0.16.0
+  - @dxos/hypercore@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/node-std@0.16.0
+  - @dxos/random-access-storage@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/keyring@0.16.0
+  - @dxos/vendor-hypercore@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [c5def76]
+- Updated dependencies [1e9c017]
+  - @dxos/vendor-hypercore@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/keyring@0.15.0
+  - @dxos/crypto@0.15.0
+  - @dxos/hypercore@0.15.0
+  - @dxos/random-access-storage@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/debug@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/node-std@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

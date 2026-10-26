@@ -18,6 +18,7 @@ import { SheetCapabilities, SheetEvents } from '#types';
 
 // Ordering-only: registers the sort comparator once the app graph exists; the body reads
 // nothing else.
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'));
 export const AnchorSort = AppCapability.anchorSort(() => import('./anchor-sort.ts'), {
   requires: [AppCapabilities.AppGraph],
   activatesOn: SheetEvents.Start,
@@ -55,11 +56,17 @@ export const Markdown = Capability.lazyModule(
   },
   () => import('./markdown-extension.ts'),
 );
+// Migration providers stay eager: a migration missing when a space opens is a data hazard.
+export const Migrations = Capability.lazyModule(
+  'SheetMigrations',
+  { provides: [ClientCapabilities.Migration] },
+  () => import('./migrations.ts'),
+);
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
-  roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties', 'org.dxos.role.section'],
+  roles: ['org.dxos.role.article', 'org.dxos.role.objectProperties', 'org.dxos.role.section', 'org.dxos.role.slide'],
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const SheetState = Capability.lazyModule(
@@ -74,6 +81,7 @@ export const UndoMappings = AppCapability.undoMappings(() => import('./undo-mapp
   activatesOn: SheetEvents.Start,
   environments: ['browser', 'node', 'tauri'],
 });
+export const SpaceTemplates = AppCapability.spaceTemplates(() => import('./space-templates.ts'));
 export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,

@@ -4,7 +4,7 @@
 
 import { type ExpectStatic, describe, test } from 'vitest';
 
-import { type Bounds, type Camera, type FrameNode } from '../model/types.ts';
+import { type Bounds, type Camera, type ViewNode } from '../model/index.ts';
 import {
   MAX_ZOOM,
   MIN_ZOOM,
@@ -12,6 +12,7 @@ import {
   enterPortal,
   exitPortal,
   fitBounds,
+  interpolateCamera,
   portalFrame,
   sceneToScreen,
   screenToScene,
@@ -21,8 +22,8 @@ import { nodeBounds } from './shapes.ts';
 
 const viewport = { width: 800, height: 600 };
 
-const portal: FrameNode = {
-  type: 'frame',
+const portal: ViewNode = {
+  type: 'view',
   id: 'p',
   z: 'V',
   center: { x: 640, y: 620 },
@@ -125,5 +126,16 @@ describe('camera', () => {
     // So a shape inside keeps its size through the drill-in: entering maps the zoom one to one.
     const camera = { x: 0, y: 0, zoom: 0.79 };
     expect(enterPortal(camera, portal, empty).zoom).toBeCloseTo(0.79);
+  });
+
+  test('interpolateCamera starts and ends on its cameras and zooms monotonically between them', ({ expect }) => {
+    const from = fitBounds({ x: 0, y: 0, width: 160, height: 90 }, viewport);
+    const to = fitBounds({ x: -480, y: -270, width: 1120, height: 630 }, viewport);
+    const interpolate = interpolateCamera(from, to, viewport);
+    expectCamera(expect, interpolate(0), from);
+    expectCamera(expect, interpolate(1), to);
+    const zooms = [0, 0.25, 0.5, 0.75, 1].map((t) => interpolate(t).zoom);
+    zooms.slice(1).forEach((zoom, index) => expect(zoom).toBeLessThan(zooms[index]));
+    expect(interpolate.duration).toBeGreaterThan(0);
   });
 });

@@ -30,6 +30,19 @@ import { numberLines, segmentLines, truncateText, windowLines } from './source.t
 /** Published input price, USD per million tokens (output is free). */
 export const PRICE_PER_MILLION = 0.042;
 
+/** Default ceiling on one run's spend, USD: past it a review belongs to subagents, which bill plan usage. */
+export const DEFAULT_MAX_COST_USD = 5;
+
+/** USD for a number of input tokens. */
+export const costForTokens = (tokens: number): number => (tokens / 1_000_000) * PRICE_PER_MILLION;
+
+/**
+ * Predicted cost of a run from a plan made without the API, which covers round one only. Round two
+ * asks at most the pairs round one asked, each with at most one more context kind, so doubling
+ * round one bounds the whole run.
+ */
+export const predictCostUsd = (roundOneTokens: number): number => costForTokens(roundOneTokens * 2);
+
 /** Tokens held back from the state for the longest question sent beside it. */
 const QUESTION_RESERVE = 3_000;
 
@@ -430,6 +443,8 @@ export type Stats = {
   estimatedForAnswered: number;
   contextRetries: number;
   failedRequests: number;
+  /** Requests not sent because they would have taken the run past `maxCostUsd`. */
+  budgetSkipped: number;
   failures: string[];
 };
 
@@ -445,6 +460,8 @@ export type RunReviewOptions = {
   fileTargets: FileTarget[];
   prTargets: PrTarget[];
   settings: Settings;
+  /** Ceiling on estimated spend; a request that would cross it is not sent and its pairs go unanswered. */
+  maxCostUsd?: number;
   log?: (message: string) => void;
 };
 
@@ -459,6 +476,7 @@ export const runReview = async ({
   fileTargets,
   prTargets,
   settings,
+  maxCostUsd = Number.POSITIVE_INFINITY,
   log = () => {},
 }: RunReviewOptions): Promise<ReviewResult> => {
   const stats: Stats = {
@@ -468,9 +486,12 @@ export const runReview = async ({
     estimatedForAnswered: 0,
     contextRetries: 0,
     failedRequests: 0,
+    budgetSkipped: 0,
     failures: [],
   };
   const oversized: Oversized[] = [];
+  // Reserved from estimates before sending, since billed usage arrives only after the spend is made.
+  let reservedTokens = 0;
 
   const execute = async (plan: Plan, round: 1 | 2): Promise<Verdict[]> => {
     stats.requests += plan.requests.length;
@@ -479,12 +500,18 @@ export const runReview = async ({
     if (!client) {
       return [];
     }
+    const skippedBefore = stats.budgetSkipped;
     let done = 0;
     const results = await Promise.all(
       plan.requests.map(async (request): Promise<Verdict[]> => {
         const questions: Record<string, Question<QuestionInstructions>> = Object.fromEntries(
           request.entries.map((entry) => [entry.id, entry.question]),
         );
+        if (costForTokens(reservedTokens + request.estimatedTokens) > maxCostUsd) {
+          stats.budgetSkipped++;
+          return readAnswers(request, {}, round);
+        }
+        reservedTokens += request.estimatedTokens;
         let response: EvaluateResponse;
         try {
           response = await client.evaluate(request.state, questions);
@@ -509,6 +536,9 @@ export const runReview = async ({
         return readAnswers(request, response.answers ?? {}, round);
       }),
     );
+    if (stats.budgetSkipped > skippedBefore) {
+      log(`round ${round}: ${stats.budgetSkipped - skippedBefore} requests not sent, past the $${maxCostUsd} ceiling`);
+    }
     return results.flat();
   };
 
@@ -582,7 +612,7 @@ export const runReview = async ({
     oversized,
     stats: {
       ...stats,
-      costUsd: (stats.inputTokens / 1_000_000) * PRICE_PER_MILLION,
+      costUsd: costForTokens(stats.inputTokens),
       charsPerTokenMeasured:
         stats.inputTokens > 0 ? (stats.estimatedForAnswered * CHARS_PER_TOKEN) / stats.inputTokens : null,
     },

@@ -10,37 +10,41 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import { Context } from '@dxos/context';
-import { type EdgeHttpClient, EdgeHttpClientService, type EdgeRequestArgs } from '@dxos/edge-client';
+import { type EdgeHttpClient, EdgeHttpClientService } from '@dxos/edge-client';
 
 import { AgentMailbox } from '#types';
-
-/** EDGE route of a mailbox. */
-const mailboxPath = (handle: string): string => `/compute/email/mailboxes/${encodeURIComponent(handle)}`;
 
 /** {@link AgentMailbox.Service} over EDGE's `/compute/email/mailboxes/:handle`, signed with the user's identity. */
 export const makeEdgeAgentMailbox = (edge: EdgeHttpClient): AgentMailbox.Service => {
   // The EDGE client has no Effect form, so this is the one Promise boundary.
-  const call = Effect.fnUntraced(function* (handle: string, args: EdgeRequestArgs) {
+  const call = Effect.fnUntraced(function* <A, I>(
+    request: (ctx: Context) => Promise<unknown>,
+    schema: Schema.Codec<A, I>,
+  ) {
     const data = yield* Effect.tryPromise({
-      try: () => edge.request(Context.default(), mailboxPath(handle), args),
+      try: () => request(Context.default()),
       catch: (cause) =>
         new AgentMailbox.AgentMailboxError({
           message: cause instanceof Error ? cause.message : 'EDGE mailbox request failed.',
           cause,
         }),
     });
-    return yield* Schema.decodeUnknownEffect(AgentMailbox.MailboxStatus)(data).pipe(
+    return yield* Schema.decodeUnknownEffect(schema)(data).pipe(
       Effect.mapError(
-        (cause) => new AgentMailbox.AgentMailboxError({ message: 'Unexpected mailbox status from EDGE.', cause }),
+        (cause) => new AgentMailbox.AgentMailboxError({ message: 'Unexpected mailbox answer from EDGE.', cause }),
       ),
     );
   });
 
   return {
     claim: ({ handle, allowedSenders, ...body }) =>
-      call(handle, { method: 'PUT', body: { ...body, allowedSenders: [...allowedSenders] } }),
-    release: (handle) => call(handle, { method: 'DELETE' }),
-    status: (handle) => call(handle, { method: 'GET' }),
+      call(
+        (ctx) => edge.claimMailbox(ctx, handle, { ...body, allowedSenders: [...allowedSenders] }),
+        AgentMailbox.MailboxStatus,
+      ),
+    release: (handle) => call((ctx) => edge.releaseMailbox(ctx, handle), AgentMailbox.MailboxStatus),
+    status: (handle) => call((ctx) => edge.getMailbox(ctx, handle), AgentMailbox.MailboxStatus),
+    send: ({ handle, ...body }) => call((ctx) => edge.sendMailboxEmail(ctx, handle, body), AgentMailbox.SendResult),
   };
 };
 

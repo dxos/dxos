@@ -564,7 +564,7 @@ const makeProvider = (db: DatabaseImpl): WorkingSetDataProvider => ({
     return db.spaceId;
   },
   allCores: () => db.allObjectCores(),
-  getCoreById: (id, load) => db.getObjectCoreById(id, { load: load ?? false }),
+  getCoreById: (id) => db.getObjectCoreById(id, { load: false }),
   areStrongDepsSatisfied: (core) => db.areStrongDepsSatisfied(core),
   areStrongDepsResolved: (core) => db.areStrongDepsResolved(core),
 });

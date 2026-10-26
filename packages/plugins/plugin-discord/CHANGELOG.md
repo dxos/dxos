@@ -1,5 +1,175 @@
 # @dxos/plugin-discord
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/echo-client@0.16.0
+  - @dxos/assistant@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/react-client@0.16.0
+  - @dxos/plugin-agent@0.16.0
+  - @dxos/plugin-client@0.16.0
+  - @dxos/plugin-connector@0.16.0
+  - @dxos/plugin-thread@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-graph@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-form@0.16.0
+  - @dxos/react-ui-list@0.16.0
+  - @dxos/react-ui-menu@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/crawler@0.16.0
+  - @dxos/link@0.16.0
+  - @dxos/pipeline-discord@0.16.0
+  - @dxos/echo-react@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/ai@0.16.0
+  - @dxos/config@0.16.0
+  - @dxos/pipeline-rdf@0.16.0
+  - @dxos/context@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/pipeline@0.16.0
+  - @dxos/edge-client@0.16.0
+  - @dxos/protocols@0.16.0
+  - @dxos/react-hooks@0.16.0
+  - @dxos/ui-theme@0.16.0
+  - @dxos/ui-types@0.16.0
+
+## 0.15.0
+
+### Minor Changes
+
+- 0507be5: An agent in a channel no longer has its written reply sent back where the message came from: it acts through tools its channel provides. A Discord channel's agent can reply in a channel or thread, send a direct message (to a user id, @handle or contact name) or react to a message; an email channel's agent sends email to its contacts and to anyone who has emailed it. Doing nothing is an option, and the agent may answer somewhere other than where it was asked. A channel declares its tools as a skill on its config type, which every conversation of the channel binds, so the agent core names no channel. Relayed messages are marked `outbound`, the only messages EDGE still posts on the agent's behalf.
+- 94ec06d: A Discord back-index runs as a trigger-driven operation that extracts facts a page of messages per model request and appends them to a fact feed, with its progress kept in ECHO; an agent's brain on EDGE indexes the fact feeds registered with it.
+
+  - `@dxos/compute` / `@dxos/compute-runtime`: `FeedSpec.batchSize` (`Trigger.specFeed(feed, { batchSize })`) delivers that many consecutive feed items per invocation as `event.items`; `event.item` stays the first. `Trigger.Manager.resetTrigger` rewinds a feed trigger to the start of its feed and fails with `TriggerNotResettableError` for any other kind. Breaking: every `Trigger.Manager` and `RemoteTriggerManager.Manager` must provide `resetTrigger`.
+  - `@dxos/edge-compute` / `@dxos/edge-client`: a remote feed trigger is reset on EDGE (`EdgeHttpClient.resetTrigger`), and `EdgeHttpClient.addBrainFactFeed`, `removeBrainFactFeed` and `listBrainFactFeeds` manage a brain's fact feeds.
+  - `@dxos/pipeline` / `@dxos/pipeline-rdf`: `Stage.batch` groups consecutive items (optionally weighted) and runs one effect per group. `indexFactsBatch` and `indexFactsBatchStage` extract several documents as one tagged transcript per model request and attribute each fact to its message; `FactPipeline.run(docs, { batchSize })` does the same, and without `batchSize` keeps one request per document.
+  - `@dxos/crawler`: `CrawlState` is an ECHO type holding a crawl's frontier, per-target cursors, run status and the content hash of each message already extracted, and `StateStore.layerEcho(state)` keeps the crawler's state in it. Its setters mutate a draft, so a caller batches several writes in one `Obj.update`. `extractFactsStage` extracts 25 messages per request by default (`batchSize: 1` keeps one per message). Breaking: every `StateStore.Service` must provide `resetTargets` and `removeTargets`.
+  - `@dxos/client` / `@dxos/protocols`: `space.internal.export({ feedIds })` writes a JSON archive holding only those feeds and their items, and `client.spaces.import(archive, { into })` merges a JSON archive into an existing space, skipping objects and feed items it already holds.
+  - `@dxos/plugin-discord`: `DiscordOperation.CrawlDiscordChannels` takes `state` (a `CrawlState`) and `facts` (a fact feed) and runs at most `maxSteps` pages per invocation with the space's Discord token; it no longer keeps a session SQLite runtime. `DiscordOperation.ConfigureBackIndex` creates or updates the crawl state, fact feed and the remote timer trigger that runs it. `DiscordSource.Endpoint` points the Discord REST client at another base and fetches it directly rather than through the CORS proxy, and `DiscordChannel.kaiApplicationId` and `KAI_APPLICATION_IDS` name the EDGE-hosted Kai bot outside the plugin.
+  - `@dxos/plugin-agent`: `FactFeed.FactItem` stores one extracted fact as a feed item, and `AgentOperation.AddFactFeed`, `RemoveFactFeed` and `ListFactFeeds` register fact feeds with the agent's brain on EDGE.
+  - `@dxos/plugin-space`: `dx space export --feed <id>` and `dx space import --into <space>`.
+
+### Patch Changes
+
+- 278f49c: An agent's brain holds only facts: the agent remembers and recalls structured facts rather than free-text memories.
+
+  - `@dxos/plugin-agent` (breaking): `MemoryOperation.Remember` is now `org.dxos.operation.agent.recordFacts` and takes `facts` — each a subject, a predicate from the seed ontology (listed in the tool's description), an entity `object` or a literal `value`, and optional `quote`, `origin`, `confidence` and `supersedes` — and returns their ids. `Recall` returns `facts` (now with an `id`) and `goals` only, leaving out superseded, retracted and expired facts. `Forget`, `RecalledMemory`, `Mode.records` and the `@dxos/plugin-agent/Knowledge` subpath are removed. Profiles group the facts about their subject by predicate, and the knowledge, state and profile panels show facts in place of memories. Memories already stored in a brain are no longer read.
+  - `@dxos/pipeline-rdf`: exports `predicateSection`, the ontology's predicates as a prompt section.
+  - `@dxos/plugin-agent`, `@dxos/plugin-discord`: a channel agent is told that an answer it only writes out is lost, so it delivers answers with its channel tools (Discord reply or direct message) instead of plain text.
+
+- 5490cbc: A remote agent process that EDGE no longer hosts now fails in place instead of retrying its input forever, so the agent's next turn starts a new process; the agent Discord bot is now reached at EDGE's `/discord/bots` routes (served by discord-service), and the agent knowledge panel can show each fact as the RDF it is stored as.
+- 0d81167: Hand-built agent panels follow the form's layout, and the entity browser slots into its host.
+
+  - `@dxos/react-ui-components`: **Breaking:** `Section` is removed; build a labelled group with react-ui's `Fieldset.Root` and `Fieldset.Legend` (the form's label row) instead.
+  - `@dxos/plugin-agent`: the Activity panel lays out its groups in the form's frame (`Form.Viewport`, `Fieldset`). `AgentKnowledge.Browser` (`EntityBrowser`) is composable, its horizontal scroll frame the root, so a host's `Panel.Body asChild` slots onto it instead of nesting a second panel. Predicate cards title each predicate in kebab case, as the entity cards key it. The email channel's settings are a panel whose header toolbar reads "Email" with one connect/disconnect toggle, as Activity's, and the form scrolls beneath it.
+  - `@dxos/plugin-discord`: the Discord setup panel uses the same form frame and `Fieldset` groups. Its toolbar links to the hub console's Discord page for the EDGE environment the client is configured with.
+  - `@dxos/plugin-client`: recovery credentials show when each was issued to the minute on a 24-hour clock, and a revoked one is marked by its strikethrough alone.
+  - `@dxos/react-ui`: `Layout.Columns` lays out a horizontal run of columns sized to whole shares of the space (as many as fit at a minimum width, each an exact fraction), scrolling a column at a time and following the newest. `Status.Empty` reads at the label's size (`text-sm` by default), so every empty state is the same secondary text. Overlay scroll thumbs sit flush with the ends of their track, as they already did with its side. A tag in a start-aligned card row centres on the first line, as text does.
+
+- Updated dependencies [6897df1]
+- Updated dependencies [36d45ee]
+- Updated dependencies [278f49c]
+- Updated dependencies [3b03db7]
+- Updated dependencies [0507be5]
+- Updated dependencies [36f4894]
+- Updated dependencies [a941f0d]
+- Updated dependencies [d071b94]
+- Updated dependencies [a6195f2]
+- Updated dependencies [0880591]
+- Updated dependencies [c205da8]
+- Updated dependencies [f3dc87f]
+- Updated dependencies [5387dc8]
+- Updated dependencies [191dd14]
+- Updated dependencies [bc72a37]
+- Updated dependencies [3bd183a]
+- Updated dependencies [2a28b3a]
+- Updated dependencies [a6cba78]
+- Updated dependencies [9b93ba2]
+- Updated dependencies [20611d2]
+- Updated dependencies [6488905]
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [1f72729]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [b7d83c9]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [460bbc3]
+- Updated dependencies [d84f9b8]
+- Updated dependencies [b82150a]
+- Updated dependencies [0420f87]
+- Updated dependencies [cd70a43]
+- Updated dependencies [0d81167]
+- Updated dependencies [45ab961]
+- Updated dependencies [71fc002]
+- Updated dependencies [1b33a84]
+- Updated dependencies [16bde33]
+- Updated dependencies [d250ed2]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [35030a7]
+- Updated dependencies [55bdf55]
+- Updated dependencies [ed1039a]
+- Updated dependencies [9b9a4ca]
+- Updated dependencies [37edd53]
+- Updated dependencies [098a536]
+- Updated dependencies [25af912]
+- Updated dependencies [2208806]
+- Updated dependencies [7b47951]
+- Updated dependencies [8190cc5]
+- Updated dependencies [60ef4ec]
+- Updated dependencies [2b6a93a]
+  - @dxos/plugin-agent@0.15.0
+  - @dxos/pipeline-rdf@0.15.0
+  - @dxos/assistant@0.15.0
+  - @dxos/react-ui@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/echo-client@0.15.0
+  - @dxos/edge-client@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/ai@0.15.0
+  - @dxos/plugin-client@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/echo-react@0.15.0
+  - @dxos/crawler@0.15.0
+  - @dxos/pipeline-discord@0.15.0
+  - @dxos/react-ui-form@0.15.0
+  - @dxos/plugin-connector@0.15.0
+  - @dxos/plugin-thread@0.15.0
+  - @dxos/app-graph@0.15.0
+  - @dxos/react-client@0.15.0
+  - @dxos/react-ui-list@0.15.0
+  - @dxos/react-ui-menu@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/config@0.15.0
+  - @dxos/react-hooks@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/pipeline@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/ui-theme@0.15.0
+  - @dxos/ui-types@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

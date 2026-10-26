@@ -38,9 +38,9 @@ import { createConfig as createTestConfig } from '../../../vitest.base.config.ts
 import { bootChunking } from './src/vite/boot-chunking.ts';
 import { bootMarkFilter, channelFaviconPlugin, channelVariant } from './src/vite/channel-branding.ts';
 import { debugPortSidecarPlugin, resolveDebugPortSession } from './src/vite/debug-port.ts';
+import { fileSystemPlugin } from './src/vite/file-system.ts';
 import { nodeBuiltinStubs } from './src/vite/node-builtin-stubs.ts';
 import { optimizeDepsInclude } from './src/vite/optimize-deps.ts';
-import { preloadLinkIndex } from './src/vite/preload-link-index.ts';
 import { reactRefreshPreamble } from './src/vite/react-refresh-preamble.ts';
 import { traceBootLeak } from './src/vite/trace-boot-leak.ts';
 
@@ -54,7 +54,7 @@ const PLUGIN_SETS: Record<string, string> = {
   mobile: 'src/plugin-defs.mobile.tsx',
 };
 const pluginSetFile = PLUGIN_SETS[process.env.DX_PLUGIN_SET ?? ''] ?? 'src/plugin-defs.tsx';
-// Non-empty only when a dev server is launched with the debug-port flag; see `src/vite/debug-port.ts`.
+// Non-empty unless `DX_DEBUG_PORT=false`; only `serve` uses it. See `src/vite/debug-port.ts`.
 const debugPortSession = resolveDebugPortSession();
 const isReducedPluginSet = pluginSetFile !== 'src/plugin-defs.tsx';
 // The Tauri CLI sets `TAURI_ENV_PLATFORM` for `beforeDevCommand`.
@@ -76,6 +76,29 @@ const isBundledDev =
 
 const rootDir = searchForWorkspaceRoot(process.cwd());
 const phosphorIconsCore = path.join(rootDir, '/node_modules/@phosphor-icons/core/assets');
+
+/**
+ * Slide theme fonts that plugin-presenter imports only when a deck picks one (`FONTS`/`MONO_FONTS` in its
+ * `SlideTheme.tsx`; keep the two in step). Precaching them would download every one at install, so the service
+ * worker caches each on first use instead. Matched by Fontsource's `<font>-<subset>-…` file names, so a family
+ * that only shares a prefix (`nunito-sans`) is not caught.
+ */
+const ON_DEMAND_FONTS = [
+  'inter',
+  'nunito',
+  'source-serif-4',
+  'fira-code',
+  'ibm-plex-mono',
+  'space-grotesk',
+  'mali',
+  'geist',
+  'orbitron',
+  'unbounded',
+  'opendyslexic',
+  'lxgw-wenkai',
+];
+
+const FONT_SUBSETS = '@(latin|latin-ext|cyrillic|cyrillic-ext|greek|greek-ext|vietnamese|thai|math|symbols|symbols2)';
 const dxosIcons = path.join(rootDir, '/packages/ui/brand/assets/icons');
 const extendedIcons = path.join(rootDir, '/packages/ui/ui-icons/assets');
 
@@ -283,6 +306,26 @@ const pluginToolchain = (): string => {
 };
 
 /**
+ * Re-arms the watch on a file after every change it reports. Under `useFsEvents: false` each file is watched by a
+ * descriptor bound to its inode, and chokidar re-attaches after a rename-over save only on Linux, so on macOS every
+ * save after the first would be lost (same as storybook's `dxos:rearm-watch`).
+ */
+const rearmWatchPlugin = (): PluginOption => ({
+  name: 'dxos:rearm-watch',
+  apply: 'serve',
+  configureServer: (server) => {
+    server.watcher.on('change', (file) => {
+      // Vite also emits `change` for virtual module ids (`\0virtual:…`), which are not files and crash `fs.stat`.
+      if (file.includes('\0') || !file.startsWith('/')) {
+        return;
+      }
+      server.watcher.unwatch(file);
+      server.watcher.add(file);
+    });
+  },
+});
+
+/**
  * https://vitejs.dev/config
  */
 export default defineConfig((env) => ({
@@ -317,6 +360,9 @@ export default defineConfig((env) => ({
       // fse_dispatch_event, with no idle time at all). `ignored` does not help — chokidar filters after
       // this routing, so the scan happens regardless.
       useFsEvents: false,
+      // Explicit: chokidar turns polling ON for macOS whenever fsevents is off and `usePolling` is unset, which
+      // `fs.watchFile`-stats every watched module and starves the libuv pool that serves transforms on reload.
+      usePolling: false,
       // Build output is not source, and the watch root spans the monorepo, so a single
       // `moon run <pkg>:build` — which rewrites dist across many packages — is a large event burst for
       // no benefit. Vite already ignores .git, node_modules, test-results and its cache dir, and merges
@@ -537,11 +583,14 @@ export default defineConfig((env) => ({
     format: 'es' as const,
 
     plugins: () => [...sharedPlugins(env)],
+    // Chunk optimization moves modules a worker shares with its lazy chunks into its entry chunk, and WebKit
+    // evaluates a module worker's entry again when a chunk imports it (https://bugs.webkit.org/show_bug.cgi?id=324459).
+    rolldownOptions: { experimental: { chunkOptimization: false } },
   },
   plugins: [
     traceBootLeak(path.resolve(dirname, 'src/main.tsx')),
-    preloadLinkIndex(),
     ShutdownPlugin(),
+    rearmWatchPlugin(),
     ...sharedPlugins(env),
 
     // Hosts the Claude Agent SDK in the dev server, so the app reaches it same-origin. Dev only —
@@ -559,9 +608,18 @@ export default defineConfig((env) => ({
       },
     },
 
-    // Hosts the computer harness's shell route against the vite process cwd. Imported dynamically
+    // Hosts the dev shell's shell route against the vite process cwd. Imported dynamically
     // because this config's static imports are bundled as CJS `require` and the package is ESM-only.
-    import('@dxos/plugin-computer/vite-plugin').then(({ ComputerShellPlugin }) => ComputerShellPlugin()),
+    import('@dxos/plugin-dev-shell/vite-plugin').then(({ DevShellVitePlugin }) => DevShellVitePlugin()),
+
+    // Serves code-index to plugin-code-graph by running `code-index mcp` beside the dev server. Imported dynamically
+    // for the same reason as the dev shell: the package is ESM-only and this config's static imports are bundled as CJS.
+    import('@dxos/plugin-code-graph/vite-plugin').then(({ CodeIndexVitePlugin }) =>
+      CodeIndexVitePlugin({ root: rootDir }),
+    ),
+
+    // Dev-only: local files for plugin-file-system's FileSystem service (the desktop app uses the Tauri fs plugin instead).
+    fileSystemPlugin(rootDir),
 
     // RSS proxy middleware for CORS-free feed fetching.
     {
@@ -709,7 +767,7 @@ export default defineConfig((env) => ({
         // manifest entries alone would add one install-time request per file, slowing every
         // install/update. sw.ts caches /phosphor/ fetches at runtime (cache-first) instead,
         // so any icon the app has rendered once stays available offline.
-        globIgnores: ['**/phosphor/**'],
+        globIgnores: ['**/phosphor/**', ...ON_DEMAND_FONTS.map((font) => `**/${font}-${FONT_SUBSETS}-*.woff2`)],
       },
       includeAssets: ['favicon.ico'],
       manifest: {
@@ -816,7 +874,8 @@ export default defineConfig((env) => ({
     .filter(isNonNullable)
     .flat(), // Plugins
 
-  ...createTestConfig({ dirname, node: true, storybook: true }),
+  // Space-template stories boot the deck with a dozen content plugins, which the 15s default cannot cover.
+  ...createTestConfig({ dirname, node: true, storybook: { timeout: 120_000 } }),
 }));
 
 /**

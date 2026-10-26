@@ -18,7 +18,6 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Theme from '@dxos/react-ui/Theme';
 import { getStyles } from '@dxos/ui-theme';
-import { type MaybePromise } from '@dxos/util';
 
 import { useInputSurfaceLookup } from '#hooks';
 import { meta } from '#meta';
@@ -63,7 +62,7 @@ export type CreateObjectPanelProps = {
   resolve?: (typename: string) => Metadata | undefined;
   onTargetChange?: (target: Database.Database) => void;
   onTypenameChange?: (typename: string) => void;
-  onCreateObject?: (params: { metadata: Metadata; data?: Record<string, any> }) => MaybePromise<void>;
+  onCreateObject?: (params: { metadata: Metadata; data?: Record<string, any> }) => void;
   /** Abandons the create; the draft form offers a Cancel button only when this is supplied. */
   onCancel?: () => void;
   /**
@@ -96,23 +95,23 @@ export const CreateObjectPanel = ({
   const sortedOptions = useMemo(() => [...options].sort((a, b) => a.label.localeCompare(b.label)), [options]);
 
   const handleCreateObject = useCallback(
-    async (props: Record<string, any>) => {
+    (props: Record<string, any>) => {
       if (!metadata) {
         return;
       }
-      await onCreateObject?.({ metadata, data: props });
+      onCreateObject?.({ metadata, data: props });
     },
     [onCreateObject, metadata],
   );
 
   const handleSelectOption = useCallback(
-    async (id: string) => {
+    (id: string) => {
       const metadata = resolve?.(id);
       // A live create always has a form to show — the object's own — so only a draft can skip
       // straight to creating from an entry that declares no inputs.
       if (mode !== 'live' && metadata && !metadata.inputSchema && !metadata.customPanel && !schema) {
         // No form to show, so the caller's defaults (a name typed into a link, say) are the data.
-        await onCreateObject?.({ metadata, data: initialFormValues });
+        onCreateObject?.({ metadata, data: initialFormValues });
       } else {
         onTypenameChange?.(id);
       }

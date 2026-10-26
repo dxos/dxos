@@ -18,7 +18,7 @@ import Inspect from 'vite-plugin-inspect';
 import solid from 'vite-plugin-solid';
 import WasmPlugin from 'vite-plugin-wasm';
 import { type UserWorkspaceConfig, type ViteUserConfig, defineProject } from 'vitest/config';
-import type { Reporter, TestModule, TestRunEndReason } from 'vitest/node';
+import type { BrowserCommand, Reporter, TestModule, TestRunEndReason } from 'vitest/node';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import PluginImportSource from '@dxos/vite-plugin-import-source';
@@ -521,6 +521,8 @@ export type NodeOptions = {
   plugins?: Plugin[];
   /** Which JSX runtime to wire into the vitest node project. Defaults to `'react'`. */
   jsx?: 'react' | 'solid';
+  /** Globs to leave out, such as a nested workspace package that runs its own suite. */
+  exclude?: string[];
 };
 
 export type BrowserOptions = {
@@ -587,15 +589,18 @@ const SANDBOX_LAUNCH_OPTIONS = process.env.CLAUDE_CODE_REMOTE
     }
   : {};
 
+const throttleCpu: BrowserCommand<[]> = async ({ context, page }) => {
+  const rate = Number(process.env.DX_STORYBOOK_CPU_THROTTLE ?? 1);
+  if (rate > 1 && context.browser()?.browserType().name() === 'chromium') {
+    const session = await context.newCDPSession(page);
+    await session.send('Emulation.setCPUThrottlingRate', { rate });
+  }
+};
+
 const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
   defineProject({
     test: {
       name: 'storybook',
-      // The playwright/chromium session occasionally dies mid-run with
-      // "Browser connection was closed while running tests", causing every
-      // subsequent story file to fail to import. Retry once so a transient
-      // browser-side flake doesn't fail the whole job.
-      retry: 1,
       // Defaults to per-file isolation; opt out (see `StorybookOptions.isolate`) to share the WASM-backed
       // module graph across story files and avoid cumulative WebAssembly memory exhaustion.
       ...(options?.isolate !== undefined ? { isolate: options.isolate } : {}),
@@ -609,6 +614,7 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
         provider: playwright({ contextOptions: { timezoneId: 'America/Los_Angeles' }, ...SANDBOX_LAUNCH_OPTIONS }),
         // `DX_STORYBOOK_BROWSER` runs the stories elsewhere, for a story that pins browser-specific behaviour.
         instances: [{ browser: process.env.DX_STORYBOOK_BROWSER || 'chromium' }],
+        commands: { throttleCpu },
       },
       setupFiles: [new URL('./tools/storybook-react/.storybook/vitest.setup.ts', import.meta.url).pathname],
     },
@@ -818,6 +824,7 @@ const createNodeProject = ({
   setupFiles = [],
   plugins = [],
   jsx = 'react',
+  exclude = [],
 }: NodeOptions = {}) =>
   defineProject({
     esbuild: {
@@ -844,6 +851,7 @@ const createNodeProject = ({
         '!**/test/**/*.browser.test.{ts,tsx}',
         '!**/src/**/*.workerd.test.{ts,tsx}',
         '!**/test/**/*.workerd.test.{ts,tsx}',
+        ...exclude.map((glob) => `!${glob}`),
       ],
       globalSetup: [VITEST_LOG_GLOBAL_SETUP],
       setupFiles: [

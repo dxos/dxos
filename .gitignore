@@ -280,11 +280,12 @@ node_modules
 .agents/reviews/*/STAGING.md
 .agents/reviews/*/groups.json
 .agents/reviews/*/groups/
+.agents/reviews/*/system-one.json
 
 # Icon-copy artifact: a misconfigured asset step writes phosphor SVGs to a literal
 # "dummy-non-existing-folder" rather than skipping. Generated output, never sources.
 dummy-non-existing-folder/
-tools/vscode/vscode-mdl/dist
+tools/vscode-mdl/dist
 
 # Generated headless capability barrels (dx-plugin prebuild, produced by plugin prebuild tasks).
 **/src/capabilities/gen/
@@ -296,3 +297,6 @@ reports/mutation/
 # Bun writes its cache under `$HOME/Library` on macOS, which lands in the package directory when a
 # command runs with HOME unset — as an MCP server spawned by a client can.
 **/Library/Caches/
+
+# Python bytecode caches.
+__pycache__/

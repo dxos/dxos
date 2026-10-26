@@ -24,7 +24,7 @@ import { type FeedHandle } from '../feed/feed-handle.ts';
 import { type QuerySourceProvider, recordObjectDiagnostic } from '../hypergraph.ts';
 import { DatabaseImpl } from '../proxy-db/index.ts';
 import {
-  type QuerySource,
+  type RemoteQuerySource,
   type SourceEntry,
   getQueryDeletedOption,
   getTargetSpacesForQuery,
@@ -68,6 +68,8 @@ export type IndexQueryProviderProps = {
   graph: Hypergraph.Hypergraph;
   /** Overrides {@link QUERY_SERVICE_TIMEOUT}; tests drive the budget rather than waiting it out. */
   queryTimeout?: number;
+  /** Fires as the host's index makes progress; each restarts a one-shot query's index budget. */
+  indexProgress?: ReadOnlyEvent<unknown>;
   /** Overrides {@link RECORD_HYDRATION_TIMEOUT}; tests drive the budget rather than waiting it out. */
   hydrationTimeout?: number;
 };
@@ -92,7 +94,7 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
   constructor(private readonly _params: IndexQueryProviderProps) {}
 
   // TODO(burdon): Rename createQuerySource
-  create(): QuerySource {
+  create(): RemoteQuerySource {
     return new IndexQuerySource({
       service: this._params.service,
       runtime: this._params.runtime,
@@ -100,6 +102,7 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
       graph: this._params.graph,
       queryTimeout: this._params.queryTimeout,
       hydrationTimeout: this._params.hydrationTimeout,
+      indexProgress: this._params.indexProgress,
     });
   }
 }
@@ -111,6 +114,8 @@ export type IndexQuerySourceProps = {
   graph: Hypergraph.Hypergraph;
   /** Overrides {@link QUERY_SERVICE_TIMEOUT}; tests drive the budget rather than waiting it out. */
   queryTimeout?: number;
+  /** Fires as the host's index makes progress; each restarts a one-shot query's index budget. */
+  indexProgress?: ReadOnlyEvent<unknown>;
   /** Overrides {@link RECORD_HYDRATION_TIMEOUT}; tests drive the budget rather than waiting it out. */
   hydrationTimeout?: number;
 };
@@ -118,7 +123,7 @@ export type IndexQuerySourceProps = {
 /**
  * Runs queries against an index.
  */
-export class IndexQuerySource implements QuerySource {
+export class IndexQuerySource implements RemoteQuerySource {
   changed = new Event<void>();
 
   readonly kind = 'index';
@@ -131,6 +136,9 @@ export class IndexQuerySource implements QuerySource {
 
   /** Whether the current reactive stream failed. */
   #failed = false;
+
+  /** Whether the latest integrated answer left out derivations over its budget. */
+  #truncated = false;
 
   private _query?: QueryAST.Query = undefined;
   private _results?: SourceEntry[] = [];
@@ -192,6 +200,7 @@ export class IndexQuerySource implements QuerySource {
     this.#responses = 0;
     this.#integrated = 0;
     this.#failed = false;
+    this.#truncated = false;
     this._results = undefined;
     this._lastRemoteResults = undefined;
     this._releasedDocumentJsonIds.clear();
@@ -219,9 +228,8 @@ export class IndexQuerySource implements QuerySource {
     return this.#failed;
   }
 
-  /** Index results are produced asynchronously from the host query stream. */
-  isSynchronous(): boolean {
-    return false;
+  isTruncated(): boolean {
+    return this.#truncated;
   }
 
   isPending(): boolean {
@@ -236,7 +244,7 @@ export class IndexQuerySource implements QuerySource {
     // The index serves spaces and feeds; a query whose explicit scopes target neither
     // (e.g. registry-only) is answered entirely by other sources. Forwarding it anyway
     // made the whole query fail on edge — the query host rejects space-less queries, and
-    // the fail-fast merge in `GraphQueryContext.run` discarded the registry source's results.
+    // the fail-fast merge in `LocalQueryEngine.run` discarded the registry's results.
     if (!queryTargetsSpacesOrFeeds(query)) {
       return [];
     }
@@ -260,6 +268,7 @@ export class IndexQuerySource implements QuerySource {
     this.#responses = 0;
     this.#integrated = 0;
     this.#failed = false;
+    this.#truncated = false;
     this.changed.emit();
 
     // Don't start a reactive remote query until the query context is started (calls `open()`).
@@ -294,6 +303,7 @@ export class IndexQuerySource implements QuerySource {
       }
       settled = true;
       clearTimeout(timeout);
+      unsubscribeProgress?.();
       cleanup?.();
       run();
     };
@@ -302,9 +312,12 @@ export class IndexQuerySource implements QuerySource {
     // otherwise lazy and would hang if the host never responds.
     const queryTimeout = this._params.queryTimeout ?? QUERY_SERVICE_TIMEOUT;
     const hydrationTimeout = this._params.hydrationTimeout ?? RECORD_HYDRATION_TIMEOUT;
-    const timeout = setTimeout(() => {
-      settle(() => reject(new TimeoutError(queryTimeout, 'index query')));
-    }, queryTimeout);
+    const expire = () => settle(() => reject(new TimeoutError(queryTimeout, 'index query')));
+    let timeout = setTimeout(expire, queryTimeout);
+    let unsubscribeProgress = this._params.indexProgress?.on(() => {
+      clearTimeout(timeout);
+      timeout = setTimeout(expire, queryTimeout);
+    });
 
     cleanup = subscribeStream(
       this._params.runtime,
@@ -326,6 +339,8 @@ export class IndexQuerySource implements QuerySource {
               // bounded per record and must not be charged to it — doing so reported a stalled
               // document as an "index query" timeout, naming the wrong subsystem.
               clearTimeout(timeout);
+              unsubscribeProgress?.();
+              unsubscribeProgress = undefined;
               const { results, stalled } = await this._mapRecords(
                 new Context(),
                 queryId,
@@ -395,6 +410,7 @@ export class IndexQuerySource implements QuerySource {
               return;
             }
             this._assertResultSpaces(query, response);
+            this.#truncated = response.truncated !== undefined;
             // Remember the raw host records so a later local object load can re-hydrate them.
             this._lastRemoteResults = response.results ?? [];
             this._releasedDocumentJsonIds.clear();
@@ -693,6 +709,7 @@ export class IndexQuerySource implements QuerySource {
         match: { rank: result.rank },
         resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
         group: _groupFromRemoteResult(result),
+        manifest: result.manifest,
       };
     }
 
@@ -756,6 +773,7 @@ export class IndexQuerySource implements QuerySource {
           match: { rank: result.rank },
           resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
           group: _groupFromRemoteResult(result),
+          ..._evidenceFromRemoteResult(result),
         };
       }
 
@@ -793,6 +811,7 @@ export class IndexQuerySource implements QuerySource {
         match: { rank: result.rank },
         resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
         group: _groupFromRemoteResult(result),
+        ..._evidenceFromRemoteResult(result),
       };
       return queryResult;
     }
@@ -819,6 +838,7 @@ export class IndexQuerySource implements QuerySource {
       match: { rank: result.rank },
       resolution: { source: 'index', time: Date.now() - queryStartTimestamp },
       group: _groupFromRemoteResult(result),
+      ..._evidenceFromRemoteResult(result),
     };
     return queryResult;
   }
@@ -877,6 +897,12 @@ const _groupFromRemoteResult = (result: QueryService.QueryResult): SourceEntry['
         ...(result.aggregates !== undefined ? { aggregates: JSON.parse(result.aggregates) } : {}),
       }
     : undefined;
+
+/** What the host says it evaluated a row at and how it reached it, which the engine revalidates the row against. */
+const _evidenceFromRemoteResult = (result: QueryService.QueryResult): Pick<SourceEntry, 'version' | 'paths'> => ({
+  ...(result.version && { version: result.version }),
+  ...(result.paths && { paths: result.paths }),
+});
 
 const recordKey = (spaceId: string, objectId: string): string => `${spaceId}:${objectId}`;
 

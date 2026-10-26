@@ -4,7 +4,11 @@
 
 import { Role } from '../../../common/index.ts';
 import { SurfaceContext } from './context.ts';
-import { SurfaceComponent, useIsSurfaceAvailable } from './SurfaceComponent.tsx';
+import {
+  SurfaceComponent,
+  matchCandidates as matchSurfaceCandidates,
+  useIsSurfaceAvailable,
+} from './SurfaceComponent.tsx';
 import {
   type MountedSurface,
   getMountedSurfaces,
@@ -46,6 +50,8 @@ export const Context = SurfaceContext;
 
 export const Surface = SurfaceComponent;
 export const useIsAvailable = useIsSurfaceAvailable;
+/** Filters a role's candidate definitions to those whose guard accepts the data. */
+export const matchCandidates = matchSurfaceCandidates;
 
 export type Binding = SurfaceBindingType;
 export type Filter<TData> = SurfaceFilterType<TData>;

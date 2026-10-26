@@ -30,6 +30,14 @@ describe('shouldTriggerAgent', () => {
     expect(shouldTriggerAgent(makeThread(), makeMessage('user', 'hi'), 'echo')).toBe(false);
   });
 
+  test('a thread with no config of its own follows the given fallback config', ({ expect }) => {
+    const message = makeMessage(undefined, '@kai add a diagram');
+    expect(shouldTriggerAgent(makeThread(), message, 'Kai', { enabled: true, mode: 'mention' })).toBe(true);
+    // The thread's own config wins over the fallback.
+    const off = makeThread({ agent: { enabled: false, mode: 'mention' } });
+    expect(shouldTriggerAgent(off, message, 'Kai', off.agent)).toBe(false);
+  });
+
   test('returns false when agent is disabled', ({ expect }) => {
     const thread = makeThread({ agent: { enabled: false, mode: 'auto' } });
     expect(shouldTriggerAgent(thread, makeMessage('user', 'hi'), 'echo')).toBe(false);

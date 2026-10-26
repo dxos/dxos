@@ -327,7 +327,7 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
           EffectDialect,
         );
         expect(output).toEqual(
-          'README.md,database.md,queries.md,operations.md,errors.md,catalog/types.md,catalog/operations.md\n' +
+          'README.md,database.md,queries.md,operations.md,printing.md,errors.md,catalog/types.md,catalog/operations.md\n' +
             '# Code mode (Effect dialect)',
         );
       },

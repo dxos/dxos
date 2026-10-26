@@ -30,7 +30,6 @@ const handler: Operation.WithHandler<typeof ModeOperation.ListModes> = ModeOpera
           name: mode.name,
           description: mode.description,
           skills: mode.skills.map(skillKeyOf).filter((key) => key !== undefined),
-          records: mode.records ? [...mode.records] : undefined,
           current: mode.name === current,
         })),
       };

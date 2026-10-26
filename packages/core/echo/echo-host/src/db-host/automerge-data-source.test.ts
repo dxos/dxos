@@ -3,7 +3,7 @@
 //
 
 import { RawString, getHeads, hasHeads, init, loadIncremental } from '@automerge/automerge';
-import { describe, expect, onTestFinished, test } from 'vitest';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Context } from '@dxos/context';
 import {
@@ -110,7 +110,7 @@ describe('AutomergeDataSource', () => {
     expect(result.cursors[0].cursor).toBe(headsCodec.encode(getHeads(handle.doc()!)));
   });
 
-  test("ships heads only once the JSON's heads are saved", async () => {
+  test('records the heads it read as the version, and ships heads only once they are saved', async () => {
     const host = await setupAutomergeHost();
     const handle = await createDatabaseDirectory(host, SpaceId.random(), {
       'obj-1': EntityStructure.makeObject({
@@ -127,8 +127,10 @@ describe('AutomergeDataSource', () => {
     const dataSource = new AutomergeDataSource(host);
     const unsaved = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
     const unsavedObject = unsaved.objects.find((object) => object.data.id === 'obj-1');
-    expect(unsavedObject).toBeDefined();
+    const unsavedDoc = handle.doc();
+    invariant(unsavedDoc);
     expect(unsavedObject?.heads).toBeUndefined();
+    expect(unsavedObject?.version).toEqual(getHeads(unsavedDoc));
 
     await host.flush(Context.default());
     const cursor: IndexCursor = {
@@ -142,6 +144,7 @@ describe('AutomergeDataSource', () => {
     const object = objects.find((object) => object.data.id === 'obj-1');
     invariant(object?.heads);
     expect(object.heads).toEqual(getHeads(handle.doc()!));
+    expect(object.version).toEqual(object.heads);
     const stored = loadIncremental(init<DatabaseDirectory>(), (await host.readStoredChanges(handle.documentId))!);
     expect(hasHeads(stored, [...object.heads])).toBe(true);
 
@@ -171,7 +174,7 @@ describe('AutomergeDataSource', () => {
     const dataSource = new AutomergeDataSource(host);
     const { objects } = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
     expect(objects).toHaveLength(4);
-    expect(objects.every((object) => object.heads === undefined)).toBe(true);
+    expect(objects.every((object) => object.heads === undefined && object.version !== undefined)).toBe(true);
   });
 
   test('returns documents with changed heads', async () => {
@@ -310,6 +313,9 @@ describe('AutomergeDataSource', () => {
     const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
 
     expect(result.objects).toHaveLength(0);
+    expect(result.cursors).toEqual([{ spaceId, resourceId: handle.documentId, cursor: expect.any(String) }]);
+    const again = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), result.cursors));
+    expect(again.cursors).toEqual([]);
   });
 
   test('extracts object attributes correctly', async () => {
@@ -355,6 +361,58 @@ describe('AutomergeDataSource', () => {
     const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
 
     expect(result.objects).toHaveLength(0);
+    expect(result.cursors).toEqual([{ spaceId: null, resourceId: handle.documentId, cursor: expect.any(String) }]);
+  });
+
+  test('a document whose space cannot be derived is read and gets a cursor', async () => {
+    const host = await setupAutomergeHost();
+    const handle = await createDatabaseDirectory(host, 'not-a-space-id' as SpaceId, {
+      'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'Bad space' } }),
+    });
+    await host.flush(Context.default());
+
+    const dataSource = new AutomergeDataSource(host);
+    const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
+
+    expect(result.objects).toHaveLength(0);
+    expect(result.cursors).toEqual([{ spaceId: null, resourceId: handle.documentId, cursor: expect.any(String) }]);
+  });
+
+  test('a document whose read throws gets a cursor, with none of its objects, and is not read again', async () => {
+    const host = await setupAutomergeHost();
+    const handle = await createDatabaseDirectory(host, SpaceId.random(), {
+      'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'Corrupt' } }),
+    });
+    await host.flush(Context.default());
+    vi.spyOn(host, 'loadDoc').mockResolvedValue({
+      doc: () => {
+        throw new Error('corrupt document');
+      },
+      [Symbol.dispose]: () => {},
+    } as never);
+
+    const dataSource = new AutomergeDataSource(host);
+    const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
+
+    expect(result.objects).toHaveLength(0);
+    expect(result.cursors).toEqual([{ spaceId: null, resourceId: handle.documentId, cursor: expect.any(String) }]);
+    const again = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), result.cursors));
+    expect(again.cursors).toEqual([]);
+  });
+
+  test('a document whose read throws partway contributes none of its objects', async () => {
+    const host = await setupAutomergeHost();
+    const handle = await createDatabaseDirectory(host, SpaceId.random(), {
+      'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'Fine' } }),
+      'obj-2': null as never,
+    });
+    await host.flush(Context.default());
+
+    const dataSource = new AutomergeDataSource(host);
+    const result = await EffectEx.runAndForwardErrors(dataSource.getChangedObjects(Context.default(), []));
+
+    expect(result.objects).toHaveLength(0);
+    expect(result.cursors).toMatchObject([{ resourceId: handle.documentId }]);
   });
 
   test('derives spaceId from documents that only carry the legacy spaceKey field', async () => {

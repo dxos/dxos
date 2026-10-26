@@ -12,6 +12,7 @@ import { GitHubOperation } from '#types';
 
 import { pullRequestChanges } from '../pull-request.ts';
 import { fetchPullRequestWithFallback } from './import-pull-request.ts';
+import { type GitHubAccess } from './pull-request.ts';
 
 /**
  * How often the space's refresh trigger polls its open pull requests: hourly, at an off-the-hour minute
@@ -31,9 +32,9 @@ const IN_FLIGHT_STATES: readonly PullRequest.State[] = ['open', 'draft'];
  */
 export const refreshPullRequest = Effect.fn('refreshPullRequest')(function* (
   pullRequest: PullRequest.PullRequest,
-  token: string,
+  access: GitHubAccess,
 ) {
-  const pull = yield* fetchPullRequestWithFallback(pullRequest, token);
+  const pull = yield* fetchPullRequestWithFallback(pullRequest, access);
   const changes = pullRequestChanges(pullRequest, pull);
   const updated = Object.keys(changes);
   if (updated.length > 0) {

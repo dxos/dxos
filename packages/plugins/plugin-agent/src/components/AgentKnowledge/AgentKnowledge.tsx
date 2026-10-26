@@ -13,14 +13,12 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Status from '@dxos/react-ui/Status';
 import * as Tabs from '@dxos/react-ui/Tabs';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Typography from '@dxos/react-ui/Typography';
 import { type SpaceGraphEdge, SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
 
 import { meta } from '#meta';
-import { type Goal, type Knowledge } from '#types';
+import { type Goal } from '#types';
 
-import { MEMORY_ICONS } from '../ProfileGraph/index.ts';
 import { EntityBrowser } from './EntityBrowser.tsx';
 import { type EntityCardProps } from './EntityCard.tsx';
 import { KnowledgeCard, KnowledgeStack } from './KnowledgeStack.tsx';
@@ -32,7 +30,7 @@ import { TurtleSnippet } from './TurtleSnippet.tsx';
 // Root
 //
 
-const VIEWS = ['memories', 'facts', 'entities', 'predicates', 'goals', 'graph'] as const;
+const VIEWS = ['facts', 'entities', 'predicates', 'goals', 'graph'] as const;
 
 type AgentKnowledgeView = (typeof VIEWS)[number];
 
@@ -47,7 +45,7 @@ type AgentKnowledgeContextValue = {
   brain: AgentKnowledgeBrainStatus;
 };
 
-/** Memories and facts are read from the agent's brain, so an empty list means nothing only once a read has returned. */
+/** Facts are read from the agent's brain, so an empty list means nothing only once a read has returned. */
 type AgentKnowledgeBrainStatus =
   | { state: 'loading' }
   | { state: 'resetting' }
@@ -55,7 +53,7 @@ type AgentKnowledgeBrainStatus =
   | { state: 'error'; error: string };
 
 const AgentKnowledgeContext = createContext<AgentKnowledgeContextValue>({
-  view: 'memories',
+  view: 'facts',
   raw: false,
   brain: { state: 'ready' },
 });
@@ -65,17 +63,17 @@ type AgentKnowledgeRootProps = PropsWithChildren<{
   defaultView?: AgentKnowledgeView;
   /** Forgets everything the agent knows; the toolbar shows Reset only when given. */
   onReset?: () => void;
-  /** Whether the brain's memories and facts have been read; ready when omitted. */
+  /** Whether the brain's facts have been read; ready when omitted. */
   brain?: AgentKnowledgeBrainStatus;
 }>;
 
 /**
- * What the agent knows, one view at a time: its memories, the facts it read, the predicates its brain states them
+ * What the agent knows, one view at a time: its facts, the entities they relate, the predicates its brain states them
  * with, the goals it serves and its knowledge graph.
  */
 const AgentKnowledgeRoot = ({
   role,
-  defaultView = 'memories',
+  defaultView = 'facts',
   onReset,
   brain = READY,
   children,
@@ -85,6 +83,28 @@ const AgentKnowledgeRoot = ({
   const [raw, setRaw] = useState(false);
   const menuActions = useMenuBuilder(() => {
     const builder = MenuBuilder.make().root({ label: ['agent-knowledge-actions.label', { ns: meta.profile.key }] });
+    // The tabs lead and the gap pushes the actions to the end.
+    builder
+      .custom('tabs', { label: ['agent-knowledge-actions.label', { ns: meta.profile.key }] }, () => (
+        <Tabs.List>
+          <Tabs.Trigger value='facts' data-testid='agent-knowledge-tab-facts'>
+            {t('agent-knowledge-facts.label')}
+          </Tabs.Trigger>
+          <Tabs.Trigger value='entities' data-testid='agent-knowledge-tab-entities'>
+            {t('agent-knowledge-entities.label')}
+          </Tabs.Trigger>
+          <Tabs.Trigger value='predicates' data-testid='agent-knowledge-tab-predicates'>
+            {t('agent-knowledge-predicates.label')}
+          </Tabs.Trigger>
+          <Tabs.Trigger value='goals' data-testid='agent-knowledge-tab-goals'>
+            {t('agent-knowledge-goals.label')}
+          </Tabs.Trigger>
+          <Tabs.Trigger value='graph' data-testid='agent-knowledge-tab-graph'>
+            {t('agent-knowledge-graph.label')}
+          </Tabs.Trigger>
+        </Tabs.List>
+      ))
+      .separator('gap');
     if (view === 'facts' || view === 'predicates') {
       builder.action(
         'raw',
@@ -113,42 +133,13 @@ const AgentKnowledgeRoot = ({
       );
     }
     return builder.build();
-  }, [view, raw, onReset]);
+  }, [view, raw, onReset, t]);
   const context = useMemo(() => ({ view, raw, brain }), [view, raw, brain]);
   return (
     <Tabs.Root asChild orientation='horizontal' value={view} onValueChange={(value) => isView(value) && setView(value)}>
       <Panel.Root role={role}>
         <Panel.Header>
-          <ActionToolbar
-            {...menuActions}
-            alwaysActive
-            // The tabs lead and the gap pushes the actions to the end.
-            start={
-              <>
-                <Tabs.List>
-                  <Tabs.Trigger value='memories' data-testid='agent-knowledge-tab-memories'>
-                    {t('agent-knowledge-memories.label')}
-                  </Tabs.Trigger>
-                  <Tabs.Trigger value='facts' data-testid='agent-knowledge-tab-facts'>
-                    {t('agent-knowledge-facts.label')}
-                  </Tabs.Trigger>
-                  <Tabs.Trigger value='entities' data-testid='agent-knowledge-tab-entities'>
-                    {t('agent-knowledge-entities.label')}
-                  </Tabs.Trigger>
-                  <Tabs.Trigger value='predicates' data-testid='agent-knowledge-tab-predicates'>
-                    {t('agent-knowledge-predicates.label')}
-                  </Tabs.Trigger>
-                  <Tabs.Trigger value='goals' data-testid='agent-knowledge-tab-goals'>
-                    {t('agent-knowledge-goals.label')}
-                  </Tabs.Trigger>
-                  <Tabs.Trigger value='graph' data-testid='agent-knowledge-tab-graph'>
-                    {t('agent-knowledge-graph.label')}
-                  </Tabs.Trigger>
-                </Tabs.List>
-                <Toolbar.Separator variant='gap' />
-              </>
-            }
-          />
+          <ActionToolbar {...menuActions} alwaysActive />
         </Panel.Header>
         {/* Views render their own Panel.Body (rather than `Tabs.Content`, whose content mounts hidden for a frame,
             where the force graph would measure zero), so a list's ScrollArea is the body and gets its height. */}
@@ -183,60 +174,6 @@ const useBrainStatusMessage = (): string | undefined => {
 };
 
 //
-// Memories
-//
-
-type AgentKnowledgeMemory = Pick<Knowledge.Memory, 'id' | 'content' | 'kind' | 'observedAt'>;
-
-type AgentKnowledgeMemoriesProps = {
-  /** Newest first. */
-  memories: readonly AgentKnowledgeMemory[];
-  /** Fixes the instant timestamps are measured against, so stories and tests do not drift. */
-  now?: Typography.TimestampProps['now'];
-};
-
-/** The agent's active memories, newest first. */
-const AgentKnowledgeMemories = ({ memories, now }: AgentKnowledgeMemoriesProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  const status = useBrainStatusMessage();
-  if (useContext(AgentKnowledgeContext).view !== 'memories') {
-    return null;
-  }
-
-  return memories.length === 0 || status ? (
-    <StatusBody>{status ?? t('agent-knowledge-memories-empty.message')}</StatusBody>
-  ) : (
-    <KnowledgeStack
-      items={memories}
-      getId={(memory) => memory.id}
-      getText={(memory) => `${memory.content} ${t(`memory-kind-${memory.kind}.label`)}`}
-      renderItem={(memory) => (
-        <KnowledgeCard
-          icon={MEMORY_ICONS[memory.kind]}
-          title={memory.content}
-          rows={[
-            {
-              label: t('agent-knowledge-kind.label'),
-              value: <Card.Text>{t(`memory-kind-${memory.kind}.label`)}</Card.Text>,
-            },
-            {
-              label: t('agent-knowledge-observed.label'),
-              value: (
-                <Card.Text>
-                  <Typography.Timestamp date={memory.observedAt} now={now} />
-                </Card.Text>
-              ),
-            },
-          ]}
-        />
-      )}
-    />
-  );
-};
-
-AgentKnowledgeMemories.displayName = 'AgentKnowledge.Memories';
-
-//
 // Facts
 //
 
@@ -244,7 +181,7 @@ type AgentKnowledgeFact = {
   id: string;
   /** Subject, predicate and object. */
   text: string;
-  /** The name of the source it was read from. */
+  /** The name of the source it was read from or recorded in. */
   source?: string;
   /** Who said it, when known. */
   speaker?: string;
@@ -260,7 +197,7 @@ type AgentKnowledgeFactsProps = {
   now?: Typography.TimestampProps['now'];
 };
 
-/** The facts the agent read from documents, pages and conversations, newest first. */
+/** The facts that hold in the agent's brain, read from sources or recorded by the agent, newest first. */
 const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const { view, raw } = useContext(AgentKnowledgeContext);
@@ -278,12 +215,11 @@ const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
       getText={(fact) => [fact.text, fact.source, fact.speaker].filter(Boolean).join(' ')}
       before={
         raw && (
-          <pre
+          <TurtleSnippet
             data-testid='agent-knowledge-fact-prefixes'
-            className='m-0 p-2 overflow-x-auto whitespace-pre text-xs font-mono text-fg-muted select-text'
-          >
-            {TRIG_PREFIXES}
-          </pre>
+            className='p-2 overflow-x-auto text-xs select-text cursor-text'
+            source={TRIG_PREFIXES}
+          />
         )
       }
       renderItem={(fact) => (
@@ -411,12 +347,11 @@ const AgentKnowledgePredicates = ({ predicates, trig }: AgentKnowledgePredicates
       before={
         raw &&
         trig && (
-          <pre
+          <TurtleSnippet
             data-testid='agent-knowledge-predicates-trig'
-            className='m-0 p-2 overflow-x-auto whitespace-pre text-xs font-mono text-fg-muted select-text'
-          >
-            {trig}
-          </pre>
+            className='p-2 overflow-x-auto text-xs select-text cursor-text'
+            source={trig}
+          />
         )
       }
       renderItem={(predicate) => <PredicateCard predicate={predicate} />}
@@ -569,8 +504,8 @@ type AgentKnowledgeNode = {
 type AgentKnowledgeEdge = {
   source: string;
   target: string;
-  /** `subject`: memory → entity it is about; `owner`: goal → holder; `knows`: agent → entity. */
-  kind: 'subject' | 'owner' | 'knows';
+  /** `related`: entity → entity a fact relates it to; `owner`: goal → holder; `knows`: agent → entity. */
+  kind: 'related' | 'owner' | 'knows';
 };
 
 type AgentKnowledgeGraphProps = {
@@ -578,7 +513,7 @@ type AgentKnowledgeGraphProps = {
   edges: readonly AgentKnowledgeEdge[];
 };
 
-/** The agent's knowledge as a force-directed graph of people, organizations, goals and memories. */
+/** The agent's knowledge as a force-directed graph of people, organizations and goals, linked by the facts. */
 const AgentKnowledgeGraph = ({ nodes, edges }: AgentKnowledgeGraphProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const active = useContext(AgentKnowledgeContext).view === 'graph';
@@ -622,7 +557,6 @@ AgentKnowledgeGraph.displayName = 'AgentKnowledge.Graph';
 
 export const AgentKnowledge = {
   Root: AgentKnowledgeRoot,
-  Memories: AgentKnowledgeMemories,
   Facts: AgentKnowledgeFacts,
   Entities: AgentKnowledgeEntities,
   Predicates: AgentKnowledgePredicates,
@@ -639,8 +573,6 @@ export type {
   AgentKnowledgeGoal,
   AgentKnowledgeGoalsProps,
   AgentKnowledgeGraphProps,
-  AgentKnowledgeMemoriesProps,
-  AgentKnowledgeMemory,
   AgentKnowledgeNode,
   AgentKnowledgePredicate,
   AgentKnowledgePredicatesProps,

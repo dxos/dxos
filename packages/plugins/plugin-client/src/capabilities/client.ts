@@ -11,12 +11,14 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import { Event, timeoutUnlessProgress } from '@dxos/async';
 import { Client, ClientService, fromClient } from '@dxos/client';
 import { INITIALIZE_TIMEOUT } from '@dxos/client-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
 import { log } from '@dxos/log';
+import { markMilestone } from '@dxos/util';
 
 import { ClientCapabilities, ClientEvents, ClientOptions } from '#types';
 
@@ -77,7 +79,7 @@ export default Capability.makeModule(
     yield* Effect.gen(function* () {
       // Bounded so a handshake that never completes becomes a failure the app can surface,
       // rather than leaving every suspended consumer waiting on a promise that never settles.
-      yield* Effect.tryPromise(() => client.initialize()).pipe(Effect.timeout(initializeTimeout));
+      yield* Effect.tryPromise(() => untilStalled(client, client.initialize(), initializeTimeout));
       performance.mark('milestone:client-initialize:end');
       log('client.initialize() returned successfully');
       if (onClientInitialized) {
@@ -113,10 +115,17 @@ export default Capability.makeModule(
       // A reload drops every change only this page holds. The reconnect hands those to the new worker,
       // so the reload waits until it has them, and is skipped while it does not: a broken session the
       // user can still save from beats a clean one without their changes. A reset discards them anyway.
-      client.services.reconnected?.on(async () => {
+      //
+      // A tab that reconnected to a worker it now owns does not reload: its reload releases the leader
+      // lock and kills that worker, so the other tab reconnects and reloads in turn, forever.
+      client.services.reconnected?.on(async ({ isOwner }) => {
         if (client.resetting) {
           log.info('client reset, reloading to the app root');
           window.location.href = window.location.origin;
+          return;
+        }
+        if (isOwner) {
+          log.info('client reconnected to a worker this tab now leads, not reloading');
           return;
         }
         if (!(await saveUnsavedChanges(client))) {
@@ -135,6 +144,7 @@ export default Capability.makeModule(
           spacesAvailableFired = true;
           // Boot-waterfall milestone: ECHO spaces observable from here (both entry paths).
           performance.mark('milestone:spaces-ready');
+          markMilestone('spaces.ready');
           const exit = await Effect.gen(function* () {
             yield* Plugin.activate(ClientEvents.SpacesAvailable);
             if (onSpacesAvailable) {
@@ -180,7 +190,7 @@ export default Capability.makeModule(
       ? Layer.effect(
           ClientService,
           Effect.tryPromise({
-            try: () => client.waitUntilInitialized({ timeout: initializeTimeout }),
+            try: () => untilStalled(client, client.waitUntilInitialized(), initializeTimeout),
             catch: (error) => new ClientInitError({ context: { initializeTimeout }, cause: error }),
           }).pipe(Effect.as(client)),
         )
@@ -203,3 +213,13 @@ export default Capability.makeModule(
     ];
   }),
 );
+
+const untilStalled = async <T>(client: Client, promise: Promise<T>, timeout: number): Promise<T> => {
+  const progress = new Event();
+  const subscription = client.indexStatus.subscribe(() => progress.emit());
+  try {
+    return await timeoutUnlessProgress(promise, timeout, progress);
+  } finally {
+    subscription.unsubscribe();
+  }
+};

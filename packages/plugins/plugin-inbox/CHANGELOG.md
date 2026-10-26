@@ -1,5 +1,163 @@
 # @dxos/plugin-inbox
 
+## 0.16.0
+
+### Patch Changes
+
+- e26ed70: `DraftEmailAndOpen` now reads its database from `Database.Service` instead of taking a `db` input, so callers pass the space through the invoke options. Also removes casts, orphaned JSDoc and hand-written layout wrappers flagged by the agentic review.
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/echo-client@0.16.0
+  - @dxos/assistant@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/plugin-space@0.16.0
+  - @dxos/client@0.16.0
+  - @dxos/plugin-client@0.16.0
+  - @dxos/plugin-connector@0.16.0
+  - @dxos/plugin-markdown@0.16.0
+  - @dxos/plugin-routine@0.16.0
+  - @dxos/plugin-settings@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-graph@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-attention@0.16.0
+  - @dxos/react-ui-calendar@0.16.0
+  - @dxos/react-ui-card@0.16.0
+  - @dxos/react-ui-components@0.16.0
+  - @dxos/react-ui-editor@0.16.0
+  - @dxos/react-ui-form@0.16.0
+  - @dxos/react-ui-html@0.16.0
+  - @dxos/react-ui-menu@0.16.0
+  - @dxos/react-ui-mosaic@0.16.0
+  - @dxos/react-ui-query@0.16.0
+  - @dxos/react-ui-search@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/extractor@0.16.0
+  - @dxos/extractor-lib@0.16.0
+  - @dxos/link@0.16.0
+  - @dxos/pipeline-email@0.16.0
+  - @dxos/echo-doc@0.16.0
+  - @dxos/echo-react@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/ui-editor@0.16.0
+  - @dxos/ai@0.16.0
+  - @dxos/echo-query@0.16.0
+  - @dxos/plugin-graph@0.16.0
+  - @dxos/async@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/graph@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/markdown@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/pipeline@0.16.0
+  - @dxos/react-hooks@0.16.0
+  - @dxos/ui-theme@0.16.0
+  - @dxos/ui-types@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- b6ae19d: Live queries reflect a local write before the writing call returns: subscribers are notified synchronously, once per `Obj.update` or `db.add`, and an index result never re-adds an object a local edit has disqualified. Adds `Query.characteristics()` and `completeness`/`sources` on `QueryResult`. Behaviour change: a subscriber that writes from its callback now does so after the triggering write has committed but before it returns, rather than on a later microtask. The inbox message header now reads its tag chips reactively from the tag index, which it had only seen through a late query notification.
+- 098a536: `SampleSpace.phase` is replaced by `SampleSpace.partial`: the content one `CONTENT.md` spec describes, which may compose smaller partials and carries their schemas. `SampleSpace.make` takes `partials` instead of `phases`. The debug plugin adds a Fieldstone Labs space template, a software team run mostly by agents, built from four partials plus the DXOS architecture diagrams; `@dxos/plugin-canvas` now publishes and exports its architecture partial from `@dxos/plugin-canvas/Architecture`. A contact card shows the employer's name instead of only an icon, related events no longer swap recent and upcoming, a conversation's message header keeps its date and actions to the right with the subject at full width, an event's star sits beside its title, cards have a visible edge in light mode, a calendar card lists at most three attendees, a sheet embedded in a document renders instead of failing, and object links past a document's first screen render as links instead of raw markdown.
+- Updated dependencies [3b03db7]
+- Updated dependencies [6488905]
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [b7d83c9]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [460bbc3]
+- Updated dependencies [b82150a]
+- Updated dependencies [cd70a43]
+- Updated dependencies [0d81167]
+- Updated dependencies [45ab961]
+- Updated dependencies [71fc002]
+- Updated dependencies [1e9c017]
+- Updated dependencies [1b33a84]
+- Updated dependencies [9deb245]
+- Updated dependencies [16bde33]
+- Updated dependencies [417247b]
+- Updated dependencies [1bc475e]
+- Updated dependencies [d250ed2]
+- Updated dependencies [5162e12]
+- Updated dependencies [55bdf55]
+- Updated dependencies [ed1039a]
+- Updated dependencies [9b9a4ca]
+- Updated dependencies [b7fe13f]
+- Updated dependencies [37edd53]
+- Updated dependencies [098a536]
+- Updated dependencies [6a02061]
+- Updated dependencies [1bddc93]
+- Updated dependencies [25af912]
+- Updated dependencies [7b47951]
+- Updated dependencies [8190cc5]
+- Updated dependencies [60ef4ec]
+- Updated dependencies [2b6a93a]
+- Updated dependencies [743604d]
+  - @dxos/ui-editor@0.15.0
+  - @dxos/assistant@0.15.0
+  - @dxos/plugin-space@0.15.0
+  - @dxos/react-ui@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/echo-client@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/plugin-routine@0.15.0
+  - @dxos/ai@0.15.0
+  - @dxos/plugin-client@0.15.0
+  - @dxos/react-ui-components@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/react-ui-card@0.15.0
+  - @dxos/plugin-markdown@0.15.0
+  - @dxos/react-ui-editor@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/echo-query@0.15.0
+  - @dxos/echo-react@0.15.0
+  - @dxos/client@0.15.0
+  - @dxos/pipeline-email@0.15.0
+  - @dxos/react-ui-form@0.15.0
+  - @dxos/react-ui-query@0.15.0
+  - @dxos/plugin-connector@0.15.0
+  - @dxos/plugin-settings@0.15.0
+  - @dxos/app-graph@0.15.0
+  - @dxos/react-ui-attention@0.15.0
+  - @dxos/react-ui-calendar@0.15.0
+  - @dxos/react-ui-html@0.15.0
+  - @dxos/react-ui-menu@0.15.0
+  - @dxos/react-ui-mosaic@0.15.0
+  - @dxos/react-ui-search@0.15.0
+  - @dxos/extractor@0.15.0
+  - @dxos/extractor-lib@0.15.0
+  - @dxos/echo-doc@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/plugin-graph@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/graph@0.15.0
+  - @dxos/react-hooks@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/pipeline@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/markdown@0.15.0
+  - @dxos/ui-theme@0.15.0
+  - @dxos/ui-types@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

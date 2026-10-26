@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-debug",
-  "version": "0.14.0",
+  "version": "0.16.0",
   "description": "DXOS developer debugging utilities plugin.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -98,6 +98,11 @@
       "types": "./dist/types/src/types/DebugSurface.d.ts",
       "import": "./dist/lib/DebugSurface.mjs"
     },
+    "./FieldstoneSpace": {
+      "source": "./src/samples/fieldstone/FieldstoneSpace.ts",
+      "types": "./dist/types/src/samples/fieldstone/FieldstoneSpace.d.ts",
+      "import": "./dist/lib/FieldstoneSpace.mjs"
+    },
     "./IncidentSpace": {
       "source": "./src/samples/incident/IncidentSpace.ts",
       "types": "./dist/types/src/samples/incident/IncidentSpace.d.ts",
@@ -107,6 +112,11 @@
       "source": "./src/samples/crm/PipelineSpace.ts",
       "types": "./dist/types/src/samples/crm/PipelineSpace.d.ts",
       "import": "./dist/lib/PipelineSpace.mjs"
+    },
+    "./PresenterSpace": {
+      "source": "./src/samples/presenter/PresenterSpace.ts",
+      "types": "./dist/types/src/samples/presenter/PresenterSpace.d.ts",
+      "import": "./dist/lib/PresenterSpace.mjs"
     },
     "./ReviewSpace": {
       "source": "./src/samples/review/ReviewSpace.ts",
@@ -127,6 +137,11 @@
       "source": "./src/samples/tidepool/TidepoolSpace.ts",
       "types": "./dist/types/src/samples/tidepool/TidepoolSpace.d.ts",
       "import": "./dist/lib/TidepoolSpace.mjs"
+    },
+    "./TimelineSpace": {
+      "source": "./src/samples/timeline/TimelineSpace.ts",
+      "types": "./dist/types/src/samples/timeline/TimelineSpace.d.ts",
+      "import": "./dist/lib/TimelineSpace.mjs"
     },
     "./WeatherSpace": {
       "source": "./src/samples/weather/WeatherSpace.ts",
@@ -180,6 +195,7 @@
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/assistant": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
     "@dxos/async": "workspace:*",
     "@dxos/compute": "workspace:*",
@@ -199,6 +215,7 @@
     "@dxos/log-store-idb": "workspace:*",
     "@dxos/operation": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",
+    "@dxos/plugin-canvas": "workspace:*",
     "@dxos/plugin-chess": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-connector": "workspace:*",
@@ -207,7 +224,9 @@
     "@dxos/plugin-graph": "workspace:*",
     "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
+    "@dxos/plugin-kanban": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/plugin-projects": "workspace:*",
     "@dxos/plugin-sheet": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
@@ -223,6 +242,7 @@
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/react-ui-syntax-highlighter": "workspace:*",
+    "@dxos/react-ui-table": "workspace:*",
     "@dxos/react-ui-terminal": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/tracing": "workspace:*",
@@ -235,15 +255,14 @@
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
     "@dxos/ai": "workspace:*",
-    "@dxos/assistant": "workspace:*",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
     "@dxos/plugin-progress": "workspace:*",
-    "@dxos/plugin-projects": "workspace:*",
     "@dxos/plugin-sandbox": "workspace:*",
     "@dxos/plugin-tasks": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/react-ui-geo": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@effect/vitest": "catalog:",

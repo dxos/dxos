@@ -65,7 +65,7 @@ export default Capability.makeModule(
           const operation = yield* OperationHandlerSet.getHandlerByKey(handlers, action.operation);
           yield* invoker.invoke(operation, action.input);
         }),
-      ).catch(() => {});
+      ).catch((err) => log.catch(err));
 
     //
     // Notifications — driven by the process monitor.
@@ -157,7 +157,7 @@ export default Capability.makeModule(
           ? {
               actionLabel: ['plugin-failure-action.label', { ns: meta.profile.key }],
               actionAlt: ['plugin-failure-action.alt', { ns: meta.profile.key }],
-              onAction: () => void invoker.invokePromise(SettingsOperation.OpenPluginRegistry),
+              onAction: () => void invoker.invokePromise(SettingsOperation.OpenPluginRegistry, {}),
             }
           : {}),
       };
@@ -196,6 +196,8 @@ export default Capability.makeModule(
       Effect.gen(function* () {
         const historyTracker = yield* Capability.waitFor(Capabilities.HistoryTracker);
         yield* Stream.fromPubSub(historyTracker.undoable).pipe(
+          // An editor with its own undo keys records its edits without a toast.
+          Stream.filter((event) => event.toast !== false),
           Stream.runForEach((event) =>
             Effect.sync(() => showUndoToast(event.message, () => void historyTracker.undoPromise())),
           ),

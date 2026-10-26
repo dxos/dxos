@@ -118,6 +118,8 @@ export type Options = {
   createRuntime: (args: {
     config: Record<string, any> | undefined;
     requestShutdown: () => void;
+    /** Sends the leader a `status` message (see {@link WorkerProtocol.DedicatedWorkerStatusMessage}). */
+    reportStatus: (status: unknown) => void;
   }) => Effect.Effect<RuntimeHandle, BaseError, Scope.Scope>;
 };
 
@@ -277,6 +279,9 @@ export const run = ({
 
     const requestShutdown = () => void shutdown();
 
+    const reportStatus = (status: unknown) =>
+      endpoint.postMessage({ type: 'status', status } satisfies WorkerProtocol.DedicatedWorkerMessage);
+
     const handleMessage = async (ev: MessageEvent<WorkerProtocol.DedicatedWorkerMessage>) => {
       const message = ev.data;
       log('worker message received', { type: message.type });
@@ -286,7 +291,9 @@ export const run = ({
           log('worker init with config', { keys: Object.keys(message.config ?? {}) });
           try {
             runtime = await EffectEx.runPromise(
-              createRuntime({ config: message.config, requestShutdown }).pipe(Scope.provide(runtimeScope)),
+              createRuntime({ config: message.config, requestShutdown, reportStatus }).pipe(
+                Scope.provide(runtimeScope),
+              ),
             );
           } catch (err) {
             // A worker with no runtime serves nothing, so it reports why and exits instead of advertising `ready`.

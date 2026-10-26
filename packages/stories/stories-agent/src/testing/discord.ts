@@ -6,7 +6,6 @@ import type * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
-import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
 import * as AgentChannels from '@dxos/plugin-agent/AgentChannels';
 import * as AgentEmail from '@dxos/plugin-agent/AgentEmail';
@@ -15,7 +14,6 @@ import * as ModeOperation from '@dxos/plugin-agent/ModeOperation';
 import * as DiscordChannel from '@dxos/plugin-discord/DiscordChannel';
 import { Channel } from '@dxos/types';
 
-import { type EdgeEnvironment } from './story-settings.ts';
 import { seedSupportFacts, seedSupportTeam } from './support-team.ts';
 
 //
@@ -24,17 +22,6 @@ import { seedSupportFacts, seedSupportTeam } from './support-team.ts';
 //
 
 export const AGENT_NAME = 'Kai';
-
-/**
- * Each EDGE environment's Kai, one Discord app apiece (see the package README); each must match that environment's
- * `DISCORD_KAI_APPLICATION_ID` in edge's discord-service, which holds the token.
- */
-export const KAI_APPLICATION_IDS: Record<EdgeEnvironment, string> = {
-  local: '1559967387972009984',
-  dev: '1559736753990926390',
-  preview: '1559967457274372126',
-  production: '1555777706459660288',
-};
 
 /** The Discord ids the story's channel config is seeded with; empty values keep what the space already holds. */
 export type DiscordBotArgs = {
@@ -53,9 +40,6 @@ export const EMAIL_HANDLE = 'kai';
 
 /** The mode the agent works in on the community channel; each Discord thread's chat inherits its skills. */
 export const SUPPORT_MODE = 'Support';
-
-/** Placeholder secret: local EDGE substitutes `DISCORD_BOT_TOKEN_DEV`, so the space never holds the real token. */
-const PLACEHOLDER_TOKEN = 'dev';
 
 export type SetupAgentProps = {
   db: Database.Database;
@@ -98,22 +82,6 @@ const attachChannels = async (db: Database.Database, agent: Agent.Agent, channel
       });
     }
   }
-  await db.flush({ indexes: true });
-};
-
-/**
- * The space's record of the bot before any channel is bound: a Discord channel config attached to no channel,
- * naming the app and its token object. Binding a channel creates the per-server configs.
- */
-export const ensureBotRecord = async (db: Database.Database, applicationId: string): Promise<void> => {
-  const configs = await db.query(Filter.type(DiscordChannel.DiscordChannel)).run();
-  if (configs.some((config) => config.applicationId === applicationId)) {
-    return;
-  }
-  const accessToken = db.add(
-    AccessToken.make({ source: 'discord.com', account: AGENT_NAME, token: PLACEHOLDER_TOKEN }),
-  );
-  db.add(DiscordChannel.make({ accessToken: Ref.make(accessToken), applicationId, channels: [] }));
   await db.flush({ indexes: true });
 };
 
@@ -205,15 +173,12 @@ const ensureChannel = async (db: Database.Database) => {
     return existing;
   }
 
-  const accessToken = db.add(
-    AccessToken.make({ source: 'discord.com', account: AGENT_NAME, token: PLACEHOLDER_TOKEN }),
-  );
   return db.add(
     Channel.make({
       name: DISCORD_CHANNEL_NAME,
       backend: {
         kind: DiscordChannel.BACKEND_KIND,
-        config: DiscordChannel.make({ accessToken: Ref.make(accessToken), applicationId: '', channels: [] }),
+        config: DiscordChannel.make({ applicationId: '', channels: [] }),
       },
     }),
   );

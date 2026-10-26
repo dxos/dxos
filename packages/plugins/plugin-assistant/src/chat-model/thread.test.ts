@@ -257,6 +257,24 @@ describe('optimistic prompts', () => {
     expect(sent.messages[1].id).toBe(answered.messages[1].id);
   });
 
+  // The thread shows who wrote each prompt by DID, so the swap to the delivery row must keep it.
+  test("a prompt row keeps its author's DID from submit through its turn", ({ expect }) => {
+    const sender = { identityDid: 'did:halo:reader', name: 'Rich' };
+    const prompt = outboxEntry('hello', []);
+    const sent = projectThread({ feedMessages: [], outbox: [prompt], sender });
+    expect(sent.messages[0].sender).toEqual({ ...sender, role: 'user' });
+
+    const turn = Message.make({ sender: { role: 'user', identityDid: 'did:halo:reader' }, blocks: prompt.blocks });
+    const read = projectThread({ feedMessages: [turn], outbox: [prompt], sender });
+    expect(read.messages[0].sender.identityDid).toBe('did:halo:reader');
+  });
+
+  test("a waiting entry from another member keeps that member's DID", ({ expect }) => {
+    const entry = queued(Message.make({ sender: { role: 'user', identityDid: 'did:halo:alice' }, blocks: [] }));
+    const { messages } = projectThread({ feedMessages: [entry], sender: { identityDid: 'did:halo:reader' } });
+    expect(messages[0].sender.identityDid).toBe('did:halo:alice');
+  });
+
   test('a row that has not changed status is the same object, so it does not re-render', ({ expect }) => {
     const prompt = outboxEntry('hello', []);
     const first = projectThread({ feedMessages: [], outbox: [prompt] });

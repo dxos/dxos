@@ -1,0 +1,30 @@
+# The complete spec of the `soak` job in `.github/workflows/edge-nightly.yml`.
+#
+# `EdgeStress` has no defaults in code: every field below is required, and the plan decodes the spec
+# against `EdgeStressSpec` (`src/spec/edge-stress/system.ts`) before it creates anything, so a missing,
+# misspelled or out-of-range field fails the run up front.
+#
+# Run locally from `packages/e2e/blade-runner`, overriding only what a debugging run changes:
+#   node --import tsx src/main.ts edgeStress --no-browser -s configs/edge-stress-nightly.yml \
+#     [--spec '{"edge":"local","maxCommands":25}']
+
+platform: nodejs
+edge: preview
+# Five identities, one of them with a second device, so HALO replication is always in play.
+devicesPerIdentity: [2, 1, 1, 1, 1]
+# D11: the agent is the always-online member that lets a joiner in when every device is offline.
+agents: true
+maxSpaces: 5
+maxDocumentsPerSpace: 100
+# Sized so the run keeps issuing commands for at least half an hour: a healthy command costs ~3s
+# against preview, and overshooting is free because `maxRuntimeMs` stops the run early.
+maxCommands: 800
+sampleDraws: 12
+# 60 minutes. A ceiling, not the expected duration: a stall is caught by `quiescenceTimeoutMs` (or
+# the per-call budget for a hung peer) in a minute or two. The soak job's timeout sits above it.
+maxRuntimeMs: 3600000
+quiescenceTimeoutMs: 90000
+checkpoints: true
+# Off until finding 5 (a cut link crashes the peer) is fixed; see RESULTS.md.
+partitions: false
+cleanup: true

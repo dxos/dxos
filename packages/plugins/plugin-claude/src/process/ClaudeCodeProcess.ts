@@ -14,20 +14,27 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 
-import { AgentInput, type AgentProcessDefinition, makeInputMessage } from '@dxos/agent-runtime';
+import {
+  AgentInput,
+  type AgentProcessDefinition,
+  type McpEndpointOf,
+  loadMcpServers,
+  makeInputMessage,
+  mcpServerTypes,
+} from '@dxos/agent-runtime';
 import { Alarm, HarnessControl, type PendingState, SessionStore } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
+import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as ShellService from '@dxos/compute/ShellService';
 import * as StorageService from '@dxos/compute/StorageService';
 import * as Trace from '@dxos/compute/Trace';
-import { Annotation, Database, Feed } from '@dxos/echo';
-import { AccessToken } from '@dxos/link';
+import { Annotation, Database, Feed, Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
-import * as AcpAgent from '@dxos/plugin-code/AcpAgent';
 import { ContentBlock, Message } from '@dxos/types';
 
+import * as AcpAgent from '../agents/AcpAgent.ts';
 import { claudeCodeToken } from '../claude-code-token.ts';
 import { CLAUDE_CODE_OAUTH_TOKEN_ENV } from '../constants.ts';
 
@@ -43,6 +50,8 @@ export type Command = Pick<ShellService.SpawnOptions, 'command' | 'args' | 'env'
 /** How the agent runs, less how it is started: the process starts it through {@link ShellService}. */
 export type Options = Omit<AcpAgent.AgentOptions, 'connect'> & {
   command?: Command;
+  /** The MCP server a connection exposes; see `AgentProcessOptions.mcpEndpoint`. */
+  mcpEndpoint?: McpEndpointOf;
 };
 
 /**
@@ -59,9 +68,9 @@ export const make = (options: Options): AgentProcessDefinition =>
     input: AgentInput,
     output: Schema.Void,
     // Typed queries match nothing for an unregistered type: `SessionStore` reads the queue with them,
-    // and the agent's subscription token is found with one.
-    types: [Chat.Chat, Feed.Feed, Message.Message, Alarm.Alarm, AccessToken.AccessToken],
-    services: [Database.Service, ShellService.ShellService],
+    // the agent's subscription token is found with one, and the chat's MCP connections with others.
+    types: [Chat.Chat, Feed.Feed, Message.Message, Alarm.Alarm, ...mcpServerTypes],
+    services: [Database.Service, Registry.Service, Credential.CredentialsService, ShellService.ShellService],
     rpcs: HarnessControl,
   }).pipe(
     Operation.withDurableHandler((ctx) =>
@@ -148,9 +157,11 @@ export const make = (options: Options): AgentProcessDefinition =>
           }
         });
 
+        const mcpContext = yield* Effect.context<Database.Service | Registry.Service | Credential.CredentialsService>();
         const runTurn = Effect.fnUntraced(function* (prompt: readonly ContentBlock.Any[]) {
           yield* Trace.write(Trace.AgentRequestBegin, {});
-          yield* AcpAgent.runTurn(agent, { chat, feed }, { prompt: [...prompt] }).pipe(
+          const mcpServers = loadMcpServers({ feed, endpointOf: options.mcpEndpoint }).pipe(Effect.provide(mcpContext));
+          yield* AcpAgent.runTurn(agent, { chat, feed }, { prompt: [...prompt], mcpServers }).pipe(
             Effect.onExit((exit) =>
               Trace.write(Trace.AgentRequestEnd, {
                 status: Exit.isSuccess(exit) ? 'success' : Exit.hasInterrupts(exit) ? 'interrupted' : 'error',

@@ -13,6 +13,7 @@ import { Entity, Obj, Type } from '@dxos/echo';
 import { DATA_NAMESPACE, EncodedReference, PROPERTY_ID, isEncodedReference } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
+  EntityElementsId,
   EntityKind,
   type EntityMeta,
   EventId,
@@ -27,6 +28,7 @@ import {
   SelfURIId,
   assertMutable,
   assertObjectModel,
+  canonicalOf,
   containsRawStringAnnotation,
   createArrayMethodError,
   createProxy,
@@ -72,6 +74,7 @@ import {
   getTypename,
   handleStoredSchema,
   lookupRef,
+  resolveStrongDep,
   stripShadowingProperties,
 } from './echo-prototypes.ts';
 import {
@@ -394,7 +397,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
           applyRawStringFields(
             target,
             [...target[symbolPath], prop],
-            this._handleLinksAssignment(target, validatedValue),
+            this._handleLinksAssignment(target, validatedValue, holdsEntities(target, [...target[symbolPath], prop])),
           ),
         );
       }
@@ -431,7 +434,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       return handleStoredSchema(target, decoded);
     }
     if (isEncodedReference(decoded)) {
-      return lookupRef(target, decoded);
+      // A tag is a strong dependency, loaded before its holder surfaces, so it reads as the entity itself.
+      return isTagsPath(namespace, dataPath.slice(0, -1))
+        ? resolveStrongDep(target[symbolInternals], decoded)
+        : lookupRef(target, decoded);
     }
     if (Array.isArray(decoded)) {
       const targetKey = TargetKey.new(dataPath, namespace, 'array');
@@ -444,6 +450,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         defineHiddenProperty(array, symbolPath, dataPath);
         defineHiddenProperty(array, symbolNamespace, namespace);
         defineHiddenProperty(array, EventId, target[EventId]);
+        if (isTagsPath(namespace, dataPath)) {
+          defineHiddenProperty(array, EntityElementsId, true);
+        }
         return array as any as ProxyTarget;
       });
 
@@ -499,8 +508,15 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     return value;
   }
 
-  private _handleLinksAssignment(target: ProxyTarget, value: any): any {
+  /**
+   * Encodes the value for storage: `Ref`s become encoded references, and so do entities when
+   * `entities` is set — the value is (or is an element of) an array holding entities by identity.
+   */
+  private _handleLinksAssignment(target: ProxyTarget, value: any, entities = false): any {
     return deepMapValues(value, (value, recurse) => {
+      if (entities && Entity.isEntity(value)) {
+        return EncodedReference.fromURI(this.createRef(target, canonicalOf(value)));
+      }
       if (isEchoObjectField(value) || isDetachedObjectField(value)) {
         // The value is a value-object field of another object — database-backed or detached. We don't
         // want to create a reference to it or have shared mutability, we need to copy by value.
@@ -550,7 +566,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     assertMutable(target, 'push', createArrayMethodError);
     const validatedItems = this._validateForArray(target, path, items, target.length);
 
-    const encodedItems = this._encodeForArray(target, validatedItems);
+    const encodedItems = this._encodeForArray(target, path, validatedItems);
     const result = target[symbolInternals].arrayPush([getNamespace(target), ...path], encodedItems);
     return result;
   }
@@ -587,7 +603,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     assertMutable(target, 'unshift', createArrayMethodError);
     const validatedItems = this._validateForArray(target, path, items, 0);
     const fullPath = this._getPropertyMountPath(target, path);
-    const encodedItems = this._encodeForArray(target, validatedItems);
+    const encodedItems = this._encodeForArray(target, path, validatedItems);
 
     let newLength: number = -1;
     target[symbolInternals].change((doc: any) => {
@@ -605,7 +621,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const validatedItems = this._validateForArray(target, path, items, start);
 
     const fullPath = this._getPropertyMountPath(target, path);
-    const encodedItems = this._encodeForArray(target, validatedItems);
+    const encodedItems = this._encodeForArray(target, path, validatedItems);
 
     let deletedElements: any[] | undefined;
     target[symbolInternals].change((doc: any) => {
@@ -795,8 +811,8 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
   }
 
   // TODO(dmaretskyi): Change to not rely on object-core doing linking.
-  private _encodeForArray(target: ProxyTarget, items: any[] | undefined): any[] {
-    const linksEncoded = this._handleLinksAssignment(target, items);
+  private _encodeForArray(target: ProxyTarget, path: Doc.KeyPath, items: any[] | undefined): any[] {
+    const linksEncoded = this._handleLinksAssignment(target, items, holdsEntities(target, path));
     return target[symbolInternals].encode(linksEncoded);
   }
 
@@ -1235,12 +1251,21 @@ const applyRawStringFields = (
   return chain.some(hasRawStringAnnotation) ? toRawStrings(value) : rawStringsForAst(chain.at(-1) ?? schema.ast, value);
 };
 
+/** Whether the data path is `meta.tags`, the array that holds {@link Tag} entities by identity. */
+const isTagsPath = (namespace: string, dataPath: Doc.KeyPath): boolean =>
+  namespace === META_NAMESPACE && dataPath.length === 1 && dataPath[0] === 'tags';
+
+/** Whether a value written at `path` (the array itself, or one of its elements) is held by identity. */
+const holdsEntities = (target: ProxyTarget, path: Doc.KeyPath): boolean =>
+  target[symbolNamespace] === META_NAMESPACE && path[0] === 'tags' && path.length <= 2;
+
 /**
  * Encodes any `Ref`s held in meta (e.g. `meta.tags`) to encoded references before persisting, since
  * `core.setMeta` (unlike the reactive `set` trap) does not run link assignment.
  */
-const linkMetaRefs = (target: ProxyTarget, meta: EntityMeta): EntityMeta =>
-  deepMapValues(meta, (value, recurse) => {
+const linkMetaRefs = (target: ProxyTarget, meta: EntityMeta): EntityMeta => {
+  const { tags, ...rest } = meta;
+  const linked = deepMapValues(rest, (value, recurse) => {
     if (Ref.isRef(value)) {
       return refToEncodedReference(target, value);
     }
@@ -1248,7 +1273,13 @@ const linkMetaRefs = (target: ProxyTarget, meta: EntityMeta): EntityMeta =>
       return value;
     }
     return recurse(value);
-  }) as EntityMeta;
+  });
+  // Tags are held by identity; each persists as a reference, adding an unsaved tag as an endpoint would be.
+  const tagRefs = tags.map((tag) =>
+    EncodedReference.fromURI(EchoReactiveHandler.instance.createRef(target, canonicalOf(tag))),
+  );
+  return { ...linked, tags: tagRefs } as EntityMeta;
+};
 
 const refToEncodedReference = (target: ProxyTarget, ref: Ref<any>): EncodedReference => {
   const savedTarget = getRefSavedTarget(ref);

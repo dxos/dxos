@@ -15,7 +15,6 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Collection, DXN, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { EID } from '@dxos/keys';
 import { ArchivableAnnotation } from '@dxos/schema';
 
 import { rootCollectionRule } from '../capabilities/default-parent.ts';
@@ -54,12 +53,8 @@ export const decodeTypeRow = Schema.decodeUnknownSync(
   Schema.Struct({ typename: Schema.String, jsonSchema: Schema.optional(Schema.Unknown) }),
 );
 
-/**
- * Compare by entity id: a same-space ref stores a local EID (`echo:/<id>`) while `Obj.getURI`
- * returns the fully-qualified form.
- */
-export const taggedIds = (object: Obj.Any): (string | undefined)[] =>
-  Obj.getMeta(object).tags.map((ref) => EID.getEntityId(EID.parse(ref.uri)));
+/** The ids of the tags an object carries. */
+export const taggedIds = (object: Obj.Any): (string | undefined)[] => Obj.getMeta(object).tags.map((tag) => tag.id);
 
 /** The host's capability manager, carrying the default-parent rule plugin-space contributes. */
 const makeCapabilities = () => {

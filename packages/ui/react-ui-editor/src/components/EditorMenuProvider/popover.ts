@@ -22,7 +22,8 @@ const DELIMITERS = [' ', ':'];
 export type PopoverOptions = {
   trigger?: string | string[];
   triggerKey?: string;
-  placeholder?: Partial<PlaceholderOptions>;
+  /** Overrides the trigger hint shown in an empty, focused editor; `false` omits the hint. */
+  placeholder?: Partial<PlaceholderOptions> | false;
   delimiters?: string[];
 
   /**
@@ -68,6 +69,7 @@ export const popover = (options: PopoverOptions = {}): Extension => {
     popoverAnchorDecoration(options),
     modalStateField,
     options.trigger &&
+      options.placeholder !== false &&
       placeholder({
         // TODO(burdon): Translations.
         content: `Press '${Array.isArray(options.trigger) ? options.trigger[0] : options.trigger}' for commands`,

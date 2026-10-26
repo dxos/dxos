@@ -68,4 +68,53 @@ test QA-1: Create a planet and reshape it with live parameters
         NO `invoke` — nothing in the test captured the planet (the create step is human-only), so
         there is no id to pass `removeObjects`; deletion stays human-only rather than passing an
         empty `objects` list, which removes nothing.
+
+test QA-2: Populate a planet and tour its views
+  desc: |
+    Objects on the planet and the three views of it: the 3D globe, the flat map, and the camera riding an
+    object. Like QA-1 it is human-only: there is no `org.dxos.operation.terra.*` module, and the views are
+    WebGL and SVG renders.
+  actors: human
+  status: unverified        # 2026-10-16, driven end to end by autocue/tour-the-views.mjs
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-terra is enabled (off by default in every environment)
+  steps:
+    - name: Create the planet
+      do: In the navtree, click + on the space and choose Terra.
+      expect: a planet renders in the 3D view, and the simulation is playing
+    - name: Create five random objects
+      do: Click the dice button five times.
+      expect: five objects appear on the planet and move, and the telemetry panel lists five rows
+    - name: Show the rotation gizmos
+      do: Turn on the gizmo toggle beside the view tabs.
+      expect: each object shows its heading and orientation axes
+    - name: Slowly rotate and zoom in
+      do: Drag slowly across the planet while scrolling in.
+      expect: the camera orbits and closes on the globe, and the objects keep moving
+    - name: Toggle the views
+      do: Switch slowly between Map, Camera and 3D, holding each for a few seconds.
+      expect: the map draws the same terrain and objects flat; the camera rides one object; 3D shows the globe
+    - name: Back to the globe
+      do: Return to 3D and spin the globe once more.
+      expect: the globe shows with the objects where the simulation has moved them
+
+test QA-3: Showcase clip
+  desc: |
+    The 10s showcase clip: Spin a generated planet. Recorded light at 60 fps with no ident, captions or
+    count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: terra` step.
+  actors: human
+  status: unverified        # driven by autocue/showcase.mjs
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-terra enabled
+  steps:
+    - name: Create the object
+      do: Create a terra object from the + menu.
+      expect: it renders in the plank
+    - name: Orbit it
+      do: Drag slowly across it.
+      expect: the view turns or pans smoothly
 ```

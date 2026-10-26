@@ -90,9 +90,14 @@ const OTHERS: TasksCapabilities.TaskAction[] = [
   },
 ];
 
+const agentLabel = (agent: AssistantCapabilities.Agent): string =>
+  agent.variantOf !== undefined && agent.locations?.length === 1
+    ? `${agent.label} (${agent.locations[0] === 'edge' ? 'EDGE' : 'this device'})`
+    : agent.label;
+
 const assignTo = (agent: AssistantCapabilities.Agent): TasksCapabilities.TaskAction => ({
   id: `assign-to-${agent.id}`,
-  label: `Assign to ${agent.label}`,
+  label: `Assign to ${agentLabel(agent)}`,
   icon: agent.icon,
   group: ASSIGN_GROUP,
   unavailable: Atom.make((get) => {

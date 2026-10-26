@@ -5,6 +5,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ObjectCombobox from '@dxos/app-toolkit/ObjectCombobox';
 import { Entity } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { SearchList } from '@dxos/react-ui-search';
@@ -14,14 +15,15 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { getHostPlatform, isTauri } from '@dxos/util';
 
 import { SearchResultStack } from '#components';
-import { buildSearchQuery, toSearchResults, useGlobalSearch, useSearchableTypeUris } from '#hooks';
+import { toSearchResults, useGlobalSearch } from '#hooks';
 
 export const SearchArticle = ({ space }: AppSurface.SpaceArticleProps) => {
   // TODO(burdon): Cross-space search — Milestone 2 (fan-out + merge).
   const [query, setQuery] = useState<string>();
   // Scope the FTS query to user-facing types so results match what the app can render.
-  const typeUris = useSearchableTypeUris(space);
-  const objects = useQuery(space.db, buildSearchQuery(query, typeUris));
+  const typeUris = ObjectCombobox.useListedTypeUris(space.db);
+  ObjectCombobox.useDrainedSearchIndex(space.db);
+  const objects = useQuery(space.db, ObjectCombobox.searchQuery(query, typeUris));
   const { setMatch } = useGlobalSearch();
   const results = useMemo(() => (query ? toSearchResults(objects, query) : []), [objects, query]);
   const allResults = useMemo(() => results.filter(({ object }) => object && Entity.getLabel(object)), [results]);

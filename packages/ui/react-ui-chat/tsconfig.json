@@ -15,9 +15,6 @@
       "path": "../../common/async"
     },
     {
-      "path": "../../common/invariant"
-    },
-    {
       "path": "../../common/log"
     },
     {
@@ -37,6 +34,9 @@
     },
     {
       "path": "../react-ui-experimental"
+    },
+    {
+      "path": "../react-ui-list"
     },
     {
       "path": "../ui-editor"

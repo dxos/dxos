@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type SplineLink } from '../model/types.ts';
+import { type SplineLink } from '../model/index.ts';
 import { cloneShape, createNode, flipLink } from './shapes.ts';
 
 describe('shapes', () => {
@@ -28,8 +28,8 @@ describe('shapes', () => {
   });
 
   test('a cloned portal opens onto its own scene, and a note gets its type text', ({ expect }) => {
-    const portal = createNode({ type: 'frame', id: 'p', z: 'a0', center: { x: 0, y: 0 }, scene: 'scene:p' });
-    const copy = cloneShape(portal, createNode({ type: 'frame', id: 'q', z: 'a1', center: { x: 0, y: 0 } }));
+    const portal = createNode({ type: 'view', id: 'p', z: 'a0', center: { x: 0, y: 0 }, scene: 'scene:p' });
+    const copy = cloneShape(portal, createNode({ type: 'view', id: 'q', z: 'a1', center: { x: 0, y: 0 } }));
     expect(copy).toMatchObject({ id: 'q', scene: 'q' });
 
     const named = { ...createNode({ type: 'note', id: 'c', z: 'a0', center: { x: 0, y: 0 } }), text: 'Mine' };

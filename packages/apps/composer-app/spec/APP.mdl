@@ -753,6 +753,60 @@ test QA-11: Composer basics tour
     - the default space holds the commented README, "About Composer", the drawing, the table and its type, the sheet and the map
 ```
 
+```mdl
+test QA-13: Plugin showcase
+  desc: |
+    One short, wordless beat per visually distinct plugin, recorded for the Grid montage (tools/autocue/showcase
+    SHOWCASE.md): each plugin creates its object off camera, then performs one characteristic gesture. Its value is
+    that every plugin it touches still creates and renders from a fresh profile. Each plugin's beat is now its own
+    `autocue/showcase.mjs` and its own "Showcase clip" test; `tools/autocue/showcase/overnight.mjs` records them all.
+  actors: human
+  status: unverified        # driven per plugin by tools/autocue/showcase/overnight.mjs
+  given:
+    - a fresh identity whose default space is open
+    - the showcase plugins enabled (the flow enables them with org.dxos.operation.registry.enablePlugins)
+  before:
+    - name: Dismiss the privacy notice
+      do: If the "Privacy Notice" toast shows, close it.
+      expect: no privacy toast remains
+    - name: Close the companion panel
+      do: If the right-hand companion panel is open, close it.
+      expect: the main content takes the width
+  steps:
+    - name: Pan a map
+      do: Create a Map, zoom into Europe and drag across it.
+      expect: map tiles render and follow the drag
+    - name: Spin a planet, a scene and a voxel world
+      do: Create a Terra world, a Spacetime scene and a Voxel world in turn, dragging across each.
+      expect: each renders in 3D and the view orbits with the drag
+    - name: Fill a sheet
+      do: Create a sheet and type three rows of a label, a number and a formula doubling it.
+      expect: the formula cells show the doubled values
+    - name: Grow a diagram
+      do: Create a document with a mermaid block, then add edges one at a time with the cursor outside the block.
+      expect: the rendered diagram gains a node or edge with each line
+    - name: Write, present and outline
+      do: Type a short note into a document; present a document split on `---` and page through it; type an outline.
+      expect: the note formats live, the slides advance, and the outline indents
+    - name: Draw in each drawing variant
+      do: Create tldraw, Excalidraw and Canvas drawings and draw a rectangle, an ellipse and a stroke in each.
+      expect: the shapes appear in each variant
+    - name: Browse the plugin registry
+      do: Open the plugin registry and scroll through it.
+      expect: the plugin cards scroll smoothly
+    - name: Replay a chess game
+      do: Create a Chess game from the Opera Game PGN and step through it with the arrow keys.
+      expect: the board advances one move per key
+    - name: Play a handpan
+      do: Create a Handpan instrument and click around its ring of notes.
+      expect: each clicked note highlights
+    - name: Open a template project
+      do: Create a project from the Composer Plugin template and open its Tasks tab.
+      expect: the template's tasks are listed
+  then:
+    - the default space holds one object of each plugin above
+```
+
 ## Suites
 
 ```mdl
@@ -850,6 +904,24 @@ test QA-12: Two people collaborate, then one invites the other from the notifica
       expect: neither "QA:" space remains on either profile
   then:
     - no error is logged on either peer, and EDGE `/inbox` calls return 2xx throughout
+
+test QA-15: Showcase clip
+  desc: |
+    The 20s showcase clip: Walk the Bramble Coffee Roasters space: a project, its tasks, and the roastery handbook. Recorded light at 60 fps with no ident, captions or
+    count-in by `tools/autocue/showcase/overnight.mjs`; the clip is the `clip: composer` step.
+  actors: human
+  status: unverified        # driven by autocue/showcase.mjs
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-onboarding enabled
+  steps:
+    - name: Create the space from its template
+      do: Open the app menu, choose Create space, pick Bramble Coffee Roasters, and click Create.
+      expect: the space opens and its tree fills with projects, documents and mail
+    - name: Walk the space
+      do: Open the Spring Blend Launch project and its Tasks, then the Roastery Handbook, and scroll.
+      expect: the project, its tasks and the handbook each render
 ```
 
 ```mdl
@@ -895,4 +967,41 @@ suite editor: The markdown plugin's own contract, run at app level
   desc: The plugin tests already verified through the port, so the nightly run covers a plugin as well as the app.
   tags: [nightly]
   tests: [markdown:QA-1, markdown:QA-2]
+```
+
+```mdl
+test QA-14: Bramble — Kai locks the Spring Blend
+  desc: |
+    A story demo of the Bramble template: Kai Chen, head roaster, is six weeks from launching a new
+    espresso blend, and every step answers one question, whether the Spring Blend is ready. A
+    wholesale customer's feedback leads to her contact, the cupping on the calendar, the launch
+    project, the roasts, and the protocol the blend is judged by. Recorded by
+    plugin-onboarding/autocue/bramble-spring-blend.mjs.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists, on a fresh profile
+    - space: a space created from the "Bramble Coffee Roasters" template, open, with the navtree expanded
+  steps:
+    - name: The ask
+      do: In the Inbox, open "Spring blend v1 — feedback" and read its summary.
+      expect: the thread opens in the conversation view; Priya Shah of Hatch Bakery asks for a standing 20 lb a week
+    - name: Who is asking
+      do: Hover Priya's avatar on her message, then open her contact from the card.
+      expect: the card names Hatch Bakery and lists her mail and the upcoming cupping; her contact opens
+    - name: When we will know
+      do: From her contact, open "Spring Blend cupping — Hatch" under upcoming events.
+      expect: the cupping eight days out, with Kai and Priya attending
+    - name: What has to happen first
+      do: Open the Spring Blend Launch project's tasks.
+      expect: done, started and to-do tasks, and the product-page brief waiting for an agent
+    - name: The roasts
+      do: Open the Roast Log board.
+      expect: Spring Blend v2 under cupped and v3 under planned
+    - name: How it will be judged
+      do: Open "Spring blend tasting protocol".
+      expect: the protocol, with the launch task list embedded in it
+    - name: Close
+      do: Return to the Inbox and hold.
+      expect: the inbox, as the take began
 ```

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useRef, useState } from 'react';
 import { expect } from 'storybook/test';
 
-import { type WindowController } from '@dxos/react-ui-virtual';
+import { FOLLOW_WINDOW, type WindowController } from '@dxos/react-ui-virtual';
 import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
@@ -203,6 +203,7 @@ export const Tail: Story = {
       return !!last && Math.abs(last.getBoundingClientRect().bottom - scroller.getBoundingClientRect().bottom) <= 2;
     };
 
+    await new Promise((resolve) => setTimeout(resolve, FOLLOW_WINDOW + 200));
     (canvasElement.querySelector('[data-testid="bridge.bottom"]') as HTMLElement).click();
     // Arrival is by correction rounds — the jump lands on estimates and the follow finishes the
     // journey against the rendered edge — so it is polled, not sampled.

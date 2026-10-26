@@ -96,7 +96,8 @@ run, edit the script when the user steers, and read the result.
 
 Check for a committed flow first: one that has already run end to end lives in an `autocue/` folder at the
 root of the package it exercises (`packages/apps/composer-app/autocue/`, or a plugin's own), and running it
-in place beats rewriting it.
+in place beats rewriting it. [DEMOS.md](DEMOS.md) lists every committed flow and its published video; add a
+row when you commit one.
 
 **Otherwise the `.mdl` test comes first, and the script second.** A flow binds a spec; it is not one. The
 test carries the intent a reviewer checks — `given`, each step's `do:`/`expect:`, and every product fact the
@@ -144,8 +145,8 @@ first step after the setup ones it plays a countdown in the page: a closed ring 
 3-2-1 inside the ring as it unwinds. In manual mode the ring waits for a click, so the user starts their
 recorder, clicks it, and the take begins on cue. `"countdown": false` on `run` skips it, `"wait": false` plays
 it without the click, and the `countdown` op plays one on demand. It is react-ui-experimental's `Countdown`
-(story `ui/react-ui-experimental/Countdown`): its DOM half, `play-countdown.ts`, has no imports, and the overlay
-transpiles and injects that same file rather than keeping a copy, so change the look there.
+(story `ui/react-ui-experimental/Countdown`): `scripts/inject.mjs` bundles its DOM half, `play-countdown.ts`, and
+injects that same file rather than keeping a copy, so change the look there.
 
 ### Browser logs
 
@@ -420,7 +421,7 @@ C '{"op":"stop"}'          # closes the context — this is what writes the vide
 ```
 
 Ops: `goto` `cut` `click` `fill` `type` `press` `keys` `hover` `drag` `waitFor` `text` `count` `eval` `invoke`
-`caption` `clearCaption` `sleep` `screenshot` `run` `steps` `status` `abort` `stop`. In manual mode `stop` leaves the browser open, and `run` executes a flow script (see "Drive it from a flow script"). `invoke` takes `key`, `input` and an optional
+`caption` `clearCaption` `title` `speed` `sleep` `screenshot` `run` `steps` `status` `abort` `stop`. In manual mode `stop` leaves the browser open, and `run` executes a flow script (see "Drive it from a flow script"). `invoke` takes `key`, `input` and an optional
 `spaceId`, and runs the operation through `composer.invoke`. `selector` takes any Playwright selector; `text` selects
 by visible text instead. Every op answers `{ok:true,...}` or `{ok:false,error}` and never kills the
 driver.
@@ -497,14 +498,29 @@ shadow root, so neither Playwright's actionability checks nor the app's hit test
 
 ## 3. Caption every step
 
-`caption` pins a banner to the bottom of the page, so the video explains itself with no editing:
+`caption` pins a banner to the bottom of the page, so the video explains itself with no editing. The banner is the
+caption band of `tools/autocue`'s `Frame` (story `tools/autocue/Frame`), injected in overlay mode, so change its look
+there. `--caption-position top` (or `middle`) moves it off a subject that lives at the bottom of the plank, and
+`--caption-background 0.85` makes its translucent black panel (0.6 by default, blurred behind) more opaque. `--caption-colors black-on-white` (or `white-on-black`) fixes the title's and captions' colours:
 
 ```bash
 C '{"op":"caption","value":"Step 2 — Play 1. e4: drag the e2 pawn to e4","subtitle":"from plugin-chess/PLUGIN.mdl"}'
 ```
 
+`"position"` (`top`, `middle` or `bottom`) on a caption moves it, and the captions after it, off whatever the
+step shows: `--caption-position` is only where they start.
+
 When running a `.mdl` test, the caption is the step's `do:` text verbatim and the subtitle is where it
 came from. A viewer then sees the spec and the app agreeing, which is the whole point of the artifact.
+
+`title` puts the take's name on screen. By default it opens alone as a large panel centred on the page for 3s, then
+fades out as the caption fades in. `"band": true` keeps it as a translucent band over the top for the rest of the
+take, `"open": 0` skips the open title, and `"hold": 3600` waits out the open title before the next op. A `cut` clears
+the title and caption, like any caption shown before it, so issue `title` after the last `cut`:
+
+```bash
+C '{"op":"title","value":"Projects","subtitle":"Track work across spaces","hold":3600}'
+```
 
 ## 4. Trim the dead air
 
@@ -541,6 +557,11 @@ Two caps, because the hold budget should be spent where information appears: `--
 pause that begins just after a step caption went up (the one the viewer has to read), `--max-static`
 for every other pause. Uniform capping buys length without readability.
 
+Motion with no content in it, such as an agent's spinner and scrolling tool calls, is not still, so
+the cap cannot remove it. Wrap it in `await demo.speed({ factor: 10 })` … `await demo.speed({ factor: 1 })`:
+the trimmer keeps every tenth frame of that stretch, and a `⏩ 10×` badge is shown while it plays, so
+the viewer knows time was skipped.
+
 ### Tuning the motion metric
 
 Frames are compared on a strided sample of the Y plane, counting samples that changed by more than
@@ -560,22 +581,26 @@ decoder, none of `select`/`concat`/`mpdecimate` — so frames cannot be fed back
 `apt-get update && apt-get install -y ffmpeg`, or point `FFMPEG_PATH` at a real one. (In the cloud
 sandbox `apt-get update` first: the preinstalled index is stale and the install 404s without it.)
 
-### Intro and outro: `--ident`
+### Open and close: `--ident`
 
-`--ident` opens the trimmed demo with the DXOS opening title and closes it with the end card, both from
-`tools/ident` (Remotion). They are rendered into `tools/ident/out/` on first use, which needs `pnpm install`
-and the licensed Sharp Sans font in `tools/ident/public/fonts/` (without it they render in a fallback face).
-`--ident composer` opens on the Composer logo instead. `--intro <video>` / `--outro <video>` bookend with any
-other clip. Clips are letterboxed to the recording's
-frame, their audio is dropped, and chapters and captions are shifted past the intro.
+`--ident` opens the trimmed demo with the DXOS open title and closes it with the close card, both from
+`tools/autocue` (Remotion, `src/components/Ident/`). They are rendered into `tools/autocue/out/` on first use, which needs `pnpm install`
+and the licensed Sharp Sans font in `tools/autocue/public/fonts/` (without it they render in a fallback face).
+The ident is rendered in the format nearest the recording's aspect ratio (`16x10` for the default 1280×800 viewport,
+`16x9` for 1920×1080), so it fills the frame. `--theme light` renders it off-black on off-white to match a light
+recording, and `--logo-color <hue>` colours the logo and the end card's rule with a Tailwind hue (`sky`, `rose`, …),
+shaded `-500` in dark and `-600` in light; preview both in storybook `tools/autocue/Ident`. `--ident composer` opens
+on the Composer logo instead.
+`--open <video>` / `--close <video>` bookend with any other clip, letterboxed to the recording's frame. Their
+audio is dropped, and chapters and captions are shifted past the open clip.
 
 ### Voice-over: `--voiceover`
 
 `--voiceover steps` on the trimmer narrates each chapter as it starts: every on-camera flow step lands in the
 timeline, spoken as its `narration` field if it has one, else its name. `--voiceover <cues.json>` speaks
-hand-written lines instead; `--voice <name>` picks the voice. With an intro, the narration opens on "This is
-Composer … by DXOS." (a pause after "Composer") as the intro starts (`--intro-line <text>` to change it,
-`--intro-line off` to drop it). One run gives the bookended, narrated, uploaded demo:
+hand-written lines instead; `--voice <name>` picks the voice. With an open clip, the narration opens on "This is
+Composer … by DXOS." (a pause after "Composer") as the open clip starts (`--open-line <text>` to change it,
+`--open-line off` to drop it). One run gives the bookended, narrated, uploaded demo:
 
 ```bash
 node .agents/skills/autocue/scripts/trim-static.mjs --in /tmp/demo/session.webm --out demo.webm \
@@ -625,6 +650,10 @@ private voice on the DXOS HeyGen account; `--voices` lists the account's own voi
 catalog. It needs `HEYGEN_API_KEY`, from the environment or `.secrets/heygen.env` / `.secrets/heygen.txt` (in
 the worktree or the primary checkout). A cue that runs into the next one
 is reported, so shorten its text rather than letting the voices overlap.
+
+A demo whose subject is a video call casts its participants as HeyGen avatars (`heygen.mjs`) and cuts them into
+call tracks (`conversation.mjs`, `align.py`); the runbook is
+[`plugin-meeting/autocue/README.md`](../../../packages/plugins/plugin-meeting/autocue/README.md).
 
 ### For a phone: `--mp4`
 

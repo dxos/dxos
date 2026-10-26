@@ -256,6 +256,50 @@ describe('runJmapSync against a mock JMAP API', () => {
     expect(statusUpdates.some((update) => update.message === `Syncing ${mailbox.name}`)).toBe(true);
   });
 
+  // One meter for the whole chain: each run's total sizes the window it has left (`calculateTotal`), not
+  // just its own capped share, and its count is the messages it keeps.
+  test('each run of a capped sync reports a total covering the rest of the backfill', async ({ expect }) => {
+    const now = new Date();
+    const dataset = generateJmapDataset({ count: 25, seed: 31, start: subDays(now, 5), end: subDays(now, 1) });
+    const { db, connection } = await seed();
+
+    const runOnce = async () => {
+      const progress: { current?: number; total?: number }[] = [];
+      const traceLayer = Trace.testTraceService().pipe(
+        Layer.provide(
+          Layer.succeed(Trace.TraceSink, {
+            write: (message) => {
+              for (const event of Trace.flatten(message)) {
+                if (Trace.isOfType(Trace.StatusUpdate, event) && event.data.progress) {
+                  progress.push(event.data.progress);
+                }
+              }
+            },
+          }),
+        ),
+      );
+      const exit = await EffectEx.runPromise(
+        Effect.exit(runJmapSync({ connection: Ref.make(connection), now, maxMessages: 10 })).pipe(
+          Effect.provide(jmapSyncTestServices(db, dataset, { traceLayer })),
+        ),
+      );
+      const totals = progress.flatMap((update) => (update.total === undefined ? [] : [update.total]));
+      return { exit, total: Math.max(...totals), current: progress.at(-1)?.current };
+    };
+
+    const runs = [await runOnce()];
+    while (Exit.isFailure(runs.at(-1)!.exit)) {
+      runs.push(await runOnce());
+    }
+    expect(runs).toHaveLength(3);
+    // The first run sizes the whole backfill; the later ones size what is left, plus the boundary
+    // message the backward window re-includes.
+    expect(runs.map((run) => run.current)).toEqual([10, 10, 5]);
+    expect(runs[0].total).toBe(25);
+    expect(runs[1].total).toBeGreaterThanOrEqual(15);
+    expect(runs[2].total).toBeGreaterThanOrEqual(5);
+  });
+
   test('initial backward, incremental forward, and widening syncBackDays reopens backfill', async ({ expect }) => {
     const now = new Date();
     // Three disjoint date bands (distinct ids via idPrefix), oldest → newest: older, mid, recent.

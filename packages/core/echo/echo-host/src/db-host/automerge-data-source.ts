@@ -15,6 +15,7 @@ import {
   type IndexDataSource,
   type IndexerObject,
 } from '@dxos/index-core';
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { type AutomergeHost } from '../automerge/index.ts';
@@ -115,12 +116,13 @@ export class AutomergeDataSource implements IndexDataSource {
   getChangedObjects(
     ctx: Context,
     cursors: DataSourceCursor[],
-    opts?: { limit?: number; activity?: boolean; objects?: boolean },
+    opts?: { limit?: number; activity?: boolean; objects?: boolean; countCatchUp?: boolean },
   ): Effect.Effect<{
     objects: IndexerObject[];
     cursors: DataSourceCursor[];
     activity?: DocumentActivity[];
     more: boolean;
+    catchUp?: number;
   }> {
     return Effect.gen({ self: this }, function* () {
       // Build a map of documentId -> cursor for quick lookup.
@@ -137,11 +139,19 @@ export class AutomergeDataSource implements IndexDataSource {
       const changedDocuments: { documentId: DocumentId; heads: A.Heads }[] = [];
       const limit = opts?.limit ?? Infinity;
       let more = false;
+      let catchUp = opts?.countCatchUp ? 0 : undefined;
       for (const { documentId, heads } of allDocumentHeads) {
-        if (hasChanged(cursorMap.get(documentId), heads)) {
+        const cursor = cursorMap.get(documentId);
+        if (hasChanged(cursor, heads)) {
           if (changedDocuments.length >= limit) {
             more = true;
-            break;
+            if (catchUp === undefined) {
+              break;
+            }
+            if (cursor) {
+              catchUp++;
+            }
+            continue;
           }
           changedDocuments.push({ documentId, heads });
         }
@@ -155,6 +165,10 @@ export class AutomergeDataSource implements IndexDataSource {
       const extractObjects = opts?.objects !== false;
 
       for (const { documentId, heads: docHeads } of changedDocuments) {
+        const firstObject = objects.length;
+        let docSpaceId: SpaceId | null = null;
+        const markRead = (spaceId: SpaceId | null) =>
+          updatedCursors.push({ spaceId, resourceId: documentId, cursor: headsCodec.encode(docHeads) });
         try {
           using lease = yield* Effect.promise(() => this.#automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId));
           if (!lease) {
@@ -162,15 +176,16 @@ export class AutomergeDataSource implements IndexDataSource {
           }
           const doc: DatabaseDirectory = lease.doc();
 
-          // Skip outdated docs.
-          if (doc.version !== SpaceDocVersion.CURRENT) {
-            continue;
-          }
+          const spaceId = yield* Effect.promise(() =>
+            DatabaseDirectory.getSpaceId(doc).catch((err) => {
+              log.warn('document space id could not be derived', { documentId, err });
+              return null;
+            }),
+          );
+          docSpaceId = spaceId;
 
-          // Extract spaceId from document, coalescing legacy space key fields.
-          const spaceId = yield* Effect.promise(() => DatabaseDirectory.getSpaceId(doc));
-          if (!spaceId) {
-            // Skip documents without a space identifier.
+          if (doc.version !== SpaceDocVersion.CURRENT || !spaceId) {
+            markRead(spaceId);
             continue;
           }
 
@@ -192,7 +207,8 @@ export class AutomergeDataSource implements IndexDataSource {
           });
 
           const docObjects = extractObjects ? (doc.objects ?? {}) : {};
-          const atSavedHeads = !this.#branchDocumentIds.has(documentId) && isSaved(docHeads, A.getHeads(doc));
+          const readHeads = A.getHeads(doc);
+          const atSavedHeads = !this.#branchDocumentIds.has(documentId) && isSaved(docHeads, readHeads);
           for (const [objectId, structure] of Object.entries(docObjects)) {
             if (changedObjectIds && !changedObjectIds.has(objectId)) {
               continue;
@@ -210,15 +226,11 @@ export class AutomergeDataSource implements IndexDataSource {
               createdAt: typeof storedCreatedAt === 'number' ? storedCreatedAt : null,
               updatedAt,
               heads: atSavedHeads && backingJson(doc, structure, data) !== undefined ? docHeads : undefined,
+              version: readHeads,
             });
           }
 
-          // Update cursor for this document.
-          updatedCursors.push({
-            spaceId,
-            resourceId: documentId,
-            cursor: headsCodec.encode(docHeads),
-          });
+          markRead(spaceId);
           if (opts?.activity) {
             pendingActivity.set(documentId, {
               spaceId,
@@ -232,11 +244,13 @@ export class AutomergeDataSource implements IndexDataSource {
           }
         } catch (error) {
           log.error('Error loading document for indexing', { documentId, error });
+          objects.length = firstObject;
+          markRead(docSpaceId);
         }
       }
 
       if (!opts?.activity) {
-        return { objects, cursors: updatedCursors, more };
+        return { objects, cursors: updatedCursors, more, catchUp };
       }
       const activity: DocumentActivity[] = [...branchDiscards.values()];
       for (const [documentId, entry] of pendingActivity) {
@@ -246,7 +260,7 @@ export class AutomergeDataSource implements IndexDataSource {
         const isBranch = this.#branchDocumentIds.has(documentId) || this.#isBranchDocument?.(documentId);
         activity.push(isBranch ? { ...entry, full: true, changes: [] } : entry);
       }
-      return { objects, cursors: updatedCursors, activity, more };
+      return { objects, cursors: updatedCursors, activity, more, catchUp };
     });
   }
 }

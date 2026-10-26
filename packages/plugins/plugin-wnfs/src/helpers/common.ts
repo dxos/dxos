@@ -59,7 +59,7 @@ export const store = (blockstore: Blockstore): WnfsBlockStore => {
   return { getBlock, hasBlock, putBlockKeyed, putBlock };
 };
 
-export const storeName = () => 'dxos/wnfs';
+export const STORE_NAME = 'dxos/wnfs';
 
 //
 // OTHER

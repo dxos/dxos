@@ -8,43 +8,60 @@ import React from 'react';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
+import { PLACES } from '#testing';
 import { translations } from '#translations';
-import { BookingSearch } from '#types';
+import { BookingSearch, Segment } from '#types';
 
 import { OfferStack } from './OfferStack.tsx';
 
-const OFFERS: BookingSearch.FlightOffer[] = [
-  {
-    _tag: 'flight',
-    id: 'off_1',
-    provider: 'stub',
-    operator: { name: 'Duffel Airways', iataCode: 'ZZ' },
-    totalAmount: 1373.56,
-    currency: 'USD',
-    serviceClass: 'business',
-    slices: [
-      {
-        origin: { code: 'JFK', name: 'New York' },
-        destination: { code: 'CDG', name: 'Paris' },
-        number: 'ZZ100',
-        departAt: '2026-07-15T08:00:00.000Z',
-        arriveAt: '2026-07-15T20:00:00.000Z',
-      },
-    ],
-  },
-  {
-    _tag: 'flight',
-    id: 'off_2',
-    provider: 'stub',
-    operator: { name: 'Iberia', iataCode: 'IB' },
-    totalAmount: 1375.42,
-    currency: 'USD',
-    serviceClass: 'business',
-    slices: [
-      { origin: { code: 'JFK', name: 'New York' }, destination: { code: 'CDG', name: 'Paris' }, number: 'IB200' },
-    ],
-  },
+const OPERATORS: BookingSearch.FlightOffer['operator'][] = [
+  { name: 'Duffel Airways', iataCode: 'ZZ' },
+  { name: 'Iberia', iataCode: 'IB' },
+  { name: 'British Airways', iataCode: 'BA' },
+  { name: 'Air France', iataCode: 'AF' },
+  { name: 'Singapore Airlines', iataCode: 'SQ' },
+  { name: 'Koninklijke Luchtvaart Maatschappij (KLM Royal Dutch Airlines)', iataCode: 'KL' },
 ];
+
+const SERVICE_CLASSES: Segment.ServiceClass[] = ['economy', 'premium', 'business', 'first'];
+
+const AIRPORTS = [PLACES.JFK, PLACES.SFO, PLACES.LHR, PLACES.CDG, PLACES.BHX, PLACES.SIN];
+
+const OFFER_COUNT = 40;
+
+/** Deterministic offers (no randomness) so the stack is stable across loads while varying operator, route and price. */
+const makeOffers = (count: number): BookingSearch.FlightOffer[] => {
+  const baseTime = Date.parse('2026-07-15T06:00:00.000Z');
+  return Array.from({ length: count }, (_, index): BookingSearch.FlightOffer => {
+    const operator = OPERATORS[index % OPERATORS.length];
+    const origin = AIRPORTS[index % AIRPORTS.length];
+    const destination = AIRPORTS[(index * 5 + 1) % AIRPORTS.length];
+    const departMs = baseTime + ((index * 7) % 48) * 60 * 60 * 1000;
+    const durationHours = 2 + ((index * 3) % 14);
+    // Every fifth offer omits times, matching providers that only return the route.
+    const timed = index % 5 !== 4;
+    return {
+      _tag: 'flight',
+      id: `off_${index + 1}`,
+      provider: 'stub',
+      operator,
+      totalAmount: Math.round((420 + ((index * 137) % 2400) + index * 0.37) * 100) / 100,
+      currency: index % 4 === 3 ? 'EUR' : 'USD',
+      serviceClass: SERVICE_CLASSES[index % SERVICE_CLASSES.length],
+      slices: [
+        {
+          origin: { code: origin.code ?? '', name: origin.city },
+          destination: { code: destination.code ?? '', name: destination.city },
+          number: `${operator.iataCode}${100 + index * 11}`,
+          departAt: timed ? new Date(departMs).toISOString() : undefined,
+          arriveAt: timed ? new Date(departMs + durationHours * 60 * 60 * 1000).toISOString() : undefined,
+        },
+      ],
+    };
+  });
+};
+
+const OFFERS = makeOffers(OFFER_COUNT);
 
 const DefaultStory = () => (
   <Dnd.Root>

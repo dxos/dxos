@@ -34,7 +34,8 @@ export const spaceIdWithDefault = (spaceId: Option.Option<Key.SpaceId>) =>
   Effect.gen(function* () {
     const client = yield* ClientService;
     return Option.getOrElse(spaceId, () => {
-      const defaultSpace = AppSpace.getDefaultSpace(client);
+      // As `spaceLayer` resolves it, so a profile made outside Composer, which designates no default, still works.
+      const defaultSpace = AppSpace.getDefaultSpace(client) ?? client.spaces.get().find(AppSpace.isVisibleSpace);
       if (!defaultSpace) {
         throw new Error('No space ID provided and no default space found.');
       }
