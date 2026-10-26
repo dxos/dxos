@@ -403,9 +403,9 @@ export const useWindow = ({
   const state = `${visible.first}:${visible.last}:${first}:${last}:${count}`;
   if (onChange && announced.current !== state) {
     announced.current = state;
-    // In render rather than an effect, so a readout never lags the frame it describes by one.
-    const scroller = scrollerRef.current;
-    const viewport = (axis === 'block' ? scroller?.clientHeight : scroller?.clientWidth) ?? 0;
+    // In render rather than an effect, so a readout never lags the frame it describes by one. The viewport comes
+    // from the ResizeObserver's last reading: a DOM read here would force a layout mid-commit.
+    const viewport = placement.viewport;
     const extent = windowExtentOf(placement, first, last);
     queueMicrotask(() =>
       onChange({
