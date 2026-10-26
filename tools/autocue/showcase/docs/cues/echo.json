@@ -1,22 +1,52 @@
 [
   {
     "at": 0.5,
+    "title": "The Silo Problem",
+    "lines": [
+      "SaaS has siloed our data for decades.",
+      "This was a consequence of cloud software economics.",
+      "But today apps are easier to build, and agents need all of our data to be useful.",
+      "That demands a new data and security model."
+    ],
     "text": "SaaS has siloed our data for decades. This was a consequence of cloud software economics. But today apps are easier to build, and agents need all of our data to be useful. That demands a new data and security model."
   },
   {
     "at": 10.5,
+    "title": "Monolithic Agents",
+    "lines": [
+      "Today we grant agents coarse-grained access to everything, with no audit and limited control.",
+      "This approach is risky, and it simply doesn't work for agents that run continuously with evolving requirements."
+    ],
     "text": "Today we grant agents coarse-grained access to everything, with no audit and limited control. This approach is risky, and it simply doesn't work for agents that run continuously with evolving requirements."
   },
   {
     "at": 20.5,
-    "text": "The ECHO Database takes a fundamentally different approach. Enterprise, team and personal data live in a unified virtual semantic graph. Composer brings it all together in one super app, replacing dozens of separate SaaS tools."
+    "title": "ECHO Graph Database",
+    "lines": [
+      "The ECHO Database takes a fundamentally different approach.",
+      "Enterprise, team, and personal data connect into a unified virtual semantic graph.",
+      "Composer brings it all together in one super app, replacing dozens of separate SaaS tools."
+    ],
+    "text": "The ECHO Database takes a fundamentally different approach. Enterprise, team, and personal data connect into a unified virtual semantic graph. Composer brings it all together in one super app, replacing dozens of separate SaaS tools."
   },
   {
     "at": 30.5,
+    "title": "ECHO Hypergraph",
+    "lines": [
+      "The graph is partitioned into interconnected workspaces;",
+      "enabling teams and agents to work within a secure shared context.",
+      "Workspaces adapt to the work, drawing in data from different sources as the projects and tasks evolve."
+    ],
     "text": "The graph is partitioned into interconnected workspaces; enabling teams and agents to work within a secure shared context. Workspaces adapt to the work, drawing in data from different sources as the projects and tasks evolve."
   },
   {
     "at": 40.5,
+    "title": "Open and Extensible",
+    "lines": [
+      "Open by design, it lets teams and third parties extend it -- building with their own apps, plugins and agents.",
+      "And the entire stack runs on Cloudflare Workers, so they are secure, cost-effective, and scale on demand.",
+      "DXOS is the operating system for the new enterprise."
+    ],
     "text": "Open by design, it lets teams and third parties extend it -- building with their own apps, plugins and agents. And the entire stack runs on Cloudflare Workers, so they are secure, cost-effective, and scale on demand. DXOS is the operating system for the new enterprise."
   }
 ]

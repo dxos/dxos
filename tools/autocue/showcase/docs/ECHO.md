@@ -60,34 +60,31 @@ claim that needs checking against the code before it is spoken.
 
 ## Script
 
-The spoken lines, one bullet per sentence; [`cues/echo.json`](cues/echo.json) is built from this section (its times are in
-the 60s source render, 3s earlier than in `ECHO.m4v`). About 25 words fits a 10s slide.
+The spoken lines, one bullet per line read; each slide starts at its time in the 60s source render (3s earlier than in
+`ECHO.m4v`). `cues.mjs` builds [`cues/echo.json`](cues/echo.json) and the prompter's cues from this section. About
+25 words fits a 10s slide.
 
-1. **The Silo Problem**
-
+1. **The Silo Problem** (at 0.5s)
    - SaaS has siloed our data for decades.
    - This was a consequence of cloud software economics.
    - But today apps are easier to build, and agents need all of our data to be useful.
    - That demands a new data and security model.
 
-2. **Monolithic Agents**
-
+2. **Monolithic Agents** (at 10.5s)
    - Today we grant agents coarse-grained access to everything, with no audit and limited control.
    - This approach is risky, and it simply doesn't work for agents that run continuously with evolving requirements.
 
-3. **ECHO Graph Database**
-
+3. **ECHO Graph Database** (at 20.5s)
    - The ECHO Database takes a fundamentally different approach.
-   - Enterprise, team and personal data live in a unified virtual semantic graph.
+   - Enterprise, team, and personal data connect into a unified virtual semantic graph.
    - Composer brings it all together in one super app, replacing dozens of separate SaaS tools.
 
-4. **ECHO Hypergraph**
-
-   - The graph is partitioned into interconnected workspaces; enabling teams and agents to work within a secure shared context.
+4. **ECHO Hypergraph** (at 30.5s)
+   - The graph is partitioned into interconnected workspaces;
+   - enabling teams and agents to work within a secure shared context.
    - Workspaces adapt to the work, drawing in data from different sources as the projects and tasks evolve.
 
-5. **Open and Extensible**
-
+5. **Open and Extensible** (at 40.5s)
    - Open by design, it lets teams and third parties extend it -- building with their own apps, plugins and agents.
    - And the entire stack runs on Cloudflare Workers, so they are secure, cost-effective, and scale on demand.
    - DXOS is the operating system for the new enterprise.
