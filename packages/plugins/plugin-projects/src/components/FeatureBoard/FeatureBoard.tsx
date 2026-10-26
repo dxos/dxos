@@ -83,8 +83,9 @@ export const FeatureBoardFilter = ({ features, value, onValueChange }: FeatureBo
         {STATUSES.map((status) => {
           const count = features.filter((feature) => feature.status === status).length;
           const pressed = value.statuses.has(status);
+          // A pressed status stays shown at zero, or its filter would hide the cards with no toggle left to clear it.
           return (
-            count > 0 && (
+            (count > 0 || pressed) && (
               // Neutral until pressed, then the status's own tag colour, as the cards show it.
               <Tag.Tag
                 key={status}
