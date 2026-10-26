@@ -23,6 +23,7 @@ import { CodeGraph } from '#types';
 import { SAMPLE_GRAPH } from '../testing.ts';
 import * as CodeIndexMiddleware from '../vite-plugin/CodeIndexMiddleware.ts';
 import * as Command from './Command.ts';
+import * as Grounding from './Grounding.ts';
 
 //
 // Headless end-to-end runs of the command loop: the real index of this repository (through the same dev-server
@@ -85,7 +86,11 @@ describe.runIf(process.env.DX_ANTHROPIC_API_KEY || PRESET === 'edge-remote')(
       await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
       const address = server.address();
       baseUrl = typeof address === 'object' && address ? `http://127.0.0.1:${address.port}` : '';
-    });
+      // As the article does on mount: the first query starts the index process and loads the package catalog.
+      await EffectEx.runPromise(
+        Grounding.packages.pipe(Effect.provide(Layer.succeed(CodeIndexClient.BaseUrl, baseUrl))),
+      );
+    }, 60_000);
 
     afterAll(() => {
       middleware?.close();
@@ -151,6 +156,37 @@ describe.runIf(process.env.DX_ANTHROPIC_API_KEY || PRESET === 'edge-remote')(
       await run(graph, 'add the packages plugin-markdown depends on');
       expect(graph.nodes[0].id).toBe(SAMPLE_GRAPH.nodes[0].id);
       expect(graph.edges.filter(({ from }) => from === SAMPLE_GRAPH.nodes[0].id).length).toBeGreaterThan(3);
+    });
+
+    test('which plugins use a package', async ({ expect }) => {
+      const graph = CodeGraph.make();
+      const { elapsedMs } = await run(graph, 'which plugins use @dxos/plugin-space');
+      const target = `${Iri.PACKAGE}@dxos/plugin-space`;
+      const users = graph.edges.filter(({ to }) => to === target).map(({ from }) => from);
+      expect(users.length).toBeGreaterThanOrEqual(5);
+      expect(users.every((iri) => iri.startsWith(`${Iri.PACKAGE}@dxos/plugin-`))).toBe(true);
+      expect(elapsedMs).toBeLessThan(LATENCY_MS);
+    });
+
+    test('what a symbol depends on', async ({ expect }) => {
+      const graph = CodeGraph.make();
+      const { elapsedMs } = await run(graph, 'show what Obj.update depends on');
+      const source = `${Iri.FILE}packages/core/echo/echo/src/Obj.ts#update`;
+      expect(graph.edges.filter(({ from }) => from === source).length).toBeGreaterThan(0);
+      expect(elapsedMs).toBeLessThan(LATENCY_MS);
+    });
+
+    test("a package's files and their imports", async ({ expect }) => {
+      const graph = CodeGraph.make();
+      const { elapsedMs } = await run(graph, 'show the files in @dxos/log and how they import each other');
+      const files = graph.nodes.filter(({ kind }) => kind === 'file');
+      expect(files.length).toBeGreaterThanOrEqual(3);
+      expect(files.every(({ id }) => id.startsWith(`${Iri.FILE}packages/common/log/`))).toBe(true);
+      const fileIds = new Set(files.map(({ id }) => id));
+      expect(graph.edges.filter(({ from, to }) => fileIds.has(from) && fileIds.has(to)).length).toBeGreaterThanOrEqual(
+        3,
+      );
+      expect(elapsedMs).toBeLessThan(LATENCY_MS);
     });
   },
 );
