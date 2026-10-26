@@ -122,24 +122,24 @@ assume the demo opens on a 4.5s title; the sections add up to 130s against the c
 stretches to the voice as for ECHO. Lines marked _(verify)_ make a claim to check against the cut.
 
 1. **Documents** (at 4.5s, 45s)
-   - This is Composer: one open, extensible super app for teams and their agents.
-   - Here, a team is working on a design document.
-   - I can edit it, and mention a colleague in a comment.
-   - And I can just as easily give a task to an agent, which reads the document and adds a diagram.
-   - The drawing opens right here, and I can edit it in place.
-   - Then I insert a spreadsheet into the document, and open it to see its chart.
-   - Documents, drawings and sheets are all objects in the same graph.
+   - This is Composer: one open, extensible super-app for teams and their agents.
+   - Your data is organized into collaborative workspaces and accessed via plugins.
+   - You can add comments to any document, while the app manages the interactions between your team.
+   - I can give a task to an agent, which reads and updates the data in real time.
+   - Documents can include components from any plugin.
+   - I can easily insert a spreadsheet, and open it to create or view a chart.
+   - Documents, drawings, sheets, and kanbans are all objects in the same graph.
 
 2. **Agents** (at 49.5s, 15s)
-   - We also use Composer as a harness for frontier and open models.
-   - In fact, Composer's own development, its plans, tasks and agents, is managed from inside the app.
+   - At DXOS we use Composer as a coding harness for frontier and open models.
+   - In fact, Composer's own development, including its plans, tasks and agents -- are all managed from inside the app.
 
 3. **Email, calendar, meetings and CRM** (at 64.5s, 60s)
    - We run the rest of the business in it too.
    - Email arrives in the same graph, so every message is linked to the people and organizations behind it.
    - From a message, I can open the sender, their company, and everyone we work with there.
-   - The calendar holds our meetings; this sales review links straight to its notes and the deal pipeline.
-   - Meetings are captured, and agents turn them into notes and follow-ups. _(verify)_
+   - The calendar holds our meetings; with automated summaries including links to generated artifacts.
+   - Meetings are captured, and agents turn them into notes and follow-ups.
    - And the CRM is simply another view of the same data, for people and agents alike.
 
 4. **Open and extensible** (at 124.5s, 10s)

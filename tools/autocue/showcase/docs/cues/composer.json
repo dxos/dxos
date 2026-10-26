@@ -1,42 +1,47 @@
 [
   {
     "at": 4.5,
-    "text": "This is Composer, an app built on DXOS. A team is working on its architecture guide, in a space they share."
-  },
-  {
-    "at": 14.5,
-    "text": "They comment and mention colleagues, and ask an agent for a diagram the same way, right in the document."
-  },
-  {
-    "at": 25.5,
-    "text": "Documents, diagrams and sheets are all objects in one graph. A link opens the architecture canvas, and the performance sheet charts its own data."
+    "title": "Documents",
+    "lines": [
+      "This is Composer: one open, extensible super-app for teams and their agents.",
+      "Your data is organized into collaborative workspaces and accessed via plugins.",
+      "You can add comments to any document, while the app manages the interactions between your team.",
+      "I can give a task to an agent, which reads and updates the data in real time.",
+      "Documents can include components from any plugin.",
+      "I can easily insert a spreadsheet, and open it to create or view a chart.",
+      "Documents, drawings, sheets, and kanbans are all objects in the same graph."
+    ],
+    "text": "This is Composer: one open, extensible super-app for teams and their agents. Your data is organized into collaborative workspaces and accessed via plugins. You can add comments to any document, while the app manages the interactions between your team. I can give a task to an agent, which reads and updates the data in real time. Documents can include components from any plugin. I can easily insert a spreadsheet, and open it to create or view a chart. Documents, drawings, sheets, and kanbans are all objects in the same graph."
   },
   {
     "at": 46.5,
-    "text": "Projects turn work into tasks. Pick the ones you want, and hand them to an agent."
-  },
-  {
-    "at": 56.5,
-    "text": "The agent works through them in the background, and its progress shows up in the project, beside the team's."
+    "title": "Agents",
+    "lines": [
+      "At DXOS we use Composer as a coding harness for frontier and open models.",
+      "In fact, Composer's own development, including its plans, tasks and agents -- are all managed from inside the app."
+    ],
+    "text": "At DXOS we use Composer as a coding harness for frontier and open models. In fact, Composer's own development, including its plans, tasks and agents -- are all managed from inside the app."
   },
   {
     "at": 70.5,
-    "text": "The inbox brings mail into the same graph. Messages, people and organizations are linked objects, not rows in someone else's CRM."
-  },
-  {
-    "at": 82.5,
-    "text": "From a message, you reach the sender, their company, and everyone you work with there."
-  },
-  {
-    "at": 92.5,
-    "text": "The calendar holds the sales review, and its notes link straight to the deal pipeline."
-  },
-  {
-    "at": 101.5,
-    "text": "Every view works on the same data, for people and agents alike."
+    "title": "Email, calendar, meetings and CRM",
+    "lines": [
+      "We run the rest of the business in it too.",
+      "Email arrives in the same graph, so every message is linked to the people and organizations behind it.",
+      "From a message, I can open the sender, their company, and everyone we work with there.",
+      "The calendar holds our meetings; with automated summaries including links to generated artifacts.",
+      "Meetings are captured, and agents turn them into notes and follow-ups.",
+      "And the CRM is simply another view of the same data, for people and agents alike."
+    ],
+    "text": "We run the rest of the business in it too. Email arrives in the same graph, so every message is linked to the people and organizations behind it. From a message, I can open the sender, their company, and everyone we work with there. The calendar holds our meetings; with automated summaries including links to generated artifacts. Meetings are captured, and agents turn them into notes and follow-ups. And the CRM is simply another view of the same data, for people and agents alike."
   },
   {
     "at": 110.5,
-    "text": "Documents, sheets, maps, games, 3D scenes and meetings. Every plugin is built on the same graph, and you can build your own."
+    "title": "Open and extensible",
+    "lines": [
+      "The entire platform is open and extensible.",
+      "It's built from over a hundred plugins that contribute interfaces, agent skills, and connectors to other systems."
+    ],
+    "text": "The entire platform is open and extensible. It's built from over a hundred plugins that contribute interfaces, agent skills, and connectors to other systems."
   }
 ]
