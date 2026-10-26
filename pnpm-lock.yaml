@@ -15455,9 +15455,6 @@ importers:
       hast-util-to-jsx-runtime:
         specifier: 'catalog:'
         version: 2.3.6
-      react-resize-detector:
-        specifier: 'catalog:'
-        version: 11.0.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       remark-frontmatter:
         specifier: 'catalog:'
         version: 5.0.0

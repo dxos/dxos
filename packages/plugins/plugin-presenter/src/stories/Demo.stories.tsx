@@ -46,7 +46,8 @@ export const Demo: Story = {
 
     await canvas.findByTestId('presenter.slide-grid.9', undefined, { timeout: 10_000 });
     await waitFor(() => expect(canvas.getByTestId('presenter.deck')).toHaveFocus());
-    // The article shows every slide as a thumbnail, so each one is checked alone by presenting.
+    // The article shows every slide as a thumbnail, so each one is checked alone by presenting; fullscreen fades in once
+    // its size settles, so visibility is awaited.
     await userEvent.keyboard('f');
     await expect(await canvas.findByTestId('presenter.overlay')).toBeInTheDocument();
     await expect(await canvas.findByText('1 / 10')).toBeInTheDocument();
@@ -57,12 +58,14 @@ export const Demo: Story = {
     await waitFor(() => expect(canvasElement.querySelector('pre code')).not.toBeNull());
 
     await next(6);
-    await expect(await canvas.findByRole('heading', { name: 'Columns' })).toBeVisible();
+    const columns = await canvas.findByRole('heading', { name: 'Columns' });
+    await waitFor(() => expect(columns).toBeVisible());
     await waitFor(() => expect(canvasElement.querySelector('[data-layout="image-right"] [data-image]')).not.toBeNull());
     await waitFor(() => expect(canvasElement.querySelector(DATA_URI_IMAGE)).not.toBeNull());
 
     await next(7);
-    await expect(await canvas.findByRole('heading', { name: 'Rows' })).toBeVisible();
+    const rows = await canvas.findByRole('heading', { name: 'Rows' });
+    await waitFor(() => expect(rows).toBeVisible());
     await waitFor(() => expect(canvasElement.querySelector('[data-layout="image"]')).not.toBeNull());
     await waitFor(() => expect(canvasElement.querySelector(DATA_URI_IMAGE)).not.toBeNull());
 
