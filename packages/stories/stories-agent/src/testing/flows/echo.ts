@@ -29,11 +29,10 @@ import * as SheetUtil from '@dxos/plugin-sheet/SheetUtil';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { Message } from '@dxos/types';
 
-import { type ActorFlow, type ActorSpec, type ActorStep } from '../actors/index.ts';
+import { type Actor, type ActorFlow, type ActorSpec, type ActorStep } from '../actors/index.ts';
 
 const DOCUMENT = 'ECHO design';
 const SHEET = 'ECHO benchmarks';
-const ROADMAP_CHAT = 'Roadmap ideas';
 const WORDING_CHAT = 'Security wording';
 
 /** The diagrams the canvas builders draw, by the drawing name the template gives each. */
@@ -153,73 +152,73 @@ const seed: ActorFlow<EchoTarget>['seed'] = async ({ space }) => {
     }
   });
 
-  for (const name of [ROADMAP_CHAT, WORDING_CHAT]) {
-    space.db.add(Chat.make({ name, feed: Ref.make(space.db.add(Feed.make())) }));
-  }
+  space.db.add(Chat.make({ name: WORDING_CHAT, feed: Ref.make(space.db.add(Feed.make())) }));
   await space.db.flush({ indexes: true });
   return { blocks, records, cells };
 };
 
-/** Chapter writers: who writes each chapter and when they start, a few seconds apart. */
-const WRITERS: { chapter: number; actor: number; start: number }[] = [
-  { chapter: 1, actor: 0, start: 1_000 },
-  { chapter: 2, actor: 1, start: 4_000 },
-  { chapter: 3, actor: 3, start: 9_000 },
-  { chapter: 4, actor: 4, start: 2_500 },
-  { chapter: 5, actor: 6, start: 12_000 },
-  { chapter: 6, actor: 8, start: 6_000 },
-  { chapter: 7, actor: 9, start: 500 },
-  { chapter: 8, actor: 11, start: 20_000 },
+/** Chapter writers: four people, two chapters each, starting a few seconds apart. */
+const WRITERS: { chapters: [number, number]; actor: number; start: number }[] = [
+  { chapters: [1, 5], actor: 0, start: 1_000 },
+  { chapters: [2, 6], actor: 1, start: 4_000 },
+  { chapters: [3, 7], actor: 3, start: 2_500 },
+  { chapters: [4, 8], actor: 4, start: 6_000 },
 ];
 
-const WRITER_CPS = 30;
+const WRITER_CPS = 40;
 
 /** Deterministic pause after each chunk of a block: one to three seconds, varying by chapter and chunk. */
 const chunkPause = (chapter: number, chunk: number) => 1_000 + ((chapter * 7 + chunk * 13) % 10) * 200;
 
+/** Types chapter `chapter`'s text blocks, each after the block before it in the finished document. */
+const writeChapter = async (actor: Actor, blocks: Block[], chapter: number) => {
+  const heading = blocks.find((block) => block.kind === 'heading' && block.chapter === chapter);
+  invariant(heading, `no chapter ${chapter}`);
+  await actor.pin(heading.text);
+  for (const [position, block] of blocks.entries()) {
+    if (block.kind !== 'text' || block.chapter !== chapter) {
+      continue;
+    }
+    const previous = blocks[position - 1];
+    await actor.moveTo({ after: previous.chapter === 6 ? draft(previous.text) : previous.text });
+    const text = chapter === 6 ? draft(block.text) : block.text;
+    // A pause after each sentence and list item, so writers stop and start at their own times.
+    const chunks = `\n\n${text}`.split(/(?<=[.:] )|(?<=\n)(?!\n)/);
+    for (const [chunk, part] of chunks.entries()) {
+      await actor.type(part, { cps: WRITER_CPS });
+      await actor.pause(chunkPause(chapter, chunk));
+    }
+  }
+};
+
 const writing = (): ActorStep<EchoTarget>[] =>
-  WRITERS.map(({ chapter, actor: index, start }) => ({
+  WRITERS.map(({ chapters, actor: index, start }) => ({
     actor: index,
-    name: `Chapter ${chapter}`,
+    name: `Chapters ${chapters.join(' and ')}`,
     run: async ({ actor, target }) => {
-      const { blocks } = target;
-      const heading = blocks.find((block) => block.kind === 'heading' && block.chapter === chapter);
-      invariant(heading, `no chapter ${chapter}`);
       await actor.pause(start);
-      await actor.pin(heading.text);
-      for (const [position, block] of blocks.entries()) {
-        if (block.kind !== 'text' || block.chapter !== chapter) {
-          continue;
-        }
-        // Each block goes after the one before it in the finished document, as typed so far.
-        const previous = blocks[position - 1];
-        await actor.moveTo({ after: previous.chapter === 6 ? draft(previous.text) : previous.text });
-        const text = chapter === 6 ? draft(block.text) : block.text;
-        // A pause after each sentence and list item, so writers stop and start at their own times.
-        const chunks = `\n\n${text}`.split(/(?<=[.:] )|(?<=\n)(?!\n)/);
-        for (const [chunk, part] of chunks.entries()) {
-          await actor.type(part, { cps: WRITER_CPS });
-          await actor.pause(chunkPause(chapter, chunk));
-        }
+      for (const chapter of chapters) {
+        await writeChapter(actor, target.blocks, chapter);
       }
     },
   }));
 
-/** Canvas builders: each adds its diagram's boxes, then its arrows. */
-const BUILDERS: { actor: number; drawing: string; start: number }[] = [
-  { actor: 2, drawing: DIAGRAMS['echo-model'], start: 3_000 },
-  { actor: 5, drawing: DIAGRAMS['echo-sync'], start: 7_000 },
-  { actor: 7, drawing: DIAGRAMS['echo-query'], start: 11_000 },
+/** Canvas builders: each adds its diagrams' boxes, then their arrows, one diagram after another. */
+const BUILDERS: { actor: number; drawings: string[]; start: number }[] = [
+  { actor: 2, drawings: [DIAGRAMS['echo-model'], DIAGRAMS['echo-query']], start: 3_000 },
+  { actor: 5, drawings: [DIAGRAMS['echo-sync']], start: 7_000 },
 ];
 
 const building = (): ActorStep<EchoTarget>[] =>
-  BUILDERS.map(({ actor: index, drawing, start }) => ({
+  BUILDERS.map(({ actor: index, drawings, start }) => ({
     actor: index,
-    name: drawing,
+    name: drawings.join(', '),
     run: async ({ actor, target }) => {
       await actor.pause(start);
-      for (const [key, record] of target.records[drawing] ?? []) {
-        await actor.addRecord(drawing, key, record, key.startsWith('node:') ? 1_400 : 900);
+      for (const drawing of drawings) {
+        for (const [key, record] of target.records[drawing] ?? []) {
+          await actor.addRecord(drawing, key, record, key.startsWith('node:') ? 1_200 : 800);
+        }
       }
     },
   }));
@@ -227,20 +226,19 @@ const building = (): ActorStep<EchoTarget>[] =>
 /** The cold full-text row, which misses its target: columns A to D of row 9 (zero-based row 8). */
 const COLD_ROW = '0,8,3,8';
 
+/** Kai fills the benchmarks, then flags the row that misses its target. */
 const filling: ActorStep<EchoTarget> = {
-  actor: 10,
+  actor: 6,
   name: 'Benchmarks',
   run: async ({ actor, target }) => {
     await actor.pause(10_000);
     for (const [address, value] of target.cells) {
       await actor.setCell(SHEET, address, value, address.startsWith('D') ? 1_100 : 350);
     }
+    await actor.pause(2_000);
+    await actor.commentOn(SHEET, 'Cold full-text misses its target by 280 ms.', COLD_ROW);
   },
 };
-
-const ROADMAP_REPLY =
-  'Four themes stand out. Partial replication, so large spaces open on phones. A schema registry for shared, ' +
-  'versioned types. Fine-grained permissions on the same credential chain. And query federation across spaces.';
 
 const WORDING_REPLY =
   'Two edits tighten chapter 6. Say membership "is a chain of signed credentials rooted in the identity that ' +
@@ -248,31 +246,22 @@ const WORDING_REPLY =
 
 /** Each assistant user's scripted replies, in turn. */
 const SCRIPTS: Record<string, string[]> = {
-  Omar: [ROADMAP_REPLY],
   Pia: [WORDING_REPLY],
 };
 
+/** Dev reviews once the chapters they comment on are written; the writers of those chapters answer. */
 const reviewing = (): ActorStep<EchoTarget>[] => [
   {
-    actor: 12,
+    actor: 3,
     name: 'Review',
     run: async ({ actor }) => {
-      await actor.pause(26_000);
-      await actor.waitFor('make the graph lazy');
+      await actor.waitFor('make the graph lazy', { timeout: 240_000 });
       await actor.comment('lazy', 'Does a ref subscribe to its target as soon as it resolves?');
-      await actor.pause(4_000);
-      await actor.waitFor('Subduction service');
+      await actor.pause(3_000);
+      await actor.waitFor('Subduction service', { timeout: 240_000 });
       await actor.comment('Subduction service', 'Is this the same Subduction the EDGE diagrams show?');
-      await actor.pause(4_000);
+      await actor.pause(3_000);
       await actor.commentOn(DIAGRAMS['echo-sync'], 'Show which side of the swarm EDGE sits on.');
-    },
-  },
-  {
-    actor: 13,
-    name: 'Benchmarks review',
-    run: async ({ actor }) => {
-      await actor.pause(30_000);
-      await actor.commentOn(SHEET, 'Cold full-text misses its target by 280 ms.', COLD_ROW);
     },
   },
   {
@@ -292,7 +281,7 @@ const reviewing = (): ActorStep<EchoTarget>[] => [
     },
   },
   {
-    actor: 9,
+    actor: 0,
     name: 'Answer',
     run: async ({ actor }) => {
       await actor.pause(2_000);
@@ -303,20 +292,12 @@ const reviewing = (): ActorStep<EchoTarget>[] => [
 
 const assisting = (): ActorStep<EchoTarget>[] => [
   {
-    actor: 14,
-    name: 'Roadmap ideas',
-    run: async ({ actor }) => {
-      await actor.pause(8_000);
-      await actor.ask('What should the ECHO roadmap cover next?', 'query federation across spaces');
-    },
-  },
-  {
-    actor: 15,
+    actor: 7,
     name: 'Security wording',
     run: async ({ actor }) => {
       await actor.pause(14_000);
       await actor.ask('Tighten the wording of chapter 6 of the ECHO design.', 'gets nothing');
-      // The assistant's edits land in the document once Iris has written both drafts.
+      // The assistant's edits land in the document once Ben has written both drafts.
       for (const [finished, first] of Object.entries(DRAFTS)) {
         await actor.pause(2_000);
         await waitForText(actor, first);
@@ -327,7 +308,7 @@ const assisting = (): ActorStep<EchoTarget>[] => [
 ];
 
 /** Waits until the document, as the actor's client holds it, contains `text`. */
-const waitForText = async (actor: Parameters<ActorStep<EchoTarget>['run']>[0]['actor'], text: string) => {
+const waitForText = async (actor: Actor, text: string) => {
   const document = actor.binding.object(DOCUMENT);
   invariant(Obj.instanceOf(Markdown.Document, document), 'no design document');
   const content = await document.content.load();
@@ -344,25 +325,17 @@ const ACTORS: ActorSpec[] = [
   { name: 'Ada', hue: 'blue' },
   { name: 'Ben', hue: 'amber' },
   { name: 'Cleo', hue: 'emerald', subject: DIAGRAMS['echo-model'] },
-  { name: 'Dev', hue: 'rose' },
+  { name: 'Dev', hue: 'rose', companions: ['comments'] },
   { name: 'Eve', hue: 'violet' },
   { name: 'Finn', hue: 'orange', subject: DIAGRAMS['echo-sync'] },
-  { name: 'Gia', hue: 'teal' },
-  { name: 'Hugo', hue: 'indigo', subject: DIAGRAMS['echo-query'] },
-  { name: 'Iris', hue: 'pink' },
-  { name: 'Jon', hue: 'lime' },
-  { name: 'Kai', hue: 'cyan', subject: SHEET },
-  { name: 'Lena', hue: 'red' },
-  { name: 'Milo', hue: 'purple', companions: ['comments'] },
-  { name: 'Nia', hue: 'sky', subject: SHEET, companions: ['comments'] },
-  { name: 'Omar', hue: 'yellow', subject: ROADMAP_CHAT },
+  { name: 'Kai', hue: 'cyan', subject: SHEET, companions: ['comments'] },
   { name: 'Pia', hue: 'fuchsia', subject: WORDING_CHAT },
 ];
 
 /**
- * Sixteen people build the ECHO design document of the DXOS Architecture template from its outline: eight writers
- * (one chapter each), three canvas builders, one sheet filler, two reviewers whose threads the writers answer, and
- * two assistant users, one of whom applies the assistant's edits. Plan: `.agents/projects/multi-actor/ECHO-SCENE.md`.
+ * Eight people build the ECHO design document of the DXOS Architecture template from its outline: four writers (two
+ * chapters each, one of whom also reviews), two canvas builders, a sheet filler who flags a benchmark, and an assistant
+ * user who applies the assistant's edits. Plan: `.agents/projects/multi-actor/ECHO-SCENE.md`.
  */
 export const echoFlow: ActorFlow<EchoTarget> = {
   actors: ACTORS,
@@ -394,6 +367,6 @@ export const echoFlow: ActorFlow<EchoTarget> = {
       : []),
   ],
   quiet: { every: 30_000, length: 10_000 },
-  duration: 120_000,
+  duration: 150_000,
   steps: [...writing(), ...building(), filling, ...reviewing(), ...assisting()],
 };
