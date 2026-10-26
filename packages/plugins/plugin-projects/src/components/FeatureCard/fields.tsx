@@ -24,7 +24,7 @@ import { meta } from '#meta';
 import { type FeatureStatus } from './feature.ts';
 
 export const FEATURE_STATUS_STYLE: Record<FeatureStatus, { icon: string; hue: Tag.TagHue }> = {
-  'planned': { icon: 'ph--circle-dashed--regular', hue: 'neutral' },
+  'planned': { icon: 'ph--circle-dashed--regular', hue: 'indigo' },
   'in-progress': { icon: 'ph--circle-half--regular', hue: 'sky' },
   'prototype': { icon: 'ph--flask--regular', hue: 'amber' },
   'operational': { icon: 'ph--seal-check--regular', hue: 'emerald' },
