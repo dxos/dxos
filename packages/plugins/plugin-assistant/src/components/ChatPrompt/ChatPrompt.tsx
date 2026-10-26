@@ -79,9 +79,9 @@ export type ChatPromptProps = Merge<
     slashCommands?: readonly SlashCommand.SlashCommand[];
     event: Event<ChatEvent>;
     drawers?: ChatActionsProps['drawers'];
-    /** The prompt's graph node, which is what contributed actions are filed under. */
+    /** Attention id of the surface: scopes the toolbar and pivots the panels the prompt opens. */
     attendableId?: string;
-    /** Toolbar actions other plugins filed on this chat's node (see `ChatActions`). */
+    /** Actions other plugins filed on this prompt's node (see `ChatActions`). */
     customActions?: Atom.Atom<ActionGraphProps>;
     /**
      * The graph node those actions were filed on. Keys the dictation session, because the mic that
@@ -147,9 +147,8 @@ export const ChatPrompt = ({
   }, [event]);
 
   const fallbackDocId = useId();
-  // The node the mic action was filed on, which is what it keys the recording session by. A chat
-  // rendered as a companion is a companion node, not the chat object's own, so the object id is only
-  // the fallback for a prompt rendered outside a plank.
+  // The prompt node the mic action was filed on, which is what it keys the recording session by. The
+  // object id is only the fallback for a prompt rendered outside the app graph.
   const docId = nodeId ?? (chat ? Obj.getURI(chat) : fallbackDocId);
   useChatVoiceInput(docId, editorRef);
 

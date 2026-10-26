@@ -171,8 +171,17 @@ const finish = (acc: Accumulator): BranchCharacteristics => {
     };
   }
 
+  // A feed's unacknowledged writes are in the working set, so a simple selection over feeds has a local part.
+  const simpleFeedSelection =
+    acc.traversal === 0 &&
+    acc.aggregate === 'none' &&
+    acc.window.order === 'none' &&
+    acc.window.limit === undefined &&
+    acc.window.skip === undefined &&
+    !acc.subquery &&
+    !acc.setDifference;
   const remoteOnly =
-    scope.feeds ||
+    (scope.feeds && !simpleFeedSelection) ||
     acc.predicates === 'index' ||
     acc.aggregate === 'index' ||
     acc.selection === 'text' ||
@@ -183,11 +192,13 @@ const finish = (acc: Accumulator): BranchCharacteristics => {
     return { ...branch, class: 'remote-only', revalidation: 'none' };
   }
 
-  const windowed = acc.window.order !== 'none' || acc.window.limit !== undefined || acc.window.skip !== undefined;
+  // An order the working set can apply over the merged entries is not a window; a slice, or an order by index
+  // data, is the remote's to define.
+  const windowed = acc.window.order === 'index' || acc.window.limit !== undefined || acc.window.skip !== undefined;
   const queryClass: QueryClass =
     windowed || acc.setDifference
       ? 'local-revalidating'
-      : acc.selection === 'id' && acc.traversal === 0 && acc.aggregate === 'none' && !acc.subquery
+      : acc.selection === 'id' && acc.traversal === 0 && acc.aggregate === 'none' && !acc.subquery && !scope.feeds
         ? 'local-complete'
         : 'local-partial';
 

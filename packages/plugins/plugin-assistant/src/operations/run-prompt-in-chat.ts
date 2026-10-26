@@ -24,7 +24,7 @@ import { ChatNotSpecifiedError } from '../errors.ts';
 const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> =
   AssistantOperation.RunPromptInChat.pipe(
     Operation.withHandler(
-      Effect.fnUntraced(function* ({ chat: chatProp, companionTo, prompt, disposition }) {
+      Effect.fnUntraced(function* ({ chat: chatProp, companionTo, prompt, disposition, wait }) {
         // Activation first: the state and session providers this reads come from lazy modules that
         // otherwise activate only once the assistant UI has been opened, so a caller arriving through
         // an operation alone (an agent) would find them missing.
@@ -70,6 +70,9 @@ const handler: Operation.WithHandler<typeof AssistantOperation.RunPromptInChat> 
         yield* session.submitPrompt(
           disposition === undefined ? prompt : [ContentBlock.Text.make({ text: prompt, disposition })],
         );
+        if (wait) {
+          yield* session.waitForCompletion();
+        }
       }),
     ),
   );

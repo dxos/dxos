@@ -25,6 +25,7 @@ export const FeatureCardContent = ({ subject }: FeatureCardContentProps) => {
         <FeatureCard.Tags />
         <FeatureCard.SubfeatureCount />
         <FeatureCard.TaskCount />
+        <FeatureCard.TestCount />
         <FeatureCard.ShowcaseLead />
         <FeatureCard.DependencyCount />
       </FeatureCard.Body>

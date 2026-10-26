@@ -56,7 +56,7 @@ const slides = [
   [
     '---',
     `image: "${createImage('#6366f1', '#06b6d4', 'Columns')}"`,
-    'layout: columns',
+    'layout: image-right',
     '---',
     '# Columns',
     '',
@@ -65,13 +65,13 @@ const slides = [
   [
     '---',
     `image: "${createImage('#10b981', '#3b82f6', 'Rows')}"`,
-    'layout: rows',
+    'layout: image',
     '---',
     '# Rows',
     '',
-    'Text above an image.',
+    'Text over a full-bleed image.',
   ],
-  ['---', `image: "${createImage('#f97316', '#ec4899', 'Fullscreen')}"`, 'layout: fullscreen', '---'],
+  ['---', `image: "${createImage('#f97316', '#ec4899', 'Fullscreen')}"`, 'layout: image', '---'],
 ].map((lines) => lines.join('\n'));
 
 /**

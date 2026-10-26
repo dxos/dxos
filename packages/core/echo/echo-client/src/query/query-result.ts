@@ -14,6 +14,7 @@ import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
 import { countWork, getDeep, isNonNullable } from '@dxos/util';
 
+import { type DeletionMemo } from '../core-db/index.ts';
 import { getObjectCore, isEchoObject } from '../echo-handler/index.ts';
 import { type QueryContext, type SourceEntry } from './query-context.ts';
 import { queryMetrics } from './query-metrics.ts';
@@ -341,11 +342,15 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
 
     const kept: SourceEntry<T>[] = [];
     const removed: SourceEntry<T>[] = [];
+    // Remote entries under one parent share its deletion walk.
+    const memo: DeletionMemo = new Map();
     for (const entry of entries) {
       // The working set already applied the deleted option, so only remote entries can carry a tombstone;
       // skipping the rest keeps this off the per-write path of a synchronous notification.
       const tombstone =
-        entry.resolution?.source !== 'local' && isEchoObject(entry.result) && getObjectCore(entry.result).isDeleted();
+        entry.resolution?.source !== 'local' &&
+        isEchoObject(entry.result) &&
+        getObjectCore(entry.result).isDeleted(undefined, memo);
       (tombstone ? removed : kept).push(entry);
     }
     return { kept, removed };

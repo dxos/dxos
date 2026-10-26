@@ -70,6 +70,38 @@ describe('spec model', () => {
     expect(buildDataModel(CALLS_SPEC).types.map(({ id }) => id)).not.toContain('Participant');
   });
 
+  test('reads table blocks as stored roots linked by their foreign keys', ({ expect }) => {
+    const spec = [
+      '```mdl',
+      'table feeds: One feed of a space.',
+      '  store: feed store (feed_migrations)',
+      '  columns:',
+      '    feedPrivateId: INTEGER PRIMARY KEY AUTOINCREMENT  # local row id',
+      '    options?: TEXT                                    # json FeedOptions',
+      '```',
+      '',
+      '```mdl',
+      'table blocks: One block of a feed.',
+      '  store: feed store (feed_migrations)',
+      '  columns:',
+      '    insertionId: INTEGER PRIMARY KEY AUTOINCREMENT',
+      '    feedPrivateId: INTEGER REFERENCES feeds(feedPrivateId)',
+      '```',
+    ].join('\n');
+    const { types, edges } = buildDataModel(spec);
+    expect(types.find(({ id }) => id === 'feeds')).toMatchObject({
+      stored: 'table',
+      store: 'feed store (feed_migrations)',
+      fields: [
+        expect.objectContaining({ name: 'feedPrivateId' }),
+        expect.objectContaining({ name: 'options', optional: true }),
+      ],
+    });
+    expect(edges).toContainEqual(
+      expect.objectContaining({ kind: 'references', from: 'blocks', to: 'feeds', field: 'feedPrivateId' }),
+    );
+  });
+
   test('reads operations and service methods as signatures', ({ expect }) => {
     const { groups, effects } = buildApiModel(CALLS_SPEC);
     const startCall = groups.find(({ id }) => id === 'startCall');

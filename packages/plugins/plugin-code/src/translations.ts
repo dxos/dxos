@@ -132,6 +132,7 @@ export const translations = [
         'data-model.stored.typename.label': 'Stored · typename',
         'data-model.stored.ref.label': 'Stored · holds refs',
         'data-model.stored.described.label': 'Stored · per desc',
+        'data-model.stored.table.label': 'Stored · SQL table',
         'data-model.embedded.label': 'Embedded',
         'data-model.legend.stored.label': 'Stored object',
         'data-model.edge.embeds.label': 'Embeds',

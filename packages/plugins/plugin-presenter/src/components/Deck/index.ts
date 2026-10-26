@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Deck.tsx';
+export * as Deck from './Deck.tsx';

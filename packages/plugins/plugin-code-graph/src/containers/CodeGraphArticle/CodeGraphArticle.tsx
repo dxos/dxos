@@ -4,18 +4,20 @@
 
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
-import { type Fact, NodeDetails } from '#components';
+import { Grounding } from '#command';
+import { CommandBar, type CommandOutcome, type Fact, NodeDetails } from '#components';
 import { Kind, Semantic } from '#graph';
 import { meta } from '#meta';
 import { CodeGraph, CodeGraphOperation } from '#types';
@@ -23,6 +25,7 @@ import { CodeGraph, CodeGraphOperation } from '#types';
 // Imported directly rather than through the barrel: the canvas engine and the illustrator renderer are large.
 import { CodeGraphCanvas, framePositions } from '../../components/CodeGraphCanvas/index.ts';
 import { CodeGraphDiagram } from '../../components/CodeGraphDiagram/index.ts';
+import { useSpeechCommand } from './useSpeechCommand.ts';
 
 type Point = Semantic.Point;
 
@@ -181,6 +184,9 @@ export const CodeGraphArticle = ({ role, subject, attendableId }: CodeGraphArtic
     [invokePromise, subject, spaceId],
   );
 
+  const command = useCommand(subject, invokePromise);
+  const speech = useSpeechCommand(command.run);
+
   const [selected, setSelected] = useState<string>();
   const selectedNode = useMemo(() => nodes.find(({ id }) => id === selected), [nodes, selected]);
   const details = useInspect(selected, invokePromise);
@@ -220,7 +226,17 @@ export const CodeGraphArticle = ({ role, subject, attendableId }: CodeGraphArtic
       </Panel.Header>
       <Panel.Body asChild>
         {/* Positioned rather than a layout box: the details panel floats over the canvas, anchored to this frame. */}
-        <div className='relative dx-cover' data-testid='code-graph-article'>
+        <div
+          className='relative dx-cover'
+          data-testid='code-graph-article'
+          onKeyDown={(event) => {
+            // `/` opens the command bar from the canvas, as in a terminal or a search page.
+            if (event.key === '/' && !command.open && !isEditable(event.target)) {
+              event.preventDefault();
+              command.setOpen(true);
+            }
+          }}
+        >
           {nodes.length === 0 ? (
             <Layout.Flex center classNames='dx-cover text-description'>
               {t('empty.message')}
@@ -262,6 +278,39 @@ export const CodeGraphArticle = ({ role, subject, attendableId }: CodeGraphArtic
               onClose={() => setSelected(undefined)}
             />
           )}
+          <CommandBar
+            open={command.open}
+            onOpenChange={(open) => {
+              command.setOpen(open);
+              // The microphone toggle lives in the bar, so closing the bar must not leave it listening.
+              if (!open) {
+                speech.stop();
+              }
+            }}
+            pending={command.pending}
+            outcome={command.outcome}
+            onSubmit={command.run}
+            verbose={command.verbose}
+            onVerboseChange={command.setVerbose}
+            draft={speech.heard}
+            speech={
+              <Button.Root
+                icon={
+                  speech.loading
+                    ? 'ph--spinner--regular'
+                    : speech.listening
+                      ? 'ph--microphone-slash--regular'
+                      : 'ph--microphone--regular'
+                }
+                iconOnly
+                variant={speech.listening ? 'destructive' : 'ghost'}
+                // The tooltip carries a microphone or model failure, the one place the bar has for it.
+                label={speech.error ?? t(speech.listening ? 'command-stop-listening.label' : 'command-listen.label')}
+                onClick={speech.toggle}
+                data-testid='code-graph-command-listen'
+              />
+            }
+          />
         </div>
       </Panel.Body>
     </Panel.Root>
@@ -425,4 +474,71 @@ const useResourceInfo = (nodes: readonly CodeGraph.Node[], invokePromise: Invoke
     };
   }, [ids, invokePromise]);
   return info;
+};
+
+const isEditable = (target: EventTarget) =>
+  target instanceof HTMLElement &&
+  (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
+
+/** The command bar's state: one command at a time, through the RunCommand operation. */
+const useCommand = (subject: CodeGraph.CodeGraph, invokePromise: Invoke) => {
+  const [open, setOpen] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [outcome, setOutcome] = useState<CommandOutcome>();
+  const spaceId = Obj.getDatabase(subject)?.spaceId;
+  // A ref, not the `pending` state, so a spoken command arriving mid-run is refused before the next render.
+  const running = useRef(false);
+  const run = useCallback(
+    (text: string) => {
+      if (running.current) {
+        return;
+      }
+      running.current = true;
+      setPending(true);
+      setOutcome({ command: text });
+      const started = performance.now();
+      void invokePromise(CodeGraphOperation.RunCommand, { graph: Ref.make(subject), command: text }, { spaceId })
+        .then(({ data, error }) =>
+          setOutcome({
+            command: text,
+            elapsedMs: performance.now() - started,
+            ...(data
+              ? { message: data.message, trailer: data.trailer, trace: data.trace }
+              : { error: error?.message ?? 'Failed.' }),
+          }),
+        )
+        .finally(() => {
+          running.current = false;
+          setPending(false);
+        });
+    },
+    [invokePromise, subject, spaceId],
+  );
+  const [verbose, setVerboseState] = useState(readVerbose);
+  const setVerbose = useCallback((value: boolean) => {
+    setVerboseState(value);
+    try {
+      localStorage.setItem(VERBOSE_KEY, value ? '1' : '0');
+    } catch {
+      // Storage can be unavailable (private mode); the toggle still works for this page.
+    }
+  }, []);
+
+  // The first command pays for starting the index and loading its package list; do that while the user types.
+  useEffect(() => {
+    const fiber = Effect.runFork(Grounding.packages.pipe(Effect.ignore));
+    return () => void Effect.runFork(Fiber.interrupt(fiber));
+  }, []);
+
+  return { open, setOpen, pending, outcome, run, verbose, setVerbose };
+};
+
+const VERBOSE_KEY = 'dxos.org/plugin/code-graph/command-verbose';
+
+const readVerbose = () => {
+  try {
+    return localStorage.getItem(VERBOSE_KEY) === '1';
+  } catch {
+    return false;
+  }
 };

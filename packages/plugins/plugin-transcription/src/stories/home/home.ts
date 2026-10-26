@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type NeedleCall, type NeedleTool } from '../whistle/protocol.ts';
+import { type NeedleCall, type NeedleTool } from '../../whistle/protocol.ts';
 
 /**
  * A mock home the `Home` story controls by voice: its state, the tools Needle chooses between, and what each

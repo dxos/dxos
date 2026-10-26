@@ -635,6 +635,15 @@ decision D-14: The rest of [D-11] stands: accurate mode at or under 50% word err
   affects: [F-9.3]
 ```
 
+```mdl
+decision D-15: The Whistle hook, capture, protocol and worker move from the story folder to `src/whistle`, exported as `@dxos/plugin-transcription/Whistle`, so other plugins can take spoken input; the stories import it from there.
+  date: 2026-10-23
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-7]
+  why: Code Graph's command bar asked for the microphone and Whistle, and the stories held the only copy.
+```
+
 ## Appendix: Extension Definitions
 
 Extension block types used in this document are defined below using

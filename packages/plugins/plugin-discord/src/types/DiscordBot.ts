@@ -26,12 +26,32 @@ export type Bot = {
   readonly channel: string;
 };
 
+/** Discord's upload cap for a bot in a server without boosts, per file. */
+export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+
+/** Discord's limit on files in one message. */
+export const MAX_ATTACHMENTS = 10;
+
+/**
+ * A file to attach, by its key in the host's content-addressed blob store (the hex SHA-256 an `ni:` blob URI names), so
+ * the bot fetches the bytes itself rather than receiving them over the call.
+ */
+export const Attachment = Schema.Struct({
+  key: Schema.String,
+  name: Schema.String,
+  type: Schema.optional(Schema.String),
+  size: Schema.optional(Schema.Number),
+});
+
+export interface Attachment extends Schema.Schema.Type<typeof Attachment> {}
+
 /** Posts in a channel or thread, optionally as a reply to one of its messages. */
 export const PostAction = Schema.Struct({
   kind: Schema.Literal('post'),
   channelId: Schema.String,
   text: Schema.String,
   replyTo: Schema.optional(Schema.String),
+  files: Schema.optional(Schema.Array(Attachment)),
 });
 
 /** Adds the bot's reaction to a message. */
@@ -48,6 +68,7 @@ export const DirectAction = Schema.Struct({
   kind: Schema.Literal('dm'),
   userId: Schema.String,
   text: Schema.String,
+  files: Schema.optional(Schema.Array(Attachment)),
 });
 
 export const Action = Schema.Union([PostAction, ReactAction, DirectAction]);
