@@ -315,7 +315,12 @@ export const runTurn = (
         () =>
           Effect.gen(function* () {
             opened = true;
+            // Opening a session takes seconds, and a line stuck on 'preparing' reads as a hang.
+            yield* Trace.emitRequestPhase('building-toolkit');
             const tools = options.tools ? yield* options.tools(chat) : undefined;
+            if (servers && servers.length > 0) {
+              yield* Trace.emitRequestPhase('connecting-mcp', { detail: String(servers.length) });
+            }
             const connections =
               options.connections && servers ? yield* options.connections(chat, servers, tools?.token) : [];
             const stream = yield* options.connect(cwd, tools?.token);
@@ -349,6 +354,9 @@ export const runTurn = (
       }
 
       yield* append([Message.make({ sender: 'user', blocks: promptBlocks(request.prompt) })]);
+
+      // The wait for the agent's first update is the model working; 'generating' follows from streamed text.
+      yield* Trace.emitRequestPhase('contacting-provider');
 
       const events = yield* Queue.unbounded<TurnEvent>();
       const projection = new Projection.TurnProjection();
