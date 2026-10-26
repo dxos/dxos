@@ -153,7 +153,7 @@ export const ChatAgentPicker = ({ chat, started, presets, preset, onPresetChange
                 </Menu.ItemGroupLabel>
                 <Menu.RadioItem
                   item={{ value: '', label: t('agent-setting-default.label'), disabled: started }}
-                  data-testid={`assistant.${setting}.default`}
+                  data-testid={`assistant.${setting}.unset`}
                 />
                 {offered.map(({ id, label }) => (
                   <Menu.RadioItem

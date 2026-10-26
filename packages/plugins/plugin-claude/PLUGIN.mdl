@@ -594,7 +594,7 @@ test QA-6: A chat chooses the model, effort and permissions of Claude Code
     `packages/plugins/plugin-claude/autocue/claude-code-choices.mjs`.
   actors: human
   covers: [F-9.5]
-  status: unverified
+  status: passing           # 2026-10-26, its autocue flow against a composer-app bundle on EDGE dev
   given:
     - Composer with the Claude plugin enabled
   steps:
