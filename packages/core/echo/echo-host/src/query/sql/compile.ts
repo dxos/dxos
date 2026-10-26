@@ -204,11 +204,9 @@ export class SqlPlanCompiler {
     try {
       let current: Relation =
         input ??
-        // Typed: the leftmost arm of every working-set `UNION ALL` gives the column its affinity, and
-        // without one no automatic index can seek on `recordId` (each probe becomes a scan).
         this.#define(
           'empty',
-          sql`SELECT CAST(NULL AS INTEGER) AS recordId, CAST(NULL AS TEXT) AS objectId, CAST(NULL AS TEXT) AS spaceId, 1.0 AS rank, 0 AS ord WHERE 0`,
+          sql`SELECT NULL AS recordId, NULL AS objectId, NULL AS spaceId, 1.0 AS rank, 0 AS ord WHERE 0`,
         );
       for (const step of plan.steps) {
         current = this.#compileStep(step, current);
@@ -1313,6 +1311,8 @@ export class SqlPlanCompiler {
       )(this.#hops.map((hop, index) => sql`SELECT ${index + 1} AS hop, e.* FROM ${this.#ref(hop)} e`))})`,
     );
     const all: Relation = { name: allName };
+    // `CROSS JOIN` below keeps `reach` outer: probing it instead keys on `hop` alone (its `recordId` has no
+    // affinity), which matches every edge of a hop, so each row would scan them all.
     const reach = this.#fresh('reach');
     this.#ctes.push(
       sql`${sql.literal(reach)}(root, hop, recordId) AS (
@@ -1325,7 +1325,7 @@ export class SqlPlanCompiler {
       'rowedges',
       sql`SELECT r.root, CASE WHEN COUNT(*) > ${MAX_EDGES_PER_ROW} THEN 'null' ELSE json_group_array(json_object('hop', e.hop, 'from', e.fromObjectId, 'to', e.objectId, 'kind', e.kind, 'property', e.property,
           'holder', e.holderObjectId, 'holderHeads', json(COALESCE(hd.version, hd.heads)))) END AS edges
-        FROM ${sql.literal(reach)} r JOIN ${this.#ref(all)} e ON e.hop = r.hop AND e.recordId = r.recordId
+        FROM ${sql.literal(reach)} r CROSS JOIN ${this.#ref(all)} e ON e.hop = r.hop AND e.recordId = r.recordId
         LEFT JOIN objectSnapshot hd ON hd.recordId = e.holderRecordId
         GROUP BY r.root`,
     );
