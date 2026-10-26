@@ -331,7 +331,7 @@ export class Scene<T = unknown> implements SceneView {
   }
 
   /** Waits until every actor's editor shows the same text, so a rendered frame never catches a half-sync. */
-  async #replicated(timeout = 3_000) {
+  async #replicated(timeout = 10_000) {
     const start = performance.now();
     while (performance.now() - start < timeout) {
       const texts = this.#texts();

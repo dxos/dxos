@@ -87,6 +87,14 @@ for (let ms = 0; ms <= total; ms += Number(values.step)) {
     console.log(elapsed(), `seek ${ms} took ${took}ms`, errors.length ? JSON.stringify(errors) : '');
   }
 }
+// A last wait, so a scene whose editors only lag is told apart from one that never converges.
+const settled = Date.now();
+await page
+  .waitForFunction(() => window.actorScene?.status.texts.every((text, _, all) => text === all[0]), undefined, {
+    timeout: 60_000,
+  })
+  .catch(() => {});
+console.log(elapsed(), `settled for ${Date.now() - settled}ms`);
 const final = await page.evaluate(() => {
   const status = window.actorScene?.status;
   const chapters = (text) =>
