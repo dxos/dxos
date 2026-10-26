@@ -77,7 +77,9 @@ const program = Effect.gen(function* () {
         `GMAIL_CLIENT_ID=${clientId}\nGMAIL_CLIENT_SECRET=${clientSecret}\nGMAIL_REFRESH_TOKEN=${refreshToken}\n`,
         { mode: 0o600 },
       );
-      console.log(`Saved the grant for ${canaryAccount()} to ${file}. Copy its values into the CI secrets.`);
+      console.log(
+        `Saved the grant for ${canaryAccount()} to ${file}. Copy its values into the CI secrets and 1Password (see README).`,
+      );
       return;
     }
     case 'import-pool': {

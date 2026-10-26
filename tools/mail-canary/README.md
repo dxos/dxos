@@ -64,6 +64,11 @@ Desktop-app OAuth client of the test account's Google Cloud project (see plugin-
 GMAIL_CLIENT_ID=... GMAIL_CLIENT_SECRET=... node src/main.ts auth
 ```
 
+To run the import from a cloud session instead, store the three values in 1Password as the fields
+`GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET` and `GMAIL_REFRESH_TOKEN` of section `mail-canary` in item
+`eng-dev/com.google`. With no grant in the environment or in `.secrets/`, the script reads them
+through `op run --env-file gmail.env.tpl`.
+
 Then import the trial, look at it in Gmail, and import the pool:
 
 ```bash
