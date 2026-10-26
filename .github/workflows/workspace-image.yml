@@ -73,11 +73,19 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      # TODO(dmaretskyi): `@main` once merged; until then the action exists only on this branch.
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout. A
+      # remote `dxos/dxos/...@ref` reference would download and unpack the whole repository instead.
+      - name: Checkout the snapshot actions
+        if: ${{ matrix.variant == 'snapshot' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
       - name: Mount workspace snapshot
         id: snapshot
         if: ${{ matrix.variant == 'snapshot' }}
-        uses: dxos/dxos/.github/actions/workspace-snapshot/mount@claude/workspace-image-mount
+        uses: ./.github/actions/workspace-snapshot/mount
         with:
           tag: ${{ needs.build.outputs.tag }}
 

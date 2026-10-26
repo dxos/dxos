@@ -2,10 +2,10 @@ name: Mount workspace snapshot
 description: >
   Mount a squashfs snapshot of the workspace (source, .git, every node_modules, moon's local cache) plus
   ~/.proto and ~/.moon, each under its own overlayfs, so the job's checkout fetches only the commits since
-  the snapshot and `pnpm install` links only the lockfile delta. Runs before checkout, so reference it
-  remotely (`dxos/dxos/.github/actions/workspace-snapshot/mount@main`): a local action needs the checkout
-  this replaces. Any failure leaves an empty workspace and `mounted` false, and the job carries on with a
-  normal checkout and setup. Pass its `mounted` output to the setup action as `prebuilt`.
+  the snapshot and `pnpm install` links only the lockfile delta. Runs before the job's checkout: fetch
+  this directory first with a sparse `actions/checkout` (`sparse-checkout: .github/actions/workspace-snapshot`),
+  and the mount covers it. Any failure leaves an empty workspace and `mounted` false, and the job carries on
+  with a normal checkout and setup. Pass its `mounted` output to the setup action as `prebuilt`.
 
 inputs:
   tag:
