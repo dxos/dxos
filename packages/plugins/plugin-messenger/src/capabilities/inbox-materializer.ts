@@ -8,6 +8,7 @@ import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SpaceInvitationOperation from '@dxos/app-toolkit/SpaceInvitationOperation';
@@ -19,18 +20,23 @@ import { type Message, SpaceInvitationMessage } from '@dxos/types';
 
 import { startInboxMaterializer } from '#materializer';
 import { meta } from '#meta';
+import { describeMessage } from '#push';
 import { MessengerCapabilities, Notifications } from '#types';
 
 /**
  * Stores inbox messages in the default space's notifications feed and announces new space
  * invitations with a toast. Only the device that wrote a message toasts it; the others receive it
- * by replication, so one invitation is never announced twice.
+ * by replication, so one invitation is never announced twice. Where the app shows its own
+ * notifications (the desktop app), the writing device also notifies every message while unfocused.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const registry = yield* Capabilities.AtomRegistry;
     const invoker = yield* Capabilities.OperationInvoker;
     const client = yield* ClientCapabilities.Client;
+    // Both optional and read live: the notifier is desktop-only, and the opt-in module activates alongside this one.
+    const notifiers = yield* Capability.contributions(AppCapabilities.LocalNotifier);
+    const push = yield* Capability.contributions(AppCapabilities.PushNotifications);
 
     const spaceAtom = Atom.make<Space | undefined>(undefined).pipe(Atom.keepAlive);
     const notificationsAtom = Atom.make((get) => {
@@ -58,6 +64,16 @@ export default Capability.makeModule(
           .then(({ error }) => error && log.warn('failed to add space invitation toast', { error }));
       });
 
+    // Only while the window is not in front: a focused app already shows the message (and toasts invitations).
+    const notify = (message: Message.Message) => {
+      const notifier = notifiers.get()[0];
+      const status = push.get()[0]?.status;
+      if (!notifier || !status || registry.get(status) !== 'on' || document.hasFocus()) {
+        return;
+      }
+      notifier.show(describeMessage(message)).catch((error) => log.warn('failed to show notification', { error }));
+    };
+
     const materializer = startInboxMaterializer({
       client,
       getSpace: () => {
@@ -74,7 +90,10 @@ export default Capability.makeModule(
           registry.set(spaceAtom, space);
         }
       },
-      onWritten: announce,
+      onWritten: (message) => {
+        announce(message);
+        notify(message);
+      },
     });
 
     yield* Effect.addFinalizer(() => Effect.sync(materializer.stop));

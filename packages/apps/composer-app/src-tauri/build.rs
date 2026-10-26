@@ -48,6 +48,7 @@ fn main() {
             "defer_exit",
             "confirm_exit",
             "cancel_exit",
+            "show_notification",
             "list_audio_inputs",
             "set_preferred_audio_input",
             "start_microphone_bridge",

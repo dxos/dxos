@@ -18,6 +18,11 @@ export const ExitGuard = Capability.lazyModule(
   { requires: [Capabilities.OperationInvoker], provides: [], activatesOn: NativeEvents.Start },
   () => import('./exit-guard.ts'),
 );
+export const LocalNotifier = Capability.lazyModule(
+  'LocalNotifier',
+  { provides: [AppCapabilities.LocalNotifier], activatesOn: NativeEvents.Start },
+  () => import('./local-notifier.ts'),
+);
 export const NativeSettings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
   provides: [NativeCapabilities.Settings],

@@ -13,10 +13,11 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppPush from '@dxos/app-toolkit/AppPush';
 import { Context } from '@dxos/context';
 import * as KvsStore from '@dxos/effect/KvsStore';
+import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { meta } from '#meta';
-import { makePushRegistration, makePushSenders } from '#push';
+import { TEST_NOTIFICATION, makePushRegistration, makePushSenders } from '#push';
 
 /** The user's choice for this device; per device because each browser holds its own push subscription. */
 const OptIn = Schema.Struct({ enabled: Schema.Boolean });
@@ -28,6 +29,7 @@ export default Capability.makeModule(
     // Optional, and read live rather than once: only platforms with a push service contribute one, and plugin-pwa
     // does so on Idle, which can come after this module's activation on SpacesAvailable.
     const providers = yield* Capability.contributions(AppCapabilities.PushProvider);
+    const notifiers = yield* Capability.contributions(AppCapabilities.LocalNotifier);
 
     const optIn = KvsStore.make({
       key: `${meta.profile.key}.push`,
@@ -36,12 +38,21 @@ export default Capability.makeModule(
     });
     const enabled = Atom.make((get) => get(optIn).enabled).pipe(Atom.keepAlive);
 
+    // Where there is no push service but the app can show notifications itself (the desktop app), nothing is
+    // registered anywhere: the opt-in alone decides whether the inbox shows them.
+    const localNotifier = Atom.make((get): AppPush.LocalNotifier | undefined =>
+      get(providers.atom)[0]?.supported ? undefined : get(notifiers.atom)[0],
+    ).pipe(Atom.keepAlive);
+
     // The outcome of the last attempt; until there is one, the status follows whether a provider is here yet.
     const result = Atom.make<AppPush.Status | undefined>(undefined).pipe(Atom.keepAlive);
     const error = Atom.make<string | undefined>(undefined).pipe(Atom.keepAlive);
-    const status = Atom.make(
-      (get): AppPush.Status => get(result) ?? (get(providers.atom)[0]?.supported ? 'off' : 'unsupported'),
-    ).pipe(Atom.keepAlive);
+    const status = Atom.make((get): AppPush.Status => {
+      if (get(localNotifier)) {
+        return get(enabled) ? 'on' : 'off';
+      }
+      return get(result) ?? (get(providers.atom)[0]?.supported ? 'off' : 'unsupported');
+    }).pipe(Atom.keepAlive);
 
     const ctx = Context.default();
     const registration = makePushRegistration({
@@ -69,7 +80,7 @@ export default Capability.makeModule(
       put: (list) => client.edge.http.putPushSenders(ctx, { senders: [...list] }),
     });
     const syncSenders = () => {
-      if (registry.get(enabled)) {
+      if (registry.get(enabled) && !registry.get(localNotifier)) {
         senders.sync();
       }
     };
@@ -102,13 +113,30 @@ export default Capability.makeModule(
       yield* Effect.addFinalizer(() => Fiber.interrupt(refresh));
     }
 
+    const setLocal = (next: boolean): AppPush.Status => {
+      registry.set(optIn, { enabled: next });
+      return next ? 'on' : 'off';
+    };
+
     return Capability.contribute(AppCapabilities.PushNotifications, {
       status,
       error,
       enabled,
-      enable: registration.enable,
-      disable: registration.disable,
-      sendTest: registration.sendTest,
+      enable: async () => (registry.get(localNotifier) ? setLocal(true) : registration.enable()),
+      disable: async () => (registry.get(localNotifier) ? setLocal(false) : registration.disable()),
+      sendTest: async () => {
+        const notifier = registry.get(localNotifier);
+        if (!notifier) {
+          return registration.sendTest();
+        }
+        try {
+          await notifier.show(TEST_NOTIFICATION);
+          return 'sent';
+        } catch (err) {
+          log.catch(err);
+          return 'failed';
+        }
+      },
     });
   }),
 );

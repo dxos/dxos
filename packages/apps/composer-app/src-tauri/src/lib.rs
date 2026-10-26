@@ -16,6 +16,8 @@ mod window_state;
 mod xattr_cmd;
 #[cfg(target_os = "macos")]
 mod menubar;
+#[cfg(desktop)]
+mod notification;
 #[cfg(any(target_os = "macos", target_os = "ios"))]
 mod passkey;
 #[cfg(target_os = "macos")]
@@ -33,6 +35,17 @@ const MAIN_WINDOW_LABEL: &str = "main";
 
 #[cfg(target_os = "macos")]
 static RELOAD_ON_FOCUS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Shows and focuses the main window, wherever it was hidden to.
+#[cfg(desktop)]
+pub fn show_main_window<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
+    use tauri::Manager;
+
+    if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+        let _ = window.show();
+        let _ = window.set_focus();
+    }
+}
 
 /// Port the desktop webview loads the app from: the Vite dev server in development, and in release the
 /// asset-server port this build's release channel owns.
@@ -160,6 +173,7 @@ pub fn run() {
     let builder = builder
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_notification::init())
         // Meeting detection and system-audio capture for plugin-meeting-recorder.
         .plugin(tauri_plugin_meeting_capture::init());
 
@@ -252,6 +266,7 @@ pub fn run() {
         exit_guard::defer_exit,
         exit_guard::confirm_exit,
         exit_guard::cancel_exit,
+        notification::show_notification,
     ]);
 
     #[cfg(mobile)]
@@ -454,14 +469,26 @@ pub fn run() {
                     });
                 }
 
-                // Closing the window ends the page and then the app, so the page is asked first, as on the tray's Quit.
+                // On macOS closing the window hides Composer to the menu bar, where it keeps running and showing
+                // notifications. Elsewhere there is no menu bar icon to come back from, so closing ends the page
+                // and then the app, and the page is asked first, as on the tray's Quit.
                 {
                     let window = main_window.clone();
                     main_window.on_window_event(move |event| {
                         if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                            use tauri::Manager;
-                            if exit_guard::on_exit_requested(window.app_handle(), MAIN_WINDOW_LABEL) {
+                            #[cfg(target_os = "macos")]
+                            {
                                 api.prevent_close();
+                                if let Err(error) = window.hide() {
+                                    log::warn!("could not hide the main window: {error}");
+                                }
+                            }
+                            #[cfg(not(target_os = "macos"))]
+                            {
+                                use tauri::Manager;
+                                if exit_guard::on_exit_requested(window.app_handle(), MAIN_WINDOW_LABEL) {
+                                    api.prevent_close();
+                                }
                             }
                         }
                     });
@@ -495,6 +522,11 @@ pub fn run() {
                     .build()?;
             }
 
+            #[cfg(desktop)]
+            if let Err(error) = notification::init(app.handle()) {
+                log::error!("failed to listen for notification clicks: {error}");
+            }
+
             // Initialize menu bar (macOS only).
             #[cfg(target_os = "macos")]
             {
@@ -508,10 +540,10 @@ pub fn run() {
         })
         .build(context)
         .expect("error while building tauri application")
-        .run(|_app, _event| {
+        .run(|_app, _event| match _event {
             // Quit from the menu, Cmd+Q and the updater's relaunch exit without closing the window first.
             #[cfg(desktop)]
-            if let tauri::RunEvent::ExitRequested { api, .. } = _event {
+            tauri::RunEvent::ExitRequested { api, .. } => {
                 use tauri::Manager;
                 if let Some(window) = _app.get_webview_window(MAIN_WINDOW_LABEL) {
                     last_url::save(&window, &app_root_url(&_app.config().identifier));
@@ -520,5 +552,12 @@ pub fn run() {
                     api.prevent_exit();
                 }
             }
+            // A Dock click while the window is hidden to the menu bar.
+            #[cfg(target_os = "macos")]
+            tauri::RunEvent::Reopen {
+                has_visible_windows: false,
+                ..
+            } => show_main_window(_app),
+            _ => {}
         });
 }

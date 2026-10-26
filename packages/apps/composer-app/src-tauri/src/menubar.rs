@@ -4,7 +4,7 @@ use crate::spotlight::{toggle_spotlight, SpotlightConfig};
 use tauri::{
     menu::{MenuBuilder, MenuItemBuilder},
     tray::TrayIconBuilder,
-    AppHandle, Manager,
+    AppHandle,
 };
 
 /// Initialize the menu bar icon and menu.
@@ -47,12 +47,7 @@ pub fn init_menubar(app: &AppHandle, spotlight_config: SpotlightConfig) -> Resul
         .menu(&menu)
         .show_menu_on_left_click(true)
         .on_menu_event(move |app, event| match event.id().as_ref() {
-            "open" => {
-                if let Some(window) = app.get_webview_window("main") {
-                    let _ = window.show();
-                    let _ = window.set_focus();
-                }
-            }
+            "open" => crate::show_main_window(app),
             "quick_access" => {
                 let _ = toggle_spotlight(app, &spotlight_config);
             }

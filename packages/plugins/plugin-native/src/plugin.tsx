@@ -6,6 +6,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
   ExitGuard,
+  LocalNotifier,
   NativeSettings,
   Ollama,
   PluginAsset,
@@ -18,6 +19,7 @@ import { meta } from '#meta';
 
 export const NativePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(ExitGuard),
+  Plugin.addModule(LocalNotifier),
   Plugin.addModule(NativeSettings),
   Plugin.addModule(Ollama),
   Plugin.addModule(PluginAsset),

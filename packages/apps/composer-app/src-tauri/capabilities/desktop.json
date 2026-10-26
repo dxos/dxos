@@ -90,6 +90,7 @@
     "allow-defer-exit",
     "allow-confirm-exit",
     "allow-cancel-exit",
+    "allow-show-notification",
     {
       "identifier": "http:default",
       "allow": [
