@@ -137,17 +137,6 @@ export const PresentationRecordingsArticle = ({
         )
         .separator()
         .action(
-          'play-all',
-          {
-            label: [play.all ? 'stop-voice-over.label' : 'play-voice-over.label', { ns: meta.profile.key }],
-            icon: play.all ? 'ph--stop-circle--regular' : 'ph--play-circle--regular',
-            disposition: 'toolbar',
-            disabled: voiced.length === 0,
-            testId: 'recorder.presentation.play',
-          },
-          handlePlayAll,
-        )
-        .action(
           'download',
           {
             label: ['download-voice-over.label', { ns: meta.profile.key }],
@@ -157,6 +146,17 @@ export const PresentationRecordingsArticle = ({
             testId: 'recorder.presentation.download',
           },
           () => void handleDownload(),
+        )
+        .action(
+          'play-all',
+          {
+            label: [play.all ? 'stop-voice-over.label' : 'play-voice-over.label', { ns: meta.profile.key }],
+            icon: play.all ? 'ph--stop-circle--regular' : 'ph--play-circle--regular',
+            disposition: 'toolbar',
+            disabled: voiced.length === 0,
+            testId: 'recorder.presentation.play',
+          },
+          handlePlayAll,
         )
         .build(),
     [handleRecord, recorder, play, voiced.length, handlePlayAll, exporting, handleDownload],
