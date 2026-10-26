@@ -145,11 +145,6 @@
       "types": "./dist/types/src/skills/StudioSkill.d.ts",
       "import": "./dist/lib/StudioSkill.mjs"
     },
-    "./StudioSurface": {
-      "source": "./src/StudioSurface.ts",
-      "types": "./dist/types/src/StudioSurface.d.ts",
-      "import": "./dist/lib/StudioSurface.mjs"
-    },
     "./Templates": {
       "source": "./src/Templates.ts",
       "types": "./dist/types/src/Templates.d.ts",
@@ -195,9 +190,6 @@
       ],
       "StudioOperation": [
         "dist/types/src/types/StudioOperation.d.ts"
-      ],
-      "StudioSurface": [
-        "dist/types/src/StudioSurface.d.ts"
       ],
       "Variant": [
         "dist/types/src/types/Variant.d.ts"

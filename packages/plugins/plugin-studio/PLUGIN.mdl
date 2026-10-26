@@ -20,8 +20,7 @@ the cross-cutting ontology and the generic authoring UI; concrete media
   such as a video transcript/summary or an image caption).
 - **Rendering is a Surface, keyed by `contentType`.** Studio ships defaults
   (`image/*` → `<img>`, `video/*` → embeddable player, `audio/*` → `<audio>`); any
-  plugin overrides via a higher-priority (`Position.first`) surface, and renders a
-  variant through the public `StudioSurface.VariantRenderer` role.
+  plugin overrides via a higher-priority (`Position.first`) surface.
 - **Generation is kind-specific.** A provider contributes a `GenerationService`
   for a `kind` with its own **`requestSchema`** (Effect Schema) describing that
   medium's request config; studio renders the request form from the schema (a
@@ -398,4 +397,13 @@ decision D-1: Studio renders `audio/*` variants with a default `AudioVariant` (`
   for: user:richburdon
   affects: [VariantRenderer, AudioVariant]
   why: The user asked that a recorded take be a studio MediaArtifact; it then needs a player wherever it is listed.
+```
+
+```mdl
+decision D-2: The `VariantRenderer` role is not exported as `StudioSurface`; plugin-recorder plays its takes with its own player. Revises the export half of [D-1]; its audio renderer stands.
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [VariantRenderer]
+  why: Nothing uses the export any more; a public API with no caller is dead weight to maintain.
 ```
