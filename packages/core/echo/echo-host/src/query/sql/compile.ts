@@ -204,9 +204,11 @@ export class SqlPlanCompiler {
     try {
       let current: Relation =
         input ??
+        // Typed: the leftmost arm of every working-set `UNION ALL` gives the column its affinity, and
+        // without one no automatic index can seek on `recordId` (each probe becomes a scan).
         this.#define(
           'empty',
-          sql`SELECT NULL AS recordId, NULL AS objectId, NULL AS spaceId, 1.0 AS rank, 0 AS ord WHERE 0`,
+          sql`SELECT CAST(NULL AS INTEGER) AS recordId, CAST(NULL AS TEXT) AS objectId, CAST(NULL AS TEXT) AS spaceId, 1.0 AS rank, 0 AS ord WHERE 0`,
         );
       for (const step of plan.steps) {
         current = this.#compileStep(step, current);
@@ -665,24 +667,38 @@ export class SqlPlanCompiler {
     const sql = this.#sql;
     const wsRef = this.#ref(ws);
     // Dependencies whose deletion cascades: the parent chain, plus a relation's endpoints. Each
-    // row lists the entities its verdict depends on, to the executor's depth.
-    const dep = this.#define(
-      'dep',
+    // row's direct dependencies are the walk's seeds; rows share them (a collection's items, one
+    // parent), so the chain is walked once per distinct seed, not once per row.
+    const seedId = sql`CASE f.k WHEN 0 THEN m.parentId WHEN 1 THEN m.sourceId ELSE m.targetId END`;
+    const seeds = this.#define(
+      'seed',
+      // `CAST` gives the column TEXT affinity, without which the probes below cannot seek on it.
+      sql`SELECT DISTINCT m.spaceId, CAST(${seedId} AS TEXT) AS seedId
+        FROM ${wsRef} w CROSS JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId CROSS JOIN ${fanOut(sql, 3)} f
+        WHERE (f.k = 0 OR m.entityKind = 'relation') AND ${seedId} IS NOT NULL`,
+    );
+    // Each seed's chain to the executor's depth; the seed itself sits at depth 1.
+    const chain = this.#define(
+      'chain',
       sql`
-      SELECT w.recordId, m.spaceId, m.parentId AS depId, 1 AS depth FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId WHERE m.parentId IS NOT NULL
-      UNION ALL
-      SELECT w.recordId, m.spaceId, m.sourceId, 1 FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId WHERE m.entityKind = 'relation' AND m.sourceId IS NOT NULL
-      UNION ALL
-      SELECT w.recordId, m.spaceId, m.targetId, 1 FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId WHERE m.entityKind = 'relation' AND m.targetId IS NOT NULL
-      UNION ALL
-      SELECT x.recordId, x.spaceId, p.parentId, x.depth + 1
-        FROM ${sql.literal(this.#peekName('dep'))} x JOIN ${docRow(sql, 'p')} ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId
+      SELECT spaceId, seedId, seedId AS depId, 1 AS depth FROM ${this.#ref(seeds)}
+      UNION
+      SELECT x.spaceId, x.seedId, p.parentId, x.depth + 1
+        FROM ${sql.literal(this.#peekName('chain'))} x JOIN ${docRow(sql, 'p')} ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId
         WHERE x.depth < ${MAX_DEPTH_FOR_DELETION_TRACING} AND p.deleted = 0 AND p.parentId IS NOT NULL`,
     );
-    const deletedByDependency = sql`EXISTS (
-      SELECT 1 FROM ${this.#ref(dep)} x JOIN ${docRow(sql, 'p')} ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId
-      WHERE x.recordId = w.recordId AND p.deleted = 1)`;
-    const isDeleted = sql`(m.deleted = 1 OR ${deletedByDependency})`;
+    // `CROSS JOIN` keeps the chain outer: the planner otherwise scans every document row and probes the chain.
+    const deadSeeds = this.#define(
+      'dead',
+      sql`SELECT DISTINCT x.spaceId, x.seedId FROM ${this.#ref(chain)} x
+        CROSS JOIN ${docRow(sql, 'p')} ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId
+        WHERE p.deleted = 1`,
+    );
+    // One probe per column: an `OR` inside one `EXISTS` cannot seek the dead seeds.
+    const dead = (column: Fragment) =>
+      sql`EXISTS (SELECT 1 FROM ${this.#ref(deadSeeds)} s WHERE s.spaceId = m.spaceId AND s.seedId = ${column})`;
+    const isDeleted = sql`(m.deleted = 1 OR ${dead(sql`m.parentId`)}
+      OR (m.entityKind = 'relation' AND (${dead(sql`m.sourceId`)} OR ${dead(sql`m.targetId`)})))`;
     const condition = step.mode === 'only-deleted' ? isDeleted : sql`NOT ${isDeleted}`;
     return this.#define(
       'ws',
@@ -736,49 +752,60 @@ export class SqlPlanCompiler {
   #compileStrongDependencyFilter(ws: Relation): Relation {
     const sql = this.#sql;
     const wsRef = this.#ref(ws);
-    const typeId = (table: Fragment) => localIdOfLocalUri(sql, sql`${table}.typeDXN`);
-    const seedFrom = (depId: Fragment, extra: Fragment) =>
-      sql`SELECT w.recordId, m.spaceId, ${depId} AS depId, 1 AS depth FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId WHERE m.queueId = '' AND ${extra} ${depId} IS NOT NULL`;
-    // Each recursive branch seeks the dependency row by (space, object) and emits one of its own
-    // dependencies; a derived table over the whole of `objectMeta` here would rescan it per level.
-    const recurseWith = (depId: Fragment, extra: Fragment) =>
-      sql`SELECT x.recordId, x.spaceId, ${depId} AS depId, x.depth + 1
-        FROM ${sql.literal(this.#peekName('sdep'))} x JOIN ${docRow(sql, 'p')} ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId
-        WHERE x.depth < ${MAX_DEPTH_FOR_STRONG_DEP_TRACING} AND ${extra} ${depId} IS NOT NULL`;
-    const relation = (row: Fragment) => sql`${row}.entityKind = 'relation' AND`;
-    // Tags live in the snapshot's meta, one dependency per element.
+    // One row's direct strong dependencies: its schema object, parent and a relation's endpoints
+    // (one per `f.k`), and the tags in its snapshot's meta.
+    const columnDep = (row: string) => {
+      const table = sql.literal(row);
+      return sql`CASE f.k WHEN 0 THEN ${localIdOfLocalUri(sql, sql`${table}.typeDXN`)} WHEN 1 THEN ${table}.parentId
+        WHEN 2 THEN CASE WHEN ${table}.entityKind = 'relation' THEN ${table}.sourceId END
+        ELSE CASE WHEN ${table}.entityKind = 'relation' THEN ${table}.targetId END END`;
+    };
     const tagsPath = jsonPathLiteral(sql, [ATTR_META, 'tags']);
     const tagId = localIdOfLocalUri(sql, tagUriOf(sql, sql`t`));
-    const seedTags = sql`SELECT w.recordId, m.spaceId, ${tagId} AS depId, 1 AS depth
-        FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectSnapshot d ON d.recordId = w.recordId, json_each(d.snapshot, ${tagsPath}) t
-        WHERE m.queueId = '' AND ${tagId} IS NOT NULL`;
-    const recurseTags = sql`SELECT x.recordId, x.spaceId, ${tagId} AS depId, x.depth + 1
-        FROM ${sql.literal(this.#peekName('sdep'))} x JOIN ${docRow(sql, 'p')} ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId
+    // Materialized: read once for the distinct seeds and once for the rows they condemn.
+    const seedsName = this.#fresh('sseed');
+    this.#ctes.push(
+      sql`${sql.literal(seedsName)} AS MATERIALIZED (
+        SELECT w.recordId, m.spaceId, CAST(${columnDep('m')} AS TEXT) AS depId
+          FROM ${wsRef} w CROSS JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId CROSS JOIN ${fanOut(sql, 4)} f
+          WHERE m.queueId = '' AND ${columnDep('m')} IS NOT NULL
+        UNION ALL
+        SELECT w.recordId, m.spaceId, ${tagId}
+          FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectSnapshot d ON d.recordId = w.recordId, json_each(d.snapshot, ${tagsPath}) t
+          WHERE m.queueId = '' AND ${tagId} IS NOT NULL)`,
+    );
+    const seeds = sql.literal(seedsName);
+    // A dependency's verdict does not depend on the row that reached it, so each distinct seed's
+    // closure is walked once, to the executor's depth; the seed itself sits at depth 1. Each
+    // level seeks the dependency row once and fans out to its own dependencies.
+    const closure = this.#peekName('sclosure');
+    this.#define(
+      'sclosure',
+      sql`
+      SELECT DISTINCT spaceId, depId AS seedId, depId, 1 AS depth FROM ${seeds}
+      UNION
+      SELECT x.spaceId, x.seedId, ${columnDep('p')}, x.depth + 1
+        FROM ${sql.literal(closure)} x JOIN ${docRow(sql, 'p')} ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId
+        CROSS JOIN ${fanOut(sql, 4)} f
+        WHERE x.depth < ${MAX_DEPTH_FOR_STRONG_DEP_TRACING} AND ${columnDep('p')} IS NOT NULL
+      UNION
+      SELECT x.spaceId, x.seedId, ${tagId}, x.depth + 1
+        FROM ${sql.literal(closure)} x JOIN ${docRow(sql, 'p')} ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId
         JOIN objectSnapshot pd ON pd.recordId = p.recordId, json_each(pd.snapshot, ${tagsPath}) t
-        WHERE x.depth < ${MAX_DEPTH_FOR_STRONG_DEP_TRACING} AND ${tagId} IS NOT NULL`;
-    const sdep = this.#define(
-      'sdep',
-      sql.join(
-        ' UNION ALL ',
-        false,
-      )([
-        seedFrom(typeId(sql`m`), sql``),
-        seedFrom(sql`m.parentId`, sql``),
-        seedFrom(sql`m.sourceId`, relation(sql`m`)),
-        seedFrom(sql`m.targetId`, relation(sql`m`)),
-        seedTags,
-        recurseWith(typeId(sql`p`), sql``),
-        recurseWith(sql`p.parentId`, sql``),
-        recurseWith(sql`p.sourceId`, relation(sql`p`)),
-        recurseWith(sql`p.targetId`, relation(sql`p`)),
-        recurseTags,
-      ]),
+        WHERE x.depth < ${MAX_DEPTH_FOR_STRONG_DEP_TRACING} AND ${tagId} IS NOT NULL`,
+    );
+    const brokenSeeds = this.#define(
+      'bseed',
+      sql`SELECT DISTINCT x.spaceId, x.seedId FROM ${sql.literal(closure)} x
+        WHERE NOT EXISTS (SELECT 1 FROM ${docRow(sql, 'p')} WHERE p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId)`,
+    );
+    const broken = this.#define(
+      'broken',
+      sql`SELECT s.recordId FROM ${seeds} s JOIN ${this.#ref(brokenSeeds)} b ON b.spaceId = s.spaceId AND b.seedId = s.depId`,
     );
     return this.#define(
       'ws',
-      sql`SELECT w.* FROM ${wsRef} w WHERE NOT EXISTS (
-        SELECT 1 FROM ${this.#ref(sdep)} x WHERE x.recordId = w.recordId
-          AND NOT EXISTS (SELECT 1 FROM ${docRow(sql, 'p')} WHERE p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId))`,
+      sql`SELECT w.* FROM ${wsRef} w WHERE w.recordId NOT IN (SELECT recordId FROM ${this.#ref(broken)})`,
       ws.grouped,
     );
   }
@@ -1277,13 +1304,15 @@ export class SqlPlanCompiler {
     if (this.#hops.length === 0 || this.#nestedTraversal || ws.grouped) {
       return undefined;
     }
-    const all = this.#define(
-      'alledges',
-      sql.join(
+    // Materialized: inlined, every recursive step and the final join recompute each hop's edges.
+    const allName = this.#fresh('alledges');
+    this.#ctes.push(
+      sql`${sql.literal(allName)} AS MATERIALIZED (${sql.join(
         ' UNION ALL ',
         false,
-      )(this.#hops.map((hop, index) => sql`SELECT ${index + 1} AS hop, e.* FROM ${this.#ref(hop)} e`)),
+      )(this.#hops.map((hop, index) => sql`SELECT ${index + 1} AS hop, e.* FROM ${this.#ref(hop)} e`))})`,
     );
+    const all: Relation = { name: allName };
     const reach = this.#fresh('reach');
     this.#ctes.push(
       sql`${sql.literal(reach)}(root, hop, recordId) AS (
@@ -1536,6 +1565,10 @@ const structuralMatch = (sql: SqlClient.SqlClient, element: Fragment, operand: R
   }
   return sql`(${sql.and(conditions)})`;
 };
+
+/** `k` = 0..count-1, joined to a row to emit one output per dependency column after a single seek. */
+const fanOut = (sql: SqlClient.SqlClient, count: number): Fragment =>
+  sql`(${sql.literal(Array.from({ length: count }, (_, index) => `SELECT ${index} AS k`).join(' UNION ALL '))})`;
 
 /** `objectMeta` aliased for a document-row point lookup by (space, queue, object), with the index pinned. */
 const docRow = (sql: SqlClient.SqlClient, alias: string): Fragment =>
