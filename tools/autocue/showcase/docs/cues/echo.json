@@ -5,10 +5,10 @@
     "lines": [
       "Enterprise data has been siloed for decades;",
       "this was a consequence of SaaS software economics.",
-      "But today agents need access to all of our information to be effective.",
+      "But agents need a unified view across the organization to be effective.",
       "And this demands a new data and security model."
     ],
-    "text": "Enterprise data has been siloed for decades; this was a consequence of SaaS software economics. But today agents need access to all of our information to be effective. And this demands a new data and security model."
+    "text": "Enterprise data has been siloed for decades; this was a consequence of SaaS software economics. But agents need a unified view across the organization to be effective. And this demands a new data and security model."
   },
   {
     "at": 10.5,
@@ -25,9 +25,9 @@
     "lines": [
       "DXOS takes a fundamentally different approach.",
       "Enterprise, team, and personal data all connect into a virtual semantic graph.",
-      "And Composer brings this together as an extensible super app, replacing dozens of separate vendors."
+      "And Composer brings this together as an extensible super app, replacing dozens of separate tools."
     ],
-    "text": "DXOS takes a fundamentally different approach. Enterprise, team, and personal data all connect into a virtual semantic graph. And Composer brings this together as an extensible super app, replacing dozens of separate vendors."
+    "text": "DXOS takes a fundamentally different approach. Enterprise, team, and personal data all connect into a virtual semantic graph. And Composer brings this together as an extensible super app, replacing dozens of separate tools."
   },
   {
     "at": 30.5,

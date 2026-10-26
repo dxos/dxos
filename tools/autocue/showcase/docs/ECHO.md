@@ -67,7 +67,7 @@ The spoken lines, one bullet per line read; each slide starts at its time in the
 1. **The Silo Problem** (at 0.5s)
    - Enterprise data has been siloed for decades;
    - this was a consequence of SaaS software economics.
-   - But today agents need access to all of our information to be effective.
+   - But agents need a unified view across the organization to be effective.
    - And this demands a new data and security model.
 
 2. **Monolithic Agents** (at 10.5s)
@@ -77,7 +77,7 @@ The spoken lines, one bullet per line read; each slide starts at its time in the
 3. **ECHO Graph Database** (at 20.5s)
    - DXOS takes a fundamentally different approach.
    - Enterprise, team, and personal data all connect into a virtual semantic graph.
-   - And Composer brings this together as an extensible super app, replacing dozens of separate vendors.
+   - And Composer brings this together as an extensible super app, replacing dozens of separate tools.
 
 4. **ECHO Hypergraph** (at 30.5s)
    - The graph is partitioned into interconnected workspaces;
