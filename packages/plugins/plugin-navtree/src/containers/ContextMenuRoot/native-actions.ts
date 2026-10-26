@@ -3,6 +3,7 @@
 //
 
 import type * as AppNode from '@dxos/app-toolkit/AppNode';
+import { log } from '@dxos/log';
 import { type MenuAction, createMenuAction } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
@@ -83,18 +84,25 @@ const execClipboard = (command: 'cut' | 'copy', context: NativeContext, text: st
   if (document.execCommand(command)) {
     return;
   }
-  void navigator.clipboard.writeText(text).then(() => {
-    if (command !== 'cut') {
-      return;
-    }
-    if (context.field) {
-      replaceRange(context.field, '');
-    } else {
-      restoreSelection(context);
-      document.execCommand('delete');
-    }
-  });
+  withClipboard(
+    (clipboard) => clipboard.writeText(text),
+    () => {
+      if (command !== 'cut') {
+        return;
+      }
+      if (context.field) {
+        replaceRange(context.field, '');
+      } else {
+        restoreSelection(context);
+        document.execCommand('delete');
+      }
+    },
+  );
 };
+
+/** The clipboard API refuses without permission or focus; the refusal is logged, as the menu has closed by then. */
+const withClipboard = <T>(request: (clipboard: Clipboard) => Promise<T>, then: (value: T) => void = () => {}) =>
+  void request(navigator.clipboard).then(then, (error) => log.warn('clipboard unavailable', { error }));
 
 /** Sends a paste event to an editor, which inserts the text at its own selection. */
 const dispatchPaste = (editable: HTMLElement, text: string) => {
@@ -137,7 +145,7 @@ export const nativeActions = (context: NativeContext, commands?: AppNode.EditCom
         label: label('context-menu.open-link.label'),
         icon: 'ph--arrow-square-out--regular',
       }),
-      createMenuAction('native.copy-link', () => void navigator.clipboard.writeText(link), {
+      createMenuAction('native.copy-link', () => withClipboard((clipboard) => clipboard.writeText(link)), {
         label: label('context-menu.copy-link.label'),
         icon: 'ph--link--regular',
       }),
@@ -150,7 +158,7 @@ export const nativeActions = (context: NativeContext, commands?: AppNode.EditCom
         label: label('context-menu.open-image.label'),
         icon: 'ph--image--regular',
       }),
-      createMenuAction('native.copy-image-address', () => void navigator.clipboard.writeText(image), {
+      createMenuAction('native.copy-image-address', () => withClipboard((clipboard) => clipboard.writeText(image)), {
         label: label('context-menu.copy-image-address.label'),
         icon: 'ph--link--regular',
       }),
@@ -183,13 +191,16 @@ export const nativeActions = (context: NativeContext, commands?: AppNode.EditCom
         if (document.execCommand('paste')) {
           return;
         }
-        void navigator.clipboard.readText().then((text) => {
-          if (field) {
-            replaceRange(field, text);
-          } else if (editable) {
-            dispatchPaste(editable, text);
-          }
-        });
+        withClipboard(
+          (clipboard) => clipboard.readText(),
+          (text) => {
+            if (field) {
+              replaceRange(field, text);
+            } else if (editable) {
+              dispatchPaste(editable, text);
+            }
+          },
+        );
       }),
     );
   }
