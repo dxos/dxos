@@ -36,6 +36,8 @@ export type RecorderState = {
   /** `performance.now()` when the take started. */
   startedAt?: number;
   source?: Take.VideoSource;
+  /** The slide on screen while recording: when it came on (`performance.now()`) and its desired length (seconds). */
+  slide?: { id: string; startedAt: number; duration?: number };
   /** Why the last take failed to start. */
   error?: string;
   pending: readonly PendingTake[];
@@ -52,7 +54,7 @@ export interface Recorder {
    */
   start(presentation: Presentation.Presentation): Promise<boolean>;
   /** The slide on screen changed. */
-  mark(slide: { id: string; title?: string; step: number }): void;
+  mark(slide: { id: string; title?: string; step: number; duration?: number }): void;
   /** Ends the take and saves it. */
   stop(): void;
   /** Saves a pending take again. */

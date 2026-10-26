@@ -112,10 +112,25 @@ const usePresentationEvents = (
   const handlersRef = useRef(handlers);
   handlersRef.current = handlers;
 
-  // Mounted only while presenting, so mount and unmount are the start and stop.
+  // Mounted only while presenting, so mount and unmount are the start and stop. The stop is deferred a task so a
+  // remount at once (StrictMode's double mount) cancels it, rather than ending a recording the moment it starts.
+  const pendingStop = useRef<{ id: string; timer: ReturnType<typeof setTimeout> }>(undefined);
   useEffect(() => {
-    handlersRef.current.forEach((handler) => handler.onStart?.(presentation));
-    return () => handlersRef.current.forEach((handler) => handler.onStop?.(presentation));
+    if (pendingStop.current?.id === presentation.id) {
+      clearTimeout(pendingStop.current.timer);
+      pendingStop.current = undefined;
+    } else {
+      handlersRef.current.forEach((handler) => handler.onStart?.(presentation));
+    }
+    return () => {
+      pendingStop.current = {
+        id: presentation.id,
+        timer: setTimeout(() => {
+          pendingStop.current = undefined;
+          handlersRef.current.forEach((handler) => handler.onStop?.(presentation));
+        }),
+      };
+    };
   }, [presentation]);
 
   useEffect(() => {

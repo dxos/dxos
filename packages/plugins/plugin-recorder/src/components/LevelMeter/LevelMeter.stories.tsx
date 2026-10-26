@@ -50,6 +50,10 @@ export const Speaking: Story = {
   render: () => <SpeakingStory />,
 };
 
+export const Compact: Story = {
+  args: { peakDb: -14, holdDb: -8, rmsDb: -24, compact: true },
+};
+
 export const NoInput: Story = {
   args: {},
 };

@@ -1418,6 +1418,15 @@ decision D-73: Presenter offers `PresenterSurface.Toolbar`, `PresenterSurface.Ov
   why: The recorder needs the deck's slide changes and a place in its toolbar; the dependency must point from recorder to presenter.
 ```
 
+```mdl
+decision D-74: `PresentationEventHandler.onStop` fires a task after the presented deck unmounts, and a remount for the same presentation cancels it. Fills in [D-73].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [PresentedOverlay, F-12.7]
+  why: React's StrictMode remounts at once in development, which otherwise stopped a recording the moment it started.
+```
+
 ---
 
 ## Appendix: Extension Definitions

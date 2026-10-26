@@ -46,9 +46,9 @@ export default Capability.makeModule(
     return [
       Capability.contribute(RecorderCapabilities.Recorder, recorder),
       Capability.contribute(PresenterCapabilities.PresentationEventHandler, {
-        onSlide: ({ presentation, id, title, step }) => {
+        onSlide: ({ presentation, slide, id, title, step }) => {
           if (isRecording(presentation.id)) {
-            recorder.mark({ id, title, step });
+            recorder.mark({ id, title, step, duration: slide?.duration });
           }
         },
         onStop: (presentation) => {

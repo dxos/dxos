@@ -133,6 +133,30 @@ The deck is the only source in phase 1. The take timeline is source-neutral (sec
 the take clock), so a later `PictureSource` capability (an autocue video with gated playback, a canvas
 animation) logs the same shape.
 
+## Per-slide takes (proposal, 10-26)
+
+The user asked how to record and re-record individual slides. Proposal: **comping**, as in audio editing — the
+voice-over is assembled from the best read of each slide, wherever it came from.
+
+- **A slide take is an ordinary take with one section.** "Re-record this slide" (on a slide row in the companion,
+  and in the slide's context menu) presents the deck from that slide and stops the take when the reader leaves it
+  (Next or Escape). No new type: the take log already keys sections by Slide id.
+- **The Recording holds the comp:** `selection: Record<slideId, { take: Ref<Variant>, section: number }>` — which
+  take's section voices each slide. A full take fills every slide it covers; a newer slide take replaces that slide's
+  entry. The user can pick any earlier read instead.
+- **The companion gets a slide view** beside the take view: one row per slide with its chosen read (play just that
+  section, via a media fragment `#t=start,end`), its length against the desired length, Re-record, and the other
+  reads to choose from.
+- **Playing the comp** plays the chosen sections in slide order; **post-processing (phase 2)** cuts each chosen
+  section (trailing silence trimmed) and concatenates them, so the voiced video is built from the comp, not from one
+  take.
+
+Open questions for the user:
+
+1. Does re-recording cover one slide, or run from that slide to the end (stopping wherever the reader stops)?
+2. Does a newer read of a slide replace the chosen one automatically, or only when picked?
+3. Should a slide take begin with a short count-in (e.g. 2s) so the first word is not clipped?
+
 ## Later phases
 
 2. **Voiced video** (decision 2): a pure TypeScript planner turns a take's timeline and the slides' desired

@@ -8,6 +8,7 @@ import React, { useEffect, useState } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Presentation from '@dxos/plugin-presenter/Presentation';
 import * as UiHooks from '@dxos/react-ui/Hooks';
+import { mx } from '@dxos/ui-theme';
 
 import { LevelMeter, formatSeconds } from '#components';
 import { meta } from '#meta';
@@ -38,41 +39,59 @@ const RecordingOverlayInner = ({
   const state = useAtomValue(recorder.state);
   const recording = state.status === 'recording' && state.presentationId === subject.id;
   const level = useLevel(recording ? recorder.analyser : undefined);
-  const elapsed = useTakeTime(recording ? state.startedAt : undefined);
-  if (!recording) {
+  const now = useNow(recording);
+  if (!recording || state.startedAt === undefined) {
     return null;
   }
+
+  const elapsed = (now - state.startedAt) / 1000;
+  const duration = state.slide?.duration;
+  const remaining =
+    duration === undefined || !state.slide ? undefined : duration - (now - state.slide.startedAt) / 1000;
 
   return (
     <div
       data-testid='recorder.overlay'
-      className='absolute top-4 left-4 z-[300] flex items-center gap-3 rounded-md border border-separator bg-modal-surface px-3 py-1.5 shadow-sm'
+      className='absolute top-4 left-1/2 z-[300] flex -translate-x-1/2 items-center gap-3 rounded-md border border-separator bg-modal-surface px-3 py-1.5 shadow-sm'
     >
       <span className='flex items-center gap-1.5 font-semibold text-error-text'>
         <span className='size-2.5 animate-pulse rounded-full bg-error-text' />
         {t('recording.label')}
       </span>
       <span className='font-mono text-sm'>{formatSeconds(elapsed)}</span>
+      {remaining !== undefined && (
+        <span
+          data-testid='recorder.overlay.remaining'
+          data-over={remaining < 0}
+          className={mx('font-mono text-sm', remaining < 0 ? 'text-error-text' : 'text-fg-muted')}
+        >
+          {remaining < 0
+            ? t('slide-over.label', { time: formatSeconds(-remaining) })
+            : t('slide-remaining.label', { time: formatSeconds(remaining) })}
+        </span>
+      )}
       <LevelMeter
         peakDb={level?.peakDb}
         holdDb={level?.holdDb}
         rmsDb={level?.rmsDb}
         silent={level?.silent}
         clip={level?.clip}
+        compact
       />
     </div>
   );
 };
 
-/** Seconds since `startedAt` (a `performance.now()` time), updated twice a second. */
-const useTakeTime = (startedAt: number | undefined): number => {
+/** `performance.now()`, updated a few times a second while `active`. */
+const useNow = (active: boolean): number => {
   const [now, setNow] = useState(() => performance.now());
   useEffect(() => {
-    if (startedAt === undefined) {
+    if (!active) {
       return;
     }
-    const interval = setInterval(() => setNow(performance.now()), 500);
+    setNow(performance.now());
+    const interval = setInterval(() => setNow(performance.now()), 250);
     return () => clearInterval(interval);
-  }, [startedAt]);
-  return startedAt === undefined ? 0 : Math.max(0, (now - startedAt) / 1000);
+  }, [active]);
+  return now;
 };

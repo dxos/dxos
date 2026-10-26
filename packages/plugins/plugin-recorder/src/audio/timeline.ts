@@ -5,7 +5,7 @@
 import type * as Take from '../types/Take.ts';
 
 /** The slide on screen, as the presenter reports it. */
-export type SlideMark = { id: string; title?: string; step: number };
+export type SlideMark = { id: string; title?: string; step: number; duration?: number };
 
 /**
  * Builds a take's timeline from the slides shown while recording: each slide change closes the section on screen and

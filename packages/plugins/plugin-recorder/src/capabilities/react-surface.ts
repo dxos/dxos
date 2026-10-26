@@ -38,7 +38,7 @@ export default Capability.makeModule(() =>
           AppSurface.companion(AppSurface.Article, Presentation.Presentation),
         ),
         component: RecordingsArticle,
-        props: ({ role, data: { companionTo } }) => ({ role, presentation: companionTo }),
+        props: ({ role, data: { companionTo, attendableId } }) => ({ role, attendableId, presentation: companionTo }),
       }),
       Surface.create({
         id: 'pluginSettings',

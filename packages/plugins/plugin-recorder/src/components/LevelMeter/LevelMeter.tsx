@@ -20,9 +20,11 @@ export type LevelMeterProps = {
   /** No signal for a while: the mic is muted or dead. */
   silent?: boolean;
   clip?: boolean;
-  /** Hides the dB readout. */
+  /** Shows only the bar, and a readout only to warn (NO SIGNAL, CLIP). */
   compact?: boolean;
 };
+
+const WARNING = 'rounded-sm bg-error-bg px-1.5 py-0.5 font-semibold text-error-fg';
 
 const percent = (db: number) => `${toFraction(db) * 100}%`;
 
@@ -33,6 +35,7 @@ const percent = (db: number) => `${toFraction(db) * 100}%`;
 export const LevelMeter = ({ peakDb, holdDb, rmsDb, silent, clip, compact }: LevelMeterProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const level = peakDb ?? FLOOR_DB;
+  const clipping = !!clip || (holdDb ?? level) > CLIP_DB;
 
   return (
     <div className='flex items-center gap-2' data-testid='recorder.level-meter'>
@@ -57,20 +60,23 @@ export const LevelMeter = ({ peakDb, holdDb, rmsDb, silent, clip, compact }: Lev
         <div className='absolute inset-y-0 w-px bg-separator' style={{ left: percent(TARGET_DB.max) }} />
         {holdDb !== undefined && <div className='absolute inset-y-0 w-0.5 bg-fg' style={{ left: percent(holdDb) }} />}
       </div>
-      {!compact && (
+      {compact ? (
+        (silent || clipping) && (
+          <span data-testid='recorder.level-meter.readout' className={mx(WARNING, 'text-xs')}>
+            {t(silent ? 'no-signal.label' : 'clip.label')}
+          </span>
+        )
+      ) : (
         <span
           data-testid='recorder.level-meter.readout'
-          className={mx(
-            'min-w-[12rem] font-mono text-xs',
-            silent ? 'rounded-sm bg-error-bg px-1.5 py-0.5 font-semibold text-error-fg' : 'text-fg-muted',
-          )}
+          className={mx('min-w-[12rem] font-mono text-xs', silent ? WARNING : 'text-fg-muted')}
         >
           {silent
             ? t('no-signal.label')
             : peakDb === undefined
               ? t('no-input.label')
               : t('level.label', { peak: Math.round(holdDb ?? level), rms: Math.round(rmsDb ?? FLOOR_DB) }) +
-                (clip || (holdDb ?? level) > CLIP_DB ? ` · ${t('clip.label')}` : '')}
+                (clipping ? ` · ${t('clip.label')}` : '')}
         </span>
       )}
     </div>

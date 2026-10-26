@@ -152,6 +152,7 @@ export class TakeRecorder implements RecorderCapabilities.Recorder {
       this.#update({
         status: 'idle',
         presentationId: undefined,
+        slide: undefined,
         error: err instanceof Error ? err.message : String(err),
       });
       return false;
@@ -159,8 +160,19 @@ export class TakeRecorder implements RecorderCapabilities.Recorder {
   }
 
   mark(slide: SlideMark): void {
-    if (this.#current.status === 'recording') {
-      this.#timeline.mark(slide, this.#clock());
+    const state = this.#current;
+    if (state.status !== 'recording') {
+      return;
+    }
+    this.#timeline.mark(slide, this.#clock());
+    if (state.slide?.id !== slide.id || state.slide.duration !== slide.duration) {
+      this.#update({
+        slide: {
+          id: slide.id,
+          startedAt: state.slide?.id === slide.id ? state.slide.startedAt : performance.now(),
+          duration: slide.duration,
+        },
+      });
     }
   }
 
@@ -173,7 +185,7 @@ export class TakeRecorder implements RecorderCapabilities.Recorder {
       source: this.#source,
       ...(this.#device ? { device: this.#device } : {}),
     };
-    this.#update({ status: 'saving' });
+    this.#update({ status: 'saving', slide: undefined });
     this.#recorder.stop();
   }
 
