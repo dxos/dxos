@@ -8,6 +8,7 @@ import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -121,17 +122,18 @@ type PointerMenuProps = Omit<ContextMenuProps, 'id'> & {
 const PointerMenu = ({ node, nodeActions = [], caller, x, y, native, commands, onClose }: PointerMenuProps) => {
   const anchorRef = useRef<HTMLDivElement>(null);
   const { invokePromise } = AppHooks.useOperationInvoker();
-  const space = Hooks.useActiveSpace();
+  // The id from the layout, not `useActiveSpace`, whose space lookup needs a client the menu has no other use for.
+  const spaceId = AppSpace.getActiveSpaceId(Hooks.useLayout().workspace);
   const handleHome = useMemo(
     () =>
-      space
+      spaceId
         ? () =>
             void invokePromise(LayoutOperation.Open, {
-              subject: [GraphPath.getSpaceHomePath(space.id)],
-              workspace: GraphPath.getSpacePath(space.id),
+              subject: [GraphPath.getSpaceHomePath(spaceId)],
+              workspace: GraphPath.getSpacePath(spaceId),
             })
         : undefined,
-    [space, invokePromise],
+    [spaceId, invokePromise],
   );
   // Sections, each set off by a line: the node's actions, the browser's offerings, then navigation.
   const actions = useMemo<MenuItem[]>(

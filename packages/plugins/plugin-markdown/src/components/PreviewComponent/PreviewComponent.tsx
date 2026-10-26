@@ -63,6 +63,8 @@ const floatingClassNames = (position: string) =>
   mx(
     'absolute z-10 opacity-0 pointer-events-none transition-opacity',
     'group-hover/embed:opacity-100 group-hover/embed:pointer-events-auto',
+    // A tab onto the hidden open button reveals it; a click elsewhere in the embed does not.
+    'has-[:focus-visible]:opacity-100 has-[:focus-visible]:pointer-events-auto',
     position,
   );
 

@@ -17,9 +17,9 @@ describe('native actions', () => {
   });
 
   test('a link offers open and copy', ({ expect }) => {
-    document.body.innerHTML = '<a href="https://dxos.org"><span id="target">DXOS</span></a>';
+    document.body.innerHTML = '<a href="https://dxos.org/docs"><span id="target">DXOS</span></a>';
     const context = readNativeContext(document.getElementById('target'));
-    expect(context.link).toBe('https://dxos.org');
+    expect(context.link).toBe('https://dxos.org/docs');
     expect(ids(context)).toEqual(['native.open-link', 'native.copy-link']);
   });
 

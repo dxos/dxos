@@ -37,7 +37,8 @@ export type NativeContext = {
 /** Reads the link, image, selection and editable target under a right-click. */
 export const readNativeContext = (target: EventTarget | null): NativeContext => {
   const element = target instanceof Element ? target : null;
-  const link = element?.closest('a[href]')?.getAttribute('href') ?? undefined;
+  // The resolved address, as the browser's "Copy link address" gives it, not the attribute (which may be relative).
+  const link = element?.closest<HTMLAnchorElement>('a[href]')?.href || undefined;
   const image = element?.closest('img')?.currentSrc || undefined;
   const fieldElement = element?.closest('input, textarea') ?? null;
   const field = isTextField(fieldElement)
@@ -75,13 +76,24 @@ const restoreSelection = ({ field, editable, range }: NativeContext) => {
 /**
  * Cuts or copies the restored selection as the keyboard shortcut would, so an editor (e.g. CodeMirror) writes and
  * removes its own selection; the command needs no clipboard permission, unlike `navigator.clipboard`, which is the
- * fallback where the command is unsupported.
+ * fallback where the command is unsupported (a cut then deletes the selection itself once the text is written).
  */
 const execClipboard = (command: 'cut' | 'copy', context: NativeContext, text: string) => {
   restoreSelection(context);
-  if (!document.execCommand(command)) {
-    void navigator.clipboard.writeText(text);
+  if (document.execCommand(command)) {
+    return;
   }
+  void navigator.clipboard.writeText(text).then(() => {
+    if (command !== 'cut') {
+      return;
+    }
+    if (context.field) {
+      replaceRange(context.field, '');
+    } else {
+      restoreSelection(context);
+      document.execCommand('delete');
+    }
+  });
 };
 
 /** Sends a paste event to an editor, which inserts the text at its own selection. */
