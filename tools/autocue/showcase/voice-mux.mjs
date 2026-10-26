@@ -27,11 +27,12 @@ import { parseArgs } from 'node:util';
 
 const { values } = parseArgs({
   options: {
-    video: { type: 'string' },
-    take: { type: 'string' },
-    out: { type: 'string' },
-    fit: { type: 'string', default: 'stretch' },
-    lead: { type: 'string' },
+    'video': { type: 'string' },
+    'take': { type: 'string' },
+    'out': { type: 'string' },
+    'fit': { type: 'string', default: 'stretch' },
+    'lead': { type: 'string' },
+    'extra-last': { type: 'string', default: '2' },
   },
 });
 if (!values.video || !values.take) {
@@ -47,9 +48,10 @@ const {
   sections = [],
 } = existsSync(`${take}.json`) ? JSON.parse(readFileSync(`${take}.json`, 'utf8')) : {};
 const cuesFile = join(dirname(take), 'cues.json');
-const lead = Number(
-  values.lead ?? (existsSync(cuesFile) ? (JSON.parse(readFileSync(cuesFile, 'utf8'))[name]?.[0]?.at ?? 0) : 0),
-);
+const cues = existsSync(cuesFile) ? (JSON.parse(readFileSync(cuesFile, 'utf8'))[name] ?? []) : [];
+const lead = Number(values.lead ?? cues[0]?.at ?? 0);
+// Where the last section's picture ends; what follows (an end card) plays after the voice at normal speed.
+const lastEnd = cues.at(-1)?.end;
 const duration = Number(
   execFileSync('ffprobe', [
     '-v',
@@ -83,13 +85,20 @@ const segment = (start, end, extra) => {
   filters.push(`[0:v]trim=start=${start}:end=${end},setpts=PTS-STARTPTS${fit}${label}`);
   labels.push(label);
 };
+// A take that logs its sections (played slowed, then held) gives each section's real length directly. The last one
+// ends before the end card and gets `--extra-last` seconds, so the voice finishes on its slide with a beat to spare.
+const fitted = sections.map(({ start, end, seconds }, index) => {
+  const last = index === sections.length - 1;
+  const stop = Math.min(end, duration, last && lastEnd ? lastEnd : Infinity);
+  const real = seconds - (Math.min(end, duration) - stop) + (last ? Number(values['extra-last']) : 0);
+  return { start, end: stop, extra: Math.max(0, real - (stop - start)) };
+});
 let cursor = 0;
-if (sections.length > 0) {
-  // A take that logs its sections (played slowed, then held) gives each section's real length directly.
-  for (const { start, end, seconds } of sections) {
+if (fitted.length > 0) {
+  for (const { start, end, extra } of fitted) {
     segment(cursor, start, 0);
-    segment(start, Math.min(end, duration), Math.max(0, seconds - (Math.min(end, duration) - start)));
-    cursor = Math.min(end, duration);
+    segment(start, end, extra);
+    cursor = end;
   }
 } else {
   if (values.fit !== 'freeze' && cuts.length > 0 && lead > 0 && lead < cuts[0].at) {
@@ -103,12 +112,8 @@ if (sections.length > 0) {
 }
 segment(cursor, duration, 0);
 const total =
-  sections.length > 0
-    ? duration +
-      sections.reduce(
-        (sum, { start, end, seconds }) => sum + Math.max(0, seconds - (Math.min(end, duration) - start)),
-        0,
-      )
+  fitted.length > 0
+    ? duration + fitted.reduce((sum, { extra }) => sum + extra, 0)
     : duration + cuts.reduce((sum, hold) => sum + hold.seconds, 0);
 filters.push(`${labels.join('')}concat=n=${labels.length}:v=1:a=0[v]`);
 // Silence pads a voice that ends before the picture; the picture's length decides the output's.

@@ -71,14 +71,14 @@ The spoken lines, one bullet per line read; each slide starts at its time in the
    - And this demands a new data and security model.
 
 2. **Monolithic Agents** (at 10.5s)
-   - Today we grant agents coarse-grained access to everything,
+   - Today we grant agents access to everything,
    - and we can’t see or control what they do with it.
    - This approach is risky, and simply doesn't work for agents that run continuously with evolving requirements.
 
 3. **ECHO Graph Database** (at 20.5s)
    - DXOS takes a fundamentally different approach.
    - Enterprise, team, and personal data all connect into a unified virtual semantic graph.
-   - Composer brings it all together in a single super app, replacing dozens of separate vendors.
+   - Composer brings it all together in an extensible super app, replacing dozens of separate vendors.
 
 4. **ECHO Hypergraph** (at 30.5s)
    - The graph is partitioned into interconnected workspaces;

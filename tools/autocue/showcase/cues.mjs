@@ -18,7 +18,8 @@ const DOCS = fileURLToPath(new URL('docs/', import.meta.url));
 const PROMPTER = fileURLToPath(new URL('../../../temp/voice/', import.meta.url));
 
 /** Each doc, and how far its video's timeline is shifted from the script's: ECHO.m4v opens 3s later than its source render. */
-const SCRIPTS = [{ name: 'echo', doc: 'ECHO.md', offset: 3 }];
+// `end` is where the last section's picture ends, in the video's timeline: ECHO.m4v's end card starts at 60s.
+const SCRIPTS = [{ name: 'echo', doc: 'ECHO.md', offset: 3, end: 60 }];
 
 const parse = (markdown) => {
   const script = markdown.slice(markdown.indexOf('## Script'));
@@ -36,13 +37,17 @@ const parse = (markdown) => {
 const PROMPTER_CUES = `${PROMPTER}cues.json`;
 // Videos with no script doc keep the cues the prompter already has.
 const prompter = existsSync(PROMPTER_CUES) ? JSON.parse(readFileSync(PROMPTER_CUES, 'utf8')) : {};
-for (const { name, doc, offset } of SCRIPTS) {
+for (const { name, doc, offset, end } of SCRIPTS) {
   const cues = parse(readFileSync(DOCS + doc, 'utf8'));
   if (cues.length === 0) {
     throw new Error(`${doc} has no "N. **Title** (at Ns)" items under ## Script`);
   }
   writeFileSync(`${DOCS}cues/${name}.json`, `${JSON.stringify(cues, null, 2)}\n`);
-  prompter[name] = cues.map((cue) => ({ ...cue, at: cue.at + offset }));
+  prompter[name] = cues.map((cue, index) => ({
+    ...cue,
+    at: cue.at + offset,
+    ...(index === cues.length - 1 && end ? { end } : {}),
+  }));
   console.log(
     `${name}: ${cues.length} cues, ${cues.reduce((words, cue) => words + cue.text.split(/\s+/).length, 0)} words`,
   );
