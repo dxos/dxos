@@ -315,10 +315,10 @@ const waitForText = async (actor: Actor, text: string) => {
   await actor.until(() => content.content.includes(text), `"${text}"`, { timeout: 120_000 });
 };
 
-/** A scripted assistant: the model replies with each line in turn, split into words so the reply streams in. */
+/** A scripted assistant: the model answers each request with the next reply, in one part since each part renders apart. */
 const scriptedAssistant = (replies: string[]) =>
   ScriptedLanguageModel.scriptedAiServiceMiddleware(
-    replies.map((reply) => ({ parts: reply.split(/(?<= )/).map((word) => ScriptedLanguageModel.text(word)) })),
+    replies.map((reply) => ({ parts: [ScriptedLanguageModel.text(reply)] })),
   );
 
 const ACTORS: ActorSpec[] = [
