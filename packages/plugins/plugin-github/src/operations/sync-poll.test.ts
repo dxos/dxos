@@ -34,6 +34,8 @@ type FakeGitHub = {
   pageSize: number;
   /** A delta page that answers 404, to interrupt a run midway. */
   failPage?: number;
+  /** What `/orgs/dxos` answers; 404 (a user-owned repository) unless set. */
+  orgStatus?: number;
   requests: string[];
   /** The pull-request numbers each GraphQL request asked for. */
   batches: number[][];
@@ -79,6 +81,9 @@ const fakeFetch =
       const matching = server.items
         .filter((item) => !since || Date.parse(item.updated_at ?? '') >= Date.parse(since))
         .sort((left, right) => Date.parse(right.updated_at ?? '') - Date.parse(left.updated_at ?? ''));
+      if (url.searchParams.get('direction') === 'asc') {
+        matching.reverse();
+      }
       const body = matching.slice((page - 1) * server.pageSize, page * server.pageSize);
       const etag = etagOf(body);
       if (page === 1 && ifNoneMatch === etag) {
@@ -104,7 +109,7 @@ const fakeFetch =
       return Response.json({ data: { repository } });
     }
     // `/orgs/dxos`: the owner is a user, so there is no organization.
-    return new Response('Not Found', { status: 404 });
+    return new Response('Not Found', { status: url.pathname === '/orgs/dxos' ? (server.orgStatus ?? 404) : 404 });
   };
 
 const issue = (id: number, updatedAt: string, overrides: Partial<GitHubApi.DeltaItem> = {}): GitHubApi.DeltaItem => ({
@@ -350,6 +355,65 @@ describe('plugin-github polling sync (spec/SYNC.mdl)', () => {
       'GET /repos/dxos/composer/issues?page=3',
     ]);
     expect(binding.max).toBe(String(Date.parse('2026-10-05T10:00:00Z') - 5_000));
+  });
+
+  test('a first sync of a large repository backfills oldest first in resumable chunks', async ({ expect }) => {
+    const { db, binding, github, poll } = await setup({ pageSize: 1 });
+    github.items = Array.from({ length: 12 }, (_, index) =>
+      issue(index + 1, `2026-10-${String(index + 1).padStart(2, '0')}T10:00:00Z`),
+    );
+
+    // Ten pages, then the run saves its place and asks to run again.
+    await expect(poll()).rejects.toThrow();
+    expect(github.requests.filter((request) => request.includes('/issues'))).toHaveLength(10);
+    expect(binding.max).toBe(String(Date.parse('2026-10-10T10:00:00Z') - 5_000));
+    expect(binding.spec.token).toBeUndefined();
+    expect(await db.query(Filter.type(Task.Task)).run()).toHaveLength(10);
+
+    // The next run resumes from the watermark, reaches the end and stores the ETag.
+    await poll();
+    expect(await db.query(Filter.type(Task.Task)).run()).toHaveLength(12);
+    expect(binding.max).toBe(String(Date.parse('2026-10-12T10:00:00Z') - 5_000));
+    expect(binding.spec.token).toBeDefined();
+  });
+
+  test('settled checks are re-read on the hourly schedule, since a re-run does not move updated_at', async ({
+    expect,
+  }) => {
+    const { binding, github, poll, pullRequests } = await setup();
+    github.items = [pull(2, '2026-10-01T11:00:00Z')];
+    github.details.set(2, detail(2, { statusCheckRollup: { state: 'FAILURE' } }));
+    await poll();
+    await poll();
+    expect((await pullRequests())[0].checks).toBe('failure');
+
+    // CI re-ran and passed; within the hour the quiet poll does not look.
+    github.details.set(2, detail(2, { statusCheckRollup: { state: 'SUCCESS' } }));
+    expect((await poll()).requests).toEqual(['GET /repos/dxos/composer/issues']);
+
+    // Once the hourly read is due, every open pull request joins the batch, and milestones are read
+    // even though the repository answers 304.
+    const snapshot = Cursor.readSnapshot<{ readAt?: number }>(binding, '1234');
+    Cursor.writeSnapshot(binding, '1234', { ...snapshot, readAt: 0 });
+    const { requests, batches } = await poll();
+    expect(requests).toEqual([
+      'GET /repos/dxos/composer',
+      'GET /repos/dxos/composer/milestones',
+      'GET /repos/dxos/composer/issues',
+      'POST /graphql',
+    ]);
+    expect(batches).toEqual([[2]]);
+    expect((await pullRequests())[0].checks).toBe('success');
+  });
+
+  test('an organization read that fails other than 404 is retried on the next poll', async ({ expect }) => {
+    const { binding, github, poll } = await setup({ orgStatus: 403 });
+    await poll();
+    expect(Cursor.readSnapshot<{ membersReadAt?: number }>(binding, '1234')?.membersReadAt).toBeUndefined();
+
+    github.orgStatus = 404;
+    await poll();
+    expect(Cursor.readSnapshot<{ membersReadAt?: number }>(binding, '1234')?.membersReadAt).toBeDefined();
   });
 
   test('a locally edited issue pushes when GitHub next reports it', async ({ expect }) => {

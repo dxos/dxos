@@ -56,6 +56,12 @@ const ISSUE_CONCURRENCY = 4;
 /** How often a binding re-reads its repository's metadata and milestones. */
 const REPO_READ_INTERVAL_MS = 60 * 60 * 1000;
 
+/**
+ * Pages of 100 one backfill run reads, oldest first, before it saves its watermark and runs again, so a
+ * large repository's first sync advances in resumable chunks.
+ */
+const BACKFILL_PAGES = 10;
+
 /** How often a binding re-reads its organization and members. */
 const MEMBERS_READ_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
@@ -608,13 +614,17 @@ const upsertPullRequest = Effect.fn('upsertPullRequest')(function* (
   );
 });
 
-/** The repository's open pull requests whose checks have not settled. */
-const queryPendingPullRequests = (repo: Repo.Repo) =>
+/**
+ * The repository's open pull requests whose checks have not settled, or every open one when `settled`:
+ * a re-run moves settled checks without moving `updated_at`, so those are re-read on the hourly schedule.
+ */
+const queryOpenPullRequests = (repo: Repo.Repo, { settled }: { settled: boolean }) =>
   Database.query(Filter.type(PullRequest.PullRequest, { owner: repo.owner, repo: repo.name })).run.pipe(
     Effect.map((pullRequests) =>
       pullRequests.filter(
         (pullRequest) =>
-          (pullRequest.state === 'open' || pullRequest.state === 'draft') && pullRequest.checks === 'pending',
+          (pullRequest.state === 'open' || pullRequest.state === 'draft') &&
+          (settled || pullRequest.checks === 'pending'),
       ),
     ),
   );
@@ -861,7 +871,8 @@ const readRepoMetadata = Effect.fn('readRepoMetadata')(function* (
   let requests = 0;
   const snapshot = Cursor.readSnapshot<RepoSnapshot>(binding, externalId);
 
-  if (snapshot?.readAt === undefined || now - snapshot.readAt >= REPO_READ_INTERVAL_MS) {
+  const hourly = snapshot?.readAt === undefined || now - snapshot.readAt >= REPO_READ_INTERVAL_MS;
+  if (hourly) {
     const result = yield* GitHubApi.fetchRepoConditional(repo.owner, repo.name, snapshot?.etag).pipe(
       Effect.catchIf(
         (error) => {
@@ -878,22 +889,28 @@ const readRepoMetadata = Effect.fn('readRepoMetadata')(function* (
         return yield* Effect.fail(new GitHubRepoInaccessibleError({ context: { owner: repo.owner, name: repo.name } }));
       }
       yield* upsertRepo(binding, repo, result.value, { etag: result.etag, readAt: now });
-      // Milestones no open issue points at yet are mirrored too; the delta carries only referenced ones.
-      const milestones = yield* GitHubApi.fetchRepoMilestones(repo.owner, repo.name);
-      requests++;
-      for (const milestone of milestones) {
-        yield* upsertMilestone(issueSet, milestone);
-      }
     } else if (snapshot) {
       Cursor.writeSnapshot(binding, externalId, { ...snapshot, readAt: now });
+    }
+    // Read on every hourly read, since a milestone change does not move the repository's ETag; the delta
+    // carries only the milestones its issues name.
+    const milestones = yield* GitHubApi.fetchRepoMilestones(repo.owner, repo.name);
+    requests++;
+    for (const milestone of milestones) {
+      yield* upsertMilestone(issueSet, milestone);
     }
   }
 
   const current = Cursor.readSnapshot<RepoSnapshot>(binding, externalId);
   if (current && (current.membersReadAt === undefined || now - current.membersReadAt >= MEMBERS_READ_INTERVAL_MS)) {
-    // `/orgs/{owner}` answers 404 for a user-owned repository; there is no organization to mirror.
     const org = yield* Effect.result(GitHubApi.fetchOrg(repo.owner));
     requests++;
+    // `/orgs/{owner}` answers 404 for a user-owned repository; any other failure is retried next poll.
+    const notAnOrg = org._tag === 'Failure' && GitHubApi.responseStatus(org.failure) === 404;
+    if (org._tag === 'Failure' && !notAnOrg) {
+      log.warn('github sync: organization read failed; retrying next poll', { owner: repo.owner, error: org.failure });
+      return { requests, hourly };
+    }
     if (org._tag === 'Success') {
       const organization = yield* upsertOrganization(org.success);
       if (!repo.organization) {
@@ -912,7 +929,7 @@ const readRepoMetadata = Effect.fn('readRepoMetadata')(function* (
     Cursor.writeSnapshot(binding, externalId, { ...current, membersReadAt: now });
   }
 
-  return requests;
+  return { requests, hourly };
 });
 
 /**
@@ -963,18 +980,22 @@ export const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: 
               }),
             );
 
-          requests += yield* readRepoMetadata(binding, repo, externalId, issueSet, ensurePerson, now);
+          const metadata = yield* readRepoMetadata(binding, repo, externalId, issueSet, ensurePerson, now);
+          requests += metadata.requests;
 
-          // The delta: one request when nothing changed. The ETag only describes the URL the
-          // watermark built, so it is sent only alongside one.
+          // The delta: one request when nothing changed. Until a complete read has stored an ETag, the
+          // binding backfills oldest first in capped chunks, each advancing the watermark. The ETag only
+          // describes the URL the watermark built, so it is sent only alongside one.
           const options = (binding.spec.options ?? undefined) as GitHubOperation.SyncOptions | undefined;
           const since = binding.max
             ? new Date(Cursor.parseKey(binding.max)).toISOString()
             : sinceFromOptions(options, now);
-          const delta = yield* GitHubApi.listIssuesSince(repo.owner, repo.name, {
-            since,
-            etag: binding.max ? Cursor.readToken(binding) : undefined,
-          });
+          const etag = binding.max ? Cursor.readToken(binding) : undefined;
+          const delta = yield* GitHubApi.listIssuesSince(
+            repo.owner,
+            repo.name,
+            etag ? { since, etag } : { since, direction: 'asc', maxPages: BACKFILL_PAGES },
+          );
           requests += delta.status === 'ok' ? delta.requests : 1;
           const items = delta.status === 'ok' ? delta.value : [];
           const issueItems = items.filter((item) => item.pull_request == null);
@@ -982,7 +1003,7 @@ export const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: 
 
           // Check results do not move `updated_at`, so pending pull requests join every batch until they settle.
           const deltaNumbers = new Set(pullItems.map((item) => item.number));
-          const pending = (yield* queryPendingPullRequests(repo)).filter(
+          const pending = (yield* queryOpenPullRequests(repo, { settled: metadata.hourly })).filter(
             (pullRequest) => !deltaNumbers.has(pullRequest.number),
           );
           if (delta.status === 'not-modified' && pending.length === 0) {
@@ -1066,15 +1087,18 @@ export const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: 
               .map((item) => (item.updated_at ? Date.parse(item.updated_at) : Number.NaN))
               .filter(Number.isFinite),
           );
+          // A truncated backfill stores no ETag, so the next run continues oldest first from the watermark.
+          const truncated = delta.status === 'ok' && delta.truncated === true;
           const watermark =
-            delta.status === 'ok' && Number.isFinite(newest)
+            delta.status === 'ok'
               ? {
-                  max: Cursor.formatKey(Math.max(newest - WATERMARK_OVERLAP_MS, Cursor.parseKey(binding.max))),
-                  etag: delta.etag,
+                  max: Number.isFinite(newest)
+                    ? Cursor.formatKey(Math.max(newest - WATERMARK_OVERLAP_MS, Cursor.parseKey(binding.max)))
+                    : undefined,
+                  etag: truncated ? undefined : delta.etag,
+                  truncated,
                 }
-              : delta.status === 'ok'
-                ? { max: undefined, etag: delta.etag }
-                : undefined;
+              : undefined;
 
           return {
             result: {
@@ -1096,6 +1120,10 @@ export const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: 
       Cursor.writeToken(binding, watermark.etag);
     }
     Cursor.advance(binding, watermark?.max);
+    if (watermark?.truncated) {
+      // The backlog is not read to its end: the dispatcher re-runs the sync, which resumes from the watermark.
+      return yield* Operation.runAgain().pipe(Effect.orDie);
+    }
     if (!result.notModified) {
       yield* Effect.ignore(
         Operation.invoke(LayoutOperation.AddToast, {

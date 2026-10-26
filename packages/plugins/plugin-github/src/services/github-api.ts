@@ -591,6 +591,8 @@ export type Conditional<A> =
       readonly etag: string | undefined;
       /** Requests the read took; more than one when it followed `Link` pages. */
       readonly requests: number;
+      /** The read stopped at its page cap with pages left. */
+      readonly truncated?: boolean;
     };
 
 type ConditionalResponse<T> =
@@ -633,14 +635,14 @@ const conditionalGet = <T>(
 export type DeltaItem = GitHubIssue;
 
 /**
- * GET /repos/{o}/{r}/issues?state=all&sort=updated&direction=desc&since=…&per_page=100, following `Link`
- * pages. Newest first, so any change reaches page one: `If-None-Match` goes on that page only, and a 304
- * there means no page changed.
+ * GET /repos/{o}/{r}/issues?state=all&sort=updated&since=…&per_page=100, following `Link` pages.
+ * Newest first by default, so any change reaches page one: `If-None-Match` goes on that page only, and a
+ * 304 there means no page changed. Oldest first with `maxPages` reads a backlog in resumable chunks.
  */
 export const listIssuesSince = (
   owner: string,
   repo: string,
-  options: { since?: string; etag?: string },
+  options: { since?: string; etag?: string; direction?: 'asc' | 'desc'; maxPages?: number },
 ): GitHubEffect<Conditional<readonly DeltaItem[]>> =>
   Effect.gen(function* () {
     const creds = yield* GitHubCredentials;
@@ -650,7 +652,7 @@ export const listIssuesSince = (
     ).pipe(
       HttpClientRequest.appendUrlParam('state', 'all'),
       HttpClientRequest.appendUrlParam('sort', 'updated'),
-      HttpClientRequest.appendUrlParam('direction', 'desc'),
+      HttpClientRequest.appendUrlParam('direction', options.direction ?? 'desc'),
       HttpClientRequest.appendUrlParam('per_page', '100'),
     );
     if (options.since) {
@@ -669,17 +671,18 @@ export const listIssuesSince = (
     const items: DeltaItem[] = [...first.value];
     let requests = 1;
     let next = getNextLink(first.link);
-    while (next) {
+    while (next && (options.maxPages === undefined || requests < options.maxPages)) {
       const page = yield* conditionalGet(withAuth(HttpClientRequest.get(next), creds), Schema.Array(GitHubIssueSchema));
       requests++;
       if (page.notModified) {
+        next = undefined;
         break;
       }
       items.push(...page.value);
       next = getNextLink(page.link);
     }
 
-    return { status: 'ok' as const, value: items, etag: first.etag, requests };
+    return { status: 'ok' as const, value: items, etag: first.etag, requests, truncated: next !== undefined };
   });
 
 /** GET /repos/{o}/{r} with `If-None-Match`. */

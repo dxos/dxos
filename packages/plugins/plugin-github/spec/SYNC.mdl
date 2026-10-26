@@ -264,7 +264,7 @@ export type Conditional<A> =
 export const listIssuesSince: (
   owner: string,
   repo: string,
-  options: { since?: string; etag?: string },
+  options: { since?: string; etag?: string; direction?: 'asc' | 'desc'; maxPages?: number },
 ) => GitHubEffect<Conditional<readonly DeltaItem[]>>;
 
 /** One GraphQL query of one repository, one aliased `pullRequest(number:)` per number; at most 100 per call. */
@@ -370,11 +370,15 @@ feat F-2: Delta polling
     when: the delta returns items
     then: every item with `pull_request` is fetched in fetchPullRequestDetails batches of at most 100
 
-  req F-2.4: An open pull request whose `checks` is `pending` joins the batch on every poll, a poll whose delta answers 304 included, until it settles, because check results do not change `updated_at`.
+  req F-2.4: An open pull request whose `checks` is `pending` joins the batch on every poll, a poll whose delta answers 304 included, until it settles, because check results do not change `updated_at`. Every open pull request joins the batch on the hourly repository read, since a re-run changes settled checks without changing `updated_at` either.
 
   req F-2.5: Cursor.max advances once every page of the delta is applied, so an interrupted run re-reads from the last complete watermark. It becomes the largest `updated_at` returned, minus 5 seconds, so an item updated in the same second as the watermark is read again; snapshots make that re-read a no-op.
 
-  req F-2.6: The repository itself, with its milestones, is read with fetchRepoConditional at most once an hour per binding, so it is not part of the one-request quiet poll; the organization and its members are read at most once a day per binding.
+  req F-2.6: The repository itself is read with fetchRepoConditional, and its milestones with it whether or not the repository answers 304, at most once an hour per binding, so neither is part of the one-request quiet poll; the organization and its members are read at most once a day per binding, and a failed organization read other than 404 is retried on the next poll.
+
+  req F-2.8:
+    when: a binding has no stored ETag yet (its first sync, or a backfill still in progress)
+    then: the delta is read oldest first, at most 10 pages a run; a run that stops at the cap advances Cursor.max, stores no ETag and asks to run again, and the run that reaches the end stores the ETag, after which polls read newest first
 
   req F-2.7: Issues keep today's three-way merge and push of title, description and status; pull requests are pull-only.
 ```
@@ -678,4 +682,33 @@ decision D-24: A poll adopts a PullRequest it finds by owner, repo and number wh
   for: user:dmaretskyi
   affects: [F-1.2, T-7]
   why: Import files a PullRequest without a foreign key, so matching only by key would create a second object for the same pull request.
+```
+
+```mdl
+decision D-25: A binding's first sync backfills oldest first, ten pages a run, advancing the watermark after each run and re-running until it reaches the end; only then does it store an ETag and poll newest first. Narrows [D-17].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.8, listIssuesSince]
+  why: Newest first, a partial read cannot advance the watermark safely, so a large repository's first sync was one unbounded run that restarted from page one after any failure.
+  rejected:
+    - A default maxDaysBack for new bindings: it drops history the user asked for, and does not bound a busy repository either.
+```
+
+```mdl
+decision D-26: Every open pull request joins the GraphQL batch on the hourly repository read, and milestones are read on every hourly read whatever the repository answers. Fills in [D-4] and [D-20].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.4, F-2.6]
+  why: A CI re-run changes settled checks without moving `updated_at`, and a milestone change does not move the repository's ETag, so neither would otherwise be seen.
+```
+
+```mdl
+decision D-27: Only a 404 from the organization read means the owner is a user; any other failure leaves the daily read due, so the next poll retries it. Narrows [D-20].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.6]
+  why: Treating a 403, a timeout or a 5xx as "no organization" skipped the organization and its members for a day.
 ```
