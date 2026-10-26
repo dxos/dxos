@@ -51,3 +51,30 @@ export const describeMessage = (message: Message.Message): AppPush.LocalNotifica
     body: subject ?? firstText ?? 'You have a new message.',
   };
 };
+
+/** How far a sender's clock may run behind this device's and the message still count as sent while the app ran. */
+const CLOCK_SKEW = 2 * 60_000;
+
+export type ArrivalsOptions = {
+  /** When this device started watching; messages sent earlier are the backlog it loads, not news. */
+  since: number;
+  /** Identifies a message across the copies different devices filed. */
+  key: (message: Message.Message) => string;
+};
+
+/**
+ * Picks the messages to notify for from each new notifications view: every unread message once, whichever device
+ * filed it, as a push reaches every device.
+ */
+export const makeArrivals = ({ since, key }: ArrivalsOptions) => {
+  const seen = new Set<string>();
+  return ({ messages, read }: { messages: readonly Message.Message[]; read: ReadonlySet<string> }): Message.Message[] =>
+    messages.filter((message) => {
+      const messageKey = key(message);
+      if (seen.has(messageKey)) {
+        return false;
+      }
+      seen.add(messageKey);
+      return !read.has(message.id) && Date.parse(message.created) >= since - CLOCK_SKEW;
+    });
+};

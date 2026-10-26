@@ -20,14 +20,14 @@ import { type Message, SpaceInvitationMessage } from '@dxos/types';
 
 import { startInboxMaterializer } from '#materializer';
 import { meta } from '#meta';
-import { describeMessage } from '#push';
+import { describeMessage, makeArrivals } from '#push';
 import { MessengerCapabilities, Notifications } from '#types';
 
 /**
  * Stores inbox messages in the default space's notifications feed and announces new space
  * invitations with a toast. Only the device that wrote a message toasts it; the others receive it
  * by replication, so one invitation is never announced twice. Where the app shows its own
- * notifications (the desktop app), the writing device also notifies every message while unfocused.
+ * notifications (the desktop app), every device notifies each new message while unfocused, as a push would.
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -74,6 +74,11 @@ export default Capability.makeModule(
       notifier.show(describeMessage(message)).catch((error) => log.warn('failed to show notification', { error }));
     };
 
+    // From the feed rather than `onWritten`: another device of this identity often files the message first.
+    const viewAtom = Atom.make((get) => Notifications.deriveView(get, get(notificationsAtom)));
+    const arrivals = makeArrivals({ since: Date.now(), key: Notifications.messageKey });
+    const unwatchArrivals = registry.subscribe(viewAtom, (view) => arrivals(view).forEach(notify));
+
     const materializer = startInboxMaterializer({
       client,
       getSpace: () => {
@@ -90,13 +95,15 @@ export default Capability.makeModule(
           registry.set(spaceAtom, space);
         }
       },
-      onWritten: (message) => {
-        announce(message);
-        notify(message);
-      },
+      onWritten: announce,
     });
 
-    yield* Effect.addFinalizer(() => Effect.sync(materializer.stop));
+    yield* Effect.addFinalizer(() =>
+      Effect.sync(() => {
+        unwatchArrivals();
+        materializer.stop();
+      }),
+    );
     return Capability.contribute(MessengerCapabilities.NotificationsContainers, notificationsAtom);
   }),
 );

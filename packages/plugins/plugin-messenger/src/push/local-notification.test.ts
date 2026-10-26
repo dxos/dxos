@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Message, SpaceInvitationMessage } from '@dxos/types';
 
-import { describeMessage } from './local-notification.ts';
+import { describeMessage, makeArrivals } from './local-notification.ts';
 
 const SPACE_KEY = 'ab'.repeat(32);
 
@@ -47,5 +47,38 @@ describe('describeMessage', () => {
     expect(title).toHaveLength(60);
     expect(title.startsWith('Mallory x')).toBe(true);
     expect(title.endsWith('…')).toBe(true);
+  });
+});
+
+describe('makeArrivals', () => {
+  const since = Date.parse('2026-10-26T18:00:00Z');
+  const at = (created: string, text: string) =>
+    Message.make({ created, sender: { name: 'Bob' }, blocks: [{ _tag: 'text', text }] });
+  const view = (messages: Message.Message[], read: string[] = []) => ({ messages, read: new Set(read) });
+
+  test('announces each new unread message once, whichever device filed it', () => {
+    const arrivals = makeArrivals({
+      since,
+      key: (message) => message.blocks.map((block) => block._tag).join() + message.created,
+    });
+    const first = at('2026-10-26T18:05:00Z', 'one');
+    const second = at('2026-10-26T18:06:00Z', 'two');
+    expect(arrivals(view([first]))).toEqual([first]);
+    expect(arrivals(view([first, second]))).toEqual([second]);
+    expect(arrivals(view([first, second]))).toEqual([]);
+  });
+
+  test('skips the backlog sent before the app started, allowing for clock skew, and read messages', () => {
+    const arrivals = makeArrivals({ since, key: (message) => message.id });
+    const backlog = at('2026-10-26T17:30:00Z', 'old');
+    const skewed = at('2026-10-26T17:59:00Z', 'skewed');
+    const read = at('2026-10-26T18:05:00Z', 'read');
+    expect(arrivals(view([backlog, skewed, read], [read.id]))).toEqual([skewed]);
+  });
+
+  test('a copy another device filed under a new id is the same message', () => {
+    const arrivals = makeArrivals({ since, key: () => 'envelope-1' });
+    expect(arrivals(view([at('2026-10-26T18:05:00Z', 'one')]))).toHaveLength(1);
+    expect(arrivals(view([at('2026-10-26T18:05:00Z', 'one')]))).toEqual([]);
   });
 });
