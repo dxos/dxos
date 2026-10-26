@@ -30,6 +30,10 @@ export const useStartRecording = (
     }
     const index = slide ? presentation.slides.findIndex((ref) => ref.uri.endsWith(`/${slide.id}`)) : 0;
     update((state) => ({ ...state, index: Math.max(0, index) }));
-    await invokePromise(PresenterOperation.SetPresenting, { object: presentation, state: true });
+    // An operation failure is returned, not thrown; the recording must not run without the deck on screen.
+    const { error } = await invokePromise(PresenterOperation.SetPresenting, { object: presentation, state: true });
+    if (error) {
+      recorder.stop();
+    }
   }, [recorder, presentation, slide, update, invokePromise]);
 };

@@ -138,7 +138,7 @@ feat F-1: Record
   req F-1.4: The microphone is opened with echo cancellation, noise suppression and auto gain off.
   req F-1.5: A recording is split by slide: each slide read becomes a take of that slide, named by its start time; no take is overwritten.
   req F-1.6: A new take becomes its slide's main take.
-  req F-1.7: A take that cannot be saved stays listed with Save again, Download and Discard.
+  req F-1.7: A take that cannot be saved stays listed with Save again and Discard.
   req F-1.8: While recording, the deck shows REC, the recording's length and a level meter with NO SIGNAL and CLIP warnings, but no level readout, centered at the top.
   req F-1.9: While recording a slide with a desired length, the overlay shows the time left on it, and how far over once past.
 
@@ -461,4 +461,13 @@ decision D-33: The list rows are as tall as the toolbar, and the status bar play
   date: 2026-10-26
   by: user:richburdon
   affects: [RecordingsPanel]
+```
+
+```mdl
+decision D-34: An unsaved take offers Save again and Discard, with no Download. Fills in [D-24].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [SlideRecordingsArticle, F-1.7]
+  why: The slide companion has no download, so F-1.7 named an action the UI does not offer.
 ```

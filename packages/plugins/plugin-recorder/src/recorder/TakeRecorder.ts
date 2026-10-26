@@ -257,12 +257,14 @@ export class TakeRecorder implements RecorderCapabilities.Recorder {
       await this.#save(take);
     } catch (err) {
       log.catch(err);
-      this.#pendingSlides.set(take.name, take.slide);
+      // Names resolve to the second, so two slides read within one second share a name.
+      const id = crypto.randomUUID();
+      this.#pendingSlides.set(id, take.slide);
       this.#update({
         pending: [
           ...this.#current.pending,
           {
-            id: take.name,
+            id,
             name: take.name,
             slideId: take.slide.id,
             data: take.data,

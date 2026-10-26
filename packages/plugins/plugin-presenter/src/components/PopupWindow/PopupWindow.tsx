@@ -48,7 +48,6 @@ export const PopupWindow = ({
     }
 
     const { document: target } = popup;
-    target.title = title;
     target.head.replaceChildren(
       ...[...document.head.querySelectorAll(STYLE_NODES)].map((node) => node.cloneNode(true)),
     );
@@ -85,7 +84,14 @@ export const PopupWindow = ({
       popup.close();
       setContainer(undefined);
     };
-  }, [name, title, features]);
+  }, [name, features]);
+
+  // Kept out of the open effect: reopening would need a user activation the browser no longer has.
+  useEffect(() => {
+    if (container) {
+      container.ownerDocument.title = title;
+    }
+  }, [container, title]);
 
   return container ? createPortal(children, container) : null;
 };

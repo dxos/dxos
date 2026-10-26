@@ -45,7 +45,7 @@ const RecordingOverlayInner = ({
       <div
         data-testid='recorder.count-in'
         aria-live='assertive'
-        className='pointer-events-none absolute inset-0 z-[300] flex items-center justify-center'
+        className='pointer-events-none dx-cover z-[300] flex items-center justify-center'
       >
         <span className='flex size-40 items-center justify-center rounded-full bg-black/60 font-mono text-8xl text-white'>
           {state.count}
