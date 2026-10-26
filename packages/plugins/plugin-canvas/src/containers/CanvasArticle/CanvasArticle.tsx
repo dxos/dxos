@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Hooks from '@dxos/app-framework/Hooks';
@@ -52,6 +52,7 @@ import {
 // Aliased: `Canvas` here is the scene engine's component namespace.
 import { CanvasCapabilities, Canvas as CanvasFormat } from '#types';
 
+import { CanvasEditCommands } from './CanvasEditCommands.tsx';
 import { CanvasDatabaseContext } from './CanvasViewNodeView.tsx';
 import { createTrackerHistory } from './tracker-history.ts';
 import { createGeneratorWorker, useBoundCanvasStore, useCanvasGenerators, useCanvasNodes } from './use-canvas-scene.ts';
@@ -96,6 +97,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   );
   // In Composer the canvas's edits join the app's history, scoped to this canvas; without a tracker it keeps its own.
   const tracker = Hooks.useOptionalCapability(Capabilities.HistoryTracker);
+  const [element, setElement] = useState<HTMLDivElement | null>(null);
   const history = useMemo(
     () => (tracker ? createTrackerHistory({ tracker, invoker, canvas }) : undefined),
     [tracker, invoker, canvas],
@@ -215,7 +217,11 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   return (
     // A section takes the document's width and has no height of its own (read-only, it has no dock), so its height
     // follows from the drawing's 3:2 frame.
-    <Panel.Root role={role} classNames={section ? 'w-full aspect-[3/2]' : slide ? 'bg-transparent' : undefined}>
+    <Panel.Root
+      role={role}
+      classNames={section ? 'w-full aspect-[3/2]' : slide ? 'bg-transparent' : undefined}
+      ref={setElement}
+    >
       {newer && !embedded && (
         <Panel.Header>
           <NewerFormatBanner />
@@ -263,6 +269,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               createGeneratorWorker={createGeneratorWorker}
             >
               <Canvas.Viewport liveDepth={settings.liveDepth} />
+              <CanvasEditCommands element={element} />
               {/* Unset means shown: settings saved before the default existed hold neither key. */}
               {!slide && (settings.showToolbar ?? true) && (
                 <>

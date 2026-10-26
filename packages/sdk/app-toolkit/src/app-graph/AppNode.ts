@@ -634,3 +634,43 @@ export const CONTEXT_MENU_ATTRIBUTE = 'data-dx-context';
 export const contextMenuProps = (id: string): Record<typeof CONTEXT_MENU_ATTRIBUTE, string> => ({
   [CONTEXT_MENU_ATTRIBUTE]: id,
 });
+
+/** One edit command a container offers its context menu, with whether it can run now. */
+export type EditCommand = {
+  run: () => void;
+  enabled: () => boolean;
+};
+
+/**
+ * The edit commands a container (an editor, a canvas) offers its context menu, run against the container's own state:
+ * undo and redo always, and cut, copy and paste where they mean more than the browser's text clipboard (e.g. shapes).
+ */
+export type EditCommands = {
+  undo: EditCommand;
+  redo: EditCommand;
+  cut?: EditCommand;
+  copy?: EditCommand;
+  paste?: EditCommand;
+};
+
+const editCommands = new WeakMap<Element, EditCommands>();
+
+/** Offers `commands` to a right-click anywhere inside `element`; returns the call that withdraws them. */
+export const registerEditCommands = (element: Element, commands: EditCommands): (() => void) => {
+  editCommands.set(element, commands);
+  return () => {
+    if (editCommands.get(element) === commands) {
+      editCommands.delete(element);
+    }
+  };
+};
+
+/** The edit commands of the innermost container around `target` that offers any. */
+export const findEditCommands = (target: EventTarget | null): EditCommands | undefined => {
+  for (let element = target instanceof Element ? target : null; element; element = element.parentElement) {
+    const commands = editCommands.get(element);
+    if (commands) {
+      return commands;
+    }
+  }
+};

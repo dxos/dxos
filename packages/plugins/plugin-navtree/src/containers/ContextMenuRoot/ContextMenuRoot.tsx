@@ -21,13 +21,14 @@ import { type NativeContext, globalActions, nativeActions, readNativeContext } f
 /** Reported as the caller of an action run from the context menu. */
 export const CONTEXT_MENU = 'contextMenu';
 
-type Target = { id?: string; x: number; y: number; native: NativeContext };
+type Target = { id?: string; x: number; y: number; native: NativeContext; commands?: AppNode.EditCommands };
 
 /**
  * The app's context menu, which replaces the browser's everywhere: right-clicking an element marked with
  * {@link AppNode.contextMenuProps} (a navtree row, a tile, a plank and its content) lists the actions of the graph node
  * it names, the same list the navtree shows, followed by what the browser's menu would have offered there (open or copy
- * a link or image; cut, copy, paste). A component that handles the right-click itself (it calls `preventDefault`) keeps
+ * a link or image; cut, copy, paste) and the undo and redo of a container registered with
+ * {@link AppNode.registerEditCommands}. A component that handles the right-click itself (it calls `preventDefault`) keeps
  * it, and in development Shift + right-click opens the browser's menu for inspecting.
  */
 export const ContextMenuRoot = () => {
@@ -69,7 +70,13 @@ export const ContextMenuRoot = () => {
         // Not hovered first (e.g. the menu key): the menu opens now and fills in once the node's actions are built.
         expand(id);
       }
-      setTarget({ id, x: event.clientX, y: event.clientY, native: readNativeContext(event.target) });
+      setTarget({
+        id,
+        x: event.clientX,
+        y: event.clientY,
+        native: readNativeContext(event.target),
+        commands: AppNode.findEditCommands(event.target),
+      });
     };
     document.addEventListener('pointerover', handlePointerOver);
     document.addEventListener('contextmenu', handleContextMenu);
@@ -105,7 +112,7 @@ type PointerMenuProps = Omit<ContextMenuProps, 'id'> & {
   nodeActions?: MenuItem[];
 };
 
-const PointerMenu = ({ node, nodeActions = [], x, y, native, onClose }: PointerMenuProps) => {
+const PointerMenu = ({ node, nodeActions = [], x, y, native, commands, onClose }: PointerMenuProps) => {
   const anchorRef = useRef<HTMLDivElement>(null);
   const { invokePromise } = AppHooks.useOperationInvoker();
   const space = Hooks.useActiveSpace();
@@ -123,12 +130,12 @@ const PointerMenu = ({ node, nodeActions = [], x, y, native, onClose }: PointerM
   // Sections, each set off by a line: the node's actions, the browser's offerings, then navigation.
   const actions = useMemo<MenuItem[]>(
     () =>
-      [nodeActions, nativeActions(native), globalActions({ onHome: handleHome })]
+      [nodeActions, nativeActions(native, commands), globalActions({ onHome: handleHome })]
         .filter((section) => section.length > 0)
         .flatMap((section, index) =>
           index === 0 ? section : [...createLineSeparator(`separator-${index}`).nodes, ...section],
         ),
-    [nodeActions, native, handleHome],
+    [nodeActions, native, commands, handleHome],
   );
   const runAction = GraphHooks.useActionRunner();
   const handleAction = useCallback(

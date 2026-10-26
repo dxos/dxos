@@ -20,6 +20,8 @@ export const translations = [
         'context-menu.copy-link.label': 'Copy link',
         'context-menu.open-image.label': 'Open image in new tab',
         'context-menu.copy-image-address.label': 'Copy image address',
+        'context-menu.undo.label': 'Undo',
+        'context-menu.redo.label': 'Redo',
         'context-menu.cut.label': 'Cut',
         'context-menu.copy.label': 'Copy',
         'context-menu.paste.label': 'Paste',

@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as AppNode from '@dxos/app-toolkit/AppNode';
 import { type MenuAction, createMenuAction } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
@@ -91,11 +92,29 @@ const dispatchPaste = (editable: HTMLElement, text: string) => {
   editable.dispatchEvent(new ClipboardEvent('paste', { clipboardData, bubbles: true, cancelable: true }));
 };
 
+type EditKey = 'undo' | 'redo' | 'cut' | 'copy' | 'paste';
+
+const editProperties: Record<EditKey, { icon: string; keyBinding: Record<string, string> }> = {
+  undo: { icon: 'ph--arrow-counter-clockwise--regular', keyBinding: { macos: 'meta+z', windows: 'ctrl+z' } },
+  redo: { icon: 'ph--arrow-clockwise--regular', keyBinding: { macos: 'shift+meta+z', windows: 'ctrl+y' } },
+  cut: { icon: 'ph--scissors--regular', keyBinding: { macos: 'meta+x', windows: 'ctrl+x' } },
+  copy: { icon: 'ph--copy--regular', keyBinding: { macos: 'meta+c', windows: 'ctrl+c' } },
+  paste: { icon: 'ph--clipboard-text--regular', keyBinding: { macos: 'meta+v', windows: 'ctrl+v' } },
+};
+
+/** An edit action; a container's command shows greyed out rather than vanishing when it cannot run. */
+const editAction = (key: EditKey, run: () => void, disabled = false): MenuAction =>
+  createMenuAction(`edit.${key}`, run, { label: label(`context-menu.${key}.label`), disabled, ...editProperties[key] });
+
+const commandAction = (key: EditKey, command: AppNode.EditCommand): MenuAction =>
+  editAction(key, () => command.run(), !command.enabled());
+
 /**
  * The actions the browser's menu would have offered here, since the app's menu replaces it everywhere: open and copy a
- * link or image, and cut, copy and paste text.
+ * link or image, and cut, copy and paste text. A container's own {@link AppNode.EditCommands} add undo and redo, and
+ * replace the text clipboard's cut, copy and paste with its own where it offers them.
  */
-export const nativeActions = (context: NativeContext): MenuAction[] => {
+export const nativeActions = (context: NativeContext, commands?: AppNode.EditCommands): MenuAction[] => {
   const actions: MenuAction[] = [];
   const { link, image, selection, field, editable } = context;
   const writable = !!field || !!editable;
@@ -126,44 +145,40 @@ export const nativeActions = (context: NativeContext): MenuAction[] => {
     );
   }
 
-  if (selection && writable) {
-    actions.push(
-      createMenuAction('native.cut', () => execClipboard('cut', context, selection), {
-        label: label('context-menu.cut.label'),
-        icon: 'ph--scissors--regular',
-      }),
-    );
+  if (commands) {
+    actions.push(commandAction('undo', commands.undo), commandAction('redo', commands.redo));
   }
 
-  if (selection) {
-    actions.push(
-      createMenuAction('native.copy', () => execClipboard('copy', context, selection), {
-        label: label('context-menu.copy.label'),
-        icon: 'ph--copy--regular',
-      }),
-    );
+  if (commands?.cut) {
+    actions.push(commandAction('cut', commands.cut));
+  } else if (selection && writable) {
+    actions.push(editAction('cut', () => execClipboard('cut', context, selection)));
   }
 
-  if (writable) {
+  if (commands?.copy) {
+    actions.push(commandAction('copy', commands.copy));
+  } else if (selection) {
+    actions.push(editAction('copy', () => execClipboard('copy', context, selection)));
+  }
+
+  if (commands?.paste) {
+    actions.push(commandAction('paste', commands.paste));
+  } else if (writable) {
     actions.push(
-      createMenuAction(
-        'native.paste',
-        () => {
-          restoreSelection(context);
-          // Pages may not run the native paste command (only extensions and app shells can), so read the clipboard.
-          if (document.execCommand('paste')) {
-            return;
+      editAction('paste', () => {
+        restoreSelection(context);
+        // Pages may not run the native paste command (only extensions and app shells can), so read the clipboard.
+        if (document.execCommand('paste')) {
+          return;
+        }
+        void navigator.clipboard.readText().then((text) => {
+          if (field) {
+            replaceRange(field, text);
+          } else if (editable) {
+            dispatchPaste(editable, text);
           }
-          void navigator.clipboard.readText().then((text) => {
-            if (field) {
-              replaceRange(field, text);
-            } else if (editable) {
-              dispatchPaste(editable, text);
-            }
-          });
-        },
-        { label: label('context-menu.paste.label'), icon: 'ph--clipboard-text--regular' },
-      ),
+        });
+      }),
     );
   }
 
