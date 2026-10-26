@@ -3,8 +3,11 @@
 # Copyright 2026 DXOS.org
 #
 # Step 02: import the pool mbox from step 01 into the test account through the Gmail API, then check
-# that every message landed under the pool label, none of them in the inbox, and none newer than the
-# sync window. The import is resumable: rerun the same command after an interruption.
+# that the pool holds exactly that mbox, none of it in the inbox, and none newer than the sync window.
+# The import is resumable: rerun the same command after an interruption.
+#
+# Import a 10-message trial first and look at it in Gmail; then clear it with
+# `node src/cli/canary.ts purge-pool`, or the full import's exact count will not match.
 #
 # Run it BEFORE step 03 creates the canary space: the sync fetches the history delta's new mail by
 # id with no date check, so an import into a space that already syncs pulls the whole pool in.
@@ -31,4 +34,4 @@ canary() {
 }
 
 canary import-pool "$MBOX"
-canary pool-status
+canary pool-status "$MBOX"

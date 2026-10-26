@@ -7,7 +7,8 @@
 //
 //   node src/cli/canary.ts auth                     # step 02: mint the Gmail grant into .secrets/mail-canary-gmail.env
 //   node src/cli/canary.ts import-pool <mbox>       # step 02: import the pool from step 01 (resumable)
-//   node src/cli/canary.ts pool-status              # step 02: check the pool is non-empty, archived and old enough
+//   node src/cli/canary.ts pool-status [mbox]       # step 02: check the pool is archived, old enough, and exactly the mbox
+//   node src/cli/canary.ts purge-pool               # step 02: trash the pool, to clear a trial import
 //   node src/cli/canary.ts seed [--count 100]       # copy pool messages into the inbox as fresh dx-seed mail
 //   node src/cli/canary.ts trash [--days 2]         # move older dx-seed copies to Trash
 //
@@ -76,13 +77,20 @@ const program = Effect.gen(function* () {
     }
 
     case 'pool-status': {
-      const status = yield* new Pool(yield* connect).status();
+      const status = yield* new Pool(yield* connect).status({ mboxPath: argument });
       print(status);
       if (!status.ready) {
         return yield* new CanaryError({
-          message: `pool is not ready: it must be non-empty, archived, and older than ${SYNC_WINDOW_DAYS + 1} days`,
+          message:
+            `pool is not ready: it must be non-empty, archived, older than ${SYNC_WINDOW_DAYS + 1} days` +
+            ' and, when an mbox is given, hold exactly its messages (purge a trial import first)',
         });
       }
+      return;
+    }
+
+    case 'purge-pool': {
+      print({ trashed: yield* new Pool(yield* connect).purge() });
       return;
     }
 
@@ -101,7 +109,7 @@ const program = Effect.gen(function* () {
 
     default:
       return yield* new CanaryError({
-        message: `unknown command: ${command ?? '(none)'}; expected auth, import-pool, pool-status, seed or trash`,
+        message: `unknown command: ${command ?? '(none)'}; expected auth, import-pool, pool-status, purge-pool, seed or trash`,
       });
   }
 });

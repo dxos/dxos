@@ -9,7 +9,8 @@ Picks `--limit` messages (default 10,000) evenly across the custodians' history,
 duplicates (Enron folders repeat the same mail) and messages with no text body. Every date moves into
 a window that ends `--end-days-ago` days before today. The pool must be older than the sync's 30-day
 default window: that age, not a filter or archiving, is what keeps the canary's mailbox from syncing
-the pool. Step 02 applies the `enron-pool` label as it imports.
+the pool. Each message names its original folder in `X-Gmail-Labels` (`Enron/<custodian>/<folder>`);
+step 02 turns that into a label, next to the `enron-pool` label every message gets.
 
 Usage:
   python3 01-build-pool.py --maildir ~/enron/maildir --out pool/enron-pool.mbox
@@ -94,23 +95,33 @@ def main(argv):
         root = args.maildir / custodian
         if not root.is_dir():
             sys.exit(f'error: {root} is not a directory')
-        paths.extend(sorted(path for path in root.rglob('*') if path.is_file()))
+        paths.extend(sorted(path for path in root.rglob('*') if path.is_file() and not path.name.startswith('.')))
     if not paths:
         sys.exit(f'error: no messages under {", ".join(custodians)}')
 
-    messages, seen, skipped_empty = [], set(), 0
+    # Content key -> (message, its folders); None for a message with no text body.
+    distinct, skipped_empty = {}, 0
     for path in paths:
         message = read_message(path)
         # The CMU release gives every file its own Message-ID, so a mail filed in several folders is
-        # only recognizable by its content.
+        # only recognizable by its content. Like Gmail, the pool keeps one copy with every folder as a label.
         key = content_key(message)
-        if key in seen:
+        folder = 'Enron/' + path.parent.relative_to(args.maildir).as_posix()
+        if key in distinct:
+            if distinct[key]:
+                distinct[key][1].add(folder)
             continue
-        seen.add(key)
         if not has_text(message):
+            distinct[key] = None
             skipped_empty += 1
             continue
-        messages.append(message)
+        distinct[key] = (message, {folder})
+    messages = []
+    for entry in distinct.values():
+        if entry:
+            message, folders = entry
+            message['X-Gmail-Labels'] = ','.join(sorted(folders))
+            messages.append(message)
     print(f'read {len(paths)} files: {len(messages)} distinct messages with text, {skipped_empty} without a body')
 
     # An even sample across time, so the pool keeps the custodian's whole history rather than one folder.

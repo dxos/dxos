@@ -49,8 +49,11 @@ python3 scripts/01-build-pool.py --maildir ~/enron/maildir --out ~/enron/trial.m
   too, because the Gmail mapper drops them and their copies would never sync.
 - Dates are spread over `--span-days` (default 365) ending `--end-days-ago` (default 31) days before
   today. Keep the end at least 31 days back: that is what keeps the pool out of the canary's sync.
+- A message keeps every folder it was filed in, as `X-Gmail-Labels: Enron/<custodian>/<folder>,...`
+  (the header GYB also reads). Step 02 makes each one a Gmail label, as a real mailbox has them: the
+  default pool carries 246 labels, one to ten per message.
 - Corrupt Enron dates are clamped into 1998–2002, `Bcc` is dropped, and a missing `Message-ID` is
-  generated. The default build is about 38 MB.
+  generated. The default build is about 39 MB.
 - The corpus is real people's mail. Keep the mbox out of git.
 
 ### 02 Import the pool
@@ -58,7 +61,12 @@ python3 scripts/01-build-pool.py --maildir ~/enron/maildir --out ~/enron/trial.m
 The import uses the canary's own Gmail grant, the same one the nightly job uses. Mint it once with a
 Desktop-app OAuth client of the test account's Google Cloud project (see plugin-google
 `src/operations/mail/sync/TESTING.md` for creating one); it opens a browser for consent as
-`test@braneframe.com` and writes `.secrets/mail-canary-gmail.env` at the repo root:
+`test@braneframe.com` and writes `.secrets/mail-canary-gmail.env` at the repo root.
+
+Set the project's OAuth consent screen to **Internal**. An External app in testing mode expires its
+refresh tokens after 7 days, which would stop the nightly job a week after setup; an Internal app
+needs no Google verification and its tokens do not expire that way.
+
 
 ```bash
 GMAIL_CLIENT_ID=... GMAIL_CLIENT_SECRET=... node src/cli/canary.ts auth
@@ -69,22 +77,29 @@ To run the import from a cloud session instead, store the three values in 1Passw
 `eng-dev/com.google`. With no grant in the environment or in `.secrets/`, the script reads them
 through `op run --env-file gmail.env.tpl`.
 
-Then import the trial, look at it in Gmail, and import the pool:
+Then import the 10-message trial and check it in Gmail before the full import: search
+`label:enron-pool`, and confirm each message has its shifted date (not its 2001 date, not today) and
+its `Enron/...` labels. Clear the trial, then import the pool:
 
 ```bash
 scripts/02-import-pool.sh ~/enron/trial.mbox
+node --env-file-if-exists=../../.secrets/mail-canary-gmail.env src/cli/canary.ts purge-pool
 scripts/02-import-pool.sh ~/enron/enron-pool.mbox
 ```
 
-- Messages go in through `messages.import`: archived (no inbox), never spam, labelled `enron-pool`,
-  with Gmail's internal date taken from the shifted `Date` header. 10,000 messages take about 20
+- Messages go in through `messages.import`: archived (no inbox), never spam, labelled `enron-pool`
+  and with their folders, with Gmail's internal date taken from the shifted `Date` header. Nothing is
+  sent: an import places a message in the mailbox without delivering it to anyone. 10,000 messages take about 20
   minutes at the per-user quota; 429 and 5xx answers are retried.
 - The import is resumable: progress is kept in `<mbox>.imported`, so rerunning after an interruption
   continues where it stopped.
 - Every command checks that the grant belongs to the test account (`GMAIL_ACCOUNT`, default
   `test@braneframe.com`) and fails otherwise.
-- The script ends with `pool-status`, which fails unless the pool is non-empty, has nothing in the
-  inbox, and has nothing newer than 31 days.
+- The script ends with `pool-status <mbox>`, which fails unless the pool holds exactly the mbox's
+  messages, has nothing in the inbox, and has nothing newer than 31 days. A leftover trial fails the
+  count, so purge it first.
+- `purge-pool` moves the pool to Trash, which Gmail empties after 30 days; the `gmail.modify` grant
+  cannot delete outright.
 
 **Import before step 03, and never again while the canary space exists.** The sync fetches the
 history delta's new mail by id with no date check, so an import into a space that already syncs
@@ -182,11 +197,11 @@ flat properties: `ciOk`, `ciFailedChecks`, `ciFailureClasses`, `ciSyncMinutes`, 
 ```text
 scripts/                 one-time steps 01–03, run by hand in order
 src/
-  cli/canary.ts          auth | import-pool | pool-status | seed | trash
+  cli/canary.ts          auth | import-pool | pool-status | purge-pool | seed | trash
   cli/summary.ts         report.json → Markdown for the job summary
   gmail/GmailClient.ts   class GmailClient: the Gmail calls, as the test account only
   gmail/auth.ts          the canary's grant: env, access token, browser consent
-  pool/Pool.ts           class Pool: import the mbox (step 02) and check it is ready
+  pool/Pool.ts           class Pool: import the mbox (step 02), check it is exact, purge a trial
   seed/Seeder.ts         class Seeder: copy pool mail into the inbox, trash and list old copies
   seed/copy.ts           rewrite a pool message into a fresh copy
   space/SpaceReader.ts   class SpaceReader: sign in with dx and snapshot the canary space

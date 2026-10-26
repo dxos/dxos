@@ -4,7 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { SEED_HEADER, makeSeedCopy, readHeader } from './copy.ts';
+import { readHeader } from '../gmail/index.ts';
+import { SEED_HEADER, makeSeedCopy } from './copy.ts';
 
 const POOL_MESSAGE = [
   'Message-ID: <12345.JavaMail.evans@thyme>',

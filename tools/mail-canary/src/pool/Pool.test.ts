@@ -22,21 +22,41 @@ const mbox = (count: number) =>
 
 const fakeGmail = ({ failAt }: { failAt?: number } = {}) => {
   const imported: string[] = [];
+  const messages: string[] = [];
+  const created: string[] = [];
+  const trashed: string[] = [];
   return {
     imported,
+    messages,
+    created,
+    trashed,
     gmail: {
-      count: () => Effect.succeed(0),
-      ensureLabel: (name: string) => Effect.succeed(`label-${name}`),
+      // The pool is archived and old, so only the bare label search finds it.
+      count: (query: string) => Effect.succeed(query === 'label:enron-pool' ? imported.length : 0),
+      listIds: () => Effect.succeed(imported.map((_, index) => `id-${index}`)),
+      trash: (id: string) => Effect.sync(() => void trashed.push(id)),
+      ensureLabel: (name: string) =>
+        Effect.sync(() => {
+          created.push(name);
+          return `label-${name}`;
+        }),
       importMessage: (message: string, labelIds: readonly string[]) => {
         const subject = message.match(/^Subject: (.*)$/m)?.[1] ?? '';
         if (failAt !== undefined && Number(subject) === failAt) {
           return Effect.fail(new GmailError({ message: 'quota', status: 403 }));
         }
         imported.push(`${subject}:${labelIds.join(',')}`);
+        messages.push(message);
         return Effect.succeed(`id-${subject}`);
       },
     },
   };
+};
+
+const writeMbox = (text: string): string => {
+  const mboxPath = join(mkdtempSync(join(tmpdir(), 'pool-')), 'pool.mbox');
+  writeFileSync(mboxPath, text);
+  return mboxPath;
 };
 
 describe('Pool.import', () => {
@@ -66,5 +86,51 @@ describe('Pool.import', () => {
     const result = await EffectEx.runPromise(new Pool(second.gmail).import({ mboxPath, concurrency: 1 }));
     expect(result.imported).toBe(70);
     expect(second.imported[0]).toBe('50:label-enron-pool');
+  });
+
+  test('labels each message with its original folder and drops the folder header', async ({ expect }) => {
+    const mboxPath = writeMbox(
+      [
+        'From MAILER-DAEMON Mon Oct 26 15:54:47 2026',
+        'X-Gmail-Labels: Enron/kean-s/inbox',
+        'Subject: 0',
+        '',
+        'body',
+        '',
+        'From MAILER-DAEMON Mon Oct 26 15:54:47 2026',
+        'X-Gmail-Labels: Enron/kean-s/inbox',
+        'Subject: 1',
+        '',
+        'body',
+        '',
+      ].join('\n'),
+    );
+    const { gmail, imported, messages, created } = fakeGmail();
+    await EffectEx.runPromise(new Pool(gmail).import({ mboxPath }));
+    expect(imported).toEqual([
+      '0:label-enron-pool,label-Enron/kean-s/inbox',
+      '1:label-enron-pool,label-Enron/kean-s/inbox',
+    ]);
+    expect(created).toEqual(['enron-pool', 'Enron/kean-s/inbox']);
+    expect(messages[0]).not.toContain('X-Gmail-Labels');
+  });
+});
+
+describe('Pool.status', () => {
+  test('is ready only when the pool holds exactly the mbox', async ({ expect }) => {
+    const mboxPath = writeMbox(mbox(3));
+    const { gmail } = fakeGmail();
+    const pool = new Pool(gmail);
+    await EffectEx.runPromise(pool.import({ mboxPath }));
+    expect(await EffectEx.runPromise(pool.status({ mboxPath }))).toMatchObject({ size: 3, expected: 3, ready: true });
+    expect(await EffectEx.runPromise(pool.status({ mboxPath: writeMbox(mbox(4)) }))).toMatchObject({ ready: false });
+  });
+
+  test('purge trashes every pool message', async ({ expect }) => {
+    const { gmail, trashed } = fakeGmail();
+    const pool = new Pool(gmail);
+    await EffectEx.runPromise(pool.import({ mboxPath: writeMbox(mbox(3)) }));
+    expect(await EffectEx.runPromise(pool.purge())).toBe(3);
+    expect(trashed).toEqual(['id-0', 'id-1', 'id-2']);
   });
 });
