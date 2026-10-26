@@ -88,3 +88,60 @@ The spoken lines, one bullet per line read; each slide starts at its time in the
    - Open by design, Composer lets teams and agents build and customize apps, plugins and skills.
    - And the entire stack runs on Cloudflare Workers, so it's secure, cost-effective, and scales on demand.
    - DXOS is the operating system for the new enterprise.
+
+## Composer Demo
+
+- Composer is an open and extensible super app
+
+45s
+
+- user edits document and writes a comment to a colleague
+- then assigns a task to an agent, which creates a diagram
+- then views and edits a drawing
+- then inserts a spreadsheet into the document
+- then navigates to the sheet to see a chart
+
+15s
+
+- we use it as a harness to drive first tier and open models
+- the entire composer software development experience is managed via the app
+
+60s
+
+- we also use it for email, calendar, meetings, and CRM
+
+10s
+
+- the entire platform is open and extensible
+- made up from over 100 plugins that contribute user interface modules, agents skills, and connectors to external systems
+
+### Script (draft)
+
+The spoken lines for the Composer demo, one bullet per line read, in the same layout as [Script](#script). Times
+assume the demo opens on a 4.5s title; the sections add up to 130s against the current 127s cut, so the picture
+stretches to the voice as for ECHO. Lines marked _(verify)_ make a claim to check against the cut.
+
+1. **Documents** (at 4.5s, 45s)
+   - This is Composer: one open, extensible super app for teams and their agents.
+   - Here, a team is working on a design document.
+   - I can edit it, and mention a colleague in a comment.
+   - And I can just as easily give a task to an agent, which reads the document and adds a diagram.
+   - The drawing opens right here, and I can edit it in place.
+   - Then I insert a spreadsheet into the document, and open it to see its chart.
+   - Documents, drawings and sheets are all objects in the same graph.
+
+2. **Agents** (at 49.5s, 15s)
+   - We also use Composer as a harness for frontier and open models.
+   - In fact, Composer's own development, its plans, tasks and agents, is managed from inside the app.
+
+3. **Email, calendar, meetings and CRM** (at 64.5s, 60s)
+   - We run the rest of the business in it too.
+   - Email arrives in the same graph, so every message is linked to the people and organizations behind it.
+   - From a message, I can open the sender, their company, and everyone we work with there.
+   - The calendar holds our meetings; this sales review links straight to its notes and the deal pipeline.
+   - Meetings are captured, and agents turn them into notes and follow-ups. _(verify)_
+   - And the CRM is simply another view of the same data, for people and agents alike.
+
+4. **Open and extensible** (at 124.5s, 10s)
+   - The entire platform is open and extensible.
+   - It's built from over a hundred plugins that contribute interfaces, agent skills, and connectors to other systems.
