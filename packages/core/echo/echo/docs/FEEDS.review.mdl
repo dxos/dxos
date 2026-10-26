@@ -1,0 +1,203 @@
+---
+spec: github:dxos/dxos/packages/core/echo/echo/docs/FEEDS.mdl
+commit: caacb31de6bcee8329a90cafeed41a9a5fcff44a
+date: 2026-10-26
+by: agent:claude-code
+---
+
+# Review: Feeds
+
+The spec says nothing in it is built, and the code agrees: there are no branches in the feed layer.
+What exists is the base the spec describes under "What exists". A `Feed` is an append log of ECHO
+objects; `Obj.update` re-appends a whole object by id; `FeedProtocol.Block` carries the fields and the
+per-space, per-namespace `position` the spec names; soft fork (`Feed.PARENT_KEY`, `Feed.history`)
+gives per-item lineage inside one feed. Every branch requirement (removal, per-branch index, heads,
+partial sync, per-branch retention) is missing, and indexing, retention and sync are all per feed.
+The trajectory design (#13782) and the `Thread` 0.3.0 comment feeds (#14206) are not on `main`, so
+`Trajectory.Event` and `threadOpen` have no code in this checkout.
+
+Of 21 items: 2 done, 0 untested, 6 partial, 1 diverged, 12 missing. Three findings matter most:
+
+- **Rewind is its own mechanism.** [F-1.5] asks for rewind to be a branch plus a removal; the code
+  rewinds through `Feed.rewindFrom` and per-item `PARENT_KEY` lineage, which `Feed.history` resolves
+  at read time.
+- **Everything is per feed.** `Feed.IndexingOptions`, `Feed.RetentionOptions`, `Feed.sync` and
+  `Scope.feed` take a feed and nothing finer, so [F-2.1], [F-2.3] and [F-4.4] have no hook to build on.
+- **Local order is on its way out.** `Block.insertionId` is the only local order, and it carries a
+  `TODO(dmaretskyi): Remove. Use cursors.`; the local cursor API #13782 adds is not on `main`.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict Container: Comment threads, chats and channels exist as separate types; none points at a branch.
+  status: partial
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/Thread.ts#Thread, github:dxos/dxos/packages/core/compute/assistant/src/types/Chat.ts#Chat, github:dxos/dxos/packages/sdk/types/src/types/Channel.ts#Channel]
+  note: |
+    The three container kinds are distinct ECHO types (`Thread` is 0.2.0 on main; 0.3.0 is in #14206).
+    There is no shared model under them, and no container holds `{ feed, branch }`.
+```
+
+```mdl
+verdict F-1.1: A Feed is an append log of ECHO objects.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#Feed, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#append]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed.test.ts]
+```
+
+```mdl
+verdict F-1.2: Soft fork gives per-item lineage in one feed; there are no branch ids or fork points.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#PARENT_KEY, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#history]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Feed.test.ts]
+  note: |
+    Lineage needs no extra ECHO objects, as required, and `Feed.history` resolves one head back
+    through its ancestors. A branch has no id, no parent branch and no stored fork point, and the
+    `Feed` object holds no map of branches.
+```
+
+```mdl
+verdict F-1.3: Obj.update re-appends the whole object by id; the index keeps the latest block.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Obj.ts#update]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed.test.ts]
+```
+
+```mdl
+verdict F-1.4: No branch can be removed; Feed.remove tombstones single items.
+  status: missing
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#remove]
+  note: Searched `Feed.ts`, the feed store and the indexer for a removed or hidden branch state; none exists.
+```
+
+```mdl
+verdict F-1.5: Rewind is a separate mechanism, not a branch plus removal.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#Feed, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#history]
+  tests: [github:dxos/dxos/packages/core/echo/echo/src/Feed.test.ts]
+  note: |
+    `Feed.rewindFrom` on the Feed object carries a pending rewind, and the abandoned items are
+    dropped at read time by `Feed.history` following `PARENT_KEY`. Nothing creates a branch or marks
+    the old one removed.
+```
+
+```mdl
+verdict F-2.1: Indexing is on or off per feed; queries cannot be scoped to branches.
+  status: missing
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#IndexingOptions, github:dxos/dxos/packages/core/echo/echo/src/Scope.ts#feed]
+  note: |
+    `Feed.IndexingOptions` has no subset mode and `Scope.feed` takes only a feed URI. The index has
+    no branch column, so a branch filter cannot run before `limit`.
+```
+
+```mdl
+verdict F-2.2: The feed store has heads per namespace, not per branch.
+  status: missing
+  evidence: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.ts#FeedStore]
+  note: |
+    The feed store answers a caught-up cursor without reading blocks and moves a head per namespace
+    (feed-store tests "answers a caught-up cursor…", "moves the head of the namespace…"). No call
+    lists the branches whose heads changed since a cursor.
+```
+
+```mdl
+verdict F-2.3: Sync is per feed; no client can sync one branch.
+  status: missing
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#sync]
+  note: '`Feed.sync` pulls the whole feed. Blocks carry no branch id that EDGE could select on.'
+```
+
+```mdl
+verdict F-2.4: EDGE position exists; local order is only the unexposed insertionId.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/protocols/src/FeedProtocol.ts#Block]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts]
+  note: |
+    `position` is assigned by the position authority and converges. Local order is `insertionId`,
+    marked for removal; `Filter.feedCursor({ order: 'local' })` and `Feed.getLocalCursor` from #13782
+    are not on main.
+```
+
+```mdl
+verdict F-3.1: AI chat, comments and messaging do not share one model.
+  status: missing
+  note: Chat, Thread and Channel each use their own feeds and shapes; see the Container verdict.
+```
+
+```mdl
+verdict F-4.1: No read is scoped to a branch, so privacy by construction is not possible yet.
+  status: missing
+  note: There are no branches to scope a default read to; a feed read returns every item.
+```
+
+```mdl
+verdict F-4.2: Writers are attributed per block; a fixed turn view and late-item detection are not found.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/protocols/src/FeedProtocol.ts#Block, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#history]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts]
+  note: |
+    Each block names its `actorId` and `sequence`, and soft-fork lineage is per item, so a fork does
+    not misattribute an unaware writer. Concurrent `Obj.update` is last-flush-wins. Nothing fixes a
+    turn's view at its start or flags a late item (`PromptState.stale` is in #13782).
+```
+
+```mdl
+verdict F-4.3: No branch exists to create.
+  status: missing
+  note: Soft fork costs one `PARENT_KEY` on an existing item, but there is no branch record to count.
+```
+
+```mdl
+verdict F-4.4: Retention is per feed only.
+  status: missing
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#RetentionOptions]
+  note: '`Feed.RetentionOptions` (`maxLength`, `maxAge`) applies to a whole feed; there is no per-branch policy.'
+```
+
+```mdl
+verdict F-4.5: Permissions are per feed; no narrower branch audience.
+  status: missing
+  note: Searched the Feed module and feed store for a per-branch audience; none exists.
+```
+
+```mdl
+verdict Block: FeedProtocol.Block has every field the spec names.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/protocols/src/FeedProtocol.ts#Block]
+  tests: [github:dxos/dxos/packages/core/echo/feed/src/feed-store.test.ts, github:dxos/dxos/packages/core/protocols/src/FeedProtocol.test.ts]
+  note: |
+    `actorId`, `sequence`, `prevActorId`, `prevSequence`, `timestamp`, `data` (ciphertext when
+    sealed), `position` (per space and namespace, tested) and `insertionId` are all present. The local
+    order API over `insertionId` that #13782 adds is not on main.
+```
+
+```mdl
+verdict Trajectory.Event: Not on main; #13782 is unmerged.
+  status: missing
+  note: There is no `@dxos/trajectory` package in this checkout (searched `packages/core/compute`).
+```
+
+```mdl
+verdict threadOpen: Not on main; #13782 is unmerged.
+  status: missing
+  note: No `threadOpen`, `threadMerge`, `threadClose` or `threadWait` event exists in this checkout.
+```
+
+```mdl
+verdict Feed: Neither proposed member exists.
+  status: missing
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#Feed]
+  note: The Feed module has no `branches` field and no `heads` function.
+```
+
+```mdl
+verdict Scope: Scope.feed exists but takes only a feed URI.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Scope.ts#feed]
+  note: It has no `branches`, `after` or `before` options, so no filter is pushed into SQL before `limit`.
+```
