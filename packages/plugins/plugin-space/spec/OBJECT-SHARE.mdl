@@ -254,6 +254,8 @@ feat F-2: Opening the link
   req F-2.5: While the join runs, navigation presence reports the space and its shared object as existing, so the plank is not declared missing before the space opens.
 
   req F-2.6: A browser that has never run Composer starts with only the core plugins and those the link names, and creates its own spaces only once the shared space is ready.
+
+  req F-2.7: Opening a share link makes the shared object the whole view: the navigation sidebar collapses at once, the companion stays closed once the link's workspace is active, and no toast or progress bar announces the join.
 ```
 
 ```mdl
@@ -287,9 +289,11 @@ feat F-4: First look
 
   req F-4.5: References inside a first look resolve only to other objects of the same first look.
 
-  req F-4.6: The live object replaces the first look in the same plank once the space opens; the plank does not remount.
+  req F-4.6: The live object replaces the first look in the same plank once the space opens and its article has rendered: the plank keeps the first look over the article until then, so it never shows empty between the two, and neither the plank nor the first look remounts.
 
   req F-4.7: A failed read loses only the first look; the join and the live object are unaffected.
+
+  req F-4.8: While the plank waits, its heading shows the first look's title and icon (`AppSurface.usePendingHeading`) instead of a loading title, so the heading does not change when the live object arrives.
 ```
 
 ```mdl
@@ -528,4 +532,33 @@ decision D-14: The first look's object JSON is named `objectJson`, and the route
   why: The field holds one object's JSON, not a document. A feed object has no document or heads, and the scope guard works by document, so serving one in the first look would show an object the join never delivers.
   rejected:
     - Add a feed variant to SharedObject now — the scope walk and the guard would still leave feed objects out of the joined space.
+```
+
+```mdl
+decision D-15: Opening a share link shows the shared object as the main view with everything else hidden: the sidebar collapsed and the loading progress bar hidden. When the real data is ready the view swaps by re-rendering in place, not by a reload that flickers.
+  date: 2026-10-26
+  by: user:mykola-vrmchk
+  affects: [F-2.7, F-4.6]
+```
+
+```mdl
+decision D-16: The share-link handler collapses the navigation sidebar, closes the companion once the link's workspace is the active deck, and no longer shows the opening toast, whose countdown bar was the progress bar. Fills in [D-15].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-2.7]
+  why: A fresh profile's deck starts with the sidebar expanded and every plank's companion open, so both opened the moment the space did; the companion state belongs to the workspace's deck, which only exists once the URL's workspace is applied.
+  rejected:
+    - Fullscreen — it also drops the plank's heading and Share action, and the deck clears it on every workspace change.
+```
+
+```mdl
+decision D-17: A plank keeps its pending stand-in over the article that replaces it until that article has rendered, and a stand-in may title the pending plank. Fills in [D-15].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-4.6, F-4.8]
+  why: The plank dropped the first look as soon as the node resolved, and showed its empty loading placeholder until the article's code and content were ready, which read as a reload; the heading changed from a loading title to the object's name at the same moment.
+  rejected:
+    - Delay the node's resolution until the article is ready — the deck cannot know when a plugin's article is ready without rendering it.
 ```

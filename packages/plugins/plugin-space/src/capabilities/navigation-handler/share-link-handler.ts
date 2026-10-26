@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -74,6 +75,7 @@ export const handleShareLink = (
       return yield* Effect.fail(new SpaceOperationError({ message: 'The link names no object.' }));
     }
     joining.set(spaceId, target.objectId);
+    yield* focusSharedObject(spaceId);
     const client = yield* Capability.get(ClientCapabilities.Client);
     // Detached and first: it needs no identity, so it can be on screen before the join below has begun.
     yield* Effect.forkDetach(showFirstLook(client, spaceId, target, payload, edgeUrl));
@@ -112,14 +114,38 @@ const openShared = (client: Client, spaceId: SpaceId, target: ShareTarget, paylo
     if (!invitation) {
       return yield* Effect.fail(new SpaceOperationError({ message: 'The link is only for members of its space.' }));
     }
-    yield* Operation.invoke(LayoutOperation.AddToast, {
-      id: `${meta.profile.key}/share-link-opening`,
-      icon: 'ph--share-network--regular',
-      title: ['share-link-opening.title', { ns: meta.profile.key }],
-      duration: 15_000,
-    });
     yield* joinAndOpen(client, invitation, spaceId, target, payload);
   });
+
+/**
+ * Makes the shared object the whole view: the navigation sidebar collapses at once, and the companion closes once the
+ * link's workspace is the active deck, since a new deck opens it by default.
+ */
+const focusSharedObject = (spaceId: SpaceId): Effect.Effect<void, never, Capability.Service | Operation.Service> =>
+  Effect.gen(function* () {
+    yield* Operation.invoke(LayoutOperation.UpdateSidebar, { state: 'collapsed' });
+    const registry = yield* Capability.get(Capabilities.AtomRegistry);
+    const layout = yield* Capability.get(AppCapabilities.Layout);
+    yield* Effect.forkDetach(
+      Effect.callback<void>((resume) => {
+        const isShared = () => GraphPath.getWorkspaceToken(registry.get(layout).workspace) === spaceId;
+        if (isShared()) {
+          resume(Effect.void);
+          return;
+        }
+        const unsubscribe = registry.subscribe(layout, () => {
+          if (isShared()) {
+            resume(Effect.void);
+          }
+        });
+        return Effect.sync(unsubscribe);
+      }).pipe(
+        Effect.timeout(SPACE_TIMEOUT),
+        Effect.andThen(Operation.invoke(LayoutOperation.UpdateCompanion, { subject: null })),
+        Effect.catch((error) => Effect.sync(() => log.warn('share link companion not closed', { error }))),
+      ),
+    );
+  }).pipe(Effect.catch((error) => Effect.sync(() => log.warn('share link layout not focused', { error }))));
 
 const reportFailure = (error: unknown): Effect.Effect<void, never, Operation.Service> =>
   Effect.gen(function* () {

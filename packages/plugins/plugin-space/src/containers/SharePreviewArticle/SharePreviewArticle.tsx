@@ -7,6 +7,7 @@ import React, { useMemo } from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { Obj } from '@dxos/echo';
 
 import { sharePreviewKeyOfNode, sharePreviewsAtom } from '../../util/index.ts';
 
@@ -24,6 +25,8 @@ export const SharePreviewArticle = ({ attendableId, nodeId }: SharePreviewArticl
     () => preview && { attendableId, subject: preview.subject },
     [attendableId, preview],
   );
+  const label = preview && Obj.getLabel(preview.subject);
+  AppSurface.usePendingHeading(preview && label ? { label, icon: Obj.getIcon(preview.subject)?.icon } : undefined);
   return data ? <Surface.Surface type={AppSurface.ObjectPreview} data={data} limit={1} /> : null;
 };
 

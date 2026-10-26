@@ -5,7 +5,7 @@
 // @import-as-namespace
 
 import type * as Schema from 'effect/Schema';
-import { type ComponentType, type ReactNode } from 'react';
+import { type ComponentType, type ReactNode, createContext, useContext, useEffect } from 'react';
 
 import * as Role from '@dxos/app-framework/Role';
 import * as Surface from '@dxos/app-framework/Surface';
@@ -391,6 +391,28 @@ export type PendingArticleData = {
   attendableId: string;
   /** The node the plank is waiting for. */
   nodeId: string;
+};
+
+/** What a {@link PendingArticle} stand-in knows about the object it stands in for, so the plank can be titled. */
+export type PendingHeading = {
+  label: string;
+  icon?: string;
+};
+
+const PendingHeadingContext = createContext<((heading: PendingHeading | undefined) => void) | undefined>(undefined);
+
+/** Provided by a plank around its {@link PendingArticle} stand-in, which titles the plank through {@link usePendingHeading}. */
+export const PendingHeadingProvider = PendingHeadingContext.Provider;
+
+/** Titles the pending plank a stand-in renders in, while the stand-in is mounted. */
+export const usePendingHeading = (heading: PendingHeading | undefined): void => {
+  const setHeading = useContext(PendingHeadingContext);
+  const label = heading?.label;
+  const icon = heading?.icon;
+  useEffect(() => {
+    setHeading?.(label === undefined ? undefined : { label, icon });
+    return () => setHeading?.(undefined);
+  }, [setHeading, label, icon]);
 };
 
 /**
