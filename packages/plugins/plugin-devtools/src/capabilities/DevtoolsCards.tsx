@@ -11,6 +11,7 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import {
   EdgeCard,
+  type EdgeCardSpace,
   IndexerCard,
   QueriesCard,
   type Stats,
@@ -61,17 +62,19 @@ export type EdgeCardSurfaceProps = Pick<DevtoolsCardData, 'stats'>;
 export const EdgeCardSurface = ({ stats }: EdgeCardSurfaceProps) => {
   const { status, refresh, copy } = useEdgeStatus();
   const spaces = useSpaces({ all: true });
-  const spaceNames = useMemo(() => {
-    const names: Record<string, string> = {};
+  const localSpaces = useMemo(() => {
+    const local: Record<string, EdgeCardSpace> = {};
     for (const space of spaces) {
-      const name = space.state.get() === SpaceState.SPACE_READY ? space.properties.name : undefined;
-      if (typeof name === 'string') {
-        names[space.id] = name;
+      const state = space.state.get();
+      if (state === SpaceState.SPACE_DELETED) {
+        continue;
       }
+      const name = state === SpaceState.SPACE_READY ? space.properties.name : undefined;
+      local[space.id] = { name: typeof name === 'string' ? name : undefined, tag: space.tags[0] };
     }
-    return names;
+    return local;
   }, [spaces]);
-  return <EdgeCard edge={stats.edge} status={status} spaceNames={spaceNames} onRefresh={refresh} onCopy={copy} />;
+  return <EdgeCard edge={stats.edge} status={status} spaces={localSpaces} onRefresh={refresh} onCopy={copy} />;
 };
 
 export type SurfaceProfilerCardSurfaceProps = Pick<DevtoolsCardData, 'surfaceProfilerStats' | 'onClearSurfaceProfiler'>;
