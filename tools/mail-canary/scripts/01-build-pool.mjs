@@ -34,7 +34,8 @@ const { values: args } = parseArgs({
     'custodian': { type: 'string', multiple: true, default: ['kean-s', 'dasovich-j', 'kaminski-v'] },
     'limit': { type: 'string', default: '10000' },
     'span-days': { type: 'string', default: '365' },
-    'end-days-ago': { type: 'string', default: '31' },
+    // Margin over the 31-day readiness check, so a pool imported days after it was built still passes.
+    'end-days-ago': { type: 'string', default: '40' },
   },
 });
 if (!args.maildir || !args.out) {

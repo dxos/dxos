@@ -38,7 +38,7 @@ node scripts/01-build-pool.mjs --maildir ~/enron/maildir --out ~/enron/trial.mbo
 
 It drops duplicates by content (one custodian files the same mail in several folders, hence three
 custodians) and messages with no body, samples `--limit` (10,000) evenly over time, moves the dates
-into the year ending 31 days ago, drops `Bcc`, and records every folder a message was filed in as
+into the year ending 40 days ago (margin over the 31-day check), drops `Bcc`, and records every folder a message was filed in as
 `X-Gmail-Labels: Enron/<custodian>/<folder>,...`. The corpus is real people's mail: keep it out of git.
 
 ### 02 Import the pool
