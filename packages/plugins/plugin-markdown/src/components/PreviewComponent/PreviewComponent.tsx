@@ -370,12 +370,12 @@ export const PreviewComponent = ({
             <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
           </div>
 
-          {/* The tag and open button float below the box, shown on hover, so they never cover the surface. */}
+          {/* The tag and open button are inset at the bottom, shown only on hover, so they cover the surface only then. */}
           <Layout.Flex
             align='center'
             justify='center'
             gap='xs'
-            classNames={floatingClassNames('top-full left-1/2 -translate-x-1/2 pt-1')}
+            classNames={floatingClassNames('bottom-2 left-1/2 -translate-x-1/2')}
           >
             <span className='dx-tag dx-tag-inline flex items-center gap-1 pe-0' data-hue='neutral'>
               {objectIcon && <Icon.Icon icon={objectIcon.icon} size='md' />}
