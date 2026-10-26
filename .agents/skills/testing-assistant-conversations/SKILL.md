@@ -55,6 +55,8 @@ CI stays deterministic because it uses committed fixtures, not live LLM calls.
    - **fish:** `eval (pnpm -ws 1p-credentials)`
    - **bash/zsh:** `eval "$(pnpm -ws 1p-credentials)"`
 
+   An agent's key is `op://eng-dev/com.anthropic.api/local/AGENTS_API_KEY`: run the tests under `DX_ANTHROPIC_API_KEY='op://eng-dev/com.anthropic.api/local/AGENTS_API_KEY' op run -- <command>` so the value never reaches the shell.
+
    The script is the `1p-credentials` package script (runs `op inject` over inlined `op://CI/…` references; the full env template lives in the dxos/edge repo as `.env.tpl`). An agent runs it only when `OP_SERVICE_ACCOUNT_TOKEN` is set; in a local session it would pop a 1Password prompt, so ask the user to export the keys in their shell instead (see the `1password` skill).
 
 2. **Run tests with generation:**
@@ -82,7 +84,7 @@ Effects that use memoization **must** end with **`TestHelpers.provideTestContext
 ### Real LLM calls and `DX_ANTHROPIC_API_KEY`
 
 The default `aiServicePreset: 'direct'` calls the Anthropic API directly. Set `DX_ANTHROPIC_API_KEY`
-(via `pnpm -ws 1p-credentials` or `export DX_ANTHROPIC_API_KEY=sk-ant-...`) when regenerating the
+(an agent: `DX_ANTHROPIC_API_KEY='op://eng-dev/com.anthropic.api/local/AGENTS_API_KEY' op run -- <command>`; otherwise `pnpm -ws 1p-credentials` or `export DX_ANTHROPIC_API_KEY=sk-ant-...`) when regenerating the
 memoized cache with `DX_UPDATE_MODEL_FIXTURES=1`. Use `DX_ANTHROPIC_API_KEY`, not `ANTHROPIC_API_KEY`
 (the latter breaks Claude Code). Normal cached runs need no key. Works for both direct operation
 invocations and full conversation tests. Example: `packages/core/assistant-toolkit/src/skills/skill-manager/skill.test.ts`.

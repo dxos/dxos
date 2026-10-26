@@ -203,7 +203,8 @@ moon run assistant-evals:evals
 moon run assistant-evals:evals -- src/evals/database.eval.ts
 ```
 
-In this repo, pull the key from the 1Password `CI` vault rather than exporting it manually:
+In this repo, pull the key from 1Password rather than exporting it manually. An agent reads `op://eng-dev/com.anthropic.api/local/AGENTS_API_KEY`
+with `DX_ANTHROPIC_API_KEY='op://eng-dev/com.anthropic.api/local/AGENTS_API_KEY' op run -- <command>`; otherwise load it from the `CI` vault:
 
 ```bash
 eval "$(pnpm -ws 1p-credentials)"
