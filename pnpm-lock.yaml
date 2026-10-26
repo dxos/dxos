@@ -14132,6 +14132,9 @@ importers:
       '@automerge/automerge':
         specifier: 3.5.0
         version: 3.5.0
+      '@codemirror/commands':
+        specifier: 'catalog:'
+        version: 6.11.1
       '@codemirror/state':
         specifier: 'catalog:'
         version: 6.7.6
@@ -21801,7 +21804,6 @@ importers:
       react-dom:
         specifier: ~19.2.7
         version: 19.2.7(react@19.2.7)
-
     devDependencies:
       '@bufbuild/protobuf':
         specifier: 'catalog:'

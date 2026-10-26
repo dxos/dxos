@@ -13,6 +13,7 @@ import React, {
 
 import * as Surface from '@dxos/app-framework/Surface';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AttentionSigil from '@dxos/app-toolkit/AttentionSigil';
 import { useComposedRefs } from '@dxos/react-hooks';
@@ -139,7 +140,15 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     const ActionRoot = popoverAnchorId === `${meta.profile.key}:${node.id}` ? Popover.Anchor : Fragment;
 
     return (
-      <Pane.Root {...landmark} ref={ref} classNames={classNames} {...attentionAttrs} data-testid='deck.plank'>
+      <Pane.Root
+        {...landmark}
+        ref={ref}
+        classNames={classNames}
+        {...attentionAttrs}
+        // Right-clicking anywhere in the plank (its heading or its content) lists its node's actions.
+        {...(node.data === undefined ? {} : AppNode.contextMenuProps(node.id, meta.profile.key))}
+        data-testid='deck.plank'
+      >
         {!headless && (
           <Pane.Toolbar>
             <ActionRoot>
