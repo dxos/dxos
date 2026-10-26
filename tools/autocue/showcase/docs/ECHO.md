@@ -121,25 +121,26 @@ The spoken lines for the Composer demo, one bullet per line read, in the same la
 assume the demo opens on a 4.5s title; the sections add up to 130s against the current 127s cut, so the picture
 stretches to the voice as for ECHO. Lines marked _(verify)_ make a claim to check against the cut.
 
-1. **Documents** (at 4.5s, 45s)
+1. **Documents**
    - This is Composer: an extensible super-app for teams and their agents.
    - Your data is organized into collaborative workspaces and accessed via plugins.
    - You can add comments to any object; and assign tasks to agents, which read and update data in real time.
    - Documents can incorporate components from any plugin.
-   - And plugins provide an extensive set of tools, skills and connectors.
+   - And the plugin registry contains dozens of rich components, ready to drop into any workspace.
+   - Plugins provide an extensive set of tools, skills and connectors.
    - Documents, diagrams, tables, and kanbans are all objects in the same graph.
 
-2. **Agents** (at 49.5s, 15s)
+2. **Agents**
    - At DXOS we use Composer as a coding harness with both frontier and open models.
    - In fact, Composer's own development, including its plans, tasks and agents -- are all designed, developed and extended from inside the app.
 
-3. **Email, calendar, meetings and CRM** (at 64.5s, 60s)
+3. **Email, calendar, meetings and CRM**
    - We run the rest of the business in Composer also.
    - Email arrives in the same graph, so every message is linked to the appropriate people and organization objects.
    - And the CRM is simply another view of the same data, for people and agents alike.
    - The calendar holds our meetings; with automated summaries including links to generated artifacts.
    - Meetings are captured, and agents turn them into notes, plans, and follow-ups.
 
-4. **Open and extensible** (at 124.5s, 10s)
+4. **Open and extensible**
    - The entire platform is open and extensible.
-   - It's built from over a hundred plugins that contribute interfaces, agent skills, and connectors to other systems.
+   - Your data, your apps, your agents, all in one place, and all under your control.
