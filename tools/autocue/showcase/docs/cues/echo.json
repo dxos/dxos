@@ -14,20 +14,20 @@
     "at": 10.5,
     "title": "Monolithic Agents",
     "lines": [
-      "Today we grant agents coarse-grained access to everything, with limited or no audits or control.",
+      "Today we grant agents coarse-grained access to everything, and we can’t see or control what they do with it.",
       "This approach is risky, and simply doesn't work for agents that run continuously with evolving requirements."
     ],
-    "text": "Today we grant agents coarse-grained access to everything, with limited or no audits or control. This approach is risky, and simply doesn't work for agents that run continuously with evolving requirements."
+    "text": "Today we grant agents coarse-grained access to everything, and we can’t see or control what they do with it. This approach is risky, and simply doesn't work for agents that run continuously with evolving requirements."
   },
   {
     "at": 20.5,
     "title": "ECHO Graph Database",
     "lines": [
-      "The ECHO Database takes a fundamentally different approach.",
-      "Enterprise, team, and personal data connect into a unified virtual semantic graph.",
-      "Composer brings it all together in one super app, replacing dozens of separate SaaS tools."
+      "DXOS takes a fundamentally different approach.",
+      "Enterprise, team, and personal data all connect into a unified virtual semantic graph.",
+      "Composer brings it all together in a single super app, replacing dozens of separate SaaS systems."
     ],
-    "text": "The ECHO Database takes a fundamentally different approach. Enterprise, team, and personal data connect into a unified virtual semantic graph. Composer brings it all together in one super app, replacing dozens of separate SaaS tools."
+    "text": "DXOS takes a fundamentally different approach. Enterprise, team, and personal data all connect into a unified virtual semantic graph. Composer brings it all together in a single super app, replacing dozens of separate SaaS systems."
   },
   {
     "at": 30.5,
@@ -35,9 +35,9 @@
     "lines": [
       "The graph is partitioned into interconnected workspaces;",
       "enabling teams and agents to work within a secure shared context.",
-      "Workspaces adapt to the work, drawing in data from different sources as the projects and tasks evolve."
+      "Workspaces are flexible containers, drawing in data from different sources as plans and tasks evolve."
     ],
-    "text": "The graph is partitioned into interconnected workspaces; enabling teams and agents to work within a secure shared context. Workspaces adapt to the work, drawing in data from different sources as the projects and tasks evolve."
+    "text": "The graph is partitioned into interconnected workspaces; enabling teams and agents to work within a secure shared context. Workspaces are flexible containers, drawing in data from different sources as plans and tasks evolve."
   },
   {
     "at": 40.5,

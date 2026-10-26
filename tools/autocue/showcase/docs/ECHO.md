@@ -72,18 +72,18 @@ The spoken lines, one bullet per line read; each slide starts at its time in the
 
 2. **Monolithic Agents** (at 10.5s)
    - Today we grant agents coarse-grained access to everything,
-     with limited or no audits or control.
+     and we can’t see or control what they do with it.
    - This approach is risky, and simply doesn't work for agents that run continuously with evolving requirements.
 
 3. **ECHO Graph Database** (at 20.5s)
-   - The ECHO Database takes a fundamentally different approach.
-   - Enterprise, team, and personal data connect into a unified virtual semantic graph.
-   - Composer brings it all together in one super app, replacing dozens of separate SaaS tools.
+   - DXOS takes a fundamentally different approach.
+   - Enterprise, team, and personal data all connect into a unified virtual semantic graph.
+   - Composer brings it all together in a single super app, replacing dozens of separate SaaS systems.
 
 4. **ECHO Hypergraph** (at 30.5s)
    - The graph is partitioned into interconnected workspaces;
    - enabling teams and agents to work within a secure shared context.
-   - Workspaces adapt to the work, drawing in data from different sources as the projects and tasks evolve.
+   - Workspaces are flexible containers, drawing in data from different sources as plans and tasks evolve.
 
 5. **Open and Extensible** (at 40.5s)
    - Open by design, it lets teams and third parties extend it -- building with their own apps, plugins and agents.
