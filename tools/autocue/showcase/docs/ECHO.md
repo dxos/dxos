@@ -132,15 +132,14 @@ stretches to the voice as for ECHO. Lines marked _(verify)_ make a claim to chec
 
 2. **Agents** (at 49.5s, 15s)
    - At DXOS we use Composer as a coding harness for frontier and open models.
-   - In fact, Composer's own development, including its plans, tasks and agents -- are all managed from inside the app.
+   - In fact, Composer's own development, including its plans, tasks and agents -- are all designed, developed and extended from inside the app.
 
 3. **Email, calendar, meetings and CRM** (at 64.5s, 60s)
    - We run the rest of the business in it too.
    - Email arrives in the same graph, so every message is linked to the people and organizations behind it.
-   - From a message, I can open the sender, their company, and everyone we work with there.
+   - And the CRM is simply another view of the same data, for people and agents alike.
    - The calendar holds our meetings; with automated summaries including links to generated artifacts.
    - Meetings are captured, and agents turn them into notes and follow-ups.
-   - And the CRM is simply another view of the same data, for people and agents alike.
 
 4. **Open and extensible** (at 124.5s, 10s)
    - The entire platform is open and extensible.

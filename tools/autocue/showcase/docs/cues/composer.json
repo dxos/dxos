@@ -18,9 +18,9 @@
     "title": "Agents",
     "lines": [
       "At DXOS we use Composer as a coding harness for frontier and open models.",
-      "In fact, Composer's own development, including its plans, tasks and agents -- are all managed from inside the app."
+      "In fact, Composer's own development, including its plans, tasks and agents -- are all designed, developed and extended from inside the app."
     ],
-    "text": "At DXOS we use Composer as a coding harness for frontier and open models. In fact, Composer's own development, including its plans, tasks and agents -- are all managed from inside the app."
+    "text": "At DXOS we use Composer as a coding harness for frontier and open models. In fact, Composer's own development, including its plans, tasks and agents -- are all designed, developed and extended from inside the app."
   },
   {
     "at": 70.5,
@@ -28,12 +28,11 @@
     "lines": [
       "We run the rest of the business in it too.",
       "Email arrives in the same graph, so every message is linked to the people and organizations behind it.",
-      "From a message, I can open the sender, their company, and everyone we work with there.",
+      "And the CRM is simply another view of the same data, for people and agents alike.",
       "The calendar holds our meetings; with automated summaries including links to generated artifacts.",
-      "Meetings are captured, and agents turn them into notes and follow-ups.",
-      "And the CRM is simply another view of the same data, for people and agents alike."
+      "Meetings are captured, and agents turn them into notes and follow-ups."
     ],
-    "text": "We run the rest of the business in it too. Email arrives in the same graph, so every message is linked to the people and organizations behind it. From a message, I can open the sender, their company, and everyone we work with there. The calendar holds our meetings; with automated summaries including links to generated artifacts. Meetings are captured, and agents turn them into notes and follow-ups. And the CRM is simply another view of the same data, for people and agents alike."
+    "text": "We run the rest of the business in it too. Email arrives in the same graph, so every message is linked to the people and organizations behind it. And the CRM is simply another view of the same data, for people and agents alike. The calendar holds our meetings; with automated summaries including links to generated artifacts. Meetings are captured, and agents turn them into notes and follow-ups."
   },
   {
     "at": 110.5,
