@@ -75,8 +75,12 @@ const importOrPurge = Effect.gen(function* () {
   const status = yield* pool.status({ mboxPath: command });
   console.log(JSON.stringify({ ...result, ...status }, null, 2));
   if (!status.ready) {
+    // A purge trashes the messages but leaves the progress file, so a rerun would skip them all.
+    const hint = status.size < (status.expected ?? 0) ? `; to import again, delete ${command}.imported first` : '';
     return yield* Effect.fail(
-      new Error('pool is not ready: it must hold exactly the mbox (purge a trial first), archived and 31+ days old'),
+      new Error(
+        `pool is not ready: it must hold exactly the mbox (purge a trial first), archived and 31+ days old${hint}`,
+      ),
     );
   }
 });
