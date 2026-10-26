@@ -8,7 +8,14 @@ import * as Schema from 'effect/Schema';
 import type * as SqlClient from 'effect/sql/SqlClient';
 import * as EffectStream from 'effect/Stream';
 
-import { DeferredTask, scheduleMicroTask, scheduleTask, synchronized } from '@dxos/async';
+import {
+  DeferredTask,
+  Mutex,
+  scheduleMicroTask,
+  scheduleTask,
+  synchronized,
+  yieldBehindQueuedTasks,
+} from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { Query } from '@dxos/echo';
@@ -115,9 +122,9 @@ type ActiveQuery = {
   /** `performance.now()` before which an invalidated query is left dirty rather than re-run. */
   debouncedUntil: number;
 
-  sendResults: (results: QueryService.QueryResult[], truncated?: 'paths' | 'manifest') => void;
+  sendResults: (results: QueryService.QueryResult[], executionTime: number, truncated?: 'paths' | 'manifest') => void;
   /** Reports a re-run whose result matched the last one sent. */
-  sendUnchanged: () => void;
+  sendUnchanged: (executionTime: number) => void;
   onError: (err: Error) => void;
 
   close: () => Promise<void>;
@@ -140,6 +147,12 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   private readonly '_queries' = new Set<ActiveQuery>();
 
   private '_updateQueries'!: DeferredTask;
+
+  /**
+   * One query evaluates at a time (lookups by id aside): the worker serves SQLite statements one by one, so
+   * interleaved queries all finish with the slowest, and a run's measured time would include the others' statements.
+   */
+  readonly #executionLock = new Mutex();
 
   /** Reactive queries currently registered, across every space. */
   get 'activeQueryCount'(): number {
@@ -281,7 +294,8 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
           return;
         }
         if (queryEntry.oneShot && queryEntry.executor.selectsById) {
-          await this.#runQuery(queryEntry);
+          // A lookup by id costs a few statements, and opening an object must not wait behind a heavy query.
+          await this.#runQuery(queryEntry, { exclusive: false });
           return;
         }
         queryEntry.open = true;
@@ -361,17 +375,17 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       oneShot: request.reactivity === QueryReactivity.ONE_SHOT,
       cost: 0,
       debouncedUntil: 0,
-      sendResults: (results, truncated) => {
+      sendResults: (results, executionTime, truncated) => {
         if (ctx.disposed) {
           return;
         }
-        onResults({ queryId: request.queryId, results, ...(truncated && { truncated }) });
+        onResults({ queryId: request.queryId, results, executionTime, ...(truncated && { truncated }) });
       },
-      sendUnchanged: () => {
+      sendUnchanged: (executionTime) => {
         if (ctx.disposed) {
           return;
         }
-        onResults({ queryId: request.queryId, unchanged: true });
+        onResults({ queryId: request.queryId, unchanged: true, executionTime });
       },
       onError,
       close: async () => {
@@ -466,8 +480,22 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     }
   }
 
-  async #runQuery(query: ActiveQuery): Promise<void> {
+  async #runQuery(query: ActiveQuery, { exclusive = true }: { exclusive?: boolean } = {}): Promise<void> {
+    if (!exclusive) {
+      return this.#evaluate(query);
+    }
+    {
+      using _guard = await this.#executionLock.acquire();
+      await this.#evaluate(query);
+    }
+    // SQLite runs synchronously, so without a turn here a whole batch is one task and its answers, and the requests
+    // queued behind it, all wait for the last query.
+    await yieldBehindQueuedTasks();
+  }
+
+  async #evaluate(query: ActiveQuery): Promise<void> {
     try {
+      // Timed once the query holds the lock, so the time covers its evaluation and none of the queue ahead of it.
       const begin = performance.now();
       const { changed } = await query.executor.execQuery();
       const finishedAt = performance.now();
@@ -483,10 +511,10 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         const results = await query.executor.getResults();
         countWork('echo.queryResultsSent');
         countWork('echo.queryResultRows', results.length);
-        query.sendResults(results, query.executor.truncated);
+        query.sendResults(results, performance.now() - begin, query.executor.truncated);
       } else if (!query.oneShot) {
         // A client that holds local writes against this query waits for a re-run to know its answer is current.
-        query.sendUnchanged();
+        query.sendUnchanged(finishedAt - begin);
       }
     } catch (err) {
       log.catch(err, {

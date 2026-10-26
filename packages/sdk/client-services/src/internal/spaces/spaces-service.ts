@@ -76,8 +76,9 @@ import {
 import { type SpaceManager, SpaceManagerService } from '../space/index.ts';
 import { type DataSpace } from './data-space.ts';
 
-/** Reads the space as the buf message the service returns. */
+type ArchiveFeed = NonNullable<ReturnType<typeof readSerializedSpaceArchive>['feeds']>[number];
 
+/** Reads the space as the buf message the service returns. */
 export class SpacesServiceImpl implements SpacesService.Handlers {
   'constructor'(
     private readonly _identityManager: IdentityContract.Manager,
@@ -480,6 +481,15 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
           rootUrl: extracted.metadata.echo?.currentRootUrl as AutomergeUrl,
           tags: request.tags,
         });
+        // Feed messages live outside the documents, so the archive's feed blocks are written separately.
+        await this._importFeeds(
+          space,
+          Object.values(extracted.feeds).map(({ metadata, blocks }) => ({
+            feedObjectId: metadata.id,
+            namespace: metadata.namespace,
+            messages: blocks.map((block) => JSON.parse(Buffer.from(block.data, 'base64').toString('utf8'))),
+          })),
+        );
         await this._updateMetrics();
         return { newSpaceId: space.id };
       },
@@ -516,7 +526,16 @@ export class SpacesServiceImpl implements SpacesService.Handlers {
       }
     });
 
-    for (const feed of serialized.feeds ?? []) {
+    await this._importFeeds(space, serialized.feeds ?? [], { merge });
+  }
+
+  /** Appends each feed's messages; a merge skips messages the space's feed already holds. */
+  private async '_importFeeds'(
+    space: DataSpace,
+    feeds: readonly ArchiveFeed[],
+    { merge = false }: { merge?: boolean } = {},
+  ): Promise<void> {
+    for (const feed of feeds) {
       const namespace =
         feed.namespace === 'trace' ? FeedProtocol.WellKnownNamespaces.trace : FeedProtocol.WellKnownNamespaces.data;
       const held = merge
