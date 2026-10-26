@@ -79,9 +79,9 @@ the 60s source render, 3s earlier than in `ECHO.m4v`). About 25 words fits a 10s
 
    - ECHO DB takes a fundamentally different approach.
    - REDO: It brings all your data into a single logical graph, so teams and agents can work from a shared context.
-     - Variant A (19 words): It brings enterprise, team and personal data into a single logical graph, so people and agents share one context.
+     - Variant A (24 words): It allows users to connect all enterprise assets into a single virtual graph, so people and agents can work together in a shared context.
      - Variant B (20 words): Enterprise, team and personal data live in a single logical graph, so people and agents work from a shared context.
-     - Variant C (18 words): It brings enterprise, team and personal data together into a single logical graph that people and agents share.
+     - Variant C (18 words): It allows users to connect all enterprise assets into a single virtual graph that people and agents share.
      - Variant D (18 words): It unifies enterprise, team and personal data in one logical graph, a shared context for people and agents.
 
 4. **ECHO Hypergraph** (33–43s, 30 words)
