@@ -1,0 +1,42 @@
+[
+  {
+    "at": 4.5,
+    "text": "This is Composer, an app built on DXOS. A team is working on its architecture guide, in a space they share."
+  },
+  {
+    "at": 14.5,
+    "text": "They comment and mention colleagues, and ask an agent for a diagram the same way, right in the document."
+  },
+  {
+    "at": 25.5,
+    "text": "Documents, diagrams and sheets are all objects in one graph. A link opens the architecture canvas, and the performance sheet charts its own data."
+  },
+  {
+    "at": 46.5,
+    "text": "Projects turn work into tasks. Pick the ones you want, and hand them to an agent."
+  },
+  {
+    "at": 56.5,
+    "text": "The agent works through them in the background, and its progress shows up in the project, beside the team's."
+  },
+  {
+    "at": 70.5,
+    "text": "The inbox brings mail into the same graph. Messages, people and organizations are linked objects, not rows in someone else's CRM."
+  },
+  {
+    "at": 82.5,
+    "text": "From a message, you reach the sender, their company, and everyone you work with there."
+  },
+  {
+    "at": 92.5,
+    "text": "The calendar holds the sales review, and its notes link straight to the deal pipeline."
+  },
+  {
+    "at": 101.5,
+    "text": "Every view works on the same data, for people and agents alike."
+  },
+  {
+    "at": 110.5,
+    "text": "Documents, sheets, maps, games, 3D scenes and meetings. Every plugin is built on the same graph, and you can build your own."
+  }
+]

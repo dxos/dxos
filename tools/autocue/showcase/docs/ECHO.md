@@ -4,6 +4,9 @@ Talking points for each slide of the ECHO explainer (`ECHO.m4v`, rendered from `
 `data-molecule-animation` worktree), with a draft spoken line for each. A slide has about 10s, so about 25–30 words
 at a natural pace. Points marked _(verify)_ make a claim that needs checking against the code before it is spoken.
 
+The spoken lines as voiced live in [`cues/echo.json`](cues/echo.json) (times are in the 60s source render, 3s
+earlier than in `ECHO.m4v`); the drafts below are the starting point.
+
 ## 0. Open: DXOS (0–3s)
 
 - No narration; the logo holds while the music starts.
@@ -17,8 +20,8 @@ at a natural pace. Points marked _(verify)_ make a claim that needs checking aga
 - Second, agents are only as useful as the data they can reach: to be at their best, they need all of it.
 - Giving agents that access safely is essential, and it needs a new security model.
 
-**Spoken (draft, 29 words):** "SaaS has siloed our data for decades. Now apps are easy to build, and agents need all of
-our data to be useful. That demands a new security model."
+**Spoken (draft, 29 words):** "SaaS has siloed our data for decades. It was a consequence of the old software economics.
+Now apps are easy to build, and agents need all of our data to be useful. That demands a new security model."
 
 ## 2. Monolithic Agents (13–23s)
 
