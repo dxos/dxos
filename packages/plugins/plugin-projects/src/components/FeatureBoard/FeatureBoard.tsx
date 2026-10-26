@@ -6,10 +6,11 @@ import React, { createContext, useContext, useMemo, useState } from 'react';
 
 import { useListSelection } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
-import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
+import * as Tag from '@dxos/react-ui/Tag';
 
 import { meta } from '#meta';
 
@@ -53,7 +54,7 @@ export type FeatureBoardFilterProps = {
 };
 
 /**
- * The board's filter field and a toggle per status, rendered without a container so a host can place them in its own
+ * The board's filter field and a toggleable tag per status, rendered without a container so a host can place them in its own
  * row or toolbar. The status counts are the toggles, so each says how many cards it adds.
  */
 export const FeatureBoardFilter = ({ features, value, onValueChange }: FeatureBoardFilterProps) => {
@@ -74,26 +75,32 @@ export const FeatureBoardFilter = ({ features, value, onValueChange }: FeatureBo
         placeholder={t('feature-board.filter.placeholder')}
         aria-label={t('feature-board.filter.placeholder')}
         value={value.query}
-        classNames='max-w-64'
+        classNames='grow min-w-0'
         data-testid='feature-board.filter'
         onChange={(event) => onValueChange({ ...value, query: event.target.value })}
       />
-      {STATUSES.map((status) => {
-        const count = features.filter((feature) => feature.status === status).length;
-        return (
-          count > 0 && (
-            <Button.Toggle
-              key={status}
-              variant='ghost'
-              icon={FEATURE_STATUS_STYLE[status].icon}
-              label={t('feature-board.status-count.label', { count, status: t(`feature-status.${status}.label`) })}
-              pressed={value.statuses.has(status)}
-              onPressedChange={(pressed) => toggleStatus(status, pressed)}
-              data-testid={`feature-board.status.${status}`}
-            />
-          )
-        );
-      })}
+      <Layout.Flex gap='xs' classNames='shrink-0 items-center ms-2'>
+        {STATUSES.map((status) => {
+          const count = features.filter((feature) => feature.status === status).length;
+          const pressed = value.statuses.has(status);
+          return (
+            count > 0 && (
+              // Neutral until pressed, then the status's own tag colour, as the cards show it.
+              <Tag.Tag
+                key={status}
+                hue={pressed ? FEATURE_STATUS_STYLE[status].hue : 'neutral'}
+                aria-pressed={pressed}
+                onClick={() => toggleStatus(status, !pressed)}
+                data-testid={`feature-board.status.${status}`}
+              >
+                <Icon.Icon icon={FEATURE_STATUS_STYLE[status].icon} size='xs' />
+                {t(`feature-status.${status}.label`)}
+                <span className='text-xs tabular-nums'>({count})</span>
+              </Tag.Tag>
+            )
+          );
+        })}
+      </Layout.Flex>
     </>
   );
 };
