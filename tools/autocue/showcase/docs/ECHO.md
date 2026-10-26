@@ -77,21 +77,23 @@ the 60s source render, 3s earlier than in `ECHO.m4v`). About 25 words fits a 10s
 
 3. **ECHO Graph Database** (23–33s, 24 words)
 
-   - ECHO DB takes a fundamentally different approach.
-   - REDO: It brings all your data into a single logical semantic graph, so teams and agents can work from a shared context.
-     - Variant A (25 words): It allows users to connect all enterprise assets into a single virtual semantic graph, so people and agents can work together in a shared context.
-     - Variant B (21 words): Enterprise, team and personal data live in a single logical semantic graph, so people and agents work from a shared context.
-     - Variant C (19 words): It allows users to connect all enterprise assets into a single virtual semantic graph that people and agents share.
-     - Variant D (19 words): It unifies enterprise, team and personal data in one logical semantic graph, a shared context for people and agents.
+   - The ECHO Database takes a fundamentally different approach.
+   - Enterprise, team and personal data live in a unified virtual semantic graph.
+   - NEW: a sentence on the unified user interface.
+     - Variant A (11 words): One interface lets you see and work with all of it.
+     - Variant B (13 words): And a single, unified interface brings every kind of data together on screen.
+     - Variant C (13 words): A unified interface lets people browse, edit and connect everything in one place.
+     - Variant D (8 words): So one interface replaces a dozen separate apps.
 
 4. **ECHO Hypergraph** (33–43s, 30 words)
 
-   - The graph is partitioned into interconnected secure spaces.
-   - REDO: Share each one with the colleagues and agents who need it, even across organizations, and every agent sees only what its task requires.
-     - Variant A (16 words): Each space is shared with exactly the colleagues and agents who need it, even across organizations.
-     - Variant B (17 words): Spaces can be shared with colleagues, partners and agents, so each one sees only what it needs.
-     - Variant C (16 words): Grant a colleague, a partner or an agent access to just the spaces their work requires.
-     - Variant D (17 words): Spaces span teams and organizations, and every agent is scoped to exactly the data its task needs.
+   - The graph is partitioned into interconnected workspaces; enabling teams and agents to work within a secure shared context.
+
+   - REDO: how workspaces are flexible and take in data from different sources as required.
+     - Variant A (16 words): Each workspace is flexible, pulling in mail, documents and data from whatever sources the work needs.
+     - Variant B (17 words): Workspaces are flexible: connect the sources each one needs, from mail and chat to databases and APIs.
+     - Variant C (16 words): Spin up a workspace for any project, and bring in data from the sources it requires.
+     - Variant D (15 words): Workspaces adapt to the work, drawing in data from different sources as each task requires.
 
 5. **Open and Extensible** (43–60s, 36 words)
 
