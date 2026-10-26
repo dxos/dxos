@@ -35,6 +35,8 @@ export type MarkdownBlockProps = Util.ThemedClassName<{
   registry?: XmlWidgetRegistry;
   /** The block widget for an object embedded as a card (`![label](echo://…)`). */
   objectImage?: WidgetDef<ObjectLinkProps>;
+  /** Editor extensions other plugins contribute, such as link chips; they apply to every message. */
+  extensions?: Extension[];
   hits?: readonly HighlightRange[];
   /** Number of block widgets this item currently has mounted; 0 once it unmounts. */
   onWidgetsChange?: (count: number) => void;
@@ -54,6 +56,7 @@ export const MarkdownBlock = memo(
     editable = false,
     registry,
     objectImage,
+    extensions: extraExtensions,
     hits,
     onWidgetsChange,
   }: MarkdownBlockProps) => {
@@ -76,13 +79,14 @@ export const MarkdownBlock = memo(
     const extensions = useMemo<Extension[]>(
       () => [
         ...createBlockExtensions({ registry, objectImage, editable, themeMode, setWidgets }),
+        ...(extraExtensions ?? []),
         EditorView.updateListener.of((update) => {
           if (update.selectionSet && !update.state.selection.main.empty) {
             selectionGroupRef.current.claim(update.view);
           }
         }),
       ],
-      [editable, themeMode, registry, objectImage],
+      [editable, themeMode, registry, objectImage, extraExtensions],
     );
 
     // Deliberately NOT `useTextEditor`, which builds the view in a passive effect — i.e. after paint.

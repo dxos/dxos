@@ -26,7 +26,7 @@ export const Connector = Capability.lazyModule(
 export const MarkdownExtension = Capability.lazyModule(
   'MarkdownExtension',
   {
-    provides: [MarkdownCapabilities.ExtensionProvider],
+    provides: [MarkdownCapabilities.ExtensionProvider, MarkdownCapabilities.TextExtension],
     activatesOn: MarkdownEvents.Start,
     environments: ['browser', 'tauri'],
   },

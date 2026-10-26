@@ -20,6 +20,7 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { PublicKey, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
+import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import {
   type ChatThreadController,
   type ChatThreadEvent,
@@ -574,6 +575,12 @@ const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onV
   const identity = useIdentity();
   // Embedded objects resolve against the chat's database (the fallback one while it is transient).
   const objectImage = useMemo(() => objectCardWidget(db), [db]);
+  // Link chips and the like that other plugins decorate text with; the debug view shows the raw text.
+  const textExtensions = Hooks.useCapabilities(MarkdownCapabilities.TextExtension);
+  const extensions = useMemo(
+    () => (viewType === 'debug' ? undefined : (textExtensions ?? []).flat()),
+    [textExtensions, viewType],
+  );
   // A block reference's chip reads the object's name once it is loaded — resolved through the
   // database's own ref, which honours the URI's space and the DXN forms — and the package default's
   // bare "Object" until then; the thread re-renders as the message's blocks settle.
@@ -678,6 +685,7 @@ const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onV
         viewType={viewType}
         registry={chatRegistry}
         objectImage={objectImage}
+        extensions={extensions}
         getObjectLabel={getObjectLabel}
         userHue={userHue}
         userDid={identity.did}

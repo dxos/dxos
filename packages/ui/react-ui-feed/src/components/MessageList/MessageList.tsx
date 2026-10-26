@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Extension } from '@codemirror/state';
 import React, {
   type ComponentProps,
   type ComponentType,
@@ -77,6 +78,8 @@ type MessageListContextValue = {
   registry?: XmlWidgetRegistry;
   /** The block widget for an object embedded as a card (`![label](echo://…)`); the host supplies one that can render a card. */
   objectImage?: WidgetDef<ObjectLinkProps>;
+  /** Editor extensions other plugins contribute, such as link chips; they apply to every message. */
+  extensions?: Extension[];
   Chrome: ComponentType<MessageChromeProps>;
   Custom?: ComponentType<{ content: ItemContent & { kind: 'custom' }; message: Message.Message }>;
   debug?: boolean;
@@ -131,7 +134,7 @@ const [MessageListProvider, useMessageListContext] = Hooks.createContext<Message
  */
 type MessageListItemContextValue = Pick<
   MessageListContextValue,
-  'model' | 'renderer' | 'registry' | 'objectImage' | 'Custom' | 'debug' | 'reportWidgets'
+  'model' | 'renderer' | 'registry' | 'objectImage' | 'extensions' | 'Custom' | 'debug' | 'reportWidgets'
 >;
 
 const [MessageListItemProvider, useMessageListItemContext] =
@@ -196,6 +199,8 @@ export type MessageListRootProps = PropsWithChildren<{
   registry?: XmlWidgetRegistry;
   /** The block widget for an object embedded as a card (`![label](echo://…)`). */
   objectImage?: WidgetDef<ObjectLinkProps>;
+  /** Editor extensions other plugins contribute, such as link chips; they apply to every message. */
+  extensions?: Extension[];
   /**
    * Chrome wrapper; receives the item as `children`. Defaults to a bare frame.
    * Chrome must be layout-stable: a control that changes a row's height on hover or focus
@@ -252,6 +257,7 @@ const MessageListRoot = ({
   renderer = defaultRenderer,
   registry,
   objectImage,
+  extensions,
   Chrome = DefaultChrome,
   Custom,
   debug,
@@ -540,6 +546,7 @@ const MessageListRoot = ({
           renderer={renderer}
           registry={registry}
           objectImage={objectImage}
+          extensions={extensions}
           Chrome={Chrome}
           Custom={Custom}
           debug={debug}
@@ -570,6 +577,7 @@ const MessageListRoot = ({
             renderer={renderer}
             registry={registry}
             objectImage={objectImage}
+            extensions={extensions}
             Custom={Custom}
             debug={debug}
             reportWidgets={reportWidgets}
@@ -755,7 +763,7 @@ type MessageListItemExtra = {
  * outside the scrolling window — a pinned message, a preview — through the same path.
  */
 const MessageListItem = Util.composable<HTMLDivElement, MessageListItemExtra>(({ message, ...props }, forwardedRef) => {
-  const { model, renderer, registry, objectImage, Custom, debug, reportWidgets } =
+  const { model, renderer, registry, objectImage, extensions, Custom, debug, reportWidgets } =
     useMessageListItemContext(MESSAGE_LIST_ITEM_NAME);
   const content = renderer(message);
   // The item asks for its own cross-cutting data by id (SPEC §Aspects); the list never routed it.
@@ -792,6 +800,7 @@ const MessageListItem = Util.composable<HTMLDivElement, MessageListItemExtra>(({
             stream={model.streamingId === message.id}
             registry={registry}
             objectImage={objectImage}
+            extensions={extensions}
             hits={hits}
             onWidgetsChange={handleWidgetsChange}
           />

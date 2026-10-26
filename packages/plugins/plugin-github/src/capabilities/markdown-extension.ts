@@ -28,7 +28,11 @@ const REPO_NAME = /^[\w.-]+\/[\w.-]+$/;
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
-    return Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
+    // A chat thread has no document or project to resolve a bare `#123` against, but a full URL needs
+    // neither, so it gets the link chip alone.
+    const textExtension = Capability.contribute(MarkdownCapabilities.TextExtension, [githubLinks()]);
+
+    const extensions = Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
       ({ document: doc, subject, viewMode }) => {
         // Source view shows the document's own text; a decoration there would hide what it is.
         if (viewMode === 'source') {
@@ -62,6 +66,8 @@ export default Capability.makeModule(
         ];
       },
     ]);
+
+    return [extensions, textExtension];
   }),
 );
 

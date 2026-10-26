@@ -49,6 +49,13 @@ export const ExtensionProvider = Capability.make<MarkdownExtensionProvider[]>()(
 );
 
 /**
+ * Editor extensions that decorate text which is not a markdown document, such as the link chips in a
+ * chat thread. Separate from {@link ExtensionProvider} because those providers assume a document
+ * editor (comments, transcription, presenter), and a read-only thread must not inherit them.
+ */
+export const TextExtension = Capability.make<Extension[]>()(`${meta.profile.key}.capability.textExtension`);
+
+/**
  * Hook-shaped contribution computing the editor's subject binding and review affordances (see
  * {@link UseEditorBinding}). Absent, the article binds the object directly with no review
  * affordances. Contributions are app-lifetime: replacing the hook remounts the article (scroll and
