@@ -145,6 +145,17 @@ if (fitted.length > 0) {
   }
 }
 segment(cursor, duration, 0);
+if (fitted.length > 0) {
+  console.table(
+    fitted.map(({ start, end, from, keep, extra }) => ({
+      start,
+      end,
+      from: +from.toFixed(2),
+      keep: +keep.toFixed(2),
+      picture: +(end - start + extra).toFixed(2),
+    })),
+  );
+}
 const total =
   fitted.length > 0
     ? duration + fitted.reduce((sum, { extra }) => sum + extra, 0)
