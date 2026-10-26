@@ -197,7 +197,7 @@ export type AgentOptions = {
   /** Permission mode a new session starts in. */
   mode?: () => string | undefined;
   /** Agent-specific options every session opens with (ACP `_meta`). */
-  sessionMeta?: Record<string, unknown>;
+  sessionMeta?: Record<string, unknown> | ((chat: Chat.Chat) => Record<string, unknown>);
   /** Composer's MCP tools for the chat, and the token the agent presents for them; fresh for each session. */
   tools?: (chat: Chat.Chat) => Effect.Effect<{ servers: acp.McpServer[]; token: string } | undefined>;
   /**
@@ -325,7 +325,7 @@ export const runTurn = (
               resume,
               mcpServers: [...(tools?.servers ?? []), ...connections],
               mode: options.mode?.(),
-              meta: options.sessionMeta,
+              meta: typeof options.sessionMeta === 'function' ? options.sessionMeta(chat) : options.sessionMeta,
             });
             return { session, token: tools?.token, offered: offeredKey(connections) };
           }),

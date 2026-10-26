@@ -53,6 +53,8 @@ export type Definition = {
   icon: string;
   /** Agent-specific options every session opens with (ACP `_meta`), given the Composer tools it is offered. */
   sessionMeta?: (composer: ComposerTools) => Record<string, unknown>;
+  /** The models a chat can pick for the agent; the pick (`chat.session.agentModel`) goes to `sessionMeta` as `model`. */
+  models?: readonly AssistantCapabilities.AgentModel[];
 };
 
 /** The MCP server a session gets Composer's tools from. */
@@ -60,6 +62,8 @@ export type ComposerTools = {
   server: string;
   /** Tools that only read, which an agent may be let call without asking. */
   readOnlyTools: readonly string[];
+  /** The model the chat chose, when it chose one. */
+  model?: string;
 };
 
 /** A coding agent, as a plugin contributes it. */
@@ -176,10 +180,14 @@ export const make = (definition: Definition): Effect.Effect<CodeAgent, never, Sc
     const options: AcpAgent.AgentOptions = {
       id: definition.id,
       sessions,
-      sessionMeta: definition.sessionMeta?.({
-        server: ComposerMcp.SERVER_NAME,
-        readOnlyTools: ComposerMcp.READ_ONLY_TOOLS,
-      }),
+      sessionMeta:
+        definition.sessionMeta &&
+        ((chat) =>
+          definition.sessionMeta!({
+            server: ComposerMcp.SERVER_NAME,
+            readOnlyTools: ComposerMcp.READ_ONLY_TOOLS,
+            model: chat.session?.agentModel,
+          })),
       connect: (cwd, toolsToken) => {
         const current = helper();
         return current
@@ -242,6 +250,7 @@ export const make = (definition: Definition): Effect.Effect<CodeAgent, never, Sc
       id: definition.id,
       label: definition.label,
       icon: definition.icon,
+      ...(definition.models && { models: definition.models }),
       availability,
       makeTurnProducer: AcpAgent.makeTurnProducer(options),
       respond: ({ chat, message, requestId, optionId }) =>
