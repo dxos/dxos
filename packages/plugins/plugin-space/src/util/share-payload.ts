@@ -5,27 +5,43 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
+import * as UrlPath from '@dxos/app-toolkit/UrlPath';
+
 import { InvalidSharePayloadError } from '../errors.ts';
 
 /**
- * What an object share link carries beyond the object's path: how to join, what to replicate and what to render it
- * with. See `.agents/projects/object-share/DESIGN.md` §3.
+ * What an object share link carries beyond its path, which names the object it opens: how to join, what to replicate
+ * and what to render it with. See plugin-space's `spec/OBJECT-SHARE.mdl`.
  */
 export const SharePayload = Schema.Struct({
-  v: Schema.Literal(1),
+  version: Schema.Literal(1),
   spaceId: Schema.String,
-  /** The shared object. */
-  objectId: Schema.String,
-  /** The shared object's type as a graph path segment, so the recipient can open it before its type is registered. */
-  typeSlug: Schema.String,
-  /** Encoded delegated space invitation; absent for a link only members can open. */
-  invitation: Schema.optional(Schema.String),
+  /**
+   * The delegated space invitation as protobuf JSON (`InvitationEncoder.toJson`) rather than a code, since the
+   * payload is encoded already; absent for a link only members can open.
+   */
+  invitation: Schema.optional(Schema.Record(Schema.String, Schema.MutableJson)),
   /** Plugins that render the objects in scope. */
   plugins: Schema.Array(Schema.String),
-  /** Objects a non-member replicates: the shared object first, then what it needs. */
+  /** Objects a non-member replicates: the object the link opens and what it needs. */
   objects: Schema.Array(Schema.String),
 });
 export interface SharePayload extends Schema.Schema.Type<typeof SharePayload> {}
+
+/** The object a share link opens, read off the link's path, which is the object's shareable path. */
+export type ShareTarget = {
+  objectId: string;
+  /** The type segment the object is filed under, so the recipient can open it before its type is registered. */
+  typeSlug: string;
+};
+
+/** The last object the link's path names, as `<typeSlug>+<objectId>`; undefined for a path that names none. */
+export const readShareTarget = (url: URL): ShareTarget | undefined => {
+  const objectId = UrlPath.readReferences(url.pathname).at(-1)?.entityId;
+  const segment =
+    objectId && url.pathname.split('/').findLast((part) => part.endsWith(`${UrlPath.TAIL_SEPARATOR}${objectId}`));
+  return segment ? { objectId, typeSlug: decodeURIComponent(segment.slice(0, -objectId.length - 1)) } : undefined;
+};
 
 const decodePayload = Schema.decodeUnknownEffect(Schema.fromJsonString(SharePayload));
 

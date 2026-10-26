@@ -13,6 +13,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Client } from '@dxos/client';
 import { INITIALIZE_TIMEOUT } from '@dxos/client-protocol';
 import { type Space } from '@dxos/client/echo';
+import { type Invitation } from '@dxos/client/invitations';
 import * as Operation from '@dxos/compute/Operation';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -24,8 +25,10 @@ import { SpaceOperation } from '#types';
 import { SpaceOperationError } from '../../operations/errors.ts';
 import {
   type SharePayload,
+  type ShareTarget,
   decodeSharePayload,
   readSharePreview,
+  readShareTarget,
   sharePreviewKey,
   sharePreviewsAtom,
 } from '../../util/index.ts';
@@ -66,17 +69,21 @@ export const handleShareLink = (
     if (!SpaceId.isValid(spaceId)) {
       return yield* Effect.fail(new SpaceOperationError({ message: 'The link names no valid space.' }));
     }
-    joining.set(spaceId, payload.objectId);
+    const target = readShareTarget(url);
+    if (!target) {
+      return yield* Effect.fail(new SpaceOperationError({ message: 'The link names no object.' }));
+    }
+    joining.set(spaceId, target.objectId);
     const client = yield* Capability.get(ClientCapabilities.Client);
     // Detached and first: it needs no identity, so it can be on screen before the join below has begun.
-    yield* Effect.forkDetach(showFirstLook(client, spaceId, payload, edgeUrl));
+    yield* Effect.forkDetach(showFirstLook(client, spaceId, target, payload, edgeUrl));
     yield* enablePlugins(payload.plugins);
     // Before the identity: the first look renders with the same plugins' surfaces.
     yield* Effect.forkDetach(preloadArticleSurfaces);
     // Detached: URL projection waits on every handler, and the object's plank should open now to show the first look
     // while the guest gets an identity and joins.
     yield* Effect.forkDetach(
-      openShared(client, spaceId, payload).pipe(
+      openShared(client, spaceId, target, payload).pipe(
         Effect.ensuring(Effect.sync(() => joining.delete(spaceId))),
         Effect.catch(reportFailure),
       ),
@@ -84,7 +91,7 @@ export const handleShareLink = (
   }).pipe(Effect.catch(reportFailure));
 
 /** For a member, widens a partial space's sync scope; for anyone else, joins with the link's scope and opens the object. */
-const openShared = (client: Client, spaceId: SpaceId, payload: SharePayload) =>
+const openShared = (client: Client, spaceId: SpaceId, target: ShareTarget, payload: SharePayload) =>
   Effect.gen(function* () {
     yield* Effect.tryPromise(() => client.waitUntilInitialized({ timeout: INITIALIZE_TIMEOUT }));
     yield* waitForIdentity(client).pipe(Effect.timeout(IDENTITY_TIMEOUT));
@@ -111,7 +118,7 @@ const openShared = (client: Client, spaceId: SpaceId, payload: SharePayload) =>
       title: ['share-link-opening.title', { ns: meta.profile.key }],
       duration: 15_000,
     });
-    yield* joinAndOpen(client, invitation, spaceId, payload);
+    yield* joinAndOpen(client, invitation, spaceId, target, payload);
   });
 
 const reportFailure = (error: unknown): Effect.Effect<void, never, Operation.Service> =>
@@ -133,31 +140,28 @@ const reportFailure = (error: unknown): Effect.Effect<void, never, Operation.Ser
 const showFirstLook = (
   client: Client,
   spaceId: SpaceId,
+  target: ShareTarget,
   payload: SharePayload,
   edgeUrl: string | undefined,
 ): Effect.Effect<void, never, Capability.Service> =>
   Effect.gen(function* () {
-    const code = payload.invitation;
-    if (!code) {
+    const json = payload.invitation;
+    if (!json) {
       return;
     }
-    const { InvitationEncoder } = yield* Effect.promise(() => import('@dxos/client/invitations'));
-    const invitation = yield* Effect.try({
-      try: () => InvitationEncoder.decode(code),
-      catch: (cause) => new SpaceOperationError({ cause }),
-    });
+    const invitation = yield* decodeInvitation(json);
     const url = edgeUrl ?? (yield* configuredEdgeUrl(client));
     if (!url) {
       return;
     }
-    const preview = yield* readSharePreview({ edgeUrl: url, spaceId, objectId: payload.objectId, invitation });
+    const preview = yield* readSharePreview({ edgeUrl: url, spaceId, objectId: target.objectId, invitation });
     if (!preview) {
       return;
     }
     const registry = yield* Capability.get(Capabilities.AtomRegistry);
     registry.update(sharePreviewsAtom, (previews) => ({
       ...previews,
-      [sharePreviewKey(spaceId, payload.objectId)]: preview,
+      [sharePreviewKey(spaceId, target.objectId)]: preview,
     }));
   }).pipe(Effect.catch((error) => Effect.sync(() => log.warn('share link first look not shown', { error }))));
 
@@ -211,16 +215,13 @@ const waitForIdentity = (client: Client): Effect.Effect<void> =>
  */
 const joinAndOpen = (
   client: Client,
-  code: string,
+  json: NonNullable<SharePayload['invitation']>,
   spaceId: SpaceId,
+  target: ShareTarget,
   payload: SharePayload,
 ): Effect.Effect<void, SpaceOperationError, Operation.Service> =>
   Effect.gen(function* () {
-    const { InvitationEncoder } = yield* Effect.promise(() => import('@dxos/client/invitations'));
-    const decoded = yield* Effect.try({
-      try: () => InvitationEncoder.decode(code),
-      catch: (cause) => new SpaceOperationError({ cause }),
-    });
+    const decoded = yield* decodeInvitation(json);
     const invitation = client.spaces.join(decoded, { syncScope: { objectIds: payload.objects } });
     const subscription = invitation.subscribe(
       (value) => log('share link invitation', { state: value.state }),
@@ -230,7 +231,7 @@ const joinAndOpen = (
     yield* Effect.gen(function* () {
       const space = yield* waitForSpace(client, spaceId);
       yield* Operation.invoke(LayoutOperation.Open, {
-        subject: [GraphPath.getObjectPath(space.id, payload.typeSlug, payload.objectId)],
+        subject: [GraphPath.getObjectPath(space.id, target.typeSlug, target.objectId)],
         workspace: GraphPath.getSpacePath(space.id),
         navigation: 'immediate',
       });
@@ -240,6 +241,18 @@ const joinAndOpen = (
       Effect.mapError((cause) => new SpaceOperationError({ message: 'The shared space did not open.', cause })),
       Effect.ensuring(Effect.sync(() => subscription.unsubscribe())),
     );
+  });
+
+/** The link's invitation, from the protobuf JSON the payload carries it as. */
+const decodeInvitation = (
+  json: NonNullable<SharePayload['invitation']>,
+): Effect.Effect<Invitation, SpaceOperationError> =>
+  Effect.gen(function* () {
+    const { InvitationEncoder } = yield* Effect.promise(() => import('@dxos/client/invitations'));
+    return yield* Effect.try({
+      try: () => InvitationEncoder.fromJson(json),
+      catch: (cause) => new SpaceOperationError({ message: 'The link carries no valid invitation.', cause }),
+    });
   });
 
 /** The space once the client lists it, which trails the invitation's success. */

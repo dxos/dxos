@@ -66,17 +66,16 @@ https://composer.space/w/<spaceId>/db/<typeSlug>+<objectId>?share=<payload>
 The query parameter is `SpaceOperation.SHARE_PARAM`, which plugin-onboarding also reads (§6). The path is what the
 existing **Copy link** action already produces
 (`UrlResolution.getShareableLinkPath`), so a member who opens it lands on the object through the
-normal URL projection with no extra work. `payload` is `base64url(deflate-raw(JSON))` of:
+normal URL projection with no extra work. The path alone names the target (`<typeSlug>+<objectId>`, read back by
+`readShareTarget`). `payload` is `base64url(deflate-raw(JSON))` of:
 
 ```ts
 type SharePayload = {
-  v: 1;
+  version: 1;
   spaceId: SpaceId;
-  objectId: ObjectId; // The target.
-  typeSlug: string; // The type's graph path segment, so the guest can open the object before its type registers.
-  invitation?: string; // InvitationEncoder code; absent for Restricted links.
+  invitation?: JsonObject; // InvitationEncoder.toJson, not a code: the payload is encoded already. Absent for Restricted links.
   plugins: string[]; // Plugin ids that render the scope's types.
-  objects: ObjectId[]; // The scope (§4): the target first.
+  objects: ObjectId[]; // The scope (§4).
 };
 ```
 

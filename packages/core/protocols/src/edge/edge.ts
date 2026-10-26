@@ -222,17 +222,18 @@ export type ReadSharedObjectsRequest = {
   signature: string;
 };
 
+/** One database object a share link reads. Only objects stored in Automerge documents are served; feed objects are not. */
 export type SharedObject = {
   id: string;
   /** The Automerge document holding the object. */
   documentId?: string;
   /** The object as the index read it, in the format `Obj.toJSON` writes. */
-  documentJson: string;
-  /** Heads of the document the index read `documentJson` at; empty when the index did not record them. */
+  objectJson: string;
+  /** Heads of the document the index read `objectJson` at; empty when the index did not record them. */
   heads: string[];
 };
 
-/** Shared objects EDGE has indexed; one it has not indexed yet is missing rather than an error. */
+/** Shared objects EDGE has indexed; one it has not indexed yet, or a feed object, is missing rather than an error. */
 export type ReadSharedObjectsResponseBody = {
   objects: SharedObject[];
 };

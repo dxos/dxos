@@ -9,14 +9,12 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { EntityId, SpaceId } from '@dxos/keys';
 
 import { InvalidSharePayloadError } from '../errors.ts';
-import { type SharePayload, decodeSharePayload, encodeSharePayload } from './share-payload.ts';
+import { type SharePayload, decodeSharePayload, encodeSharePayload, readShareTarget } from './share-payload.ts';
 
 const payload: SharePayload = {
-  v: 1,
+  version: 1,
   spaceId: SpaceId.random(),
-  objectId: EntityId.random(),
-  typeSlug: 'org.dxos.type.document',
-  invitation: 'x'.repeat(200),
+  invitation: { invitationId: 'x'.repeat(64), guestKeypair: { publicKey: { data: 'AAAA' } } },
   plugins: ['org.dxos.plugin.markdown'],
   objects: Array.from({ length: 5 }, () => EntityId.random()),
 };
@@ -53,12 +51,24 @@ describe('share payload', () => {
   });
 
   test('rejects a payload that inflates past the cap instead of filling memory', async ({ expect }) => {
-    const bomb = await encodeJson({ ...payload, invitation: '0'.repeat(1024 * 1024) });
+    const bomb = await encodeJson({ ...payload, invitation: { invitationId: '0'.repeat(1024 * 1024) } });
     expect(bomb.length).toBeLessThan(4_096);
     expect(InvalidSharePayloadError.is(await decodeError(bomb))).toBe(true);
   });
 
   test('rejects a payload from another version rather than half-applying it', async ({ expect }) => {
-    expect(InvalidSharePayloadError.is(await decodeError(await encodeJson({ ...payload, v: 2 })))).toBe(true);
+    expect(InvalidSharePayloadError.is(await decodeError(await encodeJson({ ...payload, version: 2 })))).toBe(true);
+  });
+});
+
+describe('share target', () => {
+  test("is the object the link's path names, with the type segment it is filed under", ({ expect }) => {
+    const objectId = EntityId.random();
+    const url = new URL(`https://composer.space/w/${SpaceId.random()}/db/org.dxos.type.document+${objectId}?share=x`);
+    expect(readShareTarget(url)).toEqual({ objectId, typeSlug: 'org.dxos.type.document' });
+  });
+
+  test('is undefined for a path that names no object', ({ expect }) => {
+    expect(readShareTarget(new URL(`https://composer.space/w/${SpaceId.random()}`))).toBeUndefined();
   });
 });

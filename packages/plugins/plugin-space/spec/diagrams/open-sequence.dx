@@ -1,0 +1,25 @@
+diagram kind=sequence
+node Dialog "Share dialog" role=actor
+node ShareOp "ShareObject op"
+node SSM "EDGE SpaceStateMachine"
+node Handler "Share link handler"
+node Route "EDGE shared-objects route"
+node Indexer "EDGE Indexer"
+node Plank "Plank"
+node Client "Space join"
+node Guard "Scope guard"
+edge Dialog calls ShareOp "copy link"
+edge ShareOp sends SSM "invitation, then DelegatedInvitationScope"
+note Handler:right "The guest opens the link"
+fragment par "first look" {
+  edge Handler calls Route "readSharedObjects, signed with the guest key"
+  edge Route calls SSM "grant"
+  edge Route calls Indexer "readObjects"
+  edge Route returns Handler "SharedObject[]"
+  edge Handler sends Plank "first look"
+} else "join" {
+  edge Handler calls Client "join with syncScope"
+  edge Client calls SSM "redeem the invitation"
+  edge Client sends Guard "syncScope"
+}
+edge Client sends Plank "live object replaces the first look"

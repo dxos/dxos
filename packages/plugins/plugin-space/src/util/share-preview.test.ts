@@ -44,7 +44,7 @@ describe('share preview', () => {
     const objects = [
       {
         id: documentId,
-        documentJson: JSON.stringify({
+        objectJson: JSON.stringify({
           'id': documentId,
           '@type': 'dxn:org.example.type.note:0.1.0',
           'name': 'Pricing notes',
@@ -54,7 +54,7 @@ describe('share preview', () => {
       },
       {
         id: textId,
-        documentJson: JSON.stringify({
+        objectJson: JSON.stringify({
           'id': textId,
           '@type': 'dxn:org.example.type.text:0.1.0',
           'content': '# Pricing',
@@ -71,7 +71,7 @@ describe('share preview', () => {
 
     expect(await EffectEx.runPromise(decodeSharedObjects(spaceId, EntityId.random(), objects))).toBeUndefined();
     const failure = await EffectEx.runPromise(
-      Effect.flip(decodeSharedObjects(spaceId, documentId, [{ id: documentId, documentJson: '{}', heads: [] }])),
+      Effect.flip(decodeSharedObjects(spaceId, documentId, [{ id: documentId, objectJson: '{}', heads: [] }])),
     );
     expect(failure.message).toBe('A shared object could not be decoded.');
   });

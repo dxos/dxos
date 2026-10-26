@@ -15,6 +15,7 @@ import { type Space, SpaceMember_Role } from '@dxos/client/echo';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import { type buf } from '@dxos/protocols/buf';
 import { isNonNullable } from '@dxos/util';
 
 import { SpaceOperation } from '#types';
@@ -62,10 +63,8 @@ const handler: Operation.WithHandler<typeof SpaceOperation.ShareObject> = SpaceO
       url.searchParams.set(
         SpaceOperation.SHARE_PARAM,
         yield* encodeSharePayload({
-          v: 1,
+          version: 1,
           spaceId: space.id,
-          objectId: object.id,
-          typeSlug: GraphPath.getTypeSlugFromUri(Obj.getTypeURI(object)),
           invitation,
           plugins,
           objects,
@@ -79,13 +78,13 @@ export default handler;
 
 /**
  * Creates a delegated, multi-use invitation — written to the space's control feed, so EDGE redeems it with no member
- * online, and serves the shared objects to the link before its holder joins — and resolves with its code once it is
+ * online, and serves the shared objects to the link before its holder joins — and resolves with it as JSON once it is
  * live.
  */
 const createDelegatedInvitation = (
   space: Space,
   { role, target, sharedObjectIds }: { role: SpaceMember_Role; target: string; sharedObjectIds: string[] },
-): Effect.Effect<string, SpaceOperationError> =>
+): Effect.Effect<buf.JsonObject, SpaceOperationError> =>
   Effect.gen(function* () {
     const { InvitationEncoder, Invitation_AuthMethod, Invitation_State, Invitation_Type } = yield* Effect.promise(
       () => import('@dxos/client/invitations'),
@@ -104,11 +103,11 @@ const createDelegatedInvitation = (
       Invitation_State.TIMEOUT,
       Invitation_State.EXPIRED,
     ];
-    return yield* Effect.callback<string, SpaceOperationError>((resume) => {
+    return yield* Effect.callback<buf.JsonObject, SpaceOperationError>((resume) => {
       const subscription = invitation.subscribe(
         (value) => {
           if (value.state === Invitation_State.CONNECTING) {
-            resume(Effect.succeed(InvitationEncoder.encode(value)));
+            resume(Effect.succeed(InvitationEncoder.toJson(value)));
           } else if (failed.includes(value.state)) {
             resume(Effect.fail(new SpaceOperationError({ message: 'Could not create the share invitation.' })));
           }

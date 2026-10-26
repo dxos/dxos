@@ -94,7 +94,7 @@ export const decodeSharedObjects = (
     const decoded = yield* Effect.forEach(objects, (object) =>
       Effect.tryPromise({
         try: () =>
-          Obj.fromJSON(JSON.parse(object.documentJson), {
+          Obj.fromJSON(JSON.parse(object.objectJson), {
             refResolver: resolver,
             uri: EID.make({ spaceId, entityId: object.id }),
           }),

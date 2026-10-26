@@ -4,6 +4,7 @@
 
 import base from 'base-x';
 
+import { invariant } from '@dxos/invariant';
 import { buf } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Type, InvitationSchema } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
@@ -11,39 +12,57 @@ import { type Invitation, Invitation_Type, InvitationSchema } from '@dxos/protoc
 const base62 = base('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
 
 /**
- * Encodes and decodes an invitation proto into/from alphanumeric chars.
+ * Encodes and decodes an invitation proto into/from alphanumeric chars, or into/from JSON for a container that is
+ * already encoded (a share link's payload).
  */
 export class InvitationEncoder {
   static decode(text: string): Invitation {
-    const decodedInvitation = buf.fromBinary(InvitationSchema, base62.decode(text));
-    if (decodedInvitation.type === Invitation_Type.MULTIUSE) {
-      decodedInvitation.type = Invitation_Type.INTERACTIVE;
-      decodedInvitation.multiUse = true;
-    }
-    return decodedInvitation;
+    return normalize(buf.fromBinary(InvitationSchema, base62.decode(text)));
   }
 
   static encode(invitation: Invitation): string {
-    return base62.encode(
-      buf.toBinary(
-        InvitationSchema,
-        buf.create(InvitationSchema, {
-          invitationId: invitation.invitationId,
-          type: invitation.type,
-          kind: invitation.kind,
-          authMethod: invitation.authMethod,
-          swarmKey: invitation.swarmKey,
-          state: invitation.state,
-          timeout: invitation.timeout,
-          guestKeypair: invitation.guestKeypair,
-          spaceId: invitation.spaceId,
-          lifetime: invitation.lifetime,
-          created: invitation.created,
-          // TODO(wittjosiah): Make these optional to encode for greater privacy.
-          ...(invitation.spaceKey ? { spaceKey: invitation.spaceKey } : {}),
-          ...(invitation.target ? { target: invitation.target } : {}),
-        }),
-      ),
-    );
+    return base62.encode(buf.toBinary(InvitationSchema, portable(invitation)));
+  }
+
+  /** The fields {@link encode} carries, as protobuf JSON. */
+  static toJson(invitation: Invitation): buf.JsonObject {
+    // A message's protobuf JSON form is always an object.
+    const json = buf.toJson(InvitationSchema, portable(invitation));
+    invariant(isJsonObject(json));
+    return json;
+  }
+
+  static fromJson(json: buf.JsonValue): Invitation {
+    return normalize(buf.fromJson(InvitationSchema, json));
   }
 }
+
+/** Only what a guest needs to accept the invitation: never its auth code or the host's identity. */
+const portable = (invitation: Invitation): Invitation =>
+  buf.create(InvitationSchema, {
+    invitationId: invitation.invitationId,
+    type: invitation.type,
+    kind: invitation.kind,
+    authMethod: invitation.authMethod,
+    swarmKey: invitation.swarmKey,
+    state: invitation.state,
+    timeout: invitation.timeout,
+    guestKeypair: invitation.guestKeypair,
+    spaceId: invitation.spaceId,
+    lifetime: invitation.lifetime,
+    created: invitation.created,
+    // TODO(wittjosiah): Make these optional to encode for greater privacy.
+    ...(invitation.spaceKey ? { spaceKey: invitation.spaceKey } : {}),
+    ...(invitation.target ? { target: invitation.target } : {}),
+  });
+
+const normalize = (invitation: Invitation): Invitation => {
+  if (invitation.type === Invitation_Type.MULTIUSE) {
+    invitation.type = Invitation_Type.INTERACTIVE;
+    invitation.multiUse = true;
+  }
+  return invitation;
+};
+
+const isJsonObject = (value: buf.JsonValue): value is buf.JsonObject =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);

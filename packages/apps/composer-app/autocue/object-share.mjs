@@ -260,7 +260,7 @@ const serveSharedObjects = async (context, link) => {
           objects: data.results.map(({ id, documentId, documentJson, heads }) => ({
             id,
             documentId,
-            documentJson,
+            objectJson: documentJson,
             heads: heads ?? [],
           })),
         },
