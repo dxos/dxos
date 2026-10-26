@@ -40,12 +40,6 @@ export class GitHubPullRequestReferenceError extends BaseError.extend(
   'Not a pull request reference.',
 ) {}
 
-/** The local Project could not be re-resolved after its upsert. */
-export class GitHubProjectMissingError extends BaseError.extend(
-  'GitHubProjectMissingError',
-  'Local project missing after upsert.',
-) {}
-
 /**
  * User-facing / persisted diagnostic string for failures from GitHub sync paths.
  */

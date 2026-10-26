@@ -93,6 +93,7 @@ const FeatureTile = ({ data: feature }: { data: FeatureModel }) => {
           <FeatureCard.Tags />
           <FeatureCard.SubfeatureCount />
           <FeatureCard.TaskCount />
+          <FeatureCard.TestCount />
           <FeatureCard.ShowcaseLead />
           <FeatureCard.DependencyCount />
         </FeatureCard.Body>

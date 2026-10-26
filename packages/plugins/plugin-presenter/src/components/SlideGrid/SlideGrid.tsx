@@ -13,6 +13,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import { mx } from '@dxos/ui-theme';
 
 import { type SlideSource, firstHeading } from '#deck';
+import { useSlideLabel } from '#hooks';
 import { meta } from '#meta';
 import { type SlideViewState } from '#types';
 
