@@ -44,17 +44,19 @@ into the year ending 31 days ago, drops `Bcc`, and records every folder a messag
 ### 02 Import the pool
 
 ```bash
-GMAIL_CLIENT_ID=... GMAIL_CLIENT_SECRET=... node scripts/02-import-pool.mjs auth
+GMAIL_CLIENT_ID=... GMAIL_CLIENT_SECRET=... node scripts/02-import-pool.mjs auth   # values: eng-dev/com.google, section dev
 node scripts/02-import-pool.mjs ~/enron/trial.mbox      # then check label:enron-pool in Gmail
 node scripts/02-import-pool.mjs purge
 node scripts/02-import-pool.mjs ~/enron/enron-pool.mbox # about 20 minutes, resumable
 ```
 
 - `auth` mints the canary's own grant (`gmail.modify`) with a browser consent as the test account and
-  writes it to `.secrets/mail-canary-gmail.env`. Use a Desktop OAuth client whose consent screen is
-  **Internal**: an External app in testing mode expires refresh tokens after 7 days. Copy the values
-  into the CI secrets and 1Password (`eng-dev/com.google`, section `mail-canary`), where a cloud
-  session reads them through `gmail.env.tpl`.
+  writes it to `.secrets/mail-canary-gmail.env`. It uses EDGE dev's Google OAuth client (1Password
+  `eng-dev/com.google`, section `dev`), which lists `http://127.0.0.1:53682/` as an authorized
+  redirect; run it on a machine with a browser. If that client's consent screen is External and in
+  testing mode, the refresh token expires after 7 days. Store the refresh token in section
+  `mail-canary` (`GMAIL_REFRESH_TOKEN`), where a cloud session reads it through `gmail.env.tpl`, and
+  all three values in the CI secrets.
 - An import puts each message in the mailbox without sending it: archived, never spam, labelled
   `enron-pool` and with its folders, dated by its `Date` header. In the trial, check the dates are the
   shifted ones (not 2001, not today) and the `Enron/...` labels are there; `purge` then trashes it.

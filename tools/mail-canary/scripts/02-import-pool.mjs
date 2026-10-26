@@ -42,7 +42,9 @@ if (command !== 'auth' && !process.env.GMAIL_REFRESH_TOKEN) {
 const authorize = Effect.gen(function* () {
   const { GMAIL_CLIENT_ID: clientId, GMAIL_CLIENT_SECRET: clientSecret } = process.env;
   if (!clientId || !clientSecret) {
-    return yield* Effect.fail(new Error('set GMAIL_CLIENT_ID and GMAIL_CLIENT_SECRET of a Desktop OAuth client'));
+    return yield* Effect.fail(
+      new Error('set GMAIL_CLIENT_ID and GMAIL_CLIENT_SECRET (eng-dev/com.google, section dev)'),
+    );
   }
   const refreshToken = yield* mintRefreshToken({ clientId, clientSecret, loginHint: canaryAccount() });
   yield* GmailClient.connect({ clientId, clientSecret, refreshToken }, canaryAccount());

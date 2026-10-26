@@ -12,7 +12,7 @@ import { GmailError, request } from './request.ts';
 export const GMAIL_MODIFY_SCOPE = 'https://www.googleapis.com/auth/gmail.modify';
 
 /**
- * The test account's own OAuth grant (a Desktop client and a refresh token with `gmail.modify`).
+ * The test account's own OAuth grant (an OAuth client and a refresh token with `gmail.modify`).
  * The canary runs outside EDGE, so it cannot use the kms-managed token the sync uses.
  */
 export type GmailCredentials = {
@@ -29,6 +29,12 @@ export const credentialsFromEnv = (env = process.env): GmailCredentials | undefi
   env.GMAIL_CLIENT_ID && env.GMAIL_CLIENT_SECRET && env.GMAIL_REFRESH_TOKEN
     ? { clientId: env.GMAIL_CLIENT_ID, clientSecret: env.GMAIL_CLIENT_SECRET, refreshToken: env.GMAIL_REFRESH_TOKEN }
     : undefined;
+
+// Fixed, because the shared EDGE dev OAuth client is a Web client that only accepts redirects it lists.
+const AUTH_PORT = 53682;
+
+/** The redirect `auth` uses; register it on the OAuth client. */
+export const AUTH_REDIRECT_URI = `http://127.0.0.1:${AUTH_PORT}/`;
 
 const TokenResponse = Schema.Struct({ access_token: Schema.String });
 const CodeExchange = Schema.Struct({ refresh_token: Schema.optional(Schema.String) });
@@ -49,9 +55,9 @@ export const accessToken = ({ clientId, clientSecret, refreshToken }: GmailCrede
 /**
  * Mints a refresh token for the canary's own Gmail grant with a one-time browser consent.
  *
- * It needs a Desktop-app OAuth client: Google accepts any loopback port as its redirect, so the
- * callback server listens on a free port and nothing has to be registered. Prints the consent URL;
- * open it while signed in as the test account.
+ * The callback server listens on `AUTH_REDIRECT_URI`, which the OAuth client must list as an
+ * authorized redirect (a Desktop client accepts it without registration). Prints the consent URL;
+ * open it on the same machine while signed in as the test account.
  */
 export const mintRefreshToken = ({
   clientId,
@@ -65,8 +71,6 @@ export const mintRefreshToken = ({
   Effect.tryPromise({
     try: () =>
       new Promise<string>((resolve, reject) => {
-        // Set once the server is listening; the consent request and the code exchange must name the same one.
-        let redirectUri = '';
         const server = createServer(async (incoming, response) => {
           const url = new URL(incoming.url ?? '/', 'http://127.0.0.1');
           const code = url.searchParams.get('code');
@@ -84,7 +88,7 @@ export const mintRefreshToken = ({
                 code,
                 client_id: clientId,
                 client_secret: clientSecret,
-                redirect_uri: redirectUri,
+                redirect_uri: AUTH_REDIRECT_URI,
                 grant_type: 'authorization_code',
               }),
             });
@@ -97,13 +101,11 @@ export const mintRefreshToken = ({
             reject(error);
           }
         });
-        server.listen(0, '127.0.0.1', () => {
-          const address = server.address();
-          redirectUri = `http://127.0.0.1:${typeof address === 'object' && address ? address.port : 0}/`;
+        server.listen(AUTH_PORT, '127.0.0.1', () => {
           const consent = new URL('https://accounts.google.com/o/oauth2/v2/auth');
           consent.search = new URLSearchParams({
             client_id: clientId,
-            redirect_uri: redirectUri,
+            redirect_uri: AUTH_REDIRECT_URI,
             response_type: 'code',
             scope: GMAIL_MODIFY_SCOPE,
             access_type: 'offline',
