@@ -9,6 +9,11 @@ import { type QueryAST } from '@dxos/echo-protocol';
 
 import { type SourceEntry } from './query-context.ts';
 
+export type RemoteRunOptions = {
+  /** Receives the time (ms) the remote spent evaluating the answer, when it reports one. */
+  onExecutionTime?: (executionTime: number) => void;
+};
+
 /**
  * An out-of-process answerer of queries: the host index, or EDGE through the same `QueryService`. Its
  * entries are evidence the {@link LocalQueryEngine} revalidates against the working set before presenting
@@ -35,6 +40,9 @@ export interface RemoteQuerySource {
   /** Whether this source serves the current query and has yet to answer it. */
   isPending(): boolean;
 
+  /** Time (ms) the remote spent evaluating the latest integrated answer; undefined until it reports one. */
+  executionTime?(): number | undefined;
+
   open(): void;
 
   close(): void;
@@ -43,7 +51,7 @@ export interface RemoteQuerySource {
   getResults(): SourceEntry[];
 
   /** One-shot query. */
-  run(ctx: Context, query: QueryAST.Query): Promise<SourceEntry[]>;
+  run(ctx: Context, query: QueryAST.Query, opts?: RemoteRunOptions): Promise<SourceEntry[]>;
 
   /** Sets the query and starts its reactive stream once the source is open. */
   update(query: QueryAST.Query): void;
