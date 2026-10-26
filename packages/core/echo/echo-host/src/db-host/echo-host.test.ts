@@ -451,6 +451,43 @@ describe('EchoHost query service', () => {
     expect(Option.getOrThrow(queued).executionTime).toBeLessThan(STALL_MS / 2);
   });
 
+  test('a query closed while queued behind a batch is skipped', async ({ expect }) => {
+    const { host, spaceId, saveObject } = await setup();
+    await saveObject(EntityId.random());
+    await host.updateIndexes();
+
+    const slowStarted = new Trigger();
+    const releaseSlow = new Trigger();
+    onTestFinished(() => {
+      releaseSlow.wake();
+    });
+    const executed: string[] = [];
+    const execQuery = QueryExecutor.prototype.execQuery;
+    const spy = vi.spyOn(QueryExecutor.prototype, 'execQuery').mockImplementation(async function (this: QueryExecutor) {
+      executed.push(this.queryId);
+      if (this.queryId === 'slow') {
+        slowStarted.wake();
+        await releaseSlow.wait();
+      }
+      return execQuery.call(this);
+    });
+    onTestFinished(() => spy.mockRestore());
+
+    const slow = EffectEx.runPromise(
+      Stream.runHead(host.queryService['QueryService.execQuery'](oneShotRequest(spaceId, 'slow'))),
+    );
+    const queued = Effect.runFork(
+      Stream.runDrain(host.queryService['QueryService.execQuery'](oneShotRequest(spaceId, 'queued'))),
+    );
+    await slowStarted.wait();
+    await EffectEx.runPromise(Fiber.interrupt(queued));
+    releaseSlow.wake();
+    await slow;
+    await host.queryService.awaitQueryUpdates();
+
+    expect(executed).toEqual(['slow']);
+  });
+
   test('a one-shot id lookup cancelled before it runs is never executed', async () => {
     const { host, spaceId } = await setup({ queryExecutor: 'sql' });
     const checkStarted = new Trigger();

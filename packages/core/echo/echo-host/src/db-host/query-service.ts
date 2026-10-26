@@ -378,6 +378,8 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       },
       onError,
       close: async () => {
+        // Cleared first so a batch that has not reached this query yet skips it instead of running a closed executor.
+        queryEntry.open = false;
         onClose();
         await queryEntry.executor.close();
         this._queries.delete(queryEntry);
@@ -438,6 +440,9 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     ready.sort((left, right) => left.cost - right.cost);
     let sliceStart = performance.now();
     for (const query of ready) {
+      if (!query.open) {
+        continue;
+      }
       await this.#runQuery(query);
       // Without a turn the whole batch is one task, and its answers and the requests queued behind it wait for the last query.
       if (performance.now() - sliceStart >= QUERY_SLICE_MS) {
