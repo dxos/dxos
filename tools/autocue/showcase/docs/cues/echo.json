@@ -1,22 +1,22 @@
 [
   {
     "at": 0.5,
-    "text": "SaaS has siloed our data for decades. It was a consequence of the old software economics. Now apps are easy to build, and agents need all of our data to be useful. That demands a new security model."
+    "text": "SaaS has siloed our data for decades. This was a consequence of cloud software economics. But today apps are easier to build, and agents need all of our data to be useful. That demands a new data and security model."
   },
   {
     "at": 10.5,
-    "text": "Today we grant agents coarse access to everything, with no audit and no control. As agents run continuously, across both private and enterprise data, that becomes more dangerous every day."
+    "text": "Today we grant agents coarse-grained access to everything, with no audit and limited control. This approach is risky, and it simply doesn't work for agents that run continuously with evolving requirements."
   },
   {
     "at": 20.5,
-    "text": "ECHO takes a different approach. It brings all your data into a single logical graph, so people and agents work from the same context."
+    "text": "The ECHO Database takes a fundamentally different approach. Enterprise, team and personal data live in a unified virtual semantic graph. Composer brings it all together in one super app, replacing dozens of separate SaaS tools."
   },
   {
     "at": 30.5,
-    "text": "That graph is partitioned into secure spaces. Share each one with the colleagues and agents who need it, even across organizations, and every agent sees only what its task requires."
+    "text": "The graph is partitioned into interconnected workspaces; enabling teams and agents to work within a secure shared context. Workspaces adapt to the work, drawing in data from different sources as each task requires."
   },
   {
     "at": 40.5,
-    "text": "And because it's open, it keeps growing. New sources, new apps and new agents plug into the same graph, and you never give up control. DXOS is the operating system for people and agents working together."
+    "text": "And because it's open, it keeps growing. New sources, new apps and new agents plug into the same graph, and you never give up control. DXOS is the operating system for the new enterprise."
   }
 ]
