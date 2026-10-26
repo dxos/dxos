@@ -79,21 +79,20 @@ the 60s source render, 3s earlier than in `ECHO.m4v`). About 25 words fits a 10s
 
    - The ECHO Database takes a fundamentally different approach.
    - Enterprise, team and personal data live in a unified virtual semantic graph.
-   - NEW: a sentence on the unified user interface.
-     - Variant A (11 words): One interface lets you see and work with all of it.
-     - Variant B (13 words): And a single, unified interface brings every kind of data together on screen.
-     - Variant C (13 words): A unified interface lets people browse, edit and connect everything in one place.
-     - Variant D (8 words): So one interface replaces a dozen separate apps.
+   - NEW: Composer, a super app that replaces dozens of individual SaaS apps.
+     - Variant A (14 words): Composer is a super app on that graph, replacing dozens of separate SaaS tools.
+     - Variant B (12 words): And Composer, a single super app, replaces dozens of individual SaaS products.
+     - Variant C (15 words): On top of it, Composer is one super app that replaces dozens of SaaS apps.
+     - Variant D (16 words): Composer brings it all together in one super app, in place of dozens of SaaS tools.
 
 4. **ECHO Hypergraph** (33–43s, 30 words)
 
    - The graph is partitioned into interconnected workspaces; enabling teams and agents to work within a secure shared context.
-
-   - REDO: how workspaces are flexible and take in data from different sources as required.
-     - Variant A (16 words): Each workspace is flexible, pulling in mail, documents and data from whatever sources the work needs.
-     - Variant B (17 words): Workspaces are flexible: connect the sources each one needs, from mail and chat to databases and APIs.
-     - Variant C (16 words): Spin up a workspace for any project, and bring in data from the sources it requires.
-     - Variant D (15 words): Workspaces adapt to the work, drawing in data from different sources as each task requires.
+   - REDO: Workspaces adapt to the work, drawing in data from different sources as each task requires.
+     - Variant A (13 words): Workspaces adapt to the work, drawing in data from different sources as needed.
+     - Variant B (14 words): Workspaces adapt to the work, drawing in data from different sources as projects evolve.
+     - Variant C (15 words): Workspaces adapt to the work, drawing in data from different sources whenever it's called for.
+     - Variant D (13 words): Workspaces adapt to the work, drawing in data from different sources on demand.
 
 5. **Open and Extensible** (43–60s, 36 words)
 
