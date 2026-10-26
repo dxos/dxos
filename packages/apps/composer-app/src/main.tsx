@@ -37,6 +37,7 @@ import { translations as observabilityTranslations } from '@dxos/plugin-observab
 import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
 import * as SupportService from '@dxos/plugin-support/SupportService';
 import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
+import { translations as menuTranslations } from '@dxos/react-ui-menu/translations';
 import * as Theme from '@dxos/react-ui/Theme';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
@@ -721,7 +722,12 @@ const main = async () => {
             icon-only button. */}
         <Theme.Provider
           tx={Theme.defaultTx}
-          resourceExtensions={[...reactUiTranslations, ...translations, ...observabilityTranslations]}
+          resourceExtensions={[
+            ...reactUiTranslations,
+            ...menuTranslations,
+            ...translations,
+            ...observabilityTranslations,
+          ]}
         >
           {/* If the lazy chunk fails to load (broken deploy, offline), the throw reaches the
                 fatal-dialog boundary above, which shows the original error via ErrorFallback. */}
