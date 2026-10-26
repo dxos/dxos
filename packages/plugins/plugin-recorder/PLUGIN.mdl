@@ -102,7 +102,7 @@ component LevelMeter
 component RecordingsPanel
   desc: >
     The layout both Recordings companions share: the toolbar, a full-width RecordingList (a react-ui-list Listbox with
-    shared column tracks, its leading bookmark and trailing buttons under the toolbar's icons; the current row is the
+    shared column tracks, its leading check and trailing buttons under the toolbar's icons; the current row is the
     selection: a click or the arrow keys move it, Space plays or stops it, a double-click opens it), and the current
     row's player docked in the status bar, with no download menu.
   props: { toolbar, statusbar, children }
@@ -112,7 +112,7 @@ component SlideRecordingsArticle
     The Recordings companion of a Slide, on RecordingsPanel. The toolbar records a new take of the slide (the deck
     presents from it; the recording ends when the reader leaves it), and saves an unsaved take again. The takes are a
     list with columns, newest first, unsaved ones first: an icon, the date and time it was recorded, its length, the
-    slide's desired length, then a bookmark (filled on the main take; it makes a take main), Play (in the status bar) and
+    slide's desired length, then a check (green on the main take; it makes a take main), Play (in the status bar) and
     Delete (undoable; it discards an unsaved take).
   props: { slide: Slide }
 
@@ -120,7 +120,7 @@ component PresentationRecordingsArticle
   desc: >
     The Recordings companion of a Presentation, on RecordingsPanel. The toolbar records every slide (a take per
     slide), plays every main take in order, and downloads them as one WAV. The presented slides are a list with
-    columns: a bookmark (filled when the slide has a main take), number and title, take count, main take's length, desired
+    columns: a check (green when the slide has a main take), number and title, take count, main take's length, desired
     length, then Play (its main take); a double-click opens the slide.
   props: { presentation: Presentation }
 
@@ -144,7 +144,7 @@ feat F-1: Record
 
 feat F-2: Slide takes
   req F-2.1: A Slide has a Recordings companion listing its takes, newest first, with the main take marked.
-  req F-2.2: A take's row has a bookmark that makes it the main take, Play, and Delete; a delete can be undone.
+  req F-2.2: A take's row has a check that makes it the main take, Play, and Delete; a delete can be undone.
   req F-2.4: Both Recordings companions share one layout: a toolbar, a keyboard-navigable list, and the current row's player in the status bar.
   req F-2.3: Each take shows its length against the slide's desired length, flagged when over.
 
@@ -184,7 +184,7 @@ test QA-1: Record a presentation's voice-over, then re-record one slide
       do: Open slide 1's Recordings companion and press Record; after 3-2-1 read it, then press →.
       expect: the presentation closes; slide 1 lists two takes, the new one marked Main
     - name: Choose the first read
-      do: Press the star on the older take.
+      do: Press the check on the older take.
       expect: the older take is marked Main
     - name: Delete and undo
       do: Delete the newer take, then undo.
@@ -422,4 +422,21 @@ decision D-28: The main-take mark is the system bookmark icon (react-ui's System
   date: 2026-10-26
   by: user:richburdon
   affects: [RecordingsPanel, SlideRecordingsArticle, PresentationRecordingsArticle]
+```
+
+```mdl
+decision D-29: The main-take mark is the system checkmark, green when checked, instead of the bookmark; take labels (their date and time) use tabular figures. Supersedes [D-28].
+  date: 2026-10-26
+  by: user:richburdon
+  supersedes: D-28
+  affects: [RecordingsPanel, SlideRecordingsArticle, PresentationRecordingsArticle]
+```
+
+```mdl
+decision D-30: The system checkmark is a new react-ui `SystemButton.Check` toggle preset (check, bold and success valence while pressed), beside Star and Bookmark. Fills in [D-29].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [RecordingsPanel]
+  why: react-ui had no checkmark preset; Clipboard already shows its success state as a green check.
 ```

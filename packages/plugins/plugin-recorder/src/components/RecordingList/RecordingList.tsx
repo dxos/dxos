@@ -57,7 +57,7 @@ export type RecordingListProps<T extends RecordingItem = RecordingItem> = {
   onValueChange?: (id: string) => void;
   /** Accessible name of the list. */
   label: string;
-  /** Makes a row's bookmark a toggle that marks it main; without it the bookmark only shows. */
+  /** Makes a row's check a toggle that marks it main; without it the check only shows. */
   onMain?: (item: T) => void;
   /** Space on the current row plays or stops it. */
   onToggle?: (item: T) => void;
@@ -68,9 +68,9 @@ export type RecordingListProps<T extends RecordingItem = RecordingItem> = {
 };
 
 /**
- * The rows of a Recordings companion: a slide's takes, or a presentation's slides, as a list with columns (bookmark,
+ * The rows of a Recordings companion: a slide's takes, or a presentation's slides, as a list with columns (check,
  * label, count, length, desired length, then one block-sized cell per button) on Listbox's shared tracks, so cells
- * line up from row to row and the leading bookmark and trailing buttons line up with the toolbar's. The current row is the
+ * line up from row to row and the leading check and trailing buttons line up with the toolbar's. The current row is the
  * selection: a click anywhere in a row selects it, the arrow keys move it, Space plays or stops it, and a double-click
  * opens it.
  */
@@ -154,7 +154,7 @@ export const RecordingList = <T extends RecordingItem>({
                   {item.error ? (
                     <Icon.Icon icon='ph--warning--regular' classNames='text-error-text' />
                   ) : onMain ? (
-                    <SystemButton.Bookmark
+                    <SystemButton.Check
                       data-testid='recorder.item.main'
                       iconOnly
                       variant='ghost'
@@ -164,12 +164,12 @@ export const RecordingList = <T extends RecordingItem>({
                     />
                   ) : (
                     <Icon.Icon
-                      icon={item.main ? 'ph--bookmark-simple--fill' : 'ph--bookmark-simple--regular'}
-                      classNames={mx(!item.main && 'text-fg-subtle')}
+                      icon={item.main ? 'ph--check--bold' : 'ph--check--regular'}
+                      classNames={mx(item.main ? 'text-success-text' : 'text-fg-subtle')}
                     />
                   )}
                 </Listbox.ItemIcon>
-                <Listbox.ItemText>
+                <Listbox.ItemText classNames='tabular-nums'>
                   {item.index !== undefined && (
                     <span className='me-1.5 tabular-nums text-fg-subtle'>{item.index + 1}</span>
                   )}
