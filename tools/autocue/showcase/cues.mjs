@@ -22,9 +22,12 @@ const SCRIPTS = [{ name: 'echo', doc: 'ECHO.md', offset: 3 }];
 
 const parse = (markdown) => {
   const script = markdown.slice(markdown.indexOf('## Script'));
-  return [...script.matchAll(/^\d+\. \*\*([^*]+)\*\* \(at ([\d.]+)s\)\n\n?((?: {3}- .*\n?)+)/gm)].map(
+  // A bullet may wrap onto indented continuation lines, which join its first line.
+  return [...script.matchAll(/^\d+\. \*\*([^*]+)\*\* \(at ([\d.]+)s\)\n\n?((?: {3}- .*\n?(?: {5}\S.*\n?)*)+)/gm)].map(
     ([, title, at, body]) => {
-      const lines = [...body.matchAll(/^ {3}- (.*)$/gm)].map(([, line]) => line.trim());
+      const lines = [...body.matchAll(/^ {3}- (.*(?:\n {5}\S.*)*)/gm)].map(([, line]) =>
+        line.replace(/\s+/g, ' ').trim(),
+      );
       return { at: Number(at), title, lines, text: lines.join(' ') };
     },
   );

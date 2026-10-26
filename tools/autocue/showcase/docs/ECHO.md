@@ -67,12 +67,13 @@ The spoken lines, one bullet per line read; each slide starts at its time in the
 1. **The Silo Problem** (at 0.5s)
    - SaaS has siloed our data for decades.
    - This was a consequence of cloud software economics.
-   - But today agents need access to all of our data to be effective.
+   - But today agents need access to all of our information to be effective.
    - And this demands a new data and security model.
 
 2. **Monolithic Agents** (at 10.5s)
-   - Today we grant agents coarse-grained access to everything, with no audit and limited control.
-   - This approach is risky, and it simply doesn't work for agents that run continuously with evolving requirements.
+   - Today we grant agents coarse-grained access to everything,
+     with limited or no audits or control.
+   - This approach is risky, and simply doesn't work for agents that run continuously with evolving requirements.
 
 3. **ECHO Graph Database** (at 20.5s)
    - The ECHO Database takes a fundamentally different approach.
