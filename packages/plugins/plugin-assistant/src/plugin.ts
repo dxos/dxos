@@ -13,12 +13,15 @@ import {
   AppGraphBuilder,
   AssistantState,
   AutomationTemplates,
+  CommentAgentRunner,
   CompanionChatProvisioner,
   Connector,
   CreateObject,
   EdgeModelResolver,
   LocalModelResolver,
   MarkdownExtension,
+  McpServer,
+  McpServerRegistry,
   OperationHandler,
   PluginAsset,
   QuestionResumer,
@@ -38,6 +41,8 @@ export const AssistantPlugin = Plugin.define<AssistantOptions.AssistantPluginOpt
   .pipe(
     Plugin.addModule(AppGraphBuilder),
     Plugin.addModule(SkillDefinition),
+    Plugin.addModule(McpServer),
+    Plugin.addModule(McpServerRegistry),
     Plugin.addModule(CreateObject),
     Plugin.addModule(OperationHandler),
     Plugin.addModule(Schema),
@@ -60,6 +65,7 @@ export const AssistantPlugin = Plugin.define<AssistantOptions.AssistantPluginOpt
     // upstream. See `capabilities/ai-context.ts` for the rationale.
     Plugin.addModule(AiContextCapability),
     Plugin.addModule(AgentRuntime),
+    Plugin.addModule(CommentAgentRunner),
     Plugin.addModule(Agents),
   )
   .pipe(

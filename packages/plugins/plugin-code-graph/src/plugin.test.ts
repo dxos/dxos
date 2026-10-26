@@ -13,6 +13,8 @@ import { meta } from '#meta';
 import { CodeGraphPlugin } from '#plugin';
 import { CodeGraph } from '#types';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), CodeGraphPlugin()] });
+
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('CodeGraphPlugin', () => {

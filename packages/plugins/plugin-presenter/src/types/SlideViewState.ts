@@ -12,7 +12,11 @@ import { ViewState } from '@dxos/react-ui-attention/types';
 export const State = Schema.Struct({
   /** Zero-based index of the slide this user is viewing. */
   index: Schema.Number,
+  /** Thumbnail size of the slide grid. */
+  gridSize: Schema.optional(Schema.Literals(['small', 'large'])),
 }).mapFields(Struct.map(Schema.mutableKey));
+
+export type GridSize = NonNullable<State['gridSize']>;
 
 export type State = Schema.Schema.Type<typeof State>;
 

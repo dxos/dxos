@@ -83,6 +83,7 @@ import * as SidekickPlugin from '@dxos/plugin-sidekick/SidekickPlugin';
 import * as SlackPlugin from '@dxos/plugin-slack/SlackPlugin';
 import * as SpacetimePlugin from '@dxos/plugin-spacetime/SpacetimePlugin';
 import * as StackPlugin from '@dxos/plugin-stack/StackPlugin';
+import * as StePlugin from '@dxos/plugin-ste/StePlugin';
 import * as StreamDeckPlugin from '@dxos/plugin-stream-deck/StreamDeckPlugin';
 import * as StudioPlugin from '@dxos/plugin-studio/StudioPlugin';
 import * as TablePlugin from '@dxos/plugin-table/TablePlugin';
@@ -134,6 +135,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
     CanvasPlugin.meta.profile.key,
     TldrawPlugin.meta.profile.key,
     ExcalidrawPlugin.meta.profile.key,
+    PresenterPlugin.meta.profile.key,
     TablePlugin.meta.profile.key,
     ThreadPlugin.meta.profile.key,
 
@@ -182,6 +184,7 @@ export const getDefaults = ({ isDev, isLocal, isMobile }: PluginConfig): string[
       SandboxPlugin.meta.profile.key,
       SequencerPlugin.meta.profile.key,
       SidekickPlugin.meta.profile.key,
+      StePlugin.meta.profile.key,
       StudioPlugin.meta.profile.key,
       TranscriptionPlugin.meta.profile.key,
       TypefullyPlugin.meta.profile.key,
@@ -316,6 +319,7 @@ export const getPlugins = (config: PluginConfig): Plugin.Plugin[] => {
     isDev && SidekickPlugin.make(),
     SheetPlugin.make(),
     StackPlugin.make(),
+    StePlugin.make(),
     TablePlugin.make(),
     TypeSafePlugin.make(),
     TasksPlugin.make(),

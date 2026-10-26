@@ -4,12 +4,21 @@
 
 // @import-as-namespace
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { BaseError } from '@dxos/errors';
 
 import * as Protocol from './Protocol.ts';
+
+/**
+ * Origin of the route; empty in the app, where the route is same-origin. A node test or script sets it to the
+ * server it started.
+ */
+export const BaseUrl: Context.Reference<string> = Context.Reference<string>('@dxos/plugin-code-graph/BaseUrl', {
+  defaultValue: () => '',
+});
 
 /** The index could not answer: no dev-server route, no index built, or the tool refused the input. */
 export class CodeIndexError extends BaseError.extend('CodeIndexError', 'code-index could not answer.') {}
@@ -30,8 +39,8 @@ const decode =
 export const call = Effect.fn('CodeIndexClient.call')(function* (
   tool: Protocol.Tool,
   args: Record<string, unknown> = {},
-  { baseUrl = '' }: { baseUrl?: string } = {},
 ) {
+  const baseUrl = yield* BaseUrl;
   const request: Protocol.Request = { tool, args };
   const response = yield* Effect.tryPromise({
     try: (signal) =>

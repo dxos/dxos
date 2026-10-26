@@ -64,7 +64,25 @@ decides whether the code or the spec changes.
    of its steps, `diverged` when the test runs something else, `missing` when nothing runs it (a manual
    QA run does not count). `untested` does not apply. `tests:` names the test files and is required
    unless the status is `missing`; `evidence:` may name the code the test drives. The viewer shows
-   exercised, partly exercised or not exercised, with a chip per test file.
+   tested, partly tested or not tested, with a chip per test file.
+
+   When an item is implemented **in more than one place**, add a `walkthrough:` of 1 to 5 steps
+   in reading order, each `- <one sentence>. github:<key>` naming the declaration it describes:
+
+   ```mdl
+   verdict importSpec: Links a checkout file to a new Spec.
+     status: done
+     evidence: [github:dxos/dxos/packages/plugins/plugin-code/src/types/CodeOperation.ts#ImportSpec, github:dxos/dxos/packages/plugins/plugin-code/src/operations/import-spec.ts]
+     walkthrough:
+       - The operation declares its key input and the Spec it returns. github:dxos/dxos/packages/plugins/plugin-code/src/types/CodeOperation.ts#ImportSpec
+       - The handler resolves the checkout, reads the file and creates the Spec. github:dxos/dxos/packages/plugins/plugin-code/src/operations/import-spec.ts
+   ```
+
+   Say what each piece does for this item, not how it works line by line. A `type` or anything with
+   one implementation gets no walkthrough: hovering its code chip already shows the declaration. An
+   `op` walks its declaration, then each handler; a `feat` or `req` walks the pieces in the order a
+   request passes through them. The viewer shows the steps in the item's Review card and on hover
+   of its status chip.
 
 5. **Write the review** to the spec's directory as `<SPEC>.review.mdl` (`PLUGIN.mdl` →
    `PLUGIN.review.mdl`), replacing any previous one. Frontmatter:

@@ -274,6 +274,7 @@ export type CompileOptions = {
  * Compile a mermaid class diagram into scene commands: one world object per class (compartment
  * rects `title`/`attributes`/`methods`) and an `edges` object holding the relations as bound
  * arrows. Supertypes rank above subtypes, so inheritance reads downward.
+ * @deprecated Mermaid input is deprecated; write the semantic DSL (`extends`, `implements`, …) and use `Dsl.compile`.
  */
 export const compile = (source: string, options: CompileOptions = {}): Scene.Command[] => {
   const model = parse(source);

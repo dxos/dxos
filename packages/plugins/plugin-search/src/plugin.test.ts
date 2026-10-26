@@ -24,6 +24,8 @@ import { Attention } from '@dxos/react-ui-attention/types';
 
 import { SearchPlugin } from '#plugin';
 
+await Harness.preload({ plugins: [SearchPlugin()] });
+
 const makeUninitializedClientHostPlugin = (client: Client) =>
   Plugin.define(Plugin.makeMeta({ key: DXN.make('example.com.plugin.host'), name: 'Host' })).pipe(
     Plugin.addModule({

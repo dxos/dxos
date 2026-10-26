@@ -3,6 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -15,7 +16,7 @@ import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
+import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import {
   type BackgroundGrid,
@@ -24,6 +25,7 @@ import {
   type CanvasPropertiesProps,
   type Element,
   type InspectorMode,
+  MAX_ZOOM,
   type Node,
   type SceneDisplay,
   type ViewId,
@@ -56,6 +58,8 @@ import { createGeneratorWorker, useBoundCanvasStore, useCanvasGenerators, useCan
 import { canvasViewAspect } from './view-state.ts';
 
 export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
+
+const NO_REFITS = Atom.make<Record<string, number>>({});
 
 /** Why a canvas a newer plugin saved opens read-only, and what unlocks it. */
 const NewerFormatBanner = () => {
@@ -98,6 +102,10 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   );
   const nodes = useCanvasNodes(openObject);
   const bound = useBoundCanvasStore(canvas);
+  // An agent's drawing edit asks for a refit, so the view frames what changed rather than where the viewer left it.
+  const [refitAtom] = Hooks.useCapabilities(IllustratorCapabilities.Refit);
+  const refits = useAtomValue(refitAtom ?? NO_REFITS);
+  const refitKey = refits[Obj.getURI(canvas)];
   const generators = useCanvasGenerators(db);
 
   // The drawing's settings, edited in the properties companion: the lattice picks the projection.
@@ -131,10 +139,13 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   // A section is a drawing shown inside another object (a document's embed), so it is only looked at, never edited,
   // and shows the drawing alone: no palette and no inspectors.
   const section = role === AppSurface.Section.role;
+  // A slide shows the drawing as a picture: read-only like a section, and with no toolbar or panels at all.
+  const slide = role === AppSurface.Slide.role;
+  const embedded = section || slide;
   // Only the main article draws the canvas chrome (top edge, grid, guides); elsewhere it is the bare drawing.
   const article = role === AppSurface.Article.role;
   const newer = CanvasFormat.isNewerScene(canvas.schema);
-  const readonly = (viewReadonly ?? record?.readonly ?? false) || section || newer;
+  const readonly = (viewReadonly ?? record?.readonly ?? false) || embedded || newer;
   const handleInspectorsChange = useCallback(
     (mode: InspectorMode) => updateViewState((state) => ({ ...state, floating: mode === 'floating' })),
     [updateViewState],
@@ -204,8 +215,8 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   return (
     // A section takes the document's width and has no height of its own (read-only, it has no dock), so its height
     // follows from the drawing's 3:2 frame.
-    <Panel.Root role={role} classNames={section ? 'w-full aspect-[3/2]' : undefined}>
-      {newer && !section && (
+    <Panel.Root role={role} classNames={section ? 'w-full aspect-[3/2]' : slide ? 'bg-transparent' : undefined}>
+      {newer && !embedded && (
         <Panel.Header>
           <NewerFormatBanner />
         </Panel.Header>
@@ -229,11 +240,17 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               background={look.background}
               backgroundGrid={article ? look.backgroundGrid : 'none'}
               // Both write the canvas record, which a newer plugin's format keeps read-only here.
-              onThemeChange={section || newer ? undefined : handleThemeChange}
-              onBackgroundGridChange={section || newer ? undefined : handleBackgroundGridChange}
+              onThemeChange={embedded || newer ? undefined : handleThemeChange}
+              onBackgroundGridChange={embedded || newer ? undefined : handleBackgroundGridChange}
               readonly={readonly}
+              transparent={slide}
+              // A slide lays the picture out itself, so the drawing fills its box: no fit margin, and a small drawing is
+              // enlarged rather than kept at 1:1.
+              margin={slide ? 0 : undefined}
+              fitZoom={slide ? MAX_ZOOM : undefined}
+              refitKey={refitKey}
               // A newer plugin's format stays read-only here, so the toggle that would unlock it is not offered.
-              onReadonlyChange={section || newer ? undefined : handleReadonlyChange}
+              onReadonlyChange={embedded || newer ? undefined : handleReadonlyChange}
               initialCamera={savedCamera}
               onCameraChange={handleCameraChange}
               initialDisplay={{ snap, guides: article && guides, fit }}
@@ -247,7 +264,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
             >
               <Canvas.Viewport liveDepth={settings.liveDepth} />
               {/* Unset means shown: settings saved before the default existed hold neither key. */}
-              {(settings.showToolbar ?? true) && (
+              {!slide && (settings.showToolbar ?? true) && (
                 <>
                   <Canvas.Navigation />
                   <Canvas.Actions />
@@ -255,7 +272,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
                   {!section && <Canvas.Theme />}
                 </>
               )}
-              {!section && (
+              {!embedded && (
                 <>
                   {(settings.showPalette ?? true) && <Canvas.Tools />}
                   <Canvas.Properties
