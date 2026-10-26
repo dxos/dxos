@@ -377,11 +377,18 @@ export const PreviewComponent = ({
             gap='xs'
             classNames={floatingClassNames('top-full left-1/2 -translate-x-1/2 pt-1')}
           >
-            <span className='dx-tag dx-tag-inline flex gap-1' data-hue='neutral'>
+            <span className='dx-tag dx-tag-inline flex items-center gap-1 pe-0' data-hue='neutral'>
               {objectIcon && <Icon.Icon icon={objectIcon.icon} size='md' />}
               {objectLabel}
+              <Button.Root
+                size='md'
+                icon='ph--arrow-square-out--regular'
+                iconOnly
+                label='Open'
+                variant='ghost'
+                onClick={handleOpen}
+              />
             </span>
-            <Button.Root size='md' icon='ph--arrow-square-out--regular' iconOnly label='Open' onClick={handleOpen} />
           </Layout.Flex>
 
           <ResizeHandle
