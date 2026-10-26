@@ -386,7 +386,8 @@ export const PreviewComponent = ({
                 iconOnly
                 label='Open'
                 variant='ghost'
-                classNames='opacity-70 hover:opacity-100 hover:bg-transparent'
+                iconSize='md'
+                classNames='hover:bg-transparent'
                 onClick={handleOpen}
               />
             </span>
