@@ -29,6 +29,8 @@ export type NativeContext = {
   field?: { element: TextField; start: number; end: number };
   /** A contenteditable host (e.g. a CodeMirror editor), which handles clipboard events itself. */
   editable?: HTMLElement;
+  /** The selected DOM range outside a field, restored before cutting or copying it. */
+  range?: Range;
 };
 
 /** Reads the link, image, selection and editable target under a right-click. */
@@ -41,10 +43,10 @@ export const readNativeContext = (target: EventTarget | null): NativeContext => 
     ? { element: fieldElement, start: fieldElement.selectionStart ?? 0, end: fieldElement.selectionEnd ?? 0 }
     : undefined;
   const editable = field ? undefined : (element?.closest<HTMLElement>('[contenteditable="true"]') ?? undefined);
-  const selection = field
-    ? field.element.value.slice(field.start, field.end)
-    : (globalThis.getSelection?.()?.toString() ?? '');
-  return { link, image, selection: selection || undefined, field, editable };
+  const domSelection = field ? null : (globalThis.getSelection?.() ?? null);
+  const range = domSelection && domSelection.rangeCount > 0 ? domSelection.getRangeAt(0).cloneRange() : undefined;
+  const selection = field ? field.element.value.slice(field.start, field.end) : (domSelection?.toString() ?? '');
+  return { link, image, selection: selection || undefined, field, editable, range };
 };
 
 /** Replaces the field's selected range, as typing would, so frameworks listening for `input` see the change. */
@@ -54,15 +56,39 @@ const replaceRange = ({ element, start, end }: NonNullable<NativeContext['field'
   element.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: text }));
 };
 
-/** Sends a clipboard event to an editor, which applies it to its own selection. */
-const dispatchClipboard = (editable: HTMLElement, type: 'cut' | 'paste', data?: string): DataTransfer => {
-  const clipboardData = new DataTransfer();
-  if (data !== undefined) {
-    clipboardData.setData('text/plain', data);
+/** Puts focus and the selection back where they were at the right-click; opening the menu took both. */
+const restoreSelection = ({ field, editable, range }: NativeContext) => {
+  if (field) {
+    field.element.focus();
+    field.element.setSelectionRange(field.start, field.end);
+    return;
   }
+  editable?.focus();
+  const selection = globalThis.getSelection?.();
+  if (range && selection) {
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+};
+
+/**
+ * Cuts or copies the restored selection as the keyboard shortcut would, so an editor (e.g. CodeMirror) writes and
+ * removes its own selection; the command needs no clipboard permission, unlike `navigator.clipboard`, which is the
+ * fallback where the command is unsupported.
+ */
+const execClipboard = (command: 'cut' | 'copy', context: NativeContext, text: string) => {
+  restoreSelection(context);
+  if (!document.execCommand(command)) {
+    void navigator.clipboard.writeText(text);
+  }
+};
+
+/** Sends a paste event to an editor, which inserts the text at its own selection. */
+const dispatchPaste = (editable: HTMLElement, text: string) => {
+  const clipboardData = new DataTransfer();
+  clipboardData.setData('text/plain', text);
   editable.focus();
-  editable.dispatchEvent(new ClipboardEvent(type, { clipboardData, bubbles: true, cancelable: true }));
-  return clipboardData;
+  editable.dispatchEvent(new ClipboardEvent('paste', { clipboardData, bubbles: true, cancelable: true }));
 };
 
 /**
@@ -102,25 +128,16 @@ export const nativeActions = (context: NativeContext): MenuAction[] => {
 
   if (selection && writable) {
     actions.push(
-      createMenuAction(
-        'native.cut',
-        () => {
-          if (field) {
-            void navigator.clipboard.writeText(selection);
-            replaceRange(field, '');
-          } else if (editable) {
-            const data = dispatchClipboard(editable, 'cut');
-            void navigator.clipboard.writeText(data.getData('text/plain') || selection);
-          }
-        },
-        { label: label('context-menu.cut.label'), icon: 'ph--scissors--regular' },
-      ),
+      createMenuAction('native.cut', () => execClipboard('cut', context, selection), {
+        label: label('context-menu.cut.label'),
+        icon: 'ph--scissors--regular',
+      }),
     );
   }
 
   if (selection) {
     actions.push(
-      createMenuAction('native.copy', () => void navigator.clipboard.writeText(selection), {
+      createMenuAction('native.copy', () => execClipboard('copy', context, selection), {
         label: label('context-menu.copy.label'),
         icon: 'ph--copy--regular',
       }),
@@ -131,14 +148,20 @@ export const nativeActions = (context: NativeContext): MenuAction[] => {
     actions.push(
       createMenuAction(
         'native.paste',
-        () =>
+        () => {
+          restoreSelection(context);
+          // Pages may not run the native paste command (only extensions and app shells can), so read the clipboard.
+          if (document.execCommand('paste')) {
+            return;
+          }
           void navigator.clipboard.readText().then((text) => {
             if (field) {
               replaceRange(field, text);
             } else if (editable) {
-              dispatchClipboard(editable, 'paste', text);
+              dispatchPaste(editable, text);
             }
-          }),
+          });
+        },
         { label: label('context-menu.paste.label'), icon: 'ph--clipboard-text--regular' },
       ),
     );
