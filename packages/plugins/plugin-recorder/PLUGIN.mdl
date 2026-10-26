@@ -109,9 +109,10 @@ component RecordingsPanel
 component SlideRecordingsArticle
   desc: >
     The Recordings companion of a Slide, on RecordingsPanel. The toolbar records a new take of the slide (the deck
-    presents from it; the recording ends when the reader leaves it) and acts on the current take: Make main, Download,
-    Delete (undoable); an unsaved take adds Save again, and Delete discards it. Each take is a tile in one column,
-    newest first, unsaved ones first, with Play and its length against the slide's desired length.
+    presents from it; the recording ends when the reader leaves it) and acts on the current take: Download, Delete
+    (undoable); an unsaved take adds Save again, and Delete discards it. Each take is a tile in one column, newest
+    first, unsaved ones first, with a star (filled on the main take; it makes a take main), Play, and its length
+    against the slide's desired length.
   props: { slide: Slide }
 
 component PresentationRecordingsArticle
@@ -142,7 +143,7 @@ feat F-1: Record
 
 feat F-2: Slide takes
   req F-2.1: A Slide has a Recordings companion listing its takes, newest first, with the main take marked.
-  req F-2.2: A take tile's Play plays it; the current take can be downloaded, made the main take, and deleted; a delete can be undone.
+  req F-2.2: A take tile's star makes it the main take and its Play plays it; the current take can be downloaded and deleted; a delete can be undone.
   req F-2.4: Both Recordings companions share one layout: a toolbar, a keyboard-navigable list, and the current row's player in the status bar.
   req F-2.3: Each take shows its length against the slide's desired length, flagged when over.
 
@@ -359,4 +360,11 @@ decision D-20: Both lists show their rows as tiles, one per row with no image. A
   date: 2026-10-26
   by: user:richburdon
   affects: [RecordingsPanel, SlideRecordingsArticle, PresentationRecordingsArticle, F-2.2, F-3.2]
+```
+
+```mdl
+decision D-21: The tiles have small rounded corners, and the star that makes a take main sits on the take's row, not in the toolbar.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [SlideRecordingsArticle, F-2.2]
 ```

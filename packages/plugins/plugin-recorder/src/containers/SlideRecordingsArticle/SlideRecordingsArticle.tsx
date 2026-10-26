@@ -32,8 +32,8 @@ type TakeRow = RecordingItem & { take?: Variant.Variant; contentType?: string };
 
 /**
  * A slide's takes (its companion), newest first, in the layout every Recordings companion shares. The toolbar records
- * a new take of the slide and acts on the current take — make main, download, delete (undoably); each tile's Play
- * plays its take in the status bar. An unsaved take is listed first, and the toolbar saves it again, downloads or discards it.
+ * a new take of the slide and acts on the current take — download, delete (undoably); each tile's star makes it the main take,
+ * and its Play plays it in the status bar. An unsaved take is listed first, and the toolbar saves it again, downloads or discards it.
  */
 export const SlideRecordingsArticle = ({ role, attendableId, slide }: SlideRecordingsArticleProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
@@ -93,17 +93,6 @@ export const SlideRecordingsArticle = ({ role, attendableId, slide }: SlideRecor
         () => void handleRecord(),
       )
       .separator()
-      .action(
-        'select',
-        {
-          label: ['select-take.label', { ns: meta.profile.key }],
-          icon: 'ph--star--regular',
-          disposition: 'toolbar',
-          disabled: !current?.take || current.main,
-          testId: 'recorder.take.select',
-        },
-        () => current?.take && void invokePromise(RecorderOperation.SelectTake, { slide, take: current.take }),
-      )
       .action(
         'download',
         {
@@ -165,15 +154,27 @@ export const SlideRecordingsArticle = ({ role, attendableId, slide }: SlideRecor
           }
         }}
         renderActions={(item) => (
-          <Button.Root
-            data-testid='recorder.take.play'
-            icon={play.autoPlay && current?.id === item.id ? 'ph--stop--regular' : 'ph--play--regular'}
-            iconOnly
-            variant='ghost'
-            disabled={!item.take}
-            label={t(play.autoPlay && current?.id === item.id ? 'stop-take.label' : 'play-take.label')}
-            onClick={() => handlePlay(item.id)}
-          />
+          <>
+            <Button.Root
+              data-testid='recorder.take.select'
+              icon={item.main ? 'ph--star--fill' : 'ph--star--regular'}
+              iconOnly
+              variant='ghost'
+              classNames={item.main ? 'text-accent-text' : undefined}
+              disabled={!item.take || item.main}
+              label={t(item.main ? 'main-take.label' : 'select-take.label')}
+              onClick={() => item.take && void invokePromise(RecorderOperation.SelectTake, { slide, take: item.take })}
+            />
+            <Button.Root
+              data-testid='recorder.take.play'
+              icon={play.autoPlay && current?.id === item.id ? 'ph--stop--regular' : 'ph--play--regular'}
+              iconOnly
+              variant='ghost'
+              disabled={!item.take}
+              label={t(play.autoPlay && current?.id === item.id ? 'stop-take.label' : 'play-take.label')}
+              onClick={() => handlePlay(item.id)}
+            />
+          </>
         )}
       />
     </RecordingsPanel>

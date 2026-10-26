@@ -104,7 +104,7 @@ export const RecordingList = <T extends RecordingItem>({
               data-testid='recorder.item'
               data-main={item.main ? 'true' : undefined}
               data-recorded={item.duration !== undefined ? 'true' : undefined}
-              classNames='flex flex-col items-stretch gap-1 rounded-md border border-separator p-2'
+              classNames='flex flex-col items-stretch gap-1 rounded-sm border border-separator p-2'
             >
               <Layout.Flex align='center' gap='xs'>
                 <Icon.Icon
@@ -112,13 +112,11 @@ export const RecordingList = <T extends RecordingItem>({
                   icon={
                     item.error
                       ? 'ph--warning--regular'
-                      : item.main
-                        ? 'ph--star--fill'
-                        : item.video
-                          ? 'ph--video-camera--regular'
-                          : 'ph--microphone--regular'
+                      : item.video
+                        ? 'ph--video-camera--regular'
+                        : 'ph--microphone--regular'
                   }
-                  classNames={mx('shrink-0', item.error && 'text-error-text', item.main && 'text-accent-text')}
+                  classNames={mx('shrink-0', item.error && 'text-error-text')}
                 />
                 <Listbox.ItemText classNames='truncate text-sm'>
                   {item.index !== undefined && (
