@@ -103,11 +103,12 @@ edge Upsert -> Advance
 
 ### ECHO schema changes (`@dxos/types`)
 
-`PullRequest` moves to `0.2.0`. Every new field is optional, so a pull request built from a URL alone
-(a link preview, an import outside any bound repo) stays valid.
+`PullRequest` gains five fields and keeps version `0.1.0`. Every new field is optional, so a pull request
+built from a URL alone (a link preview, an import outside any bound repo) stays valid, and a stored one
+needs no migration.
 
 ```ts
-// packages/sdk/types/src/types/PullRequest.ts — fields added in 0.2.0.
+// packages/sdk/types/src/types/PullRequest.ts — fields added by part 1.
 export const CheckState = Schema.Literals(['pending', 'success', 'failure', 'neutral']);
 export const ReviewDecision = Schema.Literals(['approved', 'changes_requested', 'review_required']);
 
@@ -133,7 +134,7 @@ const [issues] = yield* Database.query(Filter.foreignKeys(TaskSet.TaskSet, [{ so
 
 ```mdl
 type PullRequest
-  desc: A proposed change to a repository (@dxos/types, 0.2.0). One object per GitHub pull request, shared by sync, import and preview.
+  desc: A proposed change to a repository (@dxos/types, 0.1.0). One object per GitHub pull request, shared by sync, import and preview.
   fields:
     owner: string
     repo: string                        # repository name; with owner and number, names the PR without a lookup
@@ -175,7 +176,8 @@ type RepoBinding = Cursor.ExternalCursor & {
     /** ETag of the last `/issues` delta response; sent as `If-None-Match`. */
     token?: string;
     options?: SyncOptions;
-    /** Keyed by GitHub numeric id: the last-pulled fields that drive the three-way merge. */
+    /** Keyed by GitHub numeric id: the last-pulled fields that drive the three-way merge. The repository's
+     *  entry also records when the repository and its organization were last read. */
     snapshots?: Record<string, IssueSnapshot | RepoSnapshot>;
   };
 };
@@ -199,10 +201,13 @@ type IssueSnapshot
 
 ```mdl
 type RepoSnapshot
-  desc: Last-pulled repository fields.
+  desc: Last-pulled repository fields, and when the repository and its organization were last read.
   fields:
     name: string            # recorded, never pushed
     description: string
+    etag?: string           # of the last repository read; sent as If-None-Match
+    readAt?: number         # epoch milliseconds of the last repository read
+    membersReadAt?: number  # epoch milliseconds of the last organization and members read
 ```
 
 ### GitHub payloads
@@ -212,7 +217,7 @@ type DeltaItem
   desc: One item of GET /repos/{o}/{r}/issues?since=…; issues and pull requests share the endpoint.
   fields:
     id: number
-    node_id: string         # GraphQL id, used to batch pull-request detail
+    node_id?: string        # GraphQL id; unused, since the batch asks for pull requests by number
     number: number
     title: string
     body?: string
@@ -225,9 +230,8 @@ type DeltaItem
 
 ```mdl
 type PullRequestDetail
-  desc: One node of the batched GraphQL query; everything a PullRequest holds that the delta lacks.
+  desc: One aliased `pullRequest(number:)` of the batched GraphQL query; everything a PullRequest holds that the delta lacks.
   fields:
-    id: string              # node_id
     number: number
     isDraft: boolean
     merged: boolean
@@ -250,7 +254,7 @@ unchanged.
 // Added to packages/plugins/plugin-github/src/services/github-api.ts.
 export type Conditional<A> =
   | { readonly status: 'not-modified' }
-  | { readonly status: 'ok'; readonly value: A; readonly etag: string | undefined };
+  | { readonly status: 'ok'; readonly value: A; readonly etag: string | undefined; readonly requests: number };
 
 /**
  * GET /repos/{o}/{r}/issues?state=all&sort=updated&direction=desc&since=…&per_page=100, following `Link`
@@ -263,9 +267,11 @@ export const listIssuesSince: (
   options: { since?: string; etag?: string },
 ) => GitHubEffect<Conditional<readonly DeltaItem[]>>;
 
-/** One GraphQL `nodes(ids:)` query; at most 100 ids per call. */
+/** One GraphQL query of one repository, one aliased `pullRequest(number:)` per number; at most 100 per call. */
 export const fetchPullRequestDetails: (
-  nodeIds: readonly string[],
+  owner: string,
+  repo: string,
+  numbers: readonly number[],
 ) => GitHubEffect<readonly PullRequestDetail[]>;
 
 /** GET /repos/{o}/{r} with If-None-Match. */
@@ -281,7 +287,7 @@ service GitHubApi
   desc: Typed GitHub REST and GraphQL client bound to one access token.
   ops:
     listIssuesSince(owner: string, repo: string, since?: string, etag?: string) → Conditional<DeltaItem[]>
-    fetchPullRequestDetails(nodeIds: string[]) → PullRequestDetail[]
+    fetchPullRequestDetails(owner: string, repo: string, numbers: number[]) → PullRequestDetail[]
     fetchRepoConditional(owner: string, repo: string, etag?: string) → Conditional<GitHubRepo>
   errors:
     Unauthorized: token missing or revoked
@@ -345,8 +351,8 @@ feat F-1: One object per GitHub item
     then: it returns the synced PullRequest, without a request to GitHub
 
   req F-1.5:
-    when: a space holds a Task mirrored from a pull request (from before 0.2.0)
-    then: the first sync replaces it with a PullRequest carrying the same foreign key and moves references to it
+    when: a space holds a Task mirrored from a pull request by the earlier sync
+    then: the first sync that reads the pull request replaces it with a PullRequest carrying the same foreign key, and drops it from every TaskSet and parent task that lists it
 ```
 
 ```mdl
@@ -368,7 +374,7 @@ feat F-2: Delta polling
 
   req F-2.5: Cursor.max advances once every page of the delta is applied, so an interrupted run re-reads from the last complete watermark. It becomes the largest `updated_at` returned, minus 5 seconds, so an item updated in the same second as the watermark is read again; snapshots make that re-read a no-op.
 
-  req F-2.6: The repository itself is read with fetchRepoConditional at most once an hour per binding, so it is not part of the one-request quiet poll; organization members are read at most once a day per organization.
+  req F-2.6: The repository itself, with its milestones, is read with fetchRepoConditional at most once an hour per binding, so it is not part of the one-request quiet poll; the organization and its members are read at most once a day per binding.
 
   req F-2.7: Issues keep today's three-way merge and push of title, description and status; pull requests are pull-only.
 ```
@@ -378,7 +384,7 @@ feat F-3: Scheduling
 
   req F-3.1: The GitHub connector entry sets `trigger` to a timer with a default schedule of every 3 minutes and `remote: true`, so polls run on EDGE with no client open. The interval belongs to that trigger: changing it means editing the trigger, and nothing on the binding mirrors it.
 
-  req F-3.2: RefreshPullRequests and its hourly trigger are removed; an imported pull request outside any bound repository is polled with the same delta, grouped by repository.
+  req F-3.2: RefreshPullRequests and its hourly trigger skip every pull request in a bound repository, which its binding's poll covers; they remain only for pull requests imported from repositories no binding targets.
 
   req F-3.3: useSyncPullRequest stays as a refresh-on-open for pull requests in spaces with no binding.
 ```
@@ -387,7 +393,7 @@ feat F-3: Scheduling
 
 ```mdl
 scenario T-1: Quiet repository
-  given: a binding whose last run stored Cursor.max and an ETag; nothing changed on GitHub since
+  given: a binding whose last run stored Cursor.max and the ETag of the delta that watermark names; nothing changed on GitHub since
   when: SyncGitHubRepositories runs
   then:
     - exactly one request is made for that binding
@@ -424,12 +430,21 @@ scenario T-4: Import a synced pull request
 ```
 
 ```mdl
+scenario T-7: Sync adopts an imported pull request
+  given: a pull request #12 imported before its repository was bound
+  when: SyncGitHubRepositories first reads #12
+  then:
+    - the imported PullRequest is updated in place and gains the github.com foreign key and `repository`
+    - no second PullRequest for #12 exists
+```
+
+```mdl
 scenario T-5: Migrate pull-request Tasks
   given: a TaskSet holding a Task whose GitHub item is a pull request
-  when: the first sync after the upgrade runs
+  when: the first sync after the upgrade reads that pull request
   then:
     - a PullRequest with the same github.com foreign key exists and the Task does not
-    - references to the Task now point at the PullRequest
+    - the TaskSet no longer lists the Task
 ```
 
 ```mdl
@@ -596,4 +611,71 @@ decision D-17: The delta is read newest first (`direction=desc`). Narrows [D-11]
   for: user:dmaretskyi
   affects: [listIssuesSince, T-6]
   why: Oldest first, a change made after the watermark lands on the last page, so page one could answer 304 while a later page changed; newest first, every change moves page one and its ETag.
+```
+
+```mdl
+decision D-18: `PullRequest` keeps version 0.1.0; the new fields are optional additions.
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [PullRequest, F-1.5]
+  why: Every added field is optional, so every stored pull request already decodes; a version bump would need a migration from 0.1.0 that changes nothing.
+  rejected:
+    - Bump to 0.2.0 with an identity migration: stored objects and queries by version would move for no change in data.
+```
+
+```mdl
+decision D-19: fetchPullRequestDetails asks for pull requests by number, one aliased `pullRequest(number:)` per pull request of one repository, instead of `nodes(ids:)`. Narrows [D-3].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [GitHubApi, PullRequestDetail, F-2.3, F-2.4]
+  why: A pending pull request that is not in the delta has no node id in hand, and a pull request imported or previewed before sync never had one; every PullRequest already carries owner, repo and number.
+  rejected:
+    - Store the node id in the pull request's snapshot: imported pull requests would still lack it, and pending ones from before the upgrade would need a REST read to find it.
+```
+
+```mdl
+decision D-20: The repository's snapshot entry records the repository read's ETag and time and the organization read's time. Milestones are read with the hourly repository read, and the organization and its members once a day per binding. Fills in [D-13]; narrows F-2.6.
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [RepoSnapshot, F-2.6]
+  why: The delta carries only the milestones its issues name; and the binding is the only state a poll owns, so a per-organization clock would need a store shared across bindings for at most one extra request a day.
+```
+
+```mdl
+decision D-21: After a poll that advanced the watermark, the next poll reads page one once more, because its `since` changed and the stored ETag describes the old URL; the quiet polls after it answer 304. Fills in [D-3].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.1, F-2.2, T-1]
+  why: GitHub's ETag covers the response for one URL, and the poll cannot know the new URL's ETag without reading it; the re-read is one request and snapshots make it a no-op.
+```
+
+```mdl
+decision D-22: A pull-request Task is replaced when a poll reads its pull request; the Task leaves every TaskSet and parent task listing it, and other references to it are not rewritten. Narrows F-1.5.
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.5, T-5]
+  why: The earlier sync left no marker of which Tasks were pull requests, so only the delta identifies them; references from arbitrary objects have no index the sync can walk without scanning the space.
+```
+
+```mdl
+decision D-23: RefreshPullRequests stays for pull requests in repositories no binding targets, and skips the rest; it does not yet use the delta. Narrows F-3.2.
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-3.2]
+  why: An unbound repository has no binding to hold a watermark or ETag, and its pull requests may be read anonymously, which GraphQL does not allow; refreshing them by REST keeps them current until that has a design.
+```
+
+```mdl
+decision D-24: A poll adopts a PullRequest it finds by owner, repo and number when none carries the pull request's foreign key, adding the key and `repository`. Fills in [F-1.2].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2, T-7]
+  why: Import files a PullRequest without a foreign key, so matching only by key would create a second object for the same pull request.
 ```

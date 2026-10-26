@@ -43,15 +43,15 @@ export const GetGitHubRepositories = Operation.make({
 });
 
 /**
- * Find-or-create the empty local root Project for a selected GitHub repo so a
- * cursor can reference it as its `spec.target`. Keyed by the repo's
- * GitHub foreign id (`remoteTarget.id`), so it is idempotent across re-selection.
+ * Find or create the `Repo` a cursor binds as its `spec.target`, and the `TaskSet` that mirrors the
+ * repository's issues. Both carry the repo's GitHub foreign id (`remoteTarget.id`), so it is
+ * idempotent across re-selection.
  */
 export const MaterializeGitHubTarget = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.github.materializeTarget'),
     name: 'Materialize GitHub Target',
-    description: 'Create the empty local root Project bound to a selected GitHub repository.',
+    description: 'Find or create the Repo bound to a selected GitHub repository, and the TaskSet mirroring its issues.',
     icon: 'ph--github-logo--regular',
   },
   input: ConnectorSpec.MaterializeTargetInput,
@@ -72,31 +72,34 @@ export const SyncOptions = Schema.Struct({
 
 export interface SyncOptions extends Schema.Schema.Type<typeof SyncOptions> {}
 
+/** What one run of {@link SyncGitHubRepositories} did, across the connection's bindings. */
+export const SyncResult = Schema.Struct({
+  bindings: Schema.Number,
+  /** Bindings whose delta answered 304. */
+  notModified: Schema.Number,
+  /** GitHub requests made, across bindings. */
+  requests: Schema.Number,
+  pulled: Schema.Struct({ issues: Schema.Number, pullRequests: Schema.Number }),
+  pushed: Schema.Struct({ issues: Schema.Number, repos: Schema.Number }),
+});
+
+export interface SyncResult extends Schema.Schema.Type<typeof SyncResult> {}
+
 /**
- * Reconcile GitHub data for every repo bound to a connection (one cursor per repo).
- *
- * Pull-then-push per bound repo: auto-upsert its owning org + members,
- * three-way merge the repo as a Project and its issues/PRs as Tasks (respecting
- * `maxDaysBack` if set), then push diverged Project/Task fields back to GitHub.
- * Sync state (`lastTick`/`lastError`/`spec.snapshots`) is written onto each binding.
+ * Poll every repository bound to a connection (one cursor per repo), as spec/SYNC.mdl describes:
+ * one conditional delta of issues and pull requests updated since the binding's watermark, one
+ * GraphQL batch for the pull requests among them (and open ones whose checks are pending), the
+ * three-way merge and push for issues, and the cursor advance. A quiet repository costs one request.
  */
 export const SyncGitHubRepositories = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.github.syncRepositories'),
     name: 'Sync GitHub Repositories',
-    description: 'Reconcile every bound GitHub repo plus its owning org, members, issues, PRs, and comments.',
+    description: 'Poll every bound GitHub repository for changed issues and pull requests.',
     icon: 'ph--arrows-clockwise--regular',
   },
   input: ConnectorSpec.SyncInput,
-  output: Schema.Struct({
-    pulled: Schema.Struct({
-      organizations: Schema.Number,
-      people: Schema.Number,
-      projects: Schema.Number,
-      tasks: Schema.Number,
-      comments: Schema.Number,
-    }),
-  }),
+  output: SyncResult,
   services: [Trace.TraceService, Credential.CredentialsService],
 }).pipe(Operation.visible);
 

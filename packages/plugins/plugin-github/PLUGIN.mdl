@@ -330,37 +330,37 @@ feat F-3: Pull — Organizations and People
 ```
 
 ```mdl
-feat F-4: Pull — Repositories as Projects
+feat F-4: Pull — Repositories as Repos
 
   req F-4.1:
     when: a selected repo does not yet have a local mirror
-    then: Project created in ECHO with foreign key [source: "github.com", id: String(repo.id)]
+    then: a Repo is created in ECHO with foreign key [source: "github.com", id: String(repo.id)], with a TaskSet carrying the same key for its issues
 
   req F-4.2:
     when: a selected repo already has a local mirror
-    then: Project fields updated via three-way merge against the stored snapshot
+    then: Repo name and description are updated via three-way merge against the stored snapshot, at most once an hour ([SYNC.mdl](spec/SYNC.mdl) F-2.6)
 
   req F-4.3:
-    when: Integration.targets[i].object is missing or points at a different Project
-    then: target.object is rewired to the upserted Project
+    when: a binding targets the issue TaskSet (bound before bindings targeted a Repo)
+    then: the binding is rewired to the repo's Repo
 ```
 
 ```mdl
-feat F-5: Pull — Issues and PRs as Tasks
+feat F-5: Pull — Issues as Tasks, pull requests as PullRequests
 
   req F-5.1:
-    when: issue/PR does not yet have a local mirror
-    then: Task created with fields title, description, status (open→todo, closed→done), assignee, project ref
+    when: an issue does not yet have a local mirror
+    then: Task created with fields title, description, status (open→todo, closed→done), assignee and milestone, listed by the repo's issue TaskSet
 
   req F-5.2:
-    when: issue/PR already has a local mirror
+    when: an issue already has a local mirror
     then: Task fields updated via three-way merge against stored snapshot
 
-  req F-5.3: PRs are treated identically to issues on pull; pull_request field marks them as PRs.
+  req F-5.3: A pull request is a PullRequest with `repository` set, pull-only; the polling delta and its GraphQL batch are specified in [SYNC.mdl](spec/SYNC.mdl).
 
   req F-5.4:
     when: maxDaysBack is set on a target
-    then: only issues/PRs updated within that window are fetched from GitHub
+    then: the first poll reads only issues and pull requests updated within that window; later polls read from the binding's watermark
 ```
 
 ```mdl
@@ -839,4 +839,13 @@ ext op
     effects?: EffectList        # echo:read | echo:write | http | fs | ...
     requires?: ServiceList      # injected service dependencies
     note?: Prose                # implementation guidance (non-normative)
+```
+
+```mdl
+decision D-5: F-4 and F-5 now describe the polling sync of [SYNC.mdl](spec/SYNC.mdl): a binding targets a Repo, issues stay Tasks in the TaskSet keyed like the Repo, and pull requests are PullRequests.
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4, F-5]
+  why: SYNC.mdl states that it replaces F-4 and F-5 once implemented; this change implements it.
 ```

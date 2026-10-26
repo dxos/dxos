@@ -12,7 +12,12 @@ import { log } from '@dxos/log';
 import { GitHubOperation } from '#types';
 
 import { githubAccess } from './pull-request.ts';
-import { ensureRefreshTrigger, queryInFlightPullRequests, refreshPullRequest, selectRefreshBatch } from './refresh.ts';
+import {
+  ensureRefreshTrigger,
+  queryUnboundInFlightPullRequests,
+  refreshPullRequest,
+  selectRefreshBatch,
+} from './refresh.ts';
 
 /** Bounded so a space with many open pull requests does not burst GitHub's secondary rate limit. */
 const REFRESH_CONCURRENCY = 2;
@@ -26,7 +31,8 @@ const handler: Operation.WithHandler<typeof GitHubOperation.RefreshPullRequests>
       Effect.fn(function* () {
         // Collapses any duplicate a racing peer created, so the space keeps one schedule.
         yield* ensureRefreshTrigger();
-        const inFlight = yield* queryInFlightPullRequests();
+        // A bound repository's pull requests are polled by its binding's sync.
+        const inFlight = yield* queryUnboundInFlightPullRequests();
         if (inFlight.length === 0) {
           return { checked: 0, updated: 0, failed: 0 };
         }
