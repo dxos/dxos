@@ -8,9 +8,9 @@ import { expect, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { getSpeakerLines } from '#markdown';
 import { translations } from '#translations';
 
+import { getSpeakerLines } from '../../markdown/notes.ts';
 import { SpeakerNotes } from './SpeakerNotes.tsx';
 
 const NOTES = `

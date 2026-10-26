@@ -82,8 +82,11 @@ const TakeListItem = ({ take, actions }: TakeListItemProps) => {
           </thead>
           <tbody>
             {take.slides.map((slide) => {
+              // Compared as shown (whole seconds), so a row never reads 0:20 / 0:20 and flagged.
               const over =
-                slide.seconds !== undefined && slide.duration !== undefined && slide.seconds > slide.duration;
+                slide.seconds !== undefined &&
+                slide.duration !== undefined &&
+                Math.round(slide.seconds) > Math.round(slide.duration);
               return (
                 <tr key={slide.id} data-over={over}>
                   <td className='truncate'>{slide.title}</td>

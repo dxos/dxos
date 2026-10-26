@@ -75,7 +75,8 @@ export type PrompterProps = {
  */
 const Prompter = ({ title, lines, next, index, count, elapsed, duration }: PrompterProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const over = duration !== undefined && elapsed > duration;
+  // Compared as shown (whole seconds), so the time never reads 0:15 / 0:15 and flagged.
+  const over = duration !== undefined && Math.round(elapsed) > Math.round(duration);
 
   return (
     <Panel.Root data-testid='presenter.prompter'>
