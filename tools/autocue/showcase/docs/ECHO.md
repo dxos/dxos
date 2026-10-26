@@ -60,14 +60,36 @@ claim that needs checking against the code before it is spoken.
 
 ## Script
 
-The spoken lines, one per slide; [`cues/echo.json`](cues/echo.json) is built from this section (its times are in
+The spoken lines, one bullet per sentence; [`cues/echo.json`](cues/echo.json) is built from this section (its times are in
 the 60s source render, 3s earlier than in `ECHO.m4v`). About 25 words fits a 10s slide.
 
-1. **The Silo Problem** (3–13s, 38 words): "SaaS has siloed our data for decades. It was a consequence of the old software economics. Now apps are easy to build, and agents need all of our data to be useful. That demands a new security model."
-2. **Monolithic Agents** (13–23s, 30 words): "Today we grant agents coarse access to everything, with no audit and no control. As agents run continuously, across both private and enterprise data, that becomes more dangerous every day."
-3. **ECHO Graph Database** (23–33s, 24 words): "ECHO takes a different approach. It brings all your data into a single logical graph, so people and agents work from the same context."
-4. **ECHO Hypergraph** (33–43s, 30 words): "That graph is partitioned into secure spaces. Share each one with the colleagues and agents who need it, even across organizations, and every agent sees only what its task requires."
-5. **Open and Extensible** (43–60s, 36 words): "And because it's open, it keeps growing. New sources, new apps and new agents plug into the same graph, and you never give up control. DXOS is the operating system for people and agents working together."
+1. **The Silo Problem** (3–13s, 38 words)
+
+   - SaaS has siloed our data for decades.
+   - It was a consequence of the old software economics.
+   - Now apps are easy to build, and agents need all of our data to be useful.
+   - That demands a new security model.
+
+2. **Monolithic Agents** (13–23s, 30 words)
+
+   - Today we grant agents coarse access to everything, with no audit and no control.
+   - As agents run continuously, across both private and enterprise data, that becomes more dangerous every day.
+
+3. **ECHO Graph Database** (23–33s, 24 words)
+
+   - ECHO takes a different approach.
+   - It brings all your data into a single logical graph, so people and agents work from the same context.
+
+4. **ECHO Hypergraph** (33–43s, 30 words)
+
+   - That graph is partitioned into secure spaces.
+   - Share each one with the colleagues and agents who need it, even across organizations, and every agent sees only what its task requires.
+
+5. **Open and Extensible** (43–60s, 36 words)
+
+   - And because it's open, it keeps growing.
+   - New sources, new apps and new agents plug into the same graph, and you never give up control.
+   - DXOS is the operating system for people and agents working together.
 
 ## Previous narration (for reference)
 
