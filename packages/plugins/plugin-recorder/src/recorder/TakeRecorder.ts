@@ -53,6 +53,8 @@ export class TakeRecorder implements RecorderCapabilities.Recorder {
   readonly #onDone?: (presentation: Presentation.Presentation) => void;
   /** Pending takes' slides, kept out of the state atom since they are live objects. */
   readonly #pendingSlides = new Map<string, Presentation.Slide>();
+  /** Pending takes being saved again; a second retry would save the take twice, and a discard would lose it mid-save. */
+  readonly #retrying = new Set<string>();
 
   #context?: AudioContext;
   #analyser?: AnalyserNode;
@@ -327,11 +329,13 @@ export class TakeRecorder implements RecorderCapabilities.Recorder {
   async retry(id: string): Promise<void> {
     const take = this.#current.pending.find((take) => take.id === id);
     const slide = this.#pendingSlides.get(id);
-    if (!take || !slide) {
+    if (!take || !slide || this.#retrying.has(id)) {
       return;
     }
+    this.#retrying.add(id);
     try {
       await this.#save({ slide, name: take.name, data: take.data, log: take.log });
+      this.#retrying.delete(id);
       this.discard(id);
     } catch (err) {
       log.catch(err);
@@ -340,6 +344,8 @@ export class TakeRecorder implements RecorderCapabilities.Recorder {
           pending.id === id ? { ...pending, error: err instanceof Error ? err.message : String(err) } : pending,
         ),
       });
+    } finally {
+      this.#retrying.delete(id);
     }
   }
 
@@ -351,6 +357,9 @@ export class TakeRecorder implements RecorderCapabilities.Recorder {
   }
 
   discard(id: string): void {
+    if (this.#retrying.has(id)) {
+      return;
+    }
     this.#pendingSlides.delete(id);
     this.#update({ pending: this.#current.pending.filter((take) => take.id !== id) });
   }
