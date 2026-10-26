@@ -265,6 +265,10 @@ export const runTurn = (
 ): Effect.Effect<Message.Message[], AgentError, Database.Service | Trace.TraceService> =>
   Effect.gen(function* () {
     const started = Date.now();
+    const trace = yield* Trace.TraceService;
+    // The session opens inside the pool's own context, which holds no trace service.
+    const emitPhase = (...args: Parameters<typeof Trace.emitRequestPhase>) =>
+      Trace.emitRequestPhase(...args).pipe(Effect.provideService(Trace.TraceService, trace));
     const device = options.device?.();
     const host = chat.session?.host;
     if (host !== undefined && device !== undefined && host !== device) {
@@ -316,10 +320,10 @@ export const runTurn = (
           Effect.gen(function* () {
             opened = true;
             // Opening a session takes seconds, and a line stuck on 'preparing' reads as a hang.
-            yield* Trace.emitRequestPhase('building-toolkit');
+            yield* emitPhase('building-toolkit');
             const tools = options.tools ? yield* options.tools(chat) : undefined;
             if (servers && servers.length > 0) {
-              yield* Trace.emitRequestPhase('connecting-mcp', { detail: String(servers.length) });
+              yield* emitPhase('connecting-mcp', { detail: String(servers.length) });
             }
             const connections =
               options.connections && servers ? yield* options.connections(chat, servers, tools?.token) : [];
