@@ -3,12 +3,12 @@
     "at": 0.5,
     "title": "The Silo Problem",
     "lines": [
-      "SaaS has siloed our data for decades.",
-      "This was a consequence of cloud software economics.",
+      "Our data has been siloed for decades;",
+      "this was a consequence of SaaS software economics.",
       "But today agents need access to all of our information to be effective.",
       "And this demands a new data and security model."
     ],
-    "text": "SaaS has siloed our data for decades. This was a consequence of cloud software economics. But today agents need access to all of our information to be effective. And this demands a new data and security model."
+    "text": "Our data has been siloed for decades; this was a consequence of SaaS software economics. But today agents need access to all of our information to be effective. And this demands a new data and security model."
   },
   {
     "at": 10.5,
