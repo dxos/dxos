@@ -101,8 +101,14 @@ export type AgentResponse = {
   optionId: string;
 };
 
-/** A model an agent that chooses its own model offers. */
-export type AgentModel = { readonly id: string; readonly label: string };
+/** A setting an `ownModel` agent lets each chat choose, by the `chat.session` field that keeps the choice. */
+export type AgentSetting = 'agentModel' | 'agentEffort' | 'agentMode';
+
+/** One value an agent offers for an {@link AgentSetting}. */
+export type AgentChoice = { readonly id: string; readonly label: string };
+
+/** The values an agent offers for each setting it lets a chat choose; a chat that chooses none gets the agent's default. */
+export type AgentChoices = Partial<Record<AgentSetting, readonly AgentChoice[]>>;
 
 /**
  * An agent a chat can run on, keyed by `chat.session.harness`. Each plugin registers the agents it
@@ -124,8 +130,8 @@ export type Agent = {
   readonly variantOf?: string;
   /** The agent chooses its own model, so the chat's model does not apply and pickers offer none. */
   readonly ownModel?: boolean;
-  /** The models an `ownModel` agent can be asked to run on, offered by pickers; the choice is `chat.session.agentModel`. */
-  readonly models?: readonly AgentModel[];
+  /** What an `ownModel` agent lets a chat choose (its model, effort, permissions), offered by pickers. */
+  readonly choices?: AgentChoices;
   readonly availability: Atom.Atom<AgentAvailability>;
   readonly makeTurnProducer: MakeTurnProducer;
   /** Hands a person's answer to the agent; false when nothing is waiting on that request. */

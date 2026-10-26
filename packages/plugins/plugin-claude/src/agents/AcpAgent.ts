@@ -194,8 +194,8 @@ export type AgentOptions = {
   connect: (cwd: string, toolsToken?: string) => Effect.Effect<acp.Stream, AgentError>;
   /** The directory the agent works in for this chat. */
   workspace: (chat: Chat.Chat) => Effect.Effect<string, AgentError>;
-  /** Permission mode a new session starts in. */
-  mode?: () => string | undefined;
+  /** Permission mode a chat's new session starts in. */
+  mode?: (chat: Chat.Chat) => string | undefined;
   /** Agent-specific options every session opens with (ACP `_meta`). */
   sessionMeta?: Record<string, unknown> | ((chat: Chat.Chat) => Record<string, unknown>);
   /** Composer's MCP tools for the chat, and the token the agent presents for them; fresh for each session. */
@@ -324,7 +324,7 @@ export const runTurn = (
               cwd,
               resume,
               mcpServers: [...(tools?.servers ?? []), ...connections],
-              mode: options.mode?.(),
+              mode: options.mode?.(chat),
               meta: typeof options.sessionMeta === 'function' ? options.sessionMeta(chat) : options.sessionMeta,
             });
             return { session, token: tools?.token, offered: offeredKey(connections) };
