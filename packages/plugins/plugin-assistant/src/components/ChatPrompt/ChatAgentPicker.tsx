@@ -143,7 +143,10 @@ export const ChatAgentPicker = ({ chat, started, presets, preset, onPresetChange
         {agentModels.length > 0 && (
           <>
             <Menu.Separator />
-            <Menu.RadioItemGroup value={agentModel?.id ?? ''} onValueChange={({ value }) => handleAgentModelChange(value)}>
+            <Menu.RadioItemGroup
+              value={agentModel?.id ?? ''}
+              onValueChange={({ value }) => handleAgentModelChange(value)}
+            >
               <Menu.ItemGroupLabel>
                 {started ? t('agent-model-locked.message') : t('model-picker.models.label')}
               </Menu.ItemGroupLabel>
