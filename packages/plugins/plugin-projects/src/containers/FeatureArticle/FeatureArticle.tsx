@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { type KeyboardEvent, useCallback, useMemo } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Filter, Obj, Type } from '@dxos/echo';
+import { DXN, Filter, Obj, Type } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { Form, type FormFieldMap, type FormFieldRenderer } from '@dxos/react-ui-form';
@@ -79,6 +79,18 @@ export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticlePr
     [editing, subject.id],
   );
   const linkedTasks = useMemo(() => feature?.tasks.map((task) => task.id) ?? [], [feature]);
+  const handleSetKey = useCallback(
+    (event: KeyboardEvent<HTMLInputElement>) => {
+      const key = event.currentTarget.value.trim();
+      if (event.key !== 'Enter' || !Schema.is(DXN.NameSchema)(key)) {
+        return;
+      }
+      updateFeature((feature) => {
+        Obj.getMeta(feature).key = key;
+      });
+    },
+    [updateFeature],
+  );
 
   // Bound to the live feature, so a status set from a card icon (or by an agent) reaches the open form.
   const values = useMemo<Partial<Values>>(
@@ -121,6 +133,7 @@ export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticlePr
                   <FeatureCard.Provider feature={feature} lookup={graph.lookup} onOpen={handleOpen}>
                     <Card.Root grid border={false} data-testid='feature-article.relations'>
                       <FeatureCard.Body>
+                        <FeatureCard.Link />
                         <FeatureCard.Tags all />
                         <FeatureCard.TaskCount />
                         <FeatureCard.Dependencies onRemove={(id) => editing.removeDependency(subject.id, id)} />
@@ -128,9 +141,18 @@ export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticlePr
                         <FeatureCard.Tasks />
                         <FeatureCard.Showcases />
                         <FeatureCard.Specs />
+                        <FeatureCard.Code />
                       </FeatureCard.Body>
                     </Card.Root>
                   </FeatureCard.Provider>
+                  {!feature.link && (
+                    <Input.Root
+                      placeholder={t('feature-article.set-key.placeholder')}
+                      aria-label={t('feature-article.set-key.placeholder')}
+                      data-testid='feature-article.set-key'
+                      onKeyDown={handleSetKey}
+                    />
+                  )}
                   {canFileTask && (
                     <Input.Root
                       placeholder={t('feature-article.file-task.placeholder')}

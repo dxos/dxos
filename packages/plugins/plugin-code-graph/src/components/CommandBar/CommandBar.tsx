@@ -13,6 +13,18 @@ import * as Layout from '@dxos/react-ui/Layout';
 
 import { meta } from '#meta';
 
+/** One timed step of a command: grounding, a model call, an add or remove, or the judge. */
+export type CommandStep = {
+  kind: 'ground' | 'model' | 'add' | 'remove' | 'judge';
+  /** The model turn the step belongs to; 0 before the first. */
+  turn: number;
+  ms: number;
+  label: string;
+  /** The SPARQL, filter or model message. */
+  detail?: string;
+  error?: string;
+};
+
 export type CommandOutcome = {
   command: string;
   message?: string;
@@ -21,6 +33,8 @@ export type CommandOutcome = {
   error?: string;
   /** Milliseconds from submit to answer. */
   elapsedMs?: number;
+  /** The steps the command took, shown in verbose mode. */
+  trace?: readonly CommandStep[];
 };
 
 export type CommandBarProps = {
@@ -33,13 +47,26 @@ export type CommandBarProps = {
   draft?: string;
   /** A control beside the field, such as a microphone toggle. */
   speech?: ReactNode;
+  /** Show every step of the outcome with its timing. */
+  verbose?: boolean;
+  onVerboseChange?: (verbose: boolean) => void;
 };
 
 /**
  * A floating button that opens a one-line command field over the canvas. The host positions its frame; the bar
  * anchors to the frame's bottom edge.
  */
-export const CommandBar = ({ open, onOpenChange, pending, outcome, onSubmit, draft, speech }: CommandBarProps) => {
+export const CommandBar = ({
+  open,
+  onOpenChange,
+  pending,
+  outcome,
+  onSubmit,
+  draft,
+  speech,
+  verbose,
+  onVerboseChange,
+}: CommandBarProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const [value, setValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -118,6 +145,17 @@ export const CommandBar = ({ open, onOpenChange, pending, outcome, onSubmit, dra
           data-testid='code-graph-command-input'
         />
         {speech}
+        {onVerboseChange && (
+          <Button.Root
+            icon='ph--list-magnifying-glass--regular'
+            iconOnly
+            variant={verbose ? 'primary' : 'ghost'}
+            label={t(verbose ? 'command-verbose-off.label' : 'command-verbose-on.label')}
+            aria-pressed={verbose}
+            onClick={() => onVerboseChange(!verbose)}
+            data-testid='code-graph-command-verbose'
+          />
+        )}
         <Button.Root
           icon='ph--arrow-right--regular'
           iconOnly
@@ -152,8 +190,38 @@ export const CommandBar = ({ open, onOpenChange, pending, outcome, onSubmit, dra
               {outcome.trailer}
             </p>
           )}
+          {verbose && outcome.trace && outcome.trace.length > 0 && <Trace steps={outcome.trace} />}
         </Layout.Flex>
       )}
     </Card.Root>
+  );
+};
+
+const formatMs = (ms: number) => (ms < 1000 ? `${Math.round(ms)}ms` : `${(ms / 1000).toFixed(1)}s`);
+
+/** The steps of a command, one row each, with the query or filter beneath. */
+const Trace = ({ steps }: { steps: readonly CommandStep[] }) => {
+  const total = steps.reduce((sum, { ms }) => sum + ms, 0);
+  return (
+    <ol
+      className='max-h-64 overflow-y-auto border-t border-separator pt-1 text-xs'
+      data-testid='code-graph-command-trace'
+    >
+      {steps.map((step, index) => (
+        <li key={index} className='py-0.5' data-testid='code-graph-command-step'>
+          <Layout.Flex gap='sm'>
+            <span className='w-6 shrink-0 text-description tabular-nums'>{step.turn > 0 ? `T${step.turn}` : ''}</span>
+            <span className='w-14 shrink-0 font-medium'>{step.kind}</span>
+            <span className={step.error ? 'grow text-error-text' : 'grow'}>{step.label}</span>
+            <span className='shrink-0 tabular-nums text-description'>{formatMs(step.ms)}</span>
+          </Layout.Flex>
+          {step.detail && (
+            <pre className='ml-20 whitespace-pre-wrap break-all font-mono text-description'>{step.detail}</pre>
+          )}
+          {step.error && <p className='ml-20 break-all text-error-text'>{step.error}</p>}
+        </li>
+      ))}
+      <li className='pt-1 text-right tabular-nums text-description'>{formatMs(total)} in steps</li>
+    </ol>
   );
 };

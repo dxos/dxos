@@ -128,8 +128,18 @@ export const useFeatureGraph = (
       Atom.make((get): FeatureGraph => {
         const input: FeatureGraphInput = {
           features: features.filter(Feature.instanceOf).map((feature) => {
-            const { id, name, description, status, specs, subfeatures } = get(Obj.atom(feature));
-            return { id, name, description, status, specs, subfeatures: subfeatures ?? [] };
+            const snapshot = get(Obj.atom(feature));
+            const { id, name, description, status, specs, subfeatures, code } = snapshot;
+            return {
+              id,
+              name,
+              description,
+              status,
+              specs,
+              subfeatures: subfeatures ?? [],
+              link: Feature.getLink(snapshot),
+              code,
+            };
           }),
           dependsOn: edges,
           implementedBy: implementsTasks.flatMap((relation) => {

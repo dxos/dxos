@@ -9,7 +9,7 @@ import { type EntityStructure, type QueryAST } from '@dxos/echo-protocol';
 import { type EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type ItemsUpdatedEvent } from '../core-db/index.ts';
+import { type DeletionMemo, type ItemsUpdatedEvent } from '../core-db/index.ts';
 import { isEchoObject } from '../echo-handler/index.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
 import { adjustGroups, withMembers } from './manifest-merge.ts';
@@ -24,7 +24,7 @@ import {
   writeAffects,
 } from './merge-plan.ts';
 import { type CoreLookup } from './path-revalidation.ts';
-import { type QueryContext, type SourceEntry } from './query-context.ts';
+import { type QueryContext, type QueryContextRunOptions, type SourceEntry } from './query-context.ts';
 import { RegistryView } from './registry-view.ts';
 import { type RemoteQuerySource } from './remote-query-source.ts';
 import { isSimpleSelectionQuery } from './util.ts';
@@ -229,6 +229,17 @@ export class LocalQueryEngine implements QueryContext {
     return answered.length < remote.length || remote.some((source) => source.isTruncated()) ? 'merged' : 'complete';
   }
 
+  getRemoteExecutionTime(): number | undefined {
+    let total: number | undefined;
+    for (const source of this.#servingRemotes()) {
+      const executionTime = source.executionTime?.();
+      if (executionTime !== undefined) {
+        total = (total ?? 0) + executionTime;
+      }
+    }
+    return total;
+  }
+
   getSourceStates(): QueryResult.SourceState[] {
     const states: QueryResult.SourceState[] = [];
     if ([...this.#spaces.values()].some((view) => view.isServing())) {
@@ -250,14 +261,22 @@ export class LocalQueryEngine implements QueryContext {
   async run(
     ctx: Context,
     query: QueryAST.Query,
-    { timeout = 30_000 }: QueryResult.RunOptions = {},
+    { timeout = 30_000, onExecutionTime }: QueryContextRunOptions = {},
   ): Promise<SourceEntry[]> {
-    const plan = createMergePlan(query);
-    const local = this.#evaluateLocal(query);
+    // Only the synchronous parts are timed: the awaits below wait on remotes and document loads.
+    const timed = <R>(work: () => R): R => {
+      const begin = performance.now();
+      try {
+        return work();
+      } finally {
+        onExecutionTime?.(performance.now() - begin);
+      }
+    };
+    const { plan, local } = timed(() => ({ plan: createMergePlan(query), local: this.#evaluateLocal(query) }));
     const ids = getSelectedIds(query);
     if (ids === undefined) {
-      const remote = await this.#runRemotes(ctx, query, timeout);
-      return this.#merge(query, plan, local, remote ?? [], remote !== undefined);
+      const remote = await this.#runRemotes(ctx, query, timeout, onExecutionTime);
+      return timed(() => this.#merge(query, plan, local, remote ?? [], remote !== undefined));
     }
 
     // By id: the working set first, then the index for what it lacks, and only what neither holds is loaded
@@ -271,13 +290,16 @@ export class LocalQueryEngine implements QueryContext {
     if (unresolved.length === 0) {
       return local;
     }
-    const remote = await this.#runRemotes(ctx, selectIds(query, unresolved), deadline - performance.now()).catch(
-      (err) => {
-        // The documents are still there to load; an index that cannot answer is not a miss.
-        log('index could not answer a by-id run; loading the objects instead', { err });
-        return undefined;
-      },
-    );
+    const remote = await this.#runRemotes(
+      ctx,
+      selectIds(query, unresolved),
+      deadline - performance.now(),
+      onExecutionTime,
+    ).catch((err) => {
+      // The documents are still there to load; an index that cannot answer is not a miss.
+      log('index could not answer a by-id run; loading the objects instead', { err });
+      return undefined;
+    });
     unresolved = missing(remote ?? [], unresolved);
     const loaded: SourceEntry[] = [];
     if (unresolved.length > 0) {
@@ -287,11 +309,13 @@ export class LocalQueryEngine implements QueryContext {
         Math.max(0, deadline - performance.now()),
       );
       const reselected = selectIds(query, unresolved);
-      for (const view of views) {
-        loaded.push(...view.evaluate(reselected));
-      }
+      timed(() => {
+        for (const view of views) {
+          loaded.push(...view.evaluate(reselected));
+        }
+      });
     }
-    return this.#merge(query, plan, [...local, ...loaded], remote ?? [], remote !== undefined);
+    return timed(() => this.#merge(query, plan, [...local, ...loaded], remote ?? [], remote !== undefined));
   }
 
   #evaluateLocal(query: QueryAST.Query): SourceEntry[] {
@@ -304,14 +328,19 @@ export class LocalQueryEngine implements QueryContext {
   }
 
   /** Every remote's one-shot answer, or undefined when no remote serves the query. */
-  async #runRemotes(ctx: Context, query: QueryAST.Query, timeout: number): Promise<SourceEntry[] | undefined> {
+  async #runRemotes(
+    ctx: Context,
+    query: QueryAST.Query,
+    timeout: number,
+    onExecutionTime?: (executionTime: number) => void,
+  ): Promise<SourceEntry[] | undefined> {
     if (this.#remotes.size === 0) {
       return undefined;
     }
     const answers = await Promise.all(
       [...this.#remotes].map(async (source) => {
         log('run query', { source: source.kind, query: Query.pretty(Query.fromAst(query)) });
-        const results = await asyncTimeout(source.run(ctx, query), Math.max(0, timeout));
+        const results = await asyncTimeout(source.run(ctx, query, { onExecutionTime }), Math.max(0, timeout));
         log('run query results', { source: source.kind, count: results.length });
         return results;
       }),
@@ -409,10 +438,16 @@ export class LocalQueryEngine implements QueryContext {
       }
     }
     const lookup = coreLookup(views);
+    // The merge is synchronous, so no core changes under it; without the memo it costs entries × depth.
+    const memo: DeletionMemo = new Map();
     const kept: SourceEntry[] = [];
     for (const entry of remote) {
-      const verdict = judgeRemoteEntry(plan, entry, lookup, (id) =>
-        views.reduce<Entity.Unknown | undefined>((found, view) => found ?? view.feedLocalWrite(id), undefined),
+      const verdict = judgeRemoteEntry(
+        plan,
+        entry,
+        lookup,
+        (id) => views.reduce<Entity.Unknown | undefined>((found, view) => found ?? view.feedLocalWrite(id), undefined),
+        memo,
       );
       if (verdict !== 'drop') {
         kept.push(withVerdict(entry, verdict === 'verified'));
@@ -447,7 +482,7 @@ export class LocalQueryEngine implements QueryContext {
       if (!view.covers(query)) {
         continue;
       }
-      for (const match of view.matchLocal(plan, admit)) {
+      for (const match of view.matchLocal(plan, admit, memo)) {
         if (seen.has(match.id)) {
           continue;
         }
