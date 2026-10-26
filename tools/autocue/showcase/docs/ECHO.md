@@ -66,40 +66,34 @@ the 60s source render, 3s earlier than in `ECHO.m4v`). About 25 words fits a 10s
 1. **The Silo Problem** (3–13s, 38 words)
 
    - SaaS has siloed our data for decades.
-   - It was a consequence of the old software economics.
-   - Now apps are easy to build, and agents need all of our data to be useful.
-   - That demands a new security model.
+   - This was a consequence of cloud software economics.
+   - But today apps are easier to build, and agents need all of our data to be useful.
+   - That demands a new data and security model.
 
 2. **Monolithic Agents** (13–23s, 30 words)
 
-   - Today we grant agents coarse access to everything, with no audit and no control.
-   - As agents run continuously, across both private and enterprise data, that becomes more dangerous every day.
+   - Today we grant agents coarse-grained access to everything, with no audit and limited control.
+   - REDO: As agents run continuously, across both private and enterprise data, that becomes more dangerous every day.
+     - Variant A (14 words): As we scale up always-on agents, mixing personal and enterprise data, that risk compounds.
+     - Variant B (16 words): And as agents run around the clock across personal and company data, the risk only grows.
+     - Variant C (15 words): That is risky today, and riskier as always-on agents mix our private and enterprise data.
 
 3. **ECHO Graph Database** (23–33s, 24 words)
 
-   - ECHO takes a different approach.
-   - It brings all your data into a single logical graph, so people and agents work from the same context.
+   - ECHO DB takes a fundamentally different approach.
+   - It brings all your data into a single logical graph, so teams and agents can work from a shared context.
 
 4. **ECHO Hypergraph** (33–43s, 30 words)
 
-   - That graph is partitioned into secure spaces.
-   - Share each one with the colleagues and agents who need it, even across organizations, and every agent sees only what its task requires.
+   - That graph is partitioned into interconnected secure spaces.
+   - REDO: Share each one with the colleagues and agents who need it, even across organizations, and every agent sees only what its task requires.
+     - Variant A (16 words): Each space is shared with exactly the colleagues and agents who need it, even across organizations.
+     - Variant B (17 words): Spaces can be shared with colleagues, partners and agents, so each one sees only what it needs.
+     - Variant C (16 words): Grant a colleague, a partner or an agent access to just the spaces their work requires.
+     - Variant D (17 words): Spaces span teams and organizations, and every agent is scoped to exactly the data its task needs.
 
 5. **Open and Extensible** (43–60s, 36 words)
 
-   - And because it's open, it keeps growing.
-   - New sources, new apps and new agents plug into the same graph, and you never give up control.
-   - DXOS is the operating system for people and agents working together.
-
-## Previous narration (for reference)
-
-The lines `flow-cues.json` speaks today, one per slide:
-
-1. "Today, your data is split across vendors. Mail, documents, finance and operations each live in their own app,
-   rented back to you."
-2. "Agents present new opportunities and challenges. To be useful, they need everything, so we grant them unrestricted
-   access to all of it."
-3. "DXOS takes a different path. ECHO brings your data into one graph you own, organized and indexed by context."
-4. "That graph is partitioned into secure spaces, so each user, team, app and agent sees only the data they need."
-5. "And because it's open, it keeps growing. New sources, new apps and new agents plug into the same foundation,
-   without ever giving up control. DXOS is the enterprise operating system."
+   - REDO: And because it's open, it keeps growing.
+   - REDO: New sources, new apps and new agents plug into the same graph, and you never give up control.
+   - DXOS is the operating system for the new enterprise.
