@@ -25,15 +25,6 @@ _1 error(s), 7 warning(s)._
 - 2f985179-7 - ignored - no-try-catch-in-effect-code - packages/core/echo/echo-client/src/client/index-query-source-provider.ts:402
 - 2f985179-8 - ignored - use-context-scoped-cancellation - packages/core/echo/echo-client/src/client/index-query-source-provider.ts:570
 
-## Triage
-
-All eight are ignored. 1, 2, 5, 6 and 7 sit on lines this PR does not change. 1 also names a test
-file that has no class. 4 is the existing `index progress restarts the one-shot budget` test, not a
-new one. 3 is the existing loader-boundary fake; the two new tests use the same fake, and an
-`Entity.Unknown` cannot be built without the full ECHO stack the unit test avoids. 8 is the
-pass-scoped hydration timer: it is cleared in a `finally`, and context disposal settles every record
-through `ContextDisposedError`, so the pass and its timer end with the context.
-
 ## Issues
 
 # WARN 2f985179-1 consistent-private-field-convention `packages/core/echo/echo-client/src/client/index-query-source-provider.test.ts:50`
@@ -84,3 +75,12 @@ estimated input tokens: 1073286
 billed input tokens: 1035626 (cost $0.0435)
 measured chars per token: 3.11
 ```
+
+## Triage
+
+All eight are ignored. 1, 2, 5, 6 and 7 sit on lines this PR does not change. 1 also names a test
+file that has no class. 4 is the existing `index progress restarts the one-shot budget` test, not a
+new one. 3 is the existing loader-boundary fake; the two new tests use the same fake, and an
+`Entity.Unknown` cannot be built without the full ECHO stack the unit test avoids. 8 is the
+pass-scoped hydration timer: it is cleared in a `finally`, and context disposal settles every record
+through `ContextDisposedError`, so the pass and its timer end with the context.
