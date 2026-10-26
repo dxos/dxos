@@ -616,6 +616,9 @@
       "path": "packages/plugins/plugin-qa/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-recorder/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-registry/tsconfig.json"
     },
     {

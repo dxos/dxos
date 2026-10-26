@@ -4,6 +4,16 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-10-26 — plugin-recorder (new plugin) + plugin-presenter
+
+- `Harness.createComposerTestApp` drops a plugin whose `dx.config.ts` `dependsOn` is unmet (logs `Plugin dependency resolution failed`), so a plugin test must load the whole `dependsOn` chain; prefer registering a referenced foreign schema in your own schema module (plugin-recorder registers studio's `MediaArtifact`/`Variant`) over a `dependsOn` that drags in the chain.
+- In node plugin tests, modules with `environments: ['browser', 'tauri']` (surfaces, browser services) are not even REGISTERED — assert `getModules()` only for headless modules.
+- A cross-plugin toolbar slot: define a `Role.make(...)` in the host's `types/<X>Surface.ts`, render `<Surface.Surface type={Role} data={{ subject }} />` in the toolbar, and list the role id in the contributor's `AppCapability.surface({ roles })` so the surface activates on demand (`plugin-presenter` `PresenterSurface.Toolbar`).
+- A new plugin needs `pnpm exec dx-plugin gen` (writes the gitignored `src/capabilities/gen/*`) and a `.storybook/` (copy a sibling's; `manager-head.html`/`preview-head.html` are symlinks) before its vitest config loads.
+- `db.query(filter).run()` resolves to the object array, not `{ objects }`.
+- A running Composer dev server does not see a new `#imports` alias in a plugin's `package.json` (restart it) nor new capability modules until `pnpm exec dx-plugin gen` rewrites `src/capabilities/gen/*`; the plugin fails to load with `startupFailureKind: module-error` until both.
+- A list held on an object's own field (not a Collection) gets undo by a Delete/Restore operation pair plus `AppCapability.undoMappings` (kanban's pattern); space `RemoveObjects` only unlinks from Collections.
+
 ## 2026-10-23 — plugin-code-graph (new plugin)
 
 - Reuse the feature-map canvas for any derived graph: `createDynamicProjection` from `@dxos/react-ui-canvas/scene` with `arrange: 'force' | 'crossings'`; feed positions from another engine (e.g. `@dxos/diagram` `SemanticEngine`) as the `Overlay` (`plugin-code-graph/src/components/CodeGraphCanvas`).

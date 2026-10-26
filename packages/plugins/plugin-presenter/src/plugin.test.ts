@@ -32,14 +32,12 @@ describe('PresenterPlugin', () => {
     expect(registered).toContain(moduleId('CreateObject'));
   });
 
-  test('registers no settings module', async ({ expect }) => {
+  test('registers the settings module for speaker notes', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
       plugins: [PresenterPlugin()],
     });
 
     const registered = harness.manager.getModules().map((module) => module.id);
-    const own = registered.filter((id) => id.startsWith(moduleId('')));
-    expect(own.length).toBeGreaterThan(0);
-    expect(own.filter((id) => id.toLowerCase().includes('settings'))).toEqual([]);
+    expect(registered).toContain(moduleId('Settings'));
   });
 });

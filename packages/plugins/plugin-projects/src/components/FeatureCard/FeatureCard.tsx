@@ -388,7 +388,8 @@ const FeatureCardTags = ({ all }: FeatureCardTagsProps) => {
   const hidden = signals.slice(shown.length);
   return (
     <Card.Row>
-      <Layout.Flex wrap gap='xs'>
+      {/* Padded by a tag's inset on a block, so wrapped tags keep the space above and below that one line has. */}
+      <Layout.Flex wrap gap='xs' classNames='py-[calc((var(--dx-block-size)_-_var(--dx-label-line-height))/2)]'>
         <Tag.Tag hue={FEATURE_STATUS_STYLE[feature.status].hue}>{t(`feature-status.${feature.status}.label`)}</Tag.Tag>
         {relation && <Tag.Tag hue={RELATION_HUE[relation]}>{t(`feature-relation.${relation}.label`)}</Tag.Tag>}
         {shown.map((signal) => (

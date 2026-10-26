@@ -164,8 +164,8 @@
   "types": "dist/types/src/index.d.ts",
   "typesVersions": {
     "*": {
-      "MediaArtifact": [
-        "dist/types/src/types/MediaArtifact.d.ts"
+      "Frame": [
+        "dist/types/src/types/Frame.d.ts"
       ],
       "Generation": [
         "dist/types/src/types/Generation.d.ts"
@@ -175,6 +175,12 @@
       ],
       "Lightbox": [
         "dist/types/src/types/Lightbox.d.ts"
+      ],
+      "MediaArtifact": [
+        "dist/types/src/types/MediaArtifact.d.ts"
+      ],
+      "Storyboard": [
+        "dist/types/src/types/Storyboard.d.ts"
       ],
       "StudioCapabilities": [
         "dist/types/src/types/StudioCapabilities.d.ts"
@@ -187,12 +193,6 @@
       ],
       "Variant": [
         "dist/types/src/types/Variant.d.ts"
-      ],
-      "Frame": [
-        "dist/types/src/types/Frame.d.ts"
-      ],
-      "Storyboard": [
-        "dist/types/src/types/Storyboard.d.ts"
       ]
     }
   },

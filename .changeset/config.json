@@ -326,6 +326,7 @@
       "@dxos/plugin-projects",
       "@dxos/plugin-pwa",
       "@dxos/plugin-qa",
+      "@dxos/plugin-recorder",
       "@dxos/plugin-registry",
       "@dxos/plugin-review",
       "@dxos/plugin-routine",

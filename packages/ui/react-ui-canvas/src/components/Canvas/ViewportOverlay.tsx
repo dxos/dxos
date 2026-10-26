@@ -26,7 +26,8 @@ export type ViewportOverlayProps = {
 
 /** Over the scene: the grain, the shield that takes the pointer while the camera moves, and the menu a gesture opens. */
 export const ViewportOverlay = ({ camera, look }: ViewportOverlayProps) => {
-  const { registry, atoms, store, capabilities, objectActions, transparent } = useCanvasServices('Canvas.Viewport');
+  const { registry, atoms, store, capabilities, objectActions, transparent, readonly, document } =
+    useCanvasServices('Canvas.Viewport');
   const { displayScene, navigating, removePoint, menu, closeMenu, menuAnchorRef } = useCanvasGesture('Canvas.Viewport');
   const selectionAspect = useCanvasSelection('Canvas.Viewport');
   const editingAspect = useCanvasEditing('Canvas.Viewport');
@@ -37,6 +38,7 @@ export const ViewportOverlay = ({ camera, look }: ViewportOverlayProps) => {
   const canGoBack = path.length > 1 || isolation !== undefined;
   const selection = useAtomValue(selectionAspect.atoms.selection);
   const clipboard = useAtomValue(editingAspect.atoms.clipboard);
+  const history = useAtomValue(document.history);
   const { copy, cut, paste } = editingAspect.commands;
   const views = useAtomValue(store.views);
   // The one instance selected, which the element menu offers to edit, ungroup or make unique.
@@ -70,6 +72,24 @@ export const ViewportOverlay = ({ camera, look }: ViewportOverlayProps) => {
         }}
       >
         <Menu.Content>
+          {/* Undo and redo lead every menu but a control point's, as they lead the app's own context menu. */}
+          {(menu?.kind === 'element' || menu?.kind === 'canvas') && (
+            <>
+              <Menu.Item
+                data-testid='menu-undo'
+                disabled={readonly || !history.canUndo}
+                onSelect={document.undo}
+                item={{ value: 'Undo', label: 'Undo' }}
+              />
+              <Menu.Item
+                data-testid='menu-redo'
+                disabled={readonly || !history.canRedo}
+                onSelect={document.redo}
+                item={{ value: 'Redo', label: 'Redo' }}
+              />
+              <Menu.Separator />
+            </>
+          )}
           {menu?.kind === 'point' && (
             <Menu.Item
               data-testid='remove-point'
