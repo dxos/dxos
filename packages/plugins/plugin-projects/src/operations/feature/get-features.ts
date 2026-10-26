@@ -27,6 +27,7 @@ const handler: Operation.WithHandler<typeof FeatureOperation.GetFeatures> = Feat
         const showcases = yield* Database.query(selected.targetOf(Showcase.Demonstrates).source()).run;
         features.push({
           id: feature.id,
+          link: Feature.getLink(feature),
           name: feature.name,
           status: feature.status,
           specs: [...(feature.specs ?? [])],

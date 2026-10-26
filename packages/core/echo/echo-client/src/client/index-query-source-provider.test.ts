@@ -287,6 +287,8 @@ describe('IndexQuerySource', () => {
     expect(results.map((entry) => entry.id)).toEqual([prompt, slow]);
   });
 
+  // Regression: every hit armed and cleared its own budget timer, which on a re-hydration pass over a
+  // large result set cost more than hydrating the already-loaded objects (UI lag trace, 2026-10-26).
   test('a row whose database closes under its load is dropped', async () => {
     const spaceId = SpaceId$.random();
     const [kept, closed] = [EntityId.random(), EntityId.random()];
