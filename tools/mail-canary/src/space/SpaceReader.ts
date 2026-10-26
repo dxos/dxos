@@ -79,7 +79,7 @@ export class SpaceReader {
   login(recoveryPhrase: string): Effect.Effect<void, DxError> {
     return Effect.gen({ self: this }, function* () {
       this.#secrets.push(recoveryPhrase);
-      yield* this.#run(['profile', 'create', '--template', 'preview', '--name', this.#profile]);
+      yield* this.#run(['profile', 'create', '--template', 'preview', '--name', this.#profile], { useProfile: false });
       yield* this.#run(['account', 'login', '--method', 'recovery-code', recoveryPhrase]);
     });
   }
@@ -122,11 +122,12 @@ export class SpaceReader {
     });
   }
 
-  #run(args: readonly string[]): Effect.Effect<string, DxError> {
+  /** `useProfile: false` for `profile create`, which fails if DX_PROFILE has already bootstrapped a bare profile. */
+  #run(args: readonly string[], { useProfile = true } = {}): Effect.Effect<string, DxError> {
     return Effect.tryPromise({
       try: async () => {
         const { stdout } = await execFileAsync(DX_BIN, args, {
-          env: { ...process.env, HOME: this.#home, DX_PROFILE: this.#profile },
+          env: { ...process.env, HOME: this.#home, ...(useProfile ? { DX_PROFILE: this.#profile } : {}) },
           maxBuffer: 256 * 1024 * 1024,
         });
         return stdout;

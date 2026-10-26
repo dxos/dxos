@@ -12,7 +12,9 @@
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import { execFileSync } from 'node:child_process';
+import { appendFileSync } from 'node:fs';
 import { homedir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { canaryAccount } from '../src/gmail/index.ts';
@@ -20,6 +22,7 @@ import { SpaceReader } from '../src/space/index.ts';
 
 const PROFILE = 'mail-canary';
 const SPACE_NAME = 'Mail canary';
+const PREVIEW_HUB = 'https://preview.dxos.network/hub/';
 const DX = fileURLToPath(new URL('../../../packages/devtools/cli/bin/dx', import.meta.url));
 const env = { ...process.env, DX_PROFILE: PROFILE };
 const dx = (...args) => execFileSync(DX, args, { env, stdio: 'inherit' });
@@ -27,7 +30,10 @@ const dxJson = (...args) => JSON.parse(execFileSync(DX, ['--json', ...args], { e
 
 const [command, argument] = process.argv.slice(2);
 if (command === 'create' && argument) {
-  dx('profile', 'create', '--template', 'preview', '--name', PROFILE);
+  // Without DX_PROFILE: dx would first bootstrap a bare profile under that name, and the create would refuse it.
+  execFileSync(DX, ['profile', 'create', '--template', 'preview', '--name', PROFILE], { stdio: 'inherit' });
+  // The preview template names no hub, so signup would check the access code against production's.
+  appendFileSync(join(homedir(), '.config/dx/profile', `${PROFILE}.yml`), `\n    hub:\n      url: ${PREVIEW_HUB}\n`);
   // Binds the identity to a hub account for the test address; follow the link the hub emails.
   dx('account', 'signup', '--method', 'email', argument, canaryAccount());
   dx('space', 'create', '--name', SPACE_NAME);
