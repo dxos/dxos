@@ -146,7 +146,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
         classNames={classNames}
         {...attentionAttrs}
         // Right-clicking anywhere in the plank (its heading or its content) lists its node's actions.
-        {...(node.data === undefined ? {} : AppNode.contextMenuProps(node.id))}
+        {...(node.data === undefined ? {} : AppNode.contextMenuProps(node.id, meta.profile.key))}
         data-testid='deck.plank'
       >
         {!headless && (

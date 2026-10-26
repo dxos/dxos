@@ -630,9 +630,19 @@ export const makeNotFound = (): AppGraphNode.NodeArg<null> => ({
 /** Names the graph node an element shows, so right-clicking it opens that node's actions as the app's context menu. */
 export const CONTEXT_MENU_ATTRIBUTE = 'data-dx-context';
 
-/** Props that make an element open the context menu of the graph node `id`. */
-export const contextMenuProps = (id: string): Record<typeof CONTEXT_MENU_ATTRIBUTE, string> => ({
+/** The caller the context menu runs the node's actions as, so what they open (e.g. a rename popover) anchors here. */
+export const CONTEXT_MENU_CALLER_ATTRIBUTE = 'data-dx-context-caller';
+
+/**
+ * Props that make an element open the context menu of the graph node `id`. `caller` is the one the element's own menu
+ * passes its actions: a popover an action opens anchors to `${caller}:${id}`, which the element renders.
+ */
+export const contextMenuProps = (
+  id: string,
+  caller?: string,
+): Partial<Record<typeof CONTEXT_MENU_ATTRIBUTE | typeof CONTEXT_MENU_CALLER_ATTRIBUTE, string>> => ({
   [CONTEXT_MENU_ATTRIBUTE]: id,
+  ...(caller ? { [CONTEXT_MENU_CALLER_ATTRIBUTE]: caller } : {}),
 });
 
 /** One edit command a container offers its context menu, with whether it can run now. */

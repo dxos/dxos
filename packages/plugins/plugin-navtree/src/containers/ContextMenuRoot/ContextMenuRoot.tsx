@@ -21,7 +21,14 @@ import { type NativeContext, globalActions, nativeActions, readNativeContext } f
 /** Reported as the caller of an action run from the context menu. */
 export const CONTEXT_MENU = 'contextMenu';
 
-type Target = { id?: string; x: number; y: number; native: NativeContext; commands?: AppNode.EditCommands };
+type Target = {
+  id?: string;
+  caller?: string;
+  x: number;
+  y: number;
+  native: NativeContext;
+  commands?: AppNode.EditCommands;
+};
 
 /**
  * The app's context menu, which replaces the browser's everywhere: right-clicking an element marked with
@@ -36,11 +43,9 @@ export const ContextMenuRoot = () => {
   const [target, setTarget] = useState<Target>();
 
   useEffect(() => {
-    const targetId = (event: Event) => {
-      const element =
-        event.target instanceof Element ? event.target.closest(`[${AppNode.CONTEXT_MENU_ATTRIBUTE}]`) : null;
-      return element?.getAttribute(AppNode.CONTEXT_MENU_ATTRIBUTE) ?? undefined;
-    };
+    const marked = (event: Event) =>
+      event.target instanceof Element ? event.target.closest(`[${AppNode.CONTEXT_MENU_ATTRIBUTE}]`) : null;
+    const targetId = (event: Event) => marked(event)?.getAttribute(AppNode.CONTEXT_MENU_ATTRIBUTE) ?? undefined;
     // The node may not be in the graph yet (its parent never expanded), and its actions are built on demand, so both
     // are asked for as the pointer arrives, ready by the time it right-clicks.
     // Expanded on an earlier event, so a flush has since run and the graph's actions for it can be trusted.
@@ -72,6 +77,7 @@ export const ContextMenuRoot = () => {
       }
       setTarget({
         id,
+        caller: marked(event)?.getAttribute(AppNode.CONTEXT_MENU_CALLER_ATTRIBUTE) ?? undefined,
         x: event.clientX,
         y: event.clientY,
         native: readNativeContext(event.target),
@@ -112,7 +118,7 @@ type PointerMenuProps = Omit<ContextMenuProps, 'id'> & {
   nodeActions?: MenuItem[];
 };
 
-const PointerMenu = ({ node, nodeActions = [], x, y, native, commands, onClose }: PointerMenuProps) => {
+const PointerMenu = ({ node, nodeActions = [], caller, x, y, native, commands, onClose }: PointerMenuProps) => {
   const anchorRef = useRef<HTMLDivElement>(null);
   const { invokePromise } = AppHooks.useOperationInvoker();
   const space = Hooks.useActiveSpace();
@@ -151,7 +157,7 @@ const PointerMenu = ({ node, nodeActions = [], x, y, native, commands, onClose }
         open
         onOpenChange={(open) => !open && onClose()}
         virtualRef={anchorRef}
-        caller={CONTEXT_MENU}
+        caller={caller ?? CONTEXT_MENU}
         onAction={handleAction}
         group={node}
         actions={actions}
