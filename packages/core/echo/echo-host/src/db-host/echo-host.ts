@@ -258,6 +258,8 @@ export class EchoHost extends Resource {
 
   /** Whether the first index pass, and the first pass that left nothing behind, are marked on the timeline. */
   #indexingMarked = false;
+  /** The last document leg read every saved document, so until one is saved again a pass need not rescan them. */
+  #documentsDrained = false;
   #caughtUpMarked = false;
 
   readonly #secondaryIndexLock = new Mutex();
@@ -1829,10 +1831,18 @@ export class EchoHost extends Resource {
 
       {
         performance.mark('indexEngine.update.automerge:start');
-        const result = await this.indexEngine
-          .update(ctx, this._automergeDataSource, { spaceId: null, limit: 50, countCatchUp })
-          .pipe(EffectEx.withContext(ctx), RuntimeProvider.runPromise(this._runtime));
-        _mergeInto(combinedResult, result);
+        // A feed append changes no document, yet the document leg reads the heads of every document and
+        // every cursor to find that out; an agent turn appends many times a second.
+        const scanDocuments = !this.#documentsDrained || !_onlyFeedReasons(reasons);
+        const result = scanDocuments
+          ? await this.indexEngine
+              .update(ctx, this._automergeDataSource, { spaceId: null, limit: 50, countCatchUp })
+              .pipe(EffectEx.withContext(ctx), RuntimeProvider.runPromise(this._runtime))
+          : undefined;
+        if (result) {
+          _mergeInto(combinedResult, result);
+          this.#documentsDrained = result.done && result.drained;
+        }
 
         // Convergence-key duplicates are born from replication, and a replicated write is exactly what
         // was just indexed — so this is the earliest a duplicate can be detected on this device.
@@ -1873,7 +1883,7 @@ export class EchoHost extends Resource {
               track: 'Indexing',
               trackGroup: 'ECHO', // Group related tracks together
               color: 'tertiary-dark',
-              properties: [['count', result.updated]],
+              properties: [['count', result?.updated ?? 0]],
             },
           },
         });
@@ -2012,6 +2022,14 @@ type MutableIndexingAccumulator = {
   documents: Set<string>;
   types: Set<string>;
   objects: Set<EntityId>;
+};
+
+/** Index runs a feed append starts; every other reason may follow a document save. */
+const FEED_ONLY_REASONS: ReadonlySet<string> = new Set(['feed-blocks', 'trace-blocks']);
+
+const _onlyFeedReasons = (reasons: Record<string, number>): boolean => {
+  const triggers = Object.keys(reasons);
+  return triggers.length > 0 && triggers.every((reason) => FEED_ONLY_REASONS.has(reason));
 };
 
 const _makeEmptyMergedResult = (): MutableIndexingAccumulator => ({
