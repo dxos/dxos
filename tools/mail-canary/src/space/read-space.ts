@@ -11,13 +11,14 @@ export const GMAIL_SOURCE = 'com.google.mail';
 /** Kind of the space's Execution Trace feed (compute-runtime `TRACE_FEED_KIND`). */
 export const TRACE_FEED_KIND = 'dxos.org.feed.trace';
 
+// Feed rows per query; small, since a query response over 32 MiB fails on EDGE.
+const PAGE_SIZE = 50;
+
 export type ReadSpaceParams = {
   /** Read trace events back to this epoch millisecond. */
   readonly since: number;
   /** Most mailbox-feed messages to read, newest first. */
   readonly maxMessages: number;
-  /** Feed rows per query; small, since a query response over 32 MiB fails on EDGE. */
-  readonly pageSize: number;
 };
 
 /**
@@ -29,7 +30,7 @@ export type ReadSpaceParams = {
  * filter pushdown yet, so a foreign-key filter would decode the whole feed.
  */
 export const readSpaceProgram = (params: ReadSpaceParams): string => `
-const params = ${JSON.stringify(params)};
+const params = ${JSON.stringify({ ...params, pageSize: PAGE_SIZE })};
 const syncKey = ${JSON.stringify(SYNC_OPERATION_KEY)};
 const gmailSource = ${JSON.stringify(GMAIL_SOURCE)};
 

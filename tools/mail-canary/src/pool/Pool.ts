@@ -15,7 +15,7 @@ export const POOL_LABEL = 'enron-pool';
 export const FOLDER_HEADER = 'X-Gmail-Labels';
 
 /** The sync's default look-back; the pool must stay older than this or the canary space would sync it. */
-export const SYNC_WINDOW_DAYS = 30;
+const SYNC_WINDOW_DAYS = 30;
 
 // Gmail's simple upload takes 5 MB, and base64url grows a message by a third.
 const MAX_MESSAGE_BYTES = 3_500_000;
@@ -25,8 +25,6 @@ const CONCURRENCY = 5;
 
 export type ImportOptions = {
   readonly mboxPath: string;
-  /** Holds how many messages are already imported, so a rerun resumes rather than duplicating. */
-  readonly progressPath?: string;
   readonly concurrency?: number;
   readonly onProgress?: (imported: number, total: number) => void;
 };
@@ -58,14 +56,11 @@ export class Pool {
    * Imports every message of the mbox from step 01, archived, under the pool label and its original
    * folder's label, with its internal date taken from the shifted `Date` header.
    */
-  import({
-    mboxPath,
-    progressPath = `${mboxPath}.imported`,
-    concurrency = CONCURRENCY,
-    onProgress,
-  }: ImportOptions): Effect.Effect<ImportResult, GmailError> {
+  import({ mboxPath, concurrency = CONCURRENCY, onProgress }: ImportOptions): Effect.Effect<ImportResult, GmailError> {
     return Effect.gen({ self: this }, function* () {
       const messages = yield* readMbox(mboxPath);
+      // Counts the messages already imported, so a rerun resumes rather than duplicating.
+      const progressPath = `${mboxPath}.imported`;
       const start = existsSync(progressPath) ? Number(readFileSync(progressPath, 'utf8').trim()) || 0 : 0;
       const labelIds = new Map([[POOL_LABEL, yield* this.#gmail.ensureLabel(POOL_LABEL)]]);
 

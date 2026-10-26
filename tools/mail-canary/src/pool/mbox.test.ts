@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { splitMbox } from './mbox.ts';
+import { joinMbox, splitMbox } from './mbox.ts';
 
 const MBOX = [
   'From MAILER-DAEMON Mon Oct 26 15:54:47 2026',
@@ -37,5 +37,10 @@ describe('splitMbox', () => {
   test('reads CRLF files and empty input', ({ expect }) => {
     expect(splitMbox(MBOX.replaceAll('\n', '\r\n'))).toHaveLength(2);
     expect(splitMbox('')).toEqual([]);
+  });
+
+  test('reads back what joinMbox writes', ({ expect }) => {
+    const messages = ['Subject: a\r\n\r\nFrom the desk\r\n', 'Subject: b\n\nbody\n'];
+    expect(splitMbox(joinMbox(messages))).toEqual(['Subject: a\n\nFrom the desk\n', 'Subject: b\n\nbody\n']);
   });
 });

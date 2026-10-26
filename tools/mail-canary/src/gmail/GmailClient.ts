@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { type GmailCredentials, accessToken } from './auth.ts';
-import { decodeRaw, encodeRaw } from './raw.ts';
 import { GmailError, request } from './request.ts';
 
 const API = 'https://gmail.googleapis.com/gmail/v1/users/me';
@@ -19,7 +18,6 @@ const RawMessage = Schema.Struct({ raw: Schema.String });
 const MetadataMessage = Schema.Struct({
   id: Schema.String,
   internalDate: Schema.String,
-  labelIds: Schema.optional(Schema.Array(Schema.String)),
   payload: Schema.optional(
     Schema.Struct({
       headers: Schema.optional(Schema.Array(Schema.Struct({ name: Schema.String, value: Schema.String }))),
@@ -35,7 +33,6 @@ const LabelList = Schema.Struct({ labels: Schema.optional(Schema.Array(Label)) }
 export type MessageMetadata = {
   readonly id: string;
   readonly internalDate: number;
-  readonly labelIds: readonly string[];
   readonly headers: Readonly<Record<string, string>>;
 };
 
@@ -80,7 +77,9 @@ export class GmailClient {
   }
 
   getMessage(id: string): Effect.Effect<string, GmailError> {
-    return this.#call(RawMessage, `/messages/${id}?format=raw`).pipe(Effect.map((message) => decodeRaw(message.raw)));
+    return this.#call(RawMessage, `/messages/${id}?format=raw`).pipe(
+      Effect.map((message) => Buffer.from(message.raw, 'base64url').toString('latin1')),
+    );
   }
 
   getMetadata(id: string, headerNames: readonly string[]): Effect.Effect<MessageMetadata, GmailError> {
@@ -89,7 +88,6 @@ export class GmailClient {
       Effect.map((message) => ({
         id: message.id,
         internalDate: Number(message.internalDate),
-        labelIds: message.labelIds ?? [],
         headers: Object.fromEntries((message.payload?.headers ?? []).map((header) => [header.name, header.value])),
       })),
     );
@@ -97,7 +95,7 @@ export class GmailClient {
 
   /** Inserts a message without sending it; `receivedTime` makes its internal date the insert time. */
   insert(message: string, labelIds: readonly string[]): Effect.Effect<string, GmailError> {
-    return this.#post('/messages?internalDateSource=receivedTime', { raw: encodeRaw(message), labelIds });
+    return this.#post('/messages?internalDateSource=receivedTime', { raw: encode(message), labelIds });
   }
 
   /**
@@ -106,7 +104,7 @@ export class GmailClient {
    */
   importMessage(message: string, labelIds: readonly string[]): Effect.Effect<string, GmailError> {
     return this.#post('/messages/import?internalDateSource=dateHeader&neverMarkSpam=true&processForCalendar=false', {
-      raw: encodeRaw(message),
+      raw: encode(message),
       labelIds,
     });
   }
@@ -144,3 +142,6 @@ export class GmailClient {
     });
   }
 }
+
+// Latin-1 round-trips every byte, so an 8-bit body survives decode and re-encode unchanged.
+const encode = (message: string): string => Buffer.from(message, 'latin1').toString('base64url');

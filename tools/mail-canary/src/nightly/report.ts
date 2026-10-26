@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type FailureClass, type Report } from '../checks/index.ts';
+import { type Report } from '../checks/index.ts';
 
 /** Everything one nightly run produced, written to disk before the test asserts. */
 export type NightlyReport = Report & {
@@ -35,7 +35,6 @@ export const toEventProperties = (report: NightlyReport): Record<string, string 
     runsFailed: report.runs.failed,
     runsOpen: report.runs.open,
     runsYielded: report.runs.yielded,
-    ...Object.fromEntries(classes.map((failureClass: FailureClass) => [`class${failureClass}`, true])),
   };
 };
 

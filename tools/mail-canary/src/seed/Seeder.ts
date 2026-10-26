@@ -5,12 +5,14 @@
 import * as Effect from 'effect/Effect';
 
 import { type SeededMessage } from '../checks/index.ts';
-import { type GmailClient, type GmailError } from '../gmail/index.ts';
+import { type GmailClient, type GmailError, rewriteHeaders } from '../gmail/index.ts';
 import { POOL_LABEL } from '../pool/index.ts';
-import { SEED_HEADER, makeSeedCopy } from './copy.ts';
 
 /** Label the canary puts on every copy, so it can find its own copies in Gmail. Sync ignores it. */
 export const SEED_LABEL = 'dx-seed';
+
+/** Header that maps a seeded copy back to the pool message it was copied from. */
+export const SEED_HEADER = 'X-Dx-Seed';
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -66,7 +68,7 @@ export class Seeder {
       return yield* Effect.forEach(
         ids,
         (id) =>
-          this.#gmail.getMetadata(id, ['Subject', 'From', SEED_HEADER]).pipe(
+          this.#gmail.getMetadata(id, ['Subject', 'From']).pipe(
             Effect.map((message): SeededMessage => ({
               gmailId: message.id,
               insertedAt: message.internalDate,
@@ -79,6 +81,25 @@ export class Seeder {
     });
   }
 }
+
+/**
+ * Rewrites a pool message into a fresh copy: a new `Date`, a new `Message-ID` and an `X-Dx-Seed`
+ * header naming the pool message, with the body untouched. `Bcc` is dropped so a copy never names a
+ * hidden recipient. The `Message-ID` must change because Gmail may drop an inserted message whose id it
+ * has already seen, which would make the copy silently vanish.
+ */
+export const makeSeedCopy = (
+  message: string,
+  { poolId, now, nonce }: { poolId: string; now: Date; nonce: string },
+): string =>
+  rewriteHeaders(message, {
+    drop: ['Date', 'Message-ID', SEED_HEADER, 'Bcc'],
+    add: [
+      `Date: ${now.toUTCString().replace('GMT', '+0000')}`,
+      `Message-ID: <${poolId}.${nonce}@canary.dxos.org>`,
+      `${SEED_HEADER}: ${poolId}`,
+    ],
+  });
 
 /**
  * Picks the pool messages for one night: a contiguous slice of the pool's ids, advanced by `count`

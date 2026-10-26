@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { execFile } from 'node:child_process';
 import { writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
@@ -52,7 +53,6 @@ export type SpaceReaderOptions = {
   /** Becomes `HOME` for every `dx` call, so the profile lives in a throwaway directory. */
   readonly home: string;
   readonly profile?: string;
-  readonly bin?: string;
 };
 
 /**
@@ -63,15 +63,13 @@ export class SpaceReader {
   readonly spaceId: string;
   readonly #home: string;
   readonly #profile: string;
-  readonly #bin: string;
   /** Values never to print, such as the recovery phrase in a failed login's command line. */
   readonly #secrets: string[] = [];
 
-  constructor({ spaceId, home, profile = 'mail-canary', bin = DX_BIN }: SpaceReaderOptions) {
+  constructor({ spaceId, home, profile = 'mail-canary' }: SpaceReaderOptions) {
     this.spaceId = spaceId;
     this.#home = home;
     this.#profile = profile;
-    this.#bin = bin;
   }
 
   /**
@@ -95,9 +93,9 @@ export class SpaceReader {
     maxMessages?: number;
   }): Effect.Effect<SpaceSnapshot, DxError> {
     return Effect.gen({ self: this }, function* () {
-      const file = join(this.#home, 'read-space.js');
+      const file = join(tmpdir(), `mail-canary-read-space-${process.pid}.js`);
       yield* Effect.tryPromise({
-        try: () => writeFile(file, readSpaceProgram({ since, maxMessages, pageSize: 50 })),
+        try: () => writeFile(file, readSpaceProgram({ since, maxMessages })),
         catch: (cause) => new DxError({ message: `cannot write the eval program: ${String(cause)}` }),
       });
       const stdout = yield* this.#run([
@@ -127,7 +125,7 @@ export class SpaceReader {
   #run(args: readonly string[]): Effect.Effect<string, DxError> {
     return Effect.tryPromise({
       try: async () => {
-        const { stdout } = await execFileAsync(this.#bin, args, {
+        const { stdout } = await execFileAsync(DX_BIN, args, {
           env: { ...process.env, HOME: this.#home, DX_PROFILE: this.#profile },
           maxBuffer: 256 * 1024 * 1024,
         });

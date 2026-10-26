@@ -4,8 +4,15 @@
 
 import { describe, test } from 'vitest';
 
-import { classifyError, pairRuns, runChecks } from './checks.ts';
-import { RUN_AGAIN_ERROR_CODE, type SeededMessage, type SpaceSnapshot, type SyncEvent } from './types.ts';
+import {
+  RUN_AGAIN_ERROR_CODE,
+  type SeededMessage,
+  type SpaceSnapshot,
+  type SyncEvent,
+  classifyError,
+  pairRuns,
+  runChecks,
+} from './checks.ts';
 
 const MINUTE = 60_000;
 const SINCE = Date.parse('2026-10-26T00:00:00Z');

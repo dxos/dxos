@@ -3,4 +3,3 @@
 //
 
 export * from './checks.ts';
-export * from './types.ts';

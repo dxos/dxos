@@ -20,3 +20,15 @@ export const splitMbox = (text: string): string[] => {
     return message.replace(/^>From /gm, 'From ');
   });
 };
+
+/** Writes raw messages as an mbox that `splitMbox` reads back, with LF line ends and `From ` body lines escaped. */
+export const joinMbox = (messages: readonly string[]): string =>
+  messages
+    .map((message) => {
+      const escaped = message
+        .replace(/\r\n/g, '\n')
+        .replace(/^From /gm, '>From ')
+        .replace(/\n*$/, '\n');
+      return `From MAILER-DAEMON Thu Jan  1 00:00:00 1970\n${escaped}`;
+    })
+    .join('\n');

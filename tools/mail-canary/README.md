@@ -4,216 +4,120 @@ An end-to-end canary for Gmail sync on the deployed **preview** EDGE. It runs ag
 account (`test@braneframe.com`), the real OAuth path (the token stays in kms-service), and the
 product's own sync trigger, so it fails where users' mail sync fails.
 
-Design and reasoning: the [Mail Sync Canary spec](https://claude.ai/artifact/GymNuUNJiiph2LuiDNZani).
-Background: [dxos/dxos#12719](https://github.com/dxos/dxos/issues/12719) (memory kills) and
+Design: the [Mail Sync Canary spec](https://claude.ai/artifact/GymNuUNJiiph2LuiDNZani). Background:
+[dxos/dxos#12719](https://github.com/dxos/dxos/issues/12719) (memory kills) and
 [dxos/dxos#14173](https://github.com/dxos/dxos/pull/14173) (flush hang until the 60 s deadline).
 
 ## How it works
 
-- **Pool (once).** 10,000 Enron messages are imported into Gmail under the archived label
-  `enron-pool`. Every pool message is older than the sync's 30-day default window, so the canary
-  space never syncs the pool. Its age, not a filter, keeps it out.
-- **Canary space (once).** A preview identity owns a space with a Gmail connection to the test
-  account. The binding has no filter and the default sync-back, and keeps the product's `*/10`
-  remote sync trigger, so the canary runs the same code path as users.
-- **Nightly.** A CI job copies 100 pool messages into the inbox as fresh mail (new `Date`, new
-  `Message-ID`, label `dx-seed`), waits for the space's own sync to pick them up, and checks the
-  space. It reads the Execution Trace feed for the last 25 hours, so a failure between two nights is
-  still seen even if later runs succeeded.
+- **Pool (once).** 10,000 Enron messages sit in Gmail under the archived label `enron-pool`, all older
+  than the sync's 30-day window. Their age, not a filter, keeps them out of the canary space.
+- **Canary space (once).** A preview identity owns a space bound to the test account with no filter,
+  the default sync-back and the product's `*/10` remote sync trigger: the users' code path.
+- **Nightly.** CI copies 100 pool messages into the inbox as fresh mail (label `dx-seed`), waits for
+  the space's own sync to pick them up, and checks the last 25 hours of the Execution Trace feed, so a
+  failure between two nights is seen even if later runs succeeded.
 
 ## Steps
 
-| Step | Script                                   | Runs                      | Needs                                   |
-| ---- | ---------------------------------------- | ------------------------- | --------------------------------------- |
-| 01   | `scripts/01-build-pool.py`               | once                      | the CMU Enron maildir                   |
-| 02   | `scripts/02-import-pool.sh`              | once, before step 03      | the canary's Gmail grant                |
-| 03   | `scripts/03-setup-space.sh`              | once                      | `dx` CLI, a browser for the Gmail OAuth |
-| 04   | `moon run mail-canary:nightly`           | nightly in CI, or by hand | all secrets below                       |
+| Step | Command                                         | Runs                 | Needs                       |
+| ---- | ----------------------------------------------- | -------------------- | --------------------------- |
+| 01   | `node scripts/01-build-pool.mjs`                | once                 | the CMU Enron maildir       |
+| 02   | `node scripts/02-import-pool.mjs`               | once, before step 03 | the canary's Gmail grant    |
+| 03   | `node scripts/03-setup-space.mjs`               | once                 | `dx` (bun), Composer        |
+| 04   | `moon run mail-canary:nightly`                  | nightly in CI        | the variables below         |
 
 ### 01 Build the pool
 
-Download and extract the [CMU Enron corpus](https://www.cs.cmu.edu/~enron/) (`enron_mail_20150507.tar.gz`,
-443 MB). Only the custodians the pool uses need extracting:
-
 ```bash
+# CMU Enron corpus, https://www.cs.cmu.edu/~enron/ (443 MB); only these custodians are needed.
 tar -xzf enron_mail_20150507.tar.gz -C ~/enron maildir/kean-s maildir/dasovich-j maildir/kaminski-v
-python3 scripts/01-build-pool.py --maildir ~/enron/maildir --out ~/enron/enron-pool.mbox
-python3 scripts/01-build-pool.py --maildir ~/enron/maildir --out ~/enron/trial.mbox --limit 10
+node scripts/01-build-pool.mjs --maildir ~/enron/maildir --out ~/enron/enron-pool.mbox
+node scripts/01-build-pool.mjs --maildir ~/enron/maildir --out ~/enron/trial.mbox --limit 10
 ```
 
-- `--limit` (default 10,000) messages are sampled evenly across the custodians' history, so the pool
-  is not one folder or one month.
-- Duplicates are dropped by content: the CMU release gives every file its own `Message-ID`, and one
-  custodian files the same mail under several folders (kean-s has 25,351 files but 6,212 distinct
-  messages), which is why the default takes three custodians. Messages with no text body are dropped
-  too, because the Gmail mapper drops them and their copies would never sync.
-- Dates are spread over `--span-days` (default 365) ending `--end-days-ago` (default 31) days before
-  today. Keep the end at least 31 days back: that is what keeps the pool out of the canary's sync.
-- A message keeps every folder it was filed in, as `X-Gmail-Labels: Enron/<custodian>/<folder>,...`
-  (the header GYB also reads). Step 02 makes each one a Gmail label, as a real mailbox has them: the
-  default pool carries 246 labels, one to ten per message.
-- Corrupt Enron dates are clamped into 1998–2002, `Bcc` is dropped, and a missing `Message-ID` is
-  generated. The default build is about 39 MB.
-- The corpus is real people's mail. Keep the mbox out of git.
+It drops duplicates by content (one custodian files the same mail in several folders, hence three
+custodians) and messages with no body, samples `--limit` (10,000) evenly over time, moves the dates
+into the year ending 31 days ago, drops `Bcc`, and records every folder a message was filed in as
+`X-Gmail-Labels: Enron/<custodian>/<folder>,...`. The corpus is real people's mail: keep it out of git.
 
 ### 02 Import the pool
 
-The import uses the canary's own Gmail grant, the same one the nightly job uses. Mint it once with a
-Desktop-app OAuth client of the test account's Google Cloud project (see plugin-google
-`src/operations/mail/sync/TESTING.md` for creating one); it opens a browser for consent as
-`test@braneframe.com` and writes `.secrets/mail-canary-gmail.env` at the repo root.
-
-Set the project's OAuth consent screen to **Internal**. An External app in testing mode expires its
-refresh tokens after 7 days, which would stop the nightly job a week after setup; an Internal app
-needs no Google verification and its tokens do not expire that way.
-
-
 ```bash
-GMAIL_CLIENT_ID=... GMAIL_CLIENT_SECRET=... node src/cli/canary.ts auth
+GMAIL_CLIENT_ID=... GMAIL_CLIENT_SECRET=... node scripts/02-import-pool.mjs auth
+node scripts/02-import-pool.mjs ~/enron/trial.mbox      # then check label:enron-pool in Gmail
+node scripts/02-import-pool.mjs purge
+node scripts/02-import-pool.mjs ~/enron/enron-pool.mbox # about 20 minutes, resumable
 ```
 
-To run the import from a cloud session instead, store the three values in 1Password as the fields
-`GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET` and `GMAIL_REFRESH_TOKEN` of section `mail-canary` in item
-`eng-dev/com.google`. With no grant in the environment or in `.secrets/`, the script reads them
-through `op run --env-file gmail.env.tpl`.
+- `auth` mints the canary's own grant (`gmail.modify`) with a browser consent as the test account and
+  writes it to `.secrets/mail-canary-gmail.env`. Use a Desktop OAuth client whose consent screen is
+  **Internal**: an External app in testing mode expires refresh tokens after 7 days. Copy the values
+  into the CI secrets and 1Password (`eng-dev/com.google`, section `mail-canary`), where a cloud
+  session reads them through `gmail.env.tpl`.
+- An import puts each message in the mailbox without sending it: archived, never spam, labelled
+  `enron-pool` and with its folders, dated by its `Date` header. In the trial, check the dates are the
+  shifted ones (not 2001, not today) and the `Enron/...` labels are there; `purge` then trashes it.
+- After the import, the script fails unless the pool holds exactly the mbox, nothing is in the inbox
+  and nothing is newer than 31 days. Every command refuses a grant for any account but
+  `GMAIL_ACCOUNT` (default `test@braneframe.com`).
 
-Then import the 10-message trial and check it in Gmail before the full import: search
-`label:enron-pool`, and confirm each message has its shifted date (not its 2001 date, not today) and
-its `Enron/...` labels. Clear the trial, then import the pool:
-
-```bash
-scripts/02-import-pool.sh ~/enron/trial.mbox
-node --env-file-if-exists=../../.secrets/mail-canary-gmail.env src/cli/canary.ts purge-pool
-scripts/02-import-pool.sh ~/enron/enron-pool.mbox
-```
-
-- Messages go in through `messages.import`: archived (no inbox), never spam, labelled `enron-pool`
-  and with their folders, with Gmail's internal date taken from the shifted `Date` header. Nothing is
-  sent: an import places a message in the mailbox without delivering it to anyone. 10,000 messages take about 20
-  minutes at the per-user quota; 429 and 5xx answers are retried.
-- The import is resumable: progress is kept in `<mbox>.imported`, so rerunning after an interruption
-  continues where it stopped.
-- Every command checks that the grant belongs to the test account (`GMAIL_ACCOUNT`, default
-  `test@braneframe.com`) and fails otherwise.
-- The script ends with `pool-status <mbox>`, which fails unless the pool holds exactly the mbox's
-  messages, has nothing in the inbox, and has nothing newer than 31 days. A leftover trial fails the
-  count, so purge it first.
-- `purge-pool` moves the pool to Trash, which Gmail empties after 30 days; the `gmail.modify` grant
-  cannot delete outright.
-
-**Import before step 03, and never again while the canary space exists.** The sync fetches the
-history delta's new mail by id with no date check, so an import into a space that already syncs
-would pull the whole pool in. To rebuild the pool, delete the canary space first and repeat step 03.
+**Import before step 03, never while the canary space exists:** the sync fetches new mail by id with
+no date check, so it would pull the whole pool in.
 
 ### 03 Create the canary identity and space
 
 ```bash
-scripts/03-setup-space.sh create <hub access code>   # dx profile, identity, space, recovery phrase
-scripts/03-setup-space.sh verify <space id>          # after binding Gmail, below
+node scripts/03-setup-space.mjs create <hub access code>   # follow the link the hub emails
+node scripts/03-setup-space.mjs verify <space id>          # after binding Gmail
 ```
 
-`create` runs the monorepo's `dx` (`packages/devtools/cli/bin/dx`, needs bun) with a `mail-canary`
-profile on preview:
-
-1. `dx profile create --template preview`;
-2. `dx account signup --method email <code> test@braneframe.com` — follow the emailed link;
-3. `dx space create --name "Mail canary"`, then `dx space list` for its id;
-4. `dx halo seed` for a recovery phrase.
-
-It prints the space id (repository variable `MAIL_CANARY_SPACE_ID`) and the recovery phrase
-(secret `MAIL_CANARY_RECOVERY_PHRASE`) once. Store both before closing the terminal.
-
-**Bind Gmail in Composer, once.** The CLI cannot do this step yet: no command creates the mailbox
-binding and its sync routine, and `dx connector add --preset google` stores the token under source
-`google.com` where plugin-google expects `com.google`. In Composer on preview, sign in with
-`test@braneframe.com`, open "Mail canary", add a Gmail connection for the test account, and accept
-the defaults: no filter, default sync-back, the remote `*/10` sync routine enabled.
-
-`verify` then reads the space through `dx eval` and should report one mailbox, one enabled remote
-timer trigger and one Execution Trace feed.
+`create` makes a `mail-canary` dx profile on preview, signs up the test address, creates the space and
+prints its id (variable `MAIL_CANARY_SPACE_ID`) and the recovery phrase (secret
+`MAIL_CANARY_RECOVERY_PHRASE`) once. Then, in Composer on preview, sign in as the test account, open
+"Mail canary" and add a Gmail connection with the defaults; the CLI cannot bind a mailbox yet.
+`verify` checks the space has a mailbox, a trace feed and one enabled remote sync trigger.
 
 ### 04 Nightly check
 
-`.github/workflows/mail-canary-nightly.yml` runs `moon run mail-canary:nightly` daily at 03:17 UTC
-and on demand. To run it by hand, export the variables below and run the same command.
+`.github/workflows/mail-canary-nightly.yml` runs `moon run mail-canary:nightly` at 03:17 UTC. Each run
+trashes copies older than 2 days, seeds a new slice of the pool, signs in with the recovery phrase in
+a throwaway `HOME`, polls the space through `dx eval` until every copy is synced (up to 45 minutes),
+runs the checks, and writes `report.json`, `summary.json` and `summary.md`.
 
-Each run:
+| Check | Fails when                                                        | Classes        |
+| ----- | ----------------------------------------------------------------- | -------------- |
+| C1    | a sync run started and has no end after 10 minutes                | KILL           |
+| C2    | a sync run ended in failure (a `runAgain` yield is not a failure) | from the error |
+| C3    | no sync run started for more than 12 minutes                      | IDLE           |
+| C4    | the mail sync trigger is missing or disabled                      | OFF            |
+| C5    | a copy older than 25 minutes is not in the mailbox feed           | DATA, STALL    |
+| C6    | a Gmail message appears twice in the mailbox feed                 | DATA           |
+| C7    | a synced copy's subject or sender differs from Gmail's            | DATA           |
 
-1. trashes `dx-seed` copies older than 2 days (keeps the inbox small and exercises deletes);
-2. copies `DX_CANARY_SEED_COUNT` pool messages (default 100) into the inbox, a different slice each
-   day, so no cursor has to be stored;
-3. signs in to the canary identity with the recovery phrase (`dx account login --method
-   recovery-code` in a throwaway `HOME`, so every run admits one new device) and polls the space
-   through `dx eval` until every copy is in the mailbox feed, for up to 45 minutes;
-4. runs the checks below and writes `report.json` and `summary.json` to `dirname($DX_CANARY_REPORT)`.
+C2 classes: `DEADLINE`, `REPO_CLOSED`, `KILL`, `AUTH`, `GONE`, `HANG`, `RATE`, else `UNKNOWN`.
 
-The space reader (`src/space/read-space.ts`) pages both feeds newest first, 50 rows at a time, as sync's own
-dedup seed does: a feed query has no filter pushdown yet, so filtering by Gmail id would decode the
-whole feed, and EDGE fails a query response over 32 MiB.
+| Variable                                                        | Used by | What                                                 |
+| --------------------------------------------------------------- | ------- | ---------------------------------------------------- |
+| `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN` | 02, 04  | the canary's grant (CI: `MAIL_CANARY_GMAIL_*`)       |
+| `GMAIL_ACCOUNT`                                                 | 02, 04  | the only mailbox it writes to, `test@braneframe.com` |
+| `DX_CANARY_RECOVERY_PHRASE`, `DX_CANARY_SPACE_ID`               | 04      | from step 03                                         |
+| `DX_CANARY_SEED_COUNT`, `DX_CANARY_SYNC_TIMEOUT_MIN`            | 04      | copies per night (100), wait in minutes (45)         |
+| `DX_CANARY_REPORT`                                              | 04      | where `report.json` goes; the summaries go beside it |
 
-| Check | Fails when                                                                    | Classes          |
-| ----- | ----------------------------------------------------------------------------- | ---------------- |
-| C1    | a sync run started and has no end after 10 minutes                            | KILL             |
-| C2    | a sync run ended in failure (a `runAgain` yield is not a failure)             | from the error   |
-| C3    | no sync run started for more than 12 minutes                                  | IDLE             |
-| C4    | the mail sync trigger is missing or disabled                                  | OFF              |
-| C5    | a copy older than 25 minutes is not in the mailbox feed                       | DATA, STALL      |
-| C6    | a Gmail message appears twice in the mailbox feed                             | DATA             |
-| C7    | a synced copy's subject or sender differs from Gmail's                        | DATA             |
+Every run posts one `ci.mail-canary` PostHog event (`ciOk`, `ciFailedChecks`, `ciFailureClasses`,
+`ciSyncMinutes`, run counts). Alert on `ciOk = false` and on no event for 26 hours.
 
-C2 names the cause from the run's error: `DEADLINE` (`InvocationDeadlineError`), `REPO_CLOSED`,
-`KILL` (memory or CPU limit), `AUTH` (managed token or Google grant), `GONE` (operation not found),
-`HANG`, `RATE` (Gmail 429, 5xx or transport error), else `UNKNOWN`.
-
-### Variables
-
-| Variable                     | Used by   | What                                                                    |
-| ---------------------------- | --------- | ----------------------------------------------------------------------- |
-| `GMAIL_ACCOUNT`              | 02, 04    | the only mailbox the canary writes to, default `test@braneframe.com`    |
-| `GMAIL_CLIENT_ID`            | 02, 04    | Desktop OAuth client of the test account's Google Cloud project         |
-| `GMAIL_CLIENT_SECRET`        | 02, 04    | its secret                                                              |
-| `GMAIL_REFRESH_TOKEN`        | 02, 04    | refresh token for `test@braneframe.com` with scope `gmail.modify`       |
-| `DX_CANARY_RECOVERY_PHRASE`  | 04        | recovery phrase of the canary identity (printed by step 03)             |
-| `DX_CANARY_SPACE_ID`         | 04        | the canary space (printed by step 03)                                   |
-| `DX_CANARY_SEED_COUNT`       | 04        | copies per night, default 100                                           |
-| `DX_CANARY_SYNC_TIMEOUT_MIN` | 04        | how long to wait for the copies, default 45                             |
-| `DX_CANARY_REPORT`           | 04        | where to write `report.json`; `summary.json` goes beside it             |
-
-In CI the first three are the secrets `MAIL_CANARY_GMAIL_*`, the recovery phrase is the secret
-`MAIL_CANARY_RECOVERY_PHRASE`, and the space id is the repository variable `MAIL_CANARY_SPACE_ID`.
-
-The Gmail grant is the test account's own, separate from the kms-managed token the sync uses, so a
-failing sync token cannot also blind the canary. `node src/cli/canary.ts auth` mints it with the
-`gmail.modify` scope (step 02).
-
-## Alerts
-
-Every run, pass or fail, posts one `ci.mail-canary` event to PostHog (`scripts/ci-event.mjs`), with
-flat properties: `ciOk`, `ciFailedChecks`, `ciFailureClasses`, `ciSyncMinutes`, run counts. Alert on
-`ciOk = false`, and on no event for 26 hours, which catches a canary that stopped running.
-
-## Development
+## Code
 
 ```text
-scripts/                 one-time steps 01–03, run by hand in order
-src/
-  cli/canary.ts          auth | import-pool | pool-status | purge-pool | seed | trash
-  cli/summary.ts         report.json → Markdown for the job summary
-  gmail/GmailClient.ts   class GmailClient: the Gmail calls, as the test account only
-  gmail/auth.ts          the canary's grant: env, access token, browser consent
-  pool/Pool.ts           class Pool: import the mbox (step 02), check it is exact, purge a trial
-  seed/Seeder.ts         class Seeder: copy pool mail into the inbox, trash and list old copies
-  seed/copy.ts           rewrite a pool message into a fresh copy
-  space/SpaceReader.ts   class SpaceReader: sign in with dx and snapshot the canary space
-  space/read-space.ts    the `dx eval` program that reads the feeds and the trigger
-  checks/checks.ts       checks C1–C7 over one snapshot (pure functions)
-  nightly/Nightly.ts     class Nightly: trash, seed, wait for sync, check
-  nightly/canary.test.ts the live nightly run (`sync-e2e`)
+scripts/               steps 01–03
+src/gmail/             GmailClient (test account only), the grant and consent, header helpers
+src/pool/              Pool: import the mbox, check it is exact, purge a trial
+src/seed/              Seeder: copy pool mail into the inbox, trash and list old copies
+src/space/             SpaceReader: sign in with dx and snapshot the space through `dx eval`
+src/checks/            checks C1–C7 over one snapshot
+src/nightly/           Nightly: trash, seed, wait, check; the report and the live test
 ```
 
-```bash
-moon run mail-canary:test      # unit tests of the seeding and the checks; part of Check
-moon run mail-canary:nightly   # the live run; needs the variables above
-node --env-file-if-exists=../../.secrets/mail-canary-gmail.env src/cli/canary.ts seed --count 5
-node --env-file-if-exists=../../.secrets/mail-canary-gmail.env src/cli/canary.ts trash --days 2
-```
+`moon run mail-canary:test` runs the unit tests (part of Check).

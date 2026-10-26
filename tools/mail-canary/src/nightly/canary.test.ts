@@ -16,7 +16,7 @@ import { GmailClient, canaryAccount, credentialsFromEnv } from '../gmail/index.t
 import { Seeder } from '../seed/index.ts';
 import { SpaceReader } from '../space/index.ts';
 import { Nightly } from './Nightly.ts';
-import { toEventProperties } from './report.ts';
+import { renderSummary, toEventProperties } from './report.ts';
 
 const credentials = credentialsFromEnv();
 const recoveryPhrase = process.env.DX_CANARY_RECOVERY_PHRASE;
@@ -53,18 +53,21 @@ describe('mail canary', { tags: ['sync-e2e'], timeout: (SYNC_TIMEOUT_MINUTES + 2
       }).pipe(Effect.result),
     );
 
-    // Written before asserting, so the workflow can summarize and record a run that failed.
-    const summaryPath = join(dirname(reportPath), 'summary.json');
+    // Written before asserting, so the workflow can summarize and record a run that failed: report.json
+    // for the artifact, summary.json for the PostHog event and summary.md for the job summary.
+    const output = (name: string, content: string) => writeFile(join(dirname(reportPath), name), content);
     if (Result.isFailure(result)) {
       const message = result.failure.message;
-      await writeFile(summaryPath, JSON.stringify({ ok: false, failureClasses: 'SETUP', error: message }, null, 2));
+      await output('summary.json', JSON.stringify({ ok: false, failureClasses: 'SETUP', error: message }));
+      await output('summary.md', `## Mail canary: could not run\n\n${message}\n`);
       expect.fail(`the canary could not run: ${message}`);
       return;
     }
 
     const report = result.success;
     await writeFile(reportPath, JSON.stringify(report, null, 2));
-    await writeFile(summaryPath, JSON.stringify(toEventProperties(report), null, 2));
+    await output('summary.json', JSON.stringify(toEventProperties(report)));
+    await output('summary.md', renderSummary(report));
     const failures = report.checks.flatMap((check) =>
       check.failures.map(
         (failure) => `${check.id} ${failure.class} ${failure.pid ?? failure.gmailId ?? ''} ${failure.message}`,

@@ -65,7 +65,7 @@ jobs:
       # before it asserts.
       - name: Report
         if: always()
-        run: node tools/mail-canary/src/cli/summary.ts "${{ runner.temp }}/mail-canary/report.json" >> "$GITHUB_STEP_SUMMARY" || true
+        run: cat "${{ runner.temp }}/mail-canary/summary.md" >> "$GITHUB_STEP_SUMMARY" || true
 
       - name: Upload report
         if: always()

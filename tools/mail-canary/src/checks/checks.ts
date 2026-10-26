@@ -2,25 +2,107 @@
 // Copyright 2026 DXOS.org
 //
 
-import {
-  type CheckId,
-  type CheckOptions,
-  type CheckResult,
-  type Failure,
-  type FailureClass,
-  type Report,
-  RUN_AGAIN_ERROR_CODE,
-  type SeededMessage,
-  type SpaceSnapshot,
-  type SyncedMessage,
-  type SyncEvent,
-} from './types.ts';
+/** Error code an operation ends with when it yields to `Operation.runAgain()` (`@dxos/compute` errors). */
+export const RUN_AGAIN_ERROR_CODE = 'RunAgainError';
+
+/** One `operation.start` or `operation.end` of the mail sync, read from the space's Execution Trace feed. */
+export type SyncEvent = {
+  readonly pid: string;
+  readonly type: 'start' | 'end';
+  readonly timestamp: number;
+  readonly outcome?: 'success' | 'failure';
+  readonly error?: string;
+  readonly errorCode?: string;
+};
+
+/** A message in the mailbox feed, reduced to what the checks compare. */
+export type SyncedMessage = {
+  readonly gmailId: string;
+  readonly subject?: string;
+  readonly sender?: string;
+};
+
+/** A sync trigger in the space. */
+export type TriggerState = {
+  readonly id: string;
+  readonly enabled: boolean;
+};
+
+/** What the canary reads from the space in one pass. */
+export type SpaceSnapshot = {
+  readonly events: readonly SyncEvent[];
+  readonly messages: readonly SyncedMessage[];
+  readonly triggers: readonly TriggerState[];
+};
+
+/** A copy the canary inserted into Gmail, as Gmail reports it. */
+export type SeededMessage = {
+  readonly gmailId: string;
+  /** Gmail `internalDate`, epoch milliseconds. */
+  readonly insertedAt: number;
+  readonly subject?: string;
+  readonly sender?: string;
+};
+
+/** What broke, so a report names the cause rather than only the symptom. */
+export type FailureClass =
+  | 'DEADLINE'
+  | 'REPO_CLOSED'
+  | 'KILL'
+  | 'AUTH'
+  | 'HANG'
+  | 'GONE'
+  | 'RATE'
+  | 'OFF'
+  | 'IDLE'
+  | 'STALL'
+  | 'DATA'
+  | 'UNKNOWN';
+
+export type Failure = {
+  readonly class: FailureClass;
+  readonly message: string;
+  readonly pid?: string;
+  readonly gmailId?: string;
+};
+
+export type CheckId = 'C1' | 'C2' | 'C3' | 'C4' | 'C5' | 'C6' | 'C7';
+
+export type CheckResult = {
+  readonly id: CheckId;
+  readonly name: string;
+  readonly ok: boolean;
+  readonly failures: readonly Failure[];
+};
+
+export type RunSummary = {
+  readonly total: number;
+  readonly succeeded: number;
+  readonly yielded: number;
+  readonly failed: number;
+  readonly open: number;
+};
+
+export type Report = {
+  readonly ok: boolean;
+  readonly checks: readonly CheckResult[];
+  readonly runs: RunSummary;
+};
+
+export type CheckOptions = {
+  /** Epoch milliseconds the checks are evaluated at. */
+  readonly now: number;
+  /** Start of the window the trace checks cover, epoch milliseconds. */
+  readonly since: number;
+};
 
 const MINUTE = 60_000;
-const DEFAULT_CLOSURE_GRACE_MS = 10 * MINUTE;
-const DEFAULT_ARRIVAL_GRACE_MS = 25 * MINUTE;
+// A run may stay open this long before it counts as killed.
+const CLOSURE_GRACE_MS = 10 * MINUTE;
+// A seeded copy may take this long to appear in the mailbox feed.
+const ARRIVAL_GRACE_MS = 25 * MINUTE;
 // The sync trigger runs every 10 minutes; two minutes of slack absorbs cron jitter.
-const DEFAULT_CADENCE_GAP_MS = 12 * MINUTE;
+const CADENCE_GAP_MS = 12 * MINUTE;
 
 /** A sync run: the start and end events that share a `pid`. */
 export type Run = {
@@ -58,19 +140,13 @@ export const classifyError = (error = '', errorCode = ''): FailureClass =>
 export const runChecks = (
   snapshot: SpaceSnapshot,
   seeded: readonly SeededMessage[],
-  {
-    now,
-    since,
-    closureGraceMs = DEFAULT_CLOSURE_GRACE_MS,
-    arrivalGraceMs = DEFAULT_ARRIVAL_GRACE_MS,
-    cadenceGapMs = DEFAULT_CADENCE_GAP_MS,
-  }: CheckOptions,
+  { now, since }: CheckOptions,
 ): Report => {
   const runs = pairRuns(snapshot.events).filter((run) => runTime(run) >= since);
   const failedRuns = runs.filter((run) => run.end && isFailure(run.end));
 
   const closure: Failure[] = runs
-    .filter((run) => run.start && !run.end && now - run.start.timestamp > closureGraceMs)
+    .filter((run) => run.start && !run.end && now - run.start.timestamp > CLOSURE_GRACE_MS)
     .map((run) => ({ class: 'KILL', pid: run.pid, message: 'run started but never ended' }));
 
   const outcome: Failure[] = failedRuns.map((run) => ({
@@ -79,7 +155,7 @@ export const runChecks = (
     message: run.end?.error ?? 'run failed without an error message',
   }));
 
-  const cadence = cadenceGaps(runs, { since, now, cadenceGapMs });
+  const cadence = cadenceGaps(runs, { since, now });
 
   const triggers: Failure[] =
     snapshot.triggers.length === 0
@@ -92,7 +168,7 @@ export const runChecks = (
   for (const message of snapshot.messages) {
     synced.set(message.gmailId, [...(synced.get(message.gmailId) ?? []), message]);
   }
-  const due = seeded.filter((message) => now - message.insertedAt > arrivalGraceMs);
+  const due = seeded.filter((message) => now - message.insertedAt > ARRIVAL_GRACE_MS);
   const missingClass: FailureClass = failedRuns.length > 0 || closure.length > 0 ? 'STALL' : 'DATA';
   const arrival: Failure[] = due
     .filter((message) => !synced.has(message.gmailId))
@@ -144,15 +220,12 @@ const result = (id: CheckId, name: string, failures: Failure[]): CheckResult => 
   failures,
 });
 
-const cadenceGaps = (
-  runs: readonly Run[],
-  { since, now, cadenceGapMs }: { since: number; now: number; cadenceGapMs: number },
-): Failure[] => {
+const cadenceGaps = (runs: readonly Run[], { since, now }: { since: number; now: number }): Failure[] => {
   const starts = runs.flatMap((run) => (run.start ? [run.start.timestamp] : []));
   const points = [since, ...starts, now];
   return points.slice(1).flatMap((point, index) => {
     const gap = point - points[index];
-    return gap > cadenceGapMs
+    return gap > CADENCE_GAP_MS
       ? [
           {
             class: 'IDLE' as const,

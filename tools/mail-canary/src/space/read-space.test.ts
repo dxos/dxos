@@ -101,20 +101,20 @@ describe('readSpaceProgram', () => {
   };
 
   test('reads every keyed mailbox message across pages', ({ expect }) => {
-    const snapshot = evaluate(readSpaceProgram({ since: SINCE, maxMessages: 1_000, pageSize: 50 }), space);
+    const snapshot = evaluate(readSpaceProgram({ since: SINCE, maxMessages: 1_000 }), space);
     expect(snapshot.mailboxFound).toBe(true);
     expect(snapshot.messages).toHaveLength(120);
     expect(snapshot.messages).toContainEqual({ gmailId: 'g7', subject: 'subject 7', sender: 'sender7@enron.com' });
   });
 
   test('stops after maxMessages rows, counting rows without a Gmail key', ({ expect }) => {
-    const snapshot = evaluate(readSpaceProgram({ since: SINCE, maxMessages: 50, pageSize: 50 }), space);
+    const snapshot = evaluate(readSpaceProgram({ since: SINCE, maxMessages: 50 }), space);
     expect(snapshot.messages).toHaveLength(49);
     expect(snapshot.messages[0].gmailId).toBe('g119');
   });
 
   test('reads mail sync events inside the window only', ({ expect }) => {
-    const snapshot = evaluate(readSpaceProgram({ since: SINCE, maxMessages: 10, pageSize: 50 }), space);
+    const snapshot = evaluate(readSpaceProgram({ since: SINCE, maxMessages: 10 }), space);
     expect(snapshot.events).toHaveLength(120);
     expect(snapshot.events.some((event: Row) => event.pid === 'old' || event.pid === 'other')).toBe(false);
     expect(snapshot.events).toContainEqual({
@@ -127,7 +127,7 @@ describe('readSpaceProgram', () => {
   });
 
   test('reports the remote timer trigger only', ({ expect }) => {
-    const snapshot = evaluate(readSpaceProgram({ since: SINCE, maxMessages: 10, pageSize: 50 }), space);
+    const snapshot = evaluate(readSpaceProgram({ since: SINCE, maxMessages: 10 }), space);
     expect(snapshot.triggers).toEqual([{ id: 'sync', enabled: true }]);
   });
 });
