@@ -12,7 +12,6 @@ import { Obj } from '@dxos/echo';
 import * as Presentation from '@dxos/plugin-presenter/Presentation';
 import type * as Variant from '@dxos/plugin-studio/Variant';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { type RecordingItem, RecordingList, RecordingsPanel } from '#components';
@@ -122,39 +121,23 @@ export const SlideRecordingsArticle = ({ role, attendableId, slide }: SlideRecor
             setPlay(({ count }) => ({ count: count + 1, autoPlay: false }));
           }
         }}
-        renderActions={(item) => (
-          <>
-            <Button.Root
-              data-testid='recorder.take.select'
-              icon={item.main ? 'ph--star--fill' : 'ph--star--regular'}
-              iconOnly
-              variant='ghost'
-              classNames={item.main ? 'text-accent-text' : undefined}
-              disabled={!item.take}
-              label={t(item.main ? 'main-take.label' : 'select-take.label')}
-              onClick={() =>
-                item.take && !item.main && void invokePromise(RecorderOperation.SelectTake, { slide, take: item.take })
-              }
-            />
-            <Button.Root
-              data-testid='recorder.take.play'
-              icon={play.autoPlay && current?.id === item.id ? 'ph--stop--regular' : 'ph--play--regular'}
-              iconOnly
-              variant='ghost'
-              disabled={!item.take}
-              label={t(play.autoPlay && current?.id === item.id ? 'stop-take.label' : 'play-take.label')}
-              onClick={() => handlePlay(item.id)}
-            />
-            <Button.Root
-              data-testid='recorder.take.delete'
-              icon='ph--trash--regular'
-              iconOnly
-              variant='ghost'
-              label={t(item.error ? 'discard-take.label' : 'delete-take.label')}
-              onClick={() => handleDelete(item)}
-            />
-          </>
-        )}
+        onMain={(item) => item.take && void invokePromise(RecorderOperation.SelectTake, { slide, take: item.take })}
+        onToggle={(item) => handlePlay(item.id)}
+        actions={(item) => [
+          {
+            id: 'play',
+            icon: play.autoPlay && current?.id === item.id ? 'ph--stop--regular' : 'ph--play--regular',
+            label: t(play.autoPlay && current?.id === item.id ? 'stop-take.label' : 'play-take.label'),
+            disabled: !item.take,
+            onClick: () => handlePlay(item.id),
+          },
+          {
+            id: 'delete',
+            icon: 'ph--trash--regular',
+            label: t(item.error ? 'discard-take.label' : 'delete-take.label'),
+            onClick: () => handleDelete(item),
+          },
+        ]}
       />
     </RecordingsPanel>
   );
@@ -182,7 +165,6 @@ const useSlideTakes = (slide: Presentation.Slide): TakeRow[] => {
               duration: takeLog.duration,
               desired: snapshot.duration,
               main: ref.uri === mainUri,
-              video: takeLog.source !== 'none',
               take: ref.target,
             },
           ];
@@ -205,7 +187,6 @@ const usePendingTakes = (recorder: RecorderCapabilities.Recorder | undefined, sl
       description: t('unsaved-take.message', { error: take.error }),
       duration: take.log.duration,
       desired: slide.duration,
-      video: take.log.source !== 'none',
       error: true,
     }));
 };

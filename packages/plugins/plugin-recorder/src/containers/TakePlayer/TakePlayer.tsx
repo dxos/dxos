@@ -6,7 +6,6 @@ import React from 'react';
 
 import type * as Variant from '@dxos/plugin-studio/Variant';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Media from '@dxos/react-ui/Media';
 
 import { meta } from '#meta';
 
@@ -31,11 +30,14 @@ export const TakePlayer = ({ take, autoPlay, onEnded }: TakePlayerProps) => {
     return null;
   }
 
+  // A native player rather than Media.Player, which has no `controlsList`: without one the bar has an overflow menu
+  // (download, speed) that the status bar does not want.
   return (
-    <Media.Player
-      classNames='h-10 w-full'
+    <audio
+      className='h-10 w-full'
       src={src}
-      kind='audio'
+      controls
+      controlsList='nodownload noplaybackrate noremoteplayback'
       autoPlay={autoPlay}
       onEnded={onEnded}
       data-testid='recorder.take.player'

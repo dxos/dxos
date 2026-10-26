@@ -4,9 +4,8 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 
-import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -14,12 +13,12 @@ import { translations } from '#translations';
 import { type RecordingItem, RecordingList } from './RecordingList.tsx';
 
 const takes: RecordingItem[] = [
-  { id: 'take-3', title: 'take-20261026-061256', duration: 14.4, desired: 15, main: true },
-  { id: 'take-2', title: 'take-20261026-061020', duration: 17.8, desired: 15 },
+  { id: 'take-3', title: 'Oct 26, 2026, 6:12:56 AM', duration: 14.4, desired: 15, main: true },
+  { id: 'take-2', title: 'Oct 26, 2026, 6:10:20 AM', duration: 17.8, desired: 15 },
   {
     id: 'take-1',
-    title: 'take-20261026-060432',
-    description: 'Not saved: File is too large',
+    title: 'Oct 26, 2026, 6:04:32 AM',
+    description: 'Not saved',
     duration: 18,
     desired: 15,
     error: true,
@@ -27,29 +26,36 @@ const takes: RecordingItem[] = [
 ];
 
 const slides: RecordingItem[] = [
-  { id: 'a', index: 0, title: 'The Silo Problem', description: '3 takes', duration: 14.4, desired: 15 },
-  { id: 'b', index: 1, title: 'Monolithic Agents', description: '1 take', duration: 13.2, desired: 12 },
+  { id: 'a', index: 0, title: 'The Silo Problem', description: '3 takes', duration: 14.4, desired: 15, main: true },
+  { id: 'b', index: 1, title: 'Monolithic Agents', description: '1 take', duration: 13.2, desired: 12, main: true },
   { id: 'c', index: 2, title: 'ECHO Graph Database', description: 'no takes', desired: 20 },
 ];
 
-const DefaultStory = ({ items }: { items: RecordingItem[] }) => {
+type StoryProps = {
+  items: RecordingItem[];
+  onToggle?: (item: RecordingItem) => void;
+  onMain?: (item: RecordingItem) => void;
+};
+
+const DefaultStory = ({ items, onToggle, onMain }: StoryProps) => {
   const [value, setValue] = useState(items[0]?.id);
   return (
     <RecordingList
-      label='Takes'
+      label='Recordings'
       items={items}
       value={value}
       onValueChange={setValue}
-      renderActions={(item) => (
-        <Button.Root
-          icon='ph--play--regular'
-          iconOnly
-          variant='ghost'
-          label='Play'
-          disabled={item.duration === undefined}
-          data-testid='story.play'
-        />
-      )}
+      onMain={onMain}
+      onToggle={onToggle}
+      actions={(item) => [
+        {
+          id: 'play',
+          icon: 'ph--play--regular',
+          label: 'Play',
+          disabled: item.duration === undefined,
+          onClick: () => {},
+        },
+      ]}
     />
   );
 };
@@ -65,13 +71,13 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Takes: Story = { args: { items: takes } };
+export const Takes: Story = { args: { items: takes, onMain: () => {} } };
 
 export const Slides: Story = { args: { items: slides } };
 
 export const Test: Story = {
-  args: { items: slides },
-  play: async ({ canvasElement }) => {
+  args: { items: slides, onToggle: fn() },
+  play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     const rows = canvas.getAllByTestId('recorder.item');
     // 1. Every slide is listed, recorded or not.
@@ -83,7 +89,11 @@ export const Test: Story = {
     await userEvent.click(rows[0]);
     await userEvent.keyboard('{ArrowDown}');
     await expect(rows[1]).toHaveAttribute('aria-selected', 'true');
-    // 4. Every row carries its own buttons.
-    await expect(canvas.getAllByTestId('story.play')).toHaveLength(3);
+    // 4. Space plays (or stops) the current row.
+    await userEvent.keyboard(' ');
+    await expect(args.onToggle).toHaveBeenCalledWith(expect.objectContaining({ id: 'b' }));
+    // 5. A press on a row's button selects its row.
+    await userEvent.click(within(rows[0]).getByTestId('recorder.item.play'));
+    await expect(rows[0]).toHaveAttribute('aria-selected', 'true');
   },
 };

@@ -15,7 +15,6 @@ import { log } from '@dxos/log';
 import type * as Presentation from '@dxos/plugin-presenter/Presentation';
 import type * as Variant from '@dxos/plugin-studio/Variant';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
-import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { type RecordingItem, RecordingList, RecordingsPanel } from '#components';
@@ -42,7 +41,7 @@ const headingOf = (content: string): string | undefined =>
 
 /**
  * The presentation's voice-over (its companion), in the layout every Recordings companion shares: each presented
- * slide as a row (its main take, with Play and Open). The toolbar records every slide (a take per
+ * slide as a row (its main take, with Play; a double-click opens the slide). The toolbar records every slide (a take per
  * slide), plays every main take in order, and downloads them as one file; the status bar plays the current slide.
  */
 export const PresentationRecordingsArticle = ({
@@ -186,27 +185,17 @@ export const PresentationRecordingsArticle = ({
             stop();
           }
         }}
-        renderActions={(item) => (
-          <>
-            <Button.Root
-              data-testid='recorder.slide.play'
-              icon={play.autoPlay && current?.id === item.id ? 'ph--stop--regular' : 'ph--play--regular'}
-              iconOnly
-              variant='ghost'
-              disabled={!item.take}
-              label={t(play.autoPlay && current?.id === item.id ? 'stop-take.label' : 'play-slide.label')}
-              onClick={() => handlePlay(item.id)}
-            />
-            <Button.Root
-              data-testid='recorder.slide.open'
-              icon='ph--arrow-square-out--regular'
-              iconOnly
-              variant='ghost'
-              label={t('open-slide.label')}
-              onClick={() => handleOpen(item.id)}
-            />
-          </>
-        )}
+        onToggle={(item) => item.take && handlePlay(item.id)}
+        onOpen={(item) => handleOpen(item.id)}
+        actions={(item) => [
+          {
+            id: 'play',
+            icon: play.autoPlay && current?.id === item.id ? 'ph--stop--regular' : 'ph--play--regular',
+            label: t(play.autoPlay && current?.id === item.id ? 'stop-take.label' : 'play-slide.label'),
+            disabled: !item.take,
+            onClick: () => handlePlay(item.id),
+          },
+        ]}
       />
     </RecordingsPanel>
   );
@@ -239,7 +228,7 @@ const useVoicedSlides = (
               description: t('take-count.label', { count: slide.takes?.length ?? 0 }),
               duration: takeLog?.duration,
               desired: slide.duration,
-              video: takeLog ? takeLog.source !== 'none' : undefined,
+              main: main !== undefined,
               take: slide.mainTake?.target,
             },
           ];

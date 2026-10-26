@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type ReactNode, useMemo, useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import { mx } from '@dxos/ui-theme';
@@ -25,137 +26,192 @@ export const isOver = (seconds: number | undefined, desired: number | undefined)
 export type RecordingItem = {
   id: string;
   title: string;
-  /** Secondary text: a slide's take count, or why a take is not saved. */
+  /** Secondary column: a slide's take count, or why a take is not saved. */
   description?: string;
   /** Length of the take (a slide's main take), in seconds; undefined when there is none. */
   duration?: number;
   /** The slide's desired length, in seconds. */
   desired?: number;
-  /** The slide's main take. */
+  /** The slide's main take (or, for a slide, that it has one). */
   main?: boolean;
-  /** The take recorded a picture besides the voice. */
-  video?: boolean;
   /** The take is not saved yet. */
   error?: boolean;
   /** Position shown before the title (a slide's number). */
   index?: number;
 };
 
+/** A button in a row's trailing cells. */
+export type RecordingAction = {
+  id: string;
+  icon: string;
+  label: string;
+  disabled?: boolean;
+  onClick: () => void;
+};
+
 export type RecordingListProps<T extends RecordingItem = RecordingItem> = {
   items: T[];
-  /** The current (selected) row, which the toolbar's actions and the status bar's player act on; the arrow keys move it. */
+  /** The current (selected) row, which the status bar's player plays; the arrow keys and a click move it. */
   value?: string;
   onValueChange?: (id: string) => void;
   /** Accessible name of the list. */
   label: string;
-  /** Buttons at the end of each row (play, open). */
-  renderActions?: (item: T) => ReactNode;
+  /** Makes a row's star a button that marks it main; without it the star only shows. */
+  onMain?: (item: T) => void;
+  /** Space on the current row plays or stops it. */
+  onToggle?: (item: T) => void;
+  /** Double-clicking a row opens what it stands for (a slide). */
+  onOpen?: (item: T) => void;
+  /** The buttons at the end of each row, one block-sized cell each; every row has the same count. */
+  actions?: (item: T) => RecordingAction[];
 };
 
 /**
- * The rows of a Recordings companion, a list with columns (icon, label, takes, length, desired, buttons): a slide's takes, or a presentation's slides, keyboard navigable
- * (up and down move the current row, which scrolls into view). Each row shows its length against the desired
- * length, flagged when over, marks the main take, and carries its own buttons.
+ * The rows of a Recordings companion: a slide's takes, or a presentation's slides, as a list with columns (star,
+ * label, count, length, desired length, then one block-sized cell per button) on Listbox's shared tracks, so cells
+ * line up from row to row and the leading star and trailing buttons line up with the toolbar's. The current row is the
+ * selection: a click anywhere in a row selects it, the arrow keys move it, Space plays or stops it, and a double-click
+ * opens it.
  */
 export const RecordingList = <T extends RecordingItem>({
   items,
   value,
   onValueChange,
   label,
-  renderActions,
+  onMain,
+  onToggle,
+  onOpen,
+  actions,
 }: RecordingListProps<T>) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const keyboard = useRef(false);
-  const columns = useMemo(
-    () => ({
-      description: items.some((item) => item.description),
-      desired: items.some((item) => item.desired !== undefined),
-    }),
-    [items],
-  );
-  const options = useMemo(
-    () => items.map((item) => ({ value: item.id, label: item.title, description: item.description })),
-    [items],
-  );
+  const contentRef = useRef<HTMLDivElement>(null);
+  const options = useMemo(() => items.map((item) => ({ value: item.id, label: item.title })), [items]);
+  const description = items.some((item) => item.description);
+  const desired = items.some((item) => item.desired !== undefined);
+  const actionCount = items[0] && actions ? actions(items[0]).length : 0;
+  const columns = [
+    'var(--dx-block-size)',
+    'minmax(0, 1fr)',
+    description && 'auto',
+    'auto',
+    desired && 'auto',
+    ...Array.from({ length: actionCount }, () => 'var(--dx-block-size)'),
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const current = items.find((item) => item.id === value);
 
   return (
     <Listbox.Root
       items={options}
+      columns={columns}
       value={value ?? ''}
-      onValueChange={(id) => onValueChange?.(id)}
-      // The current row is the selection: a keyboard move selects, while a pointer only highlights what it passes.
+      onValueChange={(id) => id && onValueChange?.(id)}
+      // A keyboard move selects, while a pointer only highlights the rows it passes.
       onHighlightChange={(id) => {
         if (keyboard.current && id) {
           onValueChange?.(id);
         }
       }}
     >
-      <Listbox.Content
-        aria-label={label}
-        data-testid='recorder.list'
-        onKeyDownCapture={() => {
-          keyboard.current = true;
-        }}
-        onPointerMove={() => {
-          keyboard.current = false;
-        }}
-      >
-        {items.map((item) => {
-          const over = isOver(item.duration, item.desired);
-          return (
-            <Listbox.Item
-              key={item.id}
-              id={item.id}
-              data-testid='recorder.item'
-              data-main={item.main ? 'true' : undefined}
-              data-recorded={item.duration !== undefined ? 'true' : undefined}
-              classNames='flex items-center gap-2'
-            >
-              <Icon.Icon
-                size='sm'
-                icon={
-                  item.error
-                    ? 'ph--warning--regular'
-                    : item.video
-                      ? 'ph--video-camera--regular'
-                      : 'ph--microphone--regular'
-                }
-                classNames={mx('shrink-0', item.error && 'text-error-text')}
-              />
-              <Listbox.ItemText classNames='min-w-0 grow truncate text-sm'>
-                {item.index !== undefined && (
-                  <span className='me-1.5 tabular-nums text-fg-subtle'>{item.index + 1}</span>
-                )}
-                {item.title}
-              </Listbox.ItemText>
-              {/* Fixed-width columns, so the take counts and lengths line up from row to row. */}
-              {columns.description && (
-                <span
-                  className={mx(
-                    'w-16 shrink-0 truncate text-end text-xs',
-                    item.error ? 'text-error-text' : 'text-fg-subtle',
-                  )}
-                  title={item.description}
-                >
-                  {item.description}
-                </span>
-              )}
-              <span
-                data-over={over ? 'true' : undefined}
-                className={mx('w-12 shrink-0 text-end font-mono text-xs', over ? 'text-error-text' : 'text-fg-muted')}
+      <Listbox.Viewport>
+        {/* No gutter: the leading and trailing icon cells then sit under the toolbar's first and last buttons. */}
+        <Listbox.Content
+          ref={contentRef}
+          gutter='none'
+          aria-label={label}
+          data-testid='recorder.list'
+          onKeyDownCapture={(event) => {
+            keyboard.current = true;
+            if (event.key === ' ' && current && onToggle) {
+              event.preventDefault();
+              event.stopPropagation();
+              onToggle(current);
+            }
+          }}
+          onPointerMove={() => {
+            keyboard.current = false;
+          }}
+        >
+          {items.map((item) => {
+            const over = isOver(item.duration, item.desired);
+            return (
+              <Listbox.Item
+                key={item.id}
+                id={item.id}
+                data-testid='recorder.item'
+                data-main={item.main ? 'true' : undefined}
+                data-recorded={item.duration !== undefined ? 'true' : undefined}
+                // A row's controls keep their presses from the list, so a press on one selects its row here.
+                onClickCapture={() => item.id !== value && onValueChange?.(item.id)}
+                // The list keeps the keyboard after a press on a row's button, so the arrows go on from this row.
+                onClick={() => contentRef.current?.focus({ preventScroll: true })}
+                onDoubleClick={onOpen && (() => onOpen(item))}
               >
-                {item.duration === undefined ? t('no-take.label') : formatSeconds(item.duration)}
-              </span>
-              {columns.desired && (
-                <span className='w-12 shrink-0 text-end font-mono text-xs text-fg-subtle'>
-                  {item.desired === undefined ? '' : formatSeconds(item.desired)}
+                <Listbox.ItemIcon>
+                  {item.error ? (
+                    <Icon.Icon icon='ph--warning--regular' classNames='text-error-text' />
+                  ) : onMain ? (
+                    <Button.Root
+                      data-testid='recorder.item.main'
+                      icon={item.main ? 'ph--star--fill' : 'ph--star--regular'}
+                      iconOnly
+                      variant='ghost'
+                      classNames={mx(item.main && 'text-accent-text')}
+                      label={t(item.main ? 'main-take.label' : 'select-take.label')}
+                      onClick={() => !item.main && onMain(item)}
+                    />
+                  ) : (
+                    <Icon.Icon
+                      icon={item.main ? 'ph--star--fill' : 'ph--star--regular'}
+                      classNames={mx(item.main ? 'text-accent-text' : 'text-fg-subtle')}
+                    />
+                  )}
+                </Listbox.ItemIcon>
+                <Listbox.ItemText>
+                  {item.index !== undefined && (
+                    <span className='me-1.5 tabular-nums text-fg-subtle'>{item.index + 1}</span>
+                  )}
+                  {item.title}
+                </Listbox.ItemText>
+                {description && (
+                  <span
+                    className={mx('truncate text-end text-xs', item.error ? 'text-error-text' : 'text-fg-subtle')}
+                    title={item.description}
+                  >
+                    {item.description}
+                  </span>
+                )}
+                <span
+                  data-over={over ? 'true' : undefined}
+                  className={mx('text-end font-mono text-xs', over ? 'text-error-text' : 'text-fg-muted')}
+                >
+                  {item.duration === undefined ? t('no-take.label') : formatSeconds(item.duration)}
                 </span>
-              )}
-              {renderActions?.(item)}
-            </Listbox.Item>
-          );
-        })}
-      </Listbox.Content>
+                {desired && (
+                  <span className='text-end font-mono text-xs text-fg-subtle'>
+                    {item.desired === undefined ? '' : formatSeconds(item.desired)}
+                  </span>
+                )}
+                {actions?.(item).map((action) => (
+                  <Listbox.ItemIcon key={action.id}>
+                    <Button.Root
+                      data-testid={`recorder.item.${action.id}`}
+                      icon={action.icon}
+                      iconOnly
+                      variant='ghost'
+                      disabled={action.disabled}
+                      label={action.label}
+                      onClick={action.onClick}
+                    />
+                  </Listbox.ItemIcon>
+                ))}
+              </Listbox.Item>
+            );
+          })}
+        </Listbox.Content>
+      </Listbox.Viewport>
     </Listbox.Root>
   );
 };

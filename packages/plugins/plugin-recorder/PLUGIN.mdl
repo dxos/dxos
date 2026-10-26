@@ -101,9 +101,10 @@ component LevelMeter
 
 component RecordingsPanel
   desc: >
-    The layout both Recordings companions share: the toolbar, a RecordingList (a react-ui-list Listbox whose current
-    row is its selection: the arrow keys move it and it scrolls into view; a pointer only highlights), and the current
-    row's player docked in the status bar. The toolbar's actions act on the current row.
+    The layout both Recordings companions share: the toolbar, a full-width RecordingList (a react-ui-list Listbox with
+    shared column tracks, its leading star and trailing buttons under the toolbar's icons; the current row is the
+    selection: a click or the arrow keys move it, Space plays or stops it, a double-click opens it), and the current
+    row's player docked in the status bar, with no download menu.
   props: { toolbar, statusbar, children }
 
 component SlideRecordingsArticle
@@ -119,8 +120,8 @@ component PresentationRecordingsArticle
   desc: >
     The Recordings companion of a Presentation, on RecordingsPanel. The toolbar records every slide (a take per
     slide), plays every main take in order, and downloads them as one WAV. The presented slides are a list with
-    columns: number and title, take count, main take's length, desired length, then Play (its main take) and Open
-    (navigates to the slide).
+    columns: a star (on when the slide has a main take), number and title, take count, main take's length, desired
+    length, then Play (its main take); a double-click opens the slide.
   props: { presentation: Presentation }
 
 component RecorderSettings
@@ -149,7 +150,7 @@ feat F-2: Slide takes
 
 feat F-3: Presentation voice-over
   req F-3.1: A Presentation has a Recordings companion listing each presented slide with its main take's length against its desired length.
-  req F-3.2: A slide's row has Play (its main take) and Open (navigates to the slide); Play all plays every main take in slide order.
+  req F-3.2: A slide's row has Play (its main take) and a double-click opens the slide; Play all plays every main take in slide order.
   req F-3.3: Download saves the main takes, in slide order, as one WAV file.
 
 feat F-4: Settings
@@ -391,4 +392,27 @@ decision D-24: Both companions are lists with columns, with the take count and l
   by: user:richburdon
   supersedes: D-20
   affects: [RecordingsPanel, SlideRecordingsArticle, PresentationRecordingsArticle, F-2.2]
+```
+
+```mdl
+decision D-25: The list's star is the row's leading icon (on for the main take) and the row icons line up with the toolbar's; clicking a row selects it and Space plays or stops it; the presentation list has no navigate button (a double-click opens the slide); lists are full width; the status bar player has no download menu.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [RecordingsPanel, SlideRecordingsArticle, PresentationRecordingsArticle, F-2.2, F-3.2]
+```
+
+```mdl
+decision D-26: The rows use Listbox's shared `columns` tracks inside its own Viewport with no gutter, so a block-sized leading cell and block-sized trailing button cells fall under the toolbar's first and last buttons; a press on a row's button also selects the row. Fills in [D-25].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [RecordingsPanel]
+  why: Under a plain ScrollArea the Listbox content found no `content` grid line and rendered half width.
+```
+
+```mdl
+decision D-27: Clicking a row selects it and makes it current, taking keyboard focus.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [RecordingsPanel]
 ```
