@@ -35,7 +35,7 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
   const properties = Object.entries(result.properties ?? {});
 
   return (
-    <Layout.Flex column gap='md' classNames='p-3 overflow-y-auto'>
+    <Layout.Flex column gap='md' classNames='p-trim-md overflow-y-auto'>
       <Layout.Grid cols={['fill', 'min', 'min']} gap='sm' align='start'>
         <h2 className='text-lg font-medium'>{result.title}</h2>
         <SystemButton.Star iconOnly variant='ghost' pressed={starred} onClick={onToggleStar} />

@@ -249,7 +249,7 @@ export const FeatureBoard = ({
   };
 
   return (
-    <Layout.Flex column gap='md' classNames='p-3 w-full' data-testid='feature-board'>
+    <Layout.Flex column gap='md' classNames='p-trim-md w-full' data-testid='feature-board'>
       {!filterProp && (
         <Layout.Flex wrap gap='xs' classNames='items-center'>
           <FeatureBoardFilter features={features} value={filterState} onValueChange={setFilterState} />

@@ -65,7 +65,7 @@ const ForceStory = ({ features = LAYERED_FEATURES, snap: initialSnap = false }: 
         lattice={snap}
         layoutKey={layoutKey}
       />
-      <div className='absolute top-2 right-2 w-64 p-3 flex flex-col gap-3 rounded-md bg-base-surface border border-separator'>
+      <div className='absolute top-2 right-2 w-64 p-trim-md flex flex-col gap-3 rounded-md bg-base-surface border border-separator'>
         <Input.Slider
           label={`Attraction ${attraction.toFixed(2)}`}
           value={[attraction]}
