@@ -71,7 +71,7 @@ The spoken lines, one bullet per line read; each slide starts at its time in the
    - And this demands a new data and security model.
 
 2. **Monolithic Agents** (at 10.5s)
-   - Today we grant agents access to data on an adhoc basis.
+   - Today, agents access our data through point-to-point connections with broad permissions.
    - This approach is risky, and simply doesn't work for agents that run continuously with evolving requirements.
 
 3. **ECHO Graph Database** (at 20.5s)

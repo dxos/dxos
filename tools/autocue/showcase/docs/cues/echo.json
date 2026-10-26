@@ -14,10 +14,10 @@
     "at": 10.5,
     "title": "Monolithic Agents",
     "lines": [
-      "Today we grant agents access to data on an adhoc basis.",
+      "Today, agents access our data through point-to-point connections with broad permissions.",
       "This approach is risky, and simply doesn't work for agents that run continuously with evolving requirements."
     ],
-    "text": "Today we grant agents access to data on an adhoc basis. This approach is risky, and simply doesn't work for agents that run continuously with evolving requirements."
+    "text": "Today, agents access our data through point-to-point connections with broad permissions. This approach is risky, and simply doesn't work for agents that run continuously with evolving requirements."
   },
   {
     "at": 20.5,
