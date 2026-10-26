@@ -147,7 +147,12 @@ export class TakeRecorder implements RecorderCapabilities.Recorder {
       if (videoTrack?.readyState === 'ended') {
         throw new Error('The screen share ended before recording started.');
       }
-      videoTrack?.addEventListener('ended', () => this.stop());
+      // Only while this capture is the live one, so a stale track cannot stop a later recording.
+      videoTrack?.addEventListener('ended', () => {
+        if (this.#stream?.getVideoTracks().includes(videoTrack)) {
+          this.stop();
+        }
+      });
       this.#presentation = presentation;
       this.#source = source;
       this.#session = new Session({ slideId: slide?.id });
