@@ -14,7 +14,8 @@
     "at": 10.5,
     "title": "Monolithic Agents",
     "lines": [
-      "Today we grant agents coarse-grained access to everything, and we can’t see or control what they do with it.",
+      "Today we grant agents coarse-grained access to everything,",
+      "and we can’t see or control what they do with it.",
       "This approach is risky, and simply doesn't work for agents that run continuously with evolving requirements."
     ],
     "text": "Today we grant agents coarse-grained access to everything, and we can’t see or control what they do with it. This approach is risky, and simply doesn't work for agents that run continuously with evolving requirements."
