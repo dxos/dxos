@@ -55,8 +55,9 @@ export type EchoTarget = {
 export const blocksOf = (content: string): Block[] => {
   let chapter = 0;
   return content.split('\n\n').map((text) => {
-    if (/^## \d+\./.test(text)) {
-      chapter = Number(/^## (\d+)\./.exec(text)?.[1]);
+    // Chapters are numbered by the editor, not in the text, so they are counted.
+    if (text.startsWith('## ')) {
+      chapter++;
     }
     const kind = text.startsWith('#') ? 'heading' : /^!\[[^\]]*\]\(echo:/.test(text) ? 'embed' : 'text';
     return { text, kind, chapter };
@@ -392,6 +393,7 @@ export const echoFlow: ActorFlow<EchoTarget> = {
         ]
       : []),
   ],
-  duration: 78_000,
+  quiet: { every: 30_000, length: 10_000 },
+  duration: 120_000,
   steps: [...writing(), ...building(), filling, ...reviewing(), ...assisting()],
 };

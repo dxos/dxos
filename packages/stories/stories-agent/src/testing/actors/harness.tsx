@@ -4,7 +4,7 @@
 
 import { type Decorator } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
-import React, { createContext, useContext, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -13,6 +13,8 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { type ClientServicesProvider } from '@dxos/client';
+import { fromHost } from '@dxos/client/local';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Filter, Obj, Relation } from '@dxos/echo';
@@ -36,6 +38,8 @@ import { Text } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 import { Cursor } from '@dxos/ui-editor';
 
+import { storyConfig } from '../config.ts';
+import { defaultEdgeEnvironment } from '../story-settings.ts';
 import { type ActorBinding, type ActorSpec, type ThreadMatch } from './actor.ts';
 import { type ActorFlow } from './flow.ts';
 import { actorPresence } from './presence.ts';
@@ -100,6 +104,11 @@ export type WithActorsProps<T> = {
 export type ActorStoryArgs = {
   /** Hands time to `window.grid.seek` (autocue's frame renderer) instead of playing in real time. */
   stepped?: boolean;
+  /**
+   * Runs just this actor, in its own client on the real (dev EDGE) network: one browser per actor, driven together
+   * by `tools/autocue/showcase/solo-scene.mjs`.
+   */
+  actor?: number;
 };
 
 /**
@@ -110,12 +119,46 @@ export const withActors = <T,>({ flow, bars = true }: WithActorsProps<T>): Decor
   const types = [...TYPES, ...(flow.types ?? [])];
   return (Story, { args }) => {
     const mode: SceneMode = args.stepped ? 'stepped' : 'realtime';
-    const scene = useMemo(() => new Scene(flow, mode), [mode]);
+    const solo = args.actor;
+    const scene = useMemo(() => new Scene(flow, mode, solo), [mode, solo]);
     useEffect(() => {
       scene.open();
       return () => scene.dispose();
     }, [scene]);
     useScene(scene);
+
+    const renderActor = (spec: ActorSpec, index: number, services: ClientServicesProvider) => (
+      <ClientProvider services={services}>
+        <ClientPluginManager
+          id={`actor-${index}`}
+          clientOptions={{ types, onClientInitialized: ({ client }) => scene.join(client, index) }}
+          plugins={() => [
+            ...CorePlugins.make(),
+            StorybookPlugin.make({}),
+            SpacePlugin({}),
+            MarkdownPlugin.make(),
+            ReviewPlugin.make({ agentIdentity: { name: 'Review' } }),
+            StagePlugin({ hue: spec.hue }),
+            ...(flow.plugins?.(spec, index) ?? []),
+          ]}
+        >
+          <ActorContext.Provider value={{ scene, index, spec }}>
+            <Story />
+          </ActorContext.Provider>
+        </ClientPluginManager>
+      </ClientProvider>
+    );
+
+    if (solo !== undefined) {
+      return (
+        <SoloActor
+          spec={flow.actors[solo]}
+          bars={bars}
+          phase={scene.phase}
+          render={(services) => renderActor(flow.actors[solo], solo, services)}
+        />
+      );
+    }
 
     const columns = Math.ceil(Math.sqrt(flow.actors.length));
     return (
@@ -129,30 +172,49 @@ export const withActors = <T,>({ flow, bars = true }: WithActorsProps<T>): Decor
             className={`grid min-h-0 min-w-0 bg-base-surface ${bars ? 'grid-rows-[auto_minmax(0,1fr)]' : 'grid-rows-[minmax(0,1fr)]'}`}
           >
             {bars && <ActorBar spec={spec} phase={scene.phase} />}
-            <ClientProvider services={scene.services[index]}>
-              <ClientPluginManager
-                id={`actor-${index}`}
-                clientOptions={{ types, onClientInitialized: ({ client }) => scene.join(client, index) }}
-                plugins={() => [
-                  ...CorePlugins.make(),
-                  StorybookPlugin.make({}),
-                  SpacePlugin({}),
-                  MarkdownPlugin.make(),
-                  ReviewPlugin.make({ agentIdentity: { name: 'Review' } }),
-                  StagePlugin({ hue: spec.hue }),
-                  ...(flow.plugins?.(spec, index) ?? []),
-                ]}
-              >
-                <ActorContext.Provider value={{ scene, index, spec }}>
-                  <Story />
-                </ActorContext.Provider>
-              </ClientPluginManager>
-            </ClientProvider>
+            {renderActor(spec, index, scene.services[index])}
           </div>
         ))}
       </div>
     );
   };
+};
+
+/** One actor filling the page, in a client of its own on the real network (built once, asynchronously). */
+const SoloActor = ({
+  spec,
+  bars,
+  phase,
+  render,
+}: {
+  spec: ActorSpec;
+  bars: boolean;
+  phase: string;
+  render: (services: ClientServicesProvider) => React.ReactNode;
+}) => {
+  const [services, setServices] = useState<ClientServicesProvider>();
+  useEffect(() => {
+    let disposed = false;
+    // Separate browsers need a real network; a fresh profile has no EDGE chosen, and local EDGE is rarely running.
+    defaultEdgeEnvironment('dev');
+    void fromHost(storyConfig({ persistent: false })).then((services) => {
+      if (!disposed) {
+        setServices(services);
+      }
+    });
+    return () => {
+      disposed = true;
+    };
+  }, []);
+
+  return (
+    <div
+      className={`dx-cover grid bg-base-surface ${bars ? 'grid-rows-[auto_minmax(0,1fr)]' : 'grid-rows-[minmax(0,1fr)]'}`}
+    >
+      {bars && <ActorBar spec={spec} phase={phase} />}
+      {services ? render(services) : <Loading />}
+    </div>
+  );
 };
 
 const ActorBar = ({ spec, phase }: { spec: ActorSpec; phase: string }) => (
@@ -199,6 +261,12 @@ export const ActorArticle = () => {
   objectsRef.current = objects;
   const name = spec.subject ?? scene.documentName;
   const subject = byName(objects, name);
+  if (space) {
+    scene.mark(index, 'space-visible');
+  }
+  if (subject) {
+    scene.mark(index, 'subject');
+  }
   scene.progress[index] = !space
     ? 'no space'
     : !subject
@@ -274,6 +342,7 @@ export const ActorArticle = () => {
       const binding = (view || !Obj.instanceOf(Markdown.Document, subject)) && bind(view);
       scene.progress[index] = binding ? 'bound' : `waiting for ${view ? 'root' : 'editor'}`;
       if (binding) {
+        scene.mark(index, 'bound');
         clearInterval(timer);
         scene.register(index, binding);
       }

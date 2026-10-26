@@ -72,6 +72,9 @@ const makeRandom = (seed: number) => {
  * Drives one actor's own view. Positions in the document are found by text, so edits other actors make
  * concurrently never invalidate a script; the caret then follows remote changes.
  */
+/** Windows in which no actor edits: the last `length` ms of every `every` ms of scene time. */
+export type QuietWindows = { every: number; length: number };
+
 export class Actor {
   readonly #random: () => number;
   /** A heading the view keeps at its top while the actor types, so their chapter stays in view. */
@@ -82,6 +85,7 @@ export class Actor {
     readonly spec: ActorSpec,
     readonly clock: VirtualClock,
     readonly binding: ActorBinding,
+    readonly quiet?: QuietWindows,
   ) {
     this.#random = makeRandom(index + 1);
   }
@@ -97,8 +101,16 @@ export class Actor {
   }
 
   /** Waits `ms` of scene time. */
-  pause(ms: number): Promise<void> {
-    return this.clock.sleep(ms);
+  async pause(ms: number): Promise<void> {
+    await this.clock.sleep(ms);
+    // Every actor stops in the same windows, so replication can catch up before anyone edits again.
+    if (this.quiet) {
+      const { every, length } = this.quiet;
+      const into = this.clock.now % every;
+      if (into >= every - length) {
+        await this.clock.sleep(every - into);
+      }
+    }
   }
 
   /** Waits until `check` holds, polling in scene time. */

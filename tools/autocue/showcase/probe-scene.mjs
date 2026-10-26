@@ -9,6 +9,10 @@
  * before committing to a frame-by-frame render.
  *
  *   node probe-scene.mjs --story stories-stories-agent-collaboration--echo [--step 1000] [--width 1920 --height 1080]
+ *     [--join-only]
+ *
+ * Once every actor has joined it prints each actor's join timeline (ms since the scene was made at which it reached
+ * each phase); `--join-only` stops there.
  */
 
 import { chromium } from '@playwright/test';
@@ -16,11 +20,12 @@ import { parseArgs } from 'node:util';
 
 const { values } = parseArgs({
   options: {
-    story: { type: 'string' },
-    url: { type: 'string', default: 'http://localhost:9009' },
-    step: { type: 'string', default: '1000' },
-    width: { type: 'string', default: '1920' },
-    height: { type: 'string', default: '1080' },
+    'story': { type: 'string' },
+    'url': { type: 'string', default: 'http://localhost:9009' },
+    'step': { type: 'string', default: '1000' },
+    'width': { type: 'string', default: '1920' },
+    'height': { type: 'string', default: '1080' },
+    'join-only': { type: 'boolean', default: false },
   },
 });
 
@@ -58,6 +63,17 @@ for (;;) {
   }
   console.log(elapsed(), JSON.stringify(await status()));
   await page.waitForTimeout(5_000);
+}
+
+const timeline = await page.evaluate(() => window.actorScene?.status.timeline ?? {});
+const phases = [...new Set(Object.values(timeline).flatMap((marks) => Object.keys(marks)))];
+console.log(['actor', ...phases].join('\t'));
+for (const [actor, marks] of Object.entries(timeline)) {
+  console.log([actor, ...phases.map((phase) => marks[phase] ?? '-')].join('\t'));
+}
+if (values['join-only']) {
+  await browser.close();
+  process.exit(0);
 }
 
 const total = await page.evaluate(() => window.grid.total);

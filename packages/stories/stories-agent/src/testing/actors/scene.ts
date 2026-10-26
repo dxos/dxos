@@ -4,15 +4,17 @@
 
 import { create } from '@bufbuild/protobuf';
 import { type EditorView } from '@codemirror/view';
+import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
+import { InvitationEncoder, Invitation_AuthMethod, Invitation_State } from '@dxos/client/invitations';
 import { TestBuilder, performInvitation } from '@dxos/client/testing';
 import { invariant } from '@dxos/invariant';
-import { type SpaceId } from '@dxos/keys';
+import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
@@ -33,6 +35,12 @@ export type ScenePhase = 'joining' | 'ready' | 'playing' | 'done';
 
 export type SceneMode = 'realtime' | 'stepped';
 
+/**
+ * What the first actor hands the others when each actor runs in its own browser: the invitation to the space, and
+ * the seed's target as JSON (which every step reads).
+ */
+export type SoloShared = { invitation: string; spaceId: string; target: string };
+
 /** What an actor's view needs of its scene, whatever the scene builds towards. */
 export type SceneView = {
   readonly phase: ScenePhase;
@@ -45,11 +53,20 @@ export type SceneView = {
   readonly clients: Client[];
   readonly views: (EditorView | undefined)[];
   readonly progress: Record<number, string>;
+  /** Solo only: the actor this page runs, or undefined when one page runs every actor. */
+  readonly solo?: number;
+  /** Solo only: what the first actor shares, once it has seeded the space. */
+  readonly shared: SoloShared | undefined;
+  /** Solo only: hands a guest what the first actor shared, so it can join. */
+  accept: (shared: SoloShared) => void;
+  /** Records when actor `index` first reached `phase`, in ms since the scene was made. */
+  mark: (index: number, phase: string) => void;
   readonly status: {
     phase: ScenePhase;
     now: number;
     registered: number[];
     progress: Record<number, string>;
+    timeline: Record<number, Record<string, number>>;
     errors: string[];
     texts: string[];
   };
@@ -68,10 +85,15 @@ export class Scene<T = unknown> implements SceneView {
   readonly clients: Client[] = [];
   /** Where each actor's view is in mounting, for diagnosing a scene that never starts. */
   readonly progress: Record<number, string> = {};
+  /** When each actor first reached each joining phase, for measuring where startup time goes. */
+  readonly timeline: Record<number, Record<string, number>> = {};
+  readonly #started = performance.now();
   /** Steps that failed, as `actor › step: error`. */
   readonly errors: string[] = [];
 
   #hostSpace = new Trigger<Space>();
+  #shared?: SoloShared;
+  #accepted = new Trigger<SoloShared>();
   #spaceId?: SpaceId;
   #bindings = new Map<number, ActorBinding>();
   #phase: ScenePhase = 'joining';
@@ -83,17 +105,25 @@ export class Scene<T = unknown> implements SceneView {
   /** The seek contract handed to the frame renderer in stepped mode. */
   readonly #seeker: NonNullable<Window['grid']>;
 
+  /**
+   * @param solo The one actor this page runs, each in its own browser on a real network; the others' pages share
+   *   the space through `shared` and `accept`. Undefined runs every actor here, on an in-memory network.
+   */
   constructor(
     readonly flow: ActorFlow<T>,
     readonly mode: SceneMode,
+    readonly solo?: number,
   ) {
     const builder = new TestBuilder();
-    this.services = flow.actors.map(() => builder.createLocalClientServices());
+    this.services = solo === undefined ? flow.actors.map(() => builder.createLocalClientServices()) : [];
     this.#seeker = {
       total: flow.duration,
       seek: async (ms) => {
         await this.clock.advanceTo(ms);
-        await this.#replicated();
+        // Solo pages are compared by their driver, which sees every page.
+        if (this.solo === undefined) {
+          await this.#replicated();
+        }
         await nextFrame();
         await nextFrame();
       },
@@ -112,6 +142,7 @@ export class Scene<T = unknown> implements SceneView {
       now: Math.round(this.clock.now),
       registered: [...this.#bindings.keys()],
       progress: this.progress,
+      timeline: this.timeline,
       errors: this.errors,
       texts: this.#texts(),
     };
@@ -125,9 +156,22 @@ export class Scene<T = unknown> implements SceneView {
     return this.flow.document.name;
   }
 
+  get shared(): SoloShared | undefined {
+    return this.#shared;
+  }
+
+  accept = (shared: SoloShared) => {
+    this.#accepted.wake(shared);
+  };
+
   get spaceId(): SpaceId | undefined {
     return this.#spaceId;
   }
+
+  mark = (index: number, phase: string) => {
+    const phases = (this.timeline[index] ??= {});
+    phases[phase] ??= Math.round(performance.now() - this.#started);
+  };
 
   subscribe = (listener: () => void) => {
     this.#listeners.add(listener);
@@ -145,7 +189,9 @@ export class Scene<T = unknown> implements SceneView {
     const spec = this.flow.actors[index];
     return Effect.gen(function* () {
       scene.clients[index] = client;
+      scene.mark(index, 'client');
       yield* Effect.promise(() => client.waitUntilInitialized());
+      scene.mark(index, 'initialized');
       if (!client.halo.identity.get()) {
         yield* Effect.promise(() =>
           client.halo.createIdentity(
@@ -153,6 +199,7 @@ export class Scene<T = unknown> implements SceneView {
           ),
         );
       }
+      scene.mark(index, 'identity');
       // The flow's schemas before anything creates objects of them; the client registers its configured types later.
       if (scene.flow.types?.length) {
         yield* Effect.promise(() => client.addTypes([...(scene.flow.types ?? [])]));
@@ -160,29 +207,59 @@ export class Scene<T = unknown> implements SceneView {
       if (!AppSpace.getSettingsSpace(client)) {
         yield* AppSpace.setupIdentitySpaces(client);
       }
+      scene.mark(index, 'identity-spaces');
 
       if (index === 0) {
         const space = yield* Effect.promise(() => client.spaces.create({ name: scene.flow.document.name }));
         yield* Effect.promise(() => space.waitUntilReady());
+        scene.mark(index, 'space');
         const seeded = yield* Effect.tryPromise(() => scene.flow.seed({ client, space })).pipe(
           Effect.tapError((error) => Effect.sync(() => scene.errors.push(`seed: ${String(error.cause ?? error)}`))),
         );
         scene.#target = { value: seeded };
         yield* Effect.promise(() => space.db.flush({ indexes: true }));
+        scene.mark(index, 'seeded');
+        if (scene.solo !== undefined) {
+          const invitation = yield* Effect.promise(() =>
+            shareSpace(space, (state) => scene.mark(index, `share:${Invitation_State[state]}`)),
+          );
+          scene.#shared = { invitation, spaceId: space.id, target: JSON.stringify(seeded ?? null) };
+          scene.mark(index, 'shared');
+        }
         scene.#setSpace(space.id);
         scene.#hostSpace.wake(space);
+      } else if (scene.solo !== undefined) {
+        const shared = yield* Effect.promise(() => scene.#accepted.wait());
+        scene.mark(index, 'inviting');
+        yield* Effect.promise(() =>
+          joinSpace(client, shared.invitation, (state) => scene.mark(index, `join:${Invitation_State[state]}`)),
+        );
+        const spaceId = shared.spaceId;
+        invariant(SpaceId.isValid(spaceId), 'the host shared no space id');
+        scene.#target = { value: JSON.parse(shared.target) };
+        const space = yield* Effect.promise(() => spaceOf(client, spaceId));
+        scene.mark(index, 'listed');
+        yield* Effect.promise(() => space.waitUntilReady());
+        scene.mark(index, 'invited');
+        scene.#setSpace(spaceId);
       } else {
         const host = yield* Effect.promise(() => scene.#hostSpace.wait());
+        scene.mark(index, 'inviting');
         yield* Effect.promise(() => Promise.all(performInvitation({ host, guest: client.spaces })));
+        scene.mark(index, 'invited');
         log.info('actor joined', { actor: spec.name, spaceId: host.id });
       }
-    });
+    }).pipe(
+      // A defect while joining otherwise vanishes into the client's startup, leaving the actor joining forever.
+      Effect.tapCause((cause) => Effect.sync(() => scene.errors.push(`${spec.name} › join: ${Cause.pretty(cause)}`))),
+    );
   };
 
   /** Called by each actor's article once its editor is mounted; the flow starts when all are. */
   register = (index: number, binding: ActorBinding) => {
     this.#bindings.set(index, binding);
-    if (this.#phase === 'joining' && this.#bindings.size === this.flow.actors.length) {
+    const expected = this.solo === undefined ? this.flow.actors.length : 1;
+    if (this.#phase === 'joining' && this.#bindings.size === expected) {
       this.#setPhase('ready');
       void this.#start();
     }
@@ -208,10 +285,11 @@ export class Scene<T = unknown> implements SceneView {
   }
 
   async #start() {
-    const actors = this.flow.actors.map((spec, index) => {
+    const indices = this.solo === undefined ? this.flow.actors.map((_, index) => index) : [this.solo];
+    const actors = indices.map((index) => {
       const binding = this.#bindings.get(index);
       invariant(binding, `actor ${index} has no editor`);
-      return new Actor(index, spec, this.clock, binding);
+      return new Actor(index, this.flow.actors[index], this.clock, binding, this.flow.quiet);
     });
     const target = this.#target;
     invariant(target, 'the scene started before its space was seeded');
@@ -284,3 +362,46 @@ export class Scene<T = unknown> implements SceneView {
     this.#listeners.forEach((listener) => listener());
   }
 }
+
+/** Opens a multi-use invitation to `space` that needs no code, and resolves with it encoded once it is listening. */
+const shareSpace = (space: Space, onState: (state: Invitation_State) => void): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const observable = space.share({ authMethod: Invitation_AuthMethod.NONE, multiUse: true });
+    observable.subscribe((invitation) => {
+      onState(invitation.state);
+      if (invitation.state === Invitation_State.CONNECTING) {
+        resolve(InvitationEncoder.encode(invitation));
+      }
+    }, reject);
+  });
+
+/** Accepts an encoded invitation and resolves once it has succeeded. */
+const joinSpace = (client: Client, code: string, onState: (state: Invitation_State) => void): Promise<void> =>
+  new Promise((resolve, reject) => {
+    const observable = client.spaces.join(InvitationEncoder.decode(code));
+    observable.subscribe((invitation) => {
+      onState(invitation.state);
+      if (invitation.state === Invitation_State.SUCCESS) {
+        resolve();
+      }
+    }, reject);
+  });
+
+/** The space `spaceId` once the client lists it, which can be a moment after its invitation succeeds. */
+const spaceOf = (client: Client, spaceId: SpaceId): Promise<Space> =>
+  new Promise((resolve) => {
+    const listed = client.spaces.get(spaceId);
+    if (listed) {
+      resolve(listed);
+      return;
+    }
+    // The observable calls back synchronously on subscribe, before `subscription` exists, so that call is skipped.
+    let subscription: { unsubscribe: () => void } | undefined;
+    subscription = client.spaces.subscribe(() => {
+      const space = client.spaces.get(spaceId);
+      if (space && subscription) {
+        subscription.unsubscribe();
+        resolve(space);
+      }
+    });
+  });

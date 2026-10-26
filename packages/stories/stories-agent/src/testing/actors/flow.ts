@@ -9,7 +9,7 @@ import { type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 
-import { type Actor, type ActorSpec } from './actor.ts';
+import { type Actor, type ActorSpec, type QuietWindows } from './actor.ts';
 import { type VirtualClock } from './clock.ts';
 
 /**
@@ -34,6 +34,8 @@ export type ActorFlow<T = unknown> = {
   /** Plugins an actor's app adds to the harness's own, by actor. */
   plugins?: (spec: ActorSpec, index: number) => Plugin.Plugin[];
   steps: ActorStep<T>[];
+  /** Windows in which every actor stops editing, to give replication a chance to catch up. */
+  quiet?: QuietWindows;
   /** Scene length in ms, including a hold after the last step. */
   duration: number;
 };

@@ -20,6 +20,7 @@ const meta = {
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   argTypes: {
     stepped: { type: { name: 'boolean' }, control: 'boolean' },
+    actor: { type: { name: 'number' }, control: 'number' },
   },
   parameters: {
     layout: 'fullscreen',
