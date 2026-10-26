@@ -38,15 +38,11 @@ The following extension dialects are used in this document.
 Comments, AI chats and message threads are the same thing: an ordered branch of messages from several
 participants, some of whom may be agents. What differs is the container object that points at the branch:
 
-```mdl
-type Container
-  desc: The container object that points at the branch, and what each kind adds.
-  literals: CommentThread | Chat | Channel
-  fields:
-    CommentThread: an anchor on a subject; a status
-    Chat: a model, instructions, tasks
-    Channel: an external backend (Bluesky, email, …)
-```
+| Container      | Adds                                    |
+| -------------- | --------------------------------------- |
+| Comment thread | an anchor on a subject; a status        |
+| Chat           | a model, instructions, tasks            |
+| Channel        | an external backend (Bluesky, email, …) |
 
 So storage needs one model, and the containers stay thin. This matches the conclusion of
 [thread-channel-merge.md](./feeds/thread-channel-merge.md) one level down: that document merges the

@@ -16,7 +16,7 @@ partial sync, per-branch retention) is missing, and indexing, retention and sync
 The trajectory design (#13782) and the `Thread` 0.3.0 comment feeds (#14206) are not on `main`, so
 `Trajectory.Event` and `threadOpen` have no code in this checkout.
 
-Of 21 items: 2 done, 0 untested, 6 partial, 1 diverged, 12 missing. Three findings matter most:
+Of 20 items: 2 done, 0 untested, 5 partial, 1 diverged, 12 missing. Three findings matter most:
 
 - **Rewind is its own mechanism.** [F-1.5] asks for rewind to be a branch plus a removal; the code
   rewinds through `Feed.rewindFrom` and per-item `PARENT_KEY` lineage, which `Feed.history` resolves
@@ -33,15 +33,6 @@ Of 21 items: 2 done, 0 untested, 6 partial, 1 diverged, 12 missing. Three findin
 | `verdict` | `org.dxos.mdl.verdict@1.0` |
 
 ## Verdicts
-
-```mdl
-verdict Container: Comment threads, chats and channels exist as separate types; none points at a branch.
-  status: partial
-  evidence: [github:dxos/dxos/packages/sdk/types/src/types/Thread.ts#Thread, github:dxos/dxos/packages/core/compute/assistant/src/types/Chat.ts#Chat, github:dxos/dxos/packages/sdk/types/src/types/Channel.ts#Channel]
-  note: |
-    The three container kinds are distinct ECHO types (`Thread` is 0.2.0 on main; 0.3.0 is in #14206).
-    There is no shared model under them, and no container holds `{ feed, branch }`.
-```
 
 ```mdl
 verdict F-1.1: A Feed is an append log of ECHO objects.
@@ -126,7 +117,7 @@ verdict F-2.4: EDGE position exists; local order is only the unexposed insertion
 ```mdl
 verdict F-3.1: AI chat, comments and messaging do not share one model.
   status: missing
-  note: Chat, Thread and Channel each use their own feeds and shapes; see the Container verdict.
+  note: `Chat`, `Thread` and `Channel` are separate ECHO types, each with its own feed and shape.
 ```
 
 ```mdl
