@@ -30,9 +30,15 @@ const SYNC_WINDOW_DAYS = 30;
 
 class CanaryError extends Data.TaggedError('CanaryError')<{ readonly message: string }> {}
 
-const flag = (name: string, fallback: number): number => {
+const flag = (name: string, fallback: number): Effect.Effect<number, CanaryError> => {
   const index = process.argv.indexOf(`--${name}`);
-  return index === -1 ? fallback : Number(process.argv[index + 1]);
+  if (index === -1) {
+    return Effect.succeed(fallback);
+  }
+  const value = Number(process.argv[index + 1]);
+  return Number.isInteger(value) && value > 0
+    ? Effect.succeed(value)
+    : Effect.fail(new CanaryError({ message: `--${name} takes a positive integer` }));
 };
 
 /** The monorepo root, where `.secrets/` lives (git-ignored at every depth). */
@@ -110,13 +116,13 @@ const program = Effect.gen(function* () {
     }
     case 'seed': {
       const gmail = yield* gmailForAccount;
-      const { poolSize, seededIds } = yield* seedCopies(gmail, { count: flag('count', 100), now: new Date() });
+      const { poolSize, seededIds } = yield* seedCopies(gmail, { count: yield* flag('count', 100), now: new Date() });
       console.log(JSON.stringify({ poolSize, seeded: seededIds.length, label: SEED_LABEL }, null, 2));
       return;
     }
     case 'trash': {
       const gmail = yield* gmailForAccount;
-      const trashed = yield* trashOldCopies(gmail, flag('days', 2));
+      const trashed = yield* trashOldCopies(gmail, yield* flag('days', 2));
       console.log(JSON.stringify({ trashed }, null, 2));
       return;
     }

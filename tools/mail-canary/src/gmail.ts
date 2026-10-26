@@ -63,13 +63,15 @@ const request = <S extends Schema.Top>(
   Effect.tryPromise({
     try: async () => {
       const response = await fetch(url, init);
-      const body: unknown = response.status === 204 ? {} : await response.json();
+      // Read text first: a 5xx from Google's front end can be HTML, and its status must survive to the retry.
+      const text = response.status === 204 ? '' : await response.text();
       if (!response.ok) {
         throw new GmailError({
-          message: `${url} → ${response.status}: ${JSON.stringify(body)}`,
+          message: `${url} → ${response.status}: ${text.slice(0, 500)}`,
           status: response.status,
         });
       }
+      const body: unknown = text ? JSON.parse(text) : {};
       return body;
     },
     catch: (cause) => (cause instanceof GmailError ? cause : new GmailError({ message: String(cause) })),

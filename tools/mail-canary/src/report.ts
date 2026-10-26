@@ -64,7 +64,7 @@ export const renderSummary = (report: NightlyReport): string => {
     lines.push('', '| Check | Class | Run or message | Detail |', '| --- | --- | --- | --- |');
     for (const failure of failures.slice(0, 50)) {
       lines.push(
-        `| ${failure.check} | ${failure.class} | ${failure.pid ?? failure.gmailId ?? ''} | ${failure.message.replaceAll('|', '\\|')} |`,
+        `| ${failure.check} | ${failure.class} | ${failure.pid ?? failure.gmailId ?? ''} | ${failure.message.replace(/\s+/g, ' ').trim().slice(0, 300).replaceAll('|', '\\|')} |`,
       );
     }
     if (failures.length > 50) {

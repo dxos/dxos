@@ -85,6 +85,10 @@ jobs:
         env:
           DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
         run: |
-          test -f "${{ runner.temp }}/mail-canary/summary.json" &&
-            node scripts/ci-event.mjs --event ci.mail-canary --timestamp now \
-              --properties "${{ runner.temp }}/mail-canary/summary.json"
+          SUMMARY="${{ runner.temp }}/mail-canary/summary.json"
+          # A run that died before its report (build, login) is still a failed night, not a silent one.
+          if [ ! -f "$SUMMARY" ]; then
+            mkdir -p "$(dirname "$SUMMARY")"
+            echo '{"ok":false,"failedChecks":"NO_REPORT"}' > "$SUMMARY"
+          fi
+          node scripts/ci-event.mjs --event ci.mail-canary --timestamp now --properties "$SUMMARY"
