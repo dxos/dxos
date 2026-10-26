@@ -189,10 +189,10 @@ export const RecordingList = <T extends RecordingItem>({
                   data-over={over ? 'true' : undefined}
                   className={mx('px-2 text-end font-mono text-xs', over ? 'text-error-text' : 'text-fg-muted')}
                 >
-                  {item.duration === undefined ? t('no-take.label') : formatSeconds(item.duration)}
+                  {item.duration === undefined ? '' : formatSeconds(item.duration)}
                 </span>
                 {desired && (
-                  <span className='px-2 text-end font-mono text-xs text-fg-subtle'>
+                  <span className='px-2 text-end font-mono text-xs text-fg-muted'>
                     {item.desired === undefined ? '' : formatSeconds(item.desired)}
                   </span>
                 )}

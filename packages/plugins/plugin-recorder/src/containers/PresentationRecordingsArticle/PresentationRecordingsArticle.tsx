@@ -225,7 +225,7 @@ const useVoicedSlides = (
               id: slide.id,
               index,
               title: slide.title ?? headingOf(text) ?? (content ? Obj.getLabel(content) : undefined) ?? slide.id,
-              description: t('take-count.label', { count: slide.takes?.length ?? 0 }),
+              description: slide.takes?.length ? t('take-count.label', { count: slide.takes.length }) : undefined,
               duration: takeLog?.duration,
               desired: slide.duration,
               take: slide.mainTake?.target,
