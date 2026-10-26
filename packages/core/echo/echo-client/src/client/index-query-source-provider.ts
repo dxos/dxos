@@ -559,7 +559,7 @@ export class IndexQuerySource implements RemoteQuerySource {
     let expire = () => {};
     let timer: ReturnType<typeof setTimeout> | undefined;
     const onTimer = () => {
-      const remaining = deadline - Date.now();
+      const remaining = deadline - performance.now();
       timer = remaining > 0 ? setTimeout(onTimer, remaining) : undefined;
       if (timer === undefined) {
         expire();
@@ -570,7 +570,7 @@ export class IndexQuerySource implements RemoteQuerySource {
     try {
       for (const chunk of chunkArray([...records], HYDRATE_RECORDS_PER_YIELD_CHECK)) {
         await yieldOrContinue('smooth');
-        deadline = Date.now() + budget;
+        deadline = performance.now() + budget;
         const stall = new Promise<typeof STALLED>((resolve) => {
           expire = () => resolve(STALLED);
         });
