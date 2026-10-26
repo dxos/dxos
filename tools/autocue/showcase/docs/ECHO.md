@@ -124,9 +124,9 @@ stretches to the voice as for ECHO. Lines marked _(verify)_ make a claim to chec
 1. **Documents** (at 4.5s, 45s)
    - This is Composer: an extensible super-app for teams and their agents.
    - Your data is organized into collaborative workspaces and accessed via plugins.
-   - You can add comments to any object; and I can give a task to an agent, which reads and updates the data in real time.
-   - Documents can include components from any plugin.
-   - And plugins provide all components with an extensive set of skills and connectors.
+   - You can add comments to any object; and assign tasks to agents, which read and update data in real time.
+   - Documents can incorporate components from any plugin.
+   - And plugins provide an extensive set of tools, skills and connectors.
    - I can easily insert a spreadsheet, and open it to create or view a chart, or import data.
    - Documents, drawings, sheets, and kanbans are all objects in the same graph.
 
