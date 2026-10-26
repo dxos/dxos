@@ -3,15 +3,16 @@
 # Copyright 2026 DXOS.org
 #
 
-"""Step 01: turn one Enron custodian's maildir into an mbox for the canary's Gmail pool.
+"""Step 01: turn Enron custodians' maildirs into an mbox for the canary's Gmail pool.
 
-Every message gets the `enron-pool` label (via `X-Gmail-Labels`, which GYB reads on restore) and a
-date moved into a window that ends `--end-days-ago` days before today. The pool must be older than
-the sync's 30-day default window: that age, not a filter or archiving, is what keeps the canary's
-mailbox from syncing the pool.
+Picks `--limit` messages (default 10,000) evenly across the custodians' history, after dropping
+duplicates (Enron folders repeat the same mail) and messages with no text body. Every date moves into
+a window that ends `--end-days-ago` days before today. The pool must be older than the sync's 30-day
+default window: that age, not a filter or archiving, is what keeps the canary's mailbox from syncing
+the pool. Step 02 applies the `enron-pool` label as it imports.
 
 Usage:
-  python3 01-build-pool.py --maildir ~/enron/maildir --custodian kean-s --out pool/enron-pool.mbox
+  python3 01-build-pool.py --maildir ~/enron/maildir --out pool/enron-pool.mbox
   python3 01-build-pool.py ... --limit 10   # a trial mbox to import first
 """
 
@@ -19,6 +20,7 @@ import argparse
 import email
 import email.policy
 import email.utils
+import hashlib
 import mailbox
 import sys
 from datetime import datetime, timedelta, timezone
@@ -32,12 +34,15 @@ LATEST = datetime(2002, 12, 31, tzinfo=timezone.utc)
 def parse_args(argv):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--maildir', required=True, type=Path, help='Extracted CMU Enron maildir root.')
-    parser.add_argument('--custodian', default='kean-s', help='Custodian folder under the maildir.')
+    parser.add_argument(
+        '--custodian',
+        action='append',
+        help='Custodian folder under the maildir; repeat for more. Default: kean-s, dasovich-j, kaminski-v.',
+    )
     parser.add_argument('--out', required=True, type=Path, help='mbox file to write.')
-    parser.add_argument('--label', default='enron-pool', help='Gmail label for every pool message.')
     parser.add_argument('--end-days-ago', type=int, default=31, help='Newest message is this many days old.')
     parser.add_argument('--span-days', type=int, default=365, help='Spread messages over this many days.')
-    parser.add_argument('--limit', type=int, default=0, help='Write at most this many messages (0 = all).')
+    parser.add_argument('--limit', type=int, default=10_000, help='Messages in the pool (0 = all).')
     return parser.parse_args(argv)
 
 
@@ -66,6 +71,11 @@ def has_text(message):
     return False
 
 
+def content_key(message):
+    body = b''.join(part.get_payload(decode=True) or b'' for part in message.walk() if not part.is_multipart())
+    return (message.get('From', ''), message.get('Date', ''), message.get('Subject', ''), hashlib.sha256(body).hexdigest())
+
+
 def remap(dates, end, span_days):
     """Maps original dates linearly onto [end - span, end], keeping their order and relative spacing."""
     first, last = min(dates), max(dates)
@@ -76,20 +86,40 @@ def remap(dates, end, span_days):
 
 def main(argv):
     args = parse_args(argv)
-    root = args.maildir / args.custodian
-    if not root.is_dir():
-        sys.exit(f'error: {root} is not a directory')
-
-    paths = sorted(path for path in root.rglob('*') if path.is_file())
-    if args.limit:
-        paths = paths[: args.limit]
+    # One custodian files the same mail under several folders: kean-s has 25,351 files but 6,212
+    # distinct messages, so a 10,000-message pool needs more than one.
+    custodians = args.custodian or ['kean-s', 'dasovich-j', 'kaminski-v']
+    paths = []
+    for custodian in custodians:
+        root = args.maildir / custodian
+        if not root.is_dir():
+            sys.exit(f'error: {root} is not a directory')
+        paths.extend(sorted(path for path in root.rglob('*') if path.is_file()))
     if not paths:
-        sys.exit(f'error: no messages under {root}')
+        sys.exit(f'error: no messages under {", ".join(custodians)}')
 
-    messages = [message for message in (read_message(path) for path in paths) if has_text(message)]
-    if len(messages) < len(paths):
-        print(f'skipped {len(paths) - len(messages)} messages without a text body')
-    end =datetime.now(timezone.utc).replace(microsecond=0) - timedelta(days=args.end_days_ago)
+    messages, seen, skipped_empty = [], set(), 0
+    for path in paths:
+        message = read_message(path)
+        # The CMU release gives every file its own Message-ID, so a mail filed in several folders is
+        # only recognizable by its content.
+        key = content_key(message)
+        if key in seen:
+            continue
+        seen.add(key)
+        if not has_text(message):
+            skipped_empty += 1
+            continue
+        messages.append(message)
+    print(f'read {len(paths)} files: {len(messages)} distinct messages with text, {skipped_empty} without a body')
+
+    # An even sample across time, so the pool keeps the custodian's whole history rather than one folder.
+    messages.sort(key=original_date)
+    if args.limit and len(messages) > args.limit:
+        step = len(messages) / args.limit
+        messages = [messages[int(index * step)] for index in range(args.limit)]
+
+    end = datetime.now(timezone.utc).replace(microsecond=0) - timedelta(days=args.end_days_ago)
     dates = remap([original_date(message) for message in messages], end, args.span_days)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
@@ -101,9 +131,7 @@ def main(argv):
             # Bcc would name recipients the original sender hid; it serves no test.
             del message['Bcc']
             del message['Date']
-            del message['X-Gmail-Labels']
             message['Date'] = email.utils.format_datetime(date)
-            message['X-Gmail-Labels'] = args.label
             if not message.get('Message-ID'):
                 message['Message-ID'] = email.utils.make_msgid(domain='enron-pool.dxos.org')
             pool.add(message)
@@ -111,10 +139,7 @@ def main(argv):
     finally:
         pool.close()
 
-    print(
-        f'wrote {len(messages)} messages to {args.out}, '
-        f'dated {min(dates).date()} to {max(dates).date()}, labelled {args.label}'
-    )
+    print(f'wrote {len(messages)} messages to {args.out}, dated {min(dates).date()} to {max(dates).date()}')
 
 
 if __name__ == '__main__':

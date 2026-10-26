@@ -12,7 +12,7 @@ import { describe, test } from 'vitest';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { accessToken, credentialsFromEnv, makeGmail } from './gmail.ts';
+import { accessToken, canaryAccount, credentialsFromEnv, makeGmail } from './gmail.ts';
 import { runNightly } from './nightly.ts';
 import { toEventProperties } from './report.ts';
 import { makeDx, spaceReader } from './space.ts';
@@ -41,6 +41,7 @@ describe('mail canary', { tags: ['sync-e2e'], timeout: (SYNC_TIMEOUT_MINUTES + 2
     const result = await EffectEx.runPromise(
       Effect.gen(function* () {
         const gmail = makeGmail(yield* accessToken(settings.credentials));
+        yield* gmail.assertAccount(canaryAccount());
         const dx = makeDx({ home });
         yield* dx.login(settings.recoveryPhrase);
         return yield* runNightly(gmail, spaceReader(dx, settings.spaceId), {

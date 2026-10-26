@@ -4,6 +4,7 @@
 
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
+import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
 const API = 'https://gmail.googleapis.com/gmail/v1/users/me';
@@ -23,6 +24,9 @@ export type GmailCredentials = {
   readonly clientSecret: string;
   readonly refreshToken: string;
 };
+
+/** The only mailbox the canary may write to; override with `GMAIL_ACCOUNT`. */
+export const canaryAccount = (env = process.env): string => env.GMAIL_ACCOUNT ?? 'test@braneframe.com';
 
 /** Reads the grant from `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET` and `GMAIL_REFRESH_TOKEN`. */
 export const credentialsFromEnv = (env = process.env): GmailCredentials | undefined =>
@@ -47,6 +51,7 @@ const MetadataMessage = Schema.Struct({
   ),
 });
 const MessageRef = Schema.Struct({ id: Schema.String });
+const Profile = Schema.Struct({ emailAddress: Schema.String });
 const Label = Schema.Struct({ id: Schema.String, name: Schema.String, messagesTotal: Schema.optional(Schema.Number) });
 const LabelList = Schema.Struct({ labels: Schema.optional(Schema.Array(Label)) });
 
@@ -69,6 +74,12 @@ const request = <S extends Schema.Top>(
     },
     catch: (cause) => (cause instanceof GmailError ? cause : new GmailError({ message: String(cause) })),
   }).pipe(
+    // Gmail answers a burst over the per-user quota with 429 and the odd 5xx; both clear on their own.
+    Effect.retry({
+      while: (error) => error.status === 429 || (error.status ?? 0) >= 500,
+      schedule: Schedule.exponential('1 second'),
+      times: 6,
+    }),
     Effect.flatMap((body) =>
       Schema.decodeUnknownEffect(schema)(body).pipe(
         Effect.mapError((error) => new GmailError({ message: `unexpected response from ${url}: ${error.message}` })),
@@ -145,6 +156,16 @@ export const makeGmail = (token: string) => {
       body: JSON.stringify({ raw, labelIds }),
     }).pipe(Effect.map((message) => message.id));
 
+  /**
+   * Imports a raw message as received mail: no inbox unless asked, never spam, and the internal date
+   * taken from its `Date` header, so an old pool message stays outside the sync window.
+   */
+  const importMessage = (raw: string, labelIds: readonly string[]): Effect.Effect<string, GmailError> =>
+    call(MessageRef, '/messages/import?internalDateSource=dateHeader&neverMarkSpam=true&processForCalendar=false', {
+      method: 'POST',
+      body: JSON.stringify({ raw, labelIds }),
+    }).pipe(Effect.map((message) => message.id));
+
   const trash = (id: string): Effect.Effect<void, GmailError> =>
     call(MessageRef, `/messages/${id}/trash`, { method: 'POST' }).pipe(Effect.asVoid);
 
@@ -164,11 +185,37 @@ export const makeGmail = (token: string) => {
   const labelTotal = (labelId: string): Effect.Effect<number, GmailError> =>
     call(Label, `/labels/${labelId}`).pipe(Effect.map((label) => label.messagesTotal ?? 0));
 
+  /** The address the token belongs to. */
+  const emailAddress = (): Effect.Effect<string, GmailError> =>
+    call(Profile, '/profile').pipe(Effect.map((profile) => profile.emailAddress));
+
+  /** Fails unless the token belongs to `expected`, so a mis-pointed grant never writes to another mailbox. */
+  const assertAccount = (expected: string): Effect.Effect<void, GmailError> =>
+    emailAddress().pipe(
+      Effect.flatMap((actual) =>
+        actual.toLowerCase() === expected.toLowerCase()
+          ? Effect.void
+          : Effect.fail(new GmailError({ message: `token belongs to ${actual}, expected ${expected}` })),
+      ),
+    );
+
   /** Count of messages matching a search, by listing them; exact, unlike `resultSizeEstimate`. */
   const count = (query: string): Effect.Effect<number, GmailError> =>
     listIds(query).pipe(Effect.map((ids) => ids.length));
 
-  return { listIds, getRaw, getMetadata, insert, trash, ensureLabel, labelTotal, count };
+  return {
+    listIds,
+    getRaw,
+    getMetadata,
+    insert,
+    importMessage,
+    trash,
+    ensureLabel,
+    labelTotal,
+    count,
+    emailAddress,
+    assertAccount,
+  };
 };
 
 export type Gmail = ReturnType<typeof makeGmail>;
