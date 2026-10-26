@@ -156,8 +156,13 @@ if (fitted.length > 0) {
   filters.push(`[1:a]asplit=${slices.length}${slices.map((_, index) => `[s${index}]`).join('')}`);
   slices.forEach(([from, to], index) => {
     const length = index === 0 ? to - from : fitted[index - 1].end - fitted[index - 1].start + fitted[index - 1].extra;
+    // The lead-in holds only the Record click and room noise, so it is silent; each slice fades in and out so no cut clicks.
+    const level =
+      index === 0
+        ? ',volume=0'
+        : `,afade=t=in:d=0.03,afade=t=out:st=${Math.max(0, to - from - 0.05).toFixed(3)}:d=0.05`;
     filters.push(
-      `[s${index}]atrim=start=${from}:end=${to},asetpts=PTS-STARTPTS,apad,atrim=end=${length.toFixed(3)}[t${index}]`,
+      `[s${index}]atrim=start=${from}:end=${to},asetpts=PTS-STARTPTS${level},apad,atrim=end=${length.toFixed(3)}[t${index}]`,
     );
   });
   filters.push(`${slices.map((_, index) => `[t${index}]`).join('')}concat=n=${slices.length}:v=0:a=1[voice]`);
