@@ -43,6 +43,7 @@ const { values: options } = parseArgs({
     'reuse-tours': { type: 'boolean', default: false },
     'once': { type: 'string', default: '' },
     'pin': { type: 'string', multiple: true, default: [] },
+    'variant': { type: 'string', default: 'light' },
   },
 });
 
@@ -51,7 +52,7 @@ if (!options.run) {
   process.exit(2);
 }
 
-const CLIPS = path.resolve(ROOT, options.run, 'clips', 'light');
+const CLIPS = path.resolve(ROOT, options.run, 'clips', options.variant);
 const GRID = path.join(ROOT, 'temp', 'grid-zoom');
 const COLS = Number(options.cols);
 const ROWS = Number(options.rows);
