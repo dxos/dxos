@@ -6,7 +6,7 @@ import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as EffectScope from 'effect/Scope';
-import { describe, expect, onTestFinished, test } from 'vitest';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Event, sleep } from '@dxos/async';
 import { Context, ContextDisposedError } from '@dxos/context';
@@ -285,6 +285,51 @@ describe('IndexQuerySource', () => {
     const results = await source.run(Context.default(), makeQuery(spaceId));
 
     expect(results.map((entry) => entry.id)).toEqual([prompt, slow]);
+  });
+
+  // Regression: every hit armed and cleared its own budget timer, which on a re-hydration pass over a
+  // large result set cost more than hydrating the already-loaded objects (UI lag trace, 2026-10-26).
+  test('hydration arms one budget timer per chunk, not per hit', async () => {
+    const spaceId = SpaceId$.random();
+    const ids = Array.from({ length: 200 }, () => EntityId.random());
+    // A budget no other timer in this path uses, so the spy counts only hydration timers.
+    const hydrationTimeout = 7_777;
+
+    const service = await makeQueryClient({
+      'QueryService.setConfig': () => Effect.void,
+      'QueryService.execQuery': (request) =>
+        EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
+          queueMicrotask(
+            () =>
+              void emit.single({
+                queryId: request.queryId,
+                results: ids.map((id) => ({ id, spaceId, rank: 0 })),
+              }),
+          );
+        }),
+      'QueryService.reindex': () => Effect.void,
+    });
+
+    const source = new IndexQuerySource({
+      service,
+      runtime: EffectContext.empty(),
+      objectLoader: {
+        loadObject: async ({ objectId }) => ({ id: objectId }) as unknown as Entity.Unknown,
+        updateEvent: noopUpdateEvent,
+      },
+      graph: mockGraph,
+      hydrationTimeout,
+    });
+    onTestFinished(() => source.close());
+
+    const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
+    onTestFinished(() => setTimeoutSpy.mockRestore());
+
+    const results = await source.run(Context.default(), makeQuery(spaceId));
+
+    expect(results).toHaveLength(ids.length);
+    const budgetTimers = setTimeoutSpy.mock.calls.filter(([, delay]) => delay === hydrationTimeout);
+    expect(budgetTimers).toHaveLength(Math.ceil(ids.length / 64));
   });
 
   test('a row whose database closes under its load is dropped', async () => {

@@ -5,7 +5,7 @@
 import * as Array from 'effect/Array';
 import * as EffectContext from 'effect/Context';
 
-import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout, yieldOrContinue } from '@dxos/async';
+import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, yieldOrContinue } from '@dxos/async';
 import { Context, ContextDisposedError } from '@dxos/context';
 import { Entity, Feed, type Hypergraph, Obj, Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
@@ -556,11 +556,7 @@ export class IndexQuerySource implements RemoteQuerySource {
     const processedResults: (SourceEntry | null | typeof STALLED)[] = [];
     for (const chunk of chunkArray([...records], HYDRATE_RECORDS_PER_YIELD_CHECK)) {
       await yieldOrContinue('smooth');
-      processedResults.push(
-        ...(await Promise.all(
-          chunk.map((result) => this._hydrateRecord(ctx, query, start, result, hydratedIntoFeedHandle, load)),
-        )),
-      );
+      processedResults.push(...(await this._hydrateChunk(ctx, query, start, chunk, hydratedIntoFeedHandle, load)));
     }
     const stalled = records.filter((_, index) => processedResults[index] === STALLED).map((record) => record.id);
     const results = processedResults.filter((entry) => entry !== STALLED).filter(isNonNullable);
@@ -642,35 +638,44 @@ export class IndexQuerySource implements RemoteQuerySource {
   }
 
   /**
-   * Hydrate one record under a bounded budget. Hydration reaches document loading, which waits on
-   * replication and never settles while a document is unavailable; left unbounded it held the
-   * caller's whole query open for as long as the index-query budget allowed.
+   * Hydrate a chunk of records, each under a bounded budget. Hydration reaches document loading, which
+   * waits on replication and never settles while a document is unavailable; left unbounded it held the
+   * caller's whole query open for as long as the index-query budget allowed. The records of a chunk
+   * start together, so one timer bounds them all: a timer per record cost more than hydrating a
+   * loaded object on every re-hydration pass.
    */
-  private async _hydrateRecord(
+  private async _hydrateChunk(
     ctx: Context,
     query: QueryAST.Query,
     start: number,
-    result: QueryService.QueryResult,
+    chunk: readonly QueryService.QueryResult[],
     hydratedIntoFeedHandle: Set<string>,
     load: RowLoader,
-  ): Promise<SourceEntry | null | typeof STALLED> {
+  ): Promise<(SourceEntry | null | typeof STALLED)[]> {
     const timeout = this._params.hydrationTimeout ?? RECORD_HYDRATION_TIMEOUT;
-    const hydration = this._filterMapResult(ctx, query, start, result, load, hydratedIntoFeedHandle);
-    // The abandoned hydration may still reject after the race has settled, which would surface as an
-    // unhandled rejection; the real outcome is already taken below.
-    hydration.catch(() => {});
-    // Compared by identity so a TimeoutError thrown from within hydration is not mistaken for ours.
-    const expired = new TimeoutError(timeout, 'index hit hydration');
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const budget = new Promise<typeof STALLED>((resolve) => {
+      timer = setTimeout(() => resolve(STALLED), timeout);
+    });
     try {
-      return await asyncTimeout(hydration, timeout, expired);
-    } catch (err) {
-      if (err === expired) {
-        return STALLED;
-      }
-      if (err instanceof ContextDisposedError) {
-        return null;
-      }
-      throw err;
+      return await Promise.all(
+        chunk.map(async (result) => {
+          const hydration = this._filterMapResult(ctx, query, start, result, load, hydratedIntoFeedHandle);
+          // The abandoned hydration may still reject after the race has settled, which would surface as an
+          // unhandled rejection; the real outcome is already taken below.
+          hydration.catch(() => {});
+          try {
+            return await Promise.race([hydration, budget]);
+          } catch (err) {
+            if (err instanceof ContextDisposedError) {
+              return null;
+            }
+            throw err;
+          }
+        }),
+      );
+    } finally {
+      clearTimeout(timer);
     }
   }
 
@@ -848,7 +853,7 @@ export class IndexQuerySource implements RemoteQuerySource {
    * are permanently unavailable.
    *
    * The load does not settle while the object's document is unavailable (see
-   * `query-api-stall.test.ts`), so the caller time-boxes it in {@link _hydrateRecord} rather than
+   * `query-api-stall.test.ts`), so the caller time-boxes it in {@link _hydrateChunk} rather than
    * here — a budget on this one step could only drop the object silently.
    */
   private async _resolveIndexedObject(result: QueryService.QueryResult): Promise<Entity.Unknown | undefined> {

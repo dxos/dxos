@@ -8,7 +8,7 @@ import * as Exit from 'effect/Exit';
 
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
-import { Database, Filter, Query, Ref } from '@dxos/echo';
+import { Database, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 import { File, Milestone, PullRequest, Task } from '@dxos/types';
@@ -19,6 +19,7 @@ import addDependency from './add-dependency.ts';
 import createShowcase from './create-showcase.ts';
 import create from './create.ts';
 import getFeatures from './get-features.ts';
+import importLinks from './import-links.ts';
 import linkTask from './link-task.ts';
 import removeDependency from './remove-dependency.ts';
 import update from './update.ts';
@@ -211,6 +212,59 @@ describe('FeatureOperation.GetFeatures', () => {
         tasks: [{ id: task.id, title: 'Send through Gmail', status: 'started' }],
         showcases: [{ id: showcase.id, name: 'Sending a reply' }],
       });
+    }).pipe(Effect.provide(testLayer())),
+  );
+});
+
+describe('FeatureOperation key', () => {
+  it.effect('create sets meta.key, update replaces it and null removes it', () =>
+    Effect.gen(function* () {
+      const { feature } = yield* create.handler({ name: 'Code mode', key: 'network.dxos.team.features.mcp.codeMode' });
+      expect(Feature.getLink(feature)).toBe(`dxn:network.dxos.team.features.mcp.codeMode#${Obj.getMnemonic(feature)}`);
+      yield* update.handler({ feature: ref(feature), key: 'network.dxos.team.features.mcp.sandbox' });
+      expect(Obj.getMeta(feature).key).toBe('network.dxos.team.features.mcp.sandbox');
+      yield* update.handler({ feature: ref(feature), key: null });
+      expect(Obj.getMeta(feature).key).toBeUndefined();
+      expect(Feature.getLink(feature)).toBeUndefined();
+    }).pipe(Effect.provide(testLayer())),
+  );
+});
+
+describe('FeatureOperation.ImportLinks', () => {
+  it.effect('replaces the code links of each feature it resolves and reports the rest', () =>
+    Effect.gen(function* () {
+      const { feature: codeMode } = yield* create.handler({
+        name: 'Code mode',
+        key: 'network.dxos.team.features.mcp.codeMode',
+      });
+      const { feature: sandbox } = yield* create.handler({ name: 'Sandbox', key: 'org.example.features.sandbox' });
+      yield* update.handler({ feature: ref(sandbox), name: 'Sandbox' });
+      const codeModeLink = `dxn:network.dxos.team.features.mcp.codeMode#${Obj.getMnemonic(codeMode)}`;
+      // The tag still cites the sandbox by its old key.
+      const renamedLink = `dxn:org.example.features.oldSandbox#${Obj.getMnemonic(sandbox)}`;
+      const result = yield* importLinks.handler({
+        links: [
+          { dxn: codeModeLink, path: 'src/a.test.ts', line: 3, kind: 'suite', symbol: 'code mode' },
+          { dxn: codeModeLink, path: 'src/a.test.ts', line: 9, kind: 'test', symbol: 'runs' },
+          { dxn: renamedLink, path: 'src/b.ts', line: 1, kind: 'code', symbol: 'track' },
+          { dxn: 'dxn:org.example.features.gone#ZZZZZZ', path: 'src/c.ts', line: 4, kind: 'code' },
+        ],
+      });
+      expect(result.features).toBe(2);
+      expect(result.unresolved).toEqual([
+        { dxn: 'dxn:org.example.features.gone#ZZZZZZ', path: 'src/c.ts', line: 4, status: 'missing' },
+      ]);
+      expect(result.outdated).toEqual([{ dxn: renamedLink, link: Feature.getLink(sandbox), status: 'renamed' }]);
+      expect(codeMode.code).toEqual([
+        { path: 'src/a.test.ts', line: 3, kind: 'suite', symbol: 'code mode' },
+        { path: 'src/a.test.ts', line: 9, kind: 'test', symbol: 'runs' },
+      ]);
+      expect(sandbox.code).toEqual([{ path: 'src/b.ts', line: 1, kind: 'code', symbol: 'track' }]);
+
+      // A second import replaces, rather than appends to, the links of the features it resolves.
+      yield* importLinks.handler({ links: [{ dxn: codeModeLink, path: 'src/a.test.ts', line: 4, kind: 'suite' }] });
+      expect(codeMode.code).toEqual([{ path: 'src/a.test.ts', line: 4, kind: 'suite' }]);
+      expect(sandbox.code).toHaveLength(1);
     }).pipe(Effect.provide(testLayer())),
   );
 });
