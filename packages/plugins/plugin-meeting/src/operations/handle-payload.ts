@@ -28,20 +28,19 @@ const handler: Operation.WithHandler<typeof MeetingOperation.HandlePayload> = Me
         activeMeeting: meeting as Meeting.Meeting | undefined,
       }));
 
-      // A bare meeting selection must not leave the previous meeting's feed receiving segments.
-      if (!transcriptDxn) {
-        callManager.clearTranscriptFeed();
-      }
-      if (space && transcriptDxn) {
-        // Resolve the feed object from its queue/echo URI.
-        const echoUri = EID.tryParse(transcriptDxn);
-        const feedObjectId = echoUri ? EID.getEntityId(echoUri) : undefined;
-        const feed = feedObjectId
+      // Resolve the feed object from its queue/echo URI.
+      const echoUri = space && transcriptDxn ? EID.tryParse(transcriptDxn) : undefined;
+      const feedObjectId = echoUri ? EID.getEntityId(echoUri) : undefined;
+      const feed =
+        space && feedObjectId
           ? yield* Effect.promise(() => space.db.query(Query.select(Filter.id(feedObjectId))).first())
           : undefined;
-        if (feed && Obj.instanceOf(Feed.Feed, feed)) {
-          callManager.setTranscriptFeed(space.db, feed);
-        }
+      // A payload whose feed does not resolve here (a bare selection, or a feed not yet replicated) must not leave the
+      // previous meeting's feed receiving segments.
+      if (space && feed && Obj.instanceOf(Feed.Feed, feed)) {
+        callManager.setTranscriptFeed(space.db, feed);
+      } else {
+        callManager.clearTranscriptFeed();
       }
 
       // The activity is last-write-wins, so a payload without the flag (e.g. a bare meeting selection) must not turn

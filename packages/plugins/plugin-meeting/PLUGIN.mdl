@@ -213,7 +213,7 @@ feat F-3: Real-Time Transcription
     then: the transcript sink is unbound and plugin state is reset
 
   req F-3.5:
-    when: HandlePayload is received without transcriptDxn
+    when: HandlePayload is received without a transcriptDxn that resolves to a Transcript feed here
     then: the call's transcript feed is unbound, so no segment reaches the previously active meeting
 
   req F-3.6:
@@ -600,6 +600,16 @@ decision D-10: The meeting's transcription toggle sits in MeetingArticle's own t
   for: user:mykola-vrmchk
   affects: [F-3.6, MeetingArticle, SetTranscription]
   why: MeetingArticle builds its own toolbar, so an action on the meeting's graph node showed only in the plank heading's menu, where QA-3 could not find it.
+  source: https://github.com/dxos/dxos/pull/14186
+```
+
+```mdl
+decision D-11: A meeting payload whose transcriptDxn does not resolve to a feed on this device (not yet replicated, or another space) unbinds the call's transcript feed, as a payload without one does. Fills in [D-7].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-3.5]
+  why: A peer that receives the new meeting before its feed replicates otherwise keeps writing segments to the previous meeting's transcript; CodeRabbit found it in review.
   source: https://github.com/dxos/dxos/pull/14186
 ```
 

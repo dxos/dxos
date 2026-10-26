@@ -74,8 +74,12 @@ const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewPro
       setTranscribing(false);
     } else {
       callManager.setRoomId(roomId);
-      await callManager.join().catch((err) => log.catch(err));
-      setJoined(true);
+      try {
+        await callManager.join();
+        setJoined(true);
+      } catch (err) {
+        log.catch(err);
+      }
     }
   }, [callManager, joined, roomId]);
 
