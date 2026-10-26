@@ -1,0 +1,24 @@
+diagram kind=sequence
+node Agent "Agent" role=actor
+node Op "Draw op" ref="packages/plugins/plugin-illustrator/src/operations/draw.ts"
+node Dsl "Dsl.compile" ref="packages/common/diagram/src/dsl/compile.ts"
+node Engine "Layout engine" ref="packages/common/diagram/src/sequence-engine.ts"
+node Variant "Variant builder" ref="packages/plugins/plugin-illustrator/src/types/IllustratorCapabilities.ts"
+node Diag "Diagnostics" ref="packages/common/diagram/src/diagnostics.ts"
+edge Agent calls Op "draw(source)"
+edge Op calls Dsl "compile"
+fragment alt "kind=sequence" {
+  edge Dsl calls Engine "SequenceEngine.solve"
+  edge Engine returns Dsl "commands"
+} else "structure, dataflow" {
+  edge Dsl calls Engine "SemanticEngine.compile"
+  edge Engine returns Dsl "commands, issues"
+}
+edge Dsl returns Op "commands, problems"
+fragment opt "no errors" {
+  edge Op calls Variant "apply(commands)"
+  edge Variant returns Op "upserted"
+}
+edge Op calls Diag "analyze(scene)"
+edge Diag returns Op "diagnostics"
+edge Op returns Agent "scene, report"

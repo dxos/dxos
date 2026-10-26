@@ -15,6 +15,7 @@ import { Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import type * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
+import { type FeedStore } from '@dxos/feed';
 import { type IndexEngine } from '@dxos/index-core';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -26,6 +27,7 @@ import { countWork } from '@dxos/util';
 import { type AutomergeHost } from '../automerge/index.ts';
 import { type ExecutionTrace, QueryExecutor, type QueryExecutorMode } from '../query/index.ts';
 import { SLOW_WORK_MS } from '../util.ts';
+import { IndexPassFailedError } from './index-scheduler.ts';
 import { type InvalidationHint, mergeHints } from './invalidation-hint.ts';
 import type { SpaceStateManager } from './space-state-manager.ts';
 
@@ -61,6 +63,9 @@ export type QueryServiceProps = {
 
   /** Whether any of a client's data subscriptions holds a document. */
   holdsDocument?: (subscriptionIds: readonly string[], documentId: DocumentId) => boolean;
+
+  /** Read for feeds with indexing disabled and for feed retention; see the query executor's `feedStore`. */
+  feedStore?: FeedStore;
 };
 
 /**
@@ -110,7 +115,7 @@ type ActiveQuery = {
   /** `performance.now()` before which an invalidated query is left dirty rather than re-run. */
   debouncedUntil: number;
 
-  sendResults: (results: QueryService.QueryResult[]) => void;
+  sendResults: (results: QueryService.QueryResult[], truncated?: 'paths' | 'manifest') => void;
   /** Reports a re-run whose result matched the last one sent. */
   sendUnchanged: () => void;
   onError: (err: Error) => void;
@@ -265,7 +270,12 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         await queryEntry.executor.open();
         const readsSnapshotStore = queryEntry.executor.compiled;
         if (queryEntry.feedScoped || (readsSnapshotStore && !(await this.#snapshotsComplete(queryEntry.executor)))) {
-          await this._params.updateIndexes();
+          // A failed pass is logged and retried by the scheduler; the query answers from the index as it stands.
+          await this._params.updateIndexes().catch((error) => {
+            if (!(error instanceof IndexPassFailedError)) {
+              throw error;
+            }
+          });
         }
         if (!this._queries.has(queryEntry)) {
           return;
@@ -342,6 +352,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         sql: this._params.sql(),
         spaceStateManager: this._params.spaceStateManager,
         holds: (documentId) => this._params.holdsDocument?.(subscriptionIds, documentId) ?? false,
+        feedStore: this._params.feedStore,
       }),
       dirty: true,
       open: false,
@@ -350,11 +361,11 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       oneShot: request.reactivity === QueryReactivity.ONE_SHOT,
       cost: 0,
       debouncedUntil: 0,
-      sendResults: (results) => {
+      sendResults: (results, truncated) => {
         if (ctx.disposed) {
           return;
         }
-        onResults({ queryId: request.queryId, results });
+        onResults({ queryId: request.queryId, results, ...(truncated && { truncated }) });
       },
       sendUnchanged: () => {
         if (ctx.disposed) {
@@ -472,7 +483,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         const results = await query.executor.getResults();
         countWork('echo.queryResultsSent');
         countWork('echo.queryResultRows', results.length);
-        query.sendResults(results);
+        query.sendResults(results, query.executor.truncated);
       } else if (!query.oneShot) {
         // A client that holds local writes against this query waits for a re-run to know its answer is current.
         query.sendUnchanged();

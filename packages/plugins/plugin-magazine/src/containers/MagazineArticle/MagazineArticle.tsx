@@ -87,9 +87,21 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
         magazine: subject,
         current: currentId === post.id,
         onToggleStar: handleToggleStar,
-        onOpen: handleOpen,
       })),
-    [posts, currentId, handleOpen, handleToggleStar],
+    [posts, currentId, handleToggleStar],
+  );
+
+  // The masonry item is the tile's focusable unit, so it opens the post on click and on Enter.
+  const itemProps = useCallback(
+    (id: string) => ({
+      onActivate: () => {
+        const post = posts.find((post) => post.id === id);
+        if (post) {
+          void handleOpen(post);
+        }
+      },
+    }),
+    [posts, handleOpen],
   );
 
   return (
@@ -108,7 +120,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
           <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
             <Masonry.Content padding>
               {/* TODO(burdon): Move items into Root. */}
-              <Masonry.Viewport classNames='py-2' items={tileItems} />
+              <Masonry.Viewport classNames='py-2' items={tileItems} itemProps={itemProps} />
             </Masonry.Content>
           </Masonry.Root>
         )}
@@ -126,7 +138,6 @@ type TileData = {
   magazine: Magazine.Magazine;
   current: boolean;
   onToggleStar?: (post: Subscription.Post, starred: boolean) => void;
-  onOpen?: (post: Subscription.Post) => void;
 };
 
 const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) => {
@@ -135,13 +146,7 @@ const TileAdapter = ({ data }: { data: TileData | undefined; index: number }) =>
   }
 
   return (
-    <MagazineTile
-      post={data.post}
-      magazine={data.magazine}
-      current={data.current}
-      onOpen={data.onOpen}
-      onToggleStar={data.onToggleStar}
-    />
+    <MagazineTile post={data.post} magazine={data.magazine} current={data.current} onToggleStar={data.onToggleStar} />
   );
 };
 

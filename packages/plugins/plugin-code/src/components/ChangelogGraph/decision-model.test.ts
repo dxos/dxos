@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import DEUS_SPEC from '../../../../../reflect/deus/SPEC.mdl?raw';
 import CANVAS_AUTOGROW_SPEC from './__fixtures__/canvas-autogrow.mdl?raw';
 import INBOX_SYNC_SPEC from './__fixtures__/inbox-sync.mdl?raw';
-import { type DecisionModel, SPEC_BLOCK_PREFIX, buildChangelogGraph } from './decision-model.ts';
+import { type DecisionModel, SPEC_BLOCK_PREFIX, buildChangelogGraph, groupByDecider } from './decision-model.ts';
 
 const decisionsOf = (content: string) =>
   new Map(
@@ -49,6 +49,15 @@ describe('changelog graph', () => {
     expect(nodes).toContainEqual({ kind: 'block', id: `${SPEC_BLOCK_PREFIX}F-4.3`, label: 'F-4.3' });
     expect(edges).toContainEqual(
       expect.objectContaining({ kind: 'affects', from: 'D-17', to: `${SPEC_BLOCK_PREFIX}F-4.3` }),
+    );
+  });
+
+  test('groups decisions by decider, people first and agents last', ({ expect }) => {
+    const groups = groupByDecider([...decisionsOf(CANVAS_AUTOGROW_SPEC).values()]);
+    const actors = groups.map(({ actor }) => actor);
+    expect(actors.indexOf('agent')).toBeGreaterThan(actors.lastIndexOf('user'));
+    expect(groups.reduce((total, { decisions }) => total + decisions.length, 0)).toBe(
+      decisionsOf(CANVAS_AUTOGROW_SPEC).size,
     );
   });
 });

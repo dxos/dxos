@@ -12,6 +12,7 @@ import * as Struct from 'effect/Struct';
 import type { AgentProcessDefinition, MakeTurnProducer } from '@dxos/agent-runtime';
 import * as Capability from '@dxos/app-framework/Capability';
 import type { AiContext } from '@dxos/assistant';
+import type * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
 import type * as Chat from '@dxos/assistant/Chat';
 import type * as Instructions from '@dxos/compute/Instructions';
 import { type Database, type Obj, type Ref, type Registry } from '@dxos/echo';
@@ -77,10 +78,19 @@ export const AgentTurnProducer = Capability.make<MakeTurnProducer>()(
 );
 
 /**
+ * Present when the host supplied `codeModeTurnProducer`, since without it code mode never runs whatever
+ * `Settings.disableCodeMode` says.
+ */
+export const CodeModeAvailable = Capability.make<true>()(`${meta.profile.key}.capability.codeModeAvailable`);
+
+/**
  * Whether an agent can run on this device; one that cannot is still listed, with the reason as a
  * short lowercase phrase shown after its name.
  */
 export type AgentAvailability = { readonly available: true } | { readonly available: false; readonly reason: string };
+
+/** Where an agent's loop runs: in this client, or on EDGE. */
+export type AgentLocation = 'local' | 'edge';
 
 /** A person's answer to a request block an agent added to a chat. */
 export type AgentResponse = {
@@ -99,6 +109,18 @@ export type Agent = {
   readonly id: string;
   readonly label: string;
   readonly icon: string;
+  /**
+   * Where this registration runs the agent. Absent ⇒ this device only. A registration listing both runs
+   * wherever the chat asks (`chat.remote`); one listing a single location runs only there.
+   */
+  readonly locations?: readonly AgentLocation[];
+  /**
+   * The id of the agent this registration is a variant of: the same agent run somewhere else by another
+   * runtime. Pickers show the two as one agent, with "runs on" choosing between them.
+   */
+  readonly variantOf?: string;
+  /** The agent chooses its own model, so the chat's model does not apply and pickers offer none. */
+  readonly ownModel?: boolean;
   readonly availability: Atom.Atom<AgentAvailability>;
   readonly makeTurnProducer: MakeTurnProducer;
   /** Hands a person's answer to the agent; false when nothing is waiting on that request. */
@@ -113,6 +135,14 @@ export const Agent = Capability.make<Agent>()(`${meta.profile.key}.capability.ag
  * none runs on the assistant's.
  */
 export const AgentProcess = Capability.make<AgentProcessDefinition>()(`${meta.profile.key}.capability.agentProcess`);
+
+/**
+ * Slash commands the chat prompt completes and runs without the model. Each plugin contributes the
+ * commands for its own verbs; skills are offered as commands beside them.
+ */
+export const SlashCommands = Capability.make<readonly SlashCommand.SlashCommand[]>()(
+  `${meta.profile.key}.capability.slashCommands`,
+);
 
 /** Context a chat receives when it runs against a subject object. */
 export type SubjectBindings = AiContext.BindingProps & {

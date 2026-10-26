@@ -220,7 +220,7 @@ const meta = {
                     Connection.make({ name: 'Story Mail', accessToken: Ref.make(accessToken) }),
                   );
                   defaultSpace.db.add(
-                    Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(mailbox) }),
+                    Cursor.makeExternal({ source: Connection.getAccessToken(connection), target: Ref.make(mailbox) }),
                   );
                 }
               }

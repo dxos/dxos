@@ -5,15 +5,15 @@
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schedule from 'effect/Schedule';
-import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Context } from '@dxos/context';
 import { Database, Obj } from '@dxos/echo';
+import { type ProvisionedBrain } from '@dxos/edge-client';
 import { BaseError } from '@dxos/errors';
-import { IdentityDid, PublicKey, SpaceId } from '@dxos/keys';
+import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { buf, toPublicKey } from '@dxos/protocols/buf';
@@ -40,19 +40,6 @@ export const SPACE_SOURCE = 'org.dxos.agent/space';
  * join's credentials take a moment to reach the client, so checking them at once would find them missing.
  */
 const joined = new Set<string>();
-
-/**
- * EDGE's answer to `POST /compute/brain`: the brain's identity and the caller's membership of the agent's default
- * space, as base64 protobuf.
- */
-const ProvisionedBrain = Schema.Struct({
-  identity: Schema.Struct({
-    identityDid: IdentityDid,
-    identityKey: Schema.String,
-    defaultSpaceId: Schema.optional(SpaceId),
-  }),
-  membership: Schema.String,
-});
 
 /**
  * EDGE did not give the agent its identity, or the caller's HALO did not take the membership. Worth retrying: EDGE
@@ -138,26 +125,17 @@ const handler: Operation.WithHandler<typeof AgentOperation.EnsureIdentity> = Age
 
       const provision = Effect.tryPromise({
         try: () =>
-          edge.value.request(Context.default(), '/compute/brain', {
-            method: 'POST',
-            body: { agent: agent.id, homeSpaceId: db.spaceId, label: agent.name ?? '' },
+          edge.value.provisionBrain(Context.default(), {
+            agent: agent.id,
+            homeSpaceId: db.spaceId,
+            label: agent.name ?? '',
           }),
         catch: (cause) => new ProvisionIdentityError({ cause }),
-      }).pipe(
-        Effect.flatMap((answer) =>
-          Schema.decodeUnknownEffect(ProvisionedBrain)(answer).pipe(
-            Effect.mapError((cause) => new ProvisionIdentityError({ cause })),
-          ),
-        ),
-      );
+      });
 
       // Only joins people and spaces, so it runs in the background, retried: the caller's membership of the agent's own
       // space, then the agent's membership of the space it was created in.
-      const join = (
-        did: string,
-        { identity, membership }: Schema.Schema.Type<typeof ProvisionedBrain>,
-        steps: Join,
-      ): Effect.Effect<void> => {
+      const join = (did: string, { identity, membership }: ProvisionedBrain, steps: Join): Effect.Effect<void> => {
         if (Option.isNone(client)) {
           return Effect.void;
         }

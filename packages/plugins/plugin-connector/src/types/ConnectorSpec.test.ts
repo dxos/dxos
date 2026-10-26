@@ -30,6 +30,7 @@ const TestSync = Operation.make({
 const makeConnector = (id: string, targetTypename?: string): ConnectorSpec.ConnectorEntry => ({
   id,
   source: `${id}.example`,
+  kind: 'user',
   sync: { operation: TestSync, ...(targetTypename ? { targetTypename } : {}) },
 });
 

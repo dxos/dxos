@@ -13,6 +13,7 @@ import type * as Atom from 'effect/reactivity/Atom';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type Space } from '@dxos/client/echo';
 import { Annotation, Collection, type Database, Obj, Ref, Registry, Type } from '@dxos/echo';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { Attention } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
 import type * as Position from '@dxos/util/Position';
@@ -212,9 +213,12 @@ export const makeObject = ({
   const iconAnnotation = delegatedIcon ?? staticIcon;
   const graphProps = schema ? Option.getOrUndefined(AppAnnotation.GraphPropsAnnotation.get(schema)) : undefined;
 
+  const containerProps = schema ? Option.getOrUndefined(AppAnnotation.ContainerAnnotation.get(schema)) : undefined;
   const partials = Obj.instanceOf(Collection.Collection, object)
     ? getListPartials(ContainerModel.collection(object), db)
-    : graphProps;
+    : containerProps
+      ? { ...graphProps, ...getListPartials({ object, ...containerProps }, db) }
+      : graphProps;
 
   const label =
     get(Obj.labelAtom(object)) || getDynamicLabel('object-name.placeholder', typename, { defaultValue: 'New item' });
@@ -573,6 +577,37 @@ export const makeToolbarSeparator = (
 });
 
 //
+// Prompt helpers.
+//
+
+/** Type of the hidden node a text prompt reads its contributed actions from. */
+export const PROMPT_TYPE = 'org.dxos.type.prompt';
+
+/** Segment of a prompt node under its host. */
+export const PROMPT_SEGMENT = 'prompt';
+
+/**
+ * The prompt node of a host (a chat, a companion, a space's home).
+ * Keyed by the host rather than the chat it composes into, so it survives a draft chat being stored or replaced.
+ */
+export const getPromptId = (hostId: string): string => GraphNode.qualifyId(hostId, PROMPT_SEGMENT);
+
+/**
+ * Build the prompt node for a host. Contributors file actions on it with the `prompt` disposition, and
+ * its id is the key a prompt's controls share (e.g. the dictation session).
+ */
+export const makePrompt = (): AppGraphNode.NodeArg<null> => ({
+  id: PROMPT_SEGMENT,
+  type: PROMPT_TYPE,
+  data: null,
+  properties: {
+    label: ['prompt.label', { ns: 'org.dxos.i18n.os' }],
+    icon: 'ph--chat-text--regular',
+    disposition: 'hidden',
+  },
+});
+
+//
 // Not-found helpers.
 //
 
@@ -586,4 +621,16 @@ export const makeNotFound = (): AppGraphNode.NodeArg<null> => ({
     icon: 'ph--warning--regular',
     disposition: 'hidden',
   },
+});
+
+//
+// Context menu.
+//
+
+/** Names the graph node an element shows, so right-clicking it opens that node's actions as the app's context menu. */
+export const CONTEXT_MENU_ATTRIBUTE = 'data-dx-context';
+
+/** Props that make an element open the context menu of the graph node `id`. */
+export const contextMenuProps = (id: string): Record<typeof CONTEXT_MENU_ATTRIBUTE, string> => ({
+  [CONTEXT_MENU_ATTRIBUTE]: id,
 });

@@ -27,6 +27,7 @@
     "check-public-dependencies": "node scripts/check-public-dependencies.mjs",
     "check-publish-config": "node scripts/check-publish-config.mjs",
     "create-worktree": "./scripts/create-worktree",
+    "deus": "node --conditions=source packages/reflect/deus/bin/deus.ts",
     "fixtures": "node tools/fixtures/bin/fixtures.mjs",
     "format": "oxfmt",
     "format-check": "oxfmt --check",

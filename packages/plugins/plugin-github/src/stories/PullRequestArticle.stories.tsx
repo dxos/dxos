@@ -4,16 +4,22 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import React, { useMemo } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as Credential from '@dxos/compute/Credential';
+import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
+import { DXN } from '@dxos/echo';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { PullRequest } from '@dxos/types';
@@ -42,6 +48,33 @@ const handlers = OperationHandlerSet.make(
   Operation.withHandler(GitHubOperation.SyncPullRequest, () => Effect.succeed({ updated: [] })),
   Operation.withHandler(GitHubOperation.GetPullRequestDiff, () => Effect.succeed({ diff: PULL_REQUEST_13363_PATCH })),
   Operation.withHandler(LayoutOperation.AddToast, () => Effect.void),
+);
+
+// The GitHub operations declare `CredentialsService`, so the invoker resolves one before the fixture
+// handlers above run; none of them reads it. LayerSpecs are snapshotted at boot, so this rides Startup.
+const StoryCredentialsPlugin = Plugin.define(
+  Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.githubStoryCredentials'), name: 'GitHub Story Credentials' }),
+).pipe(
+  Plugin.addModule({
+    id: 'credentials',
+    activatesOn: ActivationEvents.Startup,
+    provides: [Capabilities.LayerSpec],
+    activate: () =>
+      Effect.succeed([
+        Capability.contribute(
+          Capabilities.LayerSpec,
+          LayerSpec.make({ affinity: 'application', requires: [], provides: [Credential.CredentialsService] }, () =>
+            Layer.succeed(Credential.CredentialsService, {
+              queryCredentials: async () => [],
+              getCredential: async () => {
+                throw new Error('The story has no credentials.');
+              },
+            }),
+          ),
+        ),
+      ]),
+  }),
+  Plugin.make,
 );
 
 // Built inside the render function so each mount gets its own object.
@@ -74,7 +107,7 @@ const meta = {
         Capability.contribute(AppCapabilities.Translations, translations),
         Capability.contribute(Capabilities.OperationHandler, handlers),
       ],
-      plugins: [...CorePlugins.make()],
+      plugins: [...CorePlugins.make(), StoryCredentialsPlugin()],
     }),
   ],
   parameters: { layout: 'fullscreen', translations },

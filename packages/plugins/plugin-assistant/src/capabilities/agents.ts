@@ -16,12 +16,16 @@ import { composerTurnProducer } from './turn-producers.ts';
 export default Capability.makeModule(
   Effect.fnUntraced(function* (options: AssistantOptions.AssistantPluginOptions | void) {
     const manager = yield* Capability.Service;
-    return Capability.contribute(AssistantCapabilities.Agent, {
-      id: SessionConfig.COMPOSER_HARNESS,
-      label: 'Composer',
-      icon: 'ph--sparkle--regular',
-      availability: Atom.make<AssistantCapabilities.AgentAvailability>({ available: true }),
-      makeTurnProducer: composerTurnProducer(manager, options?.codeModeTurnProducer?.(manager)),
-    });
+    return [
+      Capability.contribute(AssistantCapabilities.Agent, {
+        id: SessionConfig.COMPOSER_HARNESS,
+        label: 'Composer',
+        icon: 'ph--sparkle--regular',
+        locations: ['local', 'edge'],
+        availability: Atom.make<AssistantCapabilities.AgentAvailability>({ available: true }),
+        makeTurnProducer: composerTurnProducer(manager, options?.codeModeTurnProducer?.(manager)),
+      }),
+      ...(options?.codeModeTurnProducer ? [Capability.contribute(AssistantCapabilities.CodeModeAvailable, true)] : []),
+    ];
   }),
 );

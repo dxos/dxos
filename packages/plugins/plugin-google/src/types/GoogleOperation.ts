@@ -106,7 +106,7 @@ export const GoogleCalendarSync = Operation.make({
   output: Schema.Struct({
     newEvents: Schema.Number,
   }),
-  services: [Database.Service, Credential.CredentialsService],
+  services: [Database.Service, Credential.CredentialsService, Trace.TraceService],
 }).pipe(Operation.visible);
 
 export const MaterializeGoogleCalendarTarget = Operation.make({
@@ -165,5 +165,5 @@ export const GoogleContactsSync = Operation.make({
   output: Schema.Struct({
     upserted: Schema.Number,
   }),
-  services: [Database.Service, Credential.CredentialsService],
+  services: [Database.Service, Credential.CredentialsService, Trace.TraceService],
 }).pipe(Operation.visible);

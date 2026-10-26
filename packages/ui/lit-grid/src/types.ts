@@ -72,6 +72,14 @@ export type DxGridCellValue = {
    */
   className?: string;
   /**
+   * A CSS color painted behind the cell (e.g. a highlight the user picked), for colors no class can name.
+   */
+  background?: string;
+  /**
+   * A CSS color for the cell's text, to keep it readable over `background`.
+   */
+  foreground?: string;
+  /**
    * `data-refs` attribute to apply to the gridcell element.
    */
   dataRefs?: string;

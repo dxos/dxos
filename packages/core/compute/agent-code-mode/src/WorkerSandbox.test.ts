@@ -10,6 +10,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { callTool } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -29,10 +30,13 @@ const PERSON_TYPENAME = 'com.example.type.person';
 const TASK_DXN = String(DXN.make(TASK_TYPENAME, '0.1.0'));
 const PERSON_DXN = String(DXN.make(PERSON_TYPENAME, '0.1.0'));
 
+/** Declared on `Person`, so a printed person names it: the worker rebuilds types without it unless it is carried. */
+const PEOPLE_SKILL = 'com.example.skill.people';
+
 class Person extends Type.makeObject<Person>(DXN.make(PERSON_TYPENAME, '0.1.0'))(
   Schema.Struct({
     name: Schema.String,
-  }),
+  }).pipe(Skill.SkillsAnnotation.set([PEOPLE_SKILL])),
 ) {}
 
 class Task extends Type.makeObject<Task>(DXN.make(TASK_TYPENAME, '0.1.0'))(
@@ -102,6 +106,15 @@ const FileOperation: SandboxOperation = {
   definition: File,
   // Reached only through `Operation.invoke`, which runs the definition rather than the tool.
   invoke: () => Effect.die(new Error('not used')),
+};
+
+/** Stands in for an MCP server's tool: no operation backs it, so the worker must not resolve one for it. */
+const WeatherTool: SandboxOperation = {
+  name: 'get_weather',
+  description: 'Returns the current weather for a city.',
+  parameters: { type: 'object', properties: { city: { type: 'string' } } },
+  invoke: (input: unknown) =>
+    Effect.sync(() => `Sunny in ${Schema.decodeUnknownSync(Schema.Struct({ city: Schema.String }))(input).city}`),
 };
 
 /**
@@ -212,7 +225,7 @@ describe('worker sandbox', () => {
     expect(output).toEqual('tasks 1 tagged Failure');
   }, 60_000);
 
-  test('prints a live object as its JSON', async () => {
+  test('prints a live object as its card', async () => {
     const { db, run } = await setup();
     db.add(Obj.make(Task, { title: 'Write the docs', status: 'open' }));
     await db.flush();
@@ -221,8 +234,8 @@ describe('worker sandbox', () => {
       const [task] = await query('${TASK_TYPENAME}');
       print('task:', task);
     `);
-    expect(output).toContain('task: {');
-    expect(output).toContain('"title": "Write the docs"');
+    expect(output).toMatch(new RegExp(`^task: ${TASK_TYPENAME} \\w+`));
+    expect(output).toContain('  title: "Write the docs"');
   }, 60_000);
 
   test('shows a returned live object when nothing was printed', async () => {
@@ -231,7 +244,7 @@ describe('worker sandbox', () => {
     await db.flush();
 
     const output = await run(`return await query('${TASK_TYPENAME}');`);
-    expect(output).toContain('"title": "Write the docs"');
+    expect(output).toContain('  title: "Write the docs"');
   }, 60_000);
 
   test('reports a throw in the worker as a failed tool call rather than failing the turn', async () => {
@@ -290,6 +303,18 @@ describe('worker sandbox', () => {
       expect((await task.owner?.load())?.name).toEqual('Ada');
     }, 60_000);
 
+    test('a printed object names the skills its type declares, though the worker rebuilt the type', async () => {
+      const { db, runWith } = await setup();
+      const ada = db.add(Obj.make(Person, { name: 'Ada' }));
+      await db.flush();
+
+      const output = await runWith(
+        EffectDialect,
+        `yield* print((yield* Database.query(Filter.id('${ada.id}')).run)[0]);`,
+      );
+      expect(output).toContain(`  skills for this type: ${PEOPLE_SKILL}`);
+    }, 60_000);
+
     test('invokes a skill operation on the host through Operation.invoke', async () => {
       const { runWith } = await setup();
       scored.length = 0;
@@ -301,6 +326,16 @@ describe('worker sandbox', () => {
       expect(output).toEqual('scored 13');
       // The handler ran HERE: the worker only ever held a stand-in definition.
       expect(scored).toEqual(['Review the PR']);
+    }, 60_000);
+
+    test('calls a tool no operation backs through Tools, and never resolves it as an operation', async () => {
+      const { runWith } = await setup();
+
+      const output = await runWith(
+        EffectDialect,
+        `yield* print(yield* Tools.get_weather({ city: 'Paris' }), Object.keys(Tools).join(', '));`,
+      );
+      expect(output).toEqual('Sunny in Paris get_weather');
     }, 60_000);
 
     test('passes a stored object to an operation as that same object', async () => {
@@ -413,7 +448,7 @@ const setup = async () => {
           dialect,
           sandbox,
           runtime,
-          operations: [ScoreOperation, FileOperation],
+          operations: [ScoreOperation, FileOperation, WeatherTool],
           timeout,
         });
         const result = yield* callTool(yield* toolkit.handlers, {

@@ -316,20 +316,20 @@ describe('create subscription', () => {
     expect(fires).to.equal(baseline);
 
     Obj.update(task, (task) => {
-      Obj.getMeta(task).tags.push(Ref.make(urgent));
+      Obj.getMeta(task).tags.push(urgent);
     });
     expect(fires).to.equal(baseline + 1);
 
     Obj.update(task, (task) => {
-      Obj.getMeta(task).tags.splice(0, 1, Ref.make(urgent));
+      Obj.getMeta(task).tags.splice(0, 1, urgent);
     });
     expect(fires).to.equal(baseline + 1);
 
     Obj.update(task, (task) => {
-      Obj.getMeta(task).tags.push(Ref.make(later));
+      Obj.getMeta(task).tags.push(later);
     });
     expect(fires).to.equal(baseline + 2);
-    expect(registry.get(tagsAtom).map((ref) => ref.peek()?.label)).to.deep.equal(['urgent', 'later']);
+    expect(registry.get(tagsAtom).map((tag) => tag.label)).to.deep.equal(['urgent', 'later']);
   });
 
   test('a ref read off a snapshot resolves and keys the same property atom as the live ref (db-backed)', async () => {

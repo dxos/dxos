@@ -443,7 +443,7 @@ decision D-2: Bounds grow to the major grid. Fills in [D-1].
   why: Growing to the minor grid re-lays the canvas on every drag step.
 ```
 
-- **Every change adds a decision.** `scripts/check-changelog.ts` enforces this in CI. It tolerates
+- **Every change adds a decision.** `deus changelog check` enforces this in CI. It tolerates
   trivial edits (whitespace, small typo fixes), and a `Spec-Changelog-Skip: <reason>` commit
   trailer waives it for a bulk mechanical edit. It also rejects edits to existing entries: a
   reversal is a new entry with `supersedes: D-n`.
