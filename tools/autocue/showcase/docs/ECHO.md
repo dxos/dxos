@@ -1,8 +1,8 @@
 # ECHO video (60s): talking points
 
-Candidate points for each slide of the ECHO explainer (`ECHO.m4v`, rendered from `temp/flow-60s.mp4` in the
-`data-molecule-animation` worktree). Pick two or three per slide for the spoken line; each slide has about 10s,
-so about 25 words. Points marked _(verify)_ make a claim that needs checking against the code before it is spoken.
+Talking points for each slide of the ECHO explainer (`ECHO.m4v`, rendered from `temp/flow-60s.mp4` in the
+`data-molecule-animation` worktree), with a draft spoken line for each. A slide has about 10s, so about 25–30 words
+at a natural pace. Points marked _(verify)_ make a claim that needs checking against the code before it is spoken.
 
 ## 0. Open: DXOS (0–3s)
 
@@ -10,40 +10,51 @@ so about 25 words. Points marked _(verify)_ make a claim that needs checking aga
 
 ## 1. The Silo Problem (3–13s)
 
-- Every kind of work lives in a different vendor's app: mail, documents, finance, operations.
-- Each vendor keeps its own copy of your data, in its own format, on its own servers.
-- You rent access to your own data, and lose it when you stop paying or the vendor shuts down.
-- Nothing connects the silos: the same customer, project or decision is scattered across them.
-- Integrations are point-to-point glue that each team builds and maintains for itself.
-- Context, which is what makes data useful, is lost at every boundary.
+- Data silos are decades old: they are the natural result of the way SaaS has always been built.
+- Each app keeps its own copy of your data, in its own format, on its own servers.
+- Two things have changed.
+- First, SaaS is now easy to build, so the number of apps, and of silos, keeps growing.
+- Second, agents are only as useful as the data they can reach: to be at their best, they need all of it.
+- Giving agents that access safely is essential, and it needs a new security model.
+
+**Spoken (draft, 29 words):** "SaaS has siloed our data for decades. Now apps are easy to build, and agents need all of
+our data to be useful. That demands a new security model."
 
 ## 2. Monolithic Agents (13–23s)
 
-- Agents are the new way to get work done, and to be useful they need context from everywhere.
-- Today that means one OAuth grant per silo, each one all-or-nothing.
-- The agent ends up with unrestricted access to everything, with no way to scope it to a task.
-- Your data leaves your control and flows to the agent vendor's cloud.
-- There is no record of what an agent read or changed, or why.
-- The more capable agents become, the bigger this risk gets.
+- Today users grant agents coarse-grained access: one all-or-nothing grant per app.
+- Once granted, the agent can read and change everything behind it.
+- There is no audit of what an agent read or changed, and no control over how it uses the data.
+- The risk grows as agents run continuously, rather than answering one prompt at a time.
+- It grows again as those agents mix private data with enterprise data.
+- The more agents we run, the more dangerous this approach becomes.
+
+**Spoken (draft, 29 words):** "Today we grant agents coarse access to everything, with no audit and no control. As agents run
+continuously, across both private and enterprise data, that becomes more dangerous every day."
 
 ## 3. ECHO Graph Database (23–33s)
 
-- ECHO brings all of that data into one graph that you own.
-- Local-first: the data lives on your devices and works offline; the cloud is a peer, not the owner.
-- Typed objects with schema: a message, a task, a person and a sheet are all first-class objects.
-- References and relations link objects across apps, so context survives instead of being copied.
-- Live queries and indexing by context, so people and agents find what matters.
-- Real-time collaboration built in: changes merge automatically (CRDTs, built on Automerge).
+- ECHO brings your data into a single logical graph.
+- Mail, documents, finance and operations become typed objects in that one graph, not copies in separate apps.
+- References link objects across what used to be separate apps, so context is kept, not lost.
+- People and agents query the same graph, so an agent sees the same context a person does.
+- Local-first: the graph lives on your devices and works offline.
+- Changes from many people and agents merge automatically, in real time.
+
+**Spoken (draft, 24 words):** "ECHO takes a different approach. It brings all your data into a single logical graph, so people
+and agents work from the same context."
 
 ## 4. ECHO Hypergraph (33–43s)
 
-- The graph is partitioned into spaces: secure workspaces for a person, a team, a project or a customer.
-- Each space has its own members, and access is granted per space, not per vendor.
-- Identity and membership come from HALO: keys and credentials you hold, not an account on someone's server.
-  _(verify the wording on keys and credentials)_
-- Agents get their own identities and join only the spaces they need, with permissions you choose.
-- Spaces replicate peer-to-peer, and through EDGE when devices are offline. _(verify the EDGE wording)_
-- Objects can still reference across spaces, so the whole remains one hypergraph.
+- The single graph is partitioned into secure containers, called spaces.
+- Each space is shared with exactly the colleagues and agents who need it.
+- An agent joins only the spaces its task needs, so its access is fine-grained, not all-or-nothing.
+- Spaces can span organizational boundaries: a space can be shared with a customer, a partner or a contractor.
+- Objects can reference each other across spaces, so the graph stays one logical whole.
+- Every change in a space is attributed to the person or agent who made it. _(verify)_
+
+**Spoken (draft, 30 words):** "That graph is partitioned into secure spaces. Share each one with the colleagues and agents who
+need it, even across organizations, and every agent sees only what its task requires."
 
 ## 5. Open and Extensible (43–60s)
 
