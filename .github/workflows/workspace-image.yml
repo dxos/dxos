@@ -14,8 +14,6 @@ on:
   push:
     branches:
       - main
-      # TODO(dmaretskyi): Remove before merging; pushes to this branch exercise the actions.
-      - claude/workspace-image-mount
     paths:
       - .github/actions/workspace-snapshot/**
       - .github/actions/setup/action.yml
