@@ -120,7 +120,7 @@ component PresentationRecordingsArticle
   desc: >
     The Recordings companion of a Presentation, on RecordingsPanel. The toolbar records every slide (a take per
     slide), plays every main take in order, and downloads them as one WAV. The presented slides are a list with
-    columns: number and title (no leading icon), take count, main take's length, desired
+    columns: a circle (a green check circle when the slide has a main take), the title, take count, main take's length, desired
     length, then Play (its main take); a double-click opens the slide.
   props: { presentation: Presentation }
 
@@ -446,4 +446,12 @@ decision D-31: The presentation companion's rows have no leading icon; the slide
   date: 2026-10-26
   by: user:richburdon
   affects: [SlideRecordingsArticle, PresentationRecordingsArticle]
+```
+
+```mdl
+decision D-32: The presentation companion's rows show a circle (a check circle when the slide has a main take) and no slide number; a slide with no takes shows empty cells; actual and desired lengths share a color. Supersedes the no-leading-icon part of [D-31].
+  date: 2026-10-26
+  by: user:richburdon
+  supersedes: D-31
+  affects: [PresentationRecordingsArticle, RecordingsPanel]
 ```

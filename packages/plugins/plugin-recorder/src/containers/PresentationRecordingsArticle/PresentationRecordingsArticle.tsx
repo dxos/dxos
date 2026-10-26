@@ -185,6 +185,7 @@ export const PresentationRecordingsArticle = ({
             stop();
           }
         }}
+        marks
         onToggle={(item) => item.take && handlePlay(item.id)}
         onOpen={(item) => handleOpen(item.id)}
         actions={(item) => [
@@ -211,7 +212,7 @@ const useVoicedSlides = (
   const atom = useMemo(
     () =>
       Atom.make((get) =>
-        get(Obj.atomProperty(presentation, 'slides')).flatMap((ref, index): SlideRow[] => {
+        get(Obj.atomProperty(presentation, 'slides')).flatMap((ref): SlideRow[] => {
           const slide = get(Obj.atom(ref));
           if (!slide || slide.hidden) {
             return [];
@@ -223,11 +224,11 @@ const useVoicedSlides = (
           return [
             {
               id: slide.id,
-              index,
               title: slide.title ?? headingOf(text) ?? (content ? Obj.getLabel(content) : undefined) ?? slide.id,
               description: slide.takes?.length ? t('take-count.label', { count: slide.takes.length }) : undefined,
               duration: takeLog?.duration,
               desired: slide.duration,
+              main: !!slide.mainTake,
               take: slide.mainTake?.target,
             },
           ];

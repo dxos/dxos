@@ -26,9 +26,9 @@ const takes: RecordingItem[] = [
 ];
 
 const slides: RecordingItem[] = [
-  { id: 'a', index: 0, title: 'The Silo Problem', description: '3 takes', duration: 14.4, desired: 15, main: true },
-  { id: 'b', index: 1, title: 'Monolithic Agents', description: '1 take', duration: 13.2, desired: 12, main: true },
-  { id: 'c', index: 2, title: 'ECHO Graph Database', desired: 20 },
+  { id: 'a', title: 'The Silo Problem', description: '3 takes', duration: 14.4, desired: 15, main: true },
+  { id: 'b', title: 'Monolithic Agents', description: '1 take', duration: 13.2, desired: 12, main: true },
+  { id: 'c', title: 'ECHO Graph Database', desired: 20 },
 ];
 
 type StoryProps = {

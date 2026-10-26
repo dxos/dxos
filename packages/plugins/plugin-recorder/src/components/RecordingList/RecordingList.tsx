@@ -37,8 +37,6 @@ export type RecordingItem = {
   main?: boolean;
   /** The take is not saved yet. */
   error?: boolean;
-  /** Position shown before the title (a slide's number). */
-  index?: number;
 };
 
 /** A button in a row's trailing cells. */
@@ -57,7 +55,9 @@ export type RecordingListProps<T extends RecordingItem = RecordingItem> = {
   onValueChange?: (id: string) => void;
   /** Accessible name of the list. */
   label: string;
-  /** Makes a row's leading check a toggle that marks it main; without it the row has no leading icon. */
+  /** Shows each row's main mark (a circle, a green check circle when main) as a read-only status. */
+  marks?: boolean;
+  /** Makes each row's main mark a toggle that marks it main. */
   onMain?: (item: T) => void;
   /** Space on the current row plays or stops it. */
   onToggle?: (item: T) => void;
@@ -79,6 +79,7 @@ export const RecordingList = <T extends RecordingItem>({
   value,
   onValueChange,
   label,
+  marks,
   onMain,
   onToggle,
   onOpen,
@@ -89,7 +90,7 @@ export const RecordingList = <T extends RecordingItem>({
   const contentRef = useRef<HTMLDivElement>(null);
   const options = useMemo(() => items.map((item) => ({ value: item.id, label: item.title })), [items]);
   // The leading cell holds the main-take check (or an unsaved take's warning); a list with neither has none.
-  const leading = !!onMain || items.some((item) => item.error);
+  const leading = marks || !!onMain || items.some((item) => item.error);
   const description = items.some((item) => item.description);
   const desired = items.some((item) => item.desired !== undefined);
   const actionCount = items[0] && actions ? actions(items[0]).length : 0;
@@ -156,26 +157,27 @@ export const RecordingList = <T extends RecordingItem>({
                   <Listbox.ItemIcon>
                     {item.error ? (
                       <Icon.Icon icon='ph--warning--regular' classNames='text-error-text' />
+                    ) : onMain ? (
+                      <SystemButton.Check
+                        data-testid='recorder.item.main'
+                        iconOnly
+                        variant='ghost'
+                        label={t(item.main ? 'main-take.label' : 'select-take.label')}
+                        pressed={!!item.main}
+                        onPressedChange={(pressed) => pressed && onMain(item)}
+                      />
                     ) : (
-                      onMain && (
-                        <SystemButton.Check
-                          data-testid='recorder.item.main'
-                          iconOnly
-                          variant='ghost'
-                          label={t(item.main ? 'main-take.label' : 'select-take.label')}
-                          pressed={!!item.main}
-                          onPressedChange={(pressed) => pressed && onMain(item)}
+                      marks && (
+                        <Icon.Icon
+                          data-testid='recorder.item.mark'
+                          icon={item.main ? 'ph--check-circle--fill' : 'ph--circle--regular'}
+                          classNames={mx(item.main ? 'text-success-text' : 'text-fg-subtle')}
                         />
                       )
                     )}
                   </Listbox.ItemIcon>
                 )}
-                <Listbox.ItemText classNames='tabular-nums'>
-                  {item.index !== undefined && (
-                    <span className='me-1.5 tabular-nums text-fg-subtle'>{item.index + 1}</span>
-                  )}
-                  {item.title}
-                </Listbox.ItemText>
+                <Listbox.ItemText classNames='tabular-nums'>{item.title}</Listbox.ItemText>
                 {/* Each text column pads both sides, so neighbouring values never run together. */}
                 {description && (
                   <span
