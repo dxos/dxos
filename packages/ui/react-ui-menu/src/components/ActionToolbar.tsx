@@ -470,9 +470,16 @@ const useCollapse = (menu: MenuActions, units: MenuItem[], rows: RefObject<(HTML
 
   const [count, setCount] = useState(0);
   const thresholds = useRef<number[]>([]);
-  const [, setWidth] = useState(0);
+  const [width, setWidth] = useState(0);
+  // Ids rather than the items: `collapsible` is rebuilt whenever a caller passes a fresh `onAction`.
+  const collapsibleKey = collapsible.map((item) => item.id).join('\n');
 
+  // Each read forces a layout, so measure only when the items (a new label or icon-only flag yields new items), the
+  // collapsible set, the collapse count or the frame width moved.
   useLayoutEffect(() => {
+    if (collapsible.length === 0 && count === 0) {
+      return;
+    }
     const elements = rows.current.filter((row): row is HTMLElement => !!row);
     if (elements.length === 0) {
       return;
@@ -489,7 +496,7 @@ const useCollapse = (menu: MenuActions, units: MenuItem[], rows: RefObject<(HTML
     } else if (!overflowing && count > 0 && width > (thresholds.current[count - 1] ?? Infinity)) {
       setCount(count - 1);
     }
-  });
+  }, [units, collapsibleKey, count, width]);
 
   // Re-render on resize only when something can collapse.
   const observed = collapsible.length > 0;

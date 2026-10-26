@@ -16,6 +16,7 @@ import { Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import * as Feature from './Feature.ts';
+import * as FeatureLink from './FeatureLink.ts';
 import * as Showcase from './Showcase.ts';
 
 /**
@@ -58,6 +59,12 @@ export const Create = Operation.make({
     name: Schema.String,
     description: Schema.optional(Schema.String),
     status: Schema.optional(Feature.Status.annotate({ description: 'Defaults to planned.' })),
+    key: Schema.optional(
+      DXN.NameSchema.annotate({
+        description:
+          "The feature's meta.key, a dotted name such as network.dxos.team.features.mcp.codeMode. Code cites the feature as dxn:<key>#<mnemonic>.",
+      }),
+    ),
     specs: Schema.optional(Schema.Array(Schema.String)),
     project: Schema.optional(
       Ref.Ref(Project.Project).annotate({ description: "Lists the new feature on this project's features." }),
@@ -72,7 +79,7 @@ export const Update = Operation.make({
     name: 'Update feature',
     icon: 'ph--pencil-simple--regular',
     description: trim`
-      Changes a feature's name, description, status, specs, subfeatures or project; fields left out are kept.
+      Changes a feature's key, name, description, status, specs, subfeatures or project; fields left out are kept.
       A project moves the feature onto that project's features; null takes it off any project.
       Subfeatures are the feature's parts, each with its own status, and replace the whole list when given.
       Set status when you observe it: in-progress when work starts, prototype when it works in a demo,
@@ -83,6 +90,9 @@ export const Update = Operation.make({
   types: [Feature.Feature, Project.Project],
   input: Schema.Struct({
     feature: Ref.Ref(Feature.Feature),
+    key: Schema.optional(
+      Schema.NullOr(DXN.NameSchema).annotate({ description: "Sets the feature's meta.key; null removes it." }),
+    ),
     name: Schema.optional(Schema.String),
     description: Schema.optional(Schema.String),
     status: Schema.optional(Feature.Status),
@@ -174,6 +184,7 @@ export const CreateShowcase = Operation.make({
 /** One feature as an agent reads it: ids to load more, and the joins its card shows. */
 export const FeatureSummary = Schema.Struct({
   id: Schema.String,
+  link: Schema.optional(Schema.String.annotate({ description: 'The DXN code cites the feature by in @feature tags.' })),
   name: Schema.String,
   status: Feature.Status,
   specs: Schema.Array(Schema.String),
@@ -199,3 +210,31 @@ export const GetFeatures = Operation.make({
   input: Schema.Struct({ project: Ref.Ref(Project.Project) }),
   output: Schema.Struct({ features: Schema.Array(FeatureSummary) }),
 }).pipe(Operation.mutation('none'));
+
+export const ImportLinks = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.projects.importFeatureLinks'),
+    name: 'Import feature links',
+    icon: 'ph--code--regular',
+    description: trim`
+      Records which code cites which feature. Pass the links the scan-feature-links script prints: each one is a
+      @feature tag's DXN and the file, line and symbol it documents. Each DXN is resolved against the features of
+      this space; every feature that resolves has its code links replaced by the ones given for it. Links that do
+      not resolve are returned with their status.
+    `,
+  },
+  services: [Database.Service],
+  types: [Feature.Feature],
+  input: Schema.Struct({ links: Schema.Array(FeatureLink.Link) }),
+  output: Schema.Struct({
+    features: Schema.Number.annotate({ description: 'How many features had their code links replaced.' }),
+    unresolved: Schema.Array(
+      Schema.Struct({ dxn: Schema.String, path: Schema.String, line: Schema.Number, status: FeatureLink.Status }),
+    ),
+    outdated: Schema.Array(
+      Schema.Struct({ dxn: Schema.String, link: Schema.String, status: FeatureLink.Status }).annotate({
+        description: 'Links that resolved by key or mnemonic alone, with the DXN the tag should cite instead.',
+      }),
+    ),
+  }),
+}).pipe(Operation.mutation('write'));

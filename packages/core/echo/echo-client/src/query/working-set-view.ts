@@ -12,7 +12,7 @@ import { resolveMergeRedirect } from '@dxos/echo/internal';
 import { EID, EntityId, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type ItemsUpdatedEvent, type ObjectCore } from '../core-db/index.ts';
+import { type DeletionMemo, type ItemsUpdatedEvent, type ObjectCore } from '../core-db/index.ts';
 import { type FeedHandle } from '../feed/feed-handle.ts';
 import { type DatabaseImpl } from '../proxy-db/index.ts';
 import { type MergePlan, createMergePlan, evaluateCore, matchesFeedSelection, ordersLocally } from './merge-plan.ts';
@@ -130,7 +130,7 @@ export class WorkingSetView {
    * Every object with an unindexed local write that local evaluation admits under the plan's flat filter and `admit`
    * accepts by its document data, with that data.
    */
-  matchLocal(plan: MergePlan, admit?: (data: EntityStructure['data']) => boolean): LocalMatch[] {
+  matchLocal(plan: MergePlan, admit?: (data: EntityStructure['data']) => boolean, memo?: DeletionMemo): LocalMatch[] {
     const matches: LocalMatch[] = [];
     // Only an object with a local write the index has not seen can be missing from an index answer.
     for (const id of this._database.unindexedWrites()) {
@@ -141,7 +141,7 @@ export class WorkingSetView {
         core &&
         data !== undefined &&
         (admit === undefined || admit(data)) &&
-        evaluateCore(plan, core) === true &&
+        evaluateCore(plan, core, memo) === true &&
         // Every other working-set result waits for its strong dependencies, so an admitted one does too.
         this._database.areStrongDepsSatisfied(core)
       ) {

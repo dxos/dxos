@@ -8,8 +8,10 @@ import * as Decision from 'effect/ai/Decision';
 import * as DecisionModel from 'effect/ai/DecisionModel';
 import * as LanguageModel from 'effect/ai/LanguageModel';
 import type * as Prompt from 'effect/ai/Prompt';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { Model as AiModel, AiService } from '@dxos/ai';
@@ -23,6 +25,7 @@ import { CodeGraph } from '#types';
 import { addPatch, removeNodes } from '../operations/util.ts';
 import * as Budget from './Budget.ts';
 import * as Filter from './Filter.ts';
+import * as Grounding from './Grounding.ts';
 
 /** Fast enough for a command bar; the loop needs one short structured answer per turn. */
 export const COMMAND_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
@@ -79,6 +82,19 @@ export type Turn = {
 
 export type StopReason = 'done' | 'judge' | 'limit' | 'error';
 
+/** One timed step of a command, for the verbose view and the log. */
+export type TraceEvent = {
+  kind: 'ground' | 'model' | 'add' | 'remove' | 'judge';
+  /** The model turn the step belongs to, from 1; 0 for the lookup before the first turn. */
+  turn: number;
+  ms: number;
+  /** A one-line summary, e.g. `3 rows → +3 boxes`. */
+  label: string;
+  /** The query, filter or the model's sentence. */
+  detail?: string;
+  error?: string;
+};
+
 export type Result = {
   message: string;
   turns: Turn[];
@@ -86,6 +102,8 @@ export type Result = {
   removedNodes: number;
   trailer?: Budget.Trailer;
   stop: StopReason;
+  trace: TraceEvent[];
+  elapsedMs: number;
 };
 
 /** Decides between turns whether the command is carried out; returns the probability that it is. */
@@ -123,7 +141,12 @@ export type Options = {
   maxNodes?: number;
   /** Asked between turns; without one, the loop goes on only after a failed or empty action. */
   judge?: Judge;
+  /** Finds the resources the command names before the first model call, so the model need not guess names. */
+  ground?: (command: string) => Effect.Effect<readonly Grounding.Candidate[]>;
 };
+
+/** Grounding is a hint; past this the command goes ahead without it rather than wait. */
+const GROUND_TIMEOUT = Duration.millis(1500);
 
 /**
  * Carries out one typed or spoken command on a graph. The model sees the graph and may only add query results or
@@ -134,24 +157,59 @@ export type Options = {
 export const run = Effect.fn('CodeGraphCommand.run')(function* (
   graph: CodeGraph.CodeGraph,
   command: string,
-  { maxTurns = DEFAULT_MAX_TURNS, maxNodes = Budget.DEFAULT_MAX_NODES, judge }: Options = {},
+  { maxTurns = DEFAULT_MAX_TURNS, maxNodes = Budget.DEFAULT_MAX_NODES, judge, ground }: Options = {},
 ) {
+  const started = yield* Effect.clockWith((clock) => clock.currentTimeMillis);
   const turns: Turn[] = [];
+  const trace: TraceEvent[] = [];
+  const record = (event: TraceEvent) => {
+    trace.push(event);
+    log.info('code graph command step', { command, ...event });
+  };
+  let grounding = '';
+  if (ground) {
+    const [groundTime, candidates] = yield* ground(command).pipe(
+      Effect.timeoutOption(GROUND_TIMEOUT),
+      Effect.map(Option.getOrUndefined),
+      Effect.timed,
+    );
+    record({
+      kind: 'ground',
+      turn: 0,
+      ms: Duration.toMillis(groundTime),
+      label: candidates ? `${candidates.length} candidates` : 'timed out; skipped',
+      ...(candidates && candidates.length > 0 && { detail: candidates.map(({ label }) => label).join(', ') }),
+    });
+    grounding = candidates ? Grounding.describe(candidates) : '';
+  }
   const history: Prompt.MessageEncoded[] = [
     { role: 'system', content: SYSTEM },
-    { role: 'user', content: `${describeGraph(graph)}\n\nCommand: ${command}` },
+    {
+      role: 'user',
+      content: [describeGraph(graph), grounding, `Command: ${command}`].filter((part) => part.length > 0).join('\n\n'),
+    },
   ];
   let budget = maxNodes;
   let stop: StopReason = 'limit';
 
   for (let index = 0; index < maxTurns; index++) {
-    const response = yield* LanguageModel.generateObject({
+    const turnNumber = index + 1;
+    const [modelTime, response] = yield* LanguageModel.generateObject({
       prompt: history,
       schema: Step,
       objectName: 'step',
-    }).pipe(Effect.catch((error) => Effect.succeed({ error })));
+    }).pipe(
+      Effect.catch((error) => Effect.succeed({ error })),
+      Effect.timed,
+    );
     if ('error' in response) {
-      log.info('command model failed', { error: response.error });
+      record({
+        kind: 'model',
+        turn: turnNumber,
+        ms: Duration.toMillis(modelTime),
+        label: 'failed',
+        error: String(response.error),
+      });
       if (turns.length === 0) {
         return yield* Effect.fail(response.error);
       }
@@ -159,9 +217,18 @@ export const run = Effect.fn('CodeGraphCommand.run')(function* (
       break;
     }
     const step = response.value;
+    const usage = response.usage;
+    record({
+      kind: 'model',
+      turn: turnNumber,
+      ms: Duration.toMillis(modelTime),
+      label: `${step.actions.length} action${step.actions.length === 1 ? '' : 's'} · ${usage.inputTokens.total ?? '?'} in / ${usage.outputTokens.total ?? '?'} out tokens`,
+      detail: step.message,
+    });
     const results: ActionResult[] = [];
     for (const action of step.actions) {
-      const result = yield* apply(graph, action, budget);
+      const [actionTime, result] = yield* apply(graph, action, budget).pipe(Effect.timed);
+      record(actionEvent(turnNumber, Duration.toMillis(actionTime), result));
       budget -= result.addedNodes;
       results.push(result);
     }
@@ -189,12 +256,20 @@ export const run = Effect.fn('CodeGraphCommand.run')(function* (
         stop = 'done';
         break;
       }
-      const done = yield* judge({ command, graph: describeGraph(graph), lastTurn: report }).pipe(
-        Effect.tapError((error) => Effect.sync(() => log.info('judge failed', { error }))),
-        Effect.orElseSucceed(() => 1),
+      const [judgeTime, verdict] = yield* judge({ command, graph: describeGraph(graph), lastTurn: report }).pipe(
+        Effect.map((done) => ({ done })),
+        Effect.catch((error) => Effect.succeed({ done: 1, error: String(error) })),
+        Effect.timed,
       );
-      turn.done = done;
-      if (done >= DONE_THRESHOLD) {
+      record({
+        kind: 'judge',
+        turn: turnNumber,
+        ms: Duration.toMillis(judgeTime),
+        label: 'error' in verdict ? 'failed; treated as done' : `done p=${verdict.done.toFixed(2)}`,
+        ...('error' in verdict && { error: verdict.error }),
+      });
+      turn.done = verdict.done;
+      if (verdict.done >= DONE_THRESHOLD) {
         stop = 'judge';
         break;
       }
@@ -209,6 +284,7 @@ export const run = Effect.fn('CodeGraphCommand.run')(function* (
   }
 
   const results = turns.flatMap(({ results }) => results);
+  const ended = yield* Effect.clockWith((clock) => clock.currentTimeMillis);
   return {
     message: turns.findLast(({ step }) => step.message.length > 0)?.step.message ?? '',
     turns,
@@ -219,17 +295,39 @@ export const run = Effect.fn('CodeGraphCommand.run')(function* (
       undefined,
     ),
     stop,
+    trace,
+    elapsedMs: ended - started,
   } satisfies Result;
 });
+
+const actionEvent = (turn: number, ms: number, result: ActionResult): TraceEvent => {
+  const { action, rows, addedNodes, addedEdges, removedNodes, error } = result;
+  const base = {
+    kind: action.type,
+    turn,
+    ms,
+    detail: (action.type === 'add' ? action.sparql : action.filter) ?? '',
+    ...(error !== undefined && { error }),
+  };
+  if (error !== undefined) {
+    return { ...base, label: 'failed' };
+  }
+  return action.type === 'add'
+    ? {
+        ...base,
+        label: `${rows} rows → +${addedNodes} boxes, +${addedEdges} arrows${result.trailer ? ` (+${result.trailer.count} not shown)` : ''}`,
+      }
+    : { ...base, label: `−${removedNodes} boxes` };
+};
 
 /**
  * {@link run} with the command model and the default decision model from the AI service. Without a decision model
  * the command still runs, and stops after its first turn whose actions all succeed.
  */
 export const runWithAiService = Effect.fn('CodeGraphCommand.runWithAiService')(
-  function* (graph: CodeGraph.CodeGraph, command: string, options: Omit<Options, 'judge'> = {}) {
+  function* (graph: CodeGraph.CodeGraph, command: string, options: Omit<Options, 'judge' | 'ground'> = {}) {
     const judge = yield* resolveJudge;
-    return yield* run(graph, command, { ...options, judge }).pipe(
+    return yield* run(graph, command, { ...options, judge, ground: Grounding.ground }).pipe(
       Effect.provide(AiService.languageModel(COMMAND_MODEL)),
     );
   },
@@ -352,6 +450,18 @@ const SYSTEM = trim`
   - Symbol IRIs containing \`~\` or a \`/\` after the \`#\` are local references inside a symbol; filter them out with
     \`FILTER(!CONTAINS(STRAFTER(STR(?x), "#"), "~") && !CONTAINS(STRAFTER(STR(?x), "#"), "/"))\`.
 
+  Direction matters. "What X depends on" (or uses, imports) draws arrows FROM X: \`BIND(<X> AS ?from) ?from … ?to\`.
+  "What depends on X" (or uses X, imports X) draws arrows TO X: \`BIND(<X> AS ?to) ?from … ?to\`. When the command
+  names a kind ("which plugins", "which files", "which classes"), keep only that kind, e.g.
+  \`FILTER(STRSTARTS(?name, "@dxos/plugin-"))\` for plugins.
+
+  Each \`add\` is ONE SELECT query. To draw boxes and arrows together, UNION inside the WHERE clause (never two
+  SELECTs), as in the files example below.
+
+  When the message lists resources that match words in the command, they are exact IRIs from the index: use them
+  directly (\`VALUES ?to { <…> }\`), and pick the one the command means. Only fall back to matching names with
+  \`FILTER(CONTAINS(…))\` when none fits.
+
   Match what the user names loosely (\`CONTAINS(LCASE(…), "…")\` on names and paths): "ECHO" is @dxos/echo
   (packages/core/echo/echo), "HALO" is identity and devices (packages/core/halo/*: @dxos/halo, credentials, keyring),
   "MESH" is networking (packages/core/mesh/*). A service is usually a class symbol named Service or …Service.
@@ -371,6 +481,22 @@ const SYSTEM = trim`
     FILTER(CONTAINS(STR(?to), "/packages/core/echo/"))
     ?from deus:implDependsOn|deus:apiDependsOn|deus:operationRequires|deus:providesService ?to .
     FILTER(!CONTAINS(STRAFTER(STR(?from), "#"), "~") && !CONTAINS(STRAFTER(STR(?from), "#"), "/"))
+  }
+  # What a symbol depends on: arrows from it to the symbols it uses.
+  SELECT DISTINCT ?from ?to WHERE {
+    BIND(<${Iri.FILE}packages/core/echo/echo/src/Ref.ts#make> AS ?from)
+    ?from deus:implDependsOn|deus:apiDependsOn ?to .
+    FILTER(!CONTAINS(STRAFTER(STR(?to), "#"), "~") && !CONTAINS(STRAFTER(STR(?to), "#"), "/"))
+  }
+  # Which plugins use a package.
+  SELECT ?from ?to WHERE {
+    BIND(<${Iri.PACKAGE}@dxos/echo> AS ?to)
+    ?from deus:usesPackage ?to ; deus:name ?name . FILTER(STRSTARTS(?name, "@dxos/plugin-"))
+  }
+  # A package's files as boxes, and the imports between them as arrows.
+  SELECT ?node ?from ?to WHERE {
+    BIND(<${Iri.PACKAGE}@dxos/keys> AS ?pkg)
+    { ?node deus:publishedBy ?pkg } UNION { ?from deus:publishedBy ?pkg ; deus:imports ?to . ?to deus:publishedBy ?pkg }
   }
   # The files that import a file.
   SELECT ?from ?to WHERE { ?to deus:path "packages/core/echo/echo/src/Obj.ts" . ?from deus:imports ?to . }
@@ -392,4 +518,6 @@ export const toOutput = (result: Result) => ({
   addedNodes: result.addedNodes,
   removedNodes: result.removedNodes,
   ...(result.trailer && { trailer: result.trailer.text }),
+  elapsedMs: result.elapsedMs,
+  trace: result.trace,
 });

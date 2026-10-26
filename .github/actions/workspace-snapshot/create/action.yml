@@ -1,0 +1,93 @@
+name: Build workspace snapshot
+description: >
+  Turn the current workspace into the squashfs snapshot that `workspace-snapshot/mount` mounts, and push
+  it to GHCR. Call after checkout (full depth, `filter: blob:none`, as Check clones) and the setup action,
+  so node_modules, ~/.proto and ~/.moon match what a job would build. The remote cache certificates come
+  from the MOON_CACHE_* environment variables and never enter the image.
+
+inputs:
+  tags:
+    description: Space-separated tags to push in `repository`, e.g. `ws-<sha>-sqfs ws-latest-sqfs`.
+    required: true
+  repository:
+    description: The public GHCR repository the snapshots go to.
+    default: ghcr.io/dxos/gh-actions
+  username:
+    description: GHCR user for the push.
+    required: true
+  password:
+    description: GHCR token with `write:packages` on `repository`.
+    required: true
+
+outputs:
+  size:
+    description: The snapshot's size in bytes.
+    value: ${{ steps.image.outputs.size }}
+
+runs:
+  using: composite
+  steps:
+    # Only source, .git and node_modules survive, so no untracked leftover can mask a build bug. The stat
+    # settings keep the index valid once a mount changes every inode and ctime.
+    - name: Strip to source and dependencies
+      shell: bash
+      run: |
+        git clean -ffdxq -e node_modules
+        git config core.checkStat minimal
+        git config core.trustctime false
+
+    # Outputs and moon's local cache ship with the snapshot, so projects unchanged since it hit locally.
+    # A failed build still ships whatever built.
+    - name: Build into moon's local cache
+      shell: bash
+      run: |
+        mkdir -p .moon/certs
+        printf '%s\n' "$MOON_CACHE_CA_PEM" > .moon/certs/ca.pem
+        printf '%s\n' "$MOON_CACHE_CLIENT_PEM" > .moon/certs/client.pem
+        printf '%s\n' "$MOON_CACHE_CLIENT_KEY" > .moon/certs/client.key
+        moon exec --on-failure continue :build || echo "::warning:::build failed; shipping the partial cache"
+        rm -rf .moon/certs
+
+    # `moon setup` installs node and pnpm without proto's bins, which a mounted job puts on PATH.
+    - name: Link toolchain binaries
+      shell: bash
+      run: proto regen --bin
+
+    # One image, three trees, gathered under one root by bind mounts: the workspace, proto's toolchain and
+    # moon's home. zstd level 3 keeps reads cheap; heavier levels move the cost into every job's reads.
+    - name: Build image
+      id: image
+      shell: bash
+      run: |
+        sudo apt-get update -qq
+        sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends squashfs-tools >/dev/null
+        mkdir -p "$HOME/.moon"
+        sudo mkdir -p /mnt/stage/ws /mnt/stage/proto /mnt/stage/moon /mnt/snapshot
+        sudo chown "$(id -u):$(id -g)" /mnt/snapshot
+        sudo mount --bind "$GITHUB_WORKSPACE" /mnt/stage/ws
+        sudo mount --bind "$HOME/.proto" /mnt/stage/proto
+        sudo mount --bind "$HOME/.moon" /mnt/stage/moon
+        SECONDS=0
+        mksquashfs /mnt/stage /mnt/snapshot/workspace.sqfs -comp zstd -Xcompression-level 3 -noappend -no-progress -quiet
+        for target in /mnt/stage/ws /mnt/stage/proto /mnt/stage/moon; do sudo umount "$target"; done
+        size=$(stat -c %s /mnt/snapshot/workspace.sqfs)
+        echo "squashfs: ${SECONDS}s, $((size / 1000000)) MB"
+        echo "size=$size" >> "$GITHUB_OUTPUT"
+
+    - name: Push
+      shell: bash
+      env:
+        TAGS: ${{ inputs.tags }}
+        REPOSITORY: ${{ inputs.repository }}
+        USERNAME: ${{ inputs.username }}
+        PASSWORD: ${{ inputs.password }}
+        ORAS_VERSION: 1.2.3
+      run: |
+        curl -fsSL "https://github.com/oras-project/oras/releases/download/v${ORAS_VERSION}/oras_${ORAS_VERSION}_linux_amd64.tar.gz" |
+          sudo tar -xz -C /usr/local/bin oras
+        echo "$PASSWORD" | oras login ghcr.io -u "$USERNAME" --password-stdin
+        cd /mnt/snapshot
+        read -ra tags <<< "$TAGS"
+        oras push --no-tty "$REPOSITORY:${tags[0]}" workspace.sqfs:application/octet-stream >/dev/null
+        for tag in "${tags[@]:1}"; do oras tag "$REPOSITORY:${tags[0]}" "$tag" >/dev/null; done
+        echo "pushed $REPOSITORY:{${TAGS// /,}}"

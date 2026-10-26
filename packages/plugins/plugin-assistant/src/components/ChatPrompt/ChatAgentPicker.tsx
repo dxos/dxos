@@ -124,10 +124,10 @@ export const ChatAgentPicker = ({ chat, started, presets, preset, onPresetChange
             <Menu.Separator />
             <Menu.RadioItemGroup value={preset ?? ''} onValueChange={({ value }) => onPresetChange?.(value)}>
               <Menu.ItemGroupLabel>{t('model-picker.models.label')}</Menu.ItemGroupLabel>
-              {presets?.map(({ id, label, local }) => (
+              {presets?.map(({ id, label, local, icon }) => (
                 <Menu.RadioItem
                   key={id}
-                  item={{ value: id, label, disabled: local === true && location === 'edge' }}
+                  item={{ value: id, label, icon, disabled: local === true && location === 'edge' }}
                   data-testid={`assistant.models.${id}`}
                 />
               ))}

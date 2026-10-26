@@ -41,7 +41,7 @@ export const ExternalSpec = Schema.Struct({
   /** Provider-specific options; opaque here — providers validate their shape. */
   options: Schema.Record(Schema.String, Schema.Any).pipe(Schema.optional),
   /** Last-seen remote fields keyed by foreign id (matches `Obj.Meta.keys`); drives 3-way merge. */
-  snapshots: Schema.Record(Schema.String, Schema.Any).pipe(Schema.optional),
+  snapshots: Schema.Record(Schema.String, Schema.Any).pipe(Annotation.RawStringAnnotation.set(true), Schema.optional),
   /**
    * Opaque provider delta-resume token (Gmail `historyId`, JMAP `Email/get` `state`). An optional
    * fast-path alongside `max`/`min`: when valid the provider fetches an exact delta, else it falls back
