@@ -44,11 +44,21 @@ runs:
         DIR: ${{ steps.apt.outputs.dir }}
       run: find "$DIR" -maxdepth 1 -name '*.deb' -printf '%f\n' | sort > "$RUNNER_TEMP/playwright-apt-before.txt"
 
+    # The install takes under a minute, but the Ubuntu mirror has stalled `apt-get update` for the
+    # rest of the job's cap; a fresh attempt gets a fresh connection.
     - name: Install
       shell: bash
       env:
         BROWSER: ${{ inputs.browser }}
-      run: pnpm exec playwright install --with-deps "$BROWSER"
+      run: |
+        for attempt in 1 2 3; do
+          timeout --kill-after=15 240 pnpm exec playwright install --with-deps "$BROWSER" && exit 0
+          echo "::warning::Playwright install attempt $attempt failed or stalled (exit $?)."
+          sudo pkill -x apt-get || true
+          sudo pkill -f /usr/lib/apt/methods/ || true
+          sudo dpkg --configure -a
+        done
+        exit 1
 
     # `autoclean` drops superseded revisions so the cache does not grow with every update. apt leaves
     # `partial/` and `lock` owned by root, which the cache save cannot read.
