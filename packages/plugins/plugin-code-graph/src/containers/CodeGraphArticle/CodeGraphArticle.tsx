@@ -16,6 +16,7 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
+import { Grounding } from '#command';
 import { CommandBar, type CommandOutcome, type Fact, NodeDetails } from '#components';
 import { Kind, Semantic } from '#graph';
 import { meta } from '#meta';
@@ -289,6 +290,8 @@ export const CodeGraphArticle = ({ role, subject, attendableId }: CodeGraphArtic
             pending={command.pending}
             outcome={command.outcome}
             onSubmit={command.run}
+            verbose={command.verbose}
+            onVerboseChange={command.setVerbose}
             draft={speech.heard}
             speech={
               <Button.Root
@@ -499,7 +502,9 @@ const useCommand = (subject: CodeGraph.CodeGraph, invokePromise: Invoke) => {
           setOutcome({
             command: text,
             elapsedMs: performance.now() - started,
-            ...(data ? { message: data.message, trailer: data.trailer } : { error: error?.message ?? 'Failed.' }),
+            ...(data
+              ? { message: data.message, trailer: data.trailer, trace: data.trace }
+              : { error: error?.message ?? 'Failed.' }),
           }),
         )
         .finally(() => {
@@ -509,5 +514,31 @@ const useCommand = (subject: CodeGraph.CodeGraph, invokePromise: Invoke) => {
     },
     [invokePromise, subject, spaceId],
   );
-  return { open, setOpen, pending, outcome, run };
+  const [verbose, setVerboseState] = useState(readVerbose);
+  const setVerbose = useCallback((value: boolean) => {
+    setVerboseState(value);
+    try {
+      localStorage.setItem(VERBOSE_KEY, value ? '1' : '0');
+    } catch {
+      // Storage can be unavailable (private mode); the toggle still works for this page.
+    }
+  }, []);
+
+  // The first command pays for starting the index and loading its package list; do that while the user types.
+  useEffect(() => {
+    const fiber = Effect.runFork(Grounding.packages.pipe(Effect.ignore));
+    return () => void Effect.runFork(Fiber.interrupt(fiber));
+  }, []);
+
+  return { open, setOpen, pending, outcome, run, verbose, setVerbose };
+};
+
+const VERBOSE_KEY = 'dxos.org/plugin/code-graph/command-verbose';
+
+const readVerbose = () => {
+  try {
+    return localStorage.getItem(VERBOSE_KEY) === '1';
+  } catch {
+    return false;
+  }
 };

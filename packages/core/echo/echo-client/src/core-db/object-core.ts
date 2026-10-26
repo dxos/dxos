@@ -890,8 +890,14 @@ export class ObjectCore {
 
   getMeta(): EntityMeta {
     // Codec boundary: raw decoded automerge data is returned typed as the logical `EntityMeta`
-    // (tags are encoded references at rest; the handler materializes them into live refs on access).
+    // (tags are encoded references at rest; the handler resolves them into tag entities on access).
     return this.getDecoded([META_NAMESPACE]) as unknown as EntityMeta;
+  }
+
+  /** References to the {@link Tag}s in `meta.tags`, as stored (a legacy bare id is upgraded on read). */
+  getTags(): EncodedReference[] {
+    const tags = this.getDecoded([META_NAMESPACE, 'tags']);
+    return Array.isArray(tags) ? tags.filter(EncodedReference.isEncodedReference) : [];
   }
 
   setMeta(meta: EntityMeta): void {
@@ -1014,6 +1020,7 @@ export class ObjectCore {
         source: sourceRef ? EncodedReference.toURI(sourceRef) : undefined,
         target: targetRef ? EncodedReference.toURI(targetRef) : undefined,
         parent: parentRef ? EncodedReference.toURI(parentRef) : undefined,
+        tags: this.getTags().map((ref) => EncodedReference.toURI(ref)),
       },
       this.entityManager?.spaceId,
     );

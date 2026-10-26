@@ -7,7 +7,6 @@ import { assertArgument, invariant } from '@dxos/invariant';
 import type { DeepReadonly } from '@dxos/util';
 
 import type * as Tag from '../../../Tag.ts';
-import type { Ref } from '../../Ref/ref.ts';
 import { type Mutable } from '../proxy/index.ts';
 import { type AnyProperties } from '../types/index.ts';
 import { type EntityMeta, getMeta as getMeta$ } from '../types/meta.ts';
@@ -64,25 +63,25 @@ export const deleteKeys = (entity: Mutable<AnyProperties>, source: string) => {
 };
 
 /**
- * Add a tag (a reference to a {@link Tag} object) to the entity. Idempotent.
+ * Add a {@link Tag} to the entity. Idempotent.
  * Must be called within an Obj.update or Relation.update callback.
  */
-export const addTag = (entity: Mutable<AnyProperties>, tag: Ref<Tag.Tag>) => {
+export const addTag = (entity: Mutable<AnyProperties>, tag: Tag.Tag) => {
   const meta = getMetaChecked(entity);
-  // Two refs to the same target are not `===`; dedupe by URI.
-  if (!meta.tags.some((existing) => existing.uri === tag.uri)) {
+  // Deduped by id: a snapshot or a mutable view of the same tag is not `===` to the live entity.
+  if (!meta.tags.some((existing) => existing.id === tag.id)) {
     meta.tags.push(tag);
   }
 };
 
 /**
- * Remove a tag (a reference to a {@link Tag} object) from the entity. No-op when not present.
+ * Remove a {@link Tag} from the entity. No-op when not present.
  * Must be called within an Obj.update or Relation.update callback.
  */
-export const removeTag = (entity: Mutable<AnyProperties>, tag: Ref<Tag.Tag>) => {
+export const removeTag = (entity: Mutable<AnyProperties>, tag: Tag.Tag) => {
   const meta = getMetaChecked(entity);
   for (let i = 0; i < meta.tags.length; i++) {
-    if (meta.tags[i].uri === tag.uri) {
+    if (meta.tags[i].id === tag.id) {
       meta.tags.splice(i, 1);
       i--;
     }

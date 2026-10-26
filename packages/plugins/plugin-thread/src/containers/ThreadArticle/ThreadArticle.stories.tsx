@@ -10,7 +10,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Obj, Ref } from '@dxos/echo';
+import { Obj } from '@dxos/echo';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { random } from '@dxos/random';
 import { useClient } from '@dxos/react-client';
@@ -71,8 +71,8 @@ const DefaultStory = () => {
   Hooks.useAsyncEffect(async () => {
     if (identity) {
       const space = await client.spaces.create();
-      const messages = makeThreadMessages(identity.did, MESSAGE_COUNT).map((message) => Ref.make(message));
-      const thread = space.db.add(Thread.make({ status: 'active', messages }));
+      const thread = space.db.add(Thread.make({ status: 'active' }));
+      await space.db.appendToFeed(await thread.feed.load(), makeThreadMessages(identity.did, MESSAGE_COUNT));
       setSpace(space);
       setThread(thread);
     }

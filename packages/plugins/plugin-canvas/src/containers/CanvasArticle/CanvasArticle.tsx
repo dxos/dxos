@@ -3,6 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -15,7 +16,7 @@ import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import type * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
+import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import {
   type BackgroundGrid,
@@ -58,6 +59,8 @@ import { canvasViewAspect } from './view-state.ts';
 
 export type CanvasArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
 
+const NO_REFITS = Atom.make<Record<string, number>>({});
+
 /** Why a canvas a newer plugin saved opens read-only, and what unlocks it. */
 const NewerFormatBanner = () => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
@@ -99,6 +102,10 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
   );
   const nodes = useCanvasNodes(openObject);
   const bound = useBoundCanvasStore(canvas);
+  // An agent's drawing edit asks for a refit, so the view frames what changed rather than where the viewer left it.
+  const [refitAtom] = Hooks.useCapabilities(IllustratorCapabilities.Refit);
+  const refits = useAtomValue(refitAtom ?? NO_REFITS);
+  const refitKey = refits[Obj.getURI(canvas)];
   const generators = useCanvasGenerators(db);
 
   // The drawing's settings, edited in the properties companion: the lattice picks the projection.
@@ -241,6 +248,7 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
               // enlarged rather than kept at 1:1.
               margin={slide ? 0 : undefined}
               fitZoom={slide ? MAX_ZOOM : undefined}
+              refitKey={refitKey}
               // A newer plugin's format stays read-only here, so the toggle that would unlock it is not offered.
               onReadonlyChange={embedded || newer ? undefined : handleReadonlyChange}
               initialCamera={savedCamera}

@@ -6,8 +6,9 @@ import * as Schema from 'effect/Schema';
 
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as Skill from '@dxos/compute/Skill';
-import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Collection, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import * as MediaArtifact from '@dxos/plugin-studio/MediaArtifact';
+import * as Variant from '@dxos/plugin-studio/Variant';
 import { Text } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -30,6 +31,21 @@ export class Slide extends Type.makeObject<Slide>(DXN.make('org.dxos.type.slide'
     title: Schema.optional(Schema.String),
     /** Left out when the deck is presented; the grid still shows it. */
     hidden: Schema.optional(Schema.Boolean),
+    /** Recorded voice-overs of the slide (takes), owned by it, oldest first. */
+    takes: Schema.Array(Ref.Ref(Variant.Variant)).pipe(
+      Annotation.SetParent.set(),
+      Annotation.FormInputAnnotation.set(false),
+      Schema.optional,
+    ),
+    /** The take that voices the slide when the presentation's voice-over is played or exported. */
+    mainTake: Schema.optional(Ref.Ref(Variant.Variant)).pipe(Annotation.FormInputAnnotation.set(false)),
+    /** Desired length in seconds, shown against the time spent on the slide while presenting. */
+    duration: Schema.optional(
+      Schema.Number.pipe(Schema.check(Schema.isGreaterThan(0))).annotate({
+        title: 'Duration',
+        description: 'Desired length of the slide, in seconds.',
+      }),
+    ),
     /** Speaker notes, for any content. */
     notes: Schema.optional(Ref.Ref(Text.Text)).pipe(Annotation.FormInputAnnotation.set(false)),
     /** The image a layout places (cover and image layouts): a generated media artifact. */
@@ -47,7 +63,7 @@ export class Slide extends Type.makeObject<Slide>(DXN.make('org.dxos.type.slide'
 export class Presentation extends Type.makeObject<Presentation>(DXN.make('org.dxos.type.presentation', '0.2.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.String),
+    description: Schema.optional(Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Text))),
     /** Slides in order, each parented to the presentation. */
     slides: Schema.Array(Ref.Ref(Slide)).pipe(Annotation.FormInputAnnotation.set(false)),
     /** Overrides the first slide's `theme:` headmatter for every slide, linked objects included; edited by `PresentationProperties`. */

@@ -8,6 +8,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import * as MarkdownEvents from '@dxos/plugin-markdown/MarkdownEvents';
 import { translations as threadTranslations } from '@dxos/react-ui-thread/translations';
@@ -25,11 +26,6 @@ export const AgentIdentityModule = Capability.inlineModule(
   },
   (identity) => Effect.succeed([Capability.contribute(AgentIdentity.AgentIdentity, identity)]),
 );
-export const AgentRunner = Capability.lazyModule(
-  'AgentRunner',
-  { provides: [CommentCapabilities.AgentRunner], activatesOn: ReviewEvents.Start },
-  () => import('./agent-runner.ts'),
-);
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   environments: ['browser', 'node', 'tauri'],
 });
@@ -38,6 +34,12 @@ export const HistoryGraph = AppCapability.appGraphBuilder(() => import('./histor
   environments: ['browser', 'node', 'tauri'],
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));
+// Eager, like every migration provider: a migration missing when a space opens leaves its objects unreadable.
+export const Migrations = Capability.lazyModule(
+  'ReviewMigrations',
+  { provides: [ClientCapabilities.Migration] },
+  () => import('./migrations.ts'),
+);
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
   environments: ['browser', 'node', 'tauri'],
 });

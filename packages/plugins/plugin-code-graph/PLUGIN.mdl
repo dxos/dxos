@@ -155,6 +155,8 @@ feat F-5: Single commands
   req F-5.3: Between turns a decision model judges whether the command is done; a failed or empty action earns another turn without asking, and a turn that only removed boxes ends the command; at most 3 turns.
   req F-5.4: A command adds at most 40 boxes; the rest are left out and summarised in a trailer (counts by kind and package, and a few names) shown to the user and the model.
   req F-5.5: Speaking uses Whistle on the device: with the microphone on, each pause ends a command.
+  req F-5.6: Before the first model call, the packages and exported symbols the command names are looked up in the index and given to the model as exact IRIs; the lookup is skipped after 1.5 s.
+  req F-5.7: A verbose toggle in the bar, remembered per browser, lists every step of the last command (lookup, model call, add, remove, judge) with its time, its token counts or row counts, and the SPARQL or filter it ran.
 
 ## Acceptance
 
@@ -369,4 +371,22 @@ decision D-13: Whistle moves from plugin-transcription's stories to `@dxos/plugi
   for: user:dmaretskyi
   affects: [F-5.5]
   why: The command bar asked for the microphone and Whistle; the stories held the only copy of the on-device speech hook.
+```
+
+```mdl
+decision D-14: The command loop looks up the packages and symbols a command names before the model's first turn, and the article loads the index's package list when it opens. Fills in [D-10].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.6]
+  why: A model that guessed names with CONTAINS filters drew the wrong things or wrote queries the index refused, and each retry cost another 2 s model call; an exact lookup on a warm index costs about 10 ms. The first query on a cold index takes seconds, so opening the article pays for it.
+  rejected: More turns or a larger model, which add seconds to every command.
+```
+
+```mdl
+decision D-15: RunCommand returns a trace of timed steps, and the command bar shows it in a verbose mode the user turns on. Fills in [D-10].
+  date: 2026-10-26
+  by: user:dmaretskyi
+  affects: [F-5.7, CommandBar]
+  why: A slow or wrong command could not be explained from the outcome line; the trace shows where the time went and which query the model ran.
 ```

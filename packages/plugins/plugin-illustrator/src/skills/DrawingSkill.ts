@@ -7,9 +7,9 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import { DrawingOperation } from '#types';
+import { Drawing, DrawingOperation } from '#types';
 
-export const key = 'org.dxos.skill.drawing';
+export const key = Drawing.SKILL_KEY;
 
 const operations = [
   DrawingOperation.Create,

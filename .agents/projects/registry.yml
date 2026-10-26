@@ -16,6 +16,16 @@ projects:
     design: .agents/projects/object-share/DESIGN.md
     prs: []
     resume: 'v1 in progress on claude/stoic-pascal-eestng. NEXT: see TASKS.md.'
+  - name: plugin-recorder
+    status: active
+    user: burdon
+    host: Mac
+    created: 2026-10-26
+    summary: 'Record a presentation voice-over (and screen/camera video) from plugin-presenter decks: presenter gains speaker notes (window or subtitles), slide durations and extension points; plugin-recorder adds a Record toolbar item, mic/video settings with a level meter, and stores takes as plugin-studio MediaArtifact variants.'
+    tasks: packages/plugins/plugin-recorder/docs/TASKS.md
+    design: packages/plugins/plugin-recorder/docs/DESIGN.md
+    prs: []
+    resume: 'Phase 1 in progress on claude/upbeat-faraday-7abfc9.'
   - name: autocue-ui
     status: active
     user: burdon
