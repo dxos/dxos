@@ -84,7 +84,7 @@ export default handler;
 const createDelegatedInvitation = (
   space: Space,
   { role, target, sharedObjectIds }: { role: SpaceMember_Role; target: string; sharedObjectIds: string[] },
-): Effect.Effect<buf.JsonObject, SpaceOperationError> =>
+): Effect.Effect<buf.JsonValue, SpaceOperationError> =>
   Effect.gen(function* () {
     const { InvitationEncoder, Invitation_AuthMethod, Invitation_State, Invitation_Type } = yield* Effect.promise(
       () => import('@dxos/client/invitations'),
@@ -103,7 +103,7 @@ const createDelegatedInvitation = (
       Invitation_State.TIMEOUT,
       Invitation_State.EXPIRED,
     ];
-    return yield* Effect.callback<buf.JsonObject, SpaceOperationError>((resume) => {
+    return yield* Effect.callback<buf.JsonValue, SpaceOperationError>((resume) => {
       const subscription = invitation.subscribe(
         (value) => {
           if (value.state === Invitation_State.CONNECTING) {

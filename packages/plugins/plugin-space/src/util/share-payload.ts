@@ -20,7 +20,7 @@ export const SharePayload = Schema.Struct({
    * The delegated space invitation as protobuf JSON (`InvitationEncoder.toJson`) rather than a code, since the
    * payload is encoded already; absent for a link only members can open.
    */
-  invitation: Schema.optional(Schema.Record(Schema.String, Schema.MutableJson)),
+  invitation: Schema.optional(Schema.MutableJson),
   /** Plugins that render the objects in scope. */
   plugins: Schema.Array(Schema.String),
   /** Objects a non-member replicates: the object the link opens and what it needs. */

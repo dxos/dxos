@@ -4,7 +4,6 @@
 
 import base from 'base-x';
 
-import { invariant } from '@dxos/invariant';
 import { buf } from '@dxos/protocols/buf';
 import { type Invitation, Invitation_Type, InvitationSchema } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 
@@ -25,11 +24,8 @@ export class InvitationEncoder {
   }
 
   /** The fields {@link encode} carries, as protobuf JSON. */
-  static toJson(invitation: Invitation): buf.JsonObject {
-    // A message's protobuf JSON form is always an object.
-    const json = buf.toJson(InvitationSchema, portable(invitation));
-    invariant(isJsonObject(json));
-    return json;
+  static toJson(invitation: Invitation): buf.JsonValue {
+    return buf.toJson(InvitationSchema, portable(invitation));
   }
 
   static fromJson(json: buf.JsonValue): Invitation {
@@ -63,6 +59,3 @@ const normalize = (invitation: Invitation): Invitation => {
   }
   return invitation;
 };
-
-const isJsonObject = (value: buf.JsonValue): value is buf.JsonObject =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
