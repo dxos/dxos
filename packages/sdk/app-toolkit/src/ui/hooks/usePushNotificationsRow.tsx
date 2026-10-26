@@ -27,6 +27,9 @@ export type PushNotificationsRowContent = {
 
 type TestState = AppPush.TestResult | 'idle' | 'sending';
 
+/** A local notification answers at once; the sending message waits this long so the row does not flash. */
+const SENDING_DELAY = 300;
+
 /**
  * The notifications toggle and its test control, driven by {@link AppPush.Notifications}. Shared like the update row,
  * so every platform's settings read the same; returns content rather than a laid-out row.
@@ -36,6 +39,7 @@ export const usePushNotificationsRow = ({ push, t }: PushNotificationsRowProps):
   const error = useAtomValue(push.error);
   const enabled = useAtomValue(push.enabled);
   const [test, setTest] = useState<TestState>('idle');
+  const [busy, setBusy] = useState(false);
 
   const notice: PushNotificationsRowContent['notice'] =
     status === 'unsupported' || status === 'denied' || status === 'failed'
@@ -58,8 +62,14 @@ export const usePushNotificationsRow = ({ push, t }: PushNotificationsRowProps):
   );
 
   const runTest = async () => {
-    setTest('sending');
-    setTest(await push.sendTest());
+    setBusy(true);
+    const sending = setTimeout(() => setTest('sending'), SENDING_DELAY);
+    try {
+      setTest(await push.sendTest());
+    } finally {
+      clearTimeout(sending);
+      setBusy(false);
+    }
   };
 
   return {
@@ -70,7 +80,7 @@ export const usePushNotificationsRow = ({ push, t }: PushNotificationsRowProps):
         ? {
             description: t(`settings.notifications.test.${test}.message`),
             button: (
-              <Button.Root disabled={test === 'sending'} onClick={() => void runTest()}>
+              <Button.Root disabled={busy} onClick={() => void runTest()}>
                 {t('settings.notifications.test.label')}
               </Button.Root>
             ),
