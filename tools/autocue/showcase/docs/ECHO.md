@@ -65,7 +65,7 @@ The spoken lines, one bullet per line read; each slide starts at its time in the
 25 words fits a 10s slide.
 
 1. **The Silo Problem** (at 0.5s)
-   - Our data has been siloed for decades;
+   - Enterprise data has been siloed for decades;
    - this was a consequence of SaaS software economics.
    - But today agents need access to all of our information to be effective.
    - And this demands a new data and security model.
