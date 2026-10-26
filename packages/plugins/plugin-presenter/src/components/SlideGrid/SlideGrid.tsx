@@ -5,14 +5,13 @@
 import React, { useCallback, useMemo } from 'react';
 
 import * as AppNode from '@dxos/app-toolkit/AppNode';
-import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Listbox, type ReorderListController, useReorderItem, useReorderList } from '@dxos/react-ui-list';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import { mx } from '@dxos/ui-theme';
 
-import { type SlideSource, firstHeading } from '#deck';
+import { type SlideSource } from '#deck';
 import { useSlideLabel } from '#hooks';
 import { meta } from '#meta';
 import { type SlideViewState } from '#types';
@@ -184,23 +183,4 @@ const SlideTile = ({ tile, controller, draggable, onPresent, contextMenuId }: Sl
       </Listbox.ItemText>
     </Listbox.Item>
   );
-};
-
-/** A slide's caption: its title, else its first heading (or the linked object's label). */
-const useSlideLabel = (source: SlideSource): string | undefined => {
-  const [title] = useObject(source.kind === 'markdown' ? undefined : source.slide, 'title');
-  const [content] = useObject(source.kind === 'text' ? source.text : undefined, 'content');
-  if (title) {
-    return title;
-  }
-  switch (source.kind) {
-    case 'text':
-      return firstHeading(content ?? '');
-    case 'markdown':
-      return firstHeading(source.content);
-    case 'object':
-      return Obj.getLabel(source.object);
-    default:
-      return undefined;
-  }
 };
