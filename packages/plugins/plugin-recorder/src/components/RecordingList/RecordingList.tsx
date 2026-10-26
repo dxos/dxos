@@ -8,6 +8,7 @@ import { Listbox } from '@dxos/react-ui-list';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -56,7 +57,7 @@ export type RecordingListProps<T extends RecordingItem = RecordingItem> = {
   onValueChange?: (id: string) => void;
   /** Accessible name of the list. */
   label: string;
-  /** Makes a row's star a button that marks it main; without it the star only shows. */
+  /** Makes a row's bookmark a toggle that marks it main; without it the bookmark only shows. */
   onMain?: (item: T) => void;
   /** Space on the current row plays or stops it. */
   onToggle?: (item: T) => void;
@@ -67,9 +68,9 @@ export type RecordingListProps<T extends RecordingItem = RecordingItem> = {
 };
 
 /**
- * The rows of a Recordings companion: a slide's takes, or a presentation's slides, as a list with columns (star,
+ * The rows of a Recordings companion: a slide's takes, or a presentation's slides, as a list with columns (bookmark,
  * label, count, length, desired length, then one block-sized cell per button) on Listbox's shared tracks, so cells
- * line up from row to row and the leading star and trailing buttons line up with the toolbar's. The current row is the
+ * line up from row to row and the leading bookmark and trailing buttons line up with the toolbar's. The current row is the
  * selection: a click anywhere in a row selects it, the arrow keys move it, Space plays or stops it, and a double-click
  * opens it.
  */
@@ -153,19 +154,18 @@ export const RecordingList = <T extends RecordingItem>({
                   {item.error ? (
                     <Icon.Icon icon='ph--warning--regular' classNames='text-error-text' />
                   ) : onMain ? (
-                    <Button.Root
+                    <SystemButton.Bookmark
                       data-testid='recorder.item.main'
-                      icon={item.main ? 'ph--star--fill' : 'ph--star--regular'}
                       iconOnly
                       variant='ghost'
-                      classNames={mx(item.main && 'text-accent-text')}
                       label={t(item.main ? 'main-take.label' : 'select-take.label')}
-                      onClick={() => !item.main && onMain(item)}
+                      pressed={!!item.main}
+                      onPressedChange={(pressed) => pressed && onMain(item)}
                     />
                   ) : (
                     <Icon.Icon
-                      icon={item.main ? 'ph--star--fill' : 'ph--star--regular'}
-                      classNames={mx(item.main ? 'text-accent-text' : 'text-fg-subtle')}
+                      icon={item.main ? 'ph--bookmark-simple--fill' : 'ph--bookmark-simple--regular'}
+                      classNames={mx(!item.main && 'text-fg-subtle')}
                     />
                   )}
                 </Listbox.ItemIcon>
@@ -175,9 +175,10 @@ export const RecordingList = <T extends RecordingItem>({
                   )}
                   {item.title}
                 </Listbox.ItemText>
+                {/* Each text column pads both sides, so neighbouring values never run together. */}
                 {description && (
                   <span
-                    className={mx('truncate text-end text-xs', item.error ? 'text-error-text' : 'text-fg-subtle')}
+                    className={mx('truncate px-2 text-end text-xs', item.error ? 'text-error-text' : 'text-fg-subtle')}
                     title={item.description}
                   >
                     {item.description}
@@ -185,12 +186,12 @@ export const RecordingList = <T extends RecordingItem>({
                 )}
                 <span
                   data-over={over ? 'true' : undefined}
-                  className={mx('text-end font-mono text-xs', over ? 'text-error-text' : 'text-fg-muted')}
+                  className={mx('px-2 text-end font-mono text-xs', over ? 'text-error-text' : 'text-fg-muted')}
                 >
                   {item.duration === undefined ? t('no-take.label') : formatSeconds(item.duration)}
                 </span>
                 {desired && (
-                  <span className='text-end font-mono text-xs text-fg-subtle'>
+                  <span className='px-2 text-end font-mono text-xs text-fg-subtle'>
                     {item.desired === undefined ? '' : formatSeconds(item.desired)}
                   </span>
                 )}
