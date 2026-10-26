@@ -109,17 +109,17 @@ component RecordingsPanel
 component SlideRecordingsArticle
   desc: >
     The Recordings companion of a Slide, on RecordingsPanel. The toolbar records a new take of the slide (the deck
-    presents from it; the recording ends when the reader leaves it) and acts on the current take: Play, Make main,
-    Download, Delete (undoable); an unsaved take adds Save again, and Delete discards it. Rows are the takes, newest
-    first, unsaved ones first, each with its length against the slide's desired length.
+    presents from it; the recording ends when the reader leaves it) and acts on the current take: Make main, Download,
+    Delete (undoable); an unsaved take adds Save again, and Delete discards it. Each take is a tile in one column,
+    newest first, unsaved ones first, with Play and its length against the slide's desired length.
   props: { slide: Slide }
 
 component PresentationRecordingsArticle
   desc: >
     The Recordings companion of a Presentation, on RecordingsPanel. The toolbar records every slide (a take per
-    slide), plays the current slide's main take or every main take in order, downloads the main takes as one WAV, and
-    opens the current slide. Rows are the presented slides with their take count and main take's length against
-    their desired length.
+    slide), plays every main take in order, and downloads them as one WAV. Each presented slide is a tile in one
+    column, with Play (its main take), Open (navigates to the slide), its take count, and its main take's length
+    against its desired length.
   props: { presentation: Presentation }
 
 component RecorderSettings
@@ -142,13 +142,13 @@ feat F-1: Record
 
 feat F-2: Slide takes
   req F-2.1: A Slide has a Recordings companion listing its takes, newest first, with the main take marked.
-  req F-2.2: The current take can be played, downloaded, made the main take, and deleted; a delete can be undone.
+  req F-2.2: A take tile's Play plays it; the current take can be downloaded, made the main take, and deleted; a delete can be undone.
   req F-2.4: Both Recordings companions share one layout: a toolbar, a keyboard-navigable list, and the current row's player in the status bar.
   req F-2.3: Each take shows its length against the slide's desired length, flagged when over.
 
 feat F-3: Presentation voice-over
   req F-3.1: A Presentation has a Recordings companion listing each presented slide with its main take's length against its desired length.
-  req F-3.2: Play plays the current slide's main take; Play all plays every main take in slide order.
+  req F-3.2: A slide tile's Play plays its main take, and its Open navigates to the slide; Play all plays every main take in slide order.
   req F-3.3: Download saves the main takes, in slide order, as one WAV file.
 
 feat F-4: Settings
@@ -352,4 +352,11 @@ decision D-19: The arrow keys select as they move; a pointer only highlights the
   for: user:richburdon
   affects: [RecordingsPanel]
   why: Selecting on hover would switch the status bar's take as the mouse crosses the list.
+```
+
+```mdl
+decision D-20: Both lists show their rows as tiles, one per row with no image. A presentation companion tile has Play and navigation buttons; a slide companion tile has a Play button.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [RecordingsPanel, SlideRecordingsArticle, PresentationRecordingsArticle, F-2.2, F-3.2]
 ```

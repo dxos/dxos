@@ -2,10 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { useMemo, useRef } from 'react';
+import React, { type ReactNode, useMemo, useRef } from 'react';
 
 import { Listbox } from '@dxos/react-ui-list';
 import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Layout from '@dxos/react-ui/Layout';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -16,11 +18,11 @@ export const formatSeconds = (seconds: number): string => {
   return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
 };
 
-/** Over the desired length, compared as shown (whole seconds), so a row never reads 0:20 / 0:20 and flagged. */
+/** Over the desired length, compared as shown (whole seconds), so a tile never reads 0:20 / 0:20 and flagged. */
 export const isOver = (seconds: number | undefined, desired: number | undefined): boolean =>
   seconds !== undefined && desired !== undefined && Math.round(seconds) > Math.round(desired);
 
-/** A row: a take of a slide, or a slide of the presentation with its main take. */
+/** A tile: a take of a slide, or a slide of the presentation with its main take. */
 export type RecordingItem = {
   id: string;
   title: string;
@@ -40,21 +42,29 @@ export type RecordingItem = {
   index?: number;
 };
 
-export type RecordingListProps = {
-  items: RecordingItem[];
-  /** The current (selected) row, which the toolbar's actions and the status bar's player act on; the arrow keys move it. */
+export type RecordingListProps<T extends RecordingItem = RecordingItem> = {
+  items: T[];
+  /** The current (selected) tile, which the toolbar's actions and the status bar's player act on; the arrow keys move it. */
   value?: string;
   onValueChange?: (id: string) => void;
   /** Accessible name of the list. */
   label: string;
+  /** Buttons at the end of each tile's title line (play, open). */
+  renderActions?: (item: T) => ReactNode;
 };
 
 /**
- * The rows of a Recordings companion: a slide's takes, or a presentation's slides. Keyboard navigable (the current
- * row moves with up and down, and scrolls into view); each row shows its length against the desired length, flagged
- * when over, and marks the main take.
+ * The tiles of a Recordings companion, one per row: a slide's takes, or a presentation's slides, keyboard navigable
+ * (up and down move the current tile, which scrolls into view). Each tile shows its length against the desired
+ * length, flagged when over, marks the main take, and carries its own buttons.
  */
-export const RecordingList = ({ items, value, onValueChange, label }: RecordingListProps) => {
+export const RecordingList = <T extends RecordingItem>({
+  items,
+  value,
+  onValueChange,
+  label,
+  renderActions,
+}: RecordingListProps<T>) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const keyboard = useRef(false);
   const options = useMemo(
@@ -67,7 +77,7 @@ export const RecordingList = ({ items, value, onValueChange, label }: RecordingL
       items={options}
       value={value ?? ''}
       onValueChange={(id) => onValueChange?.(id)}
-      // The current row is the selection: a keyboard move selects, while a pointer only highlights what it passes.
+      // The current tile is the selection: a keyboard move selects, while a pointer only highlights what it passes.
       onHighlightChange={(id) => {
         if (keyboard.current && id) {
           onValueChange?.(id);
@@ -77,6 +87,7 @@ export const RecordingList = ({ items, value, onValueChange, label }: RecordingL
       <Listbox.Content
         aria-label={label}
         data-testid='recorder.list'
+        classNames='flex flex-col gap-2 p-2'
         onKeyDownCapture={() => {
           keyboard.current = true;
         }}
@@ -93,35 +104,44 @@ export const RecordingList = ({ items, value, onValueChange, label }: RecordingL
               data-testid='recorder.item'
               data-main={item.main ? 'true' : undefined}
               data-recorded={item.duration !== undefined ? 'true' : undefined}
+              classNames='flex flex-col items-stretch gap-1 rounded-md border border-separator p-2'
             >
-              <Listbox.ItemIcon
-                icon={
-                  item.error
-                    ? 'ph--warning--regular'
-                    : item.main
-                      ? 'ph--star--fill'
-                      : item.video
-                        ? 'ph--video-camera--regular'
-                        : 'ph--microphone--regular'
-                }
-                classNames={mx(item.error && 'text-error-text', item.main && 'text-accent-text')}
-              />
-              <Listbox.ItemText>
-                {item.index !== undefined && <span className='me-2 tabular-nums text-fg-subtle'>{item.index + 1}</span>}
-                {item.title}
-              </Listbox.ItemText>
-              {item.description && (
-                <Listbox.ItemDescription classNames={mx(item.error && 'text-error-text')}>
+              <Layout.Flex align='center' gap='xs'>
+                <Icon.Icon
+                  size='sm'
+                  icon={
+                    item.error
+                      ? 'ph--warning--regular'
+                      : item.main
+                        ? 'ph--star--fill'
+                        : item.video
+                          ? 'ph--video-camera--regular'
+                          : 'ph--microphone--regular'
+                  }
+                  classNames={mx('shrink-0', item.error && 'text-error-text', item.main && 'text-accent-text')}
+                />
+                <Listbox.ItemText classNames='truncate text-sm'>
+                  {item.index !== undefined && (
+                    <span className='me-1.5 tabular-nums text-fg-subtle'>{item.index + 1}</span>
+                  )}
+                  {item.title}
+                </Listbox.ItemText>
+                <span className='grow' />
+                {renderActions?.(item)}
+              </Layout.Flex>
+              <Layout.Flex align='center' gap='sm' classNames='text-xs'>
+                <span className={mx('truncate', item.error ? 'text-error-text' : 'text-fg-subtle')}>
                   {item.description}
-                </Listbox.ItemDescription>
-              )}
-              <span
-                data-over={over ? 'true' : undefined}
-                className={mx('shrink-0 font-mono text-sm', over ? 'text-error-text' : 'text-fg-muted')}
-              >
-                {item.duration === undefined ? t('no-take.label') : formatSeconds(item.duration)}
-                {item.desired !== undefined && ` / ${formatSeconds(item.desired)}`}
-              </span>
+                </span>
+                <span className='grow' />
+                <span
+                  data-over={over ? 'true' : undefined}
+                  className={mx('shrink-0 font-mono', over ? 'text-error-text' : 'text-fg-muted')}
+                >
+                  {item.duration === undefined ? t('no-take.label') : formatSeconds(item.duration)}
+                  {item.desired !== undefined && ` / ${formatSeconds(item.desired)}`}
+                </span>
+              </Layout.Flex>
             </Listbox.Item>
           );
         })}

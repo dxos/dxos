@@ -12,6 +12,7 @@ import { Obj } from '@dxos/echo';
 import * as Presentation from '@dxos/plugin-presenter/Presentation';
 import type * as Variant from '@dxos/plugin-studio/Variant';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { type RecordingItem, RecordingList, RecordingsPanel } from '#components';
@@ -31,8 +32,8 @@ type TakeRow = RecordingItem & { take?: Variant.Variant; contentType?: string };
 
 /**
  * A slide's takes (its companion), newest first, in the layout every Recordings companion shares. The toolbar records
- * a new take of the slide and acts on the current take — play, make main, download, delete (undoably) — and the
- * status bar plays it. An unsaved take is listed first, and the toolbar saves it again, downloads or discards it.
+ * a new take of the slide and acts on the current take — make main, download, delete (undoably); each tile's Play
+ * plays its take in the status bar. An unsaved take is listed first, and the toolbar saves it again, downloads or discards it.
  */
 export const SlideRecordingsArticle = ({ role, attendableId, slide }: SlideRecordingsArticleProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
@@ -48,9 +49,17 @@ export const SlideRecordingsArticle = ({ role, attendableId, slide }: SlideRecor
   const current = items.find((item) => item.id === currentId) ?? items[0];
   // Bumped by Play so the status bar player remounts and starts.
   const [play, setPlay] = useState<{ count: number; autoPlay: boolean }>({ count: 0, autoPlay: false });
+  // A tile's Play plays its take, or stops it when it is the one playing.
   const handlePlay = useCallback(
-    () => setPlay(({ count, autoPlay }) => ({ count: count + 1, autoPlay: !autoPlay })),
-    [],
+    (id: string) => {
+      if (play.autoPlay && current?.id === id) {
+        setPlay(({ count }) => ({ count: count + 1, autoPlay: false }));
+      } else {
+        setCurrentId(id);
+        setPlay(({ count }) => ({ count: count + 1, autoPlay: true }));
+      }
+    },
+    [play.autoPlay, current],
   );
   const src = useTakeUrl(current?.take);
 
@@ -84,17 +93,6 @@ export const SlideRecordingsArticle = ({ role, attendableId, slide }: SlideRecor
         () => void handleRecord(),
       )
       .separator()
-      .action(
-        'play',
-        {
-          label: [play.autoPlay ? 'stop-take.label' : 'play-take.label', { ns: meta.profile.key }],
-          icon: play.autoPlay ? 'ph--stop--regular' : 'ph--play--regular',
-          disposition: 'toolbar',
-          disabled: !current?.take,
-          testId: 'recorder.take.play',
-        },
-        handlePlay,
-      )
       .action(
         'select',
         {
@@ -141,19 +139,7 @@ export const SlideRecordingsArticle = ({ role, attendableId, slide }: SlideRecor
       );
     }
     return builder.build();
-  }, [
-    handleRecord,
-    recorder,
-    presentation,
-    play,
-    handlePlay,
-    current,
-    src,
-    invokePromise,
-    slide,
-    handleDownload,
-    handleDelete,
-  ]);
+  }, [handleRecord, recorder, presentation, current, src, invokePromise, slide, handleDownload, handleDelete]);
 
   return (
     <RecordingsPanel
@@ -173,9 +159,22 @@ export const SlideRecordingsArticle = ({ role, attendableId, slide }: SlideRecor
         items={items}
         value={current?.id}
         onValueChange={(id) => {
-          setCurrentId(id);
-          setPlay(({ count }) => ({ count: count + 1, autoPlay: false }));
+          if (id !== current?.id) {
+            setCurrentId(id);
+            setPlay(({ count }) => ({ count: count + 1, autoPlay: false }));
+          }
         }}
+        renderActions={(item) => (
+          <Button.Root
+            data-testid='recorder.take.play'
+            icon={play.autoPlay && current?.id === item.id ? 'ph--stop--regular' : 'ph--play--regular'}
+            iconOnly
+            variant='ghost'
+            disabled={!item.take}
+            label={t(play.autoPlay && current?.id === item.id ? 'stop-take.label' : 'play-take.label')}
+            onClick={() => handlePlay(item.id)}
+          />
+        )}
       />
     </RecordingsPanel>
   );

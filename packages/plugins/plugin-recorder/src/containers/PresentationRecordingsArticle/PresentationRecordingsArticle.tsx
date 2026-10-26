@@ -15,6 +15,7 @@ import { log } from '@dxos/log';
 import type * as Presentation from '@dxos/plugin-presenter/Presentation';
 import type * as Variant from '@dxos/plugin-studio/Variant';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { type RecordingItem, RecordingList, RecordingsPanel } from '#components';
@@ -41,8 +42,8 @@ const headingOf = (content: string): string | undefined =>
 
 /**
  * The presentation's voice-over (its companion), in the layout every Recordings companion shares: each presented
- * slide with its main take. The toolbar records every slide (a take per slide), plays the current slide or all of
- * them in order, downloads the main takes as one file, and opens the current slide; the status bar plays.
+ * slide as a tile (its main take, with Play and Open). The toolbar records every slide (a take per
+ * slide), plays every main take in order, and downloads them as one file; the status bar plays the current slide.
  */
 export const PresentationRecordingsArticle = ({
   role,
@@ -65,9 +66,17 @@ export const PresentationRecordingsArticle = ({
     all: false,
   });
   const stop = useCallback(() => setPlay(({ count }) => ({ count: count + 1, autoPlay: false, all: false })), []);
+  // A tile's Play plays its slide's main take, or stops it when it is the one playing.
   const handlePlay = useCallback(
-    () => setPlay(({ count, autoPlay }) => ({ count: count + 1, autoPlay: !autoPlay, all: false })),
-    [],
+    (id: string) => {
+      if (play.autoPlay && current?.id === id) {
+        stop();
+      } else {
+        setCurrentId(id);
+        setPlay(({ count }) => ({ count: count + 1, autoPlay: true, all: false }));
+      }
+    },
+    [play.autoPlay, current, stop],
   );
   const handlePlayAll = useCallback(() => {
     if (play.autoPlay) {
@@ -100,15 +109,18 @@ export const PresentationRecordingsArticle = ({
     }
   }, [voiced, presentation]);
 
-  const handleOpen = useCallback(() => {
-    const db = Obj.getDatabase(presentation);
-    if (db && current) {
-      void invokePromise(LayoutOperation.Open, {
-        subject: [GraphPath.getCollectionObjectPath(GraphPath.getObjectPathFromObject(presentation), current.id)],
-        workspace: GraphPath.getSpacePath(db.spaceId),
-      });
-    }
-  }, [presentation, current, invokePromise]);
+  const handleOpen = useCallback(
+    (id: string) => {
+      const db = Obj.getDatabase(presentation);
+      if (db) {
+        void invokePromise(LayoutOperation.Open, {
+          subject: [GraphPath.getCollectionObjectPath(GraphPath.getObjectPathFromObject(presentation), id)],
+          workspace: GraphPath.getSpacePath(db.spaceId),
+        });
+      }
+    },
+    [presentation, invokePromise],
+  );
 
   const menuActions = useMenuBuilder(
     (): ActionGraphProps =>
@@ -125,17 +137,6 @@ export const PresentationRecordingsArticle = ({
           () => void handleRecord(),
         )
         .separator()
-        .action(
-          'play',
-          {
-            label: [play.autoPlay && !play.all ? 'stop-take.label' : 'play-slide.label', { ns: meta.profile.key }],
-            icon: play.autoPlay && !play.all ? 'ph--stop--regular' : 'ph--play--regular',
-            disposition: 'toolbar',
-            disabled: !current?.take,
-            testId: 'recorder.presentation.play-slide',
-          },
-          handlePlay,
-        )
         .action(
           'play-all',
           {
@@ -158,30 +159,8 @@ export const PresentationRecordingsArticle = ({
           },
           () => void handleDownload(),
         )
-        .action(
-          'open',
-          {
-            label: ['open-slide.label', { ns: meta.profile.key }],
-            icon: 'ph--arrow-square-out--regular',
-            disposition: 'toolbar',
-            disabled: !current,
-            testId: 'recorder.presentation.open',
-          },
-          handleOpen,
-        )
         .build(),
-    [
-      handleRecord,
-      recorder,
-      play,
-      current,
-      handlePlay,
-      voiced.length,
-      handlePlayAll,
-      exporting,
-      handleDownload,
-      handleOpen,
-    ],
+    [handleRecord, recorder, play, voiced.length, handlePlayAll, exporting, handleDownload],
   );
 
   return (
@@ -202,9 +181,32 @@ export const PresentationRecordingsArticle = ({
         items={items}
         value={current?.id}
         onValueChange={(id) => {
-          setCurrentId(id);
-          stop();
+          if (id !== current?.id) {
+            setCurrentId(id);
+            stop();
+          }
         }}
+        renderActions={(item) => (
+          <>
+            <Button.Root
+              data-testid='recorder.slide.play'
+              icon={play.autoPlay && current?.id === item.id ? 'ph--stop--regular' : 'ph--play--regular'}
+              iconOnly
+              variant='ghost'
+              disabled={!item.take}
+              label={t(play.autoPlay && current?.id === item.id ? 'stop-take.label' : 'play-slide.label')}
+              onClick={() => handlePlay(item.id)}
+            />
+            <Button.Root
+              data-testid='recorder.slide.open'
+              icon='ph--arrow-square-out--regular'
+              iconOnly
+              variant='ghost'
+              label={t('open-slide.label')}
+              onClick={() => handleOpen(item.id)}
+            />
+          </>
+        )}
       />
     </RecordingsPanel>
   );

@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
+import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -33,13 +34,30 @@ const slides: RecordingItem[] = [
 
 const DefaultStory = ({ items }: { items: RecordingItem[] }) => {
   const [value, setValue] = useState(items[0]?.id);
-  return <RecordingList label='Takes' items={items} value={value} onValueChange={setValue} />;
+  return (
+    <RecordingList
+      label='Takes'
+      items={items}
+      value={value}
+      onValueChange={setValue}
+      renderActions={(item) => (
+        <Button.Root
+          icon='ph--play--regular'
+          iconOnly
+          variant='ghost'
+          label='Play'
+          disabled={item.duration === undefined}
+          data-testid='story.play'
+        />
+      )}
+    />
+  );
 };
 
 const meta = {
   title: 'plugins/plugin-recorder/components/RecordingList',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-[28rem]' })],
+  decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'w-[36rem]' })],
   parameters: { translations },
 } satisfies Meta<typeof DefaultStory>;
 
@@ -65,5 +83,7 @@ export const Test: Story = {
     await userEvent.click(rows[0]);
     await userEvent.keyboard('{ArrowDown}');
     await expect(rows[1]).toHaveAttribute('aria-selected', 'true');
+    // 4. Every tile carries its own buttons.
+    await expect(canvas.getAllByTestId('story.play')).toHaveLength(3);
   },
 };
