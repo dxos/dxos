@@ -6,8 +6,6 @@
 
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
-import { log } from '@dxos/log';
-
 import * as Protocol from '../client/Protocol.ts';
 import * as McpClient from './McpClient.ts';
 
@@ -144,7 +142,6 @@ export const make = ({
       const result = await client.callTool(request.tool, toolArgs);
       reply(res, 200, { ok: true, result });
     } catch (error) {
-      log.info('code-index call failed', { tool: request.tool, error: String(error) });
       // 200 with `ok: false`: the route worked and the index refused, which the caller reports, not retries.
       reply(res, 200, { ok: false, error: error instanceof Error ? error.message : String(error) });
     }
