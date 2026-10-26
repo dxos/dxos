@@ -5,15 +5,21 @@
 
 /**
  * Lays a prompter take onto its video. The prompter keeps recording while the reader finishes a section past its slot
- * and logs each such hold (`<take>.json`: `{ holds: [{ at, seconds }] }`), so the picture freezes on its frame at
- * `at` for `seconds` and the voice stays in step. The voice is normalized to -16 LUFS for the web.
+ * and logs each such hold (`<take>.json`: `{ video, holds: [{ at, seconds }] }`), so the picture makes up that time
+ * and the voice stays in step. `--fit stretch` (the default) slows the whole section that ran over, from its start to
+ * `at`, so it lasts as long as the read; `--fit freeze` holds the frame at `at` instead. The voice is normalized to
+ * -16 LUFS for the web.
+ *
+ * A section starts at the previous hold, or for the first one at `--lead` seconds: the first cue's time, read from
+ * the prompter's `cues.json` beside the take when not given. The lead-in before it plays at normal speed.
  *
  *   node tools/autocue/showcase/voice-mux.mjs --video temp/voice/echo.mp4 --take temp/voice/echo-20261026-020432 \
- *     [--out temp/voice/echo-voiced.mp4]
+ *     [--out temp/voice/echo-voiced.mp4] [--fit stretch|freeze] [--lead 3.5]
  */
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { parseArgs } from 'node:util';
 
 const { values } = parseArgs({
@@ -21,6 +27,8 @@ const { values } = parseArgs({
     video: { type: 'string' },
     take: { type: 'string' },
     out: { type: 'string' },
+    fit: { type: 'string', default: 'stretch' },
+    lead: { type: 'string' },
   },
 });
 if (!values.video || !values.take) {
@@ -30,7 +38,11 @@ if (!values.video || !values.take) {
 
 const take = values.take.replace(/\.(webm|json)$/, '');
 const out = values.out ?? `${take}.voiced.mp4`;
-const { holds = [] } = existsSync(`${take}.json`) ? JSON.parse(readFileSync(`${take}.json`, 'utf8')) : {};
+const { video: name, holds = [] } = existsSync(`${take}.json`) ? JSON.parse(readFileSync(`${take}.json`, 'utf8')) : {};
+const cuesFile = join(dirname(take), 'cues.json');
+const lead = Number(
+  values.lead ?? (existsSync(cuesFile) ? (JSON.parse(readFileSync(cuesFile, 'utf8'))[name]?.[0]?.at ?? 0) : 0),
+);
 const duration = Number(
   execFileSync('ffprobe', [
     '-v',
@@ -43,21 +55,37 @@ const duration = Number(
   ]).toString(),
 );
 
-// Cut the picture at each hold and freeze the cut's last frame for the hold's length; a hold at the end freezes the last frame.
-const cuts = [...holds].sort((left, right) => left.at - right.at);
-const bounds = [0, ...cuts.map((hold) => Math.min(hold.at, duration)), duration];
+const cuts = [...holds]
+  .sort((left, right) => left.at - right.at)
+  .map((hold) => ({ ...hold, at: Math.min(hold.at, duration) }));
 const filters = [];
 const labels = [];
-for (let index = 0; index < bounds.length - 1; index++) {
-  const [start, end] = [bounds[index], bounds[index + 1]];
-  const freeze = cuts[index]?.seconds ?? 0;
-  if (end - start < 0.001 && freeze === 0) {
-    continue;
+const segment = (start, end, extra) => {
+  if (end - start < 0.001 && extra === 0) {
+    return;
   }
-  const pad = freeze > 0 ? `,tpad=stop_mode=clone:stop_duration=${freeze.toFixed(3)}` : '';
-  filters.push(`[0:v]trim=start=${start}:end=${end},setpts=PTS-STARTPTS${pad}[v${index}]`);
-  labels.push(`[v${index}]`);
+  const label = `[v${labels.length}]`;
+  const span = end - start;
+  // Stretch slows the section evenly; freeze holds its last frame. Either way the segment gains `extra` seconds.
+  const fit =
+    extra === 0
+      ? ''
+      : values.fit === 'freeze' || span < 0.5
+        ? `,tpad=stop_mode=clone:stop_duration=${extra.toFixed(3)}`
+        : `,setpts=PTS*${((span + extra) / span).toFixed(6)},fps=60`;
+  filters.push(`[0:v]trim=start=${start}:end=${end},setpts=PTS-STARTPTS${fit}${label}`);
+  labels.push(label);
+};
+let cursor = 0;
+if (values.fit !== 'freeze' && cuts.length > 0 && lead > 0 && lead < cuts[0].at) {
+  segment(0, lead, 0);
+  cursor = lead;
 }
+for (const hold of cuts) {
+  segment(cursor, hold.at, hold.seconds);
+  cursor = hold.at;
+}
+segment(cursor, duration, 0);
 const total = duration + cuts.reduce((sum, hold) => sum + hold.seconds, 0);
 filters.push(`${labels.join('')}concat=n=${labels.length}:v=1:a=0[v]`);
 // Silence pads a voice that ends before the picture; the picture's length decides the output's.
@@ -74,4 +102,6 @@ execFileSync(
   ],
   { stdio: 'inherit' },
 );
-console.log(`wrote ${out}: ${total.toFixed(1)}s (${duration.toFixed(1)}s of picture + ${cuts.length} holds)`);
+console.log(
+  `wrote ${out}: ${total.toFixed(1)}s (${duration.toFixed(1)}s of picture, ${cuts.length} sections fitted by ${values.fit})`,
+);
