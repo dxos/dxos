@@ -11,6 +11,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
 
@@ -53,6 +54,35 @@ export type FeatureBoardFilterProps = {
   onValueChange: (value: FeatureFilter) => void;
 };
 
+type FeatureStatusTagProps = {
+  status: FeatureStatus;
+  count: number;
+  pressed: boolean;
+  onClick: () => void;
+};
+
+/**
+ * A status filter: neutral until pressed, then the status's own tag colour, as the cards show it. In a toolbar it joins
+ * the roving focus, so the arrow keys move between it and the field rather than jumping back to the field.
+ */
+const FeatureStatusTag = ({ status, count, pressed, onClick }: FeatureStatusTagProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const itemProps = Toolbar.useToolbarItem();
+  return (
+    <Tag.Tag
+      {...itemProps}
+      hue={pressed ? FEATURE_STATUS_STYLE[status].hue : 'neutral'}
+      aria-pressed={pressed}
+      onClick={onClick}
+      data-testid={`feature-board.status.${status}`}
+    >
+      <Icon.Icon icon={FEATURE_STATUS_STYLE[status].icon} size='xs' />
+      {t(`feature-status.${status}.label`)}
+      <span className='text-xs tabular-nums'>({count})</span>
+    </Tag.Tag>
+  );
+};
+
 /**
  * The board's filter field and a toggleable tag per status, rendered without a container so a host can place them in its own
  * row or toolbar. The status counts are the toggles, so each says how many cards it adds.
@@ -86,18 +116,13 @@ export const FeatureBoardFilter = ({ features, value, onValueChange }: FeatureBo
           // A pressed status stays shown at zero, or its filter would hide the cards with no toggle left to clear it.
           return (
             (count > 0 || pressed) && (
-              // Neutral until pressed, then the status's own tag colour, as the cards show it.
-              <Tag.Tag
+              <FeatureStatusTag
                 key={status}
-                hue={pressed ? FEATURE_STATUS_STYLE[status].hue : 'neutral'}
-                aria-pressed={pressed}
+                status={status}
+                count={count}
+                pressed={pressed}
                 onClick={() => toggleStatus(status, !pressed)}
-                data-testid={`feature-board.status.${status}`}
-              >
-                <Icon.Icon icon={FEATURE_STATUS_STYLE[status].icon} size='xs' />
-                {t(`feature-status.${status}.label`)}
-                <span className='text-xs tabular-nums'>({count})</span>
-              </Tag.Tag>
+              />
             )
           );
         })}
