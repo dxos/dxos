@@ -12,6 +12,7 @@ import {
   format,
   fromSegment,
   getCandidateEntityIds,
+  getUnresolvedPairs,
   getUnresolvedPlankId,
   initialPlanks,
   parse,
@@ -140,5 +141,19 @@ describe('initialPlanks', () => {
       { segment: 'object/01JXYZ', id: 'resolved' },
       { segment: 'object/01JABC', id: getUnresolvedPlankId(other) },
     ]);
+  });
+});
+
+describe('getUnresolvedPairs', () => {
+  test('keys each plank pair by its placeholder id and leaves the companion out', ({ expect }) => {
+    const doc = { key: 'object', id: '01JXYZ', workspace: WORKSPACE };
+    const home = { key: 'home', workspace: WORKSPACE };
+    const companion = { key: 'companion', id: 'comments', workspace: WORKSPACE };
+    expect(getUnresolvedPairs([doc, companion, home])).toEqual(
+      new Map([
+        [getUnresolvedPlankId(doc), doc],
+        [getUnresolvedPlankId(home), home],
+      ]),
+    );
   });
 });

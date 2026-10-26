@@ -109,6 +109,10 @@ export const getCandidateEntityIds = (pairId: string, tailSeparator: string): st
 export const getUnresolvedPlankId = (pair: UrlPath.Pair): string =>
   [GraphPath.getSpacePath(pair.workspace), pair.key, pair.id].filter((segment) => segment !== undefined).join('/');
 
+/** A navigation's plank pairs by the placeholder id each plank holds until it resolves. */
+export const getUnresolvedPairs = (pairs: readonly UrlPath.Pair[]): Map<string, UrlPath.Pair> =>
+  new Map(pairs.filter((pair) => pair.key !== UrlPath.COMPANION_KEY).map((pair) => [getUnresolvedPlankId(pair), pair]));
+
 /**
  * The planks a chain opens before it resolves: each pair under the id `idsBySegment` holds for its
  * segment, else under a placeholder the resolved id replaces.
