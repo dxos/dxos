@@ -142,8 +142,12 @@ export class TakeRecorder implements RecorderCapabilities.Recorder {
 
       this.#stream = new MediaStream([...(video?.getVideoTracks() ?? []), ...audio.getAudioTracks()]);
       this.#mimeType = pickMimeType(video ? VIDEO_TYPES : AUDIO_TYPES);
-      // Ending the browser's screen share ends the recording.
-      video?.getVideoTracks()[0]?.addEventListener('ended', () => this.stop());
+      // Ending the browser's screen share ends the recording; a share ended during the prompts above fired no event.
+      const videoTrack = video?.getVideoTracks()[0];
+      if (videoTrack?.readyState === 'ended') {
+        throw new Error('The screen share ended before recording started.');
+      }
+      videoTrack?.addEventListener('ended', () => this.stop());
       this.#presentation = presentation;
       this.#source = source;
       this.#session = new Session({ slideId: slide?.id });
