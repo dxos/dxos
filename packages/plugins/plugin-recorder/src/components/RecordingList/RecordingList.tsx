@@ -7,7 +7,6 @@ import React, { type ReactNode, useMemo, useRef } from 'react';
 import { Listbox } from '@dxos/react-ui-list';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
-import * as Layout from '@dxos/react-ui/Layout';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -54,7 +53,7 @@ export type RecordingListProps<T extends RecordingItem = RecordingItem> = {
 };
 
 /**
- * The tiles of a Recordings companion, one per row: a slide's takes, or a presentation's slides, keyboard navigable
+ * The tiles of a Recordings companion, each one compact row (icon, label, time, buttons): a slide's takes, or a presentation's slides, keyboard navigable
  * (up and down move the current tile, which scrolls into view). Each tile shows its length against the desired
  * length, flagged when over, marks the main take, and carries its own buttons.
  */
@@ -104,42 +103,41 @@ export const RecordingList = <T extends RecordingItem>({
               data-testid='recorder.item'
               data-main={item.main ? 'true' : undefined}
               data-recorded={item.duration !== undefined ? 'true' : undefined}
-              classNames='flex flex-col items-stretch gap-1 rounded-sm border border-separator p-2'
+              classNames='flex items-center gap-2 rounded-sm border border-separator px-2 py-1'
             >
-              <Layout.Flex align='center' gap='xs'>
-                <Icon.Icon
-                  size='sm'
-                  icon={
-                    item.error
-                      ? 'ph--warning--regular'
-                      : item.video
-                        ? 'ph--video-camera--regular'
-                        : 'ph--microphone--regular'
-                  }
-                  classNames={mx('shrink-0', item.error && 'text-error-text')}
-                />
-                <Listbox.ItemText classNames='truncate text-sm'>
-                  {item.index !== undefined && (
-                    <span className='me-1.5 tabular-nums text-fg-subtle'>{item.index + 1}</span>
-                  )}
-                  {item.title}
-                </Listbox.ItemText>
-                <span className='grow' />
-                {renderActions?.(item)}
-              </Layout.Flex>
-              <Layout.Flex align='center' gap='sm' classNames='text-xs'>
-                <span className={mx('truncate', item.error ? 'text-error-text' : 'text-fg-subtle')}>
+              <Icon.Icon
+                size='sm'
+                icon={
+                  item.error
+                    ? 'ph--warning--regular'
+                    : item.video
+                      ? 'ph--video-camera--regular'
+                      : 'ph--microphone--regular'
+                }
+                classNames={mx('shrink-0', item.error && 'text-error-text')}
+              />
+              <Listbox.ItemText classNames='min-w-0 grow truncate text-sm'>
+                {item.index !== undefined && (
+                  <span className='me-1.5 tabular-nums text-fg-subtle'>{item.index + 1}</span>
+                )}
+                {item.title}
+              </Listbox.ItemText>
+              {item.description && (
+                <span
+                  className={mx('shrink truncate text-xs', item.error ? 'text-error-text' : 'text-fg-subtle')}
+                  title={item.description}
+                >
                   {item.description}
                 </span>
-                <span className='grow' />
-                <span
-                  data-over={over ? 'true' : undefined}
-                  className={mx('shrink-0 font-mono', over ? 'text-error-text' : 'text-fg-muted')}
-                >
-                  {item.duration === undefined ? t('no-take.label') : formatSeconds(item.duration)}
-                  {item.desired !== undefined && ` / ${formatSeconds(item.desired)}`}
-                </span>
-              </Layout.Flex>
+              )}
+              <span
+                data-over={over ? 'true' : undefined}
+                className={mx('shrink-0 font-mono text-xs', over ? 'text-error-text' : 'text-fg-muted')}
+              >
+                {item.duration === undefined ? t('no-take.label') : formatSeconds(item.duration)}
+                {item.desired !== undefined && ` / ${formatSeconds(item.desired)}`}
+              </span>
+              {renderActions?.(item)}
             </Listbox.Item>
           );
         })}

@@ -67,7 +67,7 @@ export const SlideRecordingsArticle = ({ role, attendableId, slide }: SlideRecor
     if (current?.error) {
       recorder?.download(current.id);
     } else if (src && current) {
-      downloadUrl(src, `${current.title}.${extension(current.contentType ?? '')}`);
+      downloadUrl(src, `${current.take?.name ?? current.id}.${extension(current.contentType ?? '')}`);
     }
   }, [current, src, recorder]);
 
@@ -161,9 +161,11 @@ export const SlideRecordingsArticle = ({ role, attendableId, slide }: SlideRecor
               iconOnly
               variant='ghost'
               classNames={item.main ? 'text-accent-text' : undefined}
-              disabled={!item.take || item.main}
+              disabled={!item.take}
               label={t(item.main ? 'main-take.label' : 'select-take.label')}
-              onClick={() => item.take && void invokePromise(RecorderOperation.SelectTake, { slide, take: item.take })}
+              onClick={() =>
+                item.take && !item.main && void invokePromise(RecorderOperation.SelectTake, { slide, take: item.take })
+              }
             />
             <Button.Root
               data-testid='recorder.take.play'
@@ -199,7 +201,7 @@ const useSlideTakes = (slide: Presentation.Slide): TakeRow[] => {
           return [
             {
               id: take.id,
-              title: take.name ?? take.id,
+              title: take.name ? Take.formatName(take.name) : take.id,
               duration: takeLog.duration,
               desired: snapshot.duration,
               main: ref.uri === mainUri,
@@ -223,7 +225,7 @@ const usePendingTakes = (recorder: RecorderCapabilities.Recorder | undefined, sl
     .filter((take) => take.slideId === slide.id)
     .map((take) => ({
       id: take.id,
-      title: take.name,
+      title: Take.formatName(take.name),
       description: t('unsaved-take.message', { error: take.error }),
       duration: take.log.duration,
       desired: slide.duration,

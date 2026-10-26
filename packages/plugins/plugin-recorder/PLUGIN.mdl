@@ -111,8 +111,8 @@ component SlideRecordingsArticle
     The Recordings companion of a Slide, on RecordingsPanel. The toolbar records a new take of the slide (the deck
     presents from it; the recording ends when the reader leaves it) and acts on the current take: Download, Delete
     (undoable); an unsaved take adds Save again, and Delete discards it. Each take is a tile in one column, newest
-    first, unsaved ones first, with a star (filled on the main take; it makes a take main), Play, and its length
-    against the slide's desired length.
+    first, unsaved ones first, as one compact row: an icon, the date and time it was recorded, its length against the
+    slide's desired length, a star (filled on the main take; it makes a take main), and Play.
   props: { slide: Slide }
 
 component PresentationRecordingsArticle
@@ -367,4 +367,20 @@ decision D-21: The tiles have small rounded corners, and the star that makes a t
   date: 2026-10-26
   by: user:richburdon
   affects: [SlideRecordingsArticle, F-2.2]
+```
+
+```mdl
+decision D-22: A take is labelled by the date and time it was recorded, and every tile is one compact row: icon, label, time, buttons.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [RecordingsPanel, SlideRecordingsArticle]
+```
+
+```mdl
+decision D-23: The date and time come from the take's name (its UTC start), shown in the reader's locale and time zone, so takes recorded before this change are labelled too. Fills in [D-22].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:richburdon
+  affects: [Take.Log]
+  why: Every take is already named by its start time; a new field would leave existing takes unlabelled.
 ```
