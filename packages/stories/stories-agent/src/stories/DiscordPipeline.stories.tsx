@@ -52,7 +52,7 @@ type Story = StoryObj<StoryArgs>;
  * The Discord back-index against a real Discord server: a remote timer trigger runs plugin-discord's
  * `CrawlDiscordChannels` on EDGE with the space's Discord token, keeps its progress in a `CrawlState` and appends the
  * facts it extracts to a fact feed, which the agent's brain indexes once the feed is registered with it. Needs an EDGE
- * with the brain's fact feed routes (the edge branch `dm/elegant-euler-at56gd`, local or deployed) and the Discord setup
+ * with the brain's fact feed routes (local or deployed) and the Discord setup
  * in the package README.
  *
  * Try:

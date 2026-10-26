@@ -15,7 +15,7 @@ import { Message, Thread } from '@dxos/types';
 import { AgentIdentity, CommentOperation } from '#types';
 
 import { restoreAnchor, snapshotAnchor } from '../anchor-preservation.ts';
-import { FAILED_TEXT, PENDING_TEXT } from '../util/pending.ts';
+import { FAILED_TEXT, PENDING_TEXT } from '../util/index.ts';
 
 /** A turn this long without settling is treated as failed, so the thread never waits on it forever. */
 const TURN_TIMEOUT = '3 minutes';

@@ -295,7 +295,7 @@ const awaitAgent = (canvasElement: HTMLElement, replied: () => boolean, timeout:
 /** The pending message plugin-review shows while the agent works. */
 const PENDING = /Working on it/;
 
-/** The comment that once went unanswered: a lowercase mention asking for an edit of the anchored text. */
+/** A lowercase mention asking for an edit of the anchored text. */
 const TRANSLATE = '@kai translate this into japanese';
 
 /**
