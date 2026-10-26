@@ -67,8 +67,8 @@ The spoken lines, one bullet per line read; each slide starts at its time in the
 1. **The Silo Problem** (at 0.5s)
    - SaaS has siloed our data for decades.
    - This was a consequence of cloud software economics.
-   - But today apps are easier to build, and agents need all of our data to be useful.
-   - That demands a new data and security model.
+   - But today agents need access to all of our data to be effective.
+   - And this demands a new data and security model.
 
 2. **Monolithic Agents** (at 10.5s)
    - Today we grant agents coarse-grained access to everything, with no audit and limited control.

@@ -5,10 +5,10 @@
     "lines": [
       "SaaS has siloed our data for decades.",
       "This was a consequence of cloud software economics.",
-      "But today apps are easier to build, and agents need all of our data to be useful.",
-      "That demands a new data and security model."
+      "But today agents need access to all of our data to be effective.",
+      "And this demands a new data and security model."
     ],
-    "text": "SaaS has siloed our data for decades. This was a consequence of cloud software economics. But today apps are easier to build, and agents need all of our data to be useful. That demands a new data and security model."
+    "text": "SaaS has siloed our data for decades. This was a consequence of cloud software economics. But today agents need access to all of our data to be effective. And this demands a new data and security model."
   },
   {
     "at": 10.5,
