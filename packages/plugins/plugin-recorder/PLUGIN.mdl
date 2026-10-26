@@ -112,7 +112,7 @@ component SlideRecordingsArticle
     The Recordings companion of a Slide, on RecordingsPanel. The toolbar records a new take of the slide (the deck
     presents from it; the recording ends when the reader leaves it), and saves an unsaved take again. The takes are a
     list with columns, newest first, unsaved ones first: an icon, the date and time it was recorded, its length, the
-    slide's desired length, then a check (green on the main take; it makes a take main), Play (in the status bar) and
+    slide's desired length, then a circle that a green check circle fills on the main take (it makes a take main), Play (in the status bar) and
     Delete (undoable; it discards an unsaved take).
   props: { slide: Slide }
 
@@ -120,7 +120,7 @@ component PresentationRecordingsArticle
   desc: >
     The Recordings companion of a Presentation, on RecordingsPanel. The toolbar records every slide (a take per
     slide), plays every main take in order, and downloads them as one WAV. The presented slides are a list with
-    columns: a check (green when the slide has a main take), number and title, take count, main take's length, desired
+    columns: number and title (no leading icon), take count, main take's length, desired
     length, then Play (its main take); a double-click opens the slide.
   props: { presentation: Presentation }
 
@@ -439,4 +439,11 @@ decision D-30: The system checkmark is a new react-ui `SystemButton.Check` toggl
   for: user:richburdon
   affects: [RecordingsPanel]
   why: react-ui had no checkmark preset; Clipboard already shows its success state as a green check.
+```
+
+```mdl
+decision D-31: The presentation companion's rows have no leading icon; the slide companion's main-take toggle is a circle, a check circle when checked.
+  date: 2026-10-26
+  by: user:richburdon
+  affects: [SlideRecordingsArticle, PresentationRecordingsArticle]
 ```

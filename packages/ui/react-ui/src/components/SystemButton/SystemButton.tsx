@@ -156,10 +156,10 @@ const Bookmark = createTogglePreset('SystemButton.Bookmark', {
   activeLabelKey: 'system-button.unbookmark.label',
 });
 
-/** Marks one of several as chosen; green while checked. */
+/** Marks one of several as chosen: an empty circle, and a green check circle while checked. */
 const Check = createTogglePreset('SystemButton.Check', {
-  icon: 'ph--check--regular',
-  activeIcon: 'ph--check--bold',
+  icon: 'ph--circle--regular',
+  activeIcon: 'ph--check-circle--fill',
   labelKey: 'system-button.check.label',
   activeLabelKey: 'system-button.uncheck.label',
   iconValence: 'success',

@@ -228,7 +228,6 @@ const useVoicedSlides = (
               description: t('take-count.label', { count: slide.takes?.length ?? 0 }),
               duration: takeLog?.duration,
               desired: slide.duration,
-              main: main !== undefined,
               take: slide.mainTake?.target,
             },
           ];
