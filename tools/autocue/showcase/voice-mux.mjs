@@ -11,7 +11,9 @@
  * -16 LUFS for the web.
  *
  * A take that logs `sections` (`[{ start, end, seconds }]`, written when the prompter plays sections slowed) is fitted
- * from those instead: each section's picture is stretched to its real length.
+ * from those instead. Each section keeps the voice up to the end of its speech plus `--pad` seconds and drops the
+ * silence after it (the wait before Next was pressed), and its picture is stretched to that length; `--no-trim` keeps
+ * the whole of each section.
  *
  * Otherwise a section starts at the previous hold, or for the first one at `--lead` seconds: the first cue's time, read from
  * the prompter's `cues.json` beside the take when not given. The lead-in before it plays at normal speed.
@@ -20,7 +22,7 @@
  *     [--out temp/voice/echo-voiced.mp4] [--fit stretch|freeze] [--lead 3.5]
  */
 
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -33,6 +35,8 @@ const { values } = parseArgs({
     'fit': { type: 'string', default: 'stretch' },
     'lead': { type: 'string' },
     'extra-last': { type: 'string', default: '2' },
+    'pad': { type: 'string', default: '0.7' },
+    'no-trim': { type: 'boolean', default: false },
   },
 });
 if (!values.video || !values.take) {
@@ -70,28 +74,58 @@ const cuts = [...holds]
 const filters = [];
 const labels = [];
 const segment = (start, end, extra) => {
-  if (end - start < 0.001 && extra === 0) {
+  if (end - start < 0.001 && Math.abs(extra) < 0.001) {
     return;
   }
   const label = `[v${labels.length}]`;
   const span = end - start;
   // Stretch slows the section evenly; freeze holds its last frame. Either way the segment gains `extra` seconds.
   const fit =
-    extra === 0
+    Math.abs(extra) < 0.001
       ? ''
-      : values.fit === 'freeze' || span < 0.5
+      : (values.fit === 'freeze' && extra > 0) || span < 0.5
         ? `,tpad=stop_mode=clone:stop_duration=${extra.toFixed(3)}`
         : `,setpts=PTS*${((span + extra) / span).toFixed(6)},fps=60`;
   filters.push(`[0:v]trim=start=${start}:end=${end},setpts=PTS-STARTPTS${fit}${label}`);
   labels.push(label);
 };
-// A take that logs its sections (played slowed, then held) gives each section's real length directly. The last one
-// ends before the end card and gets `--extra-last` seconds, so the voice finishes on its slide with a beat to spare.
+// The voice's silences, each [start, end] in take time; a silence open at the start of the take starts at 0.
+const silences = () => {
+  const { stderr } = spawnSync(
+    'ffmpeg',
+    ['-nostdin', '-i', `${take}.webm`, '-af', 'silencedetect=noise=-40dB:d=0.6', '-f', 'null', '-'],
+    { encoding: 'utf8' },
+  );
+  const gaps = [];
+  let start = 0;
+  for (const [, kind, value] of stderr.matchAll(/silence_(start|end): ([-\d.]*)/g)) {
+    if (kind === 'start') {
+      start = Number(value) || 0;
+    } else {
+      gaps.push([start, Number(value)]);
+    }
+  }
+  return gaps;
+};
+
+// A take that logs its sections (played slowed, then held) gives each section's real length directly. Trimmed, a
+// section keeps its voice to the end of its speech plus `--pad`, dropping the wait before Next. The last section ends
+// before the end card and gets `--extra-last` seconds, so the voice finishes on its slide with a beat to spare.
+const gaps = sections.length > 0 && !values['no-trim'] ? silences() : [];
+let clock = lead;
 const fitted = sections.map(({ start, end, seconds }, index) => {
   const last = index === sections.length - 1;
   const stop = Math.min(end, duration, last && lastEnd ? lastEnd : Infinity);
-  const real = seconds - (Math.min(end, duration) - stop) + (last ? Number(values['extra-last']) : 0);
-  return { start, end: stop, extra: Math.max(0, real - (stop - start)) };
+  const from = clock;
+  clock += seconds;
+  let keep = seconds - (Math.min(end, duration) - stop);
+  if (!values['no-trim']) {
+    const trailing = gaps.filter(([gapStart, gapEnd]) => gapStart >= from && gapStart < clock && gapEnd >= clock - 0.3);
+    const speechEnd = trailing.length > 0 ? Math.min(...trailing.map(([gapStart]) => gapStart)) : clock;
+    keep = Math.min(seconds, speechEnd - from + Number(values.pad));
+  }
+  const length = keep + (last ? Number(values['extra-last']) : 0);
+  return { start, end: stop, extra: length - (stop - start), from, keep };
 });
 let cursor = 0;
 if (fitted.length > 0) {
@@ -116,8 +150,22 @@ const total =
     ? duration + fitted.reduce((sum, { extra }) => sum + extra, 0)
     : duration + cuts.reduce((sum, hold) => sum + hold.seconds, 0);
 filters.push(`${labels.join('')}concat=n=${labels.length}:v=1:a=0[v]`);
-// Silence pads a voice that ends before the picture; the picture's length decides the output's.
-filters.push(`[1:a]loudnorm=I=-16:TP=-1.5:LRA=11,apad,atrim=end=${total.toFixed(3)}[a]`);
+if (fitted.length > 0) {
+  // The voice in step with the picture: the lead-in, then each section's kept stretch of the take.
+  const slices = [[0, lead], ...fitted.map(({ from, keep }) => [from, from + keep])];
+  filters.push(`[1:a]asplit=${slices.length}${slices.map((_, index) => `[s${index}]`).join('')}`);
+  slices.forEach(([from, to], index) => {
+    const length = index === 0 ? to - from : fitted[index - 1].end - fitted[index - 1].start + fitted[index - 1].extra;
+    filters.push(
+      `[s${index}]atrim=start=${from}:end=${to},asetpts=PTS-STARTPTS,apad,atrim=end=${length.toFixed(3)}[t${index}]`,
+    );
+  });
+  filters.push(`${slices.map((_, index) => `[t${index}]`).join('')}concat=n=${slices.length}:v=0:a=1[voice]`);
+  filters.push(`[voice]loudnorm=I=-16:TP=-1.5:LRA=11,apad,atrim=end=${total.toFixed(3)}[a]`);
+} else {
+  // Silence pads a voice that ends before the picture; the picture's length decides the output's.
+  filters.push(`[1:a]loudnorm=I=-16:TP=-1.5:LRA=11,apad,atrim=end=${total.toFixed(3)}[a]`);
+}
 
 execFileSync(
   'ffmpeg',
