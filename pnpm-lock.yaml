@@ -26489,6 +26489,9 @@ importers:
 
   tools/mail-canary:
     dependencies:
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../packages/common/effect
       effect:
         specifier: 4.0.4
         version: 4.0.4

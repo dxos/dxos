@@ -56,6 +56,16 @@ def original_date(message):
     return min(max(parsed, EARLIEST), LATEST)
 
 
+def has_text(message):
+    """Whether any text part has content: the Gmail mapper drops a message with no body, so its copy would never sync."""
+    for part in message.walk():
+        if part.get_content_maintype() == 'text':
+            payload = part.get_payload(decode=True) or b''
+            if payload.strip():
+                return True
+    return False
+
+
 def remap(dates, end, span_days):
     """Maps original dates linearly onto [end - span, end], keeping their order and relative spacing."""
     first, last = min(dates), max(dates)
@@ -76,8 +86,10 @@ def main(argv):
     if not paths:
         sys.exit(f'error: no messages under {root}')
 
-    messages = [read_message(path) for path in paths]
-    end = datetime.now(timezone.utc).replace(microsecond=0) - timedelta(days=args.end_days_ago)
+    messages = [message for message in (read_message(path) for path in paths) if has_text(message)]
+    if len(messages) < len(paths):
+        print(f'skipped {len(paths) - len(messages)} messages without a text body')
+    end =datetime.now(timezone.utc).replace(microsecond=0) - timedelta(days=args.end_days_ago)
     dates = remap([original_date(message) for message in messages], end, args.span_days)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)

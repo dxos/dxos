@@ -66,7 +66,30 @@ would pull the whole pool in. To rebuild the pool, delete the canary space first
 
 ### 03 Create the canary identity and space
 
-See the comments in `scripts/03-setup-space.sh`.
+```bash
+scripts/03-setup-space.sh create <hub access code>   # dx profile, identity, space, recovery phrase
+scripts/03-setup-space.sh verify <space id>          # after binding Gmail, below
+```
+
+`create` runs the monorepo's `dx` (`packages/devtools/cli/bin/dx`, needs bun) with a `mail-canary`
+profile on preview:
+
+1. `dx profile create --template preview`;
+2. `dx account signup --method email <code> test@braneframe.com` — follow the emailed link;
+3. `dx space create --name "Mail canary"`, then `dx space list` for its id;
+4. `dx halo seed` for a recovery phrase.
+
+It prints the space id (repository variable `MAIL_CANARY_SPACE_ID`) and the recovery phrase
+(secret `MAIL_CANARY_RECOVERY_PHRASE`) once. Store both before closing the terminal.
+
+**Bind Gmail in Composer, once.** The CLI cannot do this step yet: no command creates the mailbox
+binding and its sync routine, and `dx connector add --preset google` stores the token under source
+`google.com` where plugin-google expects `com.google`. In Composer on preview, sign in with
+`test@braneframe.com`, open "Mail canary", add a Gmail connection for the test account, and accept
+the defaults: no filter, default sync-back, the remote `*/10` sync routine enabled.
+
+`verify` then reads the space through `dx eval` and should report one mailbox, one enabled remote
+timer trigger and one Execution Trace feed.
 
 ### 04 Nightly check
 
@@ -78,9 +101,14 @@ Each run:
 1. trashes `dx-seed` copies older than 2 days (keeps the inbox small and exercises deletes);
 2. copies `DX_CANARY_SEED_COUNT` pool messages (default 100) into the inbox, a different slice each
    day, so no cursor has to be stored;
-3. signs in to the canary identity with the recovery phrase and polls the space until every copy is
-   in the mailbox feed, for up to 45 minutes;
+3. signs in to the canary identity with the recovery phrase (`dx account login --method
+   recovery-code` in a throwaway `HOME`, so every run admits one new device) and polls the space
+   through `dx eval` until every copy is in the mailbox feed, for up to 45 minutes;
 4. runs the checks below and writes `report.json` and `summary.json` to `dirname($DX_CANARY_REPORT)`.
+
+The space reader (`src/read-space.ts`) pages both feeds newest first, 50 rows at a time, as sync's own
+dedup seed does: a feed query has no filter pushdown yet, so filtering by Gmail id would decode the
+whole feed, and EDGE fails a query response over 32 MiB.
 
 | Check | Fails when                                                                    | Classes          |
 | ----- | ----------------------------------------------------------------------------- | ---------------- |
@@ -106,6 +134,7 @@ C2 names the cause from the run's error: `DEADLINE` (`InvocationDeadlineError`),
 | `DX_CANARY_RECOVERY_PHRASE`  | 04        | recovery phrase of the canary identity (printed by step 03)             |
 | `DX_CANARY_SPACE_ID`         | 04        | the canary space (printed by step 03)                                   |
 | `DX_CANARY_SEED_COUNT`       | 04        | copies per night, default 100                                           |
+| `DX_CANARY_SYNC_TIMEOUT_MIN` | 04        | how long to wait for the copies, default 45                             |
 | `DX_CANARY_REPORT`           | 04        | where to write `report.json`; `summary.json` goes beside it             |
 
 In CI the first three are the secrets `MAIL_CANARY_GMAIL_*`, the recovery phrase is the secret

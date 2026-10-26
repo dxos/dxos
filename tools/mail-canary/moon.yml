@@ -8,6 +8,11 @@ tags:
 # task's default filter excludes. `nightly` is the live run against preview: it seeds the test
 # account, waits for the sync and checks the space, so it is uncached and never part of `Check`.
 tasks:
+  # The test task inherits coverage/junit outputs this package never writes.
+  test:
+    options:
+      mergeOutputs: replace
+    outputs: []
   nightly:
     command: bash -c 'pnpm exec vitest run --project=node --tagsFilter=sync-e2e src/canary.test.ts'
     deps:

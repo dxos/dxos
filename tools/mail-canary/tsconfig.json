@@ -10,5 +10,9 @@
   "include": [
     "src"
   ],
-  "references": []
+  "references": [
+    {
+      "path": "../../packages/common/effect"
+    }
+  ]
 }

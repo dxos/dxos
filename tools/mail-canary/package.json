@@ -13,6 +13,7 @@
   "author": "DXOS.org",
   "type": "module",
   "dependencies": {
+    "@dxos/effect": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {

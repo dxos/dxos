@@ -249,7 +249,15 @@ const cadenceGaps = (
   });
 };
 
-const normalize = (value?: string): string => (value ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
+// The mapper decodes HTML entities in the subject, so the comparison must too.
+const ENTITIES: Record<string, string> = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'" };
+
+const normalize = (value?: string): string =>
+  (value ?? '')
+    .replace(/&(amp|lt|gt|quot|#39);/g, (entity) => ENTITIES[entity])
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
 
 const contentMismatches = (expected: SeededMessage, actual: SyncedMessage): string[] => [
   ...(normalize(expected.subject) !== normalize(actual.subject) ? ['subject'] : []),
