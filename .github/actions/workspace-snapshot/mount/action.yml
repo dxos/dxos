@@ -66,7 +66,13 @@ runs:
           echo "mount: ${SECONDS}s, snapshot $(git -C "$GITHUB_WORKSPACE" rev-parse --short=12 HEAD)"
         )
 
-        if mount_snapshot; then
+        # A plain statement, not an `if` condition: bash ignores `set -e` inside anything run as a condition,
+        # so a failing step would fall through and report the mount as done.
+        set +e
+        mount_snapshot
+        status=$?
+        set -e
+        if [ "$status" -eq 0 ]; then
           echo "mounted=true" >> "$GITHUB_OUTPUT"
         else
           echo "::warning::Workspace snapshot $TAG unavailable; using the normal checkout and setup."

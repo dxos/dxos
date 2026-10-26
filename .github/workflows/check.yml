@@ -46,6 +46,10 @@ permissions:
   packages: read
 
 env:
+  # PR and merge-queue jobs mount the nightly workspace snapshot instead of checking out and installing
+  # (`.github/actions/workspace-snapshot`); nightly, manual and main runs keep the clean path as the canary.
+  # Setting the repository variable WORKSPACE_SNAPSHOT to `off` turns it off without a change here.
+  WORKSPACE_SNAPSHOT: ${{ (github.event_name == 'pull_request' || github.event_name == 'merge_group') && vars.WORKSPACE_SNAPSHOT != 'off' && 'true' || 'false' }}
   # Bound once here rather than at every setup call site: a composite action cannot read the
   # `secrets` context, but it does inherit the process environment.
   MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
@@ -99,6 +103,20 @@ jobs:
         with:
           detached: true
 
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
       # Full depth keeps the commit graph the affected resolver and moon's own merge-base resolve against,
       # while `filter: blob:none` stops the transfer of every historical file version — the previous
       # full fetch ranged 32s–15m on the same commit. No `lfs: true`: nothing in the tree is
@@ -107,6 +125,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
         with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
           fetch-depth: 0
           filter: blob:none
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
@@ -114,6 +134,8 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
 
       - name: Resolve affected scope
         id: affected
@@ -264,9 +286,25 @@ jobs:
       status: ${{ steps.compare.outputs.status || 'skipped' }}
       body: ${{ steps.compare.outputs.body }}
     steps:
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
       - name: Checkout
         uses: actions/checkout@v5
         with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
           fetch-depth: 0
           filter: blob:none
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
@@ -289,6 +327,8 @@ jobs:
       - name: Setup
         if: steps.scope.outputs.docs-only != 'true'
         uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
 
       - name: Check boot budget
         id: budget
@@ -470,9 +510,25 @@ jobs:
       MOON_CONCURRENCY: 4
       DX_TEST_RUN_ID: ${{ github.event_name == 'schedule' && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
     steps:
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
       - name: Checkout
         uses: actions/checkout@v5
         with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           filter: blob:none
@@ -480,6 +536,8 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
 
       - name: Resolve affected scope
         uses: ./.github/actions/affected
@@ -532,9 +590,25 @@ jobs:
     # holding the queue; the forced or cold builds keep the long cap.
     timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 20 }}
     steps:
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
       - name: Checkout
         uses: actions/checkout@v5
         with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           filter: blob:none
@@ -543,6 +617,7 @@ jobs:
       - name: Setup
         uses: ./.github/actions/setup
         with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
           rust: 'true'
 
       - name: Resolve affected scope
@@ -597,9 +672,25 @@ jobs:
       VITEST_XML_REPORT: 'true'
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     steps:
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
       - name: Checkout
         uses: actions/checkout@v5
         with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           filter: blob:none
@@ -607,6 +698,8 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
 
       # Everything this cell's targets depend on, at full concurrency and before any Chromium. No affected
       # scope: the list is the scope.
@@ -702,15 +795,33 @@ jobs:
         with:
           detached: true
 
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
       - name: Checkout
         uses: actions/checkout@v5
         with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
           fetch-depth: 0
           filter: blob:none
           persist-credentials: false
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
 
       - name: Resolve affected scope
         uses: ./.github/actions/affected
@@ -802,15 +913,33 @@ jobs:
         with:
           detached: true
 
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
       - name: Checkout
         uses: actions/checkout@v5
         with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
           fetch-depth: 0
           filter: blob:none
           persist-credentials: false
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
 
       - name: Resolve affected scope
         uses: ./.github/actions/affected
@@ -900,9 +1029,25 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
       - name: Checkout
         uses: actions/checkout@v5
         with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
           fetch-depth: 0
           filter: blob:none
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
@@ -910,6 +1055,8 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
 
       # `@dxos/cli` ships as prebuilt platform binaries, so its failure modes live in the packed tarball
       # rather than the source tree. Depends on `bundle`, so this compiles the binaries too.
