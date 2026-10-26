@@ -6,12 +6,45 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import { createServer } from 'node:http';
 
-import { GmailError } from './gmail.ts';
+import { GmailError, request } from './request.ts';
 
 /** Insert, import, label and trash: what the canary does to the test account. */
 export const GMAIL_MODIFY_SCOPE = 'https://www.googleapis.com/auth/gmail.modify';
 
+/**
+ * The test account's own OAuth grant (a Desktop client and a refresh token with `gmail.modify`).
+ * The canary runs outside EDGE, so it cannot use the kms-managed token the sync uses.
+ */
+export type GmailCredentials = {
+  readonly clientId: string;
+  readonly clientSecret: string;
+  readonly refreshToken: string;
+};
+
+/** The only mailbox the canary may write to; override with `GMAIL_ACCOUNT`. */
+export const canaryAccount = (env = process.env): string => env.GMAIL_ACCOUNT ?? 'test@braneframe.com';
+
+/** Reads the grant from `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET` and `GMAIL_REFRESH_TOKEN`. */
+export const credentialsFromEnv = (env = process.env): GmailCredentials | undefined =>
+  env.GMAIL_CLIENT_ID && env.GMAIL_CLIENT_SECRET && env.GMAIL_REFRESH_TOKEN
+    ? { clientId: env.GMAIL_CLIENT_ID, clientSecret: env.GMAIL_CLIENT_SECRET, refreshToken: env.GMAIL_REFRESH_TOKEN }
+    : undefined;
+
+const TokenResponse = Schema.Struct({ access_token: Schema.String });
 const CodeExchange = Schema.Struct({ refresh_token: Schema.optional(Schema.String) });
+
+/** Mints an access token from the refresh token. */
+export const accessToken = ({ clientId, clientSecret, refreshToken }: GmailCredentials) =>
+  request(TokenResponse, 'https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: refreshToken,
+      grant_type: 'refresh_token',
+    }),
+  }).pipe(Effect.map((body) => body.access_token));
 
 /**
  * Mints a refresh token for the canary's own Gmail grant with a one-time browser consent.
@@ -34,8 +67,8 @@ export const mintRefreshToken = ({
       new Promise<string>((resolve, reject) => {
         // Set once the server is listening; the consent request and the code exchange must name the same one.
         let redirectUri = '';
-        const server = createServer(async (request, response) => {
-          const url = new URL(request.url ?? '/', 'http://127.0.0.1');
+        const server = createServer(async (incoming, response) => {
+          const url = new URL(incoming.url ?? '/', 'http://127.0.0.1');
           const code = url.searchParams.get('code');
           if (!code) {
             response.writeHead(404).end();

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { parseAddress, pickPoolSlice } from './seed.ts';
+import { parseAddress, pickPoolSlice } from './Seeder.ts';
 
 const DAY = 24 * 60 * 60 * 1000;
 

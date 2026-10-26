@@ -14,7 +14,7 @@ tasks:
       mergeOutputs: replace
     outputs: []
   nightly:
-    command: bash -c 'pnpm exec vitest run --project=node --tagsFilter=sync-e2e src/canary.test.ts'
+    command: bash -c 'pnpm exec vitest run --project=node --tagsFilter=sync-e2e src/nightly/canary.test.ts'
     deps:
       - cli:build
     options:

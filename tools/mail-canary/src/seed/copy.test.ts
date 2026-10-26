@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { SEED_HEADER, decodeRaw, encodeRaw, makeSeedCopy, readHeader } from './seed-copy.ts';
+import { SEED_HEADER, makeSeedCopy, readHeader } from './copy.ts';
 
 const POOL_MESSAGE = [
   'Message-ID: <12345.JavaMail.evans@thyme>',
@@ -47,10 +47,5 @@ describe('makeSeedCopy', () => {
     const copy = makeSeedCopy(POOL_MESSAGE.replaceAll('\r\n', '\n'), { poolId: 'id', now: NOW, nonce: 'n' });
     expect(copy.includes('\r')).toBe(false);
     expect(readHeader(copy, 'Subject')).toBe('Re: forecast for the west desk');
-  });
-
-  test('round-trips 8-bit bodies through base64url', ({ expect }) => {
-    const message = 'Subject: caf\xe9\r\n\r\nna\xefve body \xff';
-    expect(decodeRaw(encodeRaw(message))).toBe(message);
   });
 });

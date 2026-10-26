@@ -46,15 +46,8 @@ export const readHeader = (raw: string, name: string): string | undefined => {
   return [first.slice(first.indexOf(':') + 1), ...rest].map((line) => line.trim()).join(' ');
 };
 
-/** Decodes Gmail's base64url `raw` field. */
-export const decodeRaw = (raw: string): string => Buffer.from(raw, 'base64url').toString('latin1');
-
-/** Encodes a message for Gmail's base64url `raw` field. */
-export const encodeRaw = (message: string): string => Buffer.from(message, 'latin1').toString('base64url');
-
 type SplitMessage = { headerLines: string[]; separator: string; body: string; newline: string };
 
-// Latin-1 round-trips every byte, so an 8-bit body survives decode and re-encode unchanged.
 const splitMessage = (raw: string): SplitMessage => {
   const newline = raw.includes('\r\n') ? '\r\n' : '\n';
   const separator = newline + newline;

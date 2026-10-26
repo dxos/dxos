@@ -12,7 +12,7 @@
 # Usage: scripts/02-import-pool.sh <path to enron-pool.mbox>
 #
 # Reads the canary's Gmail grant from GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET and GMAIL_REFRESH_TOKEN,
-# else from .secrets/mail-canary-gmail.env (`node src/main.ts auth`), else, with a 1Password service
+# else from .secrets/mail-canary-gmail.env (`node src/cli/canary.ts auth`), else, with a 1Password service
 # account (OP_SERVICE_ACCOUNT_TOKEN, as in the cloud sandbox), from the references in gmail.env.tpl.
 
 set -euo pipefail
@@ -24,9 +24,9 @@ ENV_FILE="$ROOT/.secrets/mail-canary-gmail.env"
 
 canary() {
   if [ -z "${GMAIL_REFRESH_TOKEN:-}" ] && [ ! -f "$ENV_FILE" ] && [ -n "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]; then
-    op run --env-file="$HERE/../gmail.env.tpl" -- node "$HERE/../src/main.ts" "$@"
+    op run --env-file="$HERE/../gmail.env.tpl" -- node "$HERE/../src/cli/canary.ts" "$@"
   else
-    node --env-file-if-exists="$ENV_FILE" "$HERE/../src/main.ts" "$@"
+    node --env-file-if-exists="$ENV_FILE" "$HERE/../src/cli/canary.ts" "$@"
   fi
 }
 

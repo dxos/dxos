@@ -61,7 +61,7 @@ Desktop-app OAuth client of the test account's Google Cloud project (see plugin-
 `test@braneframe.com` and writes `.secrets/mail-canary-gmail.env` at the repo root:
 
 ```bash
-GMAIL_CLIENT_ID=... GMAIL_CLIENT_SECRET=... node src/main.ts auth
+GMAIL_CLIENT_ID=... GMAIL_CLIENT_SECRET=... node src/cli/canary.ts auth
 ```
 
 To run the import from a cloud session instead, store the three values in 1Password as the fields
@@ -132,7 +132,7 @@ Each run:
    through `dx eval` until every copy is in the mailbox feed, for up to 45 minutes;
 4. runs the checks below and writes `report.json` and `summary.json` to `dirname($DX_CANARY_REPORT)`.
 
-The space reader (`src/read-space.ts`) pages both feeds newest first, 50 rows at a time, as sync's own
+The space reader (`src/space/read-space.ts`) pages both feeds newest first, 50 rows at a time, as sync's own
 dedup seed does: a feed query has no filter pushdown yet, so filtering by Gmail id would decode the
 whole feed, and EDGE fails a query response over 32 MiB.
 
@@ -168,7 +168,7 @@ In CI the first three are the secrets `MAIL_CANARY_GMAIL_*`, the recovery phrase
 `MAIL_CANARY_RECOVERY_PHRASE`, and the space id is the repository variable `MAIL_CANARY_SPACE_ID`.
 
 The Gmail grant is the test account's own, separate from the kms-managed token the sync uses, so a
-failing sync token cannot also blind the canary. `node src/main.ts auth` mints it with the
+failing sync token cannot also blind the canary. `node src/cli/canary.ts auth` mints it with the
 `gmail.modify` scope (step 02).
 
 ## Alerts
@@ -179,9 +179,26 @@ flat properties: `ciOk`, `ciFailedChecks`, `ciFailureClasses`, `ciSyncMinutes`, 
 
 ## Development
 
+```text
+scripts/                 one-time steps 01–03, run by hand in order
+src/
+  cli/canary.ts          auth | import-pool | pool-status | seed | trash
+  cli/summary.ts         report.json → Markdown for the job summary
+  gmail/GmailClient.ts   class GmailClient: the Gmail calls, as the test account only
+  gmail/auth.ts          the canary's grant: env, access token, browser consent
+  pool/Pool.ts           class Pool: import the mbox (step 02) and check it is ready
+  seed/Seeder.ts         class Seeder: copy pool mail into the inbox, trash and list old copies
+  seed/copy.ts           rewrite a pool message into a fresh copy
+  space/SpaceReader.ts   class SpaceReader: sign in with dx and snapshot the canary space
+  space/read-space.ts    the `dx eval` program that reads the feeds and the trigger
+  checks/checks.ts       checks C1–C7 over one snapshot (pure functions)
+  nightly/Nightly.ts     class Nightly: trash, seed, wait for sync, check
+  nightly/canary.test.ts the live nightly run (`sync-e2e`)
+```
+
 ```bash
 moon run mail-canary:test      # unit tests of the seeding and the checks; part of Check
 moon run mail-canary:nightly   # the live run; needs the variables above
-node --env-file-if-exists=../../.secrets/mail-canary-gmail.env src/main.ts seed --count 5
-node --env-file-if-exists=../../.secrets/mail-canary-gmail.env src/main.ts trash --days 2
+node --env-file-if-exists=../../.secrets/mail-canary-gmail.env src/cli/canary.ts seed --count 5
+node --env-file-if-exists=../../.secrets/mail-canary-gmail.env src/cli/canary.ts trash --days 2
 ```

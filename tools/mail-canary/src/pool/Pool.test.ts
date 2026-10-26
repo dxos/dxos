@@ -10,9 +10,8 @@ import { describe, test } from 'vitest';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { GmailError } from './gmail.ts';
-import { importPool } from './pool.ts';
-import { decodeRaw } from './seed-copy.ts';
+import { GmailError } from '../gmail/index.ts';
+import { Pool } from './Pool.ts';
 
 const mbox = (count: number) =>
   Array.from(
@@ -26,9 +25,10 @@ const fakeGmail = ({ failAt }: { failAt?: number } = {}) => {
   return {
     imported,
     gmail: {
+      count: () => Effect.succeed(0),
       ensureLabel: (name: string) => Effect.succeed(`label-${name}`),
-      importMessage: (raw: string, labelIds: readonly string[]) => {
-        const subject = decodeRaw(raw).match(/^Subject: (.*)$/m)?.[1] ?? '';
+      importMessage: (message: string, labelIds: readonly string[]) => {
+        const subject = message.match(/^Subject: (.*)$/m)?.[1] ?? '';
         if (failAt !== undefined && Number(subject) === failAt) {
           return Effect.fail(new GmailError({ message: 'quota', status: 403 }));
         }
@@ -39,12 +39,14 @@ const fakeGmail = ({ failAt }: { failAt?: number } = {}) => {
   };
 };
 
-describe('importPool', () => {
+describe('Pool.import', () => {
   test('imports every message archived under the pool label', async ({ expect }) => {
     const dir = mkdtempSync(join(tmpdir(), 'pool-'));
     writeFileSync(join(dir, 'pool.mbox'), mbox(120));
     const { gmail, imported } = fakeGmail();
-    const result = await EffectEx.runPromise(importPool(gmail, { mboxPath: join(dir, 'pool.mbox'), concurrency: 1 }));
+    const result = await EffectEx.runPromise(
+      new Pool(gmail).import({ mboxPath: join(dir, 'pool.mbox'), concurrency: 1 }),
+    );
     expect(result).toEqual({ total: 120, imported: 120, skipped: 0 });
     expect(imported[0]).toBe('0:label-enron-pool');
     expect(readFileSync(join(dir, 'pool.mbox.imported'), 'utf8')).toBe('120');
@@ -55,11 +57,13 @@ describe('importPool', () => {
     const mboxPath = join(dir, 'pool.mbox');
     writeFileSync(mboxPath, mbox(120));
     const first = fakeGmail({ failAt: 75 });
-    await expect(EffectEx.runPromise(importPool(first.gmail, { mboxPath, concurrency: 1 }))).rejects.toThrow('quota');
+    await expect(EffectEx.runPromise(new Pool(first.gmail).import({ mboxPath, concurrency: 1 }))).rejects.toThrow(
+      'quota',
+    );
     expect(readFileSync(`${mboxPath}.imported`, 'utf8')).toBe('50');
 
     const second = fakeGmail();
-    const result = await EffectEx.runPromise(importPool(second.gmail, { mboxPath, concurrency: 1 }));
+    const result = await EffectEx.runPromise(new Pool(second.gmail).import({ mboxPath, concurrency: 1 }));
     expect(result.imported).toBe(70);
     expect(second.imported[0]).toBe('50:label-enron-pool');
   });

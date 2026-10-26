@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type FailureClass, type Report } from './checks.ts';
+import { type FailureClass, type Report } from '../checks/index.ts';
 
 /** Everything one nightly run produced, written to disk before the test asserts. */
 export type NightlyReport = Report & {

@@ -12,10 +12,11 @@ import { describe, test } from 'vitest';
 
 import * as EffectEx from '@dxos/effect/EffectEx';
 
-import { accessToken, canaryAccount, credentialsFromEnv, makeGmail } from './gmail.ts';
-import { runNightly } from './nightly.ts';
+import { GmailClient, canaryAccount, credentialsFromEnv } from '../gmail/index.ts';
+import { Seeder } from '../seed/index.ts';
+import { SpaceReader } from '../space/index.ts';
+import { Nightly } from './Nightly.ts';
 import { toEventProperties } from './report.ts';
-import { makeDx, spaceReader } from './space.ts';
 
 const credentials = credentialsFromEnv();
 const recoveryPhrase = process.env.DX_CANARY_RECOVERY_PHRASE;
@@ -40,12 +41,10 @@ describe('mail canary', { tags: ['sync-e2e'], timeout: (SYNC_TIMEOUT_MINUTES + 2
 
     const result = await EffectEx.runPromise(
       Effect.gen(function* () {
-        const gmail = makeGmail(yield* accessToken(settings.credentials));
-        yield* gmail.assertAccount(canaryAccount());
-        const dx = makeDx({ home });
-        yield* dx.login(settings.recoveryPhrase);
-        return yield* runNightly(gmail, spaceReader(dx, settings.spaceId), {
-          spaceId: settings.spaceId,
+        const gmail = yield* GmailClient.connect(settings.credentials, canaryAccount());
+        const space = new SpaceReader({ spaceId: settings.spaceId, home });
+        yield* space.login(settings.recoveryPhrase);
+        return yield* new Nightly({ seeder: new Seeder(gmail), space }).run({
           count: Number(process.env.DX_CANARY_SEED_COUNT ?? 100),
           syncTimeout: Duration.minutes(SYNC_TIMEOUT_MINUTES),
           pollInterval: Duration.minutes(2),
