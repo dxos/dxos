@@ -51,6 +51,16 @@ describe('agentOptions', () => {
     expect(options[0].placements.map(({ location }) => location)).toEqual(['local', 'edge']);
   });
 
+  test('keeps the models of the registration that is not a variant', ({ expect }) => {
+    const models = [{ id: 'opus', label: 'Opus' }];
+    const options = agentOptions({
+      agents: [cloud, { ...local, models }],
+      availability: [{ available: true }, { available: true }],
+      current: local.id,
+    });
+    expect(options[0].models).toEqual(models);
+  });
+
   test('disables an agent only when none of its placements is available', ({ expect }) => {
     const options = agentOptions({
       agents: [composer, local, cloud],

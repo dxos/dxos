@@ -21,12 +21,14 @@ export type AgentOption = {
   description?: string;
   placements: AgentPlacement[];
   ownModel: boolean;
+  /** Models the agent itself offers; only for an `ownModel` agent. */
+  models?: readonly AssistantCapabilities.AgentModel[];
 };
 
 export type AgentOptionsProps = {
   agents: readonly Pick<
     AssistantCapabilities.Agent,
-    'id' | 'label' | 'icon' | 'locations' | 'variantOf' | 'ownModel'
+    'id' | 'label' | 'icon' | 'locations' | 'variantOf' | 'ownModel' | 'models'
   >[];
   /** Availability of each agent, by index into `agents`. */
   availability: readonly AssistantCapabilities.AgentAvailability[];
@@ -54,7 +56,7 @@ export const agentOptions = ({ agents, availability, current }: AgentOptionsProp
     if (existing) {
       existing.placements.push(...placements);
       if (agent.variantOf === undefined) {
-        Object.assign(existing, { label: agent.label, icon: agent.icon });
+        Object.assign(existing, { label: agent.label, icon: agent.icon, ...(agent.models && { models: agent.models }) });
       }
     } else {
       options.set(key, {
@@ -64,6 +66,7 @@ export const agentOptions = ({ agents, availability, current }: AgentOptionsProp
         disabled: false,
         placements,
         ownModel: agent.ownModel ?? false,
+        ...(agent.models && { models: agent.models }),
       });
     }
   });

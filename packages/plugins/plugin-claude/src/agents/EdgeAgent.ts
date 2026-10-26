@@ -59,6 +59,8 @@ export type Definition = {
   icon: string;
   /** Permission mode a new session starts in, read when the chat's process is spawned; EDGE's default is `auto`. */
   mode?: () => string | undefined;
+  /** Agent-specific session options (ACP `_meta`) for a chat that chose `model`; read when the chat's process is spawned. */
+  sessionMeta?: (model: string | undefined) => Record<string, unknown> | undefined;
   /**
    * Whether nobody answers the agent (the default): it is told never to ask, and EDGE denies a
    * permission request on the spot rather than parking it in the chat.
@@ -388,6 +390,7 @@ const ensureProcess = (options: Options, chat: Chat.Chat): Effect.Effect<Target,
       return { control, spaceId, pid: recorded };
     }
     const mode = definition.mode?.();
+    const meta = definition.sessionMeta?.(chat.session?.agentModel);
     const repositories = yield* checkoutsOf(chat);
     const snapshot = yield* control.spawn({
       spaceId,
@@ -396,6 +399,7 @@ const ensureProcess = (options: Options, chat: Chat.Chat): Effect.Effect<Target,
       annotations: Schema.decodeUnknownSync(Annotation.Dictionary)({
         [EdgeProtocol.Annotation.unattended]: definition.unattended ?? true,
         ...(mode !== undefined && { [EdgeProtocol.Annotation.mode]: mode }),
+        ...(meta !== undefined && { [EdgeProtocol.Annotation.meta]: meta }),
         ...(repositories.length > 0 && { [EdgeProtocol.Annotation.repositories]: repositories }),
       }),
       // A spawn redelivered after a lost answer reaches the same process.

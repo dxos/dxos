@@ -12,6 +12,13 @@ import * as CodeAgent from '../agents/CodeAgent.ts';
 import { CLAUDE_CODE_AGENT } from '../constants.ts';
 import { ClaudeCodeProcess } from '../process/index.ts';
 
+/** Aliases the Claude Code CLI resolves to its current models; a chat that picks none runs the CLI's default. */
+export const CLAUDE_MODELS = [
+  { id: 'sonnet', label: 'Sonnet' },
+  { id: 'opus', label: 'Opus' },
+  { id: 'haiku', label: 'Haiku' },
+] as const;
+
 /**
  * Claude Code on this machine: run through the desktop app's agent helper over ACP as a chat's agent,
  * and as a process of its own for a chat that names it, which starts the agent through `ShellService`.
@@ -23,8 +30,14 @@ export default Capability.makeModule(
       label: 'Claude Code',
       icon: 'px--anthropic--regular',
       // Read by the ACP adapter as Agent SDK options: Composer's lookups run without a permission card each.
-      sessionMeta: ({ server, readOnlyTools }) => ({
-        claudeCode: { options: { allowedTools: readOnlyTools.map((tool) => `mcp__${server}__${tool}`) } },
+      models: CLAUDE_MODELS,
+      sessionMeta: ({ server, readOnlyTools, model }) => ({
+        claudeCode: {
+          options: {
+            allowedTools: readOnlyTools.map((tool) => `mcp__${server}__${tool}`),
+            ...(model && { model }),
+          },
+        },
       }),
     });
     const manager = yield* Capability.Service;

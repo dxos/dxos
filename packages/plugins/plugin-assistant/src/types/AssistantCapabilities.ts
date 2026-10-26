@@ -101,6 +101,9 @@ export type AgentResponse = {
   optionId: string;
 };
 
+/** A model an agent that chooses its own model offers. */
+export type AgentModel = { readonly id: string; readonly label: string };
+
 /**
  * An agent a chat can run on, keyed by `chat.session.harness`. Each plugin registers the agents it
  * provides; this plugin registers Composer's own loop as `composer`.
@@ -121,6 +124,8 @@ export type Agent = {
   readonly variantOf?: string;
   /** The agent chooses its own model, so the chat's model does not apply and pickers offer none. */
   readonly ownModel?: boolean;
+  /** The models an `ownModel` agent can be asked to run on, offered by pickers; the choice is `chat.session.agentModel`. */
+  readonly models?: readonly AgentModel[];
   readonly availability: Atom.Atom<AgentAvailability>;
   readonly makeTurnProducer: MakeTurnProducer;
   /** Hands a person's answer to the agent; false when nothing is waiting on that request. */

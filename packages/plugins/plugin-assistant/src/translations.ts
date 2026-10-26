@@ -186,6 +186,8 @@ export const translations: Theme.Resource[] = [
         'connectors-empty.label': 'No connectors with MCP servers',
         'agent-picker.label': 'Agent',
         'model-picker.models.label': 'Models',
+        'agent-model-default.label': 'Default',
+        'agent-model-locked.message': 'Model (fixed once the chat has started)',
         'model-picker.environment.label': 'Agent runs on',
         'send.label': 'Send',
         'prompt-options.label': 'Prompt options',
