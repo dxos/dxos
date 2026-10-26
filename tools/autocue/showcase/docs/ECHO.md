@@ -85,6 +85,11 @@ the 60s source render, 3s earlier than in `ECHO.m4v`). About 25 words fits a 10s
 
    - The graph is partitioned into interconnected workspaces; enabling teams and agents to work within a secure shared context.
    - Workspaces adapt to the work, drawing in data from different sources as each task requires.
+     - Variant A (20 words): A project might start with a few documents, then pull in email threads, customer records and code as it grows.
+     - Variant B (18 words): Start a project with a brief; as it grows, bring in the mail, tickets and spreadsheets it needs.
+     - Variant C (17 words): A workspace grows with its project: first a plan, then the customer's email, then the sales pipeline.
+     - Variant D (18 words): As a project moves from idea to launch, its workspace pulls in new sources: mail, CRM, code, analytics.
+     - Variant E (18 words): Today a workspace holds a design doc; next month, the same workspace holds the contracts, tickets and invoices.
 
 5. **Open and Extensible** (43–60s, 34 words)
 
