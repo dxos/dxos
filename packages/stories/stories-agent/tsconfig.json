@@ -46,6 +46,9 @@
       "path": "../../plugins/plugin-assistant"
     },
     {
+      "path": "../../plugins/plugin-canvas"
+    },
+    {
       "path": "../../plugins/plugin-client"
     },
     {
@@ -55,7 +58,19 @@
       "path": "../../plugins/plugin-discord"
     },
     {
+      "path": "../../plugins/plugin-illustrator"
+    },
+    {
+      "path": "../../plugins/plugin-markdown"
+    },
+    {
+      "path": "../../plugins/plugin-review"
+    },
+    {
       "path": "../../plugins/plugin-routine"
+    },
+    {
+      "path": "../../plugins/plugin-space"
     },
     {
       "path": "../../plugins/plugin-thread"

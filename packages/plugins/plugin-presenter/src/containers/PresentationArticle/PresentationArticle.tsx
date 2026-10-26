@@ -19,6 +19,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Deck, LayoutPicker, SectionPicker } from '#components';
 import { type SlideSource } from '#deck';
 import {
+  useGridSize,
   useIsPresenting,
   usePresentationDeck,
   usePresentedIndex,
@@ -44,6 +45,7 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
   const slides = usePresentationDeck(subject);
   const [theme] = useObject(subject, 'theme');
   const [index, setIndex] = useSlideIndex(Obj.getURI(subject), slides.length);
+  const [gridSize, setGridSize] = useGridSize(Obj.getURI(subject));
   const fullscreen = useIsPresenting(subject);
   // Presenting leaves out hidden slides; the stored index stays a position in the whole deck, as the grid shows it.
   // Positions, not ids: an object linked twice yields two slides with one id.
@@ -150,6 +152,14 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
 
                 <SectionPicker presentation={subject} />
                 <div className='grow' />
+                <Button.Root
+                  data-testid='presenter.grid-size'
+                  icon={gridSize === 'large' ? 'ph--grid-four--regular' : 'ph--grid-nine--regular'}
+                  iconOnly
+                  variant='ghost'
+                  label={t(gridSize === 'large' ? 'grid-size-small.label' : 'grid-size-large.label')}
+                  onClick={() => setGridSize(gridSize === 'large' ? 'small' : 'large')}
+                />
                 <Deck.PlayButton />
               </Toolbar.Root>
             </Panel.Header>
@@ -160,6 +170,7 @@ export const PresentationArticle = ({ role, subject, attendableId }: Presentatio
               <Deck.Viewport />
             ) : (
               <Deck.Grid
+                size={gridSize}
                 onMove={handleMoveSlide}
                 onOpen={handleOpenSlide}
                 onAddSlide={handleAddSlide}

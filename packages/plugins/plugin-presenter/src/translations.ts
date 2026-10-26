@@ -32,6 +32,8 @@ export const translations = [
         'add-slide.label': 'Add slide',
         'add-slide-layout.label': 'Layout of new slides',
         'slide-grid.label': 'Slides',
+        'grid-size-small.label': 'Small thumbnails',
+        'grid-size-large.label': 'Large thumbnails',
         'add-section.label': 'Add to presentation',
         'untitled-object.label': 'Untitled {{type}}',
         'slide-fallback.label': 'Slide {{count}}',

@@ -14598,9 +14598,6 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)(react@19.2.7)(scheduler@0.27.0)
-      date-fns:
-        specifier: 'catalog:'
-        version: 3.6.0
       effect:
         specifier: 4.0.4
         version: 4.0.4
@@ -15458,9 +15455,6 @@ importers:
       hast-util-to-jsx-runtime:
         specifier: 'catalog:'
         version: 2.3.6
-      react-resize-detector:
-        specifier: 'catalog:'
-        version: 11.0.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       remark-frontmatter:
         specifier: 'catalog:'
         version: 5.0.0
@@ -16110,9 +16104,6 @@ importers:
       '@codemirror/view':
         specifier: 'catalog:'
         version: 6.43.13
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../../core/compute/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -16173,6 +16164,9 @@ importers:
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
+      '@dxos/plugin-client':
+        specifier: workspace:*
+        version: link:../plugin-client
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
@@ -16234,9 +16228,6 @@ importers:
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
-      '@dxos/plugin-client':
-        specifier: workspace:*
-        version: link:../plugin-client
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
@@ -18878,6 +18869,9 @@ importers:
       '@dxos/echo':
         specifier: workspace:*
         version: link:../../core/echo/echo
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -18924,9 +18918,6 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
-      '@dxos/echo-react':
-        specifier: workspace:*
-        version: link:../../core/echo/echo-react
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -21699,15 +21690,30 @@ importers:
       '@dxos/keys':
         specifier: workspace:*
         version: link:../../common/keys
+      '@dxos/plugin-canvas':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-canvas
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../../plugins/plugin-client
       '@dxos/plugin-connector':
         specifier: workspace:*
         version: link:../../plugins/plugin-connector
+      '@dxos/plugin-illustrator':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-illustrator
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-markdown
+      '@dxos/plugin-review':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-review
       '@dxos/plugin-routine':
         specifier: workspace:*
         version: link:../../plugins/plugin-routine
+      '@dxos/plugin-space':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-space
       '@dxos/storybook-testing':
         specifier: workspace:*
         version: link:../storybook-testing
@@ -25431,9 +25437,6 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.4(effect@4.0.4)(react@19.2.7)(scheduler@0.27.0)
-      date-fns:
-        specifier: 'catalog:'
-        version: 3.6.0
     devDependencies:
       '@dxos/random':
         specifier: workspace:*

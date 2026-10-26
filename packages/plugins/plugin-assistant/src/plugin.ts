@@ -13,6 +13,7 @@ import {
   AppGraphBuilder,
   AssistantState,
   AutomationTemplates,
+  CommentAgentRunner,
   CompanionChatProvisioner,
   Connector,
   CreateObject,
@@ -64,6 +65,7 @@ export const AssistantPlugin = Plugin.define<AssistantOptions.AssistantPluginOpt
     // upstream. See `capabilities/ai-context.ts` for the rationale.
     Plugin.addModule(AiContextCapability),
     Plugin.addModule(AgentRuntime),
+    Plugin.addModule(CommentAgentRunner),
     Plugin.addModule(Agents),
   )
   .pipe(

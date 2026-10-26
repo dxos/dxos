@@ -21,7 +21,7 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { SpaceState } from '@dxos/protocols/buf/dxos/client/invitation_pb';
 // UI-free subpath: the root barrel reaches the panel components.
 import { logBuffer } from '@dxos/react-ui-debug/log-buffer';
-import { AnchoredTo, type Message, type Thread } from '@dxos/types';
+import { AnchoredTo, type Message, Thread } from '@dxos/types';
 
 import { DebugOperation } from '#types';
 
@@ -75,7 +75,7 @@ const collectComments = async (subject: unknown) => {
   return Promise.all(
     anchors.map(async (anchor) => {
       const thread = Relation.getSource(anchor) as Thread.Thread;
-      const messages: Message.Message[] = await Promise.all(thread.messages.map((ref) => ref.load()));
+      const messages: Message.Message[] = await Thread.loadMessages(thread);
       return {
         id: thread.id,
         anchorId: anchor.id,

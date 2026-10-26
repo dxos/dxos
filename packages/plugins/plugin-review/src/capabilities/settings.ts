@@ -16,7 +16,7 @@ export default Capability.makeModule(() =>
     const settingsAtom = KvsStore.make({
       key: meta.profile.key,
       schema: Settings.Settings,
-      defaultValue: () => ({}),
+      defaultValue: () => ({ commentAgentMode: 'mention' as const }),
     });
 
     return [

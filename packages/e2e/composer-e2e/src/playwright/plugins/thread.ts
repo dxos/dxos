@@ -7,7 +7,16 @@ import { type Locator, type Page, expect } from '@playwright/test';
 // TODO(wittjosiah): If others find this useful, factor out the thread plugin.
 export const Thread = {
   createComment: async (page: Page, plankLocator: Locator, comment: string) => {
-    const addButton = plankLocator.getByTestId('comments.comment.add');
+    // A narrow plank collapses the action into the toolbar's ⋮ menu, which renders its items in a portal once opened.
+    const inlineButton = plankLocator.getByTestId('comments.comment.add');
+    const overflow = plankLocator.getByTestId('toolbar.overflow');
+    await expect(inlineButton.or(overflow).first()).toBeVisible();
+    const inline = await inlineButton.isVisible();
+    if (!inline) {
+      await overflow.click();
+    }
+    // The opened menu is the only portalled one, so outside the plank only its item can match.
+    const addButton = inline ? inlineButton : page.getByRole('menu').getByTestId('comments.comment.add');
     // The button's disabled state is driven by aspect, which updates via a
     // debounce after a CodeMirror selection dispatch. Wait until it is enabled.
     await expect(addButton).toBeEnabled();

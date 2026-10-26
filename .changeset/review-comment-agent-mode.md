@@ -1,0 +1,6 @@
+---
+'@dxos/plugin-review': minor
+'@dxos/react-ui': minor
+---
+
+Comment threads now keep their messages in a feed the thread owns (`Thread` 0.3.0: `feed` replaces `messages`; a migration moves existing threads), and the assistant answers them: plugin-assistant contributes `AppCapabilities.CommentAgentRunner`, which runs each turn in a hidden chat on the thread's feed with the commented object bound, so comments on a diagram, a sheet or a document get that type's skills. While a turn runs the thread shows a pending reply, an agent edit keeps the comment anchored to the edited text, and `@`-mentions complete and render as pills in the mentioned actor's colour. plugin-review's own LLM runner is removed, `Chat.feed` can run on a feed another object owns, and `CreateChat` accepts an existing `feed`. The "Comment agent mode" setting (`off` | `auto` | `mention`, default `mention`) moves from plugin-markdown to plugin-review, applies to every subject, and appears under Plugin Settings. The plugin registry's search filter also matches a plugin's description. `Typography.Timestamp` gains `variant='relative'` (relative within two days, then the date), with `formatRelative` and `useRelativeTime`; comment threads, assistant messages, notifications and pull requests now share it.

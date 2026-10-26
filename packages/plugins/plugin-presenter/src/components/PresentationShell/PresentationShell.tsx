@@ -14,6 +14,12 @@ import React, {
 import { useComposedRefs } from '@dxos/react-hooks';
 import * as Util from '@dxos/react-ui/Util';
 
+/** How long the shell's size must hold still before it fades in (ms). */
+const SETTLE_DURATION = 150;
+
+/** Longest the shell waits for its size to settle (ms). */
+const SETTLE_MAX_DURATION = 800;
+
 export type PresentationShellProps = PropsWithChildren<{
   /** Fade-in/out duration (ms). */
   fadeDuration?: number;
@@ -40,11 +46,30 @@ export const PresentationShell = Util.composable<HTMLDivElement, PresentationShe
     // updaters in dev, which would schedule the exit (and its side effects) more than once.
     const exitingRef = useRef(false);
 
-    // Fade in once mounted.
+    // Fullscreen fades in once the size settles: entering it grows the shell over several frames, and the slide (scaled
+    // to it) would be seen growing. Capped, so a shell that keeps resizing still appears; inline fades in at once.
     useEffect(() => {
-      const frame = requestAnimationFrame(() => setVisible(true));
-      return () => cancelAnimationFrame(frame);
-    }, []);
+      const element = rootRef.current;
+      if (!element || !fullscreen) {
+        const frame = requestAnimationFrame(() => setVisible(true));
+        return () => cancelAnimationFrame(frame);
+      }
+      let settle: ReturnType<typeof setTimeout> | undefined;
+      const show = () => setVisible(true);
+      const restart = () => {
+        clearTimeout(settle);
+        settle = setTimeout(show, SETTLE_DURATION);
+      };
+      const cap = setTimeout(show, SETTLE_MAX_DURATION);
+      const observer = new ResizeObserver(restart);
+      observer.observe(element);
+      restart();
+      return () => {
+        observer.disconnect();
+        clearTimeout(settle);
+        clearTimeout(cap);
+      };
+    }, [fullscreen]);
 
     // Arrow keys reach the slides only while focus is inside the shell; on the enclosing pane, the
     // deck's plank navigation and the landmark mover claim them first.

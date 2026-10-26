@@ -204,7 +204,6 @@
     "@fontsource/mali": "catalog:",
     "@fontsource/opendyslexic": "catalog:",
     "hast-util-to-jsx-runtime": "catalog:",
-    "react-resize-detector": "catalog:",
     "remark-frontmatter": "catalog:",
     "remark-gfm": "catalog:",
     "remark-parse": "catalog:",

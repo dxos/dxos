@@ -50,6 +50,14 @@
     padding-block: var(--dx-gap-size);
     gap: var(--dx-gap-size);
   }
+  /*
+   * Root `tileWidth`: the column count fitted at the minimum width (set by the content as it resizes), each column as
+   * wide as the row allows up to the maximum; a row narrower than its columns' maximum leaves its slack at the end.
+   */
+  .dx-listbox-content.dx-container[data-tiles='auto'] {
+    grid-template-columns: repeat(var(--dx-tile-count, 1), minmax(0, var(--dx-tile-max, 1fr))) !important;
+    justify-content: start;
+  }
   .dx-listbox-content[data-tiles] > * {
     grid-column: auto;
   }

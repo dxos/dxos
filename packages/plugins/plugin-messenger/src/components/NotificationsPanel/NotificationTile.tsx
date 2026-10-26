@@ -10,11 +10,10 @@ import { type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic'
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Typography from '@dxos/react-ui/Typography';
 import { type Actor, Message, SpaceInvitationMessage } from '@dxos/types';
 
 import { meta } from '#meta';
-
-import { formatTime } from './format-time.ts';
 
 export type NotificationAction =
   /** Clicked: mark read and go to what the message links to. */
@@ -60,7 +59,10 @@ export const NotificationTile = forwardRef<HTMLDivElement, NotificationTileProps
       const [first = '', ...rest] = text.split('\n');
       return { title: first, body: rest.join('\n').trim() };
     }, [message]);
-    const time = useMemo(() => formatTime(message.created, now), [message.created, now]);
+    const time = useMemo(
+      () => Typography.formatRelative(message.created, { now: new Date(now) }),
+      [message.created, now],
+    );
 
     const handleCurrentChange = useCallback(() => {
       setCurrentId(message.id);
