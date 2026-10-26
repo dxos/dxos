@@ -86,6 +86,6 @@ The spoken lines, one bullet per line read; each slide starts at its time in the
    - Workspaces are flexible containers, drawing in data from different sources as plans and tasks evolve.
 
 5. **Open and Extensible** (at 40.5s)
-   - Open by design, Composer lets teams and agents build and customize apps, plugins and agents.
+   - Open by design, Composer lets teams and agents build and customize apps, plugins and skills.
    - And the entire stack runs on Cloudflare Workers, so it's secure, cost-effective, and scales on demand.
    - DXOS is the operating system for the new enterprise.
