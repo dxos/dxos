@@ -442,7 +442,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        cell: ['1/2', '2/2']
+        # A core change runs every node suite (~3 h of test time), which two cells cannot finish inside the cap below.
+        cell: ['1/4', '2/4', '3/4', '4/4']
     # `statuses: write` lets the second cell post the advisory suites' results.
     permissions:
       actions: write
