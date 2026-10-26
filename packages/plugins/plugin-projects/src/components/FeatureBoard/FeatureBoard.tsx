@@ -162,7 +162,7 @@ export const FeatureBoard = ({
   };
 
   return (
-    <Layout.Flex column gap='md' classNames='p-3 w-full' data-testid='feature-board'>
+    <Layout.Flex column gap='md' classNames='p-trim-md w-full' data-testid='feature-board'>
       {/* The status counts are the filter's toggles, so each says how many cards it adds. */}
       <Layout.Flex wrap gap='xs' classNames='items-center'>
         <Input.Root
