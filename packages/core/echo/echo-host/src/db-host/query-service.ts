@@ -8,14 +8,7 @@ import * as Schema from 'effect/Schema';
 import type * as SqlClient from 'effect/sql/SqlClient';
 import * as EffectStream from 'effect/Stream';
 
-import {
-  DeferredTask,
-  Mutex,
-  scheduleMicroTask,
-  scheduleTask,
-  synchronized,
-  yieldBehindQueuedTasks,
-} from '@dxos/async';
+import { DeferredTask, scheduleMicroTask, scheduleTask, synchronized, yieldBehindQueuedTasks } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { Query } from '@dxos/echo';
@@ -90,6 +83,9 @@ export type QueryDebounceOptions = {
   cost?: (query: QueryAST.Query, measured: number) => number;
 };
 
+/** Longest stretch (ms) a batch runs queries before yielding, so answers and incoming requests are not held for the whole batch. */
+const QUERY_SLICE_MS = 16;
+
 export const DEFAULT_QUERY_DEBOUNCE: QueryDebounceOptions = {
   factor: 4,
   minCost: 16,
@@ -147,12 +143,6 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   private readonly '_queries' = new Set<ActiveQuery>();
 
   private '_updateQueries'!: DeferredTask;
-
-  /**
-   * One query evaluates at a time (lookups by id aside): the worker serves SQLite statements one by one, so
-   * interleaved queries all finish with the slowest, and a run's measured time would include the others' statements.
-   */
-  readonly #executionLock = new Mutex();
 
   /** Reactive queries currently registered, across every space. */
   get 'activeQueryCount'(): number {
@@ -294,8 +284,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
           return;
         }
         if (queryEntry.oneShot && queryEntry.executor.selectsById) {
-          // A lookup by id costs a few statements, and opening an object must not wait behind a heavy query.
-          await this.#runQuery(queryEntry, { exclusive: false });
+          await this.#runQuery(queryEntry);
           return;
         }
         queryEntry.open = true;
@@ -444,13 +433,18 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     }
     this.#stats.totalDebounced += deferred.length;
 
-    // Cheap queries finish before expensive ones start: the worker serializes statements, so running
-    // them together would delay the cheap results and charge the expensive run's time to them.
+    // One at a time, cheapest first: SQLite runs synchronously, so interleaved queries would all finish with the
+    // slowest and each run's measured time would include the others' statements.
     ready.sort((left, right) => left.cost - right.cost);
-    const cheap = ready.filter((query) => query.cost < this.#debounce.minCost);
-    const expensive = ready.filter((query) => query.cost >= this.#debounce.minCost);
-    await Promise.all(cheap.map((query) => this.#runQuery(query)));
-    await Promise.all(expensive.map((query) => this.#runQuery(query)));
+    let sliceStart = performance.now();
+    for (const query of ready) {
+      await this.#runQuery(query);
+      // Without a turn the whole batch is one task, and its answers and the requests queued behind it wait for the last query.
+      if (performance.now() - sliceStart >= QUERY_SLICE_MS) {
+        await yieldBehindQueuedTasks();
+        sliceStart = performance.now();
+      }
+    }
     const dirtyCount = ready.length;
 
     this.#scheduleWake(deferred);
@@ -480,22 +474,8 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     }
   }
 
-  async #runQuery(query: ActiveQuery, { exclusive = true }: { exclusive?: boolean } = {}): Promise<void> {
-    if (!exclusive) {
-      return this.#evaluate(query);
-    }
-    {
-      using _guard = await this.#executionLock.acquire();
-      await this.#evaluate(query);
-    }
-    // SQLite runs synchronously, so without a turn here a whole batch is one task and its answers, and the requests
-    // queued behind it, all wait for the last query.
-    await yieldBehindQueuedTasks();
-  }
-
-  async #evaluate(query: ActiveQuery): Promise<void> {
+  async #runQuery(query: ActiveQuery): Promise<void> {
     try {
-      // Timed once the query holds the lock, so the time covers its evaluation and none of the queue ahead of it.
       const begin = performance.now();
       const { changed } = await query.executor.execQuery();
       const finishedAt = performance.now();
