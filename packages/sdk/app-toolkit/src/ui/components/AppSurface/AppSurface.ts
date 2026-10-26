@@ -5,7 +5,7 @@
 // @import-as-namespace
 
 import type * as Schema from 'effect/Schema';
-import { type ComponentType, type ReactNode, createContext, useContext, useEffect } from 'react';
+import { type ComponentType, type ReactNode, createContext, useContext, useLayoutEffect } from 'react';
 
 import * as Role from '@dxos/app-framework/Role';
 import * as Surface from '@dxos/app-framework/Surface';
@@ -409,7 +409,8 @@ export const usePendingHeading = (heading: PendingHeading | undefined): void => 
   const setHeading = useContext(PendingHeadingContext);
   const label = heading?.label;
   const icon = heading?.icon;
-  useEffect(() => {
+  // Before paint, so a plank that mounts with its stand-in never shows a frame without the title.
+  useLayoutEffect(() => {
     setHeading?.(label === undefined ? undefined : { label, icon });
     return () => setHeading?.(undefined);
   }, [setHeading, label, icon]);

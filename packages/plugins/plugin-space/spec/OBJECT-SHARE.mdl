@@ -255,7 +255,7 @@ feat F-2: Opening the link
 
   req F-2.6: A browser that has never run Composer starts with only the core plugins and those the link names, and creates its own spaces only once the shared space is ready.
 
-  req F-2.7: Opening a share link makes the shared object the whole view: the navigation sidebar collapses at once, the companion stays closed once the link's workspace is active, and no toast or progress bar announces the join.
+  req F-2.7: Opening a share link makes the shared object the whole view: the navigation sidebar collapses at once, the companion stays closed once the link's workspace is active, and no toast or progress bar announces the join. None of this waits on, or delays, the first look.
 ```
 
 ```mdl
@@ -285,7 +285,7 @@ feat F-4: First look
 
   req F-4.3: A first look is keyed by its space and object ids, so it is found both while the plank keeps the URL's `<type>+<id>` id and after the plank moves to the object's canonical node id.
 
-  req F-4.4: Markdown renders a first look read-only; a type with no preview of its own shows the object's name.
+  req F-4.4: Markdown renders a first look read-only and laid out as its article, with the article's toolbar row (inert) and fold gutter, so the text does not move when the article replaces it; a type with no preview of its own shows the object's name.
 
   req F-4.5: References inside a first look resolve only to other objects of the same first look.
 
@@ -561,4 +561,15 @@ decision D-17: A plank keeps its pending stand-in over the article that replaces
   why: The plank dropped the first look as soon as the node resolved, and showed its empty loading placeholder until the article's code and content were ready, which read as a reload; the heading changed from a loading title to the object's name at the same moment.
   rejected:
     - Delay the node's resolution until the article is ready — the deck cannot know when a plugin's article is ready without rendering it.
+```
+
+```mdl
+decision D-18: The share-link handler applies the focused layout in a detached fiber after the first look starts, the markdown first look reserves the article's toolbar row and fold gutter, and a stand-in titles the plank before its first paint. Fills in [D-15].
+  date: 2026-10-26
+  by: agent:claude-code
+  for: user:mykola-vrmchk
+  affects: [F-2.7, F-4.4, F-4.8]
+  why: The demo after D-16 and D-17 showed three seams. Awaiting the sidebar operation, whose handler loads lazily, held up URL projection, so the plank and its first look arrived about 5 s later. The live article's toolbar and gutter pushed the text down and right at the swap. A remounted plank painted one frame titled "Loading…" before the stand-in's effect titled it.
+  rejected:
+    - Render the article's live toolbar in the first look — its actions would edit text that the article then discards.
 ```

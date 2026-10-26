@@ -75,10 +75,11 @@ export const handleShareLink = (
       return yield* Effect.fail(new SpaceOperationError({ message: 'The link names no object.' }));
     }
     joining.set(spaceId, target.objectId);
-    yield* focusSharedObject(spaceId);
     const client = yield* Capability.get(ClientCapabilities.Client);
     // Detached and first: it needs no identity, so it can be on screen before the join below has begun.
     yield* Effect.forkDetach(showFirstLook(client, spaceId, target, payload, edgeUrl));
+    // Detached: its operations load lazily, which must not hold up the first look or the join.
+    yield* Effect.forkDetach(focusSharedObject(spaceId));
     yield* enablePlugins(payload.plugins);
     // Before the identity: the first look renders with the same plugins' surfaces.
     yield* Effect.forkDetach(preloadArticleSurfaces);
@@ -122,30 +123,32 @@ const openShared = (client: Client, spaceId: SpaceId, target: ShareTarget, paylo
  * link's workspace is the active deck, since a new deck opens it by default.
  */
 const focusSharedObject = (spaceId: SpaceId): Effect.Effect<void, never, Capability.Service | Operation.Service> =>
-  Effect.gen(function* () {
-    yield* Operation.invoke(LayoutOperation.UpdateSidebar, { state: 'collapsed' });
-    const registry = yield* Capability.get(Capabilities.AtomRegistry);
-    const layout = yield* Capability.get(AppCapabilities.Layout);
-    yield* Effect.forkDetach(
-      Effect.callback<void>((resume) => {
-        const isShared = () => GraphPath.getWorkspaceToken(registry.get(layout).workspace) === spaceId;
-        if (isShared()) {
-          resume(Effect.void);
-          return;
-        }
-        const unsubscribe = registry.subscribe(layout, () => {
+  Effect.all(
+    [
+      Operation.invoke(LayoutOperation.UpdateSidebar, { state: 'collapsed' }).pipe(
+        Effect.catch((error) => Effect.sync(() => log.warn('share link sidebar not collapsed', { error }))),
+      ),
+      Effect.gen(function* () {
+        const registry = yield* Capability.get(Capabilities.AtomRegistry);
+        const layout = yield* Capability.get(AppCapabilities.Layout);
+        yield* Effect.callback<void>((resume) => {
+          const isShared = () => GraphPath.getWorkspaceToken(registry.get(layout).workspace) === spaceId;
           if (isShared()) {
             resume(Effect.void);
+            return;
           }
-        });
-        return Effect.sync(unsubscribe);
-      }).pipe(
-        Effect.timeout(SPACE_TIMEOUT),
-        Effect.andThen(Operation.invoke(LayoutOperation.UpdateCompanion, { subject: null })),
-        Effect.catch((error) => Effect.sync(() => log.warn('share link companion not closed', { error }))),
-      ),
-    );
-  }).pipe(Effect.catch((error) => Effect.sync(() => log.warn('share link layout not focused', { error }))));
+          const unsubscribe = registry.subscribe(layout, () => {
+            if (isShared()) {
+              resume(Effect.void);
+            }
+          });
+          return Effect.sync(unsubscribe);
+        }).pipe(Effect.timeout(SPACE_TIMEOUT));
+        yield* Operation.invoke(LayoutOperation.UpdateCompanion, { subject: null });
+      }).pipe(Effect.catch((error) => Effect.sync(() => log.warn('share link companion not closed', { error })))),
+    ],
+    { concurrency: 'unbounded', discard: true },
+  );
 
 const reportFailure = (error: unknown): Effect.Effect<void, never, Operation.Service> =>
   Effect.gen(function* () {
