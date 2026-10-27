@@ -169,15 +169,17 @@ if (import.meta.env?.DEV) {
  * outlives the URL it was given on; a device that never chose gets `defaultValue`.
  */
 const readStickyFlag = (param: string, key: string, defaultValue = false): boolean => {
+  const value = new URLSearchParams(window.location.search).get(param);
+  const given = value === '1' || value === '0' ? value : undefined;
   try {
-    const value = new URLSearchParams(window.location.search).get(param);
-    if (value === '1' || value === '0') {
-      localStorage.setItem(key, value);
+    if (given) {
+      localStorage.setItem(key, given);
     }
     const stored = localStorage.getItem(key);
     return stored === null ? defaultValue : stored === '1';
   } catch {
-    return defaultValue;
+    // Without storage the choice cannot be kept, but the URL's still holds for this load.
+    return given ? given === '1' : defaultValue;
   }
 };
 
