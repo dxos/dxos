@@ -1,4 +1,5 @@
 ---
+# multiple-changesets: channel triage is a new feature, unrelated to the force-run fix in the same PR
 '@dxos/plugin-projects': minor
 ---
 
