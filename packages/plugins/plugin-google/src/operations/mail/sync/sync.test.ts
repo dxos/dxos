@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { subDays } from 'date-fns';
+import { subDays, subHours } from 'date-fns';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
@@ -531,6 +531,43 @@ describe('runGoogleSync against a mock Gmail API', () => {
     expect(new Set(finalIds).size).toBe(finalIds.length);
     expect(finalIds).toHaveLength(dataset.messages.length);
   });
+
+  test(
+    'capped backfill runs keep every message of a newest day that holds more than two caps — ' +
+      'regression: the forward re-list of that day pulled `min` past messages no run had committed',
+    async ({ expect }) => {
+      // Pinned clock with mail up to an hour ago: the newest day holds ~300 messages, three caps' worth.
+      // Run 1 commits the newest 100; run 2's day-granular forward window re-lists that whole day, and
+      // before the fix committed its oldest 100 first, leaving the ~100 between them inside `(min, max)`
+      // where every later run dropped them as already synced.
+      const now = new Date('2026-07-16T23:00:00.000Z');
+      const dataset = generateGmailDataset({ count: 1000, seed: 37, start: subDays(now, 3), end: subHours(now, 1) });
+      const { db, mailbox, binding } = await seedGmailBinding(builder);
+
+      let runs = 0;
+      let exit: Exit.Exit<unknown, unknown>;
+      do {
+        exit = await EffectEx.runPromise(
+          Effect.exit(runGoogleSync({ binding: Ref.make(binding), maxMessages: 100, now })).pipe(
+            Effect.provide(googleSyncTestServices(db, dataset)),
+          ),
+        );
+        runs += 1;
+        // The invariant the bug broke: nothing inside the synced range is left uncommitted.
+        const synced = new Set(await syncedIdsOf(db, mailbox));
+        const stranded = dataset.messages.filter((message) => {
+          const key = Number(message.internalDate);
+          return !synced.has(message.id) && Number(binding.min) < key && key < Number(binding.max);
+        });
+        expect(stranded).toEqual([]);
+      } while (Exit.isFailure(exit) && runs < 20);
+
+      expect(Exit.isSuccess(exit)).toBe(true);
+      const finalIds = await syncedIdsOf(db, mailbox);
+      expect(new Set(finalIds).size).toBe(finalIds.length);
+      expect(finalIds).toHaveLength(dataset.messages.length);
+    },
+  );
 
   test(
     'capped runs make progress even when a boundary day holds more already-synced messages than the cap — ' +
