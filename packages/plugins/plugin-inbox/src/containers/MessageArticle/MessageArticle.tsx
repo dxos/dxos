@@ -88,9 +88,10 @@ export const MessageArticle = ({
     [subject, mailbox, conversation],
   );
 
-  // The thread query matches the subject itself, so an empty result means it has not resolved yet and
-  // `messages` is only the fallback.
-  const resolving = !!mailbox && !!subject.threadId && conversation.length === 0;
+  // The thread query matches the subject itself, so while the mailbox has a feed to look in and the result is
+  // still empty, the lookup is pending and `messages` is only the fallback. A mailbox with no feed never
+  // resolves a thread, so the subject alone is the conversation and stays expanded.
+  const resolving = !!mailbox?.feed && !!subject.threadId && conversation.length === 0;
 
   // Contact extraction targets the conversation's space; any message resolves the same db.
   const db = Obj.getDatabase(messages[0]);
