@@ -242,7 +242,7 @@ export const analyzeFeatureMap = Effect.fnUntraced(function* (mapPath: string) {
       }
       if (!planned) {
         warnings.push(
-          `${at}: in progress with no work planned: no TASKS.md beside its spec has a \`## ${feature.id}\` section`,
+          `${at}: partly built with no work planned: no TASKS.md beside its spec has a \`## ${feature.id}\` section`,
         );
       }
     }

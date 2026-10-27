@@ -38,7 +38,7 @@ asked for each feature and who moved its status.
 | Status        | Meaning                                              | Derived from the reviews when      |
 | ------------- | ---------------------------------------------------- | ---------------------------------- |
 | `planned`     | Wanted; no work started.                             | every cited item is `missing`      |
-| `in-progress` | Someone is building it.                              | any mix that is not one of these   |
+| `in-progress` | Partly built: some of what it cites works, some not. | any mix that is not one of these   |
 | `prototype`   | It works but is not relied on: nothing tests it.     | every item is `done` or `untested` |
 | `operational` | It works and tests hold it.                          | every item is `done`               |
 | `failing`     | It was operational and does not work now.            | never; a person or a QA run sets it |
@@ -66,7 +66,7 @@ packages/core/echo/feed/SPEC.mdl#trim     # an op, type or component
 - **warnings** — a status the reviews do not support, a spec with no review or one that changed after
   its review's commit, a feature `blocked` by a planned or failing dependency, one `operational`
   ahead of a dependency, and an `in-progress` feature with no `## <feature id>` section in a
-  `TASKS.md` beside its spec ("no work planned").
+  `TASKS.md` beside its spec ("no work planned": a gap nobody has planned to close).
 
 `deus features tasks <id>` prints the open items of one feature, each with its verdict and the first
 sentence of the verdict's note, as the start of that `TASKS.md` section.

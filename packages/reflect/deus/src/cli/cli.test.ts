@@ -210,7 +210,7 @@ describe('deus features', () => {
       expect.stringMatching(/^warning: listing: the review of .*SPEC\.mdl names a commit not in this clone$/),
       'warning: greeting: marked operational but its reviews say prototype',
       'warning: export: marked in-progress but its reviews say planned',
-      'warning: export: in progress with no work planned: no TASKS.md beside its spec has a `## export` section',
+      'warning: export: partly built with no work planned: no TASKS.md beside its spec has a `## export` section',
       'error: ghost: status `shiny`; use one of planned, in-progress, prototype, operational, failing',
       'error: export: depends on unknown feature nobody',
       expect.stringMatching(/^error: ghost: .*SPEC\.mdl#F-9 names no reviewable item of the spec$/),
