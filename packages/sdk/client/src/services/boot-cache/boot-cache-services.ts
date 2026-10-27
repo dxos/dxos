@@ -27,7 +27,6 @@ const LATEST_STREAMS = [
   'IdentityService.queryIdentity',
   'DevicesService.queryDevices',
   'SpacesService.querySpaces',
-  'ContactsService.queryContacts',
 ];
 
 /** Streams that deliver their state as a sequence (added, then load complete), replayed from the start. */
