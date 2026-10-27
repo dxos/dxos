@@ -9,14 +9,12 @@ by: agent:claude-code
 
 Re-reviewed after SPEC.mdl took on the View, Object and Tag model. The containers are built and well
 tested: Group and Ungroup, library promotion, orphan pruning, the Views tree and isolation each have
-controller or unit tests, and undo is the patch log the spec now describes, tested locally and through
+controller or unit tests (F-9.9's guard included), and undo is the patch log the spec now describes, tested locally and through
 plugin-canvas's `Apply`/`Patch` operations. Tags and container order are specified as planned and
 are not built.
 
-Of 103 items: 67 done, 14 untested, 10 partial, 9 diverged, 3 missing. Findings:
+Of 103 items: 68 done, 14 untested, 10 partial, 8 diverged, 3 missing. Findings:
 
-- **F-9.9 is not enforced.** `composeSelection` groups `view` nodes like any other, so a View can
-  end up inside an Object; nothing else checks it either.
 - **Tags and order are missing (F-9.6, F-9.7, `Tag`).** Layers still hide and order elements, and
   `layerOrder` sorts by layer before node `z`.
 - **The older divergences stand.** F-3.7 (create size scales with zoom), F-5.1 / T-4 (read-only selects
@@ -764,11 +762,15 @@ verdict F-9.8: The Views panel shows the hierarchy, selects, opens, restacks, fi
 ```
 
 ```mdl
-verdict F-9.9: Nothing stops a View going inside an Object; Group accepts `view` nodes.
-  status: diverged
-  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/compose.ts#composeSelection]
+verdict F-9.9: Group refuses `view` nodes, and a create or paste of one into an Object's definition is refused.
+  status: done
+  evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/compose.ts#composeSelection, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/projection.ts#reduceIntent]
+  tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/controller.test.ts, github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/projection.test.ts]
+  walkthrough:
+    - Group refuses a selection that holds a `view` node. github:dxos/dxos/packages/ui/react-ui-canvas/src/utils/compose.ts#composeSelection
+    - The freehand reducer drops a `view` create, alone or in a paste's batch, on an Object's definition. github:dxos/dxos/packages/ui/react-ui-canvas/src/engine/projection.ts#reduceIntent
   note: |
-    `composeSelection` refuses only an empty or locked selection, so grouping a selection that holds a `view` node moves it into the Object's definition. Nothing else (paste into an isolated Object, a create there) checks either.
+    A projection that does not reduce through `reduceIntent` (constrained, dynamic, compute) is not guarded; none is used on an Object's definition.
 ```
 
 ```mdl

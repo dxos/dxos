@@ -771,7 +771,9 @@ feat F-9: Views, Objects and Tags
   req F-9.8: The Views panel shows the full hierarchy, selects on the canvas, opens a View by its drill
     path, restacks by drag and filters by name or type; the canvas selection marks its rows and reveals
     the first without taking focus.
-  req F-9.9: An Object cannot contain a View, so an Object stays a drawing rather than a navigable place.
+  req F-9.9: An Object cannot contain a View, so an Object stays a drawing rather than a navigable place:
+    Group refuses a selection holding a `view` node, and a `view` node created or pasted into an Object's
+    definition is refused.
 ```
 
 ## Rules
@@ -1022,6 +1024,13 @@ decision D-7: A stored `frame` node is read as `view`, and the next write stores
   date: 2026-10-27
   by: user:richburdon
   affects: [F-9.1]
+```
+
+```mdl
+decision D-8: Group refuses a selection holding a `view` node, and creating or pasting a `view` node into an Object's definition is refused, so no View ends up inside an Object.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-9.9]
 ```
 
 ---

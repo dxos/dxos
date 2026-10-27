@@ -30,6 +30,22 @@ const originOf = (scene: View, id: string): Point => {
 };
 
 describe('freehand projection', () => {
+  test('create refuses a view node inside an Object definition, and allows it in a View', ({ expect }) => {
+    const scene = fixture();
+    const node = {
+      id: 'v',
+      type: 'view',
+      z: 'a0',
+      center: { x: 0, y: 0 },
+      size: { width: 64, height: 64 },
+      scene: 'x',
+    };
+    const object: View = { ...scene, kind: 'composite' };
+    expect(reduceIntent(object, { kind: 'create', node })).toBe(object);
+    expect(reduceIntent(object, { kind: 'batch', intents: [{ kind: 'create', node }] })).toBe(object);
+    expect(reduceIntent(scene, { kind: 'create', node }).nodes.v).toEqual(node);
+  });
+
   test('move shifts the selected nodes and skips locked ones', ({ expect }) => {
     const scene = fixture();
     const locked = { ...scene, nodes: { ...scene.nodes, 'scene:r/b': { ...scene.nodes['scene:r/b'], locked: true } } };
