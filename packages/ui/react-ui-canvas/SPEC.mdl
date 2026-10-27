@@ -749,8 +749,8 @@ feat F-8: Links between shapes
 feat F-9: Views, Objects and Tags
   The containers of the Ontology, and the two panels that show them: Views for the hierarchy, Objects
   for the library.
-  req F-9.1: A stored `frame` node reads as `view`, on load, in every store; nothing rewrites the stored
-    record.
+  req F-9.1: A stored `frame` node reads as `view`, on load, in every store; the next write stores it as
+    `view`.
   req F-9.2: Group (⌘G) moves the selected nodes, and the links between them, into an anonymous Object
     (`View.anonymous`) and places one Instance of it over their bounds; a link crossing out of the group
     stays, re-attached to a port of the Instance. There is no separate Compose command.
@@ -1015,6 +1015,13 @@ decision D-5: An Object cannot contain a View. Fills in [D-1].
 decision D-6: Approve [D-2], [D-3], [D-4] and [D-5].
   date: 2026-10-27
   by: user:richburdon
+```
+
+```mdl
+decision D-7: A stored `frame` node is read as `view`, and the next write stores it as `view`.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-9.1]
 ```
 
 ---

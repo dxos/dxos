@@ -13,12 +13,10 @@ controller or unit tests, and undo is the patch log the spec now describes, test
 plugin-canvas's `Apply`/`Patch` operations. Tags and container order are specified as planned and
 are not built.
 
-Of 103 items: 66 done, 14 untested, 10 partial, 10 diverged, 3 missing. Findings:
+Of 103 items: 67 done, 14 untested, 10 partial, 9 diverged, 3 missing. Findings:
 
 - **F-9.9 is not enforced.** `composeSelection` groups `view` nodes like any other, so a View can
   end up inside an Object; nothing else checks it either.
-- **F-9.1 overstates.** A legacy `frame` reads as `view`, but plugin-canvas rewrites the record as
-  `view` on its next write, which the requirement says nothing does.
 - **Tags and order are missing (F-9.6, F-9.7, `Tag`).** Layers still hide and order elements, and
   `layerOrder` sorts by layer before node `z`.
 - **The older divergences stand.** F-3.7 (create size scales with zoom), F-5.1 / T-4 (read-only selects
@@ -705,12 +703,10 @@ verdict F-8.4: smartPoints stubs half a major cell and doubles back on a shared 
 ```
 
 ```mdl
-verdict F-9.1: A stored `frame` reads as `view`, and plugin-canvas then stores `view` on its next write.
-  status: diverged
+verdict F-9.1: A stored `frame` reads as `view`, and the next write stores `view`.
+  status: done
   evidence: [github:dxos/dxos/packages/ui/react-ui-canvas/src/model/types.ts#withLegacyNodeType, github:dxos/dxos/packages/ui/react-ui-canvas/src/model/types.ts#withLegacyView]
   tests: [github:dxos/dxos/packages/ui/react-ui-canvas/src/model/store.test.ts, github:dxos/dxos/packages/plugins/plugin-canvas/src/model/content.test.ts]
-  note: |
-    The read is as specified. The requirement also says nothing rewrites the stored record, but `writeViews` stores the node as `view` on the next write, and `content.test.ts` asserts it; the spec's clause is wrong, not the code.
 ```
 
 ```mdl
