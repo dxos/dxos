@@ -206,8 +206,8 @@ moon run assistant-evals:evals -- src/evals/database.eval.ts
 In this repo, pull the key from the 1Password `eng-dev` vault rather than exporting it manually:
 
 ```bash
-eval "$(pnpm -ws 1p-credentials)"
-moon run assistant-evals:evals -- src/evals/planning.eval.ts
+DX_ANTHROPIC_API_KEY=op://eng-dev/com.anthropic.api/local/AGENTS_API_KEY \
+  op run -- moon run assistant-evals:evals -- src/evals/planning.eval.ts
 ```
 
 ## Gotchas (found the hard way — real debugging sessions, not speculation)

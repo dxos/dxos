@@ -51,11 +51,10 @@ CI stays deterministic because it uses committed fixtures, not live LLM calls.
 
 ### Requirements for regeneration
 
-1. **Credentials** — API keys must be in the environment. In this repo, load 1Password-injected env from the workspace root:
-   - **fish:** `eval (pnpm -ws 1p-credentials)`
-   - **bash/zsh:** `eval "$(pnpm -ws 1p-credentials)"`
+1. **Credentials** — API keys must be in the environment. In this repo, wrap the test command in `op run`, which resolves the reference into that one process and fails loudly when it cannot:
+   - `DX_ANTHROPIC_API_KEY=op://eng-dev/com.anthropic.api/local/AGENTS_API_KEY op run -- <command>`
 
-   The script is the `1p-credentials` package script (runs `op inject` over inlined `op://eng-dev/…` references; the full env template lives in the dxos/edge repo as `.env.tpl`). An agent runs it only when `OP_SERVICE_ACCOUNT_TOKEN` is set; in a local session it would pop a 1Password prompt, so ask the user to export the keys in their shell instead (see the `1password` skill).
+   Do not `eval` the output of `pnpm -ws 1p-credentials`: the shell would parse the secret values as code. The full env template lives in the dxos/edge repo as `.env.tpl`. An agent runs `op` only when `OP_SERVICE_ACCOUNT_TOKEN` is set; in a local session it would pop a 1Password prompt, so ask the user to export the keys in their shell instead (see the `1password` skill).
 
 2. **Run tests with generation:**
 
