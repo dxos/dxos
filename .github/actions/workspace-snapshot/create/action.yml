@@ -59,8 +59,40 @@ runs:
       shell: bash
       run: proto regen --bin
 
-    # One image, three trees, gathered under one root by bind mounts: the workspace, proto's toolchain and
-    # moon's home. zstd level 3 keeps reads cheap; heavier levels move the cost into every job's reads.
+    # Every browser, plus the apt lists and packages for whatever system dependencies this runner image
+    # lacks, so `.github/actions/playwright` installs with no network: the Ubuntu mirror has stalled
+    # `apt-get update` for a whole job. A failure here ships no bundle, and jobs install as before.
+    - name: Stage Playwright
+      shell: bash
+      run: |
+        bundle="$HOME/.cache/playwright-offline"
+        stage() (
+          set -euo pipefail
+          timeout 600 pnpm exec playwright install chromium firefox webkit
+          for attempt in 1 2 3; do sudo timeout 240 apt-get update -qq && break; [ "$attempt" = 3 ] && exit 1; done
+          mapfile -t pkgs < <(pnpm exec playwright install-deps --dry-run chromium firefox webkit 2>&1 | sed -n 's/^  //p')
+          mkdir -p "$bundle/archives/partial" "$bundle/lists"
+          if [ "${#pkgs[@]}" -gt 0 ]; then
+            sudo timeout 600 env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends \
+              --download-only -o Dir::Cache::Archives="$bundle/archives/" "${pkgs[@]}" >/dev/null
+          fi
+          sudo cp -a /var/lib/apt/lists/. "$bundle/lists/"
+          sudo rm -rf "$bundle/lists/partial" "$bundle/lists/lock" "$bundle/archives/partial" "$bundle/archives/lock"
+          sudo chown -R "$(id -u):$(id -g)" "$bundle"
+          echo "staged ${#pkgs[@]} packages ($(du -sh "$bundle/archives" | cut -f1)), browsers $(du -sh "$HOME/.cache/ms-playwright" | cut -f1)"
+        )
+        set +e
+        stage
+        status=$?
+        set -e
+        if [ "$status" -ne 0 ]; then
+          echo "::warning::Playwright staging failed; the snapshot ships without it."
+          sudo rm -rf "$bundle" "$HOME/.cache/ms-playwright"
+        fi
+
+    # One image, five trees, gathered under one root by bind mounts: the workspace, proto's toolchain,
+    # moon's home and the two Playwright trees. zstd level 3 keeps reads cheap; heavier levels move the cost
+    # into every job's reads.
     - name: Build image
       id: image
       shell: bash
@@ -68,14 +100,20 @@ runs:
         sudo apt-get update -qq
         sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends squashfs-tools >/dev/null
         mkdir -p "$HOME/.moon"
-        sudo mkdir -p /mnt/stage/ws /mnt/stage/proto /mnt/stage/moon /mnt/snapshot
+        sudo mkdir -p /mnt/snapshot
         sudo chown "$(id -u):$(id -g)" /mnt/snapshot
-        sudo mount --bind "$GITHUB_WORKSPACE" /mnt/stage/ws
-        sudo mount --bind "$HOME/.proto" /mnt/stage/proto
-        sudo mount --bind "$HOME/.moon" /mnt/stage/moon
+        staged=()
+        for pair in "ws:$GITHUB_WORKSPACE" "proto:$HOME/.proto" "moon:$HOME/.moon" \
+          "playwright:$HOME/.cache/ms-playwright" "playwright-apt:$HOME/.cache/playwright-offline"; do
+          name=${pair%%:*}; source=${pair#*:}
+          [ -d "$source" ] || continue
+          sudo mkdir -p "/mnt/stage/$name"
+          sudo mount --bind "$source" "/mnt/stage/$name"
+          staged+=("/mnt/stage/$name")
+        done
         SECONDS=0
         mksquashfs /mnt/stage /mnt/snapshot/workspace.sqfs -comp zstd -Xcompression-level 3 -noappend -no-progress -quiet
-        for target in /mnt/stage/ws /mnt/stage/proto /mnt/stage/moon; do sudo umount "$target"; done
+        for target in "${staged[@]}"; do sudo umount "$target"; done
         size=$(stat -c %s /mnt/snapshot/workspace.sqfs)
         echo "squashfs: ${SECONDS}s, $((size / 1000000)) MB"
         echo "size=$size" >> "$GITHUB_OUTPUT"

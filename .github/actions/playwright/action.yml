@@ -1,7 +1,8 @@
 name: Playwright
 description: >
-  Install one Playwright browser with its system dependencies, keeping the apt packages those
-  dependencies download in the Actions cache. Call after the setup action.
+  Install one Playwright browser with its system dependencies: from the mounted workspace snapshot when it
+  carries them, otherwise from the network, keeping the apt packages those dependencies download in the
+  Actions cache. Call after the setup action.
 
 inputs:
   browser:
@@ -11,11 +12,45 @@ inputs:
 runs:
   using: 'composite'
   steps:
+    # A mounted workspace snapshot carries every browser and an offline apt bundle (lists and packages), so
+    # this installs with no network. Anything the bundle lacks falls through to the steps below.
+    - name: Install from the snapshot
+      id: offline
+      shell: bash
+      env:
+        BROWSER: ${{ inputs.browser }}
+      run: |
+        bundle="$HOME/.cache/playwright-offline"
+        [ -d "$bundle/lists" ] || exit 0
+        offline_install() (
+          set -euo pipefail
+          # The dry run asks apt what it would install, so it reads the bundle's lists, not the image's.
+          sudo cp -a "$bundle/lists/." /var/lib/apt/lists/
+          mapfile -t pkgs < <(pnpm exec playwright install-deps --dry-run "$BROWSER" 2>&1 | sed -n 's/^  //p')
+          if [ "${#pkgs[@]}" -gt 0 ]; then
+            mkdir -p "$bundle/archives/partial"
+            sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends --no-download \
+              -o Dir::Cache::Archives="$bundle/archives/" "${pkgs[@]}" >/dev/null
+          fi
+          timeout 240 pnpm exec playwright install "$BROWSER"
+          echo "installed $BROWSER and ${#pkgs[@]} system packages from the snapshot"
+        )
+        set +e
+        offline_install
+        status=$?
+        set -e
+        if [ "$status" -eq 0 ]; then
+          echo "done=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "::warning::Playwright could not install from the snapshot; installing from the network."
+        fi
+
     # `--with-deps` downloads 50-100 MB of fonts, codecs and GStreamer from the runner's Ubuntu
     # mirror, which has run at ~35 kB/s and timed a cell out mid-install. Cached, apt downloads only
     # the packages whose versions changed since.
     - name: Point apt at the package cache
       id: apt
+      if: ${{ steps.offline.outputs.done != 'true' }}
       shell: bash
       run: |
         dir="$HOME/.cache/playwright-apt"
@@ -30,6 +65,7 @@ runs:
     # this version, then for any version.
     - name: Restore the package cache
       id: restore
+      if: ${{ steps.offline.outputs.done != 'true' }}
       uses: actions/cache/restore@v5
       with:
         path: ${{ steps.apt.outputs.dir }}
@@ -39,6 +75,7 @@ runs:
           playwright-apt-${{ runner.arch }}-${{ steps.apt.outputs.image }}-${{ inputs.browser }}-
 
     - name: List the cached packages
+      if: ${{ steps.offline.outputs.done != 'true' }}
       shell: bash
       env:
         DIR: ${{ steps.apt.outputs.dir }}
@@ -47,6 +84,7 @@ runs:
     # The install takes under a minute, but the Ubuntu mirror has stalled `apt-get update` for the
     # rest of the job's cap; a fresh attempt gets a fresh connection.
     - name: Install
+      if: ${{ steps.offline.outputs.done != 'true' }}
       shell: bash
       env:
         BROWSER: ${{ inputs.browser }}
@@ -64,6 +102,7 @@ runs:
     # `partial/` and `lock` owned by root, which the cache save cannot read.
     - name: Release the package cache
       id: release
+      if: ${{ steps.offline.outputs.done != 'true' }}
       shell: bash
       env:
         DIR: ${{ steps.apt.outputs.dir }}
@@ -79,7 +118,7 @@ runs:
     # Only when apt downloaded something. Saved here rather than in a post-job step, which a cell that
     # later times out skips.
     - name: Save the package cache
-      if: ${{ steps.release.outputs.added != '0' }}
+      if: ${{ steps.offline.outputs.done != 'true' && steps.release.outputs.added != '0' }}
       uses: actions/cache/save@v5
       with:
         path: ${{ steps.apt.outputs.dir }}
