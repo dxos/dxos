@@ -117,7 +117,8 @@ const resolvePackageJsonPathViaContext = async (
  * at build time — so every new server-only entrypoint doesn't require a code change here.
  */
 const importMapExcludedSubpaths: Readonly<Record<string, ReadonlySet<string>>> = {
-  '@dxos/app-framework': new Set(['vite-plugin']),
+  // `vite-plugin/hot-modules` imports Vite itself.
+  '@dxos/app-framework': new Set(['vite-plugin', 'vite-plugin/hot-modules']),
   // `@dxos/lit-grid/testing` re-exports a playwright page-object manager and pulls
   // `@playwright/test` (and transitive playwright-core) into the browser bundle.
   '@dxos/lit-grid': new Set(['testing']),
