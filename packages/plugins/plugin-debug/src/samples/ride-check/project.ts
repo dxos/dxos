@@ -43,10 +43,12 @@ wrap the app in \`<Theme.Provider tx={Theme.defaultTx} themeMode='dark'>\`. Each
 \`border-\${hue}-border\`.
 - \`wrangler.jsonc\` sets \`assets.directory\` to the Vite output and \`run_worker_first: ['/api/*']\`.
 
-Deploy with the Cloudflare connection's token when this space has one, so later deploys update the same URL. \
-Without one, \`wrangler deploy --temporary\` mints a temporary account (wrangler 4.102 or later); its claim URL is a \
-bearer credential, so give it to me directly and file it nowhere. Wrangler keeps that account in the sandbox's \
-home for about an hour, so redeploy from the same sandbox to keep the URL. A deploy that exited zero is not evidence: fetch \
+Deploy with the space's Cloudflare connection when it has one: query \`org.dxos.type.accessToken\` for \
+\`source: "cloudflare.com"\` and add its ref to the sandbox's \`credentials\` as \`CLOUDFLARE_API_TOKEN\`, so every \
+command has it; never read the value. Then plain \`wrangler deploy\` publishes \`ride-check\` on the account's \
+workers.dev subdomain, and later deploys update the same URL. Without a connection, \`wrangler deploy --temporary\` \
+mints a temporary account (wrangler 4.102 or later); its claim URL is a bearer credential, so give it to me directly \
+and file it nowhere, and redeploy from the same sandbox, which keeps that account for about an hour. A deploy that exited zero is not evidence: fetch \
 the URL and \`/api/forecast\` and check the bodies.
 
 Commit the code to a repository attached to the sandbox before you finish, so a later change starts from it rather \

@@ -12,12 +12,18 @@
  * @mdl packages/plugins/plugin-debug/PLUGIN.mdl test QA-10
  * @app composer-app dev server on :4173 (`DX_DEV=true DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run
  *   composer-app:serve`), talking to EDGE preview, whose AI and sandbox services serve the model below
+ *
+ * The driver's `CLOUDFLARE_API_TOKEN` becomes the space's Cloudflare connection, so the agent deploys to that account
+ * and the page loads for anyone; without it the agent falls back to a temporary account. Keep the value off screen:
+ *
+ *   CLOUDFLARE_API_TOKEN='op://eng-dev/com.cloudflare/local/CLOUDFLARE_API_TOKEN' op run -- \
+ *     node .agents/skills/autocue/scripts/driver.mjs --url http://localhost:4173 --out /tmp/ride-check-take
  */
 
 const TEMPLATE = 'Ride Check';
 const PROJECT = 'Ride Check';
 const FEATURE = 'Go / no-go';
-const SUBFEATURE = 'Gust rule — warn above 30 km/h';
+const SUBFEATURE = 'Gust rule — show gusts, warn above 30 km/h';
 
 /** A beat for the viewer after a visible change. */
 const BEAT = 1_500;
@@ -144,6 +150,61 @@ const delegate = async (demo, page, titles) => {
   await closeCompanion(page);
 };
 
+/**
+ * Connects Cloudflare in the take's space from the driver's `CLOUDFLARE_API_TOKEN`, as the OAuth connector would leave
+ * it: an AccessToken for `cloudflare.com` and a Connection. The value goes from the driver's environment into the space
+ * and is never logged; run the driver under `op run` so it is never typed either.
+ */
+const connectCloudflare = async (page) => {
+  const token = process.env.CLOUDFLARE_API_TOKEN;
+  if (!token) {
+    return false;
+  }
+  await page.evaluate(
+    async ({ key, token }) => {
+      const spaceId = globalThis[key];
+      const space = dxos.spaces().find((candidate) => candidate.id === spaceId);
+      const schema = space.db.registry
+        .list()
+        .find((type) => dxos.Type.getTypename(type) === 'org.dxos.type.accessToken');
+      const accessToken = space.db.add(dxos.Obj.make(schema, { source: 'cloudflare.com', account: 'DXOS', token }));
+      await composer.invoke(
+        'org.dxos.operation.connector.createConnection',
+        { name: 'Cloudflare', accessToken: dxos.Ref.make(accessToken) },
+        { spaceId },
+      );
+    },
+    { key: TAKE_SPACE, token },
+  );
+  return true;
+};
+
+/** The Worker URL the agent filed on the project, as a Bookmark. */
+const workerUrl = (page) =>
+  page.evaluate(async (key) => {
+    const space = dxos.spaces().find((candidate) => candidate.id === globalThis[key]);
+    const bookmarks = await space.db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.bookmark'))).run();
+    return bookmarks.map((bookmark) => bookmark.url).find((url) => /^https:\/\//.test(url ?? ''));
+  }, TAKE_SPACE);
+
+/** Opens the deployed page, holds on it, and comes back to the same place in Composer. */
+const showLivePage = async (demo, page, caption, { back = true } = {}) => {
+  const url = await workerUrl(page);
+  if (!url) {
+    throw new Error('the agent filed no Worker URL on the project');
+  }
+  const composerUrl = page.url();
+  await page.goto(url, { waitUntil: 'load' });
+  await page.waitForTimeout(BEAT * 2);
+  await demo.caption({ value: caption, subtitle: new URL(url).host });
+  await page.waitForTimeout(BEAT * 4);
+  if (back) {
+    await page.goto(composerUrl, { waitUntil: 'domcontentloaded' });
+    await page.locator('[data-testid="deck.plank"]').first().waitFor({ state: 'visible', timeout: 120_000 });
+    await page.waitForTimeout(BEAT);
+  }
+};
+
 export const steps = [
   {
     name: 'Prep (off camera): dismiss notices, hide help panels',
@@ -208,6 +269,7 @@ export const steps = [
       await page.getByTestId('org.dxos.type.project.section').first().waitFor({ state: 'visible', timeout: 60_000 });
       await closeCompanion(page);
       await showProject(page);
+      await connectCloudflare(page);
     },
   },
   {
@@ -279,6 +341,12 @@ export const steps = [
         label: 'Diagram',
       });
       await page.waitForTimeout(BEAT * 3);
+    },
+  },
+  {
+    name: 'Open the live page',
+    run: async ({ demo, page }) => {
+      await showLivePage(demo, page, 'Live on Cloudflare');
     },
   },
   {
@@ -358,6 +426,12 @@ export const steps = [
       await demo.click({ selector: '[data-testid="feature-card.spec"] >> nth=0', label: 'Spec' });
       await page.getByTestId('spec-article.spec').first().waitFor({ state: 'visible', timeout: 30_000 });
       await page.waitForTimeout(BEAT * 4);
+    },
+  },
+  {
+    name: 'Reload the live page',
+    run: async ({ demo, page }) => {
+      await showLivePage(demo, page, 'Same URL, with the gust rule', { back: false });
     },
   },
 ];
