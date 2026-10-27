@@ -58,8 +58,9 @@ const findModuleBodyImports = (node: unknown, found: ModuleBodyImport[] = []): M
 };
 
 /**
- * Replaces each module-body import in a `dx.config.ts` with a promise of a marker holding the resolved
- * file, so evaluating the config at build time records module locations without loading any body.
+ * Replaces each module-body import in a `dx.config.ts` with a promise of a marker holding its specifier,
+ * so evaluating the config at build time records module locations without loading any body. The build
+ * resolves the specifier for its own target: a body can resolve differently per runtime (`#x` conditions).
  * Runs after TypeScript is stripped, because Vite drops dynamic-import attributes before resolution.
  */
 const moduleRefPlugin = (): VitePlugin => ({
@@ -83,7 +84,7 @@ const moduleRefPlugin = (): VitePlugin => ({
       if (!resolved) {
         this.error(`Cannot resolve module body '${specifier}' in ${id}.`);
       }
-      const marker = `Promise.resolve({ [Symbol.for('@dxos/app-framework/vite-plugin/ModuleRef')]: ${JSON.stringify(resolved.id)} })`;
+      const marker = `Promise.resolve({ [Symbol.for('@dxos/app-framework/vite-plugin/ModuleRef')]: ${JSON.stringify(specifier)} })`;
       out = out.slice(0, start) + marker + out.slice(end);
     }
     return out;
@@ -210,7 +211,9 @@ export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): V
       const chunkRefs: string[] = [];
       // Dev serves the source file directly; a build emits it as a chunk whose URL replaces the token.
       const toUrl = (moduleFile: string, specifier = `./${relative(dirname(file), moduleFile)}`) => {
-        this.addWatchFile(moduleFile);
+        if (moduleFile.startsWith('/')) {
+          this.addWatchFile(moduleFile);
+        }
         if (library) {
           loaders.push(
             `${JSON.stringify(specifier)}: () => import(${JSON.stringify(specifier.startsWith('.') ? moduleFile : specifier)})`,
@@ -232,14 +235,20 @@ export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): V
         // Both tags are `Symbol.for` keys, so they match the copy of the framework the config loaded.
         const name = Capability.getModuleTag(module);
         const loader = module[Capability.LoaderTag];
-        const body = loader ? readModuleRef(await loader()) : undefined;
-        if (!name || !body) {
+        const bodySpecifier = loader ? readModuleRef(await loader()) : undefined;
+        if (!name || !bodySpecifier) {
           this.error(`Module '${name ?? '?'}' in ${file} has no lazy body; manifests need one per module.`);
         }
         if (module.mapsProps) {
           this.error(
             `Module '${name}' in ${file} maps plugin options with \`props\`, which a manifest cannot carry; read the options in its body instead.`,
           );
+        }
+        // A library keeps a bare or `#` body specifier as written, so its consumer's conditions pick the file.
+        const external = library && !bodySpecifier.startsWith('.');
+        const bodyFile = external ? bodySpecifier : (await this.resolve(bodySpecifier, file))?.id;
+        if (!bodyFile) {
+          this.error(`Cannot resolve module body '${bodySpecifier}' of module '${name}' in ${file}.`);
         }
         const adapter = module[Capability.AdapterTag];
         const adapterFile = adapter ? (await this.resolve(adapter.module, file))?.id : undefined;
@@ -248,7 +257,7 @@ export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): V
         }
         modules.push({
           id: name,
-          url: toUrl(body),
+          url: external ? toUrl(bodyFile, bodySpecifier) : toUrl(bodyFile),
           activatesOn: module.activatesOn,
           requires: toManifestTags(module.requires),
           provides: toManifestTags(module.provides),
