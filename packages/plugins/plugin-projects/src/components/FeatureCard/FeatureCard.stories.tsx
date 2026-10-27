@@ -7,6 +7,7 @@ import React, { type ReactNode, useMemo } from 'react';
 import { expect, fn, userEvent, within } from 'storybook/test';
 
 import * as Card from '@dxos/react-ui/Card';
+import * as Layout from '@dxos/react-ui/Layout';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
@@ -116,7 +117,7 @@ const SectionCards = ({ dependents, ...root }: FeatureCard.RootProps & { depende
 const DefaultStory = ({ ids, features = SAMPLE_FEATURES, variant, onOpen }: StoryArgs) => {
   const lookup = useMemo(() => makeFeatureLookup(features), [features]);
   return (
-    <div className='grid grid-cols-[repeat(auto-fill,minmax(18rem,1fr))] items-start gap-2 p-2'>
+    <Layout.Grid gap='sm' classNames='grid-cols-[repeat(auto-fill,minmax(18rem,1fr))] items-start p-trim-md'>
       {ids.map((id) => {
         const feature = lookup(id);
         const dependents = getDependents(id, features).flatMap((dependent) => lookup(dependent) ?? []);
@@ -133,7 +134,7 @@ const DefaultStory = ({ ids, features = SAMPLE_FEATURES, variant, onOpen }: Stor
           )
         );
       })}
-    </div>
+    </Layout.Grid>
   );
 };
 

@@ -19,6 +19,7 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer } from '@dxos/react-ui-attention';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
+import * as Layout from '@dxos/react-ui/Layout';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
@@ -40,10 +41,10 @@ const DefaultStory = ({ attendableId }: StoryArgs) => {
   // with the plank's id, as the deck places it.
   return (
     <AttendableContainer id={attendableId} classNames='contents'>
-      <div className='dx-fill grid grid-cols-[1fr_24rem] divide-x divide-separator'>
+      <Layout.Grid classNames='dx-fill grid-cols-[1fr_24rem] divide-x divide-separator'>
         <ProjectFeatures project={project} attendableId={attendableId} />
         <FeatureCompanion project={project} attendableId={attendableId} />
-      </div>
+      </Layout.Grid>
     </AttendableContainer>
   );
 };
