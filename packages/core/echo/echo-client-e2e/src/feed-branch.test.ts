@@ -64,7 +64,7 @@ describe('feed branches', () => {
       yield* Feed.append(feed, [Obj.make(TestSchema.Person, { name: 'B2' })], { branch: b1.id });
       yield* Database.flush();
 
-      const results = yield* Feed.query(feed, Filter.type(TestSchema.Person)).run;
+      const results = yield* Feed.query(feed, Filter.type(TestSchema.Person), { branches: 'all' }).run;
       expect(results.every((item) => Number.isFinite(Feed.getPosition(item)))).toBe(true);
       const inAppendOrder = [...results].sort((left, right) => Feed.getPosition(left) - Feed.getPosition(right));
 
@@ -107,6 +107,36 @@ describe('feed branches', () => {
       expect(Feed.getBranch(reloaded)).toEqual(b1.id);
       expect(Feed.getForkPoint(reloaded)).toEqual(a1.id);
     }).pipe(Effect.provide(Database.layer(db2)), EffectEx.runAndForwardErrors);
+  });
+
+  // F-4.1: a default read covers one branch, so a branch never reaches a reader that did not ask for it.
+  test('a default feed read covers only the main branch, indexed or not', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person], assignQueuePositions: true });
+    const db = await peer.createDatabase();
+
+    await Effect.gen(function* () {
+      for (const indexed of [true, false]) {
+        const feed = yield* Database.add(Feed.make({ name: indexed ? 'indexed' : 'unindexed' }));
+        if (!indexed) {
+          yield* Feed.setIndexing(feed, { enabled: false });
+        }
+        const a1 = Obj.make(TestSchema.Person, { name: 'A1' });
+        yield* Feed.append(feed, [a1]);
+        const b1 = Obj.make(TestSchema.Person, { name: 'B1' });
+        yield* Feed.append(feed, [b1], { fork: a1 });
+        yield* Database.flush();
+
+        const names = (items: readonly TestSchema.Person[]) => items.map((item) => item.name).sort();
+        expect(names(yield* Feed.query(feed, Filter.type(TestSchema.Person)).run)).toEqual(['A1']);
+        expect(names(yield* Feed.query(feed, Filter.type(TestSchema.Person), { branches: [b1.id] }).run)).toEqual([
+          'B1',
+        ]);
+        expect(names(yield* Feed.query(feed, Filter.type(TestSchema.Person), { branches: 'all' }).run)).toEqual([
+          'A1',
+          'B1',
+        ]);
+      }
+    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
   });
 
   test('re-appending an item on a different branch is rejected', async ({ expect }) => {
@@ -165,7 +195,7 @@ const makeFeed = () =>
 
 /** Reads every person in the feed and returns a lookup by name that fails the test on a miss. */
 const queryByName = (feed: Feed.Feed) =>
-  Feed.query(feed, Filter.type(TestSchema.Person)).run.pipe(
+  Feed.query(feed, Filter.type(TestSchema.Person), { branches: 'all' }).run.pipe(
     Effect.map((results) => (name: string) => {
       const item = results.find((result) => result.name === name);
       if (item === undefined) {

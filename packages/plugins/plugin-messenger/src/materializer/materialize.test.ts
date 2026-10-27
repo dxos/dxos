@@ -256,8 +256,6 @@ describe('materialize', () => {
     await writeOwnContainer(db, [{ id: 'e2', text: 'two' }]);
     const [, loser] = Notifications.order(await db.query(Filter.type(Notifications.Notifications)).run());
     const loserFeed = await loser.feed.load();
-    // Read by a scan, since the index holds only the main branch and the branch message must be found to move.
-    await runEffect(db, Feed.setIndexing(loserFeed, { enabled: false }));
     const [two] = await runEffect(db, Feed.query(loserFeed, Filter.type(Message.Message)).run);
     const branched = Message.make({
       sender: { name: 'Alice' },

@@ -45,6 +45,18 @@ export const registry = (location: 'local' | 'remote' = 'local'): QueryAST.Regis
   location,
 });
 
+/** Options for {@link feed}. */
+export type FeedScopeOptions = {
+  /**
+   * Only items that are members of these branches: a branch id, or `null` for the main branch;
+   * `'all'` reads every branch. Omit to read the main branch only.
+   *
+   * The filter is by membership only: a branch's ancestor items up to its fork point are not
+   * included — read them with `Feed.readBranch` over the whole feed.
+   */
+  branches?: ReadonlyArray<string | null> | 'all';
+};
+
 /**
  * Scope targeting a specific feed (by its underlying queue EID).
  *
@@ -54,11 +66,15 @@ export const registry = (location: 'local' | 'remote' = 'local'): QueryAST.Regis
  * @example
  * ```ts
  * db.query(Query.select(Filter.feedCursor(cursor)).from(Scope.feed(feedUri)));
+ * db.query(Query.select(Filter.everything()).from(Scope.feed(feedUri, { branches: [null] })));
  * ```
  *
  * @performance O(1); builds a scope node.
  */
-export const feed = (feedUri: string): QueryAST.FeedScope => ({
+export const feed = (feedUri: string, options?: FeedScopeOptions): QueryAST.FeedScope => ({
   _tag: 'feed',
   feedUri,
+  ...(options?.branches === undefined
+    ? {}
+    : { branches: options.branches === 'all' ? ('all' as const) : [...options.branches] }),
 });

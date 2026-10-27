@@ -194,6 +194,18 @@ export interface AppendOptions {
 }
 
 /**
+ * Options for {@link query}.
+ */
+export interface QueryOptions {
+  /**
+   * Branches to read: branch ids, `null` for the main branch, or `'all'`. Defaults to the main branch only,
+   * so a private branch never reaches a reader that did not ask for it. Read a branch's ancestors with
+   * `'all'` (or the branches on its path) and pass the items to {@link readBranch}.
+   */
+  branches?: Scope.FeedScopeOptions['branches'];
+}
+
+/**
  * Options for {@link history}.
  */
 export interface HistoryOptions {
@@ -688,20 +700,32 @@ export const readBranch = <T extends Entity.Unknown | Entity.Snapshot>(
  * @performance O(1) to build; the result is lazy, so nothing executes until read.
  */
 export const query: {
-  <Q extends Query.Any>(feed: Feed, query: Q): QueryResult.QueryResultEffect<Query.Type<Q>, never, Database.Service>;
-  <F extends Filter.Any>(feed: Feed, filter: F): QueryResult.QueryResultEffect<Filter.Type<F>, never, Database.Service>;
+  <Q extends Query.Any>(
+    feed: Feed,
+    query: Q,
+    options?: QueryOptions,
+  ): QueryResult.QueryResultEffect<Query.Type<Q>, never, Database.Service>;
+  <F extends Filter.Any>(
+    feed: Feed,
+    filter: F,
+    options?: QueryOptions,
+  ): QueryResult.QueryResultEffect<Filter.Type<F>, never, Database.Service>;
   <Q extends Query.Any>(
     query: Q,
   ): (feed: Feed) => QueryResult.QueryResultEffect<Query.Type<Q>, never, Database.Service>;
   <F extends Filter.Any>(
     filter: F,
   ): (feed: Feed) => QueryResult.QueryResultEffect<Filter.Type<F>, never, Database.Service>;
-} = Function.dual(2, (feed: Feed, queryOrFilter: Query.Any | Filter.Any) => {
-  const feedUri = getFeedUri(feed);
-  invariant(feedUri, 'Feed must be stored in the database before accessing its contents');
-  const query = Query.is(queryOrFilter) ? queryOrFilter : Query.select(queryOrFilter);
-  return Database.query(query.from(Scope.feed(feedUri.toString())));
-});
+  // Data-first takes two or three arguments; data-last takes one, so arity alone tells them apart.
+} = Function.dual(
+  (args) => args.length >= 2,
+  (feed: Feed, queryOrFilter: Query.Any | Filter.Any, options?: QueryOptions) => {
+    const feedUri = getFeedUri(feed);
+    invariant(feedUri, 'Feed must be stored in the database before accessing its contents');
+    const query = Query.is(queryOrFilter) ? queryOrFilter : Query.select(queryOrFilter);
+    return Database.query(query.from(Scope.feed(feedUri.toString(), { branches: options?.branches })));
+  },
+);
 
 /**
  * Syncs the feed with the server.

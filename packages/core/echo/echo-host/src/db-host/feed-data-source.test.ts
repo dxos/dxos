@@ -171,6 +171,47 @@ describe('FeedDataSource', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('indexes a branch block only when the feed indexes every branch', () =>
+    Effect.gen(function* () {
+      const { source, spaceId, feedStore } = yield* setup;
+      const data = FeedProtocol.WellKnownNamespaces.data;
+      const [mainOnly, allBranches] = [EntityId.random(), EntityId.random()];
+      yield* feedStore.setFeedOptions({
+        spaceId,
+        feedId: allBranches,
+        feedNamespace: data,
+        options: { indexing: { enabled: true, mode: 'all' } },
+      });
+      const branch = EntityId.random();
+      const block = (feedId: string, onBranch: boolean) => ({
+        spaceId,
+        feedId,
+        feedNamespace: data,
+        data: EchoFeedCodec.encode({
+          id: EntityId.random(),
+          ...(onBranch ? { '@meta': { keys: [{ source: FeedProtocol.KEY_FEED_BRANCH, id: branch }] } } : {}),
+        }),
+      });
+      yield* feedStore.appendLocal([
+        block(mainOnly, false),
+        block(mainOnly, true),
+        block(allBranches, false),
+        block(allBranches, true),
+      ]);
+
+      source.beginPass();
+      const result = yield* source.getChangedObjects(Context.default(), [], { limit: 50 });
+      source.endPass();
+      expect(result.objects.map((object) => [object.queueId, EchoFeedCodec.branchOf(object.data) ?? null])).toEqual([
+        [mainOnly, null],
+        [allBranches, null],
+        [allBranches, branch],
+      ]);
+      // A skipped branch block still changes what a branch-scoped reader of its feed sees.
+      expect(source.takeReport().skippedFeeds).toEqual(new Map([[spaceId, new Set([mainOnly])]]));
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('a backfill cursor reads its feed alone to the end, then finishes', () =>
     Effect.gen(function* () {
       const { source, append, spaceId, feedIds } = yield* setup;

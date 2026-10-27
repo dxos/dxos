@@ -26,6 +26,7 @@ import {
   type EntityMeta,
   type QueueRef,
   type SourceRef,
+  buildQueueBranchCondition,
   buildQueueExpiryCondition,
   buildTypeDxnCondition,
   sourceRefs,
@@ -80,8 +81,8 @@ const buildFtsSourceCondition = (
   if (spaceIds.length > 0) {
     conditions.push(
       includeAllQueues
-        ? // All items from these spaces (both space objects and queue objects).
-          sql`m.spaceId IN ${sql.in(spaceIds)}`
+        ? // Space objects and the main-branch items of every queue, as a default feed read covers main only.
+          sql`(m.spaceId IN ${sql.in(spaceIds)} AND m.queueBranch IS NULL)`
         : // Only space objects (not queue objects) from these spaces.
           sql`(m.spaceId IN ${sql.in(spaceIds)} AND m.queueId = '')`,
     );
@@ -93,8 +94,8 @@ const buildFtsSourceCondition = (
       sql`(${sql.or(
         queues.map((queue) =>
           queue.spaceId !== undefined
-            ? sql`(m.spaceId = ${queue.spaceId} AND m.queueId = ${queue.queueId}${buildQueueExpiryCondition(sql, queue, sql`m.updatedAt`)})`
-            : sql`(m.queueId = ${queue.queueId}${buildQueueExpiryCondition(sql, queue, sql`m.updatedAt`)})`,
+            ? sql`(m.spaceId = ${queue.spaceId} AND m.queueId = ${queue.queueId}${buildQueueBranchCondition(sql, queue, sql`m.queueBranch`)}${buildQueueExpiryCondition(sql, queue, sql`m.updatedAt`)})`
+            : sql`(m.queueId = ${queue.queueId}${buildQueueBranchCondition(sql, queue, sql`m.queueBranch`)}${buildQueueExpiryCondition(sql, queue, sql`m.updatedAt`)})`,
         ),
       )})`,
     );

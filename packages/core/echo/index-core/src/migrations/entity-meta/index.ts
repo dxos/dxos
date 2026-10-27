@@ -17,6 +17,7 @@ import { addNormalizedIds } from './0008_normalized_ids.ts';
 import { backfillNormalizedIds } from './0009_backfill_normalized_ids.ts';
 import { addAnnotations } from './0010_annotations.ts';
 import queueInsertionId from './0011_queue_insertion_id.sql?raw';
+import queueBranch from './0012_queue_branch.sql?raw';
 
 /**
  * Columns added to `objectMeta` after it first shipped, with the DDL that adds them. Databases in
@@ -62,6 +63,7 @@ export const MIGRATIONS = {
   '0009_backfill_normalized_ids': backfillNormalizedIds,
   '0010_annotations': addAnnotations,
   '0011_queue_insertion_id': SqlMigrations.apply(queueInsertionId),
+  '0012_queue_branch': SqlMigrations.apply(queueBranch),
 };
 
 /** Own history table per store, since many stores share the client database. */

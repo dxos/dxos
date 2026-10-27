@@ -6,7 +6,15 @@ import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as SqlClient from 'effect/sql/SqlClient';
 
-import { ATTR_DELETED, ATTR_PARENT, ATTR_RELATION_SOURCE, ATTR_RELATION_TARGET, ATTR_TYPE } from '@dxos/echo/internal';
+import { KEY_FEED_BRANCH } from '@dxos/echo-protocol';
+import {
+  ATTR_DELETED,
+  ATTR_META,
+  ATTR_PARENT,
+  ATTR_RELATION_SOURCE,
+  ATTR_RELATION_TARGET,
+  ATTR_TYPE,
+} from '@dxos/echo/internal';
 import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
 import { ConvergenceKeyIntentStore } from '../convergence-key-intent-store.ts';
@@ -934,6 +942,85 @@ describe('EntityMetaIndex', () => {
         window: { kind: 'natural', direction: 'asc', limit: 2, skip: 2 },
       });
       expect(typed.map((row) => row.objectId)).toEqual([objectIds[2], objectIds[3]]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect("indexes a feed item's branch and filters a queue read by branch before its limit", () =>
+    Effect.gen(function* () {
+      const index = new EntityMetaIndex(yield* SqlClient.SqlClient);
+      yield* index.migrate();
+
+      const spaceId = SpaceId.random();
+      const queueId = EntityId.random();
+      const branch = EntityId.random();
+      const otherBranch = EntityId.random();
+      const objectIds = Array.from({ length: 6 }, () => EntityId.random()).sort();
+      // Main rows sort first, so a limit applied before the branch filter would return none of the branch.
+      const branchOf = [undefined, undefined, undefined, branch, branch, otherBranch];
+      const makeItem = (objectId: string, itemBranch: string | undefined): IndexerObject => ({
+        spaceId,
+        queueId,
+        queueNamespace: 'data',
+        documentId: null,
+        recordId: null,
+        queuePosition: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: {
+          id: objectId,
+          [ATTR_TYPE]: TYPE_PERSON,
+          [ATTR_DELETED]: false,
+          ...(itemBranch !== undefined ? { [ATTR_META]: { keys: [{ source: KEY_FEED_BRANCH, id: itemBranch }] } } : {}),
+        },
+      });
+      yield* index.update(objectIds.map((objectId, position) => makeItem(objectId, branchOf[position])));
+
+      const all = yield* index.queryAll({ spaceIds: [], queues: [{ queueId, spaceId }] });
+      expect(new Map(all.map((row) => [row.objectId, row.queueBranch]))).toEqual(
+        new Map(objectIds.map((objectId, position) => [objectId, branchOf[position] ?? null])),
+      );
+
+      const firstOfBranch = yield* index.queryAll({
+        spaceIds: [],
+        queues: [{ queueId, spaceId, branches: [branch] }],
+        window: { kind: 'natural', direction: 'asc', limit: 1 },
+      });
+      expect(firstOfBranch.map((row) => row.objectId)).toEqual([objectIds[3]]);
+
+      const main = yield* index.queryTypes({
+        spaceIds: [],
+        queues: [{ queueId, spaceId, branches: [null] }],
+        typeDxns: [TYPE_PERSON],
+      });
+      expect(main.map((row) => row.objectId).sort()).toEqual(objectIds.slice(0, 3));
+
+      const newestOfBoth = yield* index.queryAll({
+        spaceIds: [],
+        queues: [{ queueId, spaceId, branches: [null, otherBranch] }],
+        window: { kind: 'natural', direction: 'desc', limit: 2 },
+      });
+      expect(newestOfBoth.map((row) => row.objectId)).toEqual([objectIds[5], objectIds[2]]);
+
+      const none = yield* index.queryAll({ spaceIds: [], queues: [{ queueId, spaceId, branches: [] }] });
+      expect(none).toEqual([]);
+
+      // A removal tombstone carries no `@meta`, so the row keeps the branch its body was indexed with.
+      yield* index.update([
+        {
+          ...makeItem(objectIds[3], undefined),
+          data: { id: objectIds[3], [ATTR_DELETED]: true },
+        },
+      ]);
+      const removed = yield* index.lookupByObjectId({ spaceId, queueId, objectId: objectIds[3] });
+      expect(removed?.deleted).toBe(true);
+      expect(removed?.queueBranch).toEqual(branch);
+
+      // Narrowing the feed to its main branch removes exactly the rows of the others.
+      const branchRecordIds = yield* index.selectFeedBranchRecordIds({ spaceId, queueId });
+      expect(branchRecordIds).toHaveLength(3);
+      yield* index.deleteByRecordIds(branchRecordIds);
+      const remaining = yield* index.queryAll({ spaceIds: [], queues: [{ queueId, spaceId }] });
+      expect(remaining.map((row) => row.objectId).sort()).toEqual(objectIds.slice(0, 3));
     }).pipe(Effect.provide(TestLayer)),
   );
 

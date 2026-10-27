@@ -733,6 +733,12 @@ export interface SpaceScope extends Schema.Schema.Type<typeof SpaceScope> {}
  */
 export const FeedScope = Schema.TaggedStruct('feed', {
   feedUri: Schema.String,
+  /**
+   * Restricts the read to items that are members of these branches: a branch id, or `null` for the
+   * main branch. Absent reads the main branch only, so a private branch never reaches a reader that
+   * did not ask for it; `'all'` reads every branch.
+   */
+  branches: Schema.optional(Schema.Union([Schema.Literal('all'), Schema.Array(Schema.NullOr(Schema.String))])),
 });
 export interface FeedScope extends Schema.Schema.Type<typeof FeedScope> {}
 
