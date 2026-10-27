@@ -6,6 +6,7 @@ import { describe, it } from '@effect/vitest';
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as Fiber from 'effect/Fiber';
 import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as TestClock from 'effect/testing/TestClock';
 
@@ -56,6 +57,26 @@ describe('withPendingSyncMonitor', () => {
       // The meter's dismiss control routes through `cancel`.
       progress.cancel(key);
       expect(task()).toBeUndefined();
+    }),
+  );
+
+  it.effect(
+    'does not time out while the request is still in flight',
+    Effect.fnUntraced(function* ({ expect }) {
+      const { progress, mailbox, task } = setup();
+      const fiber = yield* Effect.forkChild(
+        withPendingSyncMonitor(mailbox, progress, Effect.sleep(2 * PENDING_SYNC_TIMEOUT_MS)),
+      );
+
+      yield* TestClock.adjust(PENDING_SYNC_TIMEOUT_MS);
+      expect(task()?.status).toBe('running');
+
+      // The clock starts when the request ends.
+      yield* TestClock.adjust(PENDING_SYNC_TIMEOUT_MS);
+      yield* Fiber.join(fiber);
+      expect(task()?.status).toBe('running');
+      yield* TestClock.adjust(PENDING_SYNC_TIMEOUT_MS);
+      expect(task()?.status).toBe('error');
     }),
   );
 

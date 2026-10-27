@@ -25,8 +25,8 @@ export const PENDING_SYNC_TIMEOUT_ERROR = 'Timed out: sync reported no progress'
  * The run registers the meter itself, but only when its first progress update reaches this client,
  * which for a run on EDGE is a round trip later. The run's own registration replaces this pending
  * entry under the same key; a superseded handle's `fail`/`remove` touch nothing, so the two never
- * fight. A meter the run never takes over fails after {@link PENDING_SYNC_TIMEOUT_MS}, and stays until
- * dismissed, so a sync that never started reads as an error rather than silently vanishing.
+ * fight. A meter the run never takes over fails {@link PENDING_SYNC_TIMEOUT_MS} after the request ends,
+ * and stays until dismissed, so a sync that never started reads as an error rather than silently vanishing.
  */
 export const withPendingSyncMonitor = <A, E, R>(
   mailbox: Mailbox.Mailbox,
@@ -46,10 +46,18 @@ export const withPendingSyncMonitor = <A, E, R>(
     }
 
     const handle = registry.register(key, { label: createSyncLabel(mailbox) });
+    const result = yield* sync.pipe(
+      Effect.tapError((error) =>
+        Effect.sync(() => handle.fail(error instanceof Error ? error.message : String(error))),
+      ),
+    );
+
+    // Timed from the end of the request, not the click: a request still in flight (a routine form left
+    // open) is not a run that failed to report, and failing it would re-enable Sync mid-request.
     yield* Effect.sleep(timeoutMs).pipe(
       Effect.andThen(
         Effect.sync(() => {
-          // A failed request already shows its own error; a superseded handle's `fail` touches nothing.
+          // A superseded handle's `fail` touches nothing, so a run that took over is left alone.
           if (registry.snapshot().tasks.some((task) => task.name === key && task.status === 'running')) {
             handle.fail(PENDING_SYNC_TIMEOUT_ERROR);
           }
@@ -58,9 +66,5 @@ export const withPendingSyncMonitor = <A, E, R>(
       Effect.forkDetach,
     );
 
-    return yield* sync.pipe(
-      Effect.tapError((error) =>
-        Effect.sync(() => handle.fail(error instanceof Error ? error.message : String(error))),
-      ),
-    );
+    return result;
   });
