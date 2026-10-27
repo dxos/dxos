@@ -36,8 +36,8 @@ runs:
         git config core.checkStat minimal
         git config core.trustctime false
 
-    # Outputs and moon's local cache ship with the snapshot, so projects unchanged since it hit locally.
-    # A failed build still ships whatever built.
+    # moon's local cache ships with the snapshot, so projects unchanged since it restore without a network
+    # round trip. A failed build still ships whatever built.
     - name: Build into moon's local cache
       shell: bash
       run: |
@@ -47,6 +47,12 @@ runs:
         printf '%s\n' "$MOON_CACHE_CLIENT_KEY" > .moon/certs/client.key
         moon exec --on-failure continue :build || echo "::warning:::build failed; shipping the partial cache"
         rm -rf .moon/certs
+
+    # The outputs themselves do not ship: moon deletes a stale output before restoring it, and a `lint`
+    # running beside it (it does not wait on builds) fails on a `dist` file it listed a moment before.
+    - name: Drop build outputs
+      shell: bash
+      run: git clean -ffdxq -e node_modules -e /.moon/cache
 
     # `moon setup` installs node and pnpm without proto's bins, which a mounted job puts on PATH.
     - name: Link toolchain binaries
