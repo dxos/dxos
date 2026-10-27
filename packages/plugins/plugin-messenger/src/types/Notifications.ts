@@ -187,8 +187,11 @@ export const remove = Effect.fn('Notifications.remove')(function* (
   removeReadKeys(containers, keys);
 });
 
-/** Feed bookkeeping a copy must not inherit, since it is positioned afresh in the target feed. */
-const FEED_KEY_SOURCES = new Set([Feed.POSITION_KEY, Feed.PARENT_KEY]);
+/**
+ * Feed bookkeeping a copy must not inherit: it is positioned afresh in the target feed, and a branch of the
+ * source feed does not exist there.
+ */
+const FEED_KEY_SOURCES = new Set([Feed.POSITION_KEY, Feed.PARENT_KEY, Feed.BRANCH_KEY, Feed.FORK_KEY]);
 
 const copyMessage = (message: Message.Message): Message.Message => {
   const { id: _id, ...data } = message;

@@ -7,6 +7,8 @@ import { EchoFeedCodec, type FeedBlockRef } from '@dxos/echo-protocol';
 import { type AnyProperties, change, getMetaChecked } from '@dxos/echo/internal';
 import { FeedProtocol } from '@dxos/protocols';
 
+import { FeedBranchMismatchError } from '../errors.ts';
+
 /** How an inbound block relates to the block a core last applied. */
 type BlockOrder = 'same' | 'newer' | 'older' | 'concurrent';
 
@@ -45,6 +47,18 @@ const compareBlocks = (inbound: FeedBlockRef, current: FeedBlockRef | undefined)
   }
   return 'newer';
 };
+
+/** An object's branch membership as its keys state it; `undefined` where a key is absent (the main branch, no fork). */
+export type BranchKeys = { branch: string | undefined; fork: string | undefined };
+
+/** Reads the raw key ids, so a malformed id still compares unequal to every other branch. */
+export const branchKeysOf = (entity: Entity.Unknown): BranchKeys => ({
+  branch: Entity.getKeys(entity, FeedProtocol.KEY_FEED_BRANCH).at(0)?.id,
+  fork: Entity.getKeys(entity, FeedProtocol.KEY_FEED_FORK).at(0)?.id,
+});
+
+const sameBranch = (left: BranchKeys, right: BranchKeys): boolean =>
+  left.branch === right.branch && left.fork === right.fork;
 
 /** What reconciling an inbound block would do, decided from its block reference alone. */
 type Classification = 'ignore' | 'reposition' | 'apply';
@@ -102,6 +116,12 @@ export class FeedObjectCore {
   /** A position the entity's state is ordered after, kept when {@link #applied} names a block not yet positioned. */
   #positionFloor: number | undefined;
 
+  /**
+   * The branch the object belongs to, fixed by its first write or by the store; `undefined` until then. A feed
+   * accepts an update only on the object's own branch (F-1.3), so no local write may change it.
+   */
+  #branch: BranchKeys | undefined;
+
   constructor(entity: Entity.Unknown, onDirty: (core: FeedObjectCore) => void) {
     this.entity = entity;
     const ref = EchoFeedCodec.blockOfKeys([
@@ -109,6 +129,7 @@ export class FeedObjectCore {
       ...Entity.getKeys(entity, FeedProtocol.KEY_QUEUE_POSITION),
     ]);
     this.#applied = blockIdOf(ref) !== undefined || ref.position !== undefined ? ref : undefined;
+    this.#branch = this.#applied !== undefined ? branchKeysOf(entity) : undefined;
     this.#unsubscribe = Entity.subscribe(entity, () => {
       if (this.#applyingRemote || this.#deleted) {
         return;
@@ -133,12 +154,68 @@ export class FeedObjectCore {
    * `Obj.update`s since the last flush into a single feed block. Returns the JSON to send plus a
    * token naming this write, for {@link confirmAppend} or {@link revertCapture}.
    */
-  captureForAppend(): { json: Record<string, unknown>; token: number } {
+  captureForAppend(): { json: Record<string, unknown>; token: number; rejected?: FeedBranchMismatchError } {
+    // The background flush has no caller to reject to, so a local edit of the branch keys is undone and reported.
+    const rejected = this.checkBranch(this.entity);
+    if (rejected) {
+      this.restoreBranch();
+    }
+    this.#branch ??= branchKeysOf(this.entity);
     const json = Entity.toJSON(this.entity) as Record<string, unknown>;
     const token = ++this.#nextToken;
     this.#pending = { token, confirmed: false };
     this.#dirty = false;
-    return { json, token };
+    return { json, token, rejected };
+  }
+
+  /**
+   * The error a write of `candidate` as this object must be rejected with, when it states a different branch or
+   * fork point than the object has; `undefined` when it may be written.
+   */
+  checkBranch(candidate: Entity.Unknown): FeedBranchMismatchError | undefined {
+    if (this.#branch === undefined) {
+      return undefined;
+    }
+    const requested = branchKeysOf(candidate);
+    if (sameBranch(requested, this.#branch)) {
+      return undefined;
+    }
+    return new FeedBranchMismatchError({
+      objectId: this.entity.id,
+      branch: this.#branch.branch,
+      fork: this.#branch.fork,
+      requestedBranch: requested.branch,
+      requestedFork: requested.fork,
+    });
+  }
+
+  /** Put the object's own branch keys back on the working-set instance after a rejected local edit of them. */
+  restoreBranch(): void {
+    const branch = this.#branch;
+    if (branch === undefined) {
+      return;
+    }
+    this.#applyingRemote = true;
+    try {
+      change(this.entity, (mutable: Entity.Mutable<Entity.Unknown>) => {
+        // In place: the existing key records belong to this array, and ECHO refuses to re-home them.
+        const keys = getMetaChecked(mutable as AnyProperties).keys;
+        for (let index = keys.length - 1; index >= 0; index--) {
+          const source = keys[index].source;
+          if (source === FeedProtocol.KEY_FEED_BRANCH || source === FeedProtocol.KEY_FEED_FORK) {
+            keys.splice(index, 1);
+          }
+        }
+        if (branch.branch !== undefined) {
+          keys.push({ source: FeedProtocol.KEY_FEED_BRANCH, id: branch.branch });
+        }
+        if (branch.fork !== undefined) {
+          keys.push({ source: FeedProtocol.KEY_FEED_FORK, id: branch.fork });
+        }
+      });
+    } finally {
+      this.#applyingRemote = false;
+    }
   }
 
   /**
@@ -204,6 +281,8 @@ export class FeedObjectCore {
       } finally {
         this.#applyingRemote = false;
       }
+      // The store is the authority on which branch it accepted the object on.
+      this.#branch = branchKeysOf(this.entity);
       this.#applied = ref;
       this.#positionFloor = undefined;
       this.#pending = undefined;
@@ -269,7 +348,8 @@ export class FeedObjectCore {
    * working-set instance (`this.entity`) stays canonical/identity-stable; `source` is the argument
    * passed to `append` and is not retained afterwards. Unlike a remote apply, this is not guarded by
    * `#applyingRemote` — the mutation is genuinely local, so it should mark the core dirty like any
-   * other `Obj.update` (the caller immediately captures it for append regardless).
+   * other `Obj.update` (the caller immediately captures it for append regardless). The caller checks
+   * {@link checkBranch} first, since the source's keys replace the object's wholesale.
    */
   applyLocalUpdate(source: Entity.Unknown): void {
     this.#copyFieldsFrom(source);

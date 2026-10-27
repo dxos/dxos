@@ -210,7 +210,7 @@ export class FeedHandle {
    * Insert into feed with optimistic update, awaiting the append RPC. Re-appending an id that
    * already has a core is an update (see `EntityMetaIndex`'s upsert-by-id): the argument's state is
    * applied onto the existing working-set instance, which stays canonical, rather than registering a
-   * second core.
+   * second core. Throws `FeedBranchMismatchError` when that update states a different branch.
    */
   async append(items: Entity.Unknown[]): Promise<void> {
     const cores = this.#registerItemsForAppend(items);
@@ -275,6 +275,18 @@ export class FeedHandle {
       }
     }
     items.forEach((item) => assertObjectModel(item));
+    // Checked for the whole batch before any item is applied, so a rejected batch writes nothing.
+    for (const item of items) {
+      const existingCore = this.#cores.get(EntityId.make(item.id));
+      const rejected = existingCore?.checkBranch(item);
+      if (existingCore && rejected) {
+        if (existingCore.entity === item) {
+          // The caller re-stamped the live instance itself; undo that so the background flush cannot send it.
+          existingCore.restoreBranch();
+        }
+        throw rejected;
+      }
+    }
 
     return items.map((item) => {
       setRefResolverOnData(item, this._refResolver);
@@ -509,7 +521,10 @@ export class FeedHandle {
       return;
     }
     const batch = [...this.#dirtyCores].map((core) => {
-      const { json, token } = core.captureForAppend();
+      const { json, token, rejected } = core.captureForAppend();
+      if (rejected) {
+        log.warn('local edit of a feed object branch reverted', { feedId: this._feedId, error: rejected });
+      }
       return { core, json, token };
     });
     this.#dirtyCores.clear();

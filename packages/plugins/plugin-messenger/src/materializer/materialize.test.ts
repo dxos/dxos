@@ -249,4 +249,27 @@ describe('materialize', () => {
     await runEffect(db, Notifications.converge());
     expect((await visible(db)).texts).toEqual(['one', 'two']);
   });
+
+  test('a message moved from a branch of another container lands on the main branch', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: TYPES });
+    await writeOwnContainer(db, [{ id: 'e1', text: 'one' }]);
+    await writeOwnContainer(db, [{ id: 'e2', text: 'two' }]);
+    const [, loser] = Notifications.order(await db.query(Filter.type(Notifications.Notifications)).run());
+    const loserFeed = await loser.feed.load();
+    // Read by a scan, since the index holds only the main branch and the branch message must be found to move.
+    await runEffect(db, Feed.setIndexing(loserFeed, { enabled: false }));
+    const [two] = await runEffect(db, Feed.query(loserFeed, Filter.type(Message.Message)).run);
+    const branched = Message.make({
+      sender: { name: 'Alice' },
+      blocks: [{ _tag: 'text', text: 'branched' }],
+      [Obj.Meta]: { keys: [{ source: Notifications.INBOX_KEY_SOURCE, id: 'e3' }] },
+    });
+    await runEffect(db, Feed.append(loserFeed, [branched], { fork: two }));
+
+    await runEffect(db, Notifications.converge());
+    const copy = (await storedMessages(db)).find((message) => Message.extractText(message) === 'branched');
+    expect(copy).toBeDefined();
+    expect(copy && Feed.isMain(copy)).toBe(true);
+    expect(copy && Feed.getForkPoint(copy)).toBeUndefined();
+  });
 });

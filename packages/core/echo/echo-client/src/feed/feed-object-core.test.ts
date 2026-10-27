@@ -4,11 +4,12 @@
 
 import { describe, test } from 'vitest';
 
-import { Entity, Obj } from '@dxos/echo';
+import { Entity, Feed, Obj } from '@dxos/echo';
 import { EchoFeedCodec, type FeedBlockRef } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { FeedProtocol } from '@dxos/protocols';
 
+import { FeedBranchMismatchError } from '../errors.ts';
 import { FeedObjectCore } from './feed-object-core.ts';
 
 describe('FeedObjectCore', () => {
@@ -198,6 +199,54 @@ describe('FeedObjectCore', () => {
     expect(positionOf(entity)).toBeUndefined();
     core.reposition(EchoFeedCodec.blockId('a', 1), 6);
     expect(positionOf(entity)).toEqual('6');
+    core.dispose();
+  });
+
+  test('a write that states another branch is rejected', ({ expect }) => {
+    const forkPoint = Obj.make(TestSchema.Person, { name: 'fork point' });
+    const entity = Obj.make(TestSchema.Person, { name: 'v1' });
+    Feed.startBranch(entity, forkPoint);
+    const core = new FeedObjectCore(stamped(entity, { actorId: 'a', sequence: 1 }), () => {});
+
+    const sameBranch = Obj.make(TestSchema.Person, { id: entity.id, name: 'v2' });
+    Feed.startBranch(sameBranch, forkPoint);
+    expect(core.checkBranch(sameBranch)).toBeUndefined();
+
+    const onMain = Obj.make(TestSchema.Person, { id: entity.id, name: 'v2' });
+    expect(core.checkBranch(onMain)).toBeInstanceOf(FeedBranchMismatchError);
+
+    const refork = Obj.make(TestSchema.Person, { id: entity.id, name: 'v2' });
+    Feed.startBranch(refork, Obj.make(TestSchema.Person, { name: 'elsewhere' }));
+    expect(core.checkBranch(refork)).toBeInstanceOf(FeedBranchMismatchError);
+    core.dispose();
+  });
+
+  test('a local edit of the branch keys is reverted at capture and reported', ({ expect }) => {
+    const entity = Obj.make(TestSchema.Person, { name: 'v1' });
+    Feed.setBranch(entity, Obj.make(TestSchema.Person, { name: 'branch' }).id);
+    const branch = Feed.getBranch(entity);
+    const core = new FeedObjectCore(stamped(entity, { actorId: 'a', sequence: 1 }), () => {});
+
+    Obj.update(entity, (entity) => {
+      entity.name = 'v2';
+    });
+    Feed.setBranch(entity, undefined);
+    const { json, rejected } = core.captureForAppend();
+    expect(rejected).toBeInstanceOf(FeedBranchMismatchError);
+    expect(Feed.getBranch(entity)).toEqual(branch);
+    expect(EchoFeedCodec.branchOf(json)).toEqual(branch);
+    expect(entity.name).toEqual('v2');
+    core.dispose();
+  });
+
+  test('a new object takes its branch from its first write', ({ expect }) => {
+    const entity = Obj.make(TestSchema.Person, { name: 'v1' });
+    const core = new FeedObjectCore(entity, () => {});
+    Feed.setBranch(entity, Obj.make(TestSchema.Person, { name: 'branch' }).id);
+    expect(core.captureForAppend().rejected).toBeUndefined();
+
+    Feed.setBranch(entity, undefined);
+    expect(core.captureForAppend().rejected).toBeInstanceOf(FeedBranchMismatchError);
     core.dispose();
   });
 });
