@@ -24,6 +24,7 @@ export default defineConfig({
     'app-framework/ObservabilityMapping': 'src/app-framework/ObservabilityMapping.ts',
     'app-framework/AppCapability': 'src/app-framework/AppCapability.ts',
     'app-framework/SchemaAdapter': 'src/app-framework/SchemaAdapter.ts',
+    'app-framework/SpaceTemplatesAdapter': 'src/app-framework/SpaceTemplatesAdapter.ts',
     'app-framework/Tour': 'src/app-framework/Tour.ts',
     'app-graph/AppNode': 'src/app-graph/AppNode.ts',
     'app-graph/AppNodeMatcher': 'src/app-graph/AppNodeMatcher.ts',

@@ -15,8 +15,8 @@ import { random } from '@dxos/random';
 import { DEFAULT_CELL } from '@dxos/react-ui-canvas/scene';
 import { Cell, ModuleContainer, createStoryDecorators } from '@dxos/storybook-testing';
 
+import * as CanvasPlugin from '#meta';
 import { createCanvas, linkKey, nodeKey, rootOf } from '#model';
-import { CanvasPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Canvas } from '#types';
 
@@ -30,7 +30,7 @@ const withDrawing = (
 ) =>
   createStoryDecorators({
     types: [Drawing.Drawing, Drawing.Canvas, Markdown.Document],
-    plugins: [IllustratorPlugin.make(), CanvasPlugin(), MarkdownPlugin.make()],
+    plugins: [IllustratorPlugin.make(), CanvasPlugin.make(), MarkdownPlugin.make()],
     onInit: async ({ space }) => {
       const canvas = space.db.add(createCanvas());
       seed(space.db, canvas);

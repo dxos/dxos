@@ -17,6 +17,7 @@ import { type Translations } from '../app/index.ts';
 import * as AppActivationEvents from './AppActivationEvents.ts';
 import * as AppCapabilities from './AppCapabilities.ts';
 import * as SchemaAdapter from './SchemaAdapter.ts';
+import * as SpaceTemplatesAdapter from './SpaceTemplatesAdapter.ts';
 
 /**
  * Type of a maker built by {@link Capability$.moduleMaker}. Naming it keeps declaration emit
@@ -416,10 +417,9 @@ export const spaceTemplates = (
       provides: [AppCapabilities.SpaceTemplate],
       environments: options?.environments ?? ['browser', 'tauri'],
     },
-    () =>
-      loader().then(({ default: templates }) => ({
-        default: () => Effect.succeed([Capability$.contributeAll(AppCapabilities.SpaceTemplate, templates)]),
-      })),
+    Capability$.wrapLoader(() => loader().then(SpaceTemplatesAdapter.default), loader, {
+      module: '@dxos/app-toolkit/SpaceTemplatesAdapter',
+    }),
   );
 
 export const commands = (

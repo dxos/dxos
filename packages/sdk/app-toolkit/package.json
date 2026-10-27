@@ -51,6 +51,11 @@
       "types": "./dist/types/src/app-framework/SchemaAdapter.d.ts",
       "import": "./dist/lib/app-framework/SchemaAdapter.mjs"
     },
+    "./SpaceTemplatesAdapter": {
+      "source": "./src/app-framework/SpaceTemplatesAdapter.ts",
+      "types": "./dist/types/src/app-framework/SpaceTemplatesAdapter.d.ts",
+      "import": "./dist/lib/app-framework/SpaceTemplatesAdapter.mjs"
+    },
     "./AppMigrations": {
       "source": "./src/echo/AppMigrations.ts",
       "types": "./dist/types/src/echo/AppMigrations.d.ts",
