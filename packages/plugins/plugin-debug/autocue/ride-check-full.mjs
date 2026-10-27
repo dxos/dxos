@@ -20,6 +20,10 @@
  *
  *   CLOUDFLARE_API_TOKEN='op://eng-dev/com.cloudflare/local/CLOUDFLARE_API_TOKEN' op run -- \
  *     node .agents/skills/autocue/scripts/driver.mjs --url http://localhost:4173 --out /tmp/ride-check-take
+ *
+ * To keep the build off EDGE's sandboxes, serve local ones (bubblewrap on Linux) with `serve()` from
+ * `plugin-sandbox/src/local/server.ts`, allowing `api.cloudflare.com`, `*.workers.dev` and `api.open-meteo.com` beside
+ * the default registries, and give the driver `DX_SANDBOX_URL` and `DX_SANDBOX_TOKEN` (see `useLocalSandbox`).
  */
 
 const TEMPLATE = 'Ride Check';
@@ -30,7 +34,8 @@ const SUBFEATURE = 'Gust rule — show gusts, warn above 30 km/h';
 /** A beat for the viewer after a visible change. */
 const BEAT = 1_500;
 
-const MODEL = 'DeepSeek V4 Pro';
+/** `DX_MODEL` picks another of the settings' remote models by label. */
+const MODEL = process.env.DX_MODEL ?? 'Claude Sonnet 5';
 const FAST = 60;
 const TASKS = ['Draw the architecture', 'Build and deploy the Worker', 'Check the live page against the spec'];
 const SHIP = 'Ship the gust rule';
@@ -181,6 +186,42 @@ const connectCloudflare = async (page) => {
   return true;
 };
 
+/**
+ * Runs the agent's sandboxes on this machine rather than on EDGE when the driver has `DX_SANDBOX_URL` and
+ * `DX_SANDBOX_TOKEN`: a local sandbox helper (`plugin-sandbox/src/local/server.ts`) serves them, and the web app, which
+ * has no launcher of its own, reaches it through the plugin's HTTP backend. `DX_REPO` is the checkout the dev server
+ * serves, from which the plugin's modules are imported so they share the app's instances.
+ */
+const useLocalSandbox = async (page) => {
+  const url = process.env.DX_SANDBOX_URL;
+  const token = process.env.DX_SANDBOX_TOKEN;
+  if (!url || !token) {
+    return false;
+  }
+  await page.evaluate(
+    async ({ repo, url, token }) => {
+      const sandbox = `/@fs${repo}/packages/plugins/plugin-sandbox/src`;
+      const [HttpBackend, SandboxCapabilities, Capabilities, Effect] = await Promise.all([
+        import(`${sandbox}/services/HttpBackend.ts`),
+        import(`${sandbox}/types/SandboxCapabilities.ts`),
+        import(`/@fs${repo}/packages/sdk/app-framework/src/common/capabilities.ts`),
+        import('/@id/effect/Effect'),
+      ]);
+      const capabilities = composer.manager.capabilities;
+      capabilities.contribute({
+        module: 'autocue.localSandbox',
+        interface: SandboxCapabilities.LocalLauncher,
+        implementation: { backend: Effect.succeed(HttpBackend.make(url, token)) },
+      });
+      const [settings] = capabilities.getAll(SandboxCapabilities.Settings);
+      const [registry] = capabilities.getAll(Capabilities.AtomRegistry);
+      registry.set(settings, { ...registry.get(settings), backend: 'local' });
+    },
+    { repo: process.env.DX_REPO ?? process.cwd(), url, token },
+  );
+  return true;
+};
+
 export const steps = [
   {
     name: 'Prep (off camera): dismiss notices, hide help panels',
@@ -212,6 +253,9 @@ export const steps = [
       await demo.click({ selector: 'role=combobox[name="Remote language model"]', hud: false });
       await demo.click({ selector: `role=option[name="${MODEL}"]`, hud: false });
       await page.locator('role=combobox[name="Remote language model"]', { hasText: MODEL }).waitFor();
+      await useLocalSandbox(page);
+      // A space shows as pending until it has opened, and a pending one does not navigate.
+      await page.locator('[data-testid="spacePlugin.space"]').first().waitFor({ state: 'visible', timeout: 120_000 });
       await demo.click({ selector: '[data-testid="spacePlugin.space"] >> nth=0', hud: false });
       await closeCompanion(page);
       await demo.cut();

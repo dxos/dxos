@@ -52,8 +52,9 @@ and file it nowhere, and redeploy from the same sandbox, which keeps that accoun
 the URL and \`/api/forecast\` and check the bodies.
 
 Commit the code to a repository attached to the sandbox before you finish, so a later change starts from it rather \
-than from nothing. Work only the tasks you are given and stop when each is in review; the page needs no tests, no \
-README and no extra artifacts.
+than from nothing. A local sandbox cannot attach one: commit to a git repository in its workspace instead, and make \
+later changes in the same sandbox. Work only the tasks you are given and stop when each is in review; the page needs \
+no tests, no README and no extra artifacts.
 
 When I change a feature's card or its spec block, I file a task for it: add the change to the spec's requirements, \
 change the code in the same repository, redeploy to the same URL, check it, and set the feature back to operational.`;
