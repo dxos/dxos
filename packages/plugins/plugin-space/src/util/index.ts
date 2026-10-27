@@ -8,3 +8,4 @@ export * from './settings-space.ts';
 export * from './space-display.ts';
 export * from './space-template.ts';
 export * from './type-section-path.ts';
+export * from './template-plugins.ts';

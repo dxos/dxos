@@ -17,6 +17,7 @@ import * as SheetUtil from '@dxos/plugin-sheet/SheetUtil';
 import { canvasRecordOf } from '#model';
 
 import * as ArchitectureSpace from './ArchitectureSpace.ts';
+import { WIKI } from './wiki/wiki.ts';
 
 /** Header cells (row 1 labels) missing the heading style, or over all-numeric values without end alignment. */
 const unstyledHeaders = (sheet: Sheet.Sheet): string[] => {
@@ -90,6 +91,19 @@ describe('ArchitectureSpace', () => {
       'CF Workers',
       'Plugin metrics',
     ]);
+
+    // The wiki: its front page, the feature-map deck, then one collection per feature-map area holding a page per spec.
+    const wiki = collections.find((collection) => collection.name === 'Wiki');
+    const wikiObjects = await Promise.all((wiki?.objects ?? []).map((ref) => ref.load()));
+    expect(wikiObjects.map((object) => Obj.getLabel(object))).toEqual([
+      'DXOS wiki',
+      'DXOS feature map',
+      ...WIKI.areas.map(({ name }) => name),
+    ]);
+    const areaPages = wikiObjects.flatMap((object) =>
+      Obj.instanceOf(Collection.Collection, object) ? object.objects : [],
+    );
+    expect(areaPages).toHaveLength(WIKI.areas.reduce((count, area) => count + area.pages.length, 0));
 
     // The ECHO deck carries a description and its own theme.
     const deck = listedObjects.find((object) => Obj.instanceOf(Presentation.Presentation, object));
