@@ -198,4 +198,4 @@ versioned-store interface (`heads()`, `read(path, heads)`, `write(path, value)`)
 4. ~~Orphaned contents~~ Decided 2026-10-18: deleting the last node that points at a contents record (a View, or an
    anonymous Object's last Instance) deletes the record in the same intent, so undo restores both. There is no
    "Unplaced" group. A named Object with no Instances is a library entry, not an orphan.
-5. Can an Object contain a View? This design says no, so an Object stays a drawing rather than a navigable place.
+5. ~~Can an Object contain a View?~~ Decided 2026-10-27: no, so an Object stays a drawing rather than a navigable place (SPEC.mdl [F-9.9]).

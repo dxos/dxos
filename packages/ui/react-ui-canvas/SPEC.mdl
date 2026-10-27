@@ -1011,6 +1011,12 @@ decision D-5: An Object cannot contain a View. Fills in [D-1].
     - Allowing it, which the design left open and nothing built needs.
 ```
 
+```mdl
+decision D-6: Approve [D-2], [D-3], [D-4] and [D-5].
+  date: 2026-10-27
+  by: user:richburdon
+```
+
 ---
 
 ## Appendix: Extension Definitions
