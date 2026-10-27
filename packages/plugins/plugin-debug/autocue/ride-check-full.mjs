@@ -117,7 +117,14 @@ const waitFor = async (demo, page, done, minutes, label) => {
 const openProjectTab = async (demo, page, tab) => {
   const selector = `[data-testid="projectsPlugin.tab.${tab}"]`;
   if (!(await visible(page.locator(selector), 2_000))) {
-    await demo.click({ selector: PROJECT_NODE, label: PROJECT });
+    // An artifact opened from the project holds its plank under a breadcrumb; the sidebar row does not navigate back.
+    const crumb = `[data-testid="deck.plank"] nav[aria-label="Navigation history"] button:has-text("${PROJECT}")`;
+    if (await visible(page.locator(crumb), 2_000)) {
+      await demo.click({ selector: `${crumb} >> nth=0`, label: PROJECT });
+    } else {
+      await demo.click({ selector: PROJECT_NODE, label: PROJECT });
+    }
+    await page.locator(selector).first().waitFor({ state: 'visible', timeout: 15_000 });
   }
   await closeCompanion(page);
   await demo.click({ selector: `${selector} >> nth=0`, label: tab[0].toUpperCase() + tab.slice(1) });
