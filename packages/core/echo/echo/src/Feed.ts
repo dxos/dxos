@@ -729,10 +729,11 @@ export const readBranch = <T extends Entity.Unknown | Entity.Snapshot>(
  * ```
  *
  * A forward walk gives each branch on the path up to the fork point of the next; a backward walk
- * goes from `begin` (or the head of `branch`) back to the root base. Each item comes once, at its
- * latest block on the path. Resume with {@link getLocalCursor} of the last item of a page.
+ * goes from `begin` (or the head of `branch`) back to the root base. Each item comes once, at the place
+ * of its first block on the path, with the content of its latest one. Resume with {@link getLocalCursor}
+ * of the last item of a page.
  *
- * @performance O(1) to build; a page reads the blocks of the path after the cursor.
+ * @performance O(1) to build; a page reads every block of the path.
  */
 export const walk = <F extends Filter.Any>(
   feed: Feed,

@@ -366,8 +366,8 @@ describe('feed branches', () => {
       }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
     });
 
-    // D-60: each item once, at its latest block on the walk.
-    test('an updated item comes once, at the place of its latest block', async ({ expect }) => {
+    // D-69: each item once, at the place of its first block, with the content of its latest one.
+    test('an updated item comes once, at the place of its first block, with its latest content', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
       const db = await peer.createDatabase();
 
@@ -377,7 +377,14 @@ describe('feed branches', () => {
           a1.name = 'A1 v2';
         });
         yield* Database.flush();
-        expect(names(yield* Feed.walk(feed, Filter.type(TestSchema.Person)).run)).toEqual(['A2', 'A3', 'A1 v2']);
+        const person = Filter.type(TestSchema.Person);
+        expect(names(yield* Feed.walk(feed, person).run)).toEqual(['A1 v2', 'A2', 'A3']);
+        expect(names(yield* Feed.walk(feed, person, { order: 'desc' }).run)).toEqual(['A3', 'A2', 'A1 v2']);
+
+        // The cursor of the updated item names its latest block, and the next page still starts after its place.
+        const [first] = yield* Feed.walk(feed, person, { limit: 1 }).run;
+        const rest = yield* Feed.walk(feed, person, { begin: Feed.getLocalCursor(first) }).run;
+        expect(names(rest)).toEqual(['A2', 'A3']);
       }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
     });
 

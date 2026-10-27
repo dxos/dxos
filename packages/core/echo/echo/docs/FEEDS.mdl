@@ -547,12 +547,14 @@ const program = Effect.gen(function* () {
 ```mdl
 question Q-6: An update of an item appends a new block. Does a walk give the item at the place of its first block or of its latest block?
   to: user:dmaretskyi
-  status: open
+  status: answered
+  answer: |
+    The first block. The walk keeps the order in which the items started, and each item has its latest content.
+  decisions: [D-69, D-70]
   affects: [F-5.1, F-5.2]
   options:
     - The latest block. The walk gives each item one time, with its latest content, and the cursor of the item is a block on the walk. An item that changes after a cursor comes again on a later page.
     - The first block. The walk keeps the order in which the items started, but the content of the item is from a later block than the cursor.
-  note: Until you answer, the code gives the latest block [D-60].
 ```
 
 ### Storage
@@ -1265,6 +1267,23 @@ decision D-67: Approve [D-61].
 decision D-68: Approve [D-65].
   date: 2026-10-27
   by: user:dmaretskyi
+```
+
+```mdl
+decision D-69: A walk gives each item one time, at the place of its first block on the path, with the content of its latest block. Answers [Q-6].
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-5.1, F-5.2]
+  supersedes: D-60
+```
+
+```mdl
+decision D-70: The cursor of an item still names its latest block. A walk resumes after the place of the item that holds that block, so an item that changes after a cursor does not come again. Fills in [D-69].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.5]
+  why: The cursor stays a block of the walk, as [D-57] has it, and a page reads the whole path already, so the place of each item is known.
 ```
 
 ## Appendix: Extension Definitions

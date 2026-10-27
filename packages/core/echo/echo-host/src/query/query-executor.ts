@@ -174,8 +174,8 @@ type QueryItem = {
   recordId?: number;
 
   /**
-   * The place of the item on a walk, which the natural order of a walk scope sorts by: its index in
-   * the walk, negated on a backward walk so that a descending order keeps the walk order.
+   * The place of the item on a walk, which the natural order of a walk scope sorts by: the index of its
+   * first block on the path read forward, so a descending order gives the backward walk.
    */
   walkIndex?: number;
 
@@ -1357,8 +1357,9 @@ export class QueryExecutor extends Resource {
   }
 
   /**
-   * The items of a walk of one feed after the cursor of `range`, in walk order, each once at its latest
-   * block on the walk. The direction is the natural order the query asks for.
+   * The items of a walk of one feed after the cursor of `range`, in walk order, each once at the place of its
+   * first block on the walk and with the content of its latest one [D-69]. The direction is the natural order
+   * the query asks for.
    */
   async #walkFeed(scope: QueryAST.FeedScope, range: QueryPlan.SelectStep['feedCursorRange']): Promise<QueryItem[]> {
     const feedStore = this.#feedStore;
@@ -1374,41 +1375,58 @@ export class QueryExecutor extends Resource {
       });
     }
     const direction = walkDirection(this.#uncompiledPlan);
+    const cursor = range?.begin ? parseLocalCursor(range.begin) : undefined;
+    // The whole path, read forward: an item's place is its first block, which may lie before the cursor.
+    const branch = scope.walk?.branch !== undefined ? scope.walk.branch : direction === 'desc' ? cursor?.branch : null;
     const blocks = await this._runInRuntime(
       feedStore.walk({
         spaceId: feed.spaceId,
         feedNamespace: feed.feedNamespace,
         feedId: ref.queueId,
-        ...(scope.walk?.branch !== undefined ? { branch: scope.walk.branch } : {}),
-        ...(range?.begin ? { after: parseLocalCursor(range.begin) } : {}),
-        direction,
+        ...(branch !== undefined ? { branch } : {}),
+        direction: 'asc',
         forks: scope.walk?.forks === true,
       }),
     );
 
-    // Each item once, at the place of its latest block: the last one emitted forward, the first backward.
-    const latest = new Map<string, { index: number; insertionId: number; data: Obj.JSON | null }>();
-    const decoded = blocks.map((block) => EchoFeedCodec.decodeBlock(block));
-    decoded.forEach((data, index) => {
-      if (typeof data.id !== 'string') {
+    // Each item once: placed at its first block, with the content of its latest one.
+    const items = new Map<string, { first: number; last: number; data: Obj.JSON | null }>();
+    const blockItems: (string | undefined)[] = [];
+    blocks.forEach((block, index) => {
+      const data = EchoFeedCodec.decodeBlock(block);
+      const id = typeof data.id === 'string' ? data.id : undefined;
+      blockItems.push(id);
+      if (id === undefined) {
         return;
       }
-      const insertionId = blocks[index].insertionId ?? 0;
-      const previous = latest.get(data.id);
+      const previous = items.get(id);
       // A partial block (a removal tombstone) keeps the body of the block before it, as the index does.
       const merged = data[ATTR_TYPE] === undefined && previous?.data ? { ...previous.data, ...data } : data;
-      if (previous === undefined || insertionId > previous.insertionId) {
-        latest.set(data.id, { index, insertionId, data: isObjectJSON(merged) ? merged : null });
-      }
+      items.set(id, { first: previous?.first ?? index, last: index, data: isObjectJSON(merged) ? merged : null });
     });
 
-    return [...latest.entries()]
-      .sort(([, left], [, right]) => left.index - right.index)
-      .flatMap(([objectId, { index, data }]): QueryItem[] => {
+    // A cursor names the latest block of an item, so the walk resumes after the place of that item.
+    let after: number | undefined;
+    if (cursor !== undefined) {
+      const cursorIndex = blocks.findIndex(
+        (block) => EchoFeedCodec.blockId(block.actorId, block.sequence) === cursor.block,
+      );
+      const cursorItem = cursorIndex === -1 ? undefined : blockItems[cursorIndex];
+      after = cursorItem === undefined ? undefined : items.get(cursorItem)?.first;
+      if (after === undefined) {
+        return [];
+      }
+    }
+
+    const sign = direction === 'desc' ? -1 : 1;
+    return [...items.entries()]
+      .filter(([, { first }]) => after === undefined || sign * (first - after) > 0)
+      .sort(([, left], [, right]) => sign * (left.first - right.first))
+      .flatMap(([objectId, { first, last, data }]): QueryItem[] => {
         if (data === null || !EntityId.isValid(objectId)) {
           return [];
         }
-        const block = blocks[index];
+        const block = blocks[last];
         return [
           {
             objectId: EntityId.make(objectId),
@@ -1419,10 +1437,10 @@ export class QueryExecutor extends Resource {
             doc: null,
             data,
             rank: 1,
-            createdAt: block.timestamp,
+            createdAt: blocks[first].timestamp,
             updatedAt: block.timestamp,
             position: block.position,
-            walkIndex: direction === 'desc' ? -index : index,
+            walkIndex: first,
           },
         ];
       });
@@ -3299,7 +3317,12 @@ const extractQueueWindow = (step: QueryPlan.SelectStep): QueueWindow | undefined
 };
 
 /** The block id a local cursor (`<branch>|<block>`) resumes after; the start sentinel `''` names none. */
-const parseLocalCursor = (cursor: string): string => cursor.slice(cursor.indexOf('|') + 1);
+/** A local cursor is `<branch>|<block id>`, with an empty branch for the root. */
+const parseLocalCursor = (cursor: string): { branch: string | null; block: string } => {
+  const separator = cursor.indexOf('|');
+  const branch = cursor.slice(0, separator);
+  return { branch: branch === '' ? null : branch, block: cursor.slice(separator + 1) };
+};
 
 /**
  * The direction of a walk: the natural order the plan asks for, ascending when it asks for none. A
