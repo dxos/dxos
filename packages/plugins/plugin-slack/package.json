@@ -17,6 +17,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/SlackPlugin.workerd.mjs",
+      "node": "./dist/lib/SlackPlugin.node.mjs",
       "default": "./dist/lib/SlackPlugin.mjs"
     },
     "#operations": {

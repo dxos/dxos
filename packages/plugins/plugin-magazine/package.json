@@ -31,6 +31,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/MagazinePlugin.workerd.mjs",
+      "node": "./dist/lib/MagazinePlugin.node.mjs",
       "default": "./dist/lib/MagazinePlugin.mjs"
     },
     "#operations": {

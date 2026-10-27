@@ -16,6 +16,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/AttentionPlugin.workerd.mjs",
+      "node": "./dist/lib/AttentionPlugin.node.mjs",
       "default": "./dist/lib/AttentionPlugin.mjs"
     },
     "#operations": {

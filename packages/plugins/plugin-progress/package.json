@@ -22,6 +22,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/ProgressPlugin.workerd.mjs",
+      "node": "./dist/lib/ProgressPlugin.node.mjs",
       "default": "./dist/lib/ProgressPlugin.mjs"
     },
     "#translations": {

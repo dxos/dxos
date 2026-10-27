@@ -31,6 +31,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/KanbanPlugin.workerd.mjs",
+      "node": "./dist/lib/KanbanPlugin.node.mjs",
       "default": "./dist/lib/KanbanPlugin.mjs"
     },
     "#operations": {

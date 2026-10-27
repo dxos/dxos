@@ -21,6 +21,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/WnfsPlugin.workerd.mjs",
+      "node": "./dist/lib/WnfsPlugin.node.mjs",
       "default": "./dist/lib/WnfsPlugin.mjs"
     },
     "#translations": {

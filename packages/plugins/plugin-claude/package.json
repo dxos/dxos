@@ -22,6 +22,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/ClaudePlugin.workerd.mjs",
+      "node": "./dist/lib/ClaudePlugin.node.mjs",
       "default": "./dist/lib/ClaudePlugin.mjs"
     },
     "#operations": {

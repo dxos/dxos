@@ -26,6 +26,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/DiscordPlugin.workerd.mjs",
+      "node": "./dist/lib/DiscordPlugin.node.mjs",
       "default": "./dist/lib/DiscordPlugin.mjs"
     },
     "#operations": {

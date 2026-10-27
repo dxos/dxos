@@ -21,6 +21,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/TablePlugin.workerd.mjs",
+      "node": "./dist/lib/TablePlugin.node.mjs",
       "default": "./dist/lib/TablePlugin.mjs"
     },
     "#operations": {

@@ -21,6 +21,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/JmapPlugin.workerd.mjs",
+      "node": "./dist/lib/JmapPlugin.node.mjs",
       "default": "./dist/lib/JmapPlugin.mjs"
     },
     "#operations": {

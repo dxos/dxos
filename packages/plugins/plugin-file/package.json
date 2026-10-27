@@ -28,6 +28,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/FilePlugin.workerd.mjs",
+      "node": "./dist/lib/FilePlugin.node.mjs",
       "default": "./dist/lib/FilePlugin.mjs"
     },
     "#operations": {

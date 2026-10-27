@@ -27,6 +27,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/QaPlugin.workerd.mjs",
+      "node": "./dist/lib/QaPlugin.node.mjs",
       "default": "./dist/lib/QaPlugin.mjs"
     },
     "#operations": {

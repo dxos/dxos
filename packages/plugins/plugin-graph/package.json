@@ -21,6 +21,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/GraphPlugin.workerd.mjs",
+      "node": "./dist/lib/GraphPlugin.node.mjs",
       "default": "./dist/lib/GraphPlugin.mjs"
     }
   },

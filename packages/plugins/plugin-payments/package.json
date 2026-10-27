@@ -22,6 +22,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/PaymentsPlugin.workerd.mjs",
+      "node": "./dist/lib/PaymentsPlugin.node.mjs",
       "default": "./dist/lib/PaymentsPlugin.mjs"
     },
     "#services": {

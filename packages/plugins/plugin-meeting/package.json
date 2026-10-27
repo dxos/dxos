@@ -27,6 +27,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/MeetingPlugin.workerd.mjs",
+      "node": "./dist/lib/MeetingPlugin.node.mjs",
       "default": "./dist/lib/MeetingPlugin.mjs"
     },
     "#operations": {

@@ -21,6 +21,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/StorybookPlugin.workerd.mjs",
+      "node": "./dist/lib/StorybookPlugin.node.mjs",
       "default": "./dist/lib/StorybookPlugin.mjs"
     },
     "#operations": {

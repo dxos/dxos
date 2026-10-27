@@ -26,6 +26,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/AgentPlugin.workerd.mjs",
+      "node": "./dist/lib/AgentPlugin.node.mjs",
       "default": "./dist/lib/AgentPlugin.mjs"
     },
     "#operations": {

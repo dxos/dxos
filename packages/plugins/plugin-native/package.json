@@ -21,6 +21,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/NativePlugin.workerd.mjs",
+      "node": "./dist/lib/NativePlugin.node.mjs",
       "default": "./dist/lib/NativePlugin.mjs"
     },
     "#translations": {

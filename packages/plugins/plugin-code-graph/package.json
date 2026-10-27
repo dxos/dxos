@@ -42,6 +42,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/CodeGraphPlugin.workerd.mjs",
+      "node": "./dist/lib/CodeGraphPlugin.node.mjs",
       "default": "./dist/lib/CodeGraphPlugin.mjs"
     },
     "#operations": {

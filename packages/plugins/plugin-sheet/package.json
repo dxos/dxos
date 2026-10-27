@@ -26,6 +26,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/SheetPlugin.workerd.mjs",
+      "node": "./dist/lib/SheetPlugin.node.mjs",
       "default": "./dist/lib/SheetPlugin.mjs"
     },
     "#operations": {

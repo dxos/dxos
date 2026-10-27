@@ -16,6 +16,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/GitHubPlugin.workerd.mjs",
+      "node": "./dist/lib/GitHubPlugin.node.mjs",
       "default": "./dist/lib/GitHubPlugin.mjs"
     },
     "#operations": {

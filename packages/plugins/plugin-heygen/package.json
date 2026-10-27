@@ -17,6 +17,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/HeyGenPlugin.workerd.mjs",
+      "node": "./dist/lib/HeyGenPlugin.node.mjs",
       "default": "./dist/lib/HeyGenPlugin.mjs"
     },
     "#services": {

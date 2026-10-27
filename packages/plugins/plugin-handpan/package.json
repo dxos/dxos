@@ -37,6 +37,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/HandpanPlugin.workerd.mjs",
+      "node": "./dist/lib/HandpanPlugin.node.mjs",
       "default": "./dist/lib/HandpanPlugin.mjs"
     },
     "#translations": {

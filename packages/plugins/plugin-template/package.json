@@ -21,6 +21,8 @@
     "#meta": {
       "source": "./dx.config.ts",
       "types": "./dist/types/dx.config.d.ts",
+      "workerd": "./dist/lib/TemplatePlugin.workerd.mjs",
+      "node": "./dist/lib/TemplatePlugin.node.mjs",
       "default": "./dist/lib/TemplatePlugin.mjs"
     },
     "#translations": {
