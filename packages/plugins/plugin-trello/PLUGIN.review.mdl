@@ -1,0 +1,265 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-trello/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: TrelloPlugin
+
+Discovery, pull and push are built and well tested. `GetTrelloBoards` lists open boards and creates
+nothing; `reconcileBoardCards` does the three-way merge (remote wins on conflict), soft-deletes
+closed or missing cards and orders columns by list `pos`; `pushBoardCards` POSTs new cards and PUTs
+only diverged fields. `sync.test.ts` and `handlers.test.ts` cover all of that against a stubbed API.
+The Trello client retries only transport failures, 429 and 5xx, and parses `<key>:<token>`.
+
+Of 31 items: 20 done, 6 untested, 2 partial, 1 diverged, 2 missing. Findings:
+
+- **Materialization moved out of sync.** The Kanban is created eagerly by a third operation,
+  `MaterializeTrelloTarget`, when a board is bound; `SyncTrelloBoard` returns zero counts when the
+  binding has no Kanban. The spec has no op block for it.
+- **Token parsing and retry policy have no tests.** `credentialsFromToken` and `shouldRetry` are
+  stubbed out by `handlers.test.ts`'s module mock, so T-8 and F-6.1/F-6.2 are unverified.
+- **The sync op's shape drifted.** It takes `connection` and `priority` (no `kanban`), fans out over
+  bindings, and fails with `ConnectorSync.DatabaseMissingError` rather than the named spec errors.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict TrelloMember: A schema with id, username, fullName and optional email.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/services/trello-api.ts#TrelloMember]
+  note: Used only by the connector's /members/me calls, which no test runs.
+```
+
+```mdl
+verdict TrelloBoard: A schema with the six specified fields.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/services/trello-api.ts#TrelloBoard]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/handlers.test.ts]
+```
+
+```mdl
+verdict TrelloList: A schema with id, name, closed and pos.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/services/trello-api.ts#TrelloList]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict TrelloCard: A schema with the nine specified fields.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/services/trello-api.ts#TrelloCard]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict SyncTarget: Discovery returns ConnectorSpec targets of id, name and description (the board's shortUrl).
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/get-trello-boards.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/handlers.test.ts]
+  note: The type comes from plugin-connector's GetSyncTargetsOutput, not this plugin.
+```
+
+```mdl
+verdict PullResult: Declared as ReconcileResult with added, updated and removed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.ts#ReconcileResult]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict PushResult: Declared with created and updated.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.ts#PushResult]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict GetTrelloBoards: Lists open boards from the connection's token and returns descriptors only.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/types/TrelloOperation.ts#GetTrelloBoards, github:dxos/dxos/packages/plugins/plugin-trello/src/operations/get-trello-boards.ts, github:dxos/dxos/packages/plugins/plugin-trello/src/services/trello-api.ts#fetchBoards]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/handlers.test.ts]
+  walkthrough:
+    - The operation takes a connection ref and returns sync targets. github:dxos/dxos/packages/plugins/plugin-trello/src/types/TrelloOperation.ts#GetTrelloBoards
+    - The handler derives the db, loads credentials and maps each board to a target. github:dxos/dxos/packages/plugins/plugin-trello/src/operations/get-trello-boards.ts
+    - The client requests the member's boards with filter=open. github:dxos/dxos/packages/plugins/plugin-trello/src/services/trello-api.ts#fetchBoards
+```
+
+```mdl
+verdict SyncTrelloBoard: Fans out over the connection's bindings, pulling then pushing each bound board.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/types/TrelloOperation.ts#SyncTrelloBoard, github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.ts#reconcileBoardCards, github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.ts#pushBoardCards]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/handlers.test.ts, github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.test.ts]
+  walkthrough:
+    - The operation takes a connection (and priority) and returns pulled and pushed counts. github:dxos/dxos/packages/plugins/plugin-trello/src/types/TrelloOperation.ts#SyncTrelloBoard
+    - The pull merges fields, soft-deletes closed or missing cards and rebuilds the column order. github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.ts#reconcileBoardCards
+    - The push POSTs new cards and PUTs diverged fields. github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.ts#pushBoardCards
+  note: |
+    No `kanban` input; the errors are `ConnectorSync.DatabaseMissingError` and a generic credential
+    error, not IntegrationDatabaseMissing. Failures are recorded on the cursor (binding), not on integration targets.
+```
+
+```mdl
+verdict F-1.1: Discovery lists every open board and creates no local object.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/get-trello-boards.ts, github:dxos/dxos/packages/plugins/plugin-trello/src/services/trello-api.ts#fetchBoards]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/handlers.test.ts]
+```
+
+```mdl
+verdict F-2.1: The Kanban is made when a board is bound, by MaterializeTrelloTarget, not on first sync.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/types/TrelloOperation.ts#MaterializeTrelloTarget, github:dxos/dxos/packages/plugins/plugin-trello/src/operations/materialize-target.ts, github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.ts#makeEmptyKanbanForBoard]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.test.ts, github:dxos/dxos/packages/plugins/plugin-trello/src/operations/handlers.test.ts]
+  note: |
+    Keyed by board id, named after the board, uncategorized hidden — but created at selection, and
+    SyncTrelloBoard returns zeros when a binding has no Kanban.
+```
+
+```mdl
+verdict F-3.1: A new remote card becomes an Expando with the Trello foreign key and seeded fields.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.ts#reconcileBoardCards]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.test.ts]
+  note: The description field is stored as `description`, not `desc`.
+```
+
+```mdl
+verdict F-3.2: Each mapped field is three-way merged, remote winning on conflict, and the snapshot refreshed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.ts#reconcileBoardCards]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict F-3.3: Closed or absent cards are soft-deleted and their refs kept in spec.items.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.ts#reconcileBoardCards]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict F-3.4: arrangement.order is rebuilt from lists sorted by pos, merged against the board snapshot.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.ts#reconcileBoardCards]
+  note: A local reorder wins and is only logged; no test asserts the resulting order.
+```
+
+```mdl
+verdict F-4.1: Cards without a foreign key in a named list are POSTed, with the key and snapshot written back.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.ts#pushBoardCards, github:dxos/dxos/packages/plugins/plugin-trello/src/services/trello-api.ts#createCard]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict F-4.2: Cards with a foreign key PUT only the fields that diverged from the snapshot.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.ts#pushBoardCards, github:dxos/dxos/packages/plugins/plugin-trello/src/services/trello-api.ts#updateCard]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict F-4.3: Soft-deleted cards are skipped in push.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.ts#pushBoardCards]
+  note: No push test includes a deleted card.
+```
+
+```mdl
+verdict F-5.1: Credentials come from the access token and must parse as two non-empty colon-separated parts.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/services/trello-api.ts#credentialsFromToken, github:dxos/dxos/packages/plugins/plugin-trello/src/services/trello-api.ts#fromConnection, github:dxos/dxos/packages/plugins/plugin-trello/src/errors.ts#InvalidTrelloAccessTokenError]
+  note: handlers.test.ts mocks the whole trello-api module, so the parser is never run by a test.
+```
+
+```mdl
+verdict F-6.1: 429, 5xx, transport and timeout failures retry with jittered exponential back-off.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/services/trello-api.ts#shouldRetry]
+  note: Schedule.upTo({ times 3 }) allows three retries, so four attempts in all. No test.
+```
+
+```mdl
+verdict F-6.2: Other 4xx and schema failures do not retry.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/services/trello-api.ts#shouldRetry]
+  note: No test.
+```
+
+```mdl
+verdict F-6.3: A failing board records lastError on its binding and the others continue.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/handlers.test.ts]
+  note: The error lives on the external-sync cursor, via Cursor.recordError.
+```
+
+```mdl
+verdict T-1: The handler test discovers two boards and finds no Kanban afterwards.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/get-trello-boards.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/handlers.test.ts]
+```
+
+```mdl
+verdict T-2: Tests cover materializing a Kanban by board id, but at binding, not on sync.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/materialize-target.ts, github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.ts#findOrCreateKanbanForBoard]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.test.ts, github:dxos/dxos/packages/plugins/plugin-trello/src/operations/handlers.test.ts]
+  note: No test asserts the Kanban name or arrangement.order against the Trello lists.
+```
+
+```mdl
+verdict T-3: The first-run pull test creates cards and seeds snapshots.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.ts#reconcileBoardCards]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict T-4: Pull tests cover local-only edits kept, remote-only edits pulled and conflicts going remote.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.ts#reconcileBoardCards]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict T-5: The soft-close test checks deletion and that the ref stays in spec.items.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.ts#reconcileBoardCards]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict T-6: The push-create test checks the POST, the written-back key and the seeded snapshot.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.ts#pushBoardCards]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict T-7: The push-update test checks that only diverged fields are sent.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.ts#pushBoardCards]
+  tests: [github:dxos/dxos/packages/plugins/plugin-trello/src/operations/sync.test.ts]
+```
+
+```mdl
+verdict T-8: No test runs a malformed token.
+  status: missing
+  note: credentialsFromToken has no test, and handlers.test.ts mocks the API module that holds it.
+```
+
+```mdl
+verdict QA-1: Not automated.
+  status: missing
+  note: Manual and blocked on live Trello credentials; handlers.test.ts covers the same flow with a stubbed API but not the UI.
+```

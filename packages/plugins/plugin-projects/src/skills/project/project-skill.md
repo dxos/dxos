@@ -272,31 +272,52 @@ have something new to report: the hook cannot write the summary.
 
 ## Features and showcases
 
-A **feature** is a goal state the product should reach ("Compose & send works against Gmail"), with a
-status: `planned`, `in-progress`, `prototype`, `operational` or `failing`. Features break down into
-subfeatures and depend on each other. A feature belongs to at most one **project**, and the project's
-Features tab shows them as a board. Specs stay in the repo, so a feature lists spec paths rather than
-holding the text.
+A **feature** is a goal state the product should reach ("Compose & send works against Gmail"). It holds:
 
-- Read a project's features with `projects-get-features { project }` before changing them: it returns each
-  feature's status, dependencies, linked tasks and showcases.
-- Create a feature with `projects-create-feature { name, project? }`. A feature's parts are **subfeatures**:
-  records with a name and their own status, set as a whole list with
-  `projects-update-feature { feature, subfeatures: [{ name, status }] }`. They are one level deep and have
-  no specs, dependencies or tasks of their own — give those to the feature.
-  Record that one feature needs another with `projects-add-feature-dependency { feature, dependsOn }` — a
-  dependency that would close a cycle is refused, and the error names the cycle.
-  `projects-remove-feature-dependency` undoes one. Move a feature into a project with
-  `projects-update-feature { feature, project }`, and take it out with `project: null`.
-- **When you pick up a task that moves a feature**, link it with `projects-link-feature-task { task, feature }`.
-- **Set the status when you observe it**, with `projects-update-feature { feature, status }`: `in-progress`
-  when work starts, `prototype` when it works in a demo, `operational` when people can rely on it, and
-  `failing` when it worked before and does not now.
+- a **description** of the ideal: what the feature does when it is complete and why it matters, in the present
+  tense. Never write the current state or what is missing there; that is what the status, the requirements and
+  the tasks say.
+- **requirements**: what the feature must do, one testable statement each. A reader should understand the feature
+  from its description and requirements alone, without opening a spec.
+- a **status** saying how far it has come: `planned`, `prototype`, `operational` or `failing`. Whether anyone is
+  working on it is a separate axis, read from its linked tasks: an operational feature can be under work too.
+
+Features **nest**: a feature with a `parent` is one of that feature's **subfeatures**, a feature in its own right
+with its own description, requirements, status, dependencies and tasks. A top-level feature belongs to at most one
+**project**, whose Features tab shows it on a map; a reader zooms into a feature to see its subfeatures.
+
+**Keep every string short.** A feature map is read at a glance, so write the fewest words that say it:
+
+- a feature **name** is a noun phrase of two to five words ("Provider sync", not "Syncing mail with providers");
+- a **description** is one sentence, two at most;
+- a **requirement** is one short, testable sentence; split a long one rather than chaining clauses;
+- no preamble, no restating the name, no hedging, no lists of examples.
+
+**Specs are the unstructured source; features add the structure.** A spec's `feat` blocks and their `req` lines
+become features and requirements: extract them rather than linking to the spec.
+
+- Read a project's features with `projects-get-features { project }` before changing them: it returns every
+  feature on the map, subfeatures included, with its description, status, requirements, parent, dependencies,
+  linked tasks and showcases.
+- Extract features from a spec with `projects-import-spec-features { path, text, project? | parent? }`: pass the
+  repo path and the spec's text. Each `feat` block becomes a feature (its prose the description, its `req` lines the
+  requirements) placed at the top of the project's map or beneath `parent`. Importing again updates the
+  requirements of the features it made before. Afterwards, rewrite any description that states the current state
+  rather than the ideal, and arrange the features into subfeatures where one is a part of another.
+- Create a feature with `projects-create-feature { name, description, requirements, project? | parent? }`.
+  Change one with `projects-update-feature`; `requirements` replaces the whole list, and `parent` or `project`
+  moves it (each clears the other). Record that one feature needs another with
+  `projects-add-feature-dependency { feature, dependsOn }` — a dependency that would close a cycle is refused, and
+  the error names the cycle. `projects-remove-feature-dependency` undoes one.
+- **When you pick up a task that moves a feature**, link it with `projects-link-feature-task { task, feature }`
+  and keep the task's status current: a started task is what marks the feature as being worked on.
+- **Set the status when you observe it**, with `projects-update-feature { feature, status }`: `prototype` when it
+  works in a demo, `operational` when people can rely on it, and `failing` when it worked before and does not now.
 - **When you finish work that shows a feature working**, make a showcase with
   `projects-create-showcase { name, content, targets, artifacts? }`: markdown saying what you showed and
   how to reproduce it, the screenshots and videos you uploaded as files and the PRs it landed in as
   `artifacts`, and every feature and task it demonstrates in `targets`. An `operational` feature without a showcase
-  is flagged on the board.
+  is flagged on the map.
 
 ## Verbs
 

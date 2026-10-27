@@ -10289,6 +10289,9 @@ importers:
         specifier: 4.0.4
         version: 4.0.4
     devDependencies:
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -10298,6 +10301,9 @@ importers:
       '@dxos/plugin-testing':
         specifier: workspace:*
         version: link:../plugin-testing
+      '@dxos/plugin-typesafe':
+        specifier: workspace:*
+        version: link:../plugin-typesafe
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
@@ -12336,6 +12342,9 @@ importers:
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../plugin-preview
+      '@dxos/plugin-search':
+        specifier: workspace:*
+        version: link:../plugin-search
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
@@ -15782,9 +15791,6 @@ importers:
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../plugin-assistant
-      '@dxos/plugin-attention':
-        specifier: workspace:*
-        version: link:../plugin-attention
       '@dxos/plugin-inbox':
         specifier: workspace:*
         version: link:../plugin-inbox
@@ -20403,6 +20409,9 @@ importers:
       effect:
         specifier: 4.0.4
         version: 4.0.4
+      playwright:
+        specifier: 'catalog:'
+        version: 1.63.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -26946,6 +26955,8 @@ importers:
       vite:
         specifier: '>=8.3.4'
         version: 8.3.4(@types/node@22.10.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.1)
+
+  tools/vite-plugin-module-url/test/conditions: {}
 
   tools/vite-plugin-shutdown:
     devDependencies:

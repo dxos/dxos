@@ -413,6 +413,9 @@ Do not paste real credential values into any shell command, and do not paste the
   Trunk test uploads → `trunk-quarantine` skill
   (`.agents/skills/trunk-quarantine/SKILL.md`); adding the Trunk MCP server →
   `REPOSITORY_GUIDE.md`.
+- **The feature map** (`FEATURES.mdl`) — the top of feature map > spec > review > tasks > code > result;
+  carry a feature change down every layer, one commit each → `feature-waterfall` skill
+  (`.agents/skills/feature-waterfall/SKILL.md`); `pnpm deus features check` shows where each feature stands.
 - **`.mdl` specs** (`PLUGIN.mdl`, `SPEC.mdl`) — the Deus language, and the `## Changelog`
   decision that every spec change must add, attributed to a `user:` or an `agent:` → `mdl` skill
   (`.agents/skills/mdl/SKILL.md`).
