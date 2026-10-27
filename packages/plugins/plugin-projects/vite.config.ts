@@ -24,6 +24,8 @@ export default defineConfig({
     'Feature': 'src/types/Feature.ts',
     'FeatureLink': 'src/types/FeatureLink.ts',
     'FeatureMapView': 'src/types/FeatureMapView.ts',
+    'FeatureSpec': 'src/types/FeatureSpec.ts',
+    'LegacyFeature': 'src/types/LegacyFeature.ts',
     'FeatureOperation': 'src/types/FeatureOperation.ts',
     'ProjectCapabilities': 'src/types/ProjectCapabilities.ts',
     'ProjectMailboxOperation': 'src/types/ProjectMailboxOperation.ts',

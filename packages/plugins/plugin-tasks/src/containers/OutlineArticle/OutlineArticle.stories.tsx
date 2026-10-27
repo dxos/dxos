@@ -58,7 +58,7 @@ const DefaultStory = ({ content, name }: StoryArgs) => {
   }
 
   return (
-    <div className='dx-expand grid grid-cols-3 gap-3 p-3'>
+    <div className='dx-expand grid grid-cols-3 gap-3 p-trim-md'>
       <Column>
         <OutlineArticle role='article' subject={outline} taskSet={taskSet} attendableId='story' />
       </Column>

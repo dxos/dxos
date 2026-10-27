@@ -182,6 +182,8 @@ export const QueryResponse = Schema.Struct({
   unchanged: Schema.optional(Schema.Boolean),
   /** Paths or manifests were left out of this answer because they exceeded its byte budget. */
   truncated: Schema.optional(Schema.Literals(['paths', 'manifest'])),
+  /** Time (ms) the host spent evaluating this answer, excluding time queued behind other work; absent from an old host. */
+  executionTime: Schema.optional(Schema.Number),
 });
 export interface QueryResponse extends Schema.Schema.Type<typeof QueryResponse> {}
 

@@ -1,0 +1,322 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-file/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: FilePlugin
+
+The upload path is solid and tested: `FileOperation.Create` resolves the stored MIME type with
+`FileLimits.toStoredMimeType`, resolves the active storage from `Settings.backend` against the registered
+`FileCapabilities.Backend` descriptors, and calls `File.fromBytes`, mapping `BlobTooLargeError` to
+`FileTooLargeError`. `create.test.ts` covers inline upload, the registry default, MIME neutralizing and the
+4 MB cap. Preview is well covered by stories: images go through `Media.Player`, PDFs through `PdfCanvas`
+(one canvas per page, rasterized near the viewport, with render cancellation before `destroy`).
+
+The biggest divergence is the `File` type: `type` and `size` are not on `File` but on the referenced
+`Blob`. Scenario T-5 still expects an `<iframe>` for PDFs, which the code (and the spec's own F-3.2) replaced
+with pdf.js canvases. `Settings` live in a `KvsStore` atom, not in the ECHO space. No test asserts
+`NoBackendError` (T-9), and the wiring modules (`create-object`, `file-uploader`, surfaces, settings panel)
+have no tests.
+
+Of 36 items: 13 done, 9 untested, 10 partial, 3 diverged, 1 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict File: The File object holds name, data and timestamp; type and size live on the referenced Blob.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/File.ts#File]
+  tests: [github:dxos/dxos/packages/sdk/types/src/types/File.test.ts]
+  note: |
+    `File.File` (`org.dxos.type.file@0.2.0`) declares only `name?`, `data: Ref<Blob>` and `timestamp?`. The MIME
+    type and byte count are `Blob.type` and `Blob.size`; `useFileUrl` and the tests read them from the Blob.
+```
+
+```mdl
+verdict BackendDescriptor: FileCapabilities.Backend carries name, description and storage, as a multi capability.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/types/FileCapabilities.ts#Backend]
+  tests: [github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.test.ts]
+```
+
+```mdl
+verdict Settings: Settings has an optional backend, but it is stored in a KvsStore atom, not in the ECHO space.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/types/Settings.ts#Settings, github:dxos/dxos/packages/plugins/plugin-file/src/capabilities/settings.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.test.ts]
+  note: |
+    `capabilities/settings.ts` builds the atom with `KvsStore.make` (local key-value storage). With no choice the
+    upload falls through to the Blob registry's default; `DEFAULT_BACKEND_STORAGE` is `'inline'` and is only the
+    settings Select's last-resort display value.
+```
+
+```mdl
+verdict Preview: Preview.Root, Toolbar and Content exist; Root renders no element and Content renders by MIME type.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/components/Preview/Preview.tsx#Preview, github:dxos/dxos/packages/plugins/plugin-file/src/components/PdfCanvas/PdfCanvas.tsx#PdfCanvas]
+  tests: [github:dxos/dxos/packages/plugins/plugin-file/src/components/Preview/Preview.stories.tsx, github:dxos/dxos/packages/plugins/plugin-file/src/components/PdfCanvas/PdfCanvas.stories.tsx]
+```
+
+```mdl
+verdict FileInput: A react-dropzone picker that emits the dropped file; it takes no schema prop.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/components/FileInput/FileInput.tsx#FileInput, github:dxos/dxos/packages/plugins/plugin-file/src/capabilities/FileUploadField.tsx#FileUploadField]
+  note: |
+    `FileInput` takes only `onChange`; the schema match is done by the `createForm` surface filter on
+    `UploadAnnotationId` in `react-surface.ts`. No story or test renders it.
+```
+
+```mdl
+verdict FileSettings: The settings panel renders a Select of registered backends and writes the choice.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/containers/FileSettings/FileSettings.tsx#FileSettings]
+  note: No story or test renders `FileSettings`.
+```
+
+```mdl
+verdict FileArticle: FileArticle resolves a URL with useFileUrl and composes Preview into the panel slots at full width.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/containers/FileArticle/FileArticle.tsx#FileArticle, github:dxos/dxos/packages/plugins/plugin-file/src/hooks/useFileUrl.ts#useFileUrl]
+  tests: [github:dxos/dxos/packages/plugins/plugin-file/src/containers/FileArticle/FileArticle.stories.tsx]
+  walkthrough:
+    - useFileUrl loads the Blob, tries Blob.url and falls back to Blob.read plus an object URL it revokes. github:dxos/dxos/packages/plugins/plugin-file/src/hooks/useFileUrl.ts#useFileUrl
+    - FileArticle places Preview.Toolbar in the panel header and Preview.Content in the body, without dx-document. github:dxos/dxos/packages/plugins/plugin-file/src/containers/FileArticle/FileArticle.tsx#FileArticle
+  note: While the URL resolves, or when the File has no database, it renders nothing rather than an empty state.
+```
+
+```mdl
+verdict Create: The Create op resolves storage and MIME type, calls File.fromBytes and returns the un-added File.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/types/FileOperation.ts#Create, github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.ts#resolveActiveStorage, github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.ts#FileTooLargeError, github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.ts#NoBackendError]
+  tests: [github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.test.ts]
+  walkthrough:
+    - The operation declares a browser File plus db as input and returns the File object. github:dxos/dxos/packages/plugins/plugin-file/src/types/FileOperation.ts#Create
+    - resolveActiveStorage fails with NoBackendError when no descriptor exists and returns the configured storage if it matches one. github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.ts#resolveActiveStorage
+    - The handler reads the bytes, calls File.fromBytes and maps BlobTooLargeError to FileTooLargeError. github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.ts
+```
+
+```mdl
+verdict F-1.1: Every type is accepted; absent and executable types are stored as application/octet-stream.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/types/FileLimits.ts#toStoredMimeType]
+  tests: [github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.test.ts, github:dxos/dxos/packages/plugins/plugin-file/src/operations/create-from-source.test.ts]
+```
+
+```mdl
+verdict F-1.2: The 4 MB cap applies only to inline storage, enforced by Blob.fromBytes.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Blob.ts#MAX_INLINE_SIZE, github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.ts#FileTooLargeError]
+  tests: [github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.test.ts]
+```
+
+```mdl
+verdict F-1.3: The Create Object entry invokes Create then AddObject; the FileUploader returns name, type and an optional url.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/capabilities/create-object.ts, github:dxos/dxos/packages/plugins/plugin-file/src/capabilities/file-uploader.ts]
+  walkthrough:
+    - The CreateObjectEntry invokes FileOperation.Create and then SpaceOperation.AddObject into the target. github:dxos/dxos/packages/plugins/plugin-file/src/capabilities/create-object.ts
+    - The FileUploader does the same and returns name, Blob type and the Blob.url value when there is one. github:dxos/dxos/packages/plugins/plugin-file/src/capabilities/file-uploader.ts
+  note: No test exercises `create-object.ts` or `file-uploader.ts`.
+```
+
+```mdl
+verdict F-1.4: An empty or unknown type is stored, and Preview shows the no-preview message with a toolbar download.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/types/FileLimits.ts#toStoredMimeType, github:dxos/dxos/packages/plugins/plugin-file/src/components/Preview/Preview.tsx#Preview]
+  tests: [github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.test.ts, github:dxos/dxos/packages/plugins/plugin-file/src/components/Preview/Preview.stories.tsx, github:dxos/dxos/packages/plugins/plugin-file/src/containers/FileArticle/FileArticle.stories.tsx]
+```
+
+```mdl
+verdict F-1.5: An oversized inline upload fails with FileTooLargeError before the Blob is added.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.ts#FileTooLargeError]
+  tests: [github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.test.ts]
+```
+
+```mdl
+verdict F-2.1: Backend is a multi capability; inline and edge descriptors are both contributed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/types/FileCapabilities.ts#Backend, github:dxos/dxos/packages/plugins/plugin-file/src/capabilities/inline-backend.ts#inlineBackend, github:dxos/dxos/packages/plugins/plugin-file/src/capabilities/edge-backend.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.test.ts]
+```
+
+```mdl
+verdict F-2.2: FilePlugin contributes the inline descriptor in every environment.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/capabilities/inline-backend.ts#inlineBackend, github:dxos/dxos/packages/plugins/plugin-file/src/capabilities/index.ts#InlineBackend]
+  note: The tests contribute their own inline descriptor; none asserts that the plugin registers `inlineBackend`.
+```
+
+```mdl
+verdict F-2.3: An absent or unmatched Settings.backend leaves storage unset, so the Blob registry default is used.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.ts#resolveActiveStorage]
+  tests: [github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.test.ts]
+  note: The tests cover the absent case (default `mem` and the device `ni:` store); the unrecognised-id case has no test.
+```
+
+```mdl
+verdict F-2.4: The descriptor only names a storage; an unregistered storage fails in the Blob layer at upload.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.ts#resolveActiveStorage, github:dxos/dxos/packages/core/echo/echo-sqlite/src/database.ts]
+  note: |
+    `resolveActiveStorage` passes the descriptor's `storage` to `File.fromBytes`; the Blob layer rejects an
+    unregistered storage with `BlobNotAvailableError` (`backend-not-registered`). No plugin-file test selects a
+    descriptor with no registered backend.
+```
+
+```mdl
+verdict F-3.1: useFileUrl uses Blob.url and falls back to Blob.read with a revoked object URL.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/hooks/useFileUrl.ts#useFileUrl]
+  tests: [github:dxos/dxos/packages/plugins/plugin-file/src/containers/FileArticle/FileArticle.stories.tsx]
+```
+
+```mdl
+verdict F-3.2: Media and PDFs match; other types render a description, and the download link is in the toolbar.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/components/Preview/Preview.tsx#Preview]
+  tests: [github:dxos/dxos/packages/plugins/plugin-file/src/components/Preview/Preview.stories.tsx]
+  note: |
+    image, video and audio go to `Media.Player` and PDF to `PdfCanvas`. Other types render an icon, name, size and
+    the no-preview message in `Preview.Content`, not an `<a download>`; the download anchor lives in
+    `Preview.Toolbar` for every type.
+```
+
+```mdl
+verdict F-3.4: Every page gets a sized canvas; only pages near the viewport are rasterized.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/components/PdfCanvas/PdfCanvas.tsx#PdfCanvas]
+  tests: [github:dxos/dxos/packages/plugins/plugin-file/src/components/PdfCanvas/PdfCanvas.stories.tsx]
+```
+
+```mdl
+verdict F-3.5: PdfCanvas cancels the in-flight render before destroying the loading task.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/components/PdfCanvas/PdfCanvas.tsx#PdfCanvas]
+  note: The effect cleanup calls `cancelRender()` before `task.destroy()`; no story unmounts mid-render to check it.
+```
+
+```mdl
+verdict F-3.3: The article surface is registered for article, section and slide roles.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/capabilities/react-surface.ts]
+  note: No test asserts the surface filter or renders a File in a section or slide.
+```
+
+```mdl
+verdict F-4.1: An image extension resolves embedded File URLs like FileArticle, contributed as a Markdown ExtensionProvider.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/extensions/image.tsx#image, github:dxos/dxos/packages/plugins/plugin-file/src/capabilities/markdown-extension.ts]
+  note: |
+    It is contributed through `MarkdownCapabilities.ExtensionProvider` on `MarkdownEvents.Start`; there is no
+    `MarkdownEvents.SetupExtensions`. `image` uses `Blob.url` and falls back to `Blob.read` plus a revoked
+    object URL. No test covers it.
+```
+
+```mdl
+verdict F-5.1: The Select lists every backend by name, sorted, but shows only the selected backend's description.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/containers/FileSettings/FileSettings.tsx#FileSettings]
+  note: Each item shows `name` with `storage` as its value; `description` appears only for the active backend, as the field description. No test.
+```
+
+```mdl
+verdict F-5.2: Selecting a backend writes Settings.backend through the settings atom.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/containers/FileSettings/FileSettings.tsx#FileSettings, github:dxos/dxos/packages/plugins/plugin-file/src/capabilities/settings.ts]
+  note: `handleChange` calls `updateSettings` on the atom that `settings.ts` contributes as both `SettingsAtom` and `AppCapabilities.Settings`. No test drives the panel.
+```
+
+```mdl
+verdict T-1: create.test uploads a PNG inline and checks name, type, size and the inline tag; adding to the space is not tested.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.test.ts]
+  note: The test invokes `Create` only; it does not run the Create Object form or `AddObject`.
+```
+
+```mdl
+verdict T-2: create.test checks FileTooLargeError for an oversized inline upload, not the absence of writes.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.ts#FileTooLargeError]
+  tests: [github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.test.ts]
+  note: No assertion that no File or Blob was written.
+```
+
+```mdl
+verdict T-3: create.test stores a .zip with Blob type application/zip.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/types/FileLimits.ts#toStoredMimeType]
+  tests: [github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.test.ts]
+```
+
+```mdl
+verdict T-4: Blob.url data: URLs and an img from a data: URL are tested separately; FileArticle over an inline Blob is not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/hooks/useFileUrl.ts#useFileUrl]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/blob/blob.test.ts, github:dxos/dxos/packages/plugins/plugin-file/src/components/Preview/Preview.stories.tsx]
+  note: The FileArticle Image story seeds the default `edge` storage, so it renders a `blob:` URL, not an inline `data:` URL.
+```
+
+```mdl
+verdict T-5: The code renders PDFs through pdf.js canvases; the story asserts there is no iframe.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/components/PdfCanvas/PdfCanvas.tsx#PdfCanvas]
+  tests: [github:dxos/dxos/packages/plugins/plugin-file/src/containers/FileArticle/FileArticle.stories.tsx, github:dxos/dxos/packages/plugins/plugin-file/src/components/Preview/Preview.stories.tsx]
+  note: The scenario is stale against F-3.2 and the Preview desc; the FileArticle PDF stories expect `querySelector('iframe')` to be null.
+```
+
+```mdl
+verdict T-6: Falling through to the registry default is tested for an absent backend, not for an unregistered 'wnfs'.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.ts#resolveActiveStorage]
+  tests: [github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.test.ts]
+  note: The tests leave `Settings.backend` unset; none sets it to a storage with no descriptor.
+```
+
+```mdl
+verdict T-7: Blob.url via a backend getUrl is tested in echo-client; FileArticle rendering it is not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/hooks/useFileUrl.ts#useFileUrl]
+  tests: [github:dxos/dxos/packages/core/echo/echo-client/src/blob/blob.test.ts]
+  note: No test renders FileArticle over an external Blob with a `getUrl` backend or asserts `Blob.read` is not called.
+```
+
+```mdl
+verdict T-8: The FileArticle Image story renders a blob: URL from local storage; it does not assert Blob.read or revocation.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/hooks/useFileUrl.ts#useFileUrl]
+  tests: [github:dxos/dxos/packages/plugins/plugin-file/src/containers/FileArticle/FileArticle.stories.tsx]
+  note: The story only checks that the img `src` starts with `blob:`; it does not confirm the fallback path ran or that the URL is revoked on unmount.
+```
+
+```mdl
+verdict T-9: No test runs Create with no Backend descriptor registered.
+  status: missing
+  note: `create.test.ts` always contributes a descriptor in `setup`; nothing asserts `NoBackendError`.
+```
+
+```mdl
+verdict QA-1: Only the upload step is automated (create.test); placing and opening the file are not.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.test.ts]
+  note: No test runs `space.addObject` or opens the File article in the app; no Playwright spec covers plugin-file.
+```
+
+```mdl
+verdict QA-2: create.test runs the oversized Create and expects FileTooLargeError; it does not check that no File exists.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.ts#FileTooLargeError]
+  tests: [github:dxos/dxos/packages/plugins/plugin-file/src/operations/create.test.ts]
+  note: The 'no File object is created' expectation is not asserted.
+```

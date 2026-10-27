@@ -549,6 +549,12 @@ type QueryScopes = {
   typenames: Set<string> | null;
   objectIds: Set<EntityId> | null;
   readsFeeds: boolean;
+  /**
+   * Typenames of the relations a plan ending in a typed relation traversal (`targetOf` / `sourceOf`) selects.
+   * Such a plan also re-runs when a relation of one of these types changes, since that never touches its
+   * anchors, or when an endpoint of a relation it returned changes. Null for every other plan.
+   */
+  relationTypenames: Set<string> | null;
 };
 
 /**
@@ -567,7 +573,10 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
     typenames: null,
     objectIds: null,
     readsFeeds: false,
+    relationTypenames: null,
   };
+  // Set by a relation traversal until the typed filter after it names the relations it selects.
+  let untypedRelationTraversal = false;
 
   for (const step of flattenSqlSteps(plan.steps)) {
     switch (step._tag) {
@@ -663,6 +672,15 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
         break;
       }
       case 'FilterStep': {
+        if (untypedRelationTraversal) {
+          if (step.filter.type === 'object' && typeof step.filter.typename === 'string') {
+            scopes.relationTypenames ??= new Set();
+            scopes.relationTypenames.add(canonicalTypename(step.filter.typename));
+            untypedRelationTraversal = false;
+          } else {
+            scopes.isSimple = false;
+          }
+        }
         // child-of filters require transitive parent traversal which can't be hinted.
         if (step.filter.type === 'child-of') {
           scopes.isSimple = false;
@@ -677,7 +695,20 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
         }
         break;
       }
-      case 'TraverseStep':
+      case 'TraverseStep': {
+        // One step from the anchors to the relations on them can be bounded by the relations' type; any other
+        // traversal reaches objects the hint cannot name.
+        const { traversal } = step;
+        const toRelations =
+          traversal._tag === 'RelationTraversal' &&
+          (traversal.direction === 'source-to-relation' || traversal.direction === 'target-to-relation');
+        if (toRelations && scopes.relationTypenames === null && !untypedRelationTraversal) {
+          untypedRelationTraversal = true;
+        } else {
+          scopes.isSimple = false;
+        }
+        break;
+      }
       case 'UnionStep':
       case 'SetDifferenceStep':
         scopes.isSimple = false;
@@ -688,6 +719,9 @@ const extractScopes = (plan: QueryPlan.Plan): QueryScopes => {
     }
   }
 
+  if (untypedRelationTraversal) {
+    scopes.isSimple = false;
+  }
   return scopes;
 };
 
@@ -718,6 +752,29 @@ const setsOverlap = <T>(a: ReadonlySet<T>, b: ReadonlySet<T>): boolean => {
     }
   }
   return false;
+};
+
+/** The ids of the objects the relations in `items` connect, read from whichever form each item carries. */
+const relationEndpoints = (items: readonly QueryItem[]): Set<EntityId> => {
+  const endpoints = new Set<EntityId>();
+  const add = (uri: string | null | undefined) => {
+    const eid = uri ? EID.tryParse(uri) : undefined;
+    const entityId = eid && EID.getEntityId(eid);
+    if (entityId) {
+      endpoints.add(entityId);
+    }
+  };
+  for (const item of items) {
+    if (item.meta) {
+      add(item.meta.source);
+      add(item.meta.target);
+    }
+    const source = item.doc && EntityStructure.getRelationSource(item.doc);
+    const target = item.doc && EntityStructure.getRelationTarget(item.doc);
+    add(source && EncodedReference.toURI(source));
+    add(target && EncodedReference.toURI(target));
+  }
+  return endpoints;
 };
 
 const overlapsOrUnconstrained = <T>(hintSet: ReadonlySet<T> | undefined, scopeSet: Set<T> | null): boolean =>
@@ -775,6 +832,8 @@ export class QueryExecutor extends Resource {
   /** Recompiles the plan with this run's feed cutoffs; absent when the plan was not compiled. */
   readonly #compile: ((feedCutoffs: ReadonlyMap<string, number>) => QueryPlan.Plan) | undefined;
   #scopes: QueryScopes;
+  /** Endpoints of the relations in the last result, for a plan bounded by {@link QueryScopes.relationTypenames}. */
+  #relationEndpoints = new Set<EntityId>();
   readonly #allFeedsSpaces: ReadonlySet<SpaceId>;
   private _trace: ExecutionTrace = ExecutionTrace.makeEmpty();
   private _lastResultSet: QueryItem[] = [];
@@ -852,7 +911,7 @@ export class QueryExecutor extends Resource {
   }
 
   get selectsById(): boolean {
-    return this.#scopes.isSimple && this.#scopes.objectIds !== null;
+    return this.#scopes.isSimple && this.#scopes.objectIds !== null && this.#scopes.relationTypenames === null;
   }
 
   /** Spaces the query reads; null when unconstrained or when the plan is too complex to bound. */
@@ -1031,11 +1090,23 @@ export class QueryExecutor extends Resource {
     if (!this.#scopes.isSimple) {
       return true;
     }
-    return (
-      overlapsOrUnconstrained(hint.spaceIds, this.#scopes.spaceIds) &&
-      overlapsOrUnconstrained(hint.queueIds, this.#scopes.queueIds) &&
+    if (
+      !overlapsOrUnconstrained(hint.spaceIds, this.#scopes.spaceIds) ||
+      !overlapsOrUnconstrained(hint.queueIds, this.#scopes.queueIds)
+    ) {
+      return false;
+    }
+    if (
       overlapsOrUnconstrained(hint.typenames, this.#scopes.typenames) &&
       overlapsOrUnconstrained(hint.objectIds, this.#scopes.objectIds)
+    ) {
+      return true;
+    }
+    const { relationTypenames } = this.#scopes;
+    return (
+      relationTypenames !== null &&
+      (overlapsOrUnconstrained(hint.typenames, relationTypenames) ||
+        (hint.objectIds !== undefined && setsOverlap(hint.objectIds, this.#relationEndpoints)))
     );
   }
 
@@ -1069,6 +1140,9 @@ export class QueryExecutor extends Resource {
     const previous = this._lastResultSet;
     const { workingSet, trace } = await this._resolveWorkingSet();
     this._lastResultSet = workingSet;
+    if (this.#scopes.relationTypenames !== null) {
+      this.#relationEndpoints = relationEndpoints(workingSet);
+    }
     trace.name = 'Root';
     trace.details = JSON.stringify({ id: this._id, query: Query.pretty(Query.fromAst(this._query)) });
     // A `SqlStep` ran the statement one level down; surface it on the root the trace prints.

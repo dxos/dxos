@@ -18,6 +18,7 @@ export default defineConfig({
     'operations': 'src/operations/index.ts',
     'testing': 'src/testing.ts',
     'translations': 'src/translations.ts',
+    'SearchCapabilities': 'src/types/SearchCapabilities.ts',
     'SearchEvents': 'src/types/SearchEvents.ts',
     'SearchOperation': 'src/types/SearchOperation.ts',
     'types': 'src/types/index.ts',

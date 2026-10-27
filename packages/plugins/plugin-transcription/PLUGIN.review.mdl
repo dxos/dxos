@@ -1,0 +1,532 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-transcription/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: TranscriptionPlugin
+
+The recording pipeline is built, but split across three packages: `@dxos/pipeline-transcription`
+holds the `Transcriber` (chunk buffering, WAV merge, Whisper POST, `no_speech_prob` filter, timestamp
+alignment and dedup, all unit-tested in `transcriber.test.ts`), `@dxos/react-ui-transcription` holds
+the `Transcription` editor and `TranscriptModel`, and this plugin holds `TranscriptionArticle`, the
+recording hook, the manager and the operations. The Whistle and Home stories (F-7, F-8) are built
+in full, with unit tests for the endpointer, the recording's silence and WAV export, and the home's
+call handling; the audio-view scripts and fixture evals (F-9) exist.
+
+Of 65 items: 11 done, 38 untested, 4 partial, 3 diverged, 9 missing. Findings:
+
+- **`normalizeSentences` is a stub.** Its handler dies with "needs to be reimplemented", it is not
+  registered in the handler set, it is LLM-based rather than pure, and its only test is skipped.
+- **`createTranscript` does not write the Transcript.** It adds the Feed and returns an unsaved
+  Transcript; the caller adds it. It takes `db`, not `space`, and returns `{ object }`.
+- **The `Oracle` component does not exist** anywhere in the repo, and no operation has a test:
+  open, create, summarize and enrich are untested, as are scenarios T-1, T-2, T-4, T-5, T-7.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict TranscriptSegment: Implemented as ContentBlock.Transcript with started and text, plus corrected, references, candidates and translation.
+  status: untested
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/ContentBlock.ts#Transcript]
+  note: The block is tagged `transcript` and carries extra pipeline fields the spec does not list; no test checks its shape.
+```
+
+```mdl
+verdict Message: The shared Message type carries id, created, blocks and sender.identityDid.
+  status: untested
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/Message.ts#Message]
+  note: blocks is any ContentBlock, not only transcript segments; the sender is an Actor with more fields than identityDid.
+```
+
+```mdl
+verdict Transcript: The Transcript type has feed and started, plus ended, summary, resolvedReferents and pipeline.
+  status: untested
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/Transcript.ts#Transcript]
+  note: Shape matches the spec's fields with additions; nothing in this plugin tests it.
+```
+
+```mdl
+verdict WhisperWord: Declared in the transcriber with word, start and end in seconds.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/pipeline-transcription/src/asr/transcriber.ts#WhisperWord]
+  tests: [github:dxos/dxos/packages/core/compute/pipeline-transcription/src/asr/transcriber.test.ts]
+```
+
+```mdl
+verdict WhisperSegment: Declared with text, start, end, words and an optional no_speech_prob.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/pipeline-transcription/src/asr/transcriber.ts#WhisperSegment]
+  tests: [github:dxos/dxos/packages/core/compute/pipeline-transcription/src/asr/transcriber.test.ts]
+  note: no_speech_prob is optional (absent from some Whisper-compatible endpoints) and treated as speech.
+```
+
+```mdl
+verdict Settings: entityExtraction defaults to true, beside recordMode, audioDeviceId and pacing settings.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/types/Settings.ts#Settings, github:dxos/dxos/packages/plugins/plugin-transcription/src/capabilities/settings.ts]
+  note: Five more settings exist than the spec lists; no test reads the default.
+```
+
+```mdl
+verdict Transcription: A read-only CodeMirror Markdown editor renders the model, with timestamps in a gutter.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/ui/react-ui-transcription/src/components/Transcription/Transcription.tsx#Transcription, github:dxos/dxos/packages/ui/react-ui-transcription/src/components/Transcription/transcription-extension.ts#transcription]
+  note: |
+    Lives in @dxos/react-ui-transcription, not this plugin. Bylines are `###### <name>` headings and
+    the time is a gutter marker, not `## Speaker · HH:MM`. No test or story with a play function exercises it.
+```
+
+```mdl
+verdict Oracle: No Oracle component exists.
+  status: missing
+  note: Searched every .tsx in packages/ for `Oracle`; the only Oracle is a non-UI class in @dxos/brain.
+```
+
+```mdl
+verdict TranscriptionArticle: A Panel with an ActionToolbar start/stop action over the Transcription editor.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/containers/TranscriptionArticle/TranscriptionArticle.tsx#TranscriptionArticle, github:dxos/dxos/packages/plugins/plugin-transcription/src/hooks/useTranscriptionRecording.ts#useTranscriptionRecording]
+  walkthrough:
+    - The article queries the feed's messages, builds the model and puts the toggle action in the toolbar. github:dxos/dxos/packages/plugins/plugin-transcription/src/containers/TranscriptionArticle/TranscriptionArticle.tsx#TranscriptionArticle
+    - The hook holds the recording flag and drives the audio track and transcriber from it. github:dxos/dxos/packages/plugins/plugin-transcription/src/hooks/useTranscriptionRecording.ts#useTranscriptionRecording
+  note: Its story only mounts it; nothing clicks the toggle.
+```
+
+```mdl
+verdict openTranscript: Loads the transcript and feed and returns the messages rendered with bylines.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/types/TranscriptOperation.ts#Open, github:dxos/dxos/packages/plugins/plugin-transcription/src/operations/open.ts]
+  walkthrough:
+    - The operation declares the transcript ref input and a `content` string output. github:dxos/dxos/packages/plugins/plugin-transcription/src/types/TranscriptOperation.ts#Open
+    - The handler loads both refs, queries Messages from the feed and joins renderByline output. github:dxos/dxos/packages/plugins/plugin-transcription/src/operations/open.ts
+  note: |
+    The TranscriptNotFound and FeedNotFound errors are not declared (load failures surface as generic
+    errors); only Database is required, not FeedService. Bylines carry no time. No test.
+```
+
+```mdl
+verdict createTranscript: Adds a Feed and returns a Transcript linked to it, without adding the Transcript.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/types/TranscriptOperation.ts#Create, github:dxos/dxos/packages/plugins/plugin-transcription/src/operations/create.ts]
+  walkthrough:
+    - The operation takes an optional name and a db, and returns `{ object }`. github:dxos/dxos/packages/plugins/plugin-transcription/src/types/TranscriptOperation.ts#Create
+    - The handler adds a new Feed to the db and makes an unsaved Transcript that refers to it. github:dxos/dxos/packages/plugins/plugin-transcription/src/operations/create.ts
+  note: The spec says both objects are written to the space; the code writes only the Feed, takes `db` not `space`, and ignores `name`.
+```
+
+```mdl
+verdict summarizeTranscript: Sends transcript and notes to Claude Sonnet with the specified prompt and returns the last text block.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/types/TranscriptOperation.ts#Summarize, github:dxos/dxos/packages/plugins/plugin-transcription/src/operations/summarize.ts]
+  walkthrough:
+    - The operation declares transcript and optional notes and a `summary` output, visible to agents. github:dxos/dxos/packages/plugins/plugin-transcription/src/types/TranscriptOperation.ts#Summarize
+    - The handler runs an AiRequest on claude-sonnet-5 with a prompt for bold names, quotes and actionable tasks. github:dxos/dxos/packages/plugins/plugin-transcription/src/operations/summarize.ts
+  note: No test or model fixture exercises it.
+```
+
+```mdl
+verdict enrichMessage: Extracts proper nouns with Haiku, finds matching objects and rewrites the text with links.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/types/TranscriptOperation.ts#EnrichMessage, github:dxos/dxos/packages/plugins/plugin-transcription/src/operations/enrich-message.ts, github:dxos/dxos/packages/core/compute/assistant/src/extraction/extraction-llm-function/proper-noun-extraction.ts#enrichTranscriptMessage]
+  walkthrough:
+    - The operation declares the message in and out and requires AiService and Database. github:dxos/dxos/packages/plugins/plugin-transcription/src/types/TranscriptOperation.ts#EnrichMessage
+    - The handler passes the message and db to the assistant's extraction helper. github:dxos/dxos/packages/plugins/plugin-transcription/src/operations/enrich-message.ts
+    - The helper calls Haiku per transcript block, searches the space and inserts references. github:dxos/dxos/packages/core/compute/assistant/src/extraction/extraction-llm-function/proper-noun-extraction.ts#enrichTranscriptMessage
+  note: The fallback to the raw message and the setting gate live in useTranscriptionRecording, not the op. No test covers enrichTranscriptMessage.
+```
+
+```mdl
+verdict normalizeSentences: The operation is declared but its handler always dies.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/types/TranscriptOperation.ts#SentenceNormalization, github:dxos/dxos/packages/plugins/plugin-transcription/src/normalization/normalization.ts#sentenceNormalization]
+  note: |
+    The handler dies with "needs to be reimplemented"; it is not in the handler set. The intended
+    design is an LLM call, not a pure transformation, and the output is `{ sentences }`. Its test is `describe.skip`.
+```
+
+```mdl
+verdict F-1.1: The toolbar toggle starts the audio track and transcriber.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/containers/TranscriptionArticle/TranscriptionArticle.tsx#TranscriptionArticle, github:dxos/dxos/packages/plugins/plugin-transcription/src/hooks/useTranscriptionRecording.ts#useTranscriptionRecording]
+  walkthrough:
+    - The toolbar action calls toggleRecording. github:dxos/dxos/packages/plugins/plugin-transcription/src/containers/TranscriptionArticle/TranscriptionArticle.tsx#TranscriptionArticle
+    - The hook opens the track (gated on the endpoint), opens the transcriber and starts chunk recording. github:dxos/dxos/packages/plugins/plugin-transcription/src/hooks/useTranscriptionRecording.ts#useTranscriptionRecording
+  note: No test drives the toggle.
+```
+
+```mdl
+verdict F-1.2: Stopping calls stopChunksRecording, which schedules a transcription of the buffered chunks.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/hooks/useTranscriptionRecording.ts#useTranscriptionRecording, github:dxos/dxos/packages/core/compute/pipeline-transcription/src/asr/transcriber.ts#Transcriber.stopChunksRecording]
+  walkthrough:
+    - The hook's effect cleanup calls stopChunksRecording when recording turns off. github:dxos/dxos/packages/plugins/plugin-transcription/src/hooks/useTranscriptionRecording.ts#useTranscriptionRecording
+    - The transcriber schedules its deferred transcription of what is buffered. github:dxos/dxos/packages/core/compute/pipeline-transcription/src/asr/transcriber.ts#Transcriber.stopChunksRecording
+  note: Transcriber tests cover alignment and transport validation, not the stop flush.
+```
+
+```mdl
+verdict F-1.3: setAudioTrack restarts the transcriber with a new recorder when the track changes.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/transcription-manager.ts#TranscriptionManagerImpl.setAudioTrack]
+  note: No test constructs TranscriptionManagerImpl.
+```
+
+```mdl
+verdict F-2.1: A chunk that brings the buffer to transcribeAfterChunksAmount while recording schedules the task.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/compute/pipeline-transcription/src/asr/transcriber.ts#Transcriber]
+  note: Implemented in `_saveAudioChunk`; no test feeds chunks to a Transcriber.
+```
+
+```mdl
+verdict F-2.2: The task merges PCM chunks into a base64 WAV and POSTs it to `<endpoint>/transcribe`.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/compute/pipeline-transcription/src/asr/transcriber.ts#Transcriber]
+  note: Implemented in `_mergeAudioChunks` and `_fetchTranscription`; only the missing-transport check is tested.
+```
+
+```mdl
+verdict F-2.3: Segments over 0.6 no_speech_prob are dropped and the rest are aligned to wall-clock time.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/pipeline-transcription/src/asr/transcriber.ts#alignWhisperSegments, github:dxos/dxos/packages/core/compute/pipeline-transcription/src/asr/transcriber.ts#Transcriber]
+  tests: [github:dxos/dxos/packages/core/compute/pipeline-transcription/src/asr/transcriber.test.ts]
+  note: Alignment is tested; the no_speech_prob filter in `_transcribe` is not.
+```
+
+```mdl
+verdict F-2.4: When not recording, the buffer is cut to the last prefixBufferChunksAmount chunks.
+  status: untested
+  evidence: [github:dxos/dxos/packages/core/compute/pipeline-transcription/src/asr/transcriber.ts#Transcriber]
+  note: Implemented by `_dropOldChunks` from `_saveAudioChunk`; no test.
+```
+
+```mdl
+verdict F-3.1: Aligned segments become a Message appended to the transcript's feed.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/hooks/useTranscriptionRecording.ts#useTranscriptionRecording, github:dxos/dxos/packages/plugins/plugin-transcription/src/transcription-manager.ts#TranscriptionManagerImpl]
+  walkthrough:
+    - In the article, the hook's segment handler makes a Message and appends it with Feed.append. github:dxos/dxos/packages/plugins/plugin-transcription/src/hooks/useTranscriptionRecording.ts#useTranscriptionRecording
+    - The manager used by other plugins does the same in its segment callback. github:dxos/dxos/packages/plugins/plugin-transcription/src/transcription-manager.ts#TranscriptionManagerImpl
+  note: No test runs either path.
+```
+
+```mdl
+verdict F-3.2: The message passes through the enricher (manager) or the EnrichMessage op (article) before the append.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/transcription-manager.ts#TranscriptionManagerImpl, github:dxos/dxos/packages/plugins/plugin-transcription/src/hooks/useTranscriptionRecording.ts#useTranscriptionRecording]
+  note: The article path gates on `entityExtraction` and falls back to the raw message on error; untested.
+```
+
+```mdl
+verdict F-3.3: The article reads messages with a reactive feed query, so peer appends re-render it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/containers/TranscriptionArticle/TranscriptionArticle.tsx#TranscriptionArticle, github:dxos/dxos/packages/ui/react-ui-transcription/src/hooks/useFeedModelAdapter.ts#useFeedModelAdapter]
+  note: Relies on ECHO replication and useQuery; no multi-peer test.
+```
+
+```mdl
+verdict F-4.1: Messages render with `######` name bylines and gutter timestamps.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/util/render-byline.ts#renderByline, github:dxos/dxos/packages/ui/react-ui-transcription/src/components/Transcription/transcription-extension.ts#transcription]
+  note: Speaker and time are both shown, but the time sits in the gutter, not in the byline. No test of renderByline.
+```
+
+```mdl
+verdict F-4.2: The feed model adapter appends new messages and the scroller extension follows the end.
+  status: partial
+  evidence: [github:dxos/dxos/packages/ui/react-ui-transcription/src/hooks/useFeedModelAdapter.ts#useFeedModelAdapter, github:dxos/dxos/packages/ui/react-ui-transcription/src/components/Transcription/Transcription.tsx#Transcription]
+  tests: [github:dxos/dxos/packages/ui/react-ui-transcription/src/hooks/useFeedModelAdapter.test.tsx]
+  note: The model update is tested; the auto-scroll is not.
+```
+
+```mdl
+verdict F-5.1: The summary prompt asks for Markdown key points, verbatim quotes and tasks.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/operations/summarize.ts]
+  note: Behaviour depends on the model following the prompt; no test or fixture.
+```
+
+```mdl
+verdict F-5.2: Notes are passed with the transcript and the prompt asks to correlate them.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/operations/summarize.ts]
+  note: When notes are absent the prompt still sends the literal "Notes: undefined". No test.
+```
+
+```mdl
+verdict F-5.3: The prompt tells the model to omit the tasks section when no tasks are found.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/operations/summarize.ts]
+  note: Prompt-only; no test.
+```
+
+```mdl
+verdict F-6.1: The skill's tools are the Open and Summarize operations.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/skills/TranscriptionSkill.ts#make, github:dxos/dxos/packages/plugins/plugin-transcription/src/capabilities/skill-definition.ts]
+  note: plugin.test.ts checks module activation, not the skill's tools.
+```
+
+```mdl
+verdict F-6.2: An assistant can call Open by Ref and get the byline text back.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/operations/open.ts, github:dxos/dxos/packages/plugins/plugin-transcription/src/skills/TranscriptionSkill.ts#make]
+  note: No assistant-conversation test uses the skill.
+```
+
+```mdl
+verdict F-6.3: An assistant can call Summarize, which is marked visible.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/operations/summarize.ts, github:dxos/dxos/packages/plugins/plugin-transcription/src/skills/TranscriptionSkill.ts#make]
+  note: No assistant-conversation test uses the skill.
+```
+
+```mdl
+verdict F-7.1: Record or held Space streams microphone audio into the Whistle worker, re-decoded every pass interval.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/usePushToTalk.ts#usePushToTalk, github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/useWhistle.ts#useWhistle, github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/whistle-worker.ts#runPass]
+  walkthrough:
+    - Space outside a text field sets the held flag. github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/usePushToTalk.ts#usePushToTalk
+    - The hook captures 16 kHz audio while active and posts it to the worker. github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/useWhistle.ts#useWhistle
+    - The worker runs a pass on the stream once enough new audio is queued. github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/whistle-worker.ts#runPass
+  note: The browser path has no automated test; the Node replay in fixtures.test.ts is manual.
+```
+
+```mdl
+verdict F-7.2: Committed words come from the engine's pass agreement; the pending tail renders in italics.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/whistle-worker.ts#runPass, github:dxos/dxos/packages/plugins/plugin-transcription/src/stories/Whistle.stories.tsx#WhistlePanel]
+  note: The agreement itself is inside the Cactus engine; no test asserts the commit rule or the italic tail.
+```
+
+```mdl
+verdict F-7.3: The story passes 1000 ms, or 200 ms with Low latency.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/stories/Whistle.stories.tsx#ACCURATE_PASS_MS, github:dxos/dxos/packages/plugins/plugin-transcription/src/stories/Whistle.stories.tsx#LOW_LATENCY_PASS_MS]
+  note: The manual fixture test replays both intervals; nothing in CI runs it.
+```
+
+```mdl
+verdict F-7.4: A paragraph breaks on 1.5 s of measured silence between committed words, or at stop.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/stories/Whistle.stories.tsx#useStreamingTranscript, github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/recording.ts#Recording.longestSilence]
+  tests: [github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/recording.test.ts]
+  walkthrough:
+    - The recording measures the longest silence against its noise floor. github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/recording.ts#Recording.longestSilence
+    - The story starts a new paragraph when that silence reaches 1.5 s or the stream ends. github:dxos/dxos/packages/plugins/plugin-transcription/src/stories/Whistle.stories.tsx#useStreamingTranscript
+  note: The test covers the silence measurement; the paragraph rule in the story is not tested.
+```
+
+```mdl
+verdict F-7.5: An open paragraph closes at a sentence end once it has 30 words.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/stories/Whistle.stories.tsx#useStreamingTranscript, github:dxos/dxos/packages/plugins/plugin-transcription/src/stories/Whistle.stories.tsx#PARAGRAPH_MIN_WORDS]
+  note: Story-only logic; no test.
+```
+
+```mdl
+verdict F-7.6: Keywords are prefilled with DXOS terms and posted to the worker as config.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/stories/Whistle.stories.tsx#DXOS_KEYWORDS, github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/useWhistle.ts#useWhistle]
+  note: The manual fixture test reports keyword recall; nothing in CI checks it.
+```
+
+```mdl
+verdict F-7.7: The Recording keeps all audio; paragraphs and the whole recording can be played or saved as WAV.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/recording.ts#Recording.toWav, github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/usePlayback.ts#usePlayback, github:dxos/dxos/packages/plugins/plugin-transcription/src/stories/Whistle.stories.tsx#saveRecording]
+  tests: [github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/recording.test.ts]
+  note: WAV export is tested; playback is not.
+```
+
+```mdl
+verdict F-7.8: The worker loads only when first requested and fetches assets through Cache Storage.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/whistle-worker.ts#fetchCached, github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/useWhistle.ts#useWhistle]
+  note: The worker is created only after `requested`; no test.
+```
+
+```mdl
+verdict F-7.9: The microphone story keeps the track open after first activation.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/stories/Whistle.stories.tsx#MicrophoneStory]
+  note: Story-only; no test.
+```
+
+```mdl
+verdict F-7.10: The worker holds audio until 0.15 s above -35 dBFS and keeps a 0.5 s pre-roll.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/endpoint.ts#Endpointer, github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/whistle-worker.ts#receive]
+  tests: [github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/endpoint.test.ts]
+  walkthrough:
+    - The endpointer reports sound only after 0.15 s above -35 dBFS. github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/endpoint.ts#Endpointer
+    - The worker keeps the latest 0.5 s as pre-roll and opens no stream until sound is heard. github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/whistle-worker.ts#receive
+```
+
+```mdl
+verdict F-8.1: The Home story streams through Whistle and answers with Needle 3 in the same worker against the home tools.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/stories/Home.stories.tsx#HomeStory, github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/whistle-worker.ts#answer]
+  walkthrough:
+    - The story passes Needle's model URL and the home tools to useWhistle as the assistant config. github:dxos/dxos/packages/plugins/plugin-transcription/src/stories/Home.stories.tsx#HomeStory
+    - The worker loads Needle beside Whistle and answers the request text when it ends. github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/whistle-worker.ts#answer
+  note: No automated test runs the model.
+```
+
+```mdl
+verdict F-8.2: Five tools change a mock home drawn as a floor plan, highlighting touched rooms.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/stories/home/home.ts#HOME_TOOLS, github:dxos/dxos/packages/plugins/plugin-transcription/src/stories/home/home.ts#applyCall, github:dxos/dxos/packages/plugins/plugin-transcription/src/stories/home/FloorPlan.tsx#FloorPlan]
+  tests: [github:dxos/dxos/packages/plugins/plugin-transcription/src/stories/home/home.test.ts]
+  note: applyCall is tested for every tool; the floor plan highlight is not.
+```
+
+```mdl
+verdict F-8.3: The request is answered from committed words plus the latest pending tail before the closing pass.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/whistle-worker.ts#drain, github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/whistle-worker.ts#answer]
+  note: Worker logic; no test.
+```
+
+```mdl
+verdict F-8.4: Low latency (default on) caps at 32 tokens; "and", "then" or "also" restores 128.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/stories/Home.stories.tsx#LOW_LATENCY_MAX_TOKENS, github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/whistle-worker.ts#answer]
+  note: The budget rule is a regex in the worker; no test.
+```
+
+```mdl
+verdict F-8.5: Hands-free ends a request after 0.7 s (0.5 s low latency) of silence after speech, detected in the worker.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/stories/Home.stories.tsx#PAUSE_SECONDS, github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/endpoint.ts#Endpointer]
+  tests: [github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/endpoint.test.ts]
+```
+
+```mdl
+verdict F-8.10: Passes pause after 0.15 s of silence and an idle stream ends after 1 s, in audio time in the worker.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/endpoint.ts#Endpointer, github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/whistle-worker.ts#receive]
+  tests: [github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/endpoint.test.ts]
+  note: The idle end is tested on the endpointer; the worker's pass hold is not.
+```
+
+```mdl
+verdict F-8.6: Suppressed calls are offered as "Did you mean …?" and run on confirm.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/stories/Home.stories.tsx#CommandEntry]
+  note: Story-only; no test.
+```
+
+```mdl
+verdict F-8.7: A request with no calls logs "No tool for that." and changes nothing.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/stories/Home.stories.tsx#CommandEntry]
+  note: Story-only; no test.
+```
+
+```mdl
+verdict F-8.8: Each log entry shows transcript, changes, calls, latency after request end, model time and confidence.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/stories/Home.stories.tsx#CommandEntry]
+  note: Story-only; no test.
+```
+
+```mdl
+verdict F-8.9: applyCall checks arguments and returns errors, but an unknown room falls back to all rooms.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/stories/home/home.ts#applyCall]
+  tests: [github:dxos/dxos/packages/plugins/plugin-transcription/src/stories/home/home.test.ts]
+  note: Unknown doors, music actions and tools are errors; an out-of-schema `room` silently means every room, and temperatures are clamped rather than rejected.
+```
+
+```mdl
+verdict F-9.1: The audio-view skill has describe, spectrogram and whistle-replay scripts sharing the story's endpointer.
+  status: untested
+  evidence: [github:dxos/dxos/.agents/skills/audio-view/SKILL.md, github:dxos/dxos/.agents/skills/audio-view/scripts/describe.mjs, github:dxos/dxos/.agents/skills/audio-view/scripts/spectrogram.mjs, github:dxos/dxos/.agents/skills/audio-view/scripts/whistle-replay.mjs]
+  note: The scripts have no tests of their own; fixtures.test.ts drives whistle-replay manually.
+```
+
+```mdl
+verdict F-9.2: The fixture test pulls the four agents-scope recordings through @dxos/fixtures; none are in git.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/fixtures.test.ts]
+  note: Bucket contents cannot be checked from the clone; the names match the test's list.
+```
+
+```mdl
+verdict F-9.3: Manual tests replay each fixture through the gate and report WER, words in silence and keyword recall.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/fixtures.test.ts, github:dxos/dxos/.agents/skills/audio-view/scripts/lib/whistle.mjs]
+  tests: [github:dxos/dxos/packages/plugins/plugin-transcription/src/whistle/fixtures.test.ts]
+  note: Tagged `manual` and skipped per missing fixture, so CI does not run them, as the spec intends.
+```
+
+```mdl
+verdict F-9.4: compare.mjs runs OpenAI and Workers AI models, skips missing credentials, and notes Anthropic.
+  status: untested
+  evidence: [github:dxos/dxos/.agents/skills/audio-view/scripts/compare.mjs]
+  note: A script with no test.
+```
+
+```mdl
+verdict T-1: No test invokes createTranscript.
+  status: missing
+  note: Searched *.test.ts in the plugin and the repo for TranscriptOperation.Create and Transcript.make with this op; none.
+```
+
+```mdl
+verdict T-2: No test records audio and persists a segment.
+  status: missing
+  note: Transcriber tests stop at alignment and transport validation; nothing runs record → Whisper → feed.
+```
+
+```mdl
+verdict T-3: Alignment tests cover deduplication against lastTimestamp.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/compute/pipeline-transcription/src/asr/transcriber.ts#alignWhisperSegments]
+  tests: [github:dxos/dxos/packages/core/compute/pipeline-transcription/src/asr/transcriber.test.ts]
+```
+
+```mdl
+verdict T-4: No test invokes openTranscript.
+  status: missing
+  note: No test file references TranscriptOperation.Open; the expected `## <speaker> · <time>` byline also differs from the code's `###### <name>`.
+```
+
+```mdl
+verdict T-5: No test invokes summarizeTranscript.
+  status: missing
+  note: No test file or model fixture references the summarize operation.
+```
+
+```mdl
+verdict T-6: The only normalization test is skipped.
+  status: missing
+  note: normalization.test.ts is `describe.skip`, and the handler dies.
+```
+
+```mdl
+verdict T-7: No test clicks the recording toggle.
+  status: missing
+  note: TranscriptionArticle.stories.tsx has no play function; no Playwright spec covers transcription.
+```
+
+```mdl
+verdict QA-1: Not automated.
+  status: missing
+  note: A manual QA test with status unverified; no automated test runs its steps.
+```
+
+```mdl
+verdict QA-2: Not automated.
+  status: missing
+  note: Manual and blocked on hardware; no automated test runs it.
+```
