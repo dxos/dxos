@@ -327,6 +327,15 @@
       "port": 9009
     },
     {
+      "name": "storybook-graph",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "export PROTO_HOME=$HOME/.proto && export PATH=$PROTO_HOME/shims:$PROTO_HOME/bin:$PATH && DX_STORIES=ui/react-ui-graph moon run storybook-react:serve-nodeps"
+      ],
+      "port": 9009
+    },
+    {
       "name": "storybook-spaces",
       "runtimeExecutable": "sh",
       "runtimeArgs": [
