@@ -26,7 +26,7 @@ import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabili
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { Attention } from '@dxos/react-ui-attention';
+import { Attention } from '@dxos/react-ui-attention/types';
 import { Task } from '@dxos/types';
 import { concat } from '@dxos/util';
 
