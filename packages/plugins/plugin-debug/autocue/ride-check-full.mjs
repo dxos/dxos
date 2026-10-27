@@ -194,6 +194,8 @@ const showLivePage = async (demo, page, caption, { back = true } = {}) => {
     throw new Error('the agent filed no Worker URL on the project');
   }
   const composerUrl = page.url();
+  // Leaving Composer drops the page's globals, the take's space id among them.
+  const spaceId = await page.evaluate((key) => globalThis[key], TAKE_SPACE);
   await page.goto(url, { waitUntil: 'load' });
   await page.waitForTimeout(BEAT * 2);
   await demo.caption({ value: caption, subtitle: new URL(url).host });
@@ -201,6 +203,8 @@ const showLivePage = async (demo, page, caption, { back = true } = {}) => {
   if (back) {
     await page.goto(composerUrl, { waitUntil: 'domcontentloaded' });
     await page.locator('[data-testid="deck.plank"]').first().waitFor({ state: 'visible', timeout: 120_000 });
+    await page.waitForFunction((id) => dxos.spaces().some((space) => space.id === id), spaceId, { timeout: 60_000 });
+    await page.evaluate(({ key, id }) => (globalThis[key] = id), { key: TAKE_SPACE, id: spaceId });
     await page.waitForTimeout(BEAT);
   }
 };
