@@ -14,7 +14,9 @@
  *   composer-app:serve`), talking to EDGE preview, whose AI and sandbox services serve the model below
  *
  * The driver's `CLOUDFLARE_API_TOKEN` becomes the space's Cloudflare connection, so the agent deploys to that account
- * and the page loads for anyone; without it the agent falls back to a temporary account. Keep the value off screen:
+ * and the page loads for anyone; without it the agent falls back to a temporary account. The take never leaves Composer:
+ * a reload in the middle of it lost the profile, so the deployed page is filmed in a browser of its own and spliced in.
+ * Keep the token's value off screen:
  *
  *   CLOUDFLARE_API_TOKEN='op://eng-dev/com.cloudflare/local/CLOUDFLARE_API_TOKEN' op run -- \
  *     node .agents/skills/autocue/scripts/driver.mjs --url http://localhost:4173 --out /tmp/ride-check-take
@@ -179,36 +181,6 @@ const connectCloudflare = async (page) => {
   return true;
 };
 
-/** The Worker URL the agent filed on the project, as a Bookmark. */
-const workerUrl = (page) =>
-  page.evaluate(async (key) => {
-    const space = dxos.spaces().find((candidate) => candidate.id === globalThis[key]);
-    const bookmarks = await space.db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.bookmark'))).run();
-    return bookmarks.map((bookmark) => bookmark.url).find((url) => /^https:\/\//.test(url ?? ''));
-  }, TAKE_SPACE);
-
-/** Opens the deployed page, holds on it, and comes back to the same place in Composer. */
-const showLivePage = async (demo, page, caption, { back = true } = {}) => {
-  const url = await workerUrl(page);
-  if (!url) {
-    throw new Error('the agent filed no Worker URL on the project');
-  }
-  const composerUrl = page.url();
-  // Leaving Composer drops the page's globals, the take's space id among them.
-  const spaceId = await page.evaluate((key) => globalThis[key], TAKE_SPACE);
-  await page.goto(url, { waitUntil: 'load' });
-  await page.waitForTimeout(BEAT * 2);
-  await demo.caption({ value: caption, subtitle: new URL(url).host });
-  await page.waitForTimeout(BEAT * 4);
-  if (back) {
-    await page.goto(composerUrl, { waitUntil: 'domcontentloaded' });
-    await page.locator('[data-testid="deck.plank"]').first().waitFor({ state: 'visible', timeout: 120_000 });
-    await page.waitForFunction((id) => dxos.spaces().some((space) => space.id === id), spaceId, { timeout: 60_000 });
-    await page.evaluate(({ key, id }) => (globalThis[key] = id), { key: TAKE_SPACE, id: spaceId });
-    await page.waitForTimeout(BEAT);
-  }
-};
-
 export const steps = [
   {
     name: 'Prep (off camera): dismiss notices, hide help panels',
@@ -348,12 +320,6 @@ export const steps = [
     },
   },
   {
-    name: 'Open the live page',
-    run: async ({ demo, page }) => {
-      await showLivePage(demo, page, 'Live on Cloudflare');
-    },
-  },
-  {
     name: 'Add the gust rule to the card and file it',
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Change the feature', subtitle: `${FEATURE}: ${SUBFEATURE}` });
@@ -430,12 +396,6 @@ export const steps = [
       await demo.click({ selector: '[data-testid="feature-card.spec"] >> nth=0', label: 'Spec' });
       await page.getByTestId('spec-article.spec').first().waitFor({ state: 'visible', timeout: 30_000 });
       await page.waitForTimeout(BEAT * 4);
-    },
-  },
-  {
-    name: 'Reload the live page',
-    run: async ({ demo, page }) => {
-      await showLivePage(demo, page, 'Same URL, with the gust rule', { back: false });
     },
   },
 ];
