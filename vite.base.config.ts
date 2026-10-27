@@ -14,7 +14,7 @@ import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 import pkgUp from 'pkg-up';
 // Vite 8 ships rolldown as its bundler by default (no `rolldown-vite` shim needed).
-import { type Plugin, type UserConfig, defineConfig as viteDefineConfig } from 'vite';
+import { type Plugin, type PluginOption, type UserConfig, defineConfig as viteDefineConfig } from 'vite';
 import Inspect from 'vite-plugin-inspect';
 import solid from 'vite-plugin-solid';
 import WasmPlugin from 'vite-plugin-wasm';
@@ -542,7 +542,7 @@ export type BrowserOptions = {
   optimizeDeps?: string[];
   nodeExternal?: boolean;
   injectGlobals?: boolean;
-  plugins?: Plugin[];
+  plugins?: PluginOption[];
   /** JSX runtime for browser tests. */
   jsx?: 'react' | 'solid';
 };
@@ -637,6 +637,7 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
       // `node:events` etc. directly). Without this vite externalises them and browser
       // tests fail with "Module has been externalized for browser compatibility".
       nodeStdResolvePlugin(),
+      ...(Object.keys(dxConfigEntries(dirname)).length > 0 ? [dxModuleAttributePlugin(dirname)] : []),
       storybookTest({
         configDir: path.join(dirname, '.storybook'),
         // The --ci flag will skip prompts and not open a browser.
@@ -1128,7 +1129,11 @@ const buildTestConfig = (
   const storybookProject = storybook
     ? createStorybookProject(dirname, typeof storybook === 'boolean' ? undefined : storybook)
     : undefined;
-  const browserProjects = normalizeBrowserOptions(browser).map((b) => createBrowserProject({ jsx: outerJsx, ...b }));
+  // Vitest projects do not inherit the root plugins, and the browser loads `dx.config.ts` as authored.
+  const dxConfigPlugins = Object.keys(dxConfigEntries(dirname)).length > 0 ? [dxModuleAttributePlugin(dirname)] : [];
+  const browserProjects = normalizeBrowserOptions(browser).map((b) =>
+    createBrowserProject({ jsx: outerJsx, ...b, plugins: [...(b.plugins ?? []), ...dxConfigPlugins] }),
+  );
   const workerdProject = workerd ? createWorkerdProject(typeof workerd === 'boolean' ? undefined : workerd) : undefined;
 
   return {
@@ -1211,12 +1216,8 @@ const dxConfigEntries = (cwd: string): Record<string, string> => {
   return entries;
 };
 
-/**
- * `pluginConfigPlugin` (build only, so tests keep importing the authored config) and the plugin that
- * strips the module-body attribute browsers reject, from the package's own `@dxos/app-framework`,
- * which the repo root cannot resolve.
- */
-const dxConfigPlugin = async (cwd: string): Promise<Plugin[]> => {
+/** The package's own `@dxos/app-framework/vite-plugin`, which the repo root cannot resolve. */
+const loadAppFrameworkVitePlugin = async (cwd: string) => {
   const pkgPath = join(cwd, 'node_modules/@dxos/app-framework/package.json');
   const target = existsSync(pkgPath)
     ? JSON.parse(readFileSync(pkgPath, 'utf8')).exports?.['./vite-plugin']?.import
@@ -1224,9 +1225,19 @@ const dxConfigPlugin = async (cwd: string): Promise<Plugin[]> => {
   if (typeof target !== 'string') {
     throw new Error(`A Plugin.config package needs @dxos/app-framework built to build ${cwd}.`);
   }
-  const { moduleBodyAttributePlugin, pluginConfigPlugin } = await import(
-    pathToFileURL(join(path.dirname(pkgPath), target)).href
-  );
+  return import(pathToFileURL(join(path.dirname(pkgPath), target)).href);
+};
+
+/** Strips the module-body import attribute from `dx.config.ts`, which browsers reject. */
+const dxModuleAttributePlugin = async (cwd: string): Promise<Plugin> =>
+  (await loadAppFrameworkVitePlugin(cwd)).moduleBodyAttributePlugin();
+
+/**
+ * `pluginConfigPlugin` (build only, so tests keep importing the authored config) and
+ * {@link dxModuleAttributePlugin}.
+ */
+const dxConfigPlugin = async (cwd: string): Promise<Plugin[]> => {
+  const { moduleBodyAttributePlugin, pluginConfigPlugin } = await loadAppFrameworkVitePlugin(cwd);
   return [pluginConfigPlugin({ apply: 'build' }), moduleBodyAttributePlugin()];
 };
 

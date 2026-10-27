@@ -8,17 +8,16 @@ import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { UmlPlugin } from '#plugin';
+import * as UmlPlugin from '#meta';
 
-await Harness.preload({ plugins: [ClientPlugin.make({}), IllustratorPlugin.make(), UmlPlugin()] });
+await Harness.preload({ plugins: [ClientPlugin.make({}), IllustratorPlugin.make(), UmlPlugin.make()] });
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+const moduleId = (name: string) => `${UmlPlugin.meta.profile.key}.module.${name}`;
 
 describe('UmlPlugin', () => {
   test('modules activate on the expected events', { timeout: 60_000 }, async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), IllustratorPlugin.make(), UmlPlugin()],
+      plugins: [ClientPlugin.make({}), IllustratorPlugin.make(), UmlPlugin.make()],
     });
 
     expect(harness.manager.getActive()).toEqual(expect.arrayContaining([moduleId('translations')]));

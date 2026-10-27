@@ -6,12 +6,10 @@ import type * as Effect from 'effect/Effect';
 import type * as Schema from 'effect/Schema';
 import type { ComponentType } from 'react';
 
-import * as Capability from '@dxos/app-framework/Capability';
 import type { Database, Obj, Type } from '@dxos/echo';
 
-import { meta } from '#meta';
-
-import * as Game from './Game.ts';
+import { GameNamespace } from '../namespace.ts';
+import type * as Game from './Game.ts';
 
 /**
  * A game variant contribution. Each variant plugin (chess, tic-tac-toe, ...)
@@ -20,7 +18,7 @@ import * as Game from './Game.ts';
  * `Capability.getAll(GameCapabilities.VariantProvider)` (Effect) or
  * `useCapabilities(GameCapabilities.VariantProvider)` (React).
  */
-export const VariantProvider = Capability.make<GameVariant>()(`${meta.profile.key}.capability.variant`);
+export const VariantProvider = GameNamespace.make<GameVariant>()('variant');
 
 /**
  * Contribution from a variant plugin (e.g. plugin-chess).

@@ -8,12 +8,8 @@ export default defineConfig({
   entry: {
     'ns/GameUtil': 'src/GameUtil.ts',
     'index': 'src/index.ts',
-    'GamePlugin': 'src/GamePlugin.ts',
-    'plugin': 'src/plugin.tsx',
-    'capabilities': 'src/capabilities/index.ts',
     'components': 'src/components/index.ts',
     'containers': 'src/containers/index.ts',
-    'meta': 'src/meta.ts',
     'translations': 'src/translations.ts',
     'GameUtil': 'src/util/load-game.ts',
     'util': 'src/util/index.ts',
