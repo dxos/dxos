@@ -26,6 +26,17 @@ const handler: Operation.WithHandler<typeof FeatureOperation.ImportSpec> = Featu
           ? yield* ensureBreakdown(yield* Database.load(featureRef))
           : (imported ?? (yield* Database.add(Spec.make({ name: name ?? key.id, project }))));
 
+      // A target without a document takes over this path's existing one, so the path keeps a single document.
+      if (!spec.document && imported?.document && imported.id !== spec.id) {
+        const moved = imported.document;
+        Obj.update(imported, (imported) => {
+          imported.document = undefined;
+        });
+        Obj.update(spec, (spec) => {
+          spec.document = moved;
+        });
+      }
+
       // The text is the spec's document: written over the one it holds, else held as a new one.
       const document = spec.document && (yield* Database.load(spec.document));
       if (document) {

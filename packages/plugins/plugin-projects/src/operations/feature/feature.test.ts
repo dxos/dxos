@@ -193,6 +193,12 @@ feat F-1: Sync
       expect(Spec.getContainer(feature)?.id).toBe(target.id);
       const [source] = (yield* Database.query(Filter.type(Spec.Spec)).run).filter(({ id }) => id === first.spec);
       expect(source?.features).toHaveLength(0);
+      // The path's document moves with it rather than being duplicated.
+      expect(source?.document).toBeUndefined();
+      const documents = yield* Database.query(Filter.type(SpecDocument.SpecDocument)).run;
+      expect(documents).toHaveLength(1);
+      expect(target.document?.uri).toBe(Ref.make(documents[0]).uri);
+      expect(Obj.getParent(documents[0])?.id).toBe(target.id);
 
       yield* importSpec.handler({ path: 'packages/b/PLUGIN.mdl', text, spec: ref(target) });
       const document = target.document && (yield* Database.load(target.document));
