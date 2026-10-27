@@ -197,4 +197,29 @@ describe('LocalQueryEngine', () => {
     expect(results.map((entry) => entry.group?.aggregates?.count)).toEqual([2]);
     engine.stop();
   });
+
+  test('a by-id aggregate counts a member whose dependencies settled unavailable once', async ({ expect }) => {
+    const people = [
+      db.add(Obj.make(TestSchema.Person, { name: 'a' })),
+      db.add(Obj.make(TestSchema.Person, { name: 'b' })),
+    ];
+    const query = Query.select(Filter.id(...people.map((person) => person.id))).aggregate({ count: Aggregate.count() });
+    const remote = new FixedRemote([
+      {
+        id: '{}',
+        resolution: { source: 'index', time: 0 },
+        group: { key: {}, count: 2, aggregates: { count: 2 } },
+        manifest: people.map((person) => ({ id: person.id, contribution: JSON.stringify({ count: 1 }) })),
+      },
+    ]);
+    const engine = engineFor(query, remote);
+    // Settled but unsatisfied: an id selection still returns the member, a discovery query does not.
+    vi.spyOn(db, 'areStrongDepsSatisfied').mockReturnValue(false);
+    vi.spyOn(db, 'areStrongDepsResolved').mockReturnValue(true);
+
+    const results = await engine.run(Context.default(), query.from(db).ast);
+
+    expect(results.map((entry) => entry.group?.aggregates?.count)).toEqual([2]);
+    engine.stop();
+  });
 });
