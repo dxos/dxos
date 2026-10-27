@@ -467,12 +467,17 @@ export class IndexEngine {
     return this.#objectSnapshotIndex.querySnapshotsJSON(recordIds);
   }
 
-  /** Each document object's JSON text with its version and backing heads; see {@link ObjectSnapshotIndex.querySnapshots}. */
+  /** Stored JSONB per record, undecoded; see {@link ObjectSnapshotIndex.querySnapshotsJSONB}. */
+  querySnapshotsJSONB(recordIds: readonly number[]) {
+    return this.#objectSnapshotIndex.querySnapshotsJSONB(recordIds);
+  }
+
+  /** Each document object's JSONB with its version and backing heads; see {@link ObjectSnapshotIndex.querySnapshots}. */
   querySnapshots(recordIds: readonly number[]) {
     return this.#objectSnapshotIndex.querySnapshots(recordIds);
   }
 
-  /** Each document object's JSON text with the heads it was read at, and stored bytes; see {@link ObjectSnapshotIndex.queryBackings}. */
+  /** Each document object's JSONB with the heads it was read at, and stored bytes; see {@link ObjectSnapshotIndex.queryBackings}. */
   queryBackings(recordIds: readonly number[]) {
     return this.#objectSnapshotIndex.queryBackings(recordIds);
   }

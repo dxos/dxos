@@ -58,6 +58,9 @@ message QueryResult {
   /// Unix ms of the object's last change, sent with `bytes`.
   optional double updated_at = 17;
 
+  /// `document_json` as SQLite JSONB, which is how the index stores it; a server sends one of the two.
+  optional bytes document_jsonb = 18;
+
   /// JSON-encoded group key (an object keyed by the aggregate's group-field names). Present iff the query has an aggregate clause.
   optional string groupKey = 12;
 

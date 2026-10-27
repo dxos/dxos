@@ -9,6 +9,7 @@ import * as SqlClient from 'effect/sql/SqlClient';
 import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
+import * as Jsonb from '@dxos/util/Jsonb';
 
 import { MIGRATIONS_TABLE } from '../migrations/object-snapshot/index.ts';
 import { TestSqliteLayer as TestLayer } from '../testing/index.ts';
@@ -61,6 +62,9 @@ describe('ObjectSnapshotIndex', () => {
       invariant(object.recordId !== null);
       const [snapshot] = yield* store.querySnapshotsJSON([object.recordId]);
       expect(snapshot.snapshot).toEqual(data);
+      const [stored] = yield* store.querySnapshotsJSONB([object.recordId, -1]);
+      expect(stored.recordId).toBe(object.recordId);
+      expect(Jsonb.decode(stored.jsonb)).toEqual(data);
     }, Effect.provide(TestLayer)),
   );
 

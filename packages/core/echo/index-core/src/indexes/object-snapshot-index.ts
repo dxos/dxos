@@ -75,6 +75,29 @@ export class ObjectSnapshotIndex implements Index {
   }
 
   /**
+   * Query snapshots by recordIds as the stored JSONB, so a caller that forwards them pays no decode.
+   * RecordIds not present in the store are silently omitted from the result.
+   */
+  querySnapshotsJSONB(
+    recordIds: readonly number[],
+  ): Effect.Effect<readonly { recordId: number; jsonb: Uint8Array }[], SqlError.SqlError> {
+    return Effect.gen({ self: this }, function* () {
+      const sql = this.#sql;
+      const results: { recordId: number; jsonb: Uint8Array }[] = [];
+      for (const chunk of chunkArray(recordIds)) {
+        const rows = yield* sql<{
+          recordId: number;
+          snapshot: StoredBlob;
+        }>`SELECT recordId, snapshot FROM objectSnapshot WHERE recordId IN ${sql.in(chunk)}`;
+        for (const row of rows) {
+          results.push({ recordId: row.recordId, jsonb: toUint8Array(row.snapshot) });
+        }
+      }
+      return results;
+    });
+  }
+
+  /**
    * Each document object's JSONB with the heads it was read at, in one read so the two agree, and
    * the document's bytes where the host stored them. Objects stored without heads are omitted.
    */
