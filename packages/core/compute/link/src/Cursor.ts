@@ -490,14 +490,8 @@ export type State = {
    */
   readonly foreignIndex?: ReadonlyMap<string, Obj.ID>;
   /**
-   * Foreign ids the provider enumerated by identity (a history delta's created messages) rather than by
-   * key window. Their keys are provider dates, which say nothing about what was synced, so
-   * {@link dedupStage} dedups them by identity and they never lower `min`.
-   */
-  readonly identityForeignIds?: ReadonlySet<string>;
-  /**
-   * Which {@link identityForeignIds} the feed already holds: one memoized feed lookup, run only when an
-   * identity item falls inside the synced range, since a feed query still decodes the whole feed.
+   * Which of {@link LayerOptions.identityForeignIds} the feed already holds: one memoized, paged feed scan,
+   * run only when an identity item falls inside the synced range, since EDGE cannot filter a feed by key.
    */
   readonly committedIdentities?: Effect.Effect<ReadonlySet<string>>;
   /** Serializes the advanced cursor key for storage on the cursor. */
@@ -540,14 +534,7 @@ export class Service extends Context.Service<Service, State>()('@dxos/link/Curso
  */
 export type LayerOptions = Omit<
   State,
-  | 'dedupSet'
-  | 'foreignIndex'
-  | 'identityForeignIds'
-  | 'committedIdentities'
-  | 'formatCursor'
-  | 'minKey'
-  | 'trackRange'
-  | 'extent'
+  'dedupSet' | 'foreignIndex' | 'committedIdentities' | 'formatCursor' | 'minKey' | 'trackRange' | 'extent'
 > & {
   readonly formatCursor?: (key: number) => string;
   /** Low-water key at run start. Only relevant with `trackRange: true`. Defaults to 0 (unset). */
@@ -574,7 +561,11 @@ export type LayerOptions = Omit<
    * pushdown. Absent on the add-only path.
    */
   readonly reconcileFilter?: Filter.Any;
-  /** See {@link State.identityForeignIds}; looked up as `dedupSeedType` objects when one is set. */
+  /**
+   * Foreign ids the provider enumerated by identity (a history delta's created messages) rather than by
+   * key window, looked up as `dedupSeedType` objects when one is set. Which items came from them is the
+   * provider's to say, through {@link dedupStage}'s `isIdentity`: the same id can also arrive from a window.
+   */
   readonly identityForeignIds?: readonly string[];
 };
 
@@ -607,27 +598,24 @@ export const layer = (options: LayerOptions): Layer.Layer<Service, never, Databa
         feed && options.reconcileFilter
           ? yield* seedForeignIndex(feed, options.foreignKeySource, options.reconcileFilter)
           : undefined;
-      const identityForeignIds =
-        options.identityForeignIds && options.identityForeignIds.length > 0
-          ? new Set(options.identityForeignIds)
-          : undefined;
+      const { identityForeignIds, ...rest } = options;
       const committedIdentities =
-        feed && identityForeignIds
+        feed && identityForeignIds && identityForeignIds.length > 0
           ? yield* Effect.cached(
-              findCommitted(feed, options.foreignKeySource, identityForeignIds, options.dedupSeedType).pipe(
-                Effect.provideContext(yield* Effect.context<Database.Service>()),
-              ),
+              findCommitted(feed, options.foreignKeySource, new Set(identityForeignIds), {
+                pageSize: dedupSeedPageSize,
+                type: options.dedupSeedType,
+              }).pipe(Effect.provideContext(yield* Effect.context<Database.Service>())),
             )
           : undefined;
       return {
-        ...options,
+        ...rest,
         minKey: options.minKey ?? 0,
         trackRange: options.trackRange ?? false,
         formatCursor: options.formatCursor ?? formatKey,
         extent: options.extent ?? { maxKey: 0, minKey: 0 },
         dedupSet,
         foreignIndex,
-        identityForeignIds,
         committedIdentities,
       };
     }),
@@ -773,25 +761,26 @@ export const skipCommitted = <In>(
  * Reusable dedup stage: drops items already committed (`dedupSet`) and items strictly inside the synced
  * range (`minKey < key < maxKey`) — a cheap shortcut past the already-synced middle. Boundary keys fall
  * through to `dedupSet`, since items can share a key. A single-directional run keeps the original
- * `key < maxKey` shortcut. An item in {@link State.identityForeignIds} inside that range is dropped only
- * when the feed lookup ({@link State.committedIdentities}) finds it: its key is a provider date, and a
- * backdated message inside the range is still new. One below `min` is left to the backward window, which
- * enumerates that range by key and dedups it there. Folds every considered item's key into
- * {@link State.extent} *before* the drop decision (an identity item's key raises only `maxKey`), so a
- * capped range-tracking run shrinks its window even when a whole page drops (see {@link Extent}). Reads
- * {@link Service}; provider-agnostic via `getForeignId`/`getKey`. Pair with {@link skipCommitted} to
- * avoid fetching already-committed items.
+ * `key < maxKey` shortcut. An item `isIdentity` marks (enumerated by identity, not by key window) inside
+ * that range is dropped only when the feed lookup ({@link State.committedIdentities}) finds it: its key is a
+ * provider date, and a backdated message inside the range is still new. One below `min` is left to the
+ * backward window, which enumerates that range by key and dedups it there. Folds every considered item's
+ * key into {@link State.extent} *before* the drop decision (an identity item's key raises only `maxKey`), so
+ * a capped range-tracking run shrinks its window even when a whole page drops (see {@link Extent}). Reads
+ * {@link Service}; provider-agnostic via `getForeignId`/`getKey`/`isIdentity`. Pair with
+ * {@link skipCommitted} to avoid fetching already-committed items.
  */
 export const dedupStage = <In>(
   id: string,
   getForeignId: (item: In) => string,
   getKey: (item: In) => number,
+  isIdentity: (item: In) => boolean = () => false,
 ): Stage.Stage<In, In, never, Service> =>
   Stage.map(id, (item: In) =>
     Effect.gen(function* () {
-      const { maxKey, minKey, trackRange, dedupSet, extent, identityForeignIds, committedIdentities } = yield* Service;
+      const { maxKey, minKey, trackRange, dedupSet, extent, committedIdentities } = yield* Service;
       const foreignId = getForeignId(item);
-      const byIdentity = identityForeignIds?.has(foreignId) ?? false;
+      const byIdentity = isIdentity(item);
       const key = getKey(item);
       if (key > 0) {
         extent.maxKey = Math.max(extent.maxKey, key);
@@ -878,33 +867,39 @@ const seedForeignIndex = (
   );
 
 /**
- * The subset of `foreignIds` the feed already holds, read by foreign key (of `type` in any schema
- * version, when set) rather than from the bounded seed tail, which a message committed long ago has left.
+ * The subset of `foreignIds` the feed already holds, scanned (as `type` objects in any schema version,
+ * when set) rather than read from the bounded seed tail, which a message committed long ago has left. Paged
+ * like the seed, newest first, since EDGE cannot filter a feed by key and answers no more than 32 MiB; stops
+ * once every id is found.
  */
-const findCommitted = (
+const findCommitted = Effect.fn('cursor.findCommitted')(function* (
   feed: Feed.Feed,
   foreignKeySource: string,
   foreignIds: ReadonlySet<string>,
-  type: Type.AnyObj | undefined,
-): Effect.Effect<ReadonlySet<string>, never, Database.Service> => {
-  const keys = [...foreignIds].map((id) => ({ source: foreignKeySource, id }));
-  const filter = type ? Filter.foreignKeys(DXN.make(Type.getTypename(type)), keys) : Filter.everything();
-  return Feed.query(feed, Query.select(filter)).run.pipe(
-    Effect.map((items) => {
-      const committed = new Set<string>();
-      for (const item of items) {
-        for (const key of Obj.getMeta(item).keys) {
-          if (key.source === foreignKeySource && foreignIds.has(key.id)) {
-            committed.add(key.id);
-          }
+  { pageSize, type }: { readonly pageSize: number; readonly type?: Type.AnyObj },
+) {
+  invariant(pageSize > 0, 'dedup seed page size must be positive');
+  const committed = new Set<string>();
+  const filter = type ? Filter.type(DXN.make(Type.getTypename(type))) : Filter.everything();
+  let read = 0;
+  while (committed.size < foreignIds.size) {
+    const query = Query.select(filter).orderBy(Order.natural('desc')).skip(read).limit(pageSize);
+    const page = yield* Feed.query(feed, query).run;
+    for (const item of page) {
+      for (const key of Obj.getMeta(item).keys) {
+        if (key.source === foreignKeySource && foreignIds.has(key.id)) {
+          committed.add(key.id);
         }
       }
-      return committed;
-    }),
-    Effect.tap((committed) => Effect.annotateCurrentSpan({ lookedUp: foreignIds.size, committed: committed.size })),
-    Effect.withSpan('cursor.findCommitted'),
-  );
-};
+    }
+    read += page.length;
+    if (page.length < pageSize) {
+      break;
+    }
+  }
+  yield* Effect.annotateCurrentSpan({ lookedUp: foreignIds.size, committed: committed.size, read });
+  return committed;
+});
 
 /** How many objects the dedup seed reads from each end of the feed, and how many per query. */
 type SeedBounds = { readonly tail: number; readonly pageSize: number };

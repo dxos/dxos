@@ -161,9 +161,10 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSync.MailSyncProvider, n
                 } satisfies EmailStage.Change;
               });
 
-            const toItem = (email: JmapMail.Email): MailSync.MailSyncItem => ({
+            const toItem = (email: JmapMail.Email, byIdentity: boolean): MailSync.MailSyncItem => ({
               foreignId: email.id,
               key: new Date(email.receivedAt).getTime(),
+              byIdentity,
               process: toMapped(email).pipe(Effect.provide(context)),
             });
 
@@ -226,17 +227,23 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSync.MailSyncProvider, n
                 if (forwardIds) {
                   onEnumerated(forwardIds.length);
                 }
-                return {
-                  additions: jmapEmails(target, folders, {
-                    windows,
+                const fetchItems = (fetchWindows: Cursor.Windows, ids: readonly string[] | undefined) =>
+                  jmapEmails(target, folders, {
+                    windows: fetchWindows,
                     filter,
                     now,
                     onEnumerated,
                     onEstimate,
                     onRetrieved,
-                    forwardIds,
-                  }).pipe(
-                    Stream.map(toItem),
+                    forwardIds: ids,
+                  }).pipe(Stream.map((email) => toItem(email, ids !== undefined)));
+                // The delta's ids and the backward window are fetched apart so each item knows its origin:
+                // the same email can come from both, and only the delta's copy is deduped by identity.
+                const additions = forwardIds
+                  ? Stream.concat(fetchItems({}, forwardIds), fetchItems({ backward: windows.backward }, undefined))
+                  : fetchItems(windows, undefined);
+                return {
+                  additions: additions.pipe(
                     Stream.provideService(JmapMailApi, providerApi),
                     Stream.mapError(MailSync.MailSyncError.wrap()),
                   ),

@@ -116,9 +116,10 @@ export const googleMailSyncProvider = (options: {
                 } satisfies EmailStage.Change;
               });
 
-            const toItem = (message: GoogleMail.Message): MailSync.MailSyncItem => ({
+            const toItem = (message: GoogleMail.Message, byIdentity: boolean): MailSync.MailSyncItem => ({
               foreignId: message.id,
               key: Number.parseInt(message.internalDate),
+              byIdentity,
               process: toMapped(message).pipe(Effect.provide(context)),
             });
 
@@ -185,18 +186,24 @@ export const googleMailSyncProvider = (options: {
                 if (forwardIds) {
                   onEnumerated(forwardIds.length);
                 }
-                return {
-                  additions: fetchMessages({
+                const fetchItems = (fetchWindows: Cursor.Windows, ids: readonly string[] | undefined) =>
+                  fetchMessages({
                     userId,
                     label,
-                    windows,
+                    windows: fetchWindows,
                     searchFilter: filter,
                     onEnumerated,
                     onEstimate,
                     onRetrieved,
-                    forwardIds,
-                  }).pipe(
-                    Stream.map(toItem),
+                    forwardIds: ids,
+                  }).pipe(Stream.map((message) => toItem(message, ids !== undefined)));
+                // The delta's ids and the backward window are fetched apart so each item knows its origin:
+                // the same message can come from both, and only the delta's copy is deduped by identity.
+                const additions = forwardIds
+                  ? Stream.concat(fetchItems({}, forwardIds), fetchItems({ backward: windows.backward }, undefined))
+                  : fetchItems(windows, undefined);
+                return {
+                  additions: additions.pipe(
                     Stream.provideService(GoogleMailApi, api),
                     Stream.mapError(MailSync.MailSyncError.wrap()),
                   ),

@@ -75,6 +75,12 @@ export type MailSyncSourceOptions = {
 export type MailSyncItem = {
   readonly foreignId: string;
   readonly key: number;
+  /**
+   * Enumerated by identity (an incremental delta's created ids) rather than by key window, so its key is
+   * a provider date that says nothing about what was synced. Set per item, since the same id can also
+   * arrive from a window in the same run.
+   */
+  readonly byIdentity?: boolean;
   readonly process: Effect.Effect<EmailStage.Change | undefined, MailSyncError, never>;
 };
 
@@ -99,9 +105,9 @@ export type MailSyncStreams = {
    */
   readonly reconciles: Stream.Stream<EmailStage.Change, MailSyncError, Cursor.Service>;
   /**
-   * The additions enumerated by identity (an incremental delta's created ids) rather than by key window.
-   * Dedup checks these against the feed instead of the synced range (see `Cursor.LayerOptions.identityForeignIds`),
-   * since a backdated message keeps its original date.
+   * The ids an incremental delta enumerated by identity rather than by key window, which dedup looks up in
+   * the feed (see `Cursor.LayerOptions.identityForeignIds`), since a backdated message keeps its original
+   * date. The additions that came from them carry {@link MailSyncItem.byIdentity}.
    */
   readonly identityForeignIds?: readonly string[];
 };
@@ -659,6 +665,7 @@ export const runMailSync = (
         'dedup',
         (item) => item.foreignId,
         (item) => item.key,
+        (item) => item.byIdentity === true,
       ),
       // The meter advances here, on the messages the run keeps, not at retrieval: fetches run ahead of
       // the cap, and a message fetched past it is fetched again, and would be counted again, by the next

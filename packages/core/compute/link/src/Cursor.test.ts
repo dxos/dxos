@@ -679,22 +679,23 @@ describe('dedupStage with identity-enumerated items', () => {
       ).pipe(Effect.provide(Database.layer(db))),
     );
 
-    type Item = { id: string; key: number };
+    type Item = { id: string; key: number; byIdentity: boolean };
     const delta = ['backdated-70', 'already-60', 'backdated-40'];
     const { kept, extent } = await Effect.gen(function* () {
       const kept = yield* Stream.fromIterable<Item>([
         // A backdated import Gmail reports in the history delta: new, but dated inside (min, max).
-        { id: 'backdated-70', key: 70 },
-        { id: 'already-60', key: 60 },
+        { id: 'backdated-70', key: 70, byIdentity: true },
+        { id: 'already-60', key: 60, byIdentity: true },
         // Below `min`: left to the backward window, and must not mark (40, 50) as synced meanwhile.
-        { id: 'backdated-40', key: 40 },
+        { id: 'backdated-40', key: 40, byIdentity: true },
         // Enumerated by the key window, so the interior shortcut still drops it.
-        { id: 'window-80', key: 80 },
+        { id: 'window-80', key: 80, byIdentity: false },
       ]).pipe(
         Cursor.dedupStage(
           'dedup',
           (item: Item) => item.id,
           (item: Item) => item.key,
+          (item: Item) => item.byIdentity,
         ),
         Stream.runCollect,
       );
@@ -717,6 +718,8 @@ describe('dedupStage with identity-enumerated items', () => {
             minKey: 50,
             trackRange: true,
             dedupSeedTail: 1,
+            // One object per page, so the lookup pages through the feed to reach `already-60`.
+            dedupSeedPageSize: 1,
             dedupSeedType: Expando.Expando,
             identityForeignIds: delta,
             stats: { newMessages: 0 },
@@ -730,6 +733,53 @@ describe('dedupStage with identity-enumerated items', () => {
     expect([...kept].map((item) => item.id)).toEqual(['backdated-70']);
     expect({ max: cursor.max, min: cursor.min }).toEqual({ max: '100', min: '50' });
     expect(extent).toEqual({ maxKey: 80, minKey: 80 });
+  });
+  test('a delta id the backward window also lists below min commits from the window', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Cursor.Cursor, Feed.Feed, Expando.Expando] });
+    const feed = db.add(Feed.make());
+    const target = db.add(Expando.make({ name: 'mailbox' }));
+    const cursor = db.add(Cursor.makeFeed({ source: Ref.make(feed), target: Ref.make(target), max: '100', min: '50' }));
+
+    type Item = { id: string; key: number; byIdentity: boolean };
+    const { kept, extent } = await Effect.gen(function* () {
+      const kept = yield* Stream.fromIterable<Item>([
+        // The delta's copy is left to the backward window ...
+        { id: 'both-40', key: 40, byIdentity: true },
+        // ... and the window's copy of the same id is that window, so it commits and lowers `min`.
+        { id: 'both-40', key: 40, byIdentity: false },
+        { id: 'window-30', key: 30, byIdentity: false },
+      ]).pipe(
+        Cursor.dedupStage(
+          'dedup',
+          (item: Item) => item.id,
+          (item: Item) => item.key,
+          (item: Item) => item.byIdentity,
+        ),
+        Stream.runCollect,
+      );
+      return { kept, extent: (yield* Cursor.Service).extent };
+    }).pipe(
+      Effect.provide(
+        Layer.provideMerge(
+          Cursor.layer({
+            cursor,
+            feed,
+            foreignKeySource: 'test',
+            maxKey: 100,
+            minKey: 50,
+            trackRange: true,
+            dedupSeedType: Expando.Expando,
+            identityForeignIds: ['both-40'],
+            stats: { newMessages: 0 },
+          }),
+          Database.layer(db),
+        ),
+      ),
+      EffectEx.runAndForwardErrors,
+    );
+
+    expect([...kept].map((item) => item.id)).toEqual(['both-40', 'window-30']);
+    expect(extent).toEqual({ maxKey: 40, minKey: 30 });
   });
 });
 
