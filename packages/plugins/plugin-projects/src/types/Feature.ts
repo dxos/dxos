@@ -16,13 +16,15 @@ import { Task } from '@dxos/types';
 // Status
 //
 
-/** Where the feature is now; authored by whoever knows, never derived. */
-export const Status = Schema.Literals(['planned', 'in-progress', 'prototype', 'operational', 'failing']);
+/**
+ * How far the feature has come; authored by whoever knows, never derived. Whether someone is working on it is a
+ * separate axis, derived from its linked tasks, so an operational feature can be under work as well as a planned one.
+ */
+export const Status = Schema.Literals(['planned', 'prototype', 'operational', 'failing']);
 export type Status = Schema.Schema.Type<typeof Status>;
 
 export const StatusOptions: Task.Option<Status>[] = [
   { id: 'planned', title: 'Planned', color: 'neutral', icon: 'ph--circle-dashed--regular' },
-  { id: 'in-progress', title: 'In progress', color: 'sky', icon: 'ph--circle-half--regular' },
   { id: 'prototype', title: 'Prototype', color: 'amber', icon: 'ph--flask--regular' },
   { id: 'operational', title: 'Operational', color: 'emerald', icon: 'ph--seal-check--regular' },
   { id: 'failing', title: 'Failing', color: 'rose', icon: 'ph--warning-octagon--regular' },
@@ -52,29 +54,44 @@ export type CodeLink = Schema.Schema.Type<typeof CodeLink>;
 // Feature
 //
 
-/** Where a feature's card sits on its project's canvas. */
+/** Where a feature's card sits on the canvas of its map. */
 export const Position = Schema.Struct({ x: Schema.Number, y: Schema.Number });
 export type Position = Schema.Schema.Type<typeof Position>;
 
-/** A part of a feature with its own status; specs, dependencies and tasks belong to the feature. */
-export const Subfeature = Schema.Struct({
-  name: Schema.String.pipe(Schema.annotate({ title: 'Name' })),
-  status: Status.pipe(Schema.annotate({ title: 'Status' })),
+/** One thing the feature must do, as stated in its spec; `id` is the spec's own (`F-3.2`) when it came from one. */
+export const Requirement = Schema.Struct({
+  id: Schema.optional(Schema.String.pipe(Schema.annotate({ title: 'Id' }))),
+  text: Schema.String.pipe(Schema.annotate({ title: 'Requirement' })),
 });
-export type Subfeature = Schema.Schema.Type<typeof Subfeature>;
+export type Requirement = Schema.Schema.Type<typeof Requirement>;
 
 /**
- * A goal state: something the product should do. Authored in ECHO; the repo specs that describe how
- * it is met stay in git and are referenced by path.
+ * A goal state: something the product should do, with the requirements that define it. Features nest: a feature with
+ * a `parent` is one of that feature's subfeatures. A spec block (`feat F-3` and its `req` lines) is the unstructured
+ * source a feature's requirements are extracted from.
  */
-export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.feature', '0.1.0'))(
+export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.feature', '0.2.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.annotate({ title: 'Name' })),
 
     description: Schema.optional(
       Schema.String.pipe(
         Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
-        Schema.annotate({ title: 'Description' }),
+        Schema.annotate({
+          title: 'Description',
+          description:
+            'The ideal: what the feature does when complete and why it matters, in the present tense. Not its current state.',
+        }),
+      ),
+    ),
+
+    requirements: Schema.optional(
+      Schema.Array(Requirement).pipe(
+        Schema.annotate({
+          title: 'Requirements',
+          description:
+            'What the feature must do, one testable statement each, extracted from its spec block (its req lines) where there is one.',
+        }),
       ),
     ),
 
@@ -86,18 +103,23 @@ export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.fe
       }),
     ),
 
-    /** Repo paths of the specs that describe this feature, e.g. `packages/plugins/plugin-inbox/PLUGIN.mdl#F-3`. */
-    specs: Schema.optional(Schema.Array(Schema.String).pipe(Schema.annotate({ title: 'Specs' }))),
-
     /**
-     * The parts this feature breaks down into, in display order. Records rather than features: the map is
-     * two levels deep, a part has a status but no specs, dependencies or tasks of its own.
+     * The spec blocks the requirements were extracted from, e.g. `packages/plugins/plugin-inbox/PLUGIN.mdl#F-3`;
+     * provenance, so a re-import updates the feature rather than adding another.
      */
-    subfeatures: Schema.optional(Schema.Array(Subfeature).pipe(Schema.annotate({ title: 'Subfeatures' }))),
+    specs: Schema.optional(Schema.Array(Schema.String).pipe(Annotation.FormInputAnnotation.set(false))),
 
     /**
-     * The project whose feature board lists this feature. Held by the feature rather than the project, since a
-     * project is a generic compute type that knows nothing of features; not owned, so deleting a project keeps it.
+     * The feature this one is a part of; its map shows this feature when the reader zooms into the parent. A feature
+     * with a parent sits on no project of its own: it belongs to the project its root feature is on.
+     */
+    parent: Schema.optional(
+      Schema.suspend((): Ref.RefSchema<Feature> => Ref.Ref(Feature)).pipe(Annotation.FormInputAnnotation.set(false)),
+    ),
+
+    /**
+     * The project whose feature map lists this feature at the top level. Held by the feature rather than the project,
+     * since a project is a generic compute type that knows nothing of features; not owned, so deleting a project keeps it.
      */
     project: Schema.optional(Ref.Ref(Project.Project).pipe(Annotation.FormInputAnnotation.set(false))),
 
@@ -107,7 +129,7 @@ export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.fe
      */
     code: Schema.optional(Schema.Array(CodeLink).pipe(Annotation.FormInputAnnotation.set(false))),
 
-    /** Where the user dragged the card on its project's canvas; a feature without one is laid out automatically. */
+    /** Where the user dragged the card on its map (its project's, or its parent's); without one it is laid out automatically. */
     position: Schema.optional(Position.pipe(Annotation.FormInputAnnotation.set(false))),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
@@ -119,8 +141,9 @@ export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.fe
   ),
 ) {}
 
-/** `subfeatures` starts as an empty list so two peers lazily creating it cannot each write a fresh one. */
-export const make = (props: Obj.MakeProps<typeof Feature>): Feature => Obj.make(Feature, { subfeatures: [], ...props });
+/** `requirements` starts as an empty list so two peers lazily creating it cannot each write a fresh one. */
+export const make = (props: Obj.MakeProps<typeof Feature>): Feature =>
+  Obj.make(Feature, { requirements: [], ...props });
 
 export const instanceOf = (value: unknown): value is Feature => Obj.instanceOf(Feature, value);
 

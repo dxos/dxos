@@ -68,7 +68,7 @@ const cardIn = (canvasElement: HTMLElement, status: FeatureStatus, id: string) =
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     await waitFor(() => expect(cardIn(canvasElement, 'planned', 'triage')).toBeTruthy(), { timeout: 10_000 });
-    await expect(canvasElement.querySelectorAll('[data-testid="board-column"]')).toHaveLength(5);
+    await expect(canvasElement.querySelectorAll('[data-testid="board-column"]')).toHaveLength(4);
 
     const source = cardIn(canvasElement, 'planned', 'triage');
     const target = column(canvasElement, 'prototype').querySelector<HTMLElement>('[data-mosaic-container-state]');
@@ -95,7 +95,7 @@ export const Default: Story = {
   },
 };
 
-/** Selection follows focus across columns, as in the cards view: the arrow keys move it, and Escape clears it. */
+/** Selection follows focus across columns: the arrow keys move it, and Escape clears it. */
 export const Selection: Story = {
   play: async ({ canvasElement }) => {
     const card = (id: string) => canvasElement.querySelector<HTMLElement>(`[data-feature="${id}"]`);
@@ -103,14 +103,14 @@ export const Selection: Story = {
       [...canvasElement.querySelectorAll('[aria-selected="true"]')].map((element) =>
         element.getAttribute('data-feature'),
       );
-    await waitFor(() => expect(card('feature-map')).toBeTruthy(), { timeout: 10_000 });
-    const featureMap = card('feature-map');
-    if (!featureMap) {
-      throw new Error('no card for feature-map');
+    await waitFor(() => expect(card('triage')).toBeTruthy(), { timeout: 10_000 });
+    const triage = card('triage');
+    if (!triage) {
+      throw new Error('no card for triage');
     }
-    await userEvent.click(featureMap);
-    await waitFor(() => expect(selected()).toEqual(['feature-map']));
-    // In progress → Prototype: the next column's card is selected, and the rest fade.
+    await userEvent.click(triage);
+    await waitFor(() => expect(selected()).toEqual(['triage']));
+    // Planned → Prototype: the next column's card is selected, and the rest fade.
     await userEvent.keyboard('{ArrowRight}');
     await waitFor(() => expect(selected()).toEqual(['sync']));
     await userEvent.keyboard('{Escape}');
