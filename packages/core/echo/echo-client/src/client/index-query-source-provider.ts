@@ -109,11 +109,14 @@ export class IndexQuerySourceProvider implements QuerySourceProvider {
   }
 }
 
+/** The part of the hypergraph a source hydrates through: the database an object belongs to, and refs. */
+export type IndexQueryGraph = Pick<Hypergraph.Hypergraph, 'getDatabase' | 'createRefResolver'>;
+
 export type IndexQuerySourceProps = {
   service: QueryService.Client;
   runtime: EffectContext.Context<never>;
   objectLoader: ObjectLoader;
-  graph: Hypergraph.Hypergraph;
+  graph: IndexQueryGraph;
   /** Overrides {@link QUERY_SERVICE_TIMEOUT}; tests drive the budget rather than waiting it out. */
   queryTimeout?: number;
   /** Fires as the host's index makes progress; each restarts a one-shot query's index budget. */

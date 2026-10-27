@@ -326,7 +326,7 @@ describe('IndexQuerySource', () => {
       graph: {
         createRefResolver: () => new StaticRefResolver(),
         getDatabase: () => undefined,
-      } as unknown as Hypergraph.Hypergraph,
+      },
     });
     onTestFinished(() => source.close());
 
