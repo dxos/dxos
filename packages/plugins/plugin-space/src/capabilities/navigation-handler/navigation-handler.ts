@@ -23,14 +23,14 @@ import { SpaceOperation } from '#types';
 
 import { JoinByKeyError, NoIdentityError } from '../../errors.ts';
 import { readJoinSpaceKey } from './join-space-key.ts';
-import { type ShareLinkOptions, handleShareLink } from './share-link-handler.ts';
+import { handleShareLink } from './share-link-handler.ts';
 
 export type NavigationHandlerOptions = {
   invitationProp?: string;
   /** Set false when another plugin (e.g. plugin-onboarding) owns the invitation URL param. */
   invitationUrlHandler?: boolean;
   joinSpaceKeyProp?: string;
-} & ShareLinkOptions;
+};
 
 /**
  * NavigationHandlers for space invitation URL params.
@@ -41,7 +41,6 @@ export default Capability.makeModule(
     invitationProp = 'spaceInvitationCode',
     invitationUrlHandler = true,
     joinSpaceKeyProp = 'spaceKey',
-    edgeUrl,
   }: NavigationHandlerOptions = {}) {
     const capabilities = yield* Capability.Service;
     const operationService = yield* Capabilities.OperationInvoker;
@@ -118,7 +117,7 @@ export default Capability.makeModule(
     };
 
     const shareLinkHandler: AppCapabilities.NavigationHandler = (url: URL) =>
-      handleShareLink(url, joining, { edgeUrl }).pipe(
+      handleShareLink(url, joining).pipe(
         Effect.provideService(Capability.Service, capabilities),
         Effect.provideService(Operation.Service, operationService),
       );

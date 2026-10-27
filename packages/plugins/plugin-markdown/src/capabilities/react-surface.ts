@@ -30,12 +30,10 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Tabpanel, Markdown.Document, (data) => !data.variant),
         ),
         component: MarkdownContainer,
-        props: ({ role, ref, data }) => ({
-          id: Obj.getURI(data.subject),
-          attendableId: data.attendableId,
-          subject: data.subject,
-          // Only the article role carries it; a section or tab panel is always editable.
-          readonly: 'readonly' in data && data.readonly === true,
+        props: ({ role, ref, data: { subject, attendableId } }) => ({
+          id: Obj.getURI(subject),
+          attendableId,
+          subject,
           role,
           ref,
         }),
@@ -50,12 +48,10 @@ export default Capability.makeModule(() =>
           AppSurface.object(AppSurface.Tabpanel, Text.Text),
         ),
         component: MarkdownContainer,
-        props: ({ role, ref, data }) => ({
-          id: Obj.getURI(data.subject),
-          attendableId: data.attendableId,
-          subject: data.subject,
-          // Only the article role carries it; a section or tab panel is always editable.
-          readonly: 'readonly' in data && data.readonly === true,
+        props: ({ role, ref, data: { subject, attendableId } }) => ({
+          id: Obj.getURI(subject),
+          attendableId,
+          subject,
           role,
           ref,
         }),

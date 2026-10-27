@@ -17595,15 +17595,6 @@ importers:
 
   packages/plugins/plugin-space:
     dependencies:
-      '@automerge/automerge':
-        specifier: 3.5.0
-        version: 3.5.0
-      '@automerge/automerge-repo':
-        specifier: 'catalog:'
-        version: 2.6.0-subduction.49(patch_hash=7ca7d5e941ce5c8776770b8a73c0484c54eba5e937ae2d6284746b01ccf6a443)
-      '@bufbuild/protobuf':
-        specifier: 'catalog:'
-        version: 2.11.0
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -17646,9 +17637,6 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
-      '@dxos/edge-client':
-        specifier: workspace:*
-        version: link:../../core/mesh/edge-client
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
@@ -17658,9 +17646,6 @@ importers:
       '@dxos/extractor':
         specifier: workspace:*
         version: link:../../core/compute/extractor
-      '@dxos/functions-runtime-cloudflare':
-        specifier: workspace:*
-        version: link:../../core/compute/functions-runtime-cloudflare
       '@dxos/graph':
         specifier: workspace:*
         version: link:../../common/graph
@@ -17776,9 +17761,6 @@ importers:
       '@dxos/agent-runtime':
         specifier: workspace:*
         version: link:../../core/compute/agent-runtime
-      '@dxos/crypto':
-        specifier: workspace:*
-        version: link:../../common/crypto
       '@dxos/extractor-lib':
         specifier: workspace:*
         version: link:../../core/compute/extractor-lib

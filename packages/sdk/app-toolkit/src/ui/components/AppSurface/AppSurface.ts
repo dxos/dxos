@@ -5,7 +5,7 @@
 // @import-as-namespace
 
 import type * as Schema from 'effect/Schema';
-import { type ComponentType, type ReactNode, createContext, useContext, useLayoutEffect } from 'react';
+import { type ComponentType, type ReactNode } from 'react';
 
 import * as Role from '@dxos/app-framework/Role';
 import * as Surface from '@dxos/app-framework/Surface';
@@ -271,11 +271,6 @@ export type ArticleData<Subject = unknown, Props extends {} = {}, CompanionTo = 
    * intrinsic content, so the surface can fit its content to the box instead of sizing to it.
    */
   extrinsic?: boolean;
-  /**
-   * Set when the subject cannot take edits, such as an object a share link's thin client serves before the guest has
-   * joined; a surface that can render read-only should, and one that cannot is free to ignore it.
-   */
-  readonly?: boolean;
 } & (unknown extends CompanionTo ? { companionTo?: CompanionTo } : { companionTo: CompanionTo }) &
   Props;
 
@@ -385,41 +380,6 @@ export const Slide: Role.Role<SectionData<any>> = Role.make('org.dxos.role.slide
 
 /** Role token for the `tabpanel` role. Shares the article data shape. */
 export const Tabpanel: Role.Role<ArticleData<any>> = Role.make('org.dxos.role.tabpanel');
-
-/**
- * Role token for the content of a plank whose graph node has not resolved yet: a plugin that knows something about
- * the node id (e.g. a share link's first look) stands in until the node and its article arrive.
- */
-export const PendingArticle: Role.Role<PendingArticleData> = Role.make('org.dxos.role.pendingArticle');
-
-export type PendingArticleData = {
-  attendableId: string;
-  /** The node the plank is waiting for. */
-  nodeId: string;
-};
-
-/** What a {@link PendingArticle} stand-in knows about the object it stands in for, so the plank can be titled. */
-export type PendingHeading = {
-  label: string;
-  icon?: string;
-};
-
-const PendingHeadingContext = createContext<((heading: PendingHeading | undefined) => void) | undefined>(undefined);
-
-/** Provided by a plank around its {@link PendingArticle} stand-in, which titles the plank through {@link usePendingHeading}. */
-export const PendingHeadingProvider = PendingHeadingContext.Provider;
-
-/** Titles the pending plank a stand-in renders in, while the stand-in is mounted. */
-export const usePendingHeading = (heading: PendingHeading | undefined): void => {
-  const setHeading = useContext(PendingHeadingContext);
-  const label = heading?.label;
-  const icon = heading?.icon;
-  // Before paint, so a plank that mounts with its stand-in never shows a frame without the title.
-  useLayoutEffect(() => {
-    setHeading?.(label === undefined ? undefined : { label, icon });
-    return () => setHeading?.(undefined);
-  }, [setHeading, label, icon]);
-};
 
 /** Roles whose data contract requires a string `attendableId`. */
 const ATTENDABLE_ROLES = new Set([Article.role, Section.role, Tabpanel.role]);

@@ -17,6 +17,5 @@ export const NavigationHandler = AppCapability.navigationHandler(() => import('.
   props: (options: SpaceSchema.SpacePluginOptions) => ({
     invitationProp: options.invitationProp,
     joinSpaceKeyProp: options.joinSpaceKeyProp,
-    edgeUrl: options.edgeUrl,
   }),
 });

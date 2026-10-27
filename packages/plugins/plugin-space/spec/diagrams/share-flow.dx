@@ -13,20 +13,17 @@ group cloud "EDGE db-service" {
 }
 group guest "Guest browser" {
   node Handler "Share link handler" ref="packages/plugins/plugin-space/src/capabilities/navigation-handler/share-link-handler.ts"
-  node Thin "Thin client" ref="packages/plugins/plugin-space/src/util/thin-client.ts"
-  node Plank "Plank first look" ref="packages/plugins/plugin-space/src/containers/SharePreviewArticle/SharePreviewArticle.tsx"
+  node Plank "Plank" ref="packages/plugins/plugin-deck/src/components/Plank/Plank.tsx"
   node Client "Space join" ref="packages/sdk/client/src/echo/space-list.ts"
   node Guard "Scope guard" ref="packages/core/echo/echo-host/src/db-host/space-state-manager.ts"
 }
 edge Dialog -> ShareOp "copy link"
 edge ShareOp -> Protocol "delegate"
 edge Protocol -> SSM "invitation, scope"
-edge Handler -> Route "signed read"
 edge Route -> SSM "grant"
 edge Route -> Indexer "readObjects"
 edge Route -> Replicator "large documents"
-edge Handler -> Thin "documents"
-edge Thin -> Plank "read-only article"
+edge Handler -> Plank "open"
 edge Handler -> Client "join"
 edge Client -> Join "redeem"
 edge Client -> Guard "syncScope"

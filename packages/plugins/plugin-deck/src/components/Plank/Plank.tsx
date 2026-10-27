@@ -7,13 +7,8 @@ import React, {
   Fragment,
   type KeyboardEventHandler,
   type ReactNode,
-  type RefObject,
   forwardRef,
-  useCallback,
-  useLayoutEffect,
   useMemo,
-  useRef,
-  useState,
 } from 'react';
 
 import * as Surface from '@dxos/app-framework/Surface';
@@ -26,7 +21,6 @@ import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import * as Breadcrumb from '@dxos/react-ui/Breadcrumb';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
-import * as Layout from '@dxos/react-ui/Layout';
 import * as Main from '@dxos/react-ui/Main';
 import * as Popover from '@dxos/react-ui/Popover';
 import * as Theme from '@dxos/react-ui/Theme';
@@ -124,33 +118,10 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     // Each plank is a focus area of the shell; its companion follows it.
     const landmark = Main.useMainLandmark(1, onKeyDown);
     const ref = useComposedRefs<HTMLDivElement>(forwardedRef, landmark.ref);
-    const unresolved = node.data === undefined;
-
-    // The stand-in a pending plank shows stays up after the node resolves, over the article, until that article has
-    // rendered: the reader sees one view become the other rather than the plank empty between them.
-    const [standIn, setStandIn] = useState<string | undefined>(unresolved ? node.id : undefined);
-    if (unresolved && standIn !== node.id) {
-      setStandIn(node.id);
-    }
-    const releaseStandIn = useCallback(() => setStandIn(undefined), []);
-    const articleLoading = useRef(false);
-    useLayoutEffect(() => {
-      // An article that rendered without loading anything never mounted its placeholder to release the stand-in.
-      if (!unresolved && standIn !== undefined && !articleLoading.current) {
-        setStandIn(undefined);
-      }
-    });
-
-    // A stand-in that knows the object titles the plank, so the heading does not change when the article arrives.
-    const [pendingHeading, setPendingHeading] = useState<AppSurface.PendingHeading>();
-    const heading = unresolved ? pendingHeading : undefined;
-    const waiting = pending && !heading;
-    const icon = node.properties?.icon ?? heading?.icon ?? 'ph--circle-dashed--regular';
+    const icon = node.properties?.icon ?? 'ph--circle-dashed--regular';
     // A bare string is taken verbatim by `toLocalizedString`; only the tuple form is looked up.
     const label = Theme.toLocalizedString(
-      node.properties?.label ??
-        heading?.label ??
-        (pending ? (['pending.heading', { ns: meta.profile.key }] as const) : ''),
+      node.properties?.label ?? (pending ? (['pending.heading', { ns: meta.profile.key }] as const) : ''),
       t,
     );
     const data = useMemo<AppSurface.ArticleData>(
@@ -195,8 +166,8 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
               ) : (
                 <Pane.Sigil
                   attendableId={attendableId}
-                  classNames={waiting && 'animate-fade-in'}
-                  style={waiting ? pendingStyle : undefined}
+                  classNames={pending && 'animate-fade-in'}
+                  style={pending ? pendingStyle : undefined}
                 >
                   <span className='sr-only'>{label}</span>
                   <Icon.Icon icon={icon} />
@@ -228,7 +199,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                       <Pane.Title
                         attendableId={attendableId}
                         related={related}
-                        classNames={[waiting && 'text-fg-muted', 'w-auto grow-0 px-(--dx-control-inset) font-normal']}
+                        classNames={[pending && 'text-fg-muted', 'w-auto grow-0 px-(--dx-control-inset) font-normal']}
                       >
                         {label}
                       </Pane.Title>
@@ -240,8 +211,8 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
               <Pane.Title
                 attendableId={attendableId}
                 related={related}
-                classNames={waiting && ['text-fg-muted', 'animate-fade-in']}
-                style={waiting ? pendingStyle : undefined}
+                classNames={pending && ['text-fg-muted', 'animate-fade-in']}
+                style={pending ? pendingStyle : undefined}
               >
                 {label}
               </Pane.Title>
@@ -250,30 +221,21 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
             {controls}
           </Pane.Toolbar>
         )}
-        <Pane.Content classNames={standIn !== undefined && 'relative'}>
-          {!unresolved && (
+        <Pane.Content>
+          {node.data === undefined ? (
+            // A plank with no subject: the URL named it and nothing has resolved it yet, so there is
+            // no Article to ask for. The same shell stands in until the Article's own module lands,
+            // so the plank does not change under the reader on the way there.
+            PLANK_LOADING
+          ) : (
             <Surface.Surface
               key={node.id}
               type={AppSurface.Article}
               data={data}
               limit={1}
               fallback={fallback}
-              placeholder={
-                standIn === undefined ? (
-                  PLANK_LOADING
-                ) : (
-                  <ArticleLoading loading={articleLoading} onLoaded={releaseStandIn} />
-                )
-              }
+              placeholder={PLANK_LOADING}
             />
-          )}
-          {standIn !== undefined && (
-            // A plank with no subject: the URL named it and nothing has resolved it yet, so there is
-            // no Article to ask for. A plugin that knows something about the id may stand in; the
-            // same empty shell shows otherwise, so the plank does not change under the reader.
-            <AppSurface.PendingHeadingProvider value={setPendingHeading}>
-              <PlankPending classNames={!unresolved && 'dx-cover'} attendableId={attendableId} nodeId={standIn} />
-            </AppSurface.PendingHeadingProvider>
           )}
         </Pane.Content>
       </Pane.Root>
@@ -282,33 +244,3 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
 );
 
 Plank.displayName = 'Plank';
-
-/** The shell {@link PLANK_LOADING} draws, holding whatever the pending-article role offers for the node. */
-const PlankPending = ({ classNames, attendableId, nodeId }: Util.ThemedClassName<AppSurface.PendingArticleData>) => {
-  const data = useMemo<AppSurface.PendingArticleData>(() => ({ attendableId, nodeId }), [attendableId, nodeId]);
-  return (
-    <Layout.Flex column classNames={['dx-attention-surface', classNames]}>
-      <Surface.Surface type={AppSurface.PendingArticle} data={data} limit={1} placeholder={null} />
-    </Layout.Flex>
-  );
-};
-
-/**
- * The article's placeholder while a stand-in covers it: renders nothing, and lets the stand-in go once the article
- * replaces it.
- */
-const ArticleLoading = ({ loading, onLoaded }: { loading: RefObject<boolean>; onLoaded: () => void }) => {
-  useLayoutEffect(() => {
-    loading.current = true;
-    return () => {
-      loading.current = false;
-      // Deferred, since a remount (React's development double-mount) runs this before mounting it again.
-      queueMicrotask(() => {
-        if (!loading.current) {
-          onLoaded();
-        }
-      });
-    };
-  }, [loading, onLoaded]);
-  return null;
-};

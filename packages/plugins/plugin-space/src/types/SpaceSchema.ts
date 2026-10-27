@@ -59,12 +59,6 @@ export type SpacePluginOptions = {
   shareableLinkOrigin?: string;
 
   /**
-   * EDGE's URL, so a share link reads its object's first look while the client is still initializing; read from the
-   * client's config once it has, otherwise.
-   */
-  edgeUrl?: string;
-
-  /**
    * Path appended to shareableLinkOrigin to form the invitation base URL.
    * Defaults to '/'.
    */

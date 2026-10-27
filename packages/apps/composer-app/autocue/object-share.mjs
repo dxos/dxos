@@ -114,7 +114,6 @@ let openedAt;
 
 /** The stages of opening the link that the stopwatch shows, in the order they happen. */
 const STAGES = [
-  ['firstLook', 'First look from EDGE'],
   ['client', 'Composer started'],
   ['identity', 'Identity created'],
   ['joined', 'Joined the space'],
@@ -165,16 +164,9 @@ const STOPWATCH = ({ text, spaceId, stages }) => {
   };
   const checkRendered = () => {
     const roots = [...document.querySelectorAll('[data-testid="composer.markdownRoot"]')];
-    const holdsText = (root) => root.textContent.includes(text);
-    // The first look is the thin client's read-only article, inside the plank's stand-in.
-    mark(
-      'firstLook',
-      roots.some((root) => root.closest('[data-testid="space.sharePreview"]') && holdsText(root)),
-    );
-    // The live article, from the full client, outside the stand-in.
     mark(
       'rendered',
-      roots.some((root) => !root.closest('[data-testid="space.sharePreview"]') && holdsText(root)),
+      roots.some((root) => root.textContent.includes(text)),
     );
   };
   const tick = () => {
@@ -224,58 +216,6 @@ const timeOpening = async (page) => {
     }
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
-};
-
-/** The share link's payload, as `encodeSharePayload` in plugin-space wrote it. */
-const decodeSharePayload = async (link) => {
-  const encoded = new URL(link).searchParams.get('share').replaceAll('-', '+').replaceAll('_', '/');
-  const bytes = Uint8Array.from(atob(encoded), (char) => char.charCodeAt(0));
-  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
-  return JSON.parse(await new Response(stream).text());
-};
-
-/** Base64 of the bytes an `exec-query` row carries, which its JSON writes as an index-keyed object. */
-const rowBytesToBase64 = (bytes) => {
-  const array = Uint8Array.from(Array.isArray(bytes) ? bytes : Object.values(bytes));
-  return btoa(Array.from(array, (byte) => String.fromCharCode(byte)).join(''));
-};
-
-/**
- * Answers Bob's first-look read as EDGE's `shared-objects` route would, for a bundle pointed at an EDGE that does not
- * serve it yet: from the same EDGE's query endpoint, whose rows carry the document bytes the index backs each object
- * with, so the answer still costs one EDGE round trip for the same documents. It checks neither the signature nor the
- * scope, which EDGE's own tests cover, and it serves only documents small enough for the index to back.
- */
-const serveSharedObjects = async (context, link) => {
-  const { spaceId, objects } = await decodeSharePayload(link);
-  const query = {
-    type: 'from',
-    query: { type: 'select', filter: { type: 'object', typename: null, id: objects, props: {} } },
-    from: { _tag: 'scope', scopes: [{ _tag: 'space', spaceId }] },
-  };
-  await context.route('**/db/spaces/*/shared-objects', async (route) => {
-    const response = await route.fetch({
-      url: route
-        .request()
-        .url()
-        .replace(/shared-objects$/, 'exec-query'),
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      postData: JSON.stringify({ query: JSON.stringify(query) }),
-    });
-    const { data } = await response.json();
-    const rows = data.results.filter(({ documentId, bytes }) => documentId && bytes);
-    await route.fulfill({
-      headers: { 'access-control-allow-origin': '*' },
-      json: {
-        success: true,
-        data: {
-          objects: rows.map(({ id, documentId, heads }) => ({ id, documentId, heads: heads ?? [] })),
-          documents: rows.map(({ documentId, bytes }) => ({ documentId, data: rowBytesToBase64(bytes) })),
-        },
-      },
-    });
-  });
 };
 
 export const steps = [
@@ -378,9 +318,6 @@ export const steps = [
     subtitle: 'QA-3 step 3: Open the link on the guest',
     run: async ({ peers: { alice, bob } }) => {
       await alice.click(alice.page.getByTestId('share-object-dialog.done'));
-      if (process.env.SHARED_OBJECTS_VIA_QUERY) {
-        await serveSharedObjects(bob.context, shareLink);
-      }
       await bob.context.addInitScript(STOPWATCH, {
         text: SHARED_TEXT,
         spaceId: new URL(shareLink).pathname.split('/')[2],

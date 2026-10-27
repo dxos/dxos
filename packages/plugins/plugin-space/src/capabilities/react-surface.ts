@@ -33,7 +33,6 @@ import {
   type RenameSubject,
   ShareObjectDialog,
   type ShareObjectDialogProps,
-  SharePreviewArticle,
   SmallPresenceLive,
   SpaceHomeArticle,
   SyncStatus,
@@ -104,12 +103,6 @@ export default Capability.makeModule(
         filter: AppSurface.object(AppSurface.Article, Collection.Collection),
         component: CollectionArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
-      }),
-      Surface.create({
-        id: 'sharePreview',
-        filter: Surface.makeFilter(AppSurface.PendingArticle),
-        component: SharePreviewArticle,
-        props: ({ data: { attendableId, nodeId } }) => ({ attendableId, nodeId }),
       }),
       Surface.create({
         id: 'recordArticle',

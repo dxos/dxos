@@ -26,9 +26,6 @@
       "path": "../../common/context"
     },
     {
-      "path": "../../common/crypto"
-    },
-    {
       "path": "../../common/display-name"
     },
     {
@@ -68,9 +65,6 @@
       "path": "../../core/compute/extractor-lib"
     },
     {
-      "path": "../../core/compute/functions-runtime-cloudflare"
-    },
-    {
       "path": "../../core/compute/progress"
     },
     {
@@ -90,9 +84,6 @@
     },
     {
       "path": "../../core/halo/halo-react"
-    },
-    {
-      "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../core/protocols"

@@ -486,11 +486,11 @@ feat F-2: Membership and Sharing
     then: op:SpaceOperation.ShareObject creates a delegated multi-use invitation, writes the scope beside it in the control feed as a credential EDGE reads, and the link carries the invitation with the object's scope (the object, every object it references or links to, the space properties, and each of these objects' strong dependencies — its parent and a type stored in the space — without the dependencies' own references) and the plugins that render that scope
   req F-2.7:
     when: someone opens a share link
-    then: a member lands on the object; a non-member joins in the background without a dialog, replicates only the scope, has the plugins enabled, and lands on the object, whose plank opens at once and shows the first look (F-2.9) until the space has opened; a browser with no identity gets one first, with no welcome screen, and creates its own spaces only once the shared space is ready; a browser that has never run Composer starts with only the core plugins and those the link names
+    then: a member lands on the object; a non-member joins in the background without a dialog, replicates only the scope, has the plugins enabled, and lands on the object, whose plank opens at once and shows the object once the space has opened (F-2.9); a browser with no identity gets one first, with no welcome screen, and creates its own spaces only once the shared space is ready; a browser that has never run Composer starts with only the core plugins and those the link names
   req F-2.8: A space joined through a share link replicates only the documents of its scope; the guest's own client enforces this, and EDGE does not.
   req F-2.9:
     when: someone opens a share link that carries an invitation
-    then: before the guest has an identity, the app reads the scope's objects from EDGE (`POST /db/spaces/<id>/shared-objects`), signed with the invitation's guest key, and the object's plank shows the object as EDGE last indexed it, read-only, until the joined space's object replaces it in place; a type with no preview of its own shows the object's name; a failed read loses only the first look
+    then: the object's plank waits for the joined space and shows no first look of the object; EDGE serves the scope's documents to a request signed with the invitation's guest key (`POST /db/spaces/<id>/shared-objects`), which the client's boot cache is to open from (`spec/OBJECT-SHARE.mdl` D-23)
 ```
 
 ```mdl
@@ -884,6 +884,15 @@ decision D-14: The share link's handler returns as soon as it has started the fi
   why: Projection waits on every navigation handler, and the handler waited for the guest's identity, so the plank appeared only once the identity existed — later than EDGE's answer in a measured run (6.8 s against 5.0 s), leaving the first look nowhere to show. The plank keeps the URL's `<type>+<id>` id until the space opens, so a first look is found by its space and object ids rather than by the plank's id.
   rejected:
     - Open the plank from the first look itself — projection then replaces it with the URL's own plank once the handler returns, and the plank mounts twice.
+```
+
+```mdl
+decision D-15: A share link's plank shows no first look from a thin client; the first look is to come from the client's boot cache instead, as `spec/OBJECT-SHARE.mdl` D-23 records. Supersedes [D-13].
+  date: 2026-10-27
+  by: user:mykola-vrmchk
+  affects: [F-2.7, F-2.9]
+  supersedes: D-13
+  source: https://github.com/dxos/dxos/pull/14261
 ```
 
 ---
