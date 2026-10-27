@@ -315,15 +315,16 @@ const encodeSnapshot = (data: Obj.JSON): Uint8Array =>
 const MERGE_PAIRS_PER_STATEMENT = 20;
 
 /**
+ * Whether a key can be written as a quoted SQLite JSON path label, which takes every character literally up to the
+ * closing `"` and has no escape for one; `\\` is merged in JS too, since only newer SQLite reads it literally, and
+ * NUL because SQLite ends the path there.
+ */
+const isPathSafeKey = (key: string): boolean => !key.includes('"') && !key.includes('\\') && !key.includes('\u0000');
+
+/**
  * Expressions that apply a partial object's keys to `snapshot` with object-spread semantics: each present key
  * replaces its prior value whole, and a key whose value `JSON.stringify` would drop removes the prior one.
  */
-/**
- * Whether a key can be written as a quoted SQLite JSON path label, which takes every character literally up to the
- * closing `"` and has no escape for one; `\\` is merged in JS too, since only newer SQLite reads it literally.
- */
-const isPathSafeKey = (key: string): boolean => !key.includes('"') && !key.includes('\\');
-
 const mergeExpressions = (sql: SqlClient.SqlClient, data: Record<string, unknown>): Statement.Fragment[] => {
   const sets: Statement.Fragment[] = [];
   const removes: Statement.Fragment[] = [];

@@ -136,9 +136,11 @@ describe('ObjectSnapshotIndex', () => {
       yield* store.update([{ ...full, updatedAt: 2, data: pathSafe }]);
       const unsafe = { id, 'q"uote': 4, 'back\\slash': 5, 'a.b': undefined };
       yield* store.update([{ ...full, updatedAt: 3, data: unsafe }]);
+      const nul = { id, 'a\u0000b': 6 };
+      yield* store.update([{ ...full, updatedAt: 4, data: nul }]);
 
       const [stored] = yield* store.querySnapshotsJSON([full.recordId]);
-      expect(stored.snapshot).toEqual(JSON.parse(JSON.stringify({ ...full.data, ...pathSafe, ...unsafe })));
+      expect(stored.snapshot).toEqual(JSON.parse(JSON.stringify({ ...full.data, ...pathSafe, ...unsafe, ...nul })));
     }, Effect.provide(TestLayer)),
   );
 

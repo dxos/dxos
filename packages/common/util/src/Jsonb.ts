@@ -109,7 +109,6 @@ let idle: Writer | undefined;
 
 const encoder = new TextEncoder();
 
-/** Whether a string holds a character a `TEXT` element must not carry raw: the quote, the backslash or a C0 control. */
 /**
  * Sets `key` as an own property, as `JSON.parse` does: a plain assignment of `__proto__` would replace the
  * object's prototype with stored data instead.
@@ -122,6 +121,7 @@ const setOwn = (object: Record<string, unknown>, key: string, value: unknown): v
   }
 };
 
+/** Whether a string holds a character a `TEXT` element must not carry raw: the quote, the backslash or a C0 control. */
 const needsEscape = (text: string): boolean => {
   for (let index = 0; index < text.length; index++) {
     const code = text.charCodeAt(index);
@@ -132,9 +132,9 @@ const needsEscape = (text: string): boolean => {
   return false;
 };
 
-/** A surrogate half without its partner, which UTF-8 cannot encode. */
 const NON_ASCII = /[\u0080-\uffff]/g;
 
+/** A surrogate half without its partner, which UTF-8 cannot encode. */
 const LONE_SURROGATE = /[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/;
 
 /** Headers are written with this many size bytes reserved, then compacted once the payload size is known. */
