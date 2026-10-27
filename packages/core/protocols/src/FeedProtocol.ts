@@ -23,6 +23,18 @@ export const KEY_QUEUE_POSITION = 'org.dxos.key.queue-position';
  */
 export const KEY_FEED_BLOCK = 'org.dxos.key.feed-block';
 
+/**
+ * Foreign-key source for the feed branch an item belongs to: the id of the branch's first item.
+ * Absent means the main branch; every item of a branch states it, so membership replicates with the block.
+ */
+export const KEY_FEED_BRANCH = 'org.dxos.key.feed-branch';
+
+/**
+ * Foreign-key source on a branch's first item only: the id of the item in the parent branch it forks
+ * at. Its presence flags the item as a fork point; the parent branch is the branch of that item.
+ */
+export const KEY_FEED_FORK = 'org.dxos.key.feed-fork';
+
 import * as Schema from 'effect/Schema';
 import * as Tuple from 'effect/Tuple';
 

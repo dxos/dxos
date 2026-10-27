@@ -118,6 +118,11 @@ export class EchoFeedCodec {
     };
   }
 
+  /** The branch an encoded or decoded item belongs to, or `undefined` for the main branch. */
+  static branchOf(value: Record<string, unknown>): string | undefined {
+    return metaKeysOf(value).find((key) => key.source === FeedProtocol.KEY_FEED_BRANCH)?.id;
+  }
+
   static #setKey(obj: Record<string, unknown>, source: string, id: string): void {
     const meta = obj[ATTR_META];
     obj[ATTR_META] = {
@@ -144,3 +149,9 @@ const parseBlockId = (id: string): FeedBlockRef => {
  * Re-exported so `@dxos/echo` can read it without depending on `@dxos/protocols`.
  */
 export const KEY_QUEUE_POSITION = FeedProtocol.KEY_QUEUE_POSITION;
+
+/** Foreign-key source for an item's feed branch; re-exported for `@dxos/echo`. */
+export const KEY_FEED_BRANCH = FeedProtocol.KEY_FEED_BRANCH;
+
+/** Foreign-key source for a branch's fork point; re-exported for `@dxos/echo`. */
+export const KEY_FEED_FORK = FeedProtocol.KEY_FEED_FORK;

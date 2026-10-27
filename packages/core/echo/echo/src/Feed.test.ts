@@ -258,6 +258,113 @@ describe('Feed', () => {
       });
     });
   });
+
+  describe('branches', () => {
+    const make = (...names: string[]) => names.map((title) => Obj.make(TestSchema.Task, { title }));
+
+    test('an item with no branch key is on the main branch', ({ expect }) => {
+      const [a1] = make('a1');
+      expect(Feed.getBranch(a1)).toBeUndefined();
+      expect(Feed.isMain(a1)).toBe(true);
+      expect(Feed.getForkPoint(a1)).toBeUndefined();
+    });
+
+    test('startBranch names the branch after its first item and flags the fork point', ({ expect }) => {
+      const [a1, b1, b2] = make('a1', 'b1', 'b2');
+      const branch = Feed.startBranch(b1, a1);
+      Feed.setBranch(b2, branch);
+      expect(branch).toBe(b1.id);
+      expect(Feed.getBranch(b1)).toBe(b1.id);
+      expect(Feed.getForkPoint(b1)).toBe(a1.id);
+      expect(Feed.getBranch(b2)).toBe(b1.id);
+      expect(Feed.getForkPoint(b2)).toBeUndefined();
+      expect(Feed.isMain(b2)).toBe(false);
+    });
+
+    test('setBranch replaces rather than accumulates, and undefined returns the item to main', ({ expect }) => {
+      const [a1, b1, c1] = make('a1', 'b1', 'c1');
+      Feed.setBranch(a1, b1.id);
+      Feed.setBranch(a1, c1.id);
+      expect(Obj.getMeta(a1).keys.filter((key) => key.source === Feed.BRANCH_KEY)).toHaveLength(1);
+      expect(Feed.getBranch(a1)).toBe(c1.id);
+      Feed.setBranch(a1, undefined);
+      expect(Feed.isMain(a1)).toBe(true);
+    });
+
+    // The worked example from the JSDoc: a branch sees its parent up to the fork point, then itself.
+    test('readBranch gives main without branch items, and a branch its ancestors up to the fork', ({ expect }) => {
+      const [a1, a2, a3, b1, a4, b2] = make('a1', 'a2', 'a3', 'b1', 'a4', 'b2');
+      const branch = Feed.startBranch(b1, a2);
+      Feed.setBranch(b2, branch);
+      const log = [a1, a2, a3, b1, a4, b2];
+
+      const main = Feed.readBranch(log);
+      expect(titles(main)).toEqual(['a1', 'a2', 'a3', 'a4']);
+      expect(main.shallow).toBe(false);
+
+      const forked = Feed.readBranch(log, branch);
+      expect(titles(forked)).toEqual(['a1', 'a2', 'b1', 'b2']);
+      expect(forked.shallow).toBe(false);
+    });
+
+    test('a nested branch cuts each ancestor at its own fork point', ({ expect }) => {
+      const [a1, a2, b1, a3, b2, c1, b3, c2] = make('a1', 'a2', 'b1', 'a3', 'b2', 'c1', 'b3', 'c2');
+      const b = Feed.startBranch(b1, a1);
+      Feed.setBranch(b2, b);
+      Feed.setBranch(b3, b);
+      const c = Feed.startBranch(c1, b2);
+      Feed.setBranch(c2, c);
+      const log = [a1, a2, b1, a3, b2, c1, b3, c2];
+
+      expect(titles(Feed.readBranch(log, c))).toEqual(['a1', 'b1', 'b2', 'c1', 'c2']);
+      expect(titles(Feed.readBranch(log, b))).toEqual(['a1', 'b1', 'b2', 'b3']);
+    });
+
+    test('a first item with no fork point starts a branch with no ancestors', ({ expect }) => {
+      const [a1, b1, b2] = make('a1', 'b1', 'b2');
+      Feed.setBranch(b1, b1.id);
+      Feed.setBranch(b2, b1.id);
+      const read = Feed.readBranch([a1, b1, b2], b1.id);
+      expect(titles(read)).toEqual(['b1', 'b2']);
+      expect(read.shallow).toBe(false);
+    });
+
+    describe('shallow', () => {
+      test('a missing first item returns the branch items and reports shallow', ({ expect }) => {
+        const [a1, b1, b2] = make('a1', 'b1', 'b2');
+        const branch = Feed.startBranch(b1, a1);
+        Feed.setBranch(b2, branch);
+        const read = Feed.readBranch([a1, b2], branch);
+        expect(titles(read)).toEqual(['b2']);
+        expect(read.shallow).toBe(true);
+      });
+
+      test('a missing fork point returns the branch items and reports shallow', ({ expect }) => {
+        const [a1, b1] = make('a1', 'b1');
+        const branch = Feed.startBranch(b1, a1);
+        const read = Feed.readBranch([b1], branch);
+        expect(titles(read)).toEqual(['b1']);
+        expect(read.shallow).toBe(true);
+      });
+
+      test('a fork point after the first item is a forward reference', ({ expect }) => {
+        const [b1, a1] = make('b1', 'a1');
+        const branch = Feed.startBranch(b1, a1);
+        const read = Feed.readBranch([b1, a1], branch);
+        expect(titles(read)).toEqual(['b1']);
+        expect(read.shallow).toBe(true);
+      });
+
+      test('an item with a malformed branch id is on no branch', ({ expect }) => {
+        const [a1, a2] = make('a1', 'a2');
+        Obj.update(a2, (a2) => {
+          Obj.getMeta(a2).keys.push({ source: Feed.BRANCH_KEY, id: 'not-a-ulid' });
+        });
+        expect(Feed.isMain(a2)).toBe(false);
+        expect(titles(Feed.readBranch([a1, a2]))).toEqual(['a1']);
+      });
+    });
+  });
 });
 
 const titles = (history: Feed.History<TestSchema.Task>) => history.items.map((item) => item.title);

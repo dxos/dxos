@@ -12,7 +12,7 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { KEY_QUEUE_POSITION } from '@dxos/echo-protocol';
+import { KEY_FEED_BRANCH, KEY_FEED_FORK, KEY_QUEUE_POSITION } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId } from '@dxos/keys';
 
@@ -43,6 +43,11 @@ export type Namespace = Schema.Schema.Type<typeof Namespace>;
 export const IndexingOptions = Schema.Struct({
   /** When false, the feed's items are not indexed at all; there is no partial mode. */
   enabled: Schema.Boolean,
+  /**
+   * Which branches the index holds: `main` (the default) or `all`. There is no selected subset.
+   * A feed whose items mutate objects keeps `main`; a feed of messages from people can index `all`.
+   */
+  mode: Schema.optional(Schema.Literals(['all', 'main'])),
 });
 export type IndexingOptions = Schema.Schema.Type<typeof IndexingOptions>;
 
@@ -176,6 +181,16 @@ export interface AppendOptions {
    * Applies to the first item only; the rest of the batch chain implicitly in append order.
    */
   parent?: Entity.Unknown | Entity.Snapshot | EntityId;
+
+  /** Branch the appended items join; omit for the main branch. */
+  branch?: BranchId;
+
+  /**
+   * Starts a new branch at this item of the parent branch: the first appended item becomes the
+   * branch's first item (its id is the branch id) and the whole batch joins the branch.
+   * Cannot be combined with `branch`.
+   */
+  fork?: Entity.Unknown | Entity.Snapshot | EntityId;
 }
 
 /**
@@ -306,6 +321,15 @@ export const append = (
         Effect.promise(() => {
           if (options?.parent !== undefined && items.length > 0) {
             setParent(items[0], options.parent);
+          }
+          invariant(
+            options?.branch === undefined || options.fork === undefined,
+            'append: pass branch or fork, not both',
+          );
+          const branch =
+            options?.fork !== undefined && items.length > 0 ? startBranch(items[0], options.fork) : options?.branch;
+          if (branch !== undefined) {
+            items.forEach((item) => setBranch(item, branch));
           }
           return db.appendToFeed(feed, items, { origin });
         }),
@@ -497,6 +521,141 @@ export const history = <T extends Entity.Unknown | Entity.Snapshot>(
   }
 
   return { items: reachable.reverse(), shallow };
+};
+
+//
+// Branches
+//
+
+/**
+ * Foreign-key source for the branch an item belongs to; absent means the main branch.
+ * Every item of a branch states it, so a writer that has not seen a fork is never misattributed.
+ */
+export const BRANCH_KEY = KEY_FEED_BRANCH;
+
+/**
+ * Foreign-key source, on a branch's first item only, naming the item of the parent branch that the
+ * branch forks at. The parent branch is the branch of that item.
+ */
+export const FORK_KEY = KEY_FEED_FORK;
+
+/** A branch id: the id of the branch's first item. The main branch has no id. */
+export type BranchId = EntityId;
+
+/** Tri-state read of an id-valued key, so a malformed id never reads as "absent". */
+const readIdKey = (item: Entity.Unknown | Entity.Snapshot, source: string): { present: boolean; id?: EntityId } => {
+  const id = internal.getKeys(item, source).at(0)?.id;
+  if (id === undefined) {
+    return { present: false };
+  }
+  return EntityId.isValid(id) ? { present: true, id } : { present: true };
+};
+
+const toId = (value: Entity.Unknown | Entity.Snapshot | EntityId): EntityId =>
+  typeof value === 'string' ? value : value.id;
+
+const writeIdKey = (item: Entity.Unknown, source: string, id: EntityId | undefined): void => {
+  internal.change(item, (mutable) => {
+    internal.deleteKeys(mutable, source);
+    if (id !== undefined) {
+      internal.getMetaChecked(mutable).keys.push(internal.foreignKey(source, id));
+    }
+  });
+};
+
+/**
+ * The branch an item belongs to, or `undefined` for the main branch (and for a malformed stored id,
+ * which {@link readBranch} excludes from every branch).
+ *
+ * @performance O(k) in the item foreign-key count.
+ */
+export const getBranch = (item: Entity.Unknown | Entity.Snapshot): BranchId | undefined =>
+  readIdKey(item, BRANCH_KEY).id;
+
+/** True when the item is on the main branch. */
+export const isMain = (item: Entity.Unknown | Entity.Snapshot): boolean => !readIdKey(item, BRANCH_KEY).present;
+
+/**
+ * The item of the parent branch that a branch forks at, read from the branch's first item;
+ * `undefined` on every other item.
+ *
+ * @performance O(k) in the item foreign-key count.
+ */
+export const getForkPoint = (item: Entity.Unknown | Entity.Snapshot): EntityId | undefined =>
+  readIdKey(item, FORK_KEY).id;
+
+/**
+ * Sets (or, with `undefined`, clears) the branch of an item. Call before appending the item;
+ * {@link append}'s `branch` option does this for you.
+ */
+export const setBranch = (item: Entity.Unknown, branch: BranchId | undefined): void =>
+  writeIdKey(item, BRANCH_KEY, branch);
+
+/**
+ * Makes `item` the first item of a new branch that forks at `forkPoint`, and returns the branch id
+ * (the id of `item`). Call before appending the item; {@link append}'s `fork` option does this for you.
+ */
+export const startBranch = (item: Entity.Unknown, forkPoint: Entity.Unknown | Entity.Snapshot | EntityId): BranchId => {
+  writeIdKey(item, BRANCH_KEY, item.id);
+  writeIdKey(item, FORK_KEY, toId(forkPoint));
+  return item.id;
+};
+
+/**
+ * Returns what a read of one branch sees: the items of its ancestors up to each fork point, then the
+ * items of the branch itself. Omit `branch` for the main branch.
+ *
+ * A feed appended as `A1, A2, A3, B1(fork A2), A4, B2` reads `A1, A2, A3, A4` on main and
+ * `A1, A2, B1, B2` on branch `B1`.
+ *
+ * `items` must be in **append order**, as for {@link history}. The read is `shallow` when a first
+ * item or a fork point is missing from `items` or malformed; the branch's own items are still
+ * returned. A first item with no fork point starts a branch with no ancestors.
+ *
+ * @performance O(n) in items; one pass to group them and one walk up the branch's ancestors.
+ */
+export const readBranch = <T extends Entity.Unknown | Entity.Snapshot>(
+  items: readonly T[],
+  branch?: BranchId,
+): History<T> => {
+  const indexById = new Map<EntityId, number>();
+  const byBranch = new Map<BranchId | undefined, number[]>();
+  items.forEach((item, index) => {
+    indexById.set(item.id, index);
+    const key = readIdKey(item, BRANCH_KEY);
+    if (key.present && key.id === undefined) {
+      return;
+    }
+    const members = byBranch.get(key.id) ?? [];
+    members.push(index);
+    byBranch.set(key.id, members);
+  });
+
+  const resolve = (target: BranchId | undefined): { indices: number[]; shallow: boolean } => {
+    const own = byBranch.get(target) ?? [];
+    if (target === undefined) {
+      return { indices: own, shallow: false };
+    }
+    const firstIndex = indexById.get(target);
+    if (firstIndex === undefined || getBranch(items[firstIndex]) !== target) {
+      return { indices: own, shallow: true };
+    }
+    const fork = readIdKey(items[firstIndex], FORK_KEY);
+    if (!fork.present) {
+      return { indices: own, shallow: false };
+    }
+    // A fork point at or after the first item is a cycle or a forward reference; requiring it to be
+    // strictly earlier also makes each step up the tree move to an earlier first item, so the walk ends.
+    const forkIndex = fork.id === undefined ? undefined : indexById.get(fork.id);
+    if (forkIndex === undefined || forkIndex >= firstIndex) {
+      return { indices: own, shallow: true };
+    }
+    const parent = resolve(getBranch(items[forkIndex]));
+    return { indices: [...parent.indices.filter((index) => index <= forkIndex), ...own], shallow: parent.shallow };
+  };
+
+  const { indices, shallow } = resolve(branch);
+  return { items: indices.map((index) => items[index]), shallow };
 };
 
 /**
