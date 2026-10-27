@@ -208,9 +208,7 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
         // layers are `orDie`), which a failure channel handler never sees.
         const prompt =
           harness === SessionConfig.COMPOSER_HARNESS
-            ? sources.length > 0
-              ? `${OPENING_PROMPT}\n${SOURCES_PROMPT}`
-              : OPENING_PROMPT
+            ? yield* renderOpeningPrompt(tasks)
             : renderDelegationBrief({
                 tasks,
                 project,
@@ -233,21 +231,39 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
   );
 
 /**
- * References the tasklist rather than restating the tasks: they are already bound to the chat, and
- * a copy in the prompt is one the reader can edit into disagreeing with the original.
+ * Composer's opening prompt: the tasks by address, so the agent starts from them rather than finding
+ * them, and fenced to exactly these — a project's other tasks sit one hop away and are not this
+ * session's to work.
  */
 const OPENING_PROMPT = concat`
-  You have been assigned tasks to work on in this session.
-  Read all tasks, then work on them sequentially.
-  This may require you to read, update, or create artifacts associated with the project.
-  Update the tasklist as you work on each task, and mark tasks ready for review as you complete them.
+  You have been assigned the tasks below, and only these. The project may hold other tasks; they are
+  not yours, so do not read, change, or act on them.
+  Work on your tasks in order. This may require you to read, update, or create artifacts associated
+  with the project. Mark each task ready for review as you complete it.
 `;
 
 /** Added when the tasks came from objects (an email), which are bound to the chat beside them. */
 const SOURCES_PROMPT = concat`
-  The objects these tasks were made from are bound to this chat; start from them and from the
-  project's instructions rather than exploring the space.
+  Each task names the object it was made from. Those objects are bound to this chat, so their
+  content is already in your context; address them, and the tasks, by the URIs given here rather than
+  exploring the space or building a URI from an id.
 `;
+
+/** One line per task: its title, its URI, and the URIs of the objects it was made from. */
+const renderOpeningPrompt = Effect.fnUntraced(function* (tasks: readonly Task.Task[]) {
+  const entries = yield* Effect.forEach(tasks, (task) =>
+    Effect.gen(function* () {
+      const sources = yield* Effect.forEach(task.artifacts ?? [], (ref) => Database.load(ref).pipe(Effect.option));
+      const uris = sources.flatMap((source) => (Option.isSome(source) ? [Obj.getURI(source.value)] : []));
+      const from = uris.length > 0 ? `; made from ${uris.join(', ')}` : '';
+      return { line: `- ${JSON.stringify(task.title)}: ${Obj.getURI(task)}${from}`, hasSources: uris.length > 0 };
+    }),
+  );
+  const hasSources = entries.some((entry) => entry.hasSources);
+  return [OPENING_PROMPT, '', ...entries.map((entry) => entry.line), ...(hasSources ? ['', SOURCES_PROMPT] : [])].join(
+    '\n',
+  );
+});
 
 /**
  * The agent the chat runs on: the one asked for, else the person's default agent while it is

@@ -8484,9 +8484,6 @@ importers:
       '@dxos/observability':
         specifier: workspace:*
         version: link:../../sdk/observability
-      '@dxos/permission':
-        specifier: workspace:*
-        version: link:../../common/permission
       '@dxos/plugin-attention':
         specifier: workspace:*
         version: link:../plugin-attention
@@ -13109,9 +13106,6 @@ importers:
       '@dxos/markdown':
         specifier: workspace:*
         version: link:../../common/markdown
-      '@dxos/permission':
-        specifier: workspace:*
-        version: link:../../common/permission
       '@dxos/pipeline':
         specifier: workspace:*
         version: link:../../core/compute/pipeline
@@ -13203,6 +13197,9 @@ importers:
       '@dxos/debug':
         specifier: workspace:*
         version: link:../../common/debug
+      '@dxos/permission':
+        specifier: workspace:*
+        version: link:../../common/permission
       '@dxos/plugin-preview':
         specifier: workspace:*
         version: link:../plugin-preview

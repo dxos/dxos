@@ -289,7 +289,6 @@
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/markdown": "workspace:*",
-    "@dxos/permission": "workspace:*",
     "@dxos/pipeline": "workspace:*",
     "@dxos/pipeline-email": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
@@ -322,6 +321,7 @@
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/permission": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
     "@dxos/plugin-progress": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",

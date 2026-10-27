@@ -18,15 +18,16 @@ const INBOX_SEND_SKILL_KEY = 'org.dxos.skill.inboxSend';
 
 /** What an agent assigned one of the project's tasks is told; tasks name the email they came from. */
 export const INBOX_PROJECT_INSTRUCTIONS = trim`
-  Every task in this project was extracted from an email in the bound mailbox. A task's description
-  names the email (its subject and sender), and the task's first artifact is a reference to that email.
+  Every task in this project was extracted from an email in the bound mailbox. Your assignment lists
+  each task's URI and the URI of the email it came from; that email is bound to the chat, so you can
+  read it in your context.
   To complete a task, write a short, friendly reply that does what the sender asked, and send it with
   the "Send an email reply" operation (\`org.dxos.operation.inbox.sendReply\`): pass the bound mailbox,
-  the task's first artifact as \`message\` (pass the reference itself; do not rebuild it from an id), and
-  the reply as \`body\`. Everything you need is in the task and the bound objects, so do not explore the
-  space first.
+  the email (resolved from its URI) as \`message\`, and the reply as \`body\`. Then mark the task ready
+  for review. Do both in one step: you already have everything you need, so do not explore the space,
+  list the project's tasks, or read documentation first.
+  Send exactly one reply per assigned task, and none for any other task.
   Sign the reply as the mailbox owner. Do not invent facts, dates, or attachments.
-  When the reply is sent, mark the task ready for review.
 `;
 
 const projectKey = (mailbox: Mailbox.Mailbox) => ({ source: LABELER_TAG_SOURCE, id: `project:${mailbox.id}` });

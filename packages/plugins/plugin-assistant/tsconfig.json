@@ -40,9 +40,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/permission"
-    },
-    {
       "path": "../../common/random"
     },
     {

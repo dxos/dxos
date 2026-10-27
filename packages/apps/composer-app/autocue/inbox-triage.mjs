@@ -203,13 +203,19 @@ export const steps = [
   },
   {
     name: 'The agent asks before it sends',
-    narration: 'Sending email needs permission, so the agent stops and asks right in the chat.',
+    narration:
+      'Sending email needs permission, so the agent stops and asks in the chat, with the reply it drafted under the request.',
     run: async ({ demo, page }) => {
       await demo.speed({ factor: 6 });
       await page.locator(REQUEST).first().waitFor({ state: 'visible', timeout: AGENT_TIMEOUT });
       await demo.speed({ factor: 1 });
       await caption(demo, 'Sending needs your permission');
-      await page.waitForTimeout(BEAT * 2);
+      await demo.click({
+        selector: `${REQUEST} [data-testid="assistant.request.preview"] button >> nth=0`,
+        label: 'Reply',
+      });
+      await caption(demo, 'The reply it will send, under the request');
+      await page.waitForTimeout(BEAT * 3);
     },
   },
   {

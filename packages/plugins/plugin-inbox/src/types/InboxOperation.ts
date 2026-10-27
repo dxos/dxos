@@ -11,7 +11,6 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, DXN, Obj, Ref, Type } from '@dxos/echo';
-import { Guard, Requirement } from '@dxos/permission';
 // Person is referenced in Actor.Actor's inferred type (via ExtractContact); importing it allows
 // TypeScript to name it in the emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
@@ -101,7 +100,11 @@ export const SendReply = Operation.make({
     sentMessageId: Schema.String,
   }),
   services: [Capability.Service, Database.Service],
-}).pipe(Operation.visible, Guard.requires(Requirement.make(InboxPermission.SendEmail)));
+}).pipe(
+  Operation.visible,
+  Operation.annotate(Operation.RequiresAnnotation, [InboxPermission.SendEmailRequirement]),
+  Operation.annotate(Operation.ConsentPreviewAnnotation, { field: 'body', label: 'Reply' }),
+);
 
 // TODO(wittjosiah): Reconcile with above.
 export const DraftEmailAndOpen = Operation.make({

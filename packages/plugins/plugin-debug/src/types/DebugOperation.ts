@@ -10,8 +10,14 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/echo';
+// Connection and Message are referenced in SendSampleMail's inferred type (via MailSend); importing them
+// lets TypeScript name them in the emitted .d.ts.
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { type Connection } from '@dxos/link';
 import * as MailSend from '@dxos/plugin-inbox/MailSend';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
+// eslint-disable-next-line unused-imports/no-unused-imports
+import { type Message } from '@dxos/types';
 
 /**
  * Fills the document with placeholder prose from the slash menu — the cheapest way to get a

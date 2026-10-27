@@ -12,7 +12,6 @@ import * as Operation from '@dxos/compute/Operation';
 import type * as Process from '@dxos/compute/Process';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { PublicKey } from '@dxos/keys';
-import { Requirement } from '@dxos/permission';
 import { type ContentBlock, Message } from '@dxos/types';
 
 /** What the person can answer; `allow_always` lasts as long as this client keeps the chat's guard. */
@@ -21,6 +20,15 @@ export const CONSENT_OPTIONS: readonly ContentBlock.RequestOption[] = [
   { id: 'allow-chat', label: 'Allow for this chat', kind: 'allow_always' },
   { id: 'deny', label: 'Deny', kind: 'reject_once' },
 ];
+
+/**
+ * The part of a `@dxos/permission` requirement this guard reads; decoded locally since that package is
+ * private and this one is published.
+ */
+const ConsentRequirement = Schema.Struct({
+  command: Schema.String,
+  consentable: Schema.optional(Schema.Boolean),
+});
 
 type Pending = {
   readonly chatId: string;
@@ -63,10 +71,10 @@ export const consentGuard = (chat: Chat.Chat): Effect.Effect<Process.Guard, neve
     // database of its own for this space.
     const context = yield* Effect.context<Database.Service>();
     const guard: Process.Guard = {
-      check: (op, _input) =>
+      check: (op, input) =>
         Effect.gen(function* () {
           const requirements = Operation.getRequirements(op).map((declared) =>
-            Schema.decodeUnknownOption(Requirement.Requirement)(declared),
+            Schema.decodeUnknownOption(ConsentRequirement)(declared),
           );
           if (requirements.some(Option.isNone)) {
             return yield* deny(op, `Operation "${op.meta.key}" declares a malformed requirement`);
@@ -85,7 +93,9 @@ export const consentGuard = (chat: Chat.Chat): Effect.Effect<Process.Guard, neve
             return;
           }
 
-          const kind = yield* ask(chat, consentTitle(op)).pipe(Effect.provide(context));
+          const kind = yield* ask(chat, consentTitle(op), Operation.getConsentPreview(op, input)).pipe(
+            Effect.provide(context),
+          );
           if (kind === 'allow_always') {
             const set = allowed.get(chat.id) ?? new Set<string>();
             asked.forEach((requirement) => set.add(requirement.command));
@@ -101,7 +111,7 @@ export const consentGuard = (chat: Chat.Chat): Effect.Effect<Process.Guard, neve
   });
 
 /** Posts a request card to the chat and waits for the person's answer; an interrupted wait cancels it. */
-const ask = (chat: Chat.Chat, title: string) =>
+const ask = (chat: Chat.Chat, title: string, preview: ContentBlock.Request['preview']) =>
   Effect.gen(function* () {
     // A chat always owns its feed, so a failed load is a defect rather than an answer.
     const feed = yield* Database.load(chat.feed).pipe(Effect.orDie);
@@ -109,7 +119,7 @@ const ask = (chat: Chat.Chat, title: string) =>
     const answer = yield* Deferred.make<ContentBlock.RequestOption['kind']>();
     const message = Message.make({
       sender: 'assistant',
-      blocks: [{ _tag: 'request', requestId, title, options: [...CONSENT_OPTIONS] }],
+      blocks: [{ _tag: 'request', requestId, title, options: [...CONSENT_OPTIONS], ...(preview && { preview }) }],
     });
     pending.set(requestId, { chatId: chat.id, answer });
     yield* Feed.append(feed, [message]);
