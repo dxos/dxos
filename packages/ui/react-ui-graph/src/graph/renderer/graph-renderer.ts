@@ -32,6 +32,15 @@ const EDGE_CLICK_CLASS = 'dx-click';
 /** Below this movement (px) a coordinate write is skipped, so a settled graph does no DOM work per tick. */
 const EPSILON = 0.01;
 
+/**
+ * Arrowhead drawn into a straight edge's `<polyline>`; matches the `marker-arrow-*` chevron
+ * (12 marker units scaled by the 0.5px edge stroke).
+ */
+const ARROW_LENGTH = 6;
+const ARROW_HALF_WIDTH = 3;
+
+type EdgeTag = 'line' | 'polyline' | 'path';
+
 type NodeEntry<NodeData> = {
   element: SVGGElement;
   node: GraphLayoutNode<NodeData>;
@@ -595,14 +604,16 @@ const updateEdge: D3Callable = <NodeData = any, EdgeData = any>(
 };
 
 /**
- * Create the edge's shapes: `<path>` for projector-supplied geometry, otherwise `<line>`.
- * Line endpoints are plain attributes, whereas a path's `d` is a CSS property, so every `d`
- * write forces a style recalc — the dominant per-tick cost for straight-edge layouts.
+ * Create the edge's shapes: `<path>` for projector-supplied geometry, otherwise `<line>`, or
+ * `<polyline>` when it carries arrowheads. Line and polyline geometry are plain attributes, whereas
+ * a path's `d` is a CSS property, so every `d` write forces a style recalc — the dominant per-tick
+ * cost for straight-edge layouts. Arrowheads are drawn into the polyline rather than as markers,
+ * since painting a marker per edge cost several times the edge itself.
  */
 const createEdgeShapes = <NodeData, EdgeData>(
   entry: EdgeEntry<NodeData, EdgeData>,
   options: GraphRendererOptions<NodeData, EdgeData>,
-  tag: 'line' | 'path',
+  tag: EdgeTag,
 ) => {
   entry.shapes.forEach((shape) => shape.remove());
   entry.shapes = [];
@@ -622,16 +633,17 @@ const createEdgeShapes = <NodeData, EdgeData>(
   const shape = document.createElementNS(SVG_NS, tag);
   shape.classList.add(EDGE_SHAPE_CLASS);
   shape.setAttribute('pointer-events', 'none');
-  // Lines stay hidden until their first endpoints are written; see writeEdge.
-  if (tag === 'line') {
+  // Straight edges stay hidden until their first endpoints are written; see writeEdge.
+  if (tag !== 'path') {
     entry.shapes.forEach((click) => click.setAttribute('visibility', 'hidden'));
     shape.setAttribute('visibility', 'hidden');
-  }
-  if (options.arrows?.start) {
-    shape.setAttribute('marker-start', 'url(#marker-arrow-start)');
-  }
-  if (options.arrows?.end) {
-    shape.setAttribute('marker-end', 'url(#marker-arrow-end)');
+  } else {
+    if (options.arrows?.start) {
+      shape.setAttribute('marker-start', 'url(#marker-arrow-start)');
+    }
+    if (options.arrows?.end) {
+      shape.setAttribute('marker-end', 'url(#marker-arrow-end)');
+    }
   }
   entry.shapes.push(shape);
   entry.group.append(...entry.shapes);
@@ -643,7 +655,7 @@ const writeEdge = <NodeData, EdgeData>(
   options: GraphRendererOptions<NodeData, EdgeData>,
 ) => {
   const { edge } = entry;
-  const tag = edge.path != null ? 'path' : 'line';
+  const tag: EdgeTag = edge.path != null ? 'path' : options.arrows?.start || options.arrows?.end ? 'polyline' : 'line';
   if (entry.shapes.length === 0 || entry.shapes[0].tagName !== tag) {
     createEdgeShapes(entry, options, tag);
   }
@@ -683,12 +695,50 @@ const writeEdge = <NodeData, EdgeData>(
     entry.shapes.forEach((shape) => shape.removeAttribute('visibility'));
   }
   entry.coords = [x1, y1, x2, y2];
+  if (tag === 'polyline') {
+    const points = createArrowPoints(x1, y1, x2, y2, options.arrows?.start, options.arrows?.end);
+    entry.shapes.forEach((shape) => shape.setAttribute('points', points));
+    return;
+  }
+
   for (const shape of entry.shapes) {
     shape.setAttribute('x1', String(x1));
     shape.setAttribute('y1', String(y1));
     shape.setAttribute('x2', String(x2));
     shape.setAttribute('y2', String(y2));
   }
+};
+
+/**
+ * Polyline points for a segment with chevron arrowheads (wing → tip → wing at each end), so a
+ * single stroked shape inherits the edge's color and hover styles.
+ */
+const createArrowPoints = (x1: number, y1: number, x2: number, y2: number, start?: boolean, end?: boolean) => {
+  const length = Math.hypot(x2 - x1, y2 - y1) || 1;
+  const ux = (x2 - x1) / length;
+  const uy = (y2 - y1) / length;
+  const wings = (x: number, y: number, direction: number) => {
+    const bx = x - ux * ARROW_LENGTH * direction;
+    const by = y - uy * ARROW_LENGTH * direction;
+    return [
+      `${bx - uy * ARROW_HALF_WIDTH},${by + ux * ARROW_HALF_WIDTH}`,
+      `${bx + uy * ARROW_HALF_WIDTH},${by - ux * ARROW_HALF_WIDTH}`,
+    ];
+  };
+
+  const head = `${x1},${y1}`;
+  const tail = `${x2},${y2}`;
+  const points: string[] = [];
+  if (start) {
+    const [left, right] = wings(x1, y1, -1);
+    points.push(left, head, right);
+  }
+  points.push(head, tail);
+  if (end) {
+    const [left, right] = wings(x2, y2, 1);
+    points.push(left, tail, right);
+  }
+  return points.join(' ');
 };
 
 /** The group's single translate transform, created if the attribute was never set. */
