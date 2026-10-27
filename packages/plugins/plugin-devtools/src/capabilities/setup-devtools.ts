@@ -27,4 +27,9 @@ const setupDevtools = () => {
   };
 };
 
-export default Capability.makeModule(() => Effect.sync(() => setupDevtools()));
+export default Capability.makeModule(() =>
+  Effect.sync(() => {
+    setupDevtools();
+    return [];
+  }),
+);
