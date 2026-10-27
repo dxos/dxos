@@ -36,8 +36,8 @@
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },
-  "beast": {},
   "devDependencies": {
     "@dxos/sql-sqlite": "workspace:*"
-  }
+  },
+  "beast": {}
 }
