@@ -4,6 +4,7 @@
 
 import React, { type MouseEvent, type PropsWithChildren, createContext, forwardRef, useContext, useState } from 'react';
 
+import { log } from '@dxos/log';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -387,7 +388,8 @@ const FeatureCardTags = ({ all }: FeatureCardTagsProps) => {
   const hidden = signals.slice(shown.length);
   return (
     <Card.Row>
-      <Layout.Flex wrap gap='xs'>
+      {/* Padded by a tag's inset on a block, so wrapped tags keep the space above and below that one line has. */}
+      <Layout.Flex wrap gap='xs' classNames='py-[calc((var(--dx-block-size)_-_var(--dx-label-line-height))/2)]'>
         <Tag.Tag hue={FEATURE_STATUS_STYLE[feature.status].hue}>{t(`feature-status.${feature.status}.label`)}</Tag.Tag>
         {relation && <Tag.Tag hue={RELATION_HUE[relation]}>{t(`feature-relation.${relation}.label`)}</Tag.Tag>}
         {shown.map((signal) => (
@@ -474,6 +476,20 @@ const FeatureCardDependencyCount = (_: FeatureCardCountProps) => {
 };
 
 FeatureCardDependencyCount.displayName = 'FeatureCard.DependencyCount';
+
+/** How many tests and suites cite the feature with a `@feature` tag; the compact stand-in for `Code`. */
+const FeatureCardTestCount = (_: FeatureCardCountProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { feature } = useFeatureCardContext('FeatureCard.TestCount');
+  const count = feature.code.filter((link) => link.kind !== 'code').length;
+  return count > 0 ? (
+    <Card.Row leading={<RowIcon icon='ph--test-tube--regular' />} data-testid='feature-card.test-count'>
+      <Card.Text truncate>{t('feature-card.tests.label', { count })}</Card.Text>
+    </Card.Row>
+  ) : null;
+};
+
+FeatureCardTestCount.displayName = 'FeatureCard.TestCount';
 
 //
 // ListSection
@@ -690,16 +706,78 @@ const FeatureCardSpecs = (_: FeatureCardSpecsProps) => {
 FeatureCardSpecs.displayName = 'FeatureCard.Specs';
 
 //
+// Link
+//
+
+type FeatureCardLinkProps = {};
+
+/** The DXN that code cites the feature by, with a button that copies it. */
+const FeatureCardLink = (_: FeatureCardLinkProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { feature } = useFeatureCardContext('FeatureCard.Link');
+  const { link } = feature;
+  return link ? (
+    <Card.Row
+      leading={<RowIcon icon='ph--hash--regular' />}
+      trailing={
+        <Card.Action
+          icon='ph--copy--regular'
+          label={t('feature-card.copy-link.label')}
+          data-testid='feature-card.copy-link'
+          onClick={() =>
+            // The browser refuses the write without focus or permission; nothing else depends on it.
+            navigator.clipboard.writeText(link).catch((error) => log.warn('copy feature link failed', { error }))
+          }
+        />
+      }
+      data-testid='feature-card.link'
+    >
+      <Card.Text truncate>{link}</Card.Text>
+    </Card.Row>
+  ) : null;
+};
+
+FeatureCardLink.displayName = 'FeatureCard.Link';
+
+//
+// Code
+//
+
+type FeatureCardCodeProps = {};
+
+/** The tests and code that cite the feature, each a link to its line on GitHub. */
+const FeatureCardCode = (_: FeatureCardCodeProps) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { feature } = useFeatureCardContext('FeatureCard.Code');
+  return feature.code.length > 0 ? (
+    <ListSection title={t('feature-card.code.title')} count={feature.code.length}>
+      {feature.code.map((link) => (
+        <Card.Link
+          key={`${link.path}:${link.line}`}
+          label={`${link.symbol ?? link.path} · ${link.path}:${link.line}`}
+          href={Feature.getCodeUrl(link)}
+          data-testid='feature-card.code'
+        />
+      ))}
+    </ListSection>
+  ) : null;
+};
+
+FeatureCardCode.displayName = 'FeatureCard.Code';
+
+//
 // Exports
 //
 
 export {
   FeatureCardBody as Body,
+  FeatureCardCode as Code,
   FeatureCardDependencies as Dependencies,
   FeatureCardDependencyCount as DependencyCount,
   FeatureCardDependents as Dependents,
   FeatureCardDescription as Description,
   FeatureCardHeader as Header,
+  FeatureCardLink as Link,
   FeatureCardMenu as Menu,
   FeatureCardProvider as Provider,
   FeatureCardRoot as Root,
@@ -713,16 +791,19 @@ export {
   FeatureCardTags as Tags,
   FeatureCardTaskCount as TaskCount,
   FeatureCardTasks as Tasks,
+  FeatureCardTestCount as TestCount,
   FeatureCardTitle as Title,
 };
 
 export type {
   FeatureCardBodyProps as BodyProps,
+  FeatureCardCodeProps as CodeProps,
   FeatureCardCountProps as CountProps,
   FeatureCardDependenciesProps as DependenciesProps,
   FeatureCardDependentsProps as DependentsProps,
   FeatureCardDescriptionProps as DescriptionProps,
   FeatureCardHeaderProps as HeaderProps,
+  FeatureCardLinkProps as LinkProps,
   FeatureCardMenuProps as MenuProps,
   FeatureCardProviderProps as ProviderProps,
   FeatureCardRootProps as RootProps,

@@ -185,7 +185,8 @@ export const useTextEditor = (
         case 'Escape': {
           // Check if popover is open.
           const modal = view?.state.field(modalStateField, false);
-          if (modal) {
+          // A key CodeMirror already acted on (closing its completion list, cancelling dictation) stays in the editor.
+          if (modal || event.defaultPrevented) {
             return;
           }
 

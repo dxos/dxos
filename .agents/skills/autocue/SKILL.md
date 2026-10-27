@@ -507,6 +507,9 @@ there. `--caption-position top` (or `middle`) moves it off a subject that lives 
 C '{"op":"caption","value":"Step 2 — Play 1. e4: drag the e2 pawn to e4","subtitle":"from plugin-chess/PLUGIN.mdl"}'
 ```
 
+`"position"` (`top`, `middle` or `bottom`) on a caption moves it, and the captions after it, off whatever the
+step shows: `--caption-position` is only where they start.
+
 When running a `.mdl` test, the caption is the step's `do:` text verbatim and the subtitle is where it
 came from. A viewer then sees the spec and the app agreeing, which is the whole point of the artifact.
 

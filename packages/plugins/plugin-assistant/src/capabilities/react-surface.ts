@@ -114,7 +114,8 @@ export default Capability.makeModule(() =>
         component: ChatCompanion,
         props: ({ role, ref, data: { subject, attendableId, nodeId, companionTo } }) => ({
           role,
-          subject,
+          // An unprovisioned companion's node carries `null`; the chat tree reads a missing chat as `undefined`.
+          subject: subject ?? undefined,
           attendableId,
           nodeId,
           companionTo,

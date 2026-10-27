@@ -17,11 +17,11 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import * as CommentSkill from '@dxos/plugin-review/CommentSkill';
 import { Text } from '@dxos/schema';
-import { Cell } from '@dxos/storybook-testing';
+import { Cell, addToRootCollection } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
 
 import { StoryRole } from '../modules/index.ts';
-import { ModuleContainer, addToRootCollection, createDecorators, storyParameters } from '../testing/index.ts';
+import { ModuleContainer, createDecorators, findPromptEditor, storyParameters } from '../testing/index.ts';
 
 const meta: Meta<typeof ModuleContainer> = {
   title: 'stories/stories-assistant/Documents',
@@ -128,12 +128,7 @@ export const WithMarkdown: Story = {
 const submitPrompt = async (canvasElement: HTMLElement, prompt: string) => {
   const canvas = within(canvasElement);
 
-  // The chat prompt is a CodeMirror editor; locate it via its placeholder.
-  const placeholder = await canvas.findByText(/ask anything/i, {}, { timeout: 30_000 });
-  const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
-  if (!editor) {
-    throw new Error('Chat editor not found.');
-  }
+  const editor = await findPromptEditor(canvasElement, 30_000);
 
   await userEvent.click(editor);
   await userEvent.type(editor, prompt);

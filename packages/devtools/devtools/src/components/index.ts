@@ -6,6 +6,7 @@ export * from './Bitbar.tsx';
 export * from './BlobPreview/index.ts';
 export * from './BooleanIcon.tsx';
 export * from './ControlledSelector.tsx';
+export * from './CredentialsTable.tsx';
 export * from './JsonView.tsx';
 export * from './MasterDetailTable.tsx';
 export * from './Placeholder.tsx';

@@ -51,7 +51,7 @@ export const reconcileCursors = ({
   existingTarget,
 }: ReconcileCursorsInput) =>
   Effect.gen(function* () {
-    const accessToken = yield* Database.load(connection.accessToken);
+    const accessToken = yield* Database.load(Connection.getAccessToken(connection));
     const account = accessToken.account;
     const existingCursors = (yield* Database.query(Filter.type(Cursor.Cursor)).run).filter(
       (cursor): cursor is Cursor.ExternalCursor => Binding.isForConnection(cursor, connection),
@@ -103,7 +103,7 @@ export const reconcileCursors = ({
         const adopted = yield* Binding.prepare({
           target,
           accessToken,
-          source: connection.accessToken,
+          source: Connection.getAccessToken(connection),
           externalId: sel.externalId,
         });
         if (adopted) {
@@ -131,7 +131,7 @@ export const reconcileCursors = ({
       }
       const cursor = yield* Database.add(
         Cursor.makeExternal({
-          source: connection.accessToken,
+          source: Connection.getAccessToken(connection),
           target: Ref.make(target),
           externalId: sel.externalId,
           ...(sel.name ? { label: sel.name } : {}),

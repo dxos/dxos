@@ -43,7 +43,7 @@ const meta = {
   decorators: [
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
-    withClientProvider({ types: [Sheet.Sheet], createSpace: true }),
+    withClientProvider({ types: [Sheet.Sheet, Sheet.Chart], createSpace: true }),
     withComputeGraphDecorator({ plugins: testFunctionPlugins }),
     withPluginManager({
       plugins: [ProcessManagerPlugin.make()],

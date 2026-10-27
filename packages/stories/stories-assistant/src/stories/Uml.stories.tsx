@@ -12,17 +12,11 @@ import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import * as UmlSkill from '@dxos/plugin-uml/UmlSkill';
 import { type Space } from '@dxos/react-client/echo';
-import { Cell } from '@dxos/storybook-testing';
+import { Cell, addToRootCollection } from '@dxos/storybook-testing';
 import { trim } from '@dxos/util';
 
 import { StoryRole } from '../modules/index.ts';
-import {
-  ModuleContainer,
-  addToRootCollection,
-  createDecorators,
-  storyParameters,
-  submitPrompt,
-} from '../testing/index.ts';
+import { ModuleContainer, createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';
 
 type StoryArgs = {
   /** Name of the seeded document. */

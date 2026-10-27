@@ -23,7 +23,7 @@ import { omitId } from '../util/index.ts';
 export const META_TAGS_KEY = '_tags';
 
 /**
- * Splices the synthetic meta-tags array (an object's `meta.tags`, surfaced as {@link Tag} refs) onto
+ * Splices the synthetic meta-tags array (an object's `meta.tags`, surfaced to the picker as refs) onto
  * a schema for editing and drops `id`. Keyed by {@link META_TAGS_KEY} so it never collides with a
  * `tags` field the schema declares itself.
  */
@@ -60,16 +60,6 @@ export const filterTagCandidates = <T>(results: readonly T[]): T[] =>
   results.filter((result) => !isTag(result) || Tag.isUserTag(result));
 
 /**
- * A ref's target entity id, ignoring whether the uri is local (`echo:///<id>`) or qualified
- * (`echo://<space>/<id>`) — `Ref.make` produces the former while `Obj.getURI` produces the latter, so
- * the two forms must compare equal. Same reason as `findRefOption`.
- */
-const entityIdOf = (uri: string): string | undefined => {
-  const parsed = EID.tryParse(uri);
-  return parsed ? EID.getEntityId(parsed) : undefined;
-};
-
-/**
  * Splits an object's meta tags into the ones a form may edit and the ones a provider owns.
  *
  * Provider-owned tags are held back rather than shown read-only: the tags field is a generic array of
@@ -80,30 +70,33 @@ const entityIdOf = (uri: string): string | undefined => {
  *
  * The caller must write `preserved` back alongside whatever the form returns: `meta.tags` is replaced
  * wholesale on save, so omitting them would delete the object's provider tags on the first edit.
- *
- * `candidates` is the space's tag set (each tag's origin lives on the tag, not on the ref); non-tag
- * entries are ignored, so a caller may pass a broader query result.
  */
-export const partitionMetaTags = (
-  refs: readonly Ref.Ref<Tag.Tag>[],
-  candidates: readonly unknown[],
-): { editable: Ref.Ref<Tag.Tag>[]; preserved: Ref.Ref<Tag.Tag>[] } => {
-  const providerIds = new Set<string>();
-  for (const candidate of candidates) {
-    if (isTag(candidate) && Tag.isProviderTag(candidate)) {
-      const id = entityIdOf(Obj.getURI(candidate).toString());
-      if (id !== undefined) {
-        providerIds.add(id);
-      }
-    }
-  }
-
-  const editable: Ref.Ref<Tag.Tag>[] = [];
-  const preserved: Ref.Ref<Tag.Tag>[] = [];
-  for (const ref of refs) {
-    const id = entityIdOf(ref.uri);
-    (id !== undefined && providerIds.has(id) ? preserved : editable).push(ref);
+export const partitionMetaTags = (tags: readonly Tag.Tag[]): { editable: Tag.Tag[]; preserved: Tag.Tag[] } => {
+  const editable: Tag.Tag[] = [];
+  const preserved: Tag.Tag[] = [];
+  for (const tag of tags) {
+    (Tag.isProviderTag(tag) ? preserved : editable).push(tag);
   }
 
   return { editable, preserved };
 };
+
+/**
+ * The tags a form's ref picker selected, as the {@link Tag} objects `meta.tags` holds. The picker builds
+ * its refs from bare URIs, whose `target` has no resolver to read through, so each is matched against the
+ * tags the object already holds (which keeps a deleted or cross-space tag the database lookup would miss),
+ * then looked up in the database.
+ */
+export const resolveMetaTags = (
+  refs: readonly Ref.Ref<Tag.Tag>[],
+  db: { getObjectById: (id: string) => unknown } | undefined,
+  held: readonly Tag.Tag[] = [],
+): Tag.Tag[] =>
+  refs.flatMap((ref) => {
+    const eid = EID.tryParse(ref.uri);
+    const entityId = eid ? EID.getEntityId(eid) : undefined;
+    const tag = entityId
+      ? (held.find((candidate) => candidate.id === entityId) ?? db?.getObjectById(entityId))
+      : undefined;
+    return isTag(tag) ? [tag] : [];
+  });

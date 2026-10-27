@@ -65,7 +65,6 @@ const ObjectsStory = () => {
 };
 
 export const Objects: Story = {
-  tags: ['!test'],
   render: () => <ObjectsStory />,
   decorators: [withPluginManager()],
 };
@@ -99,8 +98,6 @@ const CachedStory = () => {
  * 4. Click `Unmount` again: the readout shows `hits=1 misses=1` — the remount generated nothing.
  */
 export const CachedManual: Story = {
-  // TODO(wittjosiah): Flaky in CI (passes only on retry); fix and re-enable.
-  tags: ['!test'],
   render: () => <CachedStory />,
   decorators: [withPluginManager({ plugins: [TerraPlugin()] })],
 };

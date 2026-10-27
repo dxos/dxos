@@ -84,6 +84,8 @@ export const translations = [
         'connector-kind.user.label': 'Connect as you',
         'user-connection-shared.title': 'This connection acts as you',
         'user-connection-shared.message': 'Everyone in this space can use it, and what they do shows up as you.',
+        'user-connection-shared-mcp.message':
+          'Everyone in this space can use it, and their agents can act as you on {{service}}, such as posting comments or creating issues.',
         'connect-service.label': 'Connect {{service}}',
         'continue.label': 'Continue',
         'custom-token-dialog.title': 'Add custom token',

@@ -20,8 +20,10 @@ import { mx } from '@dxos/ui-theme';
 import { SceneSvg } from './SceneSvg.tsx';
 import appFramework from './testing/app-framework.dx?raw';
 import compute from './testing/compute.dx?raw';
+import dataflow from './testing/dataflow.dx?raw';
 import processSource from './testing/process.dx?raw';
 import relations from './testing/relations.dx?raw';
+import sequence from './testing/sequence.dx?raw';
 import stacked from './testing/stacked.dx?raw';
 
 //
@@ -163,7 +165,7 @@ const Scores = ({ title, compiled }: { title: string; compiled?: Compiled }) => 
     ['area', `${metrics.width} × ${metrics.height}`],
   ];
   return (
-    <div className='p-3 space-y-3 text-xs' data-testid='constraints.scores'>
+    <div className='p-trim-md space-y-3 text-xs' data-testid='constraints.scores'>
       <div className='text-sm font-medium'>{title}</div>
       <Layout.Grid cols={['fill', 'min']} gap='xs' classNames='font-mono'>
         {rows.map(([label, value]) => (
@@ -270,3 +272,9 @@ export const StackedBoxes: Story = { args: { source: stacked } };
 
 /** Every relationship word: extends, composes, owns, one-to-many, many-to-many, depends-on. */
 export const Relations: Story = { args: { source: relations } };
+
+/** `diagram kind=sequence`: participants as columns, messages as rows, with activations, notes and fragments. */
+export const Sequence: Story = { args: { source: sequence } };
+
+/** `diagram kind=dataflow`: processes, a store and external entities, laid out by the grid engine. */
+export const Dataflow: Story = { args: { source: dataflow } };

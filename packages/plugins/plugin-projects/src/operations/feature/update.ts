@@ -11,9 +11,14 @@ import { FeatureOperation } from '#types';
 
 const handler: Operation.WithHandler<typeof FeatureOperation.Update> = FeatureOperation.Update.pipe(
   Operation.withHandler(
-    Effect.fn(function* ({ feature: featureRef, name, description, status, specs, subfeatures, project }) {
+    Effect.fn(function* ({ feature: featureRef, key, name, description, status, specs, subfeatures, project }) {
       const feature = yield* Database.load(featureRef);
       Obj.update(feature, (feature) => {
+        if (key === null) {
+          delete Obj.getMeta(feature).key;
+        } else if (key !== undefined) {
+          Obj.getMeta(feature).key = key;
+        }
         if (name !== undefined) {
           feature.name = name;
         }

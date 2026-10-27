@@ -22,6 +22,17 @@ import { Task } from '@dxos/types';
 import { ProjectsPlugin } from '#plugin';
 import { ProjectOperation } from '#types';
 
+await Harness.preload({
+  plugins: [
+    ClientPlugin.make({}),
+    SpacePlugin.make({}),
+    TasksPlugin.make(),
+    AssistantPlugin.make(),
+    RoutinePlugin.make(),
+    ProjectsPlugin(),
+  ],
+});
+
 describe('ProjectOperation.CopyTaskPrompt', () => {
   test('renders the task, its addresses and the project it belongs to', async ({ expect }) => {
     await using harness = await setup();

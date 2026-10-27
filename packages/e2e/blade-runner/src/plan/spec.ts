@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
+
 import { type ReplicantEnv, type RpcHandle, type SchedulerEnv } from '../env/index.ts';
 
 export const AGENT_LOG_FILE = 'agent.log';
@@ -43,7 +45,8 @@ export type TestProps<S> = {
 /**
  * Currently blade-runner supports only `nodejs` and `chromium`.
  */
-export type Platform = 'nodejs' | 'chromium' | 'firefox' | 'webkit';
+export const Platform = Schema.Literals(['nodejs', 'chromium', 'firefox', 'webkit']);
+export type Platform = typeof Platform.Type;
 
 export type ReplicantProps = {
   /**

@@ -116,6 +116,7 @@ const FeatureKanbanCard = ({ data: feature, location, draggable, binding }: Mosa
             <FeatureCard.Tags />
             <FeatureCard.SubfeatureCount />
             <FeatureCard.TaskCount />
+            <FeatureCard.TestCount />
             <FeatureCard.ShowcaseLead />
           </FeatureCard.Body>
         </FeatureCard.Root>

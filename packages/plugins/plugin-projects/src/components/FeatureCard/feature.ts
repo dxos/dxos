@@ -33,6 +33,10 @@ export type FeatureModel = {
   /** Ids of the specs imported into the space, by repo path without anchor; such a spec opens in place of GitHub. */
   specObjects?: Readonly<Record<string, string>>;
   subfeatures: readonly Feature.Subfeature[];
+  /** The DXN code cites the feature by (`Feature.getLink`); absent without a `meta.key`. */
+  link?: string;
+  /** The code that cites the feature with a `@feature` tag. */
+  code: readonly Feature.CodeLink[];
   /** Ids of the features this one needs (`DependsOn` targets). */
   dependsOn: readonly string[];
   /** Tasks with an `Implements` relation to this feature. */
@@ -118,6 +122,8 @@ export type FeatureGraphInput = {
     status: FeatureStatus;
     specs?: readonly string[];
     subfeatures: readonly Feature.Subfeature[];
+    link?: string;
+    code?: readonly Feature.CodeLink[];
   }[];
   /** `DependsOn` edges as `[source, target]` feature ids. */
   dependsOn: readonly (readonly [string, string])[];
@@ -153,6 +159,7 @@ export const buildFeatureModels = ({
   return features.map((feature) => ({
     ...feature,
     specs: feature.specs ?? [],
+    code: feature.code ?? [],
     specObjects,
     dependsOn: dependencies.get(feature.id) ?? [],
     tasks: tasks.get(feature.id) ?? [],
