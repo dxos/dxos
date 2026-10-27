@@ -486,6 +486,42 @@ test QA-9: Hello Worker — the agent finishes the spec, plans the work and ship
     - name: Watch the Worker ship
       do: Wait for the agent's implementation tasks.
       expect: every task but the claim done or in review, and the Worker URL and its response filed on the project
+
+test QA-10: Ride Check — spec, diagram, deploy, edit a feature card, redeploy
+  desc: |
+    The Ride Check template as a demo of the whole loop. The space holds a written spec, a feature map with one card
+    per card on the page and three tasks. The take creates the space, reads the feature map and the spec, draws the
+    architecture, shows the deployed page, then adds a gust rule to the Go / no-go card, redeploys and reloads the
+    same URL. Recorded in two halves: autocue/ride-check.mjs in Composer and autocue/ride-check-redeploy.mjs on the
+    page and the terminal, spliced into one cut.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists, on a fresh profile
+    - plugin-debug, Code and Sandbox are enabled (dev-only defaults); Illustrator and Canvas are on by default
+    - the Worker is deployed at its v1 (ride-check/prepare.sh), with the gust rule committed but not deployed
+  steps:
+    - name: Create a space from the Ride Check template
+      do: Add a space and pick the "Ride Check" template.
+      expect: the space opens with the "Ride Check" project in the navtree
+    - name: Open the feature map
+      do: Open the project's Features tab.
+      expect: four planned cards, "Go / no-go", "Hourly forecast", "Best window", "Daylight"
+    - name: Open the spec
+      do: Open "Go / no-go" and its spec row.
+      expect: the spec renders in Composer with F-1 to F-4 written
+    - name: Draw the architecture
+      do: Run "Draw the architecture" (the agent, or the Drawing skill's draw operation with the diagram source).
+      expect: a drawing of the browser, the Worker with its four cards, and Open-Meteo, filed on the project
+    - name: Open the live page
+      do: Open the Worker URL for a place with calm wind and gusts over 30 km/h.
+      expect: the verdict reads GO and lists no gusts
+    - name: Add the gust rule to the card
+      do: On "Go / no-go", add the subfeature "Gust rule — warn above 30 km/h".
+      expect: the card shows three subfeatures
+    - name: Redeploy and reload
+      do: Deploy the gust-rule commit and reload the same URL.
+      expect: the verdict reads MAYBE with "Gusts up to N km/h" and a highlighted Gusts row
 ```
 
 ## Changelog
@@ -507,4 +543,14 @@ decision D-2: The take assigns all three planning tasks to one chat and never sh
   affects: [QA-9]
   why: One chat keeps the spec it wrote in its context when it plans and builds; the claim URL is a bearer credential for the account.
   rejected: Stopping before the deploy, as the take did before, which would not show the Worker answering.
+```
+
+```mdl
+decision D-3: [QA-10] demos the loop with the Ride Check template, a ride-forecast page built with DXOS UI on live Open-Meteo data, in place of [QA-9]'s JSON greeting.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-10]
+  why: Every step of the loop has to change something a viewer can see; a greeting endpoint gives the deploy and the edit nothing to show.
+  rejected: Rewriting Hello Worker in place, which its eval, QA-9 and the showcase speaking track still describe.
 ```

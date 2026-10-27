@@ -1,0 +1,28 @@
+{
+  "name": "ride-check",
+  "private": true,
+  "description": "Ride Check: a ride-forecast page built with DXOS UI, served by one Cloudflare Worker.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "deploy": "scripts/deploy.sh"
+  },
+  "dependencies": {
+    "@dxos/react-ui": "^0.16.0",
+    "@dxos/ui-theme": "^0.16.0",
+    "@effect/atom-react": "^4.0.4",
+    "@phosphor-icons/core": "^2.1.1",
+    "effect": "^4.0.4",
+    "react": "^19.2.9",
+    "react-dom": "^19.2.9"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "wrangler": "^4.153.0"
+  }
+}

@@ -1,0 +1,20 @@
+diagram flow=right
+node Browser "Rider's browser"
+group worker "Cloudflare Worker" {
+  node Page "Page · DXOS UI"
+  node Api "GET /api/forecast"
+}
+group cards "Feature cards" {
+  node Verdict "Go / no-go"
+  node Hourly "Hourly forecast"
+  node Window "Best window"
+  node Daylight "Daylight"
+}
+node Meteo "Open-Meteo"
+edge Browser -> Page "opens"
+edge Page -> Api "fetch"
+edge Api -> Meteo "forecast"
+edge Page -> Verdict
+edge Page -> Hourly
+edge Page -> Window
+edge Page -> Daylight

@@ -23,6 +23,7 @@ export const icons = [
   'ph--asterisk--regular',
   'ph--atom--regular',
   'ph--basketball--regular',
+  'ph--bicycle--regular',
   'ph--butterfly--regular',
   'ph--cactus--regular',
   'ph--cake--regular',
