@@ -23,4 +23,5 @@ export const BLOCK_TYPES = [
   'verdict',
   'plugin',
   'table',
+  'showcase',
 ] as const;

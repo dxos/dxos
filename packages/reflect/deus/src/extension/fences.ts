@@ -26,6 +26,7 @@ const BLOCK_TYPE_COLORS: Record<(typeof BLOCK_TYPES)[number], string> = {
   verdict: 'var(--color-green-400)',
   plugin: 'var(--color-fuchsia-400)',
   table: 'var(--color-red-400)',
+  showcase: 'var(--color-rose-400)',
 };
 
 const theme = EditorView.baseTheme({

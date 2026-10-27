@@ -44,7 +44,7 @@
 
 import { chromium } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
-import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { homedir } from 'node:os';
 import path from 'node:path';
@@ -55,6 +55,7 @@ import { FRAME_MODULE, injectModule } from './inject.mjs';
 import { startLogTap, startPolledLogTap } from './logs.mjs';
 import { createOverlay } from './overlay.mjs';
 import { hasFullFfmpeg, startRecorder } from './recorder.mjs';
+import { META_OPS } from './script.mjs';
 import { launchTauri } from './tauri/launch.mjs';
 
 const parseArgs = () => {
@@ -1125,6 +1126,10 @@ const server = createServer((request, response) => {
 
     try {
       const result = await handler(command);
+      // An ad-hoc session is otherwise lost with the conversation; `script.mjs write --ops` turns this log into a flow.
+      if (!META_OPS.has(command.op)) {
+        appendFileSync(path.join(options.out, 'ops.jsonl'), `${JSON.stringify(command)}\n`);
+      }
       // Serialized before the header goes out, so a result that cannot be stringified reaches the catch below.
       const body = JSON.stringify({ ok: true, ...result });
       response.writeHead(200, { 'content-type': 'application/json' });

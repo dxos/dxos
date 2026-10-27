@@ -11,6 +11,7 @@ import {
   lintMdl,
   parseChangelog,
   parseMdlBlocks,
+  parseShowcases,
 } from './check.ts';
 
 const block = (body: string) => ['```mdl', body, '```', ''].join('\n');
@@ -271,5 +272,50 @@ describe('parseMdlBlocks', () => {
       { type: 'feat', id: 'F-1', title: 'Start a call' },
     ]);
     expect(blocks[0].body).toBe('  fields:\n    name?: string\n');
+  });
+});
+
+describe('showcase', () => {
+  const feature = block('feat F-1: Start a call\n  req F-1.1: A Channel shows a call action.');
+
+  test('cites declared features and requirements', ({ expect }) => {
+    expect(messages(feature + block('showcase SC-1: A call starts\n  for: [F-1, F-1.1]'))).toEqual([]);
+  });
+
+  test('missing for', ({ expect }) => {
+    expect(
+      messages(feature + block('showcase SC-1: A call starts\n  pr: https://github.com/dxos/dxos/pull/1')),
+    ).toEqual(['Showcase is missing `for:` — name the features or requirements it shows.']);
+  });
+
+  test('cites an undeclared feature', ({ expect }) => {
+    expect(messages(feature + block('showcase SC-1: A call starts\n  for: [F-1, F-2]'))).toEqual([
+      'Showcase cites `F-2`, which this spec does not declare as a feat or req.',
+    ]);
+  });
+
+  test('reads the fields of each showcase', ({ expect }) => {
+    const text =
+      feature +
+      block(
+        [
+          'showcase SC-1: A call starts',
+          '  for: [F-1]',
+          '  pr: https://github.com/dxos/dxos/pull/1',
+          '  video: https://example.com/call.mp4  # narrated',
+          '  note: |',
+          '    Recorded on two peers.',
+        ].join('\n'),
+      );
+    expect(parseShowcases(text)).toEqual([
+      {
+        id: 'SC-1',
+        title: 'A call starts',
+        for: ['F-1'],
+        pr: 'https://github.com/dxos/dxos/pull/1',
+        video: 'https://example.com/call.mp4',
+        note: 'Recorded on two peers.',
+      },
+    ]);
   });
 });
