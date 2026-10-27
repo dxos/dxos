@@ -1,6 +1,6 @@
 ---
 spec: github:dxos/dxos/packages/plugins/plugin-zen/PLUGIN.mdl
-commit: a1525e4662630a9fde7049bcfb51424acc5f82eb
+commit: 859c2f38b9d3170c71fae8d83de5fb68c8555fea
 date: 2026-10-27
 by: agent:claude-code
 ---
@@ -8,17 +8,17 @@ by: agent:claude-code
 # Review: ZenPlugin
 
 The data model, mixer engine, binaural generator, sample player, countdown with linear fade-out and
-the Mixer/Sound/Editor components are all built and match the spec closely. Nothing is tested
-beyond module activation, so every implemented item is `untested` and every scenario `missing`.
+the Mixer/Sound/Editor components are all built and match the spec closely. Apart from the sleep fade, nothing is
+tested beyond module activation, so every other implemented item is `untested` and every scenario `missing`.
 Two divergences come from one design choice: `MixerEngine.updateLayer` rebuilds a layer on every
 change, so neither live AudioParam ramps (F-4.4) nor in-place sample muting (F-5.3) happen, though
 the generator and player both have code for them.
 
-Of 39 items: 0 done, 27 untested, 1 partial, 2 diverged, 9 missing. The sleep fade (F-6.1) fades over
-10 s instead of 30 s. Findings:
+Of 39 items: 3 done, 25 untested, 0 partial, 2 diverged, 9 missing. Only the sleep fade (F-6) is
+tested, by unit tests of `timedPlaybackStep` and of `MixerEngine` against a fake AudioContext. Findings:
 
-- **No behavioural tests.** `MixerEngine`, `BinauralGenerator` and `useCountdown` could be tested
-  with a fake AudioContext and fake timers; none are.
+- **Few behavioural tests.** Only `MixerEngine.fadeOut`/`stop` and `timedPlaybackStep` are tested; layer
+  playback, `BinauralGenerator` and `useCountdown` could be tested the same way and are not.
 - **F-4.4 diverged.** `BinauralGenerator.setConfig` (ramped) is never called; changes restart the layer.
 - **F-5.3 diverged.** Mute stops the sample node instead of setting its gain to zero.
 
@@ -223,29 +223,29 @@ verdict F-5.3: Muting a sample layer stops and drops its node rather than silenc
 ```
 
 ```mdl
-verdict F-6.1: The master gain ramps linearly to zero at the stop, but over the last 10 s, not 30 s.
-  status: partial
-  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.ts#MixerEngine.fadeOut]
+verdict F-6.1: A timed Dream fades its master gain linearly to zero over its last 30 s, or its whole length when shorter, then stops.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/sleep-fade.ts#timedPlaybackStep, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/sleep-fade.ts#sleepFadeSeconds, github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.ts#MixerEngine.fadeOut]
+  tests: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/sleep-fade.test.ts, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.test.ts]
   walkthrough:
-    - Mixer calls fadeOut with the remaining seconds once remaining falls to FADE_OUT_SECONDS (10). github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer
-    - fadeOut ramps the master gain linearly to zero over that time. github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.ts#MixerEngine.fadeOut
-  note: |
-    The fade window is a local constant of 10 s, not 30 s; a Dream shorter than 10 s fades over its whole
-    length, but one of 10 to 30 s does not. No test.
+    - sleepFadeSeconds caps the fade at SLEEP_FADE_SECONDS (30) or the Dream's duration. github:dxos/dxos/packages/plugins/plugin-zen/src/generator/sleep-fade.ts#sleepFadeSeconds
+    - timedPlaybackStep asks for the fade once remaining falls to that length, and for a stop at zero. github:dxos/dxos/packages/plugins/plugin-zen/src/generator/sleep-fade.ts#timedPlaybackStep
+    - Mixer runs the step on every countdown tick and acts on it. github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer
+    - fadeOut ramps the master gain linearly to zero over the remaining seconds. github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.ts#MixerEngine.fadeOut
 ```
 
 ```mdl
-verdict F-6.2: Stop closes the AudioContext at once and resets the fade flag; no ramp runs.
-  status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.ts#MixerEngine.stop]
-  note: No test.
+verdict F-6.2: A manual stop closes the AudioContext at once with no ramp, and the step then does nothing.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.ts#MixerEngine.stop, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/sleep-fade.ts#timedPlaybackStep, github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer]
+  tests: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/mixer.test.ts, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/sleep-fade.test.ts]
 ```
 
 ```mdl
-verdict F-6.3: The fade effect returns early when the Dream is not timed.
-  status: untested
-  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/components/Mixer/Mixer.tsx#Mixer]
-  note: No test.
+verdict F-6.3: timedPlaybackStep never fades or stops an untimed Dream.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/sleep-fade.ts#timedPlaybackStep, github:dxos/dxos/packages/plugins/plugin-zen/src/generator/sleep-fade.ts#sleepFadeSeconds]
+  tests: [github:dxos/dxos/packages/plugins/plugin-zen/src/generator/sleep-fade.test.ts]
 ```
 
 ```mdl

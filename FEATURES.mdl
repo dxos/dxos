@@ -899,7 +899,7 @@ feature code-index: CodeIndex
 
 ```mdl
 feature plugin-zen.sleep-fade: Timed Dreams fade out instead of stopping
-  status: in-progress
+  status: operational
   specs: [packages/plugins/plugin-zen/PLUGIN.mdl#F-6]
   depends: [plugin-zen]
   note: |
@@ -934,4 +934,15 @@ decision D-3: plugin-zen.sleep-fade moves to in-progress.
   for: user:dmaretskyi
   affects: [plugin-zen.sleep-fade]
   why: Its spec items now exist (PLUGIN.mdl F-6, commit a1525e46) and the review (commit 91bea605) finds the fade partly built; the remaining work is in the plugin-zen TASKS.md.
+```
+
+```mdl
+decision D-4: plugin-zen.sleep-fade moves to operational.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [plugin-zen.sleep-fade]
+  why: The code (commit 859c2f38) fades a timed Dream over its last 30 s, and the re-run review judges F-6.1, F-6.2 and F-6.3 done, each held by a unit test. It is marked operational ahead of its dependency plugin-zen, which stays in-progress: the fade does not rely on the untested parts of that spec.
+  rejected:
+    - Keep in-progress until plugin-zen is operational — the status would contradict the reviews of the items it cites.
 ```
