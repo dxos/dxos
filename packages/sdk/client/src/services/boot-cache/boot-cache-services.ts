@@ -45,6 +45,11 @@ export const DEFAULT_BOOT_CACHE_MAX_BYTES = 16 * 1024 * 1024;
 export type BootCacheOptions = {
   /** Upper bound on the working-set bytes persisted across every space. */
   maxBytes?: number;
+  /**
+   * Holds the services' open until it resolves, when the client opened from a snapshot, so an app can
+   * start its worker once the page has what it needs; a client without a snapshot opens them at once.
+   */
+  servicesGate?: () => Promise<void>;
 };
 
 /** A space whose working set the boot cache persists. */
@@ -80,6 +85,7 @@ export class BootCacheServices implements ClientServicesProvider {
   readonly #provider: ClientServicesProvider;
   readonly #store = new BootCacheStore();
   readonly #maxBytes: number;
+  readonly #servicesGate?: () => Promise<void>;
   readonly #providerOpened = Promise.withResolvers<void>();
   /** Messages each recorded stream delivered this session, written with the next {@link persist}. */
   readonly #recorded = new Map<string, unknown[]>();
@@ -94,9 +100,13 @@ export class BootCacheServices implements ClientServicesProvider {
   readonly rpc: ClientServicesRpc;
   readonly services: Partial<ClientServices>;
 
-  constructor(provider: ClientServicesProvider, { maxBytes = DEFAULT_BOOT_CACHE_MAX_BYTES }: BootCacheOptions = {}) {
+  constructor(
+    provider: ClientServicesProvider,
+    { maxBytes = DEFAULT_BOOT_CACHE_MAX_BYTES, servicesGate }: BootCacheOptions = {},
+  ) {
     this.#provider = provider;
     this.#maxBytes = maxBytes;
+    this.#servicesGate = servicesGate;
     // Every deferred call receives the rejection too; this records it when no call is waiting.
     this.#providerOpened.promise.catch((error) => log.warn('client services failed to open', { error }));
     const resolve = Effect.tryPromise({
@@ -152,10 +162,16 @@ export class BootCacheServices implements ClientServicesProvider {
     for (const [spaceId, rows] of snapshot?.spaces ?? []) {
       this.#written.set(spaceId, signatureOf(rows));
     }
-    const opening = this.#provider.open().then(() => {
-      this.#providerOpen = true;
-      markMilestone('boot-cache.services-open');
-    });
+    const gate = snapshot && this.#servicesGate ? this.#servicesGate() : Promise.resolve();
+    const opening = gate
+      .then(() => {
+        markMilestone('boot-cache.services-requested');
+        return this.#provider.open();
+      })
+      .then(() => {
+        this.#providerOpen = true;
+        markMilestone('boot-cache.services-open');
+      });
     opening.then(this.#providerOpened.resolve, this.#providerOpened.reject);
     if (snapshot) {
       markMilestone('boot-cache.opened-from-cache');
