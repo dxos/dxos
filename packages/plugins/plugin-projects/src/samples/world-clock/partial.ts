@@ -67,19 +67,21 @@ export const makePartial = (variant: Variant): SampleSpace.Partial<WorldClockRes
 
         const projectRef = Ref.make(project);
         const features: Feature.Feature[] = [];
+        const byBlock = new Map<string, Feature.Feature>();
         for (const block of FeatureSpec.parse(WORLD_CLOCK_SPEC)) {
-          features.push(
-            yield* Database.add(
-              Feature.make({
-                name: block.name,
-                description: block.description,
-                requirements: block.requirements,
-                status: 'planned',
-                specs: [FeatureSpec.getSource(WORLD_CLOCK_SPEC_PATH, block.id)],
-                project: projectRef,
-              }),
-            ),
+          const parentFeature = block.parent ? byBlock.get(block.parent) : undefined;
+          const feature = yield* Database.add(
+            Feature.make({
+              name: block.name,
+              description: block.description,
+              requirements: block.requirements,
+              status: 'planned',
+              specs: [FeatureSpec.getSource(WORLD_CLOCK_SPEC_PATH, block.id)],
+              ...(parentFeature ? { parent: Ref.make(parentFeature) } : { project: projectRef }),
+            }),
           );
+          byBlock.set(block.id, feature);
+          features.push(feature);
         }
 
         const root = features.find((feature) => feature.specs?.[0]?.endsWith(`#${ROOT_FEATURE}`));

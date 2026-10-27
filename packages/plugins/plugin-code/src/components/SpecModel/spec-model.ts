@@ -220,34 +220,8 @@ const parseSignature = (line: string): Pick<EndpointModel, 'name' | 'inputs' | '
   return { name: match[1], inputs, ...(match[3] && { output: match[3] }) };
 };
 
-/** An unindented `<kind> <id>[: title]` line, which opens a block even inside another block's fence. */
-const BLOCK_HEADER = /^([a-z]\w*)\s+([^\s:][^\n:]*?)\s*(?::\s*(.*?))?\s*$/;
-
-/**
- * The blocks of a spec, one per header rather than one per fence: specs often list several `feat`, `op` or
- * `scenario` blocks in a single fence, and reading only each fence's first header drops the rest from every view.
- */
-export const parseSpecBlocks = (text: string): MdlBlock[] =>
-  parseMdlBlocks(text).flatMap((block): MdlBlock[] => {
-    const lines = block.body.split('\n');
-    const starts = lines.flatMap((line, index) => (BLOCK_HEADER.test(line) ? [index] : []));
-    if (starts.length === 0) {
-      return [block];
-    }
-    const blocks: MdlBlock[] = [{ ...block, body: lines.slice(0, starts[0]).join('\n') }];
-    starts.forEach((start, index) => {
-      const match = lines[start].match(BLOCK_HEADER);
-      if (match) {
-        const [, type, id, title] = match;
-        const body = lines.slice(start + 1, starts[index + 1]).join('\n');
-        blocks.push({ type, id: id.trim(), ...(title && { title }), body, from: block.from });
-      }
-    });
-    return blocks;
-  });
-
 const definitionBlocks = (text: string): MdlBlock[] =>
-  parseSpecBlocks(text).filter(({ type, id }) => id && !NON_DEFINITION_KINDS.has(type));
+  parseMdlBlocks(text).filter(({ type, id }) => id && !NON_DEFINITION_KINDS.has(type));
 
 /** The id a token names: itself, or the nearest enclosing id (`F-1.2` names `F-1`; `Meeting.call` names `Meeting`). */
 const resolveToken = (token: string, ids: ReadonlySet<string>): string | undefined => {
@@ -433,7 +407,7 @@ const SQL_REFERENCE = /\bREFERENCES\s+([\w.]+)\s*\(/i;
  * them. A table is always a stored root, its columns are its fields, and a `REFERENCES` column references a table.
  */
 export const buildDataModel = (text: string): DataModel => {
-  const parsed = parseSpecBlocks(text);
+  const parsed = parseMdlBlocks(text);
   const blocks = parsed.filter(({ type, id }) => type === 'type' && id);
   const tables = parsed.filter(({ type, id }) => type === 'table' && id);
   const ids = new Set(blocks.map(({ id }) => id));
@@ -533,7 +507,7 @@ export const buildDataModel = (text: string): DataModel => {
 
 /** The `op` blocks of a spec, then its `service` blocks with their methods and events. */
 export const buildApiModel = (text: string): ApiModel => {
-  const blocks = parseSpecBlocks(text);
+  const blocks = parseMdlBlocks(text);
   const types = blocks.filter(({ type, id }) => type === 'type' && id).map(({ id }) => id);
   const groups = blocks
     .filter((block): block is MdlBlock & { type: 'op' | 'service' } =>

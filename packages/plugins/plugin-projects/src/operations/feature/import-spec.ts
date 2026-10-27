@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, Filter, Obj } from '@dxos/echo';
+import { Database, Filter, Obj, Ref } from '@dxos/echo';
 
 import { Feature, FeatureOperation, FeatureSpec } from '#types';
 
@@ -26,10 +26,15 @@ const handler: Operation.WithHandler<typeof FeatureOperation.ImportSpec> = Featu
 
       const created: string[] = [];
       const updated: string[] = [];
-      for (const { id, name, description, requirements } of blocks) {
+      // Imported features by block id, so a sub-feature (`F-3.1`) is placed beneath the feature it is part of.
+      const imported = new Map<string, Feature.Feature>();
+      // Shallower ids first, so a parent exists before any sub-feature that names it.
+      const ordered = blocks.toSorted((left, right) => left.id.split('.').length - right.id.split('.').length);
+      for (const { id, name, description, requirements, parent: specParent } of ordered) {
         const source = FeatureSpec.getSource(path, id);
         const feature = existing.get(source);
         if (feature) {
+          imported.set(id, feature);
           // The name and description may have been rewritten by hand since; the spec owns only the requirements.
           if (JSON.stringify(feature.requirements ?? []) !== JSON.stringify(requirements)) {
             Obj.update(feature, (feature) => {
@@ -39,6 +44,7 @@ const handler: Operation.WithHandler<typeof FeatureOperation.ImportSpec> = Featu
           }
           continue;
         }
+        const parentFeature = specParent ? imported.get(specParent) : undefined;
         const added = yield* Database.add(
           Feature.make({
             name,
@@ -46,9 +52,10 @@ const handler: Operation.WithHandler<typeof FeatureOperation.ImportSpec> = Featu
             requirements,
             status: 'planned',
             specs: [source],
-            ...(parent ? { parent } : { project }),
+            ...(parentFeature ? { parent: Ref.make(parentFeature) } : parent ? { parent } : { project }),
           }),
         );
+        imported.set(id, added);
         created.push(added.id);
       }
       yield* Database.flush();

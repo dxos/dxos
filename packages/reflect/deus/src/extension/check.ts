@@ -16,38 +16,54 @@ export const FENCE_REGEX = /^```mdl\s*$/gm;
 
 type BlockHeader = { type: string; id: string; from: number; to: number; body: string };
 
+/** An unindented `<kind> <id>` line, which opens another block inside the same fence. */
+const LATER_HEADER = /^[a-z]\w*\s+[^\s:]/;
+
 /**
  * Extracts block headers from the raw document text.
- * Returns { type, id, from, to, body } for each fenced block opening,
- * reading the block type from the first line of the block body.
+ * Returns { type, id, from, to, body } for each block, reading the block type from its header line. A fence may hold
+ * several blocks, each opened by an unindented header; the first spans the fence's opening line and each later one
+ * spans its own header line, so diagnostics land on the block they are about.
  */
 const parseBlockHeaders = (text: string): BlockHeader[] => {
   const results: BlockHeader[] = [];
   const fenceRe = new RegExp(FENCE_REGEX.source, FENCE_REGEX.flags);
   let match: RegExpExecArray | null;
   while ((match = fenceRe.exec(text)) !== null) {
-    const fenceEnd = match.index + match[0].length;
+    const fenceStart = match.index;
+    const fenceEnd = fenceStart + match[0].length;
     const bodyStart = text.indexOf('\n', fenceEnd);
     if (bodyStart === -1) {
       continue;
     }
     const firstBodyLineStart = bodyStart + 1;
-    const firstBodyLineEnd = text.indexOf('\n', firstBodyLineStart);
-    const firstBodyLine = (
-      firstBodyLineEnd === -1 ? text.slice(firstBodyLineStart) : text.slice(firstBodyLineStart, firstBodyLineEnd)
-    ).trim();
 
     // An unclosed block (mid-edit) ends at the next fence of either kind, or at the end of the text.
     const endMatch = /^```/m.exec(text.slice(firstBodyLineStart));
-    const body = endMatch
+    const fenceBody = endMatch
       ? text.slice(firstBodyLineStart, firstBodyLineStart + endMatch.index)
       : text.slice(firstBodyLineStart);
 
-    // First body line: "<blockType> [name][: label]"
-    const lineMatch = firstBodyLine.match(/^(\w+)(?:\s+([^\s:][^\n:]*?))?(?::\s*[^\n]*)?\s*$/);
-    const blockType = lineMatch?.[1] ?? '';
-    const id = lineMatch?.[2]?.trim() ?? '';
-    results.push({ type: blockType, id, from: match.index, to: match.index + match[0].length, body });
+    const starts: number[] = [];
+    let lineStart = 0;
+    for (const line of fenceBody.split('\n')) {
+      if (starts.length === 0 || LATER_HEADER.test(line)) {
+        starts.push(lineStart);
+      }
+      lineStart += line.length + 1;
+    }
+    starts.forEach((start, index) => {
+      const body = fenceBody.slice(start, starts[index + 1]);
+      const newline = body.indexOf('\n');
+      const header = (newline === -1 ? body : body.slice(0, newline)).trim();
+      // Header line: "<blockType> [name][: label]"
+      const lineMatch = header.match(/^(\w+)(?:\s+([^\s:][^\n:]*?))?(?::\s*[^\n]*)?\s*$/);
+      const blockType = lineMatch?.[1] ?? '';
+      const id = lineMatch?.[2]?.trim() ?? '';
+      const from = index === 0 ? fenceStart : firstBodyLineStart + start;
+      const to = index === 0 ? fenceEnd : from + (newline === -1 ? body.length : newline);
+      results.push({ type: blockType, id, from, to, body });
+    });
   }
   return results;
 };
@@ -152,11 +168,11 @@ export type MdlBlock = {
   title?: string;
   /** The block's lines after the header. */
   body: string;
-  /** Offset of the opening fence in the text. */
+  /** Offset of the opening fence for a fence's first block, or of the header line for each later one. */
   from: number;
 };
 
-/** Every fenced `mdl` block of a spec, in document order. */
+/** Every `mdl` block of a spec, in document order, including each later block of a fence that holds several. */
 export const parseMdlBlocks = (text: string): MdlBlock[] =>
   parseBlockHeaders(text).map(({ type, id, from, body }) => {
     const newline = body.indexOf('\n');

@@ -4,6 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import { parseMdlBlocks } from '@dxos/deus/extension';
+
 import CALLS_SPEC from '../../../../plugin-calls/PLUGIN.mdl?raw';
 import CANVAS_SPEC from '../../../../plugin-canvas/PLUGIN.mdl?raw';
 import MARKDOWN_SPEC from '../../../../plugin-markdown/PLUGIN.mdl?raw';
@@ -14,7 +16,6 @@ import {
   buildDefinitionGraph,
   parseField,
   parseFields,
-  parseSpecBlocks,
   selectDefinitions,
   splitTopLevel,
 } from './spec-model.ts';
@@ -70,11 +71,11 @@ describe('spec model', () => {
       '  req F-2.1: Shows text.',
       '```',
     ].join('\n');
-    expect(parseSpecBlocks(spec).map(({ type, id, title }) => [type, id, title])).toEqual([
+    expect(parseMdlBlocks(spec).map(({ type, id, title }) => [type, id, title])).toEqual([
       ['feat', 'F-1', 'Edit'],
       ['feat', 'F-2', 'View'],
     ]);
-    expect(parseSpecBlocks(spec)[1].body).toContain('req F-2.1');
+    expect(parseMdlBlocks(spec)[1].body).toContain('req F-2.1');
     const features = buildDefinitionGraph(MARKDOWN_SPEC).definitions.filter(({ kind }) => kind === 'feat');
     expect(features.length).toBeGreaterThan(5);
   });
