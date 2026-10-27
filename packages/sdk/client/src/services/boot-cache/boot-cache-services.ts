@@ -145,6 +145,10 @@ export class BootCacheServices implements ClientServicesProvider {
           return undefined;
         });
     this.#snapshot = snapshot;
+    // What the store already holds needs no rewrite until the working set moves on from it.
+    for (const [spaceId, rows] of snapshot?.spaces ?? []) {
+      this.#written.set(spaceId, signatureOf(rows));
+    }
     const opening = this.#provider.open().then(() => {
       this.#providerOpen = true;
       markMilestone('boot-cache.services-open');
