@@ -386,6 +386,7 @@ export const remove = (
         db.removeFeedItemsByIds(
           feed,
           items.map((item) => item.id),
+          { branches: items.map((item) => getBranch(item) ?? null) },
         ),
       ),
     ),

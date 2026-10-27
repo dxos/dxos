@@ -421,9 +421,16 @@ export class FeedHandle {
     return core && !core.deleted ? core.entity : undefined;
   }
 
-  async delete(ids: string[]): Promise<void> {
-    // Read before the cores go: each tombstone must land on the branch of the object it removes.
-    const branches = ids.map((id) => (EntityId.isValid(id) ? (this.#cores.get(id)?.branch ?? null) : null));
+  /**
+   * Removes the items with these ids. Each tombstone lands on its item's branch: the live copy's when
+   * this handle holds one, else `branches[index]` as read with the item, else the root.
+   */
+  async delete(ids: string[], branches?: ReadonlyArray<string | null>): Promise<void> {
+    // Read before the cores go.
+    const tombstoneBranches = ids.map((id, index) => {
+      const core = EntityId.isValid(id) ? this.#cores.get(id) : undefined;
+      return core !== undefined ? (core.branch ?? null) : (branches?.[index] ?? null);
+    });
 
     // Optimistic update.
     const deleted: Entity.Unknown[] = [];
@@ -453,7 +460,7 @@ export class FeedHandle {
         spaceId: this._spaceId,
         feedId: this._feedId,
         objectIds: ids,
-        branches,
+        branches: tombstoneBranches,
       });
     } catch (err) {
       this._error = err as Error;

@@ -186,6 +186,39 @@ describe('feed branches', () => {
     }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
   });
 
+  // D-12: a client with no live copy of the item still removes it from its own branch, read from the item.
+  test('removing a snapshot kept across a reload leaves its branch', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+    const db = await peer.createDatabase();
+    const branch = await Effect.gen(function* () {
+      const feed = yield* makeFeed();
+      const a1 = Obj.make(TestSchema.Person, { name: 'A1' });
+      yield* Feed.append(feed, [a1]);
+      const branch = yield* Feed.fork(feed, [Obj.make(TestSchema.Person, { name: 'B1' })], { at: a1 });
+      yield* Feed.append(feed, [Obj.make(TestSchema.Person, { name: 'B2' })], { branch });
+      yield* Database.flush();
+      return branch;
+    }).pipe(Effect.provide(Database.layer(db)), EffectEx.runAndForwardErrors);
+
+    await peer.reload();
+    const db2 = await peer.openLastDatabase();
+    const snapshot = await Effect.gen(function* () {
+      const [feed] = yield* Database.query(Filter.type(Feed.Feed)).run;
+      return Obj.getSnapshot((yield* queryByName(feed))('B1'));
+    }).pipe(Effect.provide(Database.layer(db2)), EffectEx.runAndForwardErrors);
+    expect(Feed.getBranch(snapshot)).toEqual(branch);
+
+    await peer.reload();
+    const db3 = await peer.openLastDatabase();
+    await Effect.gen(function* () {
+      const [feed] = yield* Database.query(Filter.type(Feed.Feed)).run;
+      yield* Feed.remove(feed, [snapshot]);
+      yield* Database.flush();
+      const names = (items: readonly TestSchema.Person[]) => items.map((item) => item.name);
+      expect(names(yield* Feed.walk(feed, Filter.type(TestSchema.Person), { branch }).run)).toEqual(['A1', 'B2']);
+    }).pipe(Effect.provide(Database.layer(db3)), EffectEx.runAndForwardErrors);
+  });
+
   // F-4.1: a default read covers one branch, so a branch never reaches a reader that did not ask for it.
   test('a default feed read covers only the root branch, indexed or not', async ({ expect }) => {
     await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person], assignQueuePositions: true });

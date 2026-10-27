@@ -180,7 +180,11 @@ export interface EchoDatabase extends Database.Database {
   /**
    * Removes feed entities by id.
    */
-  removeFeedItemsByIds(feed: Feed.Feed, ids: string[]): Promise<void>;
+  removeFeedItemsByIds(
+    feed: Feed.Feed,
+    ids: string[],
+    options?: { branches?: ReadonlyArray<string | null> },
+  ): Promise<void>;
 
   /**
    * Syncs a feed with the server.
@@ -798,11 +802,16 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     await this.removeFeedItemsByIds(
       feed,
       entities.map((entity) => entity.id),
+      { branches: entities.map((entity) => Feed.getBranch(entity) ?? null) },
     );
   }
 
-  async removeFeedItemsByIds(feed: Feed.Feed, ids: string[]): Promise<void> {
-    await this.#getFeedHandle(feed).delete(ids);
+  async removeFeedItemsByIds(
+    feed: Feed.Feed,
+    ids: string[],
+    options?: { branches?: ReadonlyArray<string | null> },
+  ): Promise<void> {
+    await this.#getFeedHandle(feed).delete(ids, options?.branches);
   }
 
   async syncFeed(feed: Feed.Feed, options?: Feed.SyncOptions): Promise<void> {
