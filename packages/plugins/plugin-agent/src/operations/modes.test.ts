@@ -162,7 +162,7 @@ describe('Modes', () => {
   );
 
   it.effect(
-    'keeps a skill removed from the instructions out of a conversation across mode switches',
+    'mode switches neither restore a skill removed from the instructions nor take one a chat started with',
     Effect.fnUntraced(
       function* ({ expect }) {
         const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
@@ -191,6 +191,19 @@ describe('Modes', () => {
         yield* Operation.invoke(ModeOperation.SwitchMode, { chat: chatRef, mode: Mode.DEFAULT });
         yield* Database.flush();
         expect(yield* boundKeys(agentRef, chat)).not.toContain(RelaySkill.key);
+
+        // The agent's own chat started with Relay, and an edit to the instructions never takes it away.
+        const primary = yield* Agent.loadChat(agent);
+        expect(primary).toBeDefined();
+        if (!primary) {
+          return;
+        }
+        yield* Operation.invoke(ModeOperation.SwitchMode, { chat: Ref.make(primary), mode: 'Note-taker' });
+        yield* Database.flush();
+        yield* Operation.invoke(ModeOperation.SwitchMode, { chat: Ref.make(primary), mode: Mode.DEFAULT });
+        yield* Database.flush();
+        expect(yield* boundKeys(agentRef, primary)).toContain(RelaySkill.key);
+        expect(yield* boundKeys(agentRef, primary)).not.toContain(NoteTakerSkill.key);
       },
       Effect.provide(Layer.merge(TestLayer, testSpaceLayer)),
       TestHelpers.provideTestContext,
