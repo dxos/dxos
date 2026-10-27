@@ -10,76 +10,66 @@ import { type SeededMessage } from '../checks/index.ts';
 import { type GmailClient, type GmailError, rewriteHeaders } from '../gmail/index.ts';
 import { POOL_LABEL } from '../pool/index.ts';
 
-/** Label the canary puts on every copy, so it can find its own copies in Gmail. Sync ignores it. */
-export const SEED_LABEL = 'dx-seed';
-
 /** Header that maps a seeded copy back to the pool message it was copied from. */
 export const SEED_HEADER = 'X-Dx-Seed';
-
-const DAY = 24 * 60 * 60 * 1000;
 
 // Gmail allows 250 quota units per user per second; an insert costs 25.
 const WRITE_CONCURRENCY = 4;
 
-export type SeedResult = {
+export type RotateResult = {
   readonly poolSize: number;
-  /** Gmail ids of the copies, in the order they were seeded. */
-  readonly seededIds: readonly string[];
+  /** The fresh copies, as Gmail reports them, in the order they were seeded. */
+  readonly seeded: readonly SeededMessage[];
+  /** Pool messages the copies replaced, now in Trash. */
+  readonly trashed: number;
 };
 
-/** Copies pool messages into the inbox as fresh mail for the sync to pick up, and cleans up old copies. */
-export class Seeder {
-  readonly #gmail: GmailClient;
+/**
+ * Keeps the pool fresh for the sync: each night the oldest pool messages are replaced by copies dated
+ * now, carrying the pool label and nothing else, so the inbox keeps its size and only `enron-pool`.
+ */
+/** The Gmail calls the rotation makes. */
+export type SeederGmail = Pick<
+  GmailClient,
+  'ensureLabel' | 'listIds' | 'getMessage' | 'insert' | 'trash' | 'getMetadata'
+>;
 
-  constructor(gmail: GmailClient) {
+export class Seeder {
+  readonly #gmail: SeederGmail;
+
+  constructor(gmail: SeederGmail) {
     this.#gmail = gmail;
   }
 
-  /** Copies `count` pool messages into the inbox as fresh `dx-seed` mail. */
-  seed({ count, now }: { count: number; now: Date }): Effect.Effect<SeedResult, GmailError> {
+  /**
+   * Copies the `count` oldest pool messages into the inbox as new mail, then trashes the originals,
+   * so the sync sees both new mail and deletes. A copy is inserted before its original is trashed,
+   * so a failed night never shrinks the pool.
+   */
+  rotate({ count, now }: { count: number; now: Date }): Effect.Effect<RotateResult, GmailError> {
     return Effect.gen({ self: this }, function* () {
+      const poolLabel = yield* this.#gmail.ensureLabel(POOL_LABEL);
+      // Gmail lists newest first, so the oldest pool messages are at the end.
       const poolIds = yield* this.#gmail.listIds(`label:${POOL_LABEL}`);
-      const seedLabel = yield* this.#gmail.ensureLabel(SEED_LABEL);
       const nonce = now.toISOString().replace(/[^0-9]/g, '');
-      const seededIds = yield* Effect.forEach(
-        pickPoolSlice(poolIds, count, now),
+      const seeded = yield* Effect.forEach(
+        poolIds.slice(-count),
         (poolId) =>
-          this.#gmail.getMessage(poolId).pipe(
-            Effect.map((message) => makeSeedCopy(message, { poolId, now, nonce })),
-            Effect.flatMap((copy) => this.#gmail.insert(copy, ['INBOX', seedLabel])),
-          ),
-        { concurrency: WRITE_CONCURRENCY },
-      );
-      return { poolSize: poolIds.length, seededIds };
-    });
-  }
-
-  /** Moves copies older than `days` to Trash, so the inbox stays small and deletes are exercised too. */
-  trash(days = 2): Effect.Effect<number, GmailError> {
-    return Effect.gen({ self: this }, function* () {
-      const ids = yield* this.#gmail.listIds(`label:${SEED_LABEL} older_than:${days}d`);
-      yield* Effect.forEach(ids, (id) => this.#gmail.trash(id), { concurrency: WRITE_CONCURRENCY, discard: true });
-      return ids.length;
-    });
-  }
-
-  /** The copies seeded in the last `days`, with what the content check compares. */
-  listSeeded(days = 2): Effect.Effect<SeededMessage[], GmailError> {
-    return Effect.gen({ self: this }, function* () {
-      const ids = yield* this.#gmail.listIds(`label:${SEED_LABEL} newer_than:${days}d`);
-      return yield* Effect.forEach(
-        ids,
-        (id) =>
-          this.#gmail.getMetadata(id, ['Subject', 'From']).pipe(
-            Effect.map((message): SeededMessage => ({
+          Effect.gen({ self: this }, function* () {
+            const copy = makeSeedCopy(yield* this.#gmail.getMessage(poolId), { poolId, now, nonce });
+            const copyId = yield* this.#gmail.insert(copy, ['INBOX', poolLabel]);
+            yield* this.#gmail.trash(poolId);
+            const message = yield* this.#gmail.getMetadata(copyId, ['Subject', 'From']);
+            return {
               gmailId: message.id,
               insertedAt: message.internalDate,
               subject: message.headers.Subject,
               sender: message.headers.From && MailSync.parseFromHeader(message.headers.From)?.email,
-            })),
-          ),
-        { concurrency: 8 },
+            } satisfies SeededMessage;
+          }),
+        { concurrency: WRITE_CONCURRENCY },
       );
+      return { poolSize: poolIds.length, seeded, trashed: seeded.length };
     });
   }
 }
@@ -102,16 +92,3 @@ export const makeSeedCopy = (
       `${SEED_HEADER}: ${poolId}`,
     ],
   });
-
-/**
- * Picks the pool messages for one night: a contiguous slice of the pool's ids, advanced by `count`
- * each day, so consecutive nights copy different mail and the run needs no stored cursor.
- */
-export const pickPoolSlice = (poolIds: readonly string[], count: number, now: Date): string[] => {
-  if (poolIds.length === 0) {
-    return [];
-  }
-  const sorted = [...poolIds].sort();
-  const offset = (Math.floor(now.getTime() / DAY) * count) % sorted.length;
-  return Array.from({ length: Math.min(count, sorted.length) }, (_, index) => sorted[(offset + index) % sorted.length]);
-};

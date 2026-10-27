@@ -2,39 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
+import * as EffectEx from '@dxos/effect/EffectEx';
+
 import { readHeader } from '../gmail/index.ts';
-import { SEED_HEADER, makeSeedCopy, pickPoolSlice } from './Seeder.ts';
-
-const DAY = 24 * 60 * 60 * 1000;
-
-describe('pickPoolSlice', () => {
-  const pool = Array.from({ length: 250 }, (_, index) => `id-${String(index).padStart(3, '0')}`);
-
-  test('consecutive days copy different mail', ({ expect }) => {
-    const today = new Date(Date.UTC(2026, 9, 26, 6));
-    const first = pickPoolSlice(pool, 100, today);
-    const second = pickPoolSlice(pool, 100, new Date(today.getTime() + DAY));
-    expect(first).toHaveLength(100);
-    expect(first.filter((id) => second.includes(id))).toEqual([]);
-  });
-
-  test('wraps around the end of the pool and never repeats within a night', ({ expect }) => {
-    const slice = pickPoolSlice(pool.slice(0, 30), 100, new Date(0));
-    expect(slice).toHaveLength(30);
-    expect(new Set(slice).size).toBe(30);
-  });
-
-  test('does not depend on the order Gmail lists the pool in', ({ expect }) => {
-    const now = new Date(Date.UTC(2026, 0, 1));
-    expect(pickPoolSlice([...pool].reverse(), 10, now)).toEqual(pickPoolSlice(pool, 10, now));
-  });
-
-  test('an empty pool gives nothing to seed', ({ expect }) => {
-    expect(pickPoolSlice([], 100, new Date())).toEqual([]);
-  });
-});
+import { SEED_HEADER, Seeder, type SeederGmail, makeSeedCopy } from './Seeder.ts';
 
 const POOL_MESSAGE = [
   'Message-ID: <12345.JavaMail.evans@thyme>',
@@ -92,5 +66,43 @@ describe('makeSeedCopy', () => {
     const copy = makeSeedCopy(POOL_MESSAGE.replaceAll('\r\n', '\n'), { poolId: 'id', now: NOW, nonce: 'n' });
     expect(copy.includes('\r')).toBe(false);
     expect(readHeader(copy, 'Subject')).toBe('Re: forecast for the west desk');
+  });
+});
+
+describe('Seeder.rotate', () => {
+  test('replaces the oldest pool messages with copies under the pool label only', async ({ expect }) => {
+    const calls: string[] = [];
+    const gmail: SeederGmail = {
+      ensureLabel: (name) => Effect.succeed(`label:${name}`),
+      // Gmail lists newest first.
+      listIds: () => Effect.succeed(['newest', 'middle', 'oldest-1', 'oldest-0']),
+      getMessage: (id) => Effect.succeed(POOL_MESSAGE.replace('12345', id)),
+      insert: (message, labelIds) => {
+        const copyId = `copy-of-${readHeader(message, SEED_HEADER)}`;
+        calls.push(`insert ${copyId} ${labelIds.join(',')}`);
+        return Effect.succeed(copyId);
+      },
+      trash: (id) => Effect.sync(() => void calls.push(`trash ${id}`)),
+      getMetadata: (id) =>
+        Effect.succeed({
+          id,
+          internalDate: NOW.getTime(),
+          headers: { Subject: 'Re: forecast', From: 'Phillip Allen <phillip.allen@enron.com>' },
+        }),
+    };
+
+    const result = await EffectEx.runPromise(new Seeder(gmail).rotate({ count: 2, now: NOW }));
+
+    expect(result.poolSize).toBe(4);
+    expect(result.trashed).toBe(2);
+    expect(result.seeded.map((message) => message.gmailId)).toEqual(['copy-of-oldest-1', 'copy-of-oldest-0']);
+    expect(result.seeded[0].sender).toBe('phillip.allen@enron.com');
+    for (const poolId of ['oldest-1', 'oldest-0']) {
+      // The copy lands before its original goes, so a failed night never shrinks the pool.
+      expect(calls.indexOf(`insert copy-of-${poolId} INBOX,label:enron-pool`)).toBeLessThan(
+        calls.indexOf(`trash ${poolId}`),
+      );
+    }
+    expect(calls.filter((call) => call.startsWith('trash'))).toHaveLength(2);
   });
 });

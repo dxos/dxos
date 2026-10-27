@@ -23,20 +23,14 @@ export type NightlyOptions = {
 };
 
 /**
- * One nightly run: trash old copies, seed fresh ones, wait for the sync to pick them up, then check
- * the whole window of sync runs and the copies of the last two days.
+ * One nightly run: rotate the oldest pool messages into fresh copies, wait for the sync to pick them
+ * up, then check the whole window of sync runs and tonight's copies.
  */
 export class Nightly {
-  readonly #seeder: Pick<Seeder, 'seed' | 'trash' | 'listSeeded'>;
+  readonly #seeder: Pick<Seeder, 'rotate'>;
   readonly #space: Pick<CanarySpace, 'spaceId' | 'snapshot'>;
 
-  constructor({
-    seeder,
-    space,
-  }: {
-    seeder: Pick<Seeder, 'seed' | 'trash' | 'listSeeded'>;
-    space: Pick<CanarySpace, 'spaceId' | 'snapshot'>;
-  }) {
+  constructor({ seeder, space }: { seeder: Pick<Seeder, 'rotate'>; space: Pick<CanarySpace, 'spaceId' | 'snapshot'> }) {
     this.#seeder = seeder;
     this.#space = space;
   }
@@ -50,8 +44,8 @@ export class Nightly {
     return Effect.gen({ self: this }, function* () {
       const startedAt = new Date();
       const since = startedAt.getTime() - Duration.toMillis(window);
-      const trashed = yield* this.#seeder.trash();
-      const { poolSize, seededIds } = yield* this.#seeder.seed({ count, now: startedAt });
+      const { poolSize, seeded, trashed } = yield* this.#seeder.rotate({ count, now: startedAt });
+      const seededIds = seeded.map((message) => message.gmailId);
 
       const deadline = startedAt.getTime() + Duration.toMillis(syncTimeout);
       let snapshot: SpaceSnapshot = yield* this.#space.snapshot();
@@ -69,7 +63,6 @@ export class Nightly {
         snapshot = yield* this.#space.snapshot();
       }
 
-      const seeded = yield* this.#seeder.listSeeded();
       const report = runChecks(snapshot, seeded, { now: Date.now(), since });
       return {
         ...report,

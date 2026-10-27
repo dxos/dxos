@@ -14,9 +14,11 @@ Design: the [Mail Sync Canary spec](https://claude.ai/artifact/GymNuUNJiiph2LuiD
   canary uses, dated inside the sync's 30-day window so the canary space syncs all of them.
 - **Canary space (once).** A preview identity owns a space bound to the test account with no filter,
   the default sync-back and the product's `*/10` remote sync trigger: the users' code path.
-- **Nightly.** CI copies 100 pool messages into the inbox as fresh mail (label `dx-seed`), waits for
-  the space's own sync to pick them up, and checks the last 25 hours of the Execution Trace feed, so a
-  failure between two nights is seen even if later runs succeeded.
+- **Nightly.** CI rotates the pool: it copies the 100 oldest pool messages into the inbox as new mail
+  dated now (label `enron-pool` only) and trashes the originals, so the inbox stays at 1,000 and the
+  sync sees both new mail and deletes. It waits for the space's own sync to pick the copies up, and
+  checks the last 25 hours of the Execution Trace feed, so a failure between two nights is seen even
+  if later runs succeeded.
 
 ## Steps
 
@@ -88,7 +90,7 @@ enabled remote sync trigger.
 ### 04 Nightly check
 
 `.github/workflows/mail-canary-nightly.yml` runs `moon run mail-canary:nightly` at 03:17 UTC. Each run
-trashes copies older than 2 days, seeds a new slice of the pool, and reads the space through an in-process
+rotates the 100 oldest pool messages into fresh copies, and reads the space through an in-process
 `@dxos/client`: it recovers the identity from the phrase into memory, waits for the space to match EDGE
 (`syncToEdge`), pulls the mailbox and trace feeds (`db.syncFeed`) and queries them as typed objects
 (`Mailbox`, `Message`, `Trace.Message`, `Trigger`). It re-reads until every copy is synced (up to 45
@@ -126,7 +128,7 @@ Every run posts one `ci.mail-canary` PostHog event (`ciOk`, `ciFailedChecks`, `c
 scripts/               steps 01–03
 src/gmail/             GmailClient (test account only), the grant and consent, header helpers
 src/pool/              Pool: import the mbox, check it is exact, purge a trial
-src/seed/              Seeder: copy pool mail into the inbox, trash and list old copies
+src/seed/              Seeder: rotate the oldest pool mail into fresh copies and trash the originals
 src/space/             CanarySpace: recover the identity in-process and read a typed snapshot
 src/checks/            checks C1–C7 over one snapshot
 src/nightly/           Nightly: trash, seed, wait, check; the report and the live test
