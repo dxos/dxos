@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import { type SpaceSnapshot, runChecks } from '../checks/index.ts';
 import { type GmailError } from '../gmail/index.ts';
 import { type Seeder } from '../seed/index.ts';
-import { type DxError, type SpaceReader } from '../space/index.ts';
+import { type CanarySpace, type CanarySpaceError } from '../space/index.ts';
 import { type NightlyReport } from './report.ts';
 
 export type NightlyOptions = {
@@ -28,14 +28,14 @@ export type NightlyOptions = {
  */
 export class Nightly {
   readonly #seeder: Pick<Seeder, 'seed' | 'trash' | 'listSeeded'>;
-  readonly #space: Pick<SpaceReader, 'spaceId' | 'snapshot'>;
+  readonly #space: Pick<CanarySpace, 'spaceId' | 'snapshot'>;
 
   constructor({
     seeder,
     space,
   }: {
     seeder: Pick<Seeder, 'seed' | 'trash' | 'listSeeded'>;
-    space: Pick<SpaceReader, 'spaceId' | 'snapshot'>;
+    space: Pick<CanarySpace, 'spaceId' | 'snapshot'>;
   }) {
     this.#seeder = seeder;
     this.#space = space;
@@ -46,7 +46,7 @@ export class Nightly {
     syncTimeout,
     pollInterval,
     window,
-  }: NightlyOptions): Effect.Effect<NightlyReport, GmailError | DxError> {
+  }: NightlyOptions): Effect.Effect<NightlyReport, GmailError | CanarySpaceError> {
     return Effect.gen({ self: this }, function* () {
       const startedAt = new Date();
       const since = startedAt.getTime() - Duration.toMillis(window);
@@ -54,7 +54,7 @@ export class Nightly {
       const { poolSize, seededIds } = yield* this.#seeder.seed({ count, now: startedAt });
 
       const deadline = startedAt.getTime() + Duration.toMillis(syncTimeout);
-      let snapshot: SpaceSnapshot = yield* this.#space.snapshot({ since });
+      let snapshot: SpaceSnapshot = yield* this.#space.snapshot();
       let syncMinutes: number | undefined;
       while (true) {
         const synced = new Set(snapshot.messages.map((message) => message.gmailId));
@@ -66,7 +66,7 @@ export class Nightly {
           break;
         }
         yield* Effect.sleep(pollInterval);
-        snapshot = yield* this.#space.snapshot({ since });
+        snapshot = yield* this.#space.snapshot();
       }
 
       const seeded = yield* this.#seeder.listSeeded();

@@ -82,21 +82,26 @@ prints its id (variable `MAIL_CANARY_SPACE_ID`) and the recovery phrase (secret
 `MAIL_CANARY_RECOVERY_PHRASE`) once; keep both in `eng-dev/network.dxos.mail-canary` (`SPACE_ID`,
 `RECOVERY_PHRASE`). Then, in Composer on preview, sign in as the test account, open
 "Mail canary" and add a Gmail connection with the defaults; the CLI cannot bind a mailbox yet.
-`verify` signs in fresh with the recovery phrase, as the nightly does, and checks the space has a mailbox, a
-trace feed and one enabled remote sync trigger, waiting up to two minutes for the space to replicate.
+`verify` reads the space as the nightly does (below) and checks it has a mailbox, a trace feed and one
+enabled remote sync trigger.
 
 ### 04 Nightly check
 
 `.github/workflows/mail-canary-nightly.yml` runs `moon run mail-canary:nightly` at 03:17 UTC. Each run
-trashes copies older than 2 days, seeds a new slice of the pool, signs in with the recovery phrase in
-a throwaway `HOME`, polls the space through `dx eval` until every copy is synced (up to 45 minutes),
-runs the checks, and writes `report.json`, `summary.json` and `summary.md`.
+trashes copies older than 2 days, seeds a new slice of the pool, and reads the space through an in-process
+`@dxos/client`: it recovers the identity from the phrase into memory, waits for the space to match EDGE
+(`syncToEdge`), pulls the mailbox and trace feeds (`db.syncFeed`) and queries them as typed objects
+(`Mailbox`, `Message`, `Trace.Message`, `Trigger`). It re-reads until every copy is synced (up to 45
+minutes), runs the checks, and writes `report.json`, `summary.json` and `summary.md`.
+
+The checks count invocations of `GoogleMailSync`, paired by `pid`; an invocation that yields with
+`Operation.runAgain()` is continued by one with the same `runId`, and the report counts both.
 
 | Check | Fails when                                                        | Classes        |
 | ----- | ----------------------------------------------------------------- | -------------- |
-| C1    | a sync run started and has no end after 10 minutes                | KILL           |
-| C2    | a sync run ended in failure (a `runAgain` yield is not a failure) | from the error |
-| C3    | no sync run started for more than 12 minutes                      | IDLE           |
+| C1    | an invocation started and has no end after 10 minutes             | KILL           |
+| C2    | an invocation failed (a `runAgain` yield is not a failure)        | from the error |
+| C3    | none started for the cron interval (`MAIL_SYNC_CRON`) plus 2 min  | IDLE           |
 | C4    | the mail sync trigger is missing or disabled                      | OFF            |
 | C5    | a copy older than 25 minutes is not in the mailbox feed           | DATA, STALL    |
 | C6    | a Gmail message appears twice in the mailbox feed                 | DATA           |
@@ -122,7 +127,7 @@ scripts/               steps 01–03
 src/gmail/             GmailClient (test account only), the grant and consent, header helpers
 src/pool/              Pool: import the mbox, check it is exact, purge a trial
 src/seed/              Seeder: copy pool mail into the inbox, trash and list old copies
-src/space/             SpaceReader: sign in with dx and snapshot the space through `dx eval`
+src/space/             CanarySpace: recover the identity in-process and read a typed snapshot
 src/checks/            checks C1–C7 over one snapshot
 src/nightly/           Nightly: trash, seed, wait, check; the report and the live test
 ```

@@ -4,6 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as MailSync from '@dxos/plugin-inbox/MailSync';
+
 import { type SeededMessage } from '../checks/index.ts';
 import { type GmailClient, type GmailError, rewriteHeaders } from '../gmail/index.ts';
 import { POOL_LABEL } from '../pool/index.ts';
@@ -73,7 +75,7 @@ export class Seeder {
               gmailId: message.id,
               insertedAt: message.internalDate,
               subject: message.headers.Subject,
-              sender: parseAddress(message.headers.From),
+              sender: message.headers.From && MailSync.parseFromHeader(message.headers.From)?.email,
             })),
           ),
         { concurrency: 8 },
@@ -113,7 +115,3 @@ export const pickPoolSlice = (poolIds: readonly string[], count: number, now: Da
   const offset = (Math.floor(now.getTime() / DAY) * count) % sorted.length;
   return Array.from({ length: Math.min(count, sorted.length) }, (_, index) => sorted[(offset + index) % sorted.length]);
 };
-
-/** The bare address of a `From` header (`Name <a@b>`, `<a@b>` or `a@b`). */
-export const parseAddress = (value?: string): string | undefined =>
-  value?.match(/<\s*([^<>\s]+@[^<>\s]+)\s*>/)?.[1] ?? value?.match(/[^\s<>"]+@[^\s<>"]+/)?.[0];

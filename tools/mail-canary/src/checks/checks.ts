@@ -2,17 +2,27 @@
 // Copyright 2026 DXOS.org
 //
 
-/** Error code an operation ends with when it yields to `Operation.runAgain()` (`@dxos/compute` errors). */
-export const RUN_AGAIN_ERROR_CODE = 'RunAgainError';
+import * as Cron from 'effect/Cron';
+import * as Schema from 'effect/Schema';
 
-/** One `operation.start` or `operation.end` of the mail sync, read from the space's Execution Trace feed. */
-export type SyncEvent = {
+import * as Process from '@dxos/compute/Process';
+import * as Trace from '@dxos/compute/Trace';
+import * as GoogleOperation from '@dxos/plugin-google/GoogleOperation';
+import * as MailSync from '@dxos/plugin-inbox/MailSync';
+
+/** How an invocation ended, as its `operation.end` event recorded it. */
+export type InvocationEnd = Trace.PayloadType<typeof Trace.OperationEnd> & { readonly timestamp: number };
+
+/**
+ * One invocation of the mail sync: the `operation.start` and `operation.end` events that share a `pid`.
+ * `runId` names the run it belongs to; an invocation that yields with `Operation.runAgain()` is continued
+ * by another invocation of the same run.
+ */
+export type Invocation = {
   readonly pid: string;
-  readonly type: 'start' | 'end';
-  readonly timestamp: number;
-  readonly outcome?: 'success' | 'failure';
-  readonly error?: string;
-  readonly errorCode?: string;
+  readonly runId: string;
+  readonly startedAt?: number;
+  readonly end?: InvocationEnd;
 };
 
 /** A message in the mailbox feed, reduced to what the checks compare. */
@@ -30,7 +40,7 @@ export type TriggerState = {
 
 /** What the canary reads from the space in one pass. */
 export type SpaceSnapshot = {
-  readonly events: readonly SyncEvent[];
+  readonly invocations: readonly Invocation[];
   readonly messages: readonly SyncedMessage[];
   readonly triggers: readonly TriggerState[];
 };
@@ -75,8 +85,10 @@ export type CheckResult = {
   readonly failures: readonly Failure[];
 };
 
+/** Counts of the window's invocations; `runs` counts the distinct runs they belong to. */
 export type RunSummary = {
-  readonly total: number;
+  readonly runs: number;
+  readonly invocations: number;
   readonly succeeded: number;
   readonly yielded: number;
   readonly failed: number;
@@ -97,29 +109,43 @@ export type CheckOptions = {
 };
 
 const MINUTE = 60_000;
-// A run may stay open this long before it counts as killed.
+// An invocation may stay open this long before it counts as killed.
 const CLOSURE_GRACE_MS = 10 * MINUTE;
 // A seeded copy may take this long to appear in the mailbox feed.
 const ARRIVAL_GRACE_MS = 25 * MINUTE;
-// The sync trigger runs every 10 minutes; two minutes of slack absorbs cron jitter.
-const CADENCE_GAP_MS = 12 * MINUTE;
+// Slack on top of the sync's cron interval, to absorb scheduler jitter.
+const CADENCE_SLACK_MS = 2 * MINUTE;
 
-/** A sync run: the start and end events that share a `pid`. */
-export type Run = {
-  readonly pid: string;
-  readonly start?: SyncEvent;
-  readonly end?: SyncEvent;
-};
+const SYNC_OPERATION_KEY = GoogleOperation.GoogleMailSync.meta.key;
 
-/** Pairs start and end events by `pid`, in start order. */
-export const pairRuns = (events: readonly SyncEvent[]): Run[] => {
-  const runs = new Map<string, { pid: string; start?: SyncEvent; end?: SyncEvent }>();
-  for (const event of events) {
-    const run = runs.get(event.pid) ?? { pid: event.pid };
-    run[event.type] = event;
-    runs.set(event.pid, run);
+const isOperationEnd = Schema.is(Trace.OperationEnd.schema);
+
+/** The mail sync's invocations in a set of trace messages, paired by `pid`, in start order. */
+export const groupInvocations = (messages: readonly Trace.MessageData[]): Invocation[] => {
+  const invocations = new Map<string, { pid: string; runId: string; startedAt?: number; end?: InvocationEnd }>();
+  for (const { meta, events } of messages) {
+    const pid = meta.pid;
+    if (!pid) {
+      continue;
+    }
+    const invocation = () => {
+      const entry = invocations.get(pid) ?? { pid, runId: meta.runId ?? pid };
+      invocations.set(pid, entry);
+      return entry;
+    };
+    for (const event of events) {
+      if (Trace.isOfType(Trace.OperationStart, event) && event.data.key === SYNC_OPERATION_KEY) {
+        invocation().startedAt = event.timestamp;
+      } else if (
+        Trace.isOfType(Trace.OperationEnd, event) &&
+        isOperationEnd(event.data) &&
+        event.data.key === SYNC_OPERATION_KEY
+      ) {
+        invocation().end = { ...event.data, timestamp: event.timestamp };
+      }
+    }
   }
-  return [...runs.values()].sort((left, right) => runTime(left) - runTime(right));
+  return [...invocations.values()].sort((left, right) => invocationTime(left) - invocationTime(right));
 };
 
 const ERROR_CLASSES: readonly (readonly [RegExp, FailureClass])[] = [
@@ -142,20 +168,23 @@ export const runChecks = (
   seeded: readonly SeededMessage[],
   { now, since }: CheckOptions,
 ): Report => {
-  const runs = pairRuns(snapshot.events).filter((run) => runTime(run) >= since);
-  const failedRuns = runs.filter((run) => run.end && isFailure(run.end));
+  const invocations = snapshot.invocations.filter((invocation) => invocationTime(invocation) >= since);
+  const failed = invocations.filter((invocation) => invocation.end && isFailure(invocation.end));
 
-  const closure: Failure[] = runs
-    .filter((run) => run.start && !run.end && now - run.start.timestamp > CLOSURE_GRACE_MS)
-    .map((run) => ({ class: 'KILL', pid: run.pid, message: 'run started but never ended' }));
+  const closure: Failure[] = invocations
+    .filter(
+      (invocation) =>
+        invocation.startedAt !== undefined && !invocation.end && now - invocation.startedAt > CLOSURE_GRACE_MS,
+    )
+    .map((invocation) => ({ class: 'KILL', pid: invocation.pid, message: 'invocation started but never ended' }));
 
-  const outcome: Failure[] = failedRuns.map((run) => ({
-    class: classifyError(run.end?.error, run.end?.errorCode),
-    pid: run.pid,
-    message: run.end?.error ?? 'run failed without an error message',
+  const outcome: Failure[] = failed.map((invocation) => ({
+    class: classifyError(invocation.end?.error, invocation.end?.errorCode),
+    pid: invocation.pid,
+    message: invocation.end?.error ?? 'invocation failed without an error message',
   }));
 
-  const cadence = cadenceGaps(runs, { since, now });
+  const cadence = cadenceGaps(invocations, { since, now });
 
   const triggers: Failure[] =
     snapshot.triggers.length === 0
@@ -169,7 +198,7 @@ export const runChecks = (
     synced.set(message.gmailId, [...(synced.get(message.gmailId) ?? []), message]);
   }
   const due = seeded.filter((message) => now - message.insertedAt > ARRIVAL_GRACE_MS);
-  const missingClass: FailureClass = failedRuns.length > 0 || closure.length > 0 ? 'STALL' : 'DATA';
+  const missingClass: FailureClass = failed.length > 0 || closure.length > 0 ? 'STALL' : 'DATA';
   const arrival: Failure[] = due
     .filter((message) => !synced.has(message.gmailId))
     .map((message) => ({ class: missingClass, gmailId: message.gmailId, message: 'seeded message not synced' }));
@@ -187,8 +216,8 @@ export const runChecks = (
   });
 
   const checks: CheckResult[] = [
-    result('C1', 'Every run ends', closure),
-    result('C2', 'Every run succeeds', outcome),
+    result('C1', 'Every invocation ends', closure),
+    result('C2', 'Every invocation succeeds', outcome),
     result('C3', 'Sync runs on schedule', cadence),
     result('C4', 'Sync trigger is enabled', triggers),
     result('C5', 'Seeded mail arrives', arrival),
@@ -200,18 +229,22 @@ export const runChecks = (
     ok: checks.every((check) => check.ok),
     checks,
     runs: {
-      total: runs.length,
-      succeeded: runs.filter((run) => run.end?.outcome === 'success').length,
-      yielded: runs.filter((run) => run.end && run.end.outcome !== 'success' && !isFailure(run.end)).length,
-      failed: failedRuns.length,
-      open: runs.filter((run) => !run.end).length,
+      runs: new Set(invocations.map((invocation) => invocation.runId)).size,
+      invocations: invocations.length,
+      succeeded: invocations.filter((invocation) => invocation.end?.outcome === 'success').length,
+      yielded: invocations.filter((invocation) => invocation.end && isRunAgain(invocation.end)).length,
+      failed: failed.length,
+      open: invocations.filter((invocation) => !invocation.end).length,
     },
   };
 };
 
-const runTime = (run: Run): number => run.start?.timestamp ?? run.end?.timestamp ?? 0;
+const invocationTime = (invocation: Invocation): number => invocation.startedAt ?? invocation.end?.timestamp ?? 0;
 
-const isFailure = (end: SyncEvent): boolean => end.outcome === 'failure' && end.errorCode !== RUN_AGAIN_ERROR_CODE;
+const isRunAgain = (end: InvocationEnd): boolean =>
+  end.outcome === 'failure' && end.errorCode === Process.RUN_AGAIN_ERROR_CODE;
+
+const isFailure = (end: InvocationEnd): boolean => end.outcome === 'failure' && !isRunAgain(end);
 
 const result = (id: CheckId, name: string, failures: Failure[]): CheckResult => ({
   id,
@@ -220,16 +253,26 @@ const result = (id: CheckId, name: string, failures: Failure[]): CheckResult => 
   failures,
 });
 
-const cadenceGaps = (runs: readonly Run[], { since, now }: { since: number; now: number }): Failure[] => {
-  const starts = runs.flatMap((run) => (run.start ? [run.start.timestamp] : []));
+/** The trigger's interval, read off the cron expression routines schedule the sync with. */
+const syncInterval = (): number => {
+  const cron = Cron.parseUnsafe(MailSync.MAIL_SYNC_CRON);
+  const first = Cron.next(cron, 0);
+  return Cron.next(cron, first).getTime() - first.getTime();
+};
+
+const cadenceGaps = (invocations: readonly Invocation[], { since, now }: { since: number; now: number }): Failure[] => {
+  const maxGap = syncInterval() + CADENCE_SLACK_MS;
+  const starts = invocations.flatMap((invocation) =>
+    invocation.startedAt !== undefined ? [invocation.startedAt] : [],
+  );
   const points = [since, ...starts, now];
   return points.slice(1).flatMap((point, index) => {
     const gap = point - points[index];
-    return gap > CADENCE_GAP_MS
+    return gap > maxGap
       ? [
           {
             class: 'IDLE' as const,
-            message: `no sync run for ${Math.round(gap / MINUTE)} min after ${new Date(points[index]).toISOString()}`,
+            message: `no sync invocation for ${Math.round(gap / MINUTE)} min after ${new Date(points[index]).toISOString()}`,
           },
         ]
       : [];

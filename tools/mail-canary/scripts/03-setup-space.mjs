@@ -8,17 +8,19 @@
 //
 //   node scripts/03-setup-space.mjs create <hub access code>   # profile, identity, space, recovery phrase
 //   MAIL_CANARY_RECOVERY_PHRASE=... node scripts/03-setup-space.mjs verify <space id>   # mailbox, trace feed, one sync trigger
+//
+// verify reads the space as the nightly does: an in-process client recovers the identity and pulls the space.
 
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import { execFileSync } from 'node:child_process';
-import { appendFileSync, mkdtempSync } from 'node:fs';
-import { homedir, tmpdir } from 'node:os';
+import { appendFileSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { canaryAccount } from '../src/gmail/index.ts';
-import { SpaceReader } from '../src/space/index.ts';
+import { CanarySpace, previewClientLayer } from '../src/space/index.ts';
 
 const PROFILE = 'mail-canary';
 const SPACE_NAME = 'Mail canary';
@@ -49,19 +51,18 @@ ${recoveryCode}
 
 Next: bind Gmail in Composer (README, step 03), then run verify ${space.id} with the phrase set.`);
 } else if (command === 'verify' && argument && process.env.MAIL_CANARY_RECOVERY_PHRASE) {
-  // Signs in fresh, as the nightly does, so it reads what EDGE holds rather than a local replica.
-  const reader = new SpaceReader({ spaceId: argument, home: mkdtempSync(join(tmpdir(), 'mail-canary-')) });
   const exit = await Effect.runPromiseExit(
-    reader
-      .login(process.env.MAIL_CANARY_RECOVERY_PHRASE)
-      .pipe(Effect.andThen(reader.snapshot({ since: Date.now() - 86_400_000, maxMessages: 0 }))),
+    CanarySpace.open({ spaceId: argument, recoveryPhrase: process.env.MAIL_CANARY_RECOVERY_PHRASE }).pipe(
+      Effect.flatMap((space) => space.snapshot()),
+      Effect.provide(previewClientLayer),
+    ),
   );
   if (Exit.isFailure(exit)) {
     console.error(String(exit.cause));
     process.exit(1);
   }
-  const { triggers, events } = exit.value;
-  console.log(JSON.stringify({ triggers, syncEventsLastDay: events.length }, null, 2));
+  const { triggers, invocations, messages } = exit.value;
+  console.log(JSON.stringify({ triggers, messages: messages.length, syncInvocations: invocations.length }, null, 2));
   if (triggers.length !== 1 || !triggers[0].enabled) {
     console.error('expected exactly one enabled remote timer trigger: the */10 mail sync');
     process.exit(1);

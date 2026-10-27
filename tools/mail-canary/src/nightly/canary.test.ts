@@ -14,7 +14,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { GmailClient, canaryAccount, credentialsFromEnv } from '../gmail/index.ts';
 import { Seeder } from '../seed/index.ts';
-import { SpaceReader } from '../space/index.ts';
+import { CanarySpace, previewClientLayer } from '../space/index.ts';
 import { Nightly } from './Nightly.ts';
 import { renderSummary, toEventProperties } from './report.ts';
 
@@ -35,22 +35,21 @@ describe('mail canary', { tags: ['sync-e2e'], timeout: (SYNC_TIMEOUT_MINUTES + 2
     if (!settings) {
       return;
     }
-    const home = await mkdtemp(join(tmpdir(), 'mail-canary-'));
-    const reportPath = process.env.DX_CANARY_REPORT ?? join(home, 'report.json');
+    const reportDir = await mkdtemp(join(tmpdir(), 'mail-canary-'));
+    const reportPath = process.env.DX_CANARY_REPORT ?? join(reportDir, 'report.json');
     await mkdir(dirname(reportPath), { recursive: true });
 
     const result = await EffectEx.runPromise(
       Effect.gen(function* () {
         const gmail = yield* GmailClient.connect(settings.credentials, canaryAccount());
-        const space = new SpaceReader({ spaceId: settings.spaceId, home });
-        yield* space.login(settings.recoveryPhrase);
+        const space = yield* CanarySpace.open(settings);
         return yield* new Nightly({ seeder: new Seeder(gmail), space }).run({
           count: Number(process.env.DX_CANARY_SEED_COUNT ?? 100),
           syncTimeout: Duration.minutes(SYNC_TIMEOUT_MINUTES),
           pollInterval: Duration.minutes(2),
           window: Duration.hours(25),
         });
-      }).pipe(Effect.result),
+      }).pipe(Effect.provide(previewClientLayer), Effect.result),
     );
 
     // Written before asserting, so the workflow can summarize and record a run that failed: report.json

@@ -4,9 +4,9 @@ tags:
   - ts-compile
   - ts-test
 
-# `test` (inherited) runs the unit tests in `Check`; the live canary is tagged `sync-e2e`, which that
-# task's default filter excludes. `nightly` is the live run against preview: it seeds the test
-# account, waits for the sync and checks the space, so it is uncached and never part of `Check`.
+# `test` (inherited) runs the unit tests in `Check`; its default tag filter excludes the live canary,
+# tagged `sync-e2e`. `nightly` is that same task narrowed to the canary: it seeds the test account,
+# waits for preview's sync and checks the space, so it is uncached and never part of `Check`.
 tasks:
   # The test task inherits coverage/junit outputs this package never writes.
   test:
@@ -14,9 +14,13 @@ tasks:
       mergeOutputs: replace
     outputs: []
   nightly:
-    command: bash -c 'pnpm exec vitest run --project=node --tagsFilter=sync-e2e src/nightly/canary.test.ts'
-    deps:
-      - cli:build
+    extends: test
+    args:
+      - src/nightly/canary.test.ts
+    env:
+      VITEST_TAGS_FILTER: sync-e2e
+      # Identity recovery logs its device credential at info, and the job log is public.
+      LOG_FILTER: warn
     options:
       cache: false
       runInCI: false

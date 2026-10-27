@@ -13,6 +13,36 @@
   "references": [
     {
       "path": "../../packages/common/effect"
+    },
+    {
+      "path": "../../packages/common/keys"
+    },
+    {
+      "path": "../../packages/core/compute/compute"
+    },
+    {
+      "path": "../../packages/core/compute/compute-runtime"
+    },
+    {
+      "path": "../../packages/core/echo/echo"
+    },
+    {
+      "path": "../../packages/core/protocols"
+    },
+    {
+      "path": "../../packages/plugins/plugin-google"
+    },
+    {
+      "path": "../../packages/plugins/plugin-inbox"
+    },
+    {
+      "path": "../../packages/sdk/client"
+    },
+    {
+      "path": "../../packages/sdk/config"
+    },
+    {
+      "path": "../../packages/sdk/types"
     }
   ]
 }

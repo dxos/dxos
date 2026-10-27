@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { readHeader } from '../gmail/index.ts';
-import { SEED_HEADER, makeSeedCopy, parseAddress, pickPoolSlice } from './Seeder.ts';
+import { SEED_HEADER, makeSeedCopy, pickPoolSlice } from './Seeder.ts';
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -33,17 +33,6 @@ describe('pickPoolSlice', () => {
 
   test('an empty pool gives nothing to seed', ({ expect }) => {
     expect(pickPoolSlice([], 100, new Date())).toEqual([]);
-  });
-});
-
-describe('parseAddress', () => {
-  test.for([
-    ['Phillip Allen <phillip.allen@enron.com>', 'phillip.allen@enron.com'],
-    ['<tim.belden@enron.com>', 'tim.belden@enron.com'],
-    ['steven.kean@enron.com', 'steven.kean@enron.com'],
-    ['"Kean, Steven" <steven.kean@enron.com>', 'steven.kean@enron.com'],
-  ] as const)('%s', ([value, expected], { expect }) => {
-    expect(parseAddress(value)).toBe(expected);
   });
 });
 

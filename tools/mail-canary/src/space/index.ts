@@ -2,5 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './read-space.ts';
-export * from './SpaceReader.ts';
+export * from './CanarySpace.ts';
+export * from './errors.ts';
+export * from './snapshot.ts';

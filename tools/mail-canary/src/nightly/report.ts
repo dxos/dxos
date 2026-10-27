@@ -31,7 +31,8 @@ export const toEventProperties = (report: NightlyReport): Record<string, string 
     seeded: report.seeded,
     poolSize: report.poolSize,
     syncMinutes: report.syncMinutes ?? -1,
-    runsTotal: report.runs.total,
+    runs: report.runs.runs,
+    invocations: report.runs.invocations,
     runsFailed: report.runs.failed,
     runsOpen: report.runs.open,
     runsYielded: report.runs.yielded,
@@ -49,8 +50,9 @@ export const renderSummary = (report: NightlyReport): string => {
         ? 'and the copies never all arrived.'
         : `and all copies arrived in ${report.syncMinutes} min.`),
     '',
-    `Sync runs in the window: ${report.runs.total} (${report.runs.succeeded} succeeded, ${report.runs.yielded} ` +
-      `yielded, ${report.runs.failed} failed, ${report.runs.open} open).`,
+    `Sync runs in the window: ${report.runs.runs}, over ${report.runs.invocations} invocations ` +
+      `(${report.runs.succeeded} succeeded, ${report.runs.yielded} yielded, ${report.runs.failed} failed, ` +
+      `${report.runs.open} open).`,
     '',
     '| Check | | Failures |',
     '| --- | --- | --- |',

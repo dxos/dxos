@@ -13,10 +13,21 @@
   "author": "DXOS.org",
   "type": "module",
   "dependencies": {
+    "@dxos/client": "workspace:*",
+    "@dxos/compute": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
+    "@dxos/config": "workspace:*",
+    "@dxos/echo": "workspace:*",
     "@dxos/effect": "workspace:*",
+    "@dxos/keys": "workspace:*",
+    "@dxos/plugin-google": "workspace:*",
+    "@dxos/plugin-inbox": "workspace:*",
+    "@dxos/protocols": "workspace:*",
+    "@dxos/types": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-client": "workspace:*",
     "@types/node": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"

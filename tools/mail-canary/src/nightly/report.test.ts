@@ -9,7 +9,7 @@ import { type NightlyReport, renderSummary } from './report.ts';
 const report = (message: string): NightlyReport => ({
   ok: false,
   checks: [{ id: 'C1', name: 'runs end', ok: false, failures: [{ class: 'DEADLINE', message, pid: 'run-1' }] }],
-  runs: { total: 1, succeeded: 0, yielded: 0, failed: 1, open: 0 },
+  runs: { runs: 1, invocations: 1, succeeded: 0, yielded: 0, failed: 1, open: 0 },
   startedAt: '2026-10-26T03:17:00Z',
   finishedAt: '2026-10-26T04:02:00Z',
   spaceId: 'space',
