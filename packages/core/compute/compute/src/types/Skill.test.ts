@@ -43,20 +43,6 @@ describe('Skill', () => {
     });
   });
 
-  describe('union', () => {
-    test('adds the second list after the first, one skill per key', ({ expect }) => {
-      const fork = Skill.make({ key: SKILL_KEY, name: 'Fork' });
-      const registry = Skill.make({ key: SKILL_KEY, name: 'Registry' });
-      const other = Skill.make({ key: 'org.dxos.skill.other', name: 'Other' });
-      expect(Skill.union([fork], [registry, other, other]).map(({ name }) => name)).toEqual(['Fork', 'Other']);
-    });
-
-    test('returns the first list itself when the second adds nothing', ({ expect }) => {
-      const first = [Skill.make({ key: SKILL_KEY, name: 'Fork' })];
-      expect(Skill.union(first, [Skill.make({ key: SKILL_KEY, name: 'Registry' })])).toBe(first);
-    });
-  });
-
   describe('resolveAnnotatedSkills', () => {
     test('a key only the registry serves binds by registry URI', async ({ expect }) => {
       const uris = await resolve({ registry: [Skill.make({ key: SKILL_KEY, name: 'Registry' })] });

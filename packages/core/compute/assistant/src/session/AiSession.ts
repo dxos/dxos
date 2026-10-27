@@ -17,9 +17,9 @@ import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 
 import { AiTelemetry, type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
-import * as Instructions from '@dxos/compute/Instructions';
+import type * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
-import * as Skill from '@dxos/compute/Skill';
+import type * as Skill from '@dxos/compute/Skill';
 import * as Trace from '@dxos/compute/Trace';
 import { Resource } from '@dxos/context';
 import { Database, Feed, Filter, Obj, Registry } from '@dxos/echo';
@@ -75,8 +75,8 @@ export type Options = {
   registry?: AtomRegistry.AtomRegistry;
   /**
    * Instructions steering the conversation (typically the owning `Chat`'s): their text is rendered into
-   * the system prompt and their skills join the bound ones, both read on every turn. The session is
-   * feed-centric and cannot reach its chat, so these are passed in.
+   * the system prompt on every turn and their skills are bound at the start of each request. The session
+   * is feed-centric and cannot reach its chat, so these are passed in.
    */
   instructions?: readonly Instructions.Instructions[];
 };
@@ -95,9 +95,6 @@ export class Session extends Resource {
   private readonly _feed: Feed.Feed;
   private readonly _runtime: Context.Context<Database.Service>;
   readonly #instructions: readonly Instructions.Instructions[];
-
-  /** The last {@link getSkills} result and the inputs it was merged from. */
-  #skills?: { bound: Skill.Skill[]; preset: Skill.Skill[]; merged: Skill.Skill[] };
 
   /**
    * Skills and objects bound to the session.
@@ -155,40 +152,9 @@ export class Session extends Resource {
     return Array.sort(items.filter(Obj.instanceOf(Message.Message)), byFeedPosition);
   }
 
-  /**
-   * The bound skills, then each instructions skill whose key none of them has. Read live rather than
-   * copied into the bindings, so an edit to the instructions applies from the next step. The result
-   * keeps its identity while neither input changes, which the system-prompt cache depends on.
-   */
-  async getSkills(): Promise<Skill.Skill[]> {
-    const bound = this.context.getSkills();
-    if (this.#instructions.length === 0) {
-      return bound;
-    }
-
-    const preset = await Instructions.loadSkills(this.#instructions);
-    const cached = this.#skills;
-    if (
-      cached?.bound === bound &&
-      cached.preset.length === preset.length &&
-      cached.preset.every((skill, index) => skill === preset[index])
-    ) {
-      return cached.merged;
-    }
-
-    const merged = Skill.union(bound, preset);
-    this.#skills = { bound, preset, merged };
-    return merged;
-  }
-
-  /** The skills the last step ran with: what its end-request hooks fire against. */
-  get skills(): Skill.Skill[] {
-    return this.#skills?.merged ?? this.context.getSkills();
-  }
-
   getTools(): Effect.Effect<Record<string, Tool.Any>, never, ToolExecutionService | ToolResolverService> {
     return Effect.gen({ self: this }, function* () {
-      const toolkit = yield* createToolkit({ skills: yield* Effect.promise(() => this.getSkills()) });
+      const toolkit = yield* createToolkit({ skills: this.context.getSkills() });
       return toolkit.toolkit.tools;
     }).pipe(Effect.orDie);
   }
@@ -260,7 +226,11 @@ export class Session extends Resource {
       yield* Trace.emitRequestPhase('loading-history');
       const history = yield* Effect.promise(() => this.getHistory());
       markWork('session.history-loaded');
-      const skills = yield* Effect.promise(() => this.getSkills());
+      // An edit to the instructions' skills since the last request takes effect on this one.
+      yield* Effect.promise(() =>
+        this.context.syncInstructionSkills(this.#instructions.flatMap(({ skills }) => skills)),
+      );
+      const skills = this.context.getSkills();
       const objects = this.context.getObjects();
 
       log('run', {
@@ -335,7 +305,7 @@ export class Session extends Resource {
         markWork('session.iteration');
         yield* Effect.promise(() => this.context.sync());
         markWork('session.context-synced');
-        const currentSkills = yield* Effect.promise(() => this.getSkills());
+        const currentSkills = this.context.getSkills();
         const mcps = yield* connectMcpServers(params.mcpServers ? yield* readMcpServers(params.mcpServers) : []);
         yield* Trace.emitRequestPhase('building-toolkit');
         const toolkit = yield* createToolkit({

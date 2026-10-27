@@ -8,6 +8,7 @@ import * as EArray from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
+import * as Option from 'effect/Option';
 import * as Order from 'effect/Order';
 import * as Atom from 'effect/reactivity/Atom';
 import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
@@ -15,11 +16,11 @@ import * as Schema from 'effect/Schema';
 
 import * as Skill from '@dxos/compute/Skill';
 import { Resource } from '@dxos/context';
-import { Database, DXN, Feed, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
+import { Annotation, Database, DXN, Feed, Obj, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import * as AtomEx from '@dxos/effect/AtomEx';
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EID, type URI } from '@dxos/keys';
+import { EID, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ComplexSet, isNonNullable } from '@dxos/util';
 
@@ -410,6 +411,28 @@ export class Binder extends Resource {
     );
   }
 
+  /**
+   * Binds the skills the conversation's instructions name, and unbinds those they named at the last sync
+   * but no longer do. A skill bound any other way (a mode, the user, `enable-skills`) is never unbound here.
+   */
+  async syncInstructionSkills(skills: readonly Ref.Ref<Skill.Skill>[]): Promise<void> {
+    const previous = Annotation.get(this._feed, InstructionSkillsAnnotation).pipe(Option.getOrElse(() => []));
+    const current = skills.map((ref) => ref.uri);
+    const currentKeys = new Set(current.map(refKey));
+    const removed = previous.filter((uri) => !currentKeys.has(refKey(URI.make(uri))));
+
+    await this.bind({ skills: [...skills] });
+    if (removed.length > 0) {
+      await this.unbind({ skills: removed.map((uri) => Ref.fromURI(URI.make(uri))) });
+    }
+    const changed = current.length !== previous.length || current.some((uri, index) => uri !== previous[index]);
+    if (changed) {
+      Obj.update(this._feed, (feed) => {
+        Annotation.set(feed, InstructionSkillsAnnotation, current);
+      });
+    }
+  }
+
   /** Turns a connection's MCP server on or off for this conversation. */
   async setConnection(connection: Ref.Ref<Obj.Unknown>, enabled: boolean): Promise<void> {
     const key = refKey(connection.uri);
@@ -644,6 +667,15 @@ const entityIdOf = (uri: URI.URI): string | undefined => {
 /**
  * Identity of a bound ref: an ECHO URI compares in its local form, since some carry the space and some do not.
  */
+/**
+ * The skill URIs {@link Binder.syncInstructionSkills} last bound from the conversation's instructions,
+ * so a later sync can tell a skill the instructions dropped from one bound some other way.
+ */
+const InstructionSkillsAnnotation = Annotation.make({
+  id: 'org.dxos.assistant.instructionSkills',
+  schema: Schema.Array(Schema.String),
+});
+
 const refKey = (uri: URI.URI): URI.URI => {
   const echoUri = EID.tryParse(uri);
   return echoUri ? EID.toLocal(echoUri) : uri;

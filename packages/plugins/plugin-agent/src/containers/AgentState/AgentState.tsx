@@ -116,16 +116,13 @@ export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
 AgentState.displayName = 'AgentState';
 
 /**
- * The skills the agent's primary chat runs with: its bindings and its instructions' skills. Resolved by
- * an operation (the binder is heavy), so the list is re-read whenever the chat's feed gains a binding
- * entry or the instructions name different skills.
+ * The skills bound to the agent's primary chat. Bindings are resolved by an operation (the binder is
+ * heavy), so the list is re-read whenever the chat's feed gains a binding entry.
  */
 const useBoundSkills = (agent: Agent.Agent, chat: Chat.Chat | undefined): AgentStateSkill[] => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const spaceId = Obj.getDatabase(agent)?.spaceId;
   const bindings = useBindingCount(chat);
-  const [instructions] = useObject(agent.instructions);
-  const presetSkills = instructions?.skills.map((ref) => ref.uri).join(' ');
   const [skills, setSkills] = useState<AgentStateSkill[]>([]);
   const refreshGeneration = useRef(0);
 
@@ -147,7 +144,7 @@ const useBoundSkills = (agent: Agent.Agent, chat: Chat.Chat | undefined): AgentS
 
   useEffect(() => {
     void refresh();
-  }, [refresh, chat?.id, bindings, presetSkills]);
+  }, [refresh, chat?.id, bindings]);
 
   return skills;
 };

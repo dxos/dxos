@@ -54,6 +54,41 @@ describe('AiContext.Binder', () => {
       .pipe(Effect.runPromise);
   });
 
+  test('syncs the instructions skills, unbinding only those it bound', async ({ expect }) => {
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make());
+      const runtime = yield* Effect.context<Database.Service>();
+      const [preset, added, user] = yield* Effect.forEach(['Preset', 'Added', 'User'], (name) =>
+        Database.add(Skill.make({ key: `org.dxos.skill.${name.toLowerCase()}`, name })),
+      );
+      const names = (binder: AiContext.Binder) =>
+        binder
+          .getSkills()
+          .map(({ name }) => name)
+          .sort();
+
+      const binder = new AiContext.Binder({ feed, runtime });
+      yield* Effect.promise(() => binder.open());
+      yield* Effect.promise(() => binder.bind({ skills: [Ref.make(user)] }));
+      yield* Effect.promise(() => binder.syncInstructionSkills([Ref.make(preset)]));
+      expect(names(binder)).toEqual(['Preset', 'User']);
+      yield* Effect.promise(() => binder.syncInstructionSkills([Ref.make(preset), Ref.make(added)]));
+      expect(names(binder)).toEqual(['Added', 'Preset', 'User']);
+      yield* Effect.promise(() => binder.syncInstructionSkills([Ref.make(added)]));
+      expect(names(binder)).toEqual(['Added', 'User']);
+      yield* Effect.promise(() => binder.close());
+
+      // What the last sync bound is kept with the feed, so another process unbinds it too.
+      const reader = new AiContext.Binder({ feed, runtime });
+      yield* Effect.promise(() => reader.open());
+      yield* Effect.promise(() => reader.syncInstructionSkills([]));
+      expect(names(reader)).toEqual(['User']);
+      yield* Effect.promise(() => reader.close());
+    })
+      .pipe(Effect.provide(TestLayer))
+      .pipe(Effect.runPromise);
+  });
+
   test('reopened binder resolves all distinct bound objects', async ({ expect }) => {
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make());
