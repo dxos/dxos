@@ -228,6 +228,9 @@ export const steps = [
         value: 'The assistant builds World Clock and publishes it privately',
         subtitle: 'the sandbox it creates gets DX_API_TOKEN for this account',
       });
+      await page.waitForTimeout(LINGER);
+      // A quarter hour of streaming tool calls is motion the still-frame trim cannot cut, so it plays fast.
+      await demo.speed({ factor: 30 });
       // Polled from here, not with `waitForFunction`: its predicate cannot await, and a returned promise is truthy.
       const deadline = Date.now() + TWENTY_FIVE_MIN;
       while (!(await parentDone({ page }))) {
@@ -236,6 +239,7 @@ export const steps = [
         }
         await page.waitForTimeout(5_000);
       }
+      await demo.speed({ factor: 1 });
       await page.waitForTimeout(LINGER);
     },
     done: parentDone,
