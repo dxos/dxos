@@ -198,7 +198,9 @@ export const normalizePluginExport = (mod: Record<string, unknown>): Plugin.Plug
       return result;
     }
   }
-  throw new Error('Remote module default export is not a Plugin or a zero-arg plugin factory.');
+  throw new Error(
+    `Remote module default export is not a Plugin or a zero-arg plugin factory (got ${typeof exported}).`,
+  );
 };
 
 /**

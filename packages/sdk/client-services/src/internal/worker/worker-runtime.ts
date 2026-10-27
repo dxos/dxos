@@ -247,8 +247,12 @@ export const makeWorkerRuntime = ({
           .pipe(Effect.orDie, Effect.scoped);
         yield* Layer.build(
           RpcRouter.layerTransport.pipe(
-            Layer.provide(Layer.succeed(RpcServer.Protocol, appProtocol)),
-            Layer.provide(Layer.succeed(RpcRouter.RpcRouter, router)),
+            Layer.provide(
+              Layer.mergeAll(
+                Layer.succeed(RpcServer.Protocol, appProtocol),
+                Layer.succeed(RpcRouter.RpcRouter, router),
+              ),
+            ),
           ),
         );
 

@@ -124,9 +124,13 @@ export const run = ({ storageLockKey, plugins: builtIn = [], onBeforeStart, onSt
         log('plugin-worker: building layer stack', { specs: layers.length });
         const stackContext = yield* Layer.build(
           LayerStack.layer({ layers, services: [ConfigService, Hook.Controller, RpcRouter.RpcRouter] }).pipe(
-            Layer.provide(Layer.succeed(ConfigService, config)),
-            Layer.provide(Layer.succeed(Hook.Controller, hooks)),
-            Layer.provide(Layer.succeed(RpcRouter.RpcRouter, router)),
+            Layer.provide(
+              Layer.mergeAll(
+                Layer.succeed(ConfigService, config),
+                Layer.succeed(Hook.Controller, hooks),
+                Layer.succeed(RpcRouter.RpcRouter, router),
+              ),
+            ),
           ),
         ).pipe(Scope.provide(stackScope));
         const stack = Context.get(stackContext, LayerStack.Service);
