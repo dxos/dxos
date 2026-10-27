@@ -2,13 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import * as Operation from '@dxos/compute/Operation';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import * as SpaceEvents from '@dxos/plugin-space/SpaceEvents';
@@ -16,7 +13,6 @@ import { trim } from '@dxos/util';
 
 import { TableNamespace } from './src/namespace.ts';
 import * as TableEvents from './src/types/TableEvents.ts';
-import * as TableOperation from './src/types/TableOperation.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
 const config: Plugin.PluginConfig = Plugin.config({
@@ -57,15 +53,10 @@ const config: Plugin.PluginConfig = Plugin.config({
       environments: ['browser', 'node', 'tauri'],
     }),
     // Genuine runtime event: fires whenever a new type is added to a space, not at startup.
-    Capability.inlineModule(
+    Capability.lazyModule(
       'on-type-added',
       { provides: [SpaceCapabilities.OnTypeAdded], activatesOn: SpaceEvents.TypeAdded },
-      () =>
-        Effect.succeed([
-          Capability.contribute(SpaceCapabilities.OnTypeAdded, ({ db, type, show }) =>
-            Operation.invoke(TableOperation.OnTypeAdded, { db, type, show }),
-          ),
-        ]),
+      () => import('./src/capabilities/on-type-added.ts', { with: { type: 'dx-module' } }),
     ),
     AppCapability.operationHandler(
       () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),

@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
@@ -16,7 +14,6 @@ import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
 import { InboxNamespace } from './src/namespace.ts';
-import * as MessageExtractor from './src/operations/extractor/index.ts';
 import * as InboxCapabilities from './src/types/InboxCapabilities.ts';
 import * as InboxEvents from './src/types/InboxEvents.ts';
 
@@ -48,10 +45,10 @@ const config: Plugin.PluginConfig = Plugin.config({
       { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
       () => import('./src/capabilities/automation-templates.ts', { with: { type: 'dx-module' } }),
     ),
-    Capability.inlineModule('contact-extractor', { provides: [InboxCapabilities.ObjectExtractor] }, () =>
-      Effect.succeed([
-        Capability.contribute(InboxCapabilities.ObjectExtractor, MessageExtractor.ContactMessageExtractor),
-      ]),
+    Capability.lazyModule(
+      'contact-extractor',
+      { provides: [InboxCapabilities.ObjectExtractor] },
+      () => import('./src/capabilities/contact-extractor.ts', { with: { type: 'dx-module' } }),
     ),
     SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'dx-module' } }), {
       environments: ['browser', 'node', 'tauri'],
@@ -101,10 +98,10 @@ const config: Plugin.PluginConfig = Plugin.config({
         environments: ['browser', 'node', 'tauri'],
       },
     ),
-    Capability.inlineModule('summarize-extractor', { provides: [InboxCapabilities.ObjectExtractor] }, () =>
-      Effect.succeed([
-        Capability.contribute(InboxCapabilities.ObjectExtractor, MessageExtractor.SummarizeMessageExtractor),
-      ]),
+    Capability.lazyModule(
+      'summarize-extractor',
+      { provides: [InboxCapabilities.ObjectExtractor] },
+      () => import('./src/capabilities/summarize-extractor.ts', { with: { type: 'dx-module' } }),
     ),
     AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
   ],

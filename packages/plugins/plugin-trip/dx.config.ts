@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Effect from 'effect/Effect';
-
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -17,9 +15,7 @@ import * as MapEvents from '@dxos/plugin-map/MapEvents';
 import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
-import { TripMessageExtractor } from '#operations';
 
-import skillDefinition from './src/capabilities/skill-definition.ts';
 import { TripNamespace } from './src/namespace.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
@@ -100,10 +96,16 @@ const config: Plugin.PluginConfig = Plugin.config({
       activatesOn: ActivationEvents.Idle,
       requires: [Capabilities.AtomRegistry],
     }),
-    Capability.inlineModule('SkillDefinition', { provides: [AppCapabilities.SkillDefinition] }, skillDefinition),
+    Capability.lazyModule(
+      'SkillDefinition',
+      { provides: [AppCapabilities.SkillDefinition] },
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+    ),
     AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
-    Capability.inlineModule('trip-extractor', { provides: [InboxCapabilities.ObjectExtractor] }, () =>
-      Effect.succeed([Capability.contribute(InboxCapabilities.ObjectExtractor, TripMessageExtractor)]),
+    Capability.lazyModule(
+      'trip-extractor',
+      { provides: [InboxCapabilities.ObjectExtractor] },
+      () => import('./src/capabilities/trip-extractor.ts', { with: { type: 'dx-module' } }),
     ),
   ],
 });

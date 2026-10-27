@@ -42,7 +42,6 @@ const config: Plugin.PluginConfig = Plugin.config({
       content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
       mimeType: 'application/x-mdl',
     }),
-    AppCapability.schema([]),
     AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
   ],
 });
