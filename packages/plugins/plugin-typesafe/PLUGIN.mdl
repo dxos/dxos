@@ -13,6 +13,7 @@ every operation running there. Headless: a connector and a model resolver, no su
 | ---------- | ---------------------------- |
 | `feat`     | `org.dxos.mdl.feat@1.0`      |
 | `scenario` | `org.dxos.mdl.scenario@1.0`  |
+| `decision` | `org.dxos.mdl.decision@1.0`  |
 
 ## Features
 
@@ -27,8 +28,8 @@ feat F-2: Decision model in the space
 
   req F-2.1: An AiModelResolver serves `ai.typesafe.model.jev.latest` via AiService.decisionModel in every space.
   req F-2.2: The key is read per call, so connecting or disconnecting takes effect on the next question.
-  req F-2.3: With the endpoint override set and no key connected, the decision fails with an AiError (AuthenticationError, MissingKey), never a defect.
-  req F-2.4: Unless overridden, calls go through EDGE `/ai/generate/typesafe`: with no key connected EDGE answers on the platform key, and a connected key rides as `X-BYOK`.
+  req F-2.3: With the endpoint override set and no key connected, a decision routed to TypeSafe's API (`ai.typesafe.model.jev.latest`) fails with an AiError (AuthenticationError, MissingKey), never a defect.
+  req F-2.4: Unless overridden, calls to TypeSafe's API go through EDGE `/ai/generate/typesafe`: with no key connected EDGE answers on the platform key, and a connected key rides as `X-BYOK`.
   req F-2.5: `Model.defaultDecisionModel` resolves to the **Default decision model** setting, and to Cloudflare's Clef on Workers AI (through EDGE `/ai/generate/workers-ai/typesafe`) when the setting is unset.
 ```
 
@@ -42,12 +43,12 @@ scenario T-1: A pasted key reaches the model
 
 scenario T-2: No key answers through EDGE on the platform key
   given: a space with no TypeSafe connection and no endpoint override
-  when: an operation asking AiService.decisionModel runs
+  when: an operation asking AiService.decisionModel for `ai.typesafe.model.jev.latest` runs
   then: the call reaches EDGE `/ai/generate/typesafe` without `X-BYOK` and answers
 
 scenario T-3: A direct endpoint with no key is a failed decision, not a crash
   given: a space with no TypeSafe connection and the endpoint override set
-  when: an operation asking AiService.decisionModel runs
+  when: an operation asking AiService.decisionModel for `ai.typesafe.model.jev.latest` runs
   then: it fails with an AiError naming the missing typesafe.ai credential, and the space slice stays up
 ```
 
@@ -91,4 +92,13 @@ decision D-1: The default decision model is Cloudflare's Clef on Workers AI, not
   by: user:dmaretskyi
   affects: [F-2.5]
   why: Clef runs on EDGE's own Cloudflare account, so every signed-in user gets an answer with no key, in about 0.3 s; jev on Workers AI returned 502 on preview.
+```
+
+```mdl
+decision D-2: The no-key failure (F-2.3) and the `/ai/generate/typesafe` route (F-2.4) apply to decisions sent to TypeSafe's API (`ai.typesafe.model.jev.latest`), not to the default decision model. Fills in [D-1].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.3, F-2.4, T-2, T-3]
+  why: Since D-1 the unset default answers on Clef through Workers AI, which needs no key and ignores the endpoint override, so these requirements held only for jev.
 ```
