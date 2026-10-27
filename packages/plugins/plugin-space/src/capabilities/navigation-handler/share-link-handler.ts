@@ -43,6 +43,9 @@ const EXTEND_TIMEOUT = 5_000;
 /** How long a background join may take to produce a ready space before it gives up and says so. */
 const SPACE_TIMEOUT = 180_000;
 
+/** How long the first look may take, from EDGE's read to the thin client's object, before it is given up. */
+const FIRST_LOOK_TIMEOUT = 20_000;
+
 export type ShareLinkOptions = {
   /** EDGE's URL, so the first look is read before the client has initialized; the client's config otherwise. */
   edgeUrl?: string;
@@ -188,7 +191,14 @@ const showFirstLook = (
     }
     // The types the enabled plugins have contributed so far, so the thin client decodes the objects with their schema.
     const types = (yield* Capability.getAll(AppCapabilities.Schema)).flat();
-    const preview = yield* readSharePreview({ edgeUrl: url, spaceId, objectId: target.objectId, invitation, types });
+    // Bounded: a first look that never opens would otherwise leave nothing to say why the plank waited.
+    const preview = yield* readSharePreview({
+      edgeUrl: url,
+      spaceId,
+      objectId: target.objectId,
+      invitation,
+      types,
+    }).pipe(Effect.timeout(FIRST_LOOK_TIMEOUT));
     if (!preview) {
       return;
     }

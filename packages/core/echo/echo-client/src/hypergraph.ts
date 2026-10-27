@@ -753,13 +753,32 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     }
     const select = Query.select(Filter.id(objectId));
     const scoped = options?.deleted === 'include' ? select.options({ deleted: 'include' }) : select;
-    const [obj] = await db.query(scoped.from(db, { includeFeeds: true })).run();
+    const query = scoped.from(db, { includeFeeds: true });
+    let [obj] = await db.query(query).run();
+    // A query surfaces an object only once its strong dependencies resolve, and their documents are
+    // asked for only after the object's lands, so an id lookup waits for them rather than missing it.
+    if (obj === undefined && (await this.#settleStrongDeps(db, objectId))) {
+      [obj] = await db.query(query).run();
+    }
     // A merged-away loser is a redirect, not a tombstone to hand back, so it follows the chain even
     // when the caller asked for deleted entities.
     if (obj && !(isEchoObject(obj) && getObjectCore(obj).getMergedInto() != null)) {
       return { entity: obj, indexed: true };
     }
     return await this._followMergeRedirectAsync(db, objectId);
+  }
+
+  /**
+   * Waits for the strong dependencies of an object whose body is loaded but whose dependencies are still loading.
+   * @returns Whether there was anything to wait for.
+   */
+  async #settleStrongDeps(db: DatabaseImpl, objectId: EntityId): Promise<boolean> {
+    const core = db.getObjectCoreById(objectId, { load: false });
+    if (!core?.isBodyAvailable || db.areStrongDepsResolved(core)) {
+      return false;
+    }
+    await db._entityManager.settleEntity(core);
+    return true;
   }
 
   /**

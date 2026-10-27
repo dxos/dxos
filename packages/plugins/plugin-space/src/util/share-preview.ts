@@ -89,6 +89,7 @@ export const readSharePreview = ({
     const publicKey = invitation.guestKeypair?.publicKey?.data;
     const spaceKey = invitation.spaceKey?.data;
     if (!secretKey || !publicKey || !spaceKey) {
+      log.warn('share link invitation has no guest key or space key; no first look');
       return undefined;
     }
 
@@ -127,14 +128,25 @@ const openSharePreview = ({
   ...options
 }: ThinClientOptions & { objectId: string }): Effect.Effect<SharePreview | undefined, SpaceOperationError> =>
   Effect.tryPromise({
-    try: async () => {
+    try: async (signal) => {
       // Loaded on demand: the thin client brings Automerge and the functions' handlers, which boot never needs.
       const { ThinClient } = await import('./thin-client.ts');
       const client = new ThinClient(options);
-      await client.open();
-      const subject = await client.load(objectId);
+      let subject: Obj.Unknown | undefined;
+      try {
+        await client.open();
+        subject = await client.load(objectId);
+      } finally {
+        // Nothing else owns a client with nothing to show, or one whose read the first look's timeout interrupted.
+        if (!subject || signal.aborted) {
+          await client.close();
+        }
+      }
       if (!subject) {
-        await client.close();
+        log.warn('share link thin client has no document for the shared object', {
+          objectId,
+          documents: options.documents.length,
+        });
         return undefined;
       }
       return { subject, client };

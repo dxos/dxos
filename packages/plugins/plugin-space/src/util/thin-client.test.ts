@@ -25,17 +25,22 @@ describe('ThinClient', () => {
     await builder.close();
   });
 
-  test('serves the handed-over objects, resolving references among them, and nothing else', async ({ expect }) => {
+  test('serves the handed-over objects, resolving references and parents among them, and nothing else', async ({
+    expect,
+  }) => {
     const types = [Collection.Collection, Text.Text];
     const { db, key } = await builder.createDatabase({ types });
+    const folder = db.add(Collection.make({ name: 'Sales' }));
     const body = db.add(Text.make({ content: '# Pricing' }));
     const shared = db.add(Collection.make({ name: 'Pricing notes', objects: [Ref.make(body)] }));
+    // A parent is a strong dependency, which the client loads after the object itself.
+    Obj.setParent(shared, folder);
     const unshared = db.add(Text.make({ content: 'Notes for the team only.' }));
     await db.flush();
 
-    const objects = [shared, body].map(sharedObject);
+    const objects = [shared, body, folder].map(sharedObject);
     // The unshared object's document is handed over too, which shows that the root, not the store, bounds the client.
-    const documents = [shared, body, unshared].map(sharedDocument);
+    const documents = [shared, body, folder, unshared].map(sharedDocument);
     const client = new ThinClient({ spaceId: db.spaceId, spaceKey: key, objects, documents, types });
     await client.open();
     try {

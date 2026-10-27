@@ -492,6 +492,43 @@ describe('Query pipeline strong-dependency stalls', () => {
   // queue polled for replication) latched its op, so a LATER local materialization of that dep did
   // not surface the dependent: nothing re-probed the working set. `HypergraphImpl._onUpdate` now
   // re-probes cached ops on every local db update, healing the dependent without a fresh request.
+  // A parent is a strong dependency, and its document is only asked for once the child's lands, so
+  // a lookup that settles on the child's document alone misses a child whose parent is reachable.
+  test('ref.tryLoad waits for the document of a reachable parent', async () => {
+    const testBuilder = new EchoTestBuilder();
+    await openAndClose(testBuilder);
+    const { peer, db } = await testBuilder.createDatabase();
+
+    const childObjectId = EntityId.random();
+    const parentObjectId = EntityId.random();
+    const [childDocHandle, parentDocHandle] = await Promise.all([
+      peer.host.createDoc<DatabaseDirectory>({
+        version: SpaceDocVersion.CURRENT,
+        access: { spaceKey: db.spaceKey.toHex() },
+        objects: {
+          [childObjectId]: {
+            meta: { keys: [] },
+            data: { title: 'child' },
+            system: { kind: 'object', parent: { '/': EID.make({ entityId: parentObjectId }) } },
+          },
+        },
+      }),
+      peer.host.createDoc<DatabaseDirectory>({
+        version: SpaceDocVersion.CURRENT,
+        access: { spaceKey: db.spaceKey.toHex() },
+        objects: { [parentObjectId]: { meta: { keys: [] }, data: { title: 'parent' }, system: { kind: 'object' } } },
+      }),
+    ]);
+    db.getSpaceRootDocHandle().change((newDoc: DatabaseDirectory) => {
+      newDoc.links ??= {};
+      newDoc.links[childObjectId] = new A.RawString(childDocHandle.url);
+      newDoc.links[parentObjectId] = new A.RawString(parentDocHandle.url);
+    });
+
+    const loaded = await asyncTimeout(db.makeRef(EID.make({ entityId: childObjectId })).tryLoad(), 2000);
+    expect(loaded).toMatchObject({ id: childObjectId, title: 'child' });
+  });
+
   test('a dependent surfaces once its absent strong dep is materialized locally', async () => {
     const testBuilder = new EchoTestBuilder();
     await openAndClose(testBuilder);
