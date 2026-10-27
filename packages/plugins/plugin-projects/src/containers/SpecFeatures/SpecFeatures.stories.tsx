@@ -8,7 +8,6 @@ import React from 'react';
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import * as Project from '@dxos/compute/Project';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
@@ -24,17 +23,19 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
 import { translations } from '#translations';
+import { Spec } from '#types';
 
 import { FeatureCompanion } from '../FeatureCompanion/index.ts';
-import { ProjectFeatures } from './ProjectFeatures.tsx';
+import { SpecFeatures } from './SpecFeatures.tsx';
 
 type StoryArgs = { attendableId: string };
 
 const DefaultStory = ({ attendableId }: StoryArgs) => {
   const [space] = useSpaces();
-  const [project] = useQuery(space?.db, Filter.type(Project.Project));
-  if (!project) {
-    return <Loading data={{ db: !!space?.db, project: !!project }} />;
+  // The seeded spec is the top-level one; the subfeatures' specs are owned by their features.
+  const [spec] = useQuery(space?.db, Filter.and(Filter.type(Spec.Spec), Filter.hasParent(false)));
+  if (!spec) {
+    return <Loading data={{ db: !!space?.db, spec: !!spec }} />;
   }
 
   // Marks the subtree attendable, as the deck's plank does, so the toolbar is live; the companion sits beside the map
@@ -42,8 +43,8 @@ const DefaultStory = ({ attendableId }: StoryArgs) => {
   return (
     <AttendableContainer id={attendableId} classNames='contents'>
       <Layout.Grid classNames='dx-fill grid-cols-[1fr_24rem] divide-x divide-separator'>
-        <ProjectFeatures project={project} attendableId={attendableId} />
-        <FeatureCompanion project={project} attendableId={attendableId} />
+        <SpecFeatures spec={spec} attendableId={attendableId} />
+        <FeatureCompanion spec={spec} attendableId={attendableId} />
       </Layout.Grid>
     </AttendableContainer>
   );
@@ -104,7 +105,7 @@ const findKanbanColumn = (canvasElement: HTMLElement, status: string) => {
 };
 
 const meta = {
-  title: 'plugins/plugin-projects/containers/ProjectFeatures',
+  title: 'plugins/plugin-projects/containers/SpecFeatures',
   render: DefaultStory,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
@@ -217,7 +218,7 @@ export const NewFeature: Story = {
   },
 };
 
-/** Selecting a box and pressing Delete removes the feature from the project, not from the space. */
+/** Selecting a box and pressing Delete deletes the feature, with the spec that breaks it down. */
 export const CanvasRemove: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

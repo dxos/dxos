@@ -11,5 +11,5 @@ export const meta = Plugin.getMetaFromConfig(config);
 
 export const MOVE_TASK_DIALOG = DXN.make(`${meta.profile.key}.moveTaskDialog`);
 
-/** The project plank's companion that shows the feature selected on its feature map. */
+/** The spec plank's companion that shows the feature selected on its feature map. */
 export const FEATURE_COMPANION = 'feature';

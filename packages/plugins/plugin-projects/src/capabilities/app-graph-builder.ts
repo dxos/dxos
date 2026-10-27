@@ -26,7 +26,7 @@ import { ArchivedAnnotation } from '@dxos/schema';
 import { Task } from '@dxos/types';
 
 import { FEATURE_COMPANION, meta } from '#meta';
-import { ProjectOperation } from '#types';
+import { ProjectOperation, Spec } from '#types';
 
 import { inboxResearch } from '../templates/index.ts';
 
@@ -57,6 +57,23 @@ export default Capability.makeModule(
         }),
     });
 
+    // Specs sit beside projects, since a spec's features are delivered by the project it names; `spec` is
+    // plugin-code's key for a plugin's bundled spec.
+    const specSectionExtensions = yield* TypeSection.createTypeSectionExtension(Spec.Spec, {
+      urlKey: 'features',
+      match: AppNodeMatcher.whenNavTreeGroup(GraphPath.GroupTypes.ai),
+      groupSegment: GraphPath.GroupSegments.ai,
+      createObject: (space) =>
+        Operation.invoke(SpaceOperation.OpenObjectForm, {
+          target: space.db,
+          typename: Type.getTypename(Spec.Spec),
+          targetNodeId: GraphPath.getSpacePath(
+            space.db.spaceId,
+            GraphPath.GroupSegments.ai,
+            Type.getTypename(Spec.Spec),
+          ),
+        }),
+    });
     const actionExtensions = yield* createProjectActionExtension();
     const chatExtensions = yield* createProjectChatsExtension();
     const chatChildrenExtensions = yield* createProjectChatsChildrenExtension();
@@ -64,11 +81,11 @@ export default Capability.makeModule(
     const artifactsActionExtensions = yield* createProjectArtifactsActionExtension();
     const taskExtensions = yield* createProjectTasksExtension();
     const mailboxExtensions = yield* createMailboxProjectExtension();
-    // The feature companion: the feature selected on the project's map, beside the project plank.
+    // The feature companion: the feature selected on the spec's map, beside the spec plank.
     const featureCompanionExtensions = yield* AppGraphBuilder.createTypeExtension({
       id: 'featureCompanion',
       relation: AppNode.companion,
-      type: Project.Project,
+      type: Spec.Spec,
       connector: () =>
         Effect.succeed([
           AppNode.makeCompanion({
@@ -81,6 +98,7 @@ export default Capability.makeModule(
     });
     return Capability.contribute(AppCapabilities.AppGraphBuilder, [
       ...sectionExtensions,
+      ...specSectionExtensions,
       ...actionExtensions,
       ...chatExtensions,
       ...chatChildrenExtensions,
