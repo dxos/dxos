@@ -98,6 +98,12 @@ export type MailSyncStreams = {
    * additions this arrives as `Change`. The harness merges it with the decoded additions.
    */
   readonly reconciles: Stream.Stream<EmailStage.Change, MailSyncError, Cursor.Service>;
+  /**
+   * The additions enumerated by identity (an incremental delta's created ids) rather than by key window.
+   * Dedup checks these against the feed instead of the synced range (see `Cursor.LayerOptions.identityForeignIds`),
+   * since a backdated message keeps its original date.
+   */
+  readonly identityForeignIds?: readonly string[];
 };
 
 /** The run's change source, produced by {@link MailSyncProviderService.prepare} once ready. */
@@ -638,7 +644,7 @@ export const runMailSync = (
     // dedup on foreignId/key, then cap at `maxMessages` (counting survivors into `taken`, which tells a
     // truncated run → re-run from an exhausted one → complete backfill), then the provider decode into an
     // `insert` Change — is flat here rather than hidden in the provider.
-    const { additions, reconciles } = source.buildSource({
+    const { additions, reconciles, identityForeignIds } = source.buildSource({
       windows,
       filter: targetOptions.filter,
       tagIndex,
@@ -704,6 +710,7 @@ export const runMailSync = (
                   source.reconcileForeignIds.map((id) => ({ source: provider.foreignKeySource, id })),
                 )
               : undefined,
+          identityForeignIds,
           dedupSeedTail: options.dedupSeedTail,
           // The feed also holds the messages' attachment blobs, which carry no foreign keys.
           dedupSeedType: Message.Message,

@@ -489,6 +489,17 @@ export type State = {
    * on the add-only path.
    */
   readonly foreignIndex?: ReadonlyMap<string, Obj.ID>;
+  /**
+   * Foreign ids the provider enumerated by identity (a history delta's created messages) rather than by
+   * key window. Their keys are provider dates, which say nothing about what was synced, so
+   * {@link dedupStage} dedups them by identity and they never lower `min`.
+   */
+  readonly identityForeignIds?: ReadonlySet<string>;
+  /**
+   * Which {@link identityForeignIds} the feed already holds: one memoized feed lookup, run only when an
+   * identity item falls inside the synced range, since a feed query still decodes the whole feed.
+   */
+  readonly committedIdentities?: Effect.Effect<ReadonlySet<string>>;
   /** Serializes the advanced cursor key for storage on the cursor. */
   readonly formatCursor: (key: number) => string;
   /** Mutable run tally, read back by the caller after the run. */
@@ -529,7 +540,14 @@ export class Service extends Context.Service<Service, State>()('@dxos/link/Curso
  */
 export type LayerOptions = Omit<
   State,
-  'dedupSet' | 'foreignIndex' | 'formatCursor' | 'minKey' | 'trackRange' | 'extent'
+  | 'dedupSet'
+  | 'foreignIndex'
+  | 'identityForeignIds'
+  | 'committedIdentities'
+  | 'formatCursor'
+  | 'minKey'
+  | 'trackRange'
+  | 'extent'
 > & {
   readonly formatCursor?: (key: number) => string;
   /** Low-water key at run start. Only relevant with `trackRange: true`. Defaults to 0 (unset). */
@@ -556,6 +574,8 @@ export type LayerOptions = Omit<
    * pushdown. Absent on the add-only path.
    */
   readonly reconcileFilter?: Filter.Any;
+  /** See {@link State.identityForeignIds}; looked up as `dedupSeedType` objects when one is set. */
+  readonly identityForeignIds?: readonly string[];
 };
 
 /**
@@ -587,6 +607,18 @@ export const layer = (options: LayerOptions): Layer.Layer<Service, never, Databa
         feed && options.reconcileFilter
           ? yield* seedForeignIndex(feed, options.foreignKeySource, options.reconcileFilter)
           : undefined;
+      const identityForeignIds =
+        options.identityForeignIds && options.identityForeignIds.length > 0
+          ? new Set(options.identityForeignIds)
+          : undefined;
+      const committedIdentities =
+        feed && identityForeignIds
+          ? yield* Effect.cached(
+              findCommitted(feed, options.foreignKeySource, identityForeignIds, options.dedupSeedType).pipe(
+                Effect.provideContext(yield* Effect.context<Database.Service>()),
+              ),
+            )
+          : undefined;
       return {
         ...options,
         minKey: options.minKey ?? 0,
@@ -595,6 +627,8 @@ export const layer = (options: LayerOptions): Layer.Layer<Service, never, Databa
         extent: options.extent ?? { maxKey: 0, minKey: 0 },
         dedupSet,
         foreignIndex,
+        identityForeignIds,
+        committedIdentities,
       };
     }),
   );
@@ -739,10 +773,14 @@ export const skipCommitted = <In>(
  * Reusable dedup stage: drops items already committed (`dedupSet`) and items strictly inside the synced
  * range (`minKey < key < maxKey`) — a cheap shortcut past the already-synced middle. Boundary keys fall
  * through to `dedupSet`, since items can share a key. A single-directional run keeps the original
- * `key < maxKey` shortcut. Folds every considered item's key into {@link State.extent} *before* the
- * drop decision, so a capped range-tracking run shrinks its window even when a whole page drops (see
- * {@link Extent}). Reads {@link Service}; provider-agnostic via `getForeignId`/`getKey`. Pair with
- * {@link skipCommitted} to avoid fetching already-committed items.
+ * `key < maxKey` shortcut. An item in {@link State.identityForeignIds} inside that range is dropped only
+ * when the feed lookup ({@link State.committedIdentities}) finds it: its key is a provider date, and a
+ * backdated message inside the range is still new. One below `min` is left to the backward window, which
+ * enumerates that range by key and dedups it there. Folds every considered item's key into
+ * {@link State.extent} *before* the drop decision (an identity item's key raises only `maxKey`), so a
+ * capped range-tracking run shrinks its window even when a whole page drops (see {@link Extent}). Reads
+ * {@link Service}; provider-agnostic via `getForeignId`/`getKey`. Pair with {@link skipCommitted} to
+ * avoid fetching already-committed items.
  */
 export const dedupStage = <In>(
   id: string,
@@ -751,23 +789,33 @@ export const dedupStage = <In>(
 ): Stage.Stage<In, In, never, Service> =>
   Stage.map(id, (item: In) =>
     Effect.gen(function* () {
-      const { maxKey, minKey, trackRange, dedupSet, extent } = yield* Service;
+      const { maxKey, minKey, trackRange, dedupSet, extent, identityForeignIds, committedIdentities } = yield* Service;
+      const foreignId = getForeignId(item);
+      const byIdentity = identityForeignIds?.has(foreignId) ?? false;
       const key = getKey(item);
       if (key > 0) {
         extent.maxKey = Math.max(extent.maxKey, key);
-        extent.minKey = extent.minKey === 0 ? key : Math.min(extent.minKey, key);
+        if (!byIdentity) {
+          extent.minKey = extent.minKey === 0 ? key : Math.min(extent.minKey, key);
+        }
       }
-      if (dedupSet.has(getForeignId(item))) {
+      if (dedupSet.has(foreignId)) {
         return undefined;
       }
       // A range run drops only the strict interior `(min, max)` so the region below `min` still
       // commits; a single-directional run keeps `key < maxKey` (also dropping a `key === 0` fallback
       // below an advanced `max`, which the range form would not).
       const interior = trackRange ? minKey < key && key < maxKey : key < maxKey;
-      if (interior) {
+      if (byIdentity && trackRange && minKey > 0 && key > 0 && key < minKey) {
         return undefined;
       }
-      return item;
+      if (!interior) {
+        return item;
+      }
+      if (byIdentity && committedIdentities) {
+        return (yield* committedIdentities).has(foreignId) ? undefined : item;
+      }
+      return undefined;
     }),
   );
 
@@ -828,6 +876,35 @@ const seedForeignIndex = (
     }),
     Effect.withSpan('cursor.seedForeignIndex'),
   );
+
+/**
+ * The subset of `foreignIds` the feed already holds, read by foreign key (of `type` in any schema
+ * version, when set) rather than from the bounded seed tail, which a message committed long ago has left.
+ */
+const findCommitted = (
+  feed: Feed.Feed,
+  foreignKeySource: string,
+  foreignIds: ReadonlySet<string>,
+  type: Type.AnyObj | undefined,
+): Effect.Effect<ReadonlySet<string>, never, Database.Service> => {
+  const keys = [...foreignIds].map((id) => ({ source: foreignKeySource, id }));
+  const filter = type ? Filter.foreignKeys(DXN.make(Type.getTypename(type)), keys) : Filter.everything();
+  return Feed.query(feed, Query.select(filter)).run.pipe(
+    Effect.map((items) => {
+      const committed = new Set<string>();
+      for (const item of items) {
+        for (const key of Obj.getMeta(item).keys) {
+          if (key.source === foreignKeySource && foreignIds.has(key.id)) {
+            committed.add(key.id);
+          }
+        }
+      }
+      return committed;
+    }),
+    Effect.tap((committed) => Effect.annotateCurrentSpan({ lookedUp: foreignIds.size, committed: committed.size })),
+    Effect.withSpan('cursor.findCommitted'),
+  );
+};
 
 /** How many objects the dedup seed reads from each end of the feed, and how many per query. */
 type SeedBounds = { readonly tail: number; readonly pageSize: number };

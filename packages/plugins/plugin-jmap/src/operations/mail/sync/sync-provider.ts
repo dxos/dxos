@@ -246,6 +246,7 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSync.MailSyncProvider, n
                     Stream.provideService(JmapMailApi, providerApi),
                     Stream.mapError(MailSync.MailSyncError.wrap()),
                   ),
+                  identityForeignIds: forwardIds,
                 };
               },
               nextToken: () => capturedToken,

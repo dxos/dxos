@@ -202,6 +202,7 @@ export const googleMailSyncProvider = (options: {
                   ),
                   // Empty on non-incremental runs; resolved to `Change`s by the shared `reconcileToChanges`.
                   reconciles: MailSync.reconcileToChanges(Stream.fromIterable(reconcileItems)),
+                  identityForeignIds: forwardIds,
                 };
               },
               nextToken: () => capturedToken,

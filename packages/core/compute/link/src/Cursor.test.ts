@@ -651,6 +651,88 @@ describe('foreignIndex (reconcileFilter)', () => {
   });
 });
 
+describe('dedupStage with identity-enumerated items', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  test('a history-delta item inside the synced range commits unless the feed already holds it', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [Cursor.Cursor, Feed.Feed, Expando.Expando] });
+    const feed = db.add(Feed.make());
+    const target = db.add(Expando.make({ name: 'mailbox' }));
+    const cursor = db.add(Cursor.makeFeed({ source: Ref.make(feed), target: Ref.make(target), max: '100', min: '50' }));
+    // `already-60` sits deep in the feed, past the one-object seed tail, so only a lookup finds it.
+    await EffectEx.runPromise(
+      Feed.append(
+        feed,
+        [
+          ['already-60', 60],
+          ['filler-90', 90],
+          ['filler-95', 95],
+        ].map(([id, key]) => Expando.make({ [Obj.Meta]: { keys: [{ id: String(id), source: 'test' }] }, key })),
+      ).pipe(Effect.provide(Database.layer(db))),
+    );
+
+    type Item = { id: string; key: number };
+    const delta = ['backdated-70', 'already-60', 'backdated-40'];
+    const { kept, extent } = await Effect.gen(function* () {
+      const kept = yield* Stream.fromIterable<Item>([
+        // A backdated import Gmail reports in the history delta: new, but dated inside (min, max).
+        { id: 'backdated-70', key: 70 },
+        { id: 'already-60', key: 60 },
+        // Below `min`: left to the backward window, and must not mark (40, 50) as synced meanwhile.
+        { id: 'backdated-40', key: 40 },
+        // Enumerated by the key window, so the interior shortcut still drops it.
+        { id: 'window-80', key: 80 },
+      ]).pipe(
+        Cursor.dedupStage(
+          'dedup',
+          (item: Item) => item.id,
+          (item: Item) => item.key,
+        ),
+        Stream.runCollect,
+      );
+      yield* Cursor.commit(
+        [...kept].map((item) => ({
+          object: Expando.make({ [Obj.Meta]: { keys: [{ id: item.id, source: 'test' }] }, key: item.key }),
+          foreignId: item.id,
+          key: item.key,
+        })),
+      );
+      return { kept, extent: (yield* Cursor.Service).extent };
+    }).pipe(
+      Effect.provide(
+        Layer.provideMerge(
+          Cursor.layer({
+            cursor,
+            feed,
+            foreignKeySource: 'test',
+            maxKey: 100,
+            minKey: 50,
+            trackRange: true,
+            dedupSeedTail: 1,
+            dedupSeedType: Expando.Expando,
+            identityForeignIds: delta,
+            stats: { newMessages: 0 },
+          }),
+          Database.layer(db),
+        ),
+      ),
+      EffectEx.runAndForwardErrors,
+    );
+
+    expect([...kept].map((item) => item.id)).toEqual(['backdated-70']);
+    expect({ max: cursor.max, min: cursor.min }).toEqual({ max: '100', min: '50' });
+    expect(extent).toEqual({ maxKey: 80, minKey: 80 });
+  });
+});
+
 describe('commit with objectless units', () => {
   let builder: EchoTestBuilder;
 

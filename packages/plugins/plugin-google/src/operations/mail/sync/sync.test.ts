@@ -789,6 +789,42 @@ describe('runGoogleSync against a mock Gmail API', () => {
     expect(ids.length).toBe(base.messages.length + 1);
   });
 
+  test('a delta message dated inside the synced range is synced once, not dropped', async ({ expect }) => {
+    const now = new Date('2026-07-16T12:00:00.000Z');
+    const base = generateGmailDataset({ count: 5, seed: 86, start: subDays(now, 6), end: subDays(now, 2) });
+    const { db, mailbox, binding } = await seedGmailBinding(builder, { options: { syncBackDays: 14 } });
+
+    await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(
+        Effect.provide(googleSyncTestServices(db, { ...base, historyId: '1000' })),
+      ),
+    );
+
+    // An import keeps its original date, so it lands strictly inside the range the first run synced; the
+    // delta also names a message that run already holds.
+    const imported = generateGmailDataset({
+      count: 1,
+      seed: 87,
+      start: subDays(now, 5),
+      end: subDays(now, 3),
+      idPrefix: 'imported',
+    }).messages[0];
+    const run2 = {
+      ...base,
+      messages: [...base.messages, imported],
+      historyId: '1001',
+      historyLog: [{ startHistoryId: '1000', historyId: '1001', messagesAdded: [imported.id, base.messages[2].id] }],
+    };
+    const r2 = await EffectEx.runPromise(
+      runGoogleSync({ binding: Ref.make(binding), now }).pipe(Effect.provide(googleSyncTestServices(db, run2))),
+    );
+
+    expect(r2.newMessages).toBe(1);
+    const ids = await syncedIdsOf(db, mailbox);
+    expect(ids).toContain(imported.id);
+    expect(ids.length).toBe(base.messages.length + 1);
+  });
+
   test('a label-change delta larger than the per-run budget reconciles across bounded runs', async ({ expect }) => {
     const now = new Date('2026-07-16T12:00:00.000Z');
     const base = generateGmailDataset({ count: 5, seed: 85, start: subDays(now, 6), end: subDays(now, 2) });
