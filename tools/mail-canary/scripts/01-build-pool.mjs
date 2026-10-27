@@ -9,8 +9,8 @@
 //   node scripts/01-build-pool.mjs --maildir ~/enron/maildir --out ~/enron/trial.mbox --limit 10
 //
 // Samples `--limit` distinct messages evenly over the custodians' history and moves their dates into
-// `--span-days` ending `--end-days-ago` days back: older than the sync's 30-day window, which is what
-// keeps the canary space from syncing the pool.
+// `--span-days` ending `--end-days-ago` days back: inside the sync's 30-day window, so the canary
+// space syncs the whole pool.
 
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -31,14 +31,14 @@ const { values: args } = parseArgs({
     'out': { type: 'string' },
     // One custodian files the same mail under several folders (kean-s: 25,351 files, 6,212 distinct).
     'custodian': { type: 'string', multiple: true, default: ['kean-s', 'dasovich-j', 'kaminski-v'] },
-    'limit': { type: 'string', default: '10000' },
-    'span-days': { type: 'string', default: '365' },
-    // Margin over the 31-day readiness check, so a pool imported days after it was built still passes.
-    'end-days-ago': { type: 'string', default: '40' },
+    'limit': { type: 'string', default: '1000' },
+    // Ends a day back and spans 28 days, so a pool imported a day after it was built is still inside the window.
+    'span-days': { type: 'string', default: '28' },
+    'end-days-ago': { type: 'string', default: '1' },
   },
 });
 if (!args.maildir || !args.out) {
-  console.error('usage: 01-build-pool.mjs --maildir <maildir> --out <mbox> [--limit 10000] [--custodian kean-s ...]');
+  console.error('usage: 01-build-pool.mjs --maildir <maildir> --out <mbox> [--limit 1000] [--custodian kean-s ...]');
   process.exit(1);
 }
 

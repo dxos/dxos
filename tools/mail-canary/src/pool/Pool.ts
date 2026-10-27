@@ -8,10 +8,10 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { type GmailClient, GmailError } from '../gmail/index.ts';
 import { splitMbox } from './mbox.ts';
 
-/** Label of the Enron messages imported once by steps 01–02. */
+/** The only label the canary puts on the test account's mail. */
 export const POOL_LABEL = 'enron-pool';
 
-/** The sync's default look-back; the pool must stay older than this or the canary space would sync it. */
+/** The sync's default look-back; the pool is dated inside it so the canary space syncs all of it. */
 const SYNC_WINDOW_DAYS = 30;
 
 // Gmail's simple upload takes 5 MB, and base64url grows a message by a third.
@@ -34,14 +34,14 @@ export type PoolStatus = {
   /** What the mbox should have put there, when one is given. */
   readonly expected?: number;
   readonly inInbox: number;
-  readonly newerThanSyncWindow: number;
-  /** Non-empty, archived, older than the sync window, and exactly the mbox when one is given. */
+  readonly olderThanSyncWindow: number;
+  /** Non-empty, all in the inbox, all inside the sync window, and exactly the mbox when one is given. */
   readonly ready: boolean;
 };
 
 type PoolGmail = Pick<GmailClient, 'count' | 'deleteLabels' | 'ensureLabel' | 'importMessage' | 'listIds' | 'trash'>;
 
-/** The Enron pool in the test account: imported once, then only read by the seeder. */
+/** The Enron pool in the test account: inbox mail the canary space syncs. */
 export class Pool {
   readonly #gmail: PoolGmail;
 
@@ -50,7 +50,7 @@ export class Pool {
   }
 
   /**
-   * Imports every message of the mbox from step 01, archived and under the pool label alone, with its
+   * Imports every message of the mbox from step 01 into the inbox under the pool label alone, with its
    * internal date taken from the shifted `Date` header.
    */
   import({ mboxPath, concurrency = CONCURRENCY, onProgress }: ImportOptions): Effect.Effect<ImportResult, GmailError> {
@@ -59,7 +59,7 @@ export class Pool {
       // Counts the messages already imported, so a rerun resumes rather than duplicating.
       const progressPath = `${mboxPath}.imported`;
       const start = existsSync(progressPath) ? Number(readFileSync(progressPath, 'utf8').trim()) || 0 : 0;
-      const poolLabel = yield* this.#gmail.ensureLabel(POOL_LABEL);
+      const labels = ['INBOX', yield* this.#gmail.ensureLabel(POOL_LABEL)];
 
       let skipped = 0;
       for (let offset = start; offset < messages.length; offset += BATCH) {
@@ -71,7 +71,7 @@ export class Pool {
               skipped++;
               return Effect.void;
             }
-            return this.#gmail.importMessage(message, [poolLabel]).pipe(Effect.asVoid);
+            return this.#gmail.importMessage(message, labels).pipe(Effect.asVoid);
           },
           { concurrency, discard: true },
         );
@@ -89,10 +89,10 @@ export class Pool {
       const expected = mboxPath ? (yield* readMbox(mboxPath)).filter(isImportable).length : undefined;
       const size = yield* this.#gmail.count(`label:${POOL_LABEL}`);
       const inInbox = yield* this.#gmail.count(`label:${POOL_LABEL} in:inbox`);
-      const newerThanSyncWindow = yield* this.#gmail.count(`label:${POOL_LABEL} newer_than:${SYNC_WINDOW_DAYS + 1}d`);
+      const olderThanSyncWindow = yield* this.#gmail.count(`label:${POOL_LABEL} older_than:${SYNC_WINDOW_DAYS}d`);
       const ready =
-        size > 0 && inInbox === 0 && newerThanSyncWindow === 0 && (expected === undefined || size === expected);
-      return { size, expected, inInbox, newerThanSyncWindow, ready };
+        size > 0 && inInbox === size && olderThanSyncWindow === 0 && (expected === undefined || size === expected);
+      return { size, expected, inInbox, olderThanSyncWindow, ready };
     });
   }
 

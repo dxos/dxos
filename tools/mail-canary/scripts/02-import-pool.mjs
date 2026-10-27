@@ -79,7 +79,7 @@ const importOrPurge = Effect.gen(function* () {
     const hint = status.size < (status.expected ?? 0) ? `; to import again, delete ${command}.imported first` : '';
     return yield* Effect.fail(
       new Error(
-        `pool is not ready: it must hold exactly the mbox (purge a trial first), archived and 31+ days old${hint}`,
+        `pool is not ready: it must hold exactly the mbox (purge a trial first), in the inbox and inside the 30-day sync window${hint}`,
       ),
     );
   }

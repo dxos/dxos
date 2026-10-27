@@ -31,8 +31,8 @@ const fakeGmail = ({ failAt }: { failAt?: number } = {}) => {
     trashed,
     deletedLabels,
     gmail: {
-      // The pool is archived and old, so only the bare label search finds it.
-      count: (query: string) => Effect.succeed(query === 'label:enron-pool' ? imported.length : 0),
+      // The pool is in the inbox and inside the sync window, so only the older_than search misses it.
+      count: (query: string) => Effect.succeed(query.includes('older_than') ? 0 : imported.length),
       listIds: () => Effect.succeed(imported.map((_, index) => `id-${index}`)),
       trash: (id: string) => Effect.sync(() => void trashed.push(id)),
       deleteLabels: (prefix: string) => Effect.sync(() => deletedLabels.push(prefix)),
@@ -60,7 +60,7 @@ const writeMbox = (text: string): string => {
 };
 
 describe('Pool.import', () => {
-  test('imports every message archived under the pool label', async ({ expect }) => {
+  test('imports every message into the inbox under the pool label', async ({ expect }) => {
     const dir = mkdtempSync(join(tmpdir(), 'pool-'));
     writeFileSync(join(dir, 'pool.mbox'), mbox(120));
     const { gmail, imported, created } = fakeGmail();
@@ -68,7 +68,7 @@ describe('Pool.import', () => {
       new Pool(gmail).import({ mboxPath: join(dir, 'pool.mbox'), concurrency: 1 }),
     );
     expect(result).toEqual({ total: 120, imported: 120, skipped: 0 });
-    expect(imported[0]).toBe('0:label-enron-pool');
+    expect(imported[0]).toBe('0:INBOX,label-enron-pool');
     expect(created).toEqual(['enron-pool']);
     expect(readFileSync(join(dir, 'pool.mbox.imported'), 'utf8')).toBe('120');
   });
@@ -86,7 +86,7 @@ describe('Pool.import', () => {
     const second = fakeGmail();
     const result = await EffectEx.runPromise(new Pool(second.gmail).import({ mboxPath, concurrency: 1 }));
     expect(result.imported).toBe(70);
-    expect(second.imported[0]).toBe('50:label-enron-pool');
+    expect(second.imported[0]).toBe('50:INBOX,label-enron-pool');
   });
 });
 

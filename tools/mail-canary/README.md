@@ -10,8 +10,8 @@ Design: the [Mail Sync Canary spec](https://claude.ai/artifact/GymNuUNJiiph2LuiD
 
 ## How it works
 
-- **Pool (once).** 10,000 Enron messages sit in Gmail under the archived label `enron-pool`, all older
-  than the sync's 30-day window. Their age, not a filter, keeps them out of the canary space.
+- **Pool (once).** 1,000 Enron messages sit in the Gmail inbox under `enron-pool`, the only label the
+  canary uses, dated inside the sync's 30-day window so the canary space syncs all of them.
 - **Canary space (once).** A preview identity owns a space bound to the test account with no filter,
   the default sync-back and the product's `*/10` remote sync trigger: the users' code path.
 - **Nightly.** CI copies 100 pool messages into the inbox as fresh mail (label `dx-seed`), waits for
@@ -37,8 +37,8 @@ node scripts/01-build-pool.mjs --maildir ~/enron/maildir --out ~/enron/trial.mbo
 ```
 
 It drops duplicates by content (one custodian files the same mail in several folders, hence three
-custodians) and messages with no body, samples `--limit` (10,000) evenly over time, moves the dates
-into the year ending 40 days ago (margin over the 31-day check), and drops `Bcc`. The corpus is real
+custodians) and messages with no body, samples `--limit` (1,000) evenly over time, moves the dates
+into the 28 days ending yesterday (inside the 30-day sync window), and drops `Bcc`. The corpus is real
 people's mail: keep it out of git.
 
 ### 02 Import the pool
@@ -57,11 +57,11 @@ node scripts/02-import-pool.mjs ~/enron/enron-pool.mbox # about 20 minutes, resu
   testing mode, the refresh token expires after 7 days. Store the refresh token in 1Password
   `eng-dev/network.dxos.mail-canary` (`REFRESH_TOKEN`), where a cloud session reads it through
   `gmail.env.tpl`, and all three values in the CI secrets.
-- An import puts each message in the mailbox without sending it: archived, never spam, labelled
+- An import puts each message in the mailbox without sending it: in the inbox, never spam, labelled
   `enron-pool` and nothing else, dated by its `Date` header. In the trial, check the dates are the
   shifted ones (not 2001, not today); `purge` then trashes it.
-- After the import, the script fails unless the pool holds exactly the mbox, nothing is in the inbox
-  and nothing is newer than 31 days. Every command refuses a grant for any account but
+- After the import, the script fails unless the pool holds exactly the mbox, all of it in the inbox
+  and inside the 30-day window. Every command refuses a grant for any account but
   `GMAIL_ACCOUNT` (default `test@braneframe.com`).
 
 **Import before step 03, never while the canary space exists:** the sync takes mail imported into a
@@ -79,12 +79,9 @@ MAIL_CANARY_RECOVERY_PHRASE=$(op read op://eng-dev/network.dxos.mail-canary/RECO
 prints its id (variable `MAIL_CANARY_SPACE_ID`) and the recovery phrase (secret
 `MAIL_CANARY_RECOVERY_PHRASE`) once; keep both in `eng-dev/network.dxos.mail-canary` (`SPACE_ID`,
 `RECOVERY_PHRASE`). Then, in Composer on preview, sign in as the test account, open
-"Mail canary" and add a Gmail connection with the defaults; the CLI cannot bind a mailbox yet. Keep
-**Sync back days** at 30 or below: the pool is archived and dated 40+ days back so that it never syncs,
-and only each run's fresh inbox copies do.
+"Mail canary" and add a Gmail connection with the defaults; the CLI cannot bind a mailbox yet.
 `verify` signs in fresh with the recovery phrase, as the nightly does, and checks the space has a mailbox, a
-trace feed and one enabled remote sync trigger. It needs WebSockets to EDGE, which the cloud sandbox's proxy
-blocks: run it on a laptop.
+trace feed and one enabled remote sync trigger, waiting up to two minutes for the space to replicate.
 
 ### 04 Nightly check
 

@@ -14,6 +14,9 @@ export const TRACE_FEED_KIND = 'dxos.org.feed.trace';
 // Feed rows per query; small, since a query response over 32 MiB fails on EDGE.
 const PAGE_SIZE = 50;
 
+// A fresh sign-in replicates the space after `dx` starts; on preview the mailbox lands within a minute.
+const REPLICATION_TIMEOUT_MS = 120_000;
+
 export type ReadSpaceParams = {
   /** Read trace events back to this epoch millisecond. */
   readonly since: number;
@@ -23,14 +26,14 @@ export type ReadSpaceParams = {
 
 /**
  * The program `dx eval` runs in the canary space, in the code-mode Effect dialect (`Database`,
- * `Filter`, `Query`, `Order`, `Obj`, `DXN` and `print` in scope). It prints one JSON line shaped as a
+ * `Effect`, `Filter`, `Query`, `Order`, `Obj`, `DXN` and `print` in scope). It prints one JSON line shaped as a
  * `SpaceSnapshot`.
  *
  * Feeds are read newest first in small pages, as sync's own dedup seed reads them: a feed query has no
  * filter pushdown yet, so a foreign-key filter would decode the whole feed.
  */
 export const readSpaceProgram = (params: ReadSpaceParams): string => `
-const params = ${JSON.stringify({ ...params, pageSize: PAGE_SIZE })};
+const params = ${JSON.stringify({ ...params, pageSize: PAGE_SIZE, replicationTimeout: REPLICATION_TIMEOUT_MS })};
 const syncKey = ${JSON.stringify(SYNC_OPERATION_KEY)};
 const gmailSource = ${JSON.stringify(GMAIL_SOURCE)};
 
@@ -43,7 +46,14 @@ const page = (feed, typename, read) =>
       .from(feed),
   ).run;
 
-const [mailbox] = yield* Database.query(Filter.type(DXN.make('org.dxos.type.mailbox'))).run;
+let mailbox;
+for (let waited = 0; ; waited += 5000) {
+  [mailbox] = yield* Database.query(Filter.type(DXN.make('org.dxos.type.mailbox'))).run;
+  if (mailbox || waited >= params.replicationTimeout) {
+    break;
+  }
+  yield* Effect.sleep('5 seconds');
+}
 const messages = [];
 if (mailbox) {
   const feed = yield* Database.load(mailbox.feed);
