@@ -7,25 +7,23 @@ import { describe, test } from 'vitest';
 import { acceptLoaderTargets, findModuleLoaders, rewriteLoaders, wrapModuleBody } from './index.ts';
 
 describe('findModuleLoaders', () => {
-  test('finds loaders passed to module makers', async ({ expect }) => {
+  test('finds loaders passed to module makers', ({ expect }) => {
     const code = `
       export const State = Capability.lazyModule('State', { provides: [] }, () => import('./state.ts'));
       export const Surface = AppCapability.surface(() => import('./react-surface.tsx'), { roles: [] });
     `;
-    expect((await findModuleLoaders('/src/capabilities/index.ts', code)).map(({ specifier }) => specifier)).toEqual([
+    expect(findModuleLoaders('/src/capabilities/index.ts', code).map(({ specifier }) => specifier)).toEqual([
       './state.ts',
       './react-surface.tsx',
     ]);
   });
 
-  test('finds plugin definitions loaded by Plugin.lazy', async ({ expect }) => {
+  test('finds plugin definitions loaded by Plugin.lazy', ({ expect }) => {
     const code = `export const make = Plugin.lazy(meta, () => import('#plugin'));`;
-    expect((await findModuleLoaders('/src/MarkdownPlugin.ts', code)).map(({ specifier }) => specifier)).toEqual([
-      '#plugin',
-    ]);
+    expect(findModuleLoaders('/src/MarkdownPlugin.ts', code).map(({ specifier }) => specifier)).toEqual(['#plugin']);
   });
 
-  test('skips lazy components, dependencies, assets and non-loader arrows', async ({ expect }) => {
+  test('skips lazy components, dependencies, assets and non-loader arrows', ({ expect }) => {
     const code = `
       const Panel = lazy(() => import('./Panel.tsx'));
       const Other = React.lazy(() => import('./Other.tsx'));
@@ -34,14 +32,14 @@ describe('findModuleLoaders', () => {
       register((props) => import('./with-params.ts'));
       register(() => import('./raw.ts?raw'));
     `;
-    expect(await findModuleLoaders('/src/capabilities/index.ts', code)).toEqual([]);
+    expect(findModuleLoaders('/src/capabilities/index.ts', code)).toEqual([]);
   });
 });
 
 describe('rewriteLoaders', () => {
-  test('resolves each loader to the newest version of its body', async ({ expect }) => {
+  test('resolves each loader to the newest version of its body', ({ expect }) => {
     const code = `a(() => import('./a.ts')); b(() => import('./b.ts'));`;
-    const rewritten = rewriteLoaders(code, await findModuleLoaders('/src/index.ts', code));
+    const rewritten = rewriteLoaders(code, findModuleLoaders('/src/index.ts', code));
     expect(rewritten).toBe(
       "a(() => import('./a.ts').then((module) => globalThis.__DX_HOT_MODULES__?.latest(module) ?? module)); " +
         "b(() => import('./b.ts').then((module) => globalThis.__DX_HOT_MODULES__?.latest(module) ?? module));",
@@ -50,9 +48,9 @@ describe('rewriteLoaders', () => {
 });
 
 describe('acceptLoaderTargets', () => {
-  test('accepts each loaded file once, on the first line', async ({ expect }) => {
+  test('accepts each loaded file once, on the first line', ({ expect }) => {
     const code = `a(() => import('./a.ts'));\nb(() => import('./a.ts'));\nc(() => import('./c.ts'));`;
-    const accepted = acceptLoaderTargets(code, await findModuleLoaders('/src/index.ts', code));
+    const accepted = acceptLoaderTargets(code, findModuleLoaders('/src/index.ts', code));
     const [first, ...rest] = accepted.split('\n');
     expect(first).toMatch(/^if \(import\.meta\.hot\) \{ import\.meta\.hot\.accept\(\["\.\/a\.ts","\.\/c\.ts"\]/);
     expect(first.endsWith("a(() => import('./a.ts'));")).toBe(true);

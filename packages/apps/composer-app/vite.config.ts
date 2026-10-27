@@ -23,7 +23,8 @@ import { VitePWA } from 'vite-plugin-pwa';
 import solid from 'vite-plugin-solid';
 import wasm from 'vite-plugin-wasm';
 
-import { bootLoaderPlugin, hotModulesPlugin, importMapPlugin } from '@dxos/app-framework/vite-plugin';
+import { bootLoaderPlugin, importMapPlugin } from '@dxos/app-framework/vite-plugin';
+import { hotModulesPlugin } from '@dxos/app-framework/vite-plugin/hot-modules';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { isNonNullable } from '@dxos/util';
