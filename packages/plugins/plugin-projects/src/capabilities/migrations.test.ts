@@ -107,4 +107,21 @@ describe('feature migrations', () => {
     const loose = byName('Loose');
     expect(loose && Spec.getContainer(loose)?.name).toBe('Features');
   });
+
+  test('a nested spec left by an earlier run is reused rather than made again', async ({ expect }) => {
+    const db = await open();
+    const sync = db.add(Obj.make(LegacyFeature.FeatureV2, { name: 'Sync', status: 'planned' }));
+    db.add(Obj.make(LegacyFeature.FeatureV2, { name: 'Gmail', status: 'planned', parent: Ref.make(sync) }));
+    // What an interrupted run leaves: the nested spec, already the parent's child, with no features yet.
+    const earlier = db.add(Spec.make({ name: 'Sync' }));
+    Obj.setParent(earlier, sync);
+    await db.flush();
+    await db.runMigrations([makeFeatureSpecs()]);
+
+    const nested = (await db.query(Filter.type(Spec.Spec, { name: 'Sync' })).run()).map(({ id }) => id);
+    expect(nested).toEqual([earlier.id]);
+    const features = await db.query(Filter.type(Feature.Feature)).run();
+    expect(features.find(({ name }) => name === 'Sync')?.spec?.target?.id).toBe(earlier.id);
+    expect(earlier.features.map((ref) => ref.target?.name)).toEqual(['Gmail']);
+  });
 });

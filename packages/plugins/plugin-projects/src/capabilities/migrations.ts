@@ -46,8 +46,8 @@ export const featureSubfeatures = Migration.define({
 /** Where a 0.2.0 feature sat, read in the transform while its refs are still live. */
 type Placement = {
   project?: Project.Project;
-  /** The feature it was a subfeature of. */
-  parent?: { id: string; name: string };
+  /** The feature it was a subfeature of, at whichever version it is when read. */
+  parent?: LegacyFeature.FeatureV2 | Feature.Feature;
   position?: Spec.Position;
 };
 
@@ -67,22 +67,54 @@ type SpecsState = {
   migrated: Map<string, Feature.Feature>;
 };
 
+const UNPLACED_NAME = 'Features';
+
+/**
+ * The nested spec made for a former parent: it is the parent's ECHO child from the moment it is made, so a later run or
+ * another peer finds it there rather than making a second one.
+ */
+const findNested = async (
+  db: Database.Database,
+  state: SpecsState,
+  parent: LegacyFeature.FeatureV2 | Feature.Feature,
+): Promise<Spec.Spec | undefined> => {
+  const cached = state.byParent.get(parent.id);
+  if (cached) {
+    return cached;
+  }
+  const [existing] = await db
+    .query(Filter.and(Filter.type(Spec.Spec), Filter.childOf(parent, { transitive: false })))
+    .run();
+  if (existing) {
+    state.byParent.set(parent.id, existing);
+  }
+  return existing;
+};
+
+/** Points a migrated feature at its nested spec, unless it already has one. */
+const linkNested = (feature: Feature.Feature, nested: Spec.Spec): void => {
+  if (!feature.spec) {
+    Obj.update(feature, (feature) => {
+      feature.spec = Ref.make(nested);
+    });
+  }
+};
+
 /** The spec a feature moves into: its project's, its former parent's nested one, or the unplaced one. */
 const getContainer = async (db: Database.Database, state: SpecsState, placement: Placement): Promise<Spec.Spec> => {
   const { project, parent } = placement;
   if (parent) {
-    let spec = state.byParent.get(parent.id);
+    let spec = await findNested(db, state, parent);
     if (!spec) {
       spec = db.add(Spec.make({ name: parent.name }));
+      Obj.setParent(spec, parent);
       state.byParent.set(parent.id, spec);
-      // A parent migrated earlier takes its spec now; one migrated later takes it in its own `onMigration`.
-      const migratedParent = state.migrated.get(parent.id);
-      if (migratedParent) {
-        const nested = spec;
-        Obj.update(migratedParent, (migratedParent) => {
-          migratedParent.spec = Ref.make(nested);
-        });
-      }
+    }
+    // A parent migrated earlier (in this run or a previous one) takes its spec now; one migrated later takes it in its
+    // own `onMigration`.
+    const migratedParent = state.migrated.get(parent.id) ?? (Feature.instanceOf(parent) ? parent : undefined);
+    if (migratedParent) {
+      linkNested(migratedParent, spec);
     }
     return spec;
   }
@@ -98,8 +130,16 @@ const getContainer = async (db: Database.Database, state: SpecsState, placement:
     return spec;
   }
 
-  state.unplaced ??= db.add(Spec.make({ name: 'Features' }));
-  return state.unplaced;
+  if (state.unplaced) {
+    return state.unplaced;
+  }
+  // Reused across runs: the top-level spec of that name that names no project.
+  const candidates = await db
+    .query(Filter.and(Filter.type(Spec.Spec, { name: UNPLACED_NAME }), Filter.hasParent(false)))
+    .run();
+  const unplaced = candidates.find((spec) => !spec.project) ?? db.add(Spec.make({ name: UNPLACED_NAME }));
+  state.unplaced = unplaced;
+  return unplaced;
 };
 
 /**
@@ -125,7 +165,7 @@ export const makeFeatureSpecs = (): Migration.ObjectMigration => {
       const [project, parent] = await Promise.all([from.project?.tryLoad(), from.parent?.tryLoad()]);
       getState(db).placements.set(from.id, {
         project: Obj.instanceOf(Project.Project, project) ? project : undefined,
-        parent: parent ? { id: parent.id, name: parent.name } : undefined,
+        parent: Feature.instanceOf(parent) || Obj.instanceOf(LegacyFeature.FeatureV2, parent) ? parent : undefined,
         position: from.position ? { x: from.position.x, y: from.position.y } : undefined,
       });
       const { name, description, requirements, status, specs, code } = from;
@@ -136,12 +176,10 @@ export const makeFeatureSpecs = (): Migration.ObjectMigration => {
       const placement = state.placements.get(object.id) ?? {};
       state.migrated.set(object.id, object);
 
-      // Its own subfeatures may have migrated first and made the nested spec it now owns.
-      const nested = state.byParent.get(object.id);
+      // Its own subfeatures may have migrated first, in this run or an earlier one, and made the nested spec it owns.
+      const nested = await findNested(db, state, object);
       if (nested) {
-        Obj.update(object, (object) => {
-          object.spec = Ref.make(nested);
-        });
+        linkNested(object, nested);
       }
 
       const container = await getContainer(db, state, placement);
