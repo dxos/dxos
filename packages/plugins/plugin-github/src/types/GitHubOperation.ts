@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
@@ -81,6 +82,8 @@ export const SyncResult = Schema.Struct({
   requests: Schema.Number,
   pulled: Schema.Struct({ issues: Schema.Number, pullRequests: Schema.Number }),
   pushed: Schema.Struct({ issues: Schema.Number, repos: Schema.Number }),
+  /** File bindings (spec/FILE-SYNC.mdl): files pulled into objects, objects pushed as files, files skipped. */
+  files: Schema.Struct({ pulled: Schema.Number, pushed: Schema.Number, skipped: Schema.Number }).pipe(Schema.optional),
 });
 
 export interface SyncResult extends Schema.Schema.Type<typeof SyncResult> {}
@@ -100,8 +103,36 @@ export const SyncGitHubRepositories = Operation.make({
   },
   input: ConnectorSpec.SyncInput,
   output: SyncResult,
-  services: [Trace.TraceService, Credential.CredentialsService],
+  // Capabilities carry the contributed file mappings a file binding runs.
+  services: [Trace.TraceService, Credential.CredentialsService, Capability.Service],
 }).pipe(Operation.visible);
+
+/**
+ * Turn on two-way file sync (spec/FILE-SYNC.mdl) for a repository the connection already syncs: adds
+ * a file binding next to its item binding. Files a contributed mapping claims (Deus specs, say) become
+ * objects, and Composer edits to them are committed to a write branch with one pull request.
+ */
+export const EnableGitHubFileSync = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.github.enableFileSync'),
+    name: 'Enable GitHub File Sync',
+    description: 'Sync files of a bound GitHub repository (such as .mdl specs) with objects in the space, both ways.',
+    icon: 'ph--files--regular',
+  },
+  input: Schema.Struct({
+    repository: Ref.Ref(Repo.Repo),
+    /** Branch read from; the repository's default branch when absent. */
+    branch: Schema.String.pipe(Schema.optional),
+    /** Branch written to; `composer/<spaceId>` when absent. */
+    writeBranch: Schema.String.pipe(Schema.optional),
+    /** FileMapping ids to run; every contributed mapping when absent. */
+    mappings: Schema.Array(Schema.String).pipe(Schema.optional),
+    /** Globs that narrow every mapping, e.g. `packages/plugins/**`. */
+    paths: Schema.Array(Schema.String).pipe(Schema.optional),
+  }),
+  output: Schema.Struct({ binding: Schema.String, created: Schema.Boolean }),
+  services: [Database.Service],
+});
 
 /**
  * Import a pull request named by a github.com URL or `owner/repo#123` into the space, so it can be
