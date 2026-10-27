@@ -1,4 +1,8 @@
 //
+// Copyright 2026 DXOS.org
+//
+
+//
 // Ride Check Worker: answers /api/forecast from Open-Meteo and serves the UI as static assets.
 //
 

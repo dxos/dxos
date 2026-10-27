@@ -1,6 +1,6 @@
-From 7a26a5c1feb8c9165518f4370f3a14506c33a7f6 Mon Sep 17 00:00:00 2001
+From 0b3c9407f14089d5a0e20f1275e9c0da46208c90 Mon Sep 17 00:00:00 2001
 From: Ride Check <ride-check@example.com>
-Date: Tue, 27 Oct 2026 03:55:08 +0000
+Date: Tue, 27 Oct 2026 06:20:11 +0000
 Subject: [PATCH] F-1.4: warn when gusts top 30 km/h
 
 ---
@@ -9,10 +9,10 @@ Subject: [PATCH] F-1.4: warn when gusts top 30 km/h
  2 files changed, 19 insertions(+), 1 deletion(-)
 
 diff --git a/src/app/main.tsx b/src/app/main.tsx
-index 3be21c3..9c2a547 100644
+index c08ee25..ab16dbe 100644
 --- a/src/app/main.tsx
 +++ b/src/app/main.tsx
-@@ -71,6 +71,18 @@ const VerdictCard = ({ forecast }: { forecast: Forecast }) => {
+@@ -98,6 +98,18 @@ const VerdictCard = ({ forecast }: { forecast: Forecast }) => {
          <Card.Row icon='ph--wind--regular' trailing={<span className='tabular-nums'>{verdict.wind} km/h</span>}>
            Wind
          </Card.Row>
@@ -32,10 +32,10 @@ index 3be21c3..9c2a547 100644
            icon='ph--thermometer-simple--regular'
            trailing={<span className='tabular-nums'>{verdict.temp}°C</span>}
 diff --git a/src/worker/index.ts b/src/worker/index.ts
-index 5bfbcde..4c5cde1 100644
+index 51f5192..39298db 100644
 --- a/src/worker/index.ts
 +++ b/src/worker/index.ts
-@@ -53,6 +53,7 @@ const verdictFor = (hours: Hour[]): Verdict => {
+@@ -57,6 +57,7 @@ const verdictFor = (hours: Hour[]): Verdict => {
    const rain = Math.max(...next.map((hour) => hour.rain));
    const wind = Math.max(...next.map((hour) => hour.wind));
    const cold = Math.min(...next.map((hour) => hour.temp));
@@ -43,7 +43,7 @@ index 5bfbcde..4c5cde1 100644
    const reasons: string[] = [];
    let level: Verdict['level'] = 'go';
    const worsen = (to: Verdict['level']) => {
-@@ -75,6 +76,11 @@ const verdictFor = (hours: Hour[]): Verdict => {
+@@ -79,6 +80,11 @@ const verdictFor = (hours: Hour[]): Verdict => {
      worsen('maybe');
      reasons.push(`Breezy (${Math.round(wind)} km/h)`);
    }
@@ -55,7 +55,7 @@ index 5bfbcde..4c5cde1 100644
    if (cold < 4) {
      worsen('no-go');
      reasons.push(`Near freezing (${Math.round(cold)}°C)`);
-@@ -83,7 +89,7 @@ const verdictFor = (hours: Hour[]): Verdict => {
+@@ -87,7 +93,7 @@ const verdictFor = (hours: Hour[]): Verdict => {
      reasons.push('Dry, calm and mild for the next three hours');
    }
  

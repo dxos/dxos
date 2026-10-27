@@ -1,4 +1,8 @@
 //
+// Copyright 2026 DXOS.org
+//
+
+//
 // The /api/forecast contract, shared by the Worker and the UI.
 //
 

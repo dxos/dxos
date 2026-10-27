@@ -1,3 +1,7 @@
+//
+// Copyright 2026 DXOS.org
+//
+
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
