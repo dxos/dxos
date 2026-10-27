@@ -14,9 +14,9 @@ import { type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import { type Translations } from '../app/index.ts';
-import schemaAdapter from './adapters/schema.ts';
 import * as AppActivationEvents from './AppActivationEvents.ts';
 import * as AppCapabilities from './AppCapabilities.ts';
+import * as SchemaAdapter from './SchemaAdapter.ts';
 
 /**
  * Type of a maker built by {@link Capability$.moduleMaker}. Naming it keeps declaration emit
@@ -319,8 +319,8 @@ export const schema = (
     return Capability$.lazyModule<readonly [typeof AppCapabilities.Schema]>(
       options?.name ?? 'schema',
       spec,
-      Capability$.wrapLoader(() => loader().then(schemaAdapter), loader, {
-        module: '@dxos/app-toolkit/adapters/schema',
+      Capability$.wrapLoader(() => loader().then(SchemaAdapter.default), loader, {
+        module: '@dxos/app-toolkit/SchemaAdapter',
       }),
     );
   }

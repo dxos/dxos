@@ -46,10 +46,10 @@
       "types": "./dist/types/src/app-framework/AppCapability.d.ts",
       "import": "./dist/lib/app-framework/AppCapability.mjs"
     },
-    "./adapters/schema": {
-      "source": "./src/app-framework/adapters/schema.ts",
-      "types": "./dist/types/src/app-framework/adapters/schema.d.ts",
-      "import": "./dist/lib/app-framework/adapters/schema.mjs"
+    "./SchemaAdapter": {
+      "source": "./src/app-framework/SchemaAdapter.ts",
+      "types": "./dist/types/src/app-framework/SchemaAdapter.d.ts",
+      "import": "./dist/lib/app-framework/SchemaAdapter.mjs"
     },
     "./AppMigrations": {
       "source": "./src/echo/AppMigrations.ts",

@@ -23,7 +23,7 @@ export default defineConfig({
     'app-framework/Progress': 'src/app-framework/Progress.ts',
     'app-framework/ObservabilityMapping': 'src/app-framework/ObservabilityMapping.ts',
     'app-framework/AppCapability': 'src/app-framework/AppCapability.ts',
-    'app-framework/adapters/schema': 'src/app-framework/adapters/schema.ts',
+    'app-framework/SchemaAdapter': 'src/app-framework/SchemaAdapter.ts',
     'app-framework/Tour': 'src/app-framework/Tour.ts',
     'app-graph/AppNode': 'src/app-graph/AppNode.ts',
     'app-graph/AppNodeMatcher': 'src/app-graph/AppNodeMatcher.ts',

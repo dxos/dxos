@@ -4,8 +4,8 @@
 
 import { dirname, relative } from 'node:path';
 import {
-  type Plugin as VitePlugin,
   type RunnableDevEnvironment,
+  type Plugin as VitePlugin,
   createRunnableDevEnvironment,
   resolveConfig,
 } from 'vite';
@@ -103,6 +103,26 @@ const readModuleRef = (value: unknown): string | undefined =>
 
 const toManifestTags = (tags: readonly Capability.AnyTag[] = []): Plugin.ManifestTag[] =>
   tags.map(({ identifier, arity }) => ({ identifier, arity }));
+
+/**
+ * Drops the module-body attribute from a `dx.config.ts` served as authored (tests, storybook): browsers
+ * reject an unknown import `type`, and only the build-time evaluator needs it.
+ */
+export const moduleBodyAttributePlugin = (): VitePlugin => ({
+  name: 'dx-plugin-config:module-body-attribute',
+  transform(code, id) {
+    if (!CONFIG_FILE.test(id.split('?')[0])) {
+      return null;
+    }
+    let out = code;
+    for (const { start, end, specifier, marked } of findModuleBodyImports(this.parse(code)).reverse()) {
+      if (marked && typeof specifier === 'string') {
+        out = out.slice(0, start) + `import(${JSON.stringify(specifier)})` + out.slice(end);
+      }
+    }
+    return out === code ? null : out;
+  },
+});
 
 export type PluginConfigPluginOptions = {
   /** Restricts the plugin to one command, e.g. `'build'` for a library whose tests import the config. */

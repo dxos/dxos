@@ -1212,10 +1212,11 @@ const dxConfigEntries = (cwd: string): Record<string, string> => {
 };
 
 /**
- * `pluginConfigPlugin` from the package's own `@dxos/app-framework`, which the repo root cannot
- * resolve; build-only, so tests keep importing the authored config.
+ * `pluginConfigPlugin` (build only, so tests keep importing the authored config) and the plugin that
+ * strips the module-body attribute browsers reject, from the package's own `@dxos/app-framework`,
+ * which the repo root cannot resolve.
  */
-const dxConfigPlugin = async (cwd: string): Promise<Plugin | undefined> => {
+const dxConfigPlugin = async (cwd: string): Promise<Plugin[]> => {
   const pkgPath = join(cwd, 'node_modules/@dxos/app-framework/package.json');
   const target = existsSync(pkgPath)
     ? JSON.parse(readFileSync(pkgPath, 'utf8')).exports?.['./vite-plugin']?.import
@@ -1223,8 +1224,10 @@ const dxConfigPlugin = async (cwd: string): Promise<Plugin | undefined> => {
   if (typeof target !== 'string') {
     throw new Error(`A Plugin.config package needs @dxos/app-framework built to build ${cwd}.`);
   }
-  const { pluginConfigPlugin } = await import(pathToFileURL(join(path.dirname(pkgPath), target)).href);
-  return pluginConfigPlugin({ apply: 'build' });
+  const { moduleBodyAttributePlugin, pluginConfigPlugin } = await import(
+    pathToFileURL(join(path.dirname(pkgPath), target)).href
+  );
+  return [pluginConfigPlugin({ apply: 'build' }), moduleBodyAttributePlugin()];
 };
 
 /**

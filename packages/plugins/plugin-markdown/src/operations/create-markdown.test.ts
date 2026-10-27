@@ -8,9 +8,8 @@ import { Obj } from '@dxos/echo';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
+import * as MarkdownPlugin from '#meta';
 import { Markdown, MarkdownOperation } from '#types';
-
-import * as MarkdownPlugin from '../../dx.config.ts';
 
 await Harness.preload({ plugins: [ClientPlugin.make({}), MarkdownPlugin.make()] });
 

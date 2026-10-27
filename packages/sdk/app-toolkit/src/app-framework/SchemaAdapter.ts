@@ -2,12 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Effect from 'effect/Effect';
 
 import * as Capability$ from '@dxos/app-framework/Capability';
 import { type Type } from '@dxos/echo';
 
-import * as AppCapabilities from '../AppCapabilities.ts';
+import * as AppCapabilities from './AppCapabilities.ts';
 
 /**
  * Adapts a module whose default export is a schema list into a module body contributing it.
