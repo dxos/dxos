@@ -481,6 +481,43 @@ rule use-context-scoped-cancellation: Schedule timeouts through the ctx-aware sc
 ```
 
 ```mdl
+rule workerd-no-timers-outside-request: Code that can run on Cloudflare Workers never starts timers or I/O outside a request
+  On EDGE, code runs in Cloudflare's `workerd` runtime, which allows timers
+  and I/O only while it is handling a request. A callback that runs outside
+  one finds `setTimeout`/`setInterval` throwing "Disallowed operation called
+  within global scope", `performance.now()` returning 0, and fetch and RPC
+  refused. The common case is a garbage-collection callback
+  (`FinalizationRegistry`, `WeakRef` cleanup) and anything it calls, such as
+  a `release()` that triggers a throttled scheduler; module-scope setup and
+  a promise settled after its request ended run outside a request too. Such
+  a callback may only record work (mark it pending, enqueue it); the run
+  itself, with its timer, send or retry, must start from code that runs
+  inside a request, such as the next flush. Separately, a path that sets
+  shared state before a call that can throw (a `scheduled` or in-flight
+  flag, a claimed slot) must undo it on every exit, or every later caller
+  waits on it forever. Flag a GC or finalizer callback, or code it reaches,
+  that calls `setTimeout`/`setInterval`, starts I/O, or derives a delay from
+  `performance.now()`; and a scheduler or queue that sets a busy flag before
+  an awaited timer or call but clears it only on the success path. Do not
+  flag code that can only ever run in a browser or Node and is never
+  bundled into an EDGE worker, or a finalizer that only deletes a map
+  entry. Fix: in the callback, only mark the work; clear the flag in
+  `finally` or a `catch` and wake waiters with a result that tells them to
+  retry, so an in-request caller runs the work with the delay skipped.
+  Source: the mail sync hang, where a finalizer's refused throttle timer left
+  `UpdateScheduler._scheduled` set and every `Database.flush` waited until
+  the 60 s deadline, https://github.com/dxos/dxos/pull/14173.
+  scope: repo
+  files:
+    - packages/**/src/**/*.ts
+  grep: FinalizationRegistry|WeakRef|setTimeout\(|setInterval\(|performance\.now\(
+  unit: file
+  context: diff, importers
+  system-one: off
+  severity: warn
+```
+
+```mdl
 rule avoid-full-collection-scans: Use the index or an incremental path, not a scan of everything
   Don't scan an entire space/collection or a data structure's full history
   when a targeted, indexed query or a cheap incremental check can answer the
