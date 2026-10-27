@@ -9,6 +9,8 @@ import { type PublicKey } from '@dxos/keys';
 
 import { SpaceSchema } from '#types';
 
+import { type SpaceOperationConfig } from '../operations/helpers.ts';
+
 /** Builds the invitation-link URL builder shared by the props mappings below. */
 export const makeCreateInvitationUrl =
   ({
@@ -40,22 +42,24 @@ export const DATABASE_KEY = 'db';
 
 /**
  * Builds the object-link builder: a URL under the generic `db` key, which every ECHO object resolves through,
- * carrying the object's title for link previews; `undefined` for an object outside a space.
+ * carrying the object's title for link previews; `undefined` for an object outside a space. No builder without a
+ * public origin (a headless host not given `shareableLinkOrigin`), since a link to localhost reaches no one else.
  */
-export const makeCreateObjectUrl =
-  ({
-    shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
-  }: SpaceSchema.SpacePluginOptions) =>
-  (object: Obj.Unknown): string | undefined => {
-    const spaceId = Obj.getDatabase(object)?.spaceId;
-    if (!spaceId) {
-      return undefined;
-    }
-    const id = [GraphPath.getTypeSlugFromUri(Obj.getTypeURI(object)), object.id].join(UrlPath.TAIL_SEPARATOR);
-    const pathname = UrlPath.format({
-      workspace: spaceId,
-      workspaceKey: UrlPath.WORKSPACE_KEY,
-      pairs: [{ key: DATABASE_KEY, id, workspace: spaceId }],
-    });
-    return UrlPath.withTitle(new URL(pathname, shareableLinkOrigin), Obj.getLabel(object)).toString();
-  };
+export const makeCreateObjectUrl = ({
+  shareableLinkOrigin = typeof window !== 'undefined' ? window.location.origin : undefined,
+}: SpaceSchema.SpacePluginOptions): SpaceOperationConfig['createObjectUrl'] =>
+  shareableLinkOrigin === undefined
+    ? undefined
+    : (object: Obj.Unknown): string | undefined => {
+        const spaceId = Obj.getDatabase(object)?.spaceId;
+        if (!spaceId) {
+          return undefined;
+        }
+        const id = [GraphPath.getTypeSlugFromUri(Obj.getTypeURI(object)), object.id].join(UrlPath.TAIL_SEPARATOR);
+        const pathname = UrlPath.format({
+          workspace: spaceId,
+          workspaceKey: UrlPath.WORKSPACE_KEY,
+          pairs: [{ key: DATABASE_KEY, id, workspace: spaceId }],
+        });
+        return UrlPath.withTitle(new URL(pathname, shareableLinkOrigin), Obj.getLabel(object)).toString();
+      };

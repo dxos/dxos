@@ -18,6 +18,9 @@ const handler: Operation.WithHandler<typeof SpaceOperation.GetObjectLink> = Spac
     Effect.fnUntraced(function* ({ object: ref }) {
       const object = yield* Database.load(ref);
       const { createObjectUrl } = yield* Capability.get(SpaceOperationConfig);
+      if (!createObjectUrl) {
+        return yield* Effect.fail(new SpaceOperationError({ message: 'This host has no public origin to link to.' }));
+      }
       const url = createObjectUrl(object);
       if (!url) {
         return yield* Effect.fail(new SpaceOperationError({ message: `Not an object in a space: ${ref.uri}` }));

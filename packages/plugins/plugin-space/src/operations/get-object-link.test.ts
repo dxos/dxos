@@ -11,6 +11,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 
 import { SpaceOperation } from '#types';
 
+import { makeCreateObjectUrl } from '../capabilities/helpers.ts';
 import GetObjectLinkHandler from './get-object-link.ts';
 import GetObjectsHandler from './get-objects.ts';
 import ResolveUrlHandler from './resolve-url.ts';
@@ -41,4 +42,8 @@ describe('SpaceOperation.GetObjectLink', () => {
       TestHelpers.provideTestContext,
     ),
   );
+
+  it('has no link builder on a host without a public origin', ({ expect }) => {
+    expect(makeCreateObjectUrl({})).toBeUndefined();
+  });
 });

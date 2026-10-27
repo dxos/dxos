@@ -11,7 +11,8 @@ import { SpaceCapabilities } from '#types';
 export type SpaceOperationConfig = {
   createInvitationUrl: (invitationCode: string) => string;
   createJoinUrl: (spaceKey: PublicKey) => string;
-  createObjectUrl: (object: Obj.Unknown) => string | undefined;
+  /** Absent on a host with no public origin to link to. */
+  createObjectUrl?: (object: Obj.Unknown) => string | undefined;
 };
 
 export const SpaceOperationConfig = Capability.makeSingleton<SpaceOperationConfig>()(
