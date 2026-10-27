@@ -14,9 +14,8 @@ import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Selection } from '@dxos/react-ui-attention/types';
 
+import { meta } from '#meta';
 import { Ibkr } from '#types';
-
-import { meta } from '../meta.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

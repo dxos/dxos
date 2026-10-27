@@ -11,9 +11,8 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Select from '@dxos/react-ui/Select';
 import * as Util from '@dxos/react-ui/Util';
 
+import { meta } from '#meta';
 import { Ibkr } from '#types';
-
-import { meta } from '../../meta.ts';
 
 export type ReportSectionsProps = {
   positions: readonly Ibkr.Position[];

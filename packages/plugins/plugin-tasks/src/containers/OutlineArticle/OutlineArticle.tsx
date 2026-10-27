@@ -20,9 +20,9 @@ import * as Show from '@dxos/react-ui/Show';
 import { Outline as OutlineType, Task, TaskSet } from '@dxos/types';
 
 import { Outline, type OutlineController } from '#components';
-import { meta } from '#meta';
 
 import { useMarkdownExtensions } from '../../hooks/index.ts';
+import { TasksNamespace } from '../../namespace.ts';
 
 export type OutlineArticleProps = AppSurface.ObjectArticleProps<OutlineType.Outline> & {
   /**
@@ -44,7 +44,7 @@ export const OutlineArticle = ({
   taskSet,
   toolbar = true,
 }: OutlineArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(TasksNamespace.key);
   const db = Obj.getDatabase(outline);
 
   // Link the user navigated into; the back button clears it to return to the outline.

@@ -8,7 +8,7 @@ import type * as Plugin from '@dxos/app-framework/Plugin';
 import { PluginManagerHost } from '@dxos/app-framework/testing';
 import { useClient } from '@dxos/react-client';
 
-import { ClientPlugin } from '#plugin';
+import * as ClientPlugin from '#meta';
 import { type ClientOptions } from '#types';
 
 export type ClientPluginManagerProps = PropsWithChildren<{
@@ -28,7 +28,7 @@ export type ClientPluginManagerProps = PropsWithChildren<{
 export const ClientPluginManager = ({ id, plugins, clientOptions, children }: ClientPluginManagerProps) => {
   const client = useClient();
   const options = useMemo(
-    () => ({ plugins: [ClientPlugin({ ...clientOptions, client }), ...plugins()] }),
+    () => ({ plugins: [ClientPlugin.make({ ...clientOptions, client }), ...plugins()] }),
     // The plugins are rebuilt only with the client: a new manager per render would never settle.
     [client],
   );

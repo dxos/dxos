@@ -32,7 +32,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { NavTreeContainer } from '#containers';
-import { NavTreePlugin } from '#plugin';
+import * as NavTreePlugin from '#meta';
 import { type StorybookGraphOptions, storybookGraphBuilders } from '#testing';
 import { translations } from '#translations';
 
@@ -156,7 +156,7 @@ const navTreeDecorators = (graphOptions?: StorybookGraphOptions) => [
         initialState: { sidebarState: 'expanded' },
       }),
 
-      NavTreePlugin(),
+      NavTreePlugin.make(),
     ],
     capabilities: () => {
       const storyStateAtom = Atom.make({ tab: 'root/space-0' }).pipe(Atom.keepAlive);

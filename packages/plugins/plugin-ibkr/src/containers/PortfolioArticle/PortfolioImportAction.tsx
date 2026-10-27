@@ -11,9 +11,8 @@ import { log } from '@dxos/log';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
+import { meta } from '#meta';
 import { Ibkr, IbkrOperation } from '#types';
-
-import { meta } from '../../meta.ts';
 
 export type PortfolioImportActionProps = {
   /** The Portfolio whose space owns the report feed the imported report is appended to. */

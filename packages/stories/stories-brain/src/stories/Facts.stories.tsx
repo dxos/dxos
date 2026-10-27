@@ -89,7 +89,7 @@ const meta = {
   title: 'stories/stories-brain/Facts',
   render: DefaultStory,
   decorators: createStoryDecorators({
-    plugins: [SpacePlugin({}), BrainPlugin.make(), CrawlerStoresPlugin(), StoryModulesPlugin()],
+    plugins: [SpacePlugin.make({}), BrainPlugin.make(), CrawlerStoresPlugin(), StoryModulesPlugin()],
   }),
   parameters: {
     layout: 'fullscreen',

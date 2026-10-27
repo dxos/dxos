@@ -11,10 +11,11 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as KvsStore from '@dxos/effect/KvsStore';
 import { invariant } from '@dxos/invariant';
 
-import { meta } from '#meta';
 import { DeckCapabilities, DeckSchema } from '#types';
 
-const STATE_KEY = `${meta.profile.key}.state`;
+import { DeckNamespace } from '../namespace.ts';
+
+const STATE_KEY = `${DeckNamespace.key}.state`;
 
 /** Default persisted state. */
 const defaultDeckState: DeckSchema.StoredDeckState = {

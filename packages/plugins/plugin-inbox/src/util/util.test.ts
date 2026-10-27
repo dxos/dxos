@@ -1,14 +1,12 @@
+import { describe, test } from 'vitest';
 //
 // Copyright 2025 DXOS.org
 //
 
-import { describe, test } from 'vitest';
-
 import { Obj } from '@dxos/echo';
 import { Message } from '@dxos/types';
 
-import { meta } from '#meta';
-
+import { InboxNamespace } from '../namespace.ts';
 import {
   createDraftMessage,
   dedupeSupersededDrafts,
@@ -354,7 +352,7 @@ describe('getMessageLabel', () => {
       blocks: [{ _tag: 'text' as const, text: '' }],
       properties: { subject: '', mailbox: DRAFT_MAILBOX },
     });
-    expect(getMessageLabel(draft)).toEqual(['draft.label', { ns: meta.profile.key }]);
+    expect(getMessageLabel(draft)).toEqual(['draft.label', { ns: InboxNamespace.key }]);
   });
 
   test('a non-draft without a subject falls back to the message label', ({ expect }) => {
@@ -364,7 +362,7 @@ describe('getMessageLabel', () => {
       blocks: [{ _tag: 'text' as const, text: '' }],
       properties: { subject: '' },
     });
-    expect(getMessageLabel(message)).toEqual(['message.label', { ns: meta.profile.key }]);
+    expect(getMessageLabel(message)).toEqual(['message.label', { ns: InboxNamespace.key }]);
   });
 });
 

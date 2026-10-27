@@ -225,6 +225,11 @@ export const pluginConfigPlugin = ({ apply }: PluginConfigPluginOptions = {}): V
         if (!name || !body) {
           this.error(`Module '${name ?? '?'}' in ${file} has no lazy body; manifests need one per module.`);
         }
+        if (module.mapsProps) {
+          this.error(
+            `Module '${name}' in ${file} maps plugin options with \`props\`, which a manifest cannot carry; read the options in its body instead.`,
+          );
+        }
         const adapter = module[Capability.AdapterTag];
         const adapterFile = adapter ? (await this.resolve(adapter.module, file))?.id : undefined;
         if (adapter && !adapterFile) {

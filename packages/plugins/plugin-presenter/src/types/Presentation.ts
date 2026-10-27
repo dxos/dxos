@@ -11,9 +11,8 @@ import * as MediaArtifact from '@dxos/plugin-studio/MediaArtifact';
 import * as Variant from '@dxos/plugin-studio/Variant';
 import { Text } from '@dxos/schema';
 
-import { meta } from '#meta';
-
 import { splitSlides } from '../markdown/split.ts';
+import { PresenterNamespace } from '../namespace.ts';
 import * as SlideTheme from './SlideTheme.ts';
 
 /** Key of the presenter skill, attached to the Presentation type. */
@@ -77,7 +76,7 @@ export class Presentation extends Type.makeObject<Presentation>(DXN.make('org.dx
     AppAnnotation.ContainerAnnotation.set({
       property: 'slides',
       deleteOwned: true,
-      removeLabel: ['remove-section.label', { ns: meta.profile.key }],
+      removeLabel: ['remove-section.label', { ns: PresenterNamespace.key }],
     }),
   ),
 ) {}

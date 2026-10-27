@@ -6,7 +6,7 @@
 
 import * as ActivationEvent from '@dxos/app-framework/ActivationEvent';
 
-import { meta } from '#meta';
+import { ClaudeNamespace } from '../namespace.ts';
 
 /** The feature's start event: the plugin's start-gated modules activate here. */
-export const Start = ActivationEvent.pluginStart(meta.profile.key);
+export const Start = ActivationEvent.pluginStart(ClaudeNamespace.key);

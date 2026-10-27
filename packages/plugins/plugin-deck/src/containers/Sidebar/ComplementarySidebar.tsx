@@ -23,13 +23,13 @@ import { iconSize, mx } from '@dxos/ui-theme';
 
 import { PlankLoading } from '#components';
 import { type DeckCompanion, useBreakpoints, useDeckCompanions, useDeckState } from '#hooks';
-import { meta } from '#meta';
 
+import { DeckNamespace } from '../../namespace.ts';
 import { isDeckCompanionMounted, layoutAppliesTopbar } from '../../util/index.ts';
 import { PlankErrorFallback } from '../Deck/PlankFallback.tsx';
 import { ToggleComplementarySidebarButton } from './SidebarButton.tsx';
 
-const label = ['complementary-sidebar.title', { ns: meta.profile.key }] satisfies Theme.Label;
+const label = ['complementary-sidebar.title', { ns: DeckNamespace.key }] satisfies Theme.Label;
 
 export type ComplementarySidebarProps = {
   current?: string;
@@ -37,7 +37,7 @@ export type ComplementarySidebarProps = {
 
 export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => {
   const { invokePromise } = Hooks.useOperationInvoker();
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(DeckNamespace.key);
   const { state, updateState } = useDeckState();
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, !!state.fullscreen);
@@ -165,7 +165,7 @@ const MAX_BADGE = 99;
 
 /** An R0 tab; subscribes to its companion's badge here so a count change re-renders only this tab. */
 const ComplementarySidebarTrigger = ({ companion, variant, onClick }: ComplementarySidebarTriggerProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(DeckNamespace.key);
   const value = Attention.getLinkedVariant(companion.id);
   const count = useAtomValue(companion.properties.badge ?? NO_BADGE);
   const badge = count !== undefined && count > 0 ? (count > MAX_BADGE ? `${MAX_BADGE}+` : String(count)) : undefined;
@@ -198,7 +198,7 @@ type ComplementarySidebarPanelProps = {
 };
 
 const ComplementarySidebarPanel = ({ companion, mounted }: ComplementarySidebarPanelProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(DeckNamespace.key);
   const data = useMemo(() => ({ id: companion.id, subject: companion.data }), [companion.id, companion.data]);
 
   if (!mounted) {

@@ -541,6 +541,8 @@ export interface Module<Options = void> {
   readonly environments?: readonly Environment[];
   /** Imports a lazy module's body without activating it; absent on inline modules. */
   readonly load?: () => Promise<unknown>;
+  /** Set when a `props` mapper adapts plugin options for the body, which a manifest cannot carry. */
+  readonly mapsProps?: boolean;
   readonly [LoaderTag]?: () => Promise<unknown>;
   readonly [AdapterTag]?: LoaderAdapter;
 }
@@ -628,6 +630,7 @@ export const lazyModule = <
     activatesOn: spec.activatesOn,
     environments: spec.environments,
     load: loader,
+    mapsProps: spec.props !== undefined,
   });
 };
 

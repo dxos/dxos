@@ -16,7 +16,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as GraphPlugin from '@dxos/plugin-graph/GraphPlugin';
 
-import { SettingsPlugin } from '#plugin';
+import * as SettingsPlugin from '#meta';
 
 /** A layout that records the operations settings asks of it, in order; `companions: false` is one with none (Spotlight). */
 const makeRecordingLayout = (calls: { op: string; input: unknown }[], { companions = true } = {}) =>
@@ -55,7 +55,7 @@ describe('SettingsOperation.Open', () => {
   test('closes the companion once the settings are open', async ({ expect }) => {
     const calls: { op: string; input: unknown }[] = [];
     await using harness = await createTestApp({
-      plugins: [GraphPlugin.make(), ProcessManagerPlugin.make(), SettingsPlugin(), makeRecordingLayout(calls)()],
+      plugins: [GraphPlugin.make(), ProcessManagerPlugin.make(), SettingsPlugin.make(), makeRecordingLayout(calls)()],
     });
 
     await harness.invoke(SettingsOperation.Open, { plugin: 'org.dxos.plugin.debug' });
@@ -69,7 +69,7 @@ describe('SettingsOperation.Open', () => {
       plugins: [
         GraphPlugin.make(),
         ProcessManagerPlugin.make(),
-        SettingsPlugin(),
+        SettingsPlugin.make(),
         makeRecordingLayout(calls, { companions: false })(),
       ],
     });

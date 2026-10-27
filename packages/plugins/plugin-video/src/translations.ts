@@ -6,7 +6,7 @@ import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 import { Video } from '@dxos/types';
 
-import { meta } from '#meta';
+import { VideoNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -22,7 +22,7 @@ export const translations = [
         'delete-object.label': 'Delete video',
         'object-deleted.label': 'Video deleted',
       },
-      [meta.profile.key]: {
+      [VideoNamespace.key]: {
         'plugin.name': 'Video',
         'transcribe.label': 'Transcribe via worker',
         'fetch-description-error.message': 'Failed to fetch description.',

@@ -1,8 +1,7 @@
+import { RegistryContext } from '@effect/atom-react/RegistryContext';
 //
 // Copyright 2026 DXOS.org
 //
-
-import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import React, { createContext, useCallback, useContext, useEffect, useMemo } from 'react';
@@ -33,8 +32,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 
-import { meta } from '#meta';
-
+import { CodeNamespace } from '../../namespace.ts';
 import {
   type ChangelogEdgeKind,
   type ChangelogGraphModel,
@@ -98,7 +96,7 @@ const NodeLookupContext = createContext<NodeLookup>(() => undefined);
 const SelectedContext = createContext<string | undefined>(undefined);
 
 const DecisionCard = ({ decision }: { decision: DecisionModel }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const { entry, actor, handle, principal, supersededBy, approvedBy } = decision;
   const style = actor ? ACTOR_STYLE[actor] : undefined;
   const selected = useContext(SelectedContext) === entry.id;
@@ -250,7 +248,7 @@ const toGraph = (model: ChangelogGraphModel, label: (kind: ChangelogEdgeKind) =>
 });
 
 const Legend = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   return (
     <Layout.Flex
       wrap
@@ -285,7 +283,7 @@ export type ChangelogGraphProps = {
  * order it was written, with an arrow to each decision it builds on, supersedes or approves.
  */
 export const ChangelogGraph = ({ content, affects = false, selected }: ChangelogGraphProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const atomRegistry = useContext(RegistryContext);
   const model = useMemo(() => buildChangelogGraph(content, { affects }), [content, affects]);
   const lookup = useMemo<NodeLookup>(() => {

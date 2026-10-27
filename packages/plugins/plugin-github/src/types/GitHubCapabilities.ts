@@ -10,9 +10,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import type * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
 import { type Issue, type PullRequest, type Repo } from '@dxos/types';
 
-import { meta } from '#meta';
-
 import { type GitHubLink } from '../extensions/index.ts';
+import { GitHubNamespace } from '../namespace.ts';
 
 /**
  * Where a previewed link's repository, pull request or issue comes from. The plugin's default fetches it from
@@ -24,4 +23,4 @@ export type GitHubLinkSource = (
   context: PreviewCapabilities.PreviewLinkContext,
 ) => Effect.Effect<Repo.Repo | Issue.Issue | PullRequest.PullRequest | undefined>;
 
-export const LinkSource = Capability.make<GitHubLinkSource>()(`${meta.profile.key}.capability.linkSource`);
+export const LinkSource = Capability.make<GitHubLinkSource>()(`${GitHubNamespace.key}.capability.linkSource`);

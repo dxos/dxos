@@ -18,8 +18,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Channel } from '@dxos/types';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
-
+import { ThreadNamespace } from '../namespace.ts';
 import { getChannelsPath } from '../paths.ts';
 
 const channelTypename = Type.getTypename(Channel.Channel);
@@ -61,7 +60,7 @@ export default Capability.makeModule(
           return Effect.succeed([
             AppNode.makeCompanion({
               variant: 'chat',
-              label: ['channel-companion.label', { ns: meta.profile.key }],
+              label: ['channel-companion.label', { ns: ThreadNamespace.key }],
               icon: 'ph--hash--regular',
               data: 'chat',
               position: Position.first,

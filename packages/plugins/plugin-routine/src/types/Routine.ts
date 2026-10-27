@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Database } from '@dxos/echo';
 
-import { meta } from '#meta';
+import { RoutineNamespace } from '../namespace.ts';
 
 export const TriggerTemplate = Schema.Union([
   Schema.Struct({ type: Schema.Literal('timer'), cron: Schema.String }),
@@ -15,7 +15,7 @@ export const TriggerTemplate = Schema.Union([
 
 export namespace AutomationAction {
   export class CreateTriggerFromTemplate extends Schema.TaggedClass<CreateTriggerFromTemplate>()(
-    `${meta.profile.key}.action.create-trigger-from-template`,
+    `${RoutineNamespace.key}.action.create-trigger-from-template`,
     {
       input: Schema.Struct({
         db: Database.Database,

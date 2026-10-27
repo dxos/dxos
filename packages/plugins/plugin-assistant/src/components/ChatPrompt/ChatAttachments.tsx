@@ -9,7 +9,7 @@ import * as Banner from '@dxos/react-ui/Banner';
 import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
+import { AssistantNamespace } from '../../namespace.ts';
 
 export type Attachment = { id: number; name: string; error?: Error };
 
@@ -24,7 +24,7 @@ export type ChatAttachmentsProps = {
 };
 
 export const ChatAttachments = ({ pending, failed, onCancel, onDismiss }: ChatAttachmentsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AssistantNamespace.key);
   const attaching = pending.length > 0;
   const [showPending, setShowPending] = useState(false);
   useEffect(() => {

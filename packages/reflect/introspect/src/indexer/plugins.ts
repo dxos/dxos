@@ -288,7 +288,7 @@ const readPluginMetaFromConfig = (rootPath: string, pkg: PackageLike, project: P
     return null;
   }
 
-  const id = readStringProperty(pluginObj, 'key');
+  const id = readStringProperty(pluginObj, 'key') ?? readNamespaceKey(configSource, pluginObj, project);
   if (!id) {
     return null;
   }
@@ -305,6 +305,39 @@ const readPluginMetaFromConfig = (rootPath: string, pkg: PackageLike, project: P
     dependsOn: [],
     metaLocation: locationOf(configSource, pluginObj.getStart()),
   };
+};
+
+/**
+ * Resolve `key: XNamespace.key`, the `Plugin.config` form: follow `XNamespace` to its declaration
+ * (`export const XNamespace = Plugin.namespace('org.dxos.plugin.x')`) and read the literal.
+ */
+const readNamespaceKey = (
+  configSource: SourceFile,
+  pluginObj: ObjectLiteralExpression,
+  project: Project,
+): string | undefined => {
+  const access = pluginObj
+    .getProperty('key')
+    ?.asKind(SyntaxKind.PropertyAssignment)
+    ?.getInitializerIfKind(SyntaxKind.PropertyAccessExpression);
+  if (!access || access.getName() !== 'key') {
+    return undefined;
+  }
+  const name = access.getExpression().getText();
+  const specifier = configSource
+    .getImportDeclarations()
+    .find((decl) => decl.getNamedImports().some((named) => named.getName() === name))
+    ?.getModuleSpecifierValue();
+  if (!specifier?.startsWith('.')) {
+    return undefined;
+  }
+  const namespacePath = join(configSource.getDirectoryPath(), specifier);
+  if (!existsSync(namespacePath)) {
+    return undefined;
+  }
+  const namespaceSource = project.getSourceFile(namespacePath) ?? project.addSourceFileAtPath(namespacePath);
+  const call = namespaceSource.getVariableDeclaration(name)?.getInitializerIfKind(SyntaxKind.CallExpression);
+  return call?.getArguments()[0]?.asKind(SyntaxKind.StringLiteral)?.getLiteralValue();
 };
 
 /** Read `obj.<name>.<key>` when `<name>` is an object-literal property (e.g. `icon: { key, hue }`). */

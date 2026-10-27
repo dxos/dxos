@@ -4,6 +4,6 @@
 
 import { DXN } from '@dxos/keys';
 
-import { meta } from '#meta';
+import { ScriptNamespace } from './namespace.ts';
 
-export const DEPLOYMENT_DIALOG = DXN.make(`${meta.profile.key}.deploymentDialog`);
+export const DEPLOYMENT_DIALOG = DXN.make(`${ScriptNamespace.key}.deploymentDialog`);

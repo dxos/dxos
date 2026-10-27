@@ -1,13 +1,12 @@
+import { TrelloNamespace } from './namespace.ts';
 //
 // Copyright 2026 DXOS.org
 //
 
-import { meta } from '#meta';
-
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [TrelloNamespace.key]: {
         'plugin.name': 'Trello',
         'sync-now.label': 'Sync now',
         'sync-this-board.label': 'Sync this board',

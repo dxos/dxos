@@ -14,8 +14,7 @@ import * as Util from '@dxos/react-ui/Util';
 import { type Message } from '@dxos/types';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
+import { ThreadNamespace } from '../../namespace.ts';
 import { getMessageMetadata } from '../../util.ts';
 
 export type MessageThreadProps = Util.ThemedClassName<{
@@ -55,7 +54,7 @@ export type MessageThreadProps = Util.ThemedClassName<{
  */
 export const MessageThread = Util.composable<HTMLDivElement, MessageThreadProps>(
   ({ id, identity, members, messages, activity, onSend, autoFocus, current, readOnly, classNames }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(ThreadNamespace.key);
 
     const components = useMemo(() => ({ Object: ObjectTile }), []);
 

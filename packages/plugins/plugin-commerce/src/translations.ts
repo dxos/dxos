@@ -6,8 +6,9 @@ import { Type } from '@dxos/echo';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Provider, Result, Search } from '#types';
+
+import { CommerceNamespace } from './namespace.ts';
 
 export const translations = [
   ...formTranslations,
@@ -33,7 +34,7 @@ export const translations = [
         'typename.label': 'Result',
         'typename.label_other': 'Results',
       },
-      [meta.profile.key]: {
+      [CommerceNamespace.key]: {
         'plugin.name': 'Commerce',
         'run-search.label': 'Run search',
         'analyze-provider.label': 'Analyze provider',

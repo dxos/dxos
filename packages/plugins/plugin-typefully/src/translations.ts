@@ -1,13 +1,12 @@
+import { TypefullyNamespace } from './namespace.ts';
 //
 // Copyright 2026 DXOS.org
 //
 
-import { meta } from '#meta';
-
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [TypefullyNamespace.key]: {
         'plugin.name': 'Typefully',
       },
     },

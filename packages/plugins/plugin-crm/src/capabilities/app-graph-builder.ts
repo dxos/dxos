@@ -20,9 +20,10 @@ import { type Space } from '@dxos/react-client/echo';
 import { Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import { meta } from '#meta';
 import { CrmSkill } from '#skills';
 import { CrmOperation } from '#types';
+
+import { CrmNamespace } from '../namespace.ts';
 
 /** A node whose data is a researchable CRM object, tagged so the action can pick the right operation. */
 type ResearchSubject =
@@ -30,7 +31,7 @@ type ResearchSubject =
   | { kind: 'organization'; subject: Organization.Organization };
 
 /** Node type for a CRM type-collection node (data is the ECHO Type). */
-const CRM_TYPE_NODE = `${meta.profile.key}/type-node`;
+const CRM_TYPE_NODE = `${CrmNamespace.key}/type-node`;
 
 /** Types surfaced as top-level nodes under the CRM group, in display order. */
 const CRM_TYPES: Type.AnyEntity[] = [Organization.Organization, Person.Person];
@@ -48,7 +49,7 @@ export default Capability.makeModule(
             AppNode.makeGroup({
               id: GraphPath.GroupSegments.crm,
               type: GraphPath.GroupTypes.crm,
-              label: ['nav-tree-group-crm.label', { ns: meta.profile.key }],
+              label: ['nav-tree-group-crm.label', { ns: CrmNamespace.key }],
               space,
               position: 500,
             }),
@@ -136,7 +137,7 @@ export default Capability.makeModule(
                   });
                 }),
               properties: {
-                label: ['research.label', { ns: meta.profile.key }],
+                label: ['research.label', { ns: CrmNamespace.key }],
                 icon: 'ph--sparkle--regular',
                 disposition: ['toolbar', 'list-item'],
                 presentation: { toolbar: { variant: 'primary', iconOnly: false } },

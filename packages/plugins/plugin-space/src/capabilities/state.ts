@@ -12,8 +12,9 @@ import * as KvsStore from '@dxos/effect/KvsStore';
 import { PublicKey } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
-import { meta } from '#meta';
 import { SpaceCapabilities } from '#types';
+
+import { SpaceNamespace } from '../namespace.ts';
 
 /** Default persisted state. */
 const defaultSpaceState: SpaceCapabilities.SpaceState = {
@@ -27,7 +28,7 @@ export default Capability.makeModule(
 
     // Persisted state using KVS store.
     const stateAtom = KvsStore.make({
-      key: `${meta.profile.key}.state`,
+      key: `${SpaceNamespace.key}.state`,
       schema: SpaceCapabilities.StateSchema,
       defaultValue: () => ({ ...defaultSpaceState }),
     });

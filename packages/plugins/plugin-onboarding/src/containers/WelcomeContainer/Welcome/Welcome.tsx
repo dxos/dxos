@@ -32,7 +32,8 @@ import * as Tabs from '@dxos/react-ui/Tabs';
 import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '../../../meta.ts';
+import { meta } from '#meta';
+
 import { OAUTH_RECOVERY_REDIRECT_PATH } from '../../../operations/shared.ts';
 import { type WelcomeError, type WelcomeScreenProps, WelcomeState, validEmail } from './types.ts';
 

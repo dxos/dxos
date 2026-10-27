@@ -9,15 +9,16 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { type Obj } from '@dxos/echo';
 import * as KvsStore from '@dxos/effect/KvsStore';
 
-import { meta } from '#meta';
 import { AssistantCapabilities } from '#types';
+
+import { AssistantNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     // NOTE: This needs to be a chat object rather than a string id to avoid a query race.
     // TODO(wittjosiah): Handle serialization and hydration for this so it can be cached.
     const stateAtom = KvsStore.make({
-      key: `${meta.profile.key}.state`,
+      key: `${AssistantNamespace.key}.state`,
       schema: AssistantCapabilities.StateSchema,
       defaultValue: () => ({
         currentChat: {},
@@ -28,7 +29,7 @@ export default Capability.makeModule(() =>
     const companionChatCacheAtom = Atom.make<Record<string, Obj.Unknown | undefined>>({}).pipe(Atom.keepAlive);
 
     const homeSuggestionsCacheAtom = KvsStore.make({
-      key: `${meta.profile.key}.home-suggestions`,
+      key: `${AssistantNamespace.key}.home-suggestions`,
       schema: AssistantCapabilities.HomeSuggestionsCacheSchema,
       defaultValue: () => ({}),
     });

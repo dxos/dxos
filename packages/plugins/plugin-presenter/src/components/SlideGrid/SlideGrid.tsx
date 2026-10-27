@@ -13,9 +13,9 @@ import { mx } from '@dxos/ui-theme';
 
 import { type SlideSource } from '#deck';
 import { useSlideLabel } from '#hooks';
-import { meta } from '#meta';
 import { type SlideViewState } from '#types';
 
+import { PresenterNamespace } from '../../namespace.ts';
 import { Slide } from '../Slide/index.ts';
 
 /** Thumbnail width bounds at each grid size (px): the grid drops a column below `min` and stops growing at `max`. */
@@ -56,7 +56,7 @@ export const SlideGrid = ({
   onAdd,
   contextMenuId,
 }: SlideGridProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(PresenterNamespace.key);
   // An object linked twice yields two slides with one id, so options are keyed by position.
   const items = useMemo(
     () => slides.map((_, slideIndex) => ({ value: String(slideIndex), label: String(slideIndex + 1) })),

@@ -10,8 +10,9 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { useObjectOptions, usePresentationDeck } from '#hooks';
-import { meta } from '#meta';
 import { Presentation } from '#types';
+
+import { PresenterNamespace } from '../../namespace.ts';
 
 export type SectionPickerProps = {
   presentation: Presentation.Presentation;
@@ -21,7 +22,7 @@ export type SectionPickerProps = {
  * Toolbar button that picks a listed object from the presentation's space and links it as a new section.
  */
 export const SectionPicker = ({ presentation }: SectionPickerProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(PresenterNamespace.key);
   const [open, setOpen] = useState(false);
   // Objects a slide already shows are not offered again.
   const slides = usePresentationDeck(presentation);

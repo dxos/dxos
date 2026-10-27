@@ -13,17 +13,17 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
 import { type BeaconPeer } from '#types';
 
 import { BeaconCapabilities } from '../capabilities/beacon-service.ts';
+import { IrohBeaconNamespace } from '../namespace.ts';
 
 /** Status bar icon with popover showing live beacon peer list. */
 export const BeaconStatusIndicator = () => {
   // The status bar paints with the shell, but the beacon service activates on `SpacesAvailable` — which
   // the forked client initialization can land long after — so absence is a normal early state here.
   const state = Hooks.useOptionalAtomCapability(BeaconCapabilities.State);
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(IrohBeaconNamespace.key);
   const onlineCount = state?.peers.filter((peer) => peer.online).length ?? 0;
 
   const iconClass =
@@ -51,7 +51,7 @@ export const BeaconStatusIndicator = () => {
 
 const BeaconPopover = () => {
   const state = Hooks.useOptionalAtomCapability(BeaconCapabilities.State);
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(IrohBeaconNamespace.key);
   const onlineCount = state?.peers.filter((peer) => peer.online).length ?? 0;
 
   if (!state) {

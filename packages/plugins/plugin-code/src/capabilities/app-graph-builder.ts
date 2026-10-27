@@ -19,7 +19,6 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
 import { formatSourceKey, keyFromTreeUrl } from '#sync';
 import { CodeProject } from '#types';
 
@@ -29,6 +28,7 @@ import {
   CODE_PROJECTS_SECTION_TYPE,
   PLUGIN_SPEC_TYPE,
 } from '../constants.ts';
+import { CodeNamespace } from '../namespace.ts';
 import { getCodeProjectBuildId, getCodeProjectSpecId, getCodeProjectsSectionId } from '../paths.ts';
 import { makePluginSpecSubject } from '../plugin-spec.ts';
 
@@ -88,7 +88,7 @@ export default Capability.makeModule(
               type: PLUGIN_SPEC_TYPE,
               data: makePluginSpecSubject({ pluginId: slug, name, content, sourceKey }),
               properties: {
-                label: ['plugin-spec.label', { ns: meta.profile.key }],
+                label: ['plugin-spec.label', { ns: CodeNamespace.key }],
                 icon: 'ph--file-code--regular',
                 disposition: 'hidden',
               },
@@ -111,7 +111,7 @@ export default Capability.makeModule(
             AppNode.makeSection({
               id: getCodeProjectsSectionId(),
               type: CODE_PROJECTS_SECTION_TYPE,
-              label: ['code-projects-section.label', { ns: meta.profile.key }],
+              label: ['code-projects-section.label', { ns: CodeNamespace.key }],
               icon: 'ph--code--regular',
               iconHue: 'indigo',
               space,
@@ -152,7 +152,7 @@ export default Capability.makeModule(
                     type: CODE_PROJECT_SPEC_TYPE,
                     data: spec ?? null,
                     properties: {
-                      label: ['spec.label', { ns: meta.profile.key }],
+                      label: ['spec.label', { ns: CodeNamespace.key }],
                       icon: 'ph--file-text--regular',
                       iconHue: 'indigo',
                     },
@@ -162,7 +162,7 @@ export default Capability.makeModule(
                     type: CODE_PROJECT_BUILD_TYPE,
                     data: project,
                     properties: {
-                      label: ['build.label', { ns: meta.profile.key }],
+                      label: ['build.label', { ns: CodeNamespace.key }],
                       icon: 'ph--app-window--regular',
                       iconHue: 'indigo',
                     },

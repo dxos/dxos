@@ -7,9 +7,8 @@ import { describe, test } from 'vitest';
 import { activateHeadlessPlugins } from '@dxos/app-toolkit/testing';
 import { Type } from '@dxos/echo';
 
+import * as IllustratorPlugin from '#meta';
 import { Drawing, LegacySketch } from '#types';
-
-import * as IllustratorPlugin from './IllustratorPlugin.ts';
 
 describe('IllustratorPlugin in workerd', () => {
   // Operations are node-only (`environments: ['node']`); workerd hosts use the plugin for its types.

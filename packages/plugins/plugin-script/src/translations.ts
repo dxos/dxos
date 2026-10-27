@@ -7,8 +7,9 @@ import { Type } from '@dxos/echo';
 import { translations as queryTranslations } from '@dxos/react-ui-query/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Notebook } from '#types';
+
+import { ScriptNamespace } from './namespace.ts';
 
 export const translations = [
   ...queryTranslations,
@@ -36,7 +37,7 @@ export const translations = [
         'delete-object.label': 'Delete notebook',
         'object-deleted.label': 'Notebook deleted',
       },
-      [meta.profile.key]: {
+      [ScriptNamespace.key]: {
         'plugin.name': 'Scripts',
         'description.label': 'Description',
         'description.placeholder': 'Enter description',

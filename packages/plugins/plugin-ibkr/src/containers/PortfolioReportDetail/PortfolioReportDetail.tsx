@@ -15,9 +15,9 @@ import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { ReportSections } from '#components';
+import { meta } from '#meta';
 import { Ibkr, IbkrOperation } from '#types';
 
-import { meta } from '../../meta.ts';
 import { parseCash, parseClosedLots, parseOpenLots, parsePositions, parseTrades } from '../../services/index.ts';
 
 export type PortfolioReportDetailProps = Pick<

@@ -15,8 +15,6 @@ import { type ActionGraphProps, createMenuAction } from '@dxos/react-ui-menu';
 import type * as Theme from '@dxos/react-ui/Theme';
 import { messageValence } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
 import { deployScript, getFunctionUrl, isScriptDeployed } from '../util/index.ts';
 
 export type DeployActionProperties = { type: 'deploy' } | { type: 'copy' };
@@ -28,6 +26,7 @@ export type DeployState = {
   error: string;
 };
 
+import { ScriptNamespace } from '../namespace.ts';
 import { type ScriptToolbarStateStore } from './useToolbarState.ts';
 
 export type CreateDeployOptions = {
@@ -53,7 +52,7 @@ export const createDeploy = ({
 
   // TODO(wittjosiah): Should this be an action?
   const errorItem = createMenuAction('error', () => {}, {
-    label: value.error ?? ['no-error.label', { ns: meta.profile.key }],
+    label: value.error ?? ['no-error.label', { ns: ScriptNamespace.key }],
     icon: 'ph--warning-circle--regular',
     hidden: !value.error,
     classNames: value.error && messageValence('error'),
@@ -87,7 +86,7 @@ export const createDeploy = ({
     },
     {
       type: 'deploy',
-      label: [value.deploying ? 'publishing.label' : 'deploy.label', { ns: meta.profile.key }],
+      label: [value.deploying ? 'publishing.label' : 'deploy.label', { ns: ScriptNamespace.key }],
       icon: value.deploying ? 'ph--spinner-gap--regular' : 'ph--cloud-arrow-up--regular',
       disabled: value.deploying,
       classNames: value.deploying ? '[&_svg]:animate-spin' : '',
@@ -103,7 +102,7 @@ export const createDeploy = ({
     },
     {
       type: 'copy',
-      label: ['copy-link.label', { ns: meta.profile.key }],
+      label: ['copy-link.label', { ns: ScriptNamespace.key }],
       icon: 'ph--link--regular',
       disabled: !value.functionUrl,
     },

@@ -12,21 +12,22 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { invariant } from '@dxos/invariant';
 
-import { meta } from '#meta';
-
+import { DeckNamespace } from '../namespace.ts';
 import * as DeckSchema from './DeckSchema.ts';
 import { type DeckState, type EphemeralDeckState, type StoredDeckState } from './DeckSchema.ts';
 
 export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings.ts').Settings>>()(
-  `${meta.profile.key}.capability.settings`,
+  `${DeckNamespace.key}.capability.settings`,
 );
 
 /** Persisted state (stored in KVS/localStorage). */
-export const State = Capability.makeSingleton<Atom.Writable<StoredDeckState>>()(`${meta.profile.key}.capability.state`);
+export const State = Capability.makeSingleton<Atom.Writable<StoredDeckState>>()(
+  `${DeckNamespace.key}.capability.state`,
+);
 
 /** Transient/ephemeral state (not persisted). */
 export const EphemeralState = Capability.makeSingleton<Atom.Writable<EphemeralDeckState>>()(
-  `${meta.profile.key}.capability.ephemeralState`,
+  `${DeckNamespace.key}.capability.ephemeralState`,
 );
 
 /**
@@ -35,7 +36,7 @@ export const EphemeralState = Capability.makeSingleton<Atom.Writable<EphemeralDe
  * long since moved off (see `url/project.ts`).
  */
 export const Projection = Capability.makeSingleton<FiberHandle.FiberHandle<string | undefined, any>>()(
-  `${meta.profile.key}.capability.projection`,
+  `${DeckNamespace.key}.capability.projection`,
 );
 
 /**
@@ -60,4 +61,4 @@ export type DeckPluginOptions = {
   platform?: Platform;
 };
 
-export const Platform = Capability.makeSingleton<Platform>()(`${meta.profile.key}.capability.platform`);
+export const Platform = Capability.makeSingleton<Platform>()(`${DeckNamespace.key}.capability.platform`);

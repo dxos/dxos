@@ -1,13 +1,12 @@
+import { BlueskyNamespace } from './namespace.ts';
 //
 // Copyright 2026 DXOS.org
 //
 
-import { meta } from '#meta';
-
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [BlueskyNamespace.key]: {
         'plugin.name': 'Bluesky',
         'target.my-posts.label': 'My posts',
         'target.my-likes.label': 'My liked posts',

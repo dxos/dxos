@@ -22,8 +22,9 @@ import { Filter } from '@dxos/echo';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
 import { SampleItem, SampleOperation } from '#types';
+
+import { SampleNamespace } from '../namespace.ts';
 
 // Section type constant used to identify the "Samples" section node.
 // A second extension matches this type to populate child nodes.
@@ -49,7 +50,7 @@ export default Capability.makeModule(
               id: SampleOperation.CreateSampleItem.meta.key,
               data: () => Operation.invoke(SampleOperation.CreateSampleItem, {}),
               properties: {
-                label: ['create-sample-item.label', { ns: meta.profile.key }],
+                label: ['create-sample-item.label', { ns: SampleNamespace.key }],
                 icon: 'ph--book-open--regular',
                 testId: 'samplePlugin.createItem',
                 // `disposition: 'menu'` places the action in the dropdown menu.
@@ -77,7 +78,7 @@ export default Capability.makeModule(
             AppNode.makeSection({
               id: 'sampleSection',
               type: SAMPLE_SECTION_TYPE,
-              label: ['plugin.name', { ns: meta.profile.key }],
+              label: ['plugin.name', { ns: SampleNamespace.key }],
               icon: 'ph--book-open--regular',
               space,
             }),
@@ -116,14 +117,14 @@ export default Capability.makeModule(
             AppNode.makeToolbarAction({
               id: 'randomize',
               data: () => Operation.invoke(SampleOperation.Randomize, { item }),
-              label: ['randomize-item.label', { ns: meta.profile.key }],
+              label: ['randomize-item.label', { ns: SampleNamespace.key }],
               icon: 'ph--shuffle--regular',
             }),
             AppGraphNode.makeAction({
               id: 'archive',
               data: () => Operation.invoke(SampleOperation.UpdateStatus, { item, status: 'archived' }),
               properties: {
-                label: ['archive-item.label', { ns: meta.profile.key }],
+                label: ['archive-item.label', { ns: SampleNamespace.key }],
                 icon: 'ph--archive--regular',
                 // `disposition: 'list-item'` makes the action appear in the navtree context menu
                 // but not in the article toolbar.
@@ -145,7 +146,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               variant: 'related',
-              label: ['related-companion.label', { ns: meta.profile.key }],
+              label: ['related-companion.label', { ns: SampleNamespace.key }],
               icon: 'ph--users-three--regular',
               data: 'related',
             }),
@@ -164,7 +165,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeDeckCompanion({
               id: 'samplePanel',
-              label: ['deck-companion.label', { ns: meta.profile.key }],
+              label: ['deck-companion.label', { ns: SampleNamespace.key }],
               icon: 'ph--book-open--regular',
               data: 'sample-panel' as const,
               position: Position.last,

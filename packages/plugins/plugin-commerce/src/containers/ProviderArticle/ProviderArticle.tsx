@@ -22,8 +22,9 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
-import { meta } from '#meta';
 import { Provider } from '#types';
+
+import { CommerceNamespace } from '../../namespace.ts';
 
 export type ProviderArticleProps = AppSurface.ObjectArticleProps<Provider.Provider>;
 
@@ -33,7 +34,7 @@ export type ProviderArticleProps = AppSurface.ObjectArticleProps<Provider.Provid
  * Provider node's graph actions (e.g. Regenerate, which runs the skill agent) in the toolbar.
  */
 export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CommerceNamespace.key);
   const [provider] = useObject(subject);
   const { actions, onAction } = useMenuActions(attendableId);
 
@@ -118,7 +119,7 @@ const useMenuActions = (
       // Boundary: the menu's ActionExecutor surfaces a structural menu-action node, while the graph
       // runner needs the nominal `AppGraphNode.Action`. The objects are the same graph actions the builder
       // produced (filtered to `disposition: 'toolbar'`), so the coercion is safe here.
-      void runAction(action as AppGraphNode.Action, { caller: meta.profile.key });
+      void runAction(action as AppGraphNode.Action, { caller: CommerceNamespace.key });
     },
     [runAction],
   );

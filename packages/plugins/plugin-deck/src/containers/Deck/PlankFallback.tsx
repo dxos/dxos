@@ -10,11 +10,11 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Status from '@dxos/react-ui/Status';
 import { descriptionMessage, mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
+import { DeckNamespace } from '../../namespace.ts';
 
 /** User-facing error fallback for a plank's content Surface. */
 export const PlankErrorFallback = ({ error }: Status.ErrorProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(DeckNamespace.key);
 
   useEffect(() => {
     if (error) {

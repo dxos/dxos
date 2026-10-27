@@ -20,7 +20,7 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Event } from '@dxos/types';
 
-import { InboxPlugin } from '#plugin';
+import * as InboxPlugin from '#meta';
 import { Builder } from '#testing';
 import { translations } from '#translations';
 import { Calendar } from '#types';
@@ -89,7 +89,7 @@ const meta = {
         }),
 
         StorybookPlugin.make({}),
-        InboxPlugin(),
+        InboxPlugin.make(),
         PreviewPlugin.make(),
       ],
     })),

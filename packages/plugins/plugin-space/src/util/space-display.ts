@@ -9,16 +9,17 @@ import * as Operation from '@dxos/compute/Operation';
 import { Obj, Type } from '@dxos/echo';
 import { type Label } from '@dxos/ui-types/translations';
 
-import { meta } from '#meta';
 import { SpaceCapabilities, SpaceOperation } from '#types';
+
+import { SpaceNamespace } from '../namespace.ts';
 
 //
 // Constants
 //
 
-const UNNAMED_SPACE_LABEL: Label = ['unnamed-space.label', { ns: meta.profile.key }];
+const UNNAMED_SPACE_LABEL: Label = ['unnamed-space.label', { ns: SpaceNamespace.key }];
 
-export const SPACES = `${meta.profile.key}-spaces`;
+export const SPACES = `${SpaceNamespace.key}-spaces`;
 
 //
 // Helpers

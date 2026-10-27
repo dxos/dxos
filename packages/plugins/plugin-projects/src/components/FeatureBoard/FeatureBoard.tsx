@@ -1,8 +1,7 @@
+import React, { createContext, useContext, useMemo, useState } from 'react';
 //
 // Copyright 2026 DXOS.org
 //
-
-import React, { createContext, useContext, useMemo, useState } from 'react';
 
 import { useListSelection } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -13,8 +12,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { meta } from '#meta';
-
+import { ProjectsNamespace } from '../../namespace.ts';
 import {
   FEATURE_STATUS_STYLE,
   FeatureCard,
@@ -66,7 +64,7 @@ type FeatureStatusTagProps = {
  * the roving focus, so the arrow keys move between it and the field rather than jumping back to the field.
  */
 const FeatureStatusTag = ({ status, count, pressed, onClick }: FeatureStatusTagProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const itemProps = Toolbar.useToolbarItem();
   return (
     <Tag.Tag
@@ -88,7 +86,7 @@ const FeatureStatusTag = ({ status, count, pressed, onClick }: FeatureStatusTagP
  * row or toolbar. The status counts are the toggles, so each says how many cards it adds.
  */
 export const FeatureBoardFilter = ({ features, value, onValueChange }: FeatureBoardFilterProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const toggleStatus = (status: FeatureStatus, pressed: boolean) => {
     const statuses = new Set(value.statuses);
     if (pressed) {

@@ -17,8 +17,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import { ParentLabelAnnotation } from '@dxos/schema';
 
-import { meta } from '#meta';
-
+import { RoutineNamespace } from '../../namespace.ts';
 import { wireTriggers } from '../../util/index.ts';
 import {
   FrequencyDefaults,
@@ -311,7 +310,7 @@ export type TriggerSectionProps = {
  * includes {@link triggerFieldMap}.
  */
 export const TriggerSection = ({ readonly, onClear }: TriggerSectionProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(RoutineNamespace.key);
   const values = useFormValues<TriggerFormInput>('TriggerEditor.TriggerSection', TRIGGER_PATH);
   const kind = values?.kind;
 

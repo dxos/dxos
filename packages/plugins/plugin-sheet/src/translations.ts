@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Sheet } from '#types';
+
+import { SheetNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -22,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete sheet',
         'object-deleted.label': 'Sheet deleted',
       },
-      [meta.profile.key]: {
+      [SheetNamespace.key]: {
         'plugin.name': 'Sheets',
         'cell.placeholder': 'Cell value...',
 

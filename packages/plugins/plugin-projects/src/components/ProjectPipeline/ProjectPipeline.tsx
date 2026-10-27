@@ -19,8 +19,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Status from '@dxos/react-ui/Status';
 import { type Task } from '@dxos/types';
 
-import { meta } from '#meta';
-
+import { ProjectsNamespace } from '../../namespace.ts';
 import { useProjectChats } from './useProjectChats.ts';
 
 export type ProjectPipelineProps = {
@@ -58,7 +57,7 @@ export const ProjectPipeline = ({
   onSelectTask,
   onSelectChat,
 }: ProjectPipelineProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const chats = useProjectChats(space, project);
   const timeline = AssistantHooks.useSessionTimeline(space, { chats, tasks });
 

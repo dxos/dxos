@@ -11,7 +11,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { ProgressPlugin } from '#plugin';
+import * as ProgressPlugin from '#meta';
 import { translations } from '#translations';
 
 import { ProgressStatusIndicator } from './ProgressStatusIndicator.tsx';
@@ -108,7 +108,7 @@ const meta = {
   title: 'plugins/plugin-progress/components/ProgressStatusIndicator',
   component: ProgressStatusIndicator,
   render: DefaultStory,
-  decorators: [withTheme(), withPluginManager({ plugins: [ProgressPlugin()] })],
+  decorators: [withTheme(), withPluginManager({ plugins: [ProgressPlugin.make()] })],
   parameters: { layout: 'centered', translations },
 } satisfies Meta<typeof ProgressStatusIndicator>;
 

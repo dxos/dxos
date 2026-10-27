@@ -8,11 +8,10 @@ import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '#meta';
-
+import { LingoNamespace } from '../namespace.ts';
 import type * as LingoSettings from './LingoSettings.ts';
 
 /** Plugin settings atom, shared by the settings surface and the reader companion. */
 export const Settings = Capability.makeSingleton<Atom.Writable<LingoSettings.Settings>>()(
-  `${meta.profile.key}.capability.settings`,
+  `${LingoNamespace.key}.capability.settings`,
 );

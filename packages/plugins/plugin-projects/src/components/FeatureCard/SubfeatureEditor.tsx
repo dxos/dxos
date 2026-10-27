@@ -8,9 +8,9 @@ import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
 import { type Feature } from '#types';
 
+import { ProjectsNamespace } from '../../namespace.ts';
 import { EditField, RowIcon, StatusIcon } from './fields.tsx';
 
 export type SubfeatureEditorProps = {
@@ -23,7 +23,7 @@ export type SubfeatureEditorProps = {
  * row removes itself. Every edit hands back the whole list, since subfeatures are records inside their feature.
  */
 export const SubfeatureEditor = ({ subfeatures, onChange }: SubfeatureEditorProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   // The row just added takes focus, so a new subfeature is named before anything else.
   const [focusIndex, setFocusIndex] = useState<number>();
   const update = (index: number, patch: Partial<Feature.Subfeature>) =>

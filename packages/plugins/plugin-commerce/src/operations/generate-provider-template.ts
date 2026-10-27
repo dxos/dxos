@@ -13,12 +13,12 @@ import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import { meta } from '#meta';
 import { Provider, SearchOperation } from '#types';
 
+import { CommerceNamespace } from '../namespace.ts';
 import { ProviderSkill } from '../skills/index.ts';
 
-const TOAST_ID = `${meta.profile.key}/regenerate`;
+const TOAST_ID = `${CommerceNamespace.key}/regenerate`;
 
 /**
  * Runs the provider skill agent: materializes the {@link ProviderSkill} as an ECHO
@@ -37,7 +37,7 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
         yield* Operation.invoke(LayoutOperation.AddToast, {
           id: TOAST_ID,
           icon: 'ph--sparkle--regular',
-          title: ['regenerate.toast.pending.title', { ns: meta.profile.key }],
+          title: ['regenerate.toast.pending.title', { ns: CommerceNamespace.key }],
         });
 
         const program = Effect.gen(function* () {
@@ -89,8 +89,8 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
               yield* Operation.invoke(LayoutOperation.AddToast, {
                 id: TOAST_ID,
                 icon: 'ph--warning--regular',
-                title: ['regenerate.toast.error.title', { ns: meta.profile.key }],
-                description: ['regenerate.toast.error.description', { ns: meta.profile.key }],
+                title: ['regenerate.toast.error.title', { ns: CommerceNamespace.key }],
+                description: ['regenerate.toast.error.description', { ns: CommerceNamespace.key }],
               });
             }),
           ),
@@ -106,10 +106,10 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
         yield* Operation.invoke(LayoutOperation.AddToast, {
           id: TOAST_ID,
           icon: 'ph--check-circle--regular',
-          title: ['regenerate.toast.success.title', { ns: meta.profile.key }],
+          title: ['regenerate.toast.success.title', { ns: CommerceNamespace.key }],
           description: [
             fieldCount > 0 ? 'regenerate.toast.success.description' : 'regenerate.toast.empty.description',
-            { ns: meta.profile.key, count: fieldCount },
+            { ns: CommerceNamespace.key, count: fieldCount },
           ],
         });
 

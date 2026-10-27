@@ -47,9 +47,8 @@ import {
 } from '@dxos/ui-editor';
 import * as Position from '@dxos/util/Position';
 
-import { OperationHandler } from '#capabilities';
 import { useDeckState } from '#hooks';
-import { meta as pluginMeta } from '#meta';
+import DeckConfig, { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import { DeckCapabilities, DeckSchema, Settings } from '#types';
 
@@ -330,7 +329,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
     ],
     activate: storyDeckState,
   }),
-  Plugin.addModule(OperationHandler),
+  Plugin.addModule(Plugin.getModule(DeckConfig, 'OperationHandler')),
   Plugin.addModule(
     Capability.inlineModule('story-surfaces', { provides: [Capabilities.ReactSurface] }, () =>
       Effect.succeed(

@@ -22,7 +22,7 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Organization, Person } from '@dxos/types';
 
-import { CrmPlugin } from '#plugin';
+import * as CrmPlugin from '#meta';
 import { CrmOperation } from '#types';
 
 /**
@@ -106,7 +106,7 @@ const meta = {
         StorybookPlugin.make({}),
         // Without the plugin the operation has no registered handler, so the button would fail on
         // click — the story exists to drive the real operation, not a stub.
-        CrmPlugin(),
+        CrmPlugin.make(),
         ClientPlugin.make({
           types: [Organization.Organization, Person.Person],
           onClientInitialized: ({ client }) =>

@@ -14,8 +14,9 @@ import * as AlertDialog from '@dxos/react-ui/AlertDialog';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
 import { ClientCapabilities, CliLogin } from '#types';
+
+import { ClientNamespace } from '../../namespace.ts';
 
 export type CliLoginDialogProps = {
   /** The CLI's loopback callback, already checked by {@link CliLogin.parseCallback}. */
@@ -34,7 +35,7 @@ type Status = 'confirm' | 'sending' | 'waiting' | 'success' | 'error';
  * why it is only created on an explicit click and only sent to a loopback callback.
  */
 export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ClientNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const identity = useIdentity();
   const [identityService] = Hooks.useCapabilities(ClientCapabilities.IdentityService);

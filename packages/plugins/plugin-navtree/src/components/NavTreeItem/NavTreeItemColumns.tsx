@@ -10,15 +10,15 @@ import * as Popover from '@dxos/react-ui/Popover';
 import * as Theme from '@dxos/react-ui/Theme';
 
 import { getListActions, useActions } from '#hooks';
-import { meta } from '#meta';
 
+import { NavTreeNamespace } from '../../namespace.ts';
 import { NAV_TREE_ITEM } from '../NavTree/index.ts';
 import { useNavTreeContext } from '../NavTreeContext/index.ts';
 import { type NavTreeItemColumnsProps } from '../types.ts';
 import { NavTreeItemActionDropdownMenu, NavTreeItemMonolithicAction } from './NavTreeItemAction.tsx';
 
 export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumnsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(NavTreeNamespace.key);
   const { renderItemEnd: ItemEnd, popoverAnchorId } = useNavTreeContext();
 
   const level = path.length - 2;

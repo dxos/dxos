@@ -17,7 +17,7 @@ import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
-import { CommercePlugin } from '#plugin';
+import * as CommercePlugin from '#meta';
 import { Provider } from '#types';
 
 import { makeSampleProvider } from '../../testing.ts';
@@ -56,9 +56,9 @@ const meta: Meta<typeof DefaultStory> = {
           types: [Provider.Provider],
           onClientInitialized: seedSpace,
         }),
-        SpacePlugin({}),
+        SpacePlugin.make({}),
         StorybookPlugin.make({}),
-        CommercePlugin(),
+        CommercePlugin.make(),
       ],
     }),
   ],

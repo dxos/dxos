@@ -31,7 +31,7 @@ import { ViewModel, getTypeURIFromQuery } from '@dxos/schema';
 import { Organization, Person } from '@dxos/types';
 
 import { useProjectionModel } from '#hooks';
-import { KanbanPlugin } from '#plugin';
+import * as KanbanPlugin from '#meta';
 import { translations } from '#translations';
 import { Kanban } from '#types';
 
@@ -73,9 +73,9 @@ const withKanbanPlugins = ({ types = [], onSpaceCreated }: ClientSetupOptions): 
           }),
       }),
       PreviewPlugin.make(),
-      SpacePlugin({}),
+      SpacePlugin.make({}),
       StorybookPlugin.make({}),
-      KanbanPlugin(),
+      KanbanPlugin.make(),
     ],
   });
 

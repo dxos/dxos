@@ -19,8 +19,9 @@ import {
 import { Obj } from '@dxos/echo';
 import { type ContentBlock, DraftMessage, type Message } from '@dxos/types';
 
-import { meta } from '#meta';
 import { Mailbox } from '#types';
+
+import { InboxNamespace } from '../namespace.ts';
 
 export const REPLY_DELIMITER = '\n\n---';
 export const REPLY_REGEXP = /^---\s*$/m;
@@ -191,8 +192,8 @@ export const dedupeSupersededDrafts = (messages: Message.Message[], mailboxUri: 
 export const getMessageLabel = (message: Message.Message) =>
   message.properties?.subject ||
   (DraftMessage.instanceOf(message)
-    ? (['draft.label', { ns: meta.profile.key }] as const)
-    : (['message.label', { ns: meta.profile.key }] as const));
+    ? (['draft.label', { ns: InboxNamespace.key }] as const)
+    : (['message.label', { ns: InboxNamespace.key }] as const));
 
 // TODO(burdon): Factor out sort pattern with getters.
 export const sortByCreated =

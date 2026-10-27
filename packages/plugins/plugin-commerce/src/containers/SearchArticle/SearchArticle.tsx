@@ -16,9 +16,9 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Status from '@dxos/react-ui/Status';
 
-import { meta } from '#meta';
 import { Result, Search } from '#types';
 
+import { CommerceNamespace } from '../../namespace.ts';
 import { ResultDetail } from './ResultDetail.tsx';
 import { ResultTile } from './ResultTile.tsx';
 
@@ -30,7 +30,7 @@ export type SearchArticleProps = AppSurface.ObjectArticleProps<Search.Search>;
  * companion (see {@link SearchProperties}).
  */
 export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(CommerceNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   // Use the live `subject` for reads/writes (the tag helpers mutate it); subscribe via useObject so
   // the view re-renders when results/tags change.
@@ -117,7 +117,7 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
         .group(
           'view',
           {
-            label: ['view-filter.label', { ns: meta.profile.key }],
+            label: ['view-filter.label', { ns: CommerceNamespace.key }],
             variant: 'toggleGroup',
             selectCardinality: 'single',
             value: view,
@@ -125,13 +125,13 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
           (group) => {
             group.action(
               'all',
-              { label: ['view-all.label', { ns: meta.profile.key }], icon: 'ph--list--regular' },
+              { label: ['view-all.label', { ns: CommerceNamespace.key }], icon: 'ph--list--regular' },
               () => setView('all'),
             );
             group.action(
               'starred',
               {
-                label: ['view-starred.label', { ns: meta.profile.key }],
+                label: ['view-starred.label', { ns: CommerceNamespace.key }],
                 icon: view === 'starred' ? 'ph--star--fill' : 'ph--star--regular',
               },
               () => setView('starred'),

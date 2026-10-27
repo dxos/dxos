@@ -20,13 +20,14 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
 import { FeedOperation, Subscription } from '#types';
+
+import { MagazineNamespace } from '../../namespace.ts';
 
 export type FeedPropertiesProps = AppSurface.ObjectPropertiesProps<Subscription.Subscription>;
 
 export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(MagazineNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
   const [pending, setPending] = useState(false);

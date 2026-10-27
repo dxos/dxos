@@ -46,10 +46,10 @@ import { objectLinks, pendingText } from '@dxos/ui-editor';
 import { type Merge } from '@dxos/util';
 
 import { insertMention, mentionText, useAttachFile, useChatKeymapExtensions, useObjectMentions } from '#hooks';
-import { meta } from '#meta';
 import { AssistantPreset } from '#types';
 
 import { type ChatModel, getChatModelState } from '../../chat-model/index.ts';
+import { AssistantNamespace } from '../../namespace.ts';
 import { type ChatEvent } from '../Chat/index.ts';
 import { attachmentAnchors, dropAnchor, insertAtAnchor, placeAnchor } from './attachment-anchors.ts';
 import { ChatActions, type ChatActionsProps } from './ChatActions.tsx';
@@ -129,7 +129,7 @@ export const ChatPrompt = ({
   started,
   onPresetChange,
 }: ChatPromptProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AssistantNamespace.key);
   const chatModelState = getChatModelState(chatModel);
   const error = useAtomValue(chatModelState.error).pipe(Option.getOrUndefined);
   const streaming = useAtomValue(chatModelState.streaming);

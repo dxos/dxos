@@ -15,9 +15,9 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { FundamentalsPanel, TradingViewChart } from '#components';
+import { meta } from '#meta';
 import { Ibkr, IbkrOperation } from '#types';
 
-import { meta } from '../../meta.ts';
 import { resolveTradingViewSymbol } from '../../services/index.ts';
 
 export type InstrumentArticleProps = AppSurface.ObjectArticleProps<Ibkr.Instrument>;

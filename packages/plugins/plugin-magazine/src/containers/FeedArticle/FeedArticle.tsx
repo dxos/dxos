@@ -13,9 +13,9 @@ import { ProgressMeter } from '@dxos/react-ui-components';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { PostStack, type PostStackAction } from '#components';
-import { meta } from '#meta';
 import { FeedOperation, Subscription } from '#types';
 
+import { MagazineNamespace } from '../../namespace.ts';
 import { FeedToolbar } from './FeedToolbar.tsx';
 
 export type FeedArticleProps = AppSurface.ObjectArticleProps<Subscription.Subscription>;
@@ -49,7 +49,7 @@ export const FeedArticle = ({ role, subject, attendableId }: FeedArticleProps) =
       { feed: Ref.make(subject) },
       {
         spaceId: Obj.getDatabase(subject)?.spaceId,
-        notify: { error: ['sync-feed-error.title', { ns: meta.profile.key }] },
+        notify: { error: ['sync-feed-error.title', { ns: MagazineNamespace.key }] },
       },
     );
   }, [subject, invokePromise]);

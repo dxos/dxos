@@ -15,10 +15,10 @@ import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } fro
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { type RecordingItem, RecordingList, RecordingsPanel } from '#components';
-import { meta } from '#meta';
 import { RecorderCapabilities, RecorderOperation, Take } from '#types';
 
 import { useStartRecording } from '../../hooks/index.ts';
+import { RecorderNamespace } from '../../namespace.ts';
 import TakePlayer from '../TakePlayer/index.ts';
 
 export type SlideRecordingsArticleProps = Pick<AppSurface.ArticleProps, 'role' | 'attendableId'> & {
@@ -34,7 +34,7 @@ type TakeRow = RecordingItem & { take?: Variant.Variant };
  * Play (in the status bar) and Delete (undoable; it discards an unsaved take, which is listed first).
  */
 export const SlideRecordingsArticle = ({ role, attendableId, slide }: SlideRecordingsArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(RecorderNamespace.key);
   const recorder = Hooks.useOptionalCapability(RecorderCapabilities.Recorder);
   const { invokePromise } = Hooks.useOperationInvoker();
   const presentation = Presentation.getPresentation(slide);
@@ -75,7 +75,7 @@ export const SlideRecordingsArticle = ({ role, attendableId, slide }: SlideRecor
     const builder = MenuBuilder.make().action(
       'record',
       {
-        label: ['record-slide.label', { ns: meta.profile.key }],
+        label: ['record-slide.label', { ns: RecorderNamespace.key }],
         icon: 'ph--record--regular',
         disposition: 'toolbar',
         disabled: !recorder || !presentation,
@@ -87,7 +87,7 @@ export const SlideRecordingsArticle = ({ role, attendableId, slide }: SlideRecor
       builder.action(
         'retry',
         {
-          label: ['retry-save.label', { ns: meta.profile.key }],
+          label: ['retry-save.label', { ns: RecorderNamespace.key }],
           icon: 'ph--arrow-clockwise--regular',
           disposition: 'toolbar',
           testId: 'recorder.take.retry',
@@ -177,7 +177,7 @@ const useSlideTakes = (slide: Presentation.Slide): TakeRow[] => {
 
 /** The slide's takes that could not be saved. */
 const usePendingTakes = (recorder: RecorderCapabilities.Recorder | undefined, slide: Presentation.Slide): TakeRow[] => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(RecorderNamespace.key);
   const state = useAtomValue(recorder?.state ?? EMPTY);
   return state.pending
     .filter((take) => take.slideId === slide.id)

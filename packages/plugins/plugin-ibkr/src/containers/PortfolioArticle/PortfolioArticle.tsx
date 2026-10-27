@@ -21,10 +21,10 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
+import { meta } from '#meta';
 import { Ibkr, IbkrOperation } from '#types';
 
 import { IBKR_CONNECTOR_ID } from '../../constants.ts';
-import { meta } from '../../meta.ts';
 import { parseCash, parsePositions, parseTrades } from '../../services/index.ts';
 import { PortfolioImportAction } from './PortfolioImportAction.tsx';
 

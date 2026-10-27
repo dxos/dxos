@@ -14,8 +14,7 @@ import * as SettingsPath from '@dxos/plugin-settings/SettingsPath';
 import { ViewAnnotation, getTypeURIFromQuery } from '@dxos/schema';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
-
+import { SpaceNamespace } from '../namespace.ts';
 import { resolveCollectionObjectPath, resolveTypeSectionPath } from '../util/index.ts';
 
 export default Capability.makeModule(
@@ -26,7 +25,7 @@ export default Capability.makeModule(
         if (!query?.uri) {
           return [
             {
-              path: SettingsPath.getPluginSettingsSectionPath(meta.profile.key),
+              path: SettingsPath.getPluginSettingsSectionPath(SpaceNamespace.key),
               label: 'Spaces settings',
               type: 'settings',
             },

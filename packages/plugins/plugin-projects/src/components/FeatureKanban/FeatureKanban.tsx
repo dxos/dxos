@@ -1,8 +1,7 @@
+import { useAtomValue } from '@effect/atom-react/Hooks';
 //
 // Copyright 2026 DXOS.org
 //
-
-import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
@@ -14,8 +13,7 @@ import * as Focus from '@dxos/react-ui/Focus';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
-
+import { ProjectsNamespace } from '../../namespace.ts';
 import {
   FeatureCard,
   type FeatureChanges,
@@ -126,7 +124,7 @@ const FeatureKanbanCard = ({ data: feature, location, draggable, binding }: Mosa
 };
 
 const FeatureKanbanColumn = ({ data: status, location }: MosaicTileProps<FeatureStatus>) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { model } = useBoard<FeatureStatus, FeatureModel>('FeatureKanban.Column');
   const { onChange } = useContext(FeatureKanbanContext);
   const count = useAtomValue(model.items(status)).length;

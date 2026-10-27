@@ -4,12 +4,12 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { CallsNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [CallsNamespace.key]: {
         'plugin.name': 'Calls',
 
         'call-panel.label': 'Active Call',

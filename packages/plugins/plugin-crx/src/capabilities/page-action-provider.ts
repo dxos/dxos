@@ -6,8 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '#meta';
 import { CrxCapabilities, CrxOperation, PageAction } from '#types';
+
+import { CrxNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
@@ -15,7 +16,7 @@ export default Capability.makeModule(() =>
     // are not surfaced in the popup or context menu.
     const actions: PageAction.PageAction[] = [
       {
-        id: `${meta.profile.key}/page-action/add-person`,
+        id: `${CrxNamespace.key}/page-action/add-person`,
         label: 'Person',
         icon: 'ph--user--regular',
         urlPatterns: ['http://*/*', 'https://*/*'],
@@ -24,7 +25,7 @@ export default Capability.makeModule(() =>
         operation: CrxOperation.AddPersonFromSnapshot,
       },
       {
-        id: `${meta.profile.key}/page-action/add-organization`,
+        id: `${CrxNamespace.key}/page-action/add-organization`,
         label: 'Organization',
         icon: 'ph--building-office--regular',
         urlPatterns: ['http://*/*', 'https://*/*'],
@@ -33,7 +34,7 @@ export default Capability.makeModule(() =>
         operation: CrxOperation.AddOrganizationFromSnapshot,
       },
       {
-        id: `${meta.profile.key}/page-action/add-note`,
+        id: `${CrxNamespace.key}/page-action/add-note`,
         label: 'Note',
         icon: 'ph--note--regular',
         urlPatterns: ['http://*/*', 'https://*/*'],

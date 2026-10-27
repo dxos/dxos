@@ -15,10 +15,10 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 import type * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
 import { CallsCapabilities } from '#types';
 
 import { type EncodedTrackName, type GlobalState } from '../../calls/index.ts';
+import { CallsNamespace } from '../../namespace.ts';
 
 // Stand-in so `useAtomValue` is always called with a real atom when no manager is contributed.
 const noCallState = Atom.make<GlobalState | undefined>(undefined).pipe(Atom.keepAlive);
@@ -30,7 +30,7 @@ export type CallDebugPanelProps = Util.ThemedClassName<{
 
 /** The call's status as a card in the devtools stats stack. */
 export const CallDebugPanel = ({ state: stateOverride }: CallDebugPanelProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(CallsNamespace.key);
   // `useCapabilities` tolerates the manager being absent, which is the case in stories.
   const [manager] = Hooks.useCapabilities(CallsCapabilities.Manager);
   const liveState = useAtomValue(manager?.stateAtom ?? noCallState);

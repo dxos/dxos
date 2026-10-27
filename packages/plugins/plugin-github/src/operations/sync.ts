@@ -18,11 +18,11 @@ import { log } from '@dxos/log';
 import * as Binding from '@dxos/plugin-connector/Binding';
 import { Milestone, Organization, Person, PullRequest, Repo, Task, TaskSet } from '@dxos/types';
 
-import { meta } from '#meta';
 import { GitHubOperation } from '#types';
 
 import { GITHUB_SOURCE } from '../constants.ts';
 import { GitHubRepoInaccessibleError, GitHubRepoUnresolvedError, formatGitHubSyncFailure } from '../errors.ts';
+import { GitHubNamespace } from '../namespace.ts';
 import { GitHubApi } from '../services/index.ts';
 import { ensureRepo, toRepoDescriptor } from './repo.ts';
 
@@ -1127,9 +1127,9 @@ export const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: 
     if (!result.notModified) {
       yield* Effect.ignore(
         Operation.invoke(LayoutOperation.AddToast, {
-          id: `${meta.profile.key}.sync-success`,
+          id: `${GitHubNamespace.key}.sync-success`,
           icon: 'ph--check--regular',
-          title: ['sync-toast.success.label', { ns: meta.profile.key }],
+          title: ['sync-toast.success.label', { ns: GitHubNamespace.key }],
         }),
       );
     }
@@ -1140,9 +1140,9 @@ export const syncRepoBinding = Effect.fn('syncRepoBinding')(function* (binding: 
     log.warn('github sync: binding failed', { error: outcome.failure });
     yield* Effect.ignore(
       Operation.invoke(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}.sync-error`,
+        id: `${GitHubNamespace.key}.sync-error`,
         icon: 'ph--warning--regular',
-        title: ['sync-toast.error.label', { ns: meta.profile.key }],
+        title: ['sync-toast.error.label', { ns: GitHubNamespace.key }],
         description: message,
       }),
     );

@@ -4,12 +4,12 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { HandpanNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [HandpanNamespace.key]: {
         'plugin.name': 'Handpan',
         'scale.label': 'Scale',
         'mode-calibrate.label': 'Calibrate',

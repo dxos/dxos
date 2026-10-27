@@ -12,14 +12,15 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import type * as Util from '@dxos/react-ui/Util';
 
 import { useDeckCompanions, useDeckState } from '#hooks';
-import { meta } from '#meta';
+
+import { DeckNamespace } from '../../namespace.ts';
 
 export const ToggleSidebarButton = ({
   classNames,
   variant = 'ghost',
 }: Util.ThemedClassName<Pick<Button.RootProps, 'variant'>>) => {
   const { updateState } = useDeckState();
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(DeckNamespace.key);
 
   const handleClick = useCallback(() => {
     updateState((state) => ({
@@ -43,7 +44,7 @@ export const ToggleSidebarButton = ({
 
 export const CloseSidebarButton = () => {
   const { updateState } = useDeckState();
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(DeckNamespace.key);
 
   const handleClick = useCallback(() => {
     updateState((state) => ({ ...state, sidebarState: 'collapsed' }));
@@ -69,7 +70,7 @@ export const ToggleComplementarySidebarButton = ({
 }: Util.ThemedClassName<{ inR0?: boolean; current?: string }>) => {
   const { invokePromise } = Hooks.useOperationInvoker();
   const { state, updateState } = useDeckState();
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(DeckNamespace.key);
 
   const companions = useDeckCompanions();
   const handleClick = useCallback(() => {

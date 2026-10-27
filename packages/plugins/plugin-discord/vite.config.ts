@@ -8,13 +8,9 @@ export default defineConfig({
   entry: {
     'ns/DiscordSource': 'src/DiscordSource.ts',
     'index': 'src/index.ts',
-    'DiscordPlugin': 'src/DiscordPlugin.ts',
-    'capabilities': 'src/capabilities/index.ts',
     'components': 'src/components/index.ts',
     'containers': 'src/containers/index.ts',
-    'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
-    'plugin': 'src/plugin.ts',
     'translations': 'src/translations.ts',
     'DiscordTargetOptions': 'src/types/DiscordTargetOptions.ts',
     'DiscordAdminOperation': 'src/types/DiscordAdminOperation.ts',

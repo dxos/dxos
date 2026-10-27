@@ -17,7 +17,7 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
 
-import { InboxPlugin } from '#plugin';
+import * as InboxPlugin from '#meta';
 import { Mailbox } from '#types';
 
 import { SubscriptionsArticle } from './SubscriptionsArticle.tsx';
@@ -49,7 +49,7 @@ const meta = {
       plugins: [
         ...CorePlugins.make(),
         StorybookPlugin.make({}),
-        InboxPlugin(),
+        InboxPlugin.make(),
         ClientPlugin.make({
           types: [Mailbox.Mailbox, Message.Message],
           onClientInitialized: ({ client }) =>

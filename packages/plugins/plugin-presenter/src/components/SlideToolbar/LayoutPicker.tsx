@@ -10,8 +10,8 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Popover from '@dxos/react-ui/Popover';
 
 import { type LayoutName, LAYOUTS } from '#markdown';
-import { meta } from '#meta';
 
+import { PresenterNamespace } from '../../namespace.ts';
 import { Slide } from '../Slide/index.ts';
 
 // Placeholder content per thumbnail, so each layout shows how it places a title, text and columns.
@@ -53,7 +53,7 @@ export type LayoutPickerProps = {
  * Toolbar button opening a grid of layout thumbnails; picking one sets the slide's `layout:`.
  */
 export const LayoutPicker = ({ value, onChange, trigger }: LayoutPickerProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(PresenterNamespace.key);
   const [open, setOpen] = useState(false);
   const options = useMemo(() => LAYOUTS.map((layout) => ({ value: layout, label: t(`layout.${layout}.label`) })), [t]);
   return (

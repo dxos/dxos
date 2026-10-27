@@ -11,10 +11,10 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import { mx } from '@dxos/ui-theme';
 
 import { LevelMeter, formatSeconds } from '#components';
-import { meta } from '#meta';
 import { RecorderCapabilities } from '#types';
 
 import { useLevel } from '../../hooks/index.ts';
+import { RecorderNamespace } from '../../namespace.ts';
 
 export type RecordingOverlayProps = {
   subject: Presentation.Presentation;
@@ -35,7 +35,7 @@ const RecordingOverlayInner = ({
   subject,
   recorder,
 }: RecordingOverlayProps & { recorder: RecorderCapabilities.Recorder }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(RecorderNamespace.key);
   const state = useAtomValue(recorder.state);
   const recording = state.status === 'recording' && state.presentationId === subject.id;
   const level = useLevel(recording ? recorder.analyser : undefined);

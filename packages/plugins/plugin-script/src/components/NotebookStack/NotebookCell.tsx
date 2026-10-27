@@ -26,9 +26,9 @@ import {
 import { mx } from '@dxos/ui-theme';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '#meta';
 import { Notebook } from '#types';
 
+import { ScriptNamespace } from '../../namespace.ts';
 import { type ComputeGraph } from '../../notebook/index.ts';
 import { TypescriptEditor, type TypescriptEditorProps } from '../TypescriptEditor/index.ts';
 import { type NotebookMenuProps } from './NotebookMenu.tsx';
@@ -46,7 +46,7 @@ export type NotebookCellProps = {
 
 // TODO(burdon): Show evaluation errors.
 export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: NotebookCellProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ScriptNamespace.key);
 
   const source = useResolveRef(cell.source);
   const prompt = useResolveRef(cell.prompt);
@@ -198,7 +198,7 @@ const NotebookTextEditor = ({
   readOnly,
   ...props
 }: EditorViewProps & Pick<BasicExtensionsOptions, 'readOnly'>) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ScriptNamespace.key);
   const themeMode = Hooks.useThemeMode();
   const extensions = useMemo(() => {
     return [

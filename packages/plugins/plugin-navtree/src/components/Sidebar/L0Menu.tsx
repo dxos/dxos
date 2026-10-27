@@ -44,8 +44,8 @@ import { getHashHue, mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
 import { useNavTreeState } from '#hooks';
-import { meta } from '#meta';
 
+import { NavTreeNamespace } from '../../namespace.ts';
 import { l0ItemType } from '../../util.ts';
 import { useNavTreeContext } from '../NavTreeContext/index.ts';
 import { UserAccountAvatar } from '../UserAccountAvatar/index.ts';
@@ -123,7 +123,7 @@ const l0Breakpoints: Record<string, string> = {
 const L0ItemRoot = memo(
   forwardRef<HTMLButtonElement, PropsWithChildren<L0ItemRootProps>>(
     ({ item, parent, path, dragging, dropTarget, onMouseEnter, children }, forwardedRef) => {
-      const { t } = Hooks.useTranslation(meta.profile.key);
+      const { t } = Hooks.useTranslation(NavTreeNamespace.key);
       const { model } = useNavTreeContext();
       const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
       const { id, testId } = useAtomValue(model.itemProps(itemPath));
@@ -173,7 +173,7 @@ export const L0ItemActiveTabIndicator = ({ classNames }: Util.ThemedClassName<{}
 
 // TODO(burdon): Factor out pinned (non-draggable) items.
 const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L0ItemProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(NavTreeNamespace.key);
   const itemElement = useRef<HTMLButtonElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -288,7 +288,7 @@ const itemHue = (item: L0ItemProps['item']): string | undefined =>
     : undefined);
 
 const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(NavTreeNamespace.key);
 
   if (item.properties.pending === true) {
     return <L0PendingAvatar />;
@@ -333,7 +333,7 @@ export const L0Menu = ({
   path,
   onItemHover,
 }: L0MenuProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(NavTreeNamespace.key);
   const runAction = GraphHooks.useActionRunner();
   const handleAction = useCallback(
     (action: AppGraphNode.Action, params: AppGraphNode.InvokeProps) => {

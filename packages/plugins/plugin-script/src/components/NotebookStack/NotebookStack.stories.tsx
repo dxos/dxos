@@ -39,7 +39,7 @@ const meta = {
               yield* initializeIdentity(client);
             }),
         }),
-        RoutinePlugin(),
+        RoutinePlugin.make(),
       ],
     }),
   ],

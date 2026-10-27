@@ -9,14 +9,15 @@ import { useObject, useResolveRef } from '@dxos/echo-react';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
 import { type Showcase } from '#types';
+
+import { ProjectsNamespace } from '../../namespace.ts';
 
 export type ShowcaseCardContentProps = AppSurface.ObjectCardProps<Showcase.Showcase>;
 
 /** The write-up's opening lines and how much evidence it carries; the host draws the frame and the name. */
 export const ShowcaseCardContent = ({ subject }: ShowcaseCardContentProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const [showcase] = useObject(subject);
   const content = useResolveRef(showcase.content);
   const [text] = useObject(content, 'content');

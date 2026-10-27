@@ -17,10 +17,10 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { ObjectGallery } from '#components';
-import { meta } from '#meta';
 import { Showcase } from '#types';
 
 import { useOpenObject, useRefTargets } from '../../hooks/index.ts';
+import { ProjectsNamespace } from '../../namespace.ts';
 
 type Values = Pick<Showcase.Showcase, 'name'>;
 
@@ -33,7 +33,7 @@ export type ShowcaseArticleProps = AppSurface.ObjectArticleProps<Showcase.Showca
  * text section), its artifacts as the app's card for each type, and what it demonstrates.
  */
 export const ShowcaseArticle = ({ role, subject, attendableId }: ShowcaseArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const [showcase, updateShowcase] = useObject(subject);
   const db = Obj.getDatabase(subject);
   const content = useResolveRef(showcase.content);

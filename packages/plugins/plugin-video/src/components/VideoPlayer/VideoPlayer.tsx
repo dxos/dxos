@@ -9,8 +9,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
-
+import { VideoNamespace } from '../../namespace.ts';
 import { toEmbedUrl } from './embed-url-parsers.ts';
 
 export type VideoPlayerProps = {
@@ -26,7 +25,7 @@ export type VideoPlayerProps = {
  */
 export const VideoPlayer = Util.composable<HTMLDivElement, VideoPlayerProps>(
   ({ url, startTime, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(VideoNamespace.key);
     const embedUrl = url ? toEmbedUrl(url, startTime) : undefined;
 
     if (!embedUrl) {

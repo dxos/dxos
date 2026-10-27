@@ -20,8 +20,9 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { SpaceOperation } from '#types';
+
+import { SpaceNamespace } from '../../namespace.ts';
 
 const COLLECTION_ICON = 'ph--folder--regular';
 
@@ -41,7 +42,7 @@ type CollectionItem = {
 
 /** Picks a collection in the object's space to list the object in. */
 export const AddToCollectionDialog = ({ object }: AddToCollectionDialogProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(SpaceNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(object);
   const space = useSpace(db?.spaceId);
@@ -56,7 +57,7 @@ export const AddToCollectionDialog = ({ object }: AddToCollectionDialogProps) =>
     const excluded = Collection.isCollection(object) ? getSubtree(object, collections) : new Set<string>();
     const getLabel = (collection: Collection.Collection) =>
       collection.id === rootId
-        ? Theme.toLocalizedString(['collections-section.label', { ns: meta.profile.key }], t)
+        ? Theme.toLocalizedString(['collections-section.label', { ns: SpaceNamespace.key }], t)
         : (Obj.getLabel(collection) ??
           Theme.toLocalizedString(
             ['object-name.placeholder', { ns: Type.getTypename(Collection.Collection), defaultValue: collection.id }],
@@ -91,9 +92,9 @@ export const AddToCollectionDialog = ({ object }: AddToCollectionDialogProps) =>
         // Stays open, so the user can pick another collection or dismiss it knowing nothing changed.
         log.warn('failed to add to collection', { error });
         await invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.profile.key}.add-to-collection-failed`,
+          id: `${SpaceNamespace.key}.add-to-collection-failed`,
           icon: 'ph--warning--regular',
-          title: ['add-to-collection-failed.title', { ns: meta.profile.key }],
+          title: ['add-to-collection-failed.title', { ns: SpaceNamespace.key }],
           description: error.message,
         });
         return;

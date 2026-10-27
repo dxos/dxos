@@ -23,8 +23,7 @@ import {
   editorClassNames,
 } from '@dxos/ui-editor';
 
-import { meta } from '#meta';
-
+import { CodeNamespace } from '../../namespace.ts';
 import { findSymbolLine } from './symbol.ts';
 
 /** Highlights the symbol's line and scrolls it to the top third of the view once the editor has laid out. */
@@ -75,7 +74,7 @@ export type CodeViewProps = {
 
 /** A read-only source file revealed at a symbol: where Ctrl/⌘-click on a code key in a spec lands. */
 export const CodeView = ({ label, path, content, symbol, error, onOpenExternal }: CodeViewProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(CodeNamespace.key);
   const themeMode = Hooks.useThemeMode();
   const line = useMemo(() => (content && symbol ? findSymbolLine(content, symbol) : undefined), [content, symbol]);
   const extensions = useMemo(

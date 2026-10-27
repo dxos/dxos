@@ -9,15 +9,14 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Tour from '@dxos/app-toolkit/Tour';
 import * as Project from '@dxos/compute/Project';
 
-import { meta } from '#meta';
-
+import { ProjectsNamespace } from '../namespace.ts';
 import { steps } from '../tours/index.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(AppCapabilities.Tour, {
-      id: `${meta.profile.key}.tour.project`,
-      label: ['project-tour.label', { ns: meta.profile.key }],
+      id: `${ProjectsNamespace.key}.tour.project`,
+      label: ['project-tour.label', { ns: ProjectsNamespace.key }],
       matches: Tour.whenType(Project.Project),
       auto: true,
       steps,

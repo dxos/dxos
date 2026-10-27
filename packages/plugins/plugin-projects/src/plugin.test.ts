@@ -16,22 +16,23 @@ import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { ProjectsPlugin } from '#plugin';
+import * as ProjectsPlugin from '#meta';
 import { ProjectCapabilities } from '#types';
 
+import { ProjectsNamespace } from './namespace.ts';
+
 await Harness.preload({
-  plugins: [ClientPlugin.make({}), AssistantPlugin.make(), TasksPlugin.make(), ProjectsPlugin()],
+  plugins: [ClientPlugin.make({}), AssistantPlugin.make(), TasksPlugin.make(), ProjectsPlugin.make()],
 });
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+const moduleId = (name: string) => `${ProjectsNamespace.key}.module.${name}`;
 
 describe('ProjectsPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
       // Assistant and Tasks are declared in `dependsOn`, so the manager refuses to resolve Projects
       // without them.
-      plugins: [ClientPlugin.make({}), AssistantPlugin.make(), TasksPlugin.make(), ProjectsPlugin()],
+      plugins: [ClientPlugin.make({}), AssistantPlugin.make(), TasksPlugin.make(), ProjectsPlugin.make()],
     });
 
     // OperationHandler is a dependency-mode root, so it activates immediately too.
@@ -52,7 +53,7 @@ describe('ProjectsPlugin', () => {
     await using harness = await Harness.createComposerTestApp({
       // Assistant and Tasks are declared in `dependsOn`, so the manager refuses to resolve Projects
       // without them.
-      plugins: [ClientPlugin.make({}), AssistantPlugin.make(), TasksPlugin.make(), ProjectsPlugin()],
+      plugins: [ClientPlugin.make({}), AssistantPlugin.make(), TasksPlugin.make(), ProjectsPlugin.make()],
     });
 
     await harness.fire(AppActivationEvents.AssistantStart);
@@ -65,7 +66,7 @@ describe('ProjectsPlugin', () => {
     await using harness = await Harness.createComposerTestApp({
       // Assistant and Tasks are declared in `dependsOn`, so the manager refuses to resolve Projects
       // without them.
-      plugins: [ClientPlugin.make({}), AssistantPlugin.make(), TasksPlugin.make(), ProjectsPlugin()],
+      plugins: [ClientPlugin.make({}), AssistantPlugin.make(), TasksPlugin.make(), ProjectsPlugin.make()],
     });
 
     const client = harness.get(ClientCapabilities.Client);
@@ -78,7 +79,7 @@ describe('ProjectsPlugin', () => {
     await using harness = await Harness.createComposerTestApp({
       // Assistant and Tasks are declared in `dependsOn`, so the manager refuses to resolve Projects
       // without them.
-      plugins: [ClientPlugin.make({}), AssistantPlugin.make(), TasksPlugin.make(), ProjectsPlugin()],
+      plugins: [ClientPlugin.make({}), AssistantPlugin.make(), TasksPlugin.make(), ProjectsPlugin.make()],
     });
 
     // Idle-gated; the harness awaits Startup only.
@@ -86,6 +87,6 @@ describe('ProjectsPlugin', () => {
     expect(harness.manager.getActive()).toContain(moduleId('Settings'));
     const registry = harness.get(Capabilities.AtomRegistry);
     expect(registry.get(harness.get(ProjectCapabilities.Settings)).showTaskDescriptions).toBe(true);
-    expect(harness.getAll(AppCapabilities.Settings).some((entry) => entry.prefix === meta.profile.key)).toBe(true);
+    expect(harness.getAll(AppCapabilities.Settings).some((entry) => entry.prefix === ProjectsNamespace.key)).toBe(true);
   });
 });

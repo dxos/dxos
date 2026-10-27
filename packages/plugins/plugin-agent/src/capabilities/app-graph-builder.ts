@@ -18,10 +18,10 @@ import * as Account from '@dxos/plugin-client/Account';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { Position } from '@dxos/util';
 
-import { meta } from '#meta';
 import { AgentCapabilities, AgentCompanion } from '#types';
 
 import { AGENTS_SECTION_ID, AGENTS_SECTION_TYPE } from '../constants.ts';
+import { AgentNamespace } from '../namespace.ts';
 import { AGENTS_PANEL, AGENTS_PANEL_PATH } from './agents-panel.ts';
 
 export default Capability.makeModule(
@@ -41,7 +41,7 @@ export default Capability.makeModule(
               type: AGENTS_SECTION_TYPE,
               data: AGENTS_SECTION_TYPE,
               properties: {
-                label: ['agents-section.label', { ns: meta.profile.key }],
+                label: ['agents-section.label', { ns: AgentNamespace.key }],
                 icon: 'ph--drone--regular',
                 iconHue: 'emerald',
                 draggable: false,
@@ -81,25 +81,25 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               variant: AgentCompanion.BRAIN,
-              label: ['brain-companion.label', { ns: meta.profile.key }],
+              label: ['brain-companion.label', { ns: AgentNamespace.key }],
               icon: 'ph--brain--regular',
               data: AgentCompanion.BRAIN,
             }),
             AppNode.makeCompanion({
               variant: AgentCompanion.ACTIVITY,
-              label: ['activity-companion.label', { ns: meta.profile.key }],
+              label: ['activity-companion.label', { ns: AgentNamespace.key }],
               icon: 'ph--pulse--regular',
               data: AgentCompanion.ACTIVITY,
             }),
             AppNode.makeCompanion({
               variant: AgentCompanion.EMAIL,
-              label: ['email-companion.label', { ns: meta.profile.key }],
+              label: ['email-companion.label', { ns: AgentNamespace.key }],
               icon: 'ph--envelope--regular',
               data: AgentCompanion.EMAIL,
             }),
             AppNode.makeCompanion({
               variant: AgentCompanion.BRAIN_STORE,
-              label: ['brain-debug-companion.label', { ns: meta.profile.key }],
+              label: ['brain-debug-companion.label', { ns: AgentNamespace.key }],
               icon: 'ph--bug--regular',
               data: AgentCompanion.BRAIN_STORE,
             }),
@@ -120,10 +120,10 @@ export default Capability.makeModule(
             AppGraphNode.make({
               id: AGENTS_PANEL,
               data: AGENTS_PANEL_PATH,
-              type: meta.profile.key,
+              type: AgentNamespace.key,
               properties: {
                 position: Position.last,
-                label: ['agents-panel.label', { ns: meta.profile.key }],
+                label: ['agents-panel.label', { ns: AgentNamespace.key }],
                 icon: 'ph--robot--regular',
                 testId: 'agentPlugin.agents',
               },

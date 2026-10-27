@@ -14,8 +14,8 @@ import * as Panel from '@dxos/react-ui/Panel';
 import { Message, type Transcript } from '@dxos/types';
 
 import { useTranscriptionRecording } from '#hooks';
-import { meta } from '#meta';
 
+import { TranscriptionNamespace } from '../../namespace.ts';
 import { renderByline } from '../../util/index.ts';
 
 export type TranscriptionArticleProps = AppSurface.ObjectArticleProps<Transcript.Transcript>;
@@ -38,7 +38,7 @@ export const TranscriptionArticle = ({ role, subject: transcript, attendableId }
         .action(
           'toggle-recording',
           {
-            label: [recording ? 'stop-recording.label' : 'start-recording.label', { ns: meta.profile.key }],
+            label: [recording ? 'stop-recording.label' : 'start-recording.label', { ns: TranscriptionNamespace.key }],
             icon: recording ? 'ph--stop-circle--regular' : 'ph--microphone--regular',
             disposition: 'toolbar',
             testId: 'transcription.toggle-recording',

@@ -22,8 +22,7 @@ import * as Typography from '@dxos/react-ui/Typography';
 import * as Util from '@dxos/react-ui/Util';
 import { getStyles, mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
+import { RegistryNamespace } from '../../namespace.ts';
 import { PluginFailureBadge } from '../PluginFailureBadge/index.ts';
 
 export type PluginDetailProps = {
@@ -133,7 +132,7 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
     },
     forwardedRef,
   ) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(RegistryNamespace.key);
     const themeMode = Hooks.useThemeMode();
     const layout = ToolkitHooks.useLayout();
     // The gutters exist to hold the icon (col 1) and carousel nav (col 3); on a phone the fixed

@@ -4,9 +4,8 @@
 
 import { describe, test } from 'vitest';
 
+import * as JmapPlugin from '#meta';
 import { JmapOperation } from '#types';
-
-import * as JmapPlugin from './JmapPlugin.ts';
 
 // Activation and the handler set are not covered: the handlers import `@dxos/pipeline-rdf`, whose
 // comunica dependency requires `process/`, a specifier the vitest workerd pool cannot resolve

@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 
-import { meta } from '#meta';
+import { RegistryNamespace } from '../../namespace.ts';
 
 export type PluginScopeProps = {
   /** Whether this plugin's enabled state follows the account rather than being pinned here. */
@@ -20,7 +20,7 @@ export type PluginScopeProps = {
 
 /** Whether one plugin's enabled state follows the account or is pinned to this device. */
 export const PluginScope = ({ synced, onPin, onUnpin }: PluginScopeProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(RegistryNamespace.key);
   const handleValueChange = useCallback(
     (value: string) => {
       if (value === 'shared' && !synced) {

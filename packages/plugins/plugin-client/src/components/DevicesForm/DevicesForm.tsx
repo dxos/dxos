@@ -10,7 +10,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import { DeviceList, type DeviceListProps } from '@dxos/shell/react';
 
-import { meta } from '#meta';
+import { ClientNamespace } from '../../namespace.ts';
 
 export type DevicesFormProps = {
   devices: readonly Identity.DeviceInfo[];
@@ -35,17 +35,17 @@ export const DevicesForm = ({
   onRecover,
   onJoinNewIdentity,
 }: DevicesFormProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ClientNamespace.key);
 
   return (
     <Form.Root variant='settings'>
       <Form.Viewport scroll>
         <Form.Content>
           <Form.FieldSet
-            label={t('devices-verbose.label', { ns: meta.profile.key })}
-            description={t('devices.description', { ns: meta.profile.key })}
+            label={t('devices-verbose.label', { ns: ClientNamespace.key })}
+            description={t('devices.description', { ns: ClientNamespace.key })}
           >
-            <Form.FieldSet label={t('devices.label', { ns: meta.profile.key })}>
+            <Form.FieldSet label={t('devices.label', { ns: ClientNamespace.key })}>
               <DeviceList devices={devices} connectionState={connectionState} />
             </Form.FieldSet>
             {invitation && <Form.FieldSet label={t('add-device.label')}>{invitation}</Form.FieldSet>}

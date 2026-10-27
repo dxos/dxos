@@ -46,7 +46,6 @@ tasks:
     deps:
       - esbuild-plugins:build
       - vite-plugin-import-source:build
-      - ~:gen-modules
       - ^:build
     options:
       cache: false
@@ -58,7 +57,6 @@ tasks:
     deps:
       - esbuild-plugins:build
       - vite-plugin-import-source:build
-      - ~:gen-modules
       - ^:build
     options:
       cache: false
@@ -70,7 +68,6 @@ tasks:
     deps:
       - esbuild-plugins:build
       - vite-plugin-import-source:build
-      - ~:gen-modules
       - ^:build
     options:
       cache: false

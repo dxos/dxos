@@ -19,15 +19,16 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 
 import { AgentList, type AgentListSpace } from '#components';
-import { meta } from '#meta';
 import { AgentSpace } from '#types';
+
+import { AgentNamespace } from '../../namespace.ts';
 
 /**
  * The agents the identity administers, read from its own agent spaces (nothing is asked of EDGE), in the contacts
  * book's rows: an agent is a contact.
  */
 export const AgentsPanel = () => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AgentNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const { agents, spaces } = useAdministeredAgents();
   const [filter, setFilter] = useState('');

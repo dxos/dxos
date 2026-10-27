@@ -12,9 +12,8 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
 import { DEFAULT_TEAM, DXOS_GUILD_ID } from '../../constants.ts';
+import { SupportNamespace } from '../../namespace.ts';
 
 export type DiscordChannel = {
   name: string;
@@ -127,7 +126,7 @@ const Root = ({ guildId = DXOS_GUILD_ID, teamMembers, channels, children }: Disc
 };
 
 const Header = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SupportNamespace.key);
   const { data, unavailable, guildId } = useWidgetContext();
 
   return (
@@ -238,7 +237,7 @@ const Content = () => {
 };
 
 const StatusBar = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SupportNamespace.key);
   const { data } = useWidgetContext();
   if (!data?.instant_invite) {
     return null;

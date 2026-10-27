@@ -30,8 +30,9 @@ import * as Typography from '@dxos/react-ui/Typography';
 import { type File, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
 import { TaskOperation } from '#types';
+
+import { TasksNamespace } from '../../namespace.ts';
 
 /**
  * Whether some plugin handles `FileOperation.Create`. Read from the registered handler sets rather
@@ -242,7 +243,7 @@ export type TaskAttachmentsProps = {
  * and nothing could be.
  */
 export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: TaskAttachmentsProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(TasksNamespace.key);
   const [refs] = useObject(task, 'attachments');
   const dragging = useContext(FileDragContext);
 
@@ -319,7 +320,7 @@ const RemoveAttachmentContext = createContext<((object: Obj.Unknown) => void) | 
 
 /** Adds "Remove attachment" to each attachment card's menu, beside the file's own actions. */
 const AttachmentCardMenu = ({ subject, menu }: AppSurface.CardMenuData<Obj.Unknown>) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(TasksNamespace.key);
   const onRemove = useContext(RemoveAttachmentContext);
   const items = useMemo(
     () =>
@@ -333,6 +334,6 @@ const AttachmentCardMenu = ({ subject, menu }: AppSurface.CardMenuData<Obj.Unkno
         : [],
     [onRemove, subject, t],
   );
-  useMenuContribution(menu, { id: `${meta.profile.key}.attachment`, mode: 'additive', items });
+  useMenuContribution(menu, { id: `${TasksNamespace.key}.attachment`, mode: 'additive', items });
   return null;
 };

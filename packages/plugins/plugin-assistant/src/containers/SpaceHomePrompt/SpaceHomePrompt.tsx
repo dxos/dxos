@@ -23,10 +23,10 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { type ChatEvent, ChatPrompt } from '#components';
 import { bindMentions, usePresets, usePromptActions, useSkills } from '#hooks';
-import { meta } from '#meta';
 import { AssistantCapabilities } from '#types';
 
 import { makeSkillCommands, runDraftCommand } from '../../commands/index.ts';
+import { AssistantNamespace } from '../../namespace.ts';
 import { getChatPath } from '../../paths.ts';
 import { bindChatDefaults, contributesPluginManager } from '../../util/default-skills.ts';
 
@@ -35,7 +35,7 @@ type SpaceScopedProps = {
 };
 
 export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
 
   const registry = useRegistry();
   const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);

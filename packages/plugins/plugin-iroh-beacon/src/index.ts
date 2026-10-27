@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as IrohBeaconPlugin from './IrohBeaconPlugin.ts';
+export * as IrohBeaconPlugin from '#meta';

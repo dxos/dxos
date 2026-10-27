@@ -13,9 +13,8 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Status from '@dxos/react-ui/Status';
 import { formatForDisplay } from '@dxos/schema';
 
+import { meta } from '#meta';
 import { Ibkr } from '#types';
-
-import { meta } from '../../meta.ts';
 
 export type FundamentalsPanelProps = {
   snapshot?: Ibkr.FundamentalsSnapshot;

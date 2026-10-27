@@ -13,7 +13,7 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as shellTranslations } from '@dxos/shell/react';
 
-import { ClientPlugin } from '#plugin';
+import * as ClientPlugin from '#meta';
 import { createFakeContacts, initializeIdentity } from '#testing';
 import { translations } from '#translations';
 
@@ -38,7 +38,7 @@ const meta = {
     withLayout({ layout: 'column' }),
     withPluginManager({
       plugins: [
-        ClientPlugin({
+        ClientPlugin.make({
           onClientInitialized: ({ client }) =>
             Effect.gen(function* () {
               yield* initializeIdentity(client, { displayName: 'Me' });

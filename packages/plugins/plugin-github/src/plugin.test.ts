@@ -10,18 +10,19 @@ import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { GitHubPlugin } from '#plugin';
+import * as GitHubPlugin from '#meta';
 import { GitHubSkill } from '#skills';
 
-await Harness.preload({ plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), GitHubPlugin()] });
+import { GitHubNamespace } from './namespace.ts';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+await Harness.preload({ plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), GitHubPlugin.make()] });
+
+const moduleId = (name: string) => `${GitHubNamespace.key}.module.${name}`;
 
 describe('GitHubPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), GitHubPlugin()],
+      plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), GitHubPlugin.make()],
     });
 
     // The harness fires every plugin's start event after startup, so both start-gated modules are active.
@@ -32,7 +33,7 @@ describe('GitHubPlugin', () => {
 
   test('contributes the GitHub skill when the assistant starts', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), GitHubPlugin()],
+      plugins: [ClientPlugin.make({}), ConnectorPlugin.make(), GitHubPlugin.make()],
     });
 
     await harness.fire(AppActivationEvents.AssistantStart);

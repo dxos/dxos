@@ -15,9 +15,9 @@ import * as Util from '@dxos/react-ui/Util';
 import type { ProjectionModel } from '@dxos/schema';
 
 import { useKanbanBoardModel, useKanbanColumnEventHandler } from '#hooks';
-import { meta } from '#meta';
 import { Kanban, KanbanConstants } from '#types';
 
+import { KanbanNamespace } from '../../namespace.ts';
 import {
   KanbanBoardContext,
   type KanbanBoardContextValue,
@@ -60,7 +60,7 @@ export const KanbanBoardRoot = ({
   onCardRemove,
 }: KanbanBoardRootProps) => {
   const registry = useContext(RegistryContext);
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(KanbanNamespace.key);
   const model = useKanbanBoardModel(kanban, projection, items, registry);
   const columns = model?.getColumns?.() ?? [];
   const [view] = useObject(kanban?.spec.kind === 'view' ? kanban.spec.view : undefined);

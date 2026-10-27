@@ -12,8 +12,9 @@ import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
 import { Task } from '@dxos/types';
 
-import { meta } from '#meta';
 import { Feature, FeatureOperation } from '#types';
+
+import { ProjectsNamespace } from '../namespace.ts';
 
 export type FeatureEditing = {
   /** Writes the given fields of the feature. */
@@ -58,10 +59,10 @@ export const useFeatureEditing = (db: Database.Database | undefined, project?: P
       const { data, error } = await invokePromise(operation, input, { spaceId: db.spaceId });
       if (error) {
         await invokePromise(LayoutOperation.AddToast, {
-          id: `${meta.profile.key}/feature-edit-error/${Date.now()}`,
+          id: `${ProjectsNamespace.key}/feature-edit-error/${Date.now()}`,
           icon: 'ph--warning--regular',
           duration: 6_000,
-          title: ['feature-edit-error.title', { ns: meta.profile.key }],
+          title: ['feature-edit-error.title', { ns: ProjectsNamespace.key }],
           description: error.message,
         });
         return undefined;

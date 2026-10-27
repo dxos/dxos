@@ -6,7 +6,7 @@ import React from 'react';
 
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
-import { meta } from '#meta';
+import { DiscordNamespace } from '../../namespace.ts';
 
 export type DiscordBotToolbarProps = {
   /** Scopes the toolbar to the host plank's attention; without one it is always enabled. */
@@ -30,12 +30,12 @@ export const DiscordBotToolbar = ({
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()
-        .root({ label: ['discord-bot-actions.label', { ns: meta.profile.key }] })
+        .root({ label: ['discord-bot-actions.label', { ns: DiscordNamespace.key }] })
         .action(
           'start',
           {
             // Reconfigures a running bot, so the label follows the state.
-            label: [running ? 'discord-bot-restart.label' : 'discord-bot-start.label', { ns: meta.profile.key }],
+            label: [running ? 'discord-bot-restart.label' : 'discord-bot-start.label', { ns: DiscordNamespace.key }],
             icon: running ? 'ph--arrow-clockwise--regular' : 'ph--play--regular',
             disabled: busy,
           },
@@ -44,7 +44,7 @@ export const DiscordBotToolbar = ({
         .action(
           'stop',
           {
-            label: ['discord-bot-stop.label', { ns: meta.profile.key }],
+            label: ['discord-bot-stop.label', { ns: DiscordNamespace.key }],
             icon: 'ph--stop--regular',
             disabled: busy || !running,
           },
@@ -53,7 +53,7 @@ export const DiscordBotToolbar = ({
         .action(
           'refresh',
           {
-            label: ['discord-bot-refresh.label', { ns: meta.profile.key }],
+            label: ['discord-bot-refresh.label', { ns: DiscordNamespace.key }],
             icon: 'ph--arrows-counter-clockwise--regular',
             disabled: busy,
           },

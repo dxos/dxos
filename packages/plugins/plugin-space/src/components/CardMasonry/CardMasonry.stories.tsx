@@ -25,9 +25,9 @@ import { createMenuAction, useMenuContribution } from '@dxos/react-ui-menu';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { Organization, Person, Task } from '@dxos/types';
 
+import * as SpacePlugin from '#meta';
 import { translations } from '#translations';
 
-import * as SpacePlugin from '../../SpacePlugin.ts';
 import { CardMasonry } from './CardMasonry.tsx';
 
 const OWNER_TITLE = 'Ship the launch';

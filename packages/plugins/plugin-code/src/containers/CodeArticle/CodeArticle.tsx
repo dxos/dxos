@@ -28,8 +28,9 @@ import {
 import { isTruthy } from '@dxos/util';
 
 import { BuildOutput, CodeToolbar, FileTree } from '#components';
-import { meta } from '#meta';
 import { CodeCapabilities, CodeOperation, CodeProject, SourceFile } from '#types';
+
+import { CodeNamespace } from '../../namespace.ts';
 
 export type CodeArticleProps = AppSurface.ObjectArticleProps<CodeProject.CodeProject>;
 
@@ -68,7 +69,7 @@ const languageForPath = (path: string) => {
 // introspect explorer so the visual rhythm matches across panels.
 export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
   ({ role, subject: project, attendableId }, forwardedRef) => {
-    const { t } = UiHooks.useTranslation(meta.profile.key);
+    const { t } = UiHooks.useTranslation(CodeNamespace.key);
     const invoker = Hooks.useOperationInvoker();
     const [buildRunState, updateBuildRun] = Hooks.useAtomCapabilityState(CodeCapabilities.BuildRun);
     const projectId = project.id;

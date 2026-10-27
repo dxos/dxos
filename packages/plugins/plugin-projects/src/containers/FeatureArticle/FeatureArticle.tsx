@@ -18,12 +18,12 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import { Task } from '@dxos/types';
 
-import { meta } from '#meta';
 import { Feature } from '#types';
 
 import { FeatureCard, SubfeatureEditor, getDependents } from '../../components/FeatureCard/index.ts';
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
 import { useFeatureEditing, useFeatureGraph, useOpenFeatureTarget } from '../../hooks/index.ts';
+import { ProjectsNamespace } from '../../namespace.ts';
 
 // The editable fields, picked from the schema on the AST as ProjectArticle does: `Type.getSchema` erases to
 // `Codec`, so the field types are re-attached here.
@@ -50,7 +50,7 @@ export type FeatureArticleProps = AppSurface.ObjectArticleProps<Feature.Feature>
  * features, tasks and showcases open beside it.
  */
 export const FeatureArticle = ({ role, subject, attendableId }: FeatureArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const [snapshot, updateFeature] = useObject(subject);
   const db = Obj.getDatabase(subject);
   const graph = useFeatureGraph(db, [subject.id], { neighbours: true });

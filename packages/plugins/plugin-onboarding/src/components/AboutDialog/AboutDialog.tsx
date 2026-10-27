@@ -14,7 +14,7 @@ import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Theme from '@dxos/react-ui/Theme';
 import * as Typography from '@dxos/react-ui/Typography';
 
-import { meta } from '../../meta.ts';
+import { meta } from '#meta';
 
 // Keyed by edge host, including legacy names still present in stored configs and installed builds.
 const ENV_LABELS: Record<string, string> = {

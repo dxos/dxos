@@ -18,8 +18,9 @@ import { Tagging } from '@dxos/schema';
 import { type Message } from '@dxos/types';
 
 import { type EditMessageProps } from '#components';
-import { meta } from '#meta';
 import { InboxCapabilities, Mailbox, SystemTags } from '#types';
+
+import { InboxNamespace } from '../namespace.ts';
 
 /**
  * The send callback for the composer: routes the draft to its mailbox's provider, records the provider
@@ -89,8 +90,8 @@ export const useSendEmail = (
           const invokeOptions = {
             spaceId,
             notify: {
-              success: ['send-email-success.title', { ns: meta.profile.key }],
-              error: ['send-email-error.title', { ns: meta.profile.key }],
+              success: ['send-email-success.title', { ns: InboxNamespace.key }],
+              error: ['send-email-error.title', { ns: InboxNamespace.key }],
             },
           } satisfies Operation.InvokeOptions;
           return yield* Operation.invoke(sendOperation.getOperation(), { message: draft, connection }, invokeOptions);

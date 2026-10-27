@@ -12,9 +12,9 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 
 import { type DiscordPresence } from '#hooks';
-import { meta } from '#meta';
 import { SupportOperation } from '#types';
 
+import { SupportNamespace } from '../../namespace.ts';
 import { AreaSelectField } from './AreaSelectField.tsx';
 import type { FeedbackPluginOption } from './types.ts';
 
@@ -124,7 +124,7 @@ export type FeedbackFormDownloadLogsProps = {
 };
 
 const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SupportNamespace.key);
   const handleClick = useCallback(async () => {
     try {
       await onDownloadLogs?.();
@@ -160,7 +160,7 @@ export type FeedbackFormSubmitProps = {
 };
 
 const FeedbackFormSubmit = ({ disabled }: FeedbackFormSubmitProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SupportNamespace.key);
   const { pending } = useFeedbackFormContext(`${FEEDBACK_FORM}.Submit`);
 
   return (
@@ -187,7 +187,7 @@ export type FeedbackFormDiscordPresenceProps = {
 };
 
 const FeedbackFormDiscordPresence = ({ discordPresence }: FeedbackFormDiscordPresenceProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SupportNamespace.key);
 
   if (!discordPresence) {
     return null;

@@ -14,8 +14,9 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
 import { BookingSearch } from '#types';
+
+import { TripNamespace } from '../../namespace.ts';
 
 export type OfferSelectHandler = (offer: BookingSearch.FlightOffer) => void;
 
@@ -35,7 +36,7 @@ type OfferTileProps = Pick<MosaicTileProps<OfferTileData>, 'data' | 'location' |
 const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, current }, forwardedRef) => {
   const { offer, onSelect } = data;
   const { setCurrentId } = useMosaicContainer('OfferTile');
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(TripNamespace.key);
 
   const handleCurrentChange = useCallback(() => {
     setCurrentId(offer.id);

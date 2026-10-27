@@ -7,9 +7,8 @@ import React from 'react';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
 import { CLIP_DB, FLOOR_DB, TARGET_DB, toFraction } from '../../audio/level.ts';
+import { RecorderNamespace } from '../../namespace.ts';
 
 export type LevelMeterProps = {
   /** Peak of the latest block (dBFS); undefined while no input is open. */
@@ -33,7 +32,7 @@ const percent = (db: number) => `${toFraction(db) * 100}%`;
  * it; a marker holds the recent peak, and the readout warns of clipping and of a silent input.
  */
 export const LevelMeter = ({ peakDb, holdDb, rmsDb, silent, clip, compact }: LevelMeterProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(RecorderNamespace.key);
   const level = peakDb ?? FLOOR_DB;
   const clipping = !!clip || (holdDb ?? level) > CLIP_DB;
 

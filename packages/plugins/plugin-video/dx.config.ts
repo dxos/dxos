@@ -2,12 +2,19 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { VideoNamespace } from './src/namespace.ts';
+import * as VideoEvents from './src/types/VideoEvents.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.video',
+    key: VideoNamespace.key,
     name: 'Video',
     author: 'DXOS',
     description: trim`
@@ -20,4 +27,34 @@ export default Config2.make({
     spec: 'PLUGIN.mdl',
     tags: ['labs'],
   },
+  modules: [
+    AppCapability.appGraphBuilder(
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+    ),
+    AppCapability.commentConfig(() => import('./src/capabilities/comment-config.ts', { with: { type: 'dx-module' } }), {
+      activatesOn: VideoEvents.Start,
+    }),
+    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'dx-module' } })),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      {
+        activatesOn: ActivationEvents.Idle,
+      },
+    ),
+    AppCapability.pluginAsset({
+      pluginId: VideoNamespace.key,
+      path: 'PLUGIN.mdl',
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      mimeType: 'application/x-mdl',
+    }),
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+      roles: ['org.dxos.role.article', 'org.dxos.role.section', 'org.dxos.role.tabpanel'],
+    }),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

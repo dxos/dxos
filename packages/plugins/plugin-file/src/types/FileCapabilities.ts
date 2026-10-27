@@ -7,8 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '#meta';
-
+import { FileNamespace } from '../namespace.ts';
 import * as Settings from './Settings.ts';
 
 /**
@@ -30,15 +29,15 @@ export type Backend = {
 };
 
 // Multi capability: inline-backend and edge-backend each contribute one entry.
-export const Backend = Capability.make<Backend>()(`${meta.profile.key}.capability.backend`);
+export const Backend = Capability.make<Backend>()(`${FileNamespace.key}.capability.backend`);
 
 export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Settings>>()(
-  `${meta.profile.key}.capability.settings`,
+  `${FileNamespace.key}.capability.settings`,
 );
 
 export namespace FileAction {
   /** Marks a field as a file upload, so the form renders the drop zone for it. Any type is accepted. */
-  export const UploadAnnotationId = `${meta.profile.key}.annotation.upload`;
+  export const UploadAnnotationId = `${FileNamespace.key}.annotation.upload`;
 
   export const CreateFileSchema = Schema.Struct({
     file: Schema.instanceOf(File).annotate({

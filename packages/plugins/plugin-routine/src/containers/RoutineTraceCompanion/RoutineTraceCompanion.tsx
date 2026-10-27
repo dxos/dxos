@@ -15,8 +15,7 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { meta } from '#meta';
-
+import { RoutineNamespace } from '../../namespace.ts';
 import { type RoutineRun, type RunStatus } from './runs.ts';
 import { useRoutineRuns } from './useRoutineRuns.ts';
 
@@ -41,7 +40,7 @@ export type RoutineTraceCompanionProps = {
 
 /** Companion panel showing the execution trace (runs) of a Routine. */
 export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(RoutineNamespace.key);
   const db = Obj.getDatabase(subject);
   const runs = useRoutineRuns(db, subject);
 

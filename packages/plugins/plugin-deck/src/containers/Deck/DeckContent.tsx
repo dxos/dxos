@@ -11,9 +11,9 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Main from '@dxos/react-ui/Main';
 
 import { useBreakpoints } from '#hooks';
-import { meta } from '#meta';
 import { DeckSchema } from '#types';
 
+import { DeckNamespace } from '../../namespace.ts';
 import { layoutAppliesTopbar } from '../../util/index.ts';
 import { ComplementarySidebar, Sidebar } from '../Sidebar/index.ts';
 import { Banner } from './Banner.tsx';
@@ -37,7 +37,7 @@ export const DeckContent = ({ children }: DeckContentProps) => {
     updateState,
     pluginManager,
   } = useDeckContext(DECK_CONTENT_NAME);
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(DeckNamespace.key);
   // Controlled height would drop every mid-drag move, so the drag is mirrored locally until it ends.
   const [liveHeight, setLiveHeight] = useState<number>();
   const breakpoint = useBreakpoints();

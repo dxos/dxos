@@ -10,8 +10,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
-
+import { SandboxNamespace } from '../../namespace.ts';
 import type { CommitInfo } from '../../services/RepositoryClient.ts';
 
 export type RepositoryHistoryProps = {
@@ -31,7 +30,7 @@ export const RepositoryHistory = ({
   onSelect,
   onLoadMore,
 }: RepositoryHistoryProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SandboxNamespace.key);
   if (commits.length === 0) {
     return <div className='p-4 text-fg-muted'>{t('history-empty.message')}</div>;
   }

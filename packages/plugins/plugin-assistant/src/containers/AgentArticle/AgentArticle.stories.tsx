@@ -25,7 +25,7 @@ import { Text } from '@dxos/schema';
 import { TypeSpec, createObjectFactory } from '@dxos/schema/testing';
 import { Message, Organization, Outline, Person } from '@dxos/types';
 
-import { AssistantPlugin } from '#plugin';
+import * as AssistantPlugin from '#meta';
 import { translations } from '#translations';
 
 import { AgentArticle } from './AgentArticle.tsx';
@@ -105,8 +105,8 @@ const meta = {
               );
             }),
         }),
-        RoutinePlugin(),
-        AssistantPlugin(),
+        RoutinePlugin.make(),
+        AssistantPlugin.make(),
         PreviewPlugin.make(),
         StorybookPlugin.make({}),
       ],

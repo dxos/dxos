@@ -1,8 +1,7 @@
+import { useAtomValue } from '@effect/atom-react/Hooks';
 //
 // Copyright 2026 DXOS.org
 //
-
-import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
@@ -21,9 +20,9 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { type Message, SpaceInvitationMessage } from '@dxos/types';
 
-import { meta } from '#meta';
 import { Notifications } from '#types';
 
+import { MessengerNamespace } from '../../namespace.ts';
 import {
   type InvitationRenderer,
   type NotificationActionHandler,
@@ -88,7 +87,7 @@ export const NotificationsPanel = ({
   onOpen,
   inboxStatus = 'available',
 }: NotificationsPanelProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(MessengerNamespace.key);
   const [filter, setFilter] = useState<NotificationFilter>('all');
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   const now = useNow(MINUTE_MS);
@@ -135,12 +134,12 @@ export const NotificationsPanel = ({
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()
-        .root({ label: ['notifications-toolbar.menu', { ns: meta.profile.key }] })
+        .root({ label: ['notifications-toolbar.menu', { ns: MessengerNamespace.key }] })
         .subgraph((builder) =>
           builder.group(
             'filter',
             {
-              label: ['notifications-filter.menu', { ns: meta.profile.key }],
+              label: ['notifications-filter.menu', { ns: MessengerNamespace.key }],
               iconOnly: true,
               variant: 'toggleGroup',
               selectCardinality: 'single',
@@ -151,7 +150,7 @@ export const NotificationsPanel = ({
                 group.action(
                   key,
                   {
-                    label: [`filter-${key}.label`, { ns: meta.profile.key }],
+                    label: [`filter-${key}.label`, { ns: MessengerNamespace.key }],
                     icon: FILTER_ICONS[key],
                     checked: filter === key,
                   },
@@ -165,7 +164,7 @@ export const NotificationsPanel = ({
         .action(
           'mark-all-read',
           {
-            label: ['mark-all-read.label', { ns: meta.profile.key }],
+            label: ['mark-all-read.label', { ns: MessengerNamespace.key }],
             icon: 'ph--checks--regular',
             disabled: unread.length === 0,
           },

@@ -14,9 +14,9 @@ import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 
+import { meta } from '#meta';
 import { Ibkr } from '#types';
 
-import { meta } from '../../meta.ts';
 import { createDailySyncTrigger, findSyncOperation, findSyncTrigger } from '../../sync.ts';
 
 export type PortfolioPropertiesProps = AppSurface.ObjectPropertiesProps<Ibkr.Portfolio>;

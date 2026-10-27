@@ -1,8 +1,7 @@
+import * as Effect from 'effect/Effect';
 //
 // Copyright 2025 DXOS.org
 //
-
-import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import type * as Atom from 'effect/reactivity/Atom';
 
@@ -31,9 +30,9 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ArchivedAnnotation, isArchivable } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
 
-import { meta } from '#meta';
 import { SpaceCapabilities, SpaceOperation } from '#types';
 
+import { SpaceNamespace } from '../../../namespace.ts';
 import { resolveCollectionObjectPath } from '../../../util/index.ts';
 import {
   ADD_TO_COLLECTION_LABEL,
@@ -101,7 +100,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
           AppNode.makeGroup({
             id: GraphPath.GroupSegments.content,
             type: GraphPath.GroupTypes.content,
-            label: ['nav-tree-group-content.label', { ns: meta.profile.key }],
+            label: ['nav-tree-group-content.label', { ns: SpaceNamespace.key }],
             icon: 'ph--files--regular',
             space,
             position: 200,
@@ -132,7 +131,7 @@ export const createCollectionExtensions = Effect.fnUntraced(function* ({
             type: COLLECTIONS_SECTION_TYPE,
             data: null,
             properties: {
-              label: ['collections-section.label', { ns: meta.profile.key }],
+              label: ['collections-section.label', { ns: SpaceNamespace.key }],
               icon: 'ph--folder--regular',
               iconHue: 'indigo',
               role: 'branch',

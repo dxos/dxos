@@ -15,8 +15,9 @@ import * as Dialog from '@dxos/react-ui/Dialog';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
-import { meta } from '#meta';
 import { ConnectorCoordination, ConnectorSpec } from '#types';
+
+import { ConnectorNamespace } from '../../namespace.ts';
 
 export type CustomTokenDialogProps = {
   db: Database.Database;
@@ -45,7 +46,7 @@ export const CustomTokenDialog = ({
   connectorLabel,
   existingTarget,
 }: CustomTokenDialogProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(ConnectorNamespace.key);
   const { invoke } = Hooks.useOperationInvoker();
   const coordinator = Hooks.useCapability(ConnectorCoordination.ConnectorCoordinator);
   const connectors = Hooks.useCapabilities(ConnectorSpec.Connector).flat();

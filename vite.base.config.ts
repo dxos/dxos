@@ -637,7 +637,7 @@ const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
       // `node:events` etc. directly). Without this vite externalises them and browser
       // tests fail with "Module has been externalized for browser compatibility".
       nodeStdResolvePlugin(),
-      ...(Object.keys(dxConfigEntries(dirname)).length > 0 ? [dxModuleAttributePlugin(dirname)] : []),
+      dxModuleAttributePlugin(),
       storybookTest({
         configDir: path.join(dirname, '.storybook'),
         // The --ci flag will skip prompts and not open a browser.
@@ -1130,9 +1130,8 @@ const buildTestConfig = (
     ? createStorybookProject(dirname, typeof storybook === 'boolean' ? undefined : storybook)
     : undefined;
   // Vitest projects do not inherit the root plugins, and the browser loads `dx.config.ts` as authored.
-  const dxConfigPlugins = Object.keys(dxConfigEntries(dirname)).length > 0 ? [dxModuleAttributePlugin(dirname)] : [];
   const browserProjects = normalizeBrowserOptions(browser).map((b) =>
-    createBrowserProject({ jsx: outerJsx, ...b, plugins: [...(b.plugins ?? []), ...dxConfigPlugins] }),
+    createBrowserProject({ jsx: outerJsx, ...b, plugins: [...(b.plugins ?? []), dxModuleAttributePlugin()] }),
   );
   const workerdProject = workerd ? createWorkerdProject(typeof workerd === 'boolean' ? undefined : workerd) : undefined;
 
@@ -1228,29 +1227,33 @@ const dxConfigEntries = (cwd: string): Record<string, string> => {
   return entries;
 };
 
-/** The package's own `@dxos/app-framework/vite-plugin`, which the repo root cannot resolve. */
-const loadAppFrameworkVitePlugin = async (cwd: string) => {
-  const pkgPath = join(cwd, 'node_modules/@dxos/app-framework/package.json');
-  const target = existsSync(pkgPath)
-    ? JSON.parse(readFileSync(pkgPath, 'utf8')).exports?.['./vite-plugin']?.import
-    : undefined;
-  if (typeof target !== 'string') {
-    throw new Error(`A Plugin.config package needs @dxos/app-framework built to build ${cwd}.`);
-  }
-  return import(pathToFileURL(join(path.dirname(pkgPath), target)).href);
+/** The workspace's `@dxos/app-framework/vite-plugin` (built), or `undefined` before its first build. */
+const APP_FRAMEWORK_DIR = join(workspaceRoot, 'packages/sdk/app-framework');
+const loadAppFrameworkVitePlugin = async () => {
+  const target = JSON.parse(readFileSync(join(APP_FRAMEWORK_DIR, 'package.json'), 'utf8')).exports?.['./vite-plugin']
+    ?.import;
+  const file = typeof target === 'string' ? join(APP_FRAMEWORK_DIR, target) : undefined;
+  return file && existsSync(file) ? import(pathToFileURL(file).href) : undefined;
 };
 
-/** Strips the module-body import attribute from `dx.config.ts`, which browsers reject. */
-const dxModuleAttributePlugin = async (cwd: string): Promise<Plugin> =>
-  (await loadAppFrameworkVitePlugin(cwd)).moduleBodyAttributePlugin();
+/**
+ * Strips the module-body import attribute from `dx.config.ts`, which browsers reject. Added to every
+ * browser-hosted test project, since any of them may load a plugin's config as authored; a no-op
+ * before app-framework is first built (nothing a build that early can host loads a config).
+ */
+const dxModuleAttributePlugin = async (): Promise<Plugin | undefined> =>
+  (await loadAppFrameworkVitePlugin())?.moduleBodyAttributePlugin();
 
 /**
  * `pluginConfigPlugin` (build only, so tests keep importing the authored config) and
  * {@link dxModuleAttributePlugin}.
  */
 const dxConfigPlugin = async (cwd: string): Promise<Plugin[]> => {
-  const { moduleBodyAttributePlugin, pluginConfigPlugin } = await loadAppFrameworkVitePlugin(cwd);
-  return [pluginConfigPlugin({ apply: 'build' }), moduleBodyAttributePlugin()];
+  const vitePlugin = await loadAppFrameworkVitePlugin();
+  if (!vitePlugin) {
+    throw new Error(`A Plugin.config package needs @dxos/app-framework built to build ${cwd}.`);
+  }
+  return [vitePlugin.pluginConfigPlugin({ apply: 'build' }), vitePlugin.moduleBodyAttributePlugin()];
 };
 
 /**

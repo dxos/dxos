@@ -11,9 +11,8 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppNodeMatcher from '@dxos/app-toolkit/AppNodeMatcher';
 import * as Agent from '@dxos/assistant/Agent';
 
-import { meta } from '#meta';
-
 import { DISCORD_AGENT_COMPANION } from '../constants.ts';
+import { DiscordNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -27,7 +26,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               variant: DISCORD_AGENT_COMPANION,
-              label: ['discord-companion.label', { ns: meta.profile.key }],
+              label: ['discord-companion.label', { ns: DiscordNamespace.key }],
               icon: 'ph--discord-logo--regular',
               data: DISCORD_AGENT_COMPANION,
             }),

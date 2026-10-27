@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation } from '@dxos/echo';
 
-import { meta } from '../meta.ts';
+import { meta } from '#meta';
 
 const EdgarConceptSourceSchema = Schema.Struct({
   concepts: Schema.Array(Schema.String),

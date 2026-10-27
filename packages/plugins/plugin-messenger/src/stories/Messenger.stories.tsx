@@ -46,7 +46,7 @@ import { Message, Organization } from '@dxos/types';
 import { NotificationsPanel } from '#components';
 import { loadLink, makeSender, startInboxMaterializer } from '#materializer';
 import { MESSENGER_COMPANION } from '#meta';
-import { MessengerPlugin } from '#plugin';
+import * as MessengerPlugin from '#meta';
 import { translations } from '#translations';
 import { MessengerCapabilities, Notifications } from '#types';
 
@@ -276,7 +276,7 @@ const ClientPlugins = ({ index, children }: PropsWithChildren<{ index: number }>
   <ClientPluginManager
     id={`messenger-client-${index}`}
     clientOptions={{ onClientInitialized: setupProfile }}
-    plugins={() => [...CorePlugins.make(), SpacePlugin({}), StorybookPlugin.make({}), MessengerPlugin()]}
+    plugins={() => [...CorePlugins.make(), SpacePlugin.make({}), StorybookPlugin.make({}), MessengerPlugin.make()]}
   >
     {children}
   </ClientPluginManager>

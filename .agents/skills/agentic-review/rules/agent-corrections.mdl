@@ -673,24 +673,27 @@ rule telemetry-raw-and-opt-in: Telemetry sends raw measurements, keys come from 
 ## Plugins
 
 ```mdl
-rule workerd-variant-imports-conditioned-barrel: A plugin's workerd variant imports #capabilities through a workerd condition, never individual capability modules
-  Reaching past the barrel for one capability or handler module to dodge
+rule workerd-variant-imports-conditioned-barrel: A plugin's workerd build is the `dx.config.ts` modules scoped by `environments` plus a workerd-conditioned `#operations`, never a hand-picked capability module
+  Reaching past the config for one capability or handler module to dodge
   React works for one plugin and leaves the rest leaking UI into the worker.
-  Flag a `plugin.workerd.ts` (or other headless variant) importing
-  `../capabilities/<file>` directly; a `#capabilities` / `#operations`
-  imports entry with `node` but no `workerd` key in a plugin that ships a
-  workerd variant; a workerd-registered operation handler importing
-  `@dxos/react-ui*`; a separate build target added only to swap one module
-  per runtime. Do not flag plugins with no workerd variant. Fix: add a
-  headless `capabilities/workerd.ts` barrel behind a `workerd` condition, use
-  `imports` conditions to swap implementations, and exclude a UI-bound
+  Flag a `dx.config.ts` module that is headless-capable but lists no
+  `environments`, or a UI module (surface, react context) whose `environments`
+  names `workerd` or `node`; a module body or `dx.config.ts` importing
+  `./operations` or `../operations/<file>` instead of `#operations`; a
+  `#operations` imports entry with `node` but no `workerd` key in a plugin whose
+  `./<X>Plugin` export has a `workerd` condition; a workerd-registered operation
+  handler importing `@dxos/react-ui*`; a hand-written `*.workerd.ts` plugin file
+  or a separate build target added only to swap one module per runtime. Do not
+  flag plugins with no `workerd` condition. Fix: list `environments` on each
+  module (headless modules include `workerd`, UI modules `['browser', 'tauri']`),
+  use `imports` conditions to swap implementations, and exclude a UI-bound
   handler from the workerd handler set only when it cannot be made headless.
   Source: 5 corrections, e.g. "the proper fix is adding a workerd condition to capabilities rather than reaching your hand into capabilities and grabbing the operation handler."
   scope: repo
   files:
-    - packages/plugins/*/src/**/*.workerd.ts
+    - packages/plugins/*/dx.config.ts
     - packages/plugins/*/package.json
-  grep: capabilities|workerd
+  grep: environments|workerd|operations
   unit: file
   severity: warn
 ```

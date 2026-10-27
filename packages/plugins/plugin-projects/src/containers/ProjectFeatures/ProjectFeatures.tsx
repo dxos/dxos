@@ -16,13 +16,13 @@ import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { EMPTY_FEATURE_FILTER, FeatureBoard, FeatureBoardFilter, type FeatureFilter, FeatureKanban } from '#components';
-import { meta } from '#meta';
 import { Feature, FeatureMapView } from '#types';
 
 // Not in the components barrel: the canvas engine is large, and the barrel is also loaded by capabilities at boot.
 import { FeatureCanvas } from '../../components/FeatureCanvas/index.ts';
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
 import { useFeatureEditing, useFeatureGraph, useOpenFeatureTarget } from '../../hooks/index.ts';
+import { ProjectsNamespace } from '../../namespace.ts';
 
 export type ProjectFeaturesProps = {
   project: Project.Project;
@@ -39,7 +39,7 @@ const MODES: { mode: FeatureMapView.Mode; icon: string }[] = [
 
 /** A project's Features tab: the features that belong to it, as cards (the default), on a canvas, or by status. */
 export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { mode } = useViewState(FeatureMapView.aspect, project.id);
   const { update: updateView } = useViewStateActions(FeatureMapView.aspect, project.id);
   const db = Obj.getDatabase(project);
@@ -68,7 +68,7 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
       .group(
         'mode',
         {
-          label: ['feature-map.mode.label', { ns: meta.profile.key }],
+          label: ['feature-map.mode.label', { ns: ProjectsNamespace.key }],
           variant: 'toggleGroup',
           selectCardinality: 'single',
           value: mode,
@@ -78,7 +78,7 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
             group.action(
               mode,
               {
-                label: [`feature-map.mode.${mode}.label`, { ns: meta.profile.key }],
+                label: [`feature-map.mode.${mode}.label`, { ns: ProjectsNamespace.key }],
                 icon,
                 testId: `projectsPlugin.featureMap.${mode}`,
               },
@@ -90,7 +90,7 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
       .action(
         'new-feature',
         {
-          label: ['feature-map.new-feature.label', { ns: meta.profile.key }],
+          label: ['feature-map.new-feature.label', { ns: ProjectsNamespace.key }],
           icon: 'ph--plus--regular',
           testId: 'feature-map.new-feature',
         },
@@ -100,7 +100,7 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
         'add-feature',
         {
           variant: 'custom',
-          label: ['feature-map.add-feature.label', { ns: meta.profile.key }],
+          label: ['feature-map.add-feature.label', { ns: ProjectsNamespace.key }],
           render: () => (
             <ObjectAddPicker
               db={db}

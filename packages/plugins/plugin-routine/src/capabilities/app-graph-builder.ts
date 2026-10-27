@@ -19,8 +19,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
-
+import { RoutineNamespace } from '../namespace.ts';
 import { ROUTINES_SETTINGS_ID, getRoutinesPath } from '../paths.ts';
 
 /** The routines panel in each space's settings section. */
@@ -33,8 +32,8 @@ export const createRoutinesSettingsExtension = () =>
       return Effect.succeed([
         AppNode.makeSettingsPanel({
           id: ROUTINES_SETTINGS_ID,
-          type: `${meta.profile.key}.space-settings-automation`,
-          label: ['automation-panel.label', { ns: meta.profile.key }],
+          type: `${RoutineNamespace.key}.space-settings-automation`,
+          label: ['automation-panel.label', { ns: RoutineNamespace.key }],
           icon: 'ph--lightning--regular',
           iconHue: 'emerald',
           position: Position.last,
@@ -66,7 +65,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               variant: 'runs',
-              label: ['routine-runs.label', { ns: meta.profile.key }],
+              label: ['routine-runs.label', { ns: RoutineNamespace.key }],
               icon: 'ph--clock-countdown--regular',
               data: 'runs',
             }),

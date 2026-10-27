@@ -8,8 +8,9 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as KvsStore from '@dxos/effect/KvsStore';
 
-import { meta } from '#meta';
 import { BrainCapabilities, BrainSettings } from '#types';
+
+import { BrainNamespace } from '../namespace.ts';
 
 /**
  * Shared KVS-backed atom for the fact-analysis settings (model/provider/strict). Created at module
@@ -17,7 +18,7 @@ import { BrainCapabilities, BrainSettings } from '#types';
  * without a cross-capability lookup or activation ordering.
  */
 export const settingsAtom = KvsStore.make({
-  key: meta.profile.key,
+  key: BrainNamespace.key,
   schema: BrainSettings.Settings,
   defaultValue: (): BrainSettings.Settings => ({}),
 });
@@ -27,7 +28,7 @@ export default Capability.makeModule(() =>
   Effect.succeed([
     Capability.contribute(BrainCapabilities.Settings, settingsAtom),
     Capability.contribute(AppCapabilities.Settings, {
-      prefix: meta.profile.key,
+      prefix: BrainNamespace.key,
       schema: BrainSettings.Settings,
       atom: settingsAtom,
     }),

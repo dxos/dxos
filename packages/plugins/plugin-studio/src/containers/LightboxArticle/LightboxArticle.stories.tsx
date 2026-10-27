@@ -18,7 +18,7 @@ import { useSpaces } from '@dxos/react-client/echo';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
-import { StudioPlugin } from '#plugin';
+import * as StudioPlugin from '#meta';
 import { translations } from '#translations';
 import { Lightbox, MediaArtifact, Variant } from '#types';
 
@@ -86,7 +86,7 @@ const meta = {
               });
             }),
         }),
-        StudioPlugin(),
+        StudioPlugin.make(),
         StubProjectsPlugin(),
         StorybookPlugin.make({}),
         PreviewPlugin.make(),

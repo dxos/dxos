@@ -8,8 +8,9 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import { type PullRequest } from '@dxos/types';
 
-import { meta } from '#meta';
 import { type GitHubOperation } from '#types';
+
+import { GitHubNamespace } from '../../namespace.ts';
 
 const stateHue: Record<PullRequest.State, string> = {
   open: 'green',
@@ -42,7 +43,7 @@ export type PullRequestStatusProps = {
 
 /** One line answering where the pull request stands: open or merged, approved or not, CI green or red. */
 export const PullRequestStatus = ({ reference, title, state, review, ci }: PullRequestStatusProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(GitHubNamespace.key);
   return (
     <Layout.Flex
       align='center'

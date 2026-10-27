@@ -117,8 +117,8 @@ export const createDecorators = ({ mailboxName, messages, ai, plugins = [], type
       await space.db.flush({ indexes: true });
     },
     plugins: [
-      SpacePlugin({}),
-      InboxPlugin(),
+      SpacePlugin.make({}),
+      InboxPlugin.make(),
       ProjectsPlugin.make(),
       // Both declared in Projects' `dependsOn`, so the manager refuses to resolve it without them.
       AssistantPlugin.make(),

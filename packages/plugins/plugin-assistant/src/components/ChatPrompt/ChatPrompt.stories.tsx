@@ -25,7 +25,7 @@ import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Message, Task } from '@dxos/types';
 
 import { useChatModel, useChatServices, usePresets } from '#hooks';
-import { AssistantPlugin } from '#plugin';
+import * as AssistantPlugin from '#meta';
 import { translations } from '#translations';
 import { AssistantCapabilities } from '#types';
 
@@ -126,7 +126,7 @@ const meta = {
               yield* Effect.promise(() => space.db.flush({ indexes: true }));
             }),
         }),
-        AssistantPlugin({}),
+        AssistantPlugin.make({}),
         StorybookPlugin.make({}),
       ],
       capabilities,

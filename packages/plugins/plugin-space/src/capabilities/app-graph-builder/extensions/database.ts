@@ -1,8 +1,7 @@
+import * as Effect from 'effect/Effect';
 //
 // Copyright 2025 DXOS.org
 //
-
-import * as Effect from 'effect/Effect';
 import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 import type * as Atom from 'effect/reactivity/Atom';
@@ -29,9 +28,9 @@ import { isLabel, toLocalizedString } from '@dxos/ui-types/translations';
 import { createFilename, downloadBlob, isNonNullable } from '@dxos/util';
 
 import { SPACE_STATS_QUERY, typeUrisWithObjects } from '#dashboard';
-import { meta } from '#meta';
 import { SpaceCapabilities, SpaceEvents, SpaceOperation } from '#types';
 
+import { SpaceNamespace } from '../../../namespace.ts';
 import { SpaceOperationError } from '../../../operations/errors.ts';
 import { makeCreateObjectEntryForDatabaseType } from '../../../util/index.ts';
 import {
@@ -66,7 +65,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
           AppNode.makeGroup({
             id: GraphPath.GroupSegments.system,
             type: GraphPath.GroupTypes.system,
-            label: ['nav-tree-group-system.label', { ns: meta.profile.key }],
+            label: ['nav-tree-group-system.label', { ns: SpaceNamespace.key }],
             icon: 'ph--gear--regular',
             space,
             position: 900,
@@ -83,7 +82,7 @@ export const createDatabaseExtensions = Effect.fnUntraced(function* () {
           AppNode.makeSection({
             id: GraphPath.Segments.database,
             type: DATABASE_SECTION_TYPE,
-            label: ['database-section.label', { ns: meta.profile.key }],
+            label: ['database-section.label', { ns: SpaceNamespace.key }],
             icon: 'ph--database--regular',
             space,
             testId: 'spacePlugin.databaseSection',
@@ -417,7 +416,7 @@ const createSchemaActions = ({
               // database types have no such namespace, so fall back to the plugin's generic label.
               label: AppNode.getDynamicLabel(
                 'add-object.label',
-                Type.getDatabase(type) != null ? meta.profile.key : typename,
+                Type.getDatabase(type) != null ? SpaceNamespace.key : typename,
               ),
               icon: 'ph--plus--regular',
               disposition: 'list-item-primary',

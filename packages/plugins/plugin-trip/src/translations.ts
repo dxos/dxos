@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Booking, Trip } from '#types';
+
+import { TripNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -33,7 +34,7 @@ export const translations = [
         'delete-object.label': 'Delete booking',
         'object-deleted.label': 'Booking deleted',
       },
-      [meta.profile.key]: {
+      [TripNamespace.key]: {
         'plugin.name': 'Trip',
         'trip.new.label': 'New trip',
         'trip.merge.label': 'Merge into nearest trip',

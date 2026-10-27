@@ -14,9 +14,9 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Status from '@dxos/react-ui/Status';
 import * as Typography from '@dxos/react-ui/Typography';
 
-import { meta } from '#meta';
 import { type GitHubOperation } from '#types';
 
+import { GitHubNamespace } from '../../namespace.ts';
 import { parseArtifactLink, parsePullRequestBody } from '../../pull-request-body.ts';
 import { ArtifactPill } from './ArtifactPill.tsx';
 import { CheckRunList, useCheckSummary } from './CheckRunList.tsx';
@@ -36,7 +36,7 @@ export type PullRequestOverviewProps = {
  * beyond the diff, and every check on its head commit.
  */
 export const PullRequestOverview = ({ body, details, runs }: PullRequestOverviewProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(GitHubNamespace.key);
   const parsed = useMemo(() => parsePullRequestBody(body), [body]);
   const components = useBodyComponents();
   const related = useRelatedItems(parsed);

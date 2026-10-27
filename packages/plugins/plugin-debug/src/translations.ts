@@ -5,14 +5,14 @@
 import { translations as logPanelTranslations } from '@dxos/react-ui-debug/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { DebugNamespace } from './namespace.ts';
 
 export const translations = [
   // The R0 log companion and status popover render `@dxos/react-ui-debug`, so its namespace must be registered.
   ...logPanelTranslations,
   {
     'en-US': {
-      [meta.profile.key]: {
+      [DebugNamespace.key]: {
         'plugin.name': 'Debug',
         'debug.label': 'Debug',
         'generate-objects.label': 'Generate Objects',

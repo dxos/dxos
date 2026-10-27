@@ -5,13 +5,13 @@
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { PaymentsNamespace } from './namespace.ts';
 
 export const translations = [
   ...formTranslations,
   {
     'en-US': {
-      [meta.profile.key]: {
+      [PaymentsNamespace.key]: {
         'plugin.name': 'Payments',
         'payments-url.label': 'Payments service URL',
         'payments-url.placeholder': 'https://payments.dxos.network',

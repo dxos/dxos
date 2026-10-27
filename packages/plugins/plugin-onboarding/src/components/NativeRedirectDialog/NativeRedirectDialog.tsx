@@ -8,7 +8,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '../../meta.ts';
+import { meta } from '#meta';
 
 /**
  * Shown after the native app has been successfully opened via custom scheme.

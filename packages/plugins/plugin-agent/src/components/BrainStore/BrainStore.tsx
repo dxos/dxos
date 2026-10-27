@@ -14,9 +14,8 @@ import * as Tabs from '@dxos/react-ui/Tabs';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Typography from '@dxos/react-ui/Typography';
 
-import { meta } from '#meta';
-
 import type * as BrainInspection from '../../brain/BrainInspection.ts';
+import { AgentNamespace } from '../../namespace.ts';
 
 const VIEWS = ['facts', 'rules', 'encoding', 'outbox'] as const;
 
@@ -38,7 +37,7 @@ type BrainStoreProps = {
  * Datalog relations those rules match, and the outboxes.
  */
 const BrainStore = ({ role, inspection, error, defaultView = 'facts' }: BrainStoreProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AgentNamespace.key);
   const [view, setView] = useState<BrainStoreView>(defaultView);
   return (
     <Tabs.Root asChild orientation='horizontal' value={view} onValueChange={(value) => isView(value) && setView(value)}>
@@ -82,7 +81,7 @@ BrainStore.displayName = 'BrainStore';
 //
 
 const Facts = ({ facts }: { facts: readonly BrainInspection.Fact[] }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AgentNamespace.key);
   if (facts.length === 0) {
     return <Empty>{t('brain-debug-facts-empty.message')}</Empty>;
   }
@@ -106,7 +105,7 @@ const Facts = ({ facts }: { facts: readonly BrainInspection.Fact[] }) => {
 };
 
 const Rules = ({ subscriptions }: { subscriptions: readonly BrainInspection.Subscription[] }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AgentNamespace.key);
   if (subscriptions.length === 0) {
     return <Empty>{t('brain-debug-rules-empty.message')}</Empty>;
   }
@@ -150,7 +149,7 @@ const Rules = ({ subscriptions }: { subscriptions: readonly BrainInspection.Subs
 };
 
 const Encoding = ({ encoding }: { encoding: readonly BrainInspection.EncodedFact[] }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AgentNamespace.key);
   if (encoding.length === 0) {
     return <Empty>{t('brain-debug-encoding-empty.message')}</Empty>;
   }
@@ -166,7 +165,7 @@ const Outbox = ({
   subscriptions: readonly BrainInspection.Subscription[];
   stats: BrainInspection.Stats;
 }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(AgentNamespace.key);
   const none = t('brain-debug-none.label');
   return (
     <Layout.Flex column gap='md'>

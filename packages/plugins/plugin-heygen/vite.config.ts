@@ -8,10 +8,6 @@ export default defineConfig({
   entry: {
     'ns/HeyGenEvents': 'src/HeyGenEvents.ts',
     'index': 'src/index.ts',
-    'HeyGenPlugin': 'src/HeyGenPlugin.ts',
-    'plugin': 'src/plugin.tsx',
-    'capabilities': 'src/capabilities/index.ts',
-    'meta': 'src/meta.ts',
     'services': 'src/services/index.ts',
   },
   jsx: 'react',

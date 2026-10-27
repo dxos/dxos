@@ -25,7 +25,7 @@ import { withMosaic } from '@dxos/react-ui-mosaic/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Channel, Message, Thread } from '@dxos/types';
 
-import { ThreadPlugin } from '#plugin';
+import * as ThreadPlugin from '#meta';
 import { translations } from '#translations';
 
 import { ChannelArticle, type ChannelArticleProps } from './ChannelArticle.tsx';
@@ -114,8 +114,8 @@ const meta = {
               yield* Feed.append(feed, messages).pipe(Effect.provide(Database.layer(defaultSpace.db)));
             }),
         }),
-        SpacePlugin({}),
-        ThreadPlugin(),
+        SpacePlugin.make({}),
+        ThreadPlugin.make(),
         CallsPlugin.make(),
       ],
     }),

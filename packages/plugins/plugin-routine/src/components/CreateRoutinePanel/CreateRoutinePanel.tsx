@@ -17,9 +17,9 @@ import { Form } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
 import { RoutineCapabilities, RoutineEvents } from '#types';
 
+import { RoutineNamespace } from '../../namespace.ts';
 import { RoutineForm } from '../RoutineForm/index.ts';
 
 export type CreateRoutinePanelProps = SpaceCapabilities.CreateObjectCustomPanelProps & {
@@ -55,7 +55,7 @@ export const CreateRoutinePanel = ({
   onCancel,
   templates: templatesProp,
 }: CreateRoutinePanelProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(RoutineNamespace.key);
   Hooks.useActivationSignal(RoutineEvents.Start);
   const capabilityTemplates = Hooks.useCapabilities(RoutineCapabilities.Template);
   const { invokePromise } = Hooks.useOperationInvoker();
@@ -94,9 +94,9 @@ export const CreateRoutinePanel = ({
       } catch (error) {
         log.catch(error);
         void invokePromise?.(LayoutOperation.AddToast, {
-          id: `${meta.profile.key}.scaffold-failed`,
+          id: `${RoutineNamespace.key}.scaffold-failed`,
           icon: 'ph--warning--regular',
-          title: ['create-panel.scaffold-error.label', { ns: meta.profile.key }],
+          title: ['create-panel.scaffold-error.label', { ns: RoutineNamespace.key }],
         });
       }
     },

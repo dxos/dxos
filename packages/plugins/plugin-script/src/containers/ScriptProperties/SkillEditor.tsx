@@ -18,12 +18,12 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 import { kebabize } from '@dxos/util';
 
-import { meta } from '#meta';
+import { ScriptNamespace } from '../../namespace.ts';
 
 export type SkillEditorProps = { object: Script.Script };
 
 export const SkillEditor = ({ object }: SkillEditorProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ScriptNamespace.key);
   const db = Obj.getDatabase(object);
   const [fn] = useQuery(db, Filter.type(Operation.PersistentOperation, { source: Ref.make(object) }));
   const skills = useQuery(db, Filter.type(Skill.Skill));

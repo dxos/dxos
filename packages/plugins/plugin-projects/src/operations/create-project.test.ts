@@ -21,7 +21,7 @@ import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as TestingHarness from '@dxos/plugin-testing/Harness';
 
-import { ProjectsPlugin } from '#plugin';
+import * as ProjectsPlugin from '#meta';
 import { FeatureMapView, ProjectCapabilities, ProjectOperation } from '#types';
 
 import { featureSpec } from '../templates/feature-spec.ts';
@@ -33,7 +33,7 @@ await TestingHarness.preload({
     AttentionPlugin.make(),
     AssistantPlugin.make(),
     TasksPlugin.make(),
-    ProjectsPlugin(),
+    ProjectsPlugin.make(),
   ],
 });
 
@@ -146,7 +146,7 @@ const setup = async (): Promise<Harness> => {
       AttentionPlugin.make(),
       AssistantPlugin.make(),
       TasksPlugin.make(),
-      ProjectsPlugin(),
+      ProjectsPlugin.make(),
     ],
   });
   const client = harness.get(ClientCapabilities.Client);

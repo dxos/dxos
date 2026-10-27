@@ -19,7 +19,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Select from '@dxos/react-ui/Select';
 import { type Actor, type Event as EventType, Person } from '@dxos/types';
 
-import { meta } from '#meta';
+import { InboxNamespace } from '../../namespace.ts';
 
 export type EventEditorProps = {
   event: EventType.Event;
@@ -33,7 +33,7 @@ export type EventEditorProps = {
  * controlled inputs; mutations go through its update callback.
  */
 export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(InboxNamespace.key);
   const [data, update] = useObject(event);
 
   const allDay = !!data.allDay;
@@ -291,7 +291,7 @@ type SelectDurationProps = {
 
 /** Duration preset picker. Empty string keeps the control controlled so it clears to the placeholder. */
 const SelectDuration = ({ value, onValueChange }: SelectDurationProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(InboxNamespace.key);
   return (
     <Select.Root
       value={[value ?? '']}

@@ -15,9 +15,9 @@ import * as Panel from '@dxos/react-ui/Panel';
 import { Channel } from '@dxos/types';
 
 import { EmailChannelCreate } from '#components';
-import { meta } from '#meta';
 import { AgentEmail, AgentOperation } from '#types';
 
+import { AgentNamespace } from '../../namespace.ts';
 import { EmailChannelProperties } from '../EmailChannelProperties/EmailChannelProperties.tsx';
 import { useAgentChannelList } from '../useAgentConversations.ts';
 
@@ -29,7 +29,7 @@ export type AgentEmailSetupProps = {
 
 /** The agent's Email companion: give it an address, then edit the address and connect its mailbox. */
 export const AgentEmailSetup = ({ role, agent, attendableId }: AgentEmailSetupProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AgentNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(agent);
   const [name] = useObject(agent, 'name');

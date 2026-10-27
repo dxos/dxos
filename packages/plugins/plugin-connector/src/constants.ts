@@ -5,13 +5,13 @@
 import { DXN } from '@dxos/keys';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 
-import { meta } from '#meta';
+import { ConnectorNamespace } from './namespace.ts';
 
 /** Surface id for the sync-targets dialog. */
-export const SYNC_TARGETS_DIALOG = DXN.make(`${meta.profile.key}.syncTargetsDialog`);
+export const SYNC_TARGETS_DIALOG = DXN.make(`${ConnectorNamespace.key}.syncTargetsDialog`);
 
 /** Surface id for the per-provider credential-form dialog (custom tokens, OAuth pre-flight inputs). */
-export const PROVIDER_FORM_DIALOG = DXN.make(`${meta.profile.key}.providerFormDialog`);
+export const PROVIDER_FORM_DIALOG = DXN.make(`${ConnectorNamespace.key}.providerFormDialog`);
 
 /** Provider id for manually entered access tokens. */
 export const CUSTOM_PROVIDER_ID = 'custom';

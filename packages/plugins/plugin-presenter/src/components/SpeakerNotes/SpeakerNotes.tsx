@@ -9,7 +9,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
+import { PresenterNamespace } from '../../namespace.ts';
 
 /** `m:ss`, for a slide's elapsed and desired length. */
 export const formatDuration = (seconds: number): string => {
@@ -74,7 +74,7 @@ export type PrompterProps = {
  * against its desired length, and the next slide's notes below.
  */
 const Prompter = ({ title, lines, next, index, count, elapsed, duration }: PrompterProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(PresenterNamespace.key);
   // Compared as shown (whole seconds), so the time never reads 0:15 / 0:15 and flagged.
   const over = duration !== undefined && Math.round(elapsed) > Math.round(duration);
 

@@ -2,12 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
+import * as InboxEvents from '@dxos/plugin-inbox/InboxEvents';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { LabelerNamespace } from './src/namespace.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.labeler',
+    key: LabelerNamespace.key,
     name: 'Labeler',
     author: 'DXOS',
     description: trim`
@@ -20,4 +28,27 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-labeler',
     tags: ['labs'],
   },
+  modules: [
+    Capability.lazyModule(
+      'MailboxAction',
+      // Rides the inbox feature it contributes to: the button is unreachable until a mailbox renders.
+      { provides: [InboxCapabilities.MailboxAction], activatesOn: InboxEvents.Start },
+      () => import('./src/capabilities/mailbox-action.ts', { with: { type: 'dx-module' } }),
+    ),
+    Capability.lazyModule(
+      'MailboxProcessor',
+      { provides: [InboxCapabilities.MailboxProcessor], activatesOn: InboxEvents.Start },
+      () => import('./src/capabilities/mailbox-processor.ts', { with: { type: 'dx-module' } }),
+    ),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      {
+        activatesOn: ActivationEvents.Idle,
+      },
+    ),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

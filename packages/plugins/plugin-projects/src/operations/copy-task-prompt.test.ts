@@ -19,7 +19,7 @@ import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 import { Task } from '@dxos/types';
 
-import { ProjectsPlugin } from '#plugin';
+import * as ProjectsPlugin from '#meta';
 import { ProjectOperation } from '#types';
 
 await Harness.preload({
@@ -29,7 +29,7 @@ await Harness.preload({
     TasksPlugin.make(),
     AssistantPlugin.make(),
     RoutinePlugin.make(),
-    ProjectsPlugin(),
+    ProjectsPlugin.make(),
   ],
 });
 
@@ -137,7 +137,7 @@ const setup = async () => {
       TasksPlugin.make(),
       AssistantPlugin.make(),
       RoutinePlugin.make(),
-      ProjectsPlugin(),
+      ProjectsPlugin.make(),
     ],
   });
   const client = harness.get(ClientCapabilities.Client);

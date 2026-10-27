@@ -22,10 +22,10 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Typography from '@dxos/react-ui/Typography';
 import { Task } from '@dxos/types';
 
-import { meta } from '#meta';
 import { TaskOperation } from '#types';
 
 import { useMarkdownExtensions, useTaskActions } from '../../hooks/index.ts';
+import { TasksNamespace } from '../../namespace.ts';
 import { TaskArtifacts } from './TaskArtifacts.tsx';
 import { TaskAttachmentDropZone, TaskAttachments, useAttachFiles } from './TaskAttachments.tsx';
 
@@ -47,7 +47,7 @@ export type TaskArticleProps = AppSurface.ObjectArticleProps<Task.Task>;
  * a plugin that can store files is present.
  */
 export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attendableId }: TaskArticleProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(TasksNamespace.key);
   const spaceId = Obj.getDatabase(task)?.spaceId;
   const descriptionExtensions = useMarkdownExtensions(task);
 
@@ -200,7 +200,7 @@ TaskArticle.displayName = 'TaskArticle';
  * row's trailing gutter, where the pane's whole subject is the task and they are its actions.
  */
 const TaskActions = ({ task }: { task: Task.Task }) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(TasksNamespace.key);
   const contributed = useTaskActions();
   const actions = useMemo(() => contributed(task), [contributed, task]);
 

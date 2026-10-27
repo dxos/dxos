@@ -4,7 +4,7 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from './meta.ts';
+import { meta } from '#meta';
 
 export const translations = [
   {

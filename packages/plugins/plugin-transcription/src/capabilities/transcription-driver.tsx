@@ -17,8 +17,9 @@ import { useAudioTrack, useTranscriber } from '@dxos/react-ui-transcription';
 import { type ContentBlock } from '@dxos/types';
 import { PendingTextStreamer, cancelPendingText, editorPendingTextSink, pendingTextState } from '@dxos/ui-editor';
 
-import { meta } from '#meta';
 import { TranscriptionCapabilities } from '#types';
+
+import { TranscriptionNamespace } from '../namespace.ts';
 
 // Recorder chunk interval; the transcriber's chunk threshold is derived from the buffering setting.
 const RECORDER_INTERVAL_MS = 200;
@@ -259,7 +260,7 @@ const TranscriptionDriver = () => {
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(Capabilities.ReactContext, {
-      id: meta.profile.key,
+      id: TranscriptionNamespace.key,
       context: ({ children }) => (
         <Fragment>
           {children}

@@ -10,7 +10,7 @@ import { Form } from '@dxos/react-ui-form';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 
-import { meta } from '#meta';
+import { RoutineNamespace } from '../../namespace.ts';
 
 /**
  * Space-level routine settings. Individual routines are now first-class objects (configured in their
@@ -20,7 +20,7 @@ import { meta } from '#meta';
  * The page is reached from space settings, so the space comes from context rather than surface data.
  */
 export const RoutineSettings = () => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(RoutineNamespace.key);
   const space = ToolkitHooks.useActiveSpace();
   const [properties, changeProperties] = useObject(space?.properties);
   const enabled = !(properties?.triggersDisabled ?? false);

@@ -16,8 +16,7 @@ import * as Util from '@dxos/react-ui/Util';
 import { type ProjectionModel } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
 
-import { meta } from '#meta';
-
+import { PipelineNamespace } from '../../namespace.ts';
 import { PipelineColumn } from './PipelineColumn.tsx';
 import { PIPELINE_ROOT, PipelineRootContext, usePipeline } from './PipelineContext.tsx';
 
@@ -109,7 +108,7 @@ const PIPELINE_TOOLBAR_NAME = 'Pipeline.Toolbar';
 
 export const PipelineToolbar = Util.composable<HTMLDivElement, Toolbar.RootProps>(
   ({ children, ...props }, forwardedRef) => {
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(PipelineNamespace.key);
     const { onAddColumn } = usePipeline(PIPELINE_TOOLBAR_NAME);
 
     return (

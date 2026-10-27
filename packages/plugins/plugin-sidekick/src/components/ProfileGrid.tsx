@@ -10,8 +10,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
-
+import { SidekickNamespace } from '../namespace.ts';
 import { Section } from './Section.tsx';
 
 export type ProfileCardData = {
@@ -28,7 +27,7 @@ export type ProfileGridProps = {
 
 /** The profiles as a masonry of cards. */
 export const ProfileGrid = ({ profiles, onSelect }: ProfileGridProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SidekickNamespace.key);
   const itemProps = useCallback(
     (id: string) => (onSelect ? { onActivate: () => onSelect(id) } : undefined),
     [onSelect],

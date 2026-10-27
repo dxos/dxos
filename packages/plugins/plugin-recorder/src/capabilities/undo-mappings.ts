@@ -8,8 +8,9 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as UndoMapping from '@dxos/app-framework/UndoMapping';
 
-import { meta } from '#meta';
 import { RecorderOperation } from '#types';
+
+import { RecorderNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -18,7 +19,7 @@ export default Capability.makeModule(() =>
         operation: RecorderOperation.DeleteTake,
         inverse: RecorderOperation.RestoreTake,
         deriveContext: (_input, output) => output,
-        message: ['take-deleted.label', { ns: meta.profile.key }],
+        message: ['take-deleted.label', { ns: RecorderNamespace.key }],
       }),
     ]),
   ),

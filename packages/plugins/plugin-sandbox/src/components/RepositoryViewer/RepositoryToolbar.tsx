@@ -9,8 +9,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Select from '@dxos/react-ui/Select';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-import { meta } from '#meta';
-
+import { SandboxNamespace } from '../../namespace.ts';
 import type { BranchInfo } from '../../services/RepositoryClient.ts';
 
 export type RepositoryView = 'files' | 'history';
@@ -33,7 +32,7 @@ export const RepositoryToolbar = ({
   onViewChange,
   onRefresh,
 }: RepositoryToolbarProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SandboxNamespace.key);
   const isCommit = currentRef !== undefined && !branches.some((branch) => branch.name === currentRef);
   const commitItem = isCommit && currentRef ? { value: currentRef, label: currentRef.slice(0, 7) } : undefined;
   const branchItems = branches.map((branch) => ({ value: branch.name, label: branch.name }));

@@ -23,8 +23,9 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 
 import { type SegmentCardAction, SegmentStack } from '#components';
-import { meta } from '#meta';
 import { Routing, RoutingOperation, Segment, Trip } from '#types';
+
+import { TripNamespace } from '../../namespace.ts';
 
 export type TripArticleProps = AppSurface.ObjectArticleProps<Trip.Trip> & {
   /** Start with the inline map surface visible (otherwise toggled via the toolbar). */
@@ -190,9 +191,9 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
       const friendly =
         err instanceof Routing.GeocodeError || err instanceof Routing.RouteError ? err.message : undefined;
       await invokePromise(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}/plan-route-error`,
-        title: ['route.error.label', { ns: meta.profile.key }],
-        description: friendly ?? ['route.error.message', { ns: meta.profile.key }],
+        id: `${TripNamespace.key}/plan-route-error`,
+        title: ['route.error.label', { ns: TripNamespace.key }],
+        description: friendly ?? ['route.error.message', { ns: TripNamespace.key }],
         icon: 'ph--warning--regular',
       });
     } finally {
@@ -207,7 +208,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
     const builder = MenuBuilder.make().group(
       'add',
       {
-        label: ['segment.add.label', { ns: meta.profile.key }],
+        label: ['segment.add.label', { ns: TripNamespace.key }],
         icon: 'ph--plus--regular',
         variant: 'dropdownMenu',
       },
@@ -215,7 +216,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         for (const kind of SEGMENT_KINDS) {
           group.action(
             `add-${kind}`,
-            { label: [`segment.${kind}.label`, { ns: meta.profile.key }], icon: Segment.kindIcon(kind) },
+            { label: [`segment.${kind}.label`, { ns: TripNamespace.key }], icon: Segment.kindIcon(kind) },
             () => handleAddSegment(kind),
           );
         }
@@ -233,7 +234,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
       builder.action(
         'plan-route',
         {
-          label: [planning ? 'route.planning.label' : 'route.plan.label', { ns: meta.profile.key }],
+          label: [planning ? 'route.planning.label' : 'route.plan.label', { ns: TripNamespace.key }],
           icon: 'ph--path--regular',
           iconOnly: true,
           disabled: planning,
@@ -247,7 +248,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
       builder.action(
         'toggle-globe',
         {
-          label: ['globe.toggle.label', { ns: meta.profile.key }],
+          label: ['globe.toggle.label', { ns: TripNamespace.key }],
           icon: 'ph--globe-hemisphere-west--regular',
           iconOnly: true,
           checked: showGlobe,

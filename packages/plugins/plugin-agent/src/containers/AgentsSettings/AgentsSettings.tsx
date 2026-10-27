@@ -21,9 +21,8 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Input from '@dxos/react-ui/Input';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
-
 import { agentDeckSubject } from '../../constants.ts';
+import { AgentNamespace } from '../../namespace.ts';
 import { createAgent } from './create-agent.ts';
 
 // The add-agent action uses Form's `settings` variant for its labeled-row chrome; there are no fields to bind.
@@ -34,7 +33,7 @@ export type AgentsSettingsProps = Record<string, never>;
 
 /** The space's agents: add one, open one, or delete one. */
 export const AgentsSettings = (_props: AgentsSettingsProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AgentNamespace.key);
   const space = ToolkitHooks.useActiveSpace();
   const { invokePromise } = Hooks.useOperationInvoker();
   const agents = useQuery(space?.db, Query.select(Filter.type(Agent.Agent)).orderBy(Order.property('name', 'asc')));
@@ -140,7 +139,7 @@ type AgentRowProps = {
 
 /** One agent row; subscribes to the agent's name so a rename re-renders only its own row. */
 const AgentRow = ({ agent, onSelect, onDelete }: AgentRowProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AgentNamespace.key);
   const [name] = useObject(agent, 'name');
   return (
     <Listbox.Item id={agent.id} classNames='cursor-pointer' onClick={() => onSelect(agent.id)}>

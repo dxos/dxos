@@ -4,12 +4,12 @@
 
 import { DXN } from '@dxos/keys';
 
-import { meta } from '#meta';
+import { ClientNamespace } from './namespace.ts';
 
-export const CLI_LOGIN_DIALOG = DXN.make(`${meta.profile.key}.cliLoginDialog`);
-export const JOIN_DIALOG = DXN.make(`${meta.profile.key}.joinDialog`);
-export const RECOVERY_CODE_DIALOG = DXN.make(`${meta.profile.key}.recoveryCodeDialog`);
-export const RESET_DIALOG = DXN.make(`${meta.profile.key}.resetDialog`);
+export const CLI_LOGIN_DIALOG = DXN.make(`${ClientNamespace.key}.cliLoginDialog`);
+export const JOIN_DIALOG = DXN.make(`${ClientNamespace.key}.joinDialog`);
+export const RECOVERY_CODE_DIALOG = DXN.make(`${ClientNamespace.key}.recoveryCodeDialog`);
+export const RESET_DIALOG = DXN.make(`${ClientNamespace.key}.resetDialog`);
 
 /**
  * Account profile page, where passkeys are revoked and the account is managed.

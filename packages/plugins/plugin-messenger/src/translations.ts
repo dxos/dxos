@@ -6,8 +6,9 @@ import { Type } from '@dxos/echo';
 import { translations as cardTranslations } from '@dxos/react-ui-card/translations';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Notifications } from '#types';
+
+import { MessengerNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -18,7 +19,7 @@ export const translations = [
         'typename.label_one': 'Notifications',
         'typename.label_other': 'Notifications',
       },
-      [meta.profile.key]: {
+      [MessengerNamespace.key]: {
         'plugin.name': 'Messenger',
         'notifications-panel.label': 'Notifications',
         'notifications-toolbar.menu': 'Notifications actions',

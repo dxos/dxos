@@ -12,9 +12,8 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { Obj } from '@dxos/echo';
 import * as Presentation from '@dxos/plugin-presenter/Presentation';
 
-import { meta } from '#meta';
-
 import { RECORDINGS_COMPANION } from '../constants.ts';
+import { RecorderNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -30,7 +29,7 @@ export default Capability.makeModule(
         Effect.succeed([
           AppNode.makeCompanion({
             variant: RECORDINGS_COMPANION,
-            label: ['recordings.label', { ns: meta.profile.key }],
+            label: ['recordings.label', { ns: RecorderNamespace.key }],
             icon: 'ph--record--regular',
             data: RECORDINGS_COMPANION,
           }),

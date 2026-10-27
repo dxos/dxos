@@ -28,8 +28,7 @@ import * as Menu from '@dxos/react-ui/Menu';
 import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import type * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
-
+import { StackNamespace } from '../../namespace.ts';
 import { StackContext, useStack, useStackContext } from './StackContext.ts';
 
 //
@@ -192,7 +191,7 @@ const DragHandleGlyph = () => (
 
 const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
   const { id, object } = data;
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(StackNamespace.key);
   const { attendableId: parentAttendableId, collapsed, onAdd, onMoveUp, onMoveDown, onCollapse, onDelete } = useStack();
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
   const attendableId = GraphPath.getCollectionObjectPath(parentAttendableId, object.id);

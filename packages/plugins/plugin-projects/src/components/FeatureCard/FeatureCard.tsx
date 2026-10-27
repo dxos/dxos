@@ -15,9 +15,9 @@ import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Tag from '@dxos/react-ui/Tag';
 import * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
 import { Feature } from '#types';
 
+import { ProjectsNamespace } from '../../namespace.ts';
 import {
   type FeatureChanges,
   type FeatureLookup,
@@ -202,7 +202,7 @@ type FeatureCardTitleProps = {};
 
 /** The name; a field in edit mode. */
 const FeatureCardTitle = (_: FeatureCardTitleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature, editing, onChange } = useFeatureCardContext('FeatureCard.Title');
   const editable = editing && onChange;
   return (
@@ -268,7 +268,7 @@ type FeatureCardMenuProps = {
 
 /** Open, edit, the status picker and remove, each when its handler is given. */
 const FeatureCardMenu = ({ onRemove }: FeatureCardMenuProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature, editing, setEditing, onOpen, onChange } = useFeatureCardContext('FeatureCard.Menu');
   const setStatus = onChange && ((status: FeatureStatus) => onChange(feature, { status }));
   // Entered a frame later: the menu refocuses its trigger as it closes, which would take focus from the name field.
@@ -342,7 +342,7 @@ type FeatureCardDescriptionProps = {};
 
 /** The description, clamped; a multiline field in edit mode, shown even while empty. Directly under the title. */
 const FeatureCardDescription = (_: FeatureCardDescriptionProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature, editing, onChange } = useFeatureCardContext('FeatureCard.Description');
   if (editing && onChange) {
     return (
@@ -381,7 +381,7 @@ type FeatureCardTagsProps = {
 
 /** The status, the relation to the host's selected feature, and the derived signals. */
 const FeatureCardTags = ({ all }: FeatureCardTagsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature, lookup, relation } = useFeatureCardContext('FeatureCard.Tags');
   const signals = getFeatureSignals(feature, lookup);
   const shown = all ? signals : signals.slice(0, 1);
@@ -421,7 +421,7 @@ type FeatureCardCountProps = {};
 
 /** How many subfeatures; the compact stand-in for `Subfeatures`. */
 const FeatureCardSubfeatureCount = (_: FeatureCardCountProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature } = useFeatureCardContext('FeatureCard.SubfeatureCount');
   return feature.subfeatures.length > 0 ? (
     <Card.Row leading={<RowIcon icon='ph--tree-view--regular' />}>
@@ -434,7 +434,7 @@ FeatureCardSubfeatureCount.displayName = 'FeatureCard.SubfeatureCount';
 
 /** How many tasks are open, and the milestones they are planned for. */
 const FeatureCardTaskCount = (_: FeatureCardCountProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature } = useFeatureCardContext('FeatureCard.TaskCount');
   const openTasks = feature.tasks.filter((task) => !task.done);
   const milestones = [...new Set(openTasks.flatMap((task) => (task.milestone ? [task.milestone] : [])))];
@@ -465,7 +465,7 @@ FeatureCardShowcaseLead.displayName = 'FeatureCard.ShowcaseLead';
 
 /** How many features this one needs; the compact stand-in for `Dependencies`. */
 const FeatureCardDependencyCount = (_: FeatureCardCountProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature, lookup } = useFeatureCardContext('FeatureCard.DependencyCount');
   const count = feature.dependsOn.filter((id) => lookup(id)).length;
   return count > 0 ? (
@@ -479,7 +479,7 @@ FeatureCardDependencyCount.displayName = 'FeatureCard.DependencyCount';
 
 /** How many tests and suites cite the feature with a `@feature` tag; the compact stand-in for `Code`. */
 const FeatureCardTestCount = (_: FeatureCardCountProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature } = useFeatureCardContext('FeatureCard.TestCount');
   const count = feature.code.filter((link) => link.kind !== 'code').length;
   return count > 0 ? (
@@ -527,7 +527,7 @@ type FeatureCardDependenciesProps = {
 
 /** The features this one needs. */
 const FeatureCardDependencies = ({ onRemove }: FeatureCardDependenciesProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature, lookup } = useFeatureCardContext('FeatureCard.Dependencies');
   const open = useOpenRow('FeatureCard.Dependencies');
   const dependencies = feature.dependsOn.flatMap((id) => lookup(id) ?? []);
@@ -569,7 +569,7 @@ type FeatureCardDependentsProps = {
 
 /** The features that need this one. */
 const FeatureCardDependents = ({ dependents }: FeatureCardDependentsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const open = useOpenRow('FeatureCard.Dependents');
   return dependents.length > 0 ? (
     <ListSection title={t('feature-card.dependents.title')} count={dependents.length}>
@@ -596,7 +596,7 @@ type FeatureCardSubfeaturesProps = {};
 
 /** Each subfeature with its status. */
 const FeatureCardSubfeatures = (_: FeatureCardSubfeaturesProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature } = useFeatureCardContext('FeatureCard.Subfeatures');
   return feature.subfeatures.length > 0 ? (
     <ListSection title={t('feature-card.subfeatures.title')} count={feature.subfeatures.length}>
@@ -623,7 +623,7 @@ type FeatureCardTasksProps = {};
 
 /** The tasks that implement the feature, done or not. */
 const FeatureCardTasks = (_: FeatureCardTasksProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature } = useFeatureCardContext('FeatureCard.Tasks');
   const open = useOpenRow('FeatureCard.Tasks');
   return feature.tasks.length > 0 ? (
@@ -652,7 +652,7 @@ type FeatureCardShowcasesProps = {};
 
 /** The showcases that demonstrate the feature. */
 const FeatureCardShowcases = (_: FeatureCardShowcasesProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature } = useFeatureCardContext('FeatureCard.Showcases');
   const open = useOpenRow('FeatureCard.Showcases');
   return feature.showcases.length > 0 ? (
@@ -680,7 +680,7 @@ type FeatureCardSpecsProps = {};
 
 /** The specs that describe the feature: rows that open them, or links to GitHub on a card that opens nothing. */
 const FeatureCardSpecs = (_: FeatureCardSpecsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature, onOpen } = useFeatureCardContext('FeatureCard.Specs');
   const open = useOpenRow('FeatureCard.Specs');
   return feature.specs.length > 0 ? (
@@ -713,7 +713,7 @@ type FeatureCardLinkProps = {};
 
 /** The DXN that code cites the feature by, with a button that copies it. */
 const FeatureCardLink = (_: FeatureCardLinkProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature } = useFeatureCardContext('FeatureCard.Link');
   const { link } = feature;
   return link ? (
@@ -747,7 +747,7 @@ type FeatureCardCodeProps = {};
 
 /** The tests and code that cite the feature, each a link to its line on GitHub. */
 const FeatureCardCode = (_: FeatureCardCodeProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const { feature } = useFeatureCardContext('FeatureCard.Code');
   return feature.code.length > 0 ? (
     <ListSection title={t('feature-card.code.title')} count={feature.code.length}>

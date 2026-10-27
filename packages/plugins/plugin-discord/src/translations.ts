@@ -4,8 +4,9 @@
 
 import { Type } from '@dxos/echo';
 
-import { meta } from '#meta';
 import { DiscordChannel } from '#types';
+
+import { DiscordNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -17,7 +18,7 @@ export const translations = [
         'typename.label_other': 'Discord channels',
         'object-name.placeholder': 'New Discord channel',
       },
-      [meta.profile.key]: {
+      [DiscordNamespace.key]: {
         'plugin.name': 'Discord',
         'sync-now.label': 'Sync now',
         'sync-this-chat.label': 'Sync this chat',

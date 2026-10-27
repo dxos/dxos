@@ -113,7 +113,7 @@ export type ModuleActivateResult = Capability.ModuleReturn | readonly Capability
  * order: a module declares the capabilities it `provides` and `requires`, and the plugin
  * manager activates providers before consumers (topological order). Runtime-event modules
  * (`activatesOn`) activate only when their event fires. See
- * `plugin-client/src/ClientPlugin.ts` for a worked example.
+ * `plugin-client/dx.config.ts` for a worked example.
  *
  * @idiom org.dxos.app-framework.moduleActivationOrdering
  *   applies: sequencing one plugin module's activation before or after another
@@ -684,6 +684,16 @@ export type PluginConfig<T = void> = Config2.Config & {
 export const config = <T = void>({ modules, ...data }: ConfigOptions): PluginConfig<T> => {
   const meta = getMetaFromConfig(data);
   return { ...data, meta, make: fromModules<T>(meta, modules), modules };
+};
+
+/**
+ * The module named `name` in a plugin's config, for tests and stories that compose a plugin from a
+ * subset of another plugin's modules.
+ */
+export const getModule = <T>({ modules }: Pick<PluginConfig<T>, 'modules'>, name: string): Capability.Module<T> => {
+  const module = modules.find((candidate) => candidate && Capability.getModuleTag(candidate) === name);
+  invariant(module, `No module named ${name}.`);
+  return module;
 };
 
 /** A capability tag as serialized in a {@link Manifest}: the identity the plugin manager matches on. */

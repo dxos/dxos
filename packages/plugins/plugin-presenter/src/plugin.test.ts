@@ -6,17 +6,18 @@ import { describe, test } from 'vitest';
 
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { PresenterPlugin } from '#plugin';
+import * as PresenterPlugin from '#meta';
 
-await Harness.preload({ plugins: [PresenterPlugin()] });
+import { PresenterNamespace } from './namespace.ts';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+await Harness.preload({ plugins: [PresenterPlugin.make()] });
+
+const moduleId = (name: string) => `${PresenterNamespace.key}.module.${name}`;
 
 describe('PresenterPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [PresenterPlugin()],
+      plugins: [PresenterPlugin.make()],
     });
 
     expect(harness.manager.getActive()).toContain(moduleId('AppGraphBuilder'));
@@ -24,7 +25,7 @@ describe('PresenterPlugin', () => {
 
   test('registers the Presentation schema and create entry', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [PresenterPlugin()],
+      plugins: [PresenterPlugin.make()],
     });
 
     const registered = harness.manager.getModules().map((module) => module.id);
@@ -34,7 +35,7 @@ describe('PresenterPlugin', () => {
 
   test('registers the settings module for speaker notes', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [PresenterPlugin()],
+      plugins: [PresenterPlugin.make()],
     });
 
     const registered = harness.manager.getModules().map((module) => module.id);

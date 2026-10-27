@@ -13,7 +13,7 @@ import type { EchoViewRefPath } from '@dxos/schema';
 import { ViewAnnotation } from '@dxos/schema';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '#meta';
+import { SpaceNamespace } from '../../../namespace.ts';
 
 //
 // Extension Factory
@@ -33,7 +33,7 @@ export const createCompanionExtensions: () => Effect.Effect<AppGraphBuilder.Buil
           Effect.succeed([
             AppNode.makeCompanion({
               variant: 'settings',
-              label: ['object-properties.label', { ns: meta.profile.key }],
+              label: ['object-properties.label', { ns: SpaceNamespace.key }],
               icon: 'ph--sliders--regular',
               data: 'settings', // TODO(burdon): Change to 'object-properties'.
               position: Position.last,
@@ -50,7 +50,7 @@ export const createCompanionExtensions: () => Effect.Effect<AppGraphBuilder.Buil
           Effect.succeed([
             AppNode.makeCompanion({
               variant: 'related',
-              label: ['companion-related.label', { ns: meta.profile.key }],
+              label: ['companion-related.label', { ns: SpaceNamespace.key }],
               icon: 'ph--graph--regular',
               data: 'related',
               position: Position.last,
@@ -89,7 +89,7 @@ export const createCompanionExtensions: () => Effect.Effect<AppGraphBuilder.Buil
           Effect.succeed([
             AppNode.makeCompanion({
               variant: 'selected-objects',
-              label: ['companion-selected-objects.label', { ns: meta.profile.key }],
+              label: ['companion-selected-objects.label', { ns: SpaceNamespace.key }],
               icon: 'ph--tree-view--regular',
               data: 'selected-objects',
             }),

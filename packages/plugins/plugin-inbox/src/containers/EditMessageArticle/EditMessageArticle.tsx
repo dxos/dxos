@@ -15,9 +15,9 @@ import { AI_ACTION_ICON } from '@dxos/ui-types';
 
 import { EditMessage } from '#components';
 import { useEmailComposerExtensions, useSendEmail } from '#hooks';
-import { meta } from '#meta';
 import { InboxCapabilities, Mailbox } from '#types';
 
+import { InboxNamespace } from '../../namespace.ts';
 import { REPLY_REGEXP } from '../../util/index.ts';
 
 export type EditMessageArticleProps = AppSurface.ObjectArticleProps<Message.Message>;
@@ -72,14 +72,14 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()
-        .root({ label: ['draft-toolbar.label', { ns: meta.profile.key }] })
+        .root({ label: ['draft-toolbar.label', { ns: InboxNamespace.key }] })
         .subgraph(
           canGenerate &&
             ((builder) =>
               builder.action(
                 'generate',
                 {
-                  label: ['draft-toolbar-generate.menu', { ns: meta.profile.key }],
+                  label: ['draft-toolbar-generate.menu', { ns: InboxNamespace.key }],
                   icon: AI_ACTION_ICON,
                   testId: 'inbox.draft.generate',
                 },

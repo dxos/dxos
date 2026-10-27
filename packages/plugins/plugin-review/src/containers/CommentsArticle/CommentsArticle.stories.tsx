@@ -39,7 +39,7 @@ import { Text } from '@dxos/schema';
 import { AnchoredTo, Message, Thread } from '@dxos/types';
 import { isNonNullable } from '@dxos/util';
 
-import { ReviewPlugin, type ReviewPluginOptions } from '#plugin';
+import * as ReviewPlugin from '#meta';
 import { translations } from '#translations';
 import { AgentIdentity, CommentCapabilities, Settings } from '#types';
 
@@ -51,6 +51,7 @@ import {
   seedAgentSuggestions,
   seedComments,
 } from '../../testing/index.ts';
+import type { ReviewPluginOptions } from '../../types/ReviewPluginOptions.ts';
 
 // Phrases in SAMPLE_CONTENT that the seeded comment threads are anchored to.
 const SEED_PHRASES = ['comment threads', 'Effect schema', 'virtual stack'];
@@ -205,8 +206,8 @@ const meta = {
               }
             }),
         }),
-        SpacePlugin({}),
-        ReviewPlugin({
+        SpacePlugin.make({}),
+        ReviewPlugin.make({
           agentRunner: StubAgentRunner,
           agentIdentity: { name: STORY_AGENT_NAME },
         } satisfies ReviewPluginOptions),

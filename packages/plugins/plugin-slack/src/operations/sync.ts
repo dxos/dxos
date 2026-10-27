@@ -16,12 +16,12 @@ import { log } from '@dxos/log';
 import * as Binding from '@dxos/plugin-connector/Binding';
 import { Channel, ContentBlock, Message } from '@dxos/types';
 
-import { meta } from '#meta';
 import { SlackChannel, SlackOperation } from '#types';
 
 import { SLACK_SOURCE } from '../constants.ts';
 import { SlackChannelTargetError, formatSlackSyncFailure } from '../errors.ts';
 import { appendToMirror, tsToIso, upgradeChannel } from '../mirror.ts';
+import { SlackNamespace } from '../namespace.ts';
 import { SlackApi } from '../services/index.ts';
 
 type SlackConversation = SlackApi.SlackConversation;
@@ -369,9 +369,9 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
           if (outcome._tag === 'Success') {
             yield* Effect.ignore(
               Operation.invoke(LayoutOperation.AddToast, {
-                id: `${meta.profile.key}.sync-success`,
+                id: `${SlackNamespace.key}.sync-success`,
                 icon: 'ph--check--regular',
-                title: ['sync-toast.success.label', { ns: meta.profile.key }],
+                title: ['sync-toast.success.label', { ns: SlackNamespace.key }],
               }),
             );
             return outcome.success;
@@ -379,9 +379,9 @@ const handler: Operation.WithHandler<typeof SlackOperation.SyncSlackChannel> = S
             const message = formatSlackSyncFailure(outcome.failure);
             yield* Effect.ignore(
               Operation.invoke(LayoutOperation.AddToast, {
-                id: `${meta.profile.key}.sync-error`,
+                id: `${SlackNamespace.key}.sync-error`,
                 icon: 'ph--warning--regular',
-                title: ['sync-toast.error.label', { ns: meta.profile.key }],
+                title: ['sync-toast.error.label', { ns: SlackNamespace.key }],
                 description: message,
               }),
             );

@@ -7,17 +7,18 @@ import { describe, test } from 'vitest';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { MapPlugin } from '#plugin';
+import * as MapPlugin from '#meta';
 
-await Harness.preload({ plugins: [ClientPlugin.make({}), MapPlugin()] });
+import { MapNamespace } from './namespace.ts';
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+await Harness.preload({ plugins: [ClientPlugin.make({}), MapPlugin.make()] });
+
+const moduleId = (name: string) => `${MapNamespace.key}.module.${name}`;
 
 describe('MapPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({
-      plugins: [ClientPlugin.make({}), MapPlugin()],
+      plugins: [ClientPlugin.make({}), MapPlugin.make()],
     });
 
     // OperationHandler is a dependency-mode root, so it activates immediately too.

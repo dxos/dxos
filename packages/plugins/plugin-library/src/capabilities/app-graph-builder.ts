@@ -17,9 +17,9 @@ import { Type } from '@dxos/echo';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import { meta } from '#meta';
 import { Book } from '#types';
 
+import { LibraryNamespace } from '../namespace.ts';
 import { LIBRARY_KEY, getBooksPath } from '../paths.ts';
 
 /** The companion segment/variant for the notes editor — shared with its surface binding. */
@@ -55,7 +55,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               variant: NOTES_COMPANION_VARIANT,
-              label: ['notes.label', { ns: meta.profile.key }],
+              label: ['notes.label', { ns: LibraryNamespace.key }],
               icon: 'ph--note--regular',
               data: book,
             }),

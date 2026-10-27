@@ -11,14 +11,16 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Identity } from '@dxos/halo';
 import * as HaloServices from '@dxos/plugin-client/HaloServices';
 
-import { meta } from '#meta';
 import { type BeaconState } from '#types';
 
 import { BeaconService } from '../beacon-service.ts';
+import { IrohBeaconNamespace } from '../namespace.ts';
 import { BroadcastChannelTransport } from '../transport/broadcast-channel-transport.ts';
 
 export namespace BeaconCapabilities {
-  export const State = Capability.makeSingleton<Atom.Atom<BeaconState>>()(`${meta.profile.key}.capability.state`);
+  export const State = Capability.makeSingleton<Atom.Atom<BeaconState>>()(
+    `${IrohBeaconNamespace.key}.capability.state`,
+  );
 }
 
 const INITIAL_STATE: BeaconState = {

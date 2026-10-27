@@ -18,12 +18,12 @@ import { log } from '@dxos/log';
 import * as Binding from '@dxos/plugin-connector/Binding';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
-import { meta } from '#meta';
 import { LinearOperation } from '#types';
 
 import { LINEAR_SOURCE } from '../constants.ts';
 import { LinearGraphQLError } from '../errors.ts';
 import { LinearTeamUnresolvedError, formatLinearSyncFailure } from '../errors.ts';
+import { LinearNamespace } from '../namespace.ts';
 import { LinearApi } from '../services/index.ts';
 
 //
@@ -696,9 +696,9 @@ export const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCurs
   if (outcome._tag === 'Success') {
     yield* Effect.ignore(
       Operation.invoke(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}.sync-success`,
+        id: `${LinearNamespace.key}.sync-success`,
         icon: 'ph--check--regular',
-        title: ['sync-toast.success.label', { ns: meta.profile.key }],
+        title: ['sync-toast.success.label', { ns: LinearNamespace.key }],
       }),
     );
     return outcome.success;
@@ -706,9 +706,9 @@ export const syncTeamBinding = Effect.fn(function* (binding: Cursor.ExternalCurs
     const message = formatLinearSyncFailure(outcome.failure);
     yield* Effect.ignore(
       Operation.invoke(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}.sync-error`,
+        id: `${LinearNamespace.key}.sync-error`,
         icon: 'ph--warning--regular',
-        title: ['sync-toast.error.label', { ns: meta.profile.key }],
+        title: ['sync-toast.error.label', { ns: LinearNamespace.key }],
         description: message,
       }),
     );

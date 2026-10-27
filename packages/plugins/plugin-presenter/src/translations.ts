@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Presentation } from '#types';
+
+import { PresenterNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -22,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete presentation',
         'object-deleted.label': 'Presentation deleted',
       },
-      [meta.profile.key]: {
+      [PresenterNamespace.key]: {
         'plugin.name': 'Presenter',
         'toggle-presentation.label': 'Present',
         'slide-pending.label': 'Loading…',

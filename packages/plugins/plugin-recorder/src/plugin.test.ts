@@ -9,14 +9,15 @@ import * as FilePlugin from '@dxos/plugin-file/FilePlugin';
 import * as PresenterPlugin from '@dxos/plugin-presenter/PresenterPlugin';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { meta } from '#meta';
-import { RecorderPlugin } from '#plugin';
+import * as RecorderPlugin from '#meta';
 
-const plugins = () => [ClientPlugin.make({}), FilePlugin.make(), PresenterPlugin.make(), RecorderPlugin()];
+import { RecorderNamespace } from './namespace.ts';
+
+const plugins = () => [ClientPlugin.make({}), FilePlugin.make(), PresenterPlugin.make(), RecorderPlugin.make()];
 
 await Harness.preload({ plugins: plugins() });
 
-const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
+const moduleId = (name: string) => `${RecorderNamespace.key}.module.${name}`;
 
 describe('RecorderPlugin', () => {
   test('registers its modules', async ({ expect }) => {

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-export * as AssistantPlugin from './AssistantPlugin.ts';
+export * as AssistantPlugin from '#meta';
 export * from '#skills';
 export * from '#types';
 export * as Chat from './Chat.ts';

@@ -16,8 +16,9 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import { Channel } from '@dxos/types';
 
-import { meta } from '#meta';
 import { Meeting, MeetingOperation } from '#types';
+
+import { MeetingNamespace } from '../../namespace.ts';
 
 // TODO(wittjosiah): Add a story which renders meetings alongside call?
 
@@ -26,7 +27,7 @@ type MeetingItemProps = {
 };
 
 const MeetingItem = ({ meeting }: MeetingItemProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(MeetingNamespace.key);
   const label = useLabel(meeting) ?? t('meeting.label') ?? meeting.id;
   const { invokePromise } = Hooks.useOperationInvoker();
 
@@ -50,7 +51,7 @@ const MeetingItem = ({ meeting }: MeetingItemProps) => {
 export type MeetingsListProps = AppSurface.ArticleProps<undefined, {}, Obj.Unknown>;
 
 export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(MeetingNamespace.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(channel);
   const meetings = useQuery(db, Query.type(Meeting.Meeting));

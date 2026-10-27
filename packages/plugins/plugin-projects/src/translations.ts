@@ -7,8 +7,9 @@ import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 import { Repo } from '@dxos/types';
 
-import { meta } from '#meta';
 import { Feature, Showcase } from '#types';
+
+import { ProjectsNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -53,7 +54,7 @@ export const translations = [
         'delete-object.label': 'Delete showcase',
         'object-deleted.label': 'Showcase deleted',
       },
-      [meta.profile.key]: {
+      [ProjectsNamespace.key]: {
         'plugin.name': 'Projects',
         'project-tour.label': 'Take the project tour',
         'project.label': 'Project',

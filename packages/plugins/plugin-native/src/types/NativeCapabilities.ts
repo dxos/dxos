@@ -8,12 +8,12 @@ import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '#meta';
+import { NativeNamespace } from '../namespace.ts';
 
 // Inline imports to avoid `Settings` / `Update` namespace aliases colliding with the
 // capability constants exported below.
 export const Settings = Capability.makeSingleton<Atom.Writable<import('./Settings.ts').Settings>>()(
-  `${meta.profile.key}.capability.settings`,
+  `${NativeNamespace.key}.capability.settings`,
 );
 // Re-exported rather than declared: plugin-pwa contributes the same capability, so a settings surface
 // resolves one identifier and gets whichever platform is present.

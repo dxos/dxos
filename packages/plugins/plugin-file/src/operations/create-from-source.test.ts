@@ -14,13 +14,13 @@ import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Harness from '@dxos/plugin-testing/Harness';
 
-import { FilePlugin } from '#plugin';
+import * as FilePlugin from '#meta';
 import { FileCapabilities, FileOperation } from '#types';
 
 import { MAX_INLINE_SOURCE_BYTES } from './create-from-source.ts';
 import { FileReadError, FileTooLargeError } from './create.ts';
 
-await Harness.preload({ plugins: [ClientPlugin.make({}), FilePlugin()] });
+await Harness.preload({ plugins: [ClientPlugin.make({}), FilePlugin.make()] });
 
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
@@ -214,7 +214,7 @@ describe('FileOperation.CreateFromSource', () => {
 });
 
 const setup = async () => {
-  const harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({}), FilePlugin()] });
+  const harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({}), FilePlugin.make()] });
   harness.capabilities.contribute({
     module: 'test',
     interface: FileCapabilities.Backend,

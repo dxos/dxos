@@ -8,12 +8,12 @@ import * as Operation from '@dxos/compute/Operation';
 import { Identity } from '@dxos/halo';
 import * as HaloServices from '@dxos/plugin-client/HaloServices';
 
-import { meta } from '#meta';
 import { SpaceOperation } from '#types';
 
 import { JOIN_DIALOG } from '../constants.ts';
 import type { JoinDialogProps } from '../containers/JoinDialog/index.ts';
 import { NoIdentityError } from '../errors.ts';
+import { SpaceNamespace } from '../namespace.ts';
 
 const handler: Operation.WithHandler<typeof SpaceOperation.Join> = SpaceOperation.Join.pipe(
   Operation.withHandler(
@@ -23,10 +23,10 @@ const handler: Operation.WithHandler<typeof SpaceOperation.Join> = SpaceOperatio
         // Space invitations authenticate against a local identity; there is nothing to redeem without one.
         yield* Effect.ignore(
           Operation.invoke(LayoutOperation.AddToast, {
-            id: `${meta.profile.key}.join-no-identity`,
+            id: `${SpaceNamespace.key}.join-no-identity`,
             icon: 'ph--warning--regular',
-            title: ['join-no-identity-toast.title', { ns: meta.profile.key }],
-            closeLabel: ['dismiss.label', { ns: meta.profile.key }],
+            title: ['join-no-identity-toast.title', { ns: SpaceNamespace.key }],
+            closeLabel: ['dismiss.label', { ns: SpaceNamespace.key }],
           }),
         );
         return yield* Effect.fail(new NoIdentityError());

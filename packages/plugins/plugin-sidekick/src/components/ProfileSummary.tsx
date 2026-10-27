@@ -6,8 +6,7 @@ import React from 'react';
 
 import * as Hooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
-
+import { SidekickNamespace } from '../namespace.ts';
 import { Section } from './Section.tsx';
 
 export type ProfileSummaryProps = {
@@ -16,7 +15,7 @@ export type ProfileSummaryProps = {
 };
 
 export const ProfileSummary = ({ summary, onOpen }: ProfileSummaryProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SidekickNamespace.key);
   return (
     <Section title={t('user-profile.title')}>
       {summary ? (

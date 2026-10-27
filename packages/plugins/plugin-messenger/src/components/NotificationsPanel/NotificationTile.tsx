@@ -13,7 +13,7 @@ import * as Icon from '@dxos/react-ui/Icon';
 import * as Typography from '@dxos/react-ui/Typography';
 import { type Actor, Message, SpaceInvitationMessage } from '@dxos/types';
 
-import { meta } from '#meta';
+import { MessengerNamespace } from '../../namespace.ts';
 
 export type NotificationAction =
   /** Clicked: mark read and go to what the message links to. */
@@ -46,7 +46,7 @@ export type NotificationTileProps = Pick<MosaicTileProps<NotificationTileData>, 
 export const NotificationTile = forwardRef<HTMLDivElement, NotificationTileProps>(
   ({ data, location, current }, forwardedRef) => {
     const { message, read, now, renderInvitation, onAction } = data;
-    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(MessengerNamespace.key);
     const { setCurrentId } = useMosaicContainer('NotificationTile');
     const invitation = useMemo(() => Option.getOrUndefined(SpaceInvitationMessage.match(message)), [message]);
     const { title, body } = useMemo(() => {

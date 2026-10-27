@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Sandbox } from '#types';
+
+import { SandboxNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -17,7 +18,7 @@ export const translations = [
         'typename.label_one': 'Sandbox',
         'typename.label_other': 'Sandboxes',
       },
-      [meta.profile.key]: {
+      [SandboxNamespace.key]: {
         'plugin.name': 'Sandbox',
         'branch-select.placeholder': 'Branch',
         'show-history.button': 'History',

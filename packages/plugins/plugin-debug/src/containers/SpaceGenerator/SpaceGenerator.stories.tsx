@@ -82,7 +82,7 @@ const meta = {
             }),
         }),
         // Contributes the operation handlers the generators invoke (e.g. `SpaceOperation.AddType`).
-        SpacePlugin({}),
+        SpacePlugin.make({}),
       ],
     })),
   ],

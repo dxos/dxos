@@ -18,9 +18,8 @@ import * as ObservabilityOperation from '@dxos/plugin-observability/Observabilit
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Util from '@dxos/react-ui/Util';
 
-import { meta } from '#meta';
-
 import { useAutoTags, useRegistryPlugins, useUpdateAvailableIds } from '../../hooks/index.ts';
+import { RegistryNamespace } from '../../namespace.ts';
 import { BaseRegistryArticle } from '../BaseRegistryArticle/index.ts';
 
 const sortEntries = (a: Plugin.Meta, b: Plugin.Meta) =>
@@ -57,7 +56,7 @@ export type PublicRegistryArticleProps = {
 
 export const PublicRegistryArticle = Util.composable<HTMLDivElement, PublicRegistryArticleProps>(
   ({ contextId, ...props }, forwardedRef) => {
-    const { t } = UiHooks.useTranslation(meta.profile.key);
+    const { t } = UiHooks.useTranslation(RegistryNamespace.key);
     const manager = PluginManagerProvider.usePluginManager();
     const { invoke } = Hooks.useOperationInvoker();
     const { entries, loading, error } = useRegistryPlugins();

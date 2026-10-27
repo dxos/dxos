@@ -5,8 +5,9 @@
 import { Type } from '@dxos/echo';
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
 import { Template } from '#types';
+
+import { TemplateNamespace } from './namespace.ts';
 
 export const translations = [
   {
@@ -22,7 +23,7 @@ export const translations = [
         'delete-object.label': 'Delete template',
         'object-deleted.label': 'Template deleted',
       },
-      [meta.profile.key]: {
+      [TemplateNamespace.key]: {
         'plugin.name': 'Template',
       },
     },

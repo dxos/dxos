@@ -14,7 +14,7 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as SupportSurface from '@dxos/plugin-support/SupportSurface';
 import * as Position from '@dxos/util/Position';
 
-import { meta } from '../meta.ts';
+import { meta } from '#meta';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

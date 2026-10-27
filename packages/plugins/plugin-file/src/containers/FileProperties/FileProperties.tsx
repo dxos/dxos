@@ -18,7 +18,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { File } from '@dxos/types';
 
-import { meta } from '#meta';
+import { FileNamespace } from '../../namespace.ts';
 
 export type FilePropertiesProps = AppSurface.ObjectPropertiesProps<File.File>;
 
@@ -32,7 +32,7 @@ export type FilePropertiesProps = AppSurface.ObjectPropertiesProps<File.File>;
  * the regenerate control rather than a value presented as permanent.
  */
 export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(FileNamespace.key);
   const [reference, setReference] = useState<string | undefined>(undefined);
   const [url, setUrl] = useState<string | undefined>(undefined);
   const [pending, setPending] = useState(false);

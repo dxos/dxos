@@ -14,7 +14,6 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
 import { Assistant, AssistantCapabilities, AssistantPreset, Ollama } from '#types';
 
 import {
@@ -25,6 +24,7 @@ import {
   providerForModel,
   resolveProvider,
 } from '../chat-model/index.ts';
+import { AssistantNamespace } from '../namespace.ts';
 import { modelIcon } from '../util/model-icon.ts';
 
 export type UsePresets = {
@@ -39,7 +39,7 @@ export type UsePresets = {
  * shows the configured default.
  */
 export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UsePresets => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   // Subscribed rather than read: the picker has to follow a selection made on another mount of the
   // same chat, and the stamp the chat model writes before the first request.
   const [session] = useObject(chat, 'session');

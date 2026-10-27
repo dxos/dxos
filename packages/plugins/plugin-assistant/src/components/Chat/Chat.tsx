@@ -43,7 +43,6 @@ import { type Actor, Message, Task } from '@dxos/types';
 import { hexToFallback, keyToFallback, markWork } from '@dxos/util';
 
 import { type ChatSwitcher, bindMentions, useChatToolbarActions, useDebug, useSlashCommands } from '#hooks';
-import { meta } from '#meta';
 import { AssistantOperation, ChatSurface } from '#types';
 
 import {
@@ -54,6 +53,7 @@ import {
   projectSelfWakes,
   resolveRewind,
 } from '../../chat-model/index.ts';
+import { AssistantNamespace } from '../../namespace.ts';
 import {
   ChatStatus,
   DEFAULT_MAX_QUEUE,
@@ -568,7 +568,7 @@ type ChatThreadProps = Util.ThemedClassName<{
 }>;
 
 const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onViewUsage }: ChatThreadProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
   const { chat, db, debug, event, chatModel, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
   const { messages, tail } = useChatThreadContext(CHAT_THREAD_NAME);
   const identity = useIdentity();
@@ -891,7 +891,7 @@ const CHAT_TASK_ROWS = 4;
 
 const ChatTaskList = Util.composable<HTMLDivElement>((props, forwardedRef) => {
   const { chat, event } = useChatContext(CHAT_TASK_LIST_NAME);
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(AssistantNamespace.key);
 
   // Both the chat (membership) and each ref (row objects): a query re-emits only on membership.
   const [chatSnapshot] = useObject(chat);

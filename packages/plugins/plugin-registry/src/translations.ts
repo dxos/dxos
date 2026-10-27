@@ -4,12 +4,12 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { RegistryNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [RegistryNamespace.key]: {
         'plugin.name': 'Registry',
         'details.label': 'Details',
         'description.label': 'Description',

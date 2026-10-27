@@ -8,8 +8,9 @@ import { translations as taskTranslations } from '@dxos/react-ui-task/translatio
 import type * as Theme from '@dxos/react-ui/Theme';
 import { Outline, RemoteSession } from '@dxos/types';
 
-import { meta } from '#meta';
 import { Journal } from '#types';
+
+import { TasksNamespace } from './namespace.ts';
 
 export const translations = [
   ...taskTranslations,
@@ -48,7 +49,7 @@ export const translations = [
         'delete-object.label': 'Delete agent session',
         'object-deleted.label': 'Agent session deleted',
       },
-      [meta.profile.key]: {
+      [TasksNamespace.key]: {
         'plugin.name': 'Tasks',
         'task-artifacts.label': 'Artifacts',
         'task-questions.label': 'Questions',

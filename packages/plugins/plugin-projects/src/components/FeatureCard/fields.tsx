@@ -19,8 +19,7 @@ import * as Input from '@dxos/react-ui/Input';
 import * as Menu from '@dxos/react-ui/Menu';
 import * as Tag from '@dxos/react-ui/Tag';
 
-import { meta } from '#meta';
-
+import { ProjectsNamespace } from '../../namespace.ts';
 import { type FeatureStatus } from './feature.ts';
 
 export const FEATURE_STATUS_STYLE: Record<FeatureStatus, { icon: string; hue: Tag.TagHue }> = {
@@ -60,7 +59,7 @@ type StatusItemsProps = {
 
 /** The five statuses as radio items, shared by the card menu and the status icon's own menu. */
 export const StatusItems = ({ value, onChange, testId }: StatusItemsProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   return (
     <Menu.RadioItemGroup
       value={value}
@@ -98,7 +97,7 @@ type StatusIconProps = {
 
 /** A status glyph that, given `onChange`, opens a menu of the statuses; neither press selects the card. */
 export const StatusIcon = ({ status, onChange, muted, testId }: StatusIconProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(ProjectsNamespace.key);
   const style = FEATURE_STATUS_STYLE[status];
   const glyph = (
     <Icon.Icon

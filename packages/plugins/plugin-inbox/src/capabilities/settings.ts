@@ -8,13 +8,14 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as KvsStore from '@dxos/effect/KvsStore';
 
-import { meta } from '#meta';
 import { InboxCapabilities, Settings } from '#types';
+
+import { InboxNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const settingsAtom = KvsStore.make({
-      key: meta.profile.key,
+      key: InboxNamespace.key,
       schema: Settings.Settings,
       defaultValue: () => ({
         conversations: true,
@@ -25,7 +26,7 @@ export default Capability.makeModule(() =>
     return [
       Capability.contribute(InboxCapabilities.Settings, settingsAtom),
       Capability.contribute(AppCapabilities.Settings, {
-        prefix: meta.profile.key,
+        prefix: InboxNamespace.key,
         schema: Settings.Settings,
         atom: settingsAtom,
       }),

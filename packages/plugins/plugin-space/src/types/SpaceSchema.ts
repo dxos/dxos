@@ -13,11 +13,11 @@ import { Annotation, Database, Obj } from '@dxos/echo';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { type ComplexMap, trim } from '@dxos/util';
 
-import { meta } from '#meta';
+import { SpaceNamespace } from '../namespace.ts';
 
 export * as Settings from './Settings.ts';
 
-export const SPACE_DIRECTORY_HANDLE = `${meta.profile.key}.directory`;
+export const SPACE_DIRECTORY_HANDLE = `${SpaceNamespace.key}.directory`;
 
 export const SPACE_TYPE = 'org.dxos.type.space';
 

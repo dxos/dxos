@@ -20,8 +20,9 @@ import type * as Util from '@dxos/react-ui/Util';
 import { type Channel } from '@dxos/types';
 import { groupHoverControlItemWithTransition } from '@dxos/ui-theme';
 
-import { meta } from '#meta';
 import { CallsCapabilities } from '#types';
+
+import { CallsNamespace } from '../../namespace.ts';
 
 export type ToolbarProps = Util.ThemedClassName<{
   channel?: Channel.Channel;
@@ -45,7 +46,7 @@ export const Toolbar = ({
   joinDisabled,
   onLeave,
 }: ToolbarProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(CallsNamespace.key);
   const { graph } = ToolkitHooks.useAppGraph();
   const runAction = GraphHooks.useActionRunner();
   const call = Hooks.useCapability(CallsCapabilities.Manager);

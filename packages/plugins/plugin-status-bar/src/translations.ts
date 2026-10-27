@@ -4,12 +4,12 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { StatusBarNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [StatusBarNamespace.key]: {
         'plugin.name': 'Status Bar',
         'released.message': 'Released {{released}}',
       },

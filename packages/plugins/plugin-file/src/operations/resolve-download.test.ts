@@ -16,12 +16,12 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Harness from '@dxos/plugin-testing/Harness';
 import { File } from '@dxos/types';
 
-import { FilePlugin } from '#plugin';
+import * as FilePlugin from '#meta';
 import { FileOperation } from '#types';
 
 import { DownloadNotAvailableError } from './resolve-download.ts';
 
-await Harness.preload({ plugins: [ClientPlugin.make({}), FilePlugin()] });
+await Harness.preload({ plugins: [ClientPlugin.make({}), FilePlugin.make()] });
 
 const DIGEST = 'a'.repeat(64);
 
@@ -61,7 +61,7 @@ describe('FileOperation.ResolveDownload', () => {
 });
 
 const setup = async () => {
-  const harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({}), FilePlugin()] });
+  const harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({}), FilePlugin.make()] });
   const { defaultSpace } = await EffectEx.runAndForwardErrors(
     initializeIdentity(harness.get(ClientCapabilities.Client)),
   );

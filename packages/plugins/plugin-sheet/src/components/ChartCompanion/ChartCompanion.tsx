@@ -15,9 +15,9 @@ import * as Splitter from '@dxos/react-ui/Splitter';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 import * as Typography from '@dxos/react-ui/Typography';
 
-import { meta } from '#meta';
 import { Sheet } from '#types';
 
+import { SheetNamespace } from '../../namespace.ts';
 import { ChartView } from './ChartView.tsx';
 
 const DEFAULT_RANGE = 'A1:B5';
@@ -56,7 +56,7 @@ export const ChartCompanion = ({
   selection,
   onSelectRange,
 }: ChartCompanionProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(SheetNamespace.key);
   const [selected, setSelected] = useState<string | undefined>(charts[0]?.id);
   const [editing, setEditing] = useState(false);
   const current = charts.find((chart) => chart.id === selected) ?? charts[0];
@@ -94,12 +94,12 @@ export const ChartCompanion = ({
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()
-        .root({ label: ['chart-actions.label', { ns: meta.profile.key }] })
-        .action('add', { label: ['add-chart.label', { ns: meta.profile.key }], icon: 'ph--plus--regular' }, handleAdd)
+        .root({ label: ['chart-actions.label', { ns: SheetNamespace.key }] })
+        .action('add', { label: ['add-chart.label', { ns: SheetNamespace.key }], icon: 'ph--plus--regular' }, handleAdd)
         .action(
           'use-selection',
           {
-            label: ['use-selection.label', { ns: meta.profile.key }],
+            label: ['use-selection.label', { ns: SheetNamespace.key }],
             icon: 'ph--selection-plus--regular',
             disabled: !current || !selection || selection === current.range,
           },
@@ -110,7 +110,7 @@ export const ChartCompanion = ({
           menu.action(
             'delete',
             {
-              label: ['delete-chart.label', { ns: meta.profile.key }],
+              label: ['delete-chart.label', { ns: SheetNamespace.key }],
               icon: 'ph--trash--regular',
               disabled: !current,
             },

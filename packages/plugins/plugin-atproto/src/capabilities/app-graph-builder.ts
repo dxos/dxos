@@ -16,10 +16,9 @@ import { Filter, Obj } from '@dxos/echo';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { Connection } from '@dxos/link';
 
-import { meta } from '#meta';
-
 import { getRecordAnnotation } from '../annotation.ts';
 import { isAtprotoConnection } from '../connection.ts';
+import { AtprotoNamespace } from '../namespace.ts';
 import { PDS_NODE_TYPE, PDS_URL_KEY } from '../pds.ts';
 
 /** The companion segment/variant for the publishing companion — shared with its surface binding. */
@@ -57,7 +56,7 @@ export default Capability.makeModule(
           Effect.succeed([
             AppNode.makeCompanion({
               variant: ATPROTO_COMPANION_VARIANT,
-              label: ['companion.label', { ns: meta.profile.key }],
+              label: ['companion.label', { ns: AtprotoNamespace.key }],
               icon: 'ph--broadcast--regular',
               data: object,
             }),
@@ -85,7 +84,7 @@ export default Capability.makeModule(
               type: PDS_NODE_TYPE,
               data: { type: PDS_NODE_TYPE, db: space.db },
               properties: {
-                label: ['pds-section.label', { ns: meta.profile.key }],
+                label: ['pds-section.label', { ns: AtprotoNamespace.key }],
                 icon: 'ph--hard-drives--regular',
                 position: 100,
                 selectable: true,

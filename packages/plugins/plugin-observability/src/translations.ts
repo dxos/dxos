@@ -4,12 +4,12 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { ObservabilityNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [ObservabilityNamespace.key]: {
         'plugin.name': 'Telemetry',
         'help.label': 'Feedback',
         'observability-toast.label': 'Privacy Notice',

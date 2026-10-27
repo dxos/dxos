@@ -2,12 +2,20 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { TasksNamespace } from './src/namespace.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.tasks',
+    key: TasksNamespace.key,
     name: 'Tasks',
     author: 'DXOS',
     description: trim`
@@ -29,4 +37,43 @@ export default Config2.make({
     spec: 'PLUGIN.mdl',
     tags: ['alpha'],
   },
+  modules: [
+    // Narrower than the `appGraphBuilder` family default: its nodes invoke
+    // `LayoutOperation.UpdateDialog`, which means nothing without an app shell.
+    AppCapability.appGraphBuilder(
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+      {
+        environments: ['browser', 'tauri'],
+      },
+    ),
+    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'dx-module' } })),
+    // Migration providers stay eager: a migration missing when a space opens is a data hazard.
+    Capability.lazyModule(
+      'TasksMigrations',
+      { provides: [ClientCapabilities.Migration] },
+      () => import('./src/capabilities/migrations.ts', { with: { type: 'dx-module' } }),
+    ),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      {
+        activatesOn: ActivationEvents.Idle,
+      },
+    ),
+    AppCapability.pluginAsset({
+      pluginId: TasksNamespace.key,
+      path: 'PLUGIN.mdl',
+      content: () => import('./PLUGIN.mdl?raw', { with: { type: 'dx-module' } }),
+      mimeType: 'application/x-mdl',
+    }),
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+      roles: ['org.dxos.role.article', 'org.dxos.role.cardContent', 'org.dxos.role.dialog', 'org.dxos.role.section'],
+    }),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+    AppCapability.undoMappings(() => import('./src/capabilities/undo-mappings.ts', { with: { type: 'dx-module' } })),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

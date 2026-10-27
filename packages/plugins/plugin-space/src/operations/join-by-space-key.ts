@@ -18,10 +18,10 @@ import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as HaloServices from '@dxos/plugin-client/HaloServices';
 
-import { meta } from '#meta';
 import { SpaceOperation } from '#types';
 
 import { JoinByKeyError, NoIdentityError } from '../errors.ts';
+import { SpaceNamespace } from '../namespace.ts';
 
 /** How long to wait for an online member to hand over the admission credential. */
 const JOIN_BY_KEY_TIMEOUT = 60_000;
@@ -64,9 +64,9 @@ const reportFailure = (error: unknown) =>
     ? Effect.gen(function* () {
         log.warn('join by space key failed', { error });
         yield* Operation.invoke(LayoutOperation.AddToast, {
-          id: `${meta.profile.key}/join-by-key-failed`,
-          title: ['join-by-key-failed-toast.title', { ns: meta.profile.key }],
-          description: ['join-by-key-failed-toast.description', { ns: meta.profile.key }],
+          id: `${SpaceNamespace.key}/join-by-key-failed`,
+          title: ['join-by-key-failed-toast.title', { ns: SpaceNamespace.key }],
+          description: ['join-by-key-failed-toast.description', { ns: SpaceNamespace.key }],
           icon: 'ph--warning--regular',
         }).pipe(Effect.catch((toastError) => Effect.sync(() => log.warn('failed to add toast', { toastError }))));
       })

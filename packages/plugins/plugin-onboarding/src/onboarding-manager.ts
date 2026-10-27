@@ -21,9 +21,10 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as HelpOperation from '@dxos/plugin-support/HelpOperation';
 import { osTranslations } from '@dxos/ui-theme';
 
+import { meta } from '#meta';
+
 import hero from '../assets/hero.webp?url';
 import { AUTHORIZING_DEVICE_DIALOG, WELCOME_SCREEN } from './constants.ts';
-import { meta } from './meta.ts';
 import { isInvalidRecoveryToken, queryAllCredentials, removeQueryParamByValue } from './util.ts';
 
 export type OnboardingManagerProps = {

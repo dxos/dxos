@@ -4,12 +4,12 @@
 
 import type * as Theme from '@dxos/react-ui/Theme';
 
-import { meta } from '#meta';
+import { CrmNamespace } from './namespace.ts';
 
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [CrmNamespace.key]: {
         'plugin.name': 'CRM',
         'nav-tree-group-crm.label': 'CRM',
         'research.label': 'Research',

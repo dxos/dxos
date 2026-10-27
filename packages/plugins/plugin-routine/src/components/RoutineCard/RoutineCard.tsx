@@ -13,8 +13,7 @@ import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 
-import { meta } from '#meta';
-
+import { RoutineNamespace } from '../../namespace.ts';
 import { cronToSchedule, describeSchedule } from '../Schedule/index.ts';
 
 export type RoutineCardProps = AppSurface.ObjectCardProps<Routine.Routine>;
@@ -26,7 +25,7 @@ export type RoutineCardProps = AppSurface.ObjectCardProps<Routine.Routine>;
  * to the generic form preview, which renders its `spec`/`triggers` internals rather than a summary.
  */
 export const RoutineCard = ({ subject }: RoutineCardProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(RoutineNamespace.key);
   const [routine] = useObject(subject);
   // MVP enforces at most one trigger; the summary describes it.
   const [trigger] = useObject(routine.triggers.at(0));

@@ -7,6 +7,7 @@ import path from 'node:path';
 import { type PluginOption, defineConfig, searchForWorkspaceRoot } from 'vite';
 import wasm from 'vite-plugin-wasm';
 
+import { pluginConfigPlugin } from '@dxos/app-framework/vite-plugin';
 import { ConfigPlugin } from '@dxos/config/vite-plugin';
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 import { IconsPlugin, iconSymbolPattern } from '@dxos/vite-plugin-icons';
@@ -69,6 +70,8 @@ export default defineConfig({
     plugins: () => sharedPlugins(),
   },
   plugins: [
+    // Replaces each plugin's `dx.config.ts` with its manifest, so the app loads only data plus the bodies it activates.
+    pluginConfigPlugin(),
     ...sharedPlugins(),
     react({ include: /\.[jt]sx$/, exclude: [/\/node_modules\//] }),
     ConfigPlugin({ root: dirname }),

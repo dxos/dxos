@@ -1,12 +1,11 @@
+import { CodeNamespace } from './namespace.ts';
 //
 // Copyright 2025 DXOS.org
 //
 
-import { meta } from '#meta';
-
-export const CODE_PROJECTS_SECTION_TYPE = `${meta.profile.key}.code-projects-section`;
-export const CODE_PROJECT_SPEC_TYPE = `${meta.profile.key}.code-project-spec`;
-export const CODE_PROJECT_BUILD_TYPE = `${meta.profile.key}.code-project-build`;
+export const CODE_PROJECTS_SECTION_TYPE = `${CodeNamespace.key}.code-projects-section`;
+export const CODE_PROJECT_SPEC_TYPE = `${CodeNamespace.key}.code-project-spec`;
+export const CODE_PROJECT_BUILD_TYPE = `${CodeNamespace.key}.code-project-build`;
 
 /**
  * Graph node type for the per-plugin MDL spec child node contributed by this

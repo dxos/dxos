@@ -5,7 +5,7 @@
 
 import { type StorybookConfig } from '@storybook/react-vite';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { type InlineConfig, type Plugin } from 'vite';
 import turbosnap from 'vite-plugin-turbosnap';
 import wasm from 'vite-plugin-wasm';
@@ -403,6 +403,11 @@ export const createConfig = ({
     const { mergeConfig } = await import('vite');
     const { default: inspect } = await import('vite-plugin-inspect');
     const { DxosLogPlugin } = await import('@dxos/vite-plugin-log');
+    // Read from the workspace path: this package does not depend on app-framework, and its vite plugin
+    // is ESM-only.
+    const { moduleBodyAttributePlugin } = await import(
+      pathToFileURL(resolve(rootDir, 'packages/sdk/app-framework/dist/lib/vite-plugin.mjs')).href
+    );
 
     const finalConfig = mergeConfig(
       {
@@ -572,6 +577,9 @@ export const createConfig = ({
           //
 
           DxosLogPlugin(),
+
+          // Stories load plugin configs as authored; the browser rejects their module-body import attribute.
+          moduleBodyAttributePlugin(),
 
           // Hosts the Claude Agent SDK so stories reach it same-origin. Storybook builds its vite
           // config here and never loads a package's `vite.config.ts`, so a story cannot mount its

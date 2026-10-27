@@ -2,12 +2,28 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Config2 } from '@dxos/app-framework/config';
+import * as Effect from 'effect/Effect';
+
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
+import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
+import * as AppCapability from '@dxos/app-toolkit/AppCapability';
+import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
+import * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
+import * as RoutineEvents from '@dxos/plugin-routine/RoutineEvents';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
+import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { trim } from '@dxos/util';
 
-export default Config2.make({
+import { InboxNamespace } from './src/namespace.ts';
+import * as MessageExtractor from './src/operations/extractor/index.ts';
+import * as InboxCapabilities from './src/types/InboxCapabilities.ts';
+import * as InboxEvents from './src/types/InboxEvents.ts';
+
+// Annotated: the capability modules import `meta` from here, so inferring it would be circular.
+const config: Plugin.PluginConfig = Plugin.config({
   plugin: {
-    key: 'org.dxos.plugin.inbox',
+    key: InboxNamespace.key,
     name: 'Inbox',
     author: 'DXOS',
     description: trim`
@@ -23,4 +39,77 @@ export default Config2.make({
     source: 'https://github.com/dxos/dxos/tree/main/packages/plugins/plugin-inbox',
     tags: ['alpha', 'connector'],
   },
+  modules: [
+    AppCapability.appGraphBuilder(
+      () => import('./src/capabilities/app-graph-builder.ts', { with: { type: 'dx-module' } }),
+    ),
+    Capability.lazyModule(
+      'AutomationTemplates',
+      { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
+      () => import('./src/capabilities/automation-templates.ts', { with: { type: 'dx-module' } }),
+    ),
+    Capability.inlineModule('contact-extractor', { provides: [InboxCapabilities.ObjectExtractor] }, () =>
+      Effect.succeed([
+        Capability.contribute(InboxCapabilities.ObjectExtractor, MessageExtractor.ContactMessageExtractor),
+      ]),
+    ),
+    SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'dx-module' } }), {
+      environments: ['browser', 'node', 'tauri'],
+    }),
+    Capability.lazyModule(
+      'IdentitySpecs',
+      { provides: [SpaceCapabilities.IdentitySpec] },
+      () => import('./src/capabilities/identity-specs.ts', { with: { type: 'dx-module' } }),
+    ),
+    AppCapability.settings(() => import('./src/capabilities/settings.ts', { with: { type: 'dx-module' } }), {
+      provides: [InboxCapabilities.Settings],
+      activatesOn: ActivationEvents.Idle,
+    }),
+    // Read only by AnalyzeMailbox, which fires the start event before it reads them.
+    Capability.lazyModule(
+      'MailboxProcessors',
+      { provides: [InboxCapabilities.MailboxProcessor], activatesOn: InboxEvents.Start },
+      () => import('./src/capabilities/mailbox-processors.ts', { with: { type: 'dx-module' } }),
+    ),
+    AppCapability.navigationResolver(
+      () => import('./src/capabilities/navigation-target-resolver.ts', { with: { type: 'dx-module' } }),
+      {
+        environments: ['browser', 'tauri'],
+        requires: [ClientCapabilities.Client],
+      },
+    ),
+    AppCapability.operationHandler(
+      () => import('./src/capabilities/operation-handler.ts', { with: { type: 'dx-module' } }),
+      {
+        activatesOn: ActivationEvents.Idle,
+      },
+    ),
+    AppCapability.surface(() => import('./src/capabilities/react-surface.ts', { with: { type: 'dx-module' } }), {
+      roles: [
+        'org.dxos.role.article',
+        'org.dxos.role.cardContent',
+        'org.dxos.role.objectProperties',
+        'org.dxos.role.popover',
+        'org.dxos.role.related',
+        'org.dxos.role.section',
+      ],
+    }),
+    AppCapability.schema(() => import('./src/capabilities/schema.ts', { with: { type: 'dx-module' } })),
+    AppCapability.skillDefinition(
+      () => import('./src/capabilities/skill-definition.ts', { with: { type: 'dx-module' } }),
+      {
+        environments: ['browser', 'node', 'tauri'],
+      },
+    ),
+    Capability.inlineModule('summarize-extractor', { provides: [InboxCapabilities.ObjectExtractor] }, () =>
+      Effect.succeed([
+        Capability.contribute(InboxCapabilities.ObjectExtractor, MessageExtractor.SummarizeMessageExtractor),
+      ]),
+    ),
+    AppCapability.translations(() => import('./src/translations.ts', { with: { type: 'dx-module' } })),
+  ],
 });
+
+export const { meta, make } = config;
+
+export default config;

@@ -13,14 +13,15 @@ import * as Skill from '@dxos/compute/Skill';
 
 import { RoutineCard } from '#components';
 import { RoutineArticle, RoutineSettings, RoutineTraceCompanion, SkillArticle } from '#containers';
-import { meta } from '#meta';
+
+import { RoutineNamespace } from '../namespace.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
       Surface.create({
         id: 'spaceSettingsAutomation',
-        filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.space-settings-automation`),
+        filter: AppSurface.literal(AppSurface.Article, `${RoutineNamespace.key}.space-settings-automation`),
         component: RoutineSettings,
       }),
       Surface.create({

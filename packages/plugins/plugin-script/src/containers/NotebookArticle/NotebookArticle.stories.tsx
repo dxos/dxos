@@ -62,8 +62,8 @@ const meta: Meta<typeof NotebookArticle> = {
               defaultSpace.db.add(Operation.serialize(AgentOperation.RunInstructions));
             }),
         }),
-        AssistantPlugin(),
-        RoutinePlugin(),
+        AssistantPlugin.make(),
+        RoutinePlugin.make(),
         ExplorerPlugin.make(),
         MarkdownPlugin.make(),
       ],

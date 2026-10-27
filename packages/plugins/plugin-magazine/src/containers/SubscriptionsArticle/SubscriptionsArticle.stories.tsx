@@ -20,7 +20,7 @@ import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
 
-import { MagazinePlugin } from '#plugin';
+import * as MagazinePlugin from '#meta';
 import { translations } from '#translations';
 import { Subscription } from '#types';
 
@@ -63,9 +63,9 @@ const meta: Meta<typeof DefaultStory> = {
               });
             }),
         }),
-        SpacePlugin({}),
+        SpacePlugin.make({}),
         StorybookPlugin.make({}),
-        MagazinePlugin(),
+        MagazinePlugin.make(),
       ],
     }),
   ],

@@ -12,7 +12,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
 import { Video } from '@dxos/types';
 
-import { meta } from '#meta';
+import { VideoNamespace } from '../namespace.ts';
+
 // Import only the (lightweight) Video type directly — NOT via the `#types` barrel. The barrel also
 // evaluates `VideoOperation`, which pulls the `@dxos/ai` stack; importing that here would drag the
 // whole AI stack into early boot (this module contributes `AppCapabilities.AppGraphBuilder`). The
@@ -45,7 +46,7 @@ export default Capability.makeModule(
                 return yield* Operation.invoke(ops.FetchTranscript, { video: Ref.make(video) }, scope(video));
               }),
             properties: {
-              label: ['fetch-transcript.label', { ns: meta.profile.key }],
+              label: ['fetch-transcript.label', { ns: VideoNamespace.key }],
               icon: 'ph--closed-captioning--regular',
               disposition: 'list-item',
             },
@@ -58,7 +59,7 @@ export default Capability.makeModule(
                 return yield* Operation.invoke(ops.Transcribe, { video: Ref.make(video) }, scope(video));
               }),
             properties: {
-              label: ['transcribe.label', { ns: meta.profile.key }],
+              label: ['transcribe.label', { ns: VideoNamespace.key }],
               icon: 'ph--subtitles--regular',
               disposition: 'list-item',
             },
@@ -71,7 +72,7 @@ export default Capability.makeModule(
                 return yield* Operation.invoke(ops.Summarize, { video: Ref.make(video) }, scope(video));
               }),
             properties: {
-              label: ['summarize.label', { ns: meta.profile.key }],
+              label: ['summarize.label', { ns: VideoNamespace.key }],
               icon: 'ph--text-align-left--regular',
               disposition: 'list-item',
             },

@@ -10,7 +10,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { TerraPlugin } from '#plugin';
+import * as TerraPlugin from '#meta';
 import { translations } from '#translations';
 import { Terra, TerraCapabilities } from '#types';
 
@@ -45,7 +45,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// A bare manager, not `TerraPlugin()`: these stories exercise TerraArticle's fallback cache, which
+// A bare manager, not `TerraPlugin.make()`: these stories exercise TerraArticle's fallback cache, which
 // only runs while the PlanetCache capability is unregistered.
 export const Default: Story = {
   decorators: [withPluginManager()],
@@ -99,5 +99,5 @@ const CachedStory = () => {
  */
 export const CachedManual: Story = {
   render: () => <CachedStory />,
-  decorators: [withPluginManager({ plugins: [TerraPlugin()] })],
+  decorators: [withPluginManager({ plugins: [TerraPlugin.make()] })],
 };

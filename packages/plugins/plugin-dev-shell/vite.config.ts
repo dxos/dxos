@@ -7,11 +7,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 export default defineConfig({
   entry: {
     'index': 'src/index.ts',
-    'DevShellPlugin': 'src/DevShellPlugin.ts',
-    'plugin': 'src/plugin.ts',
     'skills': 'src/skills/index.ts',
-    'capabilities': 'src/capabilities/index.ts',
-    'meta': 'src/meta.ts',
     'operations': 'src/operations/index.ts',
     // Browser-safe wire contract and fetch client for the dev-server route.
     'shell': 'src/shell/index.ts',

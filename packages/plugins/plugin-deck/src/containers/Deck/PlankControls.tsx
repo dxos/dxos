@@ -9,9 +9,9 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Button from '@dxos/react-ui/Button';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
 import { DeckOperation } from '#types';
 
+import { DeckNamespace } from '../../namespace.ts';
 import { type PlankCapabilities } from './useDeckPlank.ts';
 
 export type PlankControlHandler = (event: DeckOperation.PartAdjustment) => void;
@@ -28,7 +28,7 @@ export type PlankCompanionControlsProps = {
 
 export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompanionControlsProps>(
   ({ primary }, forwardedRef) => {
-    const { t } = UiHooks.useTranslation(meta.profile.key);
+    const { t } = UiHooks.useTranslation(DeckNamespace.key);
     const { invokePromise } = Hooks.useOperationInvoker();
     // `anchor` names the plank this control belongs to: companions are per-plank, and resolving the
     // target from attention instead would close whichever plank happened to be attended.
@@ -96,7 +96,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
     },
     forwardedRef,
   ) => {
-    const { t } = UiHooks.useTranslation(meta.profile.key);
+    const { t } = UiHooks.useTranslation(DeckNamespace.key);
     const buttonClassNames =
       variant === 'hide-disabled' ? `disabled:hidden ${plankControlSpacing}` : plankControlSpacing;
 

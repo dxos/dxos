@@ -11,8 +11,9 @@ import { Form } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 
-import { meta } from '#meta';
 import { IllustratorCapabilities } from '#types';
+
+import { IllustratorNamespace } from '../namespace.ts';
 
 export type CreateDrawingPanelProps = SpaceCapabilities.CreateObjectCustomPanelProps & {
   /** Optional override (primarily for stories/tests). Defaults to IllustratorCapabilities.VariantProvider. */
@@ -35,7 +36,7 @@ export const CreateDrawingPanel = ({
   onCancel,
   variants: variantsProp,
 }: CreateDrawingPanelProps) => {
-  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(IllustratorNamespace.key);
   const capabilityVariants = Hooks.useCapabilities(IllustratorCapabilities.VariantProvider);
   const variants = variantsProp ?? capabilityVariants;
   const sorted = useMemo(() => [...variants].sort((a, b) => a.label.localeCompare(b.label)), [variants]);

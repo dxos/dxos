@@ -10,7 +10,7 @@ import * as Struct from 'effect/Struct';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
-import { meta } from '#meta';
+import { SupportNamespace } from '../namespace.ts';
 
 export const StateSchema = Schema.Struct({
   running: Schema.Boolean,
@@ -24,7 +24,7 @@ export const StateSchema = Schema.Struct({
 
 export type State = Schema.Schema.Type<typeof StateSchema>;
 
-export const State = Capability.makeSingleton<Atom.Writable<State>>()(`${meta.profile.key}.capability.state`);
+export const State = Capability.makeSingleton<Atom.Writable<State>>()(`${SupportNamespace.key}.capability.state`);
 
 /** Tours the reader has started, keyed by tour id so each one syncs as its own settings key. */
 export const SeenToursSchema = Schema.Record(Schema.String, Schema.Boolean);
@@ -32,5 +32,5 @@ export const SeenToursSchema = Schema.Record(Schema.String, Schema.Boolean);
 export type SeenTours = Schema.Schema.Type<typeof SeenToursSchema>;
 
 export const SeenTours = Capability.makeSingleton<Atom.Writable<SeenTours>>()(
-  `${meta.profile.key}.capability.seenTours`,
+  `${SupportNamespace.key}.capability.seenTours`,
 );

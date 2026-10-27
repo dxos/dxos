@@ -29,9 +29,9 @@ import {
   useSlideIndex,
 } from '#hooks';
 import { type LayoutName } from '#markdown';
-import { meta } from '#meta';
 import { Presentation, PresenterSurface } from '#types';
 
+import { PresenterNamespace } from '../../namespace.ts';
 import PresentedOverlay from '../PresentedOverlay/index.ts';
 
 /** Content of a slide created from the toolbar, with its `layout:` unless that is the default. */
@@ -44,7 +44,7 @@ export type PresentationArticleProps = AppSurface.ObjectArticleProps<Presentatio
  * A presentation's slides as a grid, presented fullscreen in place; the current slide is per-viewer view state.
  */
 export const PresentationArticle = ({ role, subject, attendableId }: PresentationArticleProps) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(PresenterNamespace.key);
   const slides = usePresentationDeck(subject);
   const [theme] = useObject(subject, 'theme');
   const [index, setIndex] = useSlideIndex(Obj.getURI(subject), slides.length);

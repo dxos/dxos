@@ -18,10 +18,10 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
 
-import { meta } from '#meta';
 import { NativeCapabilities, Update } from '#types';
 
 import { TAURI_LOCALHOST_PORTS } from '../constants.ts';
+import { NativeNamespace } from '../namespace.ts';
 import { saveBeforeLeaving, unsavedChangesToast } from '../unsaved-changes.ts';
 
 const SUPPORTS_OTA = ['linux', 'macos', 'windows'];
@@ -191,12 +191,12 @@ export default Capability.makeModule(
         return true;
       }
       yield* invoke(LayoutOperation.AddToast, {
-        id: `${meta.profile.key}.update-ready`,
-        title: ['update-ready.label', { ns: meta.profile.key }],
-        description: ['update-ready.description', { ns: meta.profile.key }],
+        id: `${NativeNamespace.key}.update-ready`,
+        title: ['update-ready.label', { ns: NativeNamespace.key }],
+        description: ['update-ready.description', { ns: NativeNamespace.key }],
         duration: Infinity,
-        actionLabel: ['update.label', { ns: meta.profile.key }],
-        actionAlt: ['update.alt', { ns: meta.profile.key }],
+        actionLabel: ['update.label', { ns: NativeNamespace.key }],
+        actionAlt: ['update.alt', { ns: NativeNamespace.key }],
         onAction: () => void relaunchSaved(),
       });
       return false;

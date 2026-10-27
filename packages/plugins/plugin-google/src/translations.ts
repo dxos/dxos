@@ -1,13 +1,12 @@
+import { GoogleNamespace } from './namespace.ts';
 //
 // Copyright 2026 DXOS.org
 //
 
-import { meta } from '#meta';
-
 export const translations = [
   {
     'en-US': {
-      [meta.profile.key]: {
+      [GoogleNamespace.key]: {
         'plugin.name': 'Google',
       },
     },
