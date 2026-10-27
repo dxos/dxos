@@ -613,7 +613,6 @@ const useMailboxActions = (
   const injectedActions = Hooks.useCapabilities(InboxCapabilities.MailboxAction);
   const mailboxExtractorActions = useMailboxExtractorActions(mailbox, extractors, invoker);
   const mailboxActions = useInjectedMailboxActions(mailbox, injectedActions, invoker);
-  const extractActions = [...mailboxExtractorActions, ...mailboxActions];
 
   return useMenuBuilder(
     (get) => {
@@ -677,8 +676,13 @@ const useMailboxActions = (
               rootId: TOOLBAR_OVERFLOW_ID,
             });
             menu.subgraph(jobs);
-            if (extractActions.length > 0) {
-              if (jobs.nodes.length > 0) {
+            // Contributed actions (plugin-labeler's triage, plugin-crm's image search) are mailbox-wide
+            // jobs like sync and analyze, not extractors, so they sit beside them.
+            for (const item of mailboxActions) {
+              menu.action(`mailbox-${item.id}`, { label: item.label, icon: item.icon }, item.onSelect);
+            }
+            if (mailboxExtractorActions.length > 0) {
+              if (jobs.nodes.length > 0 || mailboxActions.length > 0) {
                 menu.separator('line');
               }
               menu.group(
@@ -689,7 +693,7 @@ const useMailboxActions = (
                   testId: 'inbox.mailbox.extract',
                 },
                 (group) => {
-                  for (const item of extractActions) {
+                  for (const item of mailboxExtractorActions) {
                     group.action(`extract-${item.id}`, { label: item.label }, item.onSelect);
                   }
                 },
