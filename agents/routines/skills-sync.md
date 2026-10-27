@@ -11,7 +11,7 @@ that edit, because `npx skills update` reinstalls over the folder whenever the u
 So each run first finds such edits and takes them upstream, and updates a consumer only when its
 copy holds nothing that dxos lacks.
 
-`scripts/skills-sync.mjs` makes the decision deterministic. The consumer's `skills-lock.json`
+`scripts/skills-sync.ts` makes the decision deterministic. The consumer's `skills-lock.json`
 records each skill's content hash at install time; the script compares that hash with the installed
 folder and with the source at `origin/main`:
 
@@ -48,7 +48,7 @@ edge/.agents/skills/<name>/ by hand, and never update a copy that holds local ed
 1. Fetch: `git -C dxos fetch origin main` and `git -C edge fetch origin main`. The script searches
    dxos history for the commit each copy was installed from, so deepen a shallow clone first:
    `git -C dxos fetch --deepen=500 origin main`.
-2. Classify: `node dxos/scripts/skills-sync.mjs --consumer edge --ref origin/main --patch-dir
+2. Classify: `bun dxos/scripts/skills-sync.ts --consumer edge --ref origin/main --patch-dir
    <scratchpad>/patches --json`. Exit 0 means every skill is in sync: reply "nothing to sync" and
    stop without a PR.
 3. For every skill that is `edited` or `diverged`, take the edit upstream first. Work in dxos, on

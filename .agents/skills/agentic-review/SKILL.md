@@ -73,7 +73,7 @@ with `npx skills add dxos/dxos --skill agentic-review`, which records it in `ski
 skill folder holds only the engine, so it is identical everywhere: each repo keeps its rules in its
 own `.mdl` files (`.agents/rules/` for the repo-wide ones), never inside the skill, because a
 reinstall replaces the whole folder. In a repo that installed the skill, do not edit it in place:
-change it in `dxos/dxos` first, then update the copy. `scripts/skills-sync.mjs` in `dxos/dxos`
+change it in `dxos/dxos` first, then update the copy. `scripts/skills-sync.ts` in `dxos/dxos`
 detects a copy that was edited in place and produces the patch to take upstream.
 
 Rules are **`rule` blocks** inside `.mdl` documents (the repo's structured
