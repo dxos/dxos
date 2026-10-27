@@ -4,7 +4,7 @@
 
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { Filter, Query, Relation } from '@dxos/echo';
+import { Filter, Query, Ref, Relation } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { Text } from '@dxos/schema';
 import { File, PullRequest, Task } from '@dxos/types';
@@ -38,21 +38,21 @@ describe('Feature', () => {
       ],
     });
 
-  test('subfeatures are records on the feature; spec paths open on GitHub', async ({ expect }) => {
+  test('subfeatures are features naming their parent; spec paths open on GitHub', async ({ expect }) => {
     const { db } = await open();
     const sync = db.add(
       Feature.make({
         name: 'Sync',
         status: 'prototype',
-        subfeatures: [
-          { name: 'Gmail', status: 'operational' },
-          { name: 'IMAP', status: 'planned' },
-        ],
+        requirements: [{ id: 'F-3.1', text: 'New mail shows within a minute.' }],
       }),
     );
+    db.add(Feature.make({ name: 'Gmail', status: 'operational', parent: Ref.make(sync) }));
+    db.add(Feature.make({ name: 'IMAP', status: 'planned', parent: Ref.make(sync) }));
     await db.flush();
-    expect(sync.subfeatures?.map(({ name }) => name)).toEqual(['Gmail', 'IMAP']);
-    expect(await db.query(Filter.type(Feature.Feature)).run()).toHaveLength(1);
+    const subfeatures = await db.query(Filter.type(Feature.Feature, { parent: Ref.make(sync) })).run();
+    expect(subfeatures.map(({ name }) => name).sort()).toEqual(['Gmail', 'IMAP']);
+    expect(sync.requirements).toEqual([{ id: 'F-3.1', text: 'New mail shows within a minute.' }]);
 
     expect(Feature.getSpecUrl('packages/plugins/plugin-inbox/PLUGIN.mdl#F-3')).toBe(
       'https://github.com/dxos/dxos/blob/main/packages/plugins/plugin-inbox/PLUGIN.mdl',

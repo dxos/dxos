@@ -5,20 +5,33 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
-import { Database, EID, Filter, Obj, Query } from '@dxos/echo';
+import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { Task } from '@dxos/types';
 
 import { Feature, FeatureOperation, Showcase } from '#types';
 
-import { endpoints } from './util.ts';
+import { endpoints, refId } from './util.ts';
 
 const handler: Operation.WithHandler<typeof FeatureOperation.GetFeatures> = FeatureOperation.GetFeatures.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ project: projectRef }) {
-      const projectId = EID.getEntityId(EID.parse(projectRef.uri));
-      const members = (yield* Database.query(Filter.type(Feature.Feature)).run)
-        .filter((feature) => feature.project && EID.getEntityId(EID.parse(feature.project.uri)) === projectId)
-        .sort((a, b) => a.name.localeCompare(b.name));
+      const projectId = refId(projectRef);
+      const all = (yield* Database.query(Filter.type(Feature.Feature)).run).sort((a, b) =>
+        a.name.localeCompare(b.name),
+      );
+      // The project's top-level features, each followed by its subtree, depth first.
+      const children = Map.groupBy(
+        all.filter((feature) => feature.parent),
+        (feature) => (feature.parent ? refId(feature.parent) : ''),
+      );
+      const members: Feature.Feature[] = [];
+      const visit = (feature: Feature.Feature) => {
+        if (!members.includes(feature)) {
+          members.push(feature);
+          (children.get(feature.id) ?? []).forEach(visit);
+        }
+      };
+      all.filter((feature) => feature.project && refId(feature.project) === projectId).forEach(visit);
       const features: FeatureOperation.FeatureSummary[] = [];
       for (const feature of members) {
         const selected = Query.select(Filter.id(feature.id));
@@ -29,9 +42,11 @@ const handler: Operation.WithHandler<typeof FeatureOperation.GetFeatures> = Feat
           id: feature.id,
           link: Feature.getLink(feature),
           name: feature.name,
+          description: feature.description,
           status: feature.status,
+          requirements: (feature.requirements ?? []).map((requirement) => ({ ...requirement })),
           specs: [...(feature.specs ?? [])],
-          subfeatures: (feature.subfeatures ?? []).map((subfeature) => ({ ...subfeature })),
+          parent: feature.parent && refId(feature.parent),
           dependsOn: dependsOn.map((relation) => endpoints(relation)[1]),
           tasks: tasks
             .filter((task): task is Task.Task => Obj.instanceOf(Task.Task, task))
