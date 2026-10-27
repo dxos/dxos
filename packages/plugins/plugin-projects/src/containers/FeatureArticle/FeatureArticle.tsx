@@ -19,7 +19,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
-import { Feature } from '#types';
+import { Feature, Spec } from '#types';
 
 import {
   FeatureCard,
@@ -84,8 +84,8 @@ export const FeatureDetail = ({ feature: subject, attendableId, onSelectSubfeatu
   const editing = useFeatureEditing(db);
   // A feature cannot depend on itself; the operation refuses longer cycles with their path.
   const excludedDependencies = useMemo(() => [subject.id, ...(feature?.dependsOn ?? [])], [subject.id, feature]);
-  // Filing needs somewhere to file into: the project the feature belongs to, and its task set.
-  const project = useResolveRef(snapshot?.project);
+  // Filing needs somewhere to file into: the project tracking the feature's spec, and its task set.
+  const project = useResolveRef(snapshot ? Spec.findProject(subject) : undefined);
   const canFileTask = !!project?.taskSet;
   const handleEnter = (action: (value: string) => void) => (event: KeyboardEvent<HTMLInputElement>) => {
     const input = event.currentTarget;

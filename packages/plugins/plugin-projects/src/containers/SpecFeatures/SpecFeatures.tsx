@@ -6,10 +6,10 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { Fragment, useCallback, useMemo } from 'react';
 
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
-import type * as Project from '@dxos/compute/Project';
-import { Filter, Obj, Query, Ref } from '@dxos/echo';
-import { useQuery } from '@dxos/echo-react';
+import { Filter, Obj, Query } from '@dxos/echo';
+import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import {
   Attention,
   useSelection,
@@ -27,19 +27,20 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { FeatureKanban } from '#components';
 import { FEATURE_COMPANION, meta } from '#meta';
-import { Feature, FeatureMapView } from '#types';
+import { Feature, FeatureMapView, Spec } from '#types';
 
 // Not in the components barrel: the canvas engine is large, and the barrel is also loaded by capabilities at boot.
 import { FeatureCanvas } from '../../components/FeatureCanvas/index.ts';
 import { ObjectAddPicker } from '../../components/ObjectAddPicker/index.ts';
 import { useFeatureEditing, useFeatureGraph } from '../../hooks/index.ts';
 
-export type ProjectFeaturesProps = {
-  project: Project.Project;
+export type SpecFeaturesProps = {
+  role?: string;
+  spec: Spec.Spec;
   attendableId?: string;
 };
 
-type Point = NonNullable<Feature.Feature['position']>;
+type Point = Spec.Position;
 
 const MODES: { mode: FeatureMapView.Mode; icon: string }[] = [
   { mode: 'canvas', icon: 'ph--graph--regular' },
@@ -48,60 +49,89 @@ const MODES: { mode: FeatureMapView.Mode; icon: string }[] = [
 
 const nothing = Query.select(Filter.nothing());
 
-/** The features from the root down to `feature`, read through atoms so a rename reaches the trail. */
-const useTrail = (feature: Feature.Feature | undefined): { id: string; name: string }[] => {
+/**
+ * The features from the map's spec down to `feature`, each the owner of the next one's spec, read through atoms so a
+ * rename reaches the trail. Stops at `root`, so a nested spec opened on its own trails from itself.
+ */
+const useTrail = (root: Spec.Spec, feature: Feature.Feature | undefined): { id: string; name: string }[] => {
   const trailAtom = useMemo(
     () =>
       Atom.make((get) => {
         const trail: { id: string; name: string }[] = [];
         for (let current = feature; current && trail.length < 32;) {
-          const { id, name, parent } = get(Obj.atom(current));
+          const { id, name } = get(Obj.atom(current));
           trail.unshift({ id, name });
-          const next = parent && get(Obj.atomReactive(parent));
-          current = Feature.instanceOf(next) ? next : undefined;
+          const container = Spec.getContainer(current);
+          current = container && container.id !== root.id ? Spec.getOwner(container) : undefined;
         }
         return trail;
       }),
-    [feature],
+    [root, feature],
   );
   return useAtomValue(trailAtom);
 };
 
 /**
- * A project's Features tab: one level of its feature map, on a canvas or by status. A click selects a feature and shows
- * it in the plank's feature companion; a double-click zooms into its subfeatures, and the trail above zooms back out.
+ * A spec's feature map: one level of it, on a canvas or by status. A click selects a feature and shows it in the
+ * plank's feature companion; a double-click zooms into the spec that breaks the feature down, and the trail above zooms
+ * back out.
  */
-export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps) => {
+export const SpecFeatures = ({ role, spec, attendableId }: SpecFeaturesProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { mode, focus } = useViewState(FeatureMapView.aspect, project.id);
-  const { update: updateView } = useViewStateActions(FeatureMapView.aspect, project.id);
-  const db = Obj.getDatabase(project);
+  const { mode, focus } = useViewState(FeatureMapView.aspect, spec.id);
+  const { update: updateView } = useViewStateActions(FeatureMapView.aspect, spec.id);
+  const db = Obj.getDatabase(spec);
 
   // The feature zoomed into; a focus that no longer resolves (deleted) falls back to the top level.
   const [focusFeature] = useQuery(focus ? db : undefined, focus ? Query.select(Filter.id(focus)) : nothing);
   const zoomed = Feature.instanceOf(focusFeature) ? focusFeature : undefined;
-  const trail = useTrail(zoomed);
+  const trail = useTrail(spec, zoomed);
 
-  // Queried, not read off the project or parent: membership lives on each feature, so a move by an agent shows up here.
-  // Filtered in the query rather than after it, since clearing a feature's `project` or `parent` leaves the set of
-  // features unchanged and a filter over that set would never re-run.
-  const levelQuery = useMemo(
+  // The level's spec: the map's own, or the one breaking the zoomed feature down (none until a feature is added).
+  const zoomedSnapshot = useObject(zoomed)[0];
+  const breakdown = useResolveRef(zoomedSnapshot?.spec);
+  const level = zoomed ? (Spec.instanceOf(breakdown) ? breakdown : undefined) : spec;
+  const [levelSnapshot] = useObject(level);
+  // Read through atoms, so a feature added by an agent or renamed on another peer reaches the map.
+  const idsAtom = useMemo(
     () =>
-      zoomed
-        ? Query.select(Filter.type(Feature.Feature, { parent: Ref.make(zoomed) }))
-        : Query.select(Filter.type(Feature.Feature, { project: Ref.make(project) })),
-    [zoomed, project],
+      Atom.make((get) => {
+        if (!level) {
+          return [];
+        }
+        const members = get(Obj.atomReactive(get(Obj.atom(level)).features)).filter(Feature.instanceOf);
+        return members
+          .map((member) => get(Obj.atom(member)))
+          .sort((left, right) => left.name.localeCompare(right.name))
+          .map(({ id }) => id);
+      }),
+    [level],
   );
-  const levelFeatures = useQuery(db, levelQuery);
-  const members = useMemo(() => [...levelFeatures].sort((a, b) => a.name.localeCompare(b.name)), [levelFeatures]);
-  const ids = useMemo(() => members.map((feature) => feature.id), [members]);
-  const positions = useMemo(
-    () => Object.fromEntries(members.flatMap((feature) => (feature.position ? [[feature.id, feature.position]] : []))),
-    [members],
+  const memberIds = useAtomValue(idsAtom);
+  // Keyed by content, so an unchanged set keeps its identity across renders and the graph's subscriptions stay put.
+  const idsKey = memberIds.join(',');
+  const ids = useMemo(() => (idsKey ? idsKey.split(',') : []), [idsKey]);
+  const positions = useMemo(() => ({ ...levelSnapshot?.layout?.positions }), [levelSnapshot]);
+  // Neighbours load the features on other specs that this level depends on, which the cards mark rather than draw.
+  const graph = useFeatureGraph(db, ids, { neighbours: true });
+  const features = useMemo(
+    () =>
+      ids.flatMap((id) => {
+        const feature = graph.lookup(id);
+        if (!feature) {
+          return [];
+        }
+        const external = feature.dependsOn
+          .filter((dependency) => !ids.includes(dependency))
+          .flatMap((dependency) => {
+            const target = graph.lookup(dependency);
+            return target ? [{ id: target.id, name: target.name }] : [];
+          });
+        return [{ ...feature, external }];
+      }),
+    [ids, graph],
   );
-  const graph = useFeatureGraph(db, ids);
-  const features = useMemo(() => ids.flatMap((id) => graph.lookup(id) ?? []), [ids, graph]);
-  const editing = useFeatureEditing(db, project);
+  const editing = useFeatureEditing(db, spec);
 
   // The selection is the plank's, so the feature companion follows it without either holding state of its own.
   const selectedId = useSelection(attendableId, 'single');
@@ -135,10 +165,7 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
       void editing.createFeature(t('feature-map.new-feature.name'), zoomed?.id).then((id) => id && handleSelect(id)),
     [editing, zoomed, handleSelect, t],
   );
-  const handleAdd = useCallback(
-    (id: string) => (zoomed ? editing.setParent(id, zoomed.id) : editing.addToProject(id)),
-    [editing, zoomed],
-  );
+  const handleAdd = useCallback((id: string) => editing.moveFeature(id, zoomed?.id), [editing, zoomed]);
 
   const menu = useMenuBuilder((): ActionGraphProps => {
     return MenuBuilder.make()
@@ -201,22 +228,31 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
       .build();
   }, [mode, updateView, db, ids, trail, zoomed, editing, handleNew, handleAdd, t]);
 
-  // Only the features whose box moved are written, so a drag touches one object rather than the whole map.
+  // Only the boxes that moved are written, so a drag touches one entry of the layout rather than all of it.
   const handlePositionsChange = useCallback(
-    (next: Record<string, Point>) =>
-      members.forEach((feature) => {
-        const point = next[feature.id];
-        if (point && (point.x !== feature.position?.x || point.y !== feature.position?.y)) {
-          Obj.update(feature, (feature) => {
-            feature.position = { x: point.x, y: point.y };
-          });
-        }
-      }),
-    [members],
+    (next: Record<string, Point>) => {
+      if (!level) {
+        return;
+      }
+      const moved = ids.flatMap((id) => {
+        const point = next[id];
+        const current = positions[id];
+        return point && (point.x !== current?.x || point.y !== current?.y) ? [[id, point] as const] : [];
+      });
+      if (moved.length > 0) {
+        Obj.update(level, (level) => {
+          level.layout ??= { positions: {} };
+          for (const [id, { x, y }] of moved) {
+            level.layout.positions[id] = { x, y };
+          }
+        });
+      }
+    },
+    [level, ids, positions],
   );
 
   return (
-    <Panel.Root>
+    <Panel.Root role={role}>
       <Panel.Header>
         <ActionToolbar {...menu} attendableId={attendableId} />
         {/* The trail is a second row: the map's level, with every step above it a way back out. */}
@@ -285,7 +321,7 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
               onZoom={handleZoom}
               onLink={editing.addDependency}
               onUnlink={editing.removeDependency}
-              onRemove={zoomed ? undefined : editing.removeFromProject}
+              onRemove={editing.removeFeature}
             />
           </div>
         )}
@@ -293,3 +329,10 @@ export const ProjectFeatures = ({ project, attendableId }: ProjectFeaturesProps)
     </Panel.Root>
   );
 };
+
+export type SpecArticleProps = AppSurface.ObjectArticleProps<Spec.Spec>;
+
+/** Article surface for a {@link Spec.Spec}: its feature map. */
+export const SpecArticle = ({ role, subject, attendableId }: SpecArticleProps) => (
+  <SpecFeatures role={role} spec={subject} attendableId={attendableId} />
+);

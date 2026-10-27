@@ -6,11 +6,12 @@
 
 import * as Schema from 'effect/Schema';
 
-import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, DXN, Format, Obj, Ref, Relation, Type } from '@dxos/echo';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
 import { Task } from '@dxos/types';
+
+import * as Spec from './Spec.ts';
 
 //
 // Status
@@ -54,10 +55,6 @@ export type CodeLink = Schema.Schema.Type<typeof CodeLink>;
 // Feature
 //
 
-/** Where a feature's card sits on the canvas of its map. */
-export const Position = Schema.Struct({ x: Schema.Number, y: Schema.Number });
-export type Position = Schema.Schema.Type<typeof Position>;
-
 /** One thing the feature must do, as stated in its spec; `id` is the spec's own (`F-3.2`) when it came from one. */
 export const Requirement = Schema.Struct({
   id: Schema.optional(Schema.String.pipe(Schema.annotate({ title: 'Id' }))),
@@ -66,11 +63,11 @@ export const Requirement = Schema.Struct({
 export type Requirement = Schema.Schema.Type<typeof Requirement>;
 
 /**
- * A goal state: something the product should do, with the requirements that define it. Features nest: a feature with
- * a `parent` is one of that feature's subfeatures. A spec block (`feat F-3` and its `req` lines) is the unstructured
- * source a feature's requirements are extracted from.
+ * A goal state: something the product should do, with the requirements that define it. A feature belongs to one
+ * spec (its ECHO parent, which lists it in `features`), and nests by owning a spec of its own that breaks it down. A
+ * spec block (`feat F-3` and its `req` lines) is the unstructured source a feature's requirements are extracted from.
  */
-export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.feature', '0.2.0'))(
+export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.feature', '0.3.0'))(
   Schema.Struct({
     name: Schema.String.pipe(Schema.annotate({ title: 'Name', description: 'A noun phrase of two to five words.' })),
 
@@ -110,27 +107,21 @@ export class Feature extends Type.makeObject<Feature>(DXN.make('org.dxos.type.fe
     specs: Schema.optional(Schema.Array(Schema.String).pipe(Annotation.FormInputAnnotation.set(false))),
 
     /**
-     * The feature this one is a part of; its map shows this feature when the reader zooms into the parent. A feature
-     * with a parent sits on no project of its own: it belongs to the project its root feature is on.
+     * The spec that breaks this feature down into features of its own; owned, so deleting the feature deletes it.
+     * Suspended because the spec module refers back to this one.
      */
-    parent: Schema.optional(
-      Schema.suspend((): Ref.RefSchema<Feature> => Ref.Ref(Feature)).pipe(Annotation.FormInputAnnotation.set(false)),
+    spec: Schema.optional(
+      Schema.suspend((): Ref.RefSchema<Spec.Spec> => Ref.Ref(Spec.Spec)).pipe(
+        Annotation.SetParent.set(),
+        Annotation.FormInputAnnotation.set(false),
+      ),
     ),
-
-    /**
-     * The project whose feature map lists this feature at the top level. Held by the feature rather than the project,
-     * since a project is a generic compute type that knows nothing of features; not owned, so deleting a project keeps it.
-     */
-    project: Schema.optional(Ref.Ref(Project.Project).pipe(Annotation.FormInputAnnotation.set(false))),
 
     /**
      * The code that cites this feature with a `@feature` tag, as last imported from a scan of the repository; held
      * here so the feature map reads it without the repository.
      */
     code: Schema.optional(Schema.Array(CodeLink).pipe(Annotation.FormInputAnnotation.set(false))),
-
-    /** Where the user dragged the card on its map (its project's, or its parent's); without one it is laid out automatically. */
-    position: Schema.optional(Position.pipe(Annotation.FormInputAnnotation.set(false))),
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--puzzle-piece--regular', hue: 'violet' }),

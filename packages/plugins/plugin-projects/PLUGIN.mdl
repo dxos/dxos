@@ -217,3 +217,44 @@ test QA-5: Showcase clip
       do: Tick the first task and click Send to agent.
       expect: the Gantt panel opens
 ```
+
+```mdl
+test QA-6: Walk a spec's feature map
+  desc: |
+    A spec is the feature map the sidebar lists. A feature nests by owning a spec of its own, which the map zooms
+    into. Walked by the autocue flow `packages/plugins/plugin-projects/autocue/spec-map.mjs` against the
+    SpecFeatures story, whose seed puts eight features on one spec and gives "Provider sync" two subfeatures.
+  actors: human
+  status: unverified
+  given:
+    - storybook serves plugin-projects
+    - the seeded spec "Inbox and agents" names a project and holds eight features
+  steps:
+    - name: Open a spec's feature map
+      do: Open the spec.
+      expect: the canvas shows eight feature cards with an arrow per dependency
+    - name: Select a feature
+      do: Click the "Provider sync" card.
+      expect: the companion shows its description, requirements and its subfeatures IMAP and Gmail
+    - name: Zoom into the feature's own spec
+      do: Double-click the "Provider sync" card.
+      expect: the canvas shows its two subfeatures, and the trail reads All features › Provider sync
+    - name: Add a subfeature
+      do: Click New feature.
+      expect: a third card appears on the nested spec and the companion shows "New feature"
+    - name: Zoom back out
+      do: Click "All features" in the trail.
+      expect: the eight top-level cards return, and "Provider sync" counts three subfeatures
+    - name: View the map by status
+      do: Click the Kanban toggle.
+      expect: one column per status, the eight features sorted into them
+```
+
+## Changelog
+
+```mdl
+decision D-1: Features live on specs, not projects: a spec owns its features and its canvas layout, a feature nests by owning one spec, and a spec may name the project that tracks its tasks and hold one spec document.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [QA-6]
+```

@@ -62,10 +62,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 ## Types
 
 ```mdl
-type Spec
+type SpecDocument
   desc: |
     A DEUS spec document. Carries `.mdl` content and a human-readable name.
-    Existing typename `org.dxos.type.spec` is preserved across the rename.
+    Typename `org.dxos.type.specDocument`; objects stored as `org.dxos.type.spec` migrate to it.
   fields:
     name?: string
     content: Ref<Text>          # mdl source
@@ -79,7 +79,7 @@ type CodeProject
     Typename `org.dxos.type.codeProject`.
   fields:
     name?: string
-    spec: Ref<Spec>             # the DEUS spec authored for this project
+    spec: Ref<SpecDocument>     # the DEUS spec authored for this project
     files?: Ref<SourceFile>[]   # source tree, hierarchy implicit in path
 ```
 
@@ -233,7 +233,7 @@ op verifySpec
     stub returns `{ ok: true, messages: [] }`. Will eventually delegate to
     BuildAgent.verify.
   input:
-    spec: Ref<Spec>
+    spec: Ref<SpecDocument>
   output: { ok: bool, messages: string[] }
   effects: [echo:read]
   requires: [Database]
@@ -402,7 +402,7 @@ op importSpec
     returns the existing Spec when one already carries the key (F-14.6).
   input:
     key: string                 # github:<owner>/<repo>/<path>.mdl
-  output: { spec: Ref<Spec>, created: boolean }
+  output: { spec: Ref<SpecDocument>, created: boolean }
   errors:
     - CodeOperationError: not a spec key, no checkout of the repository, or no such file
   effects: [fs, echo:write]
@@ -458,17 +458,18 @@ feat F-1: Rename plugin-spec → plugin-code
   req F-1.2: Directory renamed `packages/plugins/plugin-spec` → `packages/plugins/plugin-code`.
   req F-1.3: Plugin id renamed `org.dxos.plugin.spec` → `org.dxos.plugin.code`.
   req F-1.4: SpecPlugin → CodePlugin; SpecArticle → CodeArticle.
-  req F-1.5: Spec ECHO type retains typename `org.dxos.type.spec` (no migration).
+  req F-1.5: The spec document type keeps its data across renames: objects stored as `org.dxos.type.spec` migrate to
+    `org.dxos.type.specDocument`.
   req F-1.6:
     when: composer-app loads after rename
-    then: existing Spec objects continue to render; no schema migration needed
+    then: existing spec documents continue to render
 ```
 
 ```mdl
 feat F-2: CodeProject type
 
   req F-2.1: New ECHO type `CodeProject` with typename `org.dxos.type.codeProject`.
-  req F-2.2: Fields `name?: string`, `spec: Ref<Spec>`; both reactive.
+  req F-2.2: Fields `name?: string`, `spec: Ref<SpecDocument>`; both reactive.
   req F-2.3:
     when: user creates a CodeProject from the navtree
     then: an empty Spec is created and referenced by the new CodeProject
@@ -787,9 +788,9 @@ scenario T-1: Rename preserves Spec compatibility
   given: a space already containing a Spec object created by plugin-spec
   when: the renamed plugin-code is loaded
   then:
-    - the Spec object is queryable
+    - the object is queryable as a SpecDocument
     - opening it renders CodeArticle with the same content
-    - typename remains `org.dxos.type.spec`
+    - its typename is `org.dxos.type.specDocument`
 ```
 
 ```mdl
@@ -1272,6 +1273,14 @@ decision D-26: Git is reached through new read-only `git` queries on the FileSys
   affects: [F-17.4]
   why: The dev route already runs git, while the desktop app would need a new shell scope for git.
   rejected: Reading `.git` objects directly, which needs packfile and zlib decoding in the page.
+```
+
+```mdl
+decision D-27: The `Spec` type is renamed `SpecDocument`, typename `org.dxos.type.specDocument`, with a migration from `org.dxos.type.spec`. Replaces the no-migration rule of F-1.5.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-1.5, F-1.6, F-2.2, T-1]
+  why: `Spec` now names plugin-projects' feature map, which holds at most one SpecDocument as its normative text.
 ```
 
 ---

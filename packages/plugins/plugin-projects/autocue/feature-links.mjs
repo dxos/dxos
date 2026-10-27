@@ -20,7 +20,7 @@ const SUBTITLE = 'from plugin-projects/spec/FEATURE-LINKS.mdl';
 const BEAT = 1_500;
 
 const story = (id) => `${STORYBOOK}/iframe.html?id=${id}&viewMode=story`;
-const CARDS = story('plugins-plugin-projects-containers-projectfeatures--cards');
+const CARDS = story('plugins-plugin-projects-containers-specfeatures--canvas');
 const CODE_LINKS = story('plugins-plugin-projects-containers-featurearticle--code-links');
 // The SetKey story's play function sets the key itself, so the take types into the story without one.
 const WITHOUT_KEY = story('plugins-plugin-projects-containers-featurearticle--without-key');

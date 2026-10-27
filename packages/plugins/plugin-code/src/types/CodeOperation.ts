@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
-import { Spec } from '@dxos/types';
+import { SpecDocument } from '@dxos/types';
 
 import * as CodeProject from './CodeProject.ts';
 
@@ -21,7 +21,7 @@ export const VerifySpec = Operation.make({
     icon: 'ph--check-circle--regular',
   },
   input: Schema.Struct({
-    spec: Ref.Ref(Spec.Spec).annotate({ description: 'The Spec to verify.' }),
+    spec: Ref.Ref(SpecDocument.SpecDocument).annotate({ description: 'The Spec to verify.' }),
   }),
   output: Schema.Struct({
     ok: Schema.Boolean,
@@ -277,7 +277,7 @@ export const ImportSpec = Operation.make({
     }),
   }),
   output: Schema.Struct({
-    spec: Ref.Ref(Spec.Spec),
+    spec: Ref.Ref(SpecDocument.SpecDocument),
     created: Schema.Boolean,
   }),
   services: [Database.Service, Capability.Service],
