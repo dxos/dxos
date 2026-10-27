@@ -319,6 +319,33 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
   );
 
   it.effect(
+    'a name left over from an earlier call says each call is a fresh program',
+    Effect.fnUntraced(
+      function* (_) {
+        const { output, ok } = yield* runEvalResult('yield* print(mailbox.id);', EffectDialect);
+        expect(ok).toBe(false);
+        expect(output).toContain('mailbox is not defined');
+        expect(output).toContain('each eval call is a fresh program');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'print without yield* says why nothing came back',
+    Effect.fnUntraced(
+      function* (_) {
+        const output = yield* runEval("print('hello');", EffectDialect);
+        expect(output).toContain('write `yield* print(...)`');
+        expect(yield* runEval("yield* print('hello');", EffectDialect)).toEqual('hello');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'the effect dialect binds DOCS as a plain object of markdown',
     Effect.fnUntraced(
       function* (_) {
@@ -381,6 +408,27 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
         expect(output).toEqual('open 2\ncreated Review the PR\nscored 13');
         const tasks = yield* Database.query(Filter.type(Task)).run;
         expect(tasks.find((task) => task.title === 'Write the docs')?.priority).toEqual('Write the docs'.length);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'the effect dialect resolves an object by its legacy ECHO DXN as by its URI',
+    Effect.fnUntraced(
+      function* (_) {
+        yield* seedTasks();
+        const [task] = yield* Database.query(Filter.type(Task, { title: 'Write the docs' })).run;
+        const uri = Obj.getURI(task);
+        const legacy = uri.replace(/^echo:\/\/([^/]*)\/(.+)$/, (_, space, id) => `dxn:echo:${space || '@'}:${id}`);
+        expect(legacy).toMatch(/^dxn:echo:/);
+
+        const output = yield* runEval(
+          `yield* print((yield* Database.resolve('${legacy}')).title, (yield* Database.resolve('${uri}')).title);`,
+          EffectDialect,
+        );
+        expect(output).toEqual('Write the docs Write the docs');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

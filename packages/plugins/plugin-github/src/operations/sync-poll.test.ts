@@ -377,6 +377,34 @@ describe('plugin-github polling sync (spec/SYNC.mdl)', () => {
     expect(binding.spec.token).toBeDefined();
   });
 
+  test('a backfill chunk updated within the overlap is read to its end rather than repeated', async ({ expect }) => {
+    const { db, binding, github, poll } = await setup({ pageSize: 1 });
+    github.items = Array.from({ length: 12 }, (_, index) => issue(index + 1, '2026-10-01T10:00:00Z'));
+
+    await expect(poll()).rejects.toThrow();
+    expect(await db.query(Filter.type(Task.Task)).run()).toHaveLength(10);
+
+    // Ten more pages from the same watermark would not move it, so this run reads every page.
+    const { requests } = await poll();
+    expect(requests.filter((request) => request.includes('/issues'))).toHaveLength(10 + 12);
+    expect(await db.query(Filter.type(Task.Task)).run()).toHaveLength(12);
+    expect(binding.spec.token).toBeDefined();
+  });
+
+  test('a local repository description is pushed on a quiet poll', async ({ expect }) => {
+    const { repo, github, poll } = await setup();
+    github.items = [issue(1, '2026-10-01T10:00:00Z')];
+    await poll();
+    await poll();
+    Obj.update(repo, (repo) => {
+      repo.description = 'rewritten';
+    });
+
+    const { result, requests } = await poll();
+    expect(requests).toEqual(['GET /repos/dxos/composer/issues', 'PATCH /repos/dxos/composer']);
+    expect(result).toMatchObject({ notModified: true, pushed: { repos: 1, issues: 0 } });
+  });
+
   test('settled checks are re-read on the hourly schedule, since a re-run does not move updated_at', async ({
     expect,
   }) => {

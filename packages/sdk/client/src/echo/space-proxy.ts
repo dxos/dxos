@@ -76,6 +76,7 @@ import { InvitationsProxy } from '../invitations/index.ts';
 import { createDeviceLocalBranchStore } from './branch-store.ts';
 
 const EPOCH_CREATION_TIMEOUT = 60_000;
+const SPACE_ROOT_MIGRATION_TIMEOUT = 60_000;
 
 const INITIALIZATION_RETRY_BASE_MS = 1_000;
 const INITIALIZATION_RETRY_MAX_MS = 30_000;
@@ -213,6 +214,7 @@ export class SpaceProxy implements Space, CustomInspectable {
       removeMember: this._removeMember.bind(this),
       migrate: this._migrate.bind(this),
       setEdgeReplicationPreference: this._setEdgeReplicationPreference.bind(this),
+      migrateSpaceRoot: this._migrateSpaceRoot.bind(this),
       syncToEdge: this._syncToEdge.bind(this),
       export: this._export.bind(this),
     };
@@ -716,6 +718,19 @@ export class SpaceProxy implements Space, CustomInspectable {
       memberKey,
       newRole: SpaceMember_Role.REMOVED,
     });
+  }
+
+  private async _migrateSpaceRoot(): Promise<string> {
+    const { spaceRootUrl } = await runServiceCall(
+      this._runtime,
+      this._clientServices.rpc,
+      'SpacesService.migrateSpaceRoot',
+      { spaceKey: this.key },
+      { timeout: SPACE_ROOT_MIGRATION_TIMEOUT },
+    );
+    // Callers read the migration state off `data`, so resolve only once the update carrying it lands.
+    await this._anySpaceUpdate.waitForCondition(() => this._data.spaceRootUrl === spaceRootUrl);
+    return spaceRootUrl;
   }
 
   private async _createEpoch({
