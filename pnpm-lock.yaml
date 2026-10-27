@@ -20382,6 +20382,9 @@ importers:
       effect:
         specifier: 4.0.4
         version: 4.0.4
+      playwright:
+        specifier: 'catalog:'
+        version: 1.63.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
