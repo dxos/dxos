@@ -15,6 +15,7 @@ import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
+import * as Typography from '@dxos/react-ui/Typography';
 import { ParentLabelAnnotation } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -320,10 +321,8 @@ export const TriggerSection = ({ readonly, onClear }: TriggerSectionProps) => {
     <Layout.Flex column classNames={[kind && 'px-2 pb-2 dx-card-surface border border-separator rounded-xs']}>
       {kind ? (
         <>
-          <Layout.Flex align='center'>
-            <Field.Root>
-              <Field.Label classNames='grow truncate'>{t(`trigger-kind.${kind}.label`)}</Field.Label>
-            </Field.Root>
+          <Field.Header>
+            <Typography.Text truncate>{t(`trigger-kind.${kind}.label`)}</Typography.Text>
             {!readonly && (
               <Button.Root
                 variant='ghost'
@@ -333,7 +332,7 @@ export const TriggerSection = ({ readonly, onClear }: TriggerSectionProps) => {
                 onClick={onClear}
               />
             )}
-          </Layout.Flex>
+          </Field.Header>
           <Form.Fields path={TRIGGER_PATH} schema={TriggerForm} />
         </>
       ) : (
