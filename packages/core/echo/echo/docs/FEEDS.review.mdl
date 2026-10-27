@@ -16,11 +16,12 @@ These parts are missing:
 
 - branch removal, and rewind as a branch
 - heads, retention and permissions for each branch, and branch owners
+- the walk and the local cursor
 - partial sync, and the time range of a scope.
 
 Merge and close are a follow-up [D-2].
 
-Of 27 items: 3 done, 0 untested, 7 partial, 3 diverged, 14 missing. These four findings are the most
+Of 33 items: 3 done, 0 untested, 7 partial, 3 diverged, 20 missing. These four findings are the most
 important:
 
 - **The code uses the earlier form of the branch.** It stores the branch and the fork point in foreign
@@ -235,6 +236,42 @@ verdict Trajectory.Event: Not on main. #13782 is not merged.
 verdict threadOpen: Not on main. #13782 is not merged.
   status: missing
   note: This checkout has no `threadOpen`, `threadMerge`, `threadClose` or `threadWait` event.
+```
+
+```mdl
+verdict F-5.1: No forward walk exists.
+  status: missing
+  note: There is no `Feed.walk` and no branches table; `Filter.feedCursor` takes only EDGE positions.
+```
+
+```mdl
+verdict F-5.2: No backward walk exists.
+  status: missing
+  note: There is no `Feed.walk` and no branches table; `Filter.feedCursor` takes only EDGE positions.
+```
+
+```mdl
+verdict F-5.3: No cursor encodes a branch.
+  status: missing
+  note: There is no `Feed.walk` and no branches table; `Filter.feedCursor` takes only EDGE positions.
+```
+
+```mdl
+verdict F-5.4: No walk gives fork points.
+  status: missing
+  note: There is no `Feed.walk` and no branches table; `Filter.feedCursor` takes only EDGE positions.
+```
+
+```mdl
+verdict F-5.5: The local cursor query has no walk.
+  status: missing
+  note: There is no `Feed.walk` and no branches table; `Filter.feedCursor` takes only EDGE positions.
+```
+
+```mdl
+verdict LocalCursor: There is no local cursor.
+  status: missing
+  note: '`Feed.getLocalCursor` does not exist; `Feed.Cursor` holds the EDGE position only.'
 ```
 
 ```mdl

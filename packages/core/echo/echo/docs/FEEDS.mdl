@@ -147,7 +147,27 @@ feat F-4: Cross-cutting
     parent. No code does this yet.
 ```
 
-Merge and close. Forks come first. Merge and close are a follow-up [D-2]. These points are agreed:
+```mdl
+feat F-5: Walk
+
+  req F-5.1: Forward walk. A reader can walk a feed forward from the base of the root branch to a target
+    branch that it names before the walk starts. The default target is the main branch [D-40].
+
+  req F-5.2: Backward walk. A reader can walk a feed backward from an item to the base of the root
+    branch, through each base branch on the way [D-40].
+
+  req F-5.3: Cursor. A cursor encodes the position of the walk and the branch that the walk is on. Thus a
+    walk that is among interleaved items of other branches does not show those items [D-41].
+
+  req F-5.4: Fork points. A walk can include the fork points that it meets, so that the reader sees other
+    branches start from the items that it walks. Otherwise a walk shows only the items of the branches
+    that the reader asked for [D-42].
+
+  req F-5.5: Local cursor. The walk is part of the API to query a feed by local cursor [D-43].
+```
+
+Merge and close. Merges and branch cancel are out of scope of this design [D-50]. Forks come first, and
+merge and close are a follow-up [D-2]. These points are agreed for that follow-up:
 
 - Close and merge are two different operations. A branch can close without a merge. Then its parent does
   not know that the branch closed [D-3].
@@ -155,8 +175,8 @@ Merge and close. Forks come first. Merge and close are a follow-up [D-2]. These 
   merge. A reader sees the merge message when it iterates the parent [D-3].
 - A merge folds in one branch at a time, and the merge sits on the main line [D-4].
 
-Open: does a reader of the main line see branch messages and merge messages, but not always close
-messages? Rich thinks so, and he will write this part out.
+Out of scope with merges [D-50]: does a reader of the main line see branch messages and merge messages,
+but not always close messages? Rich thinks so, and he will write this part out.
 
 ## What exists
 
@@ -366,6 +386,11 @@ type FeedItemMeta
     The `feed` section of the `@meta` of a feed item [D-29]. A base block has `fork: true` and, after its
     first write, `branch` set to its own block id [D-37]. A continuation of a branch that is not the
     root has only `branch`. A root item has no `feed` section [D-34].
+
+    The fork flag tells the same fact as "`branch` is the block id of the first block of this item".
+    The flag is necessary data, because on the first write of a base item its block id does not exist
+    yet, thus `branch` cannot hold it. An update of the base item appends a new block with a new block
+    id, and `branch` keeps the id of the first block [D-44].
   fields:
     fork?: true          # the item is the base of a new branch; its predecessor is the fork point
     branch?: BranchId    # the branch that the item continues, or (with fork) the branch that it starts
@@ -386,7 +411,22 @@ module Feed
     query: (feed, filter, { branches?: (BranchId | null)[] | 'all' }) => QueryResult   # no branches reads the root only [D-24].
     IndexingOptions: { enabled: boolean, mode?: 'all' | 'main' }                  # mode absent is 'main' [D-10].
     branches: Record<BranchId, { removed?, retention?, name? }>                   # not built; only branch policy, never membership or heads.
-    heads: (feed, { since }) => BranchId[]                                        # not built; the branches whose heads moved.
+    heads: (feed, { since?: LocalCursor }) => { branch: BranchId, head: LocalCursor }[]  # not built; reads table:branches [D-45].
+    walk: (feed, { branch?, from?, direction?, forks?, filter?, limit? }) => Effect<{ items, cursor: LocalCursor, done }>  # not built; F-5.
+    getLocalCursor: (item, { branch? }) => LocalCursor | undefined                # not built; resumes a walk at this item.
+```
+
+```mdl
+type LocalCursor
+  desc: |
+    The position of a walk, as an opaque branded string [D-46]. It is local to one device, because it
+    uses the local order of blocks, which never changes under a reader [F-2.4]. Another device cannot
+    use it.
+  fields:
+    direction: forward | backward
+    target: BranchId | null      # forward only: the branch that the walk ends on; null is the root branch
+    branch: BranchId | null      # the branch that the walk is on now
+    insertionId: number          # the local order of the last block that the walk gave
 ```
 
 ```mdl
@@ -422,6 +462,43 @@ const program = Effect.gen(function* () {
   const { items } = Feed.readBranch(Array.sort(all, byPosition), branch); // a1, b1, b2
 });
 ```
+
+A walk goes through the branch tree in `table:branches`, segment by segment [D-47]:
+
+- **Forward to target T.** The walk finds the path from the root branch to T with the recursive query
+  below. For each branch on the path, it gives the blocks of that branch in local order. It stops at
+  the fork point of the next branch on the path. On T it gives all blocks.
+
+- **Backward from item P.** The walk gives the blocks of the branch of P, in reverse local order, from P
+  to the base of the branch. Then it goes to the fork point in the parent branch and continues there,
+  until it gets to the base of the root branch.
+
+- **Fork points.** With `forks: true`, after each block, the walk also gives the base items of the
+  branches that fork at that block [D-48]. It does not give their continuations.
+
+```ts
+const program = Effect.gen(function* () {
+  // Walk forward from the root base to the branch, 50 items at a time, with the forks met on the way.
+  let cursor: Feed.LocalCursor | undefined;
+  let done = false;
+  while (!done) {
+    const page = yield* Feed.walk(feed, { branch, from: cursor, forks: true, limit: 50 });
+    for (const item of page.items) {
+      if (Feed.isFork(item) && Feed.getBranch(item) !== branch) {
+        // Another branch starts at the item before this one.
+      }
+    }
+    cursor = page.cursor;
+    done = page.done;
+  }
+
+  // Walk backward from b2 to the root base: b2, b1, a1.
+  const back = yield* Feed.walk(feed, { from: Feed.getLocalCursor(b2), direction: 'backward' });
+});
+```
+
+Open: an update of an item appends a new block. Does a walk give the item at the place of its first
+block or of its latest block?
 
 ### Storage
 
@@ -463,6 +540,39 @@ table blocks: One block (one version of one item) of a feed, in local append ord
     - idx_blocks_feedPrivateId_timestamp(feedPrivateId, timestamp): retention by age without a scan
     - idx_blocks_feedPrivateId_branch(feedPrivateId, branch, insertionId): the head of one branch without a scan [D-38]
   new: branch, idx_blocks_feedPrivateId_branch
+```
+
+```mdl
+table branches: One branch of a feed. The store keeps it as blocks arrive; it is not replicated [D-45].
+  store: feed store (feed_migrations)
+  columns:
+    feedPrivateId: INTEGER NOT NULL REFERENCES feeds(feedPrivateId)
+    branchId: TEXT NOT NULL                           # the BranchId: the block id of the base block
+    baseBranchId?: TEXT                               # the branch this branch forks from; NULL for the root branch [D-49]
+    baseInsertionId: INTEGER NOT NULL                 # local order of the base block
+    forkInsertionId?: INTEGER                         # local order of the fork point (the predecessor of the base block); NULL for the root
+    headInsertionId: INTEGER NOT NULL                 # local order of the newest block of the branch
+    headSequence: INTEGER NOT NULL                    # with headActorId, the block id of the head: the predecessor of the next continuation
+    headActorId: TEXT NOT NULL
+    headPosition?: INTEGER                            # EDGE position of the head; NULL until EDGE acknowledges it
+  key: (feedPrivateId, branchId)
+  indexes:
+    - idx_branches_feedPrivateId_head(feedPrivateId, headInsertionId): the heads that moved since a cursor, without a scan [F-2.2]
+    - idx_branches_feedPrivateId_base(feedPrivateId, baseBranchId, forkInsertionId): the forks that a walk meets in one segment [F-5.4]
+  new: table
+```
+
+The full path from a branch to the root is one recursive query over `branches` [D-49]:
+
+```sql
+WITH RECURSIVE path(branchId, baseBranchId, forkInsertionId, depth) AS (
+  SELECT branchId, baseBranchId, forkInsertionId, 0
+    FROM branches WHERE feedPrivateId = :feed AND branchId = :target
+  UNION ALL
+  SELECT b.branchId, b.baseBranchId, b.forkInsertionId, path.depth + 1
+    FROM branches b JOIN path ON b.feedPrivateId = :feed AND b.branchId = path.baseBranchId
+)
+SELECT * FROM path ORDER BY depth DESC;  -- root first, target last
 ```
 
 ```mdl
@@ -515,6 +625,9 @@ table objectMeta: The latest version of one object of a space, or of one item of
 
 1. Did you put the thread ids in the payload deliberately, because then ECHO does not change? Or, if we
    move the thread ids to `@meta`, do the reducers lose something that they need?
+
+   Partly answered: the branch of an item is in `@meta.feed` [D-29]. Open: do the trajectory reducers
+   need the thread ids in the payload?
 2. Chat feeds have indexing off because no code read them through the index. With a branch column and
    push-down, do you want an index for chat feeds again? Or do you want no index for chat feeds, and an
    index only for comment branches and channel branches?
@@ -525,11 +638,18 @@ table objectMeta: The latest version of one object of a space, or of one item of
 3. Soft fork rejected block-level lineage. Is a block-level branch id (item 5 of the proposal) an
    acceptable wire change? The reasons are different: a lineage edge on blocks mixed races with forks,
    but a branch id does not.
+
+   Still open, in a new form. The predecessor is on the block [D-28]. But the fork flag and the branch
+   are in the encrypted payload [D-29]. For partial sync, EDGE must tell a fork from a race and name a
+   branch, and it cannot decrypt. Is a fork flag or a branch id in clear on the block acceptable?
 4. Is merge a concept of the feed layer, or does merge stay a trajectory event?
 
-   Answer: the core does nothing with a merge [D-3]. Merge and close are a follow-up [D-2].
+   Answer: the core does nothing with a merge [D-3]. Merges and branch cancel are out of scope of this
+   design [D-50].
 5. Can a `Message` be directly in a trajectory feed? Or must an event always wrap the content? Comments
    and channels need `Message` objects that other code reads, edits and indexes.
+
+   Still open.
 
 ## Changelog
 
@@ -840,6 +960,94 @@ decision D-39: A fork is its own call, `Feed.fork(feed, items, { at })`, which r
   for: user:dmaretskyi
   affects: [F-1.2]
   why: The two calls return different things, and a fork names its predecessor while a continuation does not.
+```
+
+```mdl
+decision D-40: A reader can walk a feed in two directions: forward from the base to a target branch named before the walk starts (the main branch by default), or backward from a point to the base through every base branch.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-5.1, F-5.2]
+```
+
+```mdl
+decision D-41: A cursor encodes where the walk is and the branch it is on, since the walk can be in the middle of interleaved items of other branches that the reader does not want to see.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-5.3]
+```
+
+```mdl
+decision D-42: A walk can include the fork points that it meets, so the reader can observe other branches that start from the blocks it walks; otherwise the blocks of other branches are not visible, only the requested ones.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-5.4]
+```
+
+```mdl
+decision D-43: The walk is part of the API to query a feed by local cursor.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-5.5]
+```
+
+```mdl
+decision D-44: The fork flag is the same fact as "`branch` is the block id of the first block of the item"; the flag stays as data because that block id does not exist on the first write. Fills in [D-30] and [D-37].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-1.2]
+  rejected:
+    - A sentinel value of `branch` (for example `self`) on the first write instead of a flag; it tells the same fact with a magic value.
+```
+
+```mdl
+decision D-45: The feed store keeps a local `branches` table, one row for each branch with its parent, its fork point and its head, so `Feed.heads` and the walk read the branch tree without a scan of the blocks.
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-2.2, F-5.1, F-5.2, F-5.4]
+  why: A grouped read of `blocks` by branch cannot answer which heads moved since a cursor without reading every branch of every feed.
+```
+
+```mdl
+decision D-46: A local cursor encodes the direction, the target branch, the branch the walk is on and the local order of the last block it gave, as an opaque branded string. Fills in [D-7] and [D-41].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.3]
+  why: The branch and the target together tell which segment of the path the walk is in, so a resumed walk skips the interleaved blocks of other branches.
+```
+
+```mdl
+decision D-47: A forward walk gives each branch on the path in local order up to the fork point of the next branch, and a backward walk gives each branch in reverse local order down to its base, then goes to the fork point. Fills in [D-40].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.1, F-5.2]
+  why: The same cut by append order as [D-23], so `Feed.readBranch` and a walk give the same items.
+```
+
+```mdl
+decision D-48: With fork points on, a walk gives the base item of each branch that forks at a block it walks, right after that block, and not the continuations of that branch. Fills in [D-42].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-5.4]
+  why: The base item carries the fork flag and the branch id, which is all a reader needs to follow the branch later.
+```
+
+```mdl
+decision D-49: Each row of the branches table stores the id of its base branch, and the full path to the root, when needed, is a recursive SQL query over that table.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-5.1, F-5.2]
+```
+
+```mdl
+decision D-50: Merges and branch cancel are out of scope of this design.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-1.4]
 ```
 
 ## Appendix: Extension Definitions
