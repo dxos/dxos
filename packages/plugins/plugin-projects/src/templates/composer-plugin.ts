@@ -8,12 +8,13 @@ import * as Schema from 'effect/Schema';
 
 import * as Skill from '@dxos/compute/Skill';
 import { Obj, Ref } from '@dxos/echo';
-import { Task, TaskSet } from '@dxos/types';
+import { Spec, Task, TaskSet } from '@dxos/types';
 import { isTauri } from '@dxos/util';
 
-import { type ProjectCapabilities } from '#types';
+import { Feature, type ProjectCapabilities } from '#types';
 
 import { scaffoldProject } from './scaffold.ts';
+import worldClockSpec from './world-clock.mdl?raw';
 
 /** Plain key rather than an import, so this plugin does not depend on plugin-sandbox (the `SkillsAnnotation` idiom). */
 const SANDBOX_SKILL_KEY = 'org.dxos.skill.sandbox';
@@ -33,6 +34,15 @@ export const PluginToolchain = Schema.Struct({
 });
 
 export interface PluginToolchain extends Schema.Schema.Type<typeof PluginToolchain> {}
+
+/** The spec World Clock is built from, which the plugin bundles so Plugins → Registry can open it. */
+export const WORLD_CLOCK_SPEC = worldClockSpec;
+
+/** Where the spec sits in the plugin's folder, and the `spec` its `dx.config.ts` names. */
+export const SPEC_FILE = 'PLUGIN.mdl';
+
+/** The spec's repo-style path: features cite `<path>#F-n`, and the space's Spec carries it as its foreign key. */
+export const WORLD_CLOCK_SPEC_PATH = `world-clock/${SPEC_FILE}`;
 
 /** The `@dxos/*` packages World Clock imports; everything else it builds with comes from npm. */
 const DXOS_PACKAGES = [
@@ -87,10 +97,16 @@ export const readGuide = (how: string): TaskSeed => ({
   estimate: 'xs',
 });
 
+/**
+ * How the plugin carries its spec: plugin-code shows a plugin's spec only when its profile names one and the plugin
+ * contributes the text as a `PluginAsset`, which a remote plugin cannot read from disk, so it is bundled with `?raw`.
+ */
+export const BUNDLE_SPEC = ` Beside them write \`${SPEC_FILE}\` holding exactly the spec below, the one this project is built from, and \`src/mdl.d.ts\` holding \`declare module '*.mdl?raw' { const content: string; export default content; }\`. Set \`spec: '${SPEC_FILE}'\` in \`dx.config.ts\`'s \`plugin\`. In \`src/plugin.tsx\` add \`import spec from '../${SPEC_FILE}?raw';\` and one more module, \`{ id: 'spec', activatesOn: ActivationEvents.PluginAssetsRequested, provides: [AppCapabilities.PluginAsset], activate: () => Effect.succeed([Capability.contribute(AppCapabilities.PluginAsset, { pluginId: meta.profile.key, path: '${SPEC_FILE}', content: spec, mimeType: 'application/x-mdl' })]) }\`: it is how the plugin's page in Plugins → Registry opens its specification.\n\n\`\`\`mdl\n${WORLD_CLOCK_SPEC.trim()}\n\`\`\`\n`;
+
 /** The plugin itself; `folder` is where its files go and `build` the sentence that says where it is served from. */
 export const writePlugin = (folder: string, build: string, extra = ''): TaskSeed => ({
   title: 'Write the plugin in TypeScript',
-  description: `Create \`dx.config.ts\`, \`vite.config.ts\`, \`tsconfig.json\` and \`src/plugin.tsx\` in \`${folder}/\`: a "World Clock" group in each space's navtree with a "Clocks" page under it. Define a \`Clock\` ECHO type holding its clocks, each a timezone and its position (from \`timezones\` in \`@dxos/react-ui-geo/data\`), one per space, stored on the first change; until then the page shows the reader's own timezone. The article shows plugin-map's \`World\` surface with a marker per clock and the Clock as its \`subject\`, and beneath it a single row of clock cards sorted west to east, each with a ghost delete button in its top-right corner (rendered after the card's text, or the text covers it) and showing the date, the time (24-hour, zero-padded, no AM/PM, ticking every second) and the timezone, then an empty card the same size as the clock cards with a large ghost plus button centered in it that opens a react-ui-form with a timezone select. Clicking a clock selects it with \`LayoutOperation.Select\`, which highlights its card and its pin on the map. Build the article from the guide's put-together example. Give each clock card \`data-testid="worldClock.clock"\`, the empty card \`data-testid="worldClock.new"\`, its plus button \`data-testid="worldClock.add"\` and each delete button \`data-testid="worldClock.delete"\`. Depend on \`org.dxos.plugin.map\` and tag it \`labs\` in \`dx.config.ts\`, as the guide does. Add to the navtree, never replace it: no workspace, no rail tab. ${build}${extra}`,
+  description: `Create \`dx.config.ts\`, \`vite.config.ts\`, \`tsconfig.json\` and \`src/plugin.tsx\` in \`${folder}/\`: a "World Clock" group in each space's navtree with a "Clocks" page under it. Define a \`Clock\` ECHO type holding its clocks, each a timezone and its position (from \`timezones\` in \`@dxos/react-ui-geo/data\`), one per space, stored on the first change; until then the page shows the reader's own timezone. The article shows plugin-map's \`World\` surface with a marker per clock and the Clock as its \`subject\`, and beneath it a single row of clock cards sorted west to east, each with a ghost delete button in its top-right corner (rendered after the card's text, or the text covers it) and showing the date, the time (24-hour, zero-padded, no AM/PM, ticking every second) and the timezone, then an empty card the same size as the clock cards with a large ghost plus button centered in it that opens a react-ui-form with a timezone select. Clicking a clock selects it with \`LayoutOperation.Select\`, which highlights its card and its pin on the map. Build the article from the guide's put-together example. Give each clock card \`data-testid="worldClock.clock"\`, the empty card \`data-testid="worldClock.new"\`, its plus button \`data-testid="worldClock.add"\` and each delete button \`data-testid="worldClock.delete"\`. Depend on \`org.dxos.plugin.map\` and tag it \`labs\` in \`dx.config.ts\`, as the guide does. Add to the navtree, never replace it: no workspace, no rail tab. ${build}${BUNDLE_SPEC}${extra}`,
   estimate: 's',
 });
 
@@ -203,19 +219,38 @@ const makeTasks = (steps: ReadonlyArray<TaskSeed>): Task.Task => {
   return Task.make({ ...PARENT, status: 'todo', subtasks: subtasks.map((task) => Ref.make(task)) });
 };
 
-/** The "Composer Plugin" template for one variant: a chat builds a TypeScript plugin and offers it back to load. */
+/**
+ * The spec World Clock is built from, as a space object: features cite it by its foreign key, so a feature card opens
+ * it in the space rather than at a GitHub path that does not exist for a template.
+ */
+export const makeWorldClockSpec = (): Spec.Spec => {
+  const spec = Spec.make({ name: 'World Clock', content: WORLD_CLOCK_SPEC });
+  Obj.update(spec, (spec) => {
+    Obj.getMeta(spec).keys.push({ source: Feature.SPEC_KEY_SOURCE, id: WORLD_CLOCK_SPEC_PATH });
+  });
+  return spec;
+};
+
+/**
+ * The "Composer Plugin" template for one variant: a chat builds a TypeScript plugin and offers it back to load.
+ * The spec is the project's first artifact, owned by it, so the agent and the reader see what the plugin is built from.
+ */
 export const makeComposerPlugin = (variant: Variant): ProjectCapabilities.Template => ({
   id: 'org.dxos.project.composerPlugin',
   label: 'Composer Plugin',
   icon: 'ph--puzzle-piece--regular',
   scaffold: ({ name }) =>
     Effect.sync(() => {
+      const spec = makeWorldClockSpec();
       const project = scaffoldProject({
         name: name ?? 'Composer Plugin',
         description:
           'A TypeScript plugin that adds a world clock page, a map with a row of clocks, under its own group in the navtree of every space, built on this machine and loaded into the running app.',
         text: variant.instructions,
         skills: [Ref.fromURI(Skill.registryURI(variant.skill))],
+      });
+      Obj.update(project, (project) => {
+        project.artifacts.push(Ref.make(spec));
       });
       const taskSet = project.taskSet?.target;
       if (taskSet) {
@@ -234,18 +269,27 @@ const readToolchain = (): PluginToolchain | undefined => {
 };
 
 /**
- * Offered only when the build stamped the commit its packages are pinned to: in the desktop app, which builds in a
+ * Available only when the build stamped the commit its packages are pinned to: in the desktop app, which builds in a
  * local sandbox and loads the result by URL, and in a browser with an EDGE to build on and publish to.
  */
-export const composerPlugin = (
+export const composerPluginVariant = (
   { edgeUrl }: { edgeUrl?: string } = {},
   toolchain = readToolchain(),
-): ProjectCapabilities.Template | undefined => {
+): Variant | undefined => {
   if (!toolchain) {
     return undefined;
   }
   if (isTauri()) {
-    return makeComposerPlugin(desktopVariant(toolchain));
+    return desktopVariant(toolchain);
   }
-  return edgeUrl ? makeComposerPlugin(registryVariant(toolchain, edgeUrl)) : undefined;
+  return edgeUrl ? registryVariant(toolchain, edgeUrl) : undefined;
+};
+
+/** The template for the variant this app can run, if any. */
+export const composerPlugin = (
+  options: { edgeUrl?: string } = {},
+  toolchain = readToolchain(),
+): ProjectCapabilities.Template | undefined => {
+  const variant = composerPluginVariant(options, toolchain);
+  return variant ? makeComposerPlugin(variant) : undefined;
 };

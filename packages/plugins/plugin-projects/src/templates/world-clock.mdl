@@ -1,0 +1,114 @@
+---
+id: org.example.plugin.worldClock
+name: World Clock
+version: 0.1.0
+---
+
+A Composer plugin that adds a "World Clock" group to each space's navtree with a "Clocks" page under it: a world map
+with a pin per clock above a row of live clocks. The Composer Plugin project template seeds this spec and builds the
+plugin from it; the plugin bundles it, so its page in Plugins → Registry opens the spec it was built from.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term       | URI                         |
+| ---------- | --------------------------- |
+| `type`     | `org.dxos.mdl.type@1.0`     |
+| `feat`     | `org.dxos.mdl.feat@1.0`     |
+| `scenario` | `org.dxos.mdl.scenario@1.0` |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+
+## Types
+
+```mdl
+type Location
+  fields:
+    lat: number
+    lng: number
+```
+
+```mdl
+type ClockEntry
+  fields:
+    timezone: string        # an IANA name from `timezones` in `@dxos/react-ui-geo/data`
+    location?: Location     # the zone's principal city, where its pin sits; a zone it does not list has no pin
+```
+
+```mdl
+type Clock
+  desc: The space's clocks, one object per space, stored on the first change. Typename `org.example.type.worldClock`.
+  fields:
+    clocks?: ClockEntry[]
+```
+
+## Features
+
+```mdl
+feat F-1: Clocks page
+  desc: The plugin adds to the navtree and replaces nothing in it.
+
+  req F-1.1: Each space's navtree shows a WORLD CLOCK group holding one Clocks page.
+  req F-1.2: Selecting Clocks opens the page as an article.
+```
+
+```mdl
+feat F-2: World map
+  desc: plugin-map's `World` surface, with the space's `type:Clock` as its subject.
+
+  req F-2.1: The map shows one marker per clock.
+  req F-2.2: Clicking a clock's card selects it, and the selection highlights both the card and its pin.
+```
+
+```mdl
+feat F-3: Live clocks
+  desc: A single row of clock cards beneath the map, sorted west to east.
+
+  req F-3.1: Each card shows the date, the time and the timezone.
+  req F-3.2: The time is 24-hour and zero-padded, and ticks every second.
+  req F-3.3: Until the space has a `type:Clock`, the row shows the reader's own timezone.
+```
+
+```mdl
+feat F-4: Edit clocks
+  desc: The row ends in an empty card the size of a clock card, with a plus button centered in it.
+
+  req F-4.1: The plus button opens a form with a timezone select; submitting it adds that clock.
+  req F-4.2: Each clock card's delete button removes its clock.
+  req F-4.3: The first change creates the space's `type:Clock`; later changes update it.
+```
+
+```mdl
+feat F-5: Bundled specification
+  desc: This spec ships inside the plugin's bundle, so it travels with every release.
+
+  req F-5.1: The plugin's profile names `PLUGIN.mdl` as its spec.
+  req F-5.2: The plugin contributes the spec's text as a plugin asset, so the plugin's page in Plugins → Registry offers Open Specification once it is installed.
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: The reader adds a clock
+  when: the reader opens Clocks and adds Asia/Tokyo with the plus card
+  then: a Tokyo card joins the row in its west-to-east place and a pin for it appears on the map
+```
+
+```mdl
+scenario T-2: The registry opens the spec
+  when: the reader installs World Clock from Plugins → Registry and clicks Open Specification on its page
+  then: this spec opens beside the plugin's page, F-1 to F-5 among its features
+```
+
+## Changelog
+
+Every change to this spec adds a decision, newest last. See `lang/changelog.mdl` for the attribution rules.
+
+```mdl
+decision D-1: World Clock is built from this spec and ships it in its bundle, so that once the reader installs it from the private registry, its page there opens the spec it was built from.
+  date: 2026-10-27
+  by: user:richburdon
+  affects: [F-5]
+  why: The round trip — a template builds the plugin, the registry serves it, the reader loads it and reads its spec — shows the whole chain in one place.
+```
