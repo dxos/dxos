@@ -1,6 +1,6 @@
 ---
-id: org.dxos.plugin.labeler
-name: LabelerPlugin
+id: org.dxos.plugin.inbox.triage
+name: Inbox triage
 version: 0.1.0
 ---
 
@@ -31,11 +31,11 @@ feat F-2: Apply only what it is confident about
   req F-2.1: A label is applied only when its confidence reaches the threshold (default 0.5).
   req F-2.2: `Needs reply` is applied at a probability of 0.6 or above.
   req F-2.3: Every message is placed in exactly one priority band — Urgent, High priority, Normal or Low priority — applied as the inbox's priority system tags; Urgent needs the top of the scale and a confident answer.
-  req F-2.4: Nothing but tags is written; the message itself is not modified.
+  req F-2.4: The message itself is not modified: triage writes tags, and the tasks and project of F-4.
 
 feat F-3: Run it over the inbox
 
-  req F-3.1: A toolbar action, "Triage inbox", runs the labeller over the whole mailbox.
+  req F-3.1: A toolbar action, "Triage inbox", runs triage over the whole mailbox.
   req F-3.2: A cascade pass (`label`, after `contacts`) runs it as part of Analyze.
   req F-3.3: A message already carrying a priority band is skipped, so a re-run is cheap.
   req F-3.4: A run is capped (default 50, max 200 messages) since each message costs a decision call, and one that needs a reply an extraction call too.
@@ -46,7 +46,7 @@ feat F-4: Extract what a message asks for as tasks
   req F-4.2: The first request becomes a task at a low confidence bar; further ones only when clear-cut, so what the sender will do themselves is not filed as the reader's work.
   req F-4.3: Tasks are filed in one project per mailbox, created on first use, whose instructions tell an agent how to answer the email a task came from.
   req F-4.4: A task carries its message's priority, names the email it came from, references the message, and is recorded as extracted from it so it shows under the email.
-  req F-4.5: A message already extracted is not read again; a failed or unavailable extraction leaves the message labelled.
+  req F-4.5: A message with a task already recorded against it is not read again, whatever else was extracted from it; a failed or unavailable extraction leaves the message labelled.
 ```
 
 ## Acceptance
@@ -54,22 +54,22 @@ feat F-4: Extract what a message asks for as tasks
 ```mdl
 scenario T-1: An urgent request is tagged
   given: a mailbox with a message asking the user to act today
-  when: LabelMailbox runs
+  when: TriageMailbox runs
   then: the message carries `Needs reply` and `Urgent`
 
 scenario T-2: A receipt is labelled with the user's own tag
   given: a space with a user tag "Receipts" and a mailbox holding a payment receipt
-  when: LabelMailbox runs
+  when: TriageMailbox runs
   then: the receipt carries "Receipts" and not `Needs reply`
 
 scenario T-4: A request becomes a task in the inbox project
   given: a mailbox with a message asking the reader to approve an invoice today
-  when: LabelMailbox runs
+  when: TriageMailbox runs
   then: the message is Urgent and a task "Approve the invoice today" is in the mailbox's project, extracted from the message
 
 scenario T-3: Re-running changes nothing
   given: a mailbox whose messages were labelled by a previous run
-  when: LabelMailbox runs again
+  when: TriageMailbox runs again
   then: every message is reported skipped and no decision call is made
 ```
 
@@ -77,7 +77,7 @@ scenario T-3: Re-running changes nothing
 
 ```mdl
 test QA-1: Label an inbox from the toolbar
-  desc: The plugin's whole journey — a mailbox of mixed mail, one click, tags that match.
+  desc: Triage's whole journey — a mailbox of mixed mail, one click, tags that match.
   actors: human
   covers: [F-1.1, F-2.1, F-3.1, F-3.3]
   status: partial            # 2026-09-17; recorded against the Northwind Sales template with a live
@@ -87,20 +87,18 @@ test QA-1: Label an inbox from the toolbar
                              # which reported every message skipped. Step 3 is NOT
                              # covered — the template seeds no user tags, so the label question is not
                              # asked at all and the choice path is only covered by
-                             # src/operations/label-mailbox.test.ts.
+                             # src/operations/triage/triage-mailbox.test.ts.
                              # Tag chips render only with Inbox's "Group by conversation" OFF:
                              # in conversation mode MailboxArticle passes no tagsAtom to the tile.
   given:
     - an identity exists
     - space: a space is open with a synced mailbox holding at least one request and one receipt
-    - TypeSafe is connected in that space (see plugin-typesafe QA-1)
     - tags: at least one user tag exists in the space (e.g. "Receipts")
     - inbox: "Group by conversation" is off, so per-message tag chips render
-    - plugin-labeler is enabled
   steps:
     - name: Run the labeller
       do: Open the mailbox and choose "Triage inbox" from the toolbar's magic-wand menu.
-      invoke: org.dxos.operation.labeler.labelMailbox
+      invoke: org.dxos.operation.inbox.triageMailbox
       expect: progress reports the mailbox, then messages show tags
     - name: Check a request
       do: Open a message that asks the user to do something.
@@ -110,7 +108,7 @@ test QA-1: Label an inbox from the toolbar
       expect: it carries the user's "Receipts" tag and not "Needs reply"
     - name: Run it again
       do: Choose "Triage inbox" a second time.
-      invoke: org.dxos.operation.labeler.labelMailbox
+      invoke: org.dxos.operation.inbox.triageMailbox
       expect: the run reports every message skipped and no tag changes
 ```
 
@@ -123,7 +121,7 @@ test QA-2: Triage an inbox, then let the agent answer the most urgent email
   given:
     - an identity exists
     - space: a space created from the "Inbox triage" template (plugin-debug), whose sample mailbox sends locally
-    - plugin-labeler, plugin-typesafe and plugin-debug are enabled
+    - plugin-debug is enabled
     - extraction reaches Clairic, through EDGE or the TypeSafe `extractionEndpoint` setting
   steps:
     - name: Start with an unsorted inbox
@@ -131,7 +129,7 @@ test QA-2: Triage an inbox, then let the agent answer the most urgent email
       expect: nine unread messages in date order, none grouped or carrying a label or priority
     - name: Triage the inbox
       do: Choose "Triage inbox" from the toolbar's magic-wand menu.
-      invoke: org.dxos.operation.labeler.labelMailbox
+      invoke: org.dxos.operation.inbox.triageMailbox
       expect: the list regroups under Urgent, High priority, Normal and Low priority, with the renewal alone under Urgent
     - name: Every request becomes a task
       do: Open the "Inbox tasks" project from the navtree and its Tasks tab.
@@ -242,4 +240,29 @@ decision D-10: QA-2 needs extraction to reach Clairic and expects a task only fo
   for: user:dmaretskyi
   affects: [F-3.4, QA-2]
   why: Without a reachable extraction model triage still labels but files no tasks, and the confidence cut in D-4 can leave a request without one.
+```
+
+```mdl
+decision D-11: Triage is part of plugin-inbox rather than its own plugin; the operation is `TriageMailbox` (`org.dxos.operation.inbox.triageMailbox`), and the spec moves to plugin-inbox/docs/TRIAGE.mdl.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-3.1, F-3.2, QA-1, QA-2]
+  why: Triage only acts on a mailbox, and as an opt-in plugin it was off wherever inbox was on.
+```
+
+```mdl
+decision D-12: Only a recorded task marks a message as already read for tasks; contacts and summaries recorded against the same message do not. Fills in [D-4].
+  date: 2026-10-27
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [F-4.5]
+  why: Inbox records the contacts and summaries it extracts on sync in the same per-message ledger, so on a synced mailbox every message read as extracted and triage filed no tasks.
+```
+
+```mdl
+decision D-13: Triage needs no TypeSafe plugin: the default decision model and Clairic are keyless Workers AI models through EDGE, served wherever the assistant is.
+  date: 2026-10-27
+  by: user:dmaretskyi
+  affects: [F-1.1, F-4.1, QA-1, QA-2]
+  why: With the resolvers in the opt-in TypeSafe plugin, triage failed with AiModelNotAvailableError on a default install.
 ```

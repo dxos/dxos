@@ -166,6 +166,7 @@ const VERBS = new Set([
   'track',
   'transcribe',
   'translate',
+  'triage',
   'unsubscribe',
   'update',
   'upload',

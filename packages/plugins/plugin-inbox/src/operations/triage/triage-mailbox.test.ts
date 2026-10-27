@@ -17,14 +17,13 @@ import * as Project from '@dxos/compute/Project';
 import { Database, Feed, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { Cursor } from '@dxos/link';
-import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { Tagging, TagIndex, Text } from '@dxos/schema';
 import { Message, Outline, Task, TaskSet } from '@dxos/types';
 
-import { LabelerOperationHandlerSet } from '#operations';
-import { LabelerOperation } from '#types';
+import { InboxOperationHandlerSet } from '#operations';
+import { InboxOperation, Mailbox } from '#types';
 
-import { MessageState, NO_LABEL, URGENCY_SCALE } from '../questions.ts';
+import { MessageState, NO_LABEL, URGENCY_SCALE } from './questions.ts';
 
 /**
  * Canned answers keyed by subject. The model itself is exercised live in `@dxos/ai`'s
@@ -94,7 +93,7 @@ const extractionModel = Layer.succeed(
 );
 
 const TestLayer = AssistantTestLayer({
-  operationHandlers: LabelerOperationHandlerSet,
+  operationHandlers: InboxOperationHandlerSet.handlers,
   types: [
     Cursor.Cursor,
     Feed.Feed,
@@ -109,7 +108,7 @@ const TestLayer = AssistantTestLayer({
     TaskSet.TaskSet,
     Text.Text,
   ],
-  // The labeler never generates text; the runtime only needs a language model to resolve.
+  // Triage never generates text; the runtime only needs a language model to resolve.
   aiService: Layer.succeed(
     AiService.AiService,
     AiService.make({
@@ -165,7 +164,7 @@ describe('LabelMailbox operation', () => {
       function* ({ expect }) {
         const { mailbox } = yield* seedMailbox();
 
-        const result = yield* Operation.invoke(LabelerOperation.LabelMailbox, { mailbox: Ref.make(mailbox) });
+        const result = yield* Operation.invoke(InboxOperation.TriageMailbox, { mailbox: Ref.make(mailbox) });
         expect(result.processed).toBe(3);
         expect(result.labelled).toBe(1);
         expect(result.needsReply).toBe(2);
@@ -192,7 +191,7 @@ describe('LabelMailbox operation', () => {
       function* ({ expect }) {
         const { mailbox } = yield* seedMailbox();
 
-        const result = yield* Operation.invoke(LabelerOperation.LabelMailbox, { mailbox: Ref.make(mailbox) });
+        const result = yield* Operation.invoke(InboxOperation.TriageMailbox, { mailbox: Ref.make(mailbox) });
         // The duplicate (by title) and the low-confidence slot are dropped; the newsletter asks nothing.
         expect(result.tasks).toBe(2);
 
@@ -215,9 +214,29 @@ describe('LabelMailbox operation', () => {
         expect(invoice && Mailbox.getExtractedObjectIds(mailbox, invoice.id)).toEqual([invoiceTask?.id]);
 
         // A second run files nothing new: every message is triaged and the invoice already extracted.
-        const rerun = yield* Operation.invoke(LabelerOperation.LabelMailbox, { mailbox: Ref.make(mailbox) });
+        const rerun = yield* Operation.invoke(InboxOperation.TriageMailbox, { mailbox: Ref.make(mailbox) });
         expect(rerun.tasks).toBe(0);
         expect(yield* Database.query(Filter.type(Project.Project)).run).toHaveLength(1);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'reads a message for tasks when only contacts were extracted from it',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const { mailbox } = yield* seedMailbox();
+        // Sync records the contacts it extracts in the same ledger triage records its tasks in.
+        const feed = yield* Database.load(mailbox.feed);
+        for (const message of yield* Feed.query(feed, Filter.type(Message.Message)).run) {
+          Mailbox.recordExtraction(mailbox, message.id, [`person-${message.id}`]);
+        }
+
+        const result = yield* Operation.invoke(InboxOperation.TriageMailbox, { mailbox: Ref.make(mailbox) });
+
+        expect(result.tasks).toBe(2);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -230,8 +249,8 @@ describe('LabelMailbox operation', () => {
       function* ({ expect }) {
         const { mailbox } = yield* seedMailbox();
 
-        yield* Operation.invoke(LabelerOperation.LabelMailbox, { mailbox: Ref.make(mailbox) });
-        const rerun = yield* Operation.invoke(LabelerOperation.LabelMailbox, { mailbox: Ref.make(mailbox) });
+        yield* Operation.invoke(InboxOperation.TriageMailbox, { mailbox: Ref.make(mailbox) });
+        const rerun = yield* Operation.invoke(InboxOperation.TriageMailbox, { mailbox: Ref.make(mailbox) });
 
         // Both messages carry a priority band now, so neither is asked about again.
         expect(rerun.processed).toBe(0);

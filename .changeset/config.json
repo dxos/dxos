@@ -298,7 +298,6 @@
       "@dxos/plugin-iroh-beacon",
       "@dxos/plugin-jmap",
       "@dxos/plugin-kanban",
-      "@dxos/plugin-labeler",
       "@dxos/plugin-lametric",
       "@dxos/plugin-library",
       "@dxos/plugin-linear",

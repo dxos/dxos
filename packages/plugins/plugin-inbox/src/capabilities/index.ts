@@ -52,6 +52,12 @@ export const MailboxProcessors = Capability.lazyModule(
   { provides: [InboxCapabilities.MailboxProcessor], activatesOn: InboxEvents.Start },
   () => import('./mailbox-processors.ts'),
 );
+export const MailboxActions = Capability.lazyModule(
+  'MailboxActions',
+  // Rides the inbox feature it contributes to: the button is unreachable until a mailbox renders.
+  { provides: [InboxCapabilities.MailboxAction], activatesOn: InboxEvents.Start },
+  () => import('./mailbox-actions.ts'),
+);
 export const AutomationTemplates = Capability.lazyModule(
   'AutomationTemplates',
   { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },

@@ -8,10 +8,11 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
-import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { trim } from '@dxos/util';
 
-import { LABELER_TAG_SOURCE } from './constants.ts';
+import { Mailbox } from '#types';
+
+import { TRIAGE_SOURCE } from './constants.ts';
 
 /** The skill that lets the agent send mail; the inbox skill arrives with the mailbox binding. */
 const INBOX_SEND_SKILL_KEY = 'org.dxos.skill.inboxSend';
@@ -30,7 +31,7 @@ export const INBOX_PROJECT_INSTRUCTIONS = trim`
   Sign the reply as the mailbox owner. Do not invent facts, dates, or attachments.
 `;
 
-const projectKey = (mailbox: Mailbox.Mailbox) => ({ source: LABELER_TAG_SOURCE, id: `project:${mailbox.id}` });
+const projectKey = (mailbox: Mailbox.Mailbox) => ({ source: TRIAGE_SOURCE, id: `project:${mailbox.id}` });
 
 /**
  * The project a mailbox's extracted tasks are filed in, created on first use. Keyed by the mailbox so a

@@ -1,7 +1,7 @@
 # Inbox triage
 
 An unsorted morning inbox for the triage demo: Sam Rivera's mail, newest first, none of it read,
-labelled or prioritised. Triage (plugin-labeler) is what sorts it.
+labelled or prioritised. Triage (plugin-inbox) is what sorts it.
 
 ## Contents
 
