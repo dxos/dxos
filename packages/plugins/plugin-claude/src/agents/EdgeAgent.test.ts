@@ -23,6 +23,7 @@ import { MANAGED_ACCESS_TOKEN } from '@dxos/protocols';
 import { type ContentBlock, Message, Outline, Repo, TaskSet } from '@dxos/types';
 
 import { AgentError } from '../errors.ts';
+import * as ClaudeChoices from './ClaudeChoices.ts';
 import * as EdgeAgent from './EdgeAgent.ts';
 import * as EdgeProtocol from './EdgeProtocol.ts';
 
@@ -207,6 +208,33 @@ describe('EdgeAgent', () => {
       });
       expect(Obj.getKeys(chat, EdgeAgent.processKeySource('edge')).map(({ id }) => id)).toEqual(['process-1']);
       expect(edge.lent).toEqual([{ env: ENV }, { env: ENV }]);
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
+  it.live("spawns the process with the chat's own permission mode and agent options", () =>
+    Effect.gen(function* () {
+      const { feed, chat, edge, options } = yield* setup((turnId) => [
+        { _tag: 'turn-end', turnId, stopReason: 'end_turn' },
+      ]);
+      Obj.update(chat, (chat) => {
+        chat.session = { ...chat.session, agentModel: 'opus', agentEffort: 'max', agentMode: 'acceptEdits' };
+      });
+      const chosen: EdgeAgent.Options = {
+        ...options,
+        definition: {
+          ...options.definition,
+          mode: (chat) => ClaudeChoices.permissionMode(chat.session, undefined),
+          sessionMeta: (chat) => ({ claudeCode: { options: ClaudeChoices.sdkOptions(chat.session) } }),
+        },
+      };
+      yield* EdgeAgent.runTurn(chosen, { chat, feed }, { prompt: 'go' });
+
+      expect(edge.spawned[0]).toMatchObject({
+        annotations: {
+          [EdgeProtocol.Annotation.mode]: 'acceptEdits',
+          [EdgeProtocol.Annotation.meta]: { claudeCode: { options: { model: 'opus', effort: 'max' } } },
+        },
+      });
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 
