@@ -1,8 +1,6 @@
 ---
 '@dxos/ai': minor
-'@dxos/compute': minor
-'@dxos/types': minor
 '@dxos/plugin-inbox': minor
 ---
 
-`@dxos/ai` adds `ExtractionModel`, a typed-field extraction service, with Cloudflare's Clairic (`Model.cloudflareClairic`) resolved through `AiService.extractionModel`. Inbox triage now groups the mailbox by priority band, lists extracted tasks under each email, and lets an agent send a reply (`InboxOperation.SendReply`) after the person allows it in the chat. The permission request shows what the call would send: an operation names that input field with `Operation.ConsentPreviewAnnotation`, and `ContentBlock.Request` carries it as an optional `preview`. `TagIndex.taggedIdsAtom` now updates on every write to a tag, not only the first.
+Add `ExtractionModel` to `@dxos/ai`, a typed-field extraction service served by Cloudflare's Clairic (`Model.cloudflareClairic`), and use it with a decision model to triage an inbox in one action: each email gets labels and a priority band, and what it asks for becomes a task filed in a per-mailbox project and shown under the email. An agent assigned such a task replies through `InboxOperation.SendReply` only after the person allows it in the chat, where the request previews the reply (`Operation.ConsentPreviewAnnotation`); delegated agents now start from their tasks' and source objects' URIs, and code mode accepts an object where an operation expects a reference to it. `TagIndex.taggedIdsAtom` now updates on every write to a tag, not only the first.
