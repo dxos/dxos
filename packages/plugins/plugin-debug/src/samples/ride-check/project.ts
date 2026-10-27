@@ -36,7 +36,10 @@ Then build in one sandbox, through the Sandbox skill (\`org.dxos.skill.sandbox\`
 - The page is React built by Vite with \`@dxos/react-ui\` and \`@dxos/ui-theme\` from npm. Add \`ThemePlugin({})\` from \
 \`@dxos/ui-theme/plugin\` to the Vite config; import \`@dxos-theme\` and \`@dxos/react-ui/theme.css\` first in the entry; \
 wrap the app in \`<Theme.Provider tx={Theme.defaultTx} themeMode='dark'>\`. Each feature is a \`Card.Root\` with a \
-\`Card.Header\`/\`Card.Title\`; use \`Tag.Tag\` and \`Icon.Icon\` for the rest.
+\`Card.Header\`/\`Card.Title\`; use \`Tag\` and \`Icon\` for the rest. Import them from their subpaths, \
+\`import * as Card from '@dxos/react-ui/Card'\`, \`import { Tag } from '@dxos/react-ui/Tag'\` and \
+\`import { Icon } from '@dxos/react-ui/Icon'\`: from the package root \`Icon\` and \`Tag\` are namespaces, and \
+rendering one is React error #130 and a blank page, which neither the HTML nor the API shows.
 - Icons load at runtime from \`/phosphor/regular/<name>.svg\`: copy the ones the page uses from \
 \`@phosphor-icons/core/assets/regular\` into \`public/phosphor/regular\`.
 - Tailwind only sees class names written out in full: map a verdict to \`border-emerald-border\`, never build \
