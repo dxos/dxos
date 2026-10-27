@@ -107,7 +107,8 @@ describe('generateReply', () => {
     expect(ai.prompts[0]).toContain('Can you send the Q2 numbers?');
     expect(ai.prompts[0]).toContain('Working on it.');
     expect(ai.prompts[0]).not.toContain('Lunch?');
-    expect(ai.prompts[0]).toContain('works-at');
+    // `works-at` is the seeded `schema:worksFor`, read back under its label.
+    expect(ai.prompts[0]).toContain('works for');
   });
 
   test('drafts without facts when the store is empty', async ({ expect }) => {

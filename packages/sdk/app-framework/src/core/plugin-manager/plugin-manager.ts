@@ -398,7 +398,8 @@ class ManagerImpl implements PluginManager {
       Effect.flatMap((subscription) =>
         PubSub.take(subscription).pipe(
           Effect.tap((message) => Effect.sync(() => this._autoDisableOnModuleError(message))),
-          Effect.forever,
+          // A yield per message is a clamped 4ms browser timer; `take` already suspends when the queue is empty.
+          Effect.forever({ disableYield: true }),
         ),
       ),
       Effect.scoped,

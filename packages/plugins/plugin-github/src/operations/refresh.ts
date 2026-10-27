@@ -6,12 +6,14 @@ import * as Effect from 'effect/Effect';
 
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
-import { PullRequest } from '@dxos/types';
+import { Cursor } from '@dxos/link';
+import { PullRequest, Repo } from '@dxos/types';
 
 import { GitHubOperation } from '#types';
 
 import { pullRequestChanges } from '../pull-request.ts';
 import { fetchPullRequestWithFallback } from './import-pull-request.ts';
+import { type GitHubAccess } from './pull-request.ts';
 
 /**
  * How often the space's refresh trigger polls its open pull requests: hourly, at an off-the-hour minute
@@ -31,9 +33,9 @@ const IN_FLIGHT_STATES: readonly PullRequest.State[] = ['open', 'draft'];
  */
 export const refreshPullRequest = Effect.fn('refreshPullRequest')(function* (
   pullRequest: PullRequest.PullRequest,
-  token: string,
+  access: GitHubAccess,
 ) {
-  const pull = yield* fetchPullRequestWithFallback(pullRequest, token);
+  const pull = yield* fetchPullRequestWithFallback(pullRequest, access);
   const changes = pullRequestChanges(pullRequest, pull);
   const updated = Object.keys(changes);
   if (updated.length > 0) {
@@ -76,6 +78,30 @@ export const queryInFlightPullRequests = () =>
     Effect.map((pullRequests) => pullRequests.filter((pullRequest) => IN_FLIGHT_STATES.includes(pullRequest.state))),
     Effect.orDie,
   );
+
+/** `owner/name` of every repository a sync binding targets. */
+const boundRepositories = () =>
+  Effect.gen(function* () {
+    const cursors = yield* Database.query(Filter.type(Cursor.Cursor)).run;
+    const names = new Set<string>();
+    for (const cursor of cursors) {
+      if (Cursor.isExternal(cursor)) {
+        const target = yield* Database.load(cursor.spec.target).pipe(Effect.orElseSucceed(() => undefined));
+        if (Repo.instanceOf(target)) {
+          names.add(Repo.fullName(target));
+        }
+      }
+    }
+    return names;
+  }).pipe(Effect.orDie);
+
+/** In-flight pull requests in repositories no binding polls; a bound repository's sync covers the rest. */
+export const queryUnboundInFlightPullRequests = () =>
+  Effect.gen(function* () {
+    const bound = yield* boundRepositories();
+    const inFlight = yield* queryInFlightPullRequests();
+    return inFlight.filter((pullRequest) => !bound.has(`${pullRequest.owner}/${pullRequest.repo}`));
+  });
 
 const isRefreshTrigger = (trigger: Trigger.Trigger): boolean =>
   trigger.runnable?.uri === GitHubOperation.RefreshPullRequests.meta.key.toString();

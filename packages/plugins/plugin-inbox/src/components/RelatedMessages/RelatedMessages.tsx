@@ -78,7 +78,7 @@ export const RelatedMessages = ({ messages, summaries, onMessageClick }: Related
           }
           onClick={() => onMessageClick?.(message)}
         >
-          <Card.Text>{messageDigest(message, summaries) ?? ''}</Card.Text>
+          <Card.Text truncate>{messageDigest(message, summaries) ?? ''}</Card.Text>
         </Card.Row>
       ))}
     </Card.Section>

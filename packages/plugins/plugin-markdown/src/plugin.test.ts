@@ -11,6 +11,8 @@ import { meta } from '#meta';
 
 import * as MarkdownPlugin from '../dx.config.ts';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), MarkdownPlugin.make()] });
+
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('MarkdownPlugin', () => {

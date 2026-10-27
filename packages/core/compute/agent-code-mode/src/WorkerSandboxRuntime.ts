@@ -13,6 +13,7 @@ import * as RpcClient from 'effect/rpc/RpcClient';
 import * as Schema from 'effect/Schema';
 
 import * as Operation from '@dxos/compute/Operation';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, JsonSchema, Type } from '@dxos/echo';
 import { EchoClient } from '@dxos/echo-client';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -22,6 +23,7 @@ import { log } from '@dxos/log';
 import { EffectDialect } from './dialect-effect.ts';
 import { PlainDialect } from './dialect-plain.ts';
 import { type Dialect, type SandboxOperation } from './Dialect.ts';
+import { formatPrinted } from './format.ts';
 import * as Wire from './Wire.ts';
 import { type SandboxInit, SandboxRpcs } from './WorkerSandboxProtocol.ts';
 
@@ -84,9 +86,14 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
     // One at a time: the JSON-schema round trip does not cover every schema (a record keyed by a
     // pattern, for one), and a type the worker cannot rebuild must cost only that type — not every
     // evaluation in a workspace that happens to register it.
-    const types = init.types.flatMap(({ typename, version, jsonSchema }) => {
+    const types = init.types.flatMap(({ typename, version, jsonSchema, skills }) => {
       try {
-        return [Type.makeObject(DXN.make(typename, version))(JsonSchema.toEffectSchema(jsonSchema))];
+        const schema = JsonSchema.toEffectSchema(jsonSchema);
+        return [
+          Type.makeObject(DXN.make(typename, version))(
+            skills === undefined ? schema : schema.pipe(Skill.SkillsAnnotation.set([...skills])),
+          ),
+        ];
       } catch (error) {
         log.warn('code-mode worker cannot rebuild type; it is unavailable to the sandbox', { typename, error });
         return [];
@@ -115,11 +122,11 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
     // the host with its handler. It exists so the Effect dialect's `Database.resolve` can answer the
     // operation's DXN exactly as in-process; the call itself crosses home through the forwarding
     // service below, where the conversation it belongs to lives.
-    const operations: SandboxOperation[] = init.operations.map(({ key, name, description, parameters }) => ({
+    const operations: SandboxOperation[] = init.operations.map(({ key, name, description, parameters, backed }) => ({
       name,
       description,
       parameters,
-      definition: standInDefinition(key, name, description),
+      definition: backed ? standInDefinition(key, name, description) : undefined,
       invoke: (input: unknown) => invokeOperation(key, toWire(input)),
     }));
 
@@ -147,10 +154,11 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
     const bindings = dialect.bindings({
       runtime,
       operations,
+      skills: init.skills,
       // Sent as it happens rather than batched with the result, so output survives a worker that is
-      // killed for outrunning its budget.
+      // killed for outrunning its budget; sent formatted, since a live object cannot cross the port.
       print: (...values: unknown[]) => {
-        Effect.runFork(client['Sandbox.print']({ values }));
+        Effect.runFork(client['Sandbox.print']({ values: values.map(formatPrinted) }));
       },
     });
 
@@ -160,7 +168,11 @@ const evaluate = (client: SandboxClient, init: SandboxInit) =>
       catch: (error: unknown) => new ModelCodeFailed({ message: describe(error) }),
     }).pipe(
       Effect.match({
-        onSuccess: (value: unknown) => ({ value, failure: null }),
+        // Formatted like printed output, which is all the host does with it.
+        onSuccess: (value: unknown) => ({
+          value: value === undefined ? undefined : formatPrinted(value),
+          failure: null,
+        }),
         onFailure: (error: ModelCodeFailed) => ({ value: undefined, failure: error.message }),
       }),
       // The turn carries on against the host's database, so it waits for what the code wrote.

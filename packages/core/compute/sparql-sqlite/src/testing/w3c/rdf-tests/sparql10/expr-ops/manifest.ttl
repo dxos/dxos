@@ -1,0 +1,192 @@
+@prefix rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix : <http://www.w3.org/2001/sw/DataAccess/tests/data-r2/expr-ops/manifest#> .
+@prefix rdfs:	<http://www.w3.org/2000/01/rdf-schema#> .
+@prefix mf:     <http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#> .
+@prefix qt:     <http://www.w3.org/2001/sw/DataAccess/tests/test-query#> .
+@prefix dawgt:   <http://www.w3.org/2001/sw/DataAccess/tests/test-dawg#> .
+@prefix sparql: <http://www.w3.org/ns/sparql#> .
+
+<>  rdf:type mf:Manifest ;
+    rdfs:label "XPath operators" ;
+    mf:specVersion sparql:version-1.0 ;
+    rdfs:comment "SPARQL tests - XPath operators in FILTERs" ;
+    mf:entries
+    ( 
+        :ge-1 :le-1 :mul-1 :plus-1 :minus-1 :unplus-1 :unminus-1
+        :dateTime-le-2
+        :dateTime-ge-2
+        :dateTime-lt-2
+        :dateTime-gt-2
+        :add-numbers-cast
+        :subtract-numbers-cast
+        :multiply-numbers-cast
+        :divide-numbers-cast
+        :unplus-2
+        :unminus-2
+        :add-literals
+    ).
+
+
+:unplus-1 a mf:QueryEvaluationTest ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://lists.w3.org/Archives/Public/public-rdf-dawg/2007JulSep/att-0087/14-dawg-minutes.html> ;
+         mf:name    "Unary Plusn" ;
+         rdfs:comment "+A in FILTER expressions" ;
+         mf:action
+            [ qt:query  <query-unplus-1.rq> ;
+              qt:data   <data.ttl> ] ;
+         mf:result  <result-unplus-1.srx>
+      .
+:unminus-1 a mf:QueryEvaluationTest ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://lists.w3.org/Archives/Public/public-rdf-dawg/2007JulSep/att-0087/14-dawg-minutes.html> ;
+         mf:name    "Unary Minus" ;
+         rdfs:comment "-A in FILTER expressions" ;
+         mf:action
+            [ qt:query  <query-unminus-1.rq> ;
+              qt:data   <data.ttl> ] ;
+         mf:result  <result-unminus-1.srx>
+      .
+:plus-1 a mf:QueryEvaluationTest ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://lists.w3.org/Archives/Public/public-rdf-dawg/2007JulSep/att-0087/14-dawg-minutes.html> ;
+         mf:name    "Addition" ;
+         rdfs:comment "A + B in FILTER expressions" ;
+         mf:action
+            [ qt:query  <query-plus-1.rq> ;
+              qt:data   <data.ttl> ] ;
+         mf:result  <result-plus-1.srx>
+      .
+:minus-1 a mf:QueryEvaluationTest ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://lists.w3.org/Archives/Public/public-rdf-dawg/2007JulSep/att-0087/14-dawg-minutes.html> ;
+         mf:name    "Subtraction" ;
+         rdfs:comment "A - B in FILTER expressions" ;
+         mf:action
+            [ qt:query  <query-minus-1.rq> ;
+              qt:data   <data.ttl> ] ;
+         mf:result  <result-minus-1.srx>
+      .
+:mul-1 a mf:QueryEvaluationTest ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://lists.w3.org/Archives/Public/public-rdf-dawg/2007JulSep/att-0087/14-dawg-minutes.html> ;
+         mf:name    "Multiplication" ;
+         rdfs:comment "A * B in FILTER expressions" ;
+         mf:action
+            [ qt:query  <query-mul-1.rq> ;
+              qt:data   <data.ttl> ] ;
+         mf:result  <result-mul-1.srx>
+      .
+
+:ge-1 a mf:QueryEvaluationTest ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://lists.w3.org/Archives/Public/public-rdf-dawg/2007JulSep/att-0087/14-dawg-minutes.html> ;
+         mf:name    "Greater-than or equals" ;
+         rdfs:comment ">= in FILTER expressions" ;
+         mf:action
+            [ qt:query  <query-ge-1.rq> ;
+              qt:data   <data.ttl> ] ;
+         mf:result  <result-ge-1.srx>
+      .
+
+:le-1 a mf:QueryEvaluationTest ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://lists.w3.org/Archives/Public/public-rdf-dawg/2007JulSep/att-0087/14-dawg-minutes.html> ;
+         mf:name    "Less-than or equals" ;
+         rdfs:comment "<= in FILTER expressions" ;
+         mf:action
+            [ qt:query  <query-le-1.rq> ;
+              qt:data   <data.ttl> ] ;
+         mf:result  <result-le-1.srx>
+      .
+
+:dateTime-le-2 a mf:QueryEvaluationTest ;
+         mf:name    "DateTime Less-than or equals" ;
+         rdfs:comment "<= in FILTER expressions" ;
+         mf:action
+            [ qt:query  <query-le-2.rq> ;
+              qt:data   <data-dateTime.ttl> ] ;
+         mf:result  <result-dateTime-le-2.srx>
+      .
+
+:dateTime-ge-2 a mf:QueryEvaluationTest ;
+         mf:name    "DateTime Greater-than or equals" ;
+         rdfs:comment "<= in FILTER expressions" ;
+         mf:action
+            [ qt:query  <query-ge-2.rq> ;
+              qt:data   <data-dateTime.ttl> ] ;
+         mf:result  <result-dateTime-ge-2.srx>
+      .
+
+:dateTime-lt-2 a mf:QueryEvaluationTest ;
+         mf:name    "DateTime Less-than" ;
+         rdfs:comment "< in FILTER expressions" ;
+         mf:action
+            [ qt:query  <query-lt-2.rq> ;
+              qt:data   <data-dateTime.ttl> ] ;
+         mf:result  <result-dateTime-lt-2.srx>
+      .
+
+:dateTime-gt-2 a mf:QueryEvaluationTest ;
+         mf:name    "DateTime Greater-than" ;
+         rdfs:comment "> in FILTER expressions" ;
+         mf:action
+            [ qt:query  <query-gt-2.rq> ;
+              qt:data   <data-dateTime.ttl> ] ;
+         mf:result  <result-dateTime-gt-2.srx>
+      .
+
+:add-numbers-cast a mf:QueryEvaluationTest ;
+         mf:name    "+ operator on number mixed datatypes" ;
+         mf:action
+            [ qt:query  <query-add-numbers-cast.rq> ;
+              qt:data   <data-numbers.ttl> ] ;
+         mf:result  <result-add-numbers-cast.srx>
+      .
+
+:subtract-numbers-cast a mf:QueryEvaluationTest ;
+         mf:name    "- operator on number mixed datatypes" ;
+         mf:action
+            [ qt:query  <query-subtract-numbers-cast.rq> ;
+              qt:data   <data-numbers.ttl> ] ;
+         mf:result  <result-subtract-numbers-cast.srx>
+      .
+
+:multiply-numbers-cast a mf:QueryEvaluationTest ;
+         mf:name    "* operator on number mixed datatypes" ;
+         mf:action
+            [ qt:query  <query-multiply-numbers-cast.rq> ;
+              qt:data   <data-numbers.ttl> ] ;
+         mf:result  <result-multiply-numbers-cast.srx>
+      .
+
+:divide-numbers-cast a mf:QueryEvaluationTest ;
+         mf:name    "/ operator on number mixed datatypes" ;
+         mf:action
+            [ qt:query  <query-divide-numbers-cast.rq> ;
+              qt:data   <data-numbers.ttl> ] ;
+         mf:result  <result-divide-numbers-cast.srx>
+      .
+
+:unplus-2 a mf:QueryEvaluationTest ;
+         mf:name    "Unary Plus with various datatype" ;
+         mf:action
+            [ qt:query  <query-unplus-2.rq> ;
+              qt:data   <data-numbers.ttl> ] ;
+         mf:result  <result-unplus-2.srx>
+      .
+
+:unminus-2 a mf:QueryEvaluationTest ;
+         mf:name    "Unary Minus with various datatype" ;
+         mf:action
+            [ qt:query  <query-unminus-2.rq> ;
+              qt:data   <data-numbers.ttl> ] ;
+         mf:result  <result-unminus-2.srx>
+      .
+
+:add-literals a mf:QueryEvaluationTest ;
+         mf:name    "Add literal numbers with + and - prefixes" ;
+         mf:action
+            [ qt:query  <query-add-literals.rq> ] ;
+         mf:result  <result-add-literals.srx>
+      .

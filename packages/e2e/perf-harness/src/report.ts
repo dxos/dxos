@@ -201,6 +201,9 @@ export const DATA_COUNTER_COLUMNS = [
   'echo.querySubscriberCallbacks',
   'echo.indexPasses',
   'echo.indexedObjects',
+  'echo.objectDocumentsLoaded',
+  'echo.snapshotObjects',
+  'echo.activations',
 ] as const;
 
 /** `sqlite.rowsRead` → `sqliteRowsRead`. */
@@ -537,6 +540,13 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
       ...(row.comparability.snapshotStages?.length
         ? { snapshotStages: row.comparability.snapshotStages.join(',') }
         : {}),
+      ...(row.comparability.http2 ? { http2: true } : {}),
+      ...(row.comparability.serviceWorker ? { serviceWorker: true } : {}),
+      ...(row.comparability.cpuThrottle ? { cpuThrottle: row.comparability.cpuThrottle } : {}),
+      ...(row.comparability.offline ? { offline: true } : {}),
+      ...(row.comparability.edge ? { edge: row.comparability.edge } : {}),
+      ...(row.comparability.telemetry ? { telemetry: true } : {}),
+      ...(row.comparability.channel ? { channel: row.comparability.channel } : {}),
     },
   };
 };

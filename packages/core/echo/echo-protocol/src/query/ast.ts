@@ -462,10 +462,60 @@ const Order_ = Schema.Union([
     field: Schema.Literals(['createdAt', 'updatedAt']),
     direction: OrderDirection,
   }),
+  Schema.Struct({
+    // Order by a scalar in an entity annotation (`meta.annotations[key]`), at `path` inside a
+    // struct-valued annotation; without `path` the annotation value itself is the scalar.
+    kind: Schema.Literal('annotation'),
+    key: Schema.String,
+    path: Schema.optional(Schema.Array(Schema.String)),
+    direction: OrderDirection,
+  }),
 ]);
 
 export type Order = Schema.Schema.Type<typeof Order_>;
 export const Order: Schema.Codec<Order> = Order_;
+
+export type OrderAnnotation = Extract<Order, { kind: 'annotation' }>;
+
+/**
+ * The value an annotation order sorts by, in the domain SQLite's JSON functions sort in: booleans
+ * as 0/1, and anything but a number or string (absent, null, object, array) as null.
+ */
+export const getAnnotationOrderValue = (
+  annotations: Readonly<Record<string, unknown>> | undefined,
+  order: OrderAnnotation,
+): string | number | null => {
+  if (annotations === undefined || !Object.hasOwn(annotations, order.key)) {
+    return null;
+  }
+  let value: unknown = annotations[order.key];
+  for (const key of order.path ?? []) {
+    if (typeof value !== 'object' || value === null || Array.isArray(value) || !Object.hasOwn(value, key)) {
+      return null;
+    }
+    value = Reflect.get(value, key);
+  }
+  if (typeof value === 'boolean') {
+    return value ? 1 : 0;
+  }
+  return typeof value === 'number' || typeof value === 'string' ? value : null;
+};
+
+/**
+ * Compares two {@link getAnnotationOrderValue} results as the SQL executor's `ORDER BY` does: nulls
+ * last in either direction, numbers before strings, strings by code unit.
+ */
+export const compareAnnotationOrderValues = (
+  a: string | number | null,
+  b: string | number | null,
+  direction: OrderDirection,
+): number => {
+  if (a === null || b === null) {
+    return a === b ? 0 : a === null ? 1 : -1;
+  }
+  const comparison = typeof a === typeof b ? (a < b ? -1 : a > b ? 1 : 0) : typeof a === 'number' ? -1 : 1;
+  return direction === 'desc' ? -comparison : comparison;
+};
 
 /**
  * Order the query results.
@@ -706,35 +756,30 @@ export interface RegistryScope extends Schema.Schema.Type<typeof RegistryScope> 
 export const Scope = Schema.Union([SpaceScope, FeedScope, RegistryScope]);
 export type Scope = Schema.Schema.Type<typeof Scope>;
 
-export const visit = (query: Query, visitor: (node: Query) => void) => {
-  visitor(query);
+const subqueries: (query: Query) => readonly Query[] = Match.type<Query>().pipe(
+  Match.when({ type: 'filter' }, ({ selection }) => [selection]),
+  Match.when({ type: 'reference-traversal' }, ({ anchor }) => [anchor]),
+  Match.when({ type: 'incoming-references' }, ({ anchor }) => [anchor]),
+  Match.when({ type: 'relation' }, ({ anchor }) => [anchor]),
+  Match.when({ type: 'options' }, ({ query }) => [query]),
+  Match.when({ type: 'relation-traversal' }, ({ anchor }) => [anchor]),
+  Match.when({ type: 'hierarchy-traversal' }, ({ anchor }) => [anchor]),
+  Match.when({ type: 'union' }, ({ queries }) => queries),
+  Match.when({ type: 'set-difference' }, ({ source, exclude }) => [source, exclude]),
+  Match.when({ type: 'order' }, ({ query }) => [query]),
+  Match.when({ type: 'limit' }, ({ query }) => [query]),
+  Match.when({ type: 'skip' }, ({ query }) => [query]),
+  Match.when({ type: 'aggregate' }, ({ query }) => [query]),
+  Match.when({ type: 'from' }, (node) => (node.from._tag === 'query' ? [node.query, node.from.query] : [node.query])),
+  Match.when({ type: 'select' }, () => []),
+  Match.exhaustive,
+);
 
-  Match.value(query).pipe(
-    Match.when({ type: 'filter' }, ({ selection }) => visit(selection, visitor)),
-    Match.when({ type: 'reference-traversal' }, ({ anchor }) => visit(anchor, visitor)),
-    Match.when({ type: 'incoming-references' }, ({ anchor }) => visit(anchor, visitor)),
-    Match.when({ type: 'relation' }, ({ anchor }) => visit(anchor, visitor)),
-    Match.when({ type: 'options' }, ({ query }) => visit(query, visitor)),
-    Match.when({ type: 'relation-traversal' }, ({ anchor }) => visit(anchor, visitor)),
-    Match.when({ type: 'hierarchy-traversal' }, ({ anchor }) => visit(anchor, visitor)),
-    Match.when({ type: 'union' }, ({ queries }) => queries.forEach((q) => visit(q, visitor))),
-    Match.when({ type: 'set-difference' }, ({ source, exclude }) => {
-      visit(source, visitor);
-      visit(exclude, visitor);
-    }),
-    Match.when({ type: 'order' }, ({ query }) => visit(query, visitor)),
-    Match.when({ type: 'limit' }, ({ query }) => visit(query, visitor)),
-    Match.when({ type: 'skip' }, ({ query }) => visit(query, visitor)),
-    Match.when({ type: 'aggregate' }, ({ query }) => visit(query, visitor)),
-    Match.when({ type: 'from' }, (node) => {
-      visit(node.query, visitor);
-      if (node.from._tag === 'query') {
-        visit(node.from.query, visitor);
-      }
-    }),
-    Match.when({ type: 'select' }, () => {}),
-    Match.exhaustive,
-  );
+export const visit = (query: Query, visitor: (node: Query) => void): void => {
+  visitor(query);
+  for (const subquery of subqueries(query)) {
+    visit(subquery, visitor);
+  }
 };
 
 /**
@@ -800,3 +845,13 @@ export const fold = <T>(query: Query, reducer: (node: Query) => T): T[] => {
     Match.exhaustive,
   );
 };
+
+export {
+  type BranchCharacteristics,
+  type Characteristics,
+  type QueryClass,
+  type QueryWindow,
+  type Revalidation,
+  type SelectionKind,
+  characteristics,
+} from './characteristics.ts';

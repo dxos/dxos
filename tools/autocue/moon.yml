@@ -1,0 +1,37 @@
+layer: tool
+language: typescript
+tags:
+  - typecheck
+
+# The ident (src/components/Ident) is a Remotion project: `studio` previews it, `render` writes its clips to out/.
+tasks:
+  studio:
+    command: pnpm exec remotion studio
+    preset: server
+
+  render:
+    command: node scripts/render.mjs
+    inputs:
+      - remotion.config.ts
+      - '@group(sources)'
+      - '@group(scripts)'
+      - '@group(assets)'
+    outputs:
+      - out/**/*
+    options:
+      cache: false
+      runInCI: false
+
+  render-first-run:
+    extends: render
+    args: --first-run
+
+  render-all:
+    extends: render
+    args: --exclude TRAIL
+
+  sounds:
+    command: python3 scripts/make-sounds.py
+    options:
+      cache: false
+      runInCI: false

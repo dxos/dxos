@@ -74,7 +74,6 @@ export const makeSnippet = (text: string, length: number = DEFAULT_SNIPPET_LENGT
   return `${base.trimEnd()}…`;
 };
 
-/** Extract image URLs from HTML. og:image (meta property) first, then <img src="...">. */
 export const extractImageUrls = (html: string): string[] => {
   if (!html) {
     return [];
@@ -87,12 +86,23 @@ export const extractImageUrls = (html: string): string[] => {
   if (ogMatch?.[1]) {
     urls.push(ogMatch[1]);
   }
-  const imgRegex = /<img[^>]+src=["']([^"']+)["']/gi;
+  const imgRegex = /<img[^>]+src=["']([^"']+)["']|!\[[^\]]*\]\(\s*<?([^)\s>]+)>?[^)]*\)/gi;
   let match: RegExpExecArray | null;
   while ((match = imgRegex.exec(html)) != null) {
-    if (match[1] && !urls.includes(match[1])) {
-      urls.push(match[1]);
+    const url = match[1] ?? match[2];
+    if (url && !urls.includes(url)) {
+      urls.push(url);
     }
   }
   return urls;
 };
+
+export const stripMarkdown = (markdown: string): string =>
+  markdown
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/^\s{0,3}(?:#{1,6}|>)\s*/gm, '')
+    .replace(/(\*\*|\*|`)(\S(?:.*?\S)?)\1/g, '$2')
+    .replace(/(^|[^\w])(__|_)(\S(?:.*?\S)?)\2(?![\w])/g, '$1$3')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();

@@ -1,5 +1,28 @@
 # @dxos/echo-react
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/echo@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- 9b9a4ca: `useQuery` keeps its query and subscription across renders when the caller passes an inline filter, including in components built with the React Compiler. The editor's menus no longer rebuild the editor, and so blur it mid-keystroke, when the caller's `getMenu` or inline trigger arrays change identity.
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [16bde33]
+- Updated dependencies [7b47951]
+- Updated dependencies [2b6a93a]
+  - @dxos/echo@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

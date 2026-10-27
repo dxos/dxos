@@ -50,6 +50,10 @@ if (sqliteLayer) {
   log.warn('database is in memory (VITE_DX_STORAGE=memory): nothing survives a reload');
 }
 
+// Started at evaluation rather than on `init`, so a worker the tab spawned early compiles the wasm
+// while the tab is still booting; `onBeforeStart` awaits the same memoized init, which surfaces a failure.
+void initEchoHostWasm().catch((err) => log.verbose('early wasm init failed; retried on init', { err }));
+
 runDedicatedWorker({
   sqliteLayer,
   onBeforeStart: async (cfg) => {

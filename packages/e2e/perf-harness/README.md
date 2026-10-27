@@ -7,7 +7,27 @@ A flow is described once, in a `.mdl` QA test, and executed once, as a Playwrigh
 
 - Flows: [`composer-app/spec/PERF.mdl`](../../apps/composer-app/spec/PERF.mdl)
 - Specs: `composer-app/src/playwright/perf-*.spec.ts`, task `composer-app:e2e-perf`
-- Nightly: [`.depot/workflows/perf-nightly.yml`](../../../.depot/workflows/perf-nightly.yml)
+- Nightly: [`.github/workflows/perf-nightly.yml`](../../../.github/workflows/perf-nightly.yml)
+
+## Where to start
+
+`pnpm perf` builds, serves and drives the app, and says whether a change helped. Run
+`pnpm perf --help` for every command and flag.
+
+| The question                                                 | Start with                                                        |
+| ------------------------------------------------------------ | ----------------------------------------------------------------- |
+| Did my change make it faster or slower?                      | `pnpm perf compare --base main`                                   |
+| How does the working tree score against the CI budgets?      | `pnpm perf run -n 3`                                              |
+| Can this machine measure right now?                          | `pnpm perf doctor`                                                |
+| Where did the CPU go?                                        | `pnpm perf summarize`, then `pnpm perf expand <handle>`           |
+| A user says X is slow; how do I reproduce it?                | `pnpm perf capture`, then `pnpm perf scenario new`                |
+| Does a real profile, or the preview app, behave differently? | `--offline` or `--edge <url>`, with `--channel` and `--telemetry` |
+
+[Did a change help?](#did-a-change-help-pnpm-perf) below covers the CLI in depth. Agents start from
+the [`perf` skill](../../../.agents/skills/perf/SKILL.md), which routes each question to a playbook.
+The memory tools outside the CLI (soaks in Playwright's and the system's WebKit, EDGE traffic,
+Subduction's sync gates) are in [`composer-app/scripts/memory/`](../../apps/composer-app/scripts/memory/README.md).
+The rest of this file explains what the harness measures and why.
 
 ## Two modes, never mixed
 
@@ -129,3 +149,170 @@ without.
 
 Running beside another worktree: `DX_PERF_PORT` serves the bundle on its own port (locally the
 config reuses whatever already listens on 4173) and `DX_PERF_DEBUG_PORT` moves the CDP port.
+
+## Did a change help? `pnpm perf`
+
+The nightly answers whether main is healthy. `pnpm perf` (`src/cli/`) answers whether one change
+helped, on a laptop shared with other worktrees.
+
+```bash
+pnpm perf doctor                              # ports, load, lock, tree; exit 4 if blocked
+pnpm perf compare --base main --metric 'wall > boot'
+pnpm perf compare --base HEAD                 # A/A: this machine's noise floor
+pnpm perf run -n 3                            # the working tree, scored against the CI budgets
+pnpm perf gate                                # the boot-graph budget CI gates every PR on
+pnpm perf ledger                              # what this worktree measured before
+```
+
+`compare` builds both refs in this worktree (patching the clean tree to the base and back; bundles
+are cached under `.perf/arms` by tree hash, keeping the six most recently used, or
+`DX_PERF_KEEP_ARMS`), then runs rounds: each round measures both arms back to back, in a random
+order, on the same port. Two runs of one commit differ by ~20% per stage
+(METRICS.md), while arms paired inside a round differ by a few percent, so pairing is what makes a
+per-change verdict possible at all.
+
+For each metric it reports the mean of the per-round differences, its Student-t interval and Cliff's
+delta. A metric has **regressed** or **improved** only when the whole interval clears the threshold
+and the effect is large, **no change** only when the whole interval sits inside the threshold, and
+is **inconclusive** otherwise; three rounds is the least that decides anything. A counter that read
+the same in every round of each arm is deterministic, and its difference needs no interval. The
+exit code carries the verdict: 0 improved, 1 regressed, 2 no change, 3 inconclusive, 4 could not
+measure.
+
+The verdict rests on the target metrics: `--metric` patterns, or by default the work counters the
+nightly budgets, since calibration kept only those that hold steady run to run. Targets share one 5%
+chance of a false call (Bonferroni), so each extra target widens every interval and needs more
+rounds. Name the one to three metrics a change is about. On this repo's A/A runs (both arms the same
+tree), a percentile bootstrap called three of 45 unchanged counters regressions after six rounds;
+the t-interval with the shared budget called none. Every other metric is listed only when it moved,
+as a lead rather than a verdict.
+
+Ports are derived from the worktree path and a machine-wide lock (`~/.cache/dxos-perf/measure.lock`)
+runs one measurement at a time, so worktrees never measure each other. Before the first round,
+compare waits for the load average to fall below the core count, since the build it just ran is
+load the rounds would otherwise measure. Every run appends a row to `.perf/ledger.tsv`.
+
+### Measuring closer to production
+
+By default the bundle is served over HTTP/1.1 with no service worker and an unthrottled CPU, and
+the whole flow runs. Each of these flags changes that for both arms, and every row records it, so
+`compare` voids a verdict whose arms were measured under different conditions:
+
+```bash
+pnpm perf compare --base main --until open-space       # skip the stages after open-space
+pnpm perf compare --base main --http2                   # HTTP/2, as production's CDN serves
+pnpm perf compare --base main --service-worker          # the PWA build, its own cached bundle
+pnpm perf compare --base main --cpu-throttle 4          # the page 4x slower
+pnpm perf compare --base main --channel preview         # built as the preview release channel
+pnpm perf compare --base main --telemetry               # observability on, as shipped
+```
+
+- `--until` skips every stage after the one named, which shortens an experiment on an early stage.
+  Setup between stages still runs: the projects fixture is built whatever the stage.
+- `--http2` matters for boot. Hundreds of lazy chunks queue behind six HTTP/1.1 connections, so
+  request count reads as boot time locally when production pays little for it. It generates a
+  self-signed `key.pem` and `cert.pem` at the repo root on first use, which `vite preview` reads
+  under `HTTPS=true`.
+- `--service-worker` builds with `DX_PWA=true`; the worker precaches the bundle during the run, as
+  it does on a user's first visit.
+- `--cpu-throttle` sends `Emulation.setCPUThrottlingRate` through the page's session. The factor is
+  not calibrated to a device yet, so pick one and keep it for the whole comparison.
+- `--channel` builds as a release channel (`DX_ENVIRONMENT`: `dev`, `preview` or `staging`), with
+  that channel's branding and behaviour, to match the app a user runs.
+- `--telemetry` builds with PostHog (events, exceptions, session replay) and the OTel export on, as
+  shipped. Every other bundle runs with them off, since PostHog starts only when a build carries a
+  key and a host. Here they point at a loopback sink, which answers as PostHog would (remote config
+  with replay on, its extension scripts) and counts requests and bytes per endpoint without keeping
+  a body; nothing reaches production telemetry. The browser presents as a person's, because PostHog
+  captures nothing from one it takes for a bot. It is a separate cached bundle.
+
+### Measuring a real profile without syncing it
+
+A production bundle points at production EDGE, so a real profile loaded into a run would sync with
+live data. `--offline` partitions the browser: every request goes to a loopback proxy that refuses
+and logs it, host resolution covers loopback only, WebRTC gets no direct UDP, and the bundle's EDGE
+URL is a closed loopback port. `--edge <url>` is the same partition except for TLS tunnels to that
+one non-production EDGE (production is refused). Each partitioned scenario run writes
+`partition.json` with what was refused and tunnelled, and fails on any response from outside.
+
+```bash
+DX_PERF_PROFILE_ARCHIVE=<file.dxprofile> pnpm perf run --scenario memory-profile --offline -n 1
+pnpm perf run --scenario memory-synthetic --offline -n 1      # the same soak on generated data
+# Closest to a preview user's app: a non-production EDGE, the preview channel, observability on.
+DX_PERF_PROFILE_ARCHIVE=<file.dxprofile> pnpm perf run --scenario memory-profile \
+  --edge https://dev.dxos.network/ --channel preview --telemetry -n 1
+```
+
+`memory-profile` imports a `.dxprofile` (exported from `/recovery.html`) into a throwaway
+disk-backed profile and soaks it: idle, visit every space, idle, revisit, idle. It refuses to run
+unpartitioned and takes no screenshots. An archive holds private keys: keep it outside the repo,
+and keep what a run derives from it (heap snapshots, page text) out of PRs and chat.
+
+### Guardrails for an optimization loop
+
+An agent asked to make a number smaller will, sooner or later, make the measurement smaller instead.
+Telling it not to does not work, so the CLI makes it structural:
+
+- `compare` voids its verdict (exit 4) when the harness differs between the two arms: the files
+  listed under `harness` in `src/cli/targets.ts`, budgets and budget scripts included. A harness
+  change is its own PR; `--allow-harness-change` measures anyway and says so in the output.
+- `pnpm perf freeze` pins the harness for a loop. While frozen, the `guard-perf-harness.sh` hook
+  refuses edits to those files, `score-perf.ts calibrate --write` refuses to rewrite budgets, and
+  `compare` voids a verdict measured after the harness moved. `pnpm perf thaw` ends it.
+- `--check '<command>'` must pass before anything is measured, so a change that breaks the app
+  never reaches a timing.
+- A work counter that fell by more than half is listed whatever the targets are: a stage that
+  stopped doing its job wins on every timing.
+
+### Where did the time go? `summarize` and `expand`
+
+Every measured stage already writes a `.cpuprofile` per realm. `pnpm perf summarize [<run>]` reads
+them for the newest run (or a named one) and prints about 30 lines: the functions with the most self
+time, or, for a `compare` run, the functions whose self time changed most between the arms, averaged
+per round. Frames are mapped back to source through each arm's own source maps, and worker realms
+drop the chunk hash so the same worker lines up across two builds. Each row gets a handle;
+`pnpm perf expand h3` prints that function's callers and callees, with the arm-to-arm change.
+
+`compare` also uses the profiles to flag an implausible win: a stage timing that fell by more than
+the changed files spent there at base. That is usually skipped work or a moved wait, not the change.
+
+`pnpm perf run --snapshots idle,end` takes heap snapshots (they perturb every later stage), and
+`pnpm perf summarize --heap` prints their composition through `scripts/memory/perf-snapshot-report.mjs`.
+
+### From a field report to a scenario
+
+A report says "it is slow when I do X". The projects flow may not do X, so the report needs its
+own reproduction before anyone can tell whether a fix helped. That reproduction is a scenario: a
+spec under `composer-app/src/playwright/scenarios/` with its own flow name, fixture, stages and
+(once calibrated) budgets, built and served like the projects flow.
+
+```bash
+pnpm perf capture --attach 9222 --seconds 30     # profile the app that showed it, every realm
+pnpm perf scenario new reload-populated --reproduces '<what the report said>'
+pnpm perf run --scenario reload-populated -n 1    # does it run, and is the symptom in the numbers?
+pnpm perf scenario check reload-populated --capture <capture run>
+pnpm perf compare --base main --scenario reload-populated --metric 'wall > first-answer'
+```
+
+`capture` attaches to any browser with a debugging port (a dev server tab, a preview, the desktop
+app) and keeps the same per-realm profiles a measured run keeps, so `summarize` reads both.
+`scenario new` writes a spec around `defineScenario` (`perf/scenario.ts`): a fixture built outside
+every stage, then one stage per step of the report.
+
+`scenario check` is the bar before anyone hillclimbs on a scenario:
+
+- **Stable**: an A/A run of the scenario makes no false call.
+- **Sensitive**: a known slowdown (`DX_PERF_INJECT`, busy main thread) is called a regression. By
+  default it goes into the wall-time stage the A/A run measured most tightly, sized past that
+  stage's threshold plus its interval width, so the size printed is about the smallest this
+  scenario sees at that round count. Injected rows are never published.
+- **Faithful**: given a capture, at least half of the capture's top functions by self time are
+  among the scenario's hot functions. A scenario that is fast and stable but spends its time
+  elsewhere reproduces some other problem.
+
+A scenario that reloads or navigates sets `navigates: true`, which leaves the coordinator shared
+worker unattached: an inspector session keeps it alive through the navigation, and the reloaded tab
+then never starts.
+
+Scenarios run only when asked (`--scenario` sets `DX_PERF_SCENARIOS`), so adding one never
+lengthens the nightly. Registering one there is its own change, once it passes `check`.

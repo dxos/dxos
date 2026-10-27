@@ -193,6 +193,9 @@ export const translations = [
         'persisted-locally.message': 'All changes have been saved to disk on this device.',
         'persistence-pending.label': 'Saving…',
         'persistence-error.label': 'Error saving changes.',
+        'persistence-error.message':
+          'Changes are not reaching disk. Keep Composer open until this clears, or the changes since will be lost.',
+        'persistence-recovered.label': 'Changes saved.',
         'more-actions.label': 'More actions',
         'invitations.heading': 'Invitations',
         'keyshortcuts.label': 'Keyboard shortcuts',

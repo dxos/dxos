@@ -12,6 +12,8 @@ import { Markdown, MarkdownOperation } from '#types';
 
 import * as MarkdownPlugin from '../../dx.config.ts';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), MarkdownPlugin.make()] });
+
 describe('CreateMarkdown', () => {
   test('returns an unpersisted document with the given name and content', async ({ expect }) => {
     await using harness = await Harness.createComposerTestApp({

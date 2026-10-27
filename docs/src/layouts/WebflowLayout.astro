@@ -1,4 +1,6 @@
 ---
+import PostHog from '../components/PostHog.astro';
+
 interface Props {
   title: string;
   description: string;
@@ -27,6 +29,22 @@ const { title, description, ogImage, wfPageId } = Astro.props;
   <link href="/webflow/css/webflow.css" rel="stylesheet" type="text/css">
   <link href="/webflow/css/dxos-org.webflow.css" rel="stylesheet" type="text/css">
   <slot name="head" />
+  <PostHog />
+  <!-- Chooses the waitlist form or the welcome card before first paint, so the hero never re-centers. -->
+  <script is:inline>
+    if (['/composer-welcome', '/welcome'].includes(location.pathname.replace(/\/+$/, ''))) {
+      document.cookie = 'user_subscribed=true; expires=' + new Date(Date.now() + 365 * 864e5).toUTCString() + '; path=/';
+    }
+    if (document.cookie.split('; ').includes('user_subscribed=true')) {
+      document.documentElement.classList.add('user-subscribed');
+    }
+  </script>
+  <style is:inline>
+    html:not(.user-subscribed) [show-welcome],
+    html.user-subscribed [show-subscribe] {
+      display: none;
+    }
+  </style>
   <link href="https://fonts.googleapis.com" rel="preconnect">
   <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin="anonymous">
   <script is:inline src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js" type="text/javascript"></script>
@@ -232,51 +250,6 @@ margin: 0rem !important;
 document.addEventListener("DOMContentLoaded", (event) => {
 const RiveModule = window.Webflow.require('rive'); const myAnimation = document.getElementsByClassName("hexagons"); const instance = RiveModule.getInstance(myAnimation); const r = instance.rive; function computeSize() {       r.resizeDrawingSurfaceToCanvas(); }
 });
-</script>
-  <script is:inline>
-  (function () {
-    const COOKIE_NAME = "user_subscribed";
-    const COOKIE_DURATION_DAYS = 365;
-    function setCookie(name, value, days) {
-      const expires = new Date(Date.now() + days * 864e5).toUTCString();
-      document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
-    }
-    function getCookie(name) {
-      return document.cookie
-        .split("; ")
-        .reduce((r, v) => {
-          const parts = v.split("=");
-          return parts[0] === name ? decodeURIComponent(parts[1]) : r;
-        }, null);
-    }
-    function showElement(attr) {
-      document.querySelectorAll(`[${attr}]`).forEach(el => el.style.display = "block");
-    }
-    function hideElement(attr) {
-      document.querySelectorAll(`[${attr}]`).forEach(el => el.style.display = "none");
-    }
-    function updateVisibility() {
-      const hasCookie = getCookie(COOKIE_NAME);
-      if (hasCookie) {
-        showElement("show-welcome");
-        hideElement("show-subscribe");
-      } else {
-        showElement("show-subscribe");
-        hideElement("show-welcome");
-      }
-    }
-    function handleRedirectCookieSet() {
-      const path = window.location.pathname;
-      const welcomePaths = ["/composer-welcome", "/welcome"];
-      if (welcomePaths.includes(path)) {
-        setCookie(COOKIE_NAME, "true", COOKIE_DURATION_DAYS);
-      }
-    }
-    document.addEventListener("DOMContentLoaded", function () {
-      handleRedirectCookieSet();
-      updateVisibility();
-    });
-  })();
 </script>
 </body>
 </html>

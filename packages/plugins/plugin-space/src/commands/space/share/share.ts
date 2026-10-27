@@ -38,6 +38,8 @@ export const handler = Effect.fn(function* ({
 
   const resolvedSpaceId = yield* spaceIdWithDefault(spaceId as Option.Option<Key.SpaceId>);
   const space = yield* getSpace(resolvedSpaceId);
+  // A space is listed before it has opened, and sharing one that has not throws.
+  yield* Effect.promise(() => space.waitUntilReady());
 
   // Always use persistent and delegated (auth required) due to P2P limitations
   const observable = space.share({

@@ -5,10 +5,15 @@
 import * as SqlClient from 'effect/sql/SqlClient';
 import type * as Statement from 'effect/sql/Statement';
 
-import { EncodedReference, QueryAST, isEncodedReference } from '@dxos/echo-protocol';
+import {
+  EncodedReference,
+  EscapedPropPath,
+  QueryAST,
+  isEncodedReference,
+  referenceIndexKey,
+} from '@dxos/echo-protocol';
 import { ATTR_META } from '@dxos/echo/internal';
 import {
-  EscapedPropPath,
   type QueueRef,
   type QueueWindow,
   buildFtsCondition,
@@ -16,7 +21,6 @@ import {
   buildSourceCondition,
   buildTypeDxnCondition,
   normalizePropPath,
-  referenceIndexKey,
 } from '@dxos/index-core';
 import { DXN, EID, EntityId, type SpaceId } from '@dxos/keys';
 
@@ -62,7 +66,6 @@ export type CompiledRow = {
   rank: number;
   createdAt: number | null;
   updatedAt: number | null;
-  /** JSON text of the body; present for feed rows only, since the client re-loads documents. */
   documentJson: string | null;
   /** JSON text of the group key; present iff the plan aggregates. */
   groupKey: string | null;
@@ -73,7 +76,23 @@ export type CompiledRow = {
    * serialized key rather than an object.
    */
   aggregates: string | null;
+  /** JSON heads of the backing the row ships, present iff the index copy is at the document's saved heads. */
+  heads: string | null;
+  /** JSON heads the index copy was read at: the row's version, whether or not it backs the row. */
+  versionHeads: string | null;
+  /** A feed item's block position: the row's version. */
+  queuePosition: number | null;
+  /**
+   * JSON array of the traversal edges that reached the row, one `{hop, from, to, kind, property, holder,
+   * holderHeads}` per edge; present iff the plan is a linear traversal chain.
+   */
+  edges: string | null;
+  /** JSON array of a collapsed group's members, each `{id, documentId, heads, position, contribution}`. */
+  manifest: string | null;
 };
+
+/** Edges one row may carry: past it the row's derivation is left unknown, as a fan-in hub would overflow it. */
+export const MAX_EDGES_PER_ROW = 512;
 
 /**
  * Builds the plan of an `in-query` subquery. Injected rather than imported, because the planner
@@ -104,6 +123,11 @@ type GroupedShape = {
   aggregateNames: readonly string[];
   /** One row per group, carrying its aggregates, because the query asked for no members. */
   collapsed: boolean;
+  /**
+   * The keyed members of a collapsed group and each one's share of its scalar aggregates, over the `k`
+   * (member), `m` (meta) and `d` (body) aliases, from which the final projection lists the group's manifest.
+   */
+  manifest?: { keyed: Relation; contribution: Fragment };
 };
 
 const HOUR_MS = 3_600_000;
@@ -128,6 +152,13 @@ export class SqlPlanCompiler {
   /** Whether any select in the plan scopes a space with its feeds, which lets a traversal reach feed items. */
   #includeAllFeeds = false;
   readonly #planSubquery: PlanSubquery;
+  /** Depth of `#compilePlan` calls; 1 is the query's own chain, deeper is a union branch or a subquery. */
+  #nesting = 0;
+  /** The edge relation of each traversal on the query's own chain, by hop. */
+  readonly #hops: Relation[] = [];
+  /** Whether a traversal ran inside a union branch or subquery, whose derivations the chain cannot state. */
+  #nestedTraversal = false;
+  #feedCutoffs: ReadonlyMap<string, number> = new Map();
 
   constructor(sql: SqlClient.SqlClient, planSubquery: PlanSubquery) {
     this.#sql = sql;
@@ -136,6 +167,7 @@ export class SqlPlanCompiler {
 
   compile(plan: QueryPlan.Plan, options: CompileOptions = {}): CompiledQuery {
     const sql = this.#sql;
+    this.#feedCutoffs = options.feedCutoffs ?? new Map();
     this.#includeAllFeeds = planIncludesAllFeeds(plan);
     let root = this.#compilePlan(plan, undefined);
     if (options.strongDependencyFilter !== false) {
@@ -168,16 +200,21 @@ export class SqlPlanCompiler {
 
   #compilePlan(plan: QueryPlan.Plan, input: Relation | undefined): Relation {
     const sql = this.#sql;
-    let current: Relation =
-      input ??
-      this.#define(
-        'empty',
-        sql`SELECT NULL AS recordId, NULL AS objectId, NULL AS spaceId, 1.0 AS rank, 0 AS ord WHERE 0`,
-      );
-    for (const step of plan.steps) {
-      current = this.#compileStep(step, current);
+    this.#nesting++;
+    try {
+      let current: Relation =
+        input ??
+        this.#define(
+          'empty',
+          sql`SELECT NULL AS recordId, NULL AS objectId, NULL AS spaceId, 1.0 AS rank, 0 AS ord WHERE 0`,
+        );
+      for (const step of plan.steps) {
+        current = this.#compileStep(step, current);
+      }
+      return current;
+    } finally {
+      this.#nesting--;
     }
-    return current;
   }
 
   #compileStep(step: QueryPlan.Step, ws: Relation): Relation {
@@ -219,7 +256,10 @@ export class SqlPlanCompiler {
     const spaces = spaceScopes.map((scope) => scope.spaceId as SpaceId);
     const queues = step.scope.filter((scope): scope is QueryAST.FeedScope => scope._tag === 'feed');
     const includeAllQueues = spaceScopes.some((scope) => scope.includeAllFeeds === true);
-    const queueRefs = extractQueueRefs(queues.map((scope) => String(scope.feedUri)));
+    const queueRefs = withFeedCutoffs(
+      extractQueueRefs(queues.map((scope) => String(scope.feedUri))),
+      this.#feedCutoffs,
+    );
     const scope = buildSourceCondition(sql, spaces, includeAllQueues, queueRefs);
     const window = buildQueueWindow(sql, extractQueueWindow(step));
 
@@ -236,11 +276,17 @@ export class SqlPlanCompiler {
           break;
         }
         const typeCondition = buildTypeDxnCondition(sql, step.selector.typename);
-        // Pinned: the planner otherwise seeks `(spaceId, queueId)` and scans the space's documents
-        // for the type. An inverted select cannot seek the type index, so it is left free.
+        // Pinned: over a space the planner otherwise seeks `(spaceId, queueId)` and scans the space's
+        // documents for the type. One feed is the exception: the type index would read that type in
+        // every feed of the space (a chat's messages among every chat's), where the feed seek reads
+        // only its rows. An inverted select cannot seek the type index, so it is left free.
+        const index =
+          spaces.length === 0 && queueRefs?.length === 1 && queueRefs[0].spaceId !== undefined
+            ? INDEX_SPACE_QUEUE_OBJECT
+            : INDEX_SPACE_TYPE;
         base = step.selector.inverted
           ? sql`SELECT m.recordId, m.objectId, m.spaceId, 1.0 AS rank FROM objectMeta m WHERE ${scope} AND NOT (${typeCondition})${window}`
-          : sql`SELECT m.recordId, m.objectId, m.spaceId, 1.0 AS rank FROM objectMeta m INDEXED BY ${sql.literal(INDEX_SPACE_TYPE)} WHERE ${scope} AND (${typeCondition})${window}`;
+          : sql`SELECT m.recordId, m.objectId, m.spaceId, 1.0 AS rank FROM objectMeta m INDEXED BY ${sql.literal(index)} WHERE ${scope} AND (${typeCondition})${window}`;
         break;
       }
       case 'IdSelector': {
@@ -403,7 +449,7 @@ export class SqlPlanCompiler {
         const target = canonicalTag(filter.tag);
         // A tag is an encoded reference or (legacy) a bare URI; both sides compare by entity id.
         return sql`EXISTS (SELECT 1 FROM json_each(d.snapshot, ${tagsPath}) t
-          WHERE ${localIdOfUri(sql, sql`COALESCE(json_extract(t.value, '$."/"'), t.value)`)} = ${target})`;
+          WHERE ${localIdOfUri(sql, tagUriOf(sql, sql`t`))} = ${target})`;
       }
       case 'annotation': {
         // Keys are matched with `json_each` rather than a JSON path, which cannot address every key
@@ -683,7 +729,7 @@ export class SqlPlanCompiler {
   }
 
   /**
-   * Drops document rows whose strong dependencies (schema object, relation endpoints, parent) are
+   * Drops document rows whose strong dependencies (schema object, relation endpoints, parent, tags) are
    * absent from the space's indexed documents, transitively, so they never reach a client that
    * could not hydrate them. Cross-space dependencies are not gated, as `ObjectCore` does not gate them.
    */
@@ -700,6 +746,16 @@ export class SqlPlanCompiler {
         FROM ${sql.literal(this.#peekName('sdep'))} x JOIN ${docRow(sql, 'p')} ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId
         WHERE x.depth < ${MAX_DEPTH_FOR_STRONG_DEP_TRACING} AND ${extra} ${depId} IS NOT NULL`;
     const relation = (row: Fragment) => sql`${row}.entityKind = 'relation' AND`;
+    // Tags live in the snapshot's meta, one dependency per element.
+    const tagsPath = jsonPathLiteral(sql, [ATTR_META, 'tags']);
+    const tagId = localIdOfLocalUri(sql, tagUriOf(sql, sql`t`));
+    const seedTags = sql`SELECT w.recordId, m.spaceId, ${tagId} AS depId, 1 AS depth
+        FROM ${wsRef} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectSnapshot d ON d.recordId = w.recordId, json_each(d.snapshot, ${tagsPath}) t
+        WHERE m.queueId = '' AND ${tagId} IS NOT NULL`;
+    const recurseTags = sql`SELECT x.recordId, x.spaceId, ${tagId} AS depId, x.depth + 1
+        FROM ${sql.literal(this.#peekName('sdep'))} x JOIN ${docRow(sql, 'p')} ON p.spaceId = x.spaceId AND p.queueId = '' AND p.objectId = x.depId
+        JOIN objectSnapshot pd ON pd.recordId = p.recordId, json_each(pd.snapshot, ${tagsPath}) t
+        WHERE x.depth < ${MAX_DEPTH_FOR_STRONG_DEP_TRACING} AND ${tagId} IS NOT NULL`;
     const sdep = this.#define(
       'sdep',
       sql.join(
@@ -710,10 +766,12 @@ export class SqlPlanCompiler {
         seedFrom(sql`m.parentId`, sql``),
         seedFrom(sql`m.sourceId`, relation(sql`m`)),
         seedFrom(sql`m.targetId`, relation(sql`m`)),
+        seedTags,
         recurseWith(typeId(sql`p`), sql``),
         recurseWith(sql`p.parentId`, sql``),
         recurseWith(sql`p.sourceId`, relation(sql`p`)),
         recurseWith(sql`p.targetId`, relation(sql`p`)),
+        recurseTags,
       ]),
     );
     return this.#define(
@@ -731,9 +789,30 @@ export class SqlPlanCompiler {
 
   #compileTraverse(step: QueryPlan.TraverseStep, ws: Relation): Relation {
     const sql = this.#sql;
+    const edges = this.#compileTraverseEdges(step, ws);
+    if (this.#nesting === 1) {
+      this.#hops.push(edges);
+    } else {
+      this.#nestedTraversal = true;
+    }
+    // One row per object reached, at the best rank and first position of the anchors reaching it.
+    return this.#define(
+      'ws',
+      sql`SELECT recordId, objectId, spaceId, MIN(rank) AS rank, MIN(ord) AS ord FROM ${this.#ref(edges)} GROUP BY recordId`,
+    );
+  }
+
+  /**
+   * Every edge a traversal crosses, one row per (anchor, object reached, way it was reached): the reached
+   * object's identity, the anchor's rank and position, and the edge's kind, property and holder (the object
+   * whose document records it), which the final projection ships as the row's derivations.
+   */
+  #compileTraverseEdges(step: QueryPlan.TraverseStep, ws: Relation): Relation {
+    const sql = this.#sql;
     const wsRef = this.#ref(ws);
-    const project = (target: Fragment) =>
-      sql`SELECT ${target}.recordId, ${target}.objectId, ${target}.spaceId, MIN(w.rank) AS rank, MIN(w.ord) AS ord`;
+    const project = (kind: string, property: Fragment, holder: Fragment) =>
+      sql`SELECT w.recordId AS fromRecordId, w.objectId AS fromObjectId, t.recordId, t.objectId, t.spaceId, w.rank, w.ord,
+        ${kind} AS kind, ${property} AS property, ${holder}.recordId AS holderRecordId, ${holder}.objectId AS holderObjectId`;
     switch (step.traversal._tag) {
       case 'ReferenceTraversal': {
         if (step.traversal.direction === 'outgoing') {
@@ -751,40 +830,38 @@ export class SqlPlanCompiler {
             : docRow(sql, 't');
           const targetKind = this.#includeAllFeeds ? sql`1 = 1` : sql`t.queueId = ''`;
           return this.#define(
-            'ws',
-            sql`${project(sql`t`)} FROM ${wsRef} w
+            'edges',
+            sql`${project('ref', sql`${step.traversal.property}`, sql`w`)} FROM ${wsRef} w
               JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId
               JOIN objectSnapshot d ON d.recordId = w.recordId
               JOIN ${refs} ref
               JOIN ${target} ON t.spaceId = COALESCE(${spaceIdOfUri(sql, uri)}, m.spaceId) AND t.objectId = ${localIdOfUri(sql, uri)} AND ${targetKind}
-              WHERE ${uri} LIKE 'echo:%'
-              GROUP BY t.recordId`,
+              WHERE ${uri} LIKE 'echo:%'`,
           );
         }
         // Incoming: the reverse index keys targets by their local form; the property narrows the
         // referrer's path.
         const pathCondition = this.#propPathCondition(step.traversal.property);
         return this.#define(
-          'ws',
-          sql`${project(sql`t`)} FROM ${wsRef} w
+          'edges',
+          sql`${project('incoming-ref', sql`r.propPath`, sql`t`)} FROM ${wsRef} w
             JOIN reverseRef r ON r.targetDXN = 'echo:///' || w.objectId
             JOIN objectMeta t ON t.recordId = r.recordId
-            WHERE ${pathCondition}
-            GROUP BY t.recordId`,
+            WHERE ${pathCondition}`,
         );
       }
       case 'RelationTraversal': {
         switch (step.traversal.direction) {
           case 'relation-to-source':
           case 'relation-to-target': {
-            const column = step.traversal.direction === 'relation-to-source' ? sql`m.source` : sql`m.target`;
+            const toSource = step.traversal.direction === 'relation-to-source';
+            const column = toSource ? sql`m.source` : sql`m.target`;
             return this.#define(
-              'ws',
-              sql`${project(sql`t`)} FROM ${wsRef} w
+              'edges',
+              sql`${project(toSource ? 'relation-source' : 'relation-target', sql`NULL`, sql`w`)} FROM ${wsRef} w
                 JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId
                 JOIN ${docRow(sql, 't')} ON t.spaceId = COALESCE(${spaceIdOfUri(sql, column)}, m.spaceId) AND t.objectId = ${localIdOfUri(sql, column)} AND t.queueId = ''
-                WHERE ${column} IS NOT NULL
-                GROUP BY t.recordId`,
+                WHERE ${column} IS NOT NULL`,
             );
           }
           case 'source-to-relation':
@@ -793,10 +870,9 @@ export class SqlPlanCompiler {
             const column = bySource ? sql`t.sourceId` : sql`t.targetId`;
             const index = sql.literal(bySource ? INDEX_SPACE_SOURCE : INDEX_SPACE_TARGET);
             return this.#define(
-              'ws',
-              sql`${project(sql`t`)} FROM ${wsRef} w
-                JOIN objectMeta t INDEXED BY ${index} ON t.spaceId = w.spaceId AND ${column} = w.objectId AND t.entityKind = 'relation'
-                GROUP BY t.recordId`,
+              'edges',
+              sql`${project(bySource ? 'relation-source' : 'relation-target', sql`NULL`, sql`t`)} FROM ${wsRef} w
+                JOIN objectMeta t INDEXED BY ${index} ON t.spaceId = w.spaceId AND ${column} = w.objectId AND t.entityKind = 'relation'`,
             );
           }
         }
@@ -805,27 +881,22 @@ export class SqlPlanCompiler {
       case 'HierarchyTraversal': {
         if (step.traversal.direction === 'to-parent') {
           return this.#define(
-            'ws',
-            sql`${project(sql`t`)} FROM ${wsRef} w
+            'edges',
+            sql`${project('parent', sql`NULL`, sql`w`)} FROM ${wsRef} w
               JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId
               JOIN ${docRow(sql, 't')} ON t.spaceId = COALESCE(${spaceIdOfUri(sql, sql`m.parent`)}, m.spaceId) AND t.objectId = ${localIdOfUri(sql, sql`m.parent`)} AND t.queueId = ''
-              WHERE m.queueId = '' AND m.parent IS NOT NULL
-              GROUP BY t.recordId`,
+              WHERE m.queueId = '' AND m.parent IS NOT NULL`,
           );
         }
         // Children by parent, and a feed's items by queue id (a feed's queue id is its object id).
         // Two seeks rather than one `OR`, which SQLite answers by scanning the space.
         return this.#define(
-          'ws',
-          sql`SELECT recordId, objectId, spaceId, MIN(rank) AS rank, MIN(ord) AS ord FROM (
-            ${project(sql`t`)} FROM ${wsRef} w
+          'edges',
+          sql`${project('child', sql`NULL`, sql`t`)} FROM ${wsRef} w
               JOIN objectMeta t INDEXED BY ${sql.literal(INDEX_SPACE_PARENT)} ON t.spaceId = w.spaceId AND t.parentId = w.objectId
-              GROUP BY t.recordId
             UNION ALL
-            ${project(sql`t`)} FROM ${wsRef} w
-              JOIN objectMeta t INDEXED BY ${sql.literal(INDEX_SPACE_QUEUE_OBJECT)} ON t.spaceId = w.spaceId AND t.queueId = w.objectId
-              GROUP BY t.recordId
-          ) GROUP BY recordId`,
+            ${project('child', sql`NULL`, sql`t`)} FROM ${wsRef} w
+              JOIN objectMeta t INDEXED BY ${sql.literal(INDEX_SPACE_QUEUE_OBJECT)} ON t.spaceId = w.spaceId AND t.queueId = w.objectId`,
         );
       }
     }
@@ -923,6 +994,22 @@ export class SqlPlanCompiler {
         // Only scalars order; anything else sorts with the nulls, last.
         return sql`CASE WHEN json_type(d.snapshot, ${at}) IN ('text', 'integer', 'real', 'true', 'false') THEN json_extract(d.snapshot, ${at}) END ${direction} NULLS LAST`;
       }
+      case 'annotation': {
+        // The key and each path segment are matched with `json_each`, as the annotation filter does,
+        // since a JSON path cannot address every key; a non-object level yields no row, so NULL.
+        const objectOrEmpty = (level: string) =>
+          sql`json_each(CASE WHEN ${sql.literal(level)}.type = 'object' THEN ${sql.literal(level)}.value ELSE '{}' END)`;
+        const path = order.path ?? [];
+        const joins = path.map(
+          (segment, index) =>
+            sql`JOIN ${objectOrEmpty(index === 0 ? 'a' : `p${index - 1}`)} ${sql.literal(`p${index}`)} ON ${sql.literal(`p${index}`)}.key = ${segment}`,
+        );
+        const leaf = sql.literal(path.length === 0 ? 'a' : `p${path.length - 1}`);
+        // Only scalars order; anything else sorts with the nulls, last.
+        return sql`(SELECT CASE WHEN ${leaf}.type IN ('text', 'integer', 'real', 'true', 'false') THEN ${leaf}.value END
+          FROM json_each(COALESCE(m.annotations, '{}')) a ${sql.join(' ', false)(joins)}
+          WHERE a.key = ${order.key}) ${direction} NULLS LAST`;
+      }
       default:
         return sql`w.ord`;
     }
@@ -1016,7 +1103,11 @@ export class SqlPlanCompiler {
         COUNT(*) OVER (PARTITION BY k.groupKey) AS groupCount${aggregateColumns.length > 0 ? sql`, ${sql.csv(aggregateColumns)}` : sql``}
         FROM ${this.#ref(keyed)} k JOIN objectMeta m NOT INDEXED ON m.recordId = k.recordId JOIN objectSnapshot d ON d.recordId = k.recordId`,
     );
-    const shape: GroupedShape = { aggregateNames: scalarAggregates.map((aggregate) => aggregate.name), collapsed };
+    const shape: GroupedShape = {
+      aggregateNames: scalarAggregates.map((aggregate) => aggregate.name),
+      collapsed,
+      manifest: collapsed ? this.#manifestShape(keyed, scalarAggregates) : undefined,
+    };
     // Groups take the order of their first member; members keep their order, or the `items`
     // aggregate's own order when it declares one. A collapsed set keeps only the first member,
     // which already carries the group's key, count and aggregates.
@@ -1028,6 +1119,28 @@ export class SqlPlanCompiler {
         FROM ${this.#ref(stamped)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId JOIN objectSnapshot d ON d.recordId = w.recordId ${members}`,
       shape,
     );
+  }
+
+  /**
+   * Each member's share of the count, sum, min and max aggregates, as the client subtracts it when it holds
+   * the member; undefined when the query asks for none.
+   */
+  #manifestShape(keyed: Relation, aggregates: readonly QueryAST.GroupAggregate[]): GroupedShape['manifest'] {
+    const sql = this.#sql;
+    const shares = aggregates.flatMap((aggregate) => {
+      switch (aggregate.kind) {
+        case 'count':
+          return [sql`${aggregate.name}, 1`];
+        case 'sum':
+          return [sql`${aggregate.name}, ${this.#numericProperty(aggregate.property)}`];
+        case 'min':
+        case 'max':
+          return [sql`${aggregate.name}, ${this.#coercedProperty(aggregate.property, sql`k`)}`];
+        default:
+          return [];
+      }
+    });
+    return shares.length > 0 ? { keyed, contribution: sql`json_object(${sql.join(', ', false)(shares)})` } : undefined;
   }
 
   /** A group key component in the scalar domain, from the joined `m` (meta) and `d` (body) rows. */
@@ -1134,12 +1247,59 @@ export class SqlPlanCompiler {
     const groupColumns = ws.grouped
       ? sql`w.groupKey AS groupKey, w.groupCount AS groupCount, ${aggregates} AS aggregates`
       : sql`NULL AS groupKey, NULL AS groupCount, NULL AS aggregates`;
+    // Grouped once over the members, not per final row, so a set of many groups costs one pass.
+    const manifests = ws.grouped?.manifest
+      ? this.#define(
+          'manifests',
+          sql`SELECT k.groupKey, json_group_array(json_object('id', k.objectId, 'documentId', m.documentId, 'heads', json(COALESCE(d.version, d.heads)), 'position', m.queuePosition, 'contribution', ${ws.grouped.manifest.contribution})) AS manifest
+            FROM ${this.#ref(ws.grouped.manifest.keyed)} k JOIN objectMeta m NOT INDEXED ON m.recordId = k.recordId JOIN objectSnapshot d ON d.recordId = k.recordId
+            GROUP BY k.groupKey`,
+        )
+      : undefined;
+    const rowEdges = this.#rowEdges(ws);
     return sql`SELECT w.recordId, w.objectId, w.spaceId, m.documentId, m.queueId, m.queueNamespace, w.rank AS rank,
-      m.createdAt, m.updatedAt,
+      m.createdAt, m.updatedAt, d.heads AS heads, COALESCE(d.version, d.heads) AS versionHeads, m.queuePosition AS queuePosition,
       CASE WHEN m.queueId != '' THEN json(d.snapshot) END AS documentJson,
-      ${groupColumns}
+      ${groupColumns}, ${rowEdges ? sql`re.edges` : sql`NULL`} AS edges, ${manifests ? sql`mf.manifest` : sql`NULL`} AS manifest
       FROM ${this.#ref(ws)} w JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId LEFT JOIN objectSnapshot d ON d.recordId = w.recordId
+      ${rowEdges ? sql`LEFT JOIN ${this.#ref(rowEdges)} re ON re.root = w.recordId` : sql``}
+      ${manifests ? sql`LEFT JOIN ${this.#ref(manifests)} mf ON mf.groupKey = w.groupKey` : sql``}
       ORDER BY w.ord`;
+  }
+
+  /**
+   * The edges that derive each final row of a linear traversal chain, as one JSON array per row: a recursive walk
+   * back from the row through each hop's edges into the objects that reached it, grouped in one pass. A row past
+   * {@link MAX_EDGES_PER_ROW} edges gets JSON `null`, which the executor reads as an unknown derivation.
+   */
+  #rowEdges(ws: Relation): Relation | undefined {
+    const sql = this.#sql;
+    if (this.#hops.length === 0 || this.#nestedTraversal || ws.grouped) {
+      return undefined;
+    }
+    const all = this.#define(
+      'alledges',
+      sql.join(
+        ' UNION ALL ',
+        false,
+      )(this.#hops.map((hop, index) => sql`SELECT ${index + 1} AS hop, e.* FROM ${this.#ref(hop)} e`)),
+    );
+    const reach = this.#fresh('reach');
+    this.#ctes.push(
+      sql`${sql.literal(reach)}(root, hop, recordId) AS (
+        SELECT recordId, ${this.#hops.length}, recordId FROM ${this.#ref(ws)}
+        UNION
+        SELECT r.root, r.hop - 1, e.fromRecordId FROM ${sql.literal(reach)} r JOIN ${this.#ref(all)} e ON e.hop = r.hop AND e.recordId = r.recordId WHERE r.hop > 1
+      )`,
+    );
+    return this.#define(
+      'rowedges',
+      sql`SELECT r.root, CASE WHEN COUNT(*) > ${MAX_EDGES_PER_ROW} THEN 'null' ELSE json_group_array(json_object('hop', e.hop, 'from', e.fromObjectId, 'to', e.objectId, 'kind', e.kind, 'property', e.property,
+          'holder', e.holderObjectId, 'holderHeads', json(COALESCE(hd.version, hd.heads)))) END AS edges
+        FROM ${sql.literal(reach)} r JOIN ${this.#ref(all)} e ON e.hop = r.hop AND e.recordId = r.recordId
+        LEFT JOIN objectSnapshot hd ON hd.recordId = e.holderRecordId
+        GROUP BY r.root`,
+    );
   }
 }
 
@@ -1149,6 +1309,8 @@ export type CompileOptions = {
    * executor mirrors the client-side gate so dependency-broken objects never reach it.
    */
   strongDependencyFilter?: boolean;
+  /** Per feed (keyed `<spaceId>/<feedId>`), the time (unix ms) before which its rows have expired. */
+  feedCutoffs?: ReadonlyMap<string, number>;
 };
 
 /**
@@ -1184,21 +1346,6 @@ const planIncludesAllFeeds = (plan: QueryPlan.Plan): boolean =>
     }
   });
 
-/**
- * Whether any filter in the plan reads `@meta` — foreign keys, a registry key/version, or tags.
- *
- * `objectSnapshot` strips `@meta` from document rows (it exists there only so the entity-meta index
- * can lift the convergence key out), so those predicates cannot be evaluated in SQL and the plan
- * has to take the in-memory path instead. Queue rows do keep their meta, but a space-scoped query
- * sees both, so this declines the plan wholesale rather than by scope.
- */
-/**
- * Whether the compiler declines this plan, leaving it for the in-memory executor.
- *
- * Two reasons would need the store read before the statement is built: `objectSnapshot` drops
- * `@meta` for document rows, and a `metaVersion` semver range has to be resolved to the versions
- * actually present. Declining them keeps compilation pure — steps in, SQL out — and the plan correct.
- */
 export const planDeclinedByCompiler = (plan: QueryPlan.Plan, planSubquery: PlanSubquery): boolean =>
   planSelectsChanges(plan) ||
   planReadsObjectMeta(plan, planSubquery) ||
@@ -1394,6 +1541,13 @@ const structuralMatch = (sql: SqlClient.SqlClient, element: Fragment, operand: R
 const docRow = (sql: SqlClient.SqlClient, alias: string): Fragment =>
   sql`objectMeta ${sql.literal(alias)} INDEXED BY ${sql.literal(INDEX_SPACE_QUEUE_OBJECT)}`;
 
+/**
+ * The URI of one `json_each` element of `meta.tags`: an encoded reference, or (legacy) a bare URI, whose
+ * text `json_extract` would reject as malformed JSON — so the element's type picks the read.
+ */
+const tagUriOf = (sql: SqlClient.SqlClient, element: Fragment): Fragment =>
+  sql`CASE ${element}.type WHEN 'object' THEN json_extract(${element}.value, '$."/"') WHEN 'text' THEN ${element}.value END`;
+
 /** The entity id of an `echo:` URI (the text after its last slash), `NULL` for any other text. */
 const localIdOfUri = (sql: SqlClient.SqlClient, uri: Fragment): Fragment =>
   sql`CASE WHEN ${uri} LIKE 'echo:%' THEN substr(${uri}, length(rtrim(${uri}, replace(${uri}, '/', ''))) + 1) ELSE ${uri} END`;
@@ -1427,6 +1581,16 @@ const extractQueueRefs = (queues: readonly string[]): QueueRef[] | null => {
   return refs;
 };
 
+/**
+ * Bounds each space-qualified queue by its feed's retention cutoff, so the read (and the page limit
+ * after it) never counts an expired row. An unqualified queue names no space whose options apply.
+ */
+export const withFeedCutoffs = (refs: QueueRef[] | null, feedCutoffs: ReadonlyMap<string, number>): QueueRef[] | null =>
+  refs?.map((ref) => {
+    const updatedSince = ref.spaceId !== undefined ? feedCutoffs.get(`${ref.spaceId}/${ref.queueId}`) : undefined;
+    return updatedSince !== undefined ? { ...ref, updatedSince } : ref;
+  }) ?? null;
+
 /** Bound below every assigned position, which start at 0. */
 const BEFORE_FIRST_POSITION = -1;
 
@@ -1445,6 +1609,7 @@ const extractQueueWindow = (step: QueryPlan.SelectStep): QueueWindow | undefined
       kind: 'natural',
       direction: step.feedScan.direction,
       limit: step.limit,
+      ...(step.feedScan.skip !== undefined ? { skip: step.feedScan.skip } : {}),
       ...(step.feedScan.deleted !== undefined ? { deleted: step.feedScan.deleted } : {}),
     };
   }

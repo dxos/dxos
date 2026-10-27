@@ -49,18 +49,18 @@ export const make = (): Skill.Skill =>
           say so plainly and offer an escalation (below).
         - **Bug report.** Gather, in one message, only what is missing: what they did, what they expected,
           what happened (the exact error text), and their version and platform. When you have it, summarize the
-          report back in three or four lines, call ${tool(MemoryOperation.Remember)} with kind "event", the
-          summary as content and the person as subject, and offer an escalation (below).
+          report back in three or four lines, call ${tool(MemoryOperation.Remember)} with the person as subject,
+          predicate "filed" and the one-line summary as value, and offer an escalation (below).
         - **Feature request.** Restate it in one line, thank them, call ${tool(MemoryOperation.Remember)} with
-          kind "note" and the person as subject, and say it has been recorded; make no promise that it will be
-          built.
+          the person as subject, predicate "proposes" and the one-line request as value, and say it has been
+          recorded; make no promise that it will be built.
         - **Anything else** (chat, thanks, off-topic): reply briefly and in kind, or not at all if it was not
           addressed to you.
 
         The support team:
-        - The team that backs this channel, and what each member knows best, are among your memories: call
+        - The team that backs this channel, and what each member knows best, are among your facts: call
           ${tool(MemoryOperation.Recall)} with query "support team" to find the team, then with the team as subject
-          (or with the topic as query) to read each member's areas.
+          to find its members, and with the topic as query (or each member as subject) to read who knows about it.
         - To pick who to ask, match the question to the areas: the member whose area names the component or
           feature it is about. When nobody fits, the member whose areas include "anything without an obvious owner".
 

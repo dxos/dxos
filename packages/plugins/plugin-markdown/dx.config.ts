@@ -12,6 +12,7 @@ import { trim } from '@dxos/util';
 
 import { MarkdownNamespace } from './src/namespace.ts';
 import * as MarkdownCapabilities from './src/types/MarkdownCapabilities.ts';
+import * as MarkdownEvents from './src/types/MarkdownEvents.ts';
 
 // Annotated: the capability modules import `meta` from here, so inferring it would be circular.
 const config: Plugin.PluginConfig = Plugin.config({
@@ -49,6 +50,7 @@ const config: Plugin.PluginConfig = Plugin.config({
       'AnchorResolver',
       {
         requires: [AppCapabilities.AppGraph],
+        activatesOn: MarkdownEvents.Start,
         provides: [AppCapabilities.AnchorResolver],
         environments: ['browser', 'tauri'],
       },
@@ -56,8 +58,11 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     AppCapability.anchorSort(() => import('./src/capabilities/anchor-sort.ts', { with: { type: 'dx-module' } }), {
       requires: [AppCapabilities.AppGraph],
+      activatesOn: MarkdownEvents.Start,
     }),
-    AppCapability.commentConfig(() => import('./src/capabilities/comment-config.ts', { with: { type: 'dx-module' } })),
+    AppCapability.commentConfig(() => import('./src/capabilities/comment-config.ts', { with: { type: 'dx-module' } }), {
+      activatesOn: MarkdownEvents.Start,
+    }),
     SpaceCapability.createObject(() => import('./src/capabilities/create-object.ts', { with: { type: 'dx-module' } }), {
       environments: ['browser', 'node', 'tauri'],
     }),
@@ -86,7 +91,8 @@ const config: Plugin.PluginConfig = Plugin.config({
     ),
     Capability.lazyModule(
       'Tour',
-      { provides: [AppCapabilities.Tour], environments: ['browser', 'tauri'] },
+      // The tour auto-starts on an attended markdown document, which needs markdown started anyway.
+      { provides: [AppCapabilities.Tour], activatesOn: MarkdownEvents.Start, environments: ['browser', 'tauri'] },
       () => import('./src/capabilities/tour.ts', { with: { type: 'dx-module' } }),
     ),
     Capability.lazyModule(

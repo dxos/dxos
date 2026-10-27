@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-transcription",
-  "version": "0.14.0",
+  "version": "0.16.0",
   "description": "Browser audio capture, transcription hooks, and UI for the transcription pipeline.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -52,6 +52,7 @@
     "date-fns": "catalog:"
   },
   "devDependencies": {
+    "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "effect": "catalog:",

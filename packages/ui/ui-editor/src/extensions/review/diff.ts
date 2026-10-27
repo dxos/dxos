@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Chunk, unifiedMergeView } from '@codemirror/merge';
+import { Change, Chunk, diff, unifiedMergeView } from '@codemirror/merge';
 import { type Extension, Text } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { diffWordsWithSpace } from 'diff';
+import { diffLines, diffWordsWithSpace } from 'diff';
 
 export type DiffOptions = {
   /**
@@ -13,6 +13,15 @@ export type DiffOptions = {
    * insertions and deletions are shown relative to this original.
    */
   original: string;
+  /**
+   * How changes are coloured. `accept` (the default) previews accepting the original into the
+   * editor's document, so the original's content reads as an addition. `changes` reads the editor's
+   * document as the newer version: its new text is tinted green and the original's removed text is
+   * faded and struck through, as a reviewer reads a change.
+   */
+  orientation?: 'accept' | 'changes';
+  /** Folds runs of unchanged lines, keeping this many lines of context around each change. */
+  collapseUnchanged?: number;
 };
 
 /**
@@ -37,14 +46,90 @@ const reviewOrientationTheme = EditorView.theme({
 });
 
 /**
+ * Reads the editor's document as the newer version. New lines are tinted and their new words filled, so an
+ * addition stands out; removed lines stay in place, faded and struck through, so they read as gone.
+ */
+const changesOrientationTheme = EditorView.theme({
+  // An inserted line carries both tints, so together they add up to one surface and the syntax colours stay legible.
+  '&.cm-merge-b .cm-changedLine': {
+    backgroundColor: 'oklch(from var(--color-cm-diff-add-surface) l c h / calc(alpha * 0.4))',
+  },
+  '&.cm-merge-b .cm-changedText': {
+    background: 'oklch(from var(--color-cm-diff-add-surface) l c h / calc(alpha * 0.6))',
+    borderRadius: '2px',
+  },
+  '& .cm-deletedChunk': {
+    backgroundColor: 'transparent',
+    opacity: '0.55',
+    filter: 'grayscale(0.6)',
+    paddingBlock: '1px',
+  },
+  '& .cm-deletedChunk .cm-deletedText, &.cm-merge-b .cm-deletedText': {
+    background: 'var(--color-cm-diff-remove-surface)',
+    textDecoration: 'line-through',
+    textDecorationColor: 'var(--color-cm-diff-remove-gutter)',
+  },
+  '&.cm-merge-b .cm-changedLineGutter': { background: 'var(--color-cm-diff-add-gutter)' },
+  '& .cm-deletedLineGutter': { background: 'var(--color-cm-diff-remove-gutter)' },
+});
+
+/**
+ * A line-first diff, as git shows one: whole lines are matched first, then each replaced run of lines is diffed by
+ * character so only the words that changed are marked. The merge view's own diff gives up on a long document (it
+ * bounds its search) and marks whole paragraphs as replaced when one line was inserted above them.
+ */
+export const lineDiff = (original: string, modified: string): readonly Change[] => {
+  const changes: Change[] = [];
+  let [positionA, positionB] = [0, 0];
+  let pending: { fromA: number; toA: number; fromB: number; toB: number } | undefined;
+  const flush = () => {
+    if (!pending) {
+      return;
+    }
+    const { fromA, toA, fromB, toB } = pending;
+    if (fromA === toA || fromB === toB) {
+      changes.push(new Change(fromA, toA, fromB, toB));
+    } else {
+      for (const change of diff(original.slice(fromA, toA), modified.slice(fromB, toB))) {
+        changes.push(new Change(change.fromA + fromA, change.toA + fromA, change.fromB + fromB, change.toB + fromB));
+      }
+    }
+    pending = undefined;
+  };
+  for (const part of diffLines(original, modified)) {
+    const length = part.value.length;
+    if (part.removed) {
+      pending ??= { fromA: positionA, toA: positionA, fromB: positionB, toB: positionB };
+      pending.toA += length;
+      positionA += length;
+    } else if (part.added) {
+      pending ??= { fromA: positionA, toA: positionA, fromB: positionB, toB: positionB };
+      pending.toB += length;
+      positionB += length;
+    } else {
+      flush();
+      positionA += length;
+      positionB += length;
+    }
+  }
+  flush();
+  return changes;
+};
+
+/**
  * Inline (unified) diff view: renders the editor's document with insertions and deletions marked
  * relative to {@link DiffOptions.original}. The editor stays editable — edits to the document update
  * the diff against the (static) original live — so it can overlay a live editor to compare the
  * current state against another version (e.g. another branch) without locking editing.
  */
-export const diffView = ({ original }: DiffOptions): Extension => [
-  unifiedMergeView({ original, mergeControls: false }),
-  reviewOrientationTheme,
+export const diffView = ({ original, orientation = 'accept', collapseUnchanged }: DiffOptions): Extension => [
+  unifiedMergeView({
+    original,
+    mergeControls: false,
+    ...(orientation === 'changes' && { diffConfig: { override: lineDiff } }),
+    ...(collapseUnchanged !== undefined && { collapseUnchanged: { margin: collapseUnchanged, minSize: 4 } }),
+  }),
+  orientation === 'changes' ? changesOrientationTheme : reviewOrientationTheme,
 ];
 
 /**

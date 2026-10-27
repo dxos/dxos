@@ -10,11 +10,10 @@ import { type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic'
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
+import * as Typography from '@dxos/react-ui/Typography';
 import { type Actor, Message, SpaceInvitationMessage } from '@dxos/types';
 
 import { meta } from '#meta';
-
-import { formatTime } from './format-time.ts';
 
 export type NotificationAction =
   /** Clicked: mark read and go to what the message links to. */
@@ -40,7 +39,8 @@ export type NotificationTileData = {
 export type NotificationTileProps = Pick<MosaicTileProps<NotificationTileData>, 'data' | 'location' | 'current'>;
 
 /**
- * One notification: subject and time, then either the invitation surface or the sender, text and links.
+ * One notification: its type icon (accented while unread) and subject, either the invitation surface or the sender,
+ * text and links, then its time in the footer.
  * Clicking it opens it; its menu toggles read state and deletes it.
  */
 export const NotificationTile = forwardRef<HTMLDivElement, NotificationTileProps>(
@@ -59,7 +59,10 @@ export const NotificationTile = forwardRef<HTMLDivElement, NotificationTileProps
       const [first = '', ...rest] = text.split('\n');
       return { title: first, body: rest.join('\n').trim() };
     }, [message]);
-    const time = useMemo(() => formatTime(message.created, now), [message.created, now]);
+    const time = useMemo(
+      () => Typography.formatRelative(message.created, { now: new Date(now) }),
+      [message.created, now],
+    );
 
     const handleCurrentChange = useCallback(() => {
       setCurrentId(message.id);
@@ -103,25 +106,16 @@ export const NotificationTile = forwardRef<HTMLDivElement, NotificationTileProps
           menu={!!menuItems}
           menuItems={menuItems}
           leading={
-            !read && (
-              <Icon.Icon
-                icon='ph--circle--fill'
-                size='xs'
-                classNames='text-accent-text'
-                aria-label={t('unread.label')}
-              />
-            )
+            <Icon.Icon
+              icon={invitation ? 'ph--users-three--regular' : 'ph--bell-simple--regular'}
+              classNames={read ? 'text-fg-muted' : 'text-accent-text'}
+              aria-label={read ? undefined : t('unread.label')}
+            />
           }
-          title={
-            <>
-              <span className={read ? 'grow truncate' : 'grow truncate font-medium'}>{title}</span>
-              <span className='text-xs text-fg-muted whitespace-nowrap shrink-0'>{time}</span>
-            </>
-          }
+          title={<span className={read ? 'grow truncate' : 'grow truncate font-medium'}>{title}</span>}
         />
         <Card.Body>
           {invitation && renderInvitation ? (
-            // A block in the content track, not a Card.Row, whose single-line truncation would stop its text wrapping.
             renderInvitation({ data: invitation, sender: message.sender })
           ) : (
             <>
@@ -135,6 +129,11 @@ export const NotificationTile = forwardRef<HTMLDivElement, NotificationTileProps
             </>
           )}
         </Card.Body>
+        <Card.Footer justify='start'>
+          <Card.Text variant='muted' classNames='text-xs'>
+            {time}
+          </Card.Text>
+        </Card.Footer>
       </CardTile.Root>
     );
   },

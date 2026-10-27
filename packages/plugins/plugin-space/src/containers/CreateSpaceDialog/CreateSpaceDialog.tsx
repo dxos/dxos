@@ -46,7 +46,9 @@ export const CreateSpaceDialog = () => {
       contributed
         .filter(({ hidden }) => !hidden)
         // `icon` seeds the form, which stores a bare name on the space; `glyph` renders the row.
-        .map((template) => ({ ...template, icon: getTemplateIcon(template), glyph: getTemplateIconGlyph(template) })),
+        .map((template) => ({ ...template, icon: getTemplateIcon(template), glyph: getTemplateIconGlyph(template) }))
+        // Contributed in plugin load order, which means nothing to the user.
+        .sort((first, second) => first.label.localeCompare(second.label)),
     [contributed],
   );
   const [template, setTemplate] = useState<string | undefined>(undefined);
@@ -145,11 +147,7 @@ export const CreateSpaceDialog = () => {
                     >
                       {/* The dialog body scrolls, so the list does not: unscrolled, it inherits the dialog's columns
                           rather than insetting its rows in a gutter of its own. */}
-                      <Listbox.Content
-                        scroll={false}
-                        classNames='my-2'
-                        aria-label={t('create-space-dialog.templates.label')}
-                      >
+                      <Listbox.Content classNames='my-2' aria-label={t('create-space-dialog.templates.label')}>
                         {templates.map(({ id }) => (
                           <Listbox.Item key={id} id={id} />
                         ))}

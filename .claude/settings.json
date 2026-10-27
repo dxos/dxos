@@ -36,6 +36,16 @@
             "statusMessage": "Checking branch/worktree safety"
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}/.claude/hooks/guard-perf-harness.sh\"",
+            "statusMessage": "Checking the perf harness freeze"
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [

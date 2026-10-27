@@ -8,6 +8,7 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Registry from 'effect/reactivity/AtomRegistry';
+import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
@@ -17,11 +18,12 @@ import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Trigger as AsyncTrigger } from '@dxos/async';
 import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
 import * as Routine from '@dxos/compute/Routine';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { operationServiceLayerNoop } from '@dxos/compute/testing';
 import * as Trigger from '@dxos/compute/Trigger';
-import { Database, DXN, Filter, Obj, Ref, URI } from '@dxos/echo';
+import { Database, DXN, EID, Filter, Key, Obj, Ref, URI } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
@@ -39,6 +41,9 @@ import { ConnectorSpec } from '#types';
 import * as Binding from './Binding.ts';
 import { autoSyncConnection } from './capabilities/connector-coordinator/auto-sync.ts';
 import { ConnectionAuthExpiredError, TargetAccountMismatchError } from './errors.ts';
+
+await Harness.preload({ plugins: [ClientPlugin.make({})] });
+
 /**
  * The binding namespace: pairing an object with the feed a connection syncs into it, the account that
  * gates a resume, the schedule that drives it, and what a disconnect leaves behind.
@@ -116,7 +121,9 @@ describe('live bindings', () => {
     };
 
     const bind = (connection: Connection.Connection, target: Obj.Unknown) => {
-      const cursor = db.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(target) }));
+      const cursor = db.add(
+        Cursor.makeExternal({ source: Connection.getAccessToken(connection), target: Ref.make(target) }),
+      );
       invariant(Cursor.isExternal(cursor));
       return cursor;
     };
@@ -256,6 +263,7 @@ describe('Binding.sync', () => {
   const connector: ConnectorSpec.ConnectorEntry = {
     id: 'example',
     source: 'example.com',
+    kind: 'user',
     sync: { operation: TestSync, trigger: Trigger.specTimer('*/10 * * * *') },
   };
 
@@ -270,6 +278,7 @@ describe('Binding.sync', () => {
       trigger.enabled
         ? Effect.sync(() => void fired.push(trigger.id))
         : Effect.fail(new Trigger.TriggerDisabledError(trigger.id)),
+    resetTrigger: () => Effect.void,
   };
 
   const toastHandler = LayoutOperation.AddToast.pipe(
@@ -506,6 +515,7 @@ describe('binding lifecycle', () => {
   const connector: ConnectorSpec.ConnectorEntry = {
     id: 'gmail',
     source: SOURCE,
+    kind: 'user',
     sync: { operation: TestSync, trigger: Trigger.specTimer('*/10 * * * *') },
   };
 
@@ -605,7 +615,7 @@ describe('binding lifecycle', () => {
     // Same cursor, same high-water mark: the next sync resumes instead of re-walking the horizon.
     expect(rebound.id).toBe(cursor.id);
     expect(rebound.max).toBe('1700000000000');
-    expect(rebound.spec.source.uri).toBe(connection.accessToken.uri);
+    expect(rebound.spec.source.uri).toBe(Connection.getAccessToken(connection).uri);
     expect((await cursors()).map((cursor) => cursor.id)).toEqual([cursor.id]);
     // No schedule is restored, and none is created: the sync Routine belonged to the connection the
     // disconnect deleted, and a Routine for the new one is only ever made through the create-routine
@@ -635,7 +645,7 @@ describe('binding lifecycle', () => {
     // A binding made before targets recorded their account: no evidence of a match, so no resume.
     const stale = addConnection('me@example.com');
     const target = db.add(Obj.make(Expando.Expando, { name: 'Inbox' }));
-    const legacy = db.add(Cursor.makeExternal({ source: stale.accessToken, target: Ref.make(target) }));
+    const legacy = db.add(Cursor.makeExternal({ source: Connection.getAccessToken(stale), target: Ref.make(target) }));
     invariant(Cursor.isExternal(legacy));
     Cursor.advance(legacy, '1700000000000');
     await db.flush({ indexes: true });
@@ -683,6 +693,49 @@ describe('binding lifecycle', () => {
     expect(rebound.max).toBeUndefined();
     expect((await cursors()).map((cursor) => cursor.id)).toContain(rebound.id);
     expect((await cursors()).length).toBe(2);
+  });
+});
+
+describe('Binding.loadReplicated', () => {
+  let builder: EchoTestBuilder;
+
+  beforeEach(async () => {
+    builder = await new EchoTestBuilder().open();
+  });
+
+  afterEach(async () => {
+    await builder.close();
+  });
+
+  const retries = Schedule.spaced('20 millis').pipe(Schedule.upTo({ times: 10 }));
+
+  /** Loads `entityId`, reporting how the load ended; `arriving` is added to the database shortly after. */
+  const load = async (entityId: Key.EntityId, arriving?: Expando.Expando) => {
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([Expando.Expando]);
+    if (arriving) {
+      setTimeout(() => db.add(arriving), 50);
+    }
+    return EffectEx.runPromise(
+      Binding.loadReplicated(db.makeRef<Expando.Expando>(EID.make({ entityId })), { retries }).pipe(
+        Effect.map((object) => object.name),
+        Effect.catchTag('EntityNotFoundError', () => Effect.succeed('not found')),
+        Effect.catchDefect((defect) => Effect.succeed(Process.RunAgainError.is(defect) ? 'run again' : 'died')),
+      ),
+    );
+  };
+
+  test('an object that arrives during the retries loads', async ({ expect }) => {
+    const object = Obj.make(Expando.Expando, { name: 'late' });
+    expect(await load(object.id, object)).toBe('late');
+  });
+
+  test('a new object that does not arrive runs the operation again', async ({ expect }) => {
+    expect(await load(Key.EntityId.random())).toBe('run again');
+  });
+
+  test('an old object that does not arrive is not found', async ({ expect }) => {
+    expect(await load(Key.EntityId.deterministic('long gone'))).toBe('not found');
   });
 });
 
@@ -771,6 +824,7 @@ describe('Binding.syncAll', () => {
         fired.push(trigger.id);
         recorded.wake();
       }),
+    resetTrigger: () => Effect.void,
   };
 
   test('fans out to each binding', async ({ expect }) => {
@@ -798,6 +852,20 @@ describe('Binding.syncAll', () => {
     expect(synced).toContain(Ref.make(cursor).uri);
   });
 
+  // A target bound and synced straight away can reach EDGE after the run starts.
+  test('waits for a priority binding that has not arrived yet', async ({ expect }) => {
+    const { db, connection, cursor, token } = await setup();
+    const target = db.add(Obj.make(Expando.Expando, { name: 'Late' }));
+    const late = Cursor.makeExternal({ source: Ref.make(token), target: Ref.make(target) });
+    setTimeout(() => db.add(late), 100);
+
+    const outcome = await runFanOut(connection, late.id);
+
+    invariant(outcome._tag === 'Success');
+    expect(outcome.success.synced).toBe(2);
+    expect(synced).toEqual([Ref.make(late).uri, Ref.make(cursor).uri]);
+  });
+
   test('re-raises runAgain after every binding had its turn', async ({ expect }) => {
     const { db, connection, cursor, token } = await setup();
     const second = await addCursor(db, token);
@@ -810,6 +878,29 @@ describe('Binding.syncAll', () => {
     // The capped binding never starves its siblings: both were attempted before the re-raise.
     expect(synced).toContain(Ref.make(cursor).uri);
     expect(synced).toContain(Ref.make(second).uri);
+  });
+
+  // Regression: deleting a mailbox left its binding behind, and every account sync then failed loading
+  // the deleted target until EDGE switched the routine off.
+  test('skips a binding whose target was deleted and syncs the rest', async ({ expect }) => {
+    const { db, connection, cursor, token } = await setup();
+    const orphaned = await addCursor(db, token);
+    const target = orphaned.spec.target.target;
+    invariant(target);
+    db.remove(target);
+    await db.flush({ indexes: true });
+
+    // Loads the target first, as every connector's per-binding sync does.
+    const outcome = await EffectEx.runPromise(
+      Binding.syncAll({
+        connection: Ref.make(connection),
+        sync: (binding) => Database.load(binding.spec.target).pipe(Effect.andThen(recordingSync(binding))),
+      }).pipe(Effect.result),
+    );
+
+    invariant(outcome._tag === 'Success');
+    expect(outcome.success.synced).toBe(1);
+    expect(synced).toEqual([Ref.make(cursor).uri]);
   });
 
   test('collects every binding before surfacing a failure', async ({ expect }) => {
@@ -961,6 +1052,7 @@ describe('Binding.syncAll', () => {
   }): ConnectorSpec.ConnectorEntry => ({
     id: 'example',
     source: 'example.com',
+    kind: 'user',
     sync: {
       operation: TestSync,
       ...(auto ? { auto: true } : {}),

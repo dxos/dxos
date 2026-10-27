@@ -5,10 +5,10 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
-  AgentLauncher,
   AppGraphBuilder,
   BuildRunState,
   CreateObject,
+  McpServer,
   NavigationTargetResolver,
   OperationHandler,
   PluginAsset,
@@ -16,16 +16,16 @@ import {
   Schema,
   Settings as SettingsCapability,
   SkillDefinition,
-  State,
+  SpecSync,
   Translations,
 } from '#capabilities';
 import { meta } from '#meta';
 
 export const CodePlugin = Plugin.define(meta).pipe(
-  Plugin.addModule(AgentLauncher),
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(BuildRunState),
   Plugin.addModule(CreateObject),
+  Plugin.addModule(McpServer),
   Plugin.addModule(NavigationTargetResolver),
   Plugin.addModule(OperationHandler),
   Plugin.addModule(PluginAsset),
@@ -33,7 +33,7 @@ export const CodePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(Schema),
   Plugin.addModule(SettingsCapability),
   Plugin.addModule(SkillDefinition),
-  Plugin.addModule(State),
+  Plugin.addModule(SpecSync),
   Plugin.addModule(Translations),
   Plugin.make,
 );

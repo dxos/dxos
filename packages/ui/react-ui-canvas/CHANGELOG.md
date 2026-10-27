@@ -1,5 +1,100 @@
 # @dxos/react-ui-canvas
 
+## 0.16.0
+
+### Minor Changes
+
+- 4be32be: `SceneView` is renamed `Canvas` (`SceneView.Canvas` is now `Canvas.Viewport`), and its inspectors sit in one `InspectorPanel` that docks beside the canvas or floats over it, with each inspector framed by an `InspectorSection`. Background dots now hold their size while the view moves, a trackpad swipe pans in both directions, each drawn frame opens onto a scene of its own, and drilling into an empty or nested frame zooms and returns level by level. A number field with a fractional step rounds to that step, and opacity is bounded to 0–1.
+
+### Patch Changes
+
+- 67f3f9f: Zooming into a frame crossfades the canvas grid into the frame's own grid, so the drill-in no longer swaps one grid for another. Text nodes use 1.5 line spacing with equal top and side margins, and their text no longer moves when editing starts.
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/react-ui-editor@0.16.0
+  - @dxos/react-ui-form@0.16.0
+  - @dxos/react-ui-list@0.16.0
+  - @dxos/ui-editor@0.16.0
+  - @dxos/diagram@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/react-hooks@0.16.0
+  - @dxos/ui-theme@0.16.0
+  - @dxos/ui-types@0.16.0
+
+## 0.15.0
+
+### Minor Changes
+
+- 0a55936: The scene engine animates: composite objects, a timeline, and agent-written generators.
+
+  - Composite objects: a scene marked `kind: 'composite'` drawn by `instance` nodes; group as object, ungroup, make unique and place; `SceneView.Objects` lists them and opens one in isolation.
+  - Timeline: `Scene.timeline` of keyed tracks with easing, `sampleScene(scene, t)`, an animated projection that turns edits away from the start into keys, a per-view clock (`SceneViewAtoms.clock`), and `SceneView.Timeline` with space, `,` `.` `[` `]` and `K`.
+  - Generators: a `generator` node runs agent-written code in a worker (`@dxos/react-ui-canvas/generator-worker`) at a fixed 120 Hz with seeded random, checkpoints and a step budget, drawing `Shape` lists; the motion library is `@dxos/react-ui-canvas/motion`.
+  - `SceneView.Root exportable` publishes the clock for `scripts/render-story.mjs`, which now seeks it frame by frame; new `path` node type and `film` theme.
+  - `@dxos/brand/paths` exports the DXOS lockup as path data (`DXOS_HORIZONTAL_LOCKUP`), which `DXOSHorizontalType` now draws from.
+  - plugin-canvas adds an image shape (palette key `I`) linked by URL in its properties.
+  - `FrameHeader` (the title, caption, counter and playback strip over a sequence of frames) moves into `@dxos/react-ui-canvas` from plugin-canvas's `SequenceHeader`.
+
+- 3d151fc: In `@dxos/react-ui-canvas`, the view has a fit mode: Fit frames the scene and keeps it framed, refitting once a resize settles and on opening another scene, until the viewer pans or zooms. `SceneView.Root` takes `initialDisplay` / `onDisplayChange` (`SceneDisplay`: snap, guides, fit) so a host can restore and persist those toggles, and a view opens in fit mode unless restored otherwise. A read-only view floats its panels. A link caption on a horizontal run is shortened with an ellipsis to fit between the run's ends, its full text as a tooltip. The camera readout shows only the zoom.
+
+  In `@dxos/plugin-canvas`, the plugin moves to the `beta` tier. A canvas's view is the viewer's own, kept in one view-state object per canvas: read-only, floating panels, grid, guides, fit and camera; the `dockPanels` setting is gone. The drawing menu now lists Read only and Dock/Float panels. A drawing's canvas record may set `readonly` as the default for viewers who have not chosen. A canvas in the section role (a document's embed) is read-only, shows the drawing without its palette or panels, and takes a 3:2 height. The DXOS Architecture space template seeds its drawings, read-only by default, from diagrams laid out ahead of time (`compiled.json`, kept current by a test), plus Composer, DXOS and EDGE documents that link and embed them.
+
+  In `@dxos/plugin-space`, the create-space dialog closes as soon as it is submitted (a failed create is a toast) and its template list aligns with its fields; the collection article is a panel with a Filter… toolbar over a scrolling column of objects, their icons in the hue's text colour; the delete-space dialog's actions sit in `Dialog.Footer`.
+
+  In `@dxos/react-ui`, a field in a toolbar no longer overflows it, and a dialog's action bar has the dialog gutter above as well as below.
+
+  In `@dxos/plugin-registry`, the load-plugin dialog's action sits in `Dialog.Footer`.
+
+- 311d611: Pointing at a scene view's floating panel, or at a popup it opens, no longer highlights the shapes beneath it.
+
+  A `Combobox` popup with a search field now frames the field above a separate scrolling list, so options no longer scroll beneath it and the scrollbar starts below it; a create form that replaces the search keeps the same frame. Typing and pressing Enter in the same frame now picks the first match: the highlight moves off a filtered-out option as the list narrows rather than an effect later.
+
+  `@dxos/app-toolkit/ObjectCombobox` picks one object of a space: the objects a user finds in the navigator or a Database section (`TypeOptions.filterListedObjects`: a registered user-facing type, not archived, not a space's root collection), sorted by label, each with its type icon, an unnamed object under its type's placeholder. `ObjectCombobox.toOptions` builds the same options for a form's ref field, which the canvas's object picker now uses. `RefOption` takes an optional `icon` and `iconHue`, which `ObjectPicker` renders at the start of the row.
+
+  app-toolkit's UI components each live in their own folder, whose module is the namespace its subpath exports (as `@dxos/react-ui` does), replacing the root re-export shims; the subpaths and the namespaces they export are unchanged.
+
+- 94fb343: Add `interpolateCamera`, which returns the camera at any point along the smooth zoom-and-pan path between two cameras, so a frame-by-frame renderer can animate the camera deterministically; `animateCamera` now uses it.
+
+### Patch Changes
+
+- 008b18c: A read-only `SceneView` shows no floating panels: `SceneView.About` renders only as a dock section and takes no props. The view's background now sits on the element `SceneView.Root`'s `classNames` styles, so a host can replace it (e.g. `bg-transparent` for a card preview). A lattice scene no longer draws the snap grid while its lattice is on, since shapes land on its cells rather than the grid lines, and the cells are drawn fainter. The plugin registry's detail scrolls when it is longer than its panel, including in the deck's detail companion.
+- Updated dependencies [3b03db7]
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [647b4bd]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [0d81167]
+- Updated dependencies [71fc002]
+- Updated dependencies [1b33a84]
+- Updated dependencies [16bde33]
+- Updated dependencies [1bc475e]
+- Updated dependencies [55bdf55]
+- Updated dependencies [098a536]
+- Updated dependencies [25af912]
+- Updated dependencies [7b47951]
+- Updated dependencies [8190cc5]
+- Updated dependencies [60ef4ec]
+- Updated dependencies [2b6a93a]
+  - @dxos/ui-editor@0.15.0
+  - @dxos/react-ui@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/diagram@0.15.0
+  - @dxos/react-ui-editor@0.15.0
+  - @dxos/react-ui-form@0.15.0
+  - @dxos/react-ui-list@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/react-hooks@0.15.0
+  - @dxos/ui-theme@0.15.0
+  - @dxos/ui-types@0.15.0
+
 ## 0.14.0
 
 ### Minor Changes

@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { EditorState, type EditorStateConfig, type Text } from '@codemirror/state';
+import { EditorState, type EditorStateConfig, StateEffect, type Text } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import {
   type ComponentPropsWithoutRef,
@@ -20,6 +20,7 @@ import {
 import { log } from '@dxos/log';
 import {
   type EditorSelection,
+  type EditorSelectionState,
   debugDispatcher,
   documentId,
   modalStateField,
@@ -55,6 +56,10 @@ export type UseTextEditorProps = Pick<EditorStateConfig, 'extensions'> & {
   selectionEnd?: boolean;
   debug?: boolean;
 };
+
+/** Whether every position in a recorded state lies within a document of `length`. */
+const fitsDocument = ({ scrollTo, selection }: EditorSelectionState, length: number): boolean =>
+  (scrollTo ?? 0) <= length && (selection?.anchor ?? 0) <= length && (selection?.head ?? 0) <= length;
 
 /**
  * Creates codemirror text editor.
@@ -130,16 +135,39 @@ export const useTextEditor = (
   }, deps);
 
   useEffect(() => {
-    if (view) {
-      if (scrollTo != null || selection) {
-        if (selection && selection.anchor > view.state.doc.length) {
-          log.warn('invalid selection', { length: view.state.doc.length, scrollTo, selection });
-          return;
-        }
-
-        restoreEditorState(view, { scrollTo, scrollOffset, selection });
-      }
+    if (!view || (scrollTo == null && !selection)) {
+      return;
     }
+
+    const state: EditorSelectionState = { scrollTo, scrollOffset, selection };
+    if (fitsDocument(state, view.state.doc.length)) {
+      restoreEditorState(view, state);
+      return;
+    }
+
+    // A bound editor is created before its content arrives (the automerge binding fills the document
+    // on attach), so a restore against the empty document would be dropped; restore on the fill instead.
+    let active = true;
+    let pending = true;
+    view.dispatch({
+      effects: StateEffect.appendConfig.of(
+        EditorView.updateListener.of((update) => {
+          if (pending && update.docChanged && fitsDocument(state, update.state.doc.length)) {
+            pending = false;
+            // A view cannot be dispatched to from within its own update.
+            queueMicrotask(() => {
+              if (active) {
+                restoreEditorState(update.view, state);
+              }
+            });
+          }
+        }),
+      ),
+    });
+
+    return () => {
+      active = false;
+    };
   }, [view, scrollTo, scrollOffset, selection]);
 
   useEffect(() => {
@@ -157,7 +185,8 @@ export const useTextEditor = (
         case 'Escape': {
           // Check if popover is open.
           const modal = view?.state.field(modalStateField, false);
-          if (modal) {
+          // A key CodeMirror already acted on (closing its completion list, cancelling dictation) stays in the editor.
+          if (modal || event.defaultPrevented) {
             return;
           }
 

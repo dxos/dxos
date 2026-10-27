@@ -10,13 +10,14 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 
 import { SessionConfig } from '@dxos/ai';
 import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import { Alarm } from '@dxos/assistant';
 import * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
 import * as AssistantChat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { useIdentity } from '@dxos/halo-react';
+import { useIdentity, useMembers } from '@dxos/halo-react';
 import { PublicKey, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import {
@@ -38,12 +39,12 @@ import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Toast from '@dxos/react-ui/Toast';
 import * as Util from '@dxos/react-ui/Util';
-import { Message, Task } from '@dxos/types';
-import { keyToFallback, markWork } from '@dxos/util';
+import { type Actor, Message, Task } from '@dxos/types';
+import { hexToFallback, keyToFallback, markWork } from '@dxos/util';
 
-import { type ChatSwitcher, useChatToolbarActions, useDebug } from '#hooks';
+import { type ChatSwitcher, bindMentions, useChatToolbarActions, useDebug, useSlashCommands } from '#hooks';
 import { meta } from '#meta';
-import { AssistantOperation } from '#types';
+import { AssistantOperation, ChatSurface } from '#types';
 
 import {
   AiUsageQuotaError,
@@ -53,7 +54,6 @@ import {
   projectSelfWakes,
   resolveRewind,
 } from '../../chat-model/index.ts';
-import { TaskSlashCommands } from '../../commands/index.ts';
 import {
   ChatStatus,
   DEFAULT_MAX_QUEUE,
@@ -70,7 +70,7 @@ import {
   useChatContext,
   useChatThreadContext,
 } from './context.ts';
-import { type ChatEvent } from './events.ts';
+import { type ChatDrawer, type ChatEvent } from './events.ts';
 import { objectCardWidget } from './ObjectCardWidget.tsx';
 import { SurfaceWidget } from './SurfaceWidget.tsx';
 
@@ -90,6 +90,8 @@ type ChatRootProps = PropsWithChildren<
     onSubmit?: (text: string) => Promise<void> | void;
     /** Called at submit time to capture ephemeral request context (e.g. companion selection). */
     getContext?: () => ChatRequestContext | undefined;
+    /** The drawer open above the prompt on mount. */
+    defaultDrawer?: ChatDrawer;
   }
 >;
 
@@ -102,9 +104,11 @@ const ChatRoot = ({
   onEvent,
   onSubmit,
   getContext,
+  defaultDrawer,
   ...props
 }: ChatRootProps) => {
   const [debug, setDebug] = useState(debugProp ?? false);
+  const [drawer, setDrawer] = useState<ChatDrawer | undefined>(defaultDrawer);
   // Slash commands run their operations through the same invoker the rest of the UI uses.
   const { invokePromise } = Hooks.useOperationInvoker();
   const chatModelState = getChatModelState(chatModel);
@@ -117,6 +121,8 @@ const ChatRoot = ({
   // Transient chats have no database of their own; fall back to the supplied space db so
   // the message query and context controls operate before the chat is persisted.
   const db = (chat && Obj.getDatabase(chat)) || dbFallback;
+  const commands = useSlashCommands({ registry: chatModel?.registry, db });
+  const slashCommands = UiHooks.useDynamicRef(commands);
 
   // Reactive subscription — re-renders when the feed ref resolves. Direct `.target` reads are not reactive.
   const [feedSnapshot] = useObject(chat?.feed);
@@ -152,6 +158,11 @@ const ChatRoot = ({
   useEffect(() => {
     return event.on((ev) => {
       switch (ev.type) {
+        case 'set-drawer': {
+          setDrawer(ev.drawer);
+          break;
+        }
+
         case 'toggle-debug': {
           setDebug((debug) => {
             if (debug) {
@@ -227,6 +238,26 @@ const ChatRoot = ({
       return;
     }
 
+    const sendPrompt = (text: string) => {
+      if (active && queued >= DEFAULT_MAX_QUEUE) {
+        return;
+      }
+      markWork('chat.submit');
+      lastPrompt.current = text;
+      chatModel.send(
+        { message: text, context: getContext?.() },
+        {
+          prepare: async () => {
+            await onSubmit?.(text);
+            const currentDb = (chat && Obj.getDatabase(chat)) || db;
+            if (currentDb) {
+              await bindMentions(chatModel.context, currentDb, text);
+            }
+          },
+        },
+      );
+    };
+
     return event.on((ev) => {
       switch (ev.type) {
         case 'submit': {
@@ -234,7 +265,7 @@ const ChatRoot = ({
           if (text.length) {
             // A leading /command is a deterministic shortcut — executed directly, no model in
             // the loop; an unknown command falls through to the model as plain text.
-            const resolved = SlashCommand.resolveSlashCommand(text, TaskSlashCommands);
+            const resolved = SlashCommand.resolveSlashCommand(text, slashCommands.current);
             if (resolved) {
               // One command at a time: `invokePromise` does not queue, so two quick submissions
               // would interleave their operations and land their summaries out of order.
@@ -245,7 +276,9 @@ const ChatRoot = ({
               // One rejection handler for the whole chain: `onSubmit` can throw synchronously and
               // `appendToFeed` can reject, and either would otherwise be lost with no error shown.
               void (async () => {
-                await Promise.resolve(onSubmit?.(text));
+                if (!resolved.command.chatOnly) {
+                  await Promise.resolve(onSubmit?.(text));
+                }
                 // Re-read after `onSubmit`: that is what persists a transient chat, so a chat that
                 // began without a database has one only now.
                 const currentDb = (chat && Obj.getDatabase(chat)) || db;
@@ -257,6 +290,7 @@ const ChatRoot = ({
                   db: currentDb,
                   chat,
                   invoke: invokePromise,
+                  binder: chatModel.context,
                 });
                 if (result instanceof Error) {
                   throw result;
@@ -267,8 +301,9 @@ const ChatRoot = ({
                 // because `onSubmit` is what persists a transient chat, creating it.
                 const currentFeed = feed ?? chat.feed?.target;
                 if (currentFeed && result.summary) {
+                  const ran = result.prompt ? resolved.command.command : text;
                   await currentDb.appendToFeed(currentFeed, [
-                    Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text }] }),
+                    Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: ran }] }),
                     Message.make({ sender: { role: 'assistant' }, blocks: [{ _tag: 'text', text: result.summary }] }),
                   ]);
                 }
@@ -277,6 +312,9 @@ const ChatRoot = ({
                   // Some effects run on the supervisor loop (delegation spawns post-turn), so the
                   // command wakes the conversation with a short synthetic prompt.
                   void chatModel.request({ message: result.followUp });
+                }
+                if (result.prompt) {
+                  sendPrompt(result.prompt);
                 }
               })()
                 .catch((error) => {
@@ -287,16 +325,7 @@ const ChatRoot = ({
                 });
               break;
             }
-            // The prompt's own guard does not cover submits emitted elsewhere (a checklist's execute action).
-            if (active && queued >= DEFAULT_MAX_QUEUE) {
-              break;
-            }
-            markWork('chat.submit');
-            lastPrompt.current = ev.text;
-            // Optimistic: the prompt is in the thread from this call on, before `onSubmit` persists a
-            // transient chat and before the agent acknowledges it. The chat model requests it when the
-            // agent is idle and queues it behind a running turn otherwise.
-            chatModel.send({ message: text, context: getContext?.() }, { prepare: () => onSubmit?.(text) });
+            sendPrompt(text);
           }
           break;
         }
@@ -350,6 +379,9 @@ const ChatRoot = ({
       started={messages.length > 0 || queued > 0}
       setController={setController}
       setVisibleRange={setVisibleRange}
+      slashCommands={commands}
+      drawer={drawer}
+      setDrawer={setDrawer}
       {...props}
     >
       <ChatThreadContextProvider
@@ -388,15 +420,14 @@ const useRequestTiming = ({ active }: { active: boolean }) => {
 
 const CHAT_TOOLBAR_NAME = 'Chat.Toolbar';
 
-type ChatToolbarProps = Pick<ActionToolbarProps, 'attendableId' | 'alwaysActive'> &
-  PropsWithChildren<{
-    companionTo?: Obj.Unknown;
-    /** Scopes the chat switcher; defaults to the companion chats of `companionTo`. */
-    switcher?: ChatSwitcher;
-  }>;
+type ChatToolbarProps = Pick<ActionToolbarProps, 'attendableId' | 'alwaysActive' | 'customActions'> & {
+  companionTo?: Obj.Unknown;
+  /** Scopes the chat switcher; defaults to the companion chats of `companionTo`. */
+  switcher?: ChatSwitcher;
+};
 
 const ChatToolbar = Util.composable<HTMLDivElement, ChatToolbarProps>(
-  ({ children, attendableId, alwaysActive, companionTo, switcher, ...props }, forwardedRef) => {
+  ({ attendableId, alwaysActive, customActions, companionTo, switcher, ...props }, forwardedRef) => {
     const { chat } = useChatContext(CHAT_TOOLBAR_NAME);
     const menuActions = useChatToolbarActions({ chat, companionTo, switcher });
 
@@ -405,11 +436,10 @@ const ChatToolbar = Util.composable<HTMLDivElement, ChatToolbarProps>(
         {...menuActions}
         attendableId={attendableId}
         alwaysActive={alwaysActive}
+        customActions={customActions}
         {...Util.composableProps(props)}
         ref={forwardedRef}
-      >
-        {children}
-      </ActionToolbar>
+      />
     );
   },
 );
@@ -574,6 +604,25 @@ const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onV
     model.setStreaming(streaming && last?.sender.role === 'assistant' ? last.id : undefined);
   }, [model, streaming, messages, tail]);
 
+  // Prompts carry their author's DID; members resolve it to the name and colours presence shows them with.
+  const members = useMembers(db?.spaceId);
+  const getAuthor = useCallback(
+    (sender: Actor.Actor) => {
+      const member = sender.identityDid ? members.find((member) => member.did === sender.identityDid) : undefined;
+      if (!member) {
+        return undefined;
+      }
+
+      const fallback = member.identityKey ? hexToFallback(member.identityKey) : undefined;
+      return {
+        name: member.displayName,
+        hue: member.data?.hue ?? fallback?.hue,
+        emoji: member.data?.emoji ?? fallback?.emoji,
+      };
+    },
+    [members],
+  );
+
   const userHue = useMemo(
     () =>
       userHueProp ||
@@ -631,6 +680,8 @@ const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onV
         objectImage={objectImage}
         getObjectLabel={getObjectLabel}
         userHue={userHue}
+        userDid={identity.did}
+        getAuthor={getAuthor}
         tailLines={tailLines}
         debug={debug}
         // An external agent keeps its own context, which a rewind of the transcript cannot reach.
@@ -721,75 +772,113 @@ const CHAT_PROMPT_NAME = 'Chat.Prompt';
 
 type ChatPromptProps = Omit<
   NaturalChatPromptProps,
-  'chat' | 'db' | 'chatModel' | 'event' | 'tasksVisible' | 'started'
-> & {
-  /** Whether the checklist is disclosed on mount. */
-  defaultTasksVisible?: boolean;
-};
+  'chat' | 'db' | 'chatModel' | 'event' | 'drawers' | 'started' | 'slashCommands'
+>;
 
 /**
- * The composer with the chat's checklist disclosed above it.
- *
- * One component rather than two siblings: they share a border and a rounded shell, and the control
- * that discloses the checklist lives in the composer's own action bar — so a host that placed them
- * side by side had to hold the disclosure state between them and coordinate the corner radius.
- *
- * Ark's `Collapsible` owns the disclosure (it measures the height the animation ramps against). Its
- * trigger is not used: the toggle is a button inside the composer, which reports through the chat
- * event rather than being wrapped in a `Collapsible.Trigger` it cannot reach.
+ * The composer with its drawers above it: the chat's checklist, and what it has in context (with any
+ * section a plugin contributes). One drawer is open at a time.
  */
-const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatPromptProps) => {
-  const { chat, db, chatModel, event, queueSize, started } = useChatContext(CHAT_PROMPT_NAME);
+const ChatPrompt = ({ classNames, ...props }: ChatPromptProps) => {
+  const { chat, db, chatModel, event, queueSize, started, slashCommands, drawer, setDrawer } =
+    useChatContext(CHAT_PROMPT_NAME);
 
-  // A chat with no checklist at all has nothing to disclose, so the toggle is withheld rather than
-  // shown pointing at nothing — `ChatActions` renders it only when `tasksVisible` is defined.
   const [tasks] = useObject(chat, 'tasks');
-  const hasTasks = tasks != null;
+  const available = useMemo(() => {
+    const drawers: ChatDrawer[] = [];
+    if (tasks != null) {
+      drawers.push('tasks');
+    }
+    if (chat && chatModel && db) {
+      drawers.push('context');
+    }
+    return drawers;
+  }, [chat, chatModel, db, tasks]);
+  const open = drawer && available.includes(drawer) ? drawer : undefined;
 
-  // Collapsed by default: the checklist is the assistant's working state, not the reader's, so the
-  // prompt keeps the room and the toggle is how they ask for it. Per mount rather than persisted —
-  // it is a glance, not a preference.
-  const [tasksVisible, setTasksVisible] = useState(chat?.tasks?.length ? defaultTasksVisible : false);
+  // Switching drawers closes the open one first, so the next slides in rather than swapping in place.
+  const [visible, setVisible] = useState(open);
+  const [requested, setRequested] = useState(open);
+  if (open !== requested) {
+    setRequested(open);
+    setVisible(visible && open ? undefined : open);
+  }
+
+  // With animations off no `animationend` fires, so a switch with no close animation running completes at once.
+  const drawerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    return event.on((ev) => {
-      if (ev.type === 'toggle-tasks') {
-        setTasksVisible((visible) => !visible);
-      }
-    });
-  }, [event]);
+    if (!visible && open && (drawerRef.current?.getAnimations().length ?? 0) === 0) {
+      setVisible(open);
+    }
+  }, [visible, open]);
+
+  const shownRef = useRef(visible);
+  if (visible) {
+    shownRef.current = visible;
+  }
+  const shown = visible ?? shownRef.current ?? available[0];
+
+  const contextOpenedRef = useRef(false);
+  if (open === 'context') {
+    contextOpenedRef.current = true;
+  }
 
   return (
     <Collapsible.Root
-      open={tasksVisible}
-      onOpenChange={({ open }) => setTasksVisible(open)}
-      // Clipped rather than unmounted: the list holds its own subscriptions, and remounting it on
-      // every toggle would refetch the checklist to show what the reader just hid.
+      open={visible !== undefined}
+      onOpenChange={({ open }) => !open && setDrawer(undefined)}
       lazyMount={false}
     >
       {/* The height the machine measures is what the ramp animates against, so the region clips. */}
-      {hasTasks && (
-        <Collapsible.Content className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'>
+      {available.length > 0 && (
+        <Collapsible.Content
+          ref={drawerRef}
+          className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'
+          onAnimationEnd={(event) => event.target === event.currentTarget && !visible && open && setVisible(open)}
+        >
           {/* The same surface and border as the prompt below, so the two read as one shell. */}
-          <ChatTaskList classNames='shrink-0 dx-group-surface border border-separator-subtle border-b-0 rounded-t-sm text-fg-muted' />
+          <div className='shrink-0 max-h-[40dvh] overflow-y-auto dx-group-surface border border-separator-subtle border-b-0 rounded-t-sm'>
+            {available.includes('tasks') && (
+              <div hidden={shown !== 'tasks'}>
+                <ChatTaskList classNames='text-fg-muted' />
+              </div>
+            )}
+            {available.includes('context') && contextOpenedRef.current && (
+              <div hidden={shown !== 'context'}>
+                <ChatContextDrawer />
+              </div>
+            )}
+          </div>
         </Collapsible.Content>
       )}
       <NaturalChatPrompt
         {...props}
-        // Square where the checklist meets it, so the two read as one shell rather than two cards.
-        classNames={[tasksVisible && 'rounded-t-none', classNames]}
+        classNames={[visible && 'rounded-t-none', classNames]}
         db={db}
         chat={chat}
         chatModel={chatModel}
         event={event}
         queueSize={queueSize}
         started={started}
-        tasksVisible={hasTasks ? tasksVisible : undefined}
+        slashCommands={slashCommands}
+        drawers={{ available, open }}
       />
     </Collapsible.Root>
   );
 };
 
 ChatPrompt.displayName = CHAT_PROMPT_NAME;
+
+const CHAT_CONTEXT_DRAWER_NAME = 'Chat.ContextDrawer';
+
+const ChatContextDrawer = () => {
+  const { chat, db, chatModel } = useChatContext(CHAT_CONTEXT_DRAWER_NAME);
+  return (
+    <div className='flex flex-col gap-1 p-1' data-testid='assistant.details'>
+      {chat && <Surface.Surface type={ChatSurface.ChatDetails} data={{ chat, db, context: chatModel?.context }} />}
+    </div>
+  );
+};
 
 //
 // TaskList

@@ -57,7 +57,9 @@ import { log } from '@dxos/log';
 const OperationHandlerProviderSpec = LayerSpec.make(
   {
     affinity: 'application',
-    requires: [Capability.Service, Capabilities.AtomRegistry],
+    // The layer service, not `Capabilities.AtomRegistry`: a capability is no service the stack provides, so naming it
+    // here pruned this spec and every space spec built on the provider.
+    requires: [Capability.Service, AtomRegistry.AtomRegistry],
     provides: [OperationHandlerSet.OperationHandlerProvider],
   },
   () =>
@@ -66,8 +68,7 @@ const OperationHandlerProviderSpec = LayerSpec.make(
         // Live view (not a one-shot snapshot): handlers contributed after materialization — e.g. by
         // a plugin enabled later — still reach subsequent reads. The manager memoizes one atom per
         // capability, so `reactive` reads the current contributions and re-merges when they change.
-        // Declared in `requires`, so absence is a wiring bug rather than a recoverable error.
-        const registry = yield* Capability.get(Capabilities.AtomRegistry).pipe(Effect.orDie);
+        const registry = yield* AtomRegistry.AtomRegistry;
         const sets = yield* Capability.atom(Capabilities.OperationHandler);
         return OperationHandlerSet.provide(OperationHandlerSet.reactive(registry, sets));
       }),
@@ -172,7 +173,7 @@ const OperationsToRegistrySpec = LayerSpec.make(
             .map(([name, keys]) => `${name} <- ${keys.join(', ')}`)
             .join('; ')}`,
         );
-        registry.add(definitions.map(Operation.serialize));
+        registry.add(definitions.map((definition) => Operation.serialize(definition)));
         return registry;
       }),
     ),
@@ -208,26 +209,22 @@ const FeedTraceSinkSpec = LayerSpec.make(
 );
 
 /**
- * Space-scoped remote operation invoker (EDGE). When edge agents are enabled
- * (`runtime.client.edgeFeatures.agents`) operations are invoked without a space
- * binding (the edge routes them); otherwise they are scoped to the space. The
- * config is read inside the factory — at slice-materialisation time, once
- * `ClientService` is available — so the owning module does not need the client
- * at activation time.
+ * Application-scoped remote operation invoker (EDGE): what an `on: 'edge'` invocation runs through, one request to
+ * EDGE's operation host rather than a spawned process. Each call names its space, so one instance serves every
+ * space. Uses EDGE whenever an edge service is configured, otherwise a no-op that refuses the call.
  */
 const RemoteOperationInvokerSpec = LayerSpec.make(
   {
-    affinity: 'space',
+    affinity: 'application',
     requires: [ClientService],
     provides: [RemoteOperationInvoker.Service],
   },
-  (context) =>
+  () =>
     Layer.unwrap(
       Effect.gen(function* () {
-        invariant(context.space, 'space context required for RemoteOperationInvoker');
         const client = yield* ClientService;
-        const edgeAgents = client.config.get('runtime.client.edgeFeatures.agents');
-        return EdgeOperationInvoker.fromClient(client, edgeAgents ? undefined : context.space);
+        const edgeUrl = client.config.values.runtime?.services?.edge?.url;
+        return edgeUrl ? EdgeOperationInvoker.fromClient(client) : RemoteOperationInvoker.layerNoop;
       }),
     ),
 );

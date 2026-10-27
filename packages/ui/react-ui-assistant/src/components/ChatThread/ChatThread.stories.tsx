@@ -16,10 +16,11 @@ import * as Input from '@dxos/react-ui/Input';
 import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
-import { Message } from '@dxos/types';
+import { type Actor, Message } from '@dxos/types';
 
 import { translations } from '../../translations.ts';
 import { type ChatThreadEvent, type ChatView, DeliveryAnnotation, type DeliveryStatus } from '../../types.ts';
+import { type MessageAuthor } from '../MessageChrome/index.ts';
 import { ChatThread, type ChatThreadController } from './ChatThread.tsx';
 
 /**
@@ -533,5 +534,69 @@ export const Delivery: Story = {
       ?.closest('[data-testid="feed.message"]');
     failed?.querySelector<HTMLElement>('[data-action="remove"]')?.click();
     await expect(deliveryEvents.map(({ type }) => type)).toEqual(['remove-prompt']);
+  },
+};
+
+const READER_DID = 'did:halo:reader';
+
+/** Profiles a host would resolve from space members, keyed by DID. */
+const AUTHORS: Record<string, MessageAuthor> = {
+  [READER_DID]: { name: 'Rich' },
+  'did:halo:alice': { name: 'Alice Park', hue: 'emerald', emoji: '🦊' },
+  'did:halo:bob': { name: 'Bob Okafor', hue: 'violet', emoji: '🐙' },
+};
+
+const prompt = (identityDid: string, text: string) =>
+  Message.make({
+    sender: { role: 'user', identityDid, name: AUTHORS[identityDid]?.name },
+    blocks: [{ _tag: 'text', text }],
+  });
+
+const answer = (text: string) => Message.make({ sender: { role: 'assistant' }, blocks: [{ _tag: 'text', text }] });
+
+const AuthorsStory = () => {
+  const model = useMemo(
+    () =>
+      new FeedModel({
+        stops: 'prompt',
+        messages: [
+          prompt(READER_DID, 'Summarize the meeting notes.'),
+          answer('Three decisions were taken: ship the beta on Friday, freeze the API, and hire a designer.'),
+          prompt('did:halo:alice', 'Which of those blocks the launch?'),
+          answer('Only the API freeze: the beta depends on it, and the hire runs in parallel.'),
+          prompt('did:halo:bob', 'Draft the announcement for the beta.'),
+          answer('Here is a first draft of the announcement.'),
+          prompt(READER_DID, 'Make it shorter.'),
+        ],
+      }),
+    [],
+  );
+  const getAuthor = useCallback(
+    (sender: Actor.Actor) => (sender.identityDid ? AUTHORS[sender.identityDid] : undefined),
+    [],
+  );
+
+  return (
+    <ChatThread.Root model={model} viewType='normal' userHue='sky' userDid={READER_DID} getAuthor={getAuthor}>
+      <ChatThread.Viewport />
+    </ChatThread.Root>
+  );
+};
+
+/**
+ * A chat several members wrote in: each prompt carries its author's DID, so the thread shows an
+ * avatar beside every prompt and names the ones the reader did not write.
+ */
+export const Authors: Story = {
+  render: () => <AuthorsStory />,
+  play: async ({ canvasElement }) => {
+    await settle(20);
+    const names = [...canvasElement.querySelectorAll<HTMLElement>('[data-testid="chat.author"]')].map(
+      (element) => element.textContent,
+    );
+    await expect({
+      avatars: canvasElement.querySelectorAll('[data-testid="chat.avatar"]').length,
+      names,
+    }).toEqual({ avatars: 4, names: ['Alice Park', 'Bob Okafor'] });
   },
 };

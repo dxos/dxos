@@ -4,54 +4,76 @@
 // Copyright 2026 DXOS.org
 //
 
-// Bootstrap-publish a single workspace package to npm. Intended for the FIRST publish of a new
-// public package (e.g. a freshly-extracted leaf lib), after which CI's `check-packages-published`
-// passes and release automation takes over. Builds the package, validates it is publishable, and
-// runs `pnpm publish` (which rewrites `workspace:`/`catalog:` specifiers to concrete versions —
-// npm would ship them verbatim), then opens the package's npm settings page (where trusted
-// publishing is configured for future automated releases). When `npm whoami` reports no session the
-// script starts an interactive `npm login`; credentials stay with npm and never pass through here.
+// Bootstrap a single workspace package on npm so `publish-all.yml` can release it from then on.
+// npm's OIDC trusted publisher can only be attached to a package that already exists on the
+// registry, so a new package needs one manual publish followed by a trusted-publisher setup:
+//   1. If the package is not on the registry yet: build it, stamp `version` to 0.0.0 (the
+//      bootstrap slot — the real version is left for `publish-all.yml`), `pnpm publish`, restore
+//      the version. `pnpm` (not npm) rewrites `workspace:`/`catalog:` specifiers to concrete versions.
+//   2. With `--trust`: create the trusted publisher with `npm trust github` (npm >= 11.15). npm asks
+//      for a browser 2FA confirmation, so run this in an interactive terminal. Without `--trust` the
+//      script prints the manual settings and opens the package's npm access page.
+// Already-published packages skip step 1, so re-running for a package that only lacks a trusted
+// publisher is safe. Credentials stay with npm and never pass through this script, except with `--op`:
+// it logs in as the npm-bot account from 1Password (`op` CLI) and answers every 2FA prompt with a fresh
+// TOTP code, so the flow runs unattended; the session token lives in a temporary npmrc and is revoked on exit.
 //
 // Usage:
-//   node scripts/publish-package.mjs <package-name|package-dir> [--dry-run] [--tag <tag>] [--no-build] [--no-open]
+//   node scripts/publish-package.mjs <package-name|package-dir> [--trust] [--op] [--dry-run] [--no-build] [--no-open]
 //
 // Examples:
-//   node scripts/publish-package.mjs @dxos/progress --dry-run
-//   node scripts/publish-package.mjs @dxos/progress
-//   node scripts/publish-package.mjs packages/core/compute/progress --tag next
+//   node scripts/publish-package.mjs @dxos/plugin-discord --dry-run
+//   node scripts/publish-package.mjs @dxos/plugin-discord --trust
+//   node scripts/publish-package.mjs @dxos/plugin-discord --trust --op
+//   node scripts/publish-package.mjs packages/core/compute/progress
 
 import { globby } from 'globby';
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const NPM_REGISTRY = 'https://registry.npmjs.org';
+const BOOTSTRAP_VERSION = '0.0.0';
+
+// The trusted publisher is bound to this repo and workflow filename (see publish-all.yml header).
+const TRUST_REPOSITORY = 'dxos/dxos';
+const TRUST_WORKFLOW = 'publish-all.yml';
+
+// First npm release whose `trust github` accepts `--allow-publish` (11.10–11.14 have `trust` without it).
+const NPM_TRUST_MIN_VERSION = [11, 15, 0];
+
+// The npm-bot account (see the npm-publishing skill).
+const OP_NPM_BOT = {
+  username: 'op://CI/NPM bot/username',
+  password: 'op://CI/NPM bot/password',
+  otp: 'op://CI/NPM bot/one-time password?attribute=otp',
+};
+
+const USAGE =
+  'Usage: node scripts/publish-package.mjs <package-name|package-dir> [--trust] [--op] [--dry-run] [--no-build] [--no-open]';
 
 const usage = () => {
-  console.error(
-    'Usage: node scripts/publish-package.mjs <package-name|package-dir> [--dry-run] [--tag <tag>] [--no-build] [--no-open]',
-  );
+  console.error(USAGE);
   process.exit(2);
 };
 
-// Minimal flag parser: one positional (the package), plus the documented options.
 const parseArgs = (argv) => {
-  const options = { dryRun: false, tag: undefined, build: true, open: true };
+  const options = { dryRun: false, build: true, open: true, trust: false, op: false };
   let target;
-  for (let index = 0; index < argv.length; index++) {
-    const arg = argv[index];
+  for (const arg of argv) {
     if (arg === '--dry-run') {
       options.dryRun = true;
     } else if (arg === '--no-build') {
       options.build = false;
     } else if (arg === '--no-open') {
       options.open = false;
-    } else if (arg === '--tag') {
-      options.tag = argv[++index];
-      if (!options.tag) {
-        usage();
-      }
+    } else if (arg === '--trust') {
+      options.trust = true;
+    } else if (arg === '--op') {
+      options.op = true;
     } else if (arg.startsWith('--')) {
       console.error(`Unknown option: ${arg}`);
       usage();
@@ -92,114 +114,304 @@ const resolvePackageJson = async (target) => {
   process.exit(1);
 };
 
-const run = (command, args, cwd) => {
-  console.log(`$ ${command} ${args.join(' ')}`);
-  execFileSync(command, args, { cwd, stdio: 'inherit' });
+const readPackageJson = (file) => JSON.parse(readFileSync(file, 'utf8'));
+
+const writePackageJson = (file, pkg) => writeFileSync(file, `${JSON.stringify(pkg, null, 2)}\n`);
+
+// Set by `--op`: child processes read the temporary npmrc, and `otpArgs()` supplies each 2FA code.
+let session;
+
+// npm reads config env vars case-insensitively, so an inherited `NPM_CONFIG_USERCONFIG` would shadow ours.
+const sessionEnv = () => {
+  const env = Object.fromEntries(
+    Object.entries(process.env).filter(([key]) => key.toLowerCase() !== 'npm_config_userconfig'),
+  );
+  return { ...env, npm_config_userconfig: session.userconfig };
 };
 
-// Prefer the repo-pinned moon (proto resolves the correct version); the bare `moon` on PATH may be
-// a stale global that rejects this workspace's config.
+// The OTP value is redacted from the echoed command line.
+const run = (command, args, cwd = REPO_ROOT) => {
+  const shown = args.map((arg) => (arg.startsWith('--otp=') ? '--otp=******' : arg));
+  console.log(`$ ${command} ${shown.join(' ')}`);
+  execFileSync(command, args, { cwd, stdio: 'inherit', env: session ? sessionEnv() : process.env });
+};
+
+const opRead = (reference) =>
+  execFileSync('op', ['read', '--no-newline', reference], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] });
+
+// A TOTP code lasts 30 seconds, so each command that needs one reads it fresh; `npm trust` parses only
+// the `--otp=<code>` form (a separate value is taken as a positional argument).
+const otpArgs = () => (session ? [`--otp=${opRead(OP_NPM_BOT.otp)}`] : []);
+
+// Logs in as npm-bot through the registry's legacy login endpoint, which takes the OTP as a header.
+const startOpSession = async () => {
+  const name = opRead(OP_NPM_BOT.username);
+  const response = await fetch(`${NPM_REGISTRY}/-/user/org.couchdb.user:${encodeURIComponent(name)}`, {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json', 'npm-otp': opRead(OP_NPM_BOT.otp) },
+    body: JSON.stringify({
+      _id: `org.couchdb.user:${name}`,
+      name,
+      password: opRead(OP_NPM_BOT.password),
+      type: 'user',
+      roles: [],
+      date: new Date().toISOString(),
+    }),
+  });
+  const { token } = await response.json().catch(() => ({}));
+  if (!response.ok || !token) {
+    throw new Error(`npm login as ${name} failed (status ${response.status})`);
+  }
+  const dir = mkdtempSync(join(tmpdir(), 'npm-bot-'));
+  const userconfig = join(dir, '.npmrc');
+  writeFileSync(userconfig, `//registry.npmjs.org/:_authToken=${token}\n`, { mode: 0o600 });
+  session = { dir, token, userconfig };
+  console.log(`npm user: ${name} (1Password)`);
+};
+
+// Revokes the session token so it does not outlive the run.
+const endOpSession = async () => {
+  if (!session) {
+    return;
+  }
+  const { dir, token } = session;
+  session = undefined;
+  try {
+    const response = await fetch(`${NPM_REGISTRY}/-/user/token/${token}`, {
+      method: 'DELETE',
+      headers: { authorization: `Bearer ${token}` },
+    }).catch((error) => ({ ok: false, status: error.message }));
+    if (!response.ok) {
+      console.warn(
+        `WARNING: revoking the npm session token failed (status ${response.status}); revoke it on npmjs.com.`,
+      );
+    } else {
+      console.log('npm session token revoked.');
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+};
+
+// Prefer the repo-pinned moon; the bare `moon` on PATH may be a stale global that rejects this workspace's config.
 const moonBin = () => {
   const local = join(REPO_ROOT, 'node_modules', '.bin', 'moon');
   return existsSync(local) ? local : 'moon';
 };
 
-// Open a URL in the default browser (best-effort — a failure here never fails the publish).
-const openUrl = (url) => {
-  const opener = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'start' : 'xdg-open';
+// A moon.yml `id:` overrides the directory-name default (e.g. vendor/quickjs → vendor-quickjs).
+const moonProjectId = (packageDir) => {
+  const moonFile = join(packageDir, 'moon.yml');
+  const match = existsSync(moonFile) ? readFileSync(moonFile, 'utf8').match(/^id:\s*['"]?([^'"\s]+)/m) : null;
+  return match?.[1] ?? packageDir.split('/').pop();
+};
+
+// True when the package name exists on the registry at any version.
+const isOnRegistry = async (name) => {
+  const response = await fetch(`${NPM_REGISTRY}/${encodeURIComponent(name)}`, {
+    headers: { Accept: 'application/vnd.npm.install-v1+json' },
+  });
+  if (response.status === 404) {
+    return false;
+  }
+  if (!response.ok) {
+    throw new Error(`unexpected status ${response.status} querying ${name} on the npm registry`);
+  }
+  return true;
+};
+
+const npmUser = () => {
   try {
-    execFileSync(opener, [url], { stdio: 'ignore' });
+    return execFileSync('npm', ['whoami'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
   } catch {
-    // The URL is printed regardless, so the caller can open it by hand.
+    return undefined;
+  }
+};
+
+// Ensure an npm session, starting the interactive `npm login` browser flow when there is none.
+const ensureNpmAuth = (scope) => {
+  let user = npmUser();
+  if (!user) {
+    console.log('\nNot authenticated to npm — starting `npm login` (browser flow).');
+    console.log(`The account needs publish rights to the ${scope} scope.\n`);
+    try {
+      execFileSync('npm', ['login'], { stdio: 'inherit' });
+    } catch {
+      // Reported below.
+    }
+    user = npmUser();
+    if (!user) {
+      console.error('ERROR: npm login did not complete; re-run this script once authenticated.');
+      process.exit(1);
+    }
+  }
+  console.log(`npm user: ${user}`);
+};
+
+const isAtLeast = (version, minimum) => {
+  const parts = version.split('.').map(Number);
+  for (let index = 0; index < minimum.length; index++) {
+    if ((parts[index] ?? 0) !== minimum[index]) {
+      return (parts[index] ?? 0) > minimum[index];
+    }
+  }
+  return true;
+};
+
+// The local npm when it already has `trust`, otherwise a pinned npm 11 through npx.
+const npmTrustCommand = () => {
+  const local = execFileSync('npm', ['--version'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+  return isAtLeast(local, NPM_TRUST_MIN_VERSION)
+    ? { command: 'npm', prefix: [] }
+    : { command: 'npx', prefix: ['--yes', `npm@${NPM_TRUST_MIN_VERSION.join('.')}`] };
+};
+
+const configureTrust = (name, dryRun) => {
+  const { command, prefix } = npmTrustCommand();
+  const args = [
+    ...prefix,
+    'trust',
+    'github',
+    name,
+    '--repository',
+    TRUST_REPOSITORY,
+    '--file',
+    TRUST_WORKFLOW,
+    '--allow-publish',
+    '--yes',
+    // npm's spinner otherwise hides the 2FA URL and its ENTER prompt.
+    '--no-progress',
+  ];
+  // Printed rather than run with npm's own --dry-run, which still demands a 2FA confirmation.
+  if (dryRun) {
+    console.log(`\nWould run: ${command} ${args.join(' ')}`);
+    return;
+  }
+  if (!session) {
+    console.log('\nnpm prints a URL and waits ~5 minutes: press ENTER (or open the URL) and approve in the browser.');
+  }
+  run(command, [...args, ...otpArgs()]);
+};
+
+const printManualTrust = (name, settingsUrl) => {
+  console.log('\nConfigure trusted publishing (OIDC) so publish-all.yml can release future versions:');
+  console.log(`  ${settingsUrl}`);
+  console.log('  → Trusted Publisher → GitHub Actions:');
+  console.log(`      Repository:      ${TRUST_REPOSITORY}`);
+  console.log(`      Workflow file:   ${TRUST_WORKFLOW}`);
+  console.log('      Environment:     (leave blank)');
+  console.log('      Allowed actions: npm publish only (not stage publish)');
+  console.log(`  Or automate it: node scripts/publish-package.mjs ${name} --trust`);
+};
+
+// Opens a URL in the default browser; best-effort because the URL is also printed.
+const openUrl = (url) => {
+  const [opener, args] =
+    process.platform === 'darwin'
+      ? ['open', [url]]
+      : process.platform === 'win32'
+        ? ['cmd', ['/c', 'start', '', url]]
+        : ['xdg-open', [url]];
+  try {
+    execFileSync(opener, args, { stdio: 'ignore' });
+  } catch {
+    // Printed above.
+  }
+};
+
+const bootstrapPublish = ({ packageJsonPath, packageDir, pkg, access, dryRun, build }) => {
+  if (build) {
+    run(moonBin(), ['run', `${moonProjectId(packageDir)}:build`]);
+  }
+
+  const original = readPackageJson(packageJsonPath);
+  writePackageJson(packageJsonPath, { ...original, version: BOOTSTRAP_VERSION });
+  try {
+    // `--no-git-checks`: bootstrap publishes legitimately run from feature branches.
+    const args = ['publish', '--access', access, '--no-git-checks'];
+    if (dryRun) {
+      args.push('--dry-run');
+    } else {
+      args.push(...otpArgs());
+    }
+    run('pnpm', args, packageDir);
+  } finally {
+    writePackageJson(packageJsonPath, original);
+    console.log(`Restored ${pkg.name} version to ${original.version}.`);
   }
 };
 
 const main = async () => {
-  const { target, dryRun, tag, build, open } = parseArgs(process.argv.slice(2));
+  const { target, dryRun, build, open, trust, op } = parseArgs(process.argv.slice(2));
   const packageJsonPath = await resolvePackageJson(target);
   const packageDir = dirname(packageJsonPath);
-  const pkg = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
+  const pkg = readPackageJson(packageJsonPath);
 
   console.log(`Package: ${pkg.name}@${pkg.version}`);
   console.log(`Dir:     ${packageDir}`);
 
   if (pkg.private) {
     console.error(
-      `ERROR: ${pkg.name} is marked "private": true and cannot be published. Remove the flag once a ` +
-        'trusted publisher exists (see AGENTS.md).',
+      `ERROR: ${pkg.name} is marked "private": true and cannot be published. Remove the flag first ` +
+        '(see AGENTS.md "New packages are private").',
     );
     process.exit(1);
   }
-  const access = pkg.publishConfig?.access;
-  if (pkg.name.startsWith('@') && access !== 'public') {
+  const access = pkg.publishConfig?.access ?? 'public';
+  if (pkg.name.startsWith('@') && pkg.publishConfig?.access !== 'public') {
     console.error(
-      `ERROR: scoped package ${pkg.name} needs "publishConfig.access": "public" (found: ${access ?? 'unset'}).`,
+      `ERROR: scoped package ${pkg.name} needs "publishConfig.access": "public" ` +
+        `(found: ${pkg.publishConfig?.access ?? 'unset'}).`,
     );
     process.exit(1);
   }
 
-  // Ensure npm auth before publishing (a dry run needs none). If not logged in, run `npm login`
-  // interactively — npm opens its own browser flow; credentials never pass through this script.
-  if (!dryRun) {
-    const whoami = () => execFileSync('npm', ['whoami'], { encoding: 'utf8' }).trim();
-    let user;
-    try {
-      user = whoami();
-    } catch {
-      console.log('\nNot authenticated to npm — starting `npm login` (browser flow).');
-      console.log(`The account needs publish rights to the ${pkg.name.split('/')[0]} scope.\n`);
-      try {
-        execFileSync('npm', ['login'], { stdio: 'inherit' });
-        user = whoami();
-      } catch {
-        console.error('ERROR: npm login did not complete; re-run this script once authenticated.');
-        process.exit(1);
-      }
+  const published = await isOnRegistry(pkg.name);
+  console.log(`Registry: ${published ? 'already published' : 'not published'}`);
+
+  if (!dryRun && (!published || trust)) {
+    if (op) {
+      await startOpSession();
+    } else {
+      ensureNpmAuth(pkg.name.split('/')[0]);
     }
-    console.log(`npm user: ${user}`);
   }
 
-  if (build) {
-    // The moon project id is the package directory's basename by convention.
-    const projectId = packageDir.split('/').pop();
-    run(moonBin(), ['run', `${projectId}:build`], REPO_ROOT);
-  }
-
-  // `pnpm publish` (not npm): it rewrites `workspace:`/`catalog:` protocol specifiers to concrete
-  // versions at pack time — `npm publish` would ship them verbatim and produce an uninstallable
-  // manifest for any package with in-repo dependencies. `--no-git-checks` because bootstrap
-  // publishes legitimately run from feature branches.
-  const publishArgs = ['publish', '--access', access ?? 'public', '--no-git-checks'];
-  if (tag) {
-    publishArgs.push('--tag', tag);
-  }
-  if (dryRun) {
-    publishArgs.push('--dry-run');
-  }
-  run('pnpm', publishArgs, packageDir);
-
-  // The npm package settings page is where trusted publishing (OIDC) is configured for future
-  // automated releases — surface it (and open it) after the first real publish.
-  const settingsUrl = `https://www.npmjs.com/package/${pkg.name}/access`;
-  if (dryRun) {
-    console.log('\nDry run complete — nothing was published.');
-    console.log(`Publish for real with: node scripts/publish-package.mjs ${pkg.name}`);
+  if (published) {
+    console.log(`Skipping bootstrap publish: ${pkg.name} is already on npm.`);
   } else {
-    console.log(`\nPublished ${pkg.name}@${pkg.version}.`);
-    console.log('\nNext steps:');
-    console.log(`  1. Configure trusted publishing (OIDC) so CI can release future versions:`);
-    console.log(`     ${settingsUrl}`);
-    console.log('     → Trusted Publisher → GitHub Actions (org/repo/workflow/actions):');
-    console.log('       dxos / dxos');
-    console.log('       publish-all.yml');
-    console.log('       [x] allow npm publish');
-    console.log(`  2. Verify the publish: npm view ${pkg.name} version`);
-    console.log("  3. CI's check-packages-published now passes for this package; release automation");
-    console.log('     takes over from the next changeset release.');
-    if (open) {
+    bootstrapPublish({ packageJsonPath, packageDir, pkg, access, dryRun, build });
+    if (!dryRun) {
+      console.log(`\nPublished ${pkg.name}@${BOOTSTRAP_VERSION}.`);
+    }
+  }
+
+  const settingsUrl = `https://www.npmjs.com/package/${pkg.name}/access`;
+  if (trust) {
+    configureTrust(pkg.name, dryRun);
+    if (!dryRun) {
+      console.log(`\nTrusted publisher configured: ${TRUST_REPOSITORY} → ${TRUST_WORKFLOW}.`);
+      console.log(`Verify: ${settingsUrl}`);
+    }
+  } else {
+    printManualTrust(pkg.name, settingsUrl);
+    if (open && !dryRun) {
       openUrl(settingsUrl);
     }
   }
+
+  if (dryRun) {
+    console.log('\nDry run complete — nothing was published or configured.');
+  } else {
+    console.log('\npublish-all.yml releases future versions from the next changeset release.');
+  }
 };
 
-await main();
+try {
+  await main();
+} catch (error) {
+  console.error(`ERROR: ${error.cause?.message ?? error.message}`);
+  process.exitCode = 1;
+} finally {
+  await endOpSession();
+}

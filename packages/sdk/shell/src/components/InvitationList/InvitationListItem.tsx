@@ -3,7 +3,7 @@
 //
 
 import { formatDistanceToNow } from 'date-fns';
-import React, { type ComponentPropsWithoutRef, useCallback } from 'react';
+import React, { type ComponentPropsWithoutRef, createContext, useCallback, useContext, useEffect } from 'react';
 
 import {
   type CancellableInvitationObservable,
@@ -41,7 +41,11 @@ export const InvitationListItem = (props: InvitationListItemProps) => {
   return <InvitationListItemImpl {...props} invitationStatus={invitationStatus} />;
 };
 
-const AVATAR_SIZE = 'lg';
+/**
+ * Lets each row tell its list how to open it (its QR or auth view), so a pick by Enter or a click on the row, which the
+ * list reports, reaches the row that knows whether it can be opened.
+ */
+export const InvitationOpenContext = createContext<(id: string, open: (() => void) | undefined) => void>(() => {});
 
 /** Two faded rings behind a multi-use invitation's avatar, so it reads as a stack. */
 const AvatarStackEffect = ({
@@ -57,7 +61,6 @@ const AvatarStackEffect = ({
       <Avatar.Root
         key={delay}
         aria-hidden
-        size={AVATAR_SIZE}
         status={status}
         animation={animation}
         hueVariant='transparent'
@@ -123,88 +126,72 @@ export const InvitationListItemImpl = ({
 
   const avatarStatus = avatarError ? 'error' : avatarGreen ? 'active' : 'inactive';
 
+  const canOpen = !!(showShare && invitationUrl);
+  const registerOpen = useContext(InvitationOpenContext);
+  useEffect(() => {
+    registerOpen(invitationId, canOpen ? () => send({ type: 'selectInvitation', invitation }) : undefined);
+    return () => registerOpen(invitationId, undefined);
+  }, [registerOpen, invitationId, canOpen, send, invitation]);
+
+  const status = canOpen
+    ? t('open-share-panel.label')
+    : invitationStatus === Invitation_State.CONNECTING
+      ? 'Connecting...'
+      : invitationStatus === Invitation_State.AUTHENTICATING
+        ? 'Authenticating...'
+        : invitationStatus === Invitation_State.ERROR || invitationStatus === Invitation_State.TIMEOUT
+          ? 'Failed'
+          : invitationStatus === Invitation_State.CANCELLED
+            ? 'Cancelled'
+            : invitationStatus === Invitation_State.SUCCESS
+              ? 'User joined'
+              : !shareable
+                ? 'Pending Invitation'
+                : '';
+
   return (
-    <Listbox.Item
-      id={invitationId}
-      {...props}
-      classNames={['flex gap-2 ps-3 pe-1 items-center relative', props.classNames]}
-    >
-      <Listbox.ItemText classNames='sr-only'>
-        {t(multiUse ? 'invite-many-list-item.label' : 'invite-one-list-item.label')}
-      </Listbox.ItemText>
-      {multiUse && (
-        <AvatarStackEffect status={avatarStatus} animation={avatarAnimation} reverseEffects={reverseEffects} />
-      )}
-      <Tooltip.Trigger asChild content={t(multiUse ? 'invite-many-qr.label' : 'invite-one-qr.label')} side='left'>
-        <Avatar.Root
-          size={AVATAR_SIZE}
-          animation={avatarAnimation}
-          status={avatarStatus}
-          fallback={hexToEmoji(invitationId)}
-          label={t(multiUse ? 'invite-many-qr.label' : 'invite-one-qr.label')}
-          tabIndex={0}
-          classNames={['dx-focus-ring', 'relative rounded-full place-self-center']}
-        />
-      </Tooltip.Trigger>
-      {showShare && invitationUrl ? (
-        <>
-          <Tooltip.Trigger
-            asChild
-            content={
-              invitationHasLifetime ? t('expires.label', { timeLeft: invitationTimeLeft }) : t('no-expiration.label')
-            }
-          >
-            <Button.Root
-              variant='ghost'
-              classNames='grow justify-start font-medium'
-              data-testid='show-qrcode'
-              onClick={() => send({ type: 'selectInvitation', invitation })}
-            >
-              <span>{t('open-share-panel.label')}</span>
-            </Button.Root>
-          </Tooltip.Trigger>
-          <SystemButton.Clipboard iconOnly variant='ghost' value={invitationUrl} />
-        </>
+    <Listbox.Item {...props} id={invitationId}>
+      <Listbox.ItemIcon>
+        {multiUse && (
+          <AvatarStackEffect status={avatarStatus} animation={avatarAnimation} reverseEffects={reverseEffects} />
+        )}
+        <Tooltip.Trigger asChild content={t(multiUse ? 'invite-many-qr.label' : 'invite-one-qr.label')} side='left'>
+          <Avatar.Root
+            animation={avatarAnimation}
+            status={avatarStatus}
+            fallback={hexToEmoji(invitationId)}
+            label={t(multiUse ? 'invite-many-qr.label' : 'invite-one-qr.label')}
+          />
+        </Tooltip.Trigger>
+      </Listbox.ItemIcon>
+      {canOpen ? (
+        <Tooltip.Trigger
+          asChild
+          content={
+            invitationHasLifetime ? t('expires.label', { timeLeft: invitationTimeLeft }) : t('no-expiration.label')
+          }
+        >
+          <Listbox.ItemText data-testid='show-qrcode'>{status}</Listbox.ItemText>
+        </Tooltip.Trigger>
       ) : showAuthCode ? (
-        <AuthCode code={authCode} classNames='grow' />
-      ) : invitationStatus === Invitation_State.CONNECTING ? (
-        <span className='px-2 grow text-neutral-500'>Connecting...</span>
-      ) : invitationStatus === Invitation_State.AUTHENTICATING ? (
-        <span className='px-2 grow text-neutral-500'>Authenticating...</span>
-      ) : invitationStatus === Invitation_State.ERROR || invitationStatus === Invitation_State.TIMEOUT ? (
-        <span className='px-2 grow text-neutral-500'>Failed</span>
-      ) : invitationStatus === Invitation_State.CANCELLED ? (
-        <span className='px-2 grow text-neutral-500'>Cancelled</span>
-      ) : invitationStatus === Invitation_State.SUCCESS ? (
-        <span className='px-2 grow truncate'>User joined</span>
-      ) : !shareable ? (
-        <span className='px-2 grow text-neutral-500'>Pending Invitation</span>
+        <Listbox.ItemText>
+          <AuthCode code={authCode} />
+        </Listbox.ItemText>
       ) : (
-        <span className='grow'> </span>
+        <Listbox.ItemText tone={invitationStatus === Invitation_State.SUCCESS ? 'default' : 'muted'}>
+          {status}
+        </Listbox.ItemText>
       )}
-      {isCancellable ? (
-        <Button.Root
-          icon='ph--x--regular'
-          iconSize='md'
-          label={t('cancel-invitation.label')}
-          iconOnly
-          variant='ghost'
-          classNames='flex gap-1 px-0'
-          onClick={cancel}
-          data-testid='cancel-invitation'
-        />
-      ) : (
-        <Button.Root
-          icon='ph--x--regular'
-          iconSize='md'
-          label={t('remove-invitation.label')}
-          iconOnly
-          variant='ghost'
-          classNames='flex gap-1 px-0'
-          onClick={handleClickRemove}
-          data-testid='remove-invitation'
-        />
-      )}
+      {canOpen && invitationUrl && <SystemButton.Clipboard iconOnly variant='ghost' value={invitationUrl} />}
+      <Button.Root
+        icon='ph--x--regular'
+        iconSize='md'
+        label={t(isCancellable ? 'cancel-invitation.label' : 'remove-invitation.label')}
+        iconOnly
+        variant='ghost'
+        onClick={isCancellable ? cancel : handleClickRemove}
+        data-testid={isCancellable ? 'cancel-invitation' : 'remove-invitation'}
+      />
     </Listbox.Item>
   );
 };

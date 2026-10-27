@@ -18,6 +18,7 @@ import { EID } from '@dxos/keys';
 import * as SpaceSurface from '@dxos/plugin-space/SpaceSurface';
 import * as Position from '@dxos/util/Position';
 
+import { ChatContextPanel } from '#components';
 import {
   AgentArticle,
   AgentProperties,
@@ -53,6 +54,13 @@ export default Capability.makeModule(() =>
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: AssistantSettingsSurface,
         props: ({ data: { subject } }) => ({ subject }),
+      }),
+      Surface.create({
+        id: 'chatContext',
+        filter: Surface.makeFilter(ChatSurface.ChatDetails),
+        component: ChatContextPanel,
+        props: ({ data: { chat, db, context } }) => ({ chat, db, context }),
+        position: Position.first,
       }),
       Surface.create({
         id: 'spaceHomePrompt',
@@ -106,7 +114,8 @@ export default Capability.makeModule(() =>
         component: ChatCompanion,
         props: ({ role, ref, data: { subject, attendableId, nodeId, companionTo } }) => ({
           role,
-          subject,
+          // An unprovisioned companion's node carries `null`; the chat tree reads a missing chat as `undefined`.
+          subject: subject ?? undefined,
           attendableId,
           nodeId,
           companionTo,

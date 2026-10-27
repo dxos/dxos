@@ -4,7 +4,8 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { asyncTimeout, sleep } from './timeout.ts';
+import { Event } from './events.ts';
+import { asyncTimeout, sleep, timeoutUnlessProgress } from './timeout.ts';
 
 describe('timeout', () => {
   test('succeeds', async () => {
@@ -22,5 +23,31 @@ describe('timeout', () => {
     const now = Date.now();
     await sleep(100);
     expect(Date.now()).to.be.greaterThanOrEqual(now + 100);
+  });
+});
+
+describe('timeoutUnlessProgress', () => {
+  test('rejects once the timeout passes with no progress', async () => {
+    const error = new Error('stalled');
+    await expect(timeoutUnlessProgress(new Promise(() => {}), 50, new Event(), error)).rejects.toBe(error);
+  });
+
+  test('stops following progress once the deadline expires', async () => {
+    const progress = new Event();
+    await expect(timeoutUnlessProgress(new Promise(() => {}), 10, progress)).rejects.toThrow();
+    expect(progress.listenerCount()).toBe(0);
+  });
+
+  test('each progress event restarts the deadline', async () => {
+    const progress = new Event();
+    const work = (async () => {
+      for (let i = 0; i < 4; i++) {
+        await sleep(30);
+        progress.emit();
+      }
+      return 'done';
+    })();
+
+    await expect(timeoutUnlessProgress(work, 50, progress, new Error('stalled'))).resolves.toBe('done');
   });
 });

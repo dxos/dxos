@@ -22,6 +22,9 @@ const reference = { owner: 'dxos', repo: 'dxos', number: 13188 };
 const run = <T>(effect: Effect.Effect<T, never, HttpClient.HttpClient>) =>
   EffectEx.runAndForwardErrors(effect.pipe(Effect.provide(FetchHttpClient.layer)));
 
+/** A space whose GitHub connection reads as `token`. */
+const connectedAs = (token: string) => ({ token, connected: true });
+
 const pull: GitHubApi.GitHubPull = { id: 1, number: reference.number, title: 'Walkthroughs', state: 'open' };
 
 /** The failure `HttpClient.filterStatusOk` produces for a non-2xx GitHub response. */
@@ -49,7 +52,9 @@ const fetchRejectingToken = (status: number, tokens: string[]) => (_owner: strin
 describe('import — token fallback', () => {
   test('a token GitHub rejects is retried anonymously', async ({ expect }) => {
     const tokens: string[] = [];
-    const result = await run(fetchPullRequestWithFallback(reference, 'dead-token', fetchRejectingToken(401, tokens)));
+    const result = await run(
+      fetchPullRequestWithFallback(reference, connectedAs('dead-token'), fetchRejectingToken(401, tokens)),
+    );
 
     expect(result).toEqual(pull);
     expect(tokens).toEqual(['dead-token', '']);
@@ -58,7 +63,7 @@ describe('import — token fallback', () => {
   test('a token that works is not retried', async ({ expect }) => {
     const tokens: string[] = [];
     const result = await run(
-      fetchPullRequestWithFallback(reference, 'live-token', (_owner, _repo, _number) =>
+      fetchPullRequestWithFallback(reference, connectedAs('live-token'), (_owner, _repo, _number) =>
         Effect.gen(function* () {
           tokens.push((yield* GitHubApi.GitHubCredentials).token);
           return pull;
@@ -73,7 +78,7 @@ describe('import — token fallback', () => {
   test('unauthorized anonymously too reports the repository as inaccessible', async ({ expect }) => {
     const tokens: string[] = [];
     const error = await run(
-      fetchPullRequestWithFallback(reference, 'dead-token', (_owner, _repo, _number) =>
+      fetchPullRequestWithFallback(reference, connectedAs('dead-token'), (_owner, _repo, _number) =>
         Effect.gen(function* () {
           tokens.push((yield* GitHubApi.GitHubCredentials).token);
           return yield* Effect.fail(statusError(401));
@@ -101,7 +106,7 @@ describe('import — token fallback', () => {
     test(`a public pull request survives a token scoped away from it (${status})`, async ({ expect }) => {
       const tokens: string[] = [];
       const result = await run(
-        fetchPullRequestWithFallback(reference, 'scoped-token', fetchRejectingToken(status, tokens)),
+        fetchPullRequestWithFallback(reference, connectedAs('scoped-token'), fetchRejectingToken(status, tokens)),
       );
 
       expect(result).toEqual(pull);
@@ -111,7 +116,7 @@ describe('import — token fallback', () => {
 
   test('a pull request unreachable with and without the token keeps the token status', async ({ expect }) => {
     const error = await run(
-      fetchPullRequestWithFallback(reference, 'scoped-token', () => Effect.fail(statusError(404))),
+      fetchPullRequestWithFallback(reference, connectedAs('scoped-token'), () => Effect.fail(statusError(404))),
     ).then(
       () => undefined,
       (error) => error,
@@ -128,7 +133,7 @@ describe('import — token fallback', () => {
   test('a space with no connection reports itself as unconnected', async ({ expect }) => {
     const tokens: string[] = [];
     const error = await run(
-      fetchPullRequestWithFallback(reference, '', (_owner, _repo, _number) =>
+      fetchPullRequestWithFallback(reference, { token: '', connected: false }, (_owner, _repo, _number) =>
         Effect.gen(function* () {
           tokens.push((yield* GitHubApi.GitHubCredentials).token);
           return yield* Effect.fail(statusError(404));
@@ -147,5 +152,22 @@ describe('import — token fallback', () => {
     });
     // No credential to fall back from, so the anonymous request is the only one made.
     expect(tokens).toEqual(['']);
+  });
+
+  // An App connection EDGE will no longer mint for: the repair is reconnecting, not connecting.
+  test('a connection with no usable token reports it as unavailable', async ({ expect }) => {
+    const error = await run(
+      fetchPullRequestWithFallback(reference, { token: '', connected: true }, () => Effect.fail(statusError(404))),
+    ).then(
+      () => undefined,
+      (error) => error,
+    );
+
+    expect(GitHubRepoInaccessibleError.is(error)).toBe(true);
+    expect((error as GitHubRepoInaccessibleError).context).toMatchObject({
+      status: 404,
+      connected: true,
+      tokenUnavailable: true,
+    });
   });
 });

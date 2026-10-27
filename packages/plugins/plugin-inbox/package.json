@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-inbox",
-  "version": "0.14.0",
+  "version": "0.16.0",
   "description": "DXOS Email inbox plugin",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -305,7 +305,6 @@
     "@dxos/react-ui-mosaic": "workspace:*",
     "@dxos/react-ui-query": "workspace:*",
     "@dxos/react-ui-search": "workspace:*",
-    "@dxos/react-ui-table": "workspace:*",
     "@dxos/schema": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",

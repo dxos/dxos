@@ -60,6 +60,17 @@ describe('extractIndexableText', () => {
     expect(text).toBe('Task');
   });
 
+  test('omits encoded bytes but keeps text beside them', () => {
+    const text = extractIndexableText({
+      id: EntityId.random(),
+      [ATTR_TYPE]: TYPE_PERSON,
+      title: 'Attachment',
+      blob: { '/': { bytes: 'AQID' } },
+    });
+
+    expect(text).toBe('Attachment');
+  });
+
   test('descends into nested objects and arrays', () => {
     const text = extractIndexableText({
       id: EntityId.random(),

@@ -95,8 +95,8 @@ export type MediaResult = {
  * storage backend. An image the loader cannot reach keeps its source URL as an external blob, so the
  * space is still complete and the file says where it came from.
  */
-export const makeMedia = (loadAsset: AssetLoader): SampleSpace.Phase<MediaResult> =>
-  SampleSpace.phase('media', {
+export const makeMedia = (loadAsset: AssetLoader): SampleSpace.Partial<MediaResult> =>
+  SampleSpace.partial('media', {
     schemas: [File.File, Blob.Blob, Video.Video],
     run: () =>
       Effect.gen(function* () {

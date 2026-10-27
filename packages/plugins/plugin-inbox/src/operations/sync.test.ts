@@ -84,7 +84,9 @@ describe('sync pipeline harness', () => {
     const accessToken = db.add(AccessToken.make({ source: 'test.mail', token: 'token' }));
     const connection = db.add(Connection.make({ connectorId: 'test', accessToken: Ref.make(accessToken) }));
     // The binding's target is unused by the pipeline; the feed stands in as a convenient local root.
-    const binding = db.add(Cursor.makeExternal({ source: connection.accessToken, target: Ref.make(feed) }));
+    const binding = db.add(
+      Cursor.makeExternal({ source: Connection.getAccessToken(connection), target: Ref.make(feed) }),
+    );
     // Contact extraction is an allow-list — an unknown individual is not materialised — so give the
     // fixture's sender domains an Organization. These tests are about dedup and recovery, not about
     // the extraction policy (which has its own tests in `@dxos/extractor-lib`).

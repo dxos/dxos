@@ -6,11 +6,12 @@
 
 import * as Schema from 'effect/Schema';
 
+import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
+import { Spec } from '@dxos/types';
 
 import * as CodeProject from './CodeProject.ts';
-import * as Spec from './Spec.ts';
 
 export const VerifySpec = Operation.make({
   meta: {
@@ -259,4 +260,40 @@ export const RunBuild = Operation.make({
     diagnostics: Schema.Array(Diagnostic),
   }),
   services: [Database.Service],
+});
+
+export const ImportSpec = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.code.importSpec'),
+    name: 'Import Spec',
+    description:
+      'Links a spec in a local checkout to a Spec object, keyed `github:<owner>/<repo>/<path>`; the spec then syncs ' +
+      'both ways with the file. Returns the existing Spec when one already carries the key.',
+    icon: 'ph--download-simple--regular',
+  },
+  input: Schema.Struct({
+    key: Schema.String.annotate({
+      description: 'The spec location, e.g. `github:dxos/dxos/packages/core/echo/echo/SPEC.mdl`.',
+    }),
+  }),
+  output: Schema.Struct({
+    spec: Ref.Ref(Spec.Spec),
+    created: Schema.Boolean,
+  }),
+  services: [Database.Service, Capability.Service],
+});
+
+export const ListLocalSpecs = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.code.listLocalSpecs'),
+    name: 'List Local Specs',
+    description: 'Lists the `.mdl` specs in every local checkout spec sync knows, as `github:` keys.',
+    icon: 'ph--folder-open--regular',
+  },
+  input: Schema.Struct({}),
+  output: Schema.Struct({
+    roots: Schema.Array(Schema.Struct({ repo: Schema.String, path: Schema.String })),
+    keys: Schema.Array(Schema.String),
+  }),
+  services: [Capability.Service],
 });

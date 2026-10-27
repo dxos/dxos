@@ -4,16 +4,15 @@
 
 import React, { type MouseEvent, type PropsWithChildren, type ReactNode } from 'react';
 
-import { Section } from '@dxos/react-ui-components';
+import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Banner from '@dxos/react-ui/Banner';
 import * as Button from '@dxos/react-ui/Button';
+import * as Fieldset from '@dxos/react-ui/Fieldset';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
-import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Typography from '@dxos/react-ui/Typography';
 
 import { meta } from '#meta';
@@ -35,20 +34,19 @@ const AgentActivityRoot = ({ role, toolbar, error, children }: AgentActivityRoot
   return (
     <Panel.Root role={role}>
       {toolbar && <Panel.Header>{toolbar}</Panel.Header>}
+      {/* The form's frame and field spacing, so the sections read as the Agent form beside them does. */}
       <Panel.Body asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport asChild>
-            <Layout.Container gap='lg'>
-              {error && (
-                <Banner.Root valence='error'>
-                  <Banner.Title>{t('activity-error.label')}</Banner.Title>
-                  <Banner.Body>{error}</Banner.Body>
-                </Banner.Root>
-              )}
-              {children}
-            </Layout.Container>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
+        <Form.Viewport scroll>
+          <Layout.Container gutter='inherit' gap='sm'>
+            {error && (
+              <Banner.Root valence='error'>
+                <Banner.Title>{t('activity-error.label')}</Banner.Title>
+                <Banner.Body>{error}</Banner.Body>
+              </Banner.Root>
+            )}
+            {children}
+          </Layout.Container>
+        </Form.Viewport>
       </Panel.Body>
     </Panel.Root>
   );
@@ -86,6 +84,8 @@ const AgentActivityToolbar = ({
     () =>
       MenuBuilder.make()
         .root({ label: ['activity-actions.label', { ns: meta.profile.key }] })
+        // The panel's name leads and takes the free space, which keeps the actions at the end.
+        .text('title', { label: ['activity-companion.label', { ns: meta.profile.key }] })
         .action(
           'refresh',
           {
@@ -108,20 +108,7 @@ const AgentActivityToolbar = ({
     [running, connectable, busy, onStart, onStop, onRefresh],
   );
 
-  const { t } = Hooks.useTranslation(meta.profile.key);
-  return (
-    <ActionToolbar
-      {...menuActions}
-      attendableId={attendableId}
-      alwaysActive={attendableId === undefined}
-      // The panel's name leads and takes the free space, which keeps the actions at the end.
-      start={
-        <>
-          <Toolbar.Text>{t('activity-companion.label')}</Toolbar.Text>
-        </>
-      }
-    />
-  );
+  return <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive={attendableId === undefined} />;
 };
 
 AgentActivityToolbar.displayName = 'AgentActivity.Toolbar';
@@ -141,17 +128,17 @@ type AgentActivityListProps = PropsWithChildren<{
 
 /** A labelled list of rows; Channels, Skills and Conversations share it so their headings and rows align. */
 const AgentActivityList = ({ label, ids, empty, children }: AgentActivityListProps) => (
-  <Section.Root>
-    <Section.Label>{label}</Section.Label>
+  <Fieldset.Root>
+    <Fieldset.Legend>{label}</Fieldset.Legend>
     {ids.length === 0 ? (
-      <Section.Empty>{empty}</Section.Empty>
+      <Typography.Text tone='muted'>{empty}</Typography.Text>
     ) : (
       // Rows render their own text, so an option carries only the id Ark keys it by.
       <Listbox.Root items={ids.map((id) => ({ value: id, label: id }))}>
-        <Listbox.Content scroll={false}>{children}</Listbox.Content>
+        <Listbox.Content>{children}</Listbox.Content>
       </Listbox.Root>
     )}
-  </Section.Root>
+  </Fieldset.Root>
 );
 
 AgentActivityList.displayName = 'AgentActivity.List';

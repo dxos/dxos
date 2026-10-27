@@ -15,10 +15,11 @@ import * as Obj from './Obj.ts';
 import * as Type from './Type.ts';
 
 export class Tag extends Type.makeObject<Tag>(internal.TagTypeDXN)(
-  Schema.Struct({
+  {
     label: Schema.String,
     hue: Schema.optional(Schema.String), // TODO(burdon): Color name?
-  }).pipe(internal.LabelAnnotation.set(['label'])),
+  },
+  internal.LabelAnnotation.set(['label']),
 ) {}
 
 /**
@@ -81,8 +82,10 @@ export const isProviderTag = (tag: Type.InstanceType<typeof Tag> | Obj.Snapshot<
  *
  * @performance O(label length) locale comparison.
  */
-export const sortTags = ({ label: a }: Type.InstanceType<typeof Tag>, { label: b }: Type.InstanceType<typeof Tag>) =>
-  a.localeCompare(b);
+export const sortTags = (
+  { label: a }: Pick<Type.InstanceType<typeof Tag>, 'label'>,
+  { label: b }: Pick<Type.InstanceType<typeof Tag>, 'label'>,
+) => a.localeCompare(b);
 
 /**
  * Convert a tag map into a list sorted by label.

@@ -27,6 +27,45 @@ DX_STORYBOOK_BROWSER=webkit pnpm --dir packages/ui/react-ui exec vitest run --pr
 Measured on 1.43.3: it fails without the patch and passes with it, in WebKit only. A pass without the
 patch means the upgrade carries the fix, and the patch and this section can go.
 
+## `@zag-js/combobox@1.43.3`
+
+**What.** `syncInputValue` skips writing a value the user typed earlier once the field already holds a
+later keystroke.
+
+**Why.** Zag handles each event in a microtask, so the state a keystroke sets renders at default
+priority, and the effect that copies that state into the field can run after the next keystroke has
+already landed. It then writes the older value back and the newer key is gone: on a slow device,
+typing "Offline mode" into a picker could leave "Offlie mode". The patch records the values each
+`INPUT.CHANGE` reported and skips only a write of one of those that is older than what the field
+shows, so an `inputValue` the caller sets (a cleared or transformed query) is still written.
+Unchanged in zag 1.46.0.
+
+**Retesting after a zag upgrade.** `CreateFeature` in
+[`ProjectFeatures.stories.tsx`](../packages/plugins/plugin-projects/src/containers/ProjectFeatures/ProjectFeatures.stories.tsx)
+types a feature name into a picker and needs the race to lose; it takes a slow CPU to hit it. Drop
+this patch's line from `pnpm-workspace.yaml`, reinstall, and run it repeatedly:
+
+```bash
+for i in $(seq 8); do DX_STORYBOOK_CPU_THROTTLE=4 pnpm --dir packages/plugins/plugin-projects exec vitest run --project=storybook src/containers/ProjectFeatures -t 'Create Feature'; done
+```
+
+Measured on 1.43.3: three of eight runs fail without the patch, twelve of twelve pass with it. If the
+upgrade's `syncInputValue` checks for `INPUT.CHANGE` before writing, the patch and this section can go.
+
+## `memory-pager@1.5.0`
+
+**What.** Starts each level of the pager's radix tree as an empty array that grows as pages are set,
+instead of preallocating all 32,768 slots.
+
+**Why.** hypercore 9 (vendored in `@dxos/vendor-hypercore`) builds four pagers per feed for its
+bitfields, and each preallocated level cost 128 KB in V8 (256 KB in JSC) however few pages the feed
+held. On a profile with ~120 feeds that was 62 MB of the ECHO worker's heap in Chromium, and about
+twice that in the WebKit the desktop app runs. Lookups and `toBuffer` are unchanged: a slot never
+set reads `undefined` either way.
+
+**Retesting after an upgrade.** memory-pager has not had a release since 1.5.0. If one appears, check
+its constructor: a `new Array(32768)` there means the patch is still needed.
+
 ## `dfx@1.0.15`
 
 **What.** Rewrites dfx's `effect/unstable/*` imports to the top-level paths Effect 4.0.0 moved them to
@@ -39,19 +78,3 @@ without the patch `plugin-discord` fails to typecheck and its layers fail to loa
 **Retesting after a dfx upgrade.** If the new release's `dist` has no `effect/unstable/` imports, drop
 this patch's line from `pnpm-workspace.yaml`, reinstall, and run `moon run plugin-discord:build`. A
 clean build means the patch and this section can go.
-
-## `effect@4.0.0`
-
-**What.** Lets a decision carry images: `DecisionModel.decide(definition, { input, images })` passes
-them to the provider as `ProviderOptions.images`, and `DecisionModel.make({ supportsImages })` says
-whether the provider can read them. A model made without it fails a call that passes images with
-`AiError.InvalidUserInputError`, so a text-only model never answers about a picture it did not see.
-
-**Why.** Cloudflare's Clef decision models read up to four images beside the state, which is how the
-illustrator's judges see a diagram as drawn instead of an ASCII rendering of it. Effect's
-`DecisionModel` hands a provider only the encoded state, so there was no way to send one.
-
-**Retesting after an effect upgrade.** If the new release's `effect/ai/DecisionModel` exports `Image`
-and `DecideOptions` has `images`, drop this patch's line from `pnpm-workspace.yaml`, reinstall, and
-run `moon run ai:test -- src/resolvers/typesafe/TypeSafeResolver.test.ts`. A pass means the patch and
-this section can go.

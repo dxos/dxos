@@ -1,5 +1,136 @@
 # @dxos/plugin-routine
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/plugin-space@0.16.0
+  - @dxos/client@0.16.0
+  - @dxos/react-client@0.16.0
+  - @dxos/assistant-toolkit@0.16.0
+  - @dxos/plugin-client@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-graph@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-attention@0.16.0
+  - @dxos/react-ui-components@0.16.0
+  - @dxos/react-ui-editor@0.16.0
+  - @dxos/react-ui-form@0.16.0
+  - @dxos/react-ui-list@0.16.0
+  - @dxos/react-ui-menu@0.16.0
+  - @dxos/react-ui-search@0.16.0
+  - @dxos/react-ui-syntax-highlighter@0.16.0
+  - @dxos/agent-runtime@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/compute-runtime@0.16.0
+  - @dxos/edge-compute@0.16.0
+  - @dxos/echo-doc@0.16.0
+  - @dxos/echo-react@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/ui-editor@0.16.0
+  - @dxos/ai@0.16.0
+  - @dxos/cli-util@0.16.0
+  - @dxos/async@0.16.0
+  - @dxos/context@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/graph@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/react-hooks@0.16.0
+  - @dxos/ui@0.16.0
+  - @dxos/ui-theme@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- b82150a: An operation invoked with `on: 'edge'` now runs as one request to EDGE's operation host (`POST /functions/dxn:<key>`) instead of spawning a process there, so a call such as the Brain panel's `InspectBrain` poll no longer creates a Durable Object per invocation. `RemoteOperationInvoker.invoke` takes the space per call and carries input and output in their wire form, which the invoker encodes and decodes with the operation's schemas. `@dxos/plugin-routine` provides the EDGE invoker once for the application instead of per space, and `EdgeOperationInvoker` presents the current identity on every call.
+- Updated dependencies [3b03db7]
+- Updated dependencies [5490cbc]
+- Updated dependencies [b7504c9]
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [b82150a]
+- Updated dependencies [cd70a43]
+- Updated dependencies [0d81167]
+- Updated dependencies [71fc002]
+- Updated dependencies [1e9c017]
+- Updated dependencies [1b33a84]
+- Updated dependencies [16bde33]
+- Updated dependencies [1bc475e]
+- Updated dependencies [5e3e00c]
+- Updated dependencies [d250ed2]
+- Updated dependencies [55bdf55]
+- Updated dependencies [ed1039a]
+- Updated dependencies [9b9a4ca]
+- Updated dependencies [b7fe13f]
+- Updated dependencies [37edd53]
+- Updated dependencies [098a536]
+- Updated dependencies [6a02061]
+- Updated dependencies [1bddc93]
+- Updated dependencies [25af912]
+- Updated dependencies [7b47951]
+- Updated dependencies [8190cc5]
+- Updated dependencies [e398906]
+- Updated dependencies [60ef4ec]
+- Updated dependencies [2b6a93a]
+- Updated dependencies [743604d]
+  - @dxos/ui-editor@0.15.0
+  - @dxos/compute-runtime@0.15.0
+  - @dxos/agent-runtime@0.15.0
+  - @dxos/plugin-space@0.15.0
+  - @dxos/react-ui@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/edge-compute@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/ai@0.15.0
+  - @dxos/plugin-client@0.15.0
+  - @dxos/react-ui-components@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/react-ui-editor@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/echo-react@0.15.0
+  - @dxos/client@0.15.0
+  - @dxos/react-ui-form@0.15.0
+  - @dxos/assistant-toolkit@0.15.0
+  - @dxos/app-graph@0.15.0
+  - @dxos/react-client@0.15.0
+  - @dxos/react-ui-attention@0.15.0
+  - @dxos/react-ui-list@0.15.0
+  - @dxos/react-ui-menu@0.15.0
+  - @dxos/react-ui-search@0.15.0
+  - @dxos/react-ui-syntax-highlighter@0.15.0
+  - @dxos/echo-doc@0.15.0
+  - @dxos/cli-util@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/graph@0.15.0
+  - @dxos/react-hooks@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/ui@0.15.0
+  - @dxos/ui-theme@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

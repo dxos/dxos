@@ -57,26 +57,30 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         {({ items }) => (
           <>
             <OrderedList.Label>Letters</OrderedList.Label>
-            <OrderedList.Content>
-              {items.map((item) => (
-                <OrderedList.Item
-                  key={item.id}
-                  id={item.id}
-                  open={expandedId === item.id}
-                  onOpenChange={(open) => setExpandedId(open ? item.id : undefined)}
-                  data-testid={`row-${item.id}-${size}`}
-                >
-                  <OrderedList.DragHandle />
-                  <OrderedList.ItemText />
-                  <SystemButton.Remove
-                    onClick={() => setItems((items) => items.filter((entry) => entry.id !== item.id))}
-                  />
-                  <OrderedList.Detail>
-                    <Typography.Text data-testid={`panel-${item.id}-${size}`}>Details for {item.label}</Typography.Text>
-                  </OrderedList.Detail>
-                </OrderedList.Item>
-              ))}
-            </OrderedList.Content>
+            <OrderedList.Viewport>
+              <OrderedList.Content>
+                {items.map((item) => (
+                  <OrderedList.Item
+                    key={item.id}
+                    id={item.id}
+                    open={expandedId === item.id}
+                    onOpenChange={(open) => setExpandedId(open ? item.id : undefined)}
+                    data-testid={`row-${item.id}-${size}`}
+                  >
+                    <OrderedList.DragHandle />
+                    <OrderedList.ItemText />
+                    <SystemButton.Remove
+                      onClick={() => setItems((items) => items.filter((entry) => entry.id !== item.id))}
+                    />
+                    <OrderedList.Detail>
+                      <Typography.Text data-testid={`panel-${item.id}-${size}`}>
+                        Details for {item.label}
+                      </Typography.Text>
+                    </OrderedList.Detail>
+                  </OrderedList.Item>
+                ))}
+              </OrderedList.Content>
+            </OrderedList.Viewport>
           </>
         )}
       </OrderedList.Root>
@@ -89,13 +93,15 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
 const SimpleStory = () => (
   <OrderedList.Root items={ITEMS} getLabel={getLabel}>
     {({ items }) => (
-      <OrderedList.Content aria-label='Simple'>
-        {items.map((item) => (
-          <OrderedList.Item key={item.id} id={item.id}>
-            <OrderedList.ItemText />
-          </OrderedList.Item>
-        ))}
-      </OrderedList.Content>
+      <OrderedList.Viewport>
+        <OrderedList.Content aria-label='Simple'>
+          {items.map((item) => (
+            <OrderedList.Item key={item.id} id={item.id}>
+              <OrderedList.ItemText />
+            </OrderedList.Item>
+          ))}
+        </OrderedList.Content>
+      </OrderedList.Viewport>
     )}
   </OrderedList.Root>
 );
@@ -106,17 +112,19 @@ const PreviewHandleStory = () => {
   return (
     <OrderedList.Root items={items} getLabel={getLabel} onMove={move} dragPreview='clone'>
       {({ items }) => (
-        <OrderedList.Content aria-label='Previews'>
-          {items.map((item) => (
-            <OrderedList.Item key={item.id} id={item.id}>
-              <OrderedList.DragHandle asChild>
-                <div className='p-2 rounded-sm bg-input-surface' data-testid={`preview-${item.id}`}>
-                  {item.label}
-                </div>
-              </OrderedList.DragHandle>
-            </OrderedList.Item>
-          ))}
-        </OrderedList.Content>
+        <OrderedList.Viewport>
+          <OrderedList.Content aria-label='Previews'>
+            {items.map((item) => (
+              <OrderedList.Item key={item.id} id={item.id}>
+                <OrderedList.DragHandle asChild>
+                  <div className='p-2 rounded-sm bg-input-surface' data-testid={`preview-${item.id}`}>
+                    {item.label}
+                  </div>
+                </OrderedList.DragHandle>
+              </OrderedList.Item>
+            ))}
+          </OrderedList.Content>
+        </OrderedList.Viewport>
       )}
     </OrderedList.Root>
   );
@@ -129,14 +137,16 @@ const SelectableStory = () => {
   return (
     <OrderedList.Root items={items} getLabel={getLabel} onMove={move} value={selected} onValueChange={setSelected}>
       {({ items }) => (
-        <OrderedList.Content aria-label='Selectable'>
-          {items.map((item) => (
-            <OrderedList.Item key={item.id} id={item.id}>
-              <OrderedList.DragHandle />
-              <OrderedList.ItemText />
-            </OrderedList.Item>
-          ))}
-        </OrderedList.Content>
+        <OrderedList.Viewport>
+          <OrderedList.Content aria-label='Selectable'>
+            {items.map((item) => (
+              <OrderedList.Item key={item.id} id={item.id}>
+                <OrderedList.DragHandle />
+                <OrderedList.ItemText />
+              </OrderedList.Item>
+            ))}
+          </OrderedList.Content>
+        </OrderedList.Viewport>
       )}
     </OrderedList.Root>
   );
@@ -149,14 +159,16 @@ const ScrollableStory = () => {
     <div data-place='full' className='h-64 flex flex-col'>
       <OrderedList.Root items={items} getLabel={getLabel} onMove={move}>
         {({ items }) => (
-          <OrderedList.Content aria-label='Scrollable'>
-            {items.map((item) => (
-              <OrderedList.Item key={item.id} id={item.id}>
-                <OrderedList.DragHandle />
-                <OrderedList.ItemText />
-              </OrderedList.Item>
-            ))}
-          </OrderedList.Content>
+          <OrderedList.Viewport>
+            <OrderedList.Content aria-label='Scrollable'>
+              {items.map((item) => (
+                <OrderedList.Item key={item.id} id={item.id}>
+                  <OrderedList.DragHandle />
+                  <OrderedList.ItemText />
+                </OrderedList.Item>
+              ))}
+            </OrderedList.Content>
+          </OrderedList.Viewport>
         )}
       </OrderedList.Root>
     </div>
@@ -171,14 +183,16 @@ const VirtualStory = () => {
       <div data-place='full' className='h-64 flex flex-col'>
         <OrderedList.Root items={items} getLabel={getLabel} onMove={move} virtual='fixed'>
           {({ items }) => (
-            <OrderedList.Content aria-label='Many'>
-              {items.map((item) => (
-                <OrderedList.Item key={item.id} id={item.id}>
-                  <OrderedList.DragHandle />
-                  <OrderedList.ItemText />
-                </OrderedList.Item>
-              ))}
-            </OrderedList.Content>
+            <OrderedList.Viewport>
+              <OrderedList.Content aria-label='Many'>
+                {items.map((item) => (
+                  <OrderedList.Item key={item.id} id={item.id}>
+                    <OrderedList.DragHandle />
+                    <OrderedList.ItemText />
+                  </OrderedList.Item>
+                ))}
+              </OrderedList.Content>
+            </OrderedList.Viewport>
           )}
         </OrderedList.Root>
       </div>
@@ -196,23 +210,27 @@ const CheckboxWithRemoveStory = () => {
     <OrderedList.Root items={items} getLabel={getLabel}>
       {({ items }) => (
         <>
-          <OrderedList.Content aria-label='Todos'>
-            {items.map((item) => (
-              <OrderedList.Item key={item.id} id={item.id}>
-                <Input.Checkbox
-                  aria-label={`Done ${item.label}`}
-                  checked={item.done}
-                  onCheckedChange={({ checked }) =>
-                    setItems((items) =>
-                      items.map((todo) => (todo.id === item.id ? { ...todo, done: checked === true } : todo)),
-                    )
-                  }
-                />
-                <OrderedList.ItemText tone={item.done ? 'muted' : undefined} />
-                <SystemButton.Remove onClick={() => setItems((items) => items.filter((todo) => todo.id !== item.id))} />
-              </OrderedList.Item>
-            ))}
-          </OrderedList.Content>
+          <OrderedList.Viewport>
+            <OrderedList.Content aria-label='Todos'>
+              {items.map((item) => (
+                <OrderedList.Item key={item.id} id={item.id}>
+                  <Input.Checkbox
+                    aria-label={`Done ${item.label}`}
+                    checked={item.done}
+                    onCheckedChange={({ checked }) =>
+                      setItems((items) =>
+                        items.map((todo) => (todo.id === item.id ? { ...todo, done: checked === true } : todo)),
+                      )
+                    }
+                  />
+                  <OrderedList.ItemText tone={item.done ? 'muted' : undefined} />
+                  <SystemButton.Remove
+                    onClick={() => setItems((items) => items.filter((todo) => todo.id !== item.id))}
+                  />
+                </OrderedList.Item>
+              ))}
+            </OrderedList.Content>
+          </OrderedList.Viewport>
           <OrderedList.Empty icon='ph--check-circle--regular'>Nothing to do</OrderedList.Empty>
         </>
       )}
@@ -233,17 +251,19 @@ const StableIdsStory = () => {
         onMove={(from, to) => setValues(move(from, to))}
       >
         {({ items }) => (
-          <OrderedList.Content aria-label='Directions'>
-            {items.map(({ id, value }) => (
-              <OrderedList.Item key={id} id={id} collapsible>
-                <OrderedList.DragHandle />
-                <OrderedList.ItemText />
-                <OrderedList.Detail>
-                  <Typography.Text>Heading {value}</Typography.Text>
-                </OrderedList.Detail>
-              </OrderedList.Item>
-            ))}
-          </OrderedList.Content>
+          <OrderedList.Viewport>
+            <OrderedList.Content aria-label='Directions'>
+              {items.map(({ id, value }) => (
+                <OrderedList.Item key={id} id={id} collapsible>
+                  <OrderedList.DragHandle />
+                  <OrderedList.ItemText />
+                  <OrderedList.Detail>
+                    <Typography.Text>Heading {value}</Typography.Text>
+                  </OrderedList.Detail>
+                </OrderedList.Item>
+              ))}
+            </OrderedList.Content>
+          </OrderedList.Viewport>
         )}
       </OrderedList.Root>
       <Typography.Text data-testid='directions'>{values.join(' ')}</Typography.Text>
@@ -255,17 +275,19 @@ const StableIdsStory = () => {
 const ColumnsStory = () => (
   <OrderedList.Root items={ITEMS} getLabel={getLabel} columns='var(--dx-block-size) minmax(0, 1fr) 6rem'>
     {({ items }) => (
-      <OrderedList.Content aria-label='Columns'>
-        {items.map((item) => (
-          <OrderedList.Item key={item.id} id={item.id} data-testid={`column-row-${item.id}`}>
-            <OrderedList.DragHandle />
-            <OrderedList.ItemText />
-            <Typography.Text tone='muted' data-testid={`column-${item.id}`}>
-              {item.label.length} letters
-            </Typography.Text>
-          </OrderedList.Item>
-        ))}
-      </OrderedList.Content>
+      <OrderedList.Viewport>
+        <OrderedList.Content aria-label='Columns'>
+          {items.map((item) => (
+            <OrderedList.Item key={item.id} id={item.id} data-testid={`column-row-${item.id}`}>
+              <OrderedList.DragHandle />
+              <OrderedList.ItemText />
+              <Typography.Text tone='muted' data-testid={`column-${item.id}`}>
+                {item.label.length} letters
+              </Typography.Text>
+            </OrderedList.Item>
+          ))}
+        </OrderedList.Content>
+      </OrderedList.Viewport>
     )}
   </OrderedList.Root>
 );
@@ -294,28 +316,30 @@ const NestedStory = () => {
   return (
     <OrderedList.Root items={groups} getLabel={getLabel} onMove={move}>
       {({ items }) => (
-        <OrderedList.Content aria-label='Groups'>
-          {items.map((group) => (
-            <OrderedList.Item key={group.id} id={group.id} collapsible>
-              <OrderedList.DragHandle />
-              <OrderedList.ItemText />
-              <OrderedList.Detail>
-                <OrderedList.Root items={group.children} getLabel={getLabel} onMove={moveChild(group.id)}>
-                  {({ items }) => (
-                    <OrderedList.Content aria-label={group.label} scroll={false}>
-                      {items.map((item) => (
-                        <OrderedList.Item key={item.id} id={item.id}>
-                          <OrderedList.DragHandle />
-                          <OrderedList.ItemText />
-                        </OrderedList.Item>
-                      ))}
-                    </OrderedList.Content>
-                  )}
-                </OrderedList.Root>
-              </OrderedList.Detail>
-            </OrderedList.Item>
-          ))}
-        </OrderedList.Content>
+        <OrderedList.Viewport>
+          <OrderedList.Content aria-label='Groups'>
+            {items.map((group) => (
+              <OrderedList.Item key={group.id} id={group.id} collapsible>
+                <OrderedList.DragHandle />
+                <OrderedList.ItemText />
+                <OrderedList.Detail>
+                  <OrderedList.Root items={group.children} getLabel={getLabel} onMove={moveChild(group.id)}>
+                    {({ items }) => (
+                      <OrderedList.Content aria-label={group.label}>
+                        {items.map((item) => (
+                          <OrderedList.Item key={item.id} id={item.id}>
+                            <OrderedList.DragHandle />
+                            <OrderedList.ItemText />
+                          </OrderedList.Item>
+                        ))}
+                      </OrderedList.Content>
+                    )}
+                  </OrderedList.Root>
+                </OrderedList.Detail>
+              </OrderedList.Item>
+            ))}
+          </OrderedList.Content>
+        </OrderedList.Viewport>
       )}
     </OrderedList.Root>
   );

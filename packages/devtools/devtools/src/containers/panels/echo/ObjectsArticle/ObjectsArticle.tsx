@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import { formatDistanceToNow } from 'date-fns';
 import * as Atom from 'effect/reactivity/Atom';
-import React, { type ComponentRef, useCallback, useMemo, useRef, useState } from 'react';
+import React, { type ComponentRef, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type Database, Entity, Filter, Format, Obj, Query, Tag, Type } from '@dxos/echo';
 import { type VersionDiff, checkoutVersion, getEditHistoryWithDiffs } from '@dxos/echo-client';
@@ -30,6 +30,7 @@ import {
   ObjectsTree,
   Placeholder,
   PropertyTree,
+  elideBytes,
   findBlob,
 } from '../../../../components/index.ts';
 import { DataSpaceSelector } from '../../../../containers/index.ts';
@@ -93,7 +94,8 @@ export const ObjectsArticle = ({ role, ...props }: ArticleProps & { space?: Spac
   // An edit keeps the entity's identity, so its atom is what tells the memos below to recompute.
   const selectedAtom = useMemo(() => (selected ? Entity.atom(selected) : NO_SNAPSHOT), [selected]);
   const snapshot = useAtomValue(selectedAtom);
-  const history = useEditHistory(selected, snapshot);
+  const [showHistory, setShowHistory] = useState(false);
+  const history = useEditHistory(selected, snapshot, showHistory);
   const displayed = useMemo(() => {
     const heads = version !== undefined ? history[version]?.heads : undefined;
     return heads && Obj.isObject(selected) ? checkoutVersion(selected, heads) : selected;
@@ -107,6 +109,11 @@ export const ObjectsArticle = ({ role, ...props }: ArticleProps & { space?: Spac
 
   const handleSelect = useCallback((id: string | undefined) => {
     setSelectedId(id);
+    setVersion(undefined);
+  }, []);
+  const handleShowHistoryChange = useCallback((show: boolean) => {
+    setShowHistory(show);
+    // A version is an index into the history, which is not kept while the pane is closed.
     setVersion(undefined);
   }, []);
   const handleViewChange = useCallback((value: string) => isView(value) && setView(value), []);
@@ -165,7 +172,9 @@ export const ObjectsArticle = ({ role, ...props }: ArticleProps & { space?: Spac
               value={inspected}
               db={db}
               history={history}
+              showHistory={showHistory}
               version={version}
+              onShowHistoryChange={handleShowHistoryChange}
               onVersionChange={setVersion}
               onSelect={handleSelect}
             />
@@ -270,19 +279,38 @@ type InspectorProps = {
   value: unknown;
   db: Database.Database;
   history: VersionDiff[];
+  showHistory: boolean;
   version?: number;
+  onShowHistoryChange: (show: boolean) => void;
   onVersionChange: (version: number | undefined) => void;
   onSelect: (id: EntityId) => void;
 };
 
 /** The selected entity's header, its properties (at the live or a past version), and its edit history. */
-const Inspector = ({ entity, value, db, history, version, onVersionChange, onSelect }: InspectorProps) => {
+const Inspector = ({
+  entity,
+  value,
+  db,
+  history,
+  showHistory,
+  version,
+  onShowHistoryChange,
+  onVersionChange,
+  onSelect,
+}: InspectorProps) => {
   const uri = Entity.getURI(entity).toString();
   const icon = Entity.getIcon(entity);
   const deleted = Entity.isDeleted(entity);
 
   return (
-    <div className='grid grid-rows-[min-content_minmax(0,1fr)_minmax(0,12rem)] overflow-hidden'>
+    <div
+      className={mx(
+        'grid overflow-hidden',
+        showHistory
+          ? 'grid-rows-[min-content_minmax(0,1fr)_minmax(0,12rem)]'
+          : 'grid-rows-[min-content_minmax(0,1fr)_min-content]',
+      )}
+    >
       <div className='flex flex-col gap-1 p-2 border-b border-separator'>
         <div className='flex items-center gap-2 min-w-0'>
           <Icon.Icon icon={icon?.icon ?? 'ph--cube--regular'} size='md' />
@@ -315,74 +343,118 @@ const Inspector = ({ entity, value, db, history, version, onVersionChange, onSel
       </div>
       <ScrollArea.Root>
         <ScrollArea.Viewport>
-          <PropertyTree value={value} db={db} onNavigate={onSelect} />
+          <PropertyTree key={entity.id} value={value} db={db} onNavigate={onSelect} />
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-      <History history={history} version={version} onVersionChange={onVersionChange} />
+      <History
+        history={history}
+        open={showHistory}
+        version={version}
+        onOpenChange={onShowHistoryChange}
+        onVersionChange={onVersionChange}
+      />
     </div>
   );
 };
 
-const useEditHistory = (entity: Entity.Unknown | undefined, snapshot: unknown): VersionDiff[] =>
-  useMemo(() => {
-    if (!Obj.isObject(entity)) {
-      return [];
+/**
+ * The edit history, read only while `enabled` (the pane is open): it replays every change in the
+ * document, so its cost grows with the history. A new selection reads at once; edits to the same
+ * object are folded into one read per {@link HISTORY_DEBOUNCE_MS}.
+ */
+const useEditHistory = (entity: Entity.Unknown | undefined, snapshot: unknown, enabled: boolean): VersionDiff[] => {
+  const [history, setHistory] = useState<VersionDiff[]>([]);
+  const lastRead = useRef<{ entity?: Entity.Unknown; enabled: boolean }>({ enabled: false });
+  useEffect(() => {
+    if (!enabled || !Obj.isObject(entity)) {
+      lastRead.current = { entity, enabled };
+      setHistory([]);
+      return;
     }
-    try {
-      return getEditHistoryWithDiffs(entity);
-    } catch (err) {
-      // An object not yet persisted has no document to read history from.
-      log.catch(err);
-      return [];
+    const fresh = lastRead.current.entity !== entity || !lastRead.current.enabled;
+    lastRead.current = { entity, enabled };
+    const read = () => {
+      try {
+        setHistory(getEditHistoryWithDiffs(entity));
+      } catch (err) {
+        // An object not yet persisted has no document to read history from.
+        log.catch(err);
+        setHistory([]);
+      }
+    };
+    if (fresh) {
+      read();
+      return;
     }
+    const timeout = setTimeout(read, HISTORY_DEBOUNCE_MS);
+    return () => clearTimeout(timeout);
     // `snapshot` changes on every edit to `entity`, whose own identity does not.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entity, snapshot]);
+  }, [entity, snapshot, enabled]);
+  return history;
+};
+
+const HISTORY_DEBOUNCE_MS = 1_000;
 
 const NO_SNAPSHOT = Atom.make<Entity.Snapshot | undefined>(undefined);
 
-const toJson = (value: unknown): unknown => (value === undefined ? undefined : JSON.parse(JSON.stringify(value)));
+const toJson = (value: unknown): unknown =>
+  value === undefined ? undefined : JSON.parse(JSON.stringify(value, elideBytes));
 
 type HistoryProps = {
   history: VersionDiff[];
+  open: boolean;
   version?: number;
+  onOpenChange: (open: boolean) => void;
   onVersionChange: (version: number | undefined) => void;
 };
 
-/** Newest first; selecting a row checks the properties out at that version. */
-const History = ({ history, version, onVersionChange }: HistoryProps) => (
+/** Collapsed until opened; newest first; selecting a row checks the properties out at that version. */
+const History = ({ history, open, version, onOpenChange, onVersionChange }: HistoryProps) => (
   <div className='flex flex-col overflow-hidden border-t border-separator'>
-    <div className='px-2 py-1 text-xs text-fg-subtle border-b border-separator'>History ({history.length})</div>
-    <ScrollArea.Root>
-      <ScrollArea.Viewport>
-        <ul className='text-sm' data-testid='objects.history'>
-          {history
-            .map((entry, index) => ({ entry, index }))
-            .reverse()
-            .map(({ entry, index }) => (
-              <li key={index}>
-                <button
-                  className={mx(
-                    'grid grid-cols-[2.5rem_minmax(0,1fr)_6rem_5rem] gap-2 w-full px-2 py-0.5 text-start hover:bg-hover-surface',
-                    version === index && 'bg-current-surface',
-                  )}
-                  onClick={() => onVersionChange(version === index || index === history.length - 1 ? undefined : index)}
-                >
-                  <span className='text-fg-subtle'>#{index + 1}</span>
-                  <span className='truncate'>{formatDistanceToNow(entry.time, { addSuffix: true })}</span>
-                  <span className='font-mono text-xs text-fg-subtle truncate' title={entry.actor}>
-                    {entry.actor.slice(0, 8)}
-                  </span>
-                  <span className='font-mono text-xs text-end'>
-                    <span className='text-green-text'>+{entry.added}</span>{' '}
-                    <span className='text-red-text'>−{entry.removed}</span>
-                  </span>
-                </button>
-              </li>
-            ))}
-        </ul>
-      </ScrollArea.Viewport>
-    </ScrollArea.Root>
+    <button
+      className='flex items-center gap-1 px-2 py-1 text-xs text-fg-subtle text-start hover:bg-hover-surface'
+      aria-expanded={open}
+      data-testid='objects.history.toggle'
+      onClick={() => onOpenChange(!open)}
+    >
+      <Icon.Icon icon={open ? 'ph--caret-down--regular' : 'ph--caret-right--regular'} size='sm' />
+      {open ? `History (${history.length})` : 'History'}
+    </button>
+    {open && (
+      <ScrollArea.Root classNames='border-t border-separator'>
+        <ScrollArea.Viewport>
+          <ul className='text-sm' data-testid='objects.history'>
+            {history
+              .map((entry, index) => ({ entry, index }))
+              .reverse()
+              .map(({ entry, index }) => (
+                <li key={index}>
+                  <button
+                    className={mx(
+                      'grid grid-cols-[2.5rem_minmax(0,1fr)_6rem_5rem] gap-2 w-full px-2 py-0.5 text-start hover:bg-hover-surface',
+                      version === index && 'bg-current-surface',
+                    )}
+                    onClick={() =>
+                      onVersionChange(version === index || index === history.length - 1 ? undefined : index)
+                    }
+                  >
+                    <span className='text-fg-subtle'>#{index + 1}</span>
+                    <span className='truncate'>{formatDistanceToNow(entry.time, { addSuffix: true })}</span>
+                    <span className='font-mono text-xs text-fg-subtle truncate' title={entry.actor}>
+                      {entry.actor.slice(0, 8)}
+                    </span>
+                    <span className='font-mono text-xs text-end'>
+                      <span className='text-green-text'>+{entry.added}</span>{' '}
+                      <span className='text-red-text'>−{entry.removed}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+          </ul>
+        </ScrollArea.Viewport>
+      </ScrollArea.Root>
+    )}
   </div>
 );
 

@@ -7,14 +7,17 @@
 import * as Schema from 'effect/Schema';
 
 import { AiService } from '@dxos/ai';
+import * as Capability from '@dxos/app-framework/Capability';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, DXN, Feed, Obj, Ref } from '@dxos/echo';
+import { Database, DXN, Feed, Hypergraph, Obj, Ref } from '@dxos/echo';
+import { EdgeHttpClientService } from '@dxos/edge-client';
 import { Space } from '@dxos/halo';
 import { Channel } from '@dxos/types';
 
+import * as AgentEmail from './AgentEmail.ts';
 import * as BrainService from './BrainService.ts';
 
 /** Creates an agent (instructions, feed and companion chat) in the space. */
@@ -35,6 +38,28 @@ export const CreateAgent = Operation.make({
   }),
   output: Schema.Struct({
     agent: Ref.Ref(Agent.Agent),
+  }),
+});
+
+/**
+ * Gives an agent an email address: an email channel in its channel list, claimed on EDGE once connected. An agent has
+ * one address, so an agent that already has an email channel gets that channel back unchanged.
+ */
+export const CreateEmailChannel = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.createEmailChannel'),
+    name: 'Create email channel',
+    description:
+      'Gives the agent an email address, or returns the one it already has; connecting the channel claims the address on EDGE.',
+    icon: 'ph--envelope--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent that answers mail to the address.' }),
+    ...AgentEmail.Properties.fields,
+  }),
+  output: Schema.Struct({
+    channel: Ref.Ref(Channel.Channel),
   }),
 });
 
@@ -215,6 +240,66 @@ export const OpenPrivateChat = Operation.make({
 });
 
 /**
+ * Gives a new agent its own identity on EDGE: a brain with a self-owned HALO identity and a default space it owns,
+ * which the caller joins; the members of that space are the agent's admins, and its creator is the owner. The agent
+ * takes the brain's DID as soon as EDGE answers. Only `mint` provisions an agent without a DID, since the DID renames
+ * its brain; for an agent with one, it finishes the join its creator's first call left undone. A client without an
+ * EDGE client changes nothing; a refusal fails, and is safe to retry, since EDGE answers its creator's repeated
+ * request with the same identity.
+ */
+export const EnsureIdentity = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.ensureIdentity'),
+    name: 'Ensure agent identity',
+    description: "Gives the agent its own identity and space on EDGE and puts the caller in the agent's space.",
+    icon: 'ph--identification-card--regular',
+    // Out of reach of models and MCP clients: provisioning an agent that has already talked would rename its brain.
+    skipRegistry: true,
+  },
+  services: [Database.Service, Capability.Service],
+  input: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent, in the space the operation runs in.' }),
+    mint: Schema.optional(
+      Schema.Boolean.annotate({
+        description: 'Provisions an agent without a DID; only for one created a moment ago, whose brain is empty.',
+      }),
+    ),
+  }),
+  output: Schema.Struct({
+    provisioned: Schema.Boolean.annotate({ description: 'True when EDGE minted an identity for the agent now.' }),
+    identityDid: Schema.optional(Schema.String.annotate({ description: "The agent's DID, when it has one." })),
+  }),
+});
+
+/**
+ * Brings an agent into the space the operation runs in, as a presence of itself: its name, DID and instructions,
+ * linked to its home by `AgentPresence.homeKey`, so it reads and writes its home's brain. Idempotent: the
+ * agent's existing presence in the space (or the agent itself, in its home) is returned.
+ */
+export const InviteAgent = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.invite'),
+    name: 'Invite agent',
+    description:
+      "Invites an agent from another space into this one; it keeps one brain across the spaces it is in. Only the agent's admins may, which EDGE enforces.",
+    icon: 'ph--user-plus--regular',
+    // Invoked by AgentAdmission after the members panel admits the agent, never by a model.
+    skipRegistry: true,
+  },
+  services: [Database.Service, Hypergraph.Service, Capability.Service],
+  input: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({
+      description:
+        "The agent to invite, in any space it is in; one whose home the caller cannot reach is read from the agent's own space.",
+    }),
+  }),
+  output: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent in this space.' }),
+    created: Schema.Boolean.annotate({ description: 'False when the agent was already in this space.' }),
+  }),
+});
+
+/**
  * Reads a source — a markdown document, text, chat transcript or web page — and pushes the RDF facts it
  * states to the agent's brain, delivering any watch they wake. A direct model call: no chat is created.
  * A chat is read incrementally: only the messages after the last read.
@@ -245,4 +330,59 @@ export const ReadSource = Operation.make({
     fired: Schema.Array(Schema.String).annotate({ description: 'The ids of the triggers that fired.' }),
     undelivered: Schema.Array(Schema.String).annotate({ description: 'Why a fired notification was not delivered.' }),
   }),
+});
+
+//
+// Fact feeds: an agent's brain on EDGE indexes the fact feeds registered with it (`/compute/brain/:spaceId/:agentId/fact-feeds`).
+//
+
+const FactFeeds = Schema.Struct({
+  feeds: Schema.Array(Schema.String).annotate({ description: 'EIDs of the fact feeds the brain indexes.' }),
+});
+
+/** Has the agent's brain index a fact feed from now on, from the start of the feed. */
+export const AddFactFeed = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.addFactFeed'),
+    name: 'Add fact feed',
+    description: "Has the agent's brain on EDGE index a fact feed, reading it from where it left off.",
+    icon: 'ph--brain--regular',
+  },
+  services: [Database.Service, EdgeHttpClientService],
+  input: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent whose brain is to index the fact feed.' }),
+    feed: Ref.Ref(Feed.Feed).annotate({ description: 'The fact feed to index.' }),
+  }),
+  output: FactFeeds,
+});
+
+/** Stops the agent's brain indexing a fact feed; the facts it already read stay. */
+export const RemoveFactFeed = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.removeFactFeed'),
+    name: 'Remove fact feed',
+    description: "Stops the agent's brain on EDGE indexing a fact feed; what it read stays.",
+    icon: 'ph--brain--regular',
+  },
+  services: [Database.Service, EdgeHttpClientService],
+  input: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent whose brain is to stop indexing the fact feed.' }),
+    feed: Ref.Ref(Feed.Feed).annotate({ description: 'The fact feed to stop indexing.' }),
+  }),
+  output: FactFeeds,
+});
+
+/** The fact feeds the agent's brain indexes. */
+export const ListFactFeeds = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.listFactFeeds'),
+    name: 'List fact feeds',
+    description: "Lists the fact feeds the agent's brain on EDGE indexes.",
+    icon: 'ph--brain--regular',
+  },
+  services: [Database.Service, EdgeHttpClientService],
+  input: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent whose brain indexes the fact feeds.' }),
+  }),
+  output: FactFeeds,
 });

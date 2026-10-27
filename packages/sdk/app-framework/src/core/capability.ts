@@ -539,6 +539,8 @@ export interface Module<Options = void> {
   readonly provides: readonly AnyTag[];
   readonly activatesOn?: ActivationEvent.Events;
   readonly environments?: readonly Environment[];
+  /** Imports a lazy module's body without activating it; absent on inline modules. */
+  readonly load?: () => Promise<unknown>;
   readonly [LoaderTag]?: () => Promise<unknown>;
   readonly [AdapterTag]?: LoaderAdapter;
 }
@@ -625,6 +627,7 @@ export const lazyModule = <
     provides: spec.provides,
     activatesOn: spec.activatesOn,
     environments: spec.environments,
+    load: loader,
   });
 };
 

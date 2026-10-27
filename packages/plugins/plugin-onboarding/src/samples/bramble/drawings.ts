@@ -227,7 +227,7 @@ const makeSketches = (): { floorPlan: Drawing.Drawing; flavorWheel: Drawing.Draw
 /** The roastery floor plan and the Spring Blend flavour wheel, as tldraw canvases. */
 export type DrawingsResult = { floorPlan: Drawing.Drawing; flavorWheel: Drawing.Drawing };
 
-export const Drawings: SampleSpace.Phase<DrawingsResult> = SampleSpace.phase('drawings', {
+export const Drawings: SampleSpace.Partial<DrawingsResult> = SampleSpace.partial('drawings', {
   schemas: [Drawing.Drawing, Drawing.Canvas],
   run: () =>
     Effect.gen(function* () {

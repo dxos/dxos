@@ -11,9 +11,10 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { DxSvg, type Scene, SVG_SCHEMA } from '@dxos/diagram';
+import { Dsl, DxSvg, type Scene, SVG_SCHEMA } from '@dxos/diagram';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { BaseError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
 import { EntityId } from '@dxos/keys';
 
 import { Drawing } from '#types';
@@ -123,17 +124,51 @@ export const remapIds = (payload: Payload): Payload => {
   };
 };
 
-/** The payload of a `.dx.svg`, or undefined for a plain SVG. */
-export const fromDxSvg = (svg: string): Effect.Effect<Payload | undefined, Schema.SchemaError> => {
-  const payload = DxSvg.extract(svg);
-  return payload === undefined ? Effect.succeed(undefined) : Schema.decodeUnknownEffect(Payload)(payload);
-};
+/**
+ * A `.dx.svg` written by drawing.sh (`@dxos/drawing`): the DSL source and no ECHO objects, since the
+ * drawing can be laid out again from the source.
+ */
+export const SourcePayload = Schema.Struct({
+  format: Schema.Literal(DxSvg.FORMAT),
+  version: Schema.Literal(1),
+  name: Schema.optional(Schema.String),
+  source: Schema.Struct({ language: Schema.Literal('dsl'), text: Schema.String }),
+});
 
 /** The SVG cannot be imported as a drawing. */
 export class ImportError extends BaseError.extend(
   'DrawingFileImportError',
   'The SVG cannot be imported as a drawing.',
 ) {}
+
+/** Lays a source-only payload out again, into the payload a Composer export would have carried. */
+const fromSource = Effect.fn('DrawingFile.fromSource')(function* (raw: unknown) {
+  const { name = 'Drawing', source } = yield* Schema.decodeUnknownEffect(SourcePayload)(raw);
+  const { commands, problems } = yield* Dsl.compile(source.text);
+  const errors = problems.filter(({ severity }) => severity === 'error');
+  if (errors.length > 0) {
+    return yield* Effect.fail(
+      new ImportError({
+        message: `The embedded source does not compile: ${errors.map(({ message }) => message).join('; ')}`,
+      }),
+    );
+  }
+  const { drawing, canvas } = makeDrawing({ name, commands, source });
+  return toPayload({ drawing, canvas, source });
+});
+
+/**
+ * The payload of a `.dx.svg`, or undefined for a plain SVG. A drawing.sh file carries only its source, which
+ * is compiled here, so both kinds import the same way.
+ */
+export const fromDxSvg = (svg: string): Effect.Effect<Payload | undefined, Schema.SchemaError | ImportError> => {
+  const raw = DxSvg.extract(svg);
+  if (raw === undefined) {
+    return Effect.succeed(undefined);
+  }
+  const hasObjects = typeof raw === 'object' && raw !== null && 'objects' in raw;
+  return hasObjects ? Schema.decodeUnknownEffect(Payload)(raw) : fromSource(raw);
+};
 
 /** Adds a `.dx.svg`'s objects to the database under fresh ids and returns the drawing to open. */
 export const importDxSvg = Effect.fn('DrawingFile.importDxSvg')(function* (svg: string) {
@@ -148,11 +183,12 @@ export const importDxSvg = Effect.fn('DrawingFile.importDxSvg')(function* (svg: 
   const decoded = yield* Effect.forEach(objects, (json) =>
     Effect.promise(() => Obj.fromJSON(json, { refResolver: resolver })),
   );
-  const drawing = decoded.find((object) => object.id === root);
-  if (!drawing || !Drawing.isDrawing(drawing)) {
+  if (!decoded.some((object) => object.id === root && Drawing.isDrawing(object))) {
     return yield* Effect.fail(new ImportError({ message: 'The .dx.svg payload has no drawing at its root.' }));
   }
-  decoded.forEach((object) => db.add(object));
+  // `add` returns the database's own instance; the decoded one stays detached, so edits to it would not persist.
+  const drawing = decoded.map((object) => db.add(object)).find((object) => object.id === root);
+  invariant(drawing && Drawing.isDrawing(drawing), 'imported drawing');
   yield* Effect.promise(() => db.flush());
   return drawing;
 });

@@ -143,13 +143,15 @@ const DefaultStory = ({ debug: debugProp }: StoryArgs) => {
         />
         <div className='overflow-y-auto h-full'>
           <Listbox.Root items={surfaces.map((surface) => ({ value: surface.id, label: surface.id }))}>
-            <Listbox.Content aria-label='Surfaces'>
-              {surfaces.map((surface) => (
-                <Listbox.Item key={surface.id} id={surface.id}>
-                  <Listbox.ItemText classNames='flex items-center'>{surface.id}</Listbox.ItemText>
-                </Listbox.Item>
-              ))}
-            </Listbox.Content>
+            <Listbox.Viewport>
+              <Listbox.Content aria-label='Surfaces'>
+                {surfaces.map((surface) => (
+                  <Listbox.Item key={surface.id} id={surface.id}>
+                    <Listbox.ItemText classNames='flex items-center'>{surface.id}</Listbox.ItemText>
+                  </Listbox.Item>
+                ))}
+              </Listbox.Content>
+            </Listbox.Viewport>
           </Listbox.Root>
         </div>
       </Panel.Body>

@@ -74,6 +74,7 @@ const seed = Effect.gen(function* () {
     createdAt: 1000,
     updatedAt: 2000,
     data: { id, [ATTR_TYPE]: type, [ATTR_DELETED]: false, ...extra, ...data },
+    heads: [`heads-${id}`],
   });
   const objects: IndexerObject[] = [
     doc(ids.project, PROJECT, { name: 'live' }),
@@ -81,7 +82,14 @@ const seed = Effect.gen(function* () {
     doc(
       ids.t1,
       TASK,
-      { title: 'alpha', priority: 2, due: -1, tags: ['a', 'b'], assignee: ref(ids.alice) },
+      {
+        title: 'alpha',
+        priority: 2,
+        due: -1,
+        tags: ['a', 'b'],
+        assignee: ref(ids.alice),
+        [ATTR_META]: { annotations: { 'test.rank': 2, 'odd"key': { 'meters': 20, 'm"x': 5 } } },
+      },
       { [ATTR_PARENT]: EID.make({ entityId: ids.project }) },
     ),
     doc(
@@ -90,13 +98,20 @@ const seed = Effect.gen(function* () {
       { title: 'beta', priority: 1, tags: ['b'], assignee: ref(ids.bob) },
       { [ATTR_PARENT]: EID.make({ entityId: ids.deletedProject }) },
     ),
-    doc(ids.t3, TASK, { title: 'gamma', priority: 3, due: 3_600_001, tags: [], assignee: ref(ids.alice) }),
+    doc(ids.t3, TASK, {
+      title: 'gamma',
+      priority: 3,
+      due: 3_600_001,
+      tags: [],
+      assignee: ref(ids.alice),
+      [ATTR_META]: { annotations: { 'test.rank': { nested: true }, 'odd"key': { 'meters': 10, 'm"x': 1 } } },
+    }),
     doc(ids.t4, TASK, {
       title: 'delta',
       due: 'soon',
       tags: ['a'],
       done: true,
-      [ATTR_META]: { keys: [{ source: 'github.com', id: '42' }] },
+      [ATTR_META]: { keys: [{ source: 'github.com', id: '42' }], annotations: { 'test.rank': 1, 'odd"key': 'text' } },
     }),
     doc(ids.alice, PERSON, { name: 'alice' }),
     doc(ids.bob, PERSON, { name: 'bob' }),
@@ -133,7 +148,73 @@ const run = (fixture: Fixture, query: Query.Any) =>
 const names = (fixture: Fixture, ids: readonly string[]) =>
   ids.map((id) => Object.entries(fixture.ids).find(([, value]) => value === id)?.[0] ?? id);
 
+const TAG = DXN.make('org.dxos.type.tag', '0.1.0');
+
+/** Tasks carrying tags: as a reference, as a legacy bare URI, and naming a tag the space does not hold. */
+const seedTags = Effect.gen(function* () {
+  const sqlClient = yield* SqlClient.SqlClient;
+  const meta = new EntityMetaIndex(sqlClient);
+  const bodies = new ObjectSnapshotIndex(sqlClient);
+  yield* meta.migrate();
+  yield* bodies.migrate();
+  yield* new ReverseRefIndex(sqlClient).migrate();
+
+  const spaceId = SpaceId.random();
+  const ids = Object.fromEntries(
+    ['tag', 'byRef', 'byLegacyUri', 'missingTag', 'untagged'].map((name) => [name, EntityId.random()]),
+  ) as Fixture['ids'];
+  const doc = (id: EntityId, type: URI.URI, tags?: unknown[]): IndexerObject => {
+    const meta: Record<string, unknown> = tags ? { [ATTR_META]: { keys: [], tags } } : {};
+    return {
+      spaceId,
+      documentId: `doc-${id}`,
+      queueId: null,
+      queueNamespace: null,
+      queuePosition: null,
+      recordId: null,
+      createdAt: 1000,
+      updatedAt: 2000,
+      data: { id, [ATTR_TYPE]: type, [ATTR_DELETED]: false, ...meta },
+      heads: [`heads-${id}`],
+    };
+  };
+  const objects = [
+    doc(ids.tag, TAG),
+    doc(ids.byRef, TASK, [{ '/': EID.make({ entityId: ids.tag }) }]),
+    doc(ids.byLegacyUri, TASK, [EID.make({ entityId: ids.tag })]),
+    doc(ids.missingTag, TASK, [{ '/': EID.make({ entityId: EntityId.random() }) }]),
+    doc(ids.untagged, TASK),
+  ];
+  yield* meta.update(objects);
+  yield* meta.lookupRecordIds(objects);
+  yield* bodies.update(objects);
+  return { spaceId, ids } satisfies Fixture;
+});
+
 describe('SqlPlanCompiler', () => {
+  it.effect('tags are strong dependencies, stored as references or legacy bare URIs', () =>
+    Effect.gen(function* () {
+      const fixture = yield* seedTags;
+      const scope = [{ _tag: 'space' as const, spaceId: fixture.spaceId }];
+      const tasks = yield* run(fixture, Query.select(Filter.type(TASK)).from(scope));
+      // A task naming a tag the space does not hold is withheld; a legacy bare URI does not break the query.
+      expect(
+        names(
+          fixture,
+          tasks.rows.map((row) => row.objectId),
+        ).sort(),
+      ).toEqual(['byLegacyUri', 'byRef', 'untagged']);
+
+      const tagged = yield* run(fixture, Query.select(Filter.tag(EID.make({ entityId: fixture.ids.tag }))).from(scope));
+      expect(
+        names(
+          fixture,
+          tagged.rows.map((row) => row.objectId),
+        ).sort(),
+      ).toEqual(['byLegacyUri', 'byRef']);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('selects a type and filters on properties, excluding deleted and cascade-deleted rows', () =>
     Effect.gen(function* () {
       const fixture = yield* seed;
@@ -201,8 +282,6 @@ describe('SqlPlanCompiler', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
-  // `objectSnapshot` strips `@meta` from document rows, so these predicates have nothing to read
-  // there and the executor sends the plan to the in-memory path instead.
   it.effect('declines plans whose filters read object meta', () =>
     Effect.gen(function* () {
       const fixture = yield* seed;
@@ -265,6 +344,48 @@ describe('SqlPlanCompiler', () => {
           page.rows.map((row) => row.objectId),
         ),
       ).toEqual(['t4']);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('orders by an annotation value with non-scalars and missing values last', () =>
+    Effect.gen(function* () {
+      const fixture = yield* seed;
+      const scope = [{ _tag: 'space' as const, spaceId: fixture.spaceId }];
+      // Built as AST: these keys hold `"`, which a JSON path cannot address and `Annotation.make` would not mint.
+      const orderedBy = (order: QueryAST.Order, window: { skip?: number; limit?: number } = {}) =>
+        Effect.gen(function* () {
+          const query = Query.fromAst({
+            type: 'order',
+            query: Query.select(Filter.type(TASK)).from(scope).ast,
+            order: [order],
+          });
+          const skipped = window.skip === undefined ? query : query.skip(window.skip);
+          const { rows } = yield* run(fixture, window.limit === undefined ? skipped : skipped.limit(window.limit));
+          return names(
+            fixture,
+            rows.map((row) => row.objectId),
+          );
+        });
+
+      expect(yield* orderedBy({ kind: 'annotation', key: 'test.rank', direction: 'asc' })).toEqual(['t4', 't1', 't3']);
+      expect(yield* orderedBy({ kind: 'annotation', key: 'test.rank', direction: 'desc' })).toEqual(['t1', 't4', 't3']);
+      // A path into a text-valued annotation reads as null rather than failing the statement.
+      expect(yield* orderedBy({ kind: 'annotation', key: 'odd"key', path: ['meters'], direction: 'asc' })).toEqual([
+        't3',
+        't1',
+        't4',
+      ]);
+      expect(yield* orderedBy({ kind: 'annotation', key: 'odd"key', path: ['m"x'], direction: 'desc' })).toEqual([
+        't1',
+        't3',
+        't4',
+      ]);
+      expect(
+        yield* orderedBy(
+          { kind: 'annotation', key: 'odd"key', path: ['meters'], direction: 'asc' },
+          { skip: 1, limit: 1 },
+        ),
+      ).toEqual(['t1']);
     }).pipe(Effect.provide(TestLayer)),
   );
 
@@ -472,6 +593,40 @@ describe('SqlPlanCompiler', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 
+  it.effect('pages a feed in natural order inside the scan', () =>
+    Effect.gen(function* () {
+      const fixture = yield* seed;
+      const sqlClient = yield* SqlClient.SqlClient;
+      const queueId = EntityId.random();
+      const ids = Array.from({ length: 6 }, () => EntityId.random()).sort();
+      const objects = ids.map((id): IndexerObject => ({
+        spaceId: fixture.spaceId,
+        queueId,
+        queueNamespace: 'data',
+        documentId: null,
+        recordId: null,
+        queuePosition: null,
+        createdAt: 1000,
+        updatedAt: 2000,
+        data: { id, [ATTR_TYPE]: TASK, [ATTR_DELETED]: false },
+      }));
+      const meta = new EntityMetaIndex(sqlClient);
+      yield* meta.update(objects);
+      yield* meta.lookupRecordIds(objects);
+      yield* new ObjectSnapshotIndex(sqlClient).update(objects);
+
+      const { rows } = yield* run(
+        fixture,
+        Query.select(Filter.everything())
+          .orderBy(Order.natural('desc'))
+          .skip(2)
+          .limit(3)
+          .from([{ _tag: 'feed' as const, feedUri: EID.make({ spaceId: fixture.spaceId, entityId: queueId }) }]),
+      );
+      expect(rows.map((row) => row.objectId)).toEqual([ids[3], ids[2], ids[1]]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
   it.effect('ships a body only for feed rows', () =>
     Effect.gen(function* () {
       const fixture = yield* seed;
@@ -481,6 +636,19 @@ describe('SqlPlanCompiler', () => {
       );
       expect(rows.every((row) => row.documentJson === null)).toBe(true);
       expect(rows.every((row) => row.documentId.startsWith('doc-'))).toBe(true);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('ships each document row its heads', () =>
+    Effect.gen(function* () {
+      const fixture = yield* seed;
+      const query = Query.select(Filter.type(PERSON)).from([{ _tag: 'space' as const, spaceId: fixture.spaceId }]);
+
+      const { rows } = yield* run(fixture, query);
+      expect(rows).toHaveLength(2);
+      for (const row of rows) {
+        expect(JSON.parse(row.heads ?? 'null')).toEqual([`heads-${row.objectId}`]);
+      }
     }).pipe(Effect.provide(TestLayer)),
   );
 });

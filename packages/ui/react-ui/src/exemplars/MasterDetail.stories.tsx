@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import '../next/theme/index.css';
+import '../theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ComponentPropsWithoutRef, type PropsWithChildren, forwardRef, useState } from 'react';
@@ -10,16 +10,16 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations } from '#translations';
 
-import { Button } from '../next/components/Button/Button.tsx';
-import { Container } from '../next/components/Container/Container.tsx';
-import { Empty } from '../next/components/Empty/Empty.tsx';
-import * as ListboxModule from '../next/components/Listbox/Listbox.tsx';
-import * as Panel from '../next/components/Panel/Panel.tsx';
-import * as ScrollArea from '../next/components/ScrollArea/ScrollArea.tsx';
-import * as Splitter from '../next/components/Splitter/Splitter.tsx';
-import * as TabsModule from '../next/components/Tabs/Tabs.tsx';
-import * as Toolbar from '../next/components/Toolbar/Toolbar.tsx';
-import * as Typography from '../next/components/Typography/Typography.tsx';
+import { Button } from '../components/Button/Button.tsx';
+import { Container } from '../components/Container/Container.tsx';
+import { Empty } from '../components/Empty/Empty.tsx';
+import * as ListboxModule from '../components/Listbox/Listbox.tsx';
+import * as Panel from '../components/Panel/Panel.tsx';
+import * as ScrollArea from '../components/ScrollArea/ScrollArea.tsx';
+import * as Splitter from '../components/Splitter/Splitter.tsx';
+import * as TabsModule from '../components/Tabs/Tabs.tsx';
+import * as Toolbar from '../components/Toolbar/Toolbar.tsx';
+import * as Typography from '../components/Typography/Typography.tsx';
 import { withLayout, withTheme } from '../testing/index.ts';
 
 // Master-detail is not a component: the list's own Root owns the selection, and a Splitter with `collapseBelow` lays
@@ -206,7 +206,6 @@ const ListboxMaster = ({ items, label }: { items: ListboxModule.Option[]; label:
   return (
     <MasterPane title={label} count={items.length}>
       <ListboxModule.Content
-        scroll={false}
         aria-label={label}
         onKeyDown={(event) => (event.key === 'Enter' || event.key === ' ') && open()}
       >

@@ -9,9 +9,11 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Registry from 'effect/reactivity/AtomRegistry';
+import * as Schema from 'effect/Schema';
 
-import { RemoteProcessManager } from '@dxos/compute-runtime';
+import { RemoteOperationInvoker, RemoteProcessManager } from '@dxos/compute-runtime';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
+import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
@@ -343,6 +345,69 @@ describe('one process manager', () => {
       yield* appManager.handles(edge);
       yield* stackManager.handles(edge);
       expect(listed).toEqual([edge.location.space, edge.location.space]);
+    }),
+  );
+
+  const Double = Operation.make({
+    meta: { key: DXN.make('com.example.operation.test.double'), name: 'Double' },
+    input: Schema.Struct({ value: Schema.Number }),
+    output: Schema.Number,
+  });
+
+  /** A plugin contributing a remote operation invoker that doubles `value`, recording each call, as EDGE's route would. */
+  const RemoteOperations = (calls: Array<{ deployedId: string; input: unknown; spaceId?: SpaceId }>) =>
+    Plugin.make(
+      Plugin.define(remoteMeta).pipe(
+        Plugin.addModule({
+          id: 'remote-operation-invoker',
+          activatesOn: ActivationEvents.Startup,
+          provides: [Capabilities.LayerSpec],
+          activate: () =>
+            Effect.succeed([
+              Capability.contribute(
+                Capabilities.LayerSpec,
+                LayerSpec.make(
+                  { affinity: 'application', requires: [], provides: [RemoteOperationInvoker.Service] },
+                  () =>
+                    Layer.succeed(RemoteOperationInvoker.Service, {
+                      invoke: (_ctx, deployedId, input, options) =>
+                        Effect.sync(() => {
+                          calls.push({ deployedId, input, ...(options?.spaceId ? { spaceId: options.spaceId } : {}) });
+                          return Schema.decodeUnknownSync(Double.input)(input).value * 2;
+                        }),
+                    }),
+                ),
+              ),
+            ]),
+        }),
+      ),
+    );
+
+  it.effect("runs the app's on:edge invocations as one call to the remote invoker a plugin contributes", () =>
+    Effect.gen(function* () {
+      const calls: Array<{ deployedId: string; input: unknown; spaceId?: SpaceId }> = [];
+      const manager = makeManager({ plugins: [RemoteOperations(calls)()], enabled: [remoteMeta.profile.key] });
+      yield* manager.activate(ActivationEvents.Startup);
+
+      const invoker = yield* manager.capabilities.waitFor(Capabilities.OperationInvoker);
+      const spaceId = edge.location.space;
+      expect(yield* invoker.invoke(Double, { value: 21 }, { on: 'edge', spaceId })).toEqual(42);
+      expect(calls).toEqual([{ deployedId: String(Double.meta.key), input: { value: 21 }, spaceId }]);
+    }),
+  );
+
+  it.effect('refuses an on:edge invocation when no remote runtime is configured', () =>
+    Effect.gen(function* () {
+      const manager = makeManager({ plugins: [], enabled: [] });
+      yield* manager.activate(ActivationEvents.Startup);
+
+      const invoker = yield* manager.capabilities.waitFor(Capabilities.OperationInvoker);
+      const exit = yield* Effect.exit(
+        invoker.invoke(Double, { value: 1 }, { on: 'edge', spaceId: edge.location.space }),
+      );
+      expect(Exit.isFailure(exit) && String(Cause.squash(exit.cause))).toContain(
+        'No remote operation invoker configured',
+      );
     }),
   );
 

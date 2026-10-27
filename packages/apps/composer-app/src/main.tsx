@@ -24,6 +24,7 @@ import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginAssetCache from '@dxos/app-framework/PluginAssetCache';
 import * as Registry from '@dxos/app-framework/Registry';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
+import { LEADER_LOCK_KEY } from '@dxos/client/lock-key';
 // Narrow entry: the barrel also re-exports auth and the ws muxer, neither of which the
 // boot path uses.
 import { EdgeHttpClient } from '@dxos/edge-client/http';
@@ -39,7 +40,7 @@ import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
 import * as Theme from '@dxos/react-ui/Theme';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
-import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
+import { getHostPlatform, markMilestone, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
 
 import { type PluginConfig, getDefaults, getPlugins } from './plugin-defs.tsx';
 import { initAutomergeWasm, initEchoHostWasm } from './util/automerge-wasm.ts';
@@ -57,6 +58,7 @@ import {
   initializeObservability,
   isFalse,
   isTrue,
+  prespawnWorker,
   readBootAssetFailure,
   registerPreloadErrorHandler,
   reportBootAssetFailure,
@@ -72,6 +74,7 @@ import {
   startupProfiler,
   translations,
 } from './util/index.ts';
+import { watchWindowCorners } from './util/window-corners.ts';
 
 // Fatal-error-only UI, loaded on demand: its FeedbackForm pulls the whole form stack
 // (react-ui-form, editor, pickers) which must stay out of the static boot graph.
@@ -199,6 +202,12 @@ const createAssetCache = async (isPwa: boolean, isTauri: boolean): Promise<Plugi
   return PluginAssetCache.noop();
 };
 
+const createDedicatedWorker = () =>
+  new Worker(new URL('./workers/dedicated-worker.ts', import.meta.url), {
+    type: 'module',
+    name: 'dxos-client-worker',
+  });
+
 const main = async () => {
   if (import.meta.env?.DEV) {
     log('composer main: main() running', { bootId: BOOT_ID });
@@ -226,6 +235,9 @@ const main = async () => {
   const profilerParam = url.searchParams.get(PARAM_PROFILER);
   const profilerEnabled = profilerParam === null ? Boolean(import.meta.env?.DEV) : isTrue(profilerParam);
   startupMark('main:start');
+  // Spawned ahead of the imports and config below, so the worker's script evaluates in parallel
+  // with them instead of after `client.initialize` elects this tab; config reaches it on `init`.
+  const prespawnedWorker = prespawnWorker({ create: createDedicatedWorker, leaderLockKey: LEADER_LOCK_KEY });
   const profiler = profilerEnabled ? startupProfiler() : undefined;
 
   // Registered before any lazy route can be reached, since a chunk missing after a deploy fails
@@ -335,6 +347,8 @@ const main = async () => {
     document.body.setAttribute('data-platform', platform);
     restoreDragRegionFocus();
   }
+  // Rails that reach the window's bottom corners round to match a rounded macOS window instead of being cut off.
+  void watchWindowCorners(isTauri);
 
   // Read the persisted opt-out state up front so we can suppress PostHog's heavy
   // instrumentation (session recorder, dead-clicks autocapture) at init time —
@@ -346,9 +360,19 @@ const main = async () => {
 
   // Intentionally do not await; the buffering backend in TRACE_PROCESSOR captures
   // early spans and replays them once the real OTEL backend registers.
-  const observability = initializeObservability(config, isTauri, logStore, observabilityDisabled, {
-    post: (message) => observabilityWorker.postMessage(message),
+  // Replay starts once boot settles: the recorder's snapshot and compression cost ~150ms of main thread during startup.
+  const startupSettled = new Promise<void>((resolve) => {
+    window.addEventListener(Hooks.STARTUP_ACTIVATED_EVENT, () => resolve(), { once: true });
+    window.addEventListener(Hooks.STARTUP_FAILED_EVENT, () => resolve(), { once: true });
   });
+  const observability = initializeObservability(
+    config,
+    isTauri,
+    logStore,
+    observabilityDisabled,
+    { post: (message) => observabilityWorker.postMessage(message) },
+    Effect.promise(() => startupSettled),
+  );
 
   const captureStartupSummary = (): Record<string, string | number | boolean | undefined> => {
     const measures = performance.getEntriesByType('measure');
@@ -390,6 +414,7 @@ const main = async () => {
     extra?: Record<string, string | number | boolean | undefined>,
   ) => {
     startupMark(endMark);
+    markMilestone(`app.${endMark}`);
     startupMeasure('total', 'main:start', endMark);
     const summary = { ...captureStartupSummary(), ...extra };
     void observability
@@ -502,6 +527,7 @@ const main = async () => {
     ? defs.Runtime_Client_ServicesMode.HOST
     : defs.Runtime_Client_ServicesMode.DEDICATED_WORKER;
   if (useLocalServices) {
+    prespawnedWorker.dispose();
     // Echo runs in this page, and its Repo constructs Subduction; a worker-mode tab never does.
     await initEchoHostWasm();
   }
@@ -522,11 +548,7 @@ const main = async () => {
     config.values,
   );
   const services = await createClientServices(config, {
-    createDedicatedWorker: () =>
-      new Worker(new URL('./workers/dedicated-worker.ts', import.meta.url), {
-        type: 'module',
-        name: 'dxos-client-worker',
-      }),
+    createDedicatedWorker: () => prespawnedWorker.take() ?? createDedicatedWorker(),
     createCoordinatorWorker: () =>
       new SharedWorker(new URL('./workers/coordinator-worker.ts', import.meta.url), {
         type: 'module',
@@ -559,7 +581,11 @@ const main = async () => {
   // has to not reject unhandled.
   performance.mark('milestone:client-initialize:start');
   const client = new Client({ config, services });
-  void client.initialize().catch((err) => log.error('client services failed to open', { error: err }));
+  void client
+    .initialize()
+    .catch((err) => log.error('client services failed to open', { error: err }))
+    // A follower tab never takes the worker, which would otherwise hold its place on the storage lock.
+    .finally(() => prespawnedWorker.dispose());
 
   // Started here rather than from plugin-debug, which a plain local `serve` leaves disabled —
   // tying the flag to it would make the flag silently do nothing.

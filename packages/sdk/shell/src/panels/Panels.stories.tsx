@@ -28,7 +28,9 @@ const StoryRow = ({ components }: { components: FC[] }) => {
     <tr style={{ whiteSpace: 'nowrap' }}>
       {components?.map((Comp) => (
         <td key={Comp.name}>
-          <div className='bg-zinc-500 text-zinc-200 p-3 text-sm text-center'>{camelCaseToSpacedName(Comp.name)}</div>
+          <div className='bg-zinc-500 text-zinc-200 p-trim-md text-sm text-center'>
+            {camelCaseToSpacedName(Comp.name)}
+          </div>
           <Comp />
         </td>
       ))}

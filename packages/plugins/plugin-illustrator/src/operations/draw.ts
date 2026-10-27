@@ -10,6 +10,7 @@ import { Diagnostics, Dsl } from '@dxos/diagram';
 import { DrawingOperation } from '#types';
 
 import { resolveVariant } from '../util/load-drawing.ts';
+import { requestRefit } from '../util/refit.ts';
 
 /** 1-based line/column for an offset, so a problem names a place the agent can find in its own source. */
 const locate = (text: string, offset: number): { line: number; column: number } => {
@@ -29,6 +30,9 @@ const handler: Operation.WithHandler<typeof DrawingOperation.Draw> = DrawingOper
       // that attribute on the canvas — while the result told the agent the statement was skipped.
       const failed = problems.some(({ severity }) => severity === 'error');
       const { upserted, removed } = failed ? { upserted: [], removed: 0 } : variant.builder.apply(canvas, commands);
+      if (!failed) {
+        yield* requestRefit(canvas);
+      }
       const { scene, unmanaged } = variant.builder.read(canvas);
       const { diagnostics } = Diagnostics.analyze(scene.objects);
       return {

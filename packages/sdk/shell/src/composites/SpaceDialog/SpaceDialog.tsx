@@ -19,15 +19,13 @@ export const SpaceDialog = (spacePanelProps: SpaceDialogProps) => {
   return (
     <Dialog.Root defaultOpen onOpenChange={({ open }) => open || spacePanelProps.onDone?.()}>
       <Dialog.Content aria-labelledby={titleId}>
-        <Dialog.Body>
-          <SpacePanel
-            {...{
-              ...spacePanelProps,
-              titleId,
-              doneActionParent: <Dialog.CloseTrigger asChild />,
-            }}
-          />
-        </Dialog.Body>
+        <SpacePanel
+          {...{
+            ...spacePanelProps,
+            titleId,
+            doneActionParent: <Dialog.CloseTrigger asChild />,
+          }}
+        />
       </Dialog.Content>
     </Dialog.Root>
   );

@@ -3,6 +3,8 @@
 //
 
 import * as EffectContext from 'effect/Context';
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 import { inspect } from 'node:util';
 
 import { Event, MulticastObservable, Trigger, asyncTimeout, synchronized } from '@dxos/async';
@@ -36,8 +38,9 @@ import {
   subscribeStream,
 } from '@dxos/protocols';
 import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { DataService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
-import { type JsonKeyOptions, type MaybePromise } from '@dxos/util';
+import { type JsonKeyOptions, type MaybePromise, markMilestone } from '@dxos/util';
 
 import { type ClientEdgeAPI, createClientEdgeAPI, createEdgeIdentity } from '../edge/index.ts';
 import { type MeshProxy } from '../mesh/mesh-proxy.ts';
@@ -88,6 +91,10 @@ export class Client {
   // TODO(wittjosiah): Make `null` status part of enum.
   private readonly _statusUpdate = new Event<SystemStatus | null>();
   private readonly _status = MulticastObservable.from(this._statusUpdate, null);
+  private readonly _indexStatusUpdate = new Event<DataService.IndexStatus | null>();
+  private readonly _indexStatus = MulticastObservable.from(this._indexStatusUpdate, null);
+  private readonly _indexActivityUpdate = new Event<DataService.IndexActivity>();
+  private readonly _indexActivity = MulticastObservable.from(this._indexActivityUpdate, {});
   private readonly _fatalErrorUpdate = new Event<Error | null>();
   private readonly _fatalError = MulticastObservable.from(this._fatalErrorUpdate, null);
 
@@ -162,6 +169,8 @@ export class Client {
     if (this._options.types) {
       void this.addTypes(this._options.types);
     }
+    this._echoClient.indexStatusUpdated.on((status) => this._indexStatusUpdate.emit(status));
+    this._echoClient.indexActivityUpdated.on((activity) => this._indexActivityUpdate.emit(activity));
   }
 
   [inspect.custom](): string {
@@ -215,6 +224,20 @@ export class Client {
    */
   waitUntilInitialized({ timeout }: { timeout?: number } = {}): Promise<void> {
     return this._initializedTrigger.wait({ timeout });
+  }
+
+  /**
+   * What the ECHO index is doing (migrating, rebuilding, idle), for a boot screen or progress
+   * indicator. Reported by the worker while the client opens, then streamed from the host;
+   * `null` until the host first reports.
+   */
+  get indexStatus(): MulticastObservable<DataService.IndexStatus | null> {
+    return this._indexStatus;
+  }
+
+  /** Index work queries answer through, such as catch-up and the full-text index, for a progress indicator. */
+  get indexActivity(): MulticastObservable<DataService.IndexActivity> {
+    return this._indexActivity;
   }
 
   /**
@@ -361,9 +384,8 @@ export class Client {
 
     {
       invariant(this._services, 'Client not initialized.');
-      await runServiceCall(this._effectRuntime, this._services.rpc['QueryService.reindex'](undefined), {
+      await runServiceCall(this._effectRuntime, this._services.rpc, 'QueryService.reindex', undefined, {
         timeout: 30_000,
-        label: 'QueryService.reindex',
       });
     }
 
@@ -382,6 +404,7 @@ export class Client {
     }
 
     performance.mark('client.initialize:called');
+    markMilestone('client.initializing');
     log('initializing client');
     const { createClientServices, IFrameManager, ShellManager } = await import('../services/index.ts');
     const { Runtime_Client_ServicesMode, Runtime_Client_Storage_SqliteMode } =
@@ -429,6 +452,19 @@ export class Client {
       }));
     performance.mark('client.initialize:services-created');
     log('client.initialize: services provider created');
+    // Once, not per `_open`: the provider outlives a reopen and keeps every callback it is given.
+    const services = this._services;
+    services.onReconnect?.(async () => {
+      const rpc = services.rpc;
+      this._echoClient._updateServices({ dataService: rpc, queryService: rpc, feedService: rpc });
+      await this._echoClient._notifyReconnect();
+    });
+    services.hostStatus?.on((status) => {
+      const decoded = Schema.decodeUnknownOption(DataService.IndexStatus)(status);
+      if (Option.isSome(decoded)) {
+        this._indexStatusUpdate.emit(decoded.value);
+      }
+    });
     this._iframeManager = this._options.shell
       ? new IFrameManager({ source: new URL(this._options.shell, window.location.origin) })
       : undefined;
@@ -450,6 +486,7 @@ export class Client {
     this._initialized = true;
     this._initializedTrigger.wake();
     performance.mark('client.initialize:completed');
+    markMilestone('client.ready');
     performance.measure('client.initialize', 'client.initialize:called', 'client.initialize:completed');
     log('initialized client');
     return this;
@@ -459,13 +496,6 @@ export class Client {
   private async _open(ctx: Context): Promise<void> {
     log('opening...');
     invariant(this._services);
-    log('client._open: importing proxy modules');
-    const { SpaceList } = await import('../echo/space-list.ts');
-    const { HaloProxy } = await import('../halo/halo-proxy.ts');
-    const { MeshProxy } = await import('../mesh/mesh-proxy.ts');
-    const { Shell } = await import('../services/index.ts');
-    log('client._open: proxy modules loaded');
-
     const trigger = new Trigger<Error | undefined>();
     this._services.closed?.on(async (error) => {
       log('terminated', { resetting: this._resetting });
@@ -485,13 +515,23 @@ export class Client {
         this.reloaded.emit();
       }
     });
-    log('client._open: opening services...');
-    await this._services.open();
+    // The services open alongside the proxy imports rather than after them: the worker handshake is
+    // the long pole, and each sequential import waits out a main thread busy with plugin activation.
+    log('client._open: importing proxy modules and opening services...');
+    invariant(this._config, 'Client not initialized.');
+    const edgeUrl = this._config.get('runtime.services.edge.url');
+    const [{ SpaceList }, { HaloProxy }, { MeshProxy }, { Shell }, edgeClientModule] = await Promise.all([
+      import('../echo/space-list.ts'),
+      import('../halo/halo-proxy.ts'),
+      import('../mesh/mesh-proxy.ts'),
+      import('../services/index.ts'),
+      edgeUrl ? import('@dxos/edge-client') : undefined,
+      this._services.open(),
+    ]);
     log('client._open: services opened');
 
-    const edgeUrl = this._config!.get('runtime.services.edge.url');
-    if (edgeUrl) {
-      const { EdgeHttpClient } = await import('@dxos/edge-client');
+    if (edgeUrl && edgeClientModule) {
+      const { EdgeHttpClient } = edgeClientModule;
       const clientTag = resolveTelemetryTag(this._config);
       this._edgeHttpClient = new EdgeHttpClient(edgeUrl, { clientTag });
       this._edgeApi = createClientEdgeAPI({ client: this, edgeClient: this._edgeHttpClient });
@@ -556,8 +596,9 @@ export class Client {
     // Registered with or without an edge endpoint: a write is confirmed once the host stores it
     // locally, and the host replicates to the edge, when configured, on its own.
     const edgeHttpClient = this._edgeHttpClient;
+    const services = this._services;
     const blobBackend = createEdgeBlobBackend({
-      store: createRpcBlobStore(this._services.rpc, this._effectRuntime),
+      store: createRpcBlobStore(() => services.rpc, this._effectRuntime),
       finalizeUpload: edgeHttpClient && ((uploadId) => edgeHttpClient.finalizeBlobUpload(Context.default(), uploadId)),
     });
     const unregisterBlobBackend = this._echoClient.graph.registerBlobBackend(Blob.Storage.edge, blobBackend, {
@@ -722,13 +763,9 @@ export class Client {
    * (e.g., HALO when SharedWorker is unavailable).
    */
   async resumeHostServices(): Promise<void> {
-    await runServiceCall(
-      this._effectRuntime,
-      this.services.rpc['SystemService.updateStatus']({ status: SystemStatus.ACTIVE }),
-      {
-        label: 'SystemService.updateStatus',
-      },
-    );
+    await runServiceCall(this._effectRuntime, this.services.rpc, 'SystemService.updateStatus', {
+      status: SystemStatus.ACTIVE,
+    });
   }
 
   /**
@@ -745,9 +782,7 @@ export class Client {
     log('resetting...');
     this._resetting = true;
     invariant(this._services, 'Client not initialized.');
-    await runServiceCall(this._effectRuntime, this._services.rpc['SystemService.reset'](undefined), {
-      label: 'SystemService.reset',
-    }).catch((err) => {
+    await runServiceCall(this._effectRuntime, this._services.rpc, 'SystemService.reset', undefined).catch((err) => {
       if (!isHostShutDownByReset(err)) {
         throw err;
       }

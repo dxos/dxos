@@ -17,6 +17,7 @@ yield* print(DOCS['operations.md'].slice(0, 400));
 | `database.md`           | Resolving types; creating, updating, deleting; refs, relations, parents.     |
 | `queries.md`            | Filters, comparisons, ordering, limits, following refs, relations, children. |
 | `operations.md`         | Resolving an operation by DXN and invoking it.                               |
+| `printing.md`           | How objects print, and the code their relation and referrer counts give.     |
 | `errors.md`             | Failures, `Effect.result`, and the mistakes that cost a call.                |
 | `catalog/types.md`      | Every type this workspace can resolve: its DXN, kind and fields.             |
 | `catalog/operations.md` | Every operation this turn can resolve: its DXN, description and input.       |

@@ -236,12 +236,16 @@ export class CallSwarmSynchronizer extends Resource {
     }
   }
 
-  private async _sendState(): Promise<void> {
-    if (!this._state.roomId || !this._identityKey || !this._deviceKey || !this._state.joined) {
-      return;
+  /**
+   * This device's state as other participants see it.
+   * @internal
+   */
+  _getLocalUser(): UserState | undefined {
+    if (!this._deviceKey) {
+      return undefined;
     }
 
-    const state: UserState = {
+    return {
       ...this._state,
       id: this._deviceKey,
       name: this._displayName,
@@ -254,6 +258,13 @@ export class CallSwarmSynchronizer extends Resource {
           )
         : {},
     };
+  }
+
+  private async _sendState(): Promise<void> {
+    const state = this._getLocalUser();
+    if (!this._state.roomId || !this._identityKey || !state || !this._state.joined) {
+      return;
+    }
 
     await this._networkService.joinSwarm(
       buf.create(JoinRequestSchema, {

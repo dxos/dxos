@@ -65,7 +65,7 @@ const DefaultStory = () => {
   const personNode = useNode(person, 'ph--user--regular');
 
   return (
-    <div className='flex h-full gap-3 p-3 dx-deck-surface'>
+    <div className='flex h-full gap-3 p-trim-md dx-deck-surface'>
       <Plank node={organizationNode} classNames={PLANK_CLASSNAMES} />
       <Plank node={personNode} classNames={PLANK_CLASSNAMES} />
     </div>
@@ -94,7 +94,7 @@ const BreadcrumbStory = () => {
   const [organization] = useMemo(() => [Organization.make({ name: random.company.name() })], []);
   const node = useNode(organization, 'ph--building-office--regular');
   return (
-    <div className='flex h-full p-3 dx-deck-surface'>
+    <div className='flex h-full p-trim-md dx-deck-surface'>
       <Plank
         node={node}
         classNames={[PLANK_CLASSNAMES, 'w-[40rem]']}
@@ -115,16 +115,27 @@ export const TestBreadcrumbControlsAtEnd: Story = {
   },
 };
 
-/** The same trail one level apart: Sessions as the current page, then as a link under New Chat. */
+/**
+ * The same trail at three depths: Composer Plugin alone at the top level, then Sessions as the current page under it,
+ * then as a link under New Chat.
+ */
 const BreadcrumbDepthStory = () => {
-  const [sessions, chat] = useMemo(
-    () => [Organization.make({ name: 'Sessions' }), Organization.make({ name: 'New Chat' })],
+  const [plugin, sessions, chat] = useMemo(
+    () => [
+      Organization.make({ name: 'Composer Plugin' }),
+      Organization.make({ name: 'Sessions' }),
+      Organization.make({ name: 'New Chat' }),
+    ],
     [],
   );
+  const pluginNode = useNode(plugin, 'ph--building-office--regular');
   const sessionsNode = useNode(sessions, 'ph--building-office--regular');
   const chatNode = useNode(chat, 'ph--building-office--regular');
   return (
-    <div className='flex flex-col h-full gap-3 p-3 dx-deck-surface'>
+    <div className='flex flex-col h-full gap-3 p-trim-md dx-deck-surface'>
+      <div data-testid='depth-0' className='flex'>
+        <Plank node={pluginNode} classNames={[PLANK_CLASSNAMES, 'w-[40rem]']} breadcrumbs={[]} />
+      </div>
       <div data-testid='depth-1' className='flex'>
         <Plank
           node={sessionsNode}
@@ -160,10 +171,17 @@ export const TestBreadcrumbStableAcrossDepth: Story = {
     const firstSeparator = (depth: string) =>
       within(canvasElement).getByTestId(depth).querySelector<HTMLElement>('[data-part="separator"]');
     await waitFor(() => crumb('depth-2', 'Sessions'));
+    const box = (element: HTMLElement) => element.getBoundingClientRect();
+
+    // The top-level title is the trail's first crumb once a level opens under it: same place, same size.
+    const top = crumb('depth-0', 'Composer Plugin');
+    const first = crumb('depth-1', 'Composer Plugin');
+    await expect(Math.abs(box(top).left - box(first).left)).toBeLessThanOrEqual(0.5);
+    await expect(Math.abs(box(top).width - box(first).width)).toBeLessThanOrEqual(0.5);
+    await expect(getComputedStyle(top).fontSize).toBe(getComputedStyle(first).fontSize);
 
     const current = crumb('depth-1', 'Sessions');
     const link = crumb('depth-2', 'Sessions');
-    const box = (element: HTMLElement) => element.getBoundingClientRect();
     await expect(Math.abs(box(current).left - box(link).left)).toBeLessThanOrEqual(0.5);
     await expect(Math.abs(box(current).width - box(link).width)).toBeLessThanOrEqual(0.5);
     await expect(Math.abs(box(current).height - box(link).height)).toBeLessThanOrEqual(0.5);

@@ -15,7 +15,7 @@ import { Database, Filter, Query, Ref } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as RemoteTriggerManager from './RemoteTriggerManager.ts';
-import { TriggerDispatcher, type TriggerRuntimeStatus } from './triggers/trigger-dispatcher.ts';
+import { TriggerDispatcher, type TriggerRuntimeStatus, resetFeedCursor } from './triggers/trigger-dispatcher.ts';
 
 /**
  * Aggregate {@link Trigger.ManagerService} that merges the local
@@ -25,7 +25,8 @@ import { TriggerDispatcher, type TriggerRuntimeStatus } from './triggers/trigger
  * {@link RemoteTriggerManager.layerNoop} for local-only deployments.
  *
  * `invokeTrigger` refuses a disabled trigger, then routes by the trigger's `remote` flag: remote
- * triggers are dispatched via the remote manager, local ones via the local dispatcher.
+ * triggers are dispatched via the remote manager, local ones via the local dispatcher. `resetTrigger`
+ * routes the same way: a local feed trigger's cursor lives on the trigger object, a remote one's on EDGE.
  */
 export const layer: Layer.Layer<
   Trigger.ManagerService,
@@ -115,6 +116,16 @@ export const layer: Layer.Layer<
           : options.trigger.remote === true
             ? remote.invokeTrigger(options)
             : dispatcher.invokeTrigger({ trigger: options.trigger, event: options.event }).pipe(Effect.asVoid),
+
+      resetTrigger: (options: Trigger.ResetOptions) =>
+        options.trigger.spec?.kind !== 'feed'
+          ? Effect.fail(new Trigger.TriggerNotResettableError(options.trigger.id))
+          : options.trigger.remote === true
+            ? remote.resetTrigger(options)
+            : Effect.sync(() => resetFeedCursor(options.trigger)).pipe(
+                Effect.andThen(Database.flush()),
+                Effect.provideService(Database.Service, database),
+              ),
     };
 
     return monitor;

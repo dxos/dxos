@@ -10,13 +10,10 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 
-import * as Memory from './Memory.ts';
-
 export const ListedMode = Schema.Struct({
   name: Schema.String,
   description: Schema.optional(Schema.String),
   skills: Schema.Array(Schema.String).annotate({ description: 'Registry keys of the skills the mode binds.' }),
-  records: Schema.optional(Schema.Array(Memory.Kind)),
   current: Schema.Boolean,
 });
 

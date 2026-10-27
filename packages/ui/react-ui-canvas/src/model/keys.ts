@@ -34,10 +34,17 @@ export type KeyAction =
   | 'undo'
   | 'redo'
   | 'selectAll'
+  | 'group'
+  | 'ungroup'
   | 'snap'
   | 'guides'
-  | 'lattice'
-  | 'debug';
+  | 'debug'
+  | 'play'
+  | 'stepBack'
+  | 'stepForward'
+  | 'previousKey'
+  | 'nextKey'
+  | 'addKey';
 
 /** Every action's chords; the first is the one shown in labels. */
 export const KEY_BINDINGS: Record<KeyAction, KeyBinding[]> = {
@@ -56,11 +63,18 @@ export const KEY_BINDINGS: Record<KeyAction, KeyBinding[]> = {
   undo: [{ key: 'z', meta: true, shift: false }],
   redo: [{ key: 'z', meta: true, shift: true }],
   selectAll: [{ key: 'a', meta: true }],
-  // Not with Shift: Shift+G is the lattice toggle.
+  group: [{ key: 'g', meta: true, shift: false }],
+  ungroup: [{ key: 'g', meta: true, shift: true }],
   snap: [{ key: 'g', shift: false }],
   guides: [{ key: ';' }],
-  lattice: [{ key: 'G', shift: true }],
   debug: [{ key: 'd' }],
+  // The timeline's (ANIMATION.md §5.8); the view hands them on to the tools while the scene has no timeline.
+  play: [{ key: ' ' }],
+  stepBack: [{ key: ',' }],
+  stepForward: [{ key: '.' }],
+  previousKey: [{ key: '[' }, { key: 'ArrowLeft', meta: true }],
+  nextKey: [{ key: ']' }, { key: 'ArrowRight', meta: true }],
+  addKey: [{ key: 'k', shift: false }],
 };
 
 /** The subset of a keyboard event the bindings read, so tests and non-React callers can pass a literal. */
@@ -102,20 +116,36 @@ export const isToolKey = (event: KeyEventLike): boolean => !hasCommandKey(event)
 const IS_MAC = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 
 const KEY_GLYPHS: Record<string, string> = {
-  ArrowUp: '↑',
-  ArrowDown: '↓',
-  ArrowLeft: '←',
-  ArrowRight: '→',
-  Escape: 'Esc',
-  Backspace: '⌫',
-  Delete: '⌦',
-  Enter: '↩',
-  Home: 'Home',
+  ' ': 'Space',
+  'ArrowUp': '↑',
+  'ArrowDown': '↓',
+  'ArrowLeft': '←',
+  'ArrowRight': '→',
+  'Escape': 'Esc',
+  'Backspace': '⌫',
+  'Delete': '⌦',
+  'Enter': '↩',
+  'Home': 'Home',
+};
+
+/** A shifted digit's character, read as the key cap it is typed on, since the label already shows Shift. */
+const SHIFTED_DIGITS: Record<string, string> = {
+  '!': '1',
+  '@': '2',
+  '#': '3',
+  '$': '4',
+  '%': '5',
+  '^': '6',
+  '&': '7',
+  '*': '8',
+  '(': '9',
+  ')': '0',
 };
 
 /** The chord as a label reads it: modifiers in the platform's order, then the key. */
 export const shortcutLabel = (binding: KeyBinding): string => {
-  const key = KEY_GLYPHS[binding.key] ?? binding.key.toUpperCase();
+  const key =
+    KEY_GLYPHS[binding.key] ?? (binding.shift ? SHIFTED_DIGITS[binding.key] : undefined) ?? binding.key.toUpperCase();
   const modifiers = [
     binding.alt ? (IS_MAC ? '⌥' : 'Alt+') : '',
     binding.shift ? (IS_MAC ? '⇧' : 'Shift+') : '',

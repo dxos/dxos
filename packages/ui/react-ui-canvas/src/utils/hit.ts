@@ -7,7 +7,7 @@
 // same for every renderer.
 //
 
-import { type Bounds, MAJOR_GRID, type Node, type Point, type Scene } from '../model/types.ts';
+import { type Bounds, MAJOR_GRID, type Node, type Point, type View } from '../model/index.ts';
 import { sortByZ } from './order.ts';
 import { nodeBounds } from './shapes.ts';
 
@@ -68,22 +68,37 @@ export const alignBounds = (bounds: Bounds, unit: number): Bounds => {
   };
 };
 
-export const nodeList = (scene: Scene): Node[] => Object.values(scene.nodes);
+export const nodeList = (scene: View): Node[] => Object.values(scene.nodes);
 
 /**
  * What a scene holds (decision 6): the union of its nodes plus padding, grown to the major grid. Fit and a
  * portal's preview frame it; an empty scene has none.
  */
-export const contentBounds = (scene: Scene, padding = BOUNDS_PADDING, unit = MAJOR_GRID): Bounds | undefined => {
+export const contentBounds = (scene: View, padding = BOUNDS_PADDING, unit = MAJOR_GRID): Bounds | undefined => {
   const content = unionBounds(nodeList(scene).map(nodeBounds));
   return content ? alignBounds(padBounds(content, padding), unit) : undefined;
 };
 
+/** `point` turned back by the node's rotation about its centre, into the frame's own axes. */
+export const unrotatePoint = (node: Node, point: Point): Point => {
+  const rotation = node.rotation ?? 0;
+  if (rotation === 0) {
+    return point;
+  }
+  const angle = (-rotation * Math.PI) / 180;
+  const dx = point.x - node.center.x;
+  const dy = point.y - node.center.y;
+  return {
+    x: node.center.x + dx * Math.cos(angle) - dy * Math.sin(angle),
+    y: node.center.y + dx * Math.sin(angle) + dy * Math.cos(angle),
+  };
+};
+
 /** Topmost node under `point`, or none; `margin` widens every node, e.g. to reach its ports. */
-export const hitTest = (scene: Scene, point: Point, margin = 0): Node | undefined => {
+export const hitTest = (scene: View, point: Point, margin = 0): Node | undefined => {
   const nodes = sortByZ(nodeList(scene));
   for (let index = nodes.length - 1; index >= 0; index--) {
-    if (containsPoint(padBounds(nodeBounds(nodes[index]), margin), point)) {
+    if (containsPoint(padBounds(nodeBounds(nodes[index]), margin), unrotatePoint(nodes[index], point))) {
       return nodes[index];
     }
   }
@@ -91,5 +106,5 @@ export const hitTest = (scene: Scene, point: Point, margin = 0): Node | undefine
 };
 
 /** Nodes whose bounds intersect `bounds` (marquee semantics). */
-export const nodesIntersecting = (scene: Scene, bounds: Bounds): Node[] =>
+export const nodesIntersecting = (scene: View, bounds: Bounds): Node[] =>
   nodeList(scene).filter((node) => intersects(nodeBounds(node), bounds));

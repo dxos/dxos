@@ -17,7 +17,7 @@ import {
 import { Context, TRACE_SPAN_ATTRIBUTE, type TraceContextData } from '@dxos/context';
 import { type Lifecycle, Resource } from '@dxos/context';
 import { log, logInfo } from '@dxos/log';
-import { EdgeClientTooOldError, EdgeCredentialsHeaderCodec } from '@dxos/protocols';
+import { EdgeClientTooOldError, EdgeCredentialsHeaderCodec, edgeFlowControlWindow } from '@dxos/protocols';
 import {
   type EdgeStatus,
   EdgeStatus_ConnectionState,
@@ -25,13 +25,14 @@ import {
 } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { type Message } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { trace } from '@dxos/tracing';
+import { markMilestone } from '@dxos/util';
 
 import {
   authenticateViaChallengeEndpoint,
   presentCredentialsForChallenge,
   readAuthChallenge,
 } from './auth-challenge.ts';
-import { assertClientSupported, clientVersionHeaders } from './client-version.ts';
+import { assertClientSupported, clientVersionHeaders, readJsonBody } from './client-version.ts';
 import { protocol } from './defs.ts';
 import { type EdgeIdentity } from './edge-identity.ts';
 import { EdgeWsConnection } from './edge-ws-connection.ts';
@@ -47,6 +48,23 @@ const STATUS_REFRESH_INTERVAL = 1000;
 
 export type MessageListener = (message: Message) => void;
 export type ReconnectListener = () => void;
+
+export type EdgeStreamOptions = {
+  /**
+   * Service every message on this stream is addressed to. It also selects the mux channel, and so
+   * the credit window the stream is bounded by.
+   */
+  serviceId: string;
+
+  /**
+   * Bytes the stream buffers before `writer.ready` stops resolving. Defaults to the service's
+   * credit window, which is the point at which the peer stops granting anyway.
+   */
+  highWaterMark?: number;
+
+  /** Aborts the stream, failing any write waiting on credit; a failed write's message may still be delivered. */
+  signal?: AbortSignal;
+};
 
 export type MessengerConfig = {
   socketEndpoint: string;
@@ -158,6 +176,26 @@ export class EdgeClient extends Resource implements EdgeConnection {
     });
   }
 
+  /** @see EdgeWsConnection.pendingSendBytes */
+  get pendingSendBytes(): number {
+    return this._currentConnection?.pendingSendBytes ?? 0;
+  }
+
+  /** @see EdgeWsConnection.unacknowledgedBytes */
+  get unacknowledgedBytes(): number {
+    return this._currentConnection?.unacknowledgedBytes ?? 0;
+  }
+
+  /** @see EdgeWsConnection.flowControlEnabled */
+  get flowControlEnabled(): boolean {
+    return this._currentConnection?.flowControlEnabled ?? false;
+  }
+
+  /** @see EdgeWsConnection.pausedUntil */
+  pausedUntil(serviceId: string): number | undefined {
+    return this._currentConnection?.pausedUntil(serviceId);
+  }
+
   get identityDid() {
     return this._identity.identityDid;
   }
@@ -180,6 +218,15 @@ export class EdgeClient extends Resource implements EdgeConnection {
    * NOTE: The message is guaranteed to be delivered but the service must respond with a message to confirm processing.
    */
   public async send(ctx: Context, message: Message) {
+    const connection = await this._prepareSend(ctx, message);
+    connection.send(message);
+  }
+
+  /**
+   * Wait for a live connection, validate the message against this identity, and stamp its trace
+   * context. Shared so the awaited path cannot drift from the fire-and-forget one.
+   */
+  private async _prepareSend(ctx: Context, message: Message): Promise<EdgeWsConnection> {
     if (this.#refusal) {
       throw this.#refusal;
     }
@@ -209,7 +256,46 @@ export class EdgeClient extends Resource implements EdgeConnection {
       };
     }
 
-    this._currentConnection.send(message);
+    return this._currentConnection;
+  }
+
+  /** {@link send}, resolving once the message has reached the socket, which under flow control waits for credit. */
+  public async sendAndWait(ctx: Context, message: Message): Promise<void> {
+    const connection = await this._prepareSend(ctx, message);
+    await connection.sendAndWait(message);
+  }
+
+  /**
+   * A stream of outbound messages on one service whose writes resolve once the message reaches the socket, which under
+   * `edge-ws-v2` waits for EDGE's credit, so `pipeTo` slows its source instead of buffering without bound.
+   * A write caught by a reconnect rejects and errors the stream, so callers recreate it from `onReconnected`.
+   */
+  public createStream({ serviceId, highWaterMark, signal }: EdgeStreamOptions): WritableStream<Message> {
+    return new WritableStream<Message>(
+      {
+        write: async (message) => {
+          signal?.throwIfAborted();
+          message.serviceId ||= serviceId;
+          const sent = this.sendAndWait(Context.default(), message);
+          if (!signal) {
+            return sent;
+          }
+          // Raced rather than checked once: a write stalled on credit would otherwise ignore the abort until a grant.
+          return new Promise<void>((resolve, reject) => {
+            const onAbort = () => reject(signal.reason);
+            signal.addEventListener('abort', onAbort, { once: true });
+            sent.then(resolve, reject).finally(() => signal.removeEventListener('abort', onAbort));
+          });
+        },
+      },
+      {
+        highWaterMark: highWaterMark ?? edgeFlowControlWindow(serviceId),
+        // Bytes, not messages: every limit in play (the credit window, the 1MB frame cap, the 32MB
+        // message cap) is a byte budget, so counting messages would make the mark meaningless
+        // across mixed sizes.
+        size: (message) => message.payload?.value?.byteLength ?? 0,
+      },
+    );
   }
 
   public onMessage(listener: MessageListener) {
@@ -245,6 +331,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
       return;
     }
     this._networkingStarted = true;
+    markMilestone('network.started');
     this._persistentLifecycle.open().catch((err) => {
       log.warn('Error while opening connection', { err });
     });
@@ -329,6 +416,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
       {
         onConnected: () => {
           if (this._isActive(connection)) {
+            markMilestone('network.connected');
             this._ready.wake();
             this._notifyReconnected();
           } else {
@@ -468,7 +556,7 @@ export class EdgeClient extends Resource implements EdgeConnection {
     }
 
     const response = await fetch(new URL(path, this._baseHttpUrl), { method: 'GET', headers: clientVersionHeaders() });
-    await assertClientSupported(response);
+    assertClientSupported(response, response.ok ? undefined : await readJsonBody(response));
     // Gate on a parsed VP challenge, not merely on a 401. A 401 forwarded from upstream can carry
     // an unrelated `WWW-Authenticate` (or none), and signing a challenge that isn't there would
     // throw instead of degrading to an unauthenticated attempt.

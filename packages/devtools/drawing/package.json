@@ -1,0 +1,43 @@
+{
+  "name": "@dxos/drawing",
+  "version": "0.16.0",
+  "description": "Diagrams your coding agent can draw: lay out a semantic diagram (.dx) into an SVG.",
+  "homepage": "https://drawing.sh",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "info@dxos.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "dist/src/index.d.ts",
+  "bin": {
+    "drawing": "bin/drawing.js"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "skills"
+  ],
+  "dependencies": {
+    "@dxos/diagram": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -52,6 +52,24 @@ const byRelation = (entries: ReadonlyArray<{ relation: string; tuple: ReadonlyAr
   Object.fromEntries(entries.map(({ relation, tuple }) => [relation, tuple]));
 
 describe('Encoding', () => {
+  test('encodes the graph, a memory kind, and the graphs it replaces', ({ expect }) => {
+    const remembered: RDF.Fact = {
+      ...MINIMAL,
+      id: 'graph-2#abc',
+      graph: 'graph-2',
+      kind: 'preference',
+      supersedes: ['graph-1'],
+      assertion: { ...MINIMAL.assertion, predicate: 'is on the team as' },
+    };
+    const entries = Encoding.encode(remembered, Vocabulary.make(Vocabulary.DEFAULT_ENTRIES));
+    const relations = byRelation(entries);
+    expect(relations.graph).toEqual(['graph-2#abc', 'graph-2']);
+    expect(relations.kind).toEqual(['graph-2#abc', 'preference']);
+    expect(relations.supersedes).toEqual(['graph-2#abc', 'graph-1']);
+    // The vocabulary is the ontology's, so an ontology synonym maps onto its predicate.
+    expect(relations.fact[2]).toBe('has_role');
+  });
+
   test('encodes fact and metadata relations keyed by the fact id', ({ expect }) => {
     const entries = Encoding.encode(REFUSAL, Vocabulary.make(Vocabulary.DEFAULT_ENTRIES));
     const relations = byRelation(entries);

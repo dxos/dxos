@@ -84,7 +84,7 @@ import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
 import { type Teleport } from '@dxos/teleport';
 import { Gossip, Presence } from '@dxos/teleport-extension-gossip';
 import { trace } from '@dxos/tracing';
-import { ComplexMap, deferFunction, forEachAsync } from '@dxos/util';
+import { ComplexMap, deferFunction, forEachAsync, markMilestone } from '@dxos/util';
 
 import * as Auth from '../../Auth.ts';
 import * as IdentityContract from '../../contracts/identity.ts';
@@ -296,6 +296,7 @@ export class DataSpaceManager extends Resource {
     log('open');
     log('metadata loaded', { spaces: this._metadataStore.spaces.length });
 
+    markMilestone('spaces.opening', `${this._metadataStore.spaces.length} spaces`);
     const spacesToActivate: DataSpace[] = [];
     await forEachAsync(this._metadataStore.spaces, async (spaceMetadata) => {
       try {
@@ -326,6 +327,7 @@ export class DataSpaceManager extends Resource {
       });
     }
 
+    markMilestone('spaces.loaded');
     this.updated.emit();
   }
 

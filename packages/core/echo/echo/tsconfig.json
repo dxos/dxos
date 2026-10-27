@@ -6,6 +6,9 @@
       "node"
     ]
   },
+  "exclude": [
+    "**/*.tst.ts"
+  ],
   "include": [
     "src"
   ],

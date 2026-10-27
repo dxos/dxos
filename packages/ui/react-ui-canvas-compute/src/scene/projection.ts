@@ -19,7 +19,7 @@ import {
   type Link,
   type Node,
   type Projection,
-  type Scene,
+  type View,
   createFreehandProjection,
   endpointNode,
   reduceIntent,
@@ -48,7 +48,7 @@ const computeId = (node: Node | undefined): string | undefined =>
   node && 'node' in node && typeof node.node === 'string' ? node.node : undefined;
 
 /** The compute edge a link stands for: both ends on compute nodes, the ports naming the properties. */
-const computeLink = (scene: Scene, link: Link | undefined): ComputeLink | undefined => {
+const computeLink = (scene: View, link: Link | undefined): ComputeLink | undefined => {
   if (!link) {
     return undefined;
   }
@@ -165,11 +165,11 @@ export const createComputeProjection = ({
   };
 
   /**
-   * The compute graph brought in line with the restored scene: a shape whose node is gone gets it back
+   * The compute graph brought in line with the patched scene: a shape whose node is gone gets it back
    * under the same id, a node this projection mirrored whose shape is gone goes, and the edges between
    * shape-backed nodes are exactly the scene's links.
    */
-  const reconcile = (restored: Scene): void => {
+  const reconcile = (restored: View): void => {
     const shapes = new Map<string, Node>();
     for (const node of Object.values(restored.nodes)) {
       const id = computeId(node);
@@ -209,11 +209,8 @@ export const createComputeProjection = ({
     scene,
     apply,
     capabilities: freehand.capabilities,
-    snapshot: freehand.snapshot,
-    restore: (snapshot) => {
-      freehand.restore(snapshot);
-      reconcile(registry.get(freehand.scene));
-    },
+    // Undo patches the store; the compute graph is then brought in line with the scene it left.
+    restored: () => reconcile(registry.get(freehand.scene)),
   };
 };
 
@@ -228,7 +225,8 @@ const withRuntimePorts = (controller: ComputeGraphSource, node: Node): Node => {
   if (!id) {
     return node;
   }
-  const computeNode = model(controller).getNode(id);
+  // `findNode`, not `getNode`: a delete removes the compute node before the shape, and a peer's may land first.
+  const computeNode = model(controller).findNode(id);
   if (!computeNode?.inputSchema && !computeNode?.outputSchema) {
     return node;
   }

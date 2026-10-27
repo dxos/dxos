@@ -33,14 +33,14 @@ These decide the shape of everything else.
 
 ## Model
 
-| Object            | What it is                                                                                                                       | Key                   | Where |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------- | --------------------- | ----- |
-| **App**           | A registered Discord application: the DXOS app ("Kai"), or a team's own. Token held by KMS, never in a space.                    | application id        | EDGE  |
-| **Installation**  | An app installed in a guild, and the Discord user who installed it (linked to their DXOS identity).                              | (app, guild)          | EDGE  |
-| **Binding**       | A Discord channel mapped to an agent in a space, with who authorized each side.                                                  | (app, guild, channel) | EDGE  |
-| **Agent**         | The ECHO agent: instructions, skills, modes, memories. One agent may be bound to many channels and shares its state across them. | space, object id      | space |
-| **Chat**          | One conversation: a Discord thread or DM, under the agent (`ensureChannelChat`).                                                 | (channel, thread)     | space |
-| **Agent process** | The turn loop for one chat.                                                                                                      | chat                  | EDGE  |
+| Object            | What it is                                                                                                                    | Key                   | Where |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------- | --------------------- | ----- |
+| **App**           | A registered Discord application: the DXOS app ("Kai"), or a team's own. Token held by KMS, never in a space.                 | application id        | EDGE  |
+| **Installation**  | An app installed in a guild, and the Discord user who installed it (linked to their DXOS identity).                           | (app, guild)          | EDGE  |
+| **Binding**       | A Discord channel mapped to an agent in a space, with who authorized each side.                                               | (app, guild, channel) | EDGE  |
+| **Agent**         | The ECHO agent: instructions, skills, modes, facts. One agent may be bound to many channels and shares its state across them. | space, object id      | space |
+| **Chat**          | One conversation: a Discord thread or DM, under the agent (`ensureChannelChat`).                                              | (channel, thread)     | space |
+| **Agent process** | The turn loop for one chat.                                                                                                   | chat                  | EDGE  |
 
 The **Discord service** is today's per-app bot host generalized: one gateway connection per app across every guild it
 is in, a binding table instead of a single config, and tokens from KMS.
@@ -134,16 +134,16 @@ endpoint calling the agent API), or only extends the agent that the shared servi
 ## Today
 
 What is built (dxos/dxos#13887, dxos/edge#1279), set up from the agent's **Discord** companion and prototyped in the
-`stories-agent` `AgentDiscord` stories:
+`stories-agent` `DiscordAgent` stories:
 
 - **Connect Discord** signs in with the `discord-user` connector (OAuth `identify` + `guilds`) and lists the servers the
   user administers; **Install** (or **Reinstall**, to grant permissions added since) opens the bot's install link.
 - One bot host per app on EDGE (`DiscordBot`, `bot:<applicationId>`) with a **binding table**: many Discord channels,
   each routed to a `Channel` in one owning space. A binding from another space is refused (409) instead of taking
   the bot over.
-- The bot token and application id live on the space's `DiscordChannel` config; locally EDGE uses its own
-  `DISCORD_BOT_TOKEN_DEV`, and everything that needs the token (listing channels, deleting a thread, posting the
-  agent's messages and relays) runs on EDGE.
+- The bot is the Kai app of the EDGE Composer talks to (plugin-discord's `KAI_APPLICATION_IDS`); EDGE holds each
+  Kai's token (`DISCORD_KAI_BOT_TOKEN`), so a space's `DiscordChannel` config names the app and its Discord channels
+  but no token. Only a team's own bot records an `AccessToken`.
 - No installation records, KMS-held tokens, slash commands or webhooks yet.
 
 ### How a Discord channel reaches an agent

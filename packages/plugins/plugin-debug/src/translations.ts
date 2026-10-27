@@ -80,7 +80,6 @@ export const translations = [
         'settings.debug-port.label': 'Open debug port.',
         'settings.debug-port.description':
           'Runs arbitrary code from a loopback server with full access to your data. Only enable while you are working with an agent you trust.',
-        'settings.debug-port.running.label': 'Listening on',
         'settings.debug-port.session.label': 'Session id',
         'settings.debug-port.session.description':
           'Pass to composer-recovery.js --session. A new id is issued on every restart.',
