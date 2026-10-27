@@ -2,16 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { parseMdlBlocks } from '@dxos/deus/extension';
+import { QUESTION_STATUSES, type QuestionStatus, parseMdlBlocks } from '@dxos/deus/extension';
 import { Key } from '@dxos/echo';
 import { type Task } from '@dxos/types';
 
-import { parseFields } from './spec-model.ts';
-
-/** The statuses of a `question` block (`lang/question.mdl`), in the order the viewer lists them. */
-export const QUESTION_STATUSES = ['open', 'answered', 'moot'] as const;
-
-export type QuestionStatus = (typeof QUESTION_STATUSES)[number];
+import { inlineValueOf, listOf, parseFields, proseOf } from './spec-model.ts';
 
 /** One `question` block of a spec. */
 export type SpecQuestion = {
@@ -34,9 +29,6 @@ export type SpecQuestion = {
 const isQuestionStatus = (value?: string): value is QuestionStatus =>
   value !== undefined && (QUESTION_STATUSES as readonly string[]).includes(value);
 
-/** An inline value without its trailing `# comment`. */
-const valueOf = (inline?: string): string | undefined => inline?.replace(/\s+#.*$/, '').trim() || undefined;
-
 /**
  * The `question` blocks of a spec, open questions first and otherwise in document order; a question with no known
  * status is dropped.
@@ -46,22 +38,13 @@ export const parseQuestions = (text: string): SpecQuestion[] =>
     .filter(({ type, id }) => type === 'question' && id)
     .flatMap(({ id, title, body }): SpecQuestion[] => {
       const fields = parseFields(body);
-      const status = valueOf(fields.get('status')?.inline);
+      const status = inlineValueOf(fields.get('status')?.inline);
       if (!isQuestionStatus(status)) {
         return [];
       }
-      const prose = (name: string) =>
-        [fields.get(name)?.inline, ...(fields.get(name)?.lines ?? [])].filter(Boolean).join(' ').trim() || undefined;
-      // A list may be inline (`[a, b]`), wrapped over several lines, or written as `- a` items.
-      const list = (name: string) =>
-        [valueOf(fields.get(name)?.inline), ...(fields.get(name)?.lines ?? [])]
-          .join(',')
-          .split(',')
-          .map((value) => value.replace(/^[\s[-]+|[\s\]]+$/g, ''))
-          .filter(Boolean);
-      const to = valueOf(fields.get('to')?.inline);
-      const answer = prose('answer');
-      const note = prose('note');
+      const to = inlineValueOf(fields.get('to')?.inline);
+      const answer = proseOf(fields.get('answer'));
+      const note = proseOf(fields.get('note'));
       return [
         {
           id,
@@ -69,8 +52,8 @@ export const parseQuestions = (text: string): SpecQuestion[] =>
           status,
           ...(to && { to }),
           ...(answer && { answer }),
-          decisions: list('decisions'),
-          affects: list('affects'),
+          decisions: listOf(fields.get('decisions')),
+          affects: listOf(fields.get('affects')),
           // An option is a sentence and may hold commas, so options are `- item` lines, never split on commas.
           options: (fields.get('options')?.lines ?? []).map((line) => line.replace(/^-\s*/, '')).filter(Boolean),
           ...(note && { note }),

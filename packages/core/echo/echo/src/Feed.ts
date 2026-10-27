@@ -357,7 +357,7 @@ export const append = (
           }
           if (options?.branch !== undefined) {
             const branch = options.branch;
-            items.forEach((item) => setBranchKey(item, branch));
+            items.forEach((item) => internal.change(item, (mutable) => setBranchKey(mutable, branch)));
           }
           return db.appendToFeed(feed, items, { origin });
         }),
@@ -584,11 +584,10 @@ export type LocalCursor = Schema.Schema.Type<typeof LocalCursor>;
 const keyOf = (item: Entity.Unknown | Entity.Snapshot, source: string): string | undefined =>
   (internal.getFeedBlockKeys(item) ?? internal.getKeys(item, source)).find((key) => key.source === source)?.id;
 
-const setBranchKey = (item: Entity.Unknown, branch: BranchId): void => {
-  internal.change(item, (mutable) => {
-    internal.deleteKeys(mutable, KEY_FEED_BRANCH);
-    internal.getMetaChecked(mutable).keys.push(internal.foreignKey(KEY_FEED_BRANCH, branch));
-  });
+/** Writes the branch key into an open change, so a caller can batch it with its other writes. */
+const setBranchKey = (mutable: Entity.Mutable<Entity.Unknown>, branch: BranchId): void => {
+  internal.deleteKeys(mutable, KEY_FEED_BRANCH);
+  internal.getMetaChecked(mutable).keys.push(internal.foreignKey(KEY_FEED_BRANCH, branch));
 };
 
 /**
@@ -649,21 +648,20 @@ export const getLocalCursor = (item: Entity.Unknown | Entity.Snapshot): LocalCur
  *
  * @performance Async; one append for the base, then one for the rest.
  */
-export const fork = (
+export const fork = Effect.fn('Feed.fork')(function* (
   feed: Feed,
   items: Entity.Unknown[],
   options: ForkOptions,
-): Effect.Effect<BranchId, never, Database.Service> =>
-  Effect.gen(function* () {
-    const { db } = yield* Database.Service;
-    const [base, ...rest] = items;
-    invariant(base !== undefined, 'fork: pass at least the base item');
-    const branch = BranchId.make(yield* Effect.promise(() => db.forkFeed(feed, base, { at: options.at })));
-    if (rest.length > 0) {
-      yield* append(feed, rest, { branch });
-    }
-    return branch;
-  }).pipe(Effect.withSpan('Feed.fork'), Database.withSpaceId);
+): Effect.fn.Return<BranchId, never, Database.Service> {
+  const { db } = yield* Database.Service;
+  const [base, ...rest] = items;
+  invariant(base !== undefined, 'fork: pass at least the base item');
+  const branch = yield* Effect.promise(() => db.forkFeed(feed, base, { at: options.at }));
+  if (rest.length > 0) {
+    yield* append(feed, rest, { branch });
+  }
+  return branch;
+}, Database.withSpaceId);
 
 /**
  * Returns what a read of one branch sees: the items of its ancestors up to each fork point, then the

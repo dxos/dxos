@@ -1188,36 +1188,35 @@ export class FeedStore {
    * @performance One recursive query for the path, one read for each branch on it, and one for the
    * fork bases; it reads the whole path, so a page costs the path rather than the page.
    */
-  walk = (request: WalkRequest): Effect.Effect<Block[], SqlError.SqlError | CypherError, SqlClient.SqlClient> =>
-    Effect.gen({ self: this }, function* () {
-      const sql = yield* SqlClient.SqlClient;
-      const [feed] = yield* sql<{ feedPrivateId: number }>`
+  walk = Effect.fn('FeedStore.walk')({ self: this }, function* (this: FeedStore, request: WalkRequest) {
+    const sql = yield* SqlClient.SqlClient;
+    const [feed] = yield* sql<{ feedPrivateId: number }>`
         SELECT feedPrivateId FROM feeds WHERE spaceId = ${request.spaceId} AND feedId = ${request.feedId}
       `;
-      if (feed === undefined) {
-        return [];
-      }
-      const { feedPrivateId } = feed;
+    if (feed === undefined) {
+      return [];
+    }
+    const { feedPrivateId } = feed;
 
-      let after: StoredPredecessor | undefined;
-      if (request.after !== undefined) {
-        const block = FeedProtocol.parseBlockId(request.after);
-        const [row] =
-          block === undefined
-            ? []
-            : yield* sql<StoredPredecessor>`
+    let after: StoredPredecessor | undefined;
+    if (request.after !== undefined) {
+      const block = FeedProtocol.parseBlockId(request.after);
+      const [row] =
+        block === undefined
+          ? []
+          : yield* sql<StoredPredecessor>`
                 SELECT insertionId, branch FROM blocks
                 WHERE feedPrivateId = ${feedPrivateId} AND sequence = ${block.sequence} AND actorId = ${block.actorId}
               `;
-        if (row === undefined) {
-          return [];
-        }
-        after = row;
+      if (row === undefined) {
+        return [];
       }
+      after = row;
+    }
 
-      const target =
-        request.branch !== undefined ? request.branch : request.direction === 'desc' ? (after?.branch ?? null) : null;
-      const path = yield* sql<BranchRow>`
+    const target =
+      request.branch !== undefined ? request.branch : request.direction === 'desc' ? (after?.branch ?? null) : null;
+    const path = yield* sql<BranchRow>`
         WITH RECURSIVE path(branchId, baseBranchId, baseInsertionId, forkInsertionId, depth) AS (
           SELECT branchId, baseBranchId, baseInsertionId, forkInsertionId, 0
             FROM branches WHERE feedPrivateId = ${feedPrivateId} AND branchId = ${target ?? ROOT_BRANCH_ROW}
@@ -1229,98 +1228,95 @@ export class FeedStore {
         SELECT branchId, baseBranchId, baseInsertionId, forkInsertionId FROM path ORDER BY depth DESC
       `;
 
-      // Blocks past the feed's maxAge are hidden from every read until the next trim deletes them.
-      const notExpired = yield* this.#notExpired(request.spaceId, request.feedNamespace);
-      const sequence: Block[] = [];
-      const onPath = new Set(path.map((row) => row.branchId));
-      const forksAt = new Map<number, Block[]>();
-      if (request.forks === true) {
-        const others = yield* sql<BranchRow>`
+    // Blocks past the feed's maxAge are hidden from every read until the next trim deletes them.
+    const notExpired = yield* this.#notExpired(request.spaceId, request.feedNamespace);
+    const sequence: Block[] = [];
+    const onPath = new Set(path.map((row) => row.branchId));
+    const forksAt = new Map<number, Block[]>();
+    if (request.forks === true) {
+      const others = yield* sql<BranchRow>`
           SELECT branchId, baseBranchId, baseInsertionId, forkInsertionId FROM branches
           WHERE feedPrivateId = ${feedPrivateId} AND forkInsertionId IS NOT NULL
         `;
-        const bases = others.filter((row) => !onPath.has(row.branchId));
-        const baseBlocks =
-          bases.length === 0
-            ? []
-            : yield* sql<Block>`
+      const bases = others.filter((row) => !onPath.has(row.branchId));
+      const baseBlocks =
+        bases.length === 0
+          ? []
+          : yield* sql<Block>`
                 SELECT blocks.*, feeds.feedId, feeds.feedNamespace
                 FROM blocks JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
                 WHERE blocks.insertionId IN ${sql.in(bases.map((row) => row.baseInsertionId))}
                 ${notExpired}
                 ORDER BY blocks.insertionId ASC
               `;
-        const forkOf = new Map(bases.map((row) => [row.baseInsertionId, row.forkInsertionId]));
-        for (const block of baseBlocks) {
-          const forkInsertionId = block.insertionId === undefined ? undefined : forkOf.get(block.insertionId);
-          if (forkInsertionId != null) {
-            forksAt.set(forkInsertionId, [...(forksAt.get(forkInsertionId) ?? []), block]);
-          }
+      const forkOf = new Map(bases.map((row) => [row.baseInsertionId, row.forkInsertionId]));
+      for (const block of baseBlocks) {
+        const forkInsertionId = block.insertionId === undefined ? undefined : forkOf.get(block.insertionId);
+        if (forkInsertionId != null) {
+          forksAt.set(forkInsertionId, [...(forksAt.get(forkInsertionId) ?? []), block]);
         }
       }
+    }
 
-      for (const [index, row] of path.entries()) {
-        const next = path[index + 1];
-        // An ancestor is cut at the fork point of the next branch on the path, by local order.
-        const cutoff =
-          next === undefined ? Number.MAX_SAFE_INTEGER : (next.forkInsertionId ?? next.baseInsertionId - 1);
-        const branch = row.branchId === ROOT_BRANCH_ROW ? null : row.branchId;
-        const blocks = yield* sql<Block>`
+    for (const [index, row] of path.entries()) {
+      const next = path[index + 1];
+      // An ancestor is cut at the fork point of the next branch on the path, by local order.
+      const cutoff = next === undefined ? Number.MAX_SAFE_INTEGER : (next.forkInsertionId ?? next.baseInsertionId - 1);
+      const branch = row.branchId === ROOT_BRANCH_ROW ? null : row.branchId;
+      const blocks = yield* sql<Block>`
           SELECT blocks.*, feeds.feedId, feeds.feedNamespace
           FROM blocks JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
           WHERE blocks.feedPrivateId = ${feedPrivateId} AND blocks.branch IS ${branch} AND blocks.insertionId <= ${cutoff}
           ${notExpired}
           ORDER BY blocks.insertionId ASC
         `;
-        for (const block of blocks) {
-          sequence.push(block, ...(block.insertionId === undefined ? [] : (forksAt.get(block.insertionId) ?? [])));
-        }
+      for (const block of blocks) {
+        sequence.push(block, ...(block.insertionId === undefined ? [] : (forksAt.get(block.insertionId) ?? [])));
       }
+    }
 
-      const ordered = request.direction === 'desc' ? sequence.reverse() : sequence;
-      const start = after === undefined ? 0 : ordered.findIndex((block) => block.insertionId === after.insertionId) + 1;
-      if (start === 0 && after !== undefined) {
-        return [];
-      }
-      return yield* this.#openRows(ordered.slice(start), request.spaceId, request.feedNamespace);
-    }).pipe(Effect.withSpan('FeedStore.walk'));
+    const ordered = request.direction === 'desc' ? sequence.reverse() : sequence;
+    const start = after === undefined ? 0 : ordered.findIndex((block) => block.insertionId === after.insertionId) + 1;
+    if (start === 0 && after !== undefined) {
+      return [];
+    }
+    return yield* this.#openRows(ordered.slice(start), request.spaceId, request.feedNamespace);
+  });
 
   /** The stored predecessor of a block, or `undefined` when it has none or the store does not hold it. */
-  #findPredecessor = (
+  #findPredecessor = Effect.fnUntraced(function* (
     feedPrivateId: number,
     block: Block,
-  ): Effect.Effect<StoredPredecessor | undefined, SqlError.SqlError, SqlClient.SqlClient> =>
-    Effect.gen(function* () {
-      if (block.prevSequence == null || block.prevActorId == null) {
-        return undefined;
-      }
-      const sql = yield* SqlClient.SqlClient;
-      const rows = yield* sql<StoredPredecessor>`
+  ): Effect.fn.Return<StoredPredecessor | undefined, SqlError.SqlError, SqlClient.SqlClient> {
+    if (block.prevSequence == null || block.prevActorId == null) {
+      return undefined;
+    }
+    const sql = yield* SqlClient.SqlClient;
+    const rows = yield* sql<StoredPredecessor>`
         SELECT insertionId, branch FROM blocks
         WHERE feedPrivateId = ${feedPrivateId}
           AND sequence = ${block.prevSequence}
           AND actorId = ${block.prevActorId}
       `;
-      return rows[0];
-    });
+    return rows[0];
+  });
 
   /**
    * Keeps the row of the branch a block was inserted on: a fork block (or the first block of a feed)
    * creates it, and every block moves its head.
    */
-  #noteBranchHead = (
+  #noteBranchHead = Effect.fnUntraced(function* (
     feedPrivateId: number,
     block: Block,
     branch: string | null,
     insertionId: number,
     predecessor: StoredPredecessor | undefined,
-  ): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
-    Effect.gen(function* () {
-      const sql = yield* SqlClient.SqlClient;
-      const forks = block.fork === true && predecessor !== undefined;
-      const baseBranchId = forks ? (predecessor.branch ?? ROOT_BRANCH_ROW) : null;
-      const forkInsertionId = forks ? predecessor.insertionId : null;
-      yield* sql`
+  ): Effect.fn.Return<void, SqlError.SqlError, SqlClient.SqlClient> {
+    const sql = yield* SqlClient.SqlClient;
+    const forks = block.fork === true && predecessor !== undefined;
+    const baseBranchId = forks ? (predecessor.branch ?? ROOT_BRANCH_ROW) : null;
+    const forkInsertionId = forks ? predecessor.insertionId : null;
+    yield* sql`
         INSERT INTO branches (
           feedPrivateId, branchId, baseBranchId, baseInsertionId, forkInsertionId,
           headInsertionId, headSequence, headActorId
@@ -1334,7 +1330,7 @@ export class FeedStore {
           headActorId = excluded.headActorId
         WHERE excluded.headInsertionId > branches.headInsertionId
       `;
-    });
+  });
 
   /**
    * Records pull progress for a pull that brought no blocks. Writes and notifies only when the
@@ -1443,10 +1439,8 @@ export class FeedStore {
             const headKey = `${key}|${branch ?? ''}`;
             if (!branchHeads.has(headKey)) {
               const rows = yield* sql<{ sequence: number; actorId: string }>`
-                SELECT sequence, actorId FROM blocks
-                WHERE feedPrivateId = ${feedPrivateId} AND branch IS ${branch}
-                ORDER BY insertionId DESC
-                LIMIT 1
+                SELECT headSequence AS sequence, headActorId AS actorId FROM branches
+                WHERE feedPrivateId = ${feedPrivateId} AND branchId = ${branch ?? ROOT_BRANCH_ROW}
               `;
               if (rows.length === 0 && branch !== null) {
                 return yield* Effect.die(new Error(`Unknown feed branch: ${branch}`));
@@ -1948,11 +1942,18 @@ export type LocalAppendMessage = {
   feedId: string;
   feedNamespace: string;
   data: Uint8Array;
-  /** The branch the block continues; absent or `null` for the root branch. Ignored with `forkAt`. */
-  branch?: string | null;
-  /** Makes the block the base of a new branch that forks at this block id. */
-  forkAt?: string;
-};
+} & (
+  | {
+      /** Makes the block the base of a new branch that forks at this block id. */
+      forkAt: string;
+      branch?: never;
+    }
+  | {
+      /** The branch the block continues; absent or `null` for the root branch. */
+      branch?: string | null;
+      forkAt?: never;
+    }
+);
 
 /** One walk of a feed, for {@link FeedStore.walk}. */
 export type WalkRequest = {

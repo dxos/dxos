@@ -4,6 +4,7 @@
 
 import React, { useMemo } from 'react';
 
+import { type QuestionStatus } from '@dxos/deus/extension';
 import { TaskQuestion } from '@dxos/react-ui-task';
 import * as Button from '@dxos/react-ui/Button';
 import * as Card from '@dxos/react-ui/Card';
@@ -14,7 +15,7 @@ import * as Tag from '@dxos/react-ui/Tag';
 
 import { meta } from '#meta';
 
-import { type QuestionStatus, type SpecQuestion, toQuestionThread } from '../SpecModel/index.ts';
+import { type SpecQuestion, toQuestionThread } from '../SpecModel/index.ts';
 
 export const QUESTION_STATUS_STYLE: Record<QuestionStatus, { icon: string; hue: Tag.TagHue }> = {
   open: { icon: 'ph--question--regular', hue: 'warning' },

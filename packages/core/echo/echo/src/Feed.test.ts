@@ -266,25 +266,19 @@ describe('Feed', () => {
 
     // Puts on each item the keys the store stamps on read, as if it was read from the block in its stamp.
     const read = (...stamps: [string, Stamp][]) =>
-      stamps.map(([title, stamp]) => {
-        const item = Obj.make(TestSchema.Task, { title });
-        Obj.update(item, (item) => {
-          const keys = Obj.getMeta(item).keys;
-          keys.push({ source: KEY_FEED_BLOCK, id: stamp.block });
-          if (stamp.branch !== undefined) {
-            keys.push({ source: KEY_FEED_BRANCH, id: stamp.branch });
-          }
-          if (stamp.prev !== undefined) {
-            keys.push({ source: KEY_FEED_PREV, id: stamp.prev });
-            if (stamp.fork) {
-              keys.push({ source: KEY_FEED_FORK, id: stamp.prev });
-            }
-          }
-        });
-        return item;
-      });
-
-    const branchId = (block: string) => Feed.BranchId.make(block);
+      stamps.map(([title, stamp]) =>
+        Obj.make(TestSchema.Task, {
+          title,
+          [Obj.Meta]: {
+            keys: [
+              { source: KEY_FEED_BLOCK, id: stamp.block },
+              ...(stamp.branch !== undefined ? [{ source: KEY_FEED_BRANCH, id: stamp.branch }] : []),
+              ...(stamp.prev !== undefined ? [{ source: KEY_FEED_PREV, id: stamp.prev }] : []),
+              ...(stamp.prev !== undefined && stamp.fork ? [{ source: KEY_FEED_FORK, id: stamp.prev }] : []),
+            ],
+          },
+        }),
+      );
 
     test('an item read from a root block has no branch and no fork flag', ({ expect }) => {
       const [a1] = read(['a1', { block: '0@a' }]);
@@ -328,7 +322,7 @@ describe('Feed', () => {
       expect(titles(root)).toEqual(['a1', 'a2', 'a3', 'a4']);
       expect(root.shallow).toBe(false);
 
-      const forked = Feed.readBranch(log, branchId('3@a'));
+      const forked = Feed.readBranch(log, Feed.BranchId.make('3@a'));
       expect(titles(forked)).toEqual(['a1', 'a2', 'b1', 'b2']);
       expect(forked.shallow).toBe(false);
     });
@@ -345,28 +339,28 @@ describe('Feed', () => {
         ['c2', { block: '7@a', branch: '5@a', prev: '5@a' }],
       );
 
-      expect(titles(Feed.readBranch(log, branchId('5@a')))).toEqual(['a1', 'b1', 'b2', 'c1', 'c2']);
-      expect(titles(Feed.readBranch(log, branchId('2@a')))).toEqual(['a1', 'b1', 'b2', 'b3']);
+      expect(titles(Feed.readBranch(log, Feed.BranchId.make('5@a')))).toEqual(['a1', 'b1', 'b2', 'c1', 'c2']);
+      expect(titles(Feed.readBranch(log, Feed.BranchId.make('2@a')))).toEqual(['a1', 'b1', 'b2', 'b3']);
     });
 
     describe('shallow', () => {
       test('a missing base returns the branch items and reports shallow', ({ expect }) => {
         const log = read(['a1', { block: '0@a' }], ['b2', { block: '2@a', branch: '1@a', prev: '1@a' }]);
-        const branch = Feed.readBranch(log, branchId('1@a'));
+        const branch = Feed.readBranch(log, Feed.BranchId.make('1@a'));
         expect(titles(branch)).toEqual(['b2']);
         expect(branch.shallow).toBe(true);
       });
 
       test('a missing fork point returns the branch items and reports shallow', ({ expect }) => {
         const log = read(['b1', { block: '1@a', branch: '1@a', fork: true, prev: '0@a' }]);
-        const branch = Feed.readBranch(log, branchId('1@a'));
+        const branch = Feed.readBranch(log, Feed.BranchId.make('1@a'));
         expect(titles(branch)).toEqual(['b1']);
         expect(branch.shallow).toBe(true);
       });
 
       test('a fork point after the base is a forward reference', ({ expect }) => {
         const log = read(['b1', { block: '0@a', branch: '0@a', fork: true, prev: '1@a' }], ['a1', { block: '1@a' }]);
-        const branch = Feed.readBranch(log, branchId('0@a'));
+        const branch = Feed.readBranch(log, Feed.BranchId.make('0@a'));
         expect(titles(branch)).toEqual(['b1']);
         expect(branch.shallow).toBe(true);
       });

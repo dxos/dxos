@@ -4,7 +4,7 @@
 
 import { type Diagnostic } from '@codemirror/lint';
 
-import { BLOCK_TYPES } from './constants.ts';
+import { BLOCK_TYPES, QUESTION_STATUSES } from './constants.ts';
 
 const KNOWN_BLOCK_TYPES = new Set(BLOCK_TYPES);
 
@@ -85,7 +85,7 @@ const lintDecision = (body: string): string[] => {
   return errors;
 };
 
-const QUESTION_STATUSES = new Set(['open', 'answered', 'moot']);
+const QUESTION_STATUS_SET = new Set<string>(QUESTION_STATUSES);
 
 /** Checks a `question` block (`lang/question.mdl`): a known status, and an answer once it is answered. */
 const lintQuestion = (body: string): string[] => {
@@ -94,7 +94,7 @@ const lintQuestion = (body: string): string[] => {
   const recipient = fieldValue(body, 'to');
   if (!status) {
     errors.push('Question is missing `status:` — open, answered or moot.');
-  } else if (!QUESTION_STATUSES.has(status)) {
+  } else if (!QUESTION_STATUS_SET.has(status)) {
     errors.push(`Question \`status: ${status}\` must be open, answered or moot.`);
   } else if (status === 'answered' && !fieldValue(body, 'answer')) {
     errors.push('An answered question needs an `answer:`.');

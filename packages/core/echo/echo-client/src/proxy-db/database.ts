@@ -788,12 +788,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   async forkFeed(
     feed: Feed.Feed,
     base: Entity.Unknown,
-    opts: { at: Entity.Unknown | Entity.Snapshot | string },
-  ): Promise<string> {
+    opts: { at: Entity.Unknown | Entity.Snapshot | Feed.BlockId },
+  ): Promise<Feed.BranchId> {
     const handle = this.#getFeedHandle(feed);
     const at = typeof opts.at === 'string' ? opts.at : handle.blockIdOf(opts.at);
     invariant(at !== undefined, 'fork: the fork point has no block yet; flush it first');
-    const branch = await handle.fork(base, at);
+    const branch = Feed.BranchId.make(await handle.fork(base, at));
     this.#emitFeedAppend(feed, [base], undefined);
     return branch;
   }

@@ -420,12 +420,11 @@ const setBranchKey = (obj: Obj.Any, branch: string | undefined): void => {
  * A feed read by a scan of its store rather than its index, which holds only the main branch by default; the
  * branch views are computed in memory from every item.
  */
-const makeFeed = () =>
-  Effect.gen(function* () {
-    const feed = yield* Database.add(Feed.make({ name: 'branches' }));
-    yield* Feed.setIndexing(feed, { enabled: false });
-    return feed;
-  });
+const makeFeed = Effect.fnUntraced(function* () {
+  const feed = yield* Database.add(Feed.make({ name: 'branches' }));
+  yield* Feed.setIndexing(feed, { enabled: false });
+  return feed;
+});
 
 /** Reads every person in the feed and returns a lookup by name that fails the test on a miss. */
 const queryByName = (feed: Feed.Feed) =>

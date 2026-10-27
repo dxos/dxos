@@ -278,8 +278,8 @@ export interface Database extends Queryable {
   forkFeed(
     feed: Feed.Feed,
     base: Entity.Unknown,
-    opts: { at: Entity.Unknown | Entity.Snapshot | string },
-  ): Promise<string>;
+    opts: { at: Entity.Unknown | Entity.Snapshot | Feed.BlockId },
+  ): Promise<Feed.BranchId>;
 
   /**
    * Removes entities from a feed.

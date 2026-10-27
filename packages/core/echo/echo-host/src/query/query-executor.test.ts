@@ -100,7 +100,7 @@ describe('QueryExecutor', () => {
         yield* indexEngine.migrate();
         const feedStore = new FeedStore({ localActorId: 'actor-id', assignPositions: false });
         yield* feedStore.migrate();
-        const append = (name: string, intent: { branch?: string; forkAt?: string } = {}) =>
+        const append = (name: string, intent: { forkAt: string } | { branch?: string } = {}) =>
           feedStore
             .appendLocal([
               {

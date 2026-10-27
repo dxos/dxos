@@ -7,7 +7,7 @@ import type * as Tag from '@dxos/react-ui/Tag';
 
 import { formatSourceKey, parseSourceKey } from '#sync';
 
-import { type Annotation, parseFields } from './spec-model.ts';
+import { type Annotation, listOf, parseFields, proseOf } from './spec-model.ts';
 
 /**
  * A review's verdicts as annotations: the code that implements each item and the tests that exercise it. `done` means
@@ -123,21 +123,14 @@ export const parseReview = (text: string): ReviewModel => {
       if (!isStatus(status)) {
         return [];
       }
-      // A list may be inline (`[a, b]`), wrapped over several lines, or written as `- a` items.
-      const list = (name: string) =>
-        [fields.get(name)?.inline, ...(fields.get(name)?.lines ?? [])]
-          .join(',')
-          .split(',')
-          .map((value) => value.replace(/^[\s[-]+|[\s\]]+$/g, ''))
-          .filter(Boolean);
-      const note = [fields.get('note')?.inline, ...(fields.get('note')?.lines ?? [])].filter(Boolean).join(' ');
+      const note = proseOf(fields.get('note'));
       return [
         {
           id,
           status,
           ...(title && { summary: title }),
-          evidence: list('evidence'),
-          tests: list('tests'),
+          evidence: listOf(fields.get('evidence')),
+          tests: listOf(fields.get('tests')),
           walkthrough: listItems(fields.get('walkthrough')?.lines ?? []).flatMap(parseStep),
           ...(note && { note }),
         },

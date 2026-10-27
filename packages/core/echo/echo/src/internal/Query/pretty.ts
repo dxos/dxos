@@ -167,9 +167,8 @@ export const prettyQuery = (query: QueryAST.Query): string => {
               : `{ space: ${JSON.stringify(scope.spaceId)} }`;
           }
           if (scope._tag === 'feed') {
-            return scope.branches !== undefined
-              ? `{ feed: ${JSON.stringify(String(scope.feedUri))}, branches: ${JSON.stringify(scope.branches)} }`
-              : `{ feed: ${JSON.stringify(String(scope.feedUri))} }`;
+            const branches = scope.branches !== undefined ? `, branches: ${JSON.stringify(scope.branches)}` : '';
+            return `{ feed: ${JSON.stringify(String(scope.feedUri))}${branches} }`;
           }
           return `{ registry: ${JSON.stringify(scope.location)} }`;
         });

@@ -13,6 +13,7 @@ export {
   parseChangelog,
   parseMdlBlocks,
 } from './check.ts';
+export { QUESTION_STATUSES, type QuestionStatus } from './constants.ts';
 export { mdlLint } from './lint.ts';
 export { mdlComplete } from './complete.ts';
 export { mdlTerms } from './syntax.ts';

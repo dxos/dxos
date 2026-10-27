@@ -54,13 +54,18 @@ export type FeedBlockData = {
   branch?: string | null;
 };
 
-/** What a writer asks of the store for an object it appends: the branch it continues, or a fork. */
-export type FeedWriteIntent = {
-  /** The branch the block continues; absent for the root branch. */
-  branch?: string;
-  /** The block id the new branch forks at; the block is the base of the branch. */
-  forkAt?: string;
-};
+/** What a writer asks of the store for an object it appends: a fork, or the branch it continues. */
+export type FeedWriteIntent =
+  | {
+      /** The block id the new branch forks at; the block is the base of the branch. */
+      forkAt: string;
+      branch?: never;
+    }
+  | {
+      /** The branch the block continues; absent for the root branch. */
+      branch?: string;
+      forkAt?: never;
+    };
 
 /**
  * Codec for ECHO objects in feed block payload: JSON object ↔ UTF-8 bytes.
@@ -229,9 +234,6 @@ export const KEY_FEED_FORK = FeedProtocol.KEY_FEED_FORK;
 
 /** Foreign-key source for the predecessor of a block; re-exported for `@dxos/echo`. */
 export const KEY_FEED_PREV = FeedProtocol.KEY_FEED_PREV;
-
-/** Foreign-key source for the fork a writer asks for; re-exported for `@dxos/echo`. */
-export const KEY_FEED_FORK_AT = FeedProtocol.KEY_FEED_FORK_AT;
 
 /** Foreign-key source for the block id of an item; re-exported for `@dxos/echo`. */
 export const KEY_FEED_BLOCK = FeedProtocol.KEY_FEED_BLOCK;

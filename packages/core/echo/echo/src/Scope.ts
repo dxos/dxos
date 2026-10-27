@@ -6,6 +6,8 @@
 
 import { type QueryAST } from '@dxos/echo-protocol';
 
+import type * as Feed from './Feed.ts';
+
 /**
  * Scope targeting a space's automerge documents.
  *
@@ -54,14 +56,14 @@ export type FeedScopeOptions = {
    * The filter is by membership only: a branch's ancestor items up to its fork point are not
    * included — read them with `Feed.readBranch` over the whole feed.
    */
-  branches?: ReadonlyArray<string | null> | 'all';
+  branches?: ReadonlyArray<Feed.BranchId | null> | 'all';
 
   /**
    * Reads the feed as a walk along the path from the root branch to `branch`, in local order; select
    * with {@link Filter.feedCursor} to start after a local cursor and order with `Order.natural` for the
    * direction. `forks` also gives the base item of each branch that forks at a block the walk gives.
    */
-  walk?: { branch?: string | null; forks?: boolean };
+  walk?: { branch?: Feed.BranchId | null; forks?: boolean };
 };
 
 /**

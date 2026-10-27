@@ -4,6 +4,7 @@
 
 import React, { useMemo } from 'react';
 
+import { QUESTION_STATUSES } from '@dxos/deus/extension';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -13,7 +14,7 @@ import * as Tag from '@dxos/react-ui/Tag';
 
 import { meta } from '#meta';
 
-import { QUESTION_STATUSES, parseQuestions } from '../SpecModel/index.ts';
+import { parseQuestions } from '../SpecModel/index.ts';
 import { QUESTION_STATUS_STYLE, SpecQuestionCard, type SpecQuestionCardProps } from './SpecQuestionCard.tsx';
 
 export type QuestionPanelProps = Pick<SpecQuestionCardProps, 'onReveal' | 'onSelectDecision'> & {

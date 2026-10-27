@@ -908,14 +908,14 @@ export class EntityMetaIndex implements Index {
 
   /** Record ids of one feed's rows on a branch other than main. */
   selectFeedBranchRecordIds = Effect.fn('EntityMetaIndex.selectFeedBranchRecordIds')(
-    (query: { spaceId: SpaceId; queueId: string }): Effect.Effect<number[], SqlError.SqlError> =>
-      Effect.gen({ self: this }, function* () {
-        const sql = this.#sql;
-        const rows = yield* sql<{
-          recordId: number;
-        }>`SELECT recordId FROM objectMeta WHERE spaceId = ${query.spaceId} AND queueId = ${query.queueId} AND queueBranch IS NOT NULL`;
-        return rows.map((row) => row.recordId);
-      }),
+    { self: this },
+    function* (this: EntityMetaIndex, query: { spaceId: SpaceId; queueId: string }) {
+      const sql = this.#sql;
+      const rows = yield* sql<{
+        recordId: number;
+      }>`SELECT recordId FROM objectMeta WHERE spaceId = ${query.spaceId} AND queueId = ${query.queueId} AND queueBranch IS NOT NULL`;
+      return rows.map((row) => row.recordId);
+    },
   );
 
   /**

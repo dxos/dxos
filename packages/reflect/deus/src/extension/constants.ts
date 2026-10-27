@@ -25,3 +25,8 @@ export const BLOCK_TYPES = [
   'plugin',
   'table',
 ] as const;
+
+/** The statuses of a `question` block (`lang/question.mdl`), in the order a viewer lists them. */
+export const QUESTION_STATUSES = ['open', 'answered', 'moot'] as const;
+
+export type QuestionStatus = (typeof QUESTION_STATUSES)[number];

@@ -153,7 +153,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
               const object: ObjectJSON = JSON.parse(encoded);
               return {
                 spaceId: spaceId,
-                feedId: feedId!,
+                feedId,
                 feedNamespace,
                 ...EchoFeedCodec.writeIntentOf(object),
                 data: EchoFeedCodec.encode(object),
@@ -181,6 +181,7 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
       try: async () => {
         const { subspaceTag, spaceId, feedId, objectIds, branches } = request;
         const feedNamespace = subspaceTag ?? FeedProtocol.WellKnownNamespaces.data;
+        assertArgument(objectIds !== undefined, 'request.objectIds', 'expected the ids to remove');
         assertArgument(
           FeedProtocol.isWellKnownNamespace(feedNamespace),
           'request.subspaceTag',
@@ -188,9 +189,9 @@ export class LocalFeedServiceImpl implements FeedService.Handlers {
         );
         await RuntimeProvider.runPromise(this.#runtime)(
           Effect.gen({ self: this }, function* () {
-            const messages = objectIds!.map((id, index) => ({
+            const messages = objectIds.map((id, index) => ({
               spaceId: spaceId,
-              feedId: feedId!,
+              feedId,
               feedNamespace,
               branch: branches?.[index] ?? null,
               data: EchoFeedCodec.encode({ id, '@deleted': true }),

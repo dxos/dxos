@@ -130,16 +130,19 @@ const IDENTIFIER = /[A-Za-z][\w-]*(?:\.[\w-]+)*/g;
 
 const indentOf = (line: string): number => line.length - line.trimStart().length;
 
+/** One top-level field of a block body: its inline value and its indented lines. */
+export type BlockField = { inline?: string; lines: string[] };
+
 /**
  * The top-level fields of a block body: a field's inline value, or for a `|` block or nested map, its
  * indented lines with the common indent removed.
  */
-export const parseFields = (body: string): Map<string, { inline?: string; lines: string[] }> => {
+export const parseFields = (body: string): Map<string, BlockField> => {
   const lines = body.split('\n');
   const contentIndents = lines.filter((line) => line.trim() !== '').map(indentOf);
   const base = contentIndents.length > 0 ? Math.min(...contentIndents) : 0;
-  const fields = new Map<string, { inline?: string; lines: string[] }>();
-  let current: { inline?: string; lines: string[] } | undefined;
+  const fields = new Map<string, BlockField>();
+  let current: BlockField | undefined;
   for (const line of lines) {
     if (line.trim() === '') {
       continue;
@@ -156,10 +159,23 @@ export const parseFields = (body: string): Map<string, { inline?: string; lines:
   return fields;
 };
 
-const proseOf = (field?: { inline?: string; lines: string[] }): string | undefined => {
+/** A field's inline value and lines as one paragraph. */
+export const proseOf = (field?: BlockField): string | undefined => {
   const text = [field?.inline, ...(field?.lines ?? [])].filter(Boolean).join(' ').trim();
   return text || undefined;
 };
+
+/** An inline value without its trailing `# comment`. */
+export const inlineValueOf = (inline?: string): string | undefined =>
+  inline?.replace(/\s+#.*$/, '').trim() || undefined;
+
+/** A list field, which may be inline (`[a, b]`), wrapped over several lines, or written as `- a` items. */
+export const listOf = (field?: BlockField): string[] =>
+  [inlineValueOf(field?.inline), ...(field?.lines ?? [])]
+    .join(',')
+    .split(',')
+    .map((value) => value.replace(/^[\s[-]+|[\s\]]+$/g, ''))
+    .filter(Boolean);
 
 /** `name[?]: Type  # comment`; a line without a type (a method signature) yields nothing. */
 export const parseField = (line: string): FieldModel | undefined => {

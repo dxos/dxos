@@ -3307,8 +3307,12 @@ const parseLocalCursor = (cursor: string): string => cursor.slice(cursor.indexOf
  */
 const walkDirection = (plan: QueryPlan.Plan): 'asc' | 'desc' => {
   const orders = plan.steps.flatMap((step) => (step._tag === 'OrderStep' ? step.order : []));
-  if (orders.some((order) => order.kind !== 'natural')) {
-    throw new QueryError({ message: 'A walk accepts only the natural order.', context: { query: null } });
+  const unsupported = orders.find((order) => order.kind !== 'natural');
+  if (unsupported !== undefined) {
+    throw new QueryError({
+      message: `A walk accepts only the natural order, not the ${unsupported.kind} order.`,
+      context: { query: null, order: unsupported.kind },
+    });
   }
   return orders[0]?.kind === 'natural' ? orders[0].direction : 'asc';
 };

@@ -48,15 +48,9 @@ const compareBlocks = (inbound: FeedBlockRef, current: FeedBlockRef | undefined)
   return 'newer';
 };
 
-/** An object's branch as its key states it; `branch` is `undefined` on the root branch. */
-export type BranchKeys = { branch: string | undefined };
-
-/** Reads the raw key id, so a malformed id still compares unequal to every other branch. */
-export const branchKeysOf = (entity: Entity.Unknown): BranchKeys => ({
-  branch: Entity.getKeys(entity, FeedProtocol.KEY_FEED_BRANCH).at(0)?.id,
-});
-
-const sameBranch = (left: BranchKeys, right: BranchKeys): boolean => left.branch === right.branch;
+/** An object's branch as its key states it, `null` on the root; the raw id, so a malformed one matches no branch. */
+const branchOf = (entity: Entity.Unknown): string | null =>
+  Entity.getKeys(entity, FeedProtocol.KEY_FEED_BRANCH).at(0)?.id ?? null;
 
 /** What reconciling an inbound block would do, decided from its block reference alone. */
 type Classification = 'ignore' | 'reposition' | 'apply';
@@ -115,10 +109,10 @@ export class FeedObjectCore {
   #positionFloor: number | undefined;
 
   /**
-   * The branch the object belongs to, fixed by its first write or by the store; `undefined` until then. A feed
-   * accepts an update only on the object's own branch (F-1.3), so no local write may change it.
+   * The branch the object belongs to (`null` for the root), fixed by its first write or by the store; `undefined`
+   * until then. A feed accepts an update only on the object's own branch (F-1.3), so no local write may change it.
    */
-  #branch: BranchKeys | undefined;
+  #branch: string | null | undefined;
 
   /**
    * The block a fork the object is the base of starts at, until the store confirms the write that carries it. Kept
@@ -133,7 +127,7 @@ export class FeedObjectCore {
       ...Entity.getKeys(entity, FeedProtocol.KEY_QUEUE_POSITION),
     ]);
     this.#applied = blockIdOf(ref) !== undefined || ref.position !== undefined ? ref : undefined;
-    this.#branch = this.#applied !== undefined ? branchKeysOf(entity) : undefined;
+    this.#branch = this.#applied !== undefined ? branchOf(entity) : undefined;
     this.#unsubscribe = Entity.subscribe(entity, () => {
       if (this.#applyingRemote || this.#deleted) {
         return;
@@ -164,7 +158,7 @@ export class FeedObjectCore {
     if (rejected) {
       this.restoreBranch();
     }
-    this.#branch ??= branchKeysOf(this.entity);
+    this.#branch ??= branchOf(this.entity);
     const entityJson = Entity.toJSON(this.entity) as Record<string, unknown>;
     const token = ++this.#nextToken;
     // Only one write carries the fork, so an edit while it is in flight does not start a second branch.
@@ -185,7 +179,17 @@ export class FeedObjectCore {
 
   /** The branch of the object; `undefined` on the root branch or before its first write. */
   get branch(): string | undefined {
-    return this.#branch?.branch;
+    return this.#branch ?? undefined;
+  }
+
+  /** Whether the object is the base of a fork the store has not yet confirmed, so its branch is not known. */
+  get forkPending(): boolean {
+    return this.#fork !== undefined;
+  }
+
+  /** Whether the write carrying the fork is in flight: a capture now would have no branch and land on the root. */
+  get forkInFlight(): boolean {
+    return this.#fork?.token !== undefined;
   }
 
   /** Whether the object was ever written, so it has a branch a fork would move it off. */
@@ -206,14 +210,14 @@ export class FeedObjectCore {
     if (this.#branch === undefined) {
       return undefined;
     }
-    const requested = branchKeysOf(candidate);
-    if (sameBranch(requested, this.#branch)) {
+    const requested = branchOf(candidate);
+    if (requested === this.#branch) {
       return undefined;
     }
     return new FeedBranchMismatchError({
       objectId: this.entity.id,
-      branch: this.#branch.branch,
-      requestedBranch: requested.branch,
+      branch: this.#branch ?? undefined,
+      requestedBranch: requested ?? undefined,
     });
   }
 
@@ -234,8 +238,8 @@ export class FeedObjectCore {
             keys.splice(index, 1);
           }
         }
-        if (branch.branch !== undefined) {
-          keys.push({ source: FeedProtocol.KEY_FEED_BRANCH, id: branch.branch });
+        if (branch !== null) {
+          keys.push({ source: FeedProtocol.KEY_FEED_BRANCH, id: branch });
         }
       });
     } finally {
@@ -254,7 +258,7 @@ export class FeedObjectCore {
       this.#fork = undefined;
       // The base block of a branch names the branch, so the object continues it from here on.
       if (blockId !== undefined) {
-        this.#branch = { branch: blockId };
+        this.#branch = blockId;
         this.restoreBranch();
       }
     }
@@ -321,7 +325,7 @@ export class FeedObjectCore {
         this.#applyingRemote = false;
       }
       // The store is the authority on which branch it accepted the object on, and the block keys it stamped.
-      this.#branch = branchKeysOf(this.entity);
+      this.#branch = branchOf(this.entity);
       setFeedBlockKeys(this.entity, undefined);
       this.#applied = ref;
       this.#positionFloor = undefined;
@@ -367,10 +371,10 @@ export class FeedObjectCore {
    * write does not notify subscribers a second time.
    */
   #stampBlock(blockId: string, predecessor: string | undefined, fork: boolean): void {
-    const branch = this.#branch?.branch;
+    const branch = this.#branch;
     setFeedBlockKeys(this.entity, [
       { source: FeedProtocol.KEY_FEED_BLOCK, id: blockId },
-      ...(branch !== undefined ? [{ source: FeedProtocol.KEY_FEED_BRANCH, id: branch }] : []),
+      ...(branch !== null && branch !== undefined ? [{ source: FeedProtocol.KEY_FEED_BRANCH, id: branch }] : []),
       ...(predecessor !== undefined ? [{ source: FeedProtocol.KEY_FEED_PREV, id: predecessor }] : []),
       ...(predecessor !== undefined && fork ? [{ source: FeedProtocol.KEY_FEED_FORK, id: predecessor }] : []),
     ]);
