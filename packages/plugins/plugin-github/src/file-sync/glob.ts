@@ -2,8 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-const cache = new Map<string, RegExp>();
-
 /**
  * Compiles a repository-relative glob: `**` spans directories (`**` + `/` also matches none), `*` and
  * `?` stay within one, everything else is literal.
@@ -31,13 +29,11 @@ const compile = (pattern: string): RegExp => {
   return new RegExp(`^${source}$`);
 };
 
+/** A predicate true when a path matches any of `patterns`, compiled once for the caller to reuse. */
+export const globMatcher = (patterns: readonly string[]): ((path: string) => boolean) => {
+  const regexes = patterns.map(compile);
+  return (path) => regexes.some((regex) => regex.test(path));
+};
+
 /** True when `path` matches any of `patterns`. */
-export const matchesAny = (patterns: readonly string[], path: string): boolean =>
-  patterns.some((pattern) => {
-    let regex = cache.get(pattern);
-    if (!regex) {
-      regex = compile(pattern);
-      cache.set(pattern, regex);
-    }
-    return regex.test(path);
-  });
+export const matchesAny = (patterns: readonly string[], path: string): boolean => globMatcher(patterns)(path);

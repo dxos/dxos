@@ -15,8 +15,8 @@ import { isFileBinding } from '../file-sync/sync-files.ts';
 
 const handler: Operation.WithHandler<typeof GitHubOperation.EnableGitHubFileSync> =
   GitHubOperation.EnableGitHubFileSync.pipe(
-    Operation.withHandler(({ repository, branch, writeBranch, mappings, paths }) =>
-      Effect.gen(function* () {
+    Operation.withHandler(
+      Effect.fn(function* ({ repository, branch, writeBranch, mappings, paths }) {
         const repo = yield* Database.load(repository);
         const cursors = (yield* Database.query(Filter.type(Cursor.Cursor)).run).filter(
           (cursor): cursor is Cursor.ExternalCursor =>

@@ -15,7 +15,7 @@ import { GITHUB_SOURCE } from '../constants.ts';
 import { GitHubFileObjectMissingError, GitHubRepoUnresolvedError, formatGitHubSyncFailure } from '../errors.ts';
 import { GitHubApi } from '../services/index.ts';
 import type * as GitHubCapabilities from '../types/GitHubCapabilities.ts';
-import { matchesAny } from './glob.ts';
+import { globMatcher } from './glob.ts';
 
 //
 // Two-way sync of repository files with ECHO objects (spec/FILE-SYNC.mdl).
@@ -223,13 +223,15 @@ export const syncFileBinding = Effect.fn('syncFileBinding')(function* (
       const writeBranch = options.writeBranch ?? `composer/${db.spaceId}`;
       const mappings = contributed.filter((mapping) => !options.mappings || options.mappings.includes(mapping.id));
       const mappingById = new Map(mappings.map((mapping) => [mapping.id, mapping]));
+      const pathFilter = options.paths ? globMatcher(options.paths) : undefined;
+      const matchers = mappings.map((mapping) => ({ mapping, matches: globMatcher(mapping.match) }));
       const conflicts = new Set<string>();
       /** The first contributed mapping that claims `path` (F-1.2). */
       const mappingFor = (path: string): GitHubCapabilities.FileMapping | undefined => {
-        if (options.paths && !matchesAny(options.paths, path)) {
+        if (pathFilter && !pathFilter(path)) {
           return undefined;
         }
-        const claiming = mappings.filter((mapping) => matchesAny(mapping.match, path));
+        const claiming = matchers.filter(({ matches }) => matches(path)).map(({ mapping }) => mapping);
         if (claiming.length > 1 && !conflicts.has(path)) {
           conflicts.add(path);
           log.warn('github file sync: several mappings claim a path; the first wins', {

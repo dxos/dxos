@@ -231,28 +231,26 @@ const ExportText = Operation.make({
   services: [Database.Service],
 });
 
-const importText = (input: GitHubCapabilities.FileImportInput) =>
-  Effect.gen(function* () {
-    if (!input.object || !input.heads || input.base === undefined) {
-      const text = yield* Database.add(Text.make({ content: input.content }));
-      return { object: Ref.make(text), heads: TextMerge.currentHeads(text) };
-    }
-    const text = yield* Database.load(input.object);
-    if (!Obj.instanceOf(Text.Text, text)) {
-      return yield* Effect.die('not a text');
-    }
-    const heads = yield* TextMerge.applyAt(text, { base: input.base, next: input.content, heads: input.heads });
-    return { object: input.object, heads };
-  });
+const importText = Effect.fn(function* (input: GitHubCapabilities.FileImportInput) {
+  if (!input.object || !input.heads || input.base === undefined) {
+    const text = yield* Database.add(Text.make({ content: input.content }));
+    return { object: Ref.make(text), heads: TextMerge.currentHeads(text) };
+  }
+  const text = yield* Database.load(input.object);
+  if (!Obj.instanceOf(Text.Text, text)) {
+    return yield* Effect.die('not a text');
+  }
+  const heads = yield* TextMerge.applyAt(text, { base: input.base, next: input.content, heads: input.heads });
+  return { object: input.object, heads };
+});
 
-const exportText = (input: GitHubCapabilities.FileExportInput) =>
-  Effect.gen(function* () {
-    const text = yield* Database.load(input.object);
-    if (!Obj.instanceOf(Text.Text, text)) {
-      return yield* Effect.die('not a text');
-    }
-    return { content: text.content, heads: TextMerge.currentHeads(text) };
-  });
+const exportText = Effect.fn(function* (input: GitHubCapabilities.FileExportInput) {
+  const text = yield* Database.load(input.object);
+  if (!Obj.instanceOf(Text.Text, text)) {
+    return yield* Effect.die('not a text');
+  }
+  return { content: text.content, heads: TextMerge.currentHeads(text) };
+});
 
 const MAPPING: GitHubCapabilities.FileMapping = {
   id: 'com.example.mapping.text',
