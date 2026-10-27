@@ -50,6 +50,8 @@ export const withPendingSyncMonitor = <A, E, R>(
       Effect.tapError((error) =>
         Effect.sync(() => handle.fail(error instanceof Error ? error.message : String(error))),
       ),
+      // An abandoned request reaches neither branch below, and its meter would otherwise spin forever.
+      Effect.onInterrupt(() => Effect.sync(() => handle.remove())),
     );
 
     // Timed from the end of the request, not the click: a request still in flight (a routine form left

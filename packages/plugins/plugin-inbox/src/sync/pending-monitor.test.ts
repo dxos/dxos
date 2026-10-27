@@ -81,6 +81,19 @@ describe('withPendingSyncMonitor', () => {
   );
 
   it.effect(
+    'clears the meter when the request is interrupted',
+    Effect.fnUntraced(function* ({ expect }) {
+      const { progress, mailbox, task } = setup();
+      const fiber = yield* Effect.forkChild(withPendingSyncMonitor(mailbox, progress, Effect.never));
+      yield* Effect.yieldNow;
+      expect(task()?.status).toBe('running');
+
+      yield* Fiber.interrupt(fiber);
+      expect(task()).toBeUndefined();
+    }),
+  );
+
+  it.effect(
     "hands over to the run's own meter, which the timeout leaves alone",
     Effect.fnUntraced(function* ({ expect }) {
       const { progress, mailbox, key, task } = setup();
