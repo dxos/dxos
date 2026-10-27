@@ -4,32 +4,12 @@
 
 import { describe, test } from 'vitest';
 
-import { Annotation, Obj } from '@dxos/echo';
 import { type ItemContent } from '@dxos/react-ui-feed';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { createRenderer, linkBareObjectUris } from './renderer.ts';
-import { DeliveryAnnotation } from './types.ts';
+import { createRenderer, linkBareObjectUris, parseMentions } from './renderer.ts';
 
 describe('createRenderer', () => {
-  // A folded tool run (`collapseToolRuns`) and a patched streaming copy are plain spreads, not ECHO
-  // objects; reading their delivery status must not throw.
-  test('a plain message copy renders without a delivery tag', ({ expect }) => {
-    const render = createRenderer(undefined);
-    const prompt = Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: 'hello' }] });
-    const copy: Message.Message = { ...prompt, blocks: [...prompt.blocks] };
-    expect(markdown(render(copy))).toBe('<prompt>hello</prompt>');
-  });
-
-  test('a prompt row with a delivery status ends with its tag; a plain prompt carries none', ({ expect }) => {
-    const render = createRenderer(undefined);
-    const prompt = Message.make({ sender: { role: 'user' }, blocks: [{ _tag: 'text', text: 'hello' }] });
-    expect(markdown(render(prompt))).not.toContain('<delivery');
-
-    Obj.update(prompt, (prompt) => Annotation.set(prompt, DeliveryAnnotation, 'delivered'));
-    expect(markdown(render(prompt))).toBe(`<prompt>hello</prompt>\n<delivery status="delivered" id="${prompt.id}" />`);
-  });
-
   test('a run of tool calls is one panel', ({ expect }) => {
     const render = createRenderer(undefined);
     const rendered = render(
@@ -144,6 +124,14 @@ describe('createRenderer', () => {
     expect(text).not.toContain('the selection');
   });
 
+  test('a mention in a prompt renders as its name, not as link markup', ({ expect }) => {
+    const text = renderUser(
+      userMessage([ContentBlock.Text.make({ text: 'compare [Q4 \\[draft\\]](echo:///01ABC) <now>' })]),
+    );
+
+    expect(text).toBe('<prompt>compare Q4 [draft] &lt;now&gt;</prompt>');
+  });
+
   // `collapseToolRuns` keeps the first message's identity, and the previous turn's trailing `stats`
   // message starts the run — so an alarm turn's synthetic prompt lands on an assistant-role message.
   // Keyed on the role, it rendered as the model's own prose with the panel frame gone.
@@ -231,5 +219,18 @@ describe('linkBareObjectUris', () => {
     const text =
       'Use `echo://SPACE1/OBJ1` and [x](echo://SPACE1/OBJ1)\n\n```\necho://SPACE1/OBJ1\n```\n\n~~~\n@echo://SPACE1/OBJ1\n~~~';
     expect(linkBareObjectUris(text, label)).toBe(text);
+  });
+});
+
+describe('parseMentions', () => {
+  test('finds each object link with its label, and ignores other links', ({ expect }) => {
+    expect(
+      parseMentions(
+        'compare [Q4 \\[draft\\]](echo:///01ABC) with [the docs](https://dxos.org) and [Spec](dxn:echo:@:01DEF)',
+      ),
+    ).toEqual([
+      { label: 'Q4 [draft]', uri: 'echo:///01ABC' },
+      { label: 'Spec', uri: 'dxn:echo:@:01DEF' },
+    ]);
   });
 });

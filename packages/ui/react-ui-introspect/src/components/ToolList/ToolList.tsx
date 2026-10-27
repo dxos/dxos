@@ -60,19 +60,21 @@ export const ToolList = ({ tools, selected, onSelect, classNames }: ToolListProp
       onValueChange={handleCurrentChange}
       items={entries.map(([name, tool]) => ({ value: name, label: name }))}
     >
-      <Listbox.Content aria-label={t('tools.label')}>
-        {entries.map(([name, tool]) => (
-          <Listbox.Item key={name} id={name}>
-            <div className='flex flex-col grow overflow-hidden'>
-              <div className='font-mono text-xs text-info-text'>{name}</div>
-              <div className='font-medium'>{tool.title}</div>
-              {tool.description && (
-                <div className='text-sm text-fg-muted line-clamp-2 mt-1'>{tool.description.trim()}</div>
-              )}
-            </div>
-          </Listbox.Item>
-        ))}
-      </Listbox.Content>
+      <Listbox.Viewport>
+        <Listbox.Content aria-label={t('tools.label')}>
+          {entries.map(([name, tool]) => (
+            <Listbox.Item key={name} id={name}>
+              <div className='flex flex-col grow overflow-hidden'>
+                <div className='font-mono text-xs text-info-text'>{name}</div>
+                <div className='font-medium'>{tool.title}</div>
+                {tool.description && (
+                  <div className='text-sm text-fg-muted line-clamp-2 mt-1'>{tool.description.trim()}</div>
+                )}
+              </div>
+            </Listbox.Item>
+          ))}
+        </Listbox.Content>
+      </Listbox.Viewport>
     </Listbox.Root>
   );
 };

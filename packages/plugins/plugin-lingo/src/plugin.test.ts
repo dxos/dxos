@@ -11,6 +11,8 @@ import * as Harness from '@dxos/plugin-testing/Harness';
 import { meta } from '#meta';
 import { LingoPlugin } from '#plugin';
 
+await Harness.preload({ plugins: [ClientPlugin.make({}), MarkdownPlugin.make(), LingoPlugin()] });
+
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('LingoPlugin', () => {

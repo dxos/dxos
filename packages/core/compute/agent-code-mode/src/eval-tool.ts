@@ -18,6 +18,7 @@ import type { ContentBlock } from '@dxos/types';
 
 import { camelCase } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation } from './Dialect.ts';
+import { formatPrinted } from './format.ts';
 import * as Sandbox from './Sandbox.ts';
 
 /** The single tool a code-mode agent carries. */
@@ -60,51 +61,68 @@ export type EvalToolkitOptions = {
   /** Services the sandbox's code runs against — the database, and `Operation.invoke`'s handler. */
   readonly runtime: Context.Context<Database.Service | Operation.Service>;
   readonly operations: readonly SandboxOperation[];
+  /** Keys of the skills the conversation has bound; see `BindingsContext.skills`. */
+  readonly skills?: readonly string[];
   readonly maxOutput?: number;
   readonly timeout?: Duration.Input;
 };
+
+/** One evaluation, as {@link evaluate} runs it: the program, plus everything that binds it to a workspace. */
+export type EvaluateOptions = EvalToolkitOptions & {
+  /** The program, in the dialect's own syntax, before the dialect wraps it. */
+  readonly code: string;
+};
+
+/**
+ * Runs one program exactly as the `eval` tool does, so any other caller (e.g. `dx eval`) answers
+ * with the same text the model would have seen: what the code printed, or — failing — what it printed
+ * before the throw with the error as the last line.
+ */
+export const evaluate = Effect.fnUntraced(function* ({
+  code,
+  dialect,
+  sandbox,
+  runtime,
+  operations,
+  skills,
+  maxOutput = DEFAULT_MAX_OUTPUT,
+  timeout,
+}: EvaluateOptions) {
+  const printer = makePrinter(maxOutput);
+  const result = yield* sandbox
+    .evaluate({
+      code: dialect.wrap(code),
+      dialect,
+      context: { runtime, operations, skills, print: printer.print },
+      timeout,
+    })
+    .pipe(Effect.result);
+
+  if (Result.isFailure(result)) {
+    // A tool failure reaches the model as a failed result, not a failed turn, so it can still
+    // read the message and write different code.
+    log.info('code-mode evaluation failed', { dialect: dialect.name, message: result.failure.message });
+    printer.fail(`Error: ${conciseError(result.failure.message)}${hintFor(result.failure.message)}`);
+    return yield* Effect.fail(printer.output());
+  }
+
+  if (result.success !== undefined && printer.isEmpty()) {
+    // A program that printed nothing but produced a value: show the value rather than nothing.
+    printer.print(result.success);
+  }
+
+  return printer.output();
+});
 
 /**
  * The toolkit a code-mode turn hands the model: one `eval` tool over the turn's dialect and
  * sandbox. Rebuilt per turn, since a skill enabled mid-request changes what the operations are.
  */
-export const makeEvalToolkit = ({
-  dialect,
-  sandbox,
-  runtime,
-  operations,
-  maxOutput = DEFAULT_MAX_OUTPUT,
-  timeout,
-}: EvalToolkitOptions): OpaqueToolkit.OpaqueToolkit =>
+export const makeEvalToolkit = (options: EvalToolkitOptions): OpaqueToolkit.OpaqueToolkit =>
   OpaqueToolkit.make(
     EvalToolkitDefinition,
     EvalToolkitDefinition.toLayer({
-      [EVAL_TOOL_NAME]: Effect.fnUntraced(function* ({ code }: { code: string }) {
-        const printer = makePrinter(maxOutput);
-        const result = yield* sandbox
-          .evaluate({
-            code: dialect.wrap(code),
-            dialect,
-            context: { runtime, operations, print: printer.print },
-            timeout,
-          })
-          .pipe(Effect.result);
-
-        if (Result.isFailure(result)) {
-          // A tool failure reaches the model as a failed result, not a failed turn, so it can still
-          // read the message and write different code.
-          log.info('code-mode evaluation failed', { dialect: dialect.name, message: result.failure.message });
-          printer.fail(`Error: ${conciseError(result.failure.message)}${hintFor(result.failure.message)}`);
-          return yield* Effect.fail(printer.output());
-        }
-
-        if (result.success !== undefined && printer.isEmpty()) {
-          // A program that printed nothing but produced a value: show the value rather than nothing.
-          printer.print(result.success);
-        }
-
-        return printer.output();
-      }),
+      [EVAL_TOOL_NAME]: ({ code }: { code: string }) => evaluate({ ...options, code }),
     }),
   );
 
@@ -181,7 +199,7 @@ const makePrinter = (maxOutput: number) => {
       if (truncated) {
         return;
       }
-      const line = values.map(format).join(' ');
+      const line = values.map(formatPrinted).join(' ');
       // The joining newline counts against the budget: a loop printing nothing at all is all
       // separators, which would otherwise grow the buffer without ever spending it.
       const separator = lines.length > 0 ? 1 : 0;
@@ -216,18 +234,6 @@ const hintFor = (message: string): string =>
   /is not iterable/.test(message)
     ? '\nHint: `yield*` takes an Effect, and that value is not one. Load a ref with `yield* Database.load(ref)`.'
     : '';
-
-/** Printed form of a value: strings verbatim, everything else as JSON the model can read back. */
-const format = (value: unknown): string => {
-  if (typeof value === 'string') {
-    return value;
-  }
-  try {
-    return JSON.stringify(value, null, 2) ?? String(value);
-  } catch {
-    return String(value);
-  }
-};
 
 /**
  * A failure's message cut to what the model can act on.

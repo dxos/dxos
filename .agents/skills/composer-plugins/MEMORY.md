@@ -4,6 +4,25 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 
 ---
 
+## 2026-10-26 — plugin-recorder (new plugin) + plugin-presenter
+
+- `Harness.createComposerTestApp` drops a plugin whose `dx.config.ts` `dependsOn` is unmet (logs `Plugin dependency resolution failed`), so a plugin test must load the whole `dependsOn` chain; prefer registering a referenced foreign schema in your own schema module (plugin-recorder registers studio's `MediaArtifact`/`Variant`) over a `dependsOn` that drags in the chain.
+- In node plugin tests, modules with `environments: ['browser', 'tauri']` (surfaces, browser services) are not even REGISTERED — assert `getModules()` only for headless modules.
+- A cross-plugin toolbar slot: define a `Role.make(...)` in the host's `types/<X>Surface.ts`, render `<Surface.Surface type={Role} data={{ subject }} />` in the toolbar, and list the role id in the contributor's `AppCapability.surface({ roles })` so the surface activates on demand (`plugin-presenter` `PresenterSurface.Toolbar`).
+- A new plugin needs `pnpm exec dx-plugin gen` (writes the gitignored `src/capabilities/gen/*`) and a `.storybook/` (copy a sibling's; `manager-head.html`/`preview-head.html` are symlinks) before its vitest config loads.
+- `db.query(filter).run()` resolves to the object array, not `{ objects }`.
+- A running Composer dev server does not see a new `#imports` alias in a plugin's `package.json` (restart it) nor new capability modules until `pnpm exec dx-plugin gen` rewrites `src/capabilities/gen/*`; the plugin fails to load with `startupFailureKind: module-error` until both.
+- A list held on an object's own field (not a Collection) gets undo by a Delete/Restore operation pair plus `AppCapability.undoMappings` (kanban's pattern); space `RemoveObjects` only unlinks from Collections.
+
+## 2026-10-23 — plugin-code-graph (new plugin)
+
+- Reuse the feature-map canvas for any derived graph: `createDynamicProjection` from `@dxos/react-ui-canvas/scene` with `arrange: 'force' | 'crossings'`; feed positions from another engine (e.g. `@dxos/diagram` `SemanticEngine`) as the `Overlay` (`plugin-code-graph/src/components/CodeGraphCanvas`).
+- A canvas fits once on mount; pass `refitKey` to `Canvas.Root` and change it when positions arrive asynchronously, or the view stays framed on the pre-layout scene.
+- `SemanticEngine` coordinates start at its own origin; recentre them on (0,0) before using them as canvas positions, which open centred on the origin.
+- Dev-server-only data for a plugin: ship a `./vite-plugin` export (connect middleware, `apply: 'serve'`) and mount it from `composer-app/vite.config.ts` with a dynamic `import()`, as `plugin-dev-shell` does; check loopback + JSON content type.
+- An object added with `Database.add` (no collection) opens at `root/<spaceId>/system/database/<typename>/<objectId>` (`GraphPath.getObjectPath`).
+- A capability restricted to `environments: ['browser', 'tauri']` does not activate in node plugin tests; restrict only what truly needs a DOM.
+
 ## 2026-09-17 — plugin-typesafe + plugin-labeler (new plugins)
 
 - `AppCapability.layerSpec(loader, { name })` takes a NAME, not `provides` — unlike the other makers (`plugin-assistant/src/capabilities/index.ts`).
@@ -460,7 +479,7 @@ Session-logged rules for agents. Append a dated section per session (newest firs
 ## 2026-06-18 — plugin-assistant (chat failure / error-toast story)
 
 - To DEMO an error toast, prefer a PRESENTATIONAL story: render `Toast.Provider`/`Toast.Viewport`/`Toast.Root` directly and feed `Toast.Description` from the real `parseError(rawError)`, title via `useTranslation(meta.id)('ai-service-error.label')`. Deterministic + screenshotable + zero console noise.
-- AVOID the full-harness route for an error-toast demo (ChatArticle-style `withPluginManager` + `useChatProcessor`, then seed `registry.set(processor.error, Option.some(parseError(...)))` via `useContext(RegistryContext)`): it renders, but the toast is transient (20s auto-dismiss), StrictMode resets `toastError` state, it is portal-positioned at the clipped viewport bottom → flaky to view, plus REMOTE-edge 401/favicon console errors.
+- AVOID the full-harness route for an error-toast demo (ChatArticle-style `withPluginManager` + `useChatModel`, then seed `registry.set(processor.error, Option.some(parseError(...)))` via `useContext(RegistryContext)`): it renders, but the toast is transient (20s auto-dismiss), StrictMode resets `toastError` state, it is portal-positioned at the clipped viewport bottom → flaky to view, plus REMOTE-edge 401/favicon console errors.
 - `Toast.Root` needs `Toast.Provider` + `Toast.Viewport` wrappers in a story (testing decorators don't supply them). Mirror `ui/react-ui/.../Toast.stories.tsx`.
 - Toast `duration` must be a 32-bit-safe ms int to stay open for review; `Number.MAX_SAFE_INTEGER`/`Infinity` overflow `setTimeout` → the toast auto-dismisses IMMEDIATELY. Use e.g. `24 * 60 * 60 * 1000`.
 - plugin-assistant `tsconfig.json` EXCLUDES `*.stories.tsx` → `compile` does NOT typecheck stories. Stories are exercised by `test-storybook` (vitest browser, smoke-mounts each story); scope it: `moon run plugin-assistant:test-storybook -- Chat.stories`.

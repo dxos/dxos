@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<sparql xmlns="http://www.w3.org/2005/sparql-results#">
+<head>
+  <variable name="s"/>
+  <variable name="count"/>
+</head>
+<results>
+  <result>
+    <binding name="s"><uri>http://example.org/c</uri></binding>
+    <binding name="count"><literal datatype="http://www.w3.org/2001/XMLSchema#integer">1</literal></binding>
+  </result>
+  <result>
+    <binding name="s"><uri>http://example.org/a</uri></binding>
+    <binding name="count"><literal datatype="http://www.w3.org/2001/XMLSchema#integer">2</literal></binding>
+  </result>
+  <result>
+    <binding name="s"><uri>http://example.org/b</uri></binding>
+    <binding name="count"><literal datatype="http://www.w3.org/2001/XMLSchema#integer">1</literal></binding>
+  </result>
+</results>
+</sparql>

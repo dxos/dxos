@@ -48,12 +48,74 @@ describe('DataServiceImpl', () => {
     );
     await registered.wait({ timeout: 1000 });
 
-    await EffectEx.runPromise(impl['DataService.updateSubscription']({ subscriptionId, addIds: [documentId] }));
+    await EffectEx.runPromise(impl['DataService.updateSubscription']({ subscriptionId, add: [{ id: documentId }] }));
     await reported.wait({ timeout: 1000 });
 
     // Without this the subscriber is told nothing at all and its handle waits for bytes no one is
     // fetching — the 15s space-open hang (DX-1297).
     expect(batches.at(-1)).toEqual({ updates: [{ documentId, unavailable: true }] });
+  });
+
+  test('a passive add fetches nothing; the others in the same request still load', async ({ expect }) => {
+    const subscriptionId = 'test-subscription';
+    const requested: string[][] = [];
+    const impl = new DataServiceImpl({} as EdgeFunctionEnv.TraceContext, {
+      ...emptyDataService(),
+      getDocuments: async (_ctx, _spaceId, documentIds) => {
+        requested.push(documentIds);
+        return Object.assign([] as EdgeFunctionEnv.RawDocument[], { [Symbol.dispose]: () => {} });
+      },
+    });
+    const registered = new Trigger();
+    void EffectEx.runPromise(
+      Stream.runForEach(impl['DataService.subscribe']({ subscriptionId, spaceId: SpaceId.random() }), () =>
+        Effect.sync(() => registered.wake()),
+      ),
+    );
+    await registered.wait({ timeout: 1000 });
+
+    await EffectEx.runPromise(
+      impl['DataService.updateSubscription']({
+        subscriptionId,
+        add: [{ id: 'held', heads: ['head-1'], passive: true }],
+      }),
+    );
+    expect(requested).toEqual([]);
+
+    await EffectEx.runPromise(
+      impl['DataService.updateSubscription']({
+        subscriptionId,
+        add: [
+          { id: 'held', heads: ['head-1'], passive: true },
+          { id: 'written', heads: ['head-2'] },
+        ],
+      }),
+    );
+    expect(requested).toEqual([['written']]);
+  });
+
+  test('a document created from bytes is created empty, then takes the bytes as its first change', async ({
+    expect,
+  }) => {
+    const spaceId = SpaceId.random();
+    const initialDocument = new Uint8Array([1, 2, 3]);
+    const calls: unknown[] = [];
+    const impl = new DataServiceImpl({} as EdgeFunctionEnv.TraceContext, {
+      ...emptyDataService(),
+      createDocument: async (_ctx, _spaceId, initialValue) => {
+        calls.push({ create: initialValue });
+        return { documentId: 'created', [Symbol.dispose]: () => {} };
+      },
+      changeDocument: async (_ctx, _spaceId, documentId, changes) => {
+        calls.push({ change: documentId, changes });
+      },
+    });
+
+    const response = await EffectEx.runPromise(impl['DataService.createDocument']({ spaceId, initialDocument }));
+
+    expect(response).toEqual({ documentId: 'created' });
+    // EDGE's create takes only JSON, which cannot carry Automerge values.
+    expect(calls).toEqual([{ create: undefined }, { change: 'created', changes: initialDocument }]);
   });
 });
 

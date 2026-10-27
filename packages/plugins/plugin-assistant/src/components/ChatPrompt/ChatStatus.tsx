@@ -53,8 +53,8 @@ export type ChatStatusViewProps = ChatStreamStatusProps & {
  * - cumulative session total tokens across all `stats` content blocks
  */
 export const ChatStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
-  // Read `messages` from the chat context (combines `useQuery(queue)` + the processor's
-  // pending atom) rather than `processor.messages` directly — the latter only contains
+  // Read `messages` from the chat context (combines `useQuery(queue)` + the chat model's
+  // pending atom) rather than `chatModel.messages` directly — the latter only contains
   // blocks streamed via the ephemeral `PartialBlock` channel, while finalized blocks
   // (including the per-turn `stats` block we read for token counts) are submitted to the
   // feed via `_submitMessage` and only show up through `useQuery`.
@@ -93,7 +93,7 @@ export const ChatStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
 
 /**
  * The pill itself, given resolved values. Split from {@link ChatStatus} so each slot — elapsed,
- * tokens, the next alarm — can be mounted and asserted in a story without a live processor.
+ * tokens, the next alarm — can be mounted and asserted in a story without a live chat model.
  */
 export const ChatStatusView = ({
   classNames,

@@ -158,7 +158,20 @@ export interface EntityMeta extends Schema.Schema.Type<typeof EntityMeta> {}
 export interface QueueRef {
   readonly queueId: string;
   readonly spaceId?: string;
+  /**
+   * Excludes the queue's rows last updated before this time (unix ms), which its retention has expired:
+   * excluded in the read so that a page limit counts only live rows.
+   */
+  readonly updatedSince?: number;
 }
+
+/** The {@link QueueRef.updatedSince} bound over the `updatedAt` column (optionally qualified). */
+export const buildQueueExpiryCondition = (
+  sql: SqlClient.SqlClient,
+  queue: QueueRef,
+  column: Statement.Fragment = sql`updatedAt`,
+): Statement.Fragment =>
+  queue.updatedSince !== undefined ? sql` AND (${column} IS NULL OR ${column} >= ${queue.updatedSince})` : sql``;
 
 /** One source a read selects from: a whole space, or one queue. */
 export type SourceRef = { readonly spaceId: string } | { readonly queue: QueueRef };
@@ -210,8 +223,8 @@ const buildSourceRefsCondition = (
       sql.or(
         queues.map((queue) =>
           queue.spaceId !== undefined
-            ? sql`(spaceId = ${queue.spaceId} AND queueId = ${queue.queueId})`
-            : sql`queueId = ${queue.queueId}`,
+            ? sql`(spaceId = ${queue.spaceId} AND queueId = ${queue.queueId}${buildQueueExpiryCondition(sql, queue)})`
+            : sql`(queueId = ${queue.queueId}${buildQueueExpiryCondition(sql, queue)})`,
         ),
       ),
     );
@@ -247,28 +260,30 @@ export interface CursorQueueWindow {
 }
 
 /**
- * Read the first `limit` rows of a feed in natural order, so a bounded query costs what it asks
- * for rather than the whole feed. Ordered by `objectId` because that is the key the query
- * executor's natural comparator uses: the capped page is then exactly the page a full scan
+ * Read a page of a feed in natural order, `limit` rows after the first `skip`, so a bounded query
+ * costs what it asks for rather than the whole feed. Ordered by `objectId` because that is the key
+ * the query executor's natural comparator uses: the page is then exactly the page a full scan
  * followed by an in-memory sort would have produced.
  */
 export interface NaturalQueueWindow {
   readonly kind: 'natural';
   readonly direction: 'asc' | 'desc';
-  /** Maximum rows to return, applied after ordering. */
+  /** Maximum rows to return, applied after ordering and `skip`. */
   readonly limit: number;
+  /** Rows dropped from the front of the ordering before `limit` counts. */
+  readonly skip?: number;
   /**
    * Restrict to rows with this deleted state. Folded in here rather than left to the caller so the
-   * cap counts only rows the caller keeps — a limit applied before the deleted filter would return
-   * short of what the caller asked for.
+   * skip and cap count only rows the caller keeps — a limit applied before the deleted filter would
+   * return short of what the caller asked for.
    */
   readonly deleted?: boolean;
 }
 
 /**
- * Trailing `... AND <bounds> ORDER BY <key> LIMIT ?` for a windowed queue read.
- * Empty when there is no window, so the unwindowed query keeps its previous shape (and its
- * unspecified row order).
+ * Trailing `... AND <bounds> ORDER BY <key> LIMIT ? OFFSET ?` for a windowed queue read issued as
+ * one statement. Empty when there is no window, so the unwindowed query keeps its previous shape
+ * (and its unspecified row order).
  */
 export const buildQueueWindow = (sql: SqlClient.SqlClient, window: QueueWindow | undefined): Statement.Fragment => {
   if (window === undefined) {
@@ -285,7 +300,8 @@ export const buildQueueWindow = (sql: SqlClient.SqlClient, window: QueueWindow |
       window.direction === 'desc'
         ? sql` ORDER BY objectId DESC, recordId DESC`
         : sql` ORDER BY objectId ASC, recordId ASC`;
-    return sql`${deleted}${order} LIMIT ${window.limit}`;
+    const offset = window.skip !== undefined ? sql` OFFSET ${window.skip}` : sql``;
+    return sql`${deleted}${order} LIMIT ${window.limit}${offset}`;
   }
 
   // A cursor read is over positioned blocks only — `queuePosition > ?` excludes the nulls, and
@@ -302,7 +318,7 @@ const compareText = (left: string, right: string): number => (left < right ? -1 
 /** The order and cut {@link buildQueueWindow} applies, for merging a read issued as several statements. */
 const queueWindowMerge = (
   window: QueueWindow | undefined,
-): { compare?: (left: EntityMeta, right: EntityMeta) => number; limit?: number } => {
+): { compare?: (left: EntityMeta, right: EntityMeta) => number; skip?: number; limit?: number } => {
   if (window === undefined) {
     return {};
   }
@@ -311,6 +327,7 @@ const queueWindowMerge = (
     return {
       compare: (left, right) =>
         direction * (compareText(left.objectId, right.objectId) || left.recordId - right.recordId),
+      skip: window.skip,
       limit: window.limit,
     };
   }
@@ -321,9 +338,30 @@ const queueWindowMerge = (
   };
 };
 
-/** Widens a window's limit by `extra` rows; an unlimited window stays unlimited. */
-const widenQueueWindow = (window: QueueWindow | undefined, extra: number): QueueWindow | undefined =>
-  window?.limit === undefined ? window : { ...window, limit: window.limit + extra };
+/**
+ * Widens a window's limit by `extra` rows and by its skip, for a statement whose rows are merged with
+ * others': only the merged order knows which rows the skip drops. An unlimited window stays unlimited.
+ */
+const widenQueueWindow = (window: QueueWindow | undefined, extra = 0): QueueWindow | undefined => {
+  if (window?.limit === undefined) {
+    return window;
+  }
+  if (window.kind === 'cursor') {
+    return { ...window, limit: window.limit + extra };
+  }
+  const { skip = 0, ...rest } = window;
+  return { ...rest, limit: rest.limit + skip + extra };
+};
+
+/**
+ * The window clause each of a read's statements appends, and the merge of their rows: one statement
+ * pages itself, while several each read through the skip for the merge to apply. Either clause fits
+ * the budget of the one-statement clause, which is what a read plans its chunks against.
+ */
+const queueWindowStatements = (sql: SqlClient.SqlClient, window: QueueWindow | undefined, statementCount: number) =>
+  statementCount > 1
+    ? { clause: buildQueueWindow(sql, widenQueueWindow(window)), merge: queueWindowMerge(window) }
+    : { clause: buildQueueWindow(sql, window), merge: {} };
 
 /** SQLite stores booleans as integers. */
 const withDeletedFlag = (row: EntityMeta): EntityMeta => ({ ...row, deleted: !!row.deleted });
@@ -405,22 +443,22 @@ export class EntityMetaIndex implements Index {
 
         const sql = this.#sql;
         const includeAllQueues = query.includeAllQueues ?? false;
-        const window = buildQueueWindow(sql, query.window);
-        const budget = (yield* SqlBoundVariableLimit) - countBoundVariables(sql, window);
+        const budget = (yield* SqlBoundVariableLimit) - countBoundVariables(sql, buildQueueWindow(sql, query.window));
         const sourceCost = measuredVariableCost(sql, (chunk: readonly SourceRef[]) =>
           buildSourceRefsCondition(sql, chunk, includeAllQueues),
         );
         const chunks = planChunks(sources, sourceCost, budget);
+        const { clause, merge } = queueWindowStatements(sql, query.window, chunks.length);
         const results = yield* readConsistently(
           sql,
           chunks.length,
           Effect.forEach(
             chunks,
             (chunk) =>
-              sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)}${window}`,
+              sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)}${clause}`,
           ),
         );
-        return mergeChunkedRows(results, queueWindowMerge(query.window)).map(withDeletedFlag);
+        return mergeChunkedRows(results, merge).map(withDeletedFlag);
       }),
   );
 
@@ -448,9 +486,7 @@ export class EntityMetaIndex implements Index {
 
         const sql = this.#sql;
         const limit = yield* SqlBoundVariableLimit;
-        const queueWindow = buildQueueWindow(sql, window);
-        const budget = limit - countBoundVariables(sql, queueWindow);
-        const merge = queueWindowMerge(window);
+        const budget = limit - countBoundVariables(sql, buildQueueWindow(sql, window));
         const typeCost = measuredVariableCost(sql, (types: readonly string[]) => buildTypeDxnCondition(sql, types));
         const sourceCost = measuredVariableCost(sql, (chunk: readonly SourceRef[]) =>
           buildSourceRefsCondition(sql, chunk, includeAllQueues),
@@ -462,13 +498,14 @@ export class EntityMetaIndex implements Index {
             { items: sources, costOf: sourceCost },
             budget,
           );
+          const { clause, merge } = queueWindowStatements(sql, window, pairs.length);
           const results = yield* readConsistently(
             sql,
             pairs.length,
             Effect.forEach(
               pairs,
               ([types, chunk]) =>
-                sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)} AND ${buildTypeDxnCondition(sql, types)}${queueWindow}`,
+                sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)} AND ${buildTypeDxnCondition(sql, types)}${clause}`,
             ),
           );
           return mergeChunkedRows(results, merge).map(withDeletedFlag);
@@ -481,13 +518,14 @@ export class EntityMetaIndex implements Index {
         if (negatedCost + widestSource <= budget) {
           const typeWhere = typeDxns.length > 0 ? sql` AND NOT ${buildTypeDxnCondition(sql, typeDxns)}` : sql``;
           const chunks = planChunks(sources, sourceCost, budget - negatedCost);
+          const { clause, merge } = queueWindowStatements(sql, window, chunks.length);
           const results = yield* readConsistently(
             sql,
             chunks.length,
             Effect.forEach(
               chunks,
               (chunk) =>
-                sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)}${typeWhere}${queueWindow}`,
+                sql<EntityMeta>`SELECT * FROM objectMeta WHERE ${buildSourceRefsCondition(sql, chunk, includeAllQueues)}${typeWhere}${clause}`,
             ),
           );
           return mergeChunkedRows(results, merge).map(withDeletedFlag);
@@ -501,8 +539,8 @@ export class EntityMetaIndex implements Index {
           { items: sources, costOf: sourceCost },
           limit,
         );
-        // Widening the window changes its limit's value, not what it binds, so the second phase plans
-        // before the first runs and the cap covers both.
+        // The widened window binds no more than the window does, so the second phase plans before the
+        // first runs and the cap covers both.
         const sourceChunks = planChunks(sources, sourceCost, budget);
         const statementCount = exclusionPairs.length + sourceChunks.length;
         invariant(statementCount <= MAX_CHUNKED_STATEMENTS, `a read needs ${statementCount} statements`);
@@ -524,7 +562,7 @@ export class EntityMetaIndex implements Index {
             return rows.map((chunkRows) => chunkRows.filter((row) => !excluded.has(row.recordId)));
           }),
         );
-        return mergeChunkedRows(results, merge).map(withDeletedFlag);
+        return mergeChunkedRows(results, queueWindowMerge(window)).map(withDeletedFlag);
       }),
   );
 
@@ -566,7 +604,7 @@ export class EntityMetaIndex implements Index {
         objects,
         (object) =>
           Effect.gen({ self: this }, function* () {
-            const { spaceId, queueId, queueNamespace, documentId, data, queuePosition } = object;
+            const { spaceId, queueId, queueNamespace, documentId, data, queuePosition, queueInsertionId } = object;
 
             // Extract metadata (Logic emulating Echo APIs as strict imports are unavailable).
             const castData = data;
@@ -687,7 +725,8 @@ export class EntityMetaIndex implements Index {
                     convergenceKey = ${convergenceKey},
                     annotations = ${annotations},
                     updatedAt = ${updatedAtTimestamp},
-                    queuePosition = ${queuePosition ?? null}
+                    queuePosition = ${queuePosition ?? null},
+                    queueInsertionId = ${queueInsertionId ?? null}
                   WHERE recordId = ${existing[0].recordId}
                 `;
             } else {
@@ -695,13 +734,13 @@ export class EntityMetaIndex implements Index {
                   INSERT INTO objectMeta (
                     objectId, queueId, queueNamespace, spaceId, documentId,
                     entityKind, typeDXN, deleted, source, target, parent, parentId, sourceId, targetId,
-                    convergenceKey, annotations, version, createdAt, updatedAt, queuePosition
+                    convergenceKey, annotations, version, createdAt, updatedAt, queuePosition, queueInsertionId
                   ) VALUES (
                     ${objectId}, ${queueId ?? ''}, ${queueNamespace ?? ''}, ${spaceId}, ${documentId ?? ''},
                     ${entityKind}, ${typeDXN}, ${deleted},
                     ${source}, ${target}, ${parent}, ${parentId}, ${sourceId}, ${targetId},
                     ${convergenceKey}, ${annotations}, ${version},
-                    ${createdAtTimestamp}, ${updatedAtTimestamp}, ${queuePosition ?? null}
+                    ${createdAtTimestamp}, ${updatedAtTimestamp}, ${queuePosition ?? null}, ${queueInsertionId ?? null}
                   )
                 `;
             }
@@ -800,6 +839,64 @@ export class EntityMetaIndex implements Index {
         }
 
         return [...recordIds];
+      }),
+  );
+
+  /** Record ids of every row of one feed's items. */
+  selectFeedRecordIds = Effect.fn('EntityMetaIndex.selectFeedRecordIds')(
+    (query: { spaceId: SpaceId; queueId: string }): Effect.Effect<number[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
+        const rows = yield* sql<{
+          recordId: number;
+        }>`SELECT recordId FROM objectMeta WHERE spaceId = ${query.spaceId} AND queueId = ${query.queueId}`;
+        return rows.map((row) => row.recordId);
+      }),
+  );
+
+  /**
+   * Record ids of a feed's rows whose current block is one of `blocks`. A row written before
+   * `queueInsertionId` existed is matched by its block's position instead, which is unique per feed.
+   */
+  selectRecordIdsForBlocks = Effect.fn('EntityMetaIndex.selectRecordIdsForBlocks')(
+    (query: {
+      spaceId: SpaceId;
+      queueId: string;
+      blocks: readonly { insertionId: number; position: number | null }[];
+    }): Effect.Effect<number[], SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
+        const recordIds = new Set<number>();
+        for (const chunk of chunkArray(query.blocks.map((block) => block.insertionId))) {
+          const rows = yield* sql<{
+            recordId: number;
+          }>`SELECT recordId FROM objectMeta WHERE spaceId = ${query.spaceId} AND queueId = ${query.queueId} AND ${sql.in('queueInsertionId', chunk)}`;
+          rows.forEach((row) => recordIds.add(row.recordId));
+        }
+        const positions = query.blocks.flatMap((block) => (block.position === null ? [] : [block.position]));
+        for (const chunk of chunkArray(positions)) {
+          const rows = yield* sql<{
+            recordId: number;
+          }>`SELECT recordId FROM objectMeta WHERE spaceId = ${query.spaceId} AND queueId = ${query.queueId} AND queueInsertionId IS NULL AND ${sql.in('queuePosition', chunk)}`;
+          rows.forEach((row) => recordIds.add(row.recordId));
+        }
+        return [...recordIds];
+      }),
+  );
+
+  /** The ids among `documentIds` that have rows in any space other than `spaceId`. */
+  queryDocumentsIndexedElsewhere = Effect.fn('EntityMetaIndex.queryDocumentsIndexedElsewhere')(
+    (query: { spaceId: SpaceId; documentIds: readonly string[] }): Effect.Effect<Set<string>, SqlError.SqlError> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = this.#sql;
+        const found = new Set<string>();
+        for (const chunk of chunkArray(query.documentIds)) {
+          const rows = yield* sql<{
+            documentId: string;
+          }>`SELECT DISTINCT documentId FROM objectMeta WHERE spaceId != ${query.spaceId} AND ${sql.in('documentId', chunk)}`;
+          rows.forEach((row) => found.add(row.documentId));
+        }
+        return found;
       }),
   );
 

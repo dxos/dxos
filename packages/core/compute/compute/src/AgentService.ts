@@ -14,6 +14,7 @@ import type { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import type { ContentBlock } from '@dxos/types';
 
+import type * as Process from './Process.ts';
 import type * as Trace from './Trace.ts';
 import { Instructions } from './types/index.ts';
 
@@ -120,7 +121,7 @@ export interface Session {
    * `runPromise(Effect.forEach(subscribe))`), use {@link Effect.forkDetach} so the
    * stream survives after the parent scope closes; interrupt it on dispose.
    */
-  subscribeEphemeral: () => Stream.Stream<Trace.Message>;
+  subscribeEphemeral: (options?: Process.SubscribeEphemeralOptions) => Stream.Stream<Trace.Message>;
 }
 
 export const getSession = (...args: Parameters<Context.Service.Shape<typeof AgentService>['getSession']>) =>
@@ -144,6 +145,12 @@ export interface GetSessionOptions {
    * @default 'local'
    */
   readonly location?: AgentLocation;
+  /**
+   * Admits the operations the agent and its tool calls invoke that declare requirements
+   * (`Process.SpawnOptions.guard`). Bound at spawn, so a session asked for with a different guard
+   * runs on a fresh process. A guard is a closure and never reaches an `edge` process.
+   */
+  readonly guard?: Process.Guard;
 }
 
 export type AgentLocation = 'local' | 'edge';

@@ -9,10 +9,11 @@ import type * as Agent from '@dxos/assistant/Agent';
 import { Obj, Ref } from '@dxos/echo';
 import { useMembers } from '@dxos/halo-react';
 
-import { Trigger, TriggerOperation } from '#types';
+import { AgentPresence, Trigger, TriggerOperation } from '#types';
 
 import { labelOf } from '../operations/members.ts';
 import { triggerRegistry } from '../triggers.ts';
+import { pollDelay } from './pollDelay.ts';
 import { useRemoteBrain } from './useBrainLocation.ts';
 
 /** A trigger as the UI shows it, from whichever brain holds it. */
@@ -44,10 +45,11 @@ export const useTriggers = (agent: Agent.Agent): Watch[] => {
   const label = useMemo(() => labelOf(members), [members]);
 
   const local = useSyncExternalStore(subscribe, getSnapshot);
+  const brain = AgentPresence.brainId(agent);
   const localWatches = useMemo(
     () =>
       local
-        .filter((trigger) => trigger.agent === agent.id)
+        .filter((trigger) => trigger.agent === brain)
         .map(({ id, goal, when, then }): Watch => ({
           id,
           ...(goal ? { goal } : {}),
@@ -55,7 +57,7 @@ export const useTriggers = (agent: Agent.Agent): Watch[] => {
           recipient: then.recipient,
           message: then.message,
         })),
-    [local, agent.id, label],
+    [local, brain, label],
   );
 
   const [remoteWatches, setRemoteWatches] = useState<Watch[]>([]);
@@ -67,10 +69,11 @@ export const useTriggers = (agent: Agent.Agent): Watch[] => {
     }
 
     let cancelled = false;
+    let failures = 0;
     let timeout: ReturnType<typeof setTimeout> | undefined;
     // Each read schedules the next once it settles, so a slow EDGE call never overlaps (or overwrites) a newer one.
     const read = async () => {
-      const { data } = await invokePromise(
+      const { data, error } = await invokePromise(
         TriggerOperation.ListTriggers,
         { agent: Ref.make(agent) },
         { spaceId: db.spaceId, on: 'edge' },
@@ -89,7 +92,8 @@ export const useTriggers = (agent: Agent.Agent): Watch[] => {
           })),
         );
       }
-      timeout = setTimeout(() => void read(), REMOTE_POLL_MS);
+      failures = error ? failures + 1 : 0;
+      timeout = setTimeout(() => void read(), pollDelay(REMOTE_POLL_MS, failures));
     };
     void read();
     return () => {

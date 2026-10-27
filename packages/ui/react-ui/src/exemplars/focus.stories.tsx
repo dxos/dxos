@@ -9,11 +9,11 @@ import { findFirstFocusable, useFocusGroup } from '@dxos/react-focus';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
+import { Checkbox } from '../components/Checkbox/Checkbox.tsx';
+import * as Field from '../components/Field/Field.tsx';
+import { Input } from '../components/Input/Input.tsx';
+import * as ScrollArea from '../components/ScrollArea/ScrollArea.tsx';
 import * as Hooks from '../hooks/Hooks.ts';
-import { Checkbox } from '../next/components/Checkbox/Checkbox.tsx';
-import * as Field from '../next/components/Field/Field.tsx';
-import { Input } from '../next/components/Input/Input.tsx';
-import * as ScrollArea from '../next/components/ScrollArea/ScrollArea.tsx';
 
 // TODO(burdon): Implement horizontal movement between columns when column is selected.
 // TODO(burdon): Prevent tab out of app.

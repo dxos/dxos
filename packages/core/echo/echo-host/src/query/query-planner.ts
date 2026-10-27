@@ -2,8 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as SqlClient from 'effect/sql/SqlClient';
-
 import { Order, Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
@@ -11,7 +9,6 @@ import { DXN, type URI } from '@dxos/keys';
 
 import { QueryError } from './errors.ts';
 import { QueryPlan } from './plan.ts';
-import { compilePlan as compileToSql, planDeclinedByCompiler } from './sql/index.ts';
 
 /**
  * Creates a QueryError with "Query too complex" message and includes the prettified query in the context.
@@ -30,19 +27,8 @@ const queryTooComplexError = (query: QueryAST.Query | null): QueryError => {
   });
 };
 
-/**
- * Which evaluation path a plan targets: `memory` leaves every step for the executor to evaluate in
- * JS over loaded objects; `sql` compiles the steps into a single {@link QueryPlan.SqlStep} over the
- * index tables. `memory` is the default; the host resolves where the choice comes from.
- */
-export type QueryExecutorMode = 'sql' | 'memory';
-
 export type QueryPlannerOptions = {
   defaultTextSearchKind: QueryPlan.TextSearchKind;
-  /** Evaluation path the plan targets, which decides what {@link QueryPlanner.createPlan} returns. */
-  executor?: QueryExecutorMode;
-  /** Builds the statement's fragments; required for `sql`, which has nothing to compile without it. */
-  sql?: SqlClient.SqlClient;
   /**
    * When true, downgrade index-backed selectors to WildcardSelector + FilterStep.
    * Use when executing against an in-memory working set without SQL index access.
@@ -53,7 +39,6 @@ export type QueryPlannerOptions = {
 
 const DEFAULT_OPTIONS: QueryPlannerOptions = {
   defaultTextSearchKind: 'full-text',
-  executor: 'memory',
 };
 
 /**
@@ -62,8 +47,6 @@ const DEFAULT_OPTIONS: QueryPlannerOptions = {
 // TODO(dmaretskyi): Implement inefficient versions of complex queries.
 export class QueryPlanner {
   private readonly _options: QueryPlannerOptions;
-  /** Passed to the compiler, which plans `in-query` subqueries through it rather than importing this module. */
-  readonly #planSubquery = (query: QueryAST.Query): QueryPlan.Plan => this.#buildSteps(query);
 
   constructor(options?: Partial<QueryPlannerOptions>) {
     this._options = {
@@ -72,22 +55,8 @@ export class QueryPlanner {
     };
   }
 
-  /**
-   * The plan the executor runs. Under `sql` the steps are compiled into one
-   * {@link QueryPlan.SqlStep}, except where {@link planDeclinedByCompiler} sends the plan to the
-   * in-memory executor instead. Synchronous: compiling reads nothing, it only builds the statement.
-   */
+  /** The uncompiled steps. Pure, so the SQL compiler recurses through it for `in-query` subqueries. */
   createPlan(query: QueryAST.Query): QueryPlan.Plan {
-    const plan = this.#buildSteps(query);
-    const sql = this._options.sql;
-    if (this._options.executor !== 'sql' || sql === undefined || planDeclinedByCompiler(plan, this.#planSubquery)) {
-      return plan;
-    }
-    return compileToSql(sql, plan, this.#planSubquery).plan;
-  }
-
-  /** The uncompiled steps. Pure, so the compiler recurses through it for `in-query` subqueries. */
-  #buildSteps(query: QueryAST.Query): QueryPlan.Plan {
     this._validateQueryScoped(query);
     this._validateAggregatePlacement(query);
     const selectsChanges = queryContainsChanges(query);
@@ -1290,7 +1259,7 @@ export class QueryPlanner {
     // Pushing the limit into the SelectStep is only sound when the scan enumerates candidates in the
     // requested order, so that the first N of the scan are the first N of the result. Absent a feed
     // scan the select runs in ascending natural order (by id / queue position). A content-based
-    // reorder (property or system timestamp) or a descending natural order does not match that scan
+    // reorder (property, annotation or system timestamp) or a descending natural order does not match that scan
     // order, so slicing at select time would keep the wrong N; those need the FULL candidate set and
     // only the OrderStep may apply the limit. Ascending natural and rank (the FTS scan already
     // returns by rank) stay consistent with the scan, so keep optimizing those.
@@ -1301,6 +1270,7 @@ export class QueryPlanner {
         orderStep.order.some(
           (order) =>
             order.kind === 'property' ||
+            order.kind === 'annotation' ||
             order.kind === 'timestamp' ||
             (order.kind === 'natural' && order.direction === 'desc'),
         );
@@ -1312,7 +1282,11 @@ export class QueryPlanner {
     // A SkipStep between a propagation target and the LimitStep drops items after the limit
     // would be applied. Since the LimitStep is removed, the limit pushed into the earlier step
     // must also cover the skipped prefix — otherwise `skip(k).limit(n)` yields only `n - k` items.
+    // A feed scan drops the prefix itself, before any document loads, so it takes the SkipSteps instead.
     const skipBetween = (fromIndex: number): number => {
+      if (feedScan !== undefined) {
+        return 0;
+      }
       let total = 0;
       for (let i = fromIndex + 1; i < limitStepIndex; i++) {
         const step = processedSteps[i];
@@ -1345,10 +1319,14 @@ export class QueryPlanner {
       };
     }
 
-    // Remove the LimitStep since limit is now propagated.
-    newSteps.splice(limitStepIndex, 1);
-
-    return QueryPlan.Plan.make(newSteps);
+    // Remove the LimitStep since limit is now propagated, and the SkipSteps a feed scan applies.
+    return QueryPlan.Plan.make(
+      newSteps.filter(
+        (step, index) =>
+          index !== limitStepIndex &&
+          !(feedScan !== undefined && step._tag === 'SkipStep' && index > selectStepIndex && index < limitStepIndex),
+      ),
+    );
   }
 }
 
@@ -1434,8 +1412,8 @@ const createRelationTraversalStep = (direction: QueryPlan.RelationTraversal['dir
  * a page capped before a step that prunes it would come back short of what the caller asked for.
  *
  * Sound only when every step between the select and the limit is one the scan reproduces:
- * the deleted filter (folded into the returned scan), a residual filter the selector already
- * enforces, a skip (the caller inflates the limit by it), and the order step the scan matches.
+ * the deleted filter and any skip (both folded into the returned scan), a residual filter the
+ * selector already enforces, and the order step the scan matches.
  */
 const feedScanForLimit = (
   steps: readonly QueryPlan.Step[],
@@ -1467,6 +1445,7 @@ const feedScanForLimit = (
   }
 
   let deleted: boolean | undefined;
+  let skip = 0;
   for (let index = selectStepIndex + 1; index < limitStepIndex; index++) {
     const step = steps[index];
     switch (step._tag) {
@@ -1486,17 +1465,22 @@ const feedScanForLimit = (
         break;
       case 'SkipStep':
         // A skip below the order composes the other way round: the plan drops rows in scan order
-        // and orders what is left, where an inflated scan limit orders first and drops from that.
+        // and orders what is left, where the scan orders first and drops from that.
         if (orderStepIndex !== -1 && index < orderStepIndex) {
           return undefined;
         }
+        skip += step.skip;
         break;
       default:
         return undefined;
     }
   }
 
-  return deleted === undefined ? { direction } : { direction, deleted };
+  return {
+    direction,
+    ...(deleted !== undefined ? { deleted } : {}),
+    ...(skip > 0 ? { skip } : {}),
+  };
 };
 
 /**

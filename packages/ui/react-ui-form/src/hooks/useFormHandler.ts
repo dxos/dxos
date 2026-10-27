@@ -170,7 +170,6 @@ export const useFormHandler = <T extends AnyProperties>({
       }
 
       let errors: ValidationError[] = validateSchema(schema, values) ?? [];
-      log('validate', { values, errors });
       if (errors.length === 0 && onValidate) {
         const validatedValues = values as T;
         errors = onValidate(validatedValues) ?? [];
@@ -178,6 +177,8 @@ export const useFormHandler = <T extends AnyProperties>({
 
       setErrors(flatMap(errors));
       const valid = errors.length === 0;
+      // Never log values or error messages: fields may hold secrets (passwords, API keys) and messages can echo them.
+      log('validate', { valid, errorPaths: errors.map((error) => error.path) });
       return valid;
     },
     [schema, onValidate],
@@ -295,15 +296,15 @@ export const useFormHandler = <T extends AnyProperties>({
       if (fieldOverrides?.[jsonPath]?.indeterminate) {
         return undefined;
       }
-      // Un-edited fields reflect the current source value.
-      return SchemaEx.getValue(source, jsonPath);
+      // Read through the merged view: an edited list holds its items' edits, which the source has not seen yet.
+      return SchemaEx.getValue(applyOverrides(source, overrides), jsonPath);
     },
     [source, overrides, fieldOverrides],
   );
 
   const onValueChange = useCallback<FormHandler<T>['onValueChange']>(
     (path, type, value) => {
-      log('onValueChange', { path, value });
+      log('onValueChange', { path });
 
       const jsonPath = SchemaEx.createJsonPath(path);
       const pathArray = path;
@@ -319,7 +320,7 @@ export const useFormHandler = <T extends AnyProperties>({
 
       // Hold the edit locally as an override (including invalid values, so it never snaps back); un-edited paths keep
       // tracking the live source. The prune effect drops the override once the source catches up.
-      const newOverrides = { ...overrides, [jsonPath]: parsedValue };
+      const newOverrides = setOverride(overrides, jsonPath, pathArray, parsedValue);
       setOverrides(newOverrides);
 
       // TODO(burdon): Check value has changed from original.
@@ -424,6 +425,30 @@ const mergeAtPath = (obj: any, path: readonly (string | number)[], value: any): 
   }
 
   return { ...obj, [head]: child };
+};
+
+const isBelow = (path: string, ancestor: string): boolean =>
+  path.startsWith(`${ancestor}.`) || path.startsWith(`${ancestor}[`);
+
+/**
+ * Records an edit so that no override nests in another (a field edit folds into its edited list; a list edit replaces
+ * its fields'), since a stale outer list would otherwise resurface once its item edits reconcile away.
+ */
+const setOverride = (
+  overrides: Record<SchemaEx.JsonPath, unknown>,
+  jsonPath: SchemaEx.JsonPath,
+  path: readonly (string | number)[],
+  value: unknown,
+): Record<SchemaEx.JsonPath, unknown> => {
+  const ancestor = (Object.keys(overrides) as SchemaEx.JsonPath[]).find((candidate) => isBelow(jsonPath, candidate));
+  if (ancestor) {
+    const depth = SchemaEx.splitJsonPath(ancestor).length;
+    return { ...overrides, [ancestor]: mergeAtPath(overrides[ancestor], path.slice(depth), value) };
+  }
+  const descendants = (Object.keys(overrides) as SchemaEx.JsonPath[]).filter((candidate) =>
+    isBelow(candidate, jsonPath),
+  );
+  return { ...omitPaths(overrides, descendants), [jsonPath]: value };
 };
 
 /** Overlays sparse json-path edits onto a base value without mutating it; un-edited paths keep the base reference. */

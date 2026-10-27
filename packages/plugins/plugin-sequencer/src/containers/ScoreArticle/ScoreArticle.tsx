@@ -8,7 +8,6 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Oscilloscope, OscilloscopeMode } from '@dxos/react-ui-audio';
-import { type ToggleMode } from '@dxos/react-ui-canvas';
 import { ActionToolbar, MenuBuilder, type ToolbarMenuActionGroupProperties, useMenuBuilder } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
@@ -18,7 +17,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import { downloadBlob } from '@dxos/util';
 
-import { SequenceGrid, TrackList } from '#components';
+import { SequenceGrid, type ToggleMode, TrackList } from '#components';
 import { Score, Sequence, Track } from '#types';
 
 import { ScorePlayer } from '../../audio/index.ts';
@@ -426,8 +425,24 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
           },
           handleExport,
         )
+        // A row field, so the label sits beside the stepper in the one-line toolbar rather than above it.
+        .custom('tempo', { label: 'BPM' }, () => (
+          <Field.Root layout='row'>
+            <Field.Label classNames='text-xs'>BPM</Field.Label>
+            <Input.Number
+              min={1}
+              step={1}
+              formatOptions={{ maximumFractionDigits: 0 }}
+              value={String(score.tempo)}
+              onValueChange={(_, tempo) => handleTempoChange(tempo)}
+              classNames='w-28'
+            />
+          </Field.Root>
+        ))
         .build(),
     [
+      score.tempo,
+      handleTempoChange,
       isPlaying,
       togglePlay,
       showAllTracks,
@@ -443,18 +458,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
   return (
     <Panel.Root role={role}>
       <Panel.Header>
-        <ActionToolbar {...menuActions} attendableId={attendableId}>
-          <Field.Root>
-            <Field.Label classNames='text-xs mr-1'>BPM</Field.Label>
-            <Input.Root
-              min={1}
-              value={score.tempo}
-              onChange={(event) => handleTempoChange(Number(event.target.value))}
-              classNames='w-16'
-              type='number'
-            />
-          </Field.Root>
-        </ActionToolbar>
+        <ActionToolbar {...menuActions} attendableId={attendableId} />
       </Panel.Header>
 
       <Panel.Body asChild>

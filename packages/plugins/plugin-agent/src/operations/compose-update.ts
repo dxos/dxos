@@ -9,7 +9,7 @@ import * as Layer from 'effect/Layer';
 import { AiService } from '@dxos/ai';
 import { DEFAULT_MODEL, type RDF } from '@dxos/pipeline-rdf';
 
-import { FactEntry } from '#types';
+import { BrainService } from '#types';
 
 import { RELAY_RULES } from '../skills/relay-rules.ts';
 
@@ -32,7 +32,7 @@ export type ComposeUpdateProps = {
 const factLine = (fact: RDF.Fact): string => {
   const quote = fact.assertion.quote ? ` — "${fact.assertion.quote}"` : '';
   const speaker = fact.attribution.agentLabel ? ` (said by ${fact.attribution.agentLabel})` : '';
-  return `- ${FactEntry.factText(fact)}${quote}${speaker}`;
+  return `- ${BrainService.factText(fact)}${quote}${speaker}`;
 };
 
 /** The prompt for one update; exported so tests can assert what the model is told. */

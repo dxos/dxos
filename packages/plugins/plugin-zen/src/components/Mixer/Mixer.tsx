@@ -171,18 +171,20 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
               onMove={handleMove}
             >
               {({ items }) => (
-                <OrderedList.Content>
-                  {items.map((layer) => (
-                    <LayerListItem
-                      key={layer.id}
-                      item={layer}
-                      selected={layer.id === selected}
-                      onLayerSelect={handleSelect}
-                      onLayerUpdate={handleUpdate}
-                      onLayerDelete={handleDelete}
-                    />
-                  ))}
-                </OrderedList.Content>
+                <OrderedList.Viewport>
+                  <OrderedList.Content>
+                    {items.map((layer) => (
+                      <LayerListItem
+                        key={layer.id}
+                        item={layer}
+                        selected={layer.id === selected}
+                        onLayerSelect={handleSelect}
+                        onLayerUpdate={handleUpdate}
+                        onLayerDelete={handleDelete}
+                      />
+                    ))}
+                  </OrderedList.Content>
+                </OrderedList.Viewport>
               )}
             </OrderedList.Root>
           </Panel.Body>

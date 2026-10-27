@@ -50,6 +50,10 @@ export type NativeOAuthRequest = {
   registerRecovery?: boolean;
   /** atproto handle or DID; atproto cannot resolve the user's auth server without it. */
   loginHint?: string;
+  /** `app` for a grant that acts as DXOS's registered app; absent for a user grant. */
+  kind?: 'user' | 'app';
+  /** The MCP server a `provider: 'mcp'` grant is for. */
+  resource?: string;
 };
 
 /**

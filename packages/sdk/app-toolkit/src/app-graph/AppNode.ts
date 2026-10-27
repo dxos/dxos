@@ -13,6 +13,7 @@ import type * as Atom from 'effect/reactivity/Atom';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type Space } from '@dxos/client/echo';
 import { Annotation, Collection, type Database, Obj, Ref, Registry, Type } from '@dxos/echo';
+import * as GraphNode from '@dxos/graph/GraphNode';
 import { Attention } from '@dxos/react-ui-attention/types';
 import { type TreeData } from '@dxos/react-ui-list';
 import type * as Position from '@dxos/util/Position';
@@ -212,9 +213,12 @@ export const makeObject = ({
   const iconAnnotation = delegatedIcon ?? staticIcon;
   const graphProps = schema ? Option.getOrUndefined(AppAnnotation.GraphPropsAnnotation.get(schema)) : undefined;
 
+  const containerProps = schema ? Option.getOrUndefined(AppAnnotation.ContainerAnnotation.get(schema)) : undefined;
   const partials = Obj.instanceOf(Collection.Collection, object)
     ? getListPartials(ContainerModel.collection(object), db)
-    : graphProps;
+    : containerProps
+      ? { ...graphProps, ...getListPartials({ object, ...containerProps }, db) }
+      : graphProps;
 
   const label =
     get(Obj.labelAtom(object)) || getDynamicLabel('object-name.placeholder', typename, { defaultValue: 'New item' });
@@ -573,6 +577,37 @@ export const makeToolbarSeparator = (
 });
 
 //
+// Prompt helpers.
+//
+
+/** Type of the hidden node a text prompt reads its contributed actions from. */
+export const PROMPT_TYPE = 'org.dxos.type.prompt';
+
+/** Segment of a prompt node under its host. */
+export const PROMPT_SEGMENT = 'prompt';
+
+/**
+ * The prompt node of a host (a chat, a companion, a space's home).
+ * Keyed by the host rather than the chat it composes into, so it survives a draft chat being stored or replaced.
+ */
+export const getPromptId = (hostId: string): string => GraphNode.qualifyId(hostId, PROMPT_SEGMENT);
+
+/**
+ * Build the prompt node for a host. Contributors file actions on it with the `prompt` disposition, and
+ * its id is the key a prompt's controls share (e.g. the dictation session).
+ */
+export const makePrompt = (): AppGraphNode.NodeArg<null> => ({
+  id: PROMPT_SEGMENT,
+  type: PROMPT_TYPE,
+  data: null,
+  properties: {
+    label: ['prompt.label', { ns: 'org.dxos.i18n.os' }],
+    icon: 'ph--chat-text--regular',
+    disposition: 'hidden',
+  },
+});
+
+//
 // Not-found helpers.
 //
 
@@ -587,3 +622,65 @@ export const makeNotFound = (): AppGraphNode.NodeArg<null> => ({
     disposition: 'hidden',
   },
 });
+
+//
+// Context menu.
+//
+
+/** Names the graph node an element shows, so right-clicking it opens that node's actions as the app's context menu. */
+export const CONTEXT_MENU_ATTRIBUTE = 'data-dx-context';
+
+/** The caller the context menu runs the node's actions as, so what they open (e.g. a rename popover) anchors here. */
+export const CONTEXT_MENU_CALLER_ATTRIBUTE = 'data-dx-context-caller';
+
+/**
+ * Props that make an element open the context menu of the graph node `id`. `caller` is the one the element's own menu
+ * passes its actions: a popover an action opens anchors to `${caller}:${id}`, which the element renders.
+ */
+export const contextMenuProps = (
+  id: string,
+  caller?: string,
+): Partial<Record<typeof CONTEXT_MENU_ATTRIBUTE | typeof CONTEXT_MENU_CALLER_ATTRIBUTE, string>> => ({
+  [CONTEXT_MENU_ATTRIBUTE]: id,
+  ...(caller ? { [CONTEXT_MENU_CALLER_ATTRIBUTE]: caller } : {}),
+});
+
+/** One edit command a container offers its context menu, with whether it can run now. */
+export type EditCommand = {
+  run: () => void;
+  enabled: () => boolean;
+};
+
+/**
+ * The edit commands a container (an editor, a canvas) offers its context menu, run against the container's own state:
+ * undo and redo always, and cut, copy and paste where they mean more than the browser's text clipboard (e.g. shapes).
+ */
+export type EditCommands = {
+  undo: EditCommand;
+  redo: EditCommand;
+  cut?: EditCommand;
+  copy?: EditCommand;
+  paste?: EditCommand;
+};
+
+const editCommands = new WeakMap<Element, EditCommands>();
+
+/** Offers `commands` to a right-click anywhere inside `element`; returns the call that withdraws them. */
+export const registerEditCommands = (element: Element, commands: EditCommands): (() => void) => {
+  editCommands.set(element, commands);
+  return () => {
+    if (editCommands.get(element) === commands) {
+      editCommands.delete(element);
+    }
+  };
+};
+
+/** The edit commands of the innermost container around `target` that offers any. */
+export const findEditCommands = (target: EventTarget | null): EditCommands | undefined => {
+  for (let element = target instanceof Element ? target : null; element; element = element.parentElement) {
+    const commands = editCommands.get(element);
+    if (commands) {
+      return commands;
+    }
+  }
+};

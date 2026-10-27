@@ -11,7 +11,7 @@ import * as RpcClient from 'effect/rpc/RpcClient';
 import * as RpcServer from 'effect/rpc/RpcServer';
 import * as Scope from 'effect/Scope';
 
-import { Trigger } from '@dxos/async';
+import { TimeoutError, Trigger, asyncTimeout } from '@dxos/async';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
@@ -35,6 +35,12 @@ const WORKER_CLIENT_CONCURRENCY = Number.MAX_SAFE_INTEGER;
  * handshake that follow.
  */
 export const DEFAULT_DISPLACE_GRACE_TIMEOUT = 10_000;
+
+/**
+ * How long shutdown waits for the runtime's teardown before releasing the locks anyway: a teardown
+ * stuck on the storage it is closing would otherwise leave every tab on a worker that serves nothing.
+ */
+export const DEFAULT_SHUTDOWN_TIMEOUT = 10_000;
 
 /**
  * Shuts down whichever worker currently holds `storageLockKey`, so its storage can be taken over.
@@ -95,6 +101,8 @@ export type Options = {
    * escalating to the tab that owns it. Defaults to {@link DEFAULT_DISPLACE_GRACE_TIMEOUT}.
    */
   displaceGraceTimeout?: number;
+  /** Defaults to {@link DEFAULT_SHUTDOWN_TIMEOUT}. */
+  shutdownTimeout?: number;
   /**
    * Ends the worker the way terminating its agent would: a pending storage-lock request is dropped
    * and a running worker shuts down. For hosts that run the loop in-process (tests, a native shell).
@@ -110,6 +118,8 @@ export type Options = {
   createRuntime: (args: {
     config: Record<string, any> | undefined;
     requestShutdown: () => void;
+    /** Sends the leader a `status` message (see {@link WorkerProtocol.DedicatedWorkerStatusMessage}). */
+    reportStatus: (status: unknown) => void;
   }) => Effect.Effect<RuntimeHandle, BaseError, Scope.Scope>;
 };
 
@@ -136,6 +146,7 @@ export const run = ({
   storageLockKey,
   displaceChannel = displaceChannelFor(storageLockKey),
   displaceGraceTimeout = DEFAULT_DISPLACE_GRACE_TIMEOUT,
+  shutdownTimeout = DEFAULT_SHUTDOWN_TIMEOUT,
   signal,
   createRuntime,
 }: Options): void => {
@@ -229,7 +240,14 @@ export const run = ({
       shuttingDown = true;
       log('worker shutting down');
       channel.close();
-      await EffectEx.runPromise(Scope.close(runtimeScope, Exit.void)).catch((err) => log.catch(err));
+      await asyncTimeout(EffectEx.runPromise(Scope.close(runtimeScope, Exit.void)), shutdownTimeout).catch((err) => {
+        if (err instanceof TimeoutError) {
+          // Closing the endpoint terminates a real worker, ending the teardown with it.
+          log.warn('worker runtime did not close in time, releasing its locks', { shutdownTimeout });
+        } else {
+          log.catch(err);
+        }
+      });
       endpoint.close?.();
       releaseLivenessLock();
       releaseStorageLock();
@@ -261,6 +279,9 @@ export const run = ({
 
     const requestShutdown = () => void shutdown();
 
+    const reportStatus = (status: unknown) =>
+      endpoint.postMessage({ type: 'status', status } satisfies WorkerProtocol.DedicatedWorkerMessage);
+
     const handleMessage = async (ev: MessageEvent<WorkerProtocol.DedicatedWorkerMessage>) => {
       const message = ev.data;
       log('worker message received', { type: message.type });
@@ -270,7 +291,9 @@ export const run = ({
           log('worker init with config', { keys: Object.keys(message.config ?? {}) });
           try {
             runtime = await EffectEx.runPromise(
-              createRuntime({ config: message.config, requestShutdown }).pipe(Scope.provide(runtimeScope)),
+              createRuntime({ config: message.config, requestShutdown, reportStatus }).pipe(
+                Scope.provide(runtimeScope),
+              ),
             );
           } catch (err) {
             // A worker with no runtime serves nothing, so it reports why and exits instead of advertising `ready`.

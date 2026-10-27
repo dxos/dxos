@@ -1,5 +1,150 @@
 # @dxos/client
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [4007fa2]
+  - @dxos/echo-protocol@0.16.0
+  - @dxos/echo-client@0.16.0
+  - @dxos/client-services@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/worker-framework@0.16.0
+  - @dxos/compute-runtime@0.16.0
+  - @dxos/client-protocol@0.16.0
+  - @dxos/config@0.16.0
+  - @dxos/async@0.16.0
+  - @dxos/context@0.16.0
+  - @dxos/debug@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/node-std@0.16.0
+  - @dxos/sql-sqlite@0.16.0
+  - @dxos/timeframe@0.16.0
+  - @dxos/tracing@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/blob@0.16.0
+  - @dxos/credentials@0.16.0
+  - @dxos/edge-client@0.16.0
+  - @dxos/messaging@0.16.0
+  - @dxos/network-manager@0.16.0
+  - @dxos/rpc@0.16.0
+  - @dxos/rpc-tunnel@0.16.0
+  - @dxos/websocket-rpc@0.16.0
+  - @dxos/protocols@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- 37edd53: Service-RPC timeouts name the call that timed out, e.g. `RPC timeout: DataService.getDocumentHeads`, instead of `RPC timeout: call`.
+
+  - `@dxos/protocols`: `runServiceCall` now takes `(runtime, client, tag, payload, options?)` and uses the tag as the timeout label; payload and result types come from the client method. The old effect form is `runServiceEffect(runtime, effect, { label, timeout? })`, with `label` required.
+  - `@dxos/devtools`: the Indexer card logs a failed heads comparison as a warning instead of reporting an exception for every space on every poll.
+
+- Updated dependencies [5490cbc]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [b7d83c9]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [d0728d8]
+- Updated dependencies [460bbc3]
+- Updated dependencies [d84f9b8]
+- Updated dependencies [b82150a]
+- Updated dependencies [0420f87]
+- Updated dependencies [cd70a43]
+- Updated dependencies [1e9c017]
+- Updated dependencies [16bde33]
+- Updated dependencies [5e3e00c]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [ce8f092]
+- Updated dependencies [37edd53]
+- Updated dependencies [6d8c4ee]
+- Updated dependencies [7b47951]
+- Updated dependencies [e398906]
+- Updated dependencies [2b6a93a]
+  - @dxos/compute-runtime@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/echo-client@0.15.0
+  - @dxos/echo-protocol@0.15.0
+  - @dxos/edge-client@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/sql-sqlite@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/client-protocol@0.15.0
+  - @dxos/client-services@0.15.0
+  - @dxos/worker-framework@0.15.0
+  - @dxos/messaging@0.15.0
+  - @dxos/credentials@0.15.0
+  - @dxos/network-manager@0.15.0
+  - @dxos/rpc@0.15.0
+  - @dxos/websocket-rpc@0.15.0
+  - @dxos/config@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/tracing@0.15.0
+  - @dxos/rpc-tunnel@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/blob@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/debug@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/node-std@0.15.0
+  - @dxos/timeframe@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [0715304]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [ed52cb7]
+- Updated dependencies [6847fe2]
+- Updated dependencies [35217f4]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [5324de6]
+  - @dxos/compute-runtime@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/echo-client@0.14.0
+  - @dxos/client-services@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/worker-framework@0.14.0
+  - @dxos/client-protocol@0.14.0
+  - @dxos/sql-sqlite@0.14.0
+  - @dxos/echo-protocol@0.14.0
+  - @dxos/edge-client@0.14.0
+  - @dxos/network-manager@0.14.0
+  - @dxos/rpc@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/config@0.14.0
+  - @dxos/credentials@0.14.0
+  - @dxos/messaging@0.14.0
+  - @dxos/websocket-rpc@0.14.0
+  - @dxos/rpc-tunnel@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/debug@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/node-std@0.14.0
+  - @dxos/timeframe@0.14.0
+  - @dxos/tracing@0.14.0
+  - @dxos/util@0.14.0
+  - @dxos/blob@0.14.0
+
 ## 0.13.0
 
 ### Minor Changes

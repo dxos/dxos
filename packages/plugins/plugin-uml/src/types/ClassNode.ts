@@ -15,7 +15,8 @@ export const TYPE: NodeType = 'class';
 export const ClassNode = Schema.Struct({
   type: Schema.Literal('class'),
   ...nodeBase,
-  name: Schema.String,
+  /** The class name, in the core base's `label`, so the class still reads by name where the type is unknown. */
+  label: Schema.String,
   attributes: Schema.Array(Schema.String),
   methods: Schema.Array(Schema.String),
 });
@@ -30,7 +31,7 @@ export const make = ({ id, z, center, size }: CreateProps): ClassNode => ({
   z,
   center,
   size,
-  name: 'Class',
+  label: 'Class',
   attributes: ['id: string'],
   methods: ['save(): void'],
 });
@@ -45,5 +46,5 @@ export const spec: NodeDefSpec = {
   defaultSize: { width: 2, height: 2 },
   resizable: true,
   minSize: { width: 128, height: 96 },
-  parts: [{ field: 'name' }, { field: 'attributes', lines: true }, { field: 'methods', lines: true }],
+  parts: [{ field: 'label' }, { field: 'attributes', lines: true }, { field: 'methods', lines: true }],
 };

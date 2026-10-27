@@ -62,6 +62,7 @@ export const translations: Theme.Resource[] = [
         'action-input.label': 'Input',
         'action-kind.operation.label': 'Operation',
         'action-kind.instructions.label': 'Instructions',
+        'action-unset.message': 'This routine is enabled but has nothing to run. Select an operation.',
 
         'triggers.title': 'Triggers',
         'triggers.description': 'When this routine runs.',
@@ -98,6 +99,7 @@ export const translations: Theme.Resource[] = [
         'history.status.success.label': 'Success',
         'history.status.failure.label': 'Failed',
         'history.status.pending.label': 'Running',
+        'history.status.incomplete.label': 'Continuing',
         'disabled.label': 'Disabled',
         'delete.label': 'Delete',
         'continue.label': 'Continue',

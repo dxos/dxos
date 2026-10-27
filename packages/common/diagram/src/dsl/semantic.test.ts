@@ -4,6 +4,7 @@
 
 import { describe, test } from 'vitest';
 
+import * as Scene from '../scene.ts';
 import { parse, read } from './parse.ts';
 import { formatId } from './print.ts';
 
@@ -96,6 +97,21 @@ describe('semantic statements', () => {
     ]);
   });
 
+  test('edges: `tail=arrow` is one connector headed at both ends', ({ expect }) => {
+    const { diagram, problems } = read(`
+      node A  node B
+      edge A -> B "syncs" tail=arrow
+    `);
+    expect(problems).toEqual([]);
+    expect(diagram?.edges).toHaveLength(1);
+    expect(diagram?.edges[0]).toMatchObject({ label: 'syncs', tail: 'arrow' });
+    expect(Scene.markersOf({ tail: 'arrow' })).toEqual({
+      start: 'arrow',
+      end: 'arrow',
+      dashed: false,
+    });
+  });
+
   test('buses: a fan with `bus`, and named buses across statements', ({ expect }) => {
     const { diagram, problems } = read(`
       node H  node A  node B  node C
@@ -168,6 +184,20 @@ describe('semantic statements', () => {
     const cycle = parse('node A right-of B\nnode B right-of A');
     expect(cycle.problems.map(({ severity }) => severity)).toEqual(['warning']);
     expect(cycle.commands.length).toBeGreaterThan(0);
+  });
+
+  test('a group with no members is dropped with a warning, and the diagram still lays out', ({ expect }) => {
+    const empty = parse('node A\nnode B\nedge A -> B\ngroup g {\n}');
+    expect(empty.problems.map(({ severity, message }) => `${severity}: ${message}`)).toEqual([
+      'warning: Group "g" has no members; declare its nodes inside its braces.',
+    ]);
+    expect(empty.commands.length).toBeGreaterThan(0);
+    // Redeclaring existing nodes inside a new group leaves it empty; the redeclarations are the errors.
+    expect(problemsOf('node A\nnode B\ngroup g { node A\nnode B }')).toEqual([
+      'error: A',
+      'error: B',
+      'warning: group g { node A\nnode B }',
+    ]);
   });
 
   test('a scene statement claiming a laid-out id is flagged', ({ expect }) => {

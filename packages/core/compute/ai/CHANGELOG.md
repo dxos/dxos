@@ -1,5 +1,67 @@
 # @dxos/ai
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/echo@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/node-std@0.16.0
+  - @dxos/util@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- cd70a43: Move Effect from 4.0.0 to 4.0.4. In 4.0.0, `PartitionedSemaphore` lost its only permit once about a thousand waiters were queued, because each release resumed the next waiter on the same stack until it overflowed. The OPFS SQLite client guards its connection with that semaphore, so a statement backlog behind one index transaction left every later statement and query waiting forever.
+
+  Effect 4.0.4 follows the current OpenTelemetry GenAI conventions, so model-call spans carry the serving product as `gen_ai.provider.name` instead of `gen_ai.system`. `ChatCompletionsAdapter` reports it under the new key, and `AiObservability` reads it from there, so `$ai_provider` on PostHog events keeps its value. `ChatCompletionsClientConfig.provider` is now required: it no longer falls back to the API format, which named an OpenAI-compatible server `openai`.
+
+  The `effect` patch is dropped: 4.0.4 ships the `DecisionModel` image support it added.
+
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [16bde33]
+- Updated dependencies [7b47951]
+- Updated dependencies [2b6a93a]
+  - @dxos/echo@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/node-std@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+  - @dxos/echo@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/types@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/node-std@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Minor Changes

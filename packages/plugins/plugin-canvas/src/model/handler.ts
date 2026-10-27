@@ -7,12 +7,26 @@
 // them back, so `applyCommands` gives the canvas the illustrator operations (draw, edit, move, remove).
 // A DSL element becomes an ordinary node (boxes, circles, text, portals) or link (arrows) carrying
 // its identity; everything the engine cannot show (polylines, curves, arcs, free arrows) is dropped.
+// On a canvas with `diagramShapes` the nodes and links are diagram shapes and connectors, which the
+// diagram's own SVG renderer draws, so a laid-out diagram keeps its look, routes and captions.
 //
 
-import { type ContentHandler, type ContentMap, Scene as Dsl, type ReadWorldObject } from '@dxos/diagram';
 import {
+  type ContentHandler,
+  type ContentMap,
+  Diagnostics,
+  Scene as Dsl,
+  type ReadWorldObject,
+  type SvgFile,
+} from '@dxos/diagram';
+import {
+  DEFAULT_LAYER,
   DEFAULT_SIZES,
+  type DiagramConnector,
+  type DiagramNode,
+  type DiagramShape,
   type EllipseNode,
+  type Layer,
   type Link,
   type Node,
   type NodeStyle,
@@ -21,11 +35,15 @@ import {
   between,
   createLink,
   defaultNodeRegistry,
+  diagramNodeElements,
   endpointNode,
+  isDiagramBackdrop,
+  isDiagramNode,
   isEllipseNode,
   isNoteNode,
   nodeBounds,
   nodeTitle,
+  sortByZ,
   topZ,
 } from '@dxos/react-ui-canvas/scene';
 
@@ -34,10 +52,14 @@ import {
   type ElementRecord,
   type LinkRecord,
   type NodeRecord,
+  canvasRecordOf,
   isElementRecord,
+  isLinkRecord,
   isNodeRecord,
+  isSceneRecord,
   linkKey,
   nodeKey,
+  sceneKey,
   seedContent,
 } from './content.ts';
 
@@ -59,20 +81,127 @@ const HUES: Partial<Record<Dsl.Color, string>> = {
   'red': 'red',
 };
 
-const styleOf = (element: { color?: Dsl.Color; fill?: Dsl.Fill }): NodeStyle | undefined => {
+const styleOf = (element: { color?: Dsl.Color; fill?: Dsl.Fill; stroke?: Dsl.Stroke }): NodeStyle | undefined => {
   const hue = element.color ? HUES[element.color] : undefined;
   const fill = element.fill === 'none' ? false : undefined;
-  return hue || fill !== undefined ? { ...(hue ? { hue } : {}), ...(fill !== undefined ? { fill } : {}) } : undefined;
+  // A tinted shape is a group's backdrop: a guide, an annotation the lattice and the link router pass over.
+  const guide = element.fill === 'tint' ? true : undefined;
+  const lineStyle = element.stroke === 'dashed' || element.stroke === 'dotted' ? element.stroke : undefined;
+  const style: NodeStyle = {
+    ...(hue ? { hue } : {}),
+    ...(fill !== undefined ? { fill } : {}),
+    ...(guide ? { guide } : {}),
+    ...(lineStyle ? { lineStyle } : {}),
+  };
+  return Object.keys(style).length > 0 ? style : undefined;
+};
+
+/** The size of a box's title (a group's name), the layout's small text. */
+const TITLE_FONT_SIZE = 14;
+
+/** Px per character and line height of a small label, for sizing its box to its text (a note's default is a page). */
+const LABEL_CHAR = 7;
+const LABEL_HEIGHT = 20;
+
+/** The node a free connector end lands on: the smallest frame containing the point (a box, not the group around it). */
+const nodeAt = (nodes: readonly Node[], point: { x: number; y: number }, slack = 1): Node | undefined =>
+  nodes
+    .filter((node) => {
+      const { x, y, width, height } = nodeBounds(node);
+      return (
+        point.x >= x - slack && point.x <= x + width + slack && point.y >= y - slack && point.y <= y + height + slack
+      );
+    })
+    .sort((left, right) => left.size.width * left.size.height - right.size.width * right.size.height)[0];
+
+/** The canvas markers of a connector's ends; a canvas end marker is one of arrow, circle or triangle. */
+const endsOf = (arrow: Dsl.Arrow): Link['ends'] => {
+  const markers = Dsl.markersOf(arrow);
+  const marker = (value: Dsl.Marker | undefined) =>
+    value === 'triangle' ? 'triangle' : value === 'circle' ? 'circle' : value ? 'arrow' : undefined;
+  const start = marker(markers.start);
+  const end = marker(markers.end);
+  return start || end ? { ...(start ? { start } : {}), ...(end ? { end } : {}) } : undefined;
 };
 
 const withStyle = (node: Node, style: NodeStyle | undefined): Node => (style ? { ...node, style } : node);
 
 const managed = (content: ContentMap): ElementRecord[] => Object.values(content).filter(isElementRecord);
 
+const nodesOf = (content: ContentMap): Node[] =>
+  Object.values(content)
+    .filter(isNodeRecord)
+    .map((record) => record.node);
+
 const nodesIn = (content: ContentMap, scene: string): Node[] =>
   managed(content)
     .filter((record): record is NodeRecord => isNodeRecord(record) && record.scene === scene)
     .map((record) => record.node);
+
+/** A group's backdrop: a guide, or a diagram's tinted group frame. */
+const isBackdrop = (node: Node): boolean => node.style?.guide === true || isDiagramBackdrop(node);
+
+/** Small text's width and height (scene px) as the diagram renderer sets it, for the frame of a diagram text node. */
+const textFrame = (element: Dsl.Text, scale: number): { w: number; h: number } => {
+  const { size, lineH } = Diagnostics.LABEL_TYPE[element.weight ?? 's'];
+  const lines = element.text.split('\n');
+  const longest = Math.max(1, ...lines.map((line) => line.length));
+  return {
+    w: element.w ?? Math.ceil(longest * size * Diagnostics.CHAR_EM) / scale,
+    h: (lines.length * lineH) / scale,
+  };
+};
+
+/** The style of a connector apart from its route: what a diagram connector keeps of an arrow, and gives back. */
+const connectorStyle = ({ relation, head, tail, stroke, color }: SvgFile.ConnectorStyle): SvgFile.ConnectorStyle => ({
+  ...(relation ? { relation } : {}),
+  ...(head ? { head } : {}),
+  ...(tail ? { tail } : {}),
+  ...(stroke ? { stroke } : {}),
+  ...(color ? { color } : {}),
+});
+
+/** The layer a drawing's decorations (group backdrops, guides) sit on, below the shapes they group. */
+export const BACKDROP_LAYER: Layer = { id: 'backdrop', name: 'Backdrop', z: '' };
+
+/**
+ * Puts an upsert's guides on the backdrop layer and everything else on the scene's top layer. Every element is placed
+ * explicitly: an element naming no layer is on the bottom one, which once there is a backdrop is the backdrop.
+ */
+const placeOnLayers = (content: ContentMap, scene: string, records: ContentMap) => {
+  const record = content[sceneKey(scene)];
+  if (!isSceneRecord(record)) {
+    return;
+  }
+  const layers: readonly Layer[] = record.layers ? Object.values(record.layers) : [];
+  const named = layers.filter((layer) => layer.id !== BACKDROP_LAYER.id);
+  const own = sortByZ(named.length > 0 ? named : [DEFAULT_LAYER]);
+  const main = own.at(-1) ?? DEFAULT_LAYER;
+  const guides = Object.values(records).some((other) => isNodeRecord(other) && isBackdrop(other.node));
+  const backdrop = guides || record.layers?.[BACKDROP_LAYER.id] !== undefined;
+  for (const [key, other] of Object.entries(records)) {
+    const node: NodeRecord | undefined = isNodeRecord(other) ? other : undefined;
+    const link: LinkRecord | undefined = isLinkRecord(other) ? other : undefined;
+    if (node) {
+      records[key] = { ...node, node: { ...node.node, layer: isBackdrop(node.node) ? BACKDROP_LAYER.id : main.id } };
+    } else if (link) {
+      records[key] = { ...link, link: { ...link.link, layer: main.id } };
+    }
+  }
+  if (backdrop) {
+    const lowest = own[0] ?? DEFAULT_LAYER;
+    content[sceneKey(scene)] = {
+      ...record,
+      layers: {
+        ...Object.fromEntries(own.map((layer) => [layer.id, layer])),
+        [BACKDROP_LAYER.id]: record.layers?.[BACKDROP_LAYER.id] ?? {
+          ...BACKDROP_LAYER,
+          z: between(undefined, lowest.z),
+        },
+      },
+    };
+  }
+};
 
 export const SceneHandler: ContentHandler = {
   identify: (record) =>
@@ -105,20 +234,99 @@ export const SceneHandler: ContentHandler = {
       return index ?? z;
     };
 
+    const diagram = canvasRecordOf(content)?.diagramShapes === true;
     const records: ContentMap = {};
     const put = (element: string, node: Node) => {
       records[nodeKey(node.id)] = { kind: 'node', scene, node, dsl: identity(element) } satisfies NodeRecord;
     };
+
+    // A small text belongs to what it captions rather than standing alone: a connector's caption
+    // (`<arrow>-label`) is the link's text, and a title inside an untitled box of its object is that box's label.
+    const captions = new Map<string, Dsl.Text>();
+    const titles = new Map<string, Dsl.Text>();
+    const absorbed = new Set<string>();
     for (const element of object.elements) {
+      if (element.kind !== 'text' || element.weight !== 's') {
+        continue;
+      }
+      const arrow = element.id.endsWith('-label') ? element.id.slice(0, -'-label'.length) : undefined;
+      if (arrow && object.elements.some((other) => other.kind === 'arrow' && other.id === arrow)) {
+        captions.set(arrow, element);
+        absorbed.add(element.id);
+        continue;
+      }
+      const box = object.elements.find(
+        (other) =>
+          other.kind === 'rect' &&
+          !other.text &&
+          !titles.has(other.id) &&
+          element.x >= other.x &&
+          element.x <= other.x + other.w &&
+          element.y >= other.y &&
+          element.y <= other.y + other.h,
+      );
+      if (box) {
+        titles.set(box.id, element);
+        absorbed.add(element.id);
+      }
+    }
+
+    for (const element of object.elements) {
+      if (absorbed.has(element.id)) {
+        continue;
+      }
       const id = elementId(object.id, element.id);
+      if (diagram && element.kind !== 'arrow') {
+        const shape = diagramShape(element, placement.scale);
+        if (shape) {
+          const title = titles.get(element.id);
+          const node: DiagramNode = {
+            type: 'diagram',
+            id,
+            z: nextZ(),
+            center: place(shape.frame.x + shape.frame.w / 2, shape.frame.y + shape.frame.h / 2),
+            size: { width: shape.frame.w * placement.scale, height: shape.frame.h * placement.scale },
+            element: shape.element,
+            ...(title || shape.text ? { label: title?.text ?? shape.text } : {}),
+            ...(title
+              ? {
+                  heading: {
+                    id: title.id,
+                    x: (title.x - shape.frame.x) * placement.scale,
+                    y: (title.y - shape.frame.y) * placement.scale,
+                    ...(title.w === undefined ? {} : { w: title.w * placement.scale }),
+                    ...(title.color ? { color: title.color } : {}),
+                    ...(title.weight ? { weight: title.weight } : {}),
+                  },
+                }
+              : {}),
+          };
+          records[nodeKey(id)] = {
+            kind: 'node',
+            scene,
+            node,
+            dsl: { ...identity(element.id), ...(element.kind === 'portal' ? { portal: element.ref } : {}) },
+          } satisfies NodeRecord;
+        }
+        continue;
+      }
       switch (element.kind) {
         case 'rect':
         case 'diamond':
         case 'triangle': {
           const size = { width: element.w * placement.scale, height: element.h * placement.scale };
           const center = place(element.x + element.w / 2, element.y + element.h / 2);
-          const node: RectNode = { type: 'rect', id, z: nextZ(), center, size, label: element.text };
-          put(element.id, withStyle(node, styleOf(element)));
+          const title = titles.get(element.id)?.text;
+          const node: RectNode = { type: 'rect', id, z: nextZ(), center, size, label: element.text ?? title };
+          const style = styleOf(element);
+          // A title reads from the box's top-left corner, small, as the layout set it; a label stays centred.
+          put(
+            element.id,
+            withStyle(
+              node,
+              title ? { ...style, alignHorizontal: 'left', alignVertical: 'top', fontSize: TITLE_FONT_SIZE } : style,
+            ),
+          );
           break;
         }
         case 'ellipse': {
@@ -143,6 +351,22 @@ export const SceneHandler: ContentHandler = {
           break;
         }
         case 'text': {
+          // A small text is a label (a group's title, a connector's caption): its own size, no frame or fill.
+          if (element.weight === 's') {
+            const width = element.w ?? element.text.length * LABEL_CHAR + 16;
+            const height = LABEL_HEIGHT;
+            const node: RectNode = {
+              type: 'rect',
+              id,
+              z: nextZ(),
+              center: place(element.x + width / 2, element.y + height / 2),
+              size: { width: width * placement.scale, height: height * placement.scale },
+              label: element.text,
+              style: { fill: false, border: false, alignHorizontal: 'left', fontSize: 12 },
+            };
+            put(element.id, node);
+            break;
+          }
           const width = element.w ?? DEFAULT_SIZES.note.width;
           const height = DEFAULT_SIZES.note.height;
           const node: NoteNode = {
@@ -170,12 +394,71 @@ export const SceneHandler: ContentHandler = {
           break;
         }
         case 'arrow': {
-          if (!element.from || !element.to) {
+          // A laid-out connector carries points, not refs: each end binds to the node it lands on.
+          // A caption (an unbordered label, from this upsert or an earlier one) is never an end.
+          const shapes = [...nodesIn(content, scene), ...nodesOf(records)].filter(
+            (node) => node.style?.border !== false && !(isDiagramNode(node) && node.element.kind === 'text'),
+          );
+          // A routed connector is its bends (`<id>-path`) then the arrow's last leg: the path starts at the source.
+          const path = object.elements.find((other) => other.kind === 'line' && other.id === `${element.id}-path`);
+          const start = path?.kind === 'line' ? path.points[0] : element.start;
+          const from = element.from
+            ? Dsl.resolveRef(element.from, object.id)
+            : start && nodeAt(shapes, place(start.x, start.y))?.id;
+          const to = element.to
+            ? Dsl.resolveRef(element.to, object.id)
+            : element.end && nodeAt(shapes, place(element.end.x, element.end.y))?.id;
+          if (!from || !to || from === to) {
             break;
           }
-          const source = { node: Dsl.resolveRef(element.from, object.id) };
-          const target = { node: Dsl.resolveRef(element.to, object.id) };
-          const link: Link = createLink({ type: 'line', id, z: nextZ(), source, target });
+          const caption = captions.get(element.id);
+          const text = element.text || caption?.text;
+          if (diagram) {
+            // The layout's route, bends and caption included, as long as the boxes stay where the layout put them.
+            const points =
+              path?.kind === 'line' && element.end
+                ? [...path.points, element.end]
+                : element.start && element.end
+                  ? [element.start, element.end]
+                  : undefined;
+            const connector: DiagramConnector = {
+              ...connectorStyle(element),
+              ...(points ? { route: points.map((point) => place(point.x, point.y)) } : {}),
+              ...(caption
+                ? {
+                    caption: {
+                      ...place(caption.x, caption.y),
+                      ...(caption.w === undefined ? {} : { w: caption.w * placement.scale }),
+                      ...(caption.color ? { color: caption.color } : {}),
+                      ...(caption.weight ? { weight: caption.weight } : {}),
+                    },
+                  }
+                : {}),
+            };
+            const link: Link = {
+              ...createLink({ type: 'line', id, z: nextZ(), source: { node: from }, target: { node: to } }),
+              ...(text ? { text } : {}),
+              connector,
+            };
+            records[linkKey(id)] = { kind: 'link', scene, link, dsl: identity(element.id) } satisfies LinkRecord;
+            break;
+          }
+          const ends = endsOf(element);
+          const dashed = Dsl.markersOf(element).dashed;
+          // Routed by the canvas (on a lattice, along its gutters) rather than through the layout's bends: the canvas
+          // attaches at its own ports, so a route through the layout's points would kink at each end.
+          const link: Link = {
+            ...createLink({
+              type: element.from ? 'line' : 'smart',
+              id,
+              z: nextZ(),
+              source: { node: from },
+              target: { node: to },
+            }),
+            ...(ends ? { ends } : {}),
+            ...(text ? { text } : {}),
+            ...(dashed ? { style: { lineStyle: 'dashed' } } : {}),
+          };
           records[linkKey(id)] = { kind: 'link', scene, link, dsl: identity(element.id) } satisfies LinkRecord;
           break;
         }
@@ -183,6 +466,7 @@ export const SceneHandler: ContentHandler = {
           break;
       }
     }
+    placeOnLayers(content, scene, records);
     return records;
   },
 
@@ -211,7 +495,14 @@ export const SceneHandler: ContentHandler = {
           const frame = nodeBounds(node);
           const local = { x: frame.x - origin.x, y: frame.y - origin.y, w: frame.width, h: frame.height };
           const text = textOf(node);
-          if (isNoteNode(node)) {
+          if (isDiagramNode(node)) {
+            elements.push(
+              ...diagramNodeElements(node).map((shape) => ({
+                ...translate(shape, -origin.x, -origin.y),
+                ...(shape.id === node.element.id ? { id: element } : {}),
+              })),
+            );
+          } else if (isNoteNode(node)) {
             elements.push({ kind: 'text', id: element, x: local.x, y: local.y, w: local.w, text });
           } else if (record.dsl?.portal !== undefined) {
             elements.push({ kind: 'portal', id: element, ...local, ref: record.dsl.portal, ...(text ? { text } : {}) });
@@ -230,7 +521,14 @@ export const SceneHandler: ContentHandler = {
           if (sourceNode !== undefined && targetNode !== undefined) {
             const from = refTo(content, sourceNode, id);
             const to = refTo(content, targetNode, id);
-            elements.push({ kind: 'arrow', id: element, from, to });
+            elements.push({
+              kind: 'arrow',
+              id: element,
+              from,
+              to,
+              ...(record.link.text ? { text: record.link.text } : {}),
+              ...(record.link.connector ? connectorStyle(record.link.connector) : {}),
+            });
           }
         }
       }
@@ -252,6 +550,48 @@ export const SceneHandler: ContentHandler = {
       record.node = { ...record.node, center: { x: center.x + delta.x, y: center.y + delta.y } };
     }
   },
+};
+
+/** A DSL element as a diagram node holds it, and its frame in the element's own units. */
+const diagramShape = (
+  element: Dsl.Element,
+  scale: number,
+): { element: DiagramShape; frame: { x: number; y: number; w: number; h: number }; text?: string } | undefined => {
+  switch (element.kind) {
+    case 'rect':
+    case 'ellipse':
+    case 'diamond':
+    case 'triangle':
+    case 'portal':
+      return { element, frame: { x: element.x, y: element.y, w: element.w, h: element.h }, text: element.text };
+    case 'circle':
+      return {
+        element,
+        frame: { x: element.cx - element.r, y: element.cy - element.r, w: element.r * 2, h: element.r * 2 },
+        text: element.text,
+      };
+    case 'text':
+      return { element, frame: { x: element.x, y: element.y, ...textFrame(element, scale) }, text: element.text };
+    default:
+      return undefined;
+  }
+};
+
+/** An element moved by `dx`, `dy`. */
+const translate = (element: Dsl.Element, dx: number, dy: number): Dsl.Element => {
+  switch (element.kind) {
+    case 'circle':
+      return { ...element, cx: element.cx + dx, cy: element.cy + dy };
+    case 'rect':
+    case 'ellipse':
+    case 'diamond':
+    case 'triangle':
+    case 'portal':
+    case 'text':
+      return { ...element, x: element.x + dx, y: element.y + dy };
+    default:
+      return element;
+  }
 };
 
 const zOf = (record: ElementRecord) => (isNodeRecord(record) ? record.node.z : record.link.z);

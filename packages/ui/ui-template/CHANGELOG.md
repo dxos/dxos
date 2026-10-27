@@ -1,5 +1,31 @@
 # @dxos/ui-template
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/react-ui-form@0.16.0
+  - @dxos/react-ui-list@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- @dxos/react-ui-form@0.15.0
+  - @dxos/react-ui-list@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [b0e4b60]
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [4820c02]
+  - @dxos/react-ui-form@0.14.0
+  - @dxos/react-ui-list@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

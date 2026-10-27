@@ -87,8 +87,15 @@
   --color-grid-fg: light-dark(var(--color-neutral-950), var(--color-neutral-50));
   --color-grid-line: light-dark(var(--color-neutral-200), var(--color-neutral-800));
   --color-grid-highlight: oklch(from var(--color-emerald-500) l c h / 0.5);
-  --color-grid-selection-surface: light-dark(var(--color-blue-500), var(--color-blue-400));
-  --color-grid-selection-fg: light-dark(var(--color-neutral-50), var(--color-neutral-950));
+  --color-grid-header: light-dark(var(--color-green-200), oklch(from var(--color-green-800) l c h / 0.6));
+  --color-grid-header-fg: light-dark(var(--color-green-900), var(--color-green-100));
+  --color-grid-selection-surface: light-dark(
+    oklch(from var(--color-blue-500) l c h / 0.12),
+    oklch(from var(--color-blue-400) l c h / 0.18)
+  );
+  /* The focused cell's ring and the selected range's outline, so one never reads lighter than the other. */
+  --color-grid-focus-ring: light-dark(var(--color-blue-600), var(--color-blue-400));
+  --color-grid-selection-fg: var(--color-grid-fg);
   --color-grid-comment: light-dark(var(--color-green-400), var(--color-green-600));
   --color-grid-comment-active: light-dark(
     oklch(from var(--color-green-400) l c h / 0.5),

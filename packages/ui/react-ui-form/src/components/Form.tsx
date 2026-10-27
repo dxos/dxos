@@ -72,7 +72,14 @@ export const FormViewport = Util.composable<HTMLDivElement, FormViewportProps>(
         </Panel.Body>
       </Panel.Root>
     ) : (
-      <Layout.Container {...props} gutter={gutter ?? defaultGutter ?? 'sm'} width={documentWidth} ref={forwardedRef}>
+      // Padded on the block axis as the scrolling form is, so a form in a host that scrolls it still ends a gutter in.
+      <Layout.Container
+        {...props}
+        gutter={gutter ?? defaultGutter ?? 'sm'}
+        width={documentWidth}
+        padBlock
+        ref={forwardedRef}
+      >
         {children}
       </Layout.Container>
     );

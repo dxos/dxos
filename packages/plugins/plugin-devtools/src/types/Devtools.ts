@@ -72,6 +72,7 @@ export namespace Agent {
   export const id = `${devtoolsId}.agent`;
   export const Dashboard = `${Agent.id}.dashboard`;
   export const Search = `${Agent.id}.search`;
+  export const Halo = `${Agent.id}.halo`;
 }
 
 export namespace Edge {

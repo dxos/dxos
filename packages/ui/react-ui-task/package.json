@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-task",
-  "version": "0.13.0",
+  "version": "0.16.0",
   "description": "Task list components over the durable Task/TaskSet model.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -48,8 +48,7 @@
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
-    "@effect/atom-react": "catalog:",
-    "date-fns": "catalog:"
+    "@effect/atom-react": "catalog:"
   },
   "devDependencies": {
     "@dxos/random": "workspace:*",

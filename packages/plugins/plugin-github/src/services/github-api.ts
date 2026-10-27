@@ -14,10 +14,13 @@ import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
 
+import * as Credential from '@dxos/compute/Credential';
 import { Database, type Ref } from '@dxos/echo';
 import { type AccessToken, Connection } from '@dxos/link';
+import { isManagedAccessToken } from '@dxos/protocols';
 
 import { GITHUB_API_BASE } from '../constants.ts';
+import { type GitHubConnectionUnavailableError, connectionUnavailable } from '../errors.ts';
 
 /** Stored as `AccessToken.token`; sent as `Authorization: Bearer <token>`. Empty means anonymous. */
 type GitHubCredentialsValue = {
@@ -74,6 +77,11 @@ const GitHubRepoSchema = Schema.Struct({
 });
 export type GitHubRepo = Schema.Schema.Type<typeof GitHubRepoSchema>;
 
+const GitHubInstallationReposSchema = Schema.Struct({ repositories: Schema.Array(GitHubRepoSchema) });
+
+/** GitHub's prefix for an App installation access token. */
+const INSTALLATION_TOKEN_PREFIX = 'ghs_';
+
 const GitHubLabelSchema = Schema.Struct({
   name: Schema.String,
 });
@@ -96,6 +104,8 @@ export type GitHubMilestone = Schema.Schema.Type<typeof GitHubMilestoneSchema>;
 
 const GitHubIssueSchema = Schema.Struct({
   id: Schema.Number,
+  /** GraphQL id. */
+  node_id: Schema.String.pipe(Schema.optional),
   number: Schema.Number,
   title: Schema.String,
   body: Schema.NullOr(Schema.String).pipe(Schema.optional),
@@ -134,7 +144,12 @@ const GitHubPullSchema = Schema.Struct({
   deletions: Schema.Number.pipe(Schema.optional),
   // `sha` pins the commit a derived artefact (a generated walkthrough) describes; `ref` is a branch
   // name and moves under it.
-  base: Schema.Struct({ ref: Schema.String, sha: Schema.String.pipe(Schema.optional) }).pipe(Schema.optional),
+  // `repo` is the repository the pull request merges into, which an import files alongside it.
+  base: Schema.Struct({
+    ref: Schema.String,
+    sha: Schema.String.pipe(Schema.optional),
+    repo: GitHubRepoSchema.pipe(Schema.optional),
+  }).pipe(Schema.optional),
   head: Schema.Struct({ ref: Schema.String, sha: Schema.String.pipe(Schema.optional) }).pipe(Schema.optional),
 });
 export type GitHubPull = Schema.Schema.Type<typeof GitHubPullSchema>;
@@ -169,24 +184,39 @@ export class GitHubCredentials extends Context.Service<GitHubCredentials, GitHub
   '@dxos/plugin-github/GitHubCredentials',
 ) {}
 
-/** Creates a credentials layer from an AccessToken ref. Loads it and returns its `token`. */
+/**
+ * The usable token behind an `AccessToken`: the user's own, as stored, or an app connection's, which
+ * EDGE custodies (the object holds a placeholder) and {@link Credential.CredentialsService} resolves.
+ * One that cannot be resolved (EDGE will not mint for an uninstalled App, or cannot be reached) fails
+ * as a connection to reauthenticate; a caller with an anonymous fallback catches it.
+ */
+export const resolveToken = (
+  accessToken: AccessToken.AccessToken,
+): Effect.Effect<string, GitHubConnectionUnavailableError, Credential.CredentialsService> =>
+  isManagedAccessToken(accessToken.token)
+    ? Credential.getApiKeyValue({ accessTokenId: accessToken.id }).pipe(
+        Effect.catchDefect((defect) => Effect.fail(connectionUnavailable(defect))),
+      )
+    : Effect.succeed(accessToken.token);
+
+/** Creates a credentials layer from an AccessToken ref. */
 export const fromAccessToken = (accessTokenRef: Ref.Ref<AccessToken.AccessToken>) =>
   Layer.effect(
     GitHubCredentials,
     Effect.gen(function* () {
       const accessToken = yield* Database.load(accessTokenRef);
-      return { token: accessToken.token };
+      return { token: yield* resolveToken(accessToken) };
     }),
   );
 
-/** Creates a credentials layer from a Connection ref. Loads its `accessToken` and returns its `token`. */
+/** Creates a credentials layer from a Connection ref's `accessToken`. */
 export const fromConnection = (connectionRef: Ref.Ref<Connection.Connection>) =>
   Layer.effect(
     GitHubCredentials,
     Effect.gen(function* () {
       const connection = yield* Database.load(connectionRef);
-      const accessToken = yield* Database.load(connection.accessToken);
-      return { token: accessToken.token };
+      const accessToken = yield* Database.load(Connection.getAccessToken(connection));
+      return { token: yield* resolveToken(accessToken) };
     }),
   );
 
@@ -406,6 +436,36 @@ export const fetchUserOrgs = (): GitHubEffect<readonly GitHubOrg[]> =>
 export const fetchUserRepos = (): GitHubEffect<readonly GitHubRepo[]> =>
   githubPaginated(() => HttpClientRequest.get(`${GITHUB_API_BASE}/user/repos`), GitHubRepoSchema);
 
+/**
+ * GET /installation/repositories — the repos an App installation token reaches. Such a token acts as
+ * no user, so `/user/repos` refuses it.
+ */
+export const fetchInstallationRepos = (): GitHubEffect<readonly GitHubRepo[]> =>
+  githubPages(
+    () => HttpClientRequest.get(`${GITHUB_API_BASE}/installation/repositories`),
+    GitHubInstallationReposSchema,
+    (page) => page.repositories,
+  );
+
+/**
+ * GET /installation/repositories (one repo) — the account an App installation token acts on, which
+ * stands in for `/user` (refused to such a token). Undefined when the installation selected no repos.
+ */
+export const fetchInstallationAccount = (): GitHubEffect<string | undefined> =>
+  githubRequest(
+    () => HttpClientRequest.get(`${GITHUB_API_BASE}/installation/repositories?per_page=1`),
+    GitHubInstallationReposSchema,
+  ).pipe(Effect.map(({ repositories }) => repositories[0]?.owner.login));
+
+/**
+ * Every repo the credential reaches: an installation's repos for an App installation token (GitHub
+ * prefixes those `ghs_`), the user's otherwise.
+ */
+export const fetchReachableRepos = (): GitHubEffect<readonly GitHubRepo[]> =>
+  Effect.flatMap(GitHubCredentials, ({ token }) =>
+    token.startsWith(INSTALLATION_TOKEN_PREFIX) ? fetchInstallationRepos() : fetchUserRepos(),
+  );
+
 /** GET /orgs/{org} — full org metadata. */
 export const fetchOrg = (org: string): GitHubEffect<GitHubOrg> =>
   githubRequest(() => HttpClientRequest.get(`${GITHUB_API_BASE}/orgs/${encodeURIComponent(org)}`), GitHubOrgSchema);
@@ -517,6 +577,207 @@ export const fetchIssueComments = (
       ),
     GitHubCommentSchema,
   );
+
+//
+// Conditional and batched reads (polling sync)
+//
+
+/** A read sent with `If-None-Match`: GitHub answers 304, which costs no rate limit, when nothing changed. */
+export type Conditional<A> =
+  | { readonly status: 'not-modified' }
+  | {
+      readonly status: 'ok';
+      readonly value: A;
+      readonly etag: string | undefined;
+      /** Requests the read took; more than one when it followed `Link` pages. */
+      readonly requests: number;
+      /** The read stopped at its page cap with pages left. */
+      readonly truncated?: boolean;
+    };
+
+type ConditionalResponse<T> =
+  | { readonly notModified: true }
+  | { readonly notModified: false; readonly value: T; readonly etag?: string; readonly link?: string };
+
+/** One GET that treats 304 as an answer rather than a failure. */
+const conditionalGet = <T>(
+  request: HttpClientRequest.HttpClientRequest,
+  schema: Schema.Codec<T>,
+): GitHubEffect<ConditionalResponse<T>> =>
+  Effect.gen(function* () {
+    const httpClient = yield* HttpClient.HttpClient;
+    const client = httpClient.pipe(
+      HttpClient.transformResponse(Effect.provideService(HttpClient.TracerDisabledWhen, () => true)),
+      HttpClient.filterStatus((status) => status === 304 || (status >= 200 && status < 300)),
+    );
+    return yield* client.execute(request).pipe(
+      Effect.flatMap(
+        (res): Effect.Effect<ConditionalResponse<T>, HttpClientError.HttpClientError | Schema.SchemaError> =>
+          res.status === 304
+            ? Effect.succeed({ notModified: true })
+            : Effect.map(Effect.flatMap(res.json, Schema.decodeUnknownEffect(schema)), (value) => ({
+                notModified: false,
+                value,
+                etag: res.headers['etag'],
+                link: res.headers['link'],
+              })),
+      ),
+      Effect.timeout('15 seconds'),
+      Effect.retry({
+        schedule: Schedule.exponential('500 millis').pipe(Schedule.jittered, Schedule.upTo({ times: 3 })),
+        while: shouldRetry,
+      }),
+      Effect.scoped,
+    );
+  });
+
+/** One item of the issues delta; issues and pull requests share the endpoint. */
+export type DeltaItem = GitHubIssue;
+
+/**
+ * GET /repos/{o}/{r}/issues?state=all&sort=updated&since=…&per_page=100, following `Link` pages.
+ * Newest first by default, so any change reaches page one: `If-None-Match` goes on that page only, and a
+ * 304 there means no page changed. Oldest first with `maxPages` reads a backlog in resumable chunks.
+ */
+export const listIssuesSince = (
+  owner: string,
+  repo: string,
+  options: { since?: string; etag?: string; direction?: 'asc' | 'desc'; maxPages?: number },
+): GitHubEffect<Conditional<readonly DeltaItem[]>> =>
+  Effect.gen(function* () {
+    const creds = yield* GitHubCredentials;
+    let request = withAuth(
+      HttpClientRequest.get(`${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues`),
+      creds,
+    ).pipe(
+      HttpClientRequest.appendUrlParam('state', 'all'),
+      HttpClientRequest.appendUrlParam('sort', 'updated'),
+      HttpClientRequest.appendUrlParam('direction', options.direction ?? 'desc'),
+      HttpClientRequest.appendUrlParam('per_page', '100'),
+    );
+    if (options.since) {
+      request = HttpClientRequest.appendUrlParam(request, 'since', options.since);
+    }
+
+    const first = yield* conditionalGet(
+      options.etag ? HttpClientRequest.setHeader(request, 'If-None-Match', options.etag) : request,
+      Schema.Array(GitHubIssueSchema),
+    );
+    if (first.notModified) {
+      return { status: 'not-modified' as const };
+    }
+
+    // Every page is read: the caller advances its watermark only once all of them are applied.
+    const items: DeltaItem[] = [...first.value];
+    let requests = 1;
+    let next = getNextLink(first.link);
+    while (next && (options.maxPages === undefined || requests < options.maxPages)) {
+      const page = yield* conditionalGet(withAuth(HttpClientRequest.get(next), creds), Schema.Array(GitHubIssueSchema));
+      requests++;
+      if (page.notModified) {
+        next = undefined;
+        break;
+      }
+      items.push(...page.value);
+      next = getNextLink(page.link);
+    }
+
+    return { status: 'ok' as const, value: items, etag: first.etag, requests, truncated: next !== undefined };
+  });
+
+/** GET /repos/{o}/{r} with `If-None-Match`. */
+export const fetchRepoConditional = (
+  owner: string,
+  repo: string,
+  etag?: string,
+): GitHubEffect<Conditional<GitHubRepo>> =>
+  Effect.gen(function* () {
+    const creds = yield* GitHubCredentials;
+    const request = withAuth(
+      HttpClientRequest.get(`${GITHUB_API_BASE}/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`),
+      creds,
+    );
+    const result = yield* conditionalGet(
+      etag ? HttpClientRequest.setHeader(request, 'If-None-Match', etag) : request,
+      GitHubRepoSchema,
+    );
+    return result.notModified
+      ? { status: 'not-modified' as const }
+      : { status: 'ok' as const, value: result.value, etag: result.etag, requests: 1 };
+  });
+
+const PullRequestDetailSchema = Schema.Struct({
+  number: Schema.Number,
+  isDraft: Schema.Boolean,
+  merged: Schema.Boolean,
+  baseRefName: Schema.String,
+  headRefName: Schema.String,
+  headRefOid: Schema.String,
+  additions: Schema.Number,
+  deletions: Schema.Number,
+  reviewDecision: Schema.NullOr(Schema.Literals(['APPROVED', 'CHANGES_REQUESTED', 'REVIEW_REQUIRED'])).pipe(
+    Schema.optional,
+  ),
+  statusCheckRollup: Schema.NullOr(
+    Schema.Struct({ state: Schema.Literals(['PENDING', 'SUCCESS', 'FAILURE', 'ERROR', 'EXPECTED']) }),
+  ).pipe(Schema.optional),
+  closingIssuesReferences: Schema.Struct({
+    nodes: Schema.Array(Schema.NullOr(Schema.Struct({ databaseId: Schema.NullOr(Schema.Number) }))),
+  }).pipe(Schema.optional),
+});
+
+/** Everything a pull request holds that the issues delta lacks. */
+export type PullRequestDetail = Schema.Schema.Type<typeof PullRequestDetailSchema>;
+
+/** Most pull requests one GraphQL request asks for. */
+export const PULL_REQUEST_BATCH_SIZE = 100;
+
+/** Issues a pull request closes beyond this many are not read; GitHub rarely shows more than a handful. */
+const CLOSING_ISSUES_LIMIT = 50;
+
+const PULL_REQUEST_FIELDS = `number isDraft merged baseRefName headRefName headRefOid additions deletions reviewDecision
+  statusCheckRollup { state } closingIssuesReferences(first: ${CLOSING_ISSUES_LIMIT}) { nodes { databaseId } }`;
+
+const GraphQLRepositorySchema = Schema.Struct({
+  data: Schema.NullOr(
+    Schema.Struct({
+      repository: Schema.NullOr(Schema.Record(Schema.String, Schema.NullOr(PullRequestDetailSchema))),
+    }),
+  ).pipe(Schema.optional),
+});
+
+/**
+ * One GraphQL request for up to {@link PULL_REQUEST_BATCH_SIZE} pull requests of one repository, each
+ * asked for by number under its own alias. A number GitHub cannot resolve is left out of the result.
+ */
+export const fetchPullRequestDetails = (
+  owner: string,
+  repo: string,
+  numbers: readonly number[],
+): GitHubEffect<readonly PullRequestDetail[]> =>
+  Effect.gen(function* () {
+    if (numbers.length === 0) {
+      return [];
+    }
+    if (numbers.length > PULL_REQUEST_BATCH_SIZE) {
+      return yield* Effect.die(new Error(`At most ${PULL_REQUEST_BATCH_SIZE} pull requests per request.`));
+    }
+    // Numbers are integers from GitHub's own payload, so interpolating them cannot inject query text.
+    const selections = numbers
+      .map((number, index) => `pr${index}: pullRequest(number: ${Math.trunc(number)}) { ${PULL_REQUEST_FIELDS} }`)
+      .join('\n');
+    const query = `query($owner: String!, $name: String!) { repository(owner: $owner, name: $name) { ${selections} } }`;
+    const response = yield* githubRequest(
+      () =>
+        HttpClientRequest.post(`${GITHUB_API_BASE}/graphql`).pipe(
+          HttpClientRequest.bodyJsonUnsafe({ query, variables: { owner, name: repo } }),
+        ),
+      GraphQLRepositorySchema,
+    );
+    return Object.values(response.data?.repository ?? {}).filter(
+      (detail): detail is PullRequestDetail => detail != null,
+    );
+  });
 
 //
 // Mutations (push)
@@ -676,6 +937,7 @@ export const createIssueComment = (
   );
 
 const GitHubCheckRunSchema = Schema.Struct({
+  id: Schema.Number.pipe(Schema.optional),
   name: Schema.String,
   /** `queued`, `in_progress` or `completed`. */
   status: Schema.String,

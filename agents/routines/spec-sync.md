@@ -73,6 +73,11 @@ Per plugin, in order, with one subagent per plugin when more than three are sele
    - Leave `## Features` and `scenario` blocks as they are unless a requirement is now impossible
      (its operation or type is gone); then mark the `req`/`scenario` with a `status: stale` comment
      rather than rewriting intent you cannot verify.
+   - Every spec you change gets at least one `agent:` decision in its `## Changelog` (the `mdl`
+     skill; CI's **Check spec changelogs** enforces it). One entry for the mechanical
+     reconciliation, and one for each judgement about intent (keeping an op as unimplemented,
+     marking a requirement stale). The `for:` is the person who set the Routine up. List the
+     judgement entries in the PR body for a person to approve.
 6. In `## QA`, every `test` that references an operation whose key, input or output changed gets
    `status: unverified  # <date>, spec-sync: <what changed>`. Do not run tests here; that is the QA
    Routine's job.
@@ -84,9 +89,8 @@ Per plugin, in order, with one subagent per plugin when more than three are sele
 
 Then:
 
-9. `node tools/claude/plugins/dxos/scripts/list-tests.mjs` must still list every test; run
-   `node tools/qa-lint/qa-lint.mjs` and `node tools/qa-lint/teardown-lint.mjs` and fix what they
-   report in the specs you touched. Run `pnpm format`.
+9. `pnpm deus qa list` must still list every test; run `pnpm deus qa lint` (unbound references
+   and unsafe teardowns) and fix what it reports in the specs you touched. Run `pnpm format`.
 10. Commit as `spec-sync: <plugin>, <plugin>, …` and open one PR with the `submit-pr` skill. The
     body lists, per plugin: keys backfilled, ops added / removed / marked unimplemented, types and
     surfaces changed, tests marked unverified, and any judgement you made that a human should

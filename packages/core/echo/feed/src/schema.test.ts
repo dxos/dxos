@@ -97,6 +97,7 @@ describe('feed migrations', () => {
         'cursor_tokens.spaceId': 0,
         'sync_state.spaceId': 1,
         'sync_state.feedNamespace': 1,
+        'trimmed_blocks.id': 0,
       });
     }).pipe(Effect.provide(TestLayer)),
   );

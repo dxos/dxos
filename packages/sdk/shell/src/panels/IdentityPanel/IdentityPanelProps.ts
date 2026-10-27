@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import type { FC, cloneElement } from 'react';
+import type { FC, ReactNode, cloneElement } from 'react';
 import type { Event, SingleOrArray } from 'xstate';
 
 import type { Device, Identity } from '@dxos/react-client/halo';
@@ -45,18 +45,10 @@ export type IdentityPanelImplProps = {
 
 export type IdentityPanelProps = Partial<Omit<IdentityPanelImplProps, 'send' | 'activeView' | 'identity'>>;
 
-export type IdentityPanelHeadingProps = Pick<
+export type IdentityPanelProfileProps = Pick<
   IdentityPanelImplProps,
-  | 'titleId'
-  | 'identity'
-  | 'onDone'
-  | 'onUpdateProfile'
-  | 'connectionState'
-  | 'onChangeConnectionState'
-  | 'onManageCredentials'
-> & {
-  title: string;
-};
+  'identity' | 'onUpdateProfile' | 'connectionState' | 'onChangeConnectionState' | 'onManageCredentials'
+>;
 
 export type IdentityPanelStepProps = Pick<
   IdentityPanelImplProps,
@@ -64,4 +56,6 @@ export type IdentityPanelStepProps = Pick<
 > & {
   active?: boolean;
   devices: Device[];
+  /** Rows the step shows above its own, in its Dialog.Body (the panel's profile, for the action chooser). */
+  heading?: ReactNode;
 };

@@ -2,15 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Filter, Obj, type QueryAST } from '@dxos/echo';
+import { Entity, type Filter, type QueryAST } from '@dxos/echo';
+import { EID } from '@dxos/keys';
 
-export type MatchFilterOptions<T extends Obj.Unknown> = {
+export type MatchFilterOptions<T extends Entity.Unknown> = {
   /**
    * The strings a free-text term searches. Defaults to the object's top-level string properties;
    * a host narrows it to what a reader sees (a task's title and description, say).
    */
   text?: (object: T) => readonly (string | undefined)[];
-  /** The object's tag ids — the uri space `#tag` terms carry. Defaults to `Obj.getMeta(object).tags`. */
+  /** The object's tag ids — the uri space `#tag` terms carry. Defaults to `Entity.getMeta(object).tags`. */
   tags?: (object: T) => readonly string[];
 };
 
@@ -24,13 +25,13 @@ export type MatchFilterOptions<T extends Obj.Unknown> = {
  * object on any field (`assignee:rich` finds an actor's name or email). An unknown node fails
  * closed, so a filter the evaluator does not understand never broadens the result.
  */
-export const matchesFilter = <T extends Obj.Unknown>(
+export const matchesFilter = <T extends Entity.Unknown>(
   filter: Filter.Any,
   object: T,
   options: MatchFilterOptions<T> = {},
 ): boolean => matchesAst(filter.ast, object, options);
 
-const matchesAst = <T extends Obj.Unknown>(
+const matchesAst = <T extends Entity.Unknown>(
   ast: QueryAST.Filter,
   object: T,
   options: MatchFilterOptions<T>,
@@ -42,8 +43,10 @@ const matchesAst = <T extends Obj.Unknown>(
       return ast.filters.some((sub) => matchesAst(sub, object, options));
     case 'not':
       return !matchesAst(ast.filter, object, options);
-    case 'tag':
-      return (options.tags ?? metaTags)(object).includes(ast.tag);
+    case 'tag': {
+      const target = canonicalTag(ast.tag);
+      return (options.tags ?? metaTags)(object).some((tag) => canonicalTag(tag) === target);
+    }
     case 'text-search':
       return matchesText(ast.text, (options.text ?? stringProperties)(object));
     case 'object': {
@@ -150,12 +153,21 @@ const getPath = (object: unknown, path: string): unknown =>
   path.split('.').reduce<unknown>((current, key) => (isRecord(current) ? current[key] : undefined), object);
 
 // The id is not text a reader wrote, so a word that happens to occur in one does not match.
-const stringProperties = (object: Obj.Unknown): string[] =>
+const stringProperties = (object: Entity.Unknown): string[] =>
   Object.entries(object).flatMap(([key, value]) => (key !== 'id' && typeof value === 'string' ? [value] : []));
 
-const metaTags = (object: Obj.Unknown): string[] => {
+/**
+ * A tag's entity id, so the absolute uri a tag map is keyed by (`echo://<space>/<id>`) matches the
+ * local form a stored meta tag carries (`echo:///<id>`), as the query engine's own tag match does.
+ */
+const canonicalTag = (uri: string): string => {
+  const eid = EID.tryParse(uri);
+  return (eid && EID.getEntityId(eid)) || uri;
+};
+
+const metaTags = (object: Entity.Unknown): string[] => {
   try {
-    return Obj.getMeta(object).tags.map((tag) => tag.uri);
+    return Entity.getMeta(object).tags.map((tag) => tag.id);
   } catch {
     // An object outside a database carries no meta; a tag term then matches nothing rather than throwing.
     return [];
@@ -169,9 +181,9 @@ const metaTags = (object: Obj.Unknown): string[] => {
 const typeMatches = (typename: string, uri: string | undefined): boolean =>
   uri !== undefined && (uri === typename || uri.startsWith(`${typename}:`));
 
-const typeUri = (object: Obj.Unknown): string | undefined => {
+const typeUri = (object: Entity.Unknown): string | undefined => {
   try {
-    return Obj.getTypeURI(object)?.toString();
+    return Entity.getTypeURI(object)?.toString();
   } catch {
     return undefined;
   }

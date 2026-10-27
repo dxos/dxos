@@ -12,6 +12,7 @@
 //
 
 import * as Appeal from './appeal.ts';
+import * as Dataflow from './dataflow.ts';
 import * as Diagnostics from './diagnostics.ts';
 import * as Layout from './layout.ts';
 import * as MermaidEngine from './mermaid-engine.ts';
@@ -20,6 +21,7 @@ import * as Scene from './scene.ts';
 import * as Place from './semantic-place.ts';
 import * as Route from './semantic-route.ts';
 import * as Semantic from './semantic.ts';
+import * as SvgFile from './svg-file.ts';
 import { GRID, type Rect } from './uml-grid.ts';
 
 const FONT = Layout.FONT_METRICS.m;
@@ -29,8 +31,9 @@ const MAX_W = GRID * 6;
 const MIN_H = GRID * 3;
 const PAD_X = GRID;
 const PAD_Y = GRID / 2;
-/** Frame inset around a group's members; the top band also holds the title. */
+/** Frame inset around a group's members, the same on every side; the title sits in the top inset. */
 const FRAME_PAD = GRID;
+/** Room a frame's title takes above its members, when sizing the default pitch. */
 const FRAME_LABEL_H = GRID;
 /** Extra gutter where two frames face each other across a row gutter, so packages read as separate. */
 const FRAME_STACK_GAP = GRID * 2;
@@ -212,15 +215,17 @@ const geometry = (
     });
     return Math.max(stacked ? FRAME_STACK_GAP : 0, ...gaps);
   };
+  // An explicit grid is a lattice the boxes must stay on (a canvas lattice, say): extra space is whole cells.
+  const whole = (extra: number, step: number) => (diagram.grid && extra > 0 ? Math.ceil(extra / step) * step : extra);
   const colX = new Map<number, number>();
   for (let col = minCol, x = minCol * pitch.w; col <= maxCol; col++) {
     colX.set(col, x);
-    x += pitch.w + extraAfterCol(col);
+    x += pitch.w + whole(extraAfterCol(col), pitch.w);
   }
   const rowY = new Map<number, number>();
   for (let row = minRow, y = minRow * pitch.h; row <= maxRow; row++) {
     rowY.set(row, y);
-    y += pitch.h + extraAfterRow(row);
+    y += pitch.h + whole(extraAfterRow(row), pitch.h);
   }
   const at = (lookup: Map<number, number>, min: number, max: number, step: number, value: number) =>
     value < min
@@ -259,7 +264,7 @@ const geometry = (
       continue;
     }
     const x = Math.min(...members.map((rect) => rect.x)) - FRAME_PAD;
-    const y = Math.min(...members.map((rect) => rect.y)) - FRAME_PAD - FRAME_LABEL_H;
+    const y = Math.min(...members.map((rect) => rect.y)) - FRAME_PAD;
     const right = Math.max(...members.map((rect) => rect.x + rect.w)) + FRAME_PAD;
     const bottom = Math.max(...members.map((rect) => rect.y + rect.h)) + FRAME_PAD;
     frames.set(group.id, { x, y, w: right - x, h: bottom - y });
@@ -273,7 +278,7 @@ const geometry = (
       ? [
           {
             x: frame.x + FRAME_PAD / 2,
-            y: frame.y + (FRAME_LABEL_H - LABEL_FONT.lineH) / 2,
+            y: frame.y + (FRAME_PAD - LABEL_FONT.lineH) / 2,
             w: group.label.length * LABEL_FONT.charW,
             h: LABEL_FONT.lineH,
           },
@@ -321,6 +326,25 @@ const facingSide = (hub: Rect | undefined, spokes: readonly (Rect | undefined)[]
 };
 
 /** Routes every edge and bus over a placement and emits the scene. */
+/** A node's shapes in its box; the first is always the `box` every reader of the layout addresses. */
+const nodeElements = (diagram: Semantic.Diagram, node: Semantic.Node, size: Semantic.Size): Scene.Element[] =>
+  diagram.kind === 'dataflow'
+    ? Dataflow.nodeElements(diagram, node, size)
+    : [
+        {
+          kind: node.shape ?? 'rect',
+          id: 'box',
+          x: 0,
+          y: 0,
+          w: size.w,
+          h: size.h,
+          text: node.label,
+          ...(node.color ? { color: node.color } : {}),
+          ...(node.fill ? { fill: node.fill } : {}),
+          ...(node.stroke ? { stroke: node.stroke } : {}),
+        },
+      ];
+
 const draw = (
   diagram: Semantic.Diagram,
   geometry: Geometry,
@@ -424,7 +448,7 @@ const draw = (
                   kind: 'text',
                   id: 'label',
                   x: FRAME_PAD / 2,
-                  y: (FRAME_LABEL_H - LABEL_FONT.lineH) / 2,
+                  y: (FRAME_PAD - LABEL_FONT.lineH) / 2,
                   text: group.label,
                   weight: 's',
                   color: 'grey',
@@ -447,20 +471,7 @@ const draw = (
         origin: place(rect),
         scale: 1,
         ...(node.ref ? { ref: node.ref } : {}),
-        elements: [
-          {
-            kind: node.shape ?? 'rect',
-            id: 'box',
-            x: 0,
-            y: 0,
-            w: rect.w,
-            h: rect.h,
-            text: node.label,
-            ...(node.color ? { color: node.color } : {}),
-            ...(node.fill ? { fill: node.fill } : {}),
-            ...(node.stroke ? { stroke: node.stroke } : {}),
-          },
-        ],
+        elements: nodeElements(diagram, node, rect),
       },
     });
   }
@@ -495,21 +506,7 @@ const draw = (
     if (!headed) {
       elements.push({ kind: 'line', id, points, ...stroke, ...color });
     } else {
-      if (points.length > 2) {
-        elements.push({ kind: 'line', id: `${id}-path`, points: points.slice(0, -1), ...stroke, ...color });
-      }
-      const tail = style?.tail;
-      elements.push({
-        kind: 'arrow',
-        id,
-        start: points[points.length - 2],
-        end: points[points.length - 1],
-        ...(style?.relation ? { relation: style.relation } : {}),
-        ...(style?.head ? { head: style.head } : {}),
-        ...(tail ? { tail } : {}),
-        ...stroke,
-        ...color,
-      });
+      elements.push(...SvgFile.connectorElements(id, points, style ?? {}));
     }
     const text = bus ? (part === 'trunk' ? bus.label : edge?.label) : (edge?.label ?? orphaned.get(part));
     if (text) {
@@ -785,6 +782,7 @@ export const solve = (source: Semantic.Diagram, options: SolveOptions = {}): Sol
     commands: chosen.candidate.commands,
     issues: [
       ...issues,
+      ...(diagram.kind === 'dataflow' ? Dataflow.check(diagram) : []),
       ...(cells ? unmetIssues(prepared, cells) : []),
       ...(cells ? stretchIssues(diagram, cells) : []),
       ...chosen.candidate.unbused.map((bus) => ({
@@ -828,16 +826,11 @@ const restyle = (diagram: Semantic.Diagram, commands: readonly Scene.Command[]):
       return command;
     }
     const node = nodes.get(command.object.id);
+    const box = command.object.elements.find((element) => element.kind === 'rect' && element.id === 'box');
+    if (node && box?.kind === 'rect') {
+      return { ...command, object: { ...command.object, elements: nodeElements(diagram, node, box) } };
+    }
     const elements = command.object.elements.map((element): Scene.Element => {
-      if (node && element.kind === 'rect' && element.id === 'box') {
-        return {
-          ...element,
-          kind: node.shape ?? 'rect',
-          ...(node.color ? { color: node.color } : {}),
-          ...(node.fill ? { fill: node.fill } : {}),
-          ...(node.stroke ? { stroke: node.stroke } : {}),
-        };
-      }
       const edge = command.object.id === Semantic.CONNECTORS ? edges.get(element.id.replace(/-path$/, '')) : undefined;
       if (edge && element.kind === 'arrow') {
         return {

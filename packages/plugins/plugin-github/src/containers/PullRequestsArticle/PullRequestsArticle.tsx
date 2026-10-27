@@ -21,6 +21,7 @@ import * as Layout from '@dxos/react-ui/Layout';
 import * as Panel from '@dxos/react-ui/Panel';
 import * as Status from '@dxos/react-ui/Status';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Typography from '@dxos/react-ui/Typography';
 import { PullRequest, Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -37,7 +38,6 @@ import {
   groupRows,
   sortRows,
 } from './arrange.ts';
-import { formatRelative } from './format.ts';
 
 const PULL_REQUEST_TYPENAME = Type.getTypename(PullRequest.PullRequest);
 
@@ -185,16 +185,18 @@ const PullRequestList = ({ role, attendableId, db }: PullRequestsArticleProps & 
           </Status.Empty>
         ) : (
           <Listbox.Root items={options}>
-            <Listbox.Content
-              classNames='dx-expand'
-              aria-label={t('typename.label_other', { ns: PULL_REQUEST_TYPENAME })}
-            >
-              {groups
-                ? groups
-                    .filter((group) => group.rows.length > 0)
-                    .map((group) => <GroupSection key={group.id} group={group} onOpen={openObject} />)
-                : rows.map((row) => <PullRequestListRow key={row.pullRequest.id} row={row} onOpen={openObject} />)}
-            </Listbox.Content>
+            <Listbox.Viewport>
+              <Listbox.Content
+                classNames='dx-expand'
+                aria-label={t('typename.label_other', { ns: PULL_REQUEST_TYPENAME })}
+              >
+                {groups
+                  ? groups
+                      .filter((group) => group.rows.length > 0)
+                      .map((group) => <GroupSection key={group.id} group={group} onOpen={openObject} />)
+                  : rows.map((row) => <PullRequestListRow key={row.pullRequest.id} row={row} onOpen={openObject} />)}
+              </Listbox.Content>
+            </Listbox.Viewport>
           </Listbox.Root>
         )}
       </Panel.Body>
@@ -256,11 +258,7 @@ const PullRequestListRow = ({
         </Layout.Flex>
         <Layout.Flex align='center' gap='sm' classNames='min-w-0 text-xs text-description'>
           {pullRequest.author && <span className='shrink-0'>{pullRequest.author}</span>}
-          {time && (
-            <time className='shrink-0' dateTime={time} title={new Date(time).toLocaleString()}>
-              {formatRelative(time)}
-            </time>
-          )}
+          {time && <Typography.Timestamp date={time} variant='relative' classNames='shrink-0' />}
           {tasks.length > 0 && (
             <Layout.Flex align='center' gap='xs' classNames='min-w-0' data-testid='pull-requests.row.tasks'>
               <Icon.Icon icon='ph--check-square-offset--regular' size='xs' classNames='shrink-0' />

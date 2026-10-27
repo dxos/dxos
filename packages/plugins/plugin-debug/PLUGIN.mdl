@@ -16,6 +16,7 @@ The following extension dialects are used in this document.
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `test`      | `org.dxos.mdl.test@1.0`        |
+| `decision`  | `org.dxos.mdl.decision@1.0`    |
 
 ## Types
 
@@ -295,4 +296,215 @@ test QA-3: Walk the review-queue demo space
       invoke: org.dxos.operation.appToolkit.switchWorkspace { subject: "root/$given.defaultSpace.id" }
       expect: the workspace is the default space and no error is logged
       assert: return $snapshot.layout.workspace === `root/${$given.defaultSpace.id}` && $stepErrors.length === 0
+```
+
+```mdl
+test QA-4: Alien Labs — a customer asks for one more thing
+  desc: |
+    The first Alien Labs vignette, a working moment for Astrid Holm, engineering manager. Okapi had a
+    cache-corruption incident, and their engineering director has replied to the postmortem with one
+    more request. Astrid reads it, checks who is asking, and finds the follow-up meeting already on
+    the calendar. Recorded by autocue/fieldstone-customer-followup.mjs.
+  actors: human
+  status: passing           # 2026-10-16, recorded by autocue/fieldstone-customer-followup.mjs
+  given:
+    - an identity exists, on a fresh profile
+    - plugin-debug is enabled (dev-only default)
+    - space: a space created from the "Alien Labs" template, open, with the navtree expanded
+  steps:
+    - name: Look at the week
+      do: Open the Alien Labs calendar, scroll the month grid a little ahead and back, then pick Monday 12 October, Wednesday 21 October and Wednesday 14 October in turn.
+      expect: days ringed for their events; each pick moves the event list to that day, with the Okapi follow-up on the 21st
+      note: The grid's highlighted "today" is the wall clock's, not the template's reference date.
+    - name: Open an event
+      do: Open one of the 14 October events from the list.
+      expect: the event with its notes and up to three attendees, then "+N more"
+    - name: Find the thread
+      do: Open the Inbox and scroll back to "Okapi cache-corruption postmortem".
+      expect: the thread, five weeks old, with eight messages
+    - name: Open the conversation
+      do: Open the thread.
+      expect: the conversation view lists its messages, with the thread summary
+    - name: Read Nadia's reply
+      do: Open Nadia Petrov's message, "Read it twice. Clear and honest, thank you."
+      expect: her message expands; she asks for the hash-mismatch alert to reach Okapi too
+    - name: Check who is asking
+      do: Hover Nadia's avatar on that message.
+      expect: her card shows Okapi Payments, her email, recent messages and the upcoming follow-up
+    - name: Open her contact
+      do: Open her contact from the card's menu.
+      expect: her contact opens, with her related messages and events
+    - name: Find the follow-up
+      do: Open "Okapi alerting follow-up" from her upcoming events.
+      expect: the follow-up a week out, with Nadia, Sam, Omar and Astrid, on the Alien Labs calendar
+```
+
+```mdl
+test QA-5: Alien Labs — what the agents did this week
+  desc: |
+    The second Alien Labs vignette. Astrid checks on the Cairn 1.8 release work, most of which agents
+    do: the project's Gantt shows each Builder and Reviewer run, one run's chat shows the work, and the
+    failed R2 task shows where a person stepped in. Recorded by autocue/fieldstone-agents-week.mjs.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists, on a fresh profile
+    - plugin-debug is enabled (dev-only default)
+    - space: a space created from the "Alien Labs" template, open, with Projects expanded
+  steps:
+    - name: Open the release project
+      do: Open "Cairn 1.8: remote cache v2" and its Tasks tab.
+      expect: twenty tasks, most assigned to agents, with done, review, started, blocked and failed ones
+    - name: See the runs on the Gantt
+      do: Open the pipeline.
+      expect: one lane per Builder and Reviewer run, overlapping across the week, and bars for the tasks they worked
+    - name: Look inside a run
+      do: Expand the project's Sessions in the navtree and open "Builder: Fix cache-key collision on concurrent writes".
+      expect: the brief, the agent's steps with their tool calls (Read file, Run tests, Open pull request, Update tasks) and its closing summary
+    - name: Find where a person stepped in
+      do: Open "Integration tests against R2".
+      expect: failed after a run and a retry, with Omar's note in its history; "Switch beta tenants to the R2 backend" is blocked on it
+```
+
+```mdl
+test QA-6: Alien Labs — the customer pipeline
+  desc: |
+    The third Alien Labs vignette, Alien Labs' accounts as structured data: the CRM section's
+    organizations and people, the pricing sheet behind a quote, and a customer note whose links lead to
+    its contacts. Recorded by autocue/fieldstone-customer-pipeline.mjs.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists, on a fresh profile
+    - plugin-debug and plugin-crm are enabled (dev-only default for plugin-debug)
+    - space: a space created from the "Alien Labs" template, open, with Collections, Planning and Customers expanded
+  steps:
+    - name: The accounts
+      do: Open Organizations in the CRM section.
+      expect: a card per organization, customers and vendors, each listing its related contacts
+    - name: The people
+      do: Open People in the CRM section and switch to the Table view.
+      expect: all 25 people with job title, organization and email
+    - name: The price behind a quote
+      do: Open "Cairn plans" in the Planning collection.
+      expect: tiers by usage, with each monthly price computed by formula
+    - name: A customer note
+      do: Open "Meridian Health Data" in the Customers collection.
+      expect: the account note, with its contacts and the SOC 2 project linked inline
+    - name: Into a contact
+      do: Click the "Aisha Bello" link in the note, then Open from the preview card's menu.
+      expect: Aisha's contact opens, with Meridian Health Data as employer
+```
+
+```mdl
+test QA-7: Alien Labs — after the incident
+  desc: |
+    The fourth Alien Labs vignette, the documents an incident leaves behind: the postmortem with its
+    timeline sheet embedded, the runbook with its escalation drawing, and the decision log the fix fed.
+    Recorded by autocue/fieldstone-after-the-incident.mjs.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists, on a fresh profile
+    - plugin-debug is enabled (dev-only default)
+    - space: a space created from the "Alien Labs" template, open, with Collections, Incidents and Handbook expanded
+  steps:
+    - name: The postmortem
+      do: Open "Okapi cache-corruption postmortem" in the Incidents collection.
+      expect: root cause and action items, linking Omar, Anika and Okapi inline
+    - name: The timeline
+      do: Scroll to the embedded "Okapi incident timeline".
+      expect: twenty timestamped rows from detection to close, hours since detection by formula
+    - name: What on-call does now
+      do: Open "On-call runbook" in the Handbook collection.
+      expect: the runbook, with the on-call escalation drawing embedded
+    - name: What the team decided
+      do: Open "Decision log".
+      expect: entries with their deciders, including compare-and-set index commits after the incident
+```
+
+```mdl
+test QA-8: Alien Labs — how Cairn plugs into DXOS
+  desc: |
+    The fifth Alien Labs vignette. Cairn's dashboard is a Composer plugin and its agents run on EDGE
+    compute, so the team's architecture doc leads into the DXOS diagrams: plugin anatomy for the
+    dashboard, EDGE's compute service for the agents. Recorded by autocue/fieldstone-cairn-on-dxos.mjs.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists, on a fresh profile
+    - plugin-debug is enabled (dev-only default)
+    - space: a space created from the "Alien Labs" template, open, with Collections, Handbook and Architecture expanded
+  steps:
+    - name: Cairn's own architecture
+      do: Open "Cairn architecture" in the Handbook collection and scroll to how Cairn sits on DXOS.
+      expect: Cairn's services, then the dashboard as a Composer plugin and the agents on EDGE compute, with the DXOS diagrams embedded
+    - name: The dashboard is a plugin
+      do: Open the Composer drawing in the Architecture collection and open the Feature Plugins box.
+      expect: Plugin Anatomy, the diagram of what a plugin contributes
+    - name: The agents run on EDGE
+      do: Go up, open the EDGE box, then compute-service.
+      expect: EDGE's compute service, where Builder, Reviewer, Triage and Scribe run
+```
+
+
+```mdl
+test QA-9: Hello Worker — the agent finishes the spec, plans the work and ships the Worker
+  desc: |
+    The Hello Worker template run on camera. The space holds a partial spec, the project's feature map and three
+    planning tasks; one chat assigned all three completes the spec in Composer, draws it on the canvas, files the
+    implementation as tasks of its own linked to the features, and works them until the deployed Worker answers.
+    The take never shows the chat, which carries the claim URL, a bearer credential. Recorded by
+    autocue/hello-worker.mjs.
+  actors: human
+  status: unverified
+  given:
+    - an identity exists, on a fresh profile, talking to an EDGE whose AI and sandbox services serve the chosen model
+    - plugin-debug, Code and Sandbox are enabled (dev-only defaults); Illustrator and Canvas are on by default
+  steps:
+    - name: Create a space from the Hello Worker template
+      do: Add a space and pick the "Hello Worker" template.
+      expect: the space opens with the "Hello Worker" project in the navtree
+    - name: Open the project and its tasks
+      do: Open the project and its Tasks tab.
+      expect: three todo tasks, "Complete the spec", "Draw the proposed architecture", "Plan the implementation as tasks"
+    - name: Open the feature map and the spec
+      do: Open the Features tab as Kanban, then "Greeting endpoint" and its spec row.
+      expect: four planned features; the spec renders in Composer with F-1 written and F-2 to F-4 only named
+    - name: Assign the planning tasks to the agent
+      do: Back on Tasks, tick all three and assign them to the agent.
+      expect: the Gantt opens with one band for the chat and a lane for each task
+    - name: Watch the spec fill in
+      do: Wait for "Complete the spec", then open the spec.
+      expect: the spec has a `feat` block for each of F-2 to F-4 and a new Changelog decision
+    - name: Open the diagram from the project
+      do: Wait for the diagram task, then open the project's Overview and the drawing.
+      expect: a drawing of the sandbox, the Worker, the temporary Cloudflare account and the client's request and JSON response
+    - name: Watch the plan become tasks
+      do: Back on Tasks, wait for the plan task.
+      expect: new implementation tasks under the plan, each linked on the feature map; the claim is assigned to you
+    - name: Watch the Worker ship
+      do: Wait for the agent's implementation tasks.
+      expect: every task but the claim done or in review, and the Worker URL and its response filed on the project
+```
+
+## Changelog
+
+Every change to this spec adds a decision, newest last. See `lang/changelog.mdl` for the attribution rules.
+
+```mdl
+decision D-1: [QA-9] records the Hello Worker template from a partial spec, feature map and planning tasks: the assistant completes the spec, draws it, files the implementation as tasks and works them until the Worker answers.
+  date: 2026-10-21
+  by: user:dmaretskyi
+  affects: [QA-9]
+```
+
+```mdl
+decision D-2: The take assigns all three planning tasks to one chat and never shows the chat, which carries the claim URL. Fills in [D-1].
+  date: 2026-10-21
+  by: agent:claude-code
+  for: user:dmaretskyi
+  affects: [QA-9]
+  why: One chat keeps the spec it wrote in its context when it plans and builds; the claim URL is a bearer credential for the account.
+  rejected: Stopping before the deploy, as the take did before, which would not show the Worker answering.
 ```

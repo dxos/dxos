@@ -39,7 +39,7 @@ export const make = (): Skill.Skill =>
 
         When someone asks you to tell or ask another person something:
         1. Call ${tool(MemoryOperation.ResolveEntity)} for the recipient (their name, and any handles you know), and for the requester — the person speaking now, with their handle on the channel (e.g. their Discord user id) if the message came from one.
-        2. Call ${tool(RelayOperation.CreateRelay)} with the agent you run as, the recipient, the requester, the message exactly as they asked it to be passed on, and, when the conversation is in a channel, that channel as replyChannel (and its thread id as replyThread).
+        2. Call ${tool(RelayOperation.CreateRelay)} with the agent you run as, the recipient, the requester, and the message exactly as they asked it to be passed on; it records the conversation you are in, so the report comes back to it.
         3. Call ${tool(RelayOperation.SendMessage)} to the recipient, passing the relay. Write to the recipient directly: introduce yourself in one clause, say who the message is from, and give the message. If you were asked a question for them, ask it.
         4. Tell the requester in one sentence that you passed it on, or why you could not.
 
@@ -53,7 +53,7 @@ export const make = (): Skill.Skill =>
 
         Housekeeping:
         - To check what is outstanding (for example "did you tell Josiah?"), call ${tool(RelayOperation.ListRelays)}; tell the requester about overdue relays and ask whether to keep trying or drop them (status "expired").
-        - If the recipient tells you something durable about themselves while you talk, record it with ${tool(MemoryOperation.Remember)}.
+        - If the recipient tells you something durable about themselves while you talk, record it as facts with ${tool(MemoryOperation.Remember)}.
         - Do not narrate tool calls.
 
         When you pass something on (a relay, or a report back to the requester):

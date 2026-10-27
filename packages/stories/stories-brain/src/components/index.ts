@@ -9,6 +9,7 @@ export * from './EntityList/index.ts';
 export * from './FactPanel/index.ts';
 export * from './GoalPanel/index.ts';
 export * from './InputPanel/index.ts';
+export * from './OntologyPanel/index.ts';
 export * from './OutputPanel/index.ts';
 export * from './PipelinePanel/index.ts';
 export * from './PredicateList/index.ts';

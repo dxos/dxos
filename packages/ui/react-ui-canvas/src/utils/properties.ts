@@ -8,9 +8,9 @@
 //
 
 import * as Schema from 'effect/Schema';
-import type * as SchemaAST from 'effect/SchemaAST';
+import * as SchemaAST from 'effect/SchemaAST';
 
-import { getChecks, getPropertySignatures, pick } from '@dxos/effect/SchemaAST';
+import { getChecks, getPropertySignatures } from '@dxos/effect/SchemaAST';
 
 type Values = Readonly<Record<string, unknown>>;
 
@@ -82,24 +82,68 @@ const sameList = (left: readonly SchemaAST.AST[], right: readonly SchemaAST.AST[
   left.length === right.length && left.every((type, index) => sameType(type, right[index]));
 
 /**
- * The properties every schema declares alike, as one struct over the first schema's declarations;
- * `undefined` when they share none. One schema is its own common schema.
+ * What two property types share: the type itself when they are the same, and for two structs (a node's style and a
+ * link's, say) the struct of the fields they declare alike, recursively; none when they share nothing.
+ */
+const commonType = (left: SchemaAST.AST, right: SchemaAST.AST): SchemaAST.AST | undefined => {
+  if (sameType(left, right)) {
+    return left;
+  }
+  // An optional struct is a union with `undefined`: intersect member by member.
+  if (left._tag === 'Union' && right._tag === 'Union' && left.types.length === right.types.length) {
+    const types = left.types.map((type, index) => commonType(type, right.types[index]));
+    return types.every((type) => type !== undefined)
+      ? new SchemaAST.Union(
+          types.flatMap((type) => (type ? [type] : [])),
+          left.options,
+          left.annotations,
+          left.checks,
+          left.encoding,
+          left.context,
+          left.encodingChecks,
+        )
+      : undefined;
+  }
+  if (left._tag !== 'Objects' || right._tag !== 'Objects' || isOptional(left) !== isOptional(right)) {
+    return undefined;
+  }
+  const shared = left.propertySignatures.flatMap((property) => {
+    const other = right.propertySignatures.find((candidate) => candidate.name === property.name);
+    const type = other && commonType(property.type, other.type);
+    return type ? [new SchemaAST.PropertySignature(property.name, type)] : [];
+  });
+  return shared.length > 0
+    ? new SchemaAST.Objects(
+        shared,
+        left.indexSignatures,
+        left.annotations,
+        left.checks,
+        left.encoding,
+        left.context,
+        left.encodingChecks,
+      )
+    : undefined;
+};
+
+/**
+ * The properties every schema declares alike, as one struct over the first schema's declarations, a struct
+ * property narrowed to the fields every schema's declares alike; `undefined` when they share none. One schema is
+ * its own common schema.
  */
 export const commonSchema = (schemas: readonly Schema.Codec<any, any>[]): Schema.Codec<any, any> | undefined => {
   const [first, ...rest] = schemas;
   if (!first) {
     return undefined;
   }
-  const shared = getPropertySignatures(first.ast)
-    .filter((property) =>
-      rest.every((schema) =>
-        getPropertySignatures(schema.ast).some(
-          (other) => other.name === property.name && sameType(property.type, other.type),
-        ),
-      ),
-    )
-    .map((property) => property.name);
-  return shared.length > 0 ? Schema.make<Schema.Codec<any, any>>(pick(first.ast, shared)) : undefined;
+  const shared = getPropertySignatures(first.ast).flatMap((property) => {
+    let type: SchemaAST.AST | undefined = property.type;
+    for (const schema of rest) {
+      const other = getPropertySignatures(schema.ast).find((candidate) => candidate.name === property.name);
+      type = type && other ? commonType(type, other.type) : undefined;
+    }
+    return type ? [new SchemaAST.PropertySignature(property.name, type)] : [];
+  });
+  return shared.length > 0 ? Schema.make<Schema.Codec<any, any>>(new SchemaAST.Objects(shared, [])) : undefined;
 };
 
 const equal = (left: unknown, right: unknown): boolean => {

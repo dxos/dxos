@@ -20,15 +20,21 @@ type Env = {
    */
   ASSET_ARCHIVE?: R2Bucket;
   FEEDBACK_LOGS?: R2Bucket;
-  SIGNOZ_INGEST_URL?: string;
-  SIGNOZ_INGESTION_KEY?: string;
+  POSTHOG_OTLP_URL?: string;
+  POSTHOG_PROJECT_TOKEN?: string;
 };
 
 const OTEL_MAX_BODY_SIZE = 800 * 1024 * 1024; // 800MB.
 const FEEDBACK_LOGS_MAX_BODY_SIZE = LOG_STORE_MAX_BYTES;
 
+/** Bucket prefix per upload `kind`: user-filed debug logs, or agent trajectories flagged as struggles. */
+const FEEDBACK_UPLOAD_PREFIXES = new Map([
+  ['logs', 'logs'],
+  ['trajectory', 'trajectories'],
+]);
+
 /**
- * Handle /api/feedback-logs — upload NDJSON debug logs to R2.
+ * Handle /api/feedback-logs — upload NDJSON debug logs (or, with `?kind=trajectory`, agent trajectories) to R2.
  *
  * Current clients send gzipped NDJSON (`Content-Type: application/gzip`), stored as `.ndjson.gz`; plain
  * NDJSON is still accepted because native builds already in the field upload it uncompressed.
@@ -81,7 +87,9 @@ const handleFeedbackLogs = async (request: Request, env: Env): Promise<Response>
   const gzipped = request.headers.get('content-type')?.split(';')[0].trim() === 'application/gzip';
   const date = new Date().toISOString().slice(0, 10);
   const id = crypto.randomUUID();
-  const key = `logs/${date}/${id}.${gzipped ? 'ndjson.gz' : 'ndjson'}`;
+  // An unknown kind falls back to `logs/` rather than letting the client choose an arbitrary prefix.
+  const prefix = FEEDBACK_UPLOAD_PREFIXES.get(new URL(request.url).searchParams.get('kind') ?? 'logs') ?? 'logs';
+  const key = `${prefix}/${date}/${id}.${gzipped ? 'ndjson.gz' : 'ndjson'}`;
 
   try {
     // Hand R2 the request body itself: `arrayBuffer()` would hold the whole dump in the isolate,
@@ -380,7 +388,7 @@ const withLinkPreview = async (request: Request, page: Response, url: URL): Prom
 const OTEL_PREFIX = '/api/otel';
 const OTEL_SIGNALS = new Set(['/v1/traces', '/v1/logs', '/v1/metrics']);
 
-/** Reverse-proxy OTel ingestion to SigNoz, injecting the access token server-side. */
+/** Reverse-proxy OTel ingestion to PostHog, so every client posts same-origin to one endpoint. */
 const handleOtelProxy = async (request: Request, env: Env, signal: string): Promise<Response> => {
   const origin = request.headers.get('Origin');
   // Native builds export here cross-origin; their own asset server has no `/api` routes.
@@ -398,7 +406,7 @@ const handleOtelProxy = async (request: Request, env: Env, signal: string): Prom
     return new Response('Forbidden', { status: 403, headers: corsHeaders(request.url, origin, allowed) });
   }
 
-  if (!env.SIGNOZ_INGEST_URL || !env.SIGNOZ_INGESTION_KEY) {
+  if (!env.POSTHOG_OTLP_URL || !env.POSTHOG_PROJECT_TOKEN) {
     return new Response('OTel proxy not configured', {
       status: 503,
       headers: corsHeaders(request.url, origin, allowed),
@@ -411,7 +419,7 @@ const handleOtelProxy = async (request: Request, env: Env, signal: string): Prom
 
   const upstreamHeaders: Record<string, string> = {
     'Content-Type': request.headers.get('Content-Type') ?? 'application/json',
-    'signoz-ingestion-key': env.SIGNOZ_INGESTION_KEY,
+    'Authorization': `Bearer ${env.POSTHOG_PROJECT_TOKEN}`,
   };
   const contentEncoding = request.headers.get('Content-Encoding');
   if (contentEncoding) {
@@ -441,7 +449,7 @@ const handleOtelProxy = async (request: Request, env: Env, signal: string): Prom
   // Pipe incoming body through the size-checking transform concurrently with the upstream fetch.
   const pipePromise = request.body.pipeTo(writable).catch(() => {});
 
-  const upstream = `${env.SIGNOZ_INGEST_URL.replace(/\/$/, '')}${signal}`;
+  const upstream = `${env.POSTHOG_OTLP_URL.replace(/\/$/, '')}${signal}`;
   let upstreamResponse: Response | null = null;
   try {
     upstreamResponse = await fetch(upstream, {

@@ -14,9 +14,9 @@ import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { Obj, Query } from '@dxos/echo';
+import { Obj, Query, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { DXN } from '@dxos/keys';
+import { DXN, EID, EntityId } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
@@ -74,6 +74,8 @@ type StoryArgs = {
   objects?: boolean;
   /** Delete the sketch after the document embeds it, so its embed points at nothing. */
   deleted?: boolean;
+  /** Leave the document without a content binding: its Text deleted, or never present. */
+  contentState?: 'deleted' | 'missing';
 };
 
 const DefaultStory = () => {
@@ -102,9 +104,9 @@ const meta = {
   title: 'plugins/plugin-markdown/containers/MarkdownArticle',
   render: DefaultStory,
   decorators: [
-    withLayout({ layout: 'column' }),
+    withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(
-      ({ args: { title = 'Testing', content = '', objects: showObjects = false, deleted = false } }) => ({
+      ({ args: { title = 'Testing', content = '', objects: showObjects = false, deleted = false, contentState } }) => ({
         plugins: [
           ...CorePlugins.make(),
           StorybookPlugin.make({}),
@@ -158,7 +160,14 @@ const meta = {
                   yield* Effect.promise(() => defaultSpace.db.flush());
                 }
 
-                defaultSpace.db.add(
+                if (contentState === 'missing') {
+                  const contentUri = EID.make({ spaceId: defaultSpace.id, entityId: EntityId.random() });
+                  defaultSpace.db.add(Obj.make(Markdown.Document, { name: title, content: Ref.fromURI(contentUri) }));
+                  yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
+                  return;
+                }
+
+                const doc = defaultSpace.db.add(
                   Markdown.make({
                     name: title,
                     content: [
@@ -177,6 +186,12 @@ const meta = {
                 );
 
                 yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
+
+                if (contentState === 'deleted') {
+                  const text = yield* Effect.promise(() => doc.content.load());
+                  defaultSpace.db.remove(text);
+                  yield* Effect.promise(() => defaultSpace.db.flush({ indexes: true }));
+                }
 
                 // Removed only once the document references it, the way a user deletes an embedded object.
                 if (deleted) {
@@ -298,5 +313,36 @@ export const EmbedFocus: Story = {
     } finally {
       document.removeEventListener('keydown', onKeyDown);
     }
+  },
+};
+
+/** The document's Text was deleted: a message stands in for the editor. */
+export const ContentDeleted: Story = {
+  args: {
+    title: 'Testing with deleted content',
+    content: 'Hello, world!',
+    contentState: 'deleted',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const status = await canvas.findByTestId('markdown.content-status', {}, { timeout: 15_000 });
+    await expect(status).toHaveAttribute('data-status', 'deleted');
+    await expect(canvasElement.querySelector('.cm-content')).toBeNull();
+  },
+};
+
+/** The document's content ref points at a Text this device does not have. */
+export const ContentMissing: Story = {
+  args: {
+    title: 'Testing with missing content',
+    contentState: 'missing',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await waitFor(
+      async () => expect(canvas.getByTestId('markdown.content-status')).toHaveAttribute('data-status', 'missing'),
+      { timeout: 15_000 },
+    );
+    await expect(canvasElement.querySelector('.cm-content')).toBeNull();
   },
 };

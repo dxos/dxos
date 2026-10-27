@@ -1,5 +1,172 @@
 # @dxos/plugin-connector
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/plugin-space@0.16.0
+  - @dxos/client@0.16.0
+  - @dxos/react-client@0.16.0
+  - @dxos/plugin-client@0.16.0
+  - @dxos/plugin-routine@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-graph@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-form@0.16.0
+  - @dxos/react-ui-list@0.16.0
+  - @dxos/react-ui-search@0.16.0
+  - @dxos/react-ui-syntax-highlighter@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/edge-compute@0.16.0
+  - @dxos/link@0.16.0
+  - @dxos/echo-react@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/cli-util@0.16.0
+  - @dxos/context@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/graph@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/node-std@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/edge-client@0.16.0
+  - @dxos/protocols@0.16.0
+  - @dxos/ui-theme@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [3d151fc]
+- Updated dependencies [ab27b41]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [d84f9b8]
+- Updated dependencies [b82150a]
+- Updated dependencies [0420f87]
+- Updated dependencies [0d81167]
+- Updated dependencies [45ab961]
+- Updated dependencies [71fc002]
+- Updated dependencies [1b33a84]
+- Updated dependencies [16bde33]
+- Updated dependencies [d250ed2]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [55bdf55]
+- Updated dependencies [ed1039a]
+- Updated dependencies [9b9a4ca]
+- Updated dependencies [b7fe13f]
+- Updated dependencies [37edd53]
+- Updated dependencies [098a536]
+- Updated dependencies [6a02061]
+- Updated dependencies [1bddc93]
+- Updated dependencies [25af912]
+- Updated dependencies [7b47951]
+- Updated dependencies [8190cc5]
+- Updated dependencies [60ef4ec]
+- Updated dependencies [2b6a93a]
+- Updated dependencies [743604d]
+  - @dxos/plugin-space@0.15.0
+  - @dxos/react-ui@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/edge-client@0.15.0
+  - @dxos/edge-compute@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/plugin-routine@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/plugin-client@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/echo-react@0.15.0
+  - @dxos/client@0.15.0
+  - @dxos/react-ui-form@0.15.0
+  - @dxos/app-graph@0.15.0
+  - @dxos/react-client@0.15.0
+  - @dxos/react-ui-list@0.15.0
+  - @dxos/react-ui-search@0.15.0
+  - @dxos/react-ui-syntax-highlighter@0.15.0
+  - @dxos/cli-util@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/graph@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/node-std@0.15.0
+  - @dxos/ui-theme@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- 5324de6: Switching a routine's action between Instructions and an operation no longer carries one kind's trigger inputs into the other: a stray `input: {}` (or an operation's `connection`) failed every run until EDGE switched the trigger off. Switching a broken trigger back on now repairs it. Pressing Sync on an account whose sync routine is switched off now shows a toast that links to the routines panel, instead of retrying EDGE's 409 refusal for about 30 seconds. The trigger manager refuses a disabled trigger with a typed `TriggerDisabledError`, and EDGE force-runs no longer retry a 409 that is not about the trigger being switched off.
+- Updated dependencies [0715304]
+- Updated dependencies [b0e4b60]
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [a1e64db]
+- Updated dependencies [28bb45b]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [385f3ce]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [2112757]
+- Updated dependencies [4820c02]
+- Updated dependencies [e0cd29c]
+- Updated dependencies [5e1acd0]
+- Updated dependencies [5324de6]
+- Updated dependencies [b07f49f]
+  - @dxos/app-framework@0.14.0
+  - @dxos/plugin-routine@0.14.0
+  - @dxos/react-ui-form@0.14.0
+  - @dxos/react-ui@0.14.0
+  - @dxos/react-ui-list@0.14.0
+  - @dxos/compute@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/plugin-space@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/edge-compute@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/cli-util@0.14.0
+  - @dxos/plugin-client@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/client@0.14.0
+  - @dxos/app-graph@0.14.0
+  - @dxos/react-client@0.14.0
+  - @dxos/react-ui-search@0.14.0
+  - @dxos/react-ui-syntax-highlighter@0.14.0
+  - @dxos/link@0.14.0
+  - @dxos/echo-react@0.14.0
+  - @dxos/schema@0.14.0
+  - @dxos/graph@0.14.0
+  - @dxos/edge-client@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/node-std@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

@@ -36,6 +36,16 @@ describe('decorateMarkdown links', () => {
     expect(view.dom.textContent).toBe('https://example.com/a');
   });
 
+  test('follows a bare URL and an autolink with the link button, as a markdown link has', ({ expect }) => {
+    const renderLinkButton = (el: HTMLElement, { url }: { url: string }) => {
+      el.className = 'test-link-button';
+      el.dataset.url = url;
+    };
+    view = createView('[label](https://a.example) https://b.example <https://c.example>', { renderLinkButton });
+    const buttons = [...view.dom.querySelectorAll<HTMLElement>('.test-link-button')].map(({ dataset }) => dataset.url);
+    expect(buttons).toEqual(['https://a.example', 'https://b.example', 'https://c.example']);
+  });
+
   test('gives a schemeless host and an email a usable href', ({ expect }) => {
     view = createView('www.example.com and hello@example.com');
     expect(links(view)).toEqual([
@@ -45,7 +55,7 @@ describe('decorateMarkdown links', () => {
   });
 });
 
-const createView = (doc: string) => {
+const createView = (doc: string, options?: Parameters<typeof decorateMarkdown>[0]) => {
   const parent = document.createElement('div');
   return new EditorView({
     state: EditorState.create({
@@ -53,7 +63,7 @@ const createView = (doc: string) => {
       extensions: [
         markdown({ base: markdownLanguage }),
         focus,
-        decorateMarkdown(),
+        decorateMarkdown(options),
         EditorState.readOnly.of(true),
         EditorView.editable.of(false),
       ],

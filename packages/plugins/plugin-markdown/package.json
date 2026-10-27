@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-markdown",
-  "version": "0.13.0",
+  "version": "0.16.0",
   "description": "DXOS Surface plugin for interacting with Markdown",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -162,6 +162,7 @@
   ],
   "dependencies": {
     "@automerge/automerge": "catalog:",
+    "@codemirror/commands": "catalog:",
     "@codemirror/state": "catalog:",
     "@codemirror/view": "catalog:",
     "@dxos/app-framework": "workspace:*",
@@ -198,6 +199,7 @@
     "@dxos/types": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@dxos/versioning": "workspace:*",
     "@effect/atom-react": "catalog:",

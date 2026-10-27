@@ -4,7 +4,7 @@
 
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
@@ -12,6 +12,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
+import * as ObjectCombobox from '@dxos/app-toolkit/ObjectCombobox';
 import { Entity, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import * as EffectEx from '@dxos/effect/EffectEx';
@@ -21,15 +22,19 @@ import * as Dialog from '@dxos/react-ui/Dialog';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as SystemButton from '@dxos/react-ui/SystemButton';
 
-import { buildSearchQuery, toSearchResults, useGlobalSearch, useSearchableTypeUris } from '#hooks';
+import { toSearchResults, useGlobalSearch } from '#hooks';
 import { meta } from '#meta';
 import { SearchCapabilities, SearchEvents } from '#types';
 
+import { type SelectHandle } from '../../select-handle.ts';
+
 export type SearchDialogProps = AppSurface.SpaceArticleProps<{
   pivotId?: string;
+  title?: string;
+  handle?: SelectHandle;
 }>;
 
-export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps) => {
+export const SearchDialog = ({ space, pivotId: pivotIdProp, title, handle }: SearchDialogProps) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invoke, invokePromise } = Hooks.useOperationInvoker();
   Hooks.useActivationSignal(SearchEvents.Start);
@@ -40,22 +45,24 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
   const [query, setQuery] = useState<string>();
 
   // Scope the FTS query to user-facing types so results match what the app can render.
-  const typeUris = useSearchableTypeUris(space);
-  const objects = useQuery(space?.db, buildSearchQuery(query, typeUris));
+  const typeUris = ObjectCombobox.useListedTypeUris(space?.db);
+  ObjectCombobox.useDrainedSearchIndex(space?.db);
+  const objects = useQuery(space?.db, ObjectCombobox.searchQuery(query, typeUris));
   const results = useMemo(() => (query ? toSearchResults(objects, query) : []), [objects, query]);
   const allResults = useMemo(() => results.filter(({ object }) => object && Entity.getLabel(object)), [results]);
 
-  // Asked on every keystroke, which is why `match` must answer from the text alone.
+  // Asked on every keystroke, which is why `match` must answer from the text alone. A picker (`handle`)
+  // chooses an existing object, so actions that make one are not offered there.
   const actionItems = useMemo(() => {
     const text = query?.trim();
-    if (!text || !space) {
+    if (!text || !space || handle) {
       return [];
     }
     return queryActions.flat().flatMap((action) => {
       const item = action.match(text);
       return item ? [{ action, item }] : [];
     });
-  }, [queryActions, query, space]);
+  }, [queryActions, query, space, handle]);
 
   const handleSearch = useCallback(
     (text: string) => {
@@ -65,9 +72,20 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
     [setMatch],
   );
 
+  useEffect(() => {
+    handle?.retain();
+    return () => handle?.dismiss();
+  }, [handle]);
+
   const handleSelect = useCallback(
     async (result: SearchResult) => {
       if (!result.object || !Obj.isObject(result.object)) {
+        return;
+      }
+
+      if (handle) {
+        handle.select(result.object);
+        await invokePromise(LayoutOperation.UpdateDialog, { state: false });
         return;
       }
 
@@ -79,7 +97,7 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
         disposition: 'add',
       });
     },
-    [pivotId, invokePromise],
+    [pivotId, invokePromise, handle],
   );
 
   const handleAction = useCallback(
@@ -124,9 +142,9 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
   );
 
   return (
-    <Dialog.Content>
+    <Dialog.Content data-testid='search.dialog'>
       <Dialog.Header>
-        <Dialog.Title>{t('search-dialog.title')}</Dialog.Title>
+        <Dialog.Title>{title ?? t('search-dialog.title')}</Dialog.Title>
         <Dialog.CloseTrigger asChild>
           <SystemButton.Close />
         </Dialog.CloseTrigger>
@@ -134,7 +152,6 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
       <Dialog.Body>
         <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
           <SearchList.Input
-            classNames='px-0'
             autoFocus
             escapeBehavior='dismiss'
             placeholder={t('search.placeholder')}

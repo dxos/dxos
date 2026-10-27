@@ -21,8 +21,9 @@ const DocumentHeads = Schema.Record(Schema.String, Schema.mutable(Schema.Array(S
  * handlers live here with the conversation), and the evaluation's own result.
  */
 export const SandboxHostRpcs = RpcGroup.make(
+  // Printed forms, not values: the code's values include live objects, which cannot cross the port.
   Rpc.make('Sandbox.print', {
-    payload: Schema.Struct({ values: Schema.Array(Schema.Any) }),
+    payload: Schema.Struct({ values: Schema.Array(Schema.String) }),
     success: Schema.Void,
   }),
   Rpc.make('Sandbox.invokeOperation', {
@@ -44,7 +45,8 @@ export const SandboxHostRpcs = RpcGroup.make(
   }),
   Rpc.make('Sandbox.complete', {
     payload: Schema.Struct({
-      value: Schema.Any,
+      /** The result's printed form, since the host only prints it. */
+      value: Schema.UndefinedOr(Schema.String),
       failure: Schema.NullOr(Schema.String),
       heads: DocumentHeads,
     }),
@@ -72,7 +74,11 @@ export type SandboxInit = {
     readonly typename: string;
     readonly version: string;
     readonly jsonSchema: JsonSchema.JsonSchema;
+    /** The type's `Skill.SkillsAnnotation`, which the JSON-schema round trip drops. */
+    readonly skills?: readonly string[];
   }[];
+  /** Keys of the skills the conversation has bound; see `BindingsContext.skills`. */
+  readonly skills?: readonly string[];
   /** The operations the conversation's skills bind, as the model is told about them. */
   readonly operations: readonly {
     readonly key: string;
@@ -80,5 +86,7 @@ export type SandboxInit = {
     readonly description?: string;
     /** As the dialect renders it into the prompt: JSON schema, already plain data. */
     readonly parameters: unknown;
+    /** Whether an operation backs it; an MCP server's tool has none, so the dialect binds it by name. */
+    readonly backed: boolean;
   }[];
 };

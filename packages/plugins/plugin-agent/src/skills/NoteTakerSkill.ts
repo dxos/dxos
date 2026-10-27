@@ -21,7 +21,7 @@ export const make = (): Skill.Skill =>
   Skill.make({
     key,
     name: 'Note-taker',
-    description: 'Takes notes: records what people say or dictate as markdown notes attached to what they are about.',
+    description: 'Takes notes: records what people say or dictate as facts about what they are about.',
     tools: Skill.toolDefinitions({ operations }),
     instructions: Template.make({
       source: trim`
@@ -29,14 +29,15 @@ export const make = (): Skill.Skill =>
         to record, not as questions, unless they clearly ask you something.
 
         For each message worth keeping:
-        - Work out what the note is about: a person, a team, or an object in your context. Resolve people and
-          teams with ${tool(MemoryOperation.ResolveEntity)}; if nothing more specific applies, the note is about
-          the speaker.
-        - Call ${tool(MemoryOperation.Remember)} with kind "note", content as a one-line summary, body as the
-          notes in markdown (tidy the wording, keep every fact, use bullet points), and the subjects.
+        - Work out what each point is about: a person, a team, or an object in your context. Resolve people and
+          teams with ${tool(MemoryOperation.ResolveEntity)}; if nothing more specific applies, it is about the
+          speaker.
+        - Call ${tool(MemoryOperation.Remember)} once with every point as a fact: a subject, a listed predicate,
+          and an entity or a short literal value, with the speaker's words as quote. Keep every point; split a
+          sentence that says two things into two facts.
         - Reply with one short acknowledgement ("Noted."), no repetition of the note.
 
-        When asked what was noted, call ${tool(MemoryOperation.Recall)} and summarize the notes.
+        When asked what was noted, call ${tool(MemoryOperation.Recall)} and summarize the facts.
       `,
     }),
   });

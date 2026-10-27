@@ -9,11 +9,13 @@ tasks:
       - vite-plugin-import-source:build
       - vite-plugin-module-url:build
       - ^:build
+      # A plugin's vite config fails to load without its own generated capability barrels.
+      - target: ~:gen-modules
+        optional: true
     inputs:
       - '@group(sources)'
       - /vite.base.config.ts
       - /vitest.base.config.ts
-      - /pnpm-lock.yaml # Ensure cache is invalidated when dependencies change.
       - vite.config.ts # Combined build + test config; most packages use this rather than `vitest.config.ts`.
       - vitest.config.ts
       - $VITEST_COVERAGE
@@ -25,6 +27,8 @@ tasks:
       - $DX_RUN_MANUAL_TESTS
       - $DX_RUN_MODEL_FIXTURE_TESTS
       - $DX_UPDATE_MODEL_FIXTURES
+      # Set per run on the nightly, so its tests execute instead of replaying a cache hit.
+      - $DX_TEST_RUN_ID
     outputs:
       - /coverage/$project/browser/**
       - /test-results/$project/browser/**

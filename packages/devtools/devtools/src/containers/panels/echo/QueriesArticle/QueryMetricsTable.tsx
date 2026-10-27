@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Fragment, type ReactNode, useMemo, useState } from 'react';
+import React, { type ReactNode, useMemo, useState } from 'react';
 
 import { type QueryMetrics } from '@dxos/echo-client';
+import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import * as Button from '@dxos/react-ui/Button';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
-import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { mx } from '@dxos/ui-theme';
@@ -63,14 +63,14 @@ const COLUMNS: Column[] = [
   {
     id: 'avg',
     label: 'Avg ms',
-    title: 'Mean time to answer.',
+    title: 'Mean evaluation time, excluding time spent queued or waiting for documents.',
     value: averageQueryTime,
     render: (query) => time(averageQueryTime(query)),
   },
   {
     id: 'max',
     label: 'Max ms',
-    title: 'Slowest time to answer.',
+    title: 'Slowest evaluation time, excluding time spent queued or waiting for documents.',
     value: (query) => query.maxTime,
     render: (query) => time(query.maxTime),
   },
@@ -83,9 +83,31 @@ const COLUMNS: Column[] = [
   },
 ];
 
-const TRACKS: Layout.GridTrack[] = ['minmax(12rem,1fr)', ...COLUMNS.slice(1).map((): Layout.GridTrack => '3.75rem')];
+// Items shows the latest count and, when larger, the most ever returned; the timing headers ("Avg ms") need the room too.
+const WIDE_COLUMNS: Record<string, Layout.GridTrack> = {
+  items: '5rem',
+  avg: '4.5rem',
+  max: '4.5rem',
+  update: '4.5rem',
+};
+const TRACKS: Layout.GridTrack[] = [
+  'minmax(12rem,1fr)',
+  ...COLUMNS.slice(1).map(({ id }): Layout.GridTrack => WIDE_COLUMNS[id] ?? '3.75rem'),
+];
+
+/** The same tracks as one template, which the list's rows share as a subgrid. */
+const COLUMNS_TEMPLATE = TRACKS.join(' ');
 
 type Sort = { column: string; descending: boolean };
+
+/** A selector-safe option value: zag builds element ids and selectors from it, and query text holds quotes. */
+const queryKey = (query: string): string => {
+  let hash = 5381;
+  for (let index = 0; index < query.length; index++) {
+    hash = (hash * 33) ^ query.charCodeAt(index);
+  }
+  return `q${(hash >>> 0).toString(36)}`;
+};
 
 export type QueryMetricsTableProps = {
   queries: QueryMetrics[];
@@ -93,13 +115,15 @@ export type QueryMetricsTableProps = {
 };
 
 /**
- * Every query of this page's client, grouped by query text, sortable by any figure and slowest first.
+ * Every query of this page's client, grouped by query text, sortable by any figure and slowest first. Rows are a
+ * Listbox: the arrow keys move the current row, a click or Enter selects it, and the selected query's metrics show
+ * below the list.
  */
 export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) => {
   const [filter, setFilter] = useState('');
   const [liveOnly, setLiveOnly] = useState(false);
   const [sort, setSort] = useState<Sort>({ column: 'max', descending: true });
-  const [expanded, setExpanded] = useState<string>();
+  const [selected, setSelected] = useState<string>();
 
   const rows = useMemo(() => {
     const column = COLUMNS.find(({ id }) => id === sort.column) ?? COLUMNS[0];
@@ -116,6 +140,12 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
         return (sort.descending ? -order : order) || a.query.localeCompare(b.query);
       });
   }, [queries, filter, liveOnly, sort]);
+
+  const items = useMemo(
+    () => rows.map((query) => ({ value: queryKey(query.query), label: shortQueryText(query.query) })),
+    [rows],
+  );
+  const current = rows.find((query) => queryKey(query.query) === selected);
 
   const live = queries.reduce((sum, query) => sum + query.active, 0);
 
@@ -144,7 +174,11 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
           />
         )}
       </Toolbar.Root>
-      <Layout.Grid cols={TRACKS} gap='sm' classNames='px-2 py-1 border-b border-separator-subtle text-xs text-fg-muted'>
+      {/* End cells take the same gap the list's rows give theirs, so the header lines up with them. */}
+      <Layout.Grid
+        cols={TRACKS}
+        classNames='px-2 py-1 border-b border-separator-subtle text-xs text-fg-muted [&>*:first-child]:ps-2 [&>*:last-child]:pe-2'
+      >
         {COLUMNS.map((column, index) => (
           <Tooltip.Trigger key={column.id} asChild content={column.title}>
             <button
@@ -160,46 +194,44 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
           </Tooltip.Trigger>
         ))}
       </Layout.Grid>
-      <ScrollArea.Root orientation='vertical' classNames='dx-grow'>
-        <ScrollArea.Viewport>
-          {rows.length === 0 && <p className='p-2 text-xs text-fg-muted'>No queries.</p>}
-          {rows.map((query) => {
-            const open = expanded === query.query;
-            return (
-              <Fragment key={query.query}>
-                <Layout.Grid
-                  asChild
-                  cols={TRACKS}
-                  gap='sm'
-                  align='center'
-                  classNames={[
-                    'w-full px-2 py-0.5 font-mono text-xs tabular-nums text-end hover:bg-hover-surface',
-                    open && 'bg-hover-surface',
-                  ]}
-                >
-                  <button
-                    type='button'
-                    aria-expanded={open}
-                    onClick={() => setExpanded(open ? undefined : query.query)}
-                  >
-                    <Tooltip.Trigger asChild content={query.query}>
-                      <span className='truncate text-start'>{shortQueryText(query.query)}</span>
-                    </Tooltip.Trigger>
-                    {COLUMNS.slice(1).map((column) => (
-                      <span key={column.id}>{column.render?.(query) ?? column.value(query).toLocaleString()}</span>
-                    ))}
-                  </button>
-                </Layout.Grid>
-                {open && (
-                  <div className='px-2 py-1 text-xs border-y border-separator-subtle'>
-                    <JsonHighlighter data={{ ...query, avgTime: averageQueryTime(query) }} />
-                  </div>
-                )}
-              </Fragment>
-            );
-          })}
-        </ScrollArea.Viewport>
-      </ScrollArea.Root>
+      {/* Always the Listbox, so the empty state sits in the same ScrollArea gutter as its rows. */}
+      <Listbox.Root
+        items={items}
+        columns={COLUMNS_TEMPLATE}
+        value={selected}
+        onValueChange={setSelected}
+        classNames='dx-grow'
+      >
+        <Listbox.Viewport>
+          <Listbox.Content>
+            {rows.map((query) => (
+              <Listbox.Item
+                key={query.query}
+                id={queryKey(query.query)}
+                // The row whose metrics the detail shows: ringed while the list has focus, a click included.
+                current={queryKey(query.query) === selected}
+                classNames='font-mono text-xs tabular-nums text-end whitespace-nowrap'
+                data-testid='query-metrics.row'
+              >
+                <Tooltip.Trigger asChild content={query.query}>
+                  <span className='truncate text-start'>{shortQueryText(query.query)}</span>
+                </Tooltip.Trigger>
+                {COLUMNS.slice(1).map((column) => (
+                  <span key={column.id}>{column.render?.(query) ?? column.value(query).toLocaleString()}</span>
+                ))}
+              </Listbox.Item>
+            ))}
+          </Listbox.Content>
+        </Listbox.Viewport>
+        <Listbox.Empty>No queries.</Listbox.Empty>
+      </Listbox.Root>
+      {current && (
+        // The highlighter is its own ScrollArea; nested in another, its contained overscroll swallowed the wheel.
+        <JsonHighlighter
+          classNames='max-h-48 shrink-0 border-t border-separator-subtle text-xs'
+          data={{ ...current, avgTime: averageQueryTime(current) }}
+        />
+      )}
     </div>
   );
 };

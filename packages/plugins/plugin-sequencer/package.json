@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-sequencer",
-  "version": "0.13.0",
+  "version": "0.16.0",
   "private": true,
   "description": "Music sequencer plugin (Score / Track / Sequence / Note) with a canvas-based step grid.",
   "homepage": "https://dxos.org",
@@ -71,6 +71,11 @@
       "import": "./dist/lib/translations.mjs"
     },
     "./package.json": "./package.json",
+    "./Instrument": {
+      "source": "./src/types/Instrument.ts",
+      "types": "./dist/types/src/types/Instrument.d.ts",
+      "import": "./dist/lib/Instrument.mjs"
+    },
     "./Note": {
       "source": "./src/types/Note.ts",
       "types": "./dist/types/src/types/Note.d.ts",
@@ -130,6 +135,9 @@
       "Track": [
         "dist/types/src/types/Track.d.ts"
       ],
+      "Instrument": [
+        "dist/types/src/types/Instrument.d.ts"
+      ],
       "Note": [
         "dist/types/src/types/Note.d.ts"
       ],
@@ -152,7 +160,6 @@
     "@dxos/echo-react": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui-audio": "workspace:*",
-    "@dxos/react-ui-canvas": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/ui-types": "workspace:*",

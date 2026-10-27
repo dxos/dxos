@@ -28,11 +28,22 @@ export const UpdateSubscriptionRequest = Schema.Struct({
    */
   subscriptionId: Schema.String,
   /**
-   * Automerge document ids to subscribe for updates.
+   * Automerge documents to subscribe for updates, with the heads the client already holds for any it
+   * got stored changes for, so the host starts their sync there and sends only what came after.
+   * `passive` asks for each update with the object's JSON (see {@link DocumentUpdate.passive}), for a
+   * document the client holds unloaded. Adding a subscribed document again switches it to the given mode.
    * Used for already existing documents.
    * To add new document use `write` rpc.
    */
-  addIds: Schema.optional(mutableArray(Schema.String)),
+  add: Schema.optional(
+    mutableArray(
+      Schema.Struct({
+        id: Schema.String,
+        heads: Schema.optional(mutableArray(Schema.String)),
+        passive: Schema.optional(Schema.Boolean),
+      }),
+    ),
+  ),
   /**
    * Automerge document ids to unsubscribe from.
    */
@@ -46,8 +57,13 @@ export const CreateDocumentRequest = Schema.Struct({
    */
   spaceId: Schema.String,
   /**
-   * Automerge encoded initial document value.
-   * Optional - if not provided, an empty document will be created.
+   * Initial document state, as `Automerge.save()` bytes.
+   * Optional - if neither this nor `initialValue` is provided, an empty document will be created.
+   */
+  initialDocument: Schema.optional(Schema.Uint8Array),
+  /**
+   * Initial document value as plain JSON, which cannot carry Automerge values such as `RawString` or bytes.
+   * @deprecated Use `initialDocument`; kept so a client older than its services can still create documents.
    */
   initialValue: Schema.optional(protoStruct),
 });
@@ -94,6 +110,19 @@ export const DocumentUpdate = Schema.Struct({
    * returns the handle to `'ready'`.
    */
   unavailable: Schema.optional(Schema.Boolean),
+  /**
+   * Sent for a document the client subscribed to as `passive`: the client keeps the mutation with the
+   * stored changes it holds, unloaded, and shows the document's one object from `json`, read at `heads`.
+   * Without `json` the object cannot be shown that way (it outgrew the size limit, or the document no
+   * longer holds just it), and the client loads the document.
+   */
+  passive: Schema.optional(
+    Schema.Struct({
+      heads: mutableArray(Schema.String),
+      json: Schema.optional(Schema.String),
+      updatedAt: Schema.optional(Schema.Number),
+    }),
+  ),
 });
 export interface DocumentUpdate extends Schema.Schema.Type<typeof DocumentUpdate> {}
 
@@ -276,6 +305,39 @@ export const GarbageCollectionReport = Schema.Struct({
 });
 export interface GarbageCollectionReport extends Schema.Schema.Type<typeof GarbageCollectionReport> {}
 
+/** Progress through one kind of index work: `done` of `total` items, where `total` can grow as new data arrives. */
+export const IndexProgress = Schema.Struct({
+  done: Schema.Number,
+  total: Schema.Number,
+});
+export interface IndexProgress extends Schema.Schema.Type<typeof IndexProgress> {}
+
+/**
+ * The index work a boot screen or a deadline waits on: running index migrations, or rebuilding the
+ * index over documents it has no cursor for and the feed blocks of its spaces stored before the host
+ * opened. `done` of `total` counts migrations while migrating and documents plus feed blocks while
+ * indexing; `total` can grow while indexing. The host reports it only when it changes, so each status
+ * is progress.
+ */
+export const IndexStatus = Schema.Struct({
+  phase: Schema.Literals(['migrating', 'indexing', 'idle']),
+  done: Schema.Number,
+  total: Schema.Number,
+});
+export interface IndexStatus extends Schema.Schema.Type<typeof IndexStatus> {}
+
+/**
+ * Index work queries answer through, from an index that is behind, for a progress indicator:
+ * `catchUp` counts indexed documents whose heads moved on and feed blocks stored after the host opened,
+ * as after time offline, and `fullText` counts objects the full-text index has not reached, as after it
+ * is rebuilt. A lane is absent while it has no work.
+ */
+export const IndexActivity = Schema.Struct({
+  catchUp: Schema.optional(IndexProgress),
+  fullText: Schema.optional(IndexProgress),
+});
+export interface IndexActivity extends Schema.Schema.Type<typeof IndexActivity> {}
+
 /**
  * Effect RPC definitions for `dxos.echo.service.DataService`.
  * Service-only payloads use Effect schemas; shared proto types remain protobuf-encoded on the wire.
@@ -350,6 +412,22 @@ export class Rpcs extends RpcGroup.make(
   Rpc.make('subscribeSpaceSyncState', {
     payload: GetSpaceSyncStateRequest,
     success: SpaceSyncState,
+    error: serviceError,
+    stream: true,
+  }),
+  /**
+   * The host's index status: the current value at once, then each change.
+   */
+  Rpc.make('subscribeIndexStatus', {
+    success: IndexStatus,
+    error: serviceError,
+    stream: true,
+  }),
+  /**
+   * The host's index activity: the current value at once, then each change.
+   */
+  Rpc.make('subscribeIndexActivity', {
+    success: IndexActivity,
     error: serviceError,
     stream: true,
   }),

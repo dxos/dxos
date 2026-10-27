@@ -1,5 +1,49 @@
 # @dxos/hypercore
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/async@0.16.0
+  - @dxos/crypto@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/node-std@0.16.0
+  - @dxos/random-access-storage@0.16.0
+  - @dxos/typings@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/vendor-hypercore@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [c5def76]
+- Updated dependencies [1e9c017]
+  - @dxos/vendor-hypercore@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/crypto@0.15.0
+  - @dxos/random-access-storage@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/node-std@0.15.0
+  - @dxos/typings@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- @dxos/async@0.14.0
+  - @dxos/crypto@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/node-std@0.14.0
+  - @dxos/random-access-storage@0.14.0
+  - @dxos/typings@0.14.0
+  - @dxos/util@0.14.0
+  - @dxos/vendor-hypercore@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

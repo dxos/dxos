@@ -5,9 +5,8 @@
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import { type ShapeDef, createAnchorMap } from '@dxos/react-ui-canvas-editor';
-
-import { ComputeShape, type CreateShapeProps, createAnchorId, createShape } from './defs.ts';
+import { createPorts, defineComputeNode } from './common/index.ts';
+import { ComputeShape, type CreateShapeProps, createAnchorId, createShape, withZ } from './defs.ts';
 import { ScopeComponent } from './Scope.tsx';
 
 // Kept out of `Scope.tsx`: react-refresh only fast-refreshes a module whose
@@ -31,11 +30,13 @@ export const createScope = (props: CreateScopeProps) =>
     ...props,
   });
 
-export const scopeShape: ShapeDef<ScopeShape> = {
+export const scopeNodeDef = defineComputeNode<ScopeShape>({
   type: 'scope',
   name: 'Scope',
   icon: 'ph--waveform--regular',
+  group: 'Outputs',
+  schema: withZ(ScopeShape),
   component: ScopeComponent,
-  createShape: createScope,
-  getAnchors: (shape) => createAnchorMap(shape, { [createAnchorId('input')]: { x: -1, y: 0 } }),
-};
+  create: createScope,
+  ports: (shape) => createPorts(shape.size, { [createAnchorId('input')]: { x: -1, y: 0 } }),
+});

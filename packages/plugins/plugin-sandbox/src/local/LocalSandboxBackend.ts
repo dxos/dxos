@@ -172,7 +172,7 @@ export class LocalSandboxBackend implements SandboxService.Backend {
         '[ -f "$f" ] || { echo "not a file" >&2; exit 2; }',
         // The path check above is lexical; a symlink in the workspace can still name any file the sandbox may
         // read, and a read here leaves the sandbox (a download into ECHO, a published URL).
-        `w=$(realpath -e -- ${shellQuote(entry.workspaceDir)}) && r=$(realpath -e -- "$f") || exit 2`,
+        `w=$(realpath -- ${shellQuote(entry.workspaceDir)}) && r=$(realpath -- "$f") || exit 2`,
         'case "$r" in "$w"/*) ;; *) echo "outside the sandbox workspace" >&2; exit 2 ;; esac',
         'exec cat -- "$r"',
       ]);

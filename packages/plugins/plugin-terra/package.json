@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-terra",
-  "version": "0.13.0",
+  "version": "0.16.0",
   "private": true,
   "description": "Deterministic 3D planet plugin",
   "homepage": "https://dxos.org",
@@ -124,6 +124,7 @@
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-attention": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
+    "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:",

@@ -123,11 +123,11 @@ export const Test: Story = {
     }
     await expect(geometry[0].control.right - geometry[0].label.left).toBeGreaterThan(100);
 
-    // 6. Rows are bordered cards one level above the pane; the switch is labelled by its row.
+    // 6. Rows are cards one level above the pane, edged by their shadow rather than a border; the switch is labelled by its row.
     const row = canvasElement.querySelector<HTMLElement>('[data-layout="row"]');
     invariant(row);
     await expect(row).toHaveAttribute('data-surface', '+1');
-    await expect(getComputedStyle(row).borderTopWidth).toBe('1px');
+    await expect(getComputedStyle(row).borderTopWidth).toBe('0px');
     await expect(canvas.getByRole('switch', { name: 'Show toolbar' })).toBeChecked();
     await expect(canvas.getByRole('combobox', { name: 'Default view mode' })).toBeInTheDocument();
 

@@ -51,7 +51,13 @@ import { meta } from '#meta';
 import { DeckOperation, DeckRole } from '#types';
 
 import { Navigation } from '../../url/index.ts';
-import { findAttendedPlank, getRenderedPlanks, isCompanionOpen, layoutAppliesTopbar } from '../../util/index.ts';
+import {
+  findAttendedPlank,
+  getRenderedPlanks,
+  isCompanionOpen,
+  isCompanionShown,
+  layoutAppliesTopbar,
+} from '../../util/index.ts';
 import {
   ToggleComplementarySidebarButton as NaturalToggleComplementarySidebarButton,
   ToggleSidebarButton as NaturalToggleSidebarButton,
@@ -148,7 +154,8 @@ type PlankContextValue = RenderedPlanks & {
  * narrowed with no user gesture, the engine answered a sticky tile's width change by silently shifting
  * `scrollLeft` by the delta (zero scroll commands — writer instrumentation finds nothing), and a
  * companion could be "open" in state yet render beside no visible plank. The variant (which tab) stays
- * global view state, shared across planks.
+ * global view state, shared across planks. A plank with no companions renders closed without touching
+ * the flag ({@link isCompanionShown}).
  */
 const useDeckCompanion = (id: string | undefined): { open: boolean; companionId: string | undefined } => {
   const { deck } = useDeckContext('useDeckCompanion');
@@ -156,7 +163,7 @@ const useDeckCompanion = (id: string | undefined): { open: boolean; companionId:
   const companions = useCompanions(id);
   const selectedVariant = useSelectedCompanionVariant();
   const { companionId } = useSelectedCompanion(companions ?? [], selectedVariant);
-  const open = isCompanionOpen(deck.companionPlanks, flatten, id);
+  const open = isCompanionShown(isCompanionOpen(deck.companionPlanks, flatten, id), companions);
   return { open, companionId: open ? companionId : undefined };
 };
 
@@ -667,17 +674,21 @@ const usePlankTiles = (stackRef: RefObject<HTMLDivElement | null>) =>
  * the front therefore spans precisely up to where the trailing pile begins.
  *
  * A layout effect, so the cap lands before first paint — no flash of full-width planks on load.
+ * `fullscreen` re-runs it because the viewport unmounts under the overlay, and observing the detached
+ * element would pin the width at zero after the overlay closes.
  */
 const useMaxPlankWidth = ({
   viewportRef,
   stackRef,
   isSliding,
   plankCount,
+  fullscreen,
 }: {
   viewportRef: RefObject<HTMLDivElement | null>;
   stackRef: RefObject<HTMLDivElement | null>;
   isSliding: boolean;
   plankCount: number;
+  fullscreen: boolean;
 }): { maxPlankWidthPx: number; viewportWidthPx: number; pairWidthPx: number | undefined } => {
   const [measured, setMeasured] = useState<{
     maxPlankWidthPx: number;
@@ -723,7 +734,7 @@ const useMaxPlankWidth = ({
     const observer = new ResizeObserver(measure);
     observer.observe(viewport);
     return () => observer.disconnect();
-  }, [isSliding, plankCount, viewportRef, stackRef]);
+  }, [isSliding, plankCount, fullscreen, viewportRef, stackRef]);
 
   return measured;
 };
@@ -1447,6 +1458,7 @@ export const DeckPlanks = () => {
     stackRef,
     isSliding,
     plankCount: planks.length,
+    fullscreen,
   });
   usePreservedScroll({ viewportRef, isSliding });
   // The plank a select/Enter exit committed to, consumed by `useExposeScroll` on the way out.

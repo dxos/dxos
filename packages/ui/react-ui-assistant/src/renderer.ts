@@ -7,7 +7,7 @@ import { type MessageRenderer, isPrompt } from '@dxos/react-ui-feed';
 import { type ContentBlock, type Message } from '@dxos/types';
 import { safeParseJson } from '@dxos/util';
 
-import { type ChatView, getDelivery } from './types.ts';
+import { type ChatView } from './types.ts';
 
 export type CreateRendererOptions = {
   /** Resolves a reference's display label; the tag carries the DXN either way. */
@@ -115,16 +115,6 @@ export const createRenderer = (
       }, [])
       .join('\n\n');
 
-    // Last, on a line of its own: the ticks sit under the prompt, and a status change then differs
-    // from the previous document only inside the tag, which is all the item reconciles.
-    const delivery = getDelivery(message);
-    if (delivery) {
-      return {
-        kind: 'markdown',
-        text: `${text}\n<delivery status="${delivery}" id="${escapeAttribute(message.id)}" />`,
-      };
-    }
-
     return { kind: 'markdown', text };
   };
 };
@@ -164,7 +154,7 @@ const blockToMarkdown = (
         return isPrompt(message) ? undefined : tag('synthetic', block.text, block);
       }
       if (message.sender.role === 'user') {
-        return tag('prompt', block.text, block);
+        return tag('prompt', block.text, block, mentionNames);
       }
       return linkBareObjectUris(block.text, getObjectLabel).trim() || undefined;
     }
@@ -274,8 +264,13 @@ const expandJsonStrings = (key: string, value: unknown): unknown => {
  * Paragraph breaks inside tag content are collapsed, since a blank line would end the enclosing
  * markdown block and leave the rest of the tag parsing as prose.
  */
-const tag = (name: string, content: string, block: ContentBlock.Any): string => {
-  const text = escapeXml(content.replace(/\n\n+/g, ' ').trim());
+const tag = (
+  name: string,
+  content: string,
+  block: ContentBlock.Any,
+  escape: (raw: string) => string = escapeXml,
+): string => {
+  const text = escape(content.replace(/\n\n+/g, ' ').trim());
   if (!text.length && !block.pending) {
     return '';
   }
@@ -286,6 +281,17 @@ const tag = (name: string, content: string, block: ContentBlock.Any): string => 
 
 const escapeXml = (raw: string): string => raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const escapeAttribute = (raw: string): string => escapeXml(raw).replace(/"/g, '&quot;');
+
+const MENTION = /\[((?:\\.|[^\]\\\n])*)\]\(((?:echo|dxn):[^)\s]+)\)/g;
+
+const unescapeLabel = (label: string): string => label.replace(/\\(.)/g, '$1');
+
+/** The objects a prompt mentions, in order; what sending it adds to the conversation's context. */
+export const parseMentions = (text: string): { label: string; uri: string }[] =>
+  [...text.matchAll(MENTION)].map(([, label, uri]) => ({ label: unescapeLabel(label), uri }));
+
+const mentionNames = (raw: string): string =>
+  escapeXml(raw.replace(MENTION, (_whole, label: string) => unescapeLabel(label)));
 
 //
 // Estimates
@@ -298,15 +304,13 @@ const LINE_HEIGHT = 24;
 const LINE_CHARS = 90;
 /** A collapsed panel: reasoning, a tool run, a summary. */
 const PANEL_HEIGHT = 50;
-/** The delivery ticks' line under a prompt still on its way to the agent. */
-const DELIVERY_HEIGHT = 20;
 
 /**
  * What a row will measure, from the message alone. Rough on purpose — its only job is to be close
  * enough that measuring the row does not move the rows below it.
  */
 export const estimateRow = (message: Message.Message): number => {
-  let height = getDelivery(message) ? ROW_CHROME + DELIVERY_HEIGHT : ROW_CHROME;
+  let height = ROW_CHROME;
   for (const block of message.blocks) {
     switch (block._tag) {
       case 'text': {

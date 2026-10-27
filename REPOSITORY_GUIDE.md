@@ -310,11 +310,11 @@ Everything runs in GitHub Actions — nobody runs `changeset` / `pnpm publish` /
 
 Packages ship as two lockstep groups — **A: Core/SDK** (`@dxos/echo`, `@dxos/client`, …) and **B: Plugins + CLI** (`@dxos/plugin-*`, `@dxos/cli`). Naming one member in a changeset bumps its whole group, and both share one "Version Packages" PR. **Apps are not in a group — they deploy, never publish.**
 
-**npm `@latest`.** Add a `.changeset/*.md` to feature PRs (optional — CI nudges if a publishable change lacks one). Pushes to `main` keep a **"Version Packages" PR** open; **merge it** and `publish-all.yml` publishes the bumped packages to `@latest` (OIDC + provenance) and pushes tags. The merge publishes even if other PRs added changesets after the Version PR was last updated; those go into the next Version PR. If the release run fails, re-run it: every step skips what already shipped.
+**npm `@latest`.** Add a `.changeset/*.md` to feature PRs (optional — CI nudges if a publishable change lacks one). Pushes to `main` keep a **"Version Packages" PR** open as a draft, which runs no CI; to release, mark it ready and, once it's green, **merge it**. `publish-all.yml` then publishes the bumped packages to `@latest` (OIDC + provenance) and pushes tags. The merge publishes even if other PRs added changesets after the Version PR was last updated; those go into the next Version PR. If the release run fails, re-run it: every step skips what already shipped.
 
 **npm `@next`.** A manual dispatch of `publish-all.yml` (Actions → **Publish** → Run workflow) cuts an ephemeral snapshot (`0.9.1-next-<datetime>`) — nothing committed, no tags. Both channels live in `publish-all.yml` because npm's OIDC trusted publisher is bound to that filename; the trigger picks the channel (push → `@latest`, dispatch → `@next`).
 
-**Previews.** Every push to `main` publishes all public packages to [pkg.pr.new](https://pkg.pr.new) (`pkg-pr-new.yml`) — an ephemeral per-commit install channel.
+**Previews.** `pkg-pr-new.yml` publishes all public packages to [pkg.pr.new](https://pkg.pr.new), an ephemeral per-commit install channel: every commit to `main`, every commit `deploy-apps.yml` deploys, and a branch tip on dispatch.
 
 **Deploy apps.** One entry point: the **Deploy Apps** workflow (`deploy-apps.yml`) — pick an environment and the app set follows. Deploys go to Cloudflare Workers Static Assets, decoupled from npm; "what's deployed where" is tracked by floating `<app>/<env>` git tags. Deployable apps are listed in [`.github/workflows/scripts/apps.mjs`](./.github/workflows/scripts/apps.mjs); everything else — Worker name, bundle task, output dir, target environments — derives from each app's `wrangler.jsonc`.
 
@@ -368,7 +368,7 @@ gh run watch
 
 Handy as aliases — e.g. `gh alias set deploy-dev 'workflow run deploy-apps.yml -f environment=dev'`, then just `gh deploy-dev`.
 
-**Worker secrets.** `pnpm secrets` (`scripts/secrets.mjs`) populates a Cloudflare Worker's secrets (e.g. composer's `SIGNOZ_INGESTION_KEY`, docs' `DX_POSTHOG_API_KEY`) from a 1Password item, matched by section label — a field under "shared" applies to every target, a field under a section named after the raw Worker name (e.g. `composer-preview`) applies only there. `remote <env>` defaults to `all` — every app (from `.github/workflows/scripts/apps.mjs`) that defines the given env — or name one app to restrict it. The `dev` MODE (`pnpm secrets dev <app>`, which writes `.dev.vars` for local `wrangler dev`) always requires an app; note this is a different `dev` from the `dev` ENVIRONMENT in `pnpm secrets remote dev`, which takes the usual `all` default. Defaults to the "dxos app worker secrets" item (pinned by UUID — stable even if the item is renamed); pass `--item` to target a different one. Requires `CLOUDFLARE_ACCOUNT_ID` in the environment (same variable CI uses):
+**Worker secrets.** `pnpm secrets` (`scripts/secrets.mjs`) populates a Cloudflare Worker's secrets (e.g. docs' `DX_POSTHOG_API_KEY`) from a 1Password item, matched by section label — a field under "shared" applies to every target, a field under a section named after the raw Worker name (e.g. `composer-preview`) applies only there. `remote <env>` defaults to `all` — every app (from `.github/workflows/scripts/apps.mjs`) that defines the given env — or name one app to restrict it. The `dev` MODE (`pnpm secrets dev <app>`, which writes `.dev.vars` for local `wrangler dev`) always requires an app; note this is a different `dev` from the `dev` ENVIRONMENT in `pnpm secrets remote dev`, which takes the usual `all` default. Defaults to the "dxos app worker secrets" item (pinned by UUID — stable even if the item is renamed); pass `--item` to target a different one. Requires `CLOUDFLARE_ACCOUNT_ID` in the environment (same variable CI uses):
 
 `secret put` both creates a version and deploys it, so Cloudflare refuses it when a Worker's latest version is not the deployed one. That is the normal state for `composer-dev`, which per-PR deploys upload versions to — promoting the latest there would push whichever PR version happens to be on top. `pnpm secrets` detects that specific refusal and writes the secret with `wrangler versions secret put` instead, which does not deploy; it then says so, because the secret only reaches the running Worker on the next deploy or `versions upload`. Any other failure is reported and exits non-zero as before.
 
@@ -393,20 +393,13 @@ pnpm secrets remote dev --item "some other item"
 
 New packages are created with `"private": true` in their `package.json` (see [New Packages](./AGENTS.md#new-packages)). Publishing a package to npm for the first time requires an initial manual publish, since npm's OIDC trusted publishing (used by [`publish-all.yml`](https://github.com/dxos/dxos/blob/main/.github/workflows/publish-all.yml)) can only be configured for a package that already exists on the registry:
 
-1. Build the package and its dependencies: `moon run <package-name>:build` (this also builds upstream deps via `moon`'s task graph).
-2. Set the package's `version` to `0.0.0` and remove `"private": true` from its `package.json` at the same time — a private package cannot be published.
-3. Run `pnpm login`, then either:
-   - one package: `pnpm publish-package @dxos/<PACKAGE>`
-   - all packages failing the published-package gate: `pnpm publish-unpublished-packages --yes`
-4. On npmjs.com, go to the package's **Settings → Trusted Publisher** and add GitHub Actions as a trusted publisher:
-   - Repository: `dxos/dxos`
-   - Workflow file: `publish-all.yml`
-   - Environment: leave blank unless the workflow specifies one.
-   - Allowed actions: `npm publish` only — do not enable `npm stage publish` (staged/review release flow that `publish-all.yml` does not use).
-   - Click "Setup Connection"
-5. Revert the package's `version` back to align with the rest of the packages in the monorepo, now that the trusted publisher is configured and `publish-all.yml` will handle future releases.
+1. Remove `"private": true` from the package's `package.json` — a private package cannot be published.
+2. Run `node scripts/publish-package.mjs @dxos/<PACKAGE> --trust`. It builds the package, publishes it at `0.0.0` (restoring the monorepo version afterward), then creates the trusted publisher with `npm trust github` (repository `dxos/dxos`, workflow `publish-all.yml`, `npm publish` only). npm asks for `npm login` and a browser 2FA confirmation, so run it in an interactive terminal. Without `--trust` it prints those settings and opens the package's npm access page to enter them by hand. A package already on npm skips the publish.
+3. To bootstrap-publish every package failing the published-package gate at once: `pnpm publish-unpublished-packages --yes`, then configure each trusted publisher as above.
 
-For bulk setup (roughly **10+ packages** at once), the [npm-trusted-publisher](https://github.com/wittjosiah/npm-trusted-publisher) Chrome extension automates step 4 across many packages. Below that threshold, doing it manually per package is faster.
+Agents follow the [`npm-publishing`](./.agents/skills/npm-publishing/SKILL.md) skill.
+
+For bulk setup (roughly **10+ packages** at once), the [npm-trusted-publisher](https://github.com/wittjosiah/npm-trusted-publisher) Chrome extension automates the trusted-publisher setup across many packages. Below that threshold, doing it manually per package is faster.
 
 ## Dependencies
 
@@ -418,8 +411,7 @@ Examples:
 
 ## CI
 
-The build/test pipeline runs on Depot CI. See [`.depot/README.md`](./.depot/README.md), including how to
-run a workflow off uncommitted changes without pushing. What is still on GitHub Actions, and why, is in
+The build/test pipeline runs on GitHub Actions' free standard runners. See
 [`.github/workflows/README.md`](./.github/workflows/README.md).
 
 ## Trunk (flaky test quarantining / CI Autopilot)

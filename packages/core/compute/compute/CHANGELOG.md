@@ -1,5 +1,106 @@
 # @dxos/compute
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/echo@0.16.0
+  - @dxos/link@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/ai@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/protocols@0.16.0
+  - @dxos/vendor-kbn-handlebars@0.16.0
+
+## 0.15.0
+
+### Minor Changes
+
+- 94ec06d: A Discord back-index runs as a trigger-driven operation that extracts facts a page of messages per model request and appends them to a fact feed, with its progress kept in ECHO; an agent's brain on EDGE indexes the fact feeds registered with it.
+
+  - `@dxos/compute` / `@dxos/compute-runtime`: `FeedSpec.batchSize` (`Trigger.specFeed(feed, { batchSize })`) delivers that many consecutive feed items per invocation as `event.items`; `event.item` stays the first. `Trigger.Manager.resetTrigger` rewinds a feed trigger to the start of its feed and fails with `TriggerNotResettableError` for any other kind. Breaking: every `Trigger.Manager` and `RemoteTriggerManager.Manager` must provide `resetTrigger`.
+  - `@dxos/edge-compute` / `@dxos/edge-client`: a remote feed trigger is reset on EDGE (`EdgeHttpClient.resetTrigger`), and `EdgeHttpClient.addBrainFactFeed`, `removeBrainFactFeed` and `listBrainFactFeeds` manage a brain's fact feeds.
+  - `@dxos/pipeline` / `@dxos/pipeline-rdf`: `Stage.batch` groups consecutive items (optionally weighted) and runs one effect per group. `indexFactsBatch` and `indexFactsBatchStage` extract several documents as one tagged transcript per model request and attribute each fact to its message; `FactPipeline.run(docs, { batchSize })` does the same, and without `batchSize` keeps one request per document.
+  - `@dxos/crawler`: `CrawlState` is an ECHO type holding a crawl's frontier, per-target cursors, run status and the content hash of each message already extracted, and `StateStore.layerEcho(state)` keeps the crawler's state in it. Its setters mutate a draft, so a caller batches several writes in one `Obj.update`. `extractFactsStage` extracts 25 messages per request by default (`batchSize: 1` keeps one per message). Breaking: every `StateStore.Service` must provide `resetTargets` and `removeTargets`.
+  - `@dxos/client` / `@dxos/protocols`: `space.internal.export({ feedIds })` writes a JSON archive holding only those feeds and their items, and `client.spaces.import(archive, { into })` merges a JSON archive into an existing space, skipping objects and feed items it already holds.
+  - `@dxos/plugin-discord`: `DiscordOperation.CrawlDiscordChannels` takes `state` (a `CrawlState`) and `facts` (a fact feed) and runs at most `maxSteps` pages per invocation with the space's Discord token; it no longer keeps a session SQLite runtime. `DiscordOperation.ConfigureBackIndex` creates or updates the crawl state, fact feed and the remote timer trigger that runs it. `DiscordSource.Endpoint` points the Discord REST client at another base and fetches it directly rather than through the CORS proxy, and `DiscordChannel.kaiApplicationId` and `KAI_APPLICATION_IDS` name the EDGE-hosted Kai bot outside the plugin.
+  - `@dxos/plugin-agent`: `FactFeed.FactItem` stores one extracted fact as a feed item, and `AgentOperation.AddFactFeed`, `RemoveFactFeed` and `ListFactFeeds` register fact feeds with the agent's brain on EDGE.
+  - `@dxos/plugin-space`: `dx space export --feed <id>` and `dx space import --into <space>`.
+
+### Patch Changes
+
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [0420f87]
+- Updated dependencies [cd70a43]
+- Updated dependencies [45ab961]
+- Updated dependencies [16bde33]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [37edd53]
+- Updated dependencies [7b47951]
+- Updated dependencies [2b6a93a]
+  - @dxos/echo@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/ai@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/vendor-kbn-handlebars@0.15.0
+
+## 0.14.0
+
+### Minor Changes
+
+- ec6da5a: A chat can run on Claude Code on this computer or on EDGE.
+
+  A chat names the durable process that runs it in `session.process`. Plugins contribute agent processes through `AssistantCapabilities.AgentProcess`, and `AgentService` spawns the one a chat names, falling back to the assistant's own. The Claude plugin's Claude Code process starts the agent through the new `ShellService` (`@dxos/compute/ShellService`), which runs operating-system processes and bash scripts for a compute process. Each process gets its own instance, and every child it started ends when that process ends. The Node.js implementation is `@dxos/compute-runtime/node-shell`.
+
+  "Claude Code (cloud)", built on plugin-code's new `EdgeAgent.make`, runs a chat's turns on EDGE's coding-agent process in a sandbox container. The session keeps working with no client connected, and EDGE restarts the container and resumes the turn when the agent dies or stalls. Each turn lends the process the user's credential, so the credential never enters the container. The cloud session runs unattended by default: a permission request is denied on the spot, and the agent skips that step and carries on.
+
+  A new **Claude Code** connector stores a Claude subscription token: open a terminal, run `claude setup-token`, and paste the token it prints. The token is kept apart from the Anthropic API key. Claude Code on this computer receives it as `CLAUDE_CODE_OAUTH_TOKEN`, and the cloud harness lends it in preference to the API key.
+
+  A project lists the GitHub repositories its cloud sessions work on (`Project.repositories`), set in the project's header next to its name. The sandbox checks out the project's `repo` and each listed repository before the agent starts. Each turn lends the space's GitHub token to EDGE, resolving it through EDGE when EDGE holds it, and EDGE proxies the sandbox's git calls with it, so the token never enters the container either. The project folder setting applies only to Claude Code on this computer.
+
+  The Code plugin's coding-agent permission setting gains `bypassPermissions`, which never asks and runs everything.
+
+- a1e64db: A chat hosted on EDGE now shows its working indicators, phases and streamed reply for the whole turn, instead of reading idle while the agent works. `AgentProcess` takes a `resident` option that keeps the process for the next prompt rather than spawning a new one per turn, and `subscribeEphemeral` takes `{ replay }`. Breaking: plugin-assistant's `AiChatProcessor` is now `ChatModel` (`useChatProcessor` → `useChatModel`, `getProcessorState` → `getChatModelState`, and the `processor` prop of `Chat.Root`/`ChatPrompt` → `chatModel`).
+- 28bb45b: Operations now run as processes through `Process.Manager`, and durable operations are declared in two stages: `Operation.makeDurable({ ... })` (which accepts an optional `name`) followed by `Operation.withDurableHandler(...)`. Breaking: spawn a durable operation with `Process.spawn(durable, input)` and read its result with `Process.awaitOutput`, wrap a plain operation with `OperationProcess.make(op)` from `@dxos/compute-runtime` (which replaces `DurableOperation.fromOperation` and finds its handler in the process context), and reattach with the new `Process.Manager.attach`; `invokeFiber`/`attachFiber`/`OperationFiber` are removed. `Process.Handle` is merged into `Process.Process` (`parentId` → `parentPid`, `Process.Handle.Any` → `Process.Any`); processes are built only by the runtime, so fixtures use `makeTestProcess` from `@dxos/compute-runtime/testing`. `Trigger.Monitor`/`Trigger.TriggerMonitorService` are renamed `Trigger.Manager`/`Trigger.ManagerService`, and compute-runtime's `TriggerMonitor` module is now `TriggerManager`.
+
+### Patch Changes
+
+- 5324de6: Switching a routine's action between Instructions and an operation no longer carries one kind's trigger inputs into the other: a stray `input: {}` (or an operation's `connection`) failed every run until EDGE switched the trigger off. Switching a broken trigger back on now repairs it. Pressing Sync on an account whose sync routine is switched off now shows a toast that links to the routines panel, instead of retrying EDGE's 409 refusal for about 30 seconds. The trigger manager refuses a disabled trigger with a typed `TriggerDisabledError`, and EDGE force-runs no longer retry a 409 that is not about the trigger being switched off.
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+  - @dxos/echo@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/ai@0.14.0
+  - @dxos/link@0.14.0
+  - @dxos/schema@0.14.0
+  - @dxos/types@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/vendor-kbn-handlebars@0.14.0
+
 ## 0.13.0
 
 ### Minor Changes

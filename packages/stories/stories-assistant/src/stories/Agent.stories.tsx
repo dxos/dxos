@@ -16,7 +16,13 @@ import { ContentBlock, Message } from '@dxos/types';
 import { concat } from '@dxos/util';
 
 import { AgentModule, StoryRole } from '../modules/index.ts';
-import { AgentClaudePlugin, ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
+import {
+  AgentClaudePlugin,
+  ModuleContainer,
+  createDecorators,
+  findPromptEditor,
+  storyParameters,
+} from '../testing/index.ts';
 
 /**
  * The turn asks for one allowed tool call (Read), one that the M1 permission posture must refuse
@@ -34,12 +40,7 @@ const MAGIC_TOKEN = 'pelican-42';
 
 /** Types a prompt into the chat editor and submits it. */
 const submitPrompt = async (canvasElement: HTMLElement, text: string) => {
-  const canvas = within(canvasElement);
-  const placeholder = await canvas.findByText(/enter question or command/i, {}, { timeout: 30_000 });
-  const editor = placeholder.closest('.cm-editor')?.querySelector<HTMLElement>('.cm-content');
-  if (!editor) {
-    throw new Error('Chat editor not found.');
-  }
+  const editor = await findPromptEditor(canvasElement, 30_000);
 
   await userEvent.click(editor);
   await userEvent.type(editor, text);
@@ -250,7 +251,7 @@ export const WithClaudeAgent: Story = {
     const space = await waitForSpace('withClaudeAgent');
     await waitForChat(space);
 
-    // Submitted through the assistant's own chat input: the processor requests a session from
+    // Submitted through the assistant's own chat input: the chat model requests a session from
     // AgentService, whose process runs the turn on the contributed Claude producer, which appends
     // the projected messages to the feed the thread renders.
     await submitPrompt(canvasElement, `Read agent-fixture.md and state the MAGIC_TOKEN. Do not run any other tools.`);

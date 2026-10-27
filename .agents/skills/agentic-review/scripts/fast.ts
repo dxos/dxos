@@ -12,7 +12,10 @@
 // reviewed — that is the trade for the speed.
 //
 // Usage:
-//   bun fast.ts [--main=origin/main] [--base=<ref>] [--dry-run]
+//   bun fast.ts [--main=origin/main] [--base=<ref>] [--max-cost=5] [--dry-run]
+//
+// `--max-cost` (USD) is System One's spend ceiling: a review predicted to cost more is refused
+// before any call, so a diff that large goes to subagents instead.
 //
 // `--base` reviews only the diff from that ref, which does not cover the whole PR, so earlier
 // stores are kept.
@@ -34,6 +37,7 @@ const { values } = parseArgs({
   options: {
     'main': { type: 'string' },
     'base': { type: 'string' },
+    'max-cost': { type: 'string' },
     'dry-run': { type: 'boolean', default: false },
   },
 });
@@ -59,8 +63,11 @@ const run = (name: string, args: string[]): void => {
 };
 
 const mainBase = values.base ? null : mainMergeBase(values.main ? [values.main, 'origin/main', 'main'] : undefined);
-// Only a review of the whole PR can stand in for the stores before it.
-const priors = mainBase ? findPrReviews(mainBase, root).filter((review) => review.slug !== slug) : [];
+// Only a review of the whole PR can stand in for the stores before it, and only for fast ones: a
+// full review also judged `system-one: off` rules, whose findings a fast run would never re-raise.
+const priors = mainBase
+  ? findPrReviews(mainBase, root).filter((review) => review.slug !== slug && review.mode === 'fast')
+  : [];
 // Deleting a store whose index did not parse would drop its dismissals unseen.
 const unreadable = priors.filter((review) => review.error);
 if (unreadable.length > 0) {
@@ -83,7 +90,11 @@ run('prepare.ts', [
 
 const groups = Object.keys(JSON.parse(readFileSync(join(store, GROUPS_MANIFEST), 'utf8')));
 if (groups.length > 0) {
-  run('system-one.ts', [`--slug=${slug}`, ...(dryRun ? ['--dry-run'] : [])]);
+  run('system-one.ts', [
+    `--slug=${slug}`,
+    ...(values['max-cost'] ? [`--max-cost=${values['max-cost']}`] : []),
+    ...(dryRun ? ['--dry-run'] : []),
+  ]);
 }
 if (dryRun) {
   // A dry run prices the pass without judging anything, so there is nothing to finalize.
@@ -92,7 +103,7 @@ if (dryRun) {
   process.exit(0);
 }
 run('finalize.ts', [`--slug=${slug}`]);
-// Per-verdict dump for tuning the checker; too large to commit on every PR.
+// Per-verdict dump for tuning the checker; gitignored, so only the local copy is dropped.
 rmSync(join(store, 'system-one.json'), { force: true });
 
 if (priors.length > 0) {

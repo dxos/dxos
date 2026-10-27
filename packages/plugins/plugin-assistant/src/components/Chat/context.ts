@@ -3,6 +3,7 @@
 //
 
 import { type Alarm } from '@dxos/assistant';
+import type * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
 import type * as Chat from '@dxos/assistant/Chat';
 import { type Event } from '@dxos/async';
 import { type Database } from '@dxos/echo';
@@ -11,8 +12,8 @@ import { type ChatThreadController } from '@dxos/react-ui-assistant';
 import { type MessageRange } from '@dxos/react-ui-feed';
 import { type Message } from '@dxos/types';
 
-import { type AiChatProcessor } from '../../processor/index.ts';
-import { type ChatEvent } from './events.ts';
+import { type ChatModel } from '../../chat-model/index.ts';
+import { type ChatDrawer, type ChatEvent } from './events.ts';
 
 /**
  * Wall-clock timestamps for the most-recent (or in-flight) request, lifted out of
@@ -36,12 +37,19 @@ export type ChatContextValue = {
   event: Event<ChatEvent>;
   db?: Database.Database;
   chat?: Chat.Chat;
-  /** Undefined while the processor is still opening; the chat renders from the feed meanwhile. */
-  processor?: AiChatProcessor;
+  /** Undefined while the chat model is still opening; the chat renders from the feed meanwhile. */
+  chatModel?: ChatModel;
+  /** Whether the conversation has begun; a boolean, so it changes once rather than per message. */
+  started: boolean;
   /** How many prompts wait behind the running turn; a count, so it changes per enqueue rather than per block. */
   queueSize: number;
   setController: (controller: ChatThreadController | null) => void;
   setVisibleRange: (range: MessageRange | undefined) => void;
+  /** The `/` commands submit runs: what plugins contribute, then one per skill. */
+  slashCommands: readonly SlashCommand.SlashCommand[];
+  /** The drawer open above the prompt, if any. */
+  drawer?: ChatDrawer;
+  setDrawer: (drawer?: ChatDrawer) => void;
 };
 
 /** What the chat currently shows: the projected thread and the state that moves with it. */

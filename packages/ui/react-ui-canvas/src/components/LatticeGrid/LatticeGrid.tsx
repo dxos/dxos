@@ -4,8 +4,8 @@
 
 import React, { memo } from 'react';
 
-import { type Bounds } from '../../model/types.ts';
-import { type LatticeSpec, cellBounds } from '../../utils/lattice.ts';
+import { type Bounds } from '../../model/index.ts';
+import { type LatticeSpec, cellBounds } from '../../utils/index.ts';
 
 /** Above this many cells the lattice reads as texture rather than places, so it is not drawn. */
 const MAX_CELLS = 4096;
@@ -46,7 +46,7 @@ export const LatticeGrid = memo(({ spec, bounds, unit }: LatticeGridProps) => {
           y={cell.y}
           width={cell.width}
           height={cell.height}
-          className='fill-none stroke-separator'
+          className='fill-none stroke-separator-subtle'
           strokeWidth={unit}
           strokeDasharray={`${4 * unit} ${4 * unit}`}
         />

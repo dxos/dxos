@@ -8,9 +8,16 @@
 // the diagram re-attaches its links.
 //
 
-import { nodeDef } from '../model/node-def.ts';
-import { type NodeRegistry } from '../model/registry.ts';
-import { type Bounds, type Node, type Point, type Port, type PortDirection, type Side } from '../model/types.ts';
+import {
+  type Bounds,
+  type Node,
+  type NodeRegistry,
+  type Point,
+  type Port,
+  type PortDirection,
+  type Side,
+  nodeDef,
+} from '../model/index.ts';
 import { nodeBounds } from './shapes.ts';
 
 export const SIDES: readonly Side[] = ['n', 'e', 's', 'w'];
@@ -128,8 +135,8 @@ const distance2 = (left: Point, right: Point) => (left.x - right.x) ** 2 + (left
  * source end only leaves a port that accepts `out`, the target end only lands on one that accepts `in`.
  */
 export const pairPorts = (source: PortTerminal, target: PortTerminal): PortPair | undefined => {
-  const sources = candidates(source, 'out');
-  const targets = candidates(target, 'in');
+  const sources = portCandidates(source, 'out');
+  const targets = portCandidates(target, 'in');
   if (sources.length === 0 || targets.length === 0) {
     return undefined;
   }
@@ -156,7 +163,7 @@ export const nearestPort = (
 ): Port | undefined => {
   let best: Port | undefined;
   let bestDistance = Infinity;
-  for (const port of candidates(terminal, direction)) {
+  for (const port of portCandidates(terminal, direction)) {
     const value = distance2(portPoint(terminal.bounds, port), point);
     if (value < bestDistance) {
       bestDistance = value;
@@ -167,7 +174,10 @@ export const nearestPort = (
 };
 
 /** The ports an end may use: those accepting its direction, narrowed to the pinned one when it is among them. */
-const candidates = ({ ports, port }: PortTerminal, direction: Exclude<PortDirection, 'any'>): readonly Port[] => {
+export const portCandidates = (
+  { ports, port }: PortTerminal,
+  direction: Exclude<PortDirection, 'any'>,
+): readonly Port[] => {
   const allowed = ports.filter((candidate) => portAccepts(candidate, direction));
   if (port === undefined) {
     return allowed;

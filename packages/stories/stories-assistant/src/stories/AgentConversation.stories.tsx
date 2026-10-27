@@ -9,9 +9,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import { type Database, Filter, Query } from '@dxos/echo';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
 import * as ChatParticipant from '@dxos/plugin-agent/ChatParticipant';
-import * as FactEntry from '@dxos/plugin-agent/FactEntry';
 import * as Goal from '@dxos/plugin-agent/Goal';
-import * as Memory from '@dxos/plugin-agent/Memory';
 import * as Mode from '@dxos/plugin-agent/Mode';
 import * as Relay from '@dxos/plugin-agent/Relay';
 import { translations as agentTranslations } from '@dxos/plugin-agent/translations';
@@ -48,9 +46,6 @@ const TYPES = [
   Person.Person,
   Organization.Organization,
   HasSubject.HasSubject,
-  Memory.Memory,
-  FactEntry.FactEntry,
-  FactEntry.ExtractionPass,
   Goal.Goal,
   Mode.Mode,
   Relay.Relay,

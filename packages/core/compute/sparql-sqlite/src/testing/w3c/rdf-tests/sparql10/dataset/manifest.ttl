@@ -1,0 +1,179 @@
+@prefix rdf:    <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix : <http://www.w3.org/2001/sw/DataAccess/tests/data-r2/dataset/manifest#> .
+@prefix rdfs:	<http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dawgt:  <http://www.w3.org/2001/sw/DataAccess/tests/test-dawg#> .
+@prefix mf:     <http://www.w3.org/2001/sw/DataAccess/tests/test-manifest#> .
+@prefix qt:     <http://www.w3.org/2001/sw/DataAccess/tests/test-query#> .
+@prefix sparql: <http://www.w3.org/ns/sparql#> .
+
+<>  rdf:type mf:Manifest ;
+    rdfs:label "dataset" ;
+    mf:specVersion sparql:version-1.0 ;
+    rdfs:comment "Tests for GRAPH" ;
+    mf:entries
+    (
+	:dawg-dataset-01
+	:dawg-dataset-02
+	:dawg-dataset-03
+	:dawg-dataset-04
+	:dawg-dataset-05
+	:dawg-dataset-06
+	:dawg-dataset-07
+	:dawg-dataset-08
+	:dawg-dataset-11
+	:dawg-dataset-09b
+	:dawg-dataset-10b
+	:dawg-dataset-12b
+   ).
+
+:dawg-dataset-01  rdf:type mf:QueryEvaluationTest ;
+	mf:name "dataset-01" ;
+    rdfs:comment  "Data: default dataset / Query: default dataset" ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://lists.w3.org/Archives/Public/public-rdf-dawg/2007JulSep/att-0047/31-dawg-minutes> ;
+    mf:action
+            [ qt:query       <dataset-01.rq> ;
+              qt:data        <data-g3.ttl>   ;
+              qt:graphData   <data-g1.ttl>   ;
+              qt:graphData   <data-g2.ttl> ] ;
+    mf:result  <dataset-01.ttl> ;
+    .
+
+:dawg-dataset-02  rdf:type mf:QueryEvaluationTest ;
+	mf:name "dataset-02" ;
+    rdfs:comment  "Data: named dataset / Query: default dataset" ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://lists.w3.org/Archives/Public/public-rdf-dawg/2007JulSep/att-0047/31-dawg-minutes> ;
+    mf:action
+            [ qt:query       <dataset-02.rq> ;
+              qt:data        <data-g3.ttl>   ;
+              qt:graphData   <data-g1.ttl> ] ;
+    mf:result  <dataset-02.ttl> ;
+    .
+
+:dawg-dataset-03  rdf:type mf:QueryEvaluationTest ;
+	mf:name "dataset-03" ;
+    rdfs:comment  "Data: named dataset / Query: named dataset dataset" ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://lists.w3.org/Archives/Public/public-rdf-dawg/2007JulSep/att-0047/31-dawg-minutes> ;
+    mf:action
+            [ qt:query       <dataset-03.rq> ;
+              qt:graphData   <data-g1.ttl>   ;
+              qt:graphData   <data-g2.ttl> ] ;
+    mf:result  <dataset-03.ttl> ;
+    .
+
+:dawg-dataset-04  rdf:type mf:QueryEvaluationTest ;
+	mf:name "dataset-04" ;
+    rdfs:comment  "Data: named dataset / Query: default dataset" ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://lists.w3.org/Archives/Public/public-rdf-dawg/2007JulSep/att-0047/31-dawg-minutes> ;
+    mf:action
+            [ qt:query       <dataset-04.rq> ;
+              qt:graphData   <data-g1.ttl> ] ;
+    mf:result  <dataset-04.ttl> ;
+    .
+
+:dawg-dataset-05  rdf:type mf:QueryEvaluationTest ;
+	mf:name "dataset-05" ;
+    rdfs:comment  "Data: default and named / Query: default dataset" ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://lists.w3.org/Archives/Public/public-rdf-dawg/2007JulSep/att-0047/31-dawg-minutes> ;
+    mf:action
+            [ qt:query       <dataset-05.rq> ;
+              qt:graphData   <data-g1.ttl> ;
+              qt:graphData   <data-g2.ttl> ] ;
+    mf:result  <dataset-05.ttl> ;
+    .
+
+:dawg-dataset-06  rdf:type mf:QueryEvaluationTest ;
+	mf:name "dataset-06" ;
+    rdfs:comment  "Data: default and named / Query: named dataset" ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://lists.w3.org/Archives/Public/public-rdf-dawg/2007JulSep/att-0047/31-dawg-minutes> ;
+    mf:action
+            [ qt:query       <dataset-06.rq> ;
+              qt:graphData   <data-g1.ttl> ;
+              qt:graphData   <data-g2.ttl> ] ;
+    mf:result  <dataset-06.ttl> ;
+    .
+
+:dawg-dataset-07  rdf:type mf:QueryEvaluationTest ;
+	mf:name "dataset-07" ;
+    rdfs:comment  "Data: default and named / Query: all data by UNION" ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://lists.w3.org/Archives/Public/public-rdf-dawg/2007JulSep/att-0047/31-dawg-minutes> ;
+    mf:action
+            [ qt:query       <dataset-07.rq> ;
+              qt:graphData   <data-g1.ttl> ;
+              qt:graphData   <data-g2.ttl> ] ;
+    mf:result  <dataset-07.ttl> ;
+    .
+
+:dawg-dataset-08  rdf:type mf:QueryEvaluationTest ;
+	mf:name "dataset-08" ;
+    rdfs:comment  "Data: default and named / Query: common subjects" ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://lists.w3.org/Archives/Public/public-rdf-dawg/2007JulSep/att-0047/31-dawg-minutes> ;
+    mf:action
+            [ qt:query       <dataset-08.rq> ;
+              qt:graphData   <data-g1.ttl> ;
+              qt:graphData   <data-g2.ttl> ] ;
+    mf:result  <dataset-08.ttl> ;
+    .
+
+:dawg-dataset-09b  rdf:type mf:QueryEvaluationTest ;
+	mf:name "dataset-09b" ;
+    rdfs:comment  "Data: default and named (bnodes) / Query: common subjects" ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://www.w3.org/2007/10/09-dawg-minutes.html> ;
+    mf:action
+            [ qt:query       <dataset-09b.rq> ;
+              qt:graphData   <data-g3-dup.ttl> ;
+              qt:graphData   <data-g3.ttl> ] ;
+    mf:result  <dataset-09.ttl> ;
+    .
+
+:dawg-dataset-10b  rdf:type mf:QueryEvaluationTest ;
+	mf:name "dataset-10b" ;
+    rdfs:comment  "Data: default and named (same data, with bnodes) / Query: common subjects" ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://www.w3.org/2007/10/09-dawg-minutes.html> ;
+    mf:action
+            [ qt:query       <dataset-10b.rq> ;
+              qt:graphData   <data-g3-dup.ttl> ;
+              qt:graphData   <data-g3.ttl> ] ;
+    mf:result  <dataset-10.ttl> ;
+    .
+
+:dawg-dataset-11  rdf:type mf:QueryEvaluationTest ;
+	mf:name "dataset-11" ;
+    rdfs:comment  "Data: default and named (several) / Query: get everything" ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://lists.w3.org/Archives/Public/public-rdf-dawg/2007JulSep/att-0118/04-dawg-minutes.html> ;
+    mf:action
+            [ qt:query       <dataset-11.rq> ;
+              qt:graphData   <data-g1.ttl> ;
+              qt:graphData   <data-g2.ttl> ;
+              qt:graphData   <data-g3.ttl> ;
+              qt:graphData   <data-g4.ttl> ] ;
+    mf:result  <dataset-11.ttl> ;
+    .
+
+:dawg-dataset-12b  rdf:type mf:QueryEvaluationTest ;
+	mf:name "dataset-12b" ;
+    rdfs:comment  "Data: default (several) and named (several) / Query: get everything" ;
+    dawgt:approval dawgt:Approved ;
+    dawgt:approvedBy <http://www.w3.org/2007/10/09-dawg-minutes.html> ;
+    mf:action
+            [ qt:query       <dataset-12b.rq> ;
+              qt:graphData   <data-g1-dup.ttl> ;
+              qt:graphData   <data-g2-dup.ttl> ;
+              qt:graphData   <data-g3-dup.ttl> ;
+              qt:graphData   <data-g4-dup.ttl> ;
+              qt:graphData   <data-g1.ttl> ;
+              qt:graphData   <data-g2.ttl> ;
+              qt:graphData   <data-g3.ttl> ;
+              qt:graphData   <data-g4.ttl> ] ;
+    mf:result  <dataset-12.ttl> ;
+    .

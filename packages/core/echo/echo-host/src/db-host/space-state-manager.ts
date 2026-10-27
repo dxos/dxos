@@ -240,6 +240,9 @@ export class SpaceStateManager extends Resource {
 
     this._perSpaceContext.set(spaceId, ctx);
 
+    // Each check runs on every directory change, and decoding a url costs a base58check SHA-256; the
+    // ids of links seen by the previous check are reused, so the cache holds only the current links.
+    let linkedIds = new Map<AutomergeUrl, DocumentId>();
     const documentListCheckScheduler = new UpdateScheduler(
       ctx,
       async () => {
@@ -249,11 +252,14 @@ export class SpaceStateManager extends Resource {
         const anchorIds = Object.values(this._spaceRootRefs.get(spaceId) ?? {})
           .filter((url): url is AutomergeUrl => typeof url === 'string')
           .map((url) => interpretAsDocumentId(url));
-        const documentIds = [
-          root.documentId,
-          ...anchorIds,
-          ...root.getAllLinkedDocuments().map((url) => interpretAsDocumentId(url)),
-        ];
+        const documentIds = [root.documentId, ...anchorIds];
+        const nextLinkedIds = new Map<AutomergeUrl, DocumentId>();
+        for (const url of root.getAllLinkedDocuments()) {
+          const documentId = linkedIds.get(url) ?? interpretAsDocumentId(url);
+          nextLinkedIds.set(url, documentId);
+          documentIds.push(documentId);
+        }
+        linkedIds = nextLinkedIds;
         if (!isEqual(documentIds, this._lastSpaceDocumentList.get(spaceId))) {
           this._lastSpaceDocumentList.set(spaceId, documentIds);
           const event = new SpaceDocumentListUpdatedEvent(spaceId, root.documentId, retiredRootId, documentIds);

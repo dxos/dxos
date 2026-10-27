@@ -1,0 +1,668 @@
+{
+  "load": {
+    "db": "lubm10",
+    "file": "lubm10.nt",
+    "url": "https://rdf-bench-sql-compiler.dxos.workers.dev",
+    "build": "1791872891",
+    "at": "2026-10-13T06:29:59.680Z",
+    "pingMs": 29.50172100000009,
+    "batchLines": 20000,
+    "concurrency": 2,
+    "quadsSent": 1316700,
+    "rawBytes": 223685529,
+    "gzBytes": 6981278,
+    "elapsedMs": 17893.343167,
+    "quadsPerSec": 73586.02513298571,
+    "medianBatchMs": 487.7592530000002,
+    "p90BatchMs": 584.8227900000002,
+    "maxBatchMs": 907.0395630000021,
+    "stats": {
+      "triples": 1272953,
+      "dbBytes": 94879744,
+      "terms": 315059,
+      "termLexBytes": 18313812,
+      "indexes": "spo,pos,osp"
+    },
+    "bytesPerTriple": 74.53515094430038
+  },
+  "hints": {
+    "db": "lubm10",
+    "url": "https://rdf-bench-sql-compiler.dxos.workers.dev",
+    "build": "1791873867",
+    "hints": "1",
+    "at": "2026-10-13T06:44:55.043Z",
+    "pingMs": 28.588566000000014,
+    "stats": {
+      "triples": 1272953,
+      "dbBytes": 94879744,
+      "terms": 315059,
+      "termLexBytes": 18313812,
+      "indexes": "spo,pos,osp"
+    },
+    "stat1": [
+      { "idx": "quads_osp", "stat": "1236346 9 1 1 1" },
+      { "idx": "quads_pos", "stat": "1236346 68686 7 1 1" },
+      { "idx": "quads", "stat": "1236346 7 2 1 1" }
+    ],
+    "queries": [
+      {
+        "id": "L-Q1",
+        "family": "lubm",
+        "inference": "none",
+        "sparql": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX ub: <http://swat.cse.lehigh.edu/onto/univ-bench.owl#>\nSELECT ?X WHERE { ?X rdf:type ub:GraduateStudent . ?X ub:takesCourse <http://www.Department0.University0.edu/GraduateCourse0> }",
+        "template": "L-Q1",
+        "rows": 4,
+        "checksum": "dbedf297",
+        "firstMs": 42.793298999999934,
+        "wallMs": 29.14783,
+        "serverMs": 0.21334049999998683,
+        "sql": "SELECT r.\"X\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0 FROM (SELECT q0.s AS \"X\" FROM quads AS q0 JOIN quads AS q1 WHERE (likelihood(q0.p = 2, 8.088e-2)) AND (likelihood(q0.o = 2013, 2.402e-1)) AND (q0.s = q1.s) AND (likelihood(q1.p = 417, 8.088e-2)) AND (likelihood(q1.o = 19, 4.000e-5))) r LEFT JOIN main.terms t0 ON t0.id = r.\"X\"",
+        "plan": [
+          "4/0 SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "9/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "16/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 7, "actual": 4, "ms": 31 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 7, "actual": 4, "ms": 36 }
+        ]
+      },
+      {
+        "id": "L-Q2",
+        "family": "lubm",
+        "inference": "subClassOf",
+        "sparql": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX ub: <http://swat.cse.lehigh.edu/onto/univ-bench.owl#>\nSELECT ?X ?Y ?Z WHERE { ?X rdf:type ub:GraduateStudent . ?Y rdf:type ub:University . ?Z rdf:type ub:Department . ?X ub:memberOf ?Z . ?Z ub:subOrganizationOf ?Y . ?X ub:undergraduateDegreeFrom ?Y }",
+        "template": "L-Q2",
+        "rows": 28,
+        "checksum": "c65a6daa",
+        "firstMs": 47.4774460000001,
+        "wallMs": 37.846450000000004,
+        "serverMs": 3.9170804999999973,
+        "sql": "SELECT r.\"X\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"Y\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"Z\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2 FROM (SELECT q0.s AS \"X\", q1.s AS \"Y\", q2.s AS \"Z\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 JOIN quads AS q3 JOIN quads AS q4 JOIN quads AS q5 WHERE (likelihood(q0.p = 2, 8.088e-2)) AND (likelihood(q0.o = 2013, 2.402e-1)) AND (likelihood(q1.p = 2, 8.088e-2)) AND (likelihood(q1.o = 7, 1.000e-2)) AND (likelihood(q2.p = 2, 8.088e-2)) AND (likelihood(q2.o = 11, 1.890e-3)) AND (q0.s = q3.s) AND (likelihood(q3.p = 415, 8.053e-2)) AND (q2.s = q3.o) AND (q2.s = q4.s) AND (likelihood(q4.p = 13, 2.439e-3)) AND (q1.s = q4.o) AND (q0.s = q5.s) AND (likelihood(q5.p = 21, 2.496e-2)) AND (q1.s = q5.o)) r LEFT JOIN main.terms t0 ON t0.id = r.\"X\" LEFT JOIN main.terms t1 ON t1.id = r.\"Y\" LEFT JOIN main.terms t2 ON t2.id = r.\"Z\"",
+        "plan": [
+          "10/0 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "15/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "21/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "28/0 SEARCH q5 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "37/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "44/0 SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "57/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "62/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "67/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 7, "actual": 189, "ms": 31 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 14, "actual": 189, "ms": 30 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 14, "actual": 189, "ms": 31 },
+          {
+            "step": "SEARCH q5 USING COVERING INDEX quads_pos (p=? AND o=?)",
+            "estimate": 98,
+            "actual": 5607,
+            "ms": 30
+          },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 98, "actual": 4517, "ms": 32 },
+          {
+            "step": "SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 98,
+            "actual": 28,
+            "ms": 34
+          }
+        ]
+      },
+      {
+        "id": "L-Q3",
+        "family": "lubm",
+        "inference": "none",
+        "sparql": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX ub: <http://swat.cse.lehigh.edu/onto/univ-bench.owl#>\nSELECT ?X WHERE { ?X rdf:type ub:Publication . ?X ub:publicationAuthor <http://www.Department0.University0.edu/AssistantProfessor0> }",
+        "template": "L-Q3",
+        "rows": 6,
+        "checksum": "f5c98da6",
+        "firstMs": 36.91717599999993,
+        "wallMs": 29.816774000000123,
+        "serverMs": 0,
+        "sql": "SELECT r.\"X\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0 FROM (SELECT q0.s AS \"X\" FROM quads AS q0 JOIN quads AS q1 WHERE (likelihood(q0.p = 2, 8.088e-2)) AND (likelihood(q0.o = 2586, 7.653e-1)) AND (q0.s = q1.s) AND (likelihood(q1.p = 2588, 8.088e-2)) AND (likelihood(q1.o = 262, 6.000e-5))) r LEFT JOIN main.terms t0 ON t0.id = r.\"X\"",
+        "plan": [
+          "4/0 SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "9/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "16/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 7, "actual": 6, "ms": 41 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 7, "actual": 6, "ms": 30 }
+        ]
+      },
+      {
+        "id": "L-Q4",
+        "family": "lubm",
+        "inference": "subClassOf",
+        "sparql": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX ub: <http://swat.cse.lehigh.edu/onto/univ-bench.owl#>\nSELECT ?X ?Y1 ?Y2 ?Y3 WHERE { ?X rdf:type ub:Professor . ?X ub:worksFor <http://www.Department0.University0.edu> . ?X ub:name ?Y1 . ?X ub:emailAddress ?Y2 . ?X ub:telephone ?Y3 }",
+        "template": "L-Q4",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 44.98926400000005,
+        "wallMs": 28.79623100000026,
+        "serverMs": 0,
+        "sql": "SELECT r.\"X\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"Y1\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"Y2\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2, r.\"Y3\" AS c3, t3.kind AS k3, t3.lex AS l3, t3.dt AS d3, t3.lang AS g3 FROM (SELECT q0.s AS \"X\", q2.o AS \"Y1\", q3.o AS \"Y2\", q4.o AS \"Y3\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 JOIN quads AS q3 JOIN quads AS q4 WHERE (likelihood(q0.p = 2, 8.088e-2)) AND (likelihood(q0.o = -1, 1.000e-9)) AND (q0.s = q1.s) AND (likelihood(q1.p = 27, 5.535e-3)) AND (likelihood(q1.o = 10, 5.992e-3)) AND (q0.s = q2.s) AND (likelihood(q2.p = 8, 8.088e-2)) AND (q0.s = q3.s) AND (likelihood(q3.p = 28, 8.088e-2)) AND (q0.s = q4.s) AND (likelihood(q4.p = 30, 8.088e-2))) r LEFT JOIN main.terms t0 ON t0.id = r.\"X\" LEFT JOIN main.terms t1 ON t1.id = r.\"Y1\" LEFT JOIN main.terms t2 ON t2.id = r.\"Y2\" LEFT JOIN main.terms t3 ON t3.id = r.\"Y3\"",
+        "plan": [
+          "10/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "15/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "25/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "31/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "37/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "43/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "48/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "53/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "58/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 7, "actual": 0, "ms": 32 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 7, "actual": 0, "ms": 31 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 14, "actual": 0, "ms": 29 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 28, "actual": 0, "ms": 32 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 56, "actual": 0, "ms": 31 }
+        ]
+      },
+      {
+        "id": "L-Q5",
+        "family": "lubm",
+        "inference": "subClassOf+subPropertyOf",
+        "sparql": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX ub: <http://swat.cse.lehigh.edu/onto/univ-bench.owl#>\nSELECT ?X WHERE { ?X rdf:type ub:Person . ?X ub:memberOf <http://www.Department0.University0.edu> }",
+        "template": "L-Q5",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 28.848741000000246,
+        "wallMs": 29.91804699999966,
+        "serverMs": 0,
+        "sql": "SELECT r.\"X\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0 FROM (SELECT q0.s AS \"X\" FROM quads AS q0 JOIN quads AS q1 WHERE (likelihood(q0.p = 2, 8.088e-2)) AND (likelihood(q0.o = -1, 1.000e-9)) AND (q0.s = q1.s) AND (likelihood(q1.p = 415, 8.053e-2)) AND (likelihood(q1.o = 10, 6.810e-3))) r LEFT JOIN main.terms t0 ON t0.id = r.\"X\"",
+        "plan": [
+          "4/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "9/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "16/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 7, "actual": 0, "ms": 32 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 7, "actual": 0, "ms": 34 }
+        ]
+      },
+      {
+        "id": "L-Q6",
+        "family": "lubm",
+        "inference": "subClassOf",
+        "sparql": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX ub: <http://swat.cse.lehigh.edu/onto/univ-bench.owl#>\nSELECT ?X WHERE { ?X rdf:type ub:Student }",
+        "template": "L-Q6",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 31.711867999999868,
+        "wallMs": 30.87534599999981,
+        "serverMs": 0,
+        "sql": "SELECT r.\"X\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0 FROM (SELECT q0.s AS \"X\" FROM quads AS q0 WHERE (likelihood(q0.p = 2, 8.088e-2)) AND (likelihood(q0.o = -1, 1.000e-9))) r LEFT JOIN main.terms t0 ON t0.id = r.\"X\"",
+        "plan": [
+          "3/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "8/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 7, "actual": 0, "ms": 32 }
+        ]
+      },
+      {
+        "id": "L-Q7",
+        "family": "lubm",
+        "inference": "subClassOf",
+        "sparql": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX ub: <http://swat.cse.lehigh.edu/onto/univ-bench.owl#>\nSELECT ?X ?Y WHERE { ?X rdf:type ub:Student . ?Y rdf:type ub:Course . ?X ub:takesCourse ?Y . <http://www.Department0.University0.edu/AssociateProfessor0> ub:teacherOf ?Y }",
+        "template": "L-Q7",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 37.172795000000406,
+        "wallMs": 28.282282000000123,
+        "serverMs": 0,
+        "sql": "SELECT r.\"X\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"Y\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1 FROM (SELECT q0.s AS \"X\", q1.s AS \"Y\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 JOIN quads AS q3 WHERE (likelihood(q0.p = 2, 8.088e-2)) AND (likelihood(q0.o = -1, 1.000e-9)) AND (likelihood(q1.p = 2, 8.088e-2)) AND (likelihood(q1.o = 3067, 1.028e-1)) AND (q0.s = q2.s) AND (likelihood(q2.p = 417, 8.088e-2)) AND (q1.s = q2.o) AND (q3.s = 125) AND (likelihood(q3.p = 17, 1.656e-2)) AND (q1.s = q3.o)) r LEFT JOIN main.terms t0 ON t0.id = r.\"X\" LEFT JOIN main.terms t1 ON t1.id = r.\"Y\"",
+        "plan": [
+          "7/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "12/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "25/0 SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "32/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "37/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 7, "actual": 0, "ms": 30 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 14, "actual": 0, "ms": 32 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 14, "actual": 0, "ms": 33 },
+          {
+            "step": "SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 14,
+            "actual": 0,
+            "ms": 30
+          }
+        ]
+      },
+      {
+        "id": "L-Q8",
+        "family": "lubm",
+        "inference": "subClassOf",
+        "sparql": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX ub: <http://swat.cse.lehigh.edu/onto/univ-bench.owl#>\nSELECT ?X ?Y ?Z WHERE { ?X rdf:type ub:Student . ?Y rdf:type ub:Department . ?X ub:memberOf ?Y . ?Y ub:subOrganizationOf <http://www.University0.edu> . ?X ub:emailAddress ?Z }",
+        "template": "L-Q8",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 28.702275999999983,
+        "wallMs": 28.94274499999983,
+        "serverMs": 0,
+        "sql": "SELECT r.\"X\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"Y\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"Z\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2 FROM (SELECT q0.s AS \"X\", q1.s AS \"Y\", q4.o AS \"Z\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 JOIN quads AS q3 JOIN quads AS q4 WHERE (likelihood(q0.p = 2, 8.088e-2)) AND (likelihood(q0.o = -1, 1.000e-9)) AND (likelihood(q1.p = 2, 8.088e-2)) AND (likelihood(q1.o = 11, 1.890e-3)) AND (q0.s = q2.s) AND (likelihood(q2.p = 415, 8.053e-2)) AND (q1.s = q2.o) AND (q1.s = q3.s) AND (likelihood(q3.p = 13, 2.439e-3)) AND (likelihood(q3.o = 6, 4.973e-3)) AND (q0.s = q4.s) AND (likelihood(q4.p = 28, 8.088e-2))) r LEFT JOIN main.terms t0 ON t0.id = r.\"X\" LEFT JOIN main.terms t1 ON t1.id = r.\"Y\" LEFT JOIN main.terms t2 ON t2.id = r.\"Z\"",
+        "plan": [
+          "9/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "14/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "20/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "27/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "37/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "43/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "48/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "53/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 7, "actual": 0, "ms": 28 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 14, "actual": 0, "ms": 30 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 14, "actual": 0, "ms": 29 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 14, "actual": 0, "ms": 31 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 28, "actual": 0, "ms": 30 }
+        ]
+      },
+      {
+        "id": "L-Q9",
+        "family": "lubm",
+        "inference": "subClassOf",
+        "sparql": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX ub: <http://swat.cse.lehigh.edu/onto/univ-bench.owl#>\nSELECT ?X ?Y ?Z WHERE { ?X rdf:type ub:Student . ?Y rdf:type ub:Faculty . ?Z rdf:type ub:Course . ?X ub:advisor ?Y . ?Y ub:teacherOf ?Z . ?X ub:takesCourse ?Z }",
+        "template": "L-Q9",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 31.053194000000076,
+        "wallMs": 32.544818000000305,
+        "serverMs": 0,
+        "sql": "SELECT r.\"X\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"Y\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1, r.\"Z\" AS c2, t2.kind AS k2, t2.lex AS l2, t2.dt AS d2, t2.lang AS g2 FROM (SELECT q0.s AS \"X\", q1.s AS \"Y\", q2.s AS \"Z\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 JOIN quads AS q3 JOIN quads AS q4 JOIN quads AS q5 WHERE (likelihood(q0.p = 2, 8.088e-2)) AND (likelihood(q0.o = -1, 1.000e-9)) AND (likelihood(q1.p = 2, 8.088e-2)) AND (likelihood(q1.o = -2, 1.000e-9)) AND (likelihood(q2.p = 2, 8.088e-2)) AND (likelihood(q2.o = 3067, 1.028e-1)) AND (q0.s = q3.s) AND (likelihood(q3.p = 430, 3.175e-2)) AND (q1.s = q3.o) AND (q1.s = q4.s) AND (likelihood(q4.p = 17, 1.656e-2)) AND (q2.s = q4.o) AND (q0.s = q5.s) AND (likelihood(q5.p = 417, 8.088e-2)) AND (q2.s = q5.o)) r LEFT JOIN main.terms t0 ON t0.id = r.\"X\" LEFT JOIN main.terms t1 ON t1.id = r.\"Y\" LEFT JOIN main.terms t2 ON t2.id = r.\"Z\"",
+        "plan": [
+          "10/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "15/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "21/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "28/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "34/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "41/0 SEARCH q5 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "54/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "59/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "64/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 7, "actual": 0, "ms": 29 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=?)", "estimate": 14, "actual": 0, "ms": 31 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 14, "actual": 0, "ms": 32 },
+          { "step": "SEARCH q4 USING PRIMARY KEY (s=? AND p=?)", "estimate": 28, "actual": 0, "ms": 31 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 28, "actual": 0, "ms": 31 },
+          {
+            "step": "SEARCH q5 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+            "estimate": 28,
+            "actual": 0,
+            "ms": 34
+          }
+        ]
+      },
+      {
+        "id": "L-Q10",
+        "family": "lubm",
+        "inference": "subClassOf",
+        "sparql": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX ub: <http://swat.cse.lehigh.edu/onto/univ-bench.owl#>\nSELECT ?X WHERE { ?X rdf:type ub:Student . ?X ub:takesCourse <http://www.Department0.University0.edu/GraduateCourse0> }",
+        "template": "L-Q10",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 29.945160999999644,
+        "wallMs": 28.914613999999347,
+        "serverMs": 0.04732400000011694,
+        "sql": "SELECT r.\"X\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0 FROM (SELECT q0.s AS \"X\" FROM quads AS q0 JOIN quads AS q1 WHERE (likelihood(q0.p = 2, 8.088e-2)) AND (likelihood(q0.o = -1, 1.000e-9)) AND (q0.s = q1.s) AND (likelihood(q1.p = 417, 8.088e-2)) AND (likelihood(q1.o = 19, 4.000e-5))) r LEFT JOIN main.terms t0 ON t0.id = r.\"X\"",
+        "plan": [
+          "4/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "9/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "16/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 7, "actual": 0, "ms": 31 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 7, "actual": 0, "ms": 29 }
+        ]
+      },
+      {
+        "id": "L-Q11",
+        "family": "lubm",
+        "inference": "transitive",
+        "sparql": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX ub: <http://swat.cse.lehigh.edu/onto/univ-bench.owl#>\nSELECT ?X WHERE { ?X rdf:type ub:ResearchGroup . ?X ub:subOrganizationOf <http://www.University0.edu> }",
+        "template": "L-Q11",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 27.253697000000102,
+        "wallMs": 29.175862000000052,
+        "serverMs": 0,
+        "sql": "SELECT r.\"X\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0 FROM (SELECT q0.s AS \"X\" FROM quads AS q0 JOIN quads AS q1 WHERE (likelihood(q0.p = 2, 8.088e-2)) AND (likelihood(q0.o = 2575, 2.827e-2)) AND (q0.s = q1.s) AND (likelihood(q1.p = 13, 2.439e-3)) AND (likelihood(q1.o = 6, 4.973e-3))) r LEFT JOIN main.terms t0 ON t0.id = r.\"X\"",
+        "plan": [
+          "4/0 SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "9/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "16/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q1 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 7, "actual": 15, "ms": 29 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 7, "actual": 0, "ms": 31 }
+        ]
+      },
+      {
+        "id": "L-Q12",
+        "family": "lubm",
+        "inference": "owl",
+        "sparql": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX ub: <http://swat.cse.lehigh.edu/onto/univ-bench.owl#>\nSELECT ?X ?Y WHERE { ?X rdf:type ub:Chair . ?Y rdf:type ub:Department . ?X ub:worksFor ?Y . ?Y ub:subOrganizationOf <http://www.University0.edu> }",
+        "template": "L-Q12",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 32.00970300000063,
+        "wallMs": 28.110901000000013,
+        "serverMs": 0,
+        "sql": "SELECT r.\"X\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0, r.\"Y\" AS c1, t1.kind AS k1, t1.lex AS l1, t1.dt AS d1, t1.lang AS g1 FROM (SELECT q0.s AS \"X\", q1.s AS \"Y\" FROM quads AS q0 JOIN quads AS q1 JOIN quads AS q2 JOIN quads AS q3 WHERE (likelihood(q0.p = 2, 8.088e-2)) AND (likelihood(q0.o = -1, 1.000e-9)) AND (likelihood(q1.p = 2, 8.088e-2)) AND (likelihood(q1.o = 11, 1.890e-3)) AND (q0.s = q2.s) AND (likelihood(q2.p = 27, 5.535e-3)) AND (q1.s = q2.o) AND (q1.s = q3.s) AND (likelihood(q3.p = 13, 2.439e-3)) AND (likelihood(q3.o = 6, 4.973e-3))) r LEFT JOIN main.terms t0 ON t0.id = r.\"X\" LEFT JOIN main.terms t1 ON t1.id = r.\"Y\"",
+        "plan": [
+          "7/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "12/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "25/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "35/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "40/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 7, "actual": 0, "ms": 29 },
+          { "step": "SEARCH q2 USING PRIMARY KEY (s=? AND p=?)", "estimate": 14, "actual": 0, "ms": 29 },
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 14, "actual": 0, "ms": 28 },
+          { "step": "SEARCH q3 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 14, "actual": 0, "ms": 29 }
+        ]
+      },
+      {
+        "id": "L-Q13",
+        "family": "lubm",
+        "inference": "inverseOf",
+        "sparql": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX ub: <http://swat.cse.lehigh.edu/onto/univ-bench.owl#>\nSELECT ?X WHERE { ?X rdf:type ub:Person . <http://www.University0.edu> ub:hasAlumnus ?X }",
+        "template": "L-Q13",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "firstMs": 28.13113599999997,
+        "wallMs": 27.862483999999313,
+        "serverMs": 0.23544925000010153,
+        "sql": "SELECT r.\"X\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0 FROM (SELECT q0.s AS \"X\" FROM quads AS q0 JOIN quads AS q1 WHERE (likelihood(q0.p = 2, 8.088e-2)) AND (likelihood(q0.o = -1, 1.000e-9)) AND (q1.s = 6) AND (likelihood(q1.p = -2, 1.000e-9)) AND (q0.s = q1.o)) r LEFT JOIN main.terms t0 ON t0.id = r.\"X\"",
+        "plan": [
+          "4/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "9/0 SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)",
+          "16/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q1 USING PRIMARY KEY (s=? AND p=?)", "estimate": 2, "actual": 0, "ms": 31 },
+          { "step": "SEARCH q0 USING PRIMARY KEY (s=? AND p=? AND o=?)", "estimate": 2, "actual": 0, "ms": 30 }
+        ]
+      },
+      {
+        "id": "L-Q14",
+        "family": "lubm",
+        "inference": "none",
+        "sparql": "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\nPREFIX ub: <http://swat.cse.lehigh.edu/onto/univ-bench.owl#>\nSELECT ?X WHERE { ?X rdf:type ub:UndergraduateStudent }",
+        "template": "L-Q14",
+        "rows": 75547,
+        "checksum": "8a8ae89b",
+        "firstMs": 200.18433800000003,
+        "wallMs": 220.39550099999997,
+        "serverMs": 78.73285699999997,
+        "sql": "SELECT r.\"X\" AS c0, t0.kind AS k0, t0.lex AS l0, t0.dt AS d0, t0.lang AS g0 FROM (SELECT q0.s AS \"X\" FROM quads AS q0 WHERE (likelihood(q0.p = 2, 8.088e-2)) AND (likelihood(q0.o = 413, 7.555e-1))) r LEFT JOIN main.terms t0 ON t0.id = r.\"X\"",
+        "plan": [
+          "3/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "8/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ],
+        "prefix": [
+          { "step": "SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)", "estimate": 7, "actual": 75547, "ms": 31 }
+        ]
+      }
+    ]
+  },
+  "noHints": {
+    "db": "lubm10",
+    "url": "https://rdf-bench-sql-compiler.dxos.workers.dev",
+    "build": "1791873867",
+    "hints": "0",
+    "at": "2026-10-13T06:44:46.019Z",
+    "pingMs": 30.329808999999955,
+    "stats": {
+      "triples": 1272953,
+      "dbBytes": 94879744,
+      "terms": 315059,
+      "termLexBytes": 18313812,
+      "indexes": "spo,pos,osp"
+    },
+    "queries": [
+      {
+        "id": "L-Q1",
+        "rows": 4,
+        "checksum": "dbedf297",
+        "wallMs": 34.20859199999995,
+        "serverMs": 4.675130500000023,
+        "firstMs": 51.656675000000064,
+        "plan": [
+          "4/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "9/0 SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "16/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "L-Q2",
+        "rows": 28,
+        "checksum": "c65a6daa",
+        "wallMs": 86.62570299999993,
+        "serverMs": 54.30110975000008,
+        "firstMs": 86.59629699999982,
+        "plan": [
+          "10/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "15/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH q2 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "31/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "40/0 SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "47/0 SEARCH q4 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "54/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "59/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "64/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "L-Q3",
+        "rows": 6,
+        "checksum": "f5c98da6",
+        "wallMs": 47.40355099999988,
+        "serverMs": 16.413784750000104,
+        "firstMs": 48.152030999999624,
+        "plan": [
+          "4/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "9/0 SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "16/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "L-Q4",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 28.28123000000005,
+        "serverMs": 0.18370425000000523,
+        "firstMs": 32.31045699999959,
+        "plan": [
+          "10/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "15/0 SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "22/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "31/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "40/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "49/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "54/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "59/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "64/0 SEARCH t3 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "L-Q5",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 27.747018000000025,
+        "serverMs": 0.23736849999977494,
+        "firstMs": 32.24226499999986,
+        "plan": [
+          "4/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "9/0 SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "16/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "L-Q6",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 27.47823299999982,
+        "serverMs": 0.1679830000000493,
+        "firstMs": 29.748600999999326,
+        "plan": [
+          "3/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "8/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "L-Q7",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 27.974742999999762,
+        "serverMs": 0,
+        "firstMs": 30.596057000000656,
+        "plan": [
+          "7/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "12/0 SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "19/0 SEARCH q2 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "28/0 SEARCH q0 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "35/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "40/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "L-Q8",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 26.938853999999992,
+        "serverMs": 0,
+        "firstMs": 35.44399700000031,
+        "plan": [
+          "9/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "14/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "23/0 SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "30/0 SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "37/0 SEARCH q4 USING PRIMARY KEY (s=? AND p=?)",
+          "46/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "51/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "56/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "L-Q9",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 28.40828000000056,
+        "serverMs": 0,
+        "firstMs": 31.608126000000084,
+        "plan": [
+          "10/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "15/0 SEARCH q3 USING PRIMARY KEY (s=? AND p=?)",
+          "24/0 SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "31/0 SEARCH q5 USING PRIMARY KEY (s=? AND p=?)",
+          "40/0 SEARCH q2 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "47/0 SEARCH q4 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "54/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "59/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "64/0 SEARCH t2 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "L-Q10",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 27.25658900000053,
+        "serverMs": 0.28874824999979865,
+        "firstMs": 28.169741000000613,
+        "plan": [
+          "4/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "9/0 SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "16/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "L-Q11",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 29.748497999999927,
+        "serverMs": 0.7233280000000377,
+        "firstMs": 30.505153000000064,
+        "plan": [
+          "4/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "9/0 SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "16/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "L-Q12",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 27.625621999999566,
+        "serverMs": 0.19687500000009095,
+        "firstMs": 28.658140999999887,
+        "plan": [
+          "7/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "12/0 SEARCH q2 USING PRIMARY KEY (s=? AND p=?)",
+          "18/0 SEARCH q1 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "25/0 SEARCH q3 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "32/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN",
+          "37/0 SEARCH t1 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "L-Q13",
+        "rows": 0,
+        "checksum": "811c9dc5",
+        "wallMs": 28.149986000000354,
+        "serverMs": 0.22685075000003962,
+        "firstMs": 29.522917000000234,
+        "plan": [
+          "4/0 SEARCH q1 USING PRIMARY KEY (s=? AND p=?)",
+          "9/0 SEARCH q0 USING COVERING INDEX quads_osp (o=? AND s=? AND p=?)",
+          "16/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      },
+      {
+        "id": "L-Q14",
+        "rows": 75547,
+        "checksum": "8a8ae89b",
+        "wallMs": 212.79801299999963,
+        "serverMs": 73.96722425000007,
+        "firstMs": 193.1459419999992,
+        "plan": [
+          "3/0 SEARCH q0 USING COVERING INDEX quads_pos (p=? AND o=?)",
+          "8/0 SEARCH t0 USING INTEGER PRIMARY KEY (rowid=?) LEFT-JOIN"
+        ]
+      }
+    ]
+  },
+  "oxigraphLocal": {
+    "engine": "oxigraph-js (LOCAL, in-memory)",
+    "triples": 1272953,
+    "loadMs": 14954.092765,
+    "results": [
+      { "id": "L-Q1", "rows": 4, "checksum": "dbedf297", "ms": 40.3573069999984 },
+      { "id": "L-Q2", "rows": 28, "checksum": "c65a6daa", "ms": 147.7419179999997 },
+      { "id": "L-Q3", "rows": 6, "checksum": "f5c98da6", "ms": 103.48329999999987 },
+      { "id": "L-Q4", "rows": 0, "checksum": "811c9dc5", "ms": 0.09406500000113738 },
+      { "id": "L-Q5", "rows": 0, "checksum": "811c9dc5", "ms": 0.04550799999924493 },
+      { "id": "L-Q6", "rows": 0, "checksum": "811c9dc5", "ms": 0.030124000000796514 },
+      { "id": "L-Q7", "rows": 0, "checksum": "811c9dc5", "ms": 0.11652200000025914 },
+      { "id": "L-Q8", "rows": 0, "checksum": "811c9dc5", "ms": 0.08762399999977788 },
+      { "id": "L-Q9", "rows": 0, "checksum": "811c9dc5", "ms": 0.16139499999917462 },
+      { "id": "L-Q10", "rows": 0, "checksum": "811c9dc5", "ms": 0.04335899999932735 },
+      { "id": "L-Q11", "rows": 0, "checksum": "811c9dc5", "ms": 3.2992119999980787 },
+      { "id": "L-Q12", "rows": 0, "checksum": "811c9dc5", "ms": 0.10037499999816646 },
+      { "id": "L-Q13", "rows": 0, "checksum": "811c9dc5", "ms": 0.05517300000065006 },
+      { "id": "L-Q14", "rows": 75547, "checksum": "8a8ae89b", "ms": 403.4446050000006 }
+    ]
+  }
+}

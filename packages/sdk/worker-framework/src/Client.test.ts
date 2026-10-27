@@ -551,6 +551,50 @@ describe('Connection multi-client', () => {
     expect(second.failures).toEqual([]);
   });
 
+  test('on leader handover the new leader reconnects as owner and the remaining guest as guest', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+
+    const leader = makeConnection(hub, keys);
+    await asyncTimeout(leader.connection.open(), 5_000);
+    expect((await asyncTimeout(leader.connected, 5_000)).isOwner).toBe(true);
+
+    // Queued on the leader lock in this order, so the first follower is the one elected next.
+    const successor = makeConnection(hub, keys);
+    const guest = makeConnection(hub, keys);
+    for (const tab of [successor, guest]) {
+      await asyncTimeout(tab.connection.open(), 5_000);
+      onTestFinished(async () => {
+        await tab.connection.close();
+      });
+      expect((await asyncTimeout(tab.connected, 5_000)).isOwner).toBe(false);
+    }
+
+    const successorReconnected = new Trigger<{ isOwner: boolean }>();
+    const guestReconnected = new Trigger<{ isOwner: boolean }>();
+    successor.connection.reconnected.on((event) => {
+      successorReconnected.wake(event);
+    });
+    guest.connection.reconnected.on((event) => {
+      guestReconnected.wake(event);
+    });
+
+    // The leader tab reloading: its lock and worker go away with it.
+    await leader.connection.close();
+
+    // A reload keyed on this event would release the lock again and restart the handover in the other tab.
+    expect(await asyncTimeout(successorReconnected.wait(), 10_000)).toEqual({ isOwner: true });
+    expect(await asyncTimeout(guestReconnected.wait(), 10_000)).toEqual({ isOwner: false });
+
+    // The reloaded tab joins as a guest of the new leader on its initial connection, which fires no reconnect.
+    const reloaded = makeConnection(hub, keys);
+    await asyncTimeout(reloaded.connection.open(), 5_000);
+    onTestFinished(async () => {
+      await reloaded.connection.close();
+    });
+    expect((await asyncTimeout(reloaded.connected, 5_000)).isOwner).toBe(false);
+  });
+
   test('rejects a non-positive maxLeaderFailures', () => {
     const hub = createHub();
     const keys = uniqueKeys();
@@ -631,6 +675,32 @@ describe('Worker session lifetime', () => {
     await asyncTimeout(worker.runtimeClosed(), 5_000);
     await sleep(0);
     expect(order).toEqual(['session', 'session', 'runtime']);
+  });
+  test('a tab reconnects when its worker shuts down but its teardown never finishes', async () => {
+    const hub = createHub();
+    const keys = uniqueKeys();
+    const shutdowns: Array<() => void> = [];
+    const createWorker = createWorkerFactory(keys.storageLockKey, {
+      shutdownTimeout: 100,
+      createRuntime: ({ requestShutdown }) =>
+        Effect.gen(function* () {
+          shutdowns.push(requestShutdown);
+          yield* Effect.addFinalizer(() => Effect.never);
+          return { createSession: () => Effect.void };
+        }),
+    });
+    const { connection } = makeConnection(hub, keys, undefined, { createWorker });
+    onTestFinished(async () => {
+      await connection.close();
+    });
+    await asyncTimeout(connection.open(), 10_000);
+
+    const reconnected = new Trigger();
+    connection.reconnected.on(() => {
+      reconnected.wake();
+    });
+    shutdowns[0]();
+    await asyncTimeout(reconnected.wait(), 10_000);
   });
 });
 

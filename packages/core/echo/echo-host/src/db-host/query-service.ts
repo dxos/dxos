@@ -2,25 +2,32 @@
 // Copyright 2024 DXOS.org
 //
 
+import { type DocumentId } from '@automerge/automerge-repo';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import type * as SqlClient from 'effect/sql/SqlClient';
 import * as EffectStream from 'effect/Stream';
 
-import { DeferredTask, scheduleMicroTask, scheduleTask, synchronized } from '@dxos/async';
+import { DeferredTask, scheduleMicroTask, scheduleTask, synchronized, yieldBehindQueuedTasks } from '@dxos/async';
 import { Context, Resource } from '@dxos/context';
 import { raise } from '@dxos/debug';
+import { Query } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import type * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
+import { type FeedStore } from '@dxos/feed';
 import { type IndexEngine } from '@dxos/index-core';
+import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { QueryService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 import { countWork } from '@dxos/util';
 
 import { type AutomergeHost } from '../automerge/index.ts';
 import { type ExecutionTrace, QueryExecutor, type QueryExecutorMode } from '../query/index.ts';
+import { SLOW_WORK_MS } from '../util.ts';
+import { IndexPassFailedError } from './index-scheduler.ts';
 import { type InvalidationHint, mergeHints } from './invalidation-hint.ts';
 import type { SpaceStateManager } from './space-state-manager.ts';
 
@@ -39,11 +46,12 @@ export type QueryServiceProps = {
   updateIndexes: () => Promise<void>;
 
   /**
-   * True once every indexed object has a snapshot. The compiled executor reads that store rather
-   * than loading documents, so while it is still filling after upgrade a query awaits indexing
-   * before its first execution. Ignored on the in-memory path, which loads documents itself.
+   * True once every indexed object in scope has a snapshot (see `IndexEngine.hasCompleteSnapshots`).
+   * The compiled executor reads that store rather than loading documents, so while it is still
+   * filling after upgrade a query awaits indexing before its first execution. Ignored on the
+   * in-memory path, which loads documents itself.
    */
-  hasCompleteSnapshots?: () => Promise<boolean>;
+  hasCompleteSnapshots?: (scope: { spaceIds?: readonly SpaceId[]; feeds: boolean }) => Promise<boolean>;
 
   /** Evaluation path for every query this service creates; see {@link QueryExecutorMode}. */
   executor?: QueryExecutorMode;
@@ -52,6 +60,12 @@ export type QueryServiceProps = {
 
   /** Overrides {@link DEFAULT_QUERY_DEBOUNCE}. */
   debounce?: Partial<QueryDebounceOptions>;
+
+  /** Whether any of a client's data subscriptions holds a document. */
+  holdsDocument?: (subscriptionIds: readonly string[], documentId: DocumentId) => boolean;
+
+  /** Read for feeds with indexing disabled and for feed retention; see the query executor's `feedStore`. */
+  feedStore?: FeedStore;
 };
 
 /**
@@ -68,6 +82,9 @@ export type QueryDebounceOptions = {
   /** Cost (ms) charged for a run; defaults to its wall-clock time, which tests replace to be deterministic. */
   cost?: (query: QueryAST.Query, measured: number) => number;
 };
+
+/** Longest stretch (ms) a batch runs queries before yielding, so answers and incoming requests are not held for the whole batch. */
+const QUERY_SLICE_MS = 16;
 
 export const DEFAULT_QUERY_DEBOUNCE: QueryDebounceOptions = {
   factor: 4,
@@ -92,13 +109,18 @@ type ActiveQuery = {
   /** Query reads from at least one feed scope, so its first result must await indexing. */
   feedScoped: boolean;
 
+  /** Answered once and never re-run; its stream ends after the first response. */
+  oneShot: boolean;
+
   /** Cost (ms) of the last run; 0 until the query has run. */
   cost: number;
 
   /** `performance.now()` before which an invalidated query is left dirty rather than re-run. */
   debouncedUntil: number;
 
-  sendResults: (results: QueryService.QueryResult[]) => void;
+  sendResults: (results: QueryService.QueryResult[], executionTime: number, truncated?: 'paths' | 'manifest') => void;
+  /** Reports a re-run whose result matched the last one sent. */
+  sendUnchanged: (executionTime: number) => void;
   onError: (err: Error) => void;
 
   close: () => Promise<void>;
@@ -131,15 +153,31 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     return Array.from(this._queries, (query) => query.executor.trace);
   }
 
-  /** Cached once true: the store only ever finishes filling, so the check need not repeat. */
-  #snapshotsKnownComplete = false;
+  readonly #snapshotsKnownComplete = new Set<string>();
 
-  async #snapshotsComplete(): Promise<boolean> {
-    if (this.#snapshotsKnownComplete || !this._params.hasCompleteSnapshots) {
+  readonly #snapshotsChecks = new Map<string, Promise<boolean>>();
+
+  async #snapshotsComplete(executor: QueryExecutor): Promise<boolean> {
+    const hasCompleteSnapshots = this._params.hasCompleteSnapshots;
+    if (!hasCompleteSnapshots) {
       return true;
     }
-    this.#snapshotsKnownComplete = await this._params.hasCompleteSnapshots();
-    return this.#snapshotsKnownComplete;
+    const spaceIds = executor.spaceIds ? [...executor.spaceIds].sort() : undefined;
+    const feeds = executor.readsFeeds;
+    const key = `${spaceIds?.join(',') ?? '*'}:${feeds}`;
+    if (this.#snapshotsKnownComplete.has(key)) {
+      return true;
+    }
+    let check = this.#snapshotsChecks.get(key);
+    if (!check) {
+      check = hasCompleteSnapshots({ spaceIds, feeds }).finally(() => this.#snapshotsChecks.delete(key));
+      this.#snapshotsChecks.set(key, check);
+    }
+    if (await check) {
+      this.#snapshotsKnownComplete.add(key);
+      return true;
+    }
+    return false;
   }
 
   // 'all' = catch-all; null = no pending hint.
@@ -222,7 +260,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
   ['QueryService.execQuery'](
     request: QueryService.QueryRequest,
   ): EffectStream.Stream<QueryService.QueryResponse, Error> {
-    return EffectEx.streamFromEmitter<QueryService.QueryResponse, Error>((emit) => {
+    const stream = EffectEx.streamFromEmitter<QueryService.QueryResponse, Error>((emit) => {
       const ctx = Context.default();
       const queryEntry = this._createQuery(
         ctx,
@@ -234,8 +272,20 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       scheduleMicroTask(ctx, async () => {
         await queryEntry.executor.open();
         const readsSnapshotStore = queryEntry.executor.compiled;
-        if (queryEntry.feedScoped || (readsSnapshotStore && !(await this.#snapshotsComplete()))) {
-          await this._params.updateIndexes();
+        if (queryEntry.feedScoped || (readsSnapshotStore && !(await this.#snapshotsComplete(queryEntry.executor)))) {
+          // A failed pass is logged and retried by the scheduler; the query answers from the index as it stands.
+          await this._params.updateIndexes().catch((error) => {
+            if (!(error instanceof IndexPassFailedError)) {
+              throw error;
+            }
+          });
+        }
+        if (!this._queries.has(queryEntry)) {
+          return;
+        }
+        if (queryEntry.oneShot && queryEntry.executor.selectsById) {
+          await this.#runQuery(queryEntry);
+          return;
         }
         queryEntry.open = true;
         this._updateQueries.schedule();
@@ -245,6 +295,8 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         await ctx.dispose();
       });
     });
+    // The client settles on the first response; ending the stream there runs the finalizer above.
+    return request.reactivity === QueryReactivity.ONE_SHOT ? stream.pipe(EffectStream.take(1)) : stream;
   }
 
   /**
@@ -290,6 +342,7 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     onClose: () => void,
   ): ActiveQuery {
     const parsedQuery = QueryAST.Query.pipe(Schema.decodeUnknownSync)(JSON.parse(request.query));
+    const subscriptionIds = request.subscriptionIds ?? [];
     const queryEntry: ActiveQuery = {
       executor: new QueryExecutor({
         indexEngine: this._params.indexEngine(),
@@ -301,21 +354,32 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
         executor: this._params.executor,
         sql: this._params.sql(),
         spaceStateManager: this._params.spaceStateManager,
+        holds: (documentId) => this._params.holdsDocument?.(subscriptionIds, documentId) ?? false,
+        feedStore: this._params.feedStore,
       }),
       dirty: true,
       open: false,
       firstResult: true,
       feedScoped: queryHasFeedScope(parsedQuery),
+      oneShot: request.reactivity === QueryReactivity.ONE_SHOT,
       cost: 0,
       debouncedUntil: 0,
-      sendResults: (results) => {
+      sendResults: (results, executionTime, truncated) => {
         if (ctx.disposed) {
           return;
         }
-        onResults({ queryId: request.queryId, results });
+        onResults({ queryId: request.queryId, results, executionTime, ...(truncated && { truncated }) });
+      },
+      sendUnchanged: (executionTime) => {
+        if (ctx.disposed) {
+          return;
+        }
+        onResults({ queryId: request.queryId, unchanged: true, executionTime });
       },
       onError,
       close: async () => {
+        // Cleared first so a batch that has not reached this query yet skips it instead of running a closed executor.
+        queryEntry.open = false;
         onClose();
         await queryEntry.executor.close();
         this._queries.delete(queryEntry);
@@ -338,6 +402,9 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       if (query.firstResult) {
         // First run is always executed regardless of hint.
         query.dirty = true;
+        continue;
+      }
+      if (query.oneShot) {
         continue;
       }
       if (hint === 'all') {
@@ -368,13 +435,21 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
     }
     this.#stats.totalDebounced += deferred.length;
 
-    // Cheap queries finish before expensive ones start: the worker serializes statements, so running
-    // them together would delay the cheap results and charge the expensive run's time to them.
+    // One at a time, cheapest first: SQLite runs synchronously, so interleaved queries would all finish with the
+    // slowest and each run's measured time would include the others' statements.
     ready.sort((left, right) => left.cost - right.cost);
-    const cheap = ready.filter((query) => query.cost < this.#debounce.minCost);
-    const expensive = ready.filter((query) => query.cost >= this.#debounce.minCost);
-    await Promise.all(cheap.map((query) => this.#runQuery(query)));
-    await Promise.all(expensive.map((query) => this.#runQuery(query)));
+    let sliceStart = performance.now();
+    for (const query of ready) {
+      if (!query.open) {
+        continue;
+      }
+      await this.#runQuery(query);
+      // Without a turn the whole batch is one task, and its answers and the requests queued behind it wait for the last query.
+      if (performance.now() - sliceStart >= QUERY_SLICE_MS) {
+        await yieldBehindQueuedTasks();
+        sliceStart = performance.now();
+      }
+    }
     const dirtyCount = ready.length;
 
     this.#scheduleWake(deferred);
@@ -386,7 +461,22 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       (this.#stats.averageQueriesActive * (this.#stats.totalExecutionBatches - 1) + activeCount) /
       this.#stats.totalExecutionBatches;
 
-    log.verbose('executed queries', { dirty: dirtyCount, active: activeCount, duration: performance.now() - begin });
+    const duration = performance.now() - begin;
+    if (duration >= SLOW_WORK_MS) {
+      const slowest = ready.reduce<ActiveQuery | undefined>(
+        (max, query) => (max && max.cost >= query.cost ? max : query),
+        undefined,
+      );
+      log.warn('slow query batch', {
+        dirty: dirtyCount,
+        active: activeCount,
+        duration,
+        slowest: slowest && Query.pretty(Query.fromAst(slowest.executor.query)),
+        slowestCost: slowest?.cost,
+      });
+    } else {
+      log.verbose('executed queries', { dirty: dirtyCount, active: activeCount, duration });
+    }
   }
 
   async #runQuery(query: ActiveQuery): Promise<void> {
@@ -403,10 +493,13 @@ export class QueryServiceImpl extends Resource implements QueryService.Handlers 
       query.dirty = false;
       if (changed || query.firstResult) {
         query.firstResult = false;
-        const results = query.executor.getResults();
+        const results = await query.executor.getResults();
         countWork('echo.queryResultsSent');
         countWork('echo.queryResultRows', results.length);
-        query.sendResults(results);
+        query.sendResults(results, performance.now() - begin, query.executor.truncated);
+      } else if (!query.oneShot) {
+        // A client that holds local writes against this query waits for a re-run to know its answer is current.
+        query.sendUnchanged(finishedAt - begin);
       }
     } catch (err) {
       log.catch(err, {

@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import {
-  SceneBuilder,
+  ViewBuilder,
   createNodeRegistry,
   defaultNodePrototypes,
   defaultNodeTypes,
@@ -25,12 +25,12 @@ describe('ClassNode', () => {
   test('joins the built-in types, and a fixture of it builds against its schema', ({ expect }) => {
     expect(Object.keys(registry)).toContain('class');
     const {
-      scenes: [scene],
-    } = SceneBuilder.scene('s', [
-      SceneBuilder.node('class', 'c', { x: 0, y: 0, width: 256, height: 256 }).properties({ name: 'Person' }),
+      views: [scene],
+    } = ViewBuilder.view('s', [
+      ViewBuilder.node('class', 'c', { x: 0, y: 0, width: 256, height: 256 }).properties({ label: 'Person' }),
     ]).build(registry);
     const node = scene.nodes.c;
-    expect(ClassNode.isClassNode(node) && [node.name, node.attributes, node.methods]).toEqual([
+    expect(ClassNode.isClassNode(node) && [node.label, node.attributes, node.methods]).toEqual([
       'Person',
       ['id: string'],
       ['save(): void'],

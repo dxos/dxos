@@ -1,0 +1,103 @@
+---
+id: org.dxos.spec.review
+name: DSL.Review
+version: 1.0
+extends:
+  - org.dxos.spec.core
+---
+
+The review dialect. A review is a separate document that judges how far the code meets a spec, item
+by item. It is written by an agent (the `spec-review` skill) or a person, and lives beside the spec
+it judges: `PLUGIN.mdl` → `PLUGIN.review.mdl`. Each new review replaces the previous file; git keeps
+the history. The spec viewer reads the latest review and marks each judged item with its status.
+
+A review is evidence, not a decision: it never changes the spec, and it adds no changelog entry.
+
+## Extensions
+
+| Term      | URI                         |
+| --------- | --------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Document
+
+Frontmatter names what was reviewed and against what:
+
+```yaml
+---
+spec: github:dxos/dxos/packages/plugins/plugin-file-system/PLUGIN.mdl
+commit: 64dcf3f44a541fdf0b3e55803f38d214e76a6279   # the code the review read
+date: 2026-10-22
+by: agent:claude-code                              # same actor forms as the changelog
+---
+```
+
+The body opens with a short summary, then one `verdict` per reviewed item.
+
+## Statuses
+
+| Status     | Meaning                                                                  |
+| ---------- | ------------------------------------------------------------------------ |
+| `done`     | The code does what the item says.                                        |
+| `untested` | The code does it, but no test exercises it.                              |
+| `partial`  | Some of what the item says is done; the note says which part is not.     |
+| `diverged` | The code does something different from what the item says.               |
+| `missing`  | Nothing in the code does it.                                             |
+
+The spec viewer shows beside each judged item whether code covers it (its `evidence:`, or "no code")
+and whether tests exercise it: `tested` when the verdict names `tests:` or is `done`, `untested` for
+any other status but `missing`, where there is no code to test.
+
+## Tests and scenarios
+
+A `scenario` or a `test` block describes behaviour to exercise, so it is judged on whether
+automation exercises it, not on whether code implements it:
+
+| Status     | For a `scenario` or `test`                                                  |
+| ---------- | --------------------------------------------------------------------------- |
+| `done`     | An automated test runs it end to end; `tests:` cites that test.             |
+| `partial`  | A test covers some of its steps or `then:` clauses; the note says which.    |
+| `diverged` | A test runs something different from what it describes.                     |
+| `missing`  | Nothing runs it (a manual QA run is not automation).                        |
+
+`untested` does not apply. `tests:` names the test files that exercise it and is required for
+`done`, `partial` and `diverged`; `evidence:` may name the code it drives. The viewer shows
+`tested`, `partly tested` or `not tested` beside it, with a chip per test file.
+
+## Walkthrough
+
+When an item is implemented in more than one place, the verdict carries a `walkthrough:`: 1 to 5
+segments, in reading order, that say where each part is implemented. Each segment is one
+sentence followed by the `github:` key of the code it describes; the viewer shows the sentence
+above the declaration the key names, linked to its file. Keep each sentence to what the code
+does for this item, not how it works line by line.
+
+- A `type` needs none: its one declaration is the hover card of its code chip.
+- An `op` walks its declaration (the schema), then each handler.
+- A `feat` or `req` walks the pieces in the order a request passes through them.
+
+An item with a single implementation gets no walkthrough.
+
+A `feat` with nested `req` items is judged through its requirements; its status is the worst of
+theirs. Judge a `feat` directly only when it has no requirements.
+
+## Definitions
+
+```mdl
+ext verdict
+  uri: org.dxos.mdl.verdict@1.0
+  desc: |
+    How far the code meets one spec item. The identifier is the item's id in the reviewed spec
+    (`F-1.2`, `Scene`, `openDirectory`); the inline prose is the verdict in one line.
+  fields:
+    status: done | untested | partial | diverged | missing
+    evidence?: RefList          # github: keys of the code that supports the verdict, with #Symbol
+    tests?: RefList             # github: keys of the test files that exercise the item, without #
+    walkthrough?: ProseList     # 1-5 items `- <one sentence>. github:<key>`, when there is more than one implementation
+    note?: Prose                # what is missing or different; required unless status is done
+  syntax: |
+    verdict F-1.2: The picker opens on the action.
+      status: done
+      evidence: [github:dxos/dxos/packages/plugins/plugin-file-system/src/util.ts#openDirectoryPicker]
+      tests: [github:dxos/dxos/packages/plugins/plugin-file-system/src/util.test.ts]
+```

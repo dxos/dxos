@@ -1,5 +1,305 @@
 # @dxos/plugin-assistant
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui@0.16.0
+  - @dxos/plugin-deck@0.16.0
+  - @dxos/echo-client@0.16.0
+  - @dxos/devtools@0.16.0
+  - @dxos/assistant@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/plugin-space@0.16.0
+  - @dxos/client@0.16.0
+  - @dxos/react-client@0.16.0
+  - @dxos/assistant-toolkit@0.16.0
+  - @dxos/plugin-attention@0.16.0
+  - @dxos/plugin-client@0.16.0
+  - @dxos/plugin-connector@0.16.0
+  - @dxos/plugin-markdown@0.16.0
+  - @dxos/plugin-observability@0.16.0
+  - @dxos/plugin-registry@0.16.0
+  - @dxos/plugin-routine@0.16.0
+  - @dxos/plugin-status-bar@0.16.0
+  - @dxos/plugin-tasks@0.16.0
+  - @dxos/plugin-transcription@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-graph@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-assistant@0.16.0
+  - @dxos/react-ui-attention@0.16.0
+  - @dxos/react-ui-chat@0.16.0
+  - @dxos/react-ui-components@0.16.0
+  - @dxos/react-ui-experimental@0.16.0
+  - @dxos/react-ui-feed@0.16.0
+  - @dxos/react-ui-form@0.16.0
+  - @dxos/react-ui-list@0.16.0
+  - @dxos/react-ui-menu@0.16.0
+  - @dxos/react-ui-search@0.16.0
+  - @dxos/react-ui-task@0.16.0
+  - @dxos/react-ui-trace@0.16.0
+  - @dxos/react-ui-transcription@0.16.0
+  - @dxos/agent-runtime@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/compute-runtime@0.16.0
+  - @dxos/conductor@0.16.0
+  - @dxos/link@0.16.0
+  - @dxos/echo-react@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/ui-editor@0.16.0
+  - @dxos/observability@0.16.0
+  - @dxos/ai@0.16.0
+  - @dxos/plugin-graph@0.16.0
+  - @dxos/config@0.16.0
+  - @dxos/mcp-client@0.16.0
+  - @dxos/halo-react@0.16.0
+  - @dxos/async@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/graph@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/edge-client@0.16.0
+  - @dxos/react-hooks@0.16.0
+  - @dxos/react-list@0.16.0
+  - @dxos/ui@0.16.0
+  - @dxos/ui-theme@0.16.0
+  - @dxos/ui-types@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [3b03db7]
+- Updated dependencies [5490cbc]
+- Updated dependencies [b7504c9]
+- Updated dependencies [6488905]
+- Updated dependencies [3d151fc]
+- Updated dependencies [008b18c]
+- Updated dependencies [ab27b41]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [1f72729]
+- Updated dependencies [1eaa8b4]
+- Updated dependencies [019891d]
+- Updated dependencies [5bbc891]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [b7d83c9]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [460bbc3]
+- Updated dependencies [d84f9b8]
+- Updated dependencies [b82150a]
+- Updated dependencies [0420f87]
+- Updated dependencies [cd70a43]
+- Updated dependencies [0d81167]
+- Updated dependencies [45ab961]
+- Updated dependencies [71fc002]
+- Updated dependencies [1e9c017]
+- Updated dependencies [1b33a84]
+- Updated dependencies [16bde33]
+- Updated dependencies [417247b]
+- Updated dependencies [1bc475e]
+- Updated dependencies [5e3e00c]
+- Updated dependencies [d250ed2]
+- Updated dependencies [ad4c7cf]
+- Updated dependencies [55bdf55]
+- Updated dependencies [ed1039a]
+- Updated dependencies [9b9a4ca]
+- Updated dependencies [b7fe13f]
+- Updated dependencies [afba7ce]
+- Updated dependencies [37edd53]
+- Updated dependencies [098a536]
+- Updated dependencies [6a02061]
+- Updated dependencies [1bddc93]
+- Updated dependencies [25af912]
+- Updated dependencies [7b47951]
+- Updated dependencies [8190cc5]
+- Updated dependencies [f1e7396]
+- Updated dependencies [e398906]
+- Updated dependencies [60ef4ec]
+- Updated dependencies [2b6a93a]
+- Updated dependencies [743604d]
+  - @dxos/ui-editor@0.15.0
+  - @dxos/compute-runtime@0.15.0
+  - @dxos/agent-runtime@0.15.0
+  - @dxos/assistant@0.15.0
+  - @dxos/plugin-space@0.15.0
+  - @dxos/react-ui@0.15.0
+  - @dxos/plugin-registry@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/plugin-deck@0.15.0
+  - @dxos/devtools@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/echo-client@0.15.0
+  - @dxos/edge-client@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/plugin-routine@0.15.0
+  - @dxos/ai@0.15.0
+  - @dxos/observability@0.15.0
+  - @dxos/plugin-client@0.15.0
+  - @dxos/react-ui-components@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/plugin-markdown@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/echo-react@0.15.0
+  - @dxos/client@0.15.0
+  - @dxos/react-ui-task@0.15.0
+  - @dxos/plugin-attention@0.15.0
+  - @dxos/plugin-tasks@0.15.0
+  - @dxos/plugin-transcription@0.15.0
+  - @dxos/react-ui-assistant@0.15.0
+  - @dxos/react-ui-chat@0.15.0
+  - @dxos/react-ui-feed@0.15.0
+  - @dxos/react-ui-form@0.15.0
+  - @dxos/react-ui-trace@0.15.0
+  - @dxos/react-ui-transcription@0.15.0
+  - @dxos/assistant-toolkit@0.15.0
+  - @dxos/conductor@0.15.0
+  - @dxos/plugin-connector@0.15.0
+  - @dxos/plugin-observability@0.15.0
+  - @dxos/plugin-status-bar@0.15.0
+  - @dxos/app-graph@0.15.0
+  - @dxos/react-client@0.15.0
+  - @dxos/react-ui-attention@0.15.0
+  - @dxos/react-ui-experimental@0.15.0
+  - @dxos/react-ui-list@0.15.0
+  - @dxos/react-ui-menu@0.15.0
+  - @dxos/react-ui-search@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/plugin-graph@0.15.0
+  - @dxos/config@0.15.0
+  - @dxos/mcp-client@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/graph@0.15.0
+  - @dxos/react-hooks@0.15.0
+  - @dxos/halo-react@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/react-list@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/ui@0.15.0
+  - @dxos/ui-theme@0.15.0
+  - @dxos/ui-types@0.15.0
+
+## 0.14.0
+
+### Minor Changes
+
+- 0e28f43: Add an Agent tab to the chat options, so a new chat can run on any registered agent (such as Claude Code on this computer or in the cloud) without delegating a task, and show which agent a chat runs on beside the options.
+- a1e64db: A chat hosted on EDGE now shows its working indicators, phases and streamed reply for the whole turn, instead of reading idle while the agent works. `AgentProcess` takes a `resident` option that keeps the process for the next prompt rather than spawning a new one per turn, and `subscribeEphemeral` takes `{ replay }`. Breaking: plugin-assistant's `AiChatProcessor` is now `ChatModel` (`useChatProcessor` → `useChatModel`, `getProcessorState` → `getChatModelState`, and the `processor` prop of `Chat.Root`/`ChatPrompt` → `chatModel`).
+
+### Patch Changes
+
+- 3e98467: The space Home assistant prompt no longer adds a feed to the space on every visit: its chat is an in-memory draft until the user sends, when the chat, its feed and its bindings are written together. `AiContext.Binder` now opens over a feed that is not stored yet, holding bindings in memory until `flush()` writes them once the feed is stored, and `unbind` removes an object from the bound set immediately whichever URI form the ref uses.
+- Updated dependencies [f0fc12a]
+- Updated dependencies [1fe9218]
+- Updated dependencies [0715304]
+- Updated dependencies [085dcb1]
+- Updated dependencies [b0e4b60]
+- Updated dependencies [fd09131]
+- Updated dependencies [508be04]
+- Updated dependencies [347546a]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [a1e64db]
+- Updated dependencies [28bb45b]
+- Updated dependencies [1759426]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [ed52cb7]
+- Updated dependencies [6847fe2]
+- Updated dependencies [35217f4]
+- Updated dependencies [716c951]
+- Updated dependencies [385f3ce]
+- Updated dependencies [3e98467]
+- Updated dependencies [1819960]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [2112757]
+- Updated dependencies [27b542c]
+- Updated dependencies [4820c02]
+- Updated dependencies [1d3eea3]
+- Updated dependencies [e0cd29c]
+- Updated dependencies [5e1acd0]
+- Updated dependencies [5324de6]
+- Updated dependencies [b07f49f]
+  - @dxos/assistant@0.14.0
+  - @dxos/observability@0.14.0
+  - @dxos/app-framework@0.14.0
+  - @dxos/compute-runtime@0.14.0
+  - @dxos/plugin-routine@0.14.0
+  - @dxos/plugin-markdown@0.14.0
+  - @dxos/react-ui-form@0.14.0
+  - @dxos/react-ui@0.14.0
+  - @dxos/react-ui-list@0.14.0
+  - @dxos/compute@0.14.0
+  - @dxos/react-ui-assistant@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/echo-client@0.14.0
+  - @dxos/devtools@0.14.0
+  - @dxos/plugin-space@0.14.0
+  - @dxos/effect@0.14.0
+  - @dxos/plugin-registry@0.14.0
+  - @dxos/plugin-connector@0.14.0
+  - @dxos/ui-theme@0.14.0
+  - @dxos/agent-runtime@0.14.0
+  - @dxos/assistant-toolkit@0.14.0
+  - @dxos/conductor@0.14.0
+  - @dxos/plugin-transcription@0.14.0
+  - @dxos/plugin-observability@0.14.0
+  - @dxos/plugin-attention@0.14.0
+  - @dxos/plugin-client@0.14.0
+  - @dxos/plugin-deck@0.14.0
+  - @dxos/plugin-graph@0.14.0
+  - @dxos/plugin-status-bar@0.14.0
+  - @dxos/plugin-tasks@0.14.0
+  - @dxos/app-toolkit@0.14.0
+  - @dxos/client@0.14.0
+  - @dxos/react-ui-trace@0.14.0
+  - @dxos/react-ui-experimental@0.14.0
+  - @dxos/app-graph@0.14.0
+  - @dxos/react-client@0.14.0
+  - @dxos/react-ui-attention@0.14.0
+  - @dxos/react-ui-chat@0.14.0
+  - @dxos/react-ui-components@0.14.0
+  - @dxos/react-ui-feed@0.14.0
+  - @dxos/react-ui-menu@0.14.0
+  - @dxos/react-ui-search@0.14.0
+  - @dxos/react-ui-task@0.14.0
+  - @dxos/react-ui-transcription@0.14.0
+  - @dxos/ai@0.14.0
+  - @dxos/link@0.14.0
+  - @dxos/echo-react@0.14.0
+  - @dxos/schema@0.14.0
+  - @dxos/types@0.14.0
+  - @dxos/ui-editor@0.14.0
+  - @dxos/graph@0.14.0
+  - @dxos/mcp-client@0.14.0
+  - @dxos/edge-client@0.14.0
+  - @dxos/config@0.14.0
+  - @dxos/ui@0.14.0
+  - @dxos/halo-react@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/errors@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+  - @dxos/react-hooks@0.14.0
+  - @dxos/react-list@0.14.0
+  - @dxos/ui-types@0.14.0
+
 ## 0.13.0
 
 ### Minor Changes

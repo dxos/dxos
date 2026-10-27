@@ -17,7 +17,9 @@ import { createDraftMessage } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof InboxOperation.DraftEmailAndOpen> = InboxOperation.DraftEmailAndOpen.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ db, mode = 'compose', message, subject, body, mailbox, contextId }) {
+    Effect.fnUntraced(function* ({ mode = 'compose', message, subject, body, mailbox, contextId }) {
+      const { db } = yield* Database.Service;
+
       // A draft is identified by the `properties.mailbox` its mailbox supplies (see `DraftMessage`), so
       // without one there is nothing to scope, tag, or render it — bail before persisting an orphan.
       if (!Mailbox.instanceOf(mailbox)) {
@@ -30,7 +32,7 @@ const handler: Operation.WithHandler<typeof InboxOperation.DraftEmailAndOpen> = 
 
       // Tag as 'draft' so the Drafts view (a systemTag filter, like Inbox/Sent) picks it up;
       // `useSendEmail` removes the tag at send time.
-      yield* SystemTags.toggleTag(mailbox, draft, 'draft').pipe(Effect.provide(Database.layer(db)));
+      yield* SystemTags.toggleTag(mailbox, draft, 'draft');
 
       // A reply/forward draft shares its parent's `threadId`, so the conversation the caller is already
       // looking at renders it inline (see `ConversationStack`) — navigating anywhere would lose that view.

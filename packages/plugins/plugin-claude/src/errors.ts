@@ -71,3 +71,12 @@ export class CredentialConflictError extends BaseError.extend(
   'CredentialConflictError',
   'A credential cannot be bound and revoked in the same call.',
 ) {}
+
+/** What was pasted into the Claude Code connector is not a token from `claude setup-token`. */
+export class ClaudeCodeTokenInvalidError extends BaseError.extend(
+  'ClaudeCodeTokenInvalidError',
+  'Not a Claude Code token. Run `claude setup-token` in a terminal and paste the token it prints.',
+) {}
+
+/** A coding agent could not be started, or its ACP connection failed. */
+export class AgentError extends BaseError.extend('AgentError', 'Coding agent failed.') {}

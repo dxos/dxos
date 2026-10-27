@@ -14,7 +14,7 @@ import * as Schema from 'effect/Schema';
 import { type Context } from '@dxos/context';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
-import { type SpaceId } from '@dxos/keys';
+import { IdentityDid, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ProcessProtocol } from '@dxos/protocols';
 import {
@@ -153,6 +153,62 @@ export type EdgeHttpClientOptions = BaseHttpClientOptions;
 /** What `finalize` reports back: the content-addressed key the bytes landed under, and their size. */
 export type FinalizedUpload = { key: string; size: number; contentType?: string };
 
+/** What EDGE answers every brain fact feed route with: the EIDs of the fact feeds the brain indexes. */
+export const BrainFactFeeds = Schema.Struct({ feeds: Schema.Array(Schema.String) });
+export type BrainFactFeeds = Schema.Schema.Type<typeof BrainFactFeeds>;
+
+/** What EDGE answers `GET /compute/brain/:agent` with, as far as clients read it. */
+export const BrainInfo = Schema.Struct({
+  identity: Schema.Struct({ identityDid: Schema.String, label: Schema.String, defaultSpaceId: Schema.String }),
+  role: Schema.String,
+});
+export type BrainInfo = Schema.Schema.Type<typeof BrainInfo>;
+
+/** What EDGE answers an added admin with: the identity keys of every admin of the agent. */
+export const BrainAdmins = Schema.Struct({ adminKeys: Schema.Array(Schema.String) });
+export type BrainAdmins = Schema.Schema.Type<typeof BrainAdmins>;
+
+/** What EDGE answers `GET /compute/brain/:agent/halo` with: what an admin inspects of an agent's identity. */
+export const AgentHalo = Schema.Struct({
+  identity: Schema.Struct({
+    identityDid: Schema.String,
+    identityKey: Schema.String,
+    agentKey: Schema.String,
+    defaultSpaceId: Schema.String,
+    homeSpaceId: Schema.String,
+    agent: Schema.String,
+    label: Schema.String,
+  }),
+  haloSpaceId: Schema.optional(Schema.String),
+  /** `null` for an agent provisioned before EDGE kept its admins. */
+  adminKeys: Schema.NullOr(Schema.Array(Schema.String)),
+  /** The spaces the agent's admins put it in. */
+  joinedSpaceIds: Schema.Array(Schema.String),
+  /** The spaces the agent holds a feed in, its HALO and default space included. */
+  memberSpaceIds: Schema.Array(Schema.String),
+  /** Every credential in the agent's HALO, each a base64 `Credential`. */
+  credentials: Schema.Array(Schema.String),
+});
+export type AgentHalo = Schema.Schema.Type<typeof AgentHalo>;
+
+/** What a client asks `POST /compute/brain` for: an identity for the agent with this entity id. */
+export type ProvisionBrainRequest = { agent: string; homeSpaceId: SpaceId; label: string };
+
+/** What EDGE answers `POST /compute/brain` with: the brain's identity and the caller's membership of its space. */
+export const ProvisionedBrain = Schema.Struct({
+  identity: Schema.Struct({
+    identityDid: IdentityDid,
+    identityKey: Schema.String,
+    defaultSpaceId: Schema.optional(SpaceId),
+  }),
+  /** The caller's `SpaceMember` credential for the agent's default space, base64 protobuf. */
+  membership: Schema.String,
+});
+export type ProvisionedBrain = Schema.Schema.Type<typeof ProvisionedBrain>;
+
+/** EDGE route of an agent's mailbox. */
+const mailboxPath = (handle: string): string => `/compute/email/mailboxes/${encodeURIComponent(handle)}`;
+
 /**
  * Validates the finalize response rather than asserting its shape.
  *
@@ -223,6 +279,37 @@ export class EdgeHttpClient extends BaseHttpClient {
   public async request(ctx: Context, path: string, args: EdgeRequestArgs): Promise<unknown> {
     const { method, body, ...rest } = args;
     return this._call<unknown>(ctx, new URL(path, this.baseUrl), { auth: true, ...rest, method, body });
+  }
+
+  //
+  // Agent mailboxes
+  //
+  // The mailbox answers are plugin-agent's to decode (`AgentMailbox.MailboxStatus`, `AgentMailbox.SendResult`).
+  //
+
+  /** Claims the agent's mailbox `handle`, or updates the claim; answers its status. */
+  public async claimMailbox(ctx: Context, handle: string, body: unknown, args?: EdgeHttpCallArgs): Promise<unknown> {
+    return this.request(ctx, mailboxPath(handle), { ...args, method: 'PUT', body });
+  }
+
+  /** Releases the mailbox `handle`; answers its status. */
+  public async releaseMailbox(ctx: Context, handle: string, args?: EdgeHttpCallArgs): Promise<unknown> {
+    return this.request(ctx, mailboxPath(handle), { ...args, method: 'DELETE' });
+  }
+
+  /** The status of the mailbox `handle`. */
+  public async getMailbox(ctx: Context, handle: string, args?: EdgeHttpCallArgs): Promise<unknown> {
+    return this.request(ctx, mailboxPath(handle), { ...args, method: 'GET' });
+  }
+
+  /** Sends an email from the mailbox `handle`; answers what EDGE sent. */
+  public async sendMailboxEmail(
+    ctx: Context,
+    handle: string,
+    body: unknown,
+    args?: EdgeHttpCallArgs,
+  ): Promise<unknown> {
+    return this.request(ctx, `${mailboxPath(handle)}/send`, { ...args, method: 'POST', body });
   }
 
   //
@@ -668,10 +755,20 @@ export class EdgeHttpClient extends BaseHttpClient {
     });
   }
 
-  public async forceRunCronTrigger(ctx: Context, spaceId: SpaceId, triggerId: ObjectId) {
+  /**
+   * Runs a cron trigger now. `data` becomes the fire event's `data`, which the trigger's
+   * `{{event.data.*}}` input templates read, and is kept across the run's `runAgain` continuations.
+   */
+  public async forceRunCronTrigger(
+    ctx: Context,
+    spaceId: SpaceId,
+    triggerId: ObjectId,
+    { data }: { data?: Record<string, unknown> } = {},
+  ) {
     return this._call(ctx, new URL(`/compute/functions/${spaceId}/triggers/crons/${triggerId}/run`, this.baseUrl), {
       method: 'POST',
       auth: true,
+      ...(data ? { body: { data } } : {}),
     });
   }
 
@@ -684,6 +781,18 @@ export class EdgeHttpClient extends BaseHttpClient {
       method: 'POST',
       auth: true,
     });
+  }
+
+  /**
+   * Rewinds a feed trigger on the EDGE dispatcher to the start of its feed, so every item is delivered
+   * again. EDGE answers 409 for a trigger that is not a feed trigger.
+   */
+  public async resetTrigger(ctx: Context, spaceId: SpaceId, triggerId: ObjectId) {
+    return this._call<{ reset: boolean }>(
+      ctx,
+      new URL(`/compute/functions/${spaceId}/triggers/${triggerId}/reset`, this.baseUrl),
+      { method: 'POST', auth: true },
+    );
   }
 
   /**
@@ -702,6 +811,112 @@ export class EdgeHttpClient extends BaseHttpClient {
       method: 'GET',
       auth: true,
     });
+  }
+
+  //
+  // Brains
+  //
+
+  /**
+   * The identity EDGE minted for an agent's brain, and the caller's role on it. `agent` is the agent's DID; EDGE answers
+   * 404 to a caller with no role, as for a brain that does not exist.
+   */
+  public async getBrain(ctx: Context, agent: string, args?: EdgeHttpCallArgs): Promise<BrainInfo> {
+    const url = new URL(`/compute/brain/${encodeURIComponent(agent)}`, this.baseUrl);
+    const response = await this._call(ctx, url, { ...args, method: 'GET', auth: true });
+    return Schema.decodeUnknownSync(BrainInfo)(response);
+  }
+
+  /** Gives the agent's brain an identity, for a caller who may write to its space; its creator asking again gets the same answer. */
+  public async provisionBrain(
+    ctx: Context,
+    body: ProvisionBrainRequest,
+    args?: EdgeHttpCallArgs,
+  ): Promise<ProvisionedBrain> {
+    const response = await this.request(ctx, '/compute/brain', { ...args, method: 'POST', body });
+    return Schema.decodeUnknownSync(ProvisionedBrain)(response);
+  }
+
+  /** Puts the agent's brain in a space, which only its admins may do. `agent` is the agent's DID. */
+  public async addBrainSpace(ctx: Context, agent: string, spaceId: SpaceId, args?: EdgeHttpCallArgs): Promise<void> {
+    await this.request(ctx, `/compute/brain/${encodeURIComponent(agent)}/spaces`, {
+      ...args,
+      method: 'POST',
+      body: { spaceId },
+    });
+  }
+
+  /** Makes an identity an admin of an agent, which only an admin may do; nothing takes it away. Answers every admin. */
+  public async addBrainAdmin(
+    ctx: Context,
+    agent: string,
+    identityKey: string,
+    args?: EdgeHttpCallArgs,
+  ): Promise<BrainAdmins> {
+    const url = new URL(`/compute/brain/${encodeURIComponent(agent)}/admins`, this.baseUrl);
+    const response = await this._call(ctx, url, { ...args, method: 'POST', body: { identityKey }, auth: true });
+    return Schema.decodeUnknownSync(BrainAdmins)(response);
+  }
+
+  /** The agent's HALO, its admins and its spaces, which only its admins may read; EDGE answers anyone else 404. */
+  public async getAgentHalo(ctx: Context, agent: string, args?: EdgeHttpCallArgs): Promise<AgentHalo> {
+    const url = new URL(`/compute/brain/${encodeURIComponent(agent)}/halo`, this.baseUrl);
+    const response = await this._call(ctx, url, { ...args, method: 'GET', auth: true });
+    return Schema.decodeUnknownSync(AgentHalo)(response);
+  }
+
+  //
+  // Brain fact feeds
+  //
+
+  /**
+   * Has an agent's brain index a fact feed (its EID) from now on; answers the feeds it indexes. `agent` names the
+   * brain (see plugin-agent's `AgentPresence.brainId`); the caller must be a member of `spaceId`, a space it serves.
+   */
+  public async addBrainFactFeed(
+    ctx: Context,
+    spaceId: SpaceId,
+    agent: string,
+    feed: string,
+    args?: EdgeHttpCallArgs,
+  ): Promise<BrainFactFeeds> {
+    return this.#factFeedsCall(ctx, spaceId, agent, { ...args, method: 'POST', body: { feed } });
+  }
+
+  /** Stops an agent's brain indexing a fact feed; the facts it read stay. Answers the feeds it still indexes. */
+  public async removeBrainFactFeed(
+    ctx: Context,
+    spaceId: SpaceId,
+    agent: string,
+    feed: string,
+    args?: EdgeHttpCallArgs,
+  ): Promise<BrainFactFeeds> {
+    return this.#factFeedsCall(ctx, spaceId, agent, { ...args, method: 'DELETE' }, { feed });
+  }
+
+  /** The fact feeds an agent's brain indexes. */
+  public async listBrainFactFeeds(
+    ctx: Context,
+    spaceId: SpaceId,
+    agent: string,
+    args?: EdgeHttpCallArgs,
+  ): Promise<BrainFactFeeds> {
+    return this.#factFeedsCall(ctx, spaceId, agent, { ...args, method: 'GET' });
+  }
+
+  async #factFeedsCall(
+    ctx: Context,
+    spaceId: SpaceId,
+    agent: string,
+    args: EdgeHttpCallArgs & { method: string; body?: unknown },
+    query: Record<string, string> = {},
+  ): Promise<BrainFactFeeds> {
+    const url = new URL(`/compute/brain/${spaceId}/${encodeURIComponent(agent)}/fact-feeds`, this.baseUrl);
+    for (const [key, value] of Object.entries(query)) {
+      url.searchParams.set(key, value);
+    }
+    const response = await this._call(ctx, url, { ...args, auth: true });
+    return Schema.decodeUnknownSync(BrainFactFeeds)(response);
   }
 
   //
@@ -840,10 +1055,7 @@ export class EdgeHttpClient extends BaseHttpClient {
     let handledAuth = false;
     while (true) {
       if (!this._authHeader) {
-        const authResponse = await fetch(new URL('/auth', this.baseUrl));
-        if (authResponse.status === 401) {
-          this._authHeader = await this._handleUnauthorized(authResponse);
-        }
+        await this._prefetchAuthHeader();
       }
 
       const headers = new Headers(request.headers);

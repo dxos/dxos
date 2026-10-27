@@ -13,23 +13,22 @@ export const key = 'org.dxos.skill.github';
 
 /**
  * Imported rather than named as strings: an unresolvable tool id is dropped from the toolkit with
- * only a log line. Verbs that write to GitHub (approvals, comments) are left out so an agent cannot
- * post under the user's account without a skill that asks for it.
+ * only a log line. Only verbs that act on the space belong here; live reads and writes against
+ * GitHub come from the GitHub connection's MCP server, which the conversation turns on or off.
  */
 export const operations: readonly Operation.Definition.Any[] = [
   GitHubOperation.ImportPullRequest,
-  GitHubOperation.GetPullRequestStatus,
   GitHubOperation.GenerateWalkthrough,
 ];
 
-/** GitHub pull requests: import them into a space by URL, read their live state, and walk through them. */
+/** GitHub pull requests: import them into a space by URL and walk through them. */
 export const make = (): Skill.Skill =>
   Skill.make({
     key,
     name: 'GitHub',
     description:
-      'Import GitHub pull requests into a space by URL or owner/repo#number, read their state and CI ' +
-      'status, and generate walkthroughs. Use when a task, message or the user names a pull request.',
+      'Import GitHub pull requests into a space by URL or owner/repo#number and generate walkthroughs. ' +
+      'Use when a task, message or the user names a pull request.',
     agentCanEnable: true,
     mcpPrompt: true,
     tools: Skill.toolDefinitions({ operations }),
@@ -40,7 +39,9 @@ export const make = (): Skill.Skill =>
         Never create the object by hand, since only an import fills its title, state and diff.
         Importing is idempotent: a pull request the space already holds is returned unchanged, so import before referencing one rather than searching first.
         Pass the returned pullRequest reference to the other tools, and use it wherever the pull request must be attached to another object, such as a task's artifacts.
-        Read the state and CI status with ${Operation.toolName(GitHubOperation.GetPullRequestStatus)} before reporting whether a pull request is open, merged or green; the stored object may be stale.
+        The import also returns the pull request's repository as a repo reference; add it to a project's repositories, or bind it to the chat, to have coding agents check it out.
+        Read a pull request's live state, reviews and CI status with the GitHub MCP server's pull request tools before reporting whether it is open, merged or green; the stored object may be stale.
+        Those tools come from the space's GitHub connection; if you cannot see them, the conversation has the connection's MCP server turned off.
       `,
     }),
   });

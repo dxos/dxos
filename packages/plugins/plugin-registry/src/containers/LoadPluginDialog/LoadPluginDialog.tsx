@@ -72,13 +72,13 @@ export const LoadPluginDialog = () => {
             />
             {error && <Field.HelperText>{error}</Field.HelperText>}
           </Field.Root>
-          <Layout.Flex justify='end'>
-            <Button.Root variant='primary' disabled={!url.trim() || loading} onClick={() => void handleLoad()}>
-              {loading ? t('loading.label') : t('load-plugin.label')}
-            </Button.Root>
-          </Layout.Flex>
         </Layout.Flex>
       </Dialog.Body>
+      <Dialog.Footer>
+        <Button.Root variant='primary' disabled={!url.trim() || loading} onClick={() => void handleLoad()}>
+          {loading ? t('loading.label') : t('load-plugin.label')}
+        </Button.Root>
+      </Dialog.Footer>
     </Dialog.Content>
   );
 };

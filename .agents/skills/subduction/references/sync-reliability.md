@@ -226,9 +226,9 @@ Set that before any reproduction attempt, and check the `subduction log level` s
 whether a bundle you were handed had it suppressed.
 
 **Correlate with the edge on attributes, not body text.** Edge logs carry `ctx.spaceId`,
-`ctx.collectionId`, `ctx.documentCount`, `ctx.identityDid`; a SigNoz full-text search for a spaceId
+`ctx.collectionId`, `ctx.documentCount`, `ctx.identityDid`; a full-text search for a spaceId
 matches only the HTTP lines whose body embeds it, missing every `SubductionAutomergeReplicator`
-line. Filter `attribute.ctx.spaceId = '<id>'` instead. The edge has **no per-document heads
+line. Filter on the `ctx.spaceId` log attribute instead. The edge has **no per-document heads
 logging**, so it can confirm delivery (`subduction: collection-state sent`, `deliveryResult`) but
 cannot tell you what diverged.
 

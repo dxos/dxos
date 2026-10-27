@@ -8,9 +8,10 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { type Space } from '@dxos/halo';
+import { EID } from '@dxos/keys';
 import { Organization, Person } from '@dxos/types';
 
-import { BrainService, Goal, Profile, Trigger, TriggerOperation } from '#types';
+import { AgentPresence, BrainService, Goal, Profile, Trigger, TriggerOperation } from '#types';
 
 import { compileGoal } from './compile-goal.ts';
 import { AgentOperationError } from './errors.ts';
@@ -30,8 +31,9 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
       ongoing,
     }) {
       const brain = yield* BrainService.BrainService;
+      const { db } = yield* Database.Service;
       const agent = yield* Database.load(agentRef);
-      if ((yield* brain.subscriptions(agent.id)).length >= BrainService.MAX_TRIGGERS) {
+      if ((yield* brain.subscriptions(AgentPresence.brainId(agent))).length >= BrainService.MAX_TRIGGERS) {
         return yield* Effect.fail(registryFull());
       }
       const requester = yield* Database.load(requesterRef);
@@ -39,6 +41,23 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
       if (!Obj.instanceOf(Person.Person, requester) && !Obj.instanceOf(Organization.Organization, requester)) {
         return yield* Effect.fail(
           new AgentOperationError({ message: 'The requester must be a person or organization; resolve them first.' }),
+        );
+      }
+
+      const members = yield* loadMembers;
+      const resolved = resolvePattern(members, when);
+      if (typeof resolved === 'string') {
+        return yield* Effect.fail(new AgentOperationError({ message: resolved }));
+      }
+
+      // Telling someone what they say themselves is never the ask: the requester was mixed up with the watched person.
+      const told = recipient ? yield* Database.load(recipient) : requester;
+      const toldDid = personDid(told);
+      if (toldDid !== undefined && resolved.speaker === toldDid) {
+        return yield* Effect.fail(
+          new AgentOperationError({
+            message: `${Profile.displayName(told)} would be told what they say themselves; the requester is the person asking you, not the person to watch.`,
+          }),
         );
       }
 
@@ -61,12 +80,6 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
         );
       }
 
-      const members = yield* loadMembers;
-      const resolved = resolvePattern(members, when);
-      if (typeof resolved === 'string') {
-        return yield* Effect.fail(new AgentOperationError({ message: resolved }));
-      }
-
       const createdAt = DateTime.formatIso(yield* DateTime.now);
       // The goal's text compiled to rules is the authority; the pattern, translated, is the fallback.
       const compiled = yield* compileGoal({
@@ -79,8 +92,8 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
       });
       const rules = compiled?.rules ?? Trigger.toRules(resolved, { createdAt });
       const trigger: Trigger.Trigger = {
-        id: Trigger.makeId(agent.id),
-        agent: agent.id,
+        id: Trigger.makeId(AgentPresence.brainId(agent)),
+        agent: AgentPresence.brainId(agent),
         goal: Ref.make(goal),
         ...(request ? { request } : {}),
         when: resolved,
@@ -88,6 +101,8 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
         ...(ongoing ? { ongoing } : {}),
         rules,
         createdAt,
+        // The goal and recipient live in this space, so what the watch wakes is delivered here (`AgentPresence.delivers`).
+        origin: EID.make({ spaceId: db.spaceId, entityId: agent.id }),
       };
       if (!(yield* brain.subscribe(trigger))) {
         return yield* Effect.fail(registryFull());

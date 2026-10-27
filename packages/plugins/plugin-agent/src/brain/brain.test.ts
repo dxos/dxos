@@ -22,22 +22,12 @@ import { HasSubject, Message, Organization, Person } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
 import { BrainSkill, ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } from '#skills';
-import {
-  AgentOperation,
-  ChatParticipant,
-  FactEntry,
-  Goal,
-  Memory,
-  Mode,
-  Relay,
-  type Trigger,
-  TriggerOperation,
-} from '#types';
+import { AgentOperation, ChatParticipant, Goal, Mode, Relay, type Trigger, TriggerOperation } from '#types';
 
 import { loadChats } from '../operations/agent-skills.ts';
 import { COMPOSE_PROMPT } from '../operations/compose-update.ts';
 import { BRAIN_SCENARIO as SCENARIO } from './scenario.ts';
-import { createLocalAgent, makeTestBrain, makeTestSpaceLayer } from './testing.ts';
+import { createLocalAgent, makeTestBrain, makeTestSpaceLayer, noChannelBackends } from './testing.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -119,7 +109,7 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
   Layer.provideMerge(
     AssistantTestLayer({
       operationHandlers: AgentOperationHandlerSet,
-      extraServices: Layer.merge(brain.layer, testSpaceLayer),
+      extraServices: Layer.mergeAll(brain.layer, testSpaceLayer, noChannelBackends),
       types: [
         Agent.Agent,
         Chat.Chat,
@@ -130,13 +120,10 @@ const TestLayer = Layer.merge(brain.layer, testSpaceLayer).pipe(
         Person.Person,
         Organization.Organization,
         HasSubject.HasSubject,
-        Memory.Memory,
         Goal.Goal,
         Mode.Mode,
         Relay.Relay,
         Message.Message,
-        FactEntry.FactEntry,
-        FactEntry.ExtractionPass,
       ],
       skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make(), BrainSkill.make()],
       aiService: ScriptedLanguageModel.scriptedAiService(makeScript(refs)),

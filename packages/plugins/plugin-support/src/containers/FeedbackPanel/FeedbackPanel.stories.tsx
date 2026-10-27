@@ -25,6 +25,7 @@ const makeObservability = (): Observability.Observability =>
     isAvailable: () => Effect.succeed(true),
     support: {
       uploadLogs: async () => 'story/logs.ndjson',
+      uploadNdjson: async () => 'story/trajectory.ndjson',
       sessionContext: () => undefined,
       flushLogs: async (ticketId: string) => {
         // eslint-disable-next-line no-console

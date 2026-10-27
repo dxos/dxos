@@ -2,6 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
@@ -77,7 +78,14 @@ export const SpaceGenerator = Util.composable<HTMLDivElement, SpaceGeneratorProp
         allTemplates.map((template) => [
           template.id,
           async (space) => {
-            await template.apply({ client, space });
+            const { error } = await invokePromise(
+              SpaceOperation.ApplyTemplate,
+              { template: template.id, space },
+              { spaceId: space.id },
+            );
+            if (error) {
+              throw error;
+            }
             return [];
           },
         ]),
@@ -163,6 +171,28 @@ export const SpaceGenerator = Util.composable<HTMLDivElement, SpaceGeneratorProp
     }, [space, invokePromise, updateInfo, t]);
 
     const menuActions = useSpaceGeneratorMenu({ updateInfo, handleReset, handleCollectGarbage });
+    const countActions = useMemo(
+      () =>
+        Atom.make(() =>
+          MenuBuilder.make()
+            .custom('count', { label: 'Count' }, () => (
+              <Field.Root>
+                <Input.Root
+                  placeholder='Count'
+                  classNames='w-[4rem] text-right'
+                  min={1}
+                  max={100}
+                  size={8}
+                  value={count}
+                  onChange={(event) => setCount(parseInt(event.target.value))}
+                  type='number'
+                />
+              </Field.Root>
+            ))
+            .build(),
+        ),
+      [count],
+    );
 
     const handleCreateData = useCallback(
       async (typename: string) => {
@@ -182,20 +212,7 @@ export const SpaceGenerator = Util.composable<HTMLDivElement, SpaceGeneratorProp
 
       <Panel.Root {...Util.composableProps(props)} ref={forwardedRef}>
         <Panel.Header>
-          <ActionToolbar {...menuActions} alwaysActive classNames='dx-document'>
-            <Field.Root>
-              <Input.Root
-                placeholder='Count'
-                classNames='w-[4rem] text-right'
-                min={1}
-                max={100}
-                size={8}
-                value={count}
-                onChange={(event) => setCount(parseInt(event.target.value))}
-                type='number'
-              />
-            </Field.Root>
-          </ActionToolbar>
+          <ActionToolbar {...menuActions} customActions={countActions} alwaysActive classNames='dx-document' />
         </Panel.Header>
         <Panel.Body asChild>
           <ScrollArea.Root orientation='vertical'>

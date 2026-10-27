@@ -17,6 +17,8 @@ import * as TestingHarness from '@dxos/plugin-testing/Harness';
 import { TasksPlugin } from '#plugin';
 import { Journal, OutlineOperation } from '#types';
 
+await TestingHarness.preload({ plugins: [ClientPlugin.make({}), TasksPlugin()] });
+
 describe('OutlineOperation.QuickJournalEntry', () => {
   test("creates the default space's journal on first use and appends a bullet", async ({ expect }) => {
     await using harness = await setup();

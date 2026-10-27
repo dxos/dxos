@@ -191,6 +191,15 @@ export const listFromTree =
   (filter?: Filter): Effect.Effect<readonly Process[]> =>
     Effect.map(processTree, (tree) => tree.filter((info) => matchesFilter(info, filter)));
 
+export interface SubscribeEphemeralOptions {
+  /**
+   * Replay the buffered events before streaming new ones (the default), so a reader attaching mid-turn
+   * sees the turn so far. A reader that subscribes BEFORE causing the work it wants to follow passes
+   * `false`: the buffer then holds only earlier turns, which would read as the new one.
+   */
+  readonly replay?: boolean;
+}
+
 /**
  * The plain fields of a {@link Process}: what a process tree holds, what crosses the wire, and what
  * {@link make} turns back into a process.
@@ -286,7 +295,7 @@ export interface Process<_Input = any, _Output = any, _Rpcs extends Rpc.Any = an
    * before live `pushEphemeral` events arrive. Interrupt the daemon fiber explicitly
    * on dispose.
    */
-  subscribeEphemeral(): Stream.Stream<Trace.Message>;
+  subscribeEphemeral(options?: SubscribeEphemeralOptions): Stream.Stream<Trace.Message>;
 
   terminate(): Effect.Effect<void>;
   readonly status: Status;
@@ -343,6 +352,22 @@ export interface Process<_Input = any, _Output = any, _Rpcs extends Rpc.Any = an
 export type Any = Process<any, any, any>;
 
 /**
+ * Admits or refuses an operation a process invokes, for operations that declare requirements
+ * (`Operation.RequiresAnnotation`). Refuses by dying with `Operation.OperationDeniedError`.
+ */
+export interface Guard {
+  readonly check: (op: Operation.Definition.Any, input: unknown) => Effect.Effect<void>;
+}
+
+/** The guard of the running process; absent when it was spawned without one. */
+export class GuardService extends Context.Service<GuardService, Guard>()('@dxos/compute/Process.GuardService') {}
+
+/** A guard that admits only what both admit, so a child spawned with its own guard never widens its parent's. */
+export const bothGuards = (first: Guard, second: Guard): Guard => ({
+  check: (op, input) => first.check(op, input).pipe(Effect.andThen(second.check(op, input))),
+});
+
+/**
  * Options for spawning a process.
  */
 export interface SpawnOptions {
@@ -371,6 +396,13 @@ export interface SpawnOptions {
   readonly traceMeta?: Trace.Meta;
 
   readonly environment?: Environment;
+
+  /**
+   * Admits the operations this process invokes that declare requirements. Inherited by children;
+   * a child's own guard is combined with its parent's, never replaces it. Not persisted, so a
+   * rehydrated process holds none and refuses operations that declare requirements.
+   */
+  readonly guard?: Guard;
 
   /**
    * Who the process's database writes are attributed to (see `Database.Origin`); also the origin of every process it

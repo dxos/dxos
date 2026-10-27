@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { Filter, Obj, Ref, Tag } from '@dxos/echo';
+import { Filter, Obj, Relation, Tag } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
 import { QueryBuilder } from '../parser/index.ts';
@@ -40,7 +40,7 @@ const makeTask = (props: { title: string; description?: string }, tagged: Tag.Ta
   if (tagged.length > 0) {
     Obj.update(task, (task) => {
       for (const tag of tagged) {
-        Obj.addTag(task, Ref.make(tag));
+        Obj.addTag(task, tag);
       }
     });
   }
@@ -143,6 +143,18 @@ describe('matchesFilter', () => {
       expect(matchesFilter(Filter.id(person.id), person)).to.be.true;
       expect(matchesFilter(Filter.id(makePerson().id), person)).to.be.false;
     });
+
+    test('a relation matches on its type and properties', ({ expect }) => {
+      const relation = Relation.make(TestSchema.EmployedBy, {
+        [Relation.Source]: makePerson(),
+        [Relation.Target]: Obj.make(TestSchema.Organization, { name: 'DXOS' }),
+        role: 'Founder',
+      });
+      expect(matchesFilter(build('type:com.example.type.employedBy'), relation)).to.be.true;
+      expect(matchesFilter(build('type:com.example.type.person'), relation)).to.be.false;
+      expect(matchesFilter(build('role:found'), relation)).to.be.true;
+      expect(matchesFilter(build('founder'), relation)).to.be.true;
+    });
   });
 
   describe('tags', () => {
@@ -158,6 +170,13 @@ describe('matchesFilter', () => {
       const tagged = { tags: () => [Obj.getURI(tagLater).toString()] };
       expect(matchesFilter(build('#later'), task, tagged)).to.be.true;
       expect(matchesFilter(build('#urgent'), task, tagged)).to.be.false;
+    });
+
+    test('a stored tag in local form matches the absolute uri a tag map is keyed by', ({ expect }) => {
+      // A tag held by an object in a database is written as a local ref (`echo:///<id>`).
+      const tagged = { tags: () => [`echo:///${tagLater.id}`] };
+      expect(matchesFilter(build('#later'), makeTask({ title: 'Ship it' }), tagged)).to.be.true;
+      expect(matchesFilter(build('#urgent'), makeTask({ title: 'Ship it' }), tagged)).to.be.false;
     });
   });
 

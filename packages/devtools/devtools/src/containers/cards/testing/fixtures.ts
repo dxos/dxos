@@ -25,6 +25,7 @@ import {
   type Stats,
   type SyncRow,
 } from '../../../hooks/index.ts';
+import { type EdgeCardSpace } from '../EdgeCard/index.ts';
 import { type SurfaceProfilerStats } from '../SurfaceProfilerCard/index.ts';
 
 export const memory: MemoryInfo = {
@@ -93,24 +94,43 @@ export const edgeStatus: EdgeStatus = {
   },
 };
 
-export const edgeSpaceNames: Record<string, string> = {
-  BPLB437SM5NPSBRYIOOLPJSWOW4O3RV4N: 'Personal Space',
-  B27NKHVKACJKNOTBRFH46MNYBBAB3NLZF: 'Acme Robotics',
+export const edgeSpaces: Record<string, EdgeCardSpace> = {
+  BPLB437SM5NPSBRYIOOLPJSWOW4O3RV4N: { name: 'Personal Space' },
+  B27NKHVKACJKNOTBRFH46MNYBBAB3NLZF: { name: 'Acme Robotics' },
+  BUM5S2UIPZQQLMY3YNTT7UXBTN2MHM7DN: { tag: 'org.dxos.space.settings' },
 };
 
 export const edgeStatusDegraded: EdgeStatus = {
   problems: [
     'Agent is not reachable.',
     'Router fetch timed out.',
-    'Some credentials were not processed by space-state-machine, might be a gap in dependency timeframes. in space BUM5S2UIPZQQLMY3YNTT7UXBTN2MHM7DN',
+    'Some credentials were not processed by space-state-machine, might be a gap in dependency timeframes. in space B27NKHVKACJKNOTBRFH46MNYBBAB3NLZF',
+    'Online peer was not found in the replicator\'s "active peers" list. in space B27NKHVKACJKNOTBRFH46MNYBBAB3NLZF',
+    'Online peer was not found in the replicator\'s "active peers" list. in space B3WUF4FALJBIAHPTB5OVBUQQIKOENEG2O',
   ],
   agent: { agentStatus: 'inactive' },
   router: { fetchError: 'timeout' },
   spaces: {
     data: {
-      [SpaceId.make('BPLB437SM5NPSBRYIOOLPJSWOW4O3RV4N')]: { diagnostics: { redFlags: [] } },
-      [SpaceId.make('B27NKHVKACJKNOTBRFH46MNYBBAB3NLZF')]: { diagnostics: { redFlags: ['feed lag', 'missing epoch'] } },
+      [SpaceId.make('BPLB437SM5NPSBRYIOOLPJSWOW4O3RV4N')]: {
+        diagnostics: { redFlags: [], echo: { documentCount: 1_204 } },
+      },
+      [SpaceId.make('B27NKHVKACJKNOTBRFH46MNYBBAB3NLZF')]: {
+        diagnostics: {
+          echo: { documentCount: 38 },
+          redFlags: [
+            'Some credentials were not processed by space-state-machine, might be a gap in dependency timeframes.',
+            'Online peer was not found in the replicator\'s "active peers" list.',
+          ],
+          feedProcessingProgress: { '04688972a8': '0 / 6', '04c6a5b9b1': '10 / 10' },
+          members: [{ activeConnections: [{ replicating: false, deviceKey: '04b4d8f3ea' }] }],
+        },
+      },
       [SpaceId.make('BUM5S2UIPZQQLMY3YNTT7UXBTN2MHM7DN')]: { fetchError: 'timeout' },
+      // Deleted on this device, so missing from `edgeSpaces` and hidden.
+      [SpaceId.make('B3WUF4FALJBIAHPTB5OVBUQQIKOENEG2O')]: {
+        diagnostics: { redFlags: ['Online peer was not found in the replicator\'s "active peers" list.'] },
+      },
     },
   },
 };
@@ -193,6 +213,51 @@ export const queries: QueryMetrics[] = [
     lastCount: 0,
   }),
 ];
+
+const TYPENAMES = [
+  'org.dxos.type.document',
+  'org.dxos.type.task',
+  'org.dxos.type.person',
+  'org.dxos.type.organization',
+  'org.dxos.type.message',
+  'org.dxos.type.event',
+  'org.dxos.type.collection',
+  'org.dxos.type.canvas',
+];
+
+const SPACES = ['BPBG3HN4O2XTMB5MRDZQXJBAXA7LAH4IA', 'C7KQ2XWNR5ZJ6M3VHT4LBYDPEFA2SGUOI'];
+
+/** Object ids for the id-filtered queries; ULID-shaped so the compact label shortens them. */
+const objectId = (index: number) => `01M3V2H2ZJ0FC014B9RA96${String(1000 + index).padStart(4, '0')}`;
+
+/** A long, deterministic list of distinct queries of every shape: by type, by id, scoped to a space, live and one-shot. */
+export const manyQueries: QueryMetrics[] = Array.from({ length: 40 }, (_, index) => {
+  const typename = TYPENAMES[index % TYPENAMES.length];
+  const space = SPACES[index % SPACES.length];
+  const query = [
+    `Query.select(Filter.type(${typename})).limit(${index + 1})`,
+    `Query.select(Filter.type(id: [${objectId(index)}])).from([{ space: "${space}", includeAllFeeds: true }])`,
+    `Query.select(Filter.type(${typename})).from([{ space: "${space}" }]).limit(${index + 1})`,
+    `Query.select(Filter.id(${objectId(index)})).children().options({ deleted: "include" })`,
+  ][index % 4];
+  const live = index % 3 !== 0;
+  const executions = (index % 7) + 1;
+  const maxTime = ((index * 37) % 400) + 1;
+  return queryMetric(query, {
+    created: executions,
+    runs: live ? 0 : executions,
+    subscriptions: live ? executions : 0,
+    active: live ? 1 : 0,
+    updates: live ? (index * 5) % 60 : 0,
+    executions,
+    totalTime: maxTime * executions * 0.6,
+    maxTime,
+    lastTime: maxTime * 0.5,
+    maxUpdateTime: live ? (index % 9) * 1.5 : 0,
+    lastCount: (index * 13) % 200,
+    maxCount: ((index * 13) % 200) + (index % 4),
+  });
+});
 
 export const surfaceProfilerStats: SurfaceProfilerStats[] = [
   {

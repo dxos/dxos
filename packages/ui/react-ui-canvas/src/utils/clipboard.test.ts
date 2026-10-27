@@ -4,14 +4,14 @@
 
 import { describe, test } from 'vitest';
 
-import { reduceIntent } from '../model/projection.ts';
-import { type Link, type Scene, endpointNode } from '../model/types.ts';
+import { reduceIntent } from '../engine/index.ts';
+import { type Link, type View, endpointNode } from '../model/index.ts';
+import { createViewTree } from '../testing/index.ts';
 import { copySelection, duplicateSelection, pasteFragment } from './clipboard.ts';
-import { createSceneTree } from './testing.ts';
 
-const fixture = (): Scene => {
-  const { scenes, root } = createSceneTree(1, 'r');
-  const scene = scenes.find((scene) => scene.id === root);
+const fixture = (): View => {
+  const { views, root } = createViewTree(1, 'r');
+  const scene = views.find((scene) => scene.id === root);
   if (!scene) {
     throw new Error('fixture has no root scene');
   }
@@ -81,6 +81,27 @@ describe('clipboard', () => {
     expect(endpointNode(spline.target)).toBe('rect-2');
     // The originals are untouched.
     expect(next.nodes['scene:r/b'].center).toEqual(scene.nodes['scene:r/b'].center);
+  });
+
+  test('paste puts every element on the given layer', ({ expect }) => {
+    const scene = fixture();
+    const clipboard = copySelection(scene, ['scene:r/b', 'scene:r/c']);
+    if (!clipboard) {
+      throw new Error('nothing copied');
+    }
+    let counter = 0;
+    const { intent } = pasteFragment({
+      clipboard,
+      offset: { x: 64, y: 64 },
+      createId: (prefix) => `${prefix}-${++counter}`,
+      nodeZ: (index) => `n${index}`,
+      linkZ: (index) => `l${index}`,
+      layer: 'top',
+    });
+    const next = reduceIntent(scene, intent);
+    expect(
+      [next.nodes['ellipse-1'], next.nodes['rect-2'], next.links['spline-3']].map((element) => element.layer),
+    ).toEqual(['top', 'top', 'top']);
   });
 
   test('a free end is copied with its node and moves with the paste', ({ expect }) => {

@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Schema from 'effect/Schema';
+
 import { invariant } from '@dxos/invariant';
 import { type EntityId, PublicKey, SpaceId, type URI } from '@dxos/keys';
 import { visitValues } from '@dxos/util';
@@ -11,6 +13,30 @@ import type { ForeignKey } from './foreign-key.ts';
 import { type EncodedReference, isEncodedReference } from './reference.ts';
 import { type SpaceDocVersion } from './space-doc-version.ts';
 import { createIdFromSpaceKey } from './space-id.ts';
+
+/** Largest JSON (characters) and stored changes (bytes) a client backs an object with instead of its document. */
+export const BACKED_OBJECT_LIMIT = 64 * 1024;
+
+/**
+ * Whether a client can back `structure` with its document's stored changes: the document's only object,
+ * with no links, and not merged into another.
+ */
+export const isBackable = (doc: DatabaseDirectory, structure: EntityStructure): boolean =>
+  Object.keys(doc.objects ?? {}).length === 1 &&
+  Object.keys(doc.links ?? {}).length === 0 &&
+  structure.system?.mergedInto === undefined;
+
+/**
+ * The JSON text a query row backs `structure` with, or `undefined` when it cannot be backed or the text
+ * exceeds {@link BACKED_OBJECT_LIMIT}.
+ */
+export const backingJson = (doc: DatabaseDirectory, structure: EntityStructure, json: unknown): string | undefined => {
+  if (!isBackable(doc, structure)) {
+    return undefined;
+  }
+  const text = JSON.stringify(json);
+  return text.length <= BACKED_OBJECT_LIMIT ? text : undefined;
+};
 
 export type SpaceState = {
   // Url of the root automerge document.
@@ -22,6 +48,46 @@ export type SpaceState = {
  */
 export type EntityProp = string;
 export type EntityPropPath = EntityProp[];
+
+/**
+ * Escaped property path within an object.
+ *
+ * Escaping rules:
+ *
+ * - '.' -> '\.'
+ * - '\' -> '\\'
+ * - contact with .
+ */
+export const EscapedPropPath: Schema.Codec<string, string> & {
+  escape: (path: EntityPropPath) => EscapedPropPath;
+  unescape: (path: EscapedPropPath) => EntityPropPath;
+} = class extends Schema.String.annotate({ title: 'EscapedPropPath' }) {
+  static escape(path: EntityPropPath): EscapedPropPath {
+    return path.map((p) => p.toString().replaceAll('\\', '\\\\').replaceAll('.', '\\.')).join('.');
+  }
+
+  static unescape(path: EscapedPropPath): EntityPropPath {
+    const parts: string[] = [];
+    let current = '';
+
+    for (let i = 0; i < path.length; i++) {
+      if (path[i] === '\\') {
+        invariant(i + 1 < path.length && (path[i + 1] === '.' || path[i + 1] === '\\'), 'Malformed escaping.');
+        current = current + path[i + 1];
+        i++;
+      } else if (path[i] === '.') {
+        parts.push(current);
+        current = '';
+      } else {
+        current += path[i];
+      }
+    }
+    parts.push(current);
+
+    return parts;
+  }
+};
+export type EscapedPropPath = Schema.Schema.Type<typeof EscapedPropPath>;
 
 /**
  * Link to all documents that hold objects in the space.
@@ -73,11 +139,34 @@ export interface DatabaseDirectory {
   branches?: SpaceBranchRegistry;
 
   /**
+   * Documents this space replaced because they could not be loaded, keyed by document id. Synced, so every
+   * peer stops loading the document and wipes its copy without reading it; the space's own directory
+   * naming the document is what attributes it to the space.
+   */
+  retired?: { [documentId: string]: RetiredDocument };
+
+  /**
    * @deprecated
    * For backward compatibility.
    */
   experimental_spaceKey?: string;
 }
+
+/**
+ * @see DatabaseDirectory.retired
+ */
+export type RetiredDocument = {
+  /** Url of the document now holding the retired document's objects. */
+  replacedBy: string | RawString;
+  /**
+   * Why it was retired: `load-failed` (it ran Automerge out of memory) or `history` (its history outgrew its state).
+   * Written as a plain, non-CRDT string; readers treat an unknown or missing value as `load-failed`.
+   */
+  reason?: string | RawString;
+};
+
+/** Why a space directory retired a document; see {@link RetiredDocument.reason}. */
+export type RetirementReason = 'load-failed' | 'history';
 
 /**
  * @see DatabaseDirectory.branches
@@ -152,6 +241,26 @@ export const DatabaseDirectory = Object.freeze({
   getBranches: (doc: DatabaseDirectory, rootObjectId: EntityId): Record<string, BranchRecord> | undefined => {
     return doc.branches?.[rootObjectId];
   },
+
+  /**
+   * @returns The documents this space retired, each with the url of its replacement; see
+   * {@link DatabaseDirectory.retired}. An entry with no replacement is skipped, since any peer (or EDGE) may read a
+   * directory another peer wrote.
+   */
+  getRetiredDocuments: (
+    doc: DatabaseDirectory,
+  ): { documentId: string; replacedBy: string; reason: RetirementReason }[] =>
+    Object.entries(doc.retired ?? {}).flatMap(([documentId, entry]) =>
+      entry?.replacedBy == null
+        ? []
+        : [
+            {
+              documentId,
+              replacedBy: String(entry.replacedBy),
+              reason: String(entry.reason) === 'history' ? 'history' : 'load-failed',
+            },
+          ],
+    ),
 
   /**
    * @returns All branch document urls referenced anywhere in the registry. Used by the host to

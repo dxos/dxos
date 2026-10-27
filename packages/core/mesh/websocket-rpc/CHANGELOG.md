@@ -1,5 +1,39 @@
 # @dxos/websocket-rpc
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/async@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/node-std@0.16.0
+  - @dxos/rpc@0.16.0
+  - @dxos/protocols@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [0420f87]
+- Updated dependencies [1e9c017]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [37edd53]
+  - @dxos/protocols@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/rpc@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/node-std@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- @dxos/rpc@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/node-std@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

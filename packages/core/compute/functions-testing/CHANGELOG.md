@@ -1,5 +1,101 @@
 # @dxos/functions-testing
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/assistant@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/plugin-space@0.16.0
+  - @dxos/client@0.16.0
+  - @dxos/assistant-toolkit@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/edge-compute@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/config@0.16.0
+  - @dxos/async@0.16.0
+  - @dxos/context@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/protocols@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [6488905]
+- Updated dependencies [3d151fc]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [b82150a]
+- Updated dependencies [0420f87]
+- Updated dependencies [1e9c017]
+- Updated dependencies [16bde33]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [b7fe13f]
+- Updated dependencies [37edd53]
+- Updated dependencies [6a02061]
+- Updated dependencies [1bddc93]
+- Updated dependencies [7b47951]
+- Updated dependencies [2b6a93a]
+- Updated dependencies [743604d]
+  - @dxos/assistant@0.15.0
+  - @dxos/plugin-space@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/edge-compute@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/client@0.15.0
+  - @dxos/assistant-toolkit@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/config@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+
+## 0.14.0
+
+### Patch Changes
+
+- Updated dependencies [f0fc12a]
+- Updated dependencies [ec6da5a]
+- Updated dependencies [a1e64db]
+- Updated dependencies [28bb45b]
+- Updated dependencies [1eed6b1]
+- Updated dependencies [6847fe2]
+- Updated dependencies [385f3ce]
+- Updated dependencies [3e98467]
+- Updated dependencies [eb5d14d]
+- Updated dependencies [2112757]
+- Updated dependencies [5324de6]
+  - @dxos/assistant@0.14.0
+  - @dxos/compute@0.14.0
+  - @dxos/echo@0.14.0
+  - @dxos/plugin-space@0.14.0
+  - @dxos/edge-compute@0.14.0
+  - @dxos/assistant-toolkit@0.14.0
+  - @dxos/client@0.14.0
+  - @dxos/schema@0.14.0
+  - @dxos/protocols@0.14.0
+  - @dxos/config@0.14.0
+  - @dxos/async@0.14.0
+  - @dxos/context@0.14.0
+  - @dxos/invariant@0.14.0
+  - @dxos/keys@0.14.0
+  - @dxos/log@0.14.0
+  - @dxos/util@0.14.0
+
 ## 0.13.0
 
 ### Patch Changes

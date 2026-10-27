@@ -24,7 +24,7 @@ import { log } from '@dxos/log';
 import { MemorySignalManager, MemorySignalManagerContext, setIdentityTags } from '@dxos/messaging';
 import { RtcTransportProxyFactory } from '@dxos/network-manager';
 import { WorkerRuntimeStartError, makeInProcessClient } from '@dxos/protocols';
-import { DevicesService, IdentityService, type RTCService } from '@dxos/protocols/rpc';
+import { type DataService, DevicesService, IdentityService, type RTCService } from '@dxos/protocols/rpc';
 import { RpcRouter } from '@dxos/rpc';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import * as SqliteClient from '@dxos/sql-sqlite/SqliteClient';
@@ -79,6 +79,12 @@ export type WorkerRuntimeOptions = {
    * so several runtimes can see each other.
    */
   memorySignalManagerContext?: MemorySignalManagerContext;
+
+  /**
+   * Receives each ECHO index status (see {@link Events.IndexStatus}) from before the stack opens until
+   * the runtime is ready, when the host's own status stream takes over.
+   */
+  onIndexStatus?: (status: DataService.IndexStatus) => void;
 };
 
 /**
@@ -114,6 +120,7 @@ export const makeWorkerRuntime = ({
   automaticallyConnectWebrtc = true,
   sqliteLayer,
   memorySignalManagerContext,
+  onIndexStatus,
 }: WorkerRuntimeOptions): Effect.Effect<WorkerRuntimeService, WorkerRuntimeStartError, Scope.Scope> =>
   Effect.gen(function* () {
     // Held so effects that outlive this construction — a session finalizer, which the framework runs
@@ -121,6 +128,7 @@ export const makeWorkerRuntime = ({
     const controller = yield* Hook.Controller;
     const transportFactory = new RtcTransportProxyFactory();
     const ready = new Trigger<Error | undefined>();
+    let started = false;
     const sessions = new Set<WorkerSession>();
     const signalMetadataTags: any = {
       runtime: 'worker-runtime',
@@ -167,7 +175,18 @@ export const makeWorkerRuntime = ({
     yield* Hook.on(Events.WipingStorage, () =>
       SqliteStorage.wipeSqliteStorage.pipe(Effect.provide(sqlite), Effect.orDie),
     );
+    if (onIndexStatus) {
+      yield* Hook.on(Events.IndexStatus, (status) =>
+        Effect.sync(() => {
+          if (!started) {
+            onIndexStatus(status);
+          }
+        }),
+      );
+    }
     yield* Hook.on(Events.Reset, () => requestShutdown);
+    // The tabs hold every change this process has not saved, and reconnect to a replacement with them.
+    yield* Hook.on(Events.StorageStuck, () => requestShutdown);
     yield* Hook.on(
       SessionClosed,
       Effect.fn('WorkerRuntime.onSessionClosed')(function* ({ session }) {
@@ -219,6 +238,7 @@ export const makeWorkerRuntime = ({
         yield* Hook.emit(Events.StackOpened, undefined);
       }).pipe(Effect.provideService(Hook.Controller, controller));
       log('worker-runtime: stack opened, signalling ready');
+      started = true;
       ready.wake(undefined);
       log('started');
 

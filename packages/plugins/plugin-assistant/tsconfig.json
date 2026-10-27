@@ -67,6 +67,9 @@
       "path": "../../core/compute/conductor"
     },
     {
+      "path": "../../core/compute/edge-compute"
+    },
+    {
       "path": "../../core/compute/link"
     },
     {
@@ -88,6 +91,9 @@
       "path": "../../core/mesh/edge-client"
     },
     {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../devtools/devtools"
     },
     {
@@ -104,6 +110,9 @@
     },
     {
       "path": "../../sdk/config"
+    },
+    {
+      "path": "../../sdk/observability"
     },
     {
       "path": "../../sdk/react-client"
@@ -157,9 +166,6 @@
       "path": "../../ui/react-ui-mosaic"
     },
     {
-      "path": "../../ui/react-ui-search"
-    },
-    {
       "path": "../../ui/react-ui-syntax-highlighter"
     },
     {
@@ -199,6 +205,9 @@
       "path": "../plugin-deck"
     },
     {
+      "path": "../plugin-file"
+    },
+    {
       "path": "../plugin-graph"
     },
     {
@@ -208,6 +217,9 @@
       "path": "../plugin-markdown"
     },
     {
+      "path": "../plugin-observability"
+    },
+    {
       "path": "../plugin-preview"
     },
     {
@@ -215,6 +227,9 @@
     },
     {
       "path": "../plugin-routine"
+    },
+    {
+      "path": "../plugin-search"
     },
     {
       "path": "../plugin-space"
