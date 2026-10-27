@@ -5,11 +5,9 @@
 import React, { type ForwardedRef, cloneElement, forwardRef } from 'react';
 
 import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import * as Hooks from '@dxos/react-ui/Hooks';
-import * as Icon from '@dxos/react-ui/Icon';
-import { mx } from '@dxos/ui-theme';
 
-import { Heading } from '../../components/index.ts';
 import { translationKey } from '../../translations.ts';
 import { type JoinPanelMode } from './JoinPanelProps.ts';
 
@@ -20,7 +18,7 @@ export type JoinSpaceHeadingProps = {
   onExit?: () => void;
 };
 
-// TODO(wittjosiah): Accesses the space properties directly which will trigger ECHO warnings without observer.
+/** The panel's Dialog.Header: its title, and an exit button unless joining is the only way on (`halo-only`). */
 export const JoinHeading = forwardRef(
   ({ mode, titleId, exitActionParent, onExit }: JoinSpaceHeadingProps, forwardedRef: ForwardedRef<HTMLDivElement>) => {
     const { t } = Hooks.useTranslation(translationKey);
@@ -28,25 +26,21 @@ export const JoinHeading = forwardRef(
     const exitButton = (
       <Button.Root
         variant='ghost'
+        icon='ph--x--regular'
+        iconOnly
+        label={t('exit.label')}
         {...(onExit && { onClick: onExit })}
-        classNames={mx('text-fg-muted', 'py-0 px-2 absolute top-0 right-0 z-[1]')}
         data-testid='join-exit'
-      >
-        <Icon.Icon icon='ph--x--bold' size='md' />
-        <span className='sr-only'>{t('exit.label')}</span>
-      </Button.Root>
+      />
     );
 
     return (
-      <Heading
-        ref={forwardedRef}
-        titleId={titleId}
-        title={t(mode === 'halo-only' ? 'selecting-identity.heading' : 'joining-space.heading')}
-        {...(mode === 'halo-only'
-          ? { ssrOnly: true }
-          : { corner: exitActionParent ? cloneElement(exitActionParent, {}, exitButton) : exitButton })}
-        ssrOnly={mode === 'halo-only'}
-      />
+      <Dialog.Header ref={forwardedRef}>
+        <Dialog.Title id={titleId}>
+          {t(mode === 'halo-only' ? 'selecting-identity.heading' : 'joining-space.heading')}
+        </Dialog.Title>
+        {mode !== 'halo-only' && (exitActionParent ? cloneElement(exitActionParent, {}, exitButton) : exitButton)}
+      </Dialog.Header>
     );
   },
 );

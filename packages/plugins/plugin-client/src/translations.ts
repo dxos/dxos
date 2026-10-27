@@ -120,7 +120,6 @@ const pluginTranslations = [
         'recovery-kind-recovery-code.label': 'Recovery code',
         'recovery-kind-oauth.label': 'Linked account',
         'recovery-kind-unknown.label': 'Recovery credential',
-        'credential-revoked.label': 'Revoked',
         'revoke-credential.label': 'Revoke',
         'revoke-failed.message': 'Could not revoke that credential. Reconnect and try again.',
         'revoke-credential-confirm.message':

@@ -11,7 +11,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { Fragment, type PropsWithChildren, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { expect, userEvent, waitFor } from 'storybook/test';
 
+import { sleep } from '@dxos/async';
 import { random } from '@dxos/random';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -80,6 +82,7 @@ const PreviewCard = () => {
   }
   return (
     <Popover.Content
+      data-testid='preview-card'
       classNames={[
         'origin-(--transform-origin)',
         'data-[state=open]:animate-popover-in',
@@ -282,7 +285,7 @@ const DefaultStory = ({ text, registry = NO_REGISTRY, image: imageWidget, trigge
         <Wrapper>{editor}</Wrapper>
       </div>
       <div className='dx-expand p-1'>
-        <pre className='dx-fill border border-separator-subtle rounded-sm p-3 overflow-auto'>
+        <pre className='dx-fill border border-separator-subtle rounded-sm p-trim-md overflow-auto'>
           <code className='font-mono text-fg-muted text-sm'>{text}</code>
         </pre>
       </div>
@@ -355,6 +358,66 @@ export const Preview: Story = {
     text: previewText,
     image: 'card',
     preview: true,
+  },
+};
+
+/** Longer than the anchor's close grace period, so a card that survives it was deliberately kept open. */
+const PAST_CLOSE_DELAY = 600;
+
+/**
+ * Regression: the pointer travels from the chip onto its hover card (e.g. to reach the card's menu). The card
+ * stays open while the pointer is over it, closes once the pointer leaves both, and stays pinned once used.
+ */
+export const PreviewHoverTest: Story = {
+  // TODO(wittjosiah): Linux CI only: in 7 of 78 Depot runs before 2026-10-21 the card had closed 600 ms after the
+  //   pointer moved onto it (step 1), passing on retry. It does not reproduce on macOS, even at
+  //   `DX_STORYBOOK_CPU_THROTTLE=6`.
+  tags: ['!test'],
+  args: { ...Preview.args },
+  play: async ({ canvasElement }) => {
+    const anchor = await waitFor(
+      () => {
+        const anchor = canvasElement.querySelector<HTMLElement>('dx-anchor');
+        if (!anchor) {
+          throw new Error('Anchor chip not rendered.');
+        }
+        return anchor;
+      },
+      { timeout: 10_000 },
+    );
+    const outside = canvasElement.querySelector<HTMLElement>('pre');
+    if (!outside) {
+      throw new Error('Source pane not rendered.');
+    }
+    const card = () => document.querySelector<HTMLElement>('[data-testid="preview-card"]');
+    const hoverOpen = async () => {
+      await userEvent.hover(anchor);
+      await waitFor(() => expect(card()).not.toBeNull(), { timeout: 5_000 });
+      const current = card();
+      if (!current) {
+        throw new Error('Preview card not open.');
+      }
+      return current;
+    };
+
+    // 1. Moving from the chip onto the card keeps it open past the close grace period.
+    const opened = await hoverOpen();
+    await userEvent.hover(opened);
+    await sleep(PAST_CLOSE_DELAY);
+    await expect(card()).not.toBeNull();
+
+    // 2. Leaving the card closes it after the grace period.
+    await userEvent.hover(outside);
+    await waitFor(() => expect(card()).toBeNull(), { timeout: 5_000 });
+
+    // 3. Pressing inside the card (e.g. opening its menu) pins it: leaving no longer closes it.
+    const pinned = await hoverOpen();
+    await userEvent.pointer({ keys: '[MouseLeft]', target: pinned });
+    await userEvent.hover(outside);
+    await sleep(PAST_CLOSE_DELAY);
+    await expect(card()).not.toBeNull();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => expect(card()).toBeNull(), { timeout: 5_000 });
   },
 };
 

@@ -14,7 +14,7 @@ export default defineConfig({
     'containers': 'src/containers/index.ts',
     'meta': 'src/meta.ts',
     'plugin': 'src/plugin.ts',
-    'Repository': 'src/types/Repository.ts',
+    'LegacyRepository': 'src/types/LegacyRepository.ts',
     'RepositoryOperation': 'src/types/RepositoryOperation.ts',
     'RepositoryService': 'src/types/RepositoryService.ts',
     'Sandbox': 'src/types/Sandbox.ts',

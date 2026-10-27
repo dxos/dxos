@@ -21,6 +21,7 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
 import { SpaceId } from '@dxos/keys';
 
+import { ProcessNotFoundError } from './errors.ts';
 import * as ProcessManager from './ProcessManager.ts';
 import * as QueuedRemoteControl from './QueuedRemoteControl.ts';
 import * as RemoteProcessManager from './RemoteProcessManager.ts';
@@ -266,8 +267,14 @@ describe('queued remote control (e2e against a local host)', () => {
           yield* waitUntil(host.applied.pipe(Effect.map((applied) => applied.length === 1)));
 
           yield* link.dropAcks(false);
-          yield* client.connected;
-          yield* client.drained;
+          // The host answers once the turn settles, so a single `connected` can land before the
+          // flusher starts the backoff it should cut; signal until the redelivery drains the queue.
+          yield* waitUntil(
+            client.connected.pipe(
+              Effect.andThen(client.pending),
+              Effect.map((pending) => pending.length === 0),
+            ),
+          );
 
           // Redelivered under the same idempotency key, so the host recognised and ignored it.
           expect((yield* host.applied).map((entry) => entry.input)).toEqual(['once']);
@@ -364,6 +371,42 @@ describe('queued remote control (e2e against a local host)', () => {
           expect(yield* client.pending).toEqual([]);
           expect(yield* host.list({ spaceId: SPACE })).toEqual([]);
         }),
+      );
+    }),
+  );
+
+  it.live(
+    'a process the host loses fails in place, and its queued input is dropped rather than retried',
+    Effect.fn(function* ({ expect }) {
+      let lost = false;
+      const gone = () => Effect.die(new ProcessNotFoundError({ message: 'the host state was wiped' }));
+      const losing = (control: RemoteProcessManager.Control): RemoteProcessManager.Control => ({
+        ...control,
+        status: (request) => (lost ? gone() : control.status(request)),
+        submitInput: (request) => (lost ? gone() : control.submitInput(request)),
+        readEvents: (request) => (lost ? gone() : control.readEvents(request)),
+      });
+      yield* withHarness(
+        ({ client }) =>
+          Effect.gen(function* () {
+            const { pid } = yield* client.spawn({ spaceId: SPACE, key: EchoProcess.key });
+            yield* client.drained;
+            expect((yield* client.status({ spaceId: SPACE, pid })).state).not.toEqual(Process.State.FAILED);
+
+            lost = true;
+            yield* client.submitInput({ spaceId: SPACE, pid, input: 'gone' });
+            // Drains only because the loss settled the input: a retried one would stay queued.
+            yield* client.drained;
+            expect(yield* client.pending).toEqual([]);
+
+            const status = yield* client.status({ spaceId: SPACE, pid });
+            expect(status.state).toEqual(Process.State.FAILED);
+            expect(status.error?.message).toContain('the host state was wiped');
+            expect((yield* client.readEvents({ spaceId: SPACE, pid, cursor: 0 })).snapshot.state).toEqual(
+              Process.State.FAILED,
+            );
+          }),
+        { wrap: losing },
       );
     }),
   );

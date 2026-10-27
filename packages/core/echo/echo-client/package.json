@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo-client",
-  "version": "0.14.0",
+  "version": "0.16.0",
   "description": "ECHO client-side database runtime.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -46,7 +46,6 @@
     "@dxos/echo-protocol": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
-    "@dxos/index-core": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",

@@ -20,6 +20,10 @@ import { meta } from '#meta';
 import { ProjectsPlugin } from '#plugin';
 import { ProjectCapabilities } from '#types';
 
+await Harness.preload({
+  plugins: [ClientPlugin.make({}), AssistantPlugin.make(), TasksPlugin.make(), ProjectsPlugin()],
+});
+
 const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('ProjectsPlugin', () => {

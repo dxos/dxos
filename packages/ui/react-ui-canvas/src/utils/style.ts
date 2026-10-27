@@ -8,19 +8,27 @@
 //
 
 import {
+  DEFAULT_LOOK,
   type HorizontalAlign,
   type Link,
+  type LookTone,
   type Node,
   type NodeStyle,
+  type NodeSurface,
   type NodeTone,
+  type Radius,
+  type SceneLook,
   STYLE_HUES,
   type StyleHue,
   type StyleMap,
+  type StyleVariant,
   type VerticalAlign,
   isEllipseNode,
-  isFrameNode,
+  isViewNode,
   showsContents,
-} from '../model/types.ts';
+  styleVariant,
+} from '../model/index.ts';
+import { DEFAULT_TEXT, NEAREST_HUE, RADIUS_CLASSES, type SetSurface, SURFACES, VIEW_FILLS } from './surfaces.ts';
 
 export type HueClasses = { surface: string; text: string; border: string };
 
@@ -141,36 +149,89 @@ export const classedNode = (node: Node, styles: StyleMap | undefined): Node => {
   return style ? { ...node, style: overlay(style, node.style) } : node;
 };
 
-/** A link as drawn: its class's colour and line style under its own. */
+/** A link as drawn: its class's colour, line style and caption size under its own. */
 export const classedLink = (link: Link, styles: StyleMap | undefined): Link => {
   const style = link.class ? styles?.[link.class]?.style : undefined;
-  // A link draws only the common base (`LineStyle`) of its class's style.
-  return style ? { ...link, style: overlay({ hue: style.hue, lineStyle: style.lineStyle }, link.style) } : link;
+  // A link draws only what `LineStyle` shares with its class's style; an edit of a classed link writes there.
+  return style
+    ? {
+        ...link,
+        style: overlay({ hue: style.hue, lineStyle: style.lineStyle, fontSize: style.fontSize }, link.style),
+      }
+    : link;
 };
 
 /**
- * A node's style with the defaults the frame draws spelled out: an unset `fill` or `border` is drawn, so
- * the properties panel must show it as on rather than as an unset (off) toggle.
+ * A node's style with the defaults the frame draws spelled out: an unset `fill`, `border` or `rounded` is drawn (the
+ * look's own corners), so the properties panel must show it as on rather than as an unset (off) toggle.
  */
 export const resolveStyle = (style: NodeStyle = {}): NodeStyle => ({
   ...style,
   fill: style.fill ?? true,
   border: style.border ?? true,
+  rounded: style.rounded ?? true,
 });
 
+type HueSurface = Exclude<NodeSurface, SetSurface>;
+
+/** The canvas's own tone each of its surfaces draws with. */
+const HUE_SURFACE_TONES: Record<HueSurface, NodeTone> = {
+  'hue-clear': 0,
+  'hue-strong': 1,
+  'hue-role': 2,
+  'hue-light': 3,
+};
+
+const isHueSurface = (surface: NodeSurface): surface is HueSurface => Object.hasOwn(HUE_SURFACE_TONES, surface);
+
 /**
- * Frame classes for a node: fill and text colour, border and corner radius from its style; a guide is
- * dashed and unfilled.
+ * The classes a hue draws with in `variant`: the canvas's own tone fills (`hueClasses`) for its `hue-*` surfaces,
+ * otherwise the variant's surface for the hue (a theme hue outside the pickers draws as the nearest picker hue).
  */
-export const frameClasses = (node: Node, selected: boolean, hovered = false): string[] => {
+export const variantClasses = (
+  hue: string | undefined,
+  variant: StyleVariant,
+  tone: LookTone = 'theme',
+): HueClasses => {
+  const { surface, label } = variant;
+  if (isHueSurface(surface)) {
+    return hueClasses(hue, HUE_SURFACE_TONES[surface]);
+  }
+  const key = hue === undefined ? 'default' : isStyleHue(hue) ? hue : NEAREST_HUE[hue];
+  const classes = SURFACES[surface][key ?? 'default'][tone];
+  return { ...classes, text: label === 'default' ? DEFAULT_TEXT[tone] : classes.text };
+};
+
+/** The classes a hue at a tone draws with in `look`'s style set: the set's variant for the tone. */
+export const surfaceClasses = (
+  hue: string | undefined,
+  tone: NodeTone | undefined,
+  look: SceneLook = DEFAULT_LOOK,
+): HueClasses => variantClasses(hue, styleVariant(look.styleSet, tone), look.tone);
+
+/**
+ * Frame classes for a node in `look` (the default flat look when unset): fill and text colour, border and corner radius from
+ * its style; a guide is dashed and unfilled. `ellipse` rounds it as an ellipse whatever the node's type (its
+ * definition asks for it).
+ */
+export const frameClasses = (
+  node: Node,
+  selected: boolean,
+  hovered = false,
+  ellipse = false,
+  look: SceneLook = DEFAULT_LOOK,
+): string[] => {
   const style = resolveStyle(node.style);
-  const hue = hueClasses(style.hue, style.tone);
+  const tokens = styleVariant(look.styleSet, style.tone);
+  const hue = variantClasses(style.hue, tokens, look.tone);
+  const { view } = look.styleSet;
   const filled = style.fill && !style.guide;
-  // A scene shape drawing its contents is a window onto another canvas, so it is opaque even in outline: the
+  // A view node drawing its contents is a window onto another canvas, so it is opaque even in outline: the
   // grid behind it would read as part of the child scene.
-  const opaque = isFrameNode(node) && showsContents(node);
+  const opaque = isViewNode(node) && showsContents(node);
   const clear = !filled || hue.surface === 'bg-transparent';
-  const surface = opaque && clear ? 'bg-base-surface' : filled ? hue.surface : '';
+  const surface = opaque && clear ? VIEW_FILLS[view.contents][look.tone] : filled ? hue.surface : '';
+  const lineStyle = style.lineStyle ?? tokens.borderStyle;
   return [
     surface,
     // A guide's hue marks its edge (a group's backdrop); its title reads in the default text colour.
@@ -180,13 +241,22 @@ export const frameClasses = (node: Node, selected: boolean, hovered = false): st
       : hovered
         ? 'border-focus/50'
         : // A frame always shows its edge: it bounds a scene or an embedded object, which has none of its own.
-          style.border === false && !style.guide && !isFrameNode(node)
+          style.border === false && !style.guide && !isViewNode(node)
           ? 'border-transparent'
           : hue.border,
-    style.guide || style.lineStyle === 'dashed' ? 'border-dashed' : style.lineStyle === 'dotted' ? 'border-dotted' : '',
-    isEllipseNode(node) ? 'rounded-[50%]' : style.rounded ? 'rounded-2xl' : 'rounded-sm',
+    style.guide || lineStyle === 'dashed' ? 'border-dashed' : lineStyle === 'dotted' ? 'border-dotted' : '',
+    ellipse || isEllipseNode(node) ? 'rounded-[50%]' : RADIUS_CLASSES[cornerRadius(node.style, tokens)],
   ];
 };
+
+/**
+ * The corner a style asks for in a look's variant: off is square, on is the look's rounded radius, and unset is the
+ * look's own corner, so the toggle's two states always differ.
+ */
+export const cornerRadius = (
+  style: NodeStyle | undefined,
+  tokens: Pick<StyleVariant, 'radius' | 'roundedRadius'>,
+): Radius => (style?.rounded === false ? 'none' : style?.rounded ? tokens.roundedRadius : tokens.radius);
 
 export type LineClasses = { stroke: string; fill: string };
 

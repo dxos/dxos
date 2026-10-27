@@ -60,6 +60,9 @@ export class InvalidOperationInputError extends BaseError.extend(
   'Operation input did not match schema',
 ) {}
 
+/** An operation declared requirements that the invoking process's guard did not admit, or the process holds no guard. */
+export class OperationDeniedError extends BaseError.extend('OperationDeniedError', 'Operation denied') {}
+
 export class InvalidOperationOutputError extends BaseError.extend(
   'InvalidOperationOutput',
   'Operation output did not match schema',
@@ -69,6 +72,16 @@ export class TriggerStateNotFoundError extends BaseError.extend('TriggerStateNot
 
 /** A manual run was asked of a trigger that is switched off; nothing was dispatched. */
 export class TriggerDisabledError extends BaseError.extend('TriggerDisabledError', 'Trigger is disabled') {
+  constructor(triggerId: string) {
+    super({ context: { triggerId } });
+  }
+}
+
+/** A reset was asked of a trigger that has no feed cursor to rewind (only feed triggers do). */
+export class TriggerNotResettableError extends BaseError.extend(
+  'TriggerNotResettableError',
+  'Only feed triggers can be reset',
+) {
   constructor(triggerId: string) {
     super({ context: { triggerId } });
   }

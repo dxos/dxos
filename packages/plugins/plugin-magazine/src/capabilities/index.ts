@@ -13,9 +13,6 @@ import * as SpaceCapability from '@dxos/plugin-space/SpaceCapability';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
-
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
   environments: ['browser', 'tauri'],
   requires: [AttentionCapabilities.ViewState],
@@ -32,6 +29,7 @@ export const Schema = AppCapability.schema(() => import('./schema.ts'));
 export const TextContent = AppCapability.textContent(() => import('./text-content.ts'), {
   activatesOn: ActivationEvents.Startup,
 });
+export const SpaceTemplates = AppCapability.spaceTemplates(() => import('./space-templates.ts'));
 export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'));
 export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'));
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
@@ -44,6 +42,6 @@ export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });

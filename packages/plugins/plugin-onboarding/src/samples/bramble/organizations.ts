@@ -72,8 +72,8 @@ const ORG_SEEDS: Array<{
   },
 ];
 
-/** Suppliers, wholesale customers and the roastery itself; every later phase references these. */
-export const Organizations: SampleSpace.Phase<OrgMap> = SampleSpace.phase('organizations', {
+/** Suppliers, wholesale customers and the roastery itself; every later partial references these. */
+export const Organizations: SampleSpace.Partial<OrgMap> = SampleSpace.partial('organizations', {
   schemas: [Organization.Organization],
   run: () =>
     SampleSpace.seed(ORG_SEEDS, (seed) =>

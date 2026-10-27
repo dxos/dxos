@@ -44,6 +44,17 @@ export const HubHttpClient = Capability.lazyModule(
   },
   () => import('./hub-http-client.ts'),
 );
+export const BootGate = Capability.lazyModule(
+  'BootGate',
+  {
+    activatesOn: ActivationEvents.Startup,
+    requires: [Capabilities.AtomRegistry, ClientCapabilities.Client],
+    provides: [Capabilities.BootGate],
+    environments: ['browser', 'tauri'],
+  },
+  () => import('./boot-gate.ts'),
+);
+
 export const Client = Capability.lazyModule(
   'Client',
   {
@@ -56,6 +67,7 @@ export const Client = Capability.lazyModule(
       Capabilities.Layer,
       ClientCapabilities.IdentityService,
       ClientCapabilities.SpaceService,
+      AppCapabilities.UnsavedChanges,
     ],
     environments: ['browser', 'node', 'tauri'],
   },
@@ -80,6 +92,15 @@ export const IdentityLifecycle = Capability.lazyModule(
 export const LayerSpecs = AppCapability.layerSpec(() => import('./layer-specs.ts'), {
   name: 'LayerSpecs',
 });
+export const IndexProgress = Capability.lazyModule(
+  'IndexProgress',
+  {
+    requires: [ClientCapabilities.Client],
+    provides: [],
+    activatesOn: ClientEvents.Initialized,
+  },
+  () => import('./index-progress.ts'),
+);
 export const Migrations = Capability.lazyModule(
   'Migrations',
   {

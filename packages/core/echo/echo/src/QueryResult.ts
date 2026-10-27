@@ -42,13 +42,46 @@ export type Entry<T> = {
      * Query resolution time in milliseconds.
      */
     time: number;
+
+    /** The state a remote source evaluated the entry at; absent for an in-process entry. */
+    version?: Version;
+
+    /**
+     * Whether local evidence confirmed a remote entry: its object is loaded here and still matches, or is held
+     * at the exact version the remote evaluated. False when the entry is shown on the remote's word alone.
+     */
+    verified?: boolean;
   };
 };
+
+/** The state a remote source evaluated an entry at: a document's heads, or a feed block's position. */
+export type Version =
+  | { kind: 'automerge'; documentId: string; heads: readonly string[] }
+  | { kind: 'feed'; insertionId: number };
 
 /**
  * Where query results come from.
  */
 export type Source = 'remote' | 'local' | 'index' | 'registry';
+
+/**
+ * How much of the answer a live query holds right now:
+ * - `complete`: nothing outstanding.
+ * - `local-only`: in-process results are shown; no remote source has answered yet.
+ * - `merged`: some remote sources answered and some have not.
+ * - `stale`: a remote answer predates a local write inside its scope; its re-run has not arrived.
+ * - `failed`: a remote source errored or timed out; `sources` names it.
+ * - `pending`: nothing in-process contributes and no remote has answered.
+ */
+export type Completeness = 'complete' | 'local-only' | 'merged' | 'stale' | 'failed' | 'pending';
+
+/** One source's progress on a live query, for diagnostics and for waiting on a specific answer. */
+export type SourceState = {
+  source: Source;
+  state: 'pending' | 'answered' | 'failed';
+  /** Answers integrated for the current query, including re-runs that left the result unchanged. */
+  answers: number;
+};
 
 /**
  * Invidual query result entry for a database Entity.
@@ -148,6 +181,21 @@ export interface QueryResult<T> {
    * @performance O(1) memoized per instance; each emission is a `runSync`.
    */
   readonly atom: Atom.Atom<T[]>;
+
+  /**
+   * How much of the answer the current results hold. Reading it never notifies; subscribers are notified
+   * only when results change.
+   *
+   * @performance O(sources).
+   */
+  readonly completeness: Completeness;
+
+  /**
+   * Per-source progress of the live query.
+   *
+   * @performance O(sources); allocates.
+   */
+  readonly sources: readonly SourceState[];
 }
 
 /**

@@ -61,7 +61,13 @@ import { type EventAttributes, trace } from '@dxos/tracing';
 
 import type { SaveStateChangedEvent } from '../automerge/index.ts';
 import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
-import { type BranchStore, EntityManager, type LoadObjectOptions, type SpaceDocumentHeads } from '../core-db/index.ts';
+import {
+  type BranchStore,
+  type DocumentRetention,
+  EntityManager,
+  type LoadObjectOptions,
+  type SpaceDocumentHeads,
+} from '../core-db/index.ts';
 import {
   EchoReactiveHandler,
   type ProxyTarget,
@@ -80,6 +86,9 @@ export interface EchoDatabase extends Database.Database {
    * Get notification about the data being saved to disk.
    */
   readonly saveStateChanged: ReadOnlyEvent<SaveStateChangedEvent>;
+
+  /** Whether a change exists only in this client, so losing the page would lose it. Synchronous, for `beforeunload`. */
+  hasUnsavedChanges(): boolean;
 
   /** @deprecated */
   readonly pendingBatch: ReadOnlyEvent<unknown>;
@@ -199,6 +208,9 @@ export type EchoDatabaseProps = {
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
   branchStore?: BranchStore;
 
+  /** Which loaded object documents the database keeps in memory. */
+  documentRetention?: DocumentRetention;
+
   /**
    * Run a reactive query for dynamic schemas.
    * @default true
@@ -282,6 +294,62 @@ const combineSyncState = (
  */
 type MigrationOutput = { id?: unknown; [MetaId]?: Partial<ProtocolEntityMeta> };
 
+/** Structural equality of plain JSON data, independent of key order. */
+const isJsonEqual = (left: unknown, right: unknown): boolean => {
+  if (left === right) {
+    return true;
+  }
+  if (Array.isArray(left) || Array.isArray(right)) {
+    return (
+      Array.isArray(left) &&
+      Array.isArray(right) &&
+      left.length === right.length &&
+      left.every((value, index) => isJsonEqual(value, right[index]))
+    );
+  }
+  if (isPlainRecord(left) && isPlainRecord(right)) {
+    const keys = Object.keys(left);
+    return (
+      keys.length === Object.keys(right).length &&
+      keys.every((key) => key in right && isJsonEqual(left[key], right[key]))
+    );
+  }
+  return false;
+};
+
+const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/**
+ * Writes a migrated content field: a record field key by key, so concurrent edits to other records
+ * survive the merge; any other field whole, and only when it changed.
+ */
+const writeContentField = (target: object, field: string, before: unknown, after: unknown, record: boolean): void => {
+  if (after === undefined) {
+    if (before !== undefined) {
+      Reflect.deleteProperty(target, field);
+    }
+    return;
+  }
+  const current: unknown = Reflect.get(target, field);
+  if (!record || !isPlainRecord(after) || !isPlainRecord(before) || !isPlainRecord(current)) {
+    if (!isJsonEqual(before, after)) {
+      Reflect.set(target, field, after);
+    }
+    return;
+  }
+  for (const key of Object.keys(before)) {
+    if (!(key in after)) {
+      Reflect.deleteProperty(current, key);
+    }
+  }
+  for (const [key, value] of Object.entries(after)) {
+    if (!isJsonEqual(before[key], value)) {
+      Reflect.set(current, key, value);
+    }
+  }
+};
+
 /**
  * User-facing API for the space database.
  * Implements EchoDatabase interface; delegates all document and core-object
@@ -337,6 +405,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       spaceId: params.spaceId,
       spaceKey: params.spaceKey,
       branchStore: params.branchStore,
+      documentRetention: params.documentRetention,
       createEntity: (core) => initEchoReactiveObjectRootProxy(core, this),
     });
 
@@ -384,6 +453,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this._entityManager._updateEvent;
   }
 
+  get _localCommitEvent() {
+    return this._entityManager._localCommitEvent;
+  }
+
   get opened() {
     return this._entityManager.opened;
   }
@@ -407,7 +480,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     }
 
     if (this._preloadSchemaOnOpen) {
-      await this.query(Filter.type(PersistentSchema)).run();
+      await this.query(Filter.type(PersistentSchema))
+        .run()
+        .catch((err) => log.warn('schema preload failed', { spaceId: this.spaceId, err }));
     }
 
     if (this._reactiveSchemaQuery) {
@@ -417,7 +492,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   @synchronized
-  protected override async _close(): Promise<void> {
+  protected override async _close(ctx: Context): Promise<void> {
     const disposals = await Promise.allSettled([...this.#feeds.values()].map((feed) => feed.dispose()));
     for (const disposal of disposals) {
       if (disposal.status === 'rejected') {
@@ -427,7 +502,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this.#feeds.clear();
     await Promise.allSettled([...this.#retiredFeeds]);
     this.#retiredFeeds.clear();
-    await this._entityManager.close();
+    await this._entityManager.close(ctx);
   }
 
   // ── Space state ─────────────────────────────────────────────────────────
@@ -469,13 +544,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     if (Type.isType(schemaInput)) {
       const entity = schemaInput;
       schema = Type.getSchema(entity).annotate({ [TypeIdentifierAnnotationId]: undefined });
-      meta =
-        getTypeAnnotation(schema) ??
-        ({
-          kind: Type.isRelation(entity) ? EntityKind.Relation : EntityKind.Object,
-          typename: Type.getTypename(entity),
-          version: Type.getVersion(entity),
-        } satisfies TypeAnnotation);
+      meta = getTypeAnnotation(schema) ?? this.#describedTypeAnnotation(entity);
     } else {
       schema = schemaInput;
       meta = getTypeAnnotation(schema);
@@ -497,6 +566,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
           kind: meta.kind,
           typename: meta.typename,
           version: meta.version,
+          relationSource: meta.sourceSchema,
+          relationTarget: meta.targetSchema,
         }),
       }),
     );
@@ -504,6 +575,40 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     const persistentSchema = this._addObject(schemaToStore, { origin });
     invariant(Type.isType(persistentSchema), 'persisted schema must materialize as a Type entity (kind=type)');
     return persistentSchema;
+  }
+
+  /**
+   * The annotation of a type entity built from JSON Schema, whose rebuilt schema carries none because
+   * its typename and version live in meta; the kind and relation ends come from the JSON Schema.
+   */
+  #describedTypeAnnotation(entity: Type.AnyEntity): TypeAnnotation {
+    const { entityKind, relationSource, relationTarget } = entity.jsonSchema;
+    const isRelation = Type.isRelation(entity) || entityKind === EntityKind.Relation;
+    return {
+      kind: isRelation ? EntityKind.Relation : EntityKind.Object,
+      typename: Type.getTypename(entity),
+      version: Type.getVersion(entity),
+      ...(isRelation && {
+        sourceSchema: this.#relationEndDXN(relationSource?.$ref),
+        targetSchema: this.#relationEndDXN(relationTarget?.$ref),
+      }),
+    };
+  }
+
+  /**
+   * A relation end as the `dxn:` the stored annotation requires; an end naming a type persisted in
+   * this space by its `echo:` id is recorded under that type's typename and version.
+   */
+  #relationEndDXN(uri: string | undefined): DXN.DXN | undefined {
+    if (uri == null || !EID.isEID(uri)) {
+      return uri == null ? undefined : DXN.tryMake(uri);
+    }
+    const entityId = EID.getEntityId(EID.parse(uri));
+    const type = entityId ? this._entityManager.getEntityById(entityId) : undefined;
+    if (!Type.isType(type)) {
+      return undefined;
+    }
+    return DXN.tryMake(`dxn:${Type.getTypename(type)}:${Type.getMeta(type).version}`);
   }
 
   // TODO(burdon): Type check.
@@ -723,6 +828,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       namespace,
     );
     this.#feeds.set(feedUri, handle);
+    this._feedHandleCreated.emit(handle);
     return handle;
   }
 
@@ -754,6 +860,13 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   _knownFeedHandles(): Iterable<FeedHandle> {
     return this.#feeds.values();
   }
+
+  /**
+   * @internal
+   * Fires when a feed handle is instantiated, so a live query over all feeds can watch a feed first written
+   * after it started.
+   */
+  readonly _feedHandleCreated = new Event<FeedHandle>();
 
   /**
    * Disposes and drops the cached feed handle for a feed (its live working-set / core cache). A
@@ -804,6 +917,14 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return this.graph.blobManager.getBlobUrl(this.spaceId, blob);
   }
 
+  hasUnsavedChanges(): boolean {
+    return (
+      this._entityManager.hasUnsavedChanges() ||
+      this.#retiredFeeds.size > 0 ||
+      [...this.#feeds.values()].some((handle) => handle.hasPendingWrites())
+    );
+  }
+
   async flush(opts?: Database.FlushOptions): Promise<void> {
     await this._entityManager.flush(opts);
     await Promise.all([
@@ -823,14 +944,58 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       }
     }
 
+    const contentTypes = new Set<URI.URI>();
     for (const migration of migrations) {
       if (Migration.isObjectMigration(migration)) {
         await this.#runObjectMigration(migration);
       } else if (Migration.isRenameMigration(migration)) {
         await this.#runRenameMigration(migration);
+      } else if (Migration.isContentMigration(migration)) {
+        contentTypes.add(migration.type);
       }
     }
+    // Content steps run per type, after object migrations have moved objects onto the types they name.
+    for (const type of contentTypes) {
+      await this.#runContentMigrations(type, Migration.getContentSteps(migrations, type));
+    }
     await this._entityManager.flush();
+  }
+
+  /**
+   * Upgrades the content of every object of `type` whose version starts a chain of `steps`, writing
+   * only the changed records and the new version in one change.
+   */
+  async #runContentMigrations(type: URI.URI, steps: ReadonlyMap<string, Migration.ContentMigration>): Promise<void> {
+    const [first] = steps.values();
+    if (!first) {
+      return;
+    }
+    const { versionField, fields, recordFields } = first;
+    const objects = await this._hypergraph.query(Query.select(Filter.type(type)).from(this)).run();
+    let migrated = 0;
+    for (const object of objects) {
+      const version: unknown = Reflect.get(object, versionField);
+      if (typeof version !== 'string' || !steps.has(version)) {
+        continue;
+      }
+      const before: Record<string, unknown> = {};
+      for (const field of fields) {
+        const value: unknown = Reflect.get(object, field);
+        if (value !== undefined) {
+          before[field] = JSON.parse(JSON.stringify(value));
+        }
+      }
+      // A separate copy, so a transform that edits its input in place still diffs against the stored data.
+      const upgraded = Migration.applyContentSteps(steps, version, JSON.parse(JSON.stringify(before)));
+      Obj.update(object, (object) => {
+        for (const field of fields) {
+          writeContentField(object, field, before[field], upgraded.content[field], recordFields.includes(field));
+        }
+        Reflect.set(object, versionField, upgraded.version);
+      });
+      migrated++;
+    }
+    log.verbose('migrate content', { type, objects: objects.length, migrated });
   }
 
   async #runObjectMigration(migration: Migration.ObjectMigration): Promise<void> {
@@ -987,10 +1152,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     if (!this.#feedService) {
       return EMPTY_FEED_SYNC_STATE;
     }
-    const response = await runServiceCall(
-      this.#runtime,
-      this.#feedService['FeedService.getSyncState']({ spaceId: this.spaceId, namespaces: [] }),
-    );
+    const response = await runServiceCall(this.#runtime, this.#feedService, 'FeedService.getSyncState', {
+      spaceId: this.spaceId,
+      namespaces: [],
+    });
     return aggregateFeedSyncState(response);
   }
 
@@ -1111,6 +1276,11 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   allObjectCores() {
     return this._entityManager.allObjectCores();
+  }
+
+  /** Objects written locally that the index may not reflect yet; see `EntityManager.unindexedWrites`. */
+  unindexedWrites(): Iterable<string> {
+    return this._entityManager.unindexedWrites();
   }
 
   areStrongDepsSatisfied(core: Parameters<EntityManager['areStrongDepsSatisfied']>[0]) {

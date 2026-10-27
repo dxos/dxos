@@ -36,7 +36,6 @@ describe('keys', () => {
     expect(isToolKey(press('r', { altKey: true }))).toBe(false);
     expect(keyAction(press('g'))).toBe('snap');
     expect(keyAction(press(';'))).toBe('guides');
-    expect(keyAction(press('G', { shiftKey: true }))).toBe('lattice');
   });
 
   test('every binding matches itself and labels read as a menu shows them', ({ expect }) => {
@@ -53,5 +52,8 @@ describe('keys', () => {
     expect(shortcutLabel({ key: 'Home' })).toBe('Home');
     expect(shortcutLabel({ key: 'z', meta: true, shift: true })).toMatch(/Z$/);
     expect(shortcutLabel({ key: 'ArrowLeft', alt: true })).toMatch(/←$/);
+    // A shifted digit reads as its key cap, since Shift is already shown.
+    expect(shortcutLabel({ key: ')', shift: true })).toMatch(/0$/);
+    expect(shortcutLabel({ key: '!', shift: true })).toMatch(/1$/);
   });
 });

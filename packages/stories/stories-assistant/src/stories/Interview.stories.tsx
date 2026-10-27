@@ -11,7 +11,6 @@ import * as Operation from '@dxos/compute/Operation';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
 import * as Goal from '@dxos/plugin-agent/Goal';
-import * as Memory from '@dxos/plugin-agent/Memory';
 import * as MemoryOperation from '@dxos/plugin-agent/MemoryOperation';
 import { translations as agentTranslations } from '@dxos/plugin-agent/translations';
 import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
@@ -47,11 +46,16 @@ const GOALS = {
   hiring: 'Hire two engineers',
 } as const;
 
-const MEMORIES = {
-  demo: 'Rich wants the autonomous agent demo working end to end by the end of October.',
-  hiring: 'Rich wants to hire two engineers this quarter.',
-  blocker: 'The Discord bot on EDGE is blocking the autonomous agent demo.',
+/** What the interview records about Rich, as the facts' predicates (their ontology labels) and literal objects. */
+const FACTS = {
+  demo: { predicate: 'works on', value: 'the autonomous agent demo, end to end by the end of October' },
+  hiring: { predicate: 'works on', value: 'hiring two engineers this quarter' },
+  blocker: { predicate: 'awaiting', value: 'a reliable Discord bot on EDGE, which blocks the demo' },
 } as const;
+
+/** A fact as the profile panel lists it: subject, predicate and object. */
+const factText = ({ predicate, value }: { predicate: string; value: string }): string =>
+  `${PERSON_NAME} ${predicate} ${value}`;
 
 const PROMPTS = [
   'Hi, I am Rich.',
@@ -130,16 +134,7 @@ const interviewerTurns: ScriptedLanguageModel.ScriptedTurn[] = [
   {
     parts: [
       toolCall(tool(MemoryOperation.Remember), () => ({
-        content: MEMORIES.demo,
-        kind: 'goal',
-        origin: 'stated',
-        subjects: [personRef()],
-      })),
-      toolCall(tool(MemoryOperation.Remember), () => ({
-        content: MEMORIES.hiring,
-        kind: 'goal',
-        origin: 'stated',
-        subjects: [personRef()],
+        facts: [FACTS.demo, FACTS.hiring].map((fact) => ({ subject: personRef(), ...fact, origin: 'stated' })),
       })),
       toolCall(tool(MemoryOperation.ProposeGoal), () => ({
         title: GOALS.demo,
@@ -165,10 +160,7 @@ const interviewerTurns: ScriptedLanguageModel.ScriptedTurn[] = [
   {
     parts: [
       toolCall(tool(MemoryOperation.Remember), () => ({
-        content: MEMORIES.blocker,
-        kind: 'fact',
-        origin: 'stated',
-        subjects: [personRef()],
+        facts: [{ subject: personRef(), ...FACTS.blocker, origin: 'stated' }],
       })),
     ],
   },
@@ -183,14 +175,13 @@ const interviewerTurns: ScriptedLanguageModel.ScriptedTurn[] = [
       toolCall(tool(MemoryOperation.UpdateProfile), () => ({ subject: personRef() })),
     ],
   },
-  { parts: [text('Thanks, Rich. I confirmed both goals, recorded three memories and updated your profile.')] },
+  { parts: [text('Thanks, Rich. I confirmed both goals, recorded three facts and updated your profile.')] },
 ];
 
 const INTERVIEW_TYPES = [
   Person.Person,
   Organization.Organization,
   HasSubject.HasSubject,
-  Memory.Memory,
   Goal.Goal,
   ProfileOf.ProfileOf,
 ];
@@ -226,18 +217,15 @@ const decorators = createDecorators({
 type SpaceSummary = {
   people: string[];
   goals: { title: string; status: Goal.Status }[];
-  memories: number;
 };
 
 /** What the interview has written, as plain data so a failed wait can report it. */
 const summarize = async (db: Database.Database): Promise<SpaceSummary> => {
   const people = await db.query(Filter.type(Person.Person)).run();
   const goals = await db.query(Filter.type(Goal.Goal)).run();
-  const memories = await db.query(Filter.type(Memory.Memory)).run();
   return {
     people: people.map(({ fullName }) => fullName ?? ''),
     goals: goals.map(({ title, status }) => ({ title, status })),
-    memories: memories.length,
   };
 };
 
@@ -264,12 +252,12 @@ const waitForSpace = async (
 
 /**
  * An autonomous agent with the interview skill, driven by a scripted model, beside the
- * interviewee's profile panel and the agent's state (mode, counts, recent memories, knowledge graph).
+ * interviewee's profile panel and the agent's state (mode, counts, facts, knowledge graph).
  *
  * Test:
  * 1. Enter "Hi, I am Rich." — the agent resolves Rich (the panel title changes) and asks what he is focused on.
- * 2. Enter any answer — two aspiration memories and two proposed goals appear in the panel.
- * 3. Enter any answer — a fact memory about the blocker appears.
+ * 2. Enter any answer — two facts about what Rich works on and two proposed goals appear in the panel.
+ * 3. Enter any answer — a fact about the blocker appears.
  * 4. Enter any answer — both goals become Confirmed and the agent summarizes.
  */
 export const Default: Story = {
@@ -292,7 +280,7 @@ export const TestInterviewScripted: Story = {
     await submitPrompt(canvasElement, PROMPTS[0]);
     await canvas.findByText(/What are you focused on right now/, {}, { timeout: 60_000 });
 
-    // 2. Goals: each is remembered as stated and proposed as a goal.
+    // 2. Goals: each is recorded as a stated fact and proposed as a goal.
     await submitPrompt(canvasElement, PROMPTS[1]);
     await canvas.findByText(/What is in the way/, {}, { timeout: 60_000 });
 
@@ -304,7 +292,7 @@ export const TestInterviewScripted: Story = {
     await submitPrompt(canvasElement, PROMPTS[3]);
     await canvas.findByText(/I confirmed both goals/, {}, { timeout: 60_000 });
 
-    // 5. The profile panel lists the goals, now confirmed, and the memories.
+    // 5. The profile panel lists the goals, now confirmed, and the facts.
     const goalsRegion = await canvas.findByRole('region', { name: 'Goals' }, { timeout: 30_000 });
     const goalsSection = within(goalsRegion);
     for (const title of Object.values(GOALS)) {
@@ -314,24 +302,23 @@ export const TestInterviewScripted: Story = {
       () => expect(goalsRegion.textContent?.match(/Confirmed/g) ?? [], goalsRegion.textContent ?? '').toHaveLength(2),
       { timeout: 30_000 },
     );
-    const memoriesSection = within(await canvas.findByRole('region', { name: 'Memories' }));
-    for (const content of Object.values(MEMORIES)) {
-      await memoriesSection.findByText(content);
+    const factsSection = within(await canvas.findByRole('region', { name: 'Facts' }));
+    for (const fact of Object.values(FACTS)) {
+      await factsSection.findByText(factText(fact));
     }
 
     // 6. The agent state panel counts what the interview recorded and shows the interview mode.
-    await waitFor(() => expect(canvas.getByTestId('agent-state-memories').textContent).toBe('3'), { timeout: 30_000 });
+    await waitFor(() => expect(Number(canvas.getByTestId('agent-state-facts').textContent)).toBeGreaterThanOrEqual(3), {
+      timeout: 30_000,
+    });
     await waitFor(() => expect(canvas.getByTestId('agent-state-goals').textContent).toBe('2'));
     await waitFor(() => expect(canvas.getByTestId('agent-state-people').textContent).toBe('1'));
     within(await canvas.findByRole('region', { name: 'Identity' })).getByText('Interview');
 
-    // 7. The space holds one interviewee, two confirmed goals and three memories.
+    // 7. The space holds one interviewee and two confirmed goals; the facts are in the agent's brain (step 6).
     await waitForSpace(
-      ({ people, goals, memories }) =>
-        people.length === 1 &&
-        goals.length === 2 &&
-        goals.every(({ status }) => status === 'confirmed') &&
-        memories >= 3,
+      ({ people, goals }) =>
+        people.length === 1 && goals.length === 2 && goals.every(({ status }) => status === 'confirmed'),
     );
   },
 };
@@ -342,8 +329,8 @@ export const TestInterviewScripted: Story = {
  *
  * Steps:
  * 1. Enter "Hi, I am Rich." — the agent states its purpose, resolves you (the panel title becomes your name) and asks one open question.
- * 2. Describe a goal with a deadline (e.g. "Get the interlocutor demo working end to end by the end of October.") — a proposed goal and memories appear in the panel.
- * 3. Answer its follow-ups (why, obstacles, who is involved) — each answer adds memories.
+ * 2. Describe a goal with a deadline (e.g. "Get the interlocutor demo working end to end by the end of October.") — a proposed goal and facts appear in the panel.
+ * 3. Answer its follow-ups (why, obstacles, who is involved) — each answer adds facts.
  * 4. When it reads your goals back, confirm them — the goals become Confirmed and the agent summarizes.
  */
 export const Live: Story = {

@@ -1,24 +1,18 @@
 name: pkg.pr.new
 
-# TODO(wittjosiah): stays on GitHub Actions. pkg.pr.new's own publish CLI verifies the calling CI
-# run against GitHub's real Actions run tracking - on Depot CI (#12779) it failed every run with
-# `Check failed (404): There is no workflow defined for <id>`, since a Depot-executed run isn't a
-# real GitHub Actions run from pkg.pr.new's backend's perspective. Same underlying issue as
-# pr-deploy.yml's artifact-download failure: third-party tools that verify against GitHub's own
-# run identity don't work once the workflow actually executes on Depot's infrastructure.
-
-# Publishes `main` once a day at 06:00 UTC, an hour before dxos/plugins' SDK nightly (07:00) pins the
-# newest commit pkg.pr.new serves; edge's catalog bump picks that commit the same way. `deploy-apps.yml`
-# calls this for every commit it deploys, since a Composer bundle pins its plugin template to its own
-# commit. Dispatch it to publish anything else.
+# Publishes every commit to `main`: dxos/plugins' SDK nightly and edge's catalog bump pin the newest
+# commit pkg.pr.new serves, so an unpublished commit 404s for them. `deploy-apps.yml` calls this for
+# every commit it deploys, since a Composer bundle pins its plugin template to its own commit. Dispatch
+# it to publish anything else.
 on:
-  schedule:
-    - cron: '0 6 * * *'
+  push:
+    branches:
+      - main
   workflow_dispatch:
   workflow_call:
 
-# One group per commit: GitHub keeps a single pending run per group, so a shared group would let a
-# second deploy cancel the publish of a commit the first one's bundle already pins.
+# One group per commit, never cancelled: GitHub keeps a single pending run per group, so a shared group
+# would let the next merge or deploy cancel the publish of a commit something already pins.
 concurrency:
   group: pkg-pr-new-${{ github.sha }}
   cancel-in-progress: false
@@ -31,9 +25,9 @@ env:
   MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
 
 jobs:
-  # The 06:00 schedule and the 07:00 preview deploy often land on the same commit.
+  # A deploy usually lands on a commit its push already published.
   published:
-    runs-on: depot-ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       exists: ${{ steps.check.outputs.exists }}
@@ -48,7 +42,7 @@ jobs:
   publish:
     needs: published
     if: needs.published.outputs.exists != 'true'
-    runs-on: depot-ubuntu-24.04-4
+    runs-on: ubuntu-24.04
     container:
       image: ghcr.io/dxos/gh-actions:24.11.1
       credentials:
@@ -69,7 +63,7 @@ jobs:
       # general CI pool nor trusted without an integrity check. Same reasoning already applied to
       # dxos/edge's copy of this workflow.
       - name: Setup
-        uses: ./.depot/actions/setup
+        uses: ./.github/actions/setup
         with:
           cache-scope: 'publish'
           verify-integrity: 'true'

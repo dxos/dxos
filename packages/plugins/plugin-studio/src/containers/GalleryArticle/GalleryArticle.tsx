@@ -2,17 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type MouseEvent, useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as ObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { type Collection, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { useListSelection } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Card from '@dxos/react-ui/Card';
 import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
@@ -22,7 +24,7 @@ import { GalleryImage } from '#components';
 import { meta } from '#meta';
 import { MediaArtifact } from '#types';
 
-import { useMediaArtifactCoverSource } from '../../hooks/index.ts';
+import { useMediaArtifactCoverSource } from '../../hooks/useMediaArtifactCoverSource.ts';
 
 const isArtifact = Obj.instanceOf(MediaArtifact.MediaArtifact);
 
@@ -37,12 +39,21 @@ const ArtifactTile = ({ data, selected }: { data?: TileData; selected?: boolean 
     return null;
   }
   return (
-    <div className='relative'>
-      <GalleryImage src={src} contentType={contentType} alt={data.artifact.name} />
-      {selected && (
-        <Icon.Icon icon='ph--check-circle--fill' size='xl' classNames='absolute top-1 right-1 text-accent-text' />
-      )}
-    </div>
+    <ObjectCard.Root>
+      <ObjectCard.Header
+        subject={data.artifact}
+        menu={
+          selected && (
+            <Layout.Block rail='end'>
+              <Icon.Icon icon='ph--check-circle--fill' classNames='text-accent-text' />
+            </Layout.Block>
+          )
+        }
+      />
+      <Card.Body>
+        <GalleryImage src={src} contentType={contentType} alt={data.artifact.name} />
+      </Card.Body>
+    </ObjectCard.Root>
   );
 };
 
@@ -110,8 +121,6 @@ export const GalleryArticle = ({ role, subject: collection, attendableId }: Gall
     setSelectedIds(new Set());
   }, [db, collection, selectedIds]);
 
-  const handleSelect = useCallback((id: string, _event: MouseEvent) => bind(id).toggle(), [bind]);
-
   const menuActions = useMenuBuilder(
     () =>
       MenuBuilder.make()
@@ -155,8 +164,7 @@ export const GalleryArticle = ({ role, subject: collection, attendableId }: Gall
               <Masonry.Viewport
                 items={items}
                 getId={(data?: TileData) => data?.artifact.id ?? String(data?.index ?? '')}
-                selectedIds={selectedIds}
-                onSelect={handleSelect}
+                itemProps={(id) => bind(id).rowProps}
               />
             </Masonry.Content>
           </Masonry.Root>

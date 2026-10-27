@@ -1,0 +1,232 @@
+> ---
+  "---" punctuation.definition.begin.frontmatter
+> id: org.dxos.spec.fixture
+  "i" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml entity.name.tag.yaml
+  "d" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml entity.name.tag.yaml
+  ":" meta.embedded.block.frontmatter punctuation.separator.key-value.mapping.yaml
+  "o" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml
+  "rg.dxos.spec.fixture" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml
+> name: Fixture
+  "n" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml entity.name.tag.yaml
+  "ame" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml entity.name.tag.yaml
+  ":" meta.embedded.block.frontmatter punctuation.separator.key-value.mapping.yaml
+  "F" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml
+  "ixture" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml
+> version: 0.1.0
+  "v" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml entity.name.tag.yaml
+  "ersion" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml entity.name.tag.yaml
+  ":" meta.embedded.block.frontmatter punctuation.separator.key-value.mapping.yaml
+  "0.1.0" meta.embedded.block.frontmatter constant.numeric.float.yaml
+> extends:
+  "e" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml entity.name.tag.yaml
+  "xtends" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml entity.name.tag.yaml
+  ":" meta.embedded.block.frontmatter punctuation.separator.key-value.mapping.yaml
+>   - org.dxos.spec.core
+  "-" meta.embedded.block.frontmatter punctuation.definition.block.sequence.item.yaml
+  "o" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml
+  "rg.dxos.spec.core" meta.embedded.block.frontmatter string.unquoted.plain.out.yaml
+> ---
+  "---" punctuation.definition.end.frontmatter
+> 
+> Cases the real specs do not all exercise. Prose outside a fence stays markdown: [F-1] is a link
+  "[" meta.paragraph.markdown meta.link.reference.markdown punctuation.definition.link.title.begin.markdown
+  "F-1" meta.paragraph.markdown meta.link.reference.markdown string.other.link.title.markdown
+  "]" meta.paragraph.markdown meta.link.reference.markdown punctuation.definition.link.title.end.markdown
+> reference here, not an MDL cross-reference.
+> 
+> ```mdl
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+  "mdl" markup.fenced_code.block.markdown fenced_code.block.language.markdown
+> diagram-rule DR-1: An unknown, hyphenated block type is still a type
+  "diagram-rule" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.type.block.mdl
+  "DR-1" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.function.id.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "An unknown, hyphenated block type is still a type" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl
+>   severity: warn | error   # a union with a trailing comment
+  "severity" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "warn" markup.fenced_code.block.markdown meta.embedded.block.mdl constant.other.literal.mdl
+  "|" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.operator.union.mdl
+  "error" markup.fenced_code.block.markdown meta.embedded.block.mdl constant.other.literal.mdl
+  "#" markup.fenced_code.block.markdown meta.embedded.block.mdl comment.line.number-sign.mdl punctuation.definition.comment.mdl
+  " a union with a trailing comment" markup.fenced_code.block.markdown meta.embedded.block.mdl comment.line.number-sign.mdl
+>   tags: [smoke, nightly]
+  "tags" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "[" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.begin.mdl
+  "smoke" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.reference.mdl
+  "," markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.comma.mdl
+  "nightly" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.reference.mdl
+  "]" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.end.mdl
+>   covers: []
+  "covers" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "[]" markup.fenced_code.block.markdown meta.embedded.block.mdl storage.modifier.array.mdl
+> ```
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+> 
+> ```mdl
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+  "mdl" markup.fenced_code.block.markdown fenced_code.block.language.markdown
+> type Piece
+  "type" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.control.block.type.mdl
+  "Piece" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.function.id.mdl
+>   # a whole-line comment
+  "#" markup.fenced_code.block.markdown meta.embedded.block.mdl comment.line.number-sign.mdl punctuation.definition.comment.mdl
+  " a whole-line comment" markup.fenced_code.block.markdown meta.embedded.block.mdl comment.line.number-sign.mdl
+>   kind: PieceKind
+  "kind" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "PieceKind" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.type.mdl
+>   color?: Color
+  "color" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  "?" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.operator.optional.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "Color" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.type.mdl
+>   moves: Move[]
+  "moves" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "Move" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.type.mdl
+  "[]" markup.fenced_code.block.markdown meta.embedded.block.mdl storage.modifier.array.mdl
+>   ref: Ref<Board>
+  "ref" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "Ref" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.type.mdl
+  "<" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.generic.mdl
+  "Board" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.type.mdl
+  ">" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.generic.mdl
+>   active: true
+  "active" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "true" markup.fenced_code.block.markdown meta.embedded.block.mdl constant.language.boolean.mdl
+>   weight: 1..10
+  "weight" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "1" markup.fenced_code.block.markdown meta.embedded.block.mdl constant.numeric.mdl
+  ".." markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.operator.range.mdl
+  "10" markup.fenced_code.block.markdown meta.embedded.block.mdl constant.numeric.mdl
+>   label?: "pawn" | "rook"
+  "label" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  "?" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.operator.optional.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "\"pawn\"" markup.fenced_code.block.markdown meta.embedded.block.mdl string.quoted.double.mdl
+  "|" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.operator.union.mdl
+  "\"rook\"" markup.fenced_code.block.markdown meta.embedded.block.mdl string.quoted.double.mdl
+> ```
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+> 
+> ```mdl
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+  "mdl" markup.fenced_code.block.markdown fenced_code.block.language.markdown
+> feat F-1: Refers to [F-1.2] and [op:Move] in its title
+  "feat" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.control.block.feat.mdl
+  "F-1" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.function.id.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "Refers to " markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl
+  "[" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl punctuation.definition.list.begin.mdl
+  "F-1.2" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl variable.other.reference.mdl
+  "]" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl punctuation.definition.list.end.mdl
+  " and " markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl
+  "[" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl punctuation.definition.list.begin.mdl
+  "op" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl storage.type.reference.op.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl punctuation.separator.reference.mdl
+  "Move" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl variable.other.reference.mdl
+  "]" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl punctuation.definition.list.end.mdl
+  " in its title" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl
+>   Inline prose before the first field, with `code`, "a string" and $given.space.
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "code" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl
+  "`" markup.fenced_code.block.markdown meta.embedded.block.mdl markup.inline.raw.string.mdl punctuation.definition.raw.mdl
+  "\"a string\"" markup.fenced_code.block.markdown meta.embedded.block.mdl string.quoted.double.mdl
+  "$given.space" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.capture.mdl
+>   req F-1.1: White moves first; see type:Board and op:Move.
+  "req" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  "F-1.1" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.function.id.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "type" markup.fenced_code.block.markdown meta.embedded.block.mdl storage.type.reference.type.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.reference.mdl
+  "Board" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.reference.mdl
+  "op" markup.fenced_code.block.markdown meta.embedded.block.mdl storage.type.reference.op.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.reference.mdl
+  "Move" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.reference.mdl
+>   req F-1.2: The rule in org.dxos.mdl.rule@1.0 applies. A # in a sentence is a comment.
+  "req" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  "F-1.2" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.function.id.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "org.dxos.mdl.rule@1.0" markup.fenced_code.block.markdown meta.embedded.block.mdl support.constant.reference.mdl
+  "#" markup.fenced_code.block.markdown meta.embedded.block.mdl comment.line.number-sign.mdl punctuation.definition.comment.mdl
+  " in a sentence is a comment." markup.fenced_code.block.markdown meta.embedded.block.mdl comment.line.number-sign.mdl
+> ```
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+> 
+> ```mdl
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+  "mdl" markup.fenced_code.block.markdown fenced_code.block.language.markdown
+> decision D-7: Two deciders stay two entries. Fills in [D-1, D-2].
+  "decision" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.control.block.decision.mdl
+  "D-7" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.function.id.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "Two deciders stay two entries. Fills in " markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl
+  "[" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl punctuation.definition.list.begin.mdl
+  "D-1" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl variable.other.reference.mdl
+  "," markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl punctuation.separator.comma.mdl
+  "D-2" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl variable.other.reference.mdl
+  "]" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl punctuation.definition.list.end.mdl
+  "." markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.section.title.mdl
+>   date: 2026-10-20
+  "date" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "2026-10-20" markup.fenced_code.block.markdown meta.embedded.block.mdl constant.other.date.mdl
+>   by: agent:claude-code
+  "by" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "agent" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.actor.agent.mdl support.function.actor.agent.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.actor.agent.mdl punctuation.separator.actor.mdl
+  "claude-code" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.actor.agent.mdl string.unquoted.actor.agent.mdl
+>   for: user:alice
+  "for" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "user" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.actor.user.mdl support.class.actor.user.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.actor.user.mdl punctuation.separator.actor.mdl
+  "alice" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.actor.user.mdl string.unquoted.actor.user.mdl
+>   affects: [Scene, F-2.1]
+  "affects" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "[" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.begin.mdl
+  "Scene" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.reference.mdl
+  "," markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.comma.mdl
+  "F-2.1" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.reference.mdl
+  "]" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.end.mdl
+>   desc: |
+  "desc" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "|" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.operator.block-scalar.mdl
+>     A block scalar: key: value lines in here are prose, not fields,
+  "A block scalar: key: value lines in here are prose, not fields," markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+>     and user:bob is still an actor.
+  "and " markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+  "user" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl meta.actor.user.mdl support.class.actor.user.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl meta.actor.user.mdl punctuation.separator.actor.mdl
+  "bob" markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl meta.actor.user.mdl string.unquoted.actor.user.mdl
+  " is still an actor." markup.fenced_code.block.markdown meta.embedded.block.mdl meta.block-scalar.mdl
+>   rejected:
+  "rejected" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+>     - One entry with both deciders: hides who chose what.
+  "-" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.definition.list.begin.mdl
+> ```
+  "```" markup.fenced_code.block.markdown punctuation.definition.markdown
+> 
+> ~~~mdl
+  "~~~" markup.fenced_code.block.markdown punctuation.definition.markdown
+  "mdl" markup.fenced_code.block.markdown fenced_code.block.language.markdown
+> op Move
+  "op" markup.fenced_code.block.markdown meta.embedded.block.mdl keyword.control.block.op.mdl
+  "Move" markup.fenced_code.block.markdown meta.embedded.block.mdl entity.name.function.id.mdl
+>   key: org.dxos.operation.chess.move
+  "key" markup.fenced_code.block.markdown meta.embedded.block.mdl variable.other.property.mdl
+  ":" markup.fenced_code.block.markdown meta.embedded.block.mdl punctuation.separator.key-value.mdl
+  "org.dxos.operation.chess.move" markup.fenced_code.block.markdown meta.embedded.block.mdl support.constant.reference.mdl
+> ~~~
+  "~~~" markup.fenced_code.block.markdown punctuation.definition.markdown
+> 

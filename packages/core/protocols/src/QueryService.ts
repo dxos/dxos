@@ -67,8 +67,57 @@ export const QueryRequest = Schema.Struct({
    * JSON-encoded `QueryAST.Query`.
    */
   query: Schema.String,
+  /** The client's data subscriptions: rows of documents they hold ship without their JSON and stored changes. */
+  subscriptionIds: Schema.optional(mutableArray(Schema.String)),
 });
 export interface QueryRequest extends Schema.Schema.Type<typeof QueryRequest> {}
+
+/**
+ * The state the index evaluated a row at: a document's heads, or a feed block's position. Equal heads mean
+ * the client holds exactly what the index evaluated, so its own re-check would reproduce the verdict.
+ */
+export const RowVersion = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal('automerge'),
+    documentId: Schema.String,
+    heads: mutableArray(Schema.String),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal('feed'),
+    /** The block's global position; the primary order of feed versions. */
+    insertionId: Schema.Number,
+  }),
+]);
+export type RowVersion = Schema.Schema.Type<typeof RowVersion>;
+
+/**
+ * One hop of a traversal the index took to reach a row. `holder` is the object whose document records the
+ * edge (the `from` side for a reference or a parent pointer, the `to` side for an incoming reference or a
+ * child, the relation for a relation endpoint), so the client re-checks the edge against that document.
+ */
+export const PathEdge = Schema.Struct({
+  from: Schema.String,
+  to: Schema.String,
+  kind: Schema.Literals(['ref', 'incoming-ref', 'relation-source', 'relation-target', 'parent', 'child']),
+  /** The reference's property path, escaped; absent for an edge that is not a reference. */
+  property: Schema.optional(Schema.String),
+  holder: Schema.String,
+  /** The holder's heads when the index read the edge; equal local heads skip the re-check. */
+  holderHeads: Schema.optional(mutableArray(Schema.String)),
+});
+export type PathEdge = Schema.Schema.Type<typeof PathEdge>;
+
+/**
+ * One member's share of a collapsed group's scalar aggregates, so a client can replace the share of a
+ * member it holds with its local value instead of trusting a count or sum that predates its write.
+ */
+export const ManifestEntry = Schema.Struct({
+  id: Schema.String,
+  version: Schema.optional(RowVersion),
+  /** JSON-encoded map of aggregate name to this member's value: 1 for a count, the property for the rest. */
+  contribution: Schema.String,
+});
+export type ManifestEntry = Schema.Schema.Type<typeof ManifestEntry>;
 
 export const QueryResult = Schema.Struct({
   id: Schema.String,
@@ -78,7 +127,8 @@ export const QueryResult = Schema.Struct({
   queueNamespace: Schema.optional(Schema.String),
   rank: Schema.Number,
   /**
-   * In the ECHO JSON object format.
+   * In the ECHO JSON object format. Sent for a feed row, and for a document row the client can back
+   * with {@link heads} and {@link bytes}.
    */
   documentJson: Schema.optional(Schema.String),
   /**
@@ -101,12 +151,39 @@ export const QueryResult = Schema.Struct({
    * `Filter.changes`); no object fields are sent, and `id` is the record's own identity.
    */
   recordJson: Schema.optional(Schema.String),
+  /** Heads of the document the index read a document row's {@link documentJson} at. */
+  heads: Schema.optional(mutableArray(Schema.String)),
+  /**
+   * The document's Automerge bytes as storage holds them, which may be ahead of {@link heads}; sent with
+   * {@link documentJson} for a document that holds only this object. The client loads them when it first
+   * writes to the object, and makes every write of that update at {@link heads} when the bytes hold them.
+   */
+  bytes: Schema.optional(Schema.Uint8Array),
+  /** Unix ms of the object's creation, sent with a document row's {@link bytes}. */
+  createdAt: Schema.optional(Schema.Number),
+  /** Unix ms of the object's last change, sent with a document row's {@link bytes}. */
+  updatedAt: Schema.optional(Schema.Number),
+  /** The state the index evaluated this row at; absent when it does not know it. */
+  version: Schema.optional(RowVersion),
+  /** Every derivation of a traversal hit, deduped by edge; absent when the answer exceeded its budget. */
+  paths: Schema.optional(mutableArray(mutableArray(PathEdge))),
+  /** Every member of a collapsed group with its share of the group's scalar aggregates, within budget. */
+  manifest: Schema.optional(mutableArray(ManifestEntry)),
 });
 export interface QueryResult extends Schema.Schema.Type<typeof QueryResult> {}
 
 export const QueryResponse = Schema.Struct({
   queryId: Schema.optional(Schema.String),
   results: Schema.optional(mutableArray(QueryResult)),
+  /**
+   * The reactive query re-ran and its result is the one last sent; `results` is omitted. Lets a client
+   * learn its earlier answer is current again without a resend.
+   */
+  unchanged: Schema.optional(Schema.Boolean),
+  /** Paths or manifests were left out of this answer because they exceeded its byte budget. */
+  truncated: Schema.optional(Schema.Literals(['paths', 'manifest'])),
+  /** Time (ms) the host spent evaluating this answer, excluding time queued behind other work; absent from an old host. */
+  executionTime: Schema.optional(Schema.Number),
 });
 export interface QueryResponse extends Schema.Schema.Type<typeof QueryResponse> {}
 

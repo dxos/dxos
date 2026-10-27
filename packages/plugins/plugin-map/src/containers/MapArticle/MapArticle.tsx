@@ -121,7 +121,7 @@ const MapArticleInner = ({
     setViewport((prev) => ({ center: centerProp ?? prev.center, zoom: zoomProp ?? prev.zoom }));
   }, [centerProp, zoomProp]);
 
-  const { markers, lines, selection } = provider.useMarkers(subject, { attendableId });
+  const { markers, lines, tour, selection } = provider.useMarkers(subject, { attendableId });
 
   // Read the attention selection. The provider may override the context/mode (e.g. a view
   // highlights multiple rows by typename); default to single-select against the article.
@@ -170,6 +170,7 @@ const MapArticleInner = ({
       {...props}
       markers={markers}
       lines={lines}
+      tour={tour}
       selected={selected}
       onSelect={handleSelect}
       center={viewport.center}

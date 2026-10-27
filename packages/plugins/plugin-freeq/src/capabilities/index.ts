@@ -10,8 +10,6 @@ import * as ThreadEvents from '@dxos/plugin-thread/ThreadEvents';
 import { meta } from '#meta';
 import { translations } from '#translations';
 
-// eslint-disable-next-line import/no-relative-packages
-import pluginSpec from '../../PLUGIN.mdl?raw';
 import * as FreeqCapabilities from '../FreeqCapabilities.ts';
 
 // Contributes both the connection manager and the channel backend (see channel-backend.ts).
@@ -26,7 +24,7 @@ export const ChannelBackend = Capability.lazyModule(
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
-  content: pluginSpec,
+  content: () => import('../../PLUGIN.mdl?raw'),
   mimeType: 'application/x-mdl',
 });
 export const Schema = AppCapability.schema(() => import('./schema.ts'));

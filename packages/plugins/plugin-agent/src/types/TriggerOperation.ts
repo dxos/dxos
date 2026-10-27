@@ -116,9 +116,9 @@ export const CancelTrigger = Operation.make({
 });
 
 /**
- * Runs the agent's time-driven rules (`elapsed`, `every`, `due`) now and delivers what they woke; the
- * host calls it when the brain says the clock next matters (`nextDueAt`), as EDGE's Durable Object
- * alarm does for EDGE's brain.
+ * Runs the agent's time-driven rules (`elapsed`, `every`, `due`) now and delivers what the watches set in this
+ * space have queued; the host calls it when the brain says the clock next matters (`nextDueAt`). EDGE's Durable
+ * Object alarm calls it in each space whose watches have something queued, as the agent there.
  */
 export const RunDue = Operation.make({
   meta: {
@@ -154,6 +154,22 @@ export const BrainSnapshot = Schema.Struct({
 });
 
 export interface BrainSnapshot extends Schema.Schema.Type<typeof BrainSnapshot> {}
+
+/** Wipes the agent's brain: every fact, read cursor and queued event, so it starts over; its watches stay. */
+export const ResetBrain = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.resetBrain'),
+    name: 'Reset brain',
+    description:
+      "Wipes the agent's brain: its facts, how far it has read each source, and its queued events. Watches stay.",
+    icon: 'ph--trash--regular',
+  },
+  services: [Database.Service, BrainService.BrainService],
+  input: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent.' }),
+  }),
+  output: Schema.Struct({}),
+});
 
 /** Reads the agent's brain as stored, for the debug view; it changes nothing. */
 export const InspectBrain = Operation.make({

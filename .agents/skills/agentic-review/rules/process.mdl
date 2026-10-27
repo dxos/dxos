@@ -110,6 +110,32 @@ rule moon-yml-entrypoint-registration: Every package.json export/import entrypoi
   severity: warn
 ```
 
+```mdl
+rule repo-scripts-are-typescript-on-bun: New repo scripts are TypeScript run with Bun
+  Repo tooling scripts are written in TypeScript and run directly with Bun
+  (`bun scripts/foo.ts`, shebang `#!/usr/bin/env bun`), so they are type-checked
+  and need no build step. Flag a newly added `.js`/`.mjs`/`.cjs` script, or a new
+  `package.json` script or workflow step that runs one with `node`. Also flag a
+  new script that imports an npm package for something Bun or `node:*` already
+  provides (e.g. `globby` instead of `Bun.Glob`). Do not flag edits to an
+  existing `.mjs` script, shell scripts, or files that run inside a package
+  build (vite/esbuild/vitest configs). Fix: write it as `.ts` and invoke it
+  with `bun`; when rewriting an `.mjs` script, delete the old file and update
+  every caller.
+  scope: repo
+  files:
+    - scripts/**
+    - tools/**/scripts/**
+    - packages/**/scripts/**
+    - package.json
+    - .github/workflows/*.yml
+  unit: pr
+  context: diff
+  system-one: on
+  question: Does this diff add a new JavaScript (.js/.mjs/.cjs) repo script, or a new command that runs one with node, instead of a TypeScript script run with bun?
+  severity: warn
+```
+
 ## Appendix
 
 ```mdl

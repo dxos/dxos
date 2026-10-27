@@ -215,8 +215,11 @@ export const KeyPairForm = (fields: { keyId: CredentialFieldText; keySecret: Cre
   });
 
 export type CredentialFormResult =
-  | { kind: 'complete'; accessToken: AccessToken.AccessToken; connection: Connection.Connection }
-  | { kind: 'oauth'; loginHint?: string };
+  /** `accessToken` is absent for a service that needs no auth. */
+  | { kind: 'complete'; accessToken?: AccessToken.AccessToken; connection: Connection.Connection }
+  | { kind: 'oauth'; loginHint?: string }
+  /** An MCP server that signs in with MCP authorization; EDGE discovers its authorization server from the URL. */
+  | { kind: 'mcp-oauth'; endpoint: Connection.McpEndpoint };
 
 /**
  * Per-connector form rendered by the generic connector-form dialog. One
@@ -250,6 +253,14 @@ export type CredentialForm<Values = any> = {
 };
 
 /**
+ * Whose identity a connection acts as, which decides whether a shared space should hold it:
+ * - `user`: the person who connected it. Every member of the space acts as them.
+ * - `app`: DXOS's own registered app or bot on the service.
+ * - `custom`: an app, bot, service account or API key the space brings.
+ */
+export type ConnectorKind = 'user' | 'app' | 'custom';
+
+/**
  * One Connector capability row — shape of entries contributed via {@link Connector}.
  * A connector is the reusable driver for a service: it knows how to authenticate
  * (oauth / credentialForm), discover and materialize sync targets, and sync them.
@@ -261,6 +272,7 @@ export type ConnectorEntry = {
   source: string;
   /** User-facing label; defaults to `id` when omitted. */
   label?: string;
+  kind: ConnectorKind;
   oauth?: ConnectorOAuthSpec;
   /** How this connector syncs; absent for a connector that only authenticates. */
   sync?: ConnectorSync;
@@ -291,6 +303,11 @@ export type ConnectorEntry = {
     accessToken: AccessToken.AccessToken;
     connection: Connection.Connection;
   }) => ReadonlyArray<{ label: string; value: string }>;
+  /**
+   * The MCP server a connection made with this connector exposes to agents, authenticated with the
+   * connection's own credential. Declare it only where the vendor's server accepts that credential.
+   */
+  mcp?: (connection: Connection.Connection) => Connection.McpEndpoint | undefined;
 };
 
 /**
@@ -332,3 +349,16 @@ export const idsForTarget = (
     .filter((connector) => connector.sync?.targetTypename === typename)
     .map((connector) => connector.id);
 };
+
+/**
+ * The MCP server a connection exposes, from the connector that operates it. `undefined` when the
+ * connector declares none or is not registered here.
+ */
+export const mcpEndpoint = (
+  connectors: readonly ConnectorEntry[],
+  connection: Connection.Connection,
+): Connection.McpEndpoint | undefined =>
+  // A built-in MCP server belongs to no connector and stores its own endpoint.
+  connection.connectorId === undefined
+    ? connection.mcp
+    : connectors.find((connector) => connector.id === connection.connectorId)?.mcp?.(connection);

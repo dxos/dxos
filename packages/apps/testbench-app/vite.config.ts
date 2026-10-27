@@ -63,20 +63,18 @@ export default defineConfig(
           ['tiktoken/lite']: path.resolve(dirname, 'stub.mjs'),
         },
       },
-      esbuild: {
-        keepNames: true,
-      },
       build: {
         outDir: 'out/testbench-app',
         sourcemap: true,
         minify: false,
         target: ['chrome89', 'edge89', 'firefox89', 'safari15'],
-        rollupOptions: {
+        rolldownOptions: {
           input: {
             main: path.resolve(dirname, './index.html'),
             shell: path.resolve(dirname, './shell.html'),
           },
           output: {
+            keepNames: true,
             // Rolldown (used by Vite 8) requires `manualChunks` to be a function — the
             // record form that worked in Rollup is rejected at runtime.
             manualChunks: (id: string) => {
@@ -102,6 +100,11 @@ export default defineConfig(
       },
       worker: {
         format: 'es',
+        rolldownOptions: {
+          output: {
+            keepNames: true,
+          },
+        },
         plugins: () => [
           WasmPlugin(),
           sourceMaps(),

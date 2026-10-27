@@ -12,7 +12,7 @@ import { type IdbLogStore } from '@dxos/log-store-idb';
 import * as Observability from '@dxos/observability/Observability';
 import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
 import * as ObservabilityProvider from '@dxos/observability/ObservabilityProvider';
-import { getHostPlatform, isNonNullable } from '@dxos/util';
+import { getHostPlatform } from '@dxos/util';
 
 import { APP_DOMAIN, FEEDBACK_LOGS_PATH, LOG_STORE_MAX_BYTES } from './constants.ts';
 
@@ -95,6 +95,7 @@ export const initializeObservability = async (
   logStore?: IdbLogStore,
   observabilityDisabled = false,
   observabilityWorker?: ObservabilityExtension.Otel.OtelWorkerPort,
+  sessionRecordingStart?: Effect.Effect<void>,
 ) =>
   Function.pipe(
     Observability.make(),
@@ -107,7 +108,6 @@ export const initializeObservability = async (
         config,
         logs: true,
         observabilityWorker,
-        additionalDestinations: [ObservabilityExtension.PostHog.otelDestination(config)].filter(isNonNullable),
         metrics: true,
         traces: true,
       }),
@@ -122,6 +122,7 @@ export const initializeObservability = async (
         feedbackLogMaxSize: LOG_STORE_MAX_BYTES,
         feedbackLogsEndpoint: feedbackLogsEndpoint(config, isTauri),
         posthog: observabilityDisabled ? POSTHOG_DISABLED_CONFIG : undefined,
+        sessionRecordingStart,
       }),
     ),
     Observability.addDataProvider(ObservabilityProvider.IPData.provider(config)),

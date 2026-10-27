@@ -2,21 +2,23 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
 import { type EdgeStatus, EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useClient } from '@dxos/react-client';
 import { type SpaceSyncStateMap, getSyncSummary, useSyncState } from '@dxos/react-client/echo';
 import * as Button from '@dxos/react-ui/Button';
-import * as Hooks from '@dxos/react-ui/Hooks';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
 import * as Layout from '@dxos/react-ui/Layout';
 import * as Popover from '@dxos/react-ui/Popover';
 import { iconSize, mx } from '@dxos/ui-theme';
 import { Unit, type UnitFormat } from '@dxos/util';
 
-import { createClientSaveTracker, getIcon, getStatus } from '#components';
+import { type SaveState, createClientSaveTracker, getIcon, getStatus } from '#components';
 import { useEdgeStatus, useStalled } from '#hooks';
 import { meta } from '#meta';
 
@@ -26,22 +28,54 @@ export const SyncStatus = () => {
   const client = useClient();
   const state = useSyncState();
   const edgeStatus = useEdgeStatus();
-  const [saved, setSaved] = useState(true);
-  useEffect(() => createClientSaveTracker(client, (state) => setSaved(state === 'saved')), []);
+  const [save, setSave] = useState<SaveState>('saved');
+  useEffect(() => createClientSaveTracker(client, setSave), []);
+  useSaveFailureToast(save);
 
-  return <SyncStatusIndicator state={state} saved={saved} edgeStatus={edgeStatus} />;
+  return <SyncStatusIndicator state={state} save={save} edgeStatus={edgeStatus} />;
+};
+
+const SAVE_FAILURE_TOAST_ID = `${meta.profile.key}/save-failing`;
+
+/**
+ * A failed save leaves changes only in this page, where a reload loses them, so the warning stays up
+ * until saving resumes and is then replaced (same id) by a short confirmation.
+ */
+const useSaveFailureToast = (save: SaveState) => {
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const raised = useRef(false);
+  useEffect(() => {
+    if (save === 'failing' && !raised.current) {
+      raised.current = true;
+      void invokePromise(LayoutOperation.AddToast, {
+        id: SAVE_FAILURE_TOAST_ID,
+        icon: 'ph--warning--regular',
+        title: ['persistence-error.label', { ns: meta.profile.key }],
+        description: ['persistence-error.message', { ns: meta.profile.key }],
+        duration: Infinity,
+      });
+    } else if (save === 'saved' && raised.current) {
+      raised.current = false;
+      void invokePromise(LayoutOperation.AddToast, {
+        id: SAVE_FAILURE_TOAST_ID,
+        icon: 'ph--check-circle--regular',
+        title: ['persistence-recovered.label', { ns: meta.profile.key }],
+        duration: 4_000,
+      });
+    }
+  }, [save, invokePromise]);
 };
 
 export const SyncStatusIndicator = ({
   state,
-  saved,
+  save,
   edgeStatus,
 }: {
   state: SpaceSyncStateMap;
-  saved: boolean;
+  save: SaveState;
   edgeStatus: EdgeStatus;
 }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const summary = getSyncSummary(state);
   // Absent peer sync state is indistinguishable from having no connection.
   const offline = edgeStatus.state !== EdgeStatus_ConnectionState.CONNECTED || Object.values(state).length === 0;
@@ -54,13 +88,13 @@ export const SyncStatusIndicator = ({
   const transferring = edgeStatus.rateBytesUp + edgeStatus.rateBytesDown > 0;
   const stalled = useStalled({ active: !offline && outstanding > 0 && !transferring, progress: outstanding });
 
-  const status = getStatus({ offline, saved, stalled, needsToUpload, needsToDownload });
+  const status = getStatus({ offline, save, stalled, needsToUpload, needsToDownload });
   const icon = getIcon(status);
 
   return (
     <Popover.Root positioning={{ placement: 'left' }}>
       <Popover.Trigger asChild>
-        <StatusBar.Item>
+        <StatusBar.Item data-testid='spacePlugin.syncStatus' data-saved={save === 'saved'}>
           {/* The icon and label carry the status; the indicator keeps a single colour in every state. */}
           <Button.Root variant='ghost' icon={icon} iconOnly label={t(`${status}.label`)} />
         </StatusBar.Item>
@@ -73,7 +107,7 @@ export const SyncStatusIndicator = ({
 };
 
 const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
-  const { t } = Hooks.useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const client = useClient();
 
   const isConnected = status.state === EdgeStatus_ConnectionState.CONNECTED;

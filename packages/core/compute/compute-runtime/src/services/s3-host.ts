@@ -85,7 +85,7 @@ export const createS3Host = ({
         continue;
       }
 
-      const accessToken = await connection.accessToken.load();
+      const accessToken = await Connection.getAccessToken(connection).load();
       const credentials = await resolveCredentials({ spaceId, host: accessToken.source });
       if (credentials) {
         return { host: accessToken.source, credentials };

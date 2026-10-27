@@ -1,0 +1,1231 @@
+name: Check
+
+# A draft PR runs `check`, `boot-budget` and the node tests; marking it ready adds the browser,
+# storybook and e2e suites (`plan` holds them back on a draft) and `cli`. Converting a PR to a draft, by
+# hand or by `draft-on-open.yml`, starts a draft run, and the concurrency group cancels the run in flight.
+#
+# Where suites run: a ready PR runs every job. The merge queue runs only what can block a merge: `check`
+# and the jobs behind the required `test` gate. A push to main runs only e2e, which reports without gating:
+# main moves to the exact commit the queue tested, so the queue's results are the ones GitHub shows on it,
+# and e2e there covers whatever landed since the last run. No `labeled` trigger: its run would post
+# skipped check runs over the PR's real results, and branch protection reads skipped as passing.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, converted_to_draft]
+  merge_group:
+
+  push:
+    branches:
+      - main
+      - ci/*
+
+  schedule:
+    - cron: '0 4 * * 1-5'
+
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
+
+      only:
+        type: choice
+        description: 'Run only this group of jobs'
+        required: false
+        default: all
+        options:
+          - all
+          - check
+          - test
+          - e2e
+
+permissions:
+  contents: read
+  packages: read
+
+env:
+  # PR and merge-queue jobs mount the nightly workspace snapshot instead of checking out and installing
+  # (`.github/actions/workspace-snapshot`); nightly, manual and main runs keep the clean path as the canary.
+  # Setting the repository variable WORKSPACE_SNAPSHOT to `off` turns it off without a change here.
+  WORKSPACE_SNAPSHOT: ${{ (github.event_name == 'pull_request' || github.event_name == 'merge_group') && vars.WORKSPACE_SNAPSHOT != 'off' && 'true' || 'false' }}
+  # Bound once here rather than at every setup call site: a composite action cannot read the
+  # `secrets` context, but it does inherit the process environment.
+  MOON_CACHE_CA_PEM: ${{ secrets.MOON_CACHE_CA_PEM }}
+  MOON_CACHE_CLIENT_PEM: ${{ secrets.MOON_CACHE_CLIENT_PEM }}
+  MOON_CACHE_CLIENT_KEY: ${{ secrets.MOON_CACHE_CLIENT_KEY }}
+  DISCORD_TEST_REPORT_WEBHOOK: ${{ secrets.DISCORD_TEST_REPORT_WEBHOOK }}
+  TRUNK_TOKEN: ${{ secrets.TRUNK_TOKEN }}
+
+# https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/control-the-concurrency-of-workflows-and-jobs
+# The event is part of the key so the nightly, whose `github.ref` is `refs/heads/main`, never shares a group
+# with another event on that ref and gets cancelled mid-e2e.
+#
+# A manual dispatch also keys on its run id, so repeated dispatches of one ref run in parallel:
+# measuring flakiness needs N independent samples of the same commit. Every other event keeps
+# one-run-per-ref, where superseding an in-flight run is what you want.
+#
+# A merge group never cancels: its ref is unique, so only a duplicate run for the same commit shares
+# the group, and cancelling one posts `cancelled` on required checks, which dequeues the PR.
+#
+# Neither does a push to main. GitHub keeps one pending run per group and replaces it with each newer push,
+# so the run in flight finishes and the next one tests the newest commit, covering the ones it skipped.
+# Cancelling instead would never finish a run while merges land faster than e2e takes.
+concurrency:
+  group: >-
+    ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref
+    }}-${{ github.event_name == 'workflow_dispatch' && github.run_id || '' }}
+  cancel-in-progress: >-
+    ${{ github.event_name != 'merge_group' && !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+
+# https://moonrepo.dev/docs/guides/ci
+jobs:
+  check:
+    # `inputs.only` is empty outside a dispatch, so every job-group condition passes there.
+    if: >-
+      ${{ inputs.only != 'test' && inputs.only != 'e2e' &&
+      !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+    permissions:
+      actions: write
+      contents: read
+      packages: read
+    runs-on: ubuntu-24.04
+    # The scheduled run bypasses the cache: the compile gate takes about 24 minutes, then module structure
+    # rebuilds every package again (another 12), before knip and the docs bundle.
+    # A warm PR or merge-queue run of this job has taken up to 27 minutes (merge queue), so a hung runner dies at 40
+    # rather than holding the queue; the forced or cold builds keep the long cap.
+    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 40 }}
+    steps:
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        with:
+          detached: true
+
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
+      # Full depth keeps the commit graph the affected resolver and moon's own merge-base resolve against,
+      # while `filter: blob:none` stops the transfer of every historical file version — the previous
+      # full fetch ranged 32s–15m on the same commit. No `lfs: true`: nothing in the tree is
+      # LFS-tracked. `fetch-tags: false` is not used because checkout ignores it at depth 0; at
+      # ~150 tags the residual refspec cost is noise.
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
+          fetch-depth: 0
+          filter: blob:none
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
+
+      - name: Resolve affected scope
+        id: affected
+        uses: ./.github/actions/affected
+
+      # ─── Stage 1: gates that need no build ──────────────────────────────────────────────────────
+      # Independent node scripts, seconds each. Each runs once setup succeeded, whatever the gates
+      # before it did, so one run reports every failure; any failure still stops the stages after.
+      - name: Check formatting
+        if: ${{ !cancelled() && steps.affected.outcome == 'success' }}
+        run: pnpm run format-check
+
+      - name: Check for import cycles
+        if: ${{ !cancelled() && steps.affected.outcome == 'success' }}
+        run: pnpm run check-cycles
+
+      - name: Check publish config
+        if: ${{ !cancelled() && steps.affected.outcome == 'success' }}
+        run: pnpm run check-publish-config
+
+      - name: Check changesets
+        if: ${{ !cancelled() && steps.affected.outcome == 'success' }}
+        env:
+          CHANGESET_BASE_REF: ${{ github.event.pull_request.base.sha }}
+        run: pnpm run check-changesets
+
+      - name: Check spec changelogs
+        if: ${{ !cancelled() && steps.affected.outcome == 'success' }}
+        env:
+          MDL_BASE_REF: ${{ github.event.pull_request.base.sha }}
+        run: pnpm deus changelog check
+
+      # Passes with a notice until the repository has a TYPESAFE_API_KEY secret.
+      - name: Check spec decisions
+        if: ${{ !cancelled() && steps.affected.outcome == 'success' }}
+        env:
+          MDL_BASE_REF: ${{ github.event.pull_request.base.sha }}
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
+        run: node .agents/skills/mdl/scripts/check-decisions.ts
+
+      - name: Check version files in sync
+        if: ${{ !cancelled() && steps.affected.outcome == 'success' }}
+        run: node scripts/sync-versions.mjs --check
+
+      - name: Check remote cache wiring
+        if: ${{ !cancelled() && steps.affected.outcome == 'success' }}
+        run: node scripts/check-cache-wiring.mjs
+
+      - name: Check package.json paths
+        if: ${{ !cancelled() && steps.affected.outcome == 'success' }}
+        run: pnpm run pkg-lint
+
+      - name: Check public packages don't depend on private packages
+        if: ${{ !cancelled() && steps.affected.outcome == 'success' }}
+        run: pnpm run check-public-dependencies
+
+      # Disabled: edge consumes new packages from pkg.pr.new builds, so a first npm publish is not a merge prerequisite.
+      # - name: Check public packages are published
+      #   run: pnpm run check-packages-published
+
+      # Both sides of the spec <-> `.mdl` QA binding. In stage 1 because it needs no build and
+      # because the failure it catches — a renamed test leaving a flow claiming coverage it no
+      # longer has — is cheapest to report before anything compiles.
+      - name: Check e2e tests are bound to QA flows
+        if: ${{ !cancelled() && steps.affected.outcome == 'success' }}
+        run: node packages/e2e/composer-e2e/scripts/check-qa-coverage.mjs
+
+      # `.npmrc` sets `strict-peer-dependencies` with `auto-install-peers=false`, so re-resolving is what
+      # surfaces an unsatisfiable peer. `--no-frozen-lockfile` can rewrite `pnpm-lock.yaml`.
+      - name: Check for peer dependency issues
+        run: |
+          trap 'git checkout -- pnpm-lock.yaml' EXIT
+          pnpm install --resolution-only --no-frozen-lockfile
+
+      # `pkg-lint` rejects a malformed `exports`/`imports` entry; this rejects a stale one. The toolbox is
+      # the only writer of those maps, so anything it would change is drift a contributor fixes by running
+      # the same command.
+      - name: Check package exports in sync
+        run: |
+          pnpm toolbox --lint-package-exports
+          git diff --exit-code -- '**/package.json'
+
+      # ─── Stage 2: the compile gate ──────────────────────────────────────────────────────────────
+      # ~15 s warm, minutes cold, and the floor under everything below it.
+      - name: Check
+        id: compile
+        run: moon run :lint :build :test-types
+
+      # `check-module-structure` traces the built artifacts (`deps: [build]`), so it cannot move ahead
+      # of the gate however cheap it looks — its 5 s is a post-build number.
+      - name: Check module structure
+        run: moon run :check-module-structure
+
+      # ─── Stage 3: the slow checks ───────────────────────────────────────────────────────────────
+      # Each runs once the compile gate passed, whatever the other did, so one run reports both.
+      #
+      # The second is one moon invocation: `check-plugin-set` and `docs:bundle` overlap in `^:build`, so
+      # moon schedules that graph once. Only `moon exec` has `--on-failure`. `env -u` because both checks
+      # catch a property of an import edge, whose offending commit lands in a package neither project's
+      # inputs name, so scoped they no-op on the PRs they exist to catch. Unset them, do not set
+      # `MOON_AFFECTED=''`. Empty is not "off", moon reads it as an empty base and still filters.
+      - name: Check dependencies
+        if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
+        run: pnpm run knip
+
+      # `docs:bundle` IS the docs link check: `starlight-links-validator` runs as the last phase of
+      # `astro build`.
+      - name: Check production plugin set and docs links
+        if: ${{ !cancelled() && steps.compile.outcome == 'success' }}
+        run: >-
+          env -u MOON_AFFECTED -u MOON_BASE -u MOON_HEAD
+          moon exec composer-app:check-plugin-set docs:bundle --on-failure continue
+
+      # The merge queue drops a PR once `test` fails, and `test` waits on every cell: cancelling turns one
+      # failure into that verdict now instead of after the slowest cell (or a hung one) finishes.
+      - name: Cancel run on failure
+        if: ${{ failure() && github.event_name == 'merge_group' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json'
+          "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/cancel"
+
+  # Static boot-graph budget over the production bundle, on its own runner. The class it catches is a
+  # property of an IMPORT EDGE — a boot-reachable module reaching a barrel instead of a subpath — so a
+  # refactor that relocates the edge silently drops the fix and neither the build nor the tests notice;
+  # three separate fixes were undone that way. Not affected-scoped, because the offending edit lands in
+  # some other package. Here rather than on an `e2e` cell so that it gates the PR that introduces the
+  # regression.
+  # Split out of `check`, where its ~41s of bundling (nothing else in the workflow builds `bundle`) sat
+  # behind that job's whole stage 1+2 sequence; the library builds it needs come from the remote cache
+  # instead. A PR confined to `docs/` skips it: the docs site is a separate Astro project
+  # that nothing in Composer imports.
+  boot-budget:
+    if: >-
+      ${{ inputs.only != 'test' && inputs.only != 'e2e' && github.event_name != 'merge_group' &&
+      !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+    permissions:
+      contents: read
+      packages: read
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      COMPARE: >-
+        ${{ github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.full_name == github.repository }}
+    outputs:
+      status: ${{ steps.compare.outputs.status || 'skipped' }}
+      body: ${{ steps.compare.outputs.body }}
+    steps:
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
+          fetch-depth: 0
+          filter: blob:none
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      # A diff that will not resolve counts as touching code, so the budget runs.
+      - name: Scope
+        id: scope
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if changed=$(git diff --name-only "$BASE_SHA"...HEAD) && ! printf '%s\n' "$changed" | grep -qv '^docs/'; then
+            echo 'docs-only=true' >> "$GITHUB_OUTPUT"
+            echo '::notice::only docs/ changed — skipping the boot budget.'
+          else
+            echo 'docs-only=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup
+        if: steps.scope.outputs.docs-only != 'true'
+        uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
+
+      - name: Check boot budget
+        id: budget
+        if: steps.scope.outputs.docs-only != 'true'
+        continue-on-error: true
+        run: moon run composer-app:check-boot-budget
+
+      - name: Record this PR's measurement
+        id: head
+        if: env.COMPARE == 'true' && steps.scope.outputs.docs-only != 'true'
+        continue-on-error: true
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          cp packages/apps/composer-app/out/boot-budget.json "$RUNNER_TEMP/boot-budget.head.json"
+          cp packages/apps/composer-app/scripts/compare-boot-budget.mjs "$RUNNER_TEMP/compare.mjs"
+          if git diff --quiet "$BASE_SHA" HEAD -- packages/apps/composer-app/scripts/check-boot-budget.mjs; then
+            echo 'comparable=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'comparable=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::boot budget measurement changed in this PR — skipping the base comparison.'
+          fi
+
+      - name: Measure the base commit's boot graph
+        id: base
+        if: env.COMPARE == 'true' && steps.head.outputs.comparable == 'true'
+        continue-on-error: true
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          trap 'git checkout --detach "$HEAD_SHA" >/dev/null 2>&1 || true' EXIT
+          git checkout --detach "$BASE_SHA"
+          pnpm install --prefer-offline
+          # moon owns this path, so head and base measurements land on the same file: deleting first
+          # is what makes the copy below fail loudly instead of measuring the head's leftover report.
+          rm -f packages/apps/composer-app/out/boot-budget.json
+          moon run composer-app:check-boot-budget || true
+          cp packages/apps/composer-app/out/boot-budget.json "$RUNNER_TEMP/boot-budget.base.json"
+
+      - name: Compare with the base
+        id: compare
+        if: steps.base.outcome == 'success'
+        continue-on-error: true
+        run: |
+          node "$RUNNER_TEMP/compare.mjs" \
+            --base "$RUNNER_TEMP/boot-budget.base.json" \
+            --head "$RUNNER_TEMP/boot-budget.head.json"
+
+      - name: Report boot budget failure
+        if: ${{ !cancelled() && steps.budget.outcome == 'failure' }}
+        run: |
+          echo '::error::boot budget exceeded — see the "Check boot budget" step.'
+          exit 1
+
+  # A separate job because `permissions` is job-scoped: holding `pull-requests: write` in
+  # `boot-budget` would put the token in reach of the branch code that job checks out and builds.
+  boot-budget-comment:
+    needs: boot-budget
+    if: >-
+      ${{ !cancelled() && github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      needs.boot-budget.result != 'skipped' && needs.boot-budget.outputs.status != 'skipped' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Post or remove boot graph comment
+        continue-on-error: true
+        uses: actions/github-script@v7
+        env:
+          STATUS: ${{ needs.boot-budget.outputs.status }}
+          BODY: ${{ needs.boot-budget.outputs.body }}
+        with:
+          script: |
+            const marker = '<!-- boot-budget -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const existing = comments.find(
+              (comment) => comment.user?.type === 'Bot' && comment.body && comment.body.includes(marker),
+            );
+            if (process.env.STATUS === 'grew') {
+              const body = `${marker}\n${process.env.BODY}`;
+              if (existing) {
+                await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+              } else {
+                await github.rest.issues.createComment({ owner, repo, issue_number, body });
+              }
+            } else if (existing) {
+              await github.rest.issues.deleteComment({ owner, repo, comment_id: existing.id });
+            }
+
+  # Starts only the test and e2e cells whose targets the change affects (`.github/actions/plan/plan.mjs`),
+  # and lays out the e2e cells: which browsers and how many Playwright shards each gets. A draft gets the
+  # node tests only.
+  plan:
+    if: ${{ inputs.only != 'check' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      node: ${{ steps.plan.outputs.node }}
+      browser: ${{ steps.plan.outputs.browser }}
+      browser-cells: ${{ steps.plan.outputs.browser-cells }}
+      browser-config: ${{ steps.plan.outputs.browser-config }}
+      composer-cells: ${{ steps.plan.outputs.composer-cells }}
+      composer-config: ${{ steps.plan.outputs.composer-config }}
+      rest-cells: ${{ steps.plan.outputs.rest-cells }}
+      rest-config: ${{ steps.plan.outputs.rest-config }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - uses: moonrepo/setup-toolchain@v0
+        with:
+          # IMPORTANT: Keep in-sync with .prototools
+          moon-version: '2.5.2'
+          proto-version: '0.60.2'
+
+      - name: Resolve affected scope
+        uses: ./.github/actions/affected
+        with:
+          all: ${{ github.event_name == 'workflow_dispatch' }}
+
+      - id: plan
+        env:
+          DRAFT: ${{ github.event.pull_request.draft == true }}
+          MERGE_QUEUE: ${{ github.event_name == 'merge_group' }}
+          MAIN_PUSH: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        run: node .github/actions/plan/plan.mjs
+
+  # Vitest, split by runtime. `node` (`:test`, `:test-workerd`) runs four targets at a time, split by moon's
+  # `--job`. `browser` (`:test-browser`, `:test-storybook`) gets its cells from `plan`, each an explicit list
+  # of affected targets; a cell builds its targets' dependency closure at full concurrency, then runs one
+  # target at a time with nothing left to build: each target drives its own Chromium, and timing-sensitive
+  # stories fail when it shares 4 vCPU with another target or a build. File parallelism stays disabled:
+  # overloaded runners flake. Both need a successful `plan`; the `test` gate fails when it did not.
+  test-node:
+    name: test node
+    needs: plan
+    if: >-
+      ${{ !cancelled() && inputs.only != 'e2e' && needs.plan.result == 'success' &&
+      needs.plan.outputs.node == 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # A core change runs every node suite (~3 h of test time), which two cells cannot finish inside the cap below.
+        cell: ['1/4', '2/4', '3/4', '4/4']
+    permissions:
+      actions: write
+      contents: read
+      packages: read
+    runs-on: ubuntu-24.04
+    # A forced nightly once rebuilt every dependency per shard here; a cell took 58 minutes.
+    # A warm PR or merge-queue run of this job has taken up to 27 minutes (merge queue), so a hung runner dies at 40
+    # rather than holding the queue; the forced or cold builds keep the long cap.
+    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 40 }}
+    env:
+      NODE_VERSION: '24.11.1'
+      # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
+      # while still excluding the heavier opt-in tag families.
+      VITEST_TAGS_FILTER: '!sync && !sync-e2e && !functions-e2e && !manual'
+      VITEST_ENV: 'node'
+      # Coverage is unsupported for the workers pool (v8 coverage imports `node:inspector/promises`,
+      # absent in workerd), so `vite.base.config.ts` drops it for the `workerd` project type — which is
+      # what lets a cell mix workerd targets with the rest under one flag.
+      VITEST_COVERAGE: ${{ secrets.CODECOV_TOKEN != '' && 'true' || 'false' }}
+      VITEST_XML_REPORT: 'true'
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      # One target per core.
+      MOON_CONCURRENCY: 4
+      DX_TEST_RUN_ID: ${{ github.event_name == 'schedule' && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
+    steps:
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
+
+      - name: Resolve affected scope
+        uses: ./.github/actions/affected
+        with:
+          force: 'false'
+
+      # plugin-sandbox's local-backend tests skip without these.
+      - name: Install sandbox tools
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq bubblewrap socat ripgrep
+
+      - name: Test
+        uses: ./.github/actions/vitest
+        with:
+          suite: node
+          targets: ':test :test-workerd'
+          shard: ${{ strategy.job-index }}
+          of: ${{ strategy.job-total }}
+
+      # The merge queue drops a PR once `test` fails, and `test` waits on every cell: cancelling turns one
+      # failure into that verdict now instead of after the slowest cell (or a hung one) finishes.
+      - name: Cancel run on failure
+        if: ${{ failure() && github.event_name == 'merge_group' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json'
+          "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/cancel"
+
+  # Every `:test-native`: suites that compile native code or load it, kept out of the `:test` sweep. The Rust
+  # addon compiles RocksDB from source, and on the scheduled run's forced rebuild two such compiles took 25
+  # minutes of a node cell's 4 vCPU. On a PR moon's remote cache skips both unless the crate changed.
+  # The advisory suites (memory retention, model-fixture replay), apart from the test cells because their minutes ran a
+  # cell into its cap and cancelled tests that had passed; `test` does not wait on them.
+  advisory:
+    name: advisory
+    needs: plan
+    if: >-
+      ${{ !cancelled() && inputs.only != 'e2e' && needs.plan.result == 'success' &&
+      needs.plan.outputs.node == 'true' && github.event_name != 'merge_group' }}
+    permissions:
+      contents: read
+      packages: read
+      statuses: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      NODE_VERSION: '24.11.1'
+      MOON_CONCURRENCY: 4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+
+      - name: Resolve affected scope
+        uses: ./.github/actions/affected
+        with:
+          force: 'false'
+
+      - name: Advisory suites
+        uses: ./.github/actions/advisory
+
+  native:
+    if: >-
+      ${{ inputs.only != 'check' && inputs.only != 'e2e' &&
+      !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+    # `actions: write` for the merge queue's cancel-on-failure step.
+    permissions:
+      contents: read
+      packages: read
+      actions: write
+    runs-on: ubuntu-24.04
+    # A warm PR or merge-queue run of this job has taken up to 27 minutes (merge queue), so a hung runner dies at 40
+    # rather than holding the queue; the forced or cold builds keep the long cap.
+    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 75 || 40 }}
+    steps:
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
+          rust: 'true'
+
+      - name: Resolve affected scope
+        uses: ./.github/actions/affected
+
+      - name: Test
+        run: >-
+          moon exec --on-failure continue :test-native
+
+      # The merge queue drops a PR once `test` fails, and `test` waits on every cell: cancelling turns one
+      # failure into that verdict now instead of after the slowest cell (or a hung one) finishes.
+      - name: Cancel run on failure
+        if: ${{ failure() && github.event_name == 'merge_group' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json'
+          "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/cancel"
+
+  test-browser:
+    name: test browser
+    needs: plan
+    if: >-
+      ${{ !cancelled() && inputs.only != 'e2e' && needs.plan.result == 'success' &&
+      needs.plan.outputs.browser == 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        cell: ${{ fromJSON(needs.plan.outputs.browser-cells) }}
+    # `actions: write` for the merge queue's cancel-on-failure step.
+    permissions:
+      contents: read
+      packages: read
+      actions: write
+    runs-on: ubuntu-24.04
+    # Covers a cold build: fork or Dependabot PRs with no remote cache.
+    # A warm PR or merge-queue run of this job has taken up to 27 minutes (merge queue), so a hung runner dies at 40
+    # rather than holding the queue; the forced or cold builds keep the long cap.
+    timeout-minutes: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.fork || github.actor == 'dependabot[bot]') && 90 || 40 }}
+    env:
+      # The test phase; the build step overrides it.
+      MOON_CONCURRENCY: 1
+      CELL_SHARD: ${{ fromJSON(needs.plan.outputs.browser-config)[matrix.cell].shard }}
+      CELL_TARGETS: ${{ fromJSON(needs.plan.outputs.browser-config)[matrix.cell].targets }}
+      DX_TEST_RUN_ID: ${{ github.event_name == 'schedule' && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
+      NODE_VERSION: '24.11.1'
+      # Opt the test job in to flaky-tagged suites (Trunk pass-on-rerun keeps signal),
+      # while still excluding the heavier opt-in tag families.
+      VITEST_TAGS_FILTER: '!sync && !sync-e2e && !functions-e2e && !manual'
+      VITEST_ENV: 'node'
+      VITEST_COVERAGE: ${{ secrets.CODECOV_TOKEN != '' && 'true' || 'false' }}
+      VITEST_XML_REPORT: 'true'
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    steps:
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
+
+      # Everything this cell's targets depend on, at full concurrency and before any Chromium. No affected
+      # scope: the list is the scope.
+      - name: Build
+        env:
+          MOON_CONCURRENCY: 4
+        run: |
+          builds=$(node .github/actions/plan/closure.mjs $CELL_TARGETS < /dev/null)
+          [ -z "$builds" ] || moon exec --on-failure continue $builds
+
+      - name: Install Playwright
+        if: ${{ !cancelled() }}
+        uses: ./.github/actions/playwright
+        with:
+          browser: chromium
+
+      # After a failed build too, so every target that does not depend on it still runs and reports.
+      - name: Test
+        if: ${{ !cancelled() }}
+        uses: ./.github/actions/vitest
+        with:
+          suite: browser
+          targets: ${{ env.CELL_TARGETS }}
+          shard: ${{ env.CELL_SHARD }}
+
+      # The merge queue drops a PR once `test` fails, and `test` waits on every cell: cancelling turns one
+      # failure into that verdict now instead of after the slowest cell (or a hung one) finishes.
+      - name: Cancel run on failure
+        if: ${{ failure() && github.event_name == 'merge_group' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H 'Accept: application/vnd.github+json'
+          "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/cancel"
+
+  # One check per suite for branch protection to require, whatever the shard count: it fails if any cell
+  # failed or was cancelled, or `plan` failed. Skipped passes: a suite the change does not affect, or a
+  # draft's browser cells.
+  test:
+    needs: [plan, test-node, test-browser, native]
+    if: ${{ always() && !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    # The worst result, for `report`: a cancelled cell proved nothing, so it must not read as a failure.
+    outputs:
+      result: ${{ steps.gate.outputs.result }}
+    steps:
+      - name: Gate
+        id: gate
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          result=$(echo "$RESULTS" | jq -r '[.[].result] |
+            if any(. == "failure") then "failure" elif any(. == "cancelled") then "cancelled" else "success" end')
+          echo "result=$result" >> "$GITHUB_OUTPUT"
+          [ "$result" = success ]
+
+  # Composer e2e dwarfs every other suite, so `plan` splits it into Playwright shards per browser
+  # (`--shard` divides the tests by count); `e2e-rest` splits the rest of the pool's targets in two.
+  # The jobs repeat their steps because a composite action cannot carry the `Test` step's own timeout.
+  # `--on-failure continue` because moon's default bail drops a failing cell's remaining targets,
+  # hiding what they cost.
+  e2e-composer:
+    name: e2e composer
+    needs: plan
+    if: ${{ needs.plan.outputs.composer-cells != '[]' && inputs.only != 'test' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        cell: ${{ fromJSON(needs.plan.outputs.composer-cells) }}
+    runs-on: ubuntu-24.04
+    # Headroom over the step's own cap, which fails cleanly with traces attached; hitting this one
+    # cancels the job and proves nothing.
+    timeout-minutes: 40
+    env:
+      # Scoped per job because at workflow level it would also move the hashes of `test`, `storybook`,
+      # `workerd` and `cli`.
+      DX_ENVIRONMENT: ci
+      # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit
+      # and reports green without executing a test.
+      DX_E2E_RUN_ID: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
+      # Selects this cell's Playwright project; also a moon task hash input, so each browser gets its
+      # own remote-cache entry.
+      PLAYWRIGHT_BROWSER: ${{ fromJSON(needs.plan.outputs.composer-config)[matrix.cell].browser }}
+      CELL_SHARD: ${{ fromJSON(needs.plan.outputs.composer-config)[matrix.cell].shard }}
+      CELL_TOTAL: ${{ fromJSON(needs.plan.outputs.composer-config)[matrix.cell].total }}
+      CELL_WORKERS: ${{ fromJSON(needs.plan.outputs.composer-config)[matrix.cell].workers }}
+    steps:
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        with:
+          detached: true
+
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
+
+      - name: Resolve affected scope
+        uses: ./.github/actions/affected
+        with:
+          all: ${{ github.event_name == 'workflow_dispatch' }}
+          force: 'false'
+
+      # Only this cell's browser — the other two engines' downloads are dead weight here.
+      - name: Install Playwright
+        uses: ./.github/actions/playwright
+        with:
+          browser: ${{ env.PLAYWRIGHT_BROWSER }}
+
+      # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps
+      # run. Avoids 504 Outdated Optimize Dep when graph differs from bundle step. Storybook puts
+      # cache under node_modules/.cache/storybook/<hash>/sb-vite per package.
+      - name: Clear Storybook Vite cache
+        run: find . -type d -path '*/node_modules/.cache/storybook' -prune -print0 | xargs -0 rm -rf
+
+      - name: Test
+        if: ${{ env.TRUNK_TOKEN != '' }}
+        timeout-minutes: 35
+        uses: trunk-io/analytics-uploader@v1
+        with:
+          junit-paths: 'test-results/playwright/report/*.xml'
+          org-slug: dxos
+          token: ${{ secrets.TRUNK_TOKEN }}
+          quarantine: true
+          run: >-
+            moon exec --on-failure continue composer-e2e:e2e --
+            --shard=${{ env.CELL_SHARD }}/${{ env.CELL_TOTAL }} --workers=${{ env.CELL_WORKERS }}
+
+      # A fork PR gets no secrets, and the uploader cannot run without a token.
+      - name: Test (no analytics)
+        if: ${{ env.TRUNK_TOKEN == '' }}
+        timeout-minutes: 35
+        run: >-
+          moon exec --on-failure continue composer-e2e:e2e --
+          --shard=${{ env.CELL_SHARD }}/${{ env.CELL_TOTAL }} --workers=${{ env.CELL_WORKERS }}
+
+      # Trends every test's outcome in PostHog; the event contract and the gate are documented in
+      # `packages/e2e/composer-e2e/DASHBOARD.md`. `always()` because a RED run is the report worth
+      # having.
+      - name: Publish results
+        if: >-
+          ${{ always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') }}
+        env:
+          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+        run: node packages/e2e/composer-e2e/scripts/publish-results.mjs
+
+      - name: Upload Traces
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: playwright-report-${{ env.PLAYWRIGHT_BROWSER }}-composer-${{ env.CELL_SHARD }}
+          path: test-results/playwright
+          retention-days: 7
+
+  e2e-rest:
+    name: e2e rest
+    needs: plan
+    if: ${{ needs.plan.outputs.rest-cells != '[]' && inputs.only != 'test' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        cell: ${{ fromJSON(needs.plan.outputs.rest-cells) }}
+    runs-on: ubuntu-24.04
+    # Headroom over the step's own cap, which fails cleanly with traces attached; hitting this one
+    # cancels the job and proves nothing.
+    timeout-minutes: 40
+    env:
+      # Scoped per job because at workflow level it would also move the hashes of `test`, `storybook`,
+      # `workerd` and `cli`.
+      DX_ENVIRONMENT: ci
+      # Forces the e2e tasks to actually run: re-running one commit otherwise replays a cache hit
+      # and reports green without executing a test.
+      DX_E2E_RUN_ID: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && format('{0}-{1}', github.run_id, github.run_attempt) || '' }}
+      # Selects this cell's Playwright project; also a moon task hash input, so each browser gets its
+      # own remote-cache entry.
+      PLAYWRIGHT_BROWSER: ${{ fromJSON(needs.plan.outputs.rest-config)[matrix.cell].browser }}
+      CELL_SHARD: ${{ fromJSON(needs.plan.outputs.rest-config)[matrix.cell].shard }}
+      CELL_TOTAL: ${{ fromJSON(needs.plan.outputs.rest-config)[matrix.cell].total }}
+      # Storybook's cold start lost module loads on Firefox and WebKit with two workers on 4 vCPU.
+      PLAYWRIGHT_WORKERS: 1
+    steps:
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+        with:
+          detached: true
+
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
+
+      - name: Resolve affected scope
+        uses: ./.github/actions/affected
+        with:
+          all: ${{ github.event_name == 'workflow_dispatch' }}
+          force: 'false'
+
+      # Only this cell's browser — the other two engines' downloads are dead weight here.
+      - name: Install Playwright
+        uses: ./.github/actions/playwright
+        with:
+          browser: ${{ env.PLAYWRIGHT_BROWSER }}
+
+      # Clear Storybook Vite cache in every package so Storybook dev server does a fresh optimizeDeps
+      # run. Avoids 504 Outdated Optimize Dep when graph differs from bundle step. Storybook puts
+      # cache under node_modules/.cache/storybook/<hash>/sb-vite per package.
+      - name: Clear Storybook Vite cache
+        run: find . -type d -path '*/node_modules/.cache/storybook' -prune -print0 | xargs -0 rm -rf
+
+      # moon ignores MQL negation in `moon query tasks` and `moon exec --query`, so composer-e2e is
+      # filtered in node, which also takes every `total`-th target for this shard.
+      - name: Select targets
+        id: shard
+        run: |
+          targets=$(moon query tasks "task=e2e" < /dev/null |
+            node -e "let s='';process.stdin.on('data',(d)=>(s+=d)).on('end',()=>console.log(Object.keys(JSON.parse(s).tasks).filter((project)=>project!=='composer-e2e').sort().filter((_,i)=>i%${{ env.CELL_TOTAL }}===${{ env.CELL_SHARD }}).map((project)=>project+':e2e').join(' ')))")
+          [ -n "$targets" ] || { echo 'no e2e targets resolved'; exit 1; }
+          echo "targets=$targets" >> "$GITHUB_OUTPUT"
+
+      - name: Test
+        if: ${{ env.TRUNK_TOKEN != '' }}
+        timeout-minutes: 35
+        uses: trunk-io/analytics-uploader@v1
+        with:
+          junit-paths: 'test-results/playwright/report/*.xml'
+          org-slug: dxos
+          token: ${{ secrets.TRUNK_TOKEN }}
+          quarantine: true
+          run: >-
+            moon exec --on-failure continue ${{ steps.shard.outputs.targets }}
+
+      # A fork PR gets no secrets, and the uploader cannot run without a token.
+      - name: Test (no analytics)
+        if: ${{ env.TRUNK_TOKEN == '' }}
+        timeout-minutes: 35
+        run: >-
+          moon exec --on-failure continue ${{ steps.shard.outputs.targets }}
+
+      - name: Upload Traces
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: playwright-report-${{ env.PLAYWRIGHT_BROWSER }}-rest-${{ env.CELL_SHARD }}
+          path: test-results/playwright
+          retention-days: 7
+
+  # The e2e suite's gate, as `test` is the tests'. Not required by branch protection: e2e reports without
+  # gating.
+  e2e:
+    needs: [plan, e2e-composer, e2e-rest]
+    if: ${{ always() && github.event_name != 'merge_group' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    # The worst result, for `report`: a cancelled cell proved nothing, so it must not read as a failure.
+    outputs:
+      result: ${{ steps.gate.outputs.result }}
+    steps:
+      - name: Gate
+        id: gate
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          result=$(echo "$RESULTS" | jq -r '[.[].result] |
+            if any(. == "failure") then "failure" elif any(. == "cancelled") then "cancelled" else "success" end')
+          echo "result=$result" >> "$GITHUB_OUTPUT"
+          [ "$result" = success ]
+
+  # Builds, packs and smoke-tests the CLI on its own runner, in parallel with the e2e cells. It used to ride along
+  # in that job, which meant the foreign-machine check waited on the Playwright suite for an artifact that
+  # was ready in minutes — and a browser test consuming the 45 minute step budget withheld it entirely.
+  cli:
+    if: >-
+      ${{ (inputs.only == '' || inputs.only == 'all') && (
+      github.event_name != 'pull_request' || !github.event.pull_request.draft) &&
+      github.event_name != 'merge_group' && !(github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      # Just the mount action: the runner loads it before it runs, and the mount then covers this checkout.
+      - name: Checkout the snapshot actions
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/actions/workspace-snapshot
+          persist-credentials: false
+
+      # Any failure leaves an empty workspace and `mounted` false, so the job carries on down the normal path.
+      - name: Mount workspace snapshot
+        id: snapshot
+        if: ${{ env.WORKSPACE_SNAPSHOT == 'true' }}
+        uses: ./.github/actions/workspace-snapshot/mount
+
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          # The snapshot's node_modules would go to checkout's `git clean -ffdx`.
+          clean: false
+          fetch-depth: 0
+          filter: blob:none
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+
+      - name: Setup
+        uses: ./.github/actions/setup
+        with:
+          prebuilt: ${{ steps.snapshot.outputs.mounted == 'true' && 'true' || 'false' }}
+
+      # `@dxos/cli` ships as prebuilt platform binaries, so its failure modes live in the packed tarball
+      # rather than the source tree. Depends on `bundle`, so this compiles the binaries too.
+      - name: Smoke test packed CLI
+        run: moon run cli:smoke
+
+      - name: Pack the CLI for the foreign-machine job
+        run: |
+          mkdir -p cli-verify
+          npm pack --silent --pack-destination cli-verify ./packages/devtools/cli/dist/cli
+          npm pack --silent --pack-destination cli-verify ./packages/devtools/cli/dist/cli-linux-x64
+          cp packages/devtools/cli/scripts/verify-installed.mjs cli-verify/
+
+      # The verifier travels with the tarballs because the job that runs them has no checkout.
+      - name: Upload packed CLI
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-verify
+          path: cli-verify/
+          retention-days: 1
+
+  # Runs the packed CLI where the tree that built it does not exist. Deliberately no checkout, no container
+  # and a different runner: a `--compile`d binary is meant to carry everything, and when a dependency
+  # resolves a path at bundle time instead — `@automerge/automerge`'s WASM, `better-sqlite3`'s native addon —
+  # it works in the job that built it and nowhere else, which is how @dxos/cli@0.10.0 shipped unrunnable.
+  # `cli:smoke` cannot cover this in CI because the build container forbids mount namespaces.
+  cli-foreign:
+    needs: cli
+    if: ${{ !cancelled() && needs.cli.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Download packed CLI
+        uses: actions/download-artifact@v4
+        with:
+          name: cli-verify
+          path: cli-verify
+
+      # `--omit=optional` so the launcher's optionalDependencies are not fetched from npm — those versions
+      # are published, so without it the released (and possibly broken) platform package could satisfy the
+      # dependency instead of the tarball built here.
+      # The `./` is load-bearing: npm reads a bare `dir/file.tgz` as the GitHub shorthand `owner/repo` and
+      # tries to clone it.
+      - name: Install from the tarballs
+        run: |
+          npm init -y > /dev/null
+          npm install --no-audit --no-fund --omit=optional ./cli-verify/*.tgz
+
+      # The same verifier `cli:smoke` runs, so the two cannot check different things.
+      - name: Verify the install
+        run: node cli-verify/verify-installed.mjs .
+
+  # Reports every nightly job from one place, through the `test` and `e2e` gates: each posts the worst
+  # result across its cells (one red cell makes the report red; a cancelled one reads as not completed),
+  # and a failed `plan` fails both.
+  report:
+    needs: [test, e2e]
+    if: always() && github.event_name == 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      # This job only runs a repository-local action, so it never needs git auth; leaving the token in
+      # `.git/config` would expose it to anything in the checked-out tree.
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      # Each report is `always()` so an undelivered one cannot suppress the rest — without it a failing
+      # first report skips the e2e report, silencing the very signal this job exists to send. A failed
+      # step still fails the job.
+      - name: Send test report
+        if: always()
+        uses: ./.github/actions/test-report
+        with:
+          name: test-24.11.1
+          result: ${{ needs.test.outputs.result }}
+      - name: Send e2e report
+        if: always()
+        uses: ./.github/actions/test-report
+        with:
+          name: e2e
+          result: ${{ needs.e2e.outputs.result }}
+
+  # Advisory changeset reminder (NOT a gate): when a PR changes publishable source but has no
+  # `.changeset/*.md`, post/update a single sticky comment; remove it once a changeset is added.
+  # A change that needs no release just omits the changeset — no empty changeset required.
+  # Same-repo PRs only — fork PRs get a read-only token and cannot be commented on.
+  changeset-reminder:
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      !github.event.pull_request.draft
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Detect missing changeset
+        id: detect
+        env:
+          CHANGESET_BASE_REF: ${{ github.event.pull_request.base.sha }}
+        run: node scripts/check-changeset.mjs
+
+      - name: Post or remove reminder comment
+        uses: actions/github-script@v7
+        env:
+          MISSING: ${{ steps.detect.outputs.missing }}
+          PACKAGES: ${{ steps.detect.outputs.packages }}
+        with:
+          script: |
+            const marker = '<!-- changeset-reminder -->';
+            const missing = process.env.MISSING === 'true';
+            const packages = process.env.PACKAGES || '';
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const existing = comments.find((comment) => comment.body && comment.body.includes(marker));
+            if (missing) {
+              const body = [
+                marker,
+                '### 🦋 No changeset found',
+                '',
+                'This PR changes publishable source but has no `.changeset/*.md`.',
+                packages ? `Affected: ${packages}` : '',
+                '',
+                '- If the change is consumer-relevant (worth a changelog entry), run `pnpm changeset` and commit the file.',
+                "- If it isn't changelog-relevant (chore / refactor / internal), you can ignore this — the code still ships with the next release.",
+              ].filter(Boolean).join('\n');
+              if (existing) {
+                await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+              } else {
+                await github.rest.issues.createComment({ owner, repo, issue_number, body });
+              }
+            } else if (existing) {
+              await github.rest.issues.deleteComment({ owner, repo, comment_id: existing.id });
+            }

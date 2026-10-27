@@ -9,17 +9,15 @@ import * as Effect from 'effect/Effect';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 
-import { ProjectPhase } from './project.ts';
-import { WeatherSkill } from './skill.ts';
+import { ProjectPartial } from './project.ts';
 import { Tasks } from './tasks.ts';
 import { REFERENCE } from './util.ts';
 
 export { FORECAST_URL } from './util.ts';
 
-const phases = {
-  skill: WeatherSkill,
+const partials = {
   tasks: Tasks,
-  project: ProjectPhase,
+  project: ProjectPartial,
 };
 
 /**
@@ -29,24 +27,23 @@ const phases = {
  *
  * It sits between `WorkerSpace` (a deploy with nothing to call) and `StockfishSpace` (an engine, a
  * design stage and a publish step): enough to exercise the whole build → deploy → configure → call
- * path, small enough to run unattended. The account stays temporary and unclaimed, and the server is
- * configured on a seeded skill because a skill is where a chat reads MCP servers from.
+ * path, small enough to run unattended. The account stays temporary and unclaimed, and the agent adds
+ * the server to the space as an MCP connection.
  */
-export const make = (): SampleSpace.Definition<typeof phases, void> =>
+export const make = (): SampleSpace.Definition<typeof partials, void> =>
   SampleSpace.make({
     // Reaches a space only where the definition is applied directly (the generator panel, the
     // archive test): the create-space dialog takes its icon from `space-templates.ts`.
     space: { name: 'Weather MCP', icon: 'sun', hue: 'sky' },
     reference: REFERENCE,
-    phases,
-    build: (phases) =>
+    partials,
+    build: (partials) =>
       Effect.gen(function* () {
-        const skill = yield* phases.skill();
-        const tasks = yield* phases.tasks();
-        yield* phases.project({ tasks, skill });
+        const tasks = yield* partials.tasks();
+        yield* partials.project({ tasks });
 
-        // No root collection: this space seeds no documents — the project, its tasks and the skill
-        // surface through their own containers.
+        // No root collection: this space seeds no documents — the project and its tasks surface
+        // through their own containers.
       }),
   });
 

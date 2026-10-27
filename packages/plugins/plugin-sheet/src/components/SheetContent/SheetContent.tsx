@@ -15,10 +15,16 @@ import React, {
 } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import { type CellRange, rangeToA1Notation } from '@dxos/compute-hyperformula';
+import {
+  type CellRange,
+  addressToA1Notation,
+  rangeFromA1Notation,
+  rangeToA1Notation,
+} from '@dxos/compute-hyperformula';
 import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
-import { useAttention } from '@dxos/react-ui-attention';
+import { useAttention, useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import {
   type DxGridCellIndex,
   type DxGridElement,
@@ -43,6 +49,7 @@ import { SheetCapabilities, SheetOperation, SheetUtil } from '#types';
 import { type RangeController, rangeExtension, sheetExtension } from '../../extensions/index.ts';
 import { useSelectThreadOnCellFocus } from '../../integrations/index.ts';
 import { useSheetContext } from '../SheetRoot/index.ts';
+import { FitBox, naturalSize, useUsedExtent } from './fit.tsx';
 import { colLabelCell, rowLabelCell, useSheetModelDxGridProps } from './util.ts';
 
 const inertPosition: DxGridPosition = { plane: 'grid', col: 0, row: 0 };
@@ -73,9 +80,12 @@ const sheetRowDefault = {
   grid: { size: defaultRowSize, resizeable: true },
 };
 
-export type SheetContentProps = {};
+export type SheetContentProps = {
+  /** Shows the used range only, scaled down to fit the box (never past 1:1) and inert: a sheet on a slide. */
+  fit?: boolean;
+};
 
-export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((props, forwardedRef) => {
+export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>(({ fit, ...props }, forwardedRef) => {
   const { t } = UiHooks.useTranslation(meta.profile.key);
   const {
     id,
@@ -90,6 +100,9 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
     setActiveRefs,
     ignoreAttention,
   } = useSheetContext();
+  // The grid spans the sheet's own rows and columns, which grow past the defaults.
+  const [sheetRows] = useObject(model.sheet, 'rows');
+  const [sheetColumns] = useObject(model.sheet, 'columns');
 
   // NOTE(thure): using `useState` instead of `useRef` works with refs provided by `@lit/react` and gives us
   //  a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
@@ -161,6 +174,24 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
     [model],
   );
 
+  // The selection is published as ViewState (as markdown's is) so companions and the assistant can read and set it.
+  const selectionContextId = Obj.getURI(model.sheet);
+  const selection = useSelection(selectionContextId, 'range');
+  const { range: setSelectionRange } = useSelectionActions(selectionContextId);
+  const publishedSelection = useRef<string>(undefined);
+  useEffect(() => {
+    if (!dxGrid || !selection) {
+      return;
+    }
+
+    const key = `${selection.from}:${selection.to}`;
+    if (key !== publishedSelection.current) {
+      publishedSelection.current = key;
+      const { from, to = from } = rangeFromA1Notation(key);
+      dxGrid.setSelection({ start: { ...from, plane: 'grid' }, end: { ...to, plane: 'grid' } });
+    }
+  }, [dxGrid, selection?.from, selection?.to]);
+
   const handleSelect = useCallback<NonNullable<GridContentProps['onSelect']>>(
     ({ minCol, maxCol, minRow, maxRow }) => {
       const range: CellRange = { from: { col: minCol, row: minRow } };
@@ -173,9 +204,13 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
       } else {
         // Setting range while editing causes focus to move to null, avoid doing so.
         setRange(range.to ? range : undefined);
+        const from = addressToA1Notation(range.from);
+        const to = addressToA1Notation(range.to ?? range.from);
+        publishedSelection.current = `${from}:${to}`;
+        setSelectionRange(from, to);
       }
     },
-    [editing],
+    [editing, setSelectionRange],
   );
 
   const handleWheel = useCallback(
@@ -303,6 +338,8 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
   );
 
   const { columns, rows } = useSheetModelDxGridProps(dxGrid, model);
+  const extent = useUsedExtent(model.sheet);
+  const natural = useMemo(() => naturalSize(extent, { columns, rows }), [extent, columns, rows]);
 
   const extensions = useMemo(
     () => [
@@ -341,30 +378,44 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
 
   useSelectThreadOnCellFocus();
 
+  const grid = (
+    <Grid.Content
+      className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'
+      initialCells={initialCells}
+      limitColumns={fit ? extent.columns : (sheetColumns?.length ?? SheetUtil.DEFAULT_COLS)}
+      limitRows={fit ? extent.rows : (sheetRows?.length ?? SheetUtil.DEFAULT_ROWS)}
+      columns={columns}
+      rows={rows}
+      columnDefault={sheetColDefault}
+      rowDefault={sheetRowDefault}
+      activeRefs={activeRefs}
+      frozen={frozen}
+      overscroll='trap'
+      onAxisResize={handleAxisResize}
+      onSelect={handleSelect}
+      onFocus={handleFocus}
+      onWheelCapture={handleWheel}
+      onKeyDown={handleKeyDown}
+      onContextMenu={handleContextMenu}
+      onClick={handleClick}
+      ref={setDxGrid}
+    />
+  );
+
   return (
     <div ref={forwardedRef} {...Util.composableProps(props, { classNames: 'relative min-h-0' })}>
       <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
-      <Grid.Content
-        className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'
-        initialCells={initialCells}
-        limitColumns={SheetUtil.DEFAULT_COLS}
-        limitRows={SheetUtil.DEFAULT_ROWS}
-        columns={columns}
-        rows={rows}
-        columnDefault={sheetColDefault}
-        rowDefault={sheetRowDefault}
-        activeRefs={activeRefs}
-        frozen={frozen}
-        overscroll='trap'
-        onAxisResize={handleAxisResize}
-        onSelect={handleSelect}
-        onFocus={handleFocus}
-        onWheelCapture={handleWheel}
-        onKeyDown={handleKeyDown}
-        onContextMenu={handleContextMenu}
-        onClick={handleClick}
-        ref={setDxGrid}
-      />
+      {fit ? (
+        <FitBox width={natural.width} height={natural.height}>
+          {/* Inert, not only pointer-proof: no cell takes focus, so no key or clipboard edit reaches the sheet. The grid is
+              uncapped by the viewport so it renders every cell of its natural size before the box scales it. */}
+          <div inert className='dx-cover [&_.dx-grid]:max-w-none! [&_.dx-grid]:max-h-none!'>
+            {grid}
+          </div>
+        </FitBox>
+      ) : (
+        grid
+      )}
       <Menu.Root
         open={!!contextMenuOpen}
         onOpenChange={({ open: nextOpen }) => setContextMenuOpen(nextOpen ? inertPosition : null)}

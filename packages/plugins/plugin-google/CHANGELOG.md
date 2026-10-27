@@ -1,5 +1,89 @@
 # @dxos/plugin-google
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [e26ed70]
+  - @dxos/plugin-inbox@0.16.0
+  - @dxos/echo@0.16.0
+  - @dxos/plugin-connector@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/compute-runtime@0.16.0
+  - @dxos/extractor@0.16.0
+  - @dxos/extractor-lib@0.16.0
+  - @dxos/link@0.16.0
+  - @dxos/pipeline-email@0.16.0
+  - @dxos/schema@0.16.0
+  - @dxos/types@0.16.0
+  - @dxos/config@0.16.0
+  - @dxos/async@0.16.0
+  - @dxos/context@0.16.0
+  - @dxos/effect@0.16.0
+  - @dxos/errors@0.16.0
+  - @dxos/invariant@0.16.0
+  - @dxos/keys@0.16.0
+  - @dxos/log@0.16.0
+  - @dxos/markdown@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/pipeline@0.16.0
+  - @dxos/protocols@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- 45ab961: Large Gmail mailboxes sync again: attachments past the inline blob cap are skipped before download, the dedup seed reads 50 messages per query instead of 1,000 objects at once (which outgrew EDGE's 32 MiB query cap), a binding whose mailbox was deleted no longer fails every run, and a reference to a deleted object no longer downloads every feed in the space. Local syncs no longer fail on an unset `priority`, one bad trigger or failed tick no longer stops the trigger runner until a reload, and feed reads under Safari 18 (the macOS desktop app) no longer fail with `RangeError: Bad value` once a worker has decoded 2 GiB.
+- Updated dependencies [5490cbc]
+- Updated dependencies [9b2a2c0]
+- Updated dependencies [94ec06d]
+- Updated dependencies [419bf9a]
+- Updated dependencies [3aed53a]
+- Updated dependencies [ed8df23]
+- Updated dependencies [0f6457d]
+- Updated dependencies [94d4f85]
+- Updated dependencies [b6ae19d]
+- Updated dependencies [b82150a]
+- Updated dependencies [0420f87]
+- Updated dependencies [45ab961]
+- Updated dependencies [1e9c017]
+- Updated dependencies [16bde33]
+- Updated dependencies [5e3e00c]
+- Updated dependencies [d250ed2]
+- Updated dependencies [ef9aea9]
+- Updated dependencies [37edd53]
+- Updated dependencies [098a536]
+- Updated dependencies [7b47951]
+- Updated dependencies [e398906]
+- Updated dependencies [2b6a93a]
+  - @dxos/compute-runtime@0.15.0
+  - @dxos/echo@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/plugin-inbox@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/protocols@0.15.0
+  - @dxos/link@0.15.0
+  - @dxos/async@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/pipeline-email@0.15.0
+  - @dxos/plugin-connector@0.15.0
+  - @dxos/extractor@0.15.0
+  - @dxos/extractor-lib@0.15.0
+  - @dxos/schema@0.15.0
+  - @dxos/types@0.15.0
+  - @dxos/config@0.15.0
+  - @dxos/effect@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/pipeline@0.15.0
+  - @dxos/context@0.15.0
+  - @dxos/errors@0.15.0
+  - @dxos/invariant@0.15.0
+  - @dxos/keys@0.15.0
+  - @dxos/log@0.15.0
+  - @dxos/markdown@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

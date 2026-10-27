@@ -155,11 +155,24 @@ export type MakeProps<S extends Type.AnyObj> = {
   : Entity.Properties<Type.InstanceType<S>>);
 
 /**
+ * Options for {@link make}.
+ */
+export type MakeOptions = {
+  /**
+   * Skip validating `props` against the schema. Only for props the caller built from values that are
+   * already typed (e.g. serializing in-memory definitions), where validation re-checks what the
+   * compiler did and dominates the cost of creating large objects. Invalid props are not rejected.
+   */
+  skipValidation?: boolean;
+};
+
+/**
  * Creates a new echo object of the given schema or `Type.Type`.
  *
  * @param typeOrSchema - A static object schema (`Type.makeObject(...)`) or a
  *   `Type.Type` entity (e.g. one returned by `db.addType(schemaEntity)`).
  * @param props - Object properties.
+ * @param options - See {@link MakeOptions}.
  *
  * Meta can be passed as a symbol in `props`.
  *
@@ -174,8 +187,12 @@ export type MakeProps<S extends Type.AnyObj> = {
  * @performance O(n) in props size; validates props against the schema and allocates a reactive proxy, with no database
  * I/O.
  */
-export function make<T extends Type.AnyObj>(type: T, props: NoInfer<MakeProps<T>>): OfShape<Type.InstanceType<T>>;
-export function make(input: Type.AnyObj, props: any): OfShape<any> {
+export function make<T extends Type.AnyObj>(
+  type: T,
+  props: NoInfer<MakeProps<T>>,
+  options?: MakeOptions,
+): OfShape<Type.InstanceType<T>>;
+export function make(input: Type.AnyObj, props: any, options?: MakeOptions): OfShape<any> {
   // `Type.Type` entities aren't `Schema.Schema` themselves; derive the Effect
   // Schema via `Type.getSchema(...)`. Pass the entity through to `makeObject`
   // so subsequent schema mutations (`Type.addFields`, etc.) propagate.
@@ -213,6 +230,7 @@ export function make(input: Type.AnyObj, props: any): OfShape<any> {
       ...meta,
     },
     input,
+    { validate: !options?.skipValidation },
   );
 
   internal.propagateParentAnnotations(obj);
@@ -742,7 +760,7 @@ export type Meta = internal.Meta;
  * // Mutable access inside change callback
  * Obj.update(person, (obj) => {
  *   const meta = Obj.getMeta(obj);     // EntityMeta (mutable)
- *   meta.tags.push(Ref.make(tag));     // tags are refs to Tag objects
+ *   meta.tags.push(tag);               // tags are Tag objects
  * });
  * ```
  *
@@ -784,9 +802,9 @@ export const deleteKeys = (entity: Mutable<Unknown>, source: string): void => in
  * NOTE: TypeScript's structural typing allows readonly objects to be passed to `Mutable<T>`
  * parameters, so there is no compile-time error. Enforcement is runtime-only.
  *
- * @performance O(t) in the tag count; dedupes by ref URI before appending.
+ * @performance O(t) in the tag count; dedupes by tag id before appending.
  */
-export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.addTag(entity, tag);
+export const addTag = (entity: Mutable<Unknown>, tag: Tag.Tag): void => internal.addTag(entity, tag);
 
 /**
  * Remove a tag from the object.
@@ -797,7 +815,7 @@ export const addTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void =>
  *
  * @performance O(t) in the tag count.
  */
-export const removeTag = (entity: Mutable<Unknown>, tag: Ref.Ref<Tag.Tag>): void => internal.removeTag(entity, tag);
+export const removeTag = (entity: Mutable<Unknown>, tag: Tag.Tag): void => internal.removeTag(entity, tag);
 
 /**
  * Check if the object is deleted.
@@ -1224,6 +1242,13 @@ export const atomProperty = objInternal.makeProperty;
  * difference.
  */
 export const labelAtom = objInternal.makeLabelAtom;
+/**
+ * Create a reactive atom for the meta tags of an object.
+ *
+ * @performance O(1) memoized atom-family lookup; re-reads the tags on every entity change, emitting only when the
+ * tag list changes.
+ */
+export const tagsAtom = objInternal.makeTagsAtom;
 /**
  * Get the name of the property that holds the label of an object.
  *

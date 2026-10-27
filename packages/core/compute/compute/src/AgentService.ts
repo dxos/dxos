@@ -145,6 +145,12 @@ export interface GetSessionOptions {
    * @default 'local'
    */
   readonly location?: AgentLocation;
+  /**
+   * Admits the operations the agent and its tool calls invoke that declare requirements
+   * (`Process.SpawnOptions.guard`). Bound at spawn, so a session asked for with a different guard
+   * runs on a fresh process. A guard is a closure and never reaches an `edge` process.
+   */
+  readonly guard?: Process.Guard;
 }
 
 export type AgentLocation = 'local' | 'edge';

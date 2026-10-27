@@ -25,6 +25,12 @@
       "path": "../../common/errors"
     },
     {
+      "path": "../../common/invariant"
+    },
+    {
+      "path": "../../common/keys"
+    },
+    {
       "path": "../../common/log"
     },
     {
@@ -49,6 +55,12 @@
       "path": "../../core/compute/link"
     },
     {
+      "path": "../../core/compute/mcp-client"
+    },
+    {
+      "path": "../../core/compute/mcp-server"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {
@@ -67,6 +79,9 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/client"
+    },
+    {
       "path": "../../sdk/schema"
     },
     {
@@ -76,10 +91,13 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-form"
+    },
+    {
       "path": "../plugin-assistant"
     },
     {
-      "path": "../plugin-code"
+      "path": "../plugin-client"
     },
     {
       "path": "../plugin-connector"

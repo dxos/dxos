@@ -17,7 +17,8 @@ export interface DataSourceCursor {
   spaceId: SpaceId | null;
 
   /**
-   * documentId or queueNamespace.
+   * documentId or queueNamespace. A cursor naming a document covers exactly the batch objects
+   * carrying that `documentId`, and the engine advances it once the last of them is written.
    */
   resourceId: string | null;
 
@@ -54,13 +55,23 @@ export interface IndexDataSource {
    *
    * `more` says whether `opts.limit` cut the read short. A source that omits it is read as possibly
    * truncated whenever it returned anything, since only then does an empty batch prove it caught up.
+   *
+   * With `opts.countCatchUp`, `catchUp` counts the entries `opts.limit` left for a later read that the
+   * index already holds under an earlier version, as opposed to entries it has never read. Counting
+   * reads past the limit, so a caller asks for it only when it will use the number.
    */
   getChangedObjects(
     ctx: Context,
     cursors: DataSourceCursor[],
-    opts?: { limit?: number; activity?: boolean; objects?: boolean },
+    opts?: { limit?: number; activity?: boolean; objects?: boolean; countCatchUp?: boolean },
   ): Effect.Effect<
-    { objects: IndexerObject[]; cursors: DataSourceCursor[]; activity?: DocumentActivity[]; more?: boolean },
+    {
+      objects: IndexerObject[];
+      cursors: DataSourceCursor[];
+      activity?: DocumentActivity[];
+      more?: boolean;
+      catchUp?: number;
+    },
     SqlError.SqlError
   >;
 }

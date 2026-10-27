@@ -19,17 +19,13 @@ import {
   type AgentStateCounts,
   type AgentStateSkill,
 } from '#components';
-import { AgentOperation, ChatParticipant, Goal, Memory, Mode, Profile } from '#types';
+import { AgentOperation, BrainService, ChatParticipant, Goal, Mode, Profile } from '#types';
 
 import { useBrainStore } from '../useBrainStore.ts';
 import { selectPrimaryChat, useBindingCount } from '../useSkillBindings.ts';
 
 /** Statuses after which a task no longer needs doing. */
 const CLOSED_TASK_STATUSES: readonly Task.Status[] = ['done', 'duplicate', 'cancelled', 'failed'];
-
-/** A memory past its `expiresAt`; memories without one never expire. */
-const isExpired = (memory: Memory.Memory, now: string): boolean =>
-  'expiresAt' in memory && typeof memory.expiresAt === 'string' && memory.expiresAt <= now;
 
 export type AgentStateProps = {
   role?: string;
@@ -47,7 +43,6 @@ export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
   const chatFilter = useMemo(() => Filter.and(Filter.type(Chat.Chat), Filter.childOf(agent)), [agent]);
   // `Filter.and` widens to the child-of filter's untyped result, so the element type is restated here.
   const chats: Chat.Chat[] = useQuery(db, chatFilter);
-  const memories = useQuery(db, Filter.type(Memory.Memory));
   const goals = useQuery(db, Filter.type(Goal.Goal));
   const people = useQuery(db, Filter.type(Person.Person));
   const organizations = useQuery(db, Filter.type(Organization.Organization));
@@ -59,17 +54,16 @@ export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
   const stateAtom = useMemo(
     () =>
       Atom.make((get) => {
-        memories.forEach((memory) => get(Obj.atom(memory)));
         goals.forEach((goal) => get(Obj.atom(goal)));
         people.forEach((person) => get(Obj.atom(person)));
         organizations.forEach((organization) => get(Obj.atom(organization)));
         chats.forEach((chat) => get(Obj.atomProperty(chat, 'tasks')));
         tasks.forEach((task) => get(Obj.atomProperty(task, 'status')));
 
-        const now = new Date().toISOString();
-        const current = memories.filter((memory) => memory.status === 'active');
-        const expired = current.filter((memory) => isExpired(memory, now));
-        const active = current.filter((memory) => !isExpired(memory, now)).sort(Profile.byNewest);
+        const statements = BrainService.currentFacts(
+          (facts ?? []).map(({ fact }) => fact),
+          new Date().toISOString(),
+        );
 
         // The agent's own checklist: tasks its chats carry, matched by id so unloaded refs still count.
         const taskIds = new Set(
@@ -78,14 +72,10 @@ export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
         const ownTasks = tasks.filter((task) => taskIds.has(task.id));
 
         const counts: AgentStateCounts = {
-          memories: { active: active.length, expired: expired.length },
-          facts:
-            facts && facts.length > 0
-              ? {
-                  count: facts.length,
-                  speakers: new Set(facts.flatMap(({ fact }) => fact.attribution.agent ?? [])).size,
-                }
-              : undefined,
+          facts: {
+            count: statements.length,
+            speakers: new Set(statements.flatMap((fact) => fact.attribution.agent ?? [])).size,
+          },
           goals: {
             proposed: goals.filter((goal) => goal.status === 'proposed').length,
             confirmed: goals.filter((goal) => goal.status === 'confirmed' || goal.status === 'active').length,
@@ -106,7 +96,7 @@ export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
 
         return { counts };
       }),
-    [chats, memories, goals, people, organizations, tasks, facts],
+    [chats, goals, people, organizations, tasks, facts],
   );
   const { counts } = useAtomValue(stateAtom);
 

@@ -7,10 +7,10 @@ import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
 import type * as Agent from '@dxos/assistant/Agent';
-import { Database, Obj } from '@dxos/echo';
+import { Database, Filter, Obj } from '@dxos/echo';
 import { Space } from '@dxos/halo';
 import { type RDF } from '@dxos/pipeline-rdf';
-import { Person } from '@dxos/types';
+import { Organization, Person } from '@dxos/types';
 
 import { ChatParticipant } from '#types';
 
@@ -65,21 +65,99 @@ export const labelOf =
   (id: string): string =>
     memberByDid(members, id)?.displayName ?? id;
 
-/** A term naming a member is re-keyed to the member's DID; its surface form stays the label. */
-const resolveTerm = (members: readonly Space.Member[], term: RDF.Term): RDF.Term => {
+/** A person or organization in the space, as a fact about it names it. */
+export type KnownEntity = { readonly uri: string; readonly type: 'person' | 'org'; readonly name: string };
+
+/** The space's people and organizations by each name they go by; a name two of them share is left out. */
+export type EntityIndex = ReadonlyMap<string, KnownEntity>;
+
+/** Indexes the space's people and organizations by name, so a fact naming one is keyed by its object's URI. */
+export const loadEntities = Effect.gen(function* () {
+  const people = yield* Database.query(Filter.type(Person.Person)).run;
+  const organizations = yield* Database.query(Filter.type(Organization.Organization)).run;
+  const byName = new Map<string, KnownEntity[]>();
+  const add = (names: readonly (string | undefined)[], entity: Omit<KnownEntity, 'name'>) => {
+    for (const name of names) {
+      if (name && name.trim().length > 0) {
+        byName.set(nameKey(name), [...(byName.get(nameKey(name)) ?? []), { ...entity, name: name.trim() }]);
+      }
+    }
+  };
+  for (const person of people) {
+    add([person.fullName, person.preferredName, person.nickname], { uri: Obj.getURI(person), type: 'person' });
+  }
+  for (const organization of organizations) {
+    add([organization.name], { uri: Obj.getURI(organization), type: 'org' });
+  }
+  const index = new Map<string, KnownEntity>();
+  for (const [name, entities] of byName) {
+    if (new Set(entities.map(({ uri }) => uri)).size === 1) {
+      index.set(name, entities[0]);
+    }
+  }
+  return index satisfies EntityIndex;
+});
+
+/**
+ * A term naming a member is re-keyed to the member's DID, and one naming a person or organization in the space to
+ * its object's URI; its surface form stays the label.
+ */
+const resolveTerm = (members: readonly Space.Member[], entities: EntityIndex, term: RDF.Term): RDF.Term => {
   if (term.kind !== 'entity') {
     return term;
   }
-  const member = memberByName(members, term.label ?? term.entity);
-  return member?.did ? { ...term, entity: member.did, label: term.label ?? member.displayName } : term;
+  const name = term.label ?? term.entity;
+  const member = memberByName(members, name);
+  if (member?.did) {
+    return { ...term, entity: member.did, label: term.label ?? member.displayName, type: 'person' };
+  }
+  const known = entities.get(nameKey(name));
+  return known ? { ...term, entity: known.uri, label: name, type: known.type } : term;
 };
 
-/** Re-keys the fact's subject and object to the members they name. */
-export const resolveTerms = (members: readonly Space.Member[], fact: RDF.Fact): RDF.Fact => ({
+/**
+ * The members, people and organizations the extractor is shown by name, so a mention of one is stored under its DID
+ * or object URI rather than an IRI local to the graph mentioning it.
+ */
+export const knownEntities = (members: readonly Space.Member[], entities: EntityIndex): RDF.KnownEntity[] => {
+  const byIri = new Map<string, { label: string; aliases: string[]; type: RDF.EntityKind }>();
+  const add = (iri: string, name: string, type: RDF.EntityKind) => {
+    const known = byIri.get(iri);
+    if (!known) {
+      byIri.set(iri, { label: name, aliases: [], type });
+    } else if (
+      nameKey(known.label) !== nameKey(name) &&
+      !known.aliases.some((alias) => nameKey(alias) === nameKey(name))
+    ) {
+      known.aliases.push(name);
+    }
+  };
+  for (const { did, displayName } of members) {
+    if (did && displayName) {
+      add(did, displayName, 'person');
+    }
+  }
+  for (const { uri, name, type } of entities.values()) {
+    add(uri, name, type);
+  }
+  return [...byIri].map(([iri, { label, aliases, type }]) => ({
+    iri,
+    label,
+    type,
+    ...(aliases.length > 0 ? { aliases } : {}),
+  }));
+};
+
+/** Re-keys the fact's subject and object to the members, people and organizations they name. */
+export const resolveTerms = (
+  members: readonly Space.Member[],
+  fact: RDF.Fact,
+  entities: EntityIndex = new Map(),
+): RDF.Fact => ({
   ...fact,
   assertion: {
     ...fact.assertion,
-    subject: resolveTerm(members, fact.assertion.subject),
-    object: resolveTerm(members, fact.assertion.object),
+    subject: resolveTerm(members, entities, fact.assertion.subject),
+    object: resolveTerm(members, entities, fact.assertion.object),
   },
 });

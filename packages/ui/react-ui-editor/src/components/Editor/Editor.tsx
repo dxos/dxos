@@ -31,6 +31,8 @@ import {
 import {
   type EditorToolbarState,
   EditorToolbar as NaturalEditorToolbar,
+  EditorToolbarMenu as NaturalEditorToolbarMenu,
+  type EditorToolbarMenuProps as NaturalEditorToolbarMenuProps,
   type EditorToolbarProps as NaturalEditorToolbarProps,
 } from '../EditorToolbar/index.ts';
 import { type EditorController, noopController } from './controller.ts';
@@ -166,6 +168,30 @@ const EditorToolbar = (props: EditorToolbarProps) => {
 EditorToolbar.displayName = EDITOR_TOOLBAR_NAME;
 
 //
+// ToolbarMenu
+//
+
+const EDITOR_TOOLBAR_MENU_NAME = 'Editor.ToolbarMenu';
+
+type EditorToolbarMenuProps = Omit<NaturalEditorToolbarMenuProps, 'getView' | 'state'>;
+
+/**
+ * The toolbar's actions as a menu opened from its trigger (the child), for where a toolbar does not fit.
+ * Connects to the editor view through context, as `Editor.Toolbar` does.
+ */
+const EditorToolbarMenu = (props: EditorToolbarMenuProps) => {
+  const { controller, state } = useEditorContext(EDITOR_TOOLBAR_MENU_NAME);
+  const getView = useCallback(() => {
+    invariant(controller?.view);
+    return controller?.view;
+  }, [controller]);
+
+  return <NaturalEditorToolbarMenu {...props} getView={getView} state={state} />;
+};
+
+EditorToolbarMenu.displayName = EDITOR_TOOLBAR_MENU_NAME;
+
+//
 // Blocks
 //
 
@@ -292,6 +318,7 @@ EditorDiagnostics.displayName = EDITOR_DIAGNOSTICS_NAME;
 export const Editor = {
   Root: EditorRoot,
   Toolbar: EditorToolbar,
+  ToolbarMenu: EditorToolbarMenu,
   Content: EditorContent,
   View: EditorView,
   Blocks: EditorBlocks,
@@ -302,6 +329,7 @@ export type {
   EditorContentProps,
   EditorController,
   EditorRootProps,
+  EditorToolbarMenuProps,
   EditorToolbarProps,
   EditorToolbarState,
   EditorViewProps,

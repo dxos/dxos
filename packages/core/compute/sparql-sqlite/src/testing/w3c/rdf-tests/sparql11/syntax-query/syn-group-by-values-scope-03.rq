@@ -1,0 +1,10 @@
+# ?c is bound by the trailing VALUES clause, which is joined before the SELECT expressions are evaluated,
+# so ?c is already in scope when (COUNT(*) AS ?c) assigns it.
+
+PREFIX : <http://example/>
+
+SELECT ?s (COUNT(*) AS ?c) WHERE {
+  ?s :p ?o
+}
+GROUP BY ?s
+VALUES ?c { 0 1 2 }

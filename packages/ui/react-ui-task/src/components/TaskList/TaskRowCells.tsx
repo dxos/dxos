@@ -2,9 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
+import React, { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
+import { useObject } from '@dxos/echo-react';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import * as Button from '@dxos/react-ui/Button';
 import * as Field from '@dxos/react-ui/Field';
@@ -51,13 +54,15 @@ export type TaskStatusControlProps = {
 };
 
 /** The status glyph, which is also the control that completes the task. */
+const useAgentWorking = (task: Task.Task): boolean =>
+  useAtomValue(useMemo(() => Atom.make((get) => Task.isAgentWorking(get(Obj.atom(task)))), [task]));
+
 export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: TaskStatusControlProps) => {
   const { t } = Hooks.useTranslation(translationKey);
-  const status = task.status ?? 'todo';
-  // Derived from the task rather than wired down from the list: a task an agent has taken and
-  // started is being worked right now whoever renders it, and the row is the only place that says
-  // so. A human-started task keeps the static glyph.
-  const working = active ?? Task.isAgentWorking(task);
+  const [storedStatus] = useObject(task, 'status');
+  const status = storedStatus ?? 'todo';
+  const agentWorking = useAgentWorking(task);
+  const working = active ?? agentWorking;
   const { icon, classNames: iconClassNames } = working
     ? { icon: 'ph--spinner--regular', classNames: 'text-info-text animate-spin' }
     : { icon: statusIcon(status), classNames: statusTextStyle(status) };
@@ -230,9 +235,10 @@ TaskCheckbox.displayName = 'TaskList.Checkbox';
  */
 export const TaskEstimateControl = ({ task, classNames }: { task: Task.Task; classNames?: string }) => {
   const { onTaskUpdate } = useTaskListContext('TaskList.EstimateControl');
+  const [estimate] = useObject(task, 'estimate');
   return (
     <TaskEstimatePicker
-      estimate={task.estimate}
+      estimate={estimate}
       onChange={onTaskUpdate && ((estimate) => onTaskUpdate(task, { estimate: estimate ?? null }))}
       testId='taskList.item.estimate'
       classNames={classNames}
@@ -250,6 +256,7 @@ export type TaskEstimatePickerProps = {
 
 /** The estimate label and its menu over a bare value, for a row's task or a draft that has none yet. */
 export const TaskEstimatePicker = ({ estimate, onChange, testId, classNames }: TaskEstimatePickerProps) => {
+  const { t } = Hooks.useTranslation(translationKey);
   const label = estimate?.toUpperCase() ?? <Icon.Icon icon={UNSET_ICON} classNames='text-neutral-500' />;
 
   if (!onChange) {
@@ -272,6 +279,8 @@ export const TaskEstimatePicker = ({ estimate, onChange, testId, classNames }: T
       >
         <Button.Root
           variant='ghost'
+          iconOnly={estimate === undefined}
+          label={t('task-estimate.label')}
           data-testid={testId}
           classNames={mx('w-8 px-0 text-xs tabular-nums', estimateTextStyle(estimate))}
           onClick={(event: MouseEvent) => event.stopPropagation()}
@@ -296,9 +305,10 @@ TaskEstimateControl.displayName = 'TaskList.EstimateControl';
  */
 export const TaskPriorityIcon = ({ task, classNames }: { task: Task.Task; classNames?: string }) => {
   const { onTaskUpdate } = useTaskListContext('TaskList.PriorityIcon');
+  const [priority] = useObject(task, 'priority');
   return (
     <TaskPriorityPicker
-      priority={task.priority ?? undefined}
+      priority={priority ?? undefined}
       onChange={onTaskUpdate && ((priority) => onTaskUpdate(task, { priority: priority ?? null }))}
       testId='taskList.item.priority'
       classNames={classNames}

@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import { getPropertySignatures } from '@dxos/effect/SchemaAST';
 
-import { EllipseNode, LineLink, NoteNode, RectNode } from '../model/types.ts';
+import { EllipseNode, LineLink, NoteNode, RectNode } from '../model/index.ts';
 import { commonSchema, mergeValues, patchValues } from './properties.ts';
 
 const names = (schema: Schema.Codec<any, any> | undefined) =>
@@ -37,6 +37,7 @@ describe('properties', () => {
     expect(struct?._tag === 'Objects' && struct.propertySignatures.map((property) => property.name)).toEqual([
       'hue',
       'lineStyle',
+      'fontSize',
     ]);
     expect(commonSchema([Schema.Struct({ a: Schema.String }), Schema.Struct({ b: Schema.String })])).toBeUndefined();
   });

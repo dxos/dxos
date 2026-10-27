@@ -8,9 +8,16 @@
 // the diagram re-attaches its links.
 //
 
-import { nodeDef } from '../model/node-def.ts';
-import { type NodeRegistry } from '../model/registry.ts';
-import { type Bounds, type Node, type Point, type Port, type PortDirection, type Side } from '../model/types.ts';
+import {
+  type Bounds,
+  type Node,
+  type NodeRegistry,
+  type Point,
+  type Port,
+  type PortDirection,
+  type Side,
+  nodeDef,
+} from '../model/index.ts';
 import { nodeBounds } from './shapes.ts';
 
 export const SIDES: readonly Side[] = ['n', 'e', 's', 'w'];

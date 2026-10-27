@@ -27,6 +27,8 @@ import { SpaceCapabilities, SpaceOperation } from '#types';
 import type { ObjectFormHandle } from '../util/index.ts';
 import { TestObject } from './testing.ts';
 
+await Harness.preload({ plugins: [ClientPlugin.make({ types: [TestObject] }), SpacePlugin({})] });
+
 /**
  * `OpenObjectForm` returns what the dialog produced, which means the handler has to stay suspended
  * for as long as the dialog is up. These stand in for the dialog: the stub layout below hands the

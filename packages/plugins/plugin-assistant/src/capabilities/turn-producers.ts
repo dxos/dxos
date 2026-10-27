@@ -31,7 +31,7 @@ export const composerTurnProducer =
     if (codeModeTurnProducer) {
       const [settings] = manager.getAll(AssistantCapabilities.Settings);
       const [registry] = manager.getAll(Capabilities.AtomRegistry);
-      if (settings && registry?.get(settings).codeMode) {
+      if (!(settings && registry?.get(settings).disableCodeMode)) {
         return codeModeTurnProducer(options);
       }
     }

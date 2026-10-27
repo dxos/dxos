@@ -63,7 +63,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   args: {
     state: createSyncState(),
-    saved: true,
+    save: 'saved',
     edgeStatus: createEdgeStatus(),
   },
 };
@@ -71,7 +71,16 @@ export const Default: Story = {
 export const Saving: Story = {
   args: {
     state: {},
-    saved: false,
+    save: 'saving',
+    edgeStatus: createEdgeStatus(),
+  },
+};
+
+/** A change could not be handed to the worker: outranks every replication state. */
+export const SaveFailed: Story = {
+  args: {
+    state: createSyncState(),
+    save: 'failing',
     edgeStatus: createEdgeStatus(),
   },
 };
@@ -79,7 +88,7 @@ export const Saving: Story = {
 export const Offline: Story = {
   args: {
     state: {},
-    saved: true,
+    save: 'saved',
     edgeStatus: createEdgeStatus({ state: EdgeStatus_ConnectionState.NOT_CONNECTED }),
   },
 };
@@ -87,7 +96,7 @@ export const Offline: Story = {
 export const Downloading: Story = {
   args: {
     state: createSyncState({ missingOnLocal: 20, unsyncedDocumentCount: 20 }),
-    saved: true,
+    save: 'saved',
     edgeStatus: createEdgeStatus({ rateBytesDown: 4_096 }),
   },
 };
@@ -98,7 +107,7 @@ export const Downloading: Story = {
 export const Stalled: Story = {
   args: {
     state: createSyncState({ missingOnLocal: 20, unsyncedDocumentCount: 20 }),
-    saved: true,
+    save: 'saved',
     edgeStatus: createEdgeStatus(),
   },
   // The stall is only reported once the timer elapses; wait for it so a capture never lands on the interim state.
@@ -119,7 +128,7 @@ export const Stalled: Story = {
 export const Disconnected: Story = {
   args: {
     state: createSyncState({ missingOnRemote: 20, unsyncedDocumentCount: 20 }),
-    saved: true,
+    save: 'saved',
     edgeStatus: createEdgeStatus({ state: EdgeStatus_ConnectionState.NOT_CONNECTED }),
   },
 };

@@ -9,7 +9,7 @@ export const composerDiagrams = (diagrams: DiagramSet['diagrams']): DiagramSet =
   root: 'composer',
   diagrams,
   names: {
-    'composer': 'Composer',
+    'composer': 'Overview',
     'composer-framework': 'App Framework',
     'composer-data': 'Data Stack',
     'composer-plugin': 'Plugin Anatomy',
@@ -34,7 +34,7 @@ export const edgeDiagrams = (diagrams: DiagramSet['diagrams']): DiagramSet => ({
   root: 'edge',
   diagrams,
   names: {
-    'edge': 'EDGE',
+    'edge': 'CF Workers',
     'edge-router': 'Router',
     'edge-db': 'db-service',
     'edge-compute': 'compute-service',
@@ -58,17 +58,38 @@ export const edgeDiagrams = (diagrams: DiagramSet['diagrams']): DiagramSet => ({
 export const diagramFiles = (diagrams: DiagramSet['diagrams'], prefix: string): DiagramSet['diagrams'] =>
   Object.fromEntries(Object.entries(diagrams).filter(([id]) => id === prefix || id.startsWith(`${prefix}-`)));
 
-/** Composer with EDGE beneath it: the Composer overview's EDGE box opens the EDGE overview and everything under it. */
+/** ECHO: the three diagrams the ECHO design document embeds; replication's AutomergeHost opens the echo-host diagram. */
+export const echoDiagrams = (diagrams: DiagramSet['diagrams']): DiagramSet => ({
+  root: 'echo-model',
+  diagrams,
+  names: {
+    'echo-model': 'ECHO data model',
+    'echo-sync': 'ECHO replication',
+    'echo-query': 'ECHO queries',
+  },
+  drills: {
+    'echo-sync': {
+      Host: 'composer-echo',
+    },
+  },
+});
+
+/**
+ * Composer with EDGE beneath it: the Composer overview's EDGE box opens the EDGE overview and everything under it;
+ * the ECHO design document's diagrams stand beside them.
+ */
 export const architectureDiagrams = (diagrams: DiagramSet['diagrams']): DiagramSet => {
   const composer = composerDiagrams(diagramFiles(diagrams, 'composer'));
   const edge = edgeDiagrams(diagramFiles(diagrams, 'edge'));
+  const echo = echoDiagrams(diagramFiles(diagrams, 'echo'));
   return {
     root: composer.root,
-    diagrams: { ...composer.diagrams, ...edge.diagrams },
-    names: { ...composer.names, ...edge.names },
+    diagrams: { ...composer.diagrams, ...edge.diagrams, ...echo.diagrams },
+    names: { ...composer.names, ...edge.names, ...echo.names },
     drills: {
       ...composer.drills,
       ...edge.drills,
+      ...echo.drills,
       [composer.root]: { ...composer.drills[composer.root], Edge: edge.root },
     },
   };

@@ -10,6 +10,7 @@ import * as Layer from 'effect/Layer';
 import * as Atom from 'effect/reactivity/Atom';
 import * as Semaphore from 'effect/Semaphore';
 
+import { SessionConfig } from '@dxos/ai';
 import { AiContext, type HarnessControlRpcs } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
@@ -23,6 +24,7 @@ import type { ContentBlock } from '@dxos/types';
 
 import { AGENT_PROCESS_KEY, type AgentInput, AgentProcess, type AgentProcessDefinition } from './agent-process.ts';
 import { type DelegationStrategy } from './delegation-strategy.ts';
+import { type McpEndpointOf } from './mcp-servers.ts';
 import { type MakeTurnProducer } from './turn-producer.ts';
 
 /** Live handle to a spawned agent process, carrying its `HarnessControl` RPC surface. */
@@ -35,6 +37,10 @@ export interface CreateSessionOptions {
   readonly model?: DXN.DXN;
   readonly provider?: DXN.DXN;
   readonly systemPrompt?: string;
+  /** Where the session's agent runs (see `AgentService.GetSessionOptions.location`). */
+  readonly location?: AgentService.AgentLocation;
+  /** Admits the operations the agent invokes that declare requirements (see `AgentService.GetSessionOptions.guard`). */
+  readonly guard?: Process.Guard;
 }
 
 /**
@@ -63,7 +69,11 @@ export const createSession: (
     const chat = yield* Database.add(
       Chat.make({ feed: Ref.make(feed), ...(opts?.model ? { session: { model: opts.model } } : {}) }),
     );
-    return yield* AgentService.getSession(chat, { provider: opts?.provider });
+    return yield* AgentService.getSession(chat, {
+      provider: opts?.provider,
+      ...(opts?.location !== undefined ? { location: opts.location } : {}),
+      ...(opts?.guard !== undefined ? { guard: opts.guard } : {}),
+    });
   }, Effect.scoped);
 
 export interface Options {
@@ -107,6 +117,8 @@ export interface Options {
   processes?: () => readonly AgentProcessDefinition[];
   /** Keep each session's process resident between turns (see `AgentProcessOptions.resident`). */
   resident?: boolean;
+  /** The MCP server a connection exposes (see `AgentProcessOptions.mcpEndpoint`). */
+  mcpEndpoint?: McpEndpointOf;
 }
 
 /**
@@ -145,17 +157,19 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
         return { kind: 'edge', space: spaceId };
       };
 
-      // The agent's model and steering instructions are bound to its process at spawn time, so the
-      // cache tracks what each session was created with. A chat repointed at a different model or
-      // instructions ref tears down the old process and spawns a fresh one (see below).
+      // The agent's model, harness and steering instructions are bound to its process at spawn time, so
+      // the cache tracks what each session was created with. A chat repointed at a different model,
+      // harness or instructions ref tears down the old process and spawns a fresh one (see below).
       const sessionCache = new Map<
         string,
         {
           model: string | undefined;
+          harness: string;
           provider: DXN.DXN | undefined;
           instructions: string | undefined;
           location: AgentService.AgentLocation;
           process: string;
+          guard: Process.Guard | undefined;
           handle: AgentHandle;
           session: AgentService.Session;
         }
@@ -185,6 +199,7 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
           enableToolBackgrounding: opts?.enableToolBackgrounding,
           delegationStrategy: opts?.delegationStrategy,
           resident: opts?.resident,
+          mcpEndpoint: opts?.mcpEndpoint,
         });
 
       /**
@@ -249,8 +264,10 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
                 // Read off the chat rather than passed in: the process is bound to the chat, so its
                 // model and steering are whatever the chat points at when the process is spawned.
                 const model = chat.session?.model;
+                const harness = SessionConfig.harnessOf(chat.session);
                 const instructions = chat.instructions?.uri;
                 const location: AgentService.AgentLocation = options?.location ?? 'local';
+                const guard = options?.guard;
                 const executable = executableFor(chat, provider);
                 if (location === 'edge' && executable.key !== AGENT_PROCESS_KEY) {
                   // EDGE spawns by key from its own registry, which holds no process a plugin contributed.
@@ -262,17 +279,19 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
                 if (cached) {
                   if (
                     cached.model === model &&
+                    cached.harness === harness &&
                     cached.provider === provider &&
                     cached.instructions === instructions &&
                     cached.location === location &&
                     cached.process === executable.key &&
+                    cached.guard === guard &&
                     !Process.isTerminal(cached.handle.status.state)
                   ) {
                     return cached.session;
                   }
 
                   if (!Process.isTerminal(cached.handle.status.state)) {
-                    // Model, provider, steering instructions, location or process changed (e.g. the user
+                    // Model, harness, provider, steering instructions, location or process changed (e.g. the user
                     // toggled online/offline, or moved the chat to the cloud): terminate the
                     // existing process so the conversation continues on a fresh process bound to the new
                     // configuration. Conversation history is preserved via the feed, which the new
@@ -297,6 +316,11 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
                   location: processLocation,
                 });
                 let activeProcess = processes.find((process) => !Process.isTerminal(process.status.state));
+                if (activeProcess && guard !== undefined) {
+                  // A running process keeps the guard it was spawned with, so one asked for under a guard is never adopted.
+                  yield* activeProcess.terminate();
+                  activeProcess = undefined;
+                }
 
                 let handle: AgentHandle;
                 if (activeProcess) {
@@ -308,6 +332,7 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
                     location: processLocation,
                     name: 'Agent',
                     target,
+                    ...(guard !== undefined ? { guard } : {}),
                     // Stamp the host marker so the harness control surface is discoverable by annotation
                     // lookup (set once at spawn, immutable — the identity plane).
                     annotations: Annotation.buildDictionary((dictionary) => {
@@ -363,10 +388,12 @@ export const layer = (opts?: Options): Layer.Layer<AgentService.AgentService, ne
                 const session = makeSession(handle, chat, feed, releaseSession, isFinished, resubmit);
                 sessionCache.set(chat.id, {
                   model,
+                  harness,
                   provider,
                   instructions,
                   location,
                   process: executable.key,
+                  guard,
                   handle,
                   session,
                 });

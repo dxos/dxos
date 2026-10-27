@@ -4,9 +4,10 @@
 
 import * as A from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
-import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import { Trigger, asyncTimeout, sleep, waitForCondition } from '@dxos/async';
+import { Context } from '@dxos/context';
 import {
   Aggregate,
   Annotation,
@@ -23,12 +24,13 @@ import {
   Ref,
   Relation,
   Scope,
+  Tag,
   Type,
   View,
 } from '@dxos/echo';
-import { type EchoDatabase } from '@dxos/echo-client';
+import { DatabaseImpl, type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder, type EchoTestPeer, createTmpPath, getObjectCore } from '@dxos/echo-client/testing';
-import { type DatabaseDirectory } from '@dxos/echo-protocol';
+import { BACKED_OBJECT_LIMIT, type DatabaseDirectory, EncodedReference } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, PublicKey, URI } from '@dxos/keys';
@@ -44,14 +46,13 @@ const getFeedUriOrThrow = (feed: Feed.Feed): EID.EID => {
   return uri;
 };
 
-// Tag ids are the URIs of Tag objects; meta stores them as refs.
-const tags = ['echo:///TAGRED', 'echo:///TAGGREEN', 'echo:///TAGBLUE'];
-const tagRefs = tags.map((uri) => Ref.fromURI(URI.make(uri)));
+// Tags are Tag objects; each test database gets its own, since tagging adds them to it.
+const createTestTags = () => ['red', 'green', 'blue'].map((label) => Tag.make({ label }));
 
 Obj.make(TestSchema.Expando, { foo: 100 });
 
 type ObjectProps = {
-  [Obj.Meta]?: { tags?: Ref.Ref<unknown>[]; key?: string; version?: string };
+  [Obj.Meta]?: { tags?: Tag.Tag[]; key?: string; version?: string };
   value?: number;
 };
 
@@ -62,7 +63,7 @@ const createTestObject = (props: ObjectProps = {}) => {
   });
 };
 
-const createTestObjects = () => {
+const createTestObjects = (tags: Tag.Tag[]) => {
   return new Array<Entity.Any>()
     .concat(range(1).map(() => createTestObject()))
     .concat(
@@ -76,7 +77,7 @@ const createTestObjects = () => {
       range(2).map((i) =>
         createTestObject({
           value: 200,
-          [Obj.Meta]: { tags: tagRefs.slice(i) },
+          [Obj.Meta]: { tags: tags.slice(i) },
         }),
       ),
     )
@@ -84,7 +85,7 @@ const createTestObjects = () => {
       range(4).map((i) =>
         createTestObject({
           value: 300,
-          [Obj.Meta]: { tags: tagRefs.slice(i + 1) },
+          [Obj.Meta]: { tags: tags.slice(i + 1) },
         }),
       ),
     );
@@ -103,10 +104,15 @@ describe('Query', () => {
 
   describe('Query with different filters', () => {
     let db: EchoDatabase;
+    let tags: Tag.Tag[];
+
+    // The 10 test objects plus the 3 tags they carry, which tagging adds to the database.
+    const objectCount = 13;
 
     beforeEach(async () => {
-      ({ db } = await builder.createDatabase({ types: [Feed.Feed, Collection.Collection, View.View] }));
-      createTestObjects().forEach((object) => db.add(object));
+      ({ db } = await builder.createDatabase({ types: [Feed.Feed, Collection.Collection, View.View, Tag.Tag] }));
+      tags = createTestTags();
+      createTestObjects(tags).forEach((object) => db.add(object));
       await db.flush();
     });
 
@@ -117,7 +123,7 @@ describe('Query', () => {
 
     test('query everything', async () => {
       const objects = await db.query(Query.select(Filter.everything())).run();
-      expect(objects).to.have.length(10);
+      expect(objects).to.have.length(objectCount);
     });
 
     test('order by natural', async () => {
@@ -161,7 +167,7 @@ describe('Query', () => {
 
     test('limit larger than result set returns all results', async () => {
       const objects = await db.query(Query.select(Filter.everything()).limit(100)).run();
-      expect(objects).to.have.length(10);
+      expect(objects).to.have.length(objectCount);
     });
 
     test('filter by type', async () => {
@@ -183,7 +189,7 @@ describe('Query', () => {
 
     test('filter by tag', async () => {
       {
-        const objects = await db.query(Query.select(Filter.tag(tags[1]))).run();
+        const objects = await db.query(Query.select(Filter.tag(Obj.getURI(tags[1])))).run();
         expect(objects).to.have.length(3);
       }
 
@@ -348,17 +354,17 @@ describe('Query', () => {
 
       {
         const objects = await db.query(Query.select(Filter.everything())).run();
-        expect(objects).to.have.length(7);
+        expect(objects).to.have.length(objectCount - 3);
       }
 
       {
         const objects = await db.query(Query.select(Filter.everything()).options({ deleted: 'exclude' })).run();
-        expect(objects).to.have.length(7);
+        expect(objects).to.have.length(objectCount - 3);
       }
 
       {
         const objects = await db.query(Query.select(Filter.everything()).options({ deleted: 'include' })).run();
-        expect(objects).to.have.length(10);
+        expect(objects).to.have.length(objectCount);
       }
 
       {
@@ -2184,6 +2190,7 @@ describe('Query', () => {
 
       const object = queryResult.find((obj) => obj.id === assertion.objectId);
       invariant(object, 'object missing after reload');
+      getObjectCore(object).getDoc();
       const objectDocHandle = getObjectCore(object).docHandle;
       invariant(objectDocHandle, 'docHandle missing');
       expect(objectDocHandle.url).to.eq(assertion.documentUrl);
@@ -2331,45 +2338,64 @@ describe('Query', () => {
     });
 
     test('tags', async () => {
-      const { db } = await builder.createDatabase();
+      const { db } = await builder.createDatabase({ types: [Tag.Tag] });
 
-      const important = 'echo:///TAGIMPORTANT';
-      const investor = 'echo:///TAGINVESTOR';
-      const importantRef = Ref.fromURI(URI.make(important));
-      const investorRef = Ref.fromURI(URI.make(investor));
+      const important = Tag.make({ label: 'important' });
+      const investor = Tag.make({ label: 'investor' });
 
       db.add(Obj.make(TestSchema.Expando, { name: 'a' }));
       const b = db.add(
         Obj.make(TestSchema.Expando, {
           name: 'b',
-          [Obj.Meta]: { tags: [importantRef] },
+          [Obj.Meta]: { tags: [important] },
         }),
       );
       const c = db.add(
         Obj.make(TestSchema.Expando, {
           name: 'c',
-          [Obj.Meta]: { tags: [importantRef, investorRef] },
+          [Obj.Meta]: { tags: [important, investor] },
         }),
       );
 
-      const objects = await db.query(Query.select(Filter.tag(important))).run();
+      const objects = await db.query(Query.select(Filter.tag(Obj.getURI(important)))).run();
       expect(objects).toEqual([b, c]);
+      expect(Obj.getMeta(c).tags).toEqual([important, investor]);
+    });
+
+    test('an object whose tag is missing is not surfaced', async ({ expect }) => {
+      const spaceKey = PublicKey.random();
+      await using peer = await builder.createPeer({ types: [Tag.Tag] });
+      let plainId: string;
+      {
+        await using db = await peer.createDatabase(spaceKey);
+        const tagged = db.add(Obj.make(TestSchema.Expando, { name: 'tagged' }));
+        plainId = db.add(Obj.make(TestSchema.Expando, { name: 'plain' })).id;
+        // A tag is a strong dependency: an object naming a tag this space does not hold stays hidden.
+        const missingTag = EncodedReference.fromURI(EID.make({ entityId: EntityId.random() }));
+        getObjectCore(tagged).setDecoded(['meta', 'tags'], [missingTag]);
+        await db.flush({ indexes: true });
+      }
+
+      await peer.reload();
+      {
+        await using db = await peer.openLastDatabase();
+        const objects = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+        expect(objects.map((object) => object.id)).toEqual([plainId]);
+      }
     });
 
     test('bare string tags are upgraded to refs on read', async ({ expect }) => {
-      const { db } = await builder.createDatabase();
+      const { db } = await builder.createDatabase({ types: [Tag.Tag] });
+      const tag = db.add(Tag.make({ label: 'legacy' }));
       const obj = db.add(Obj.make(TestSchema.Expando, { name: 'legacy' }));
       await db.flush();
 
       // Simulate data written before the tags-as-refs migration: a bare tag id string in `meta.tags`.
-      const tagEid = EID.make({ entityId: EntityId.make('01J00000000000000000000000') });
+      const tagEid = EID.make({ entityId: tag.id });
       getObjectCore(obj).setDecoded(['meta', 'tags'], [tagEid]);
 
-      // Read back: the string is materialized as a `Ref` carrying the tag EID.
-      const tags = Obj.getMeta(obj).tags;
-      expect(tags).toHaveLength(1);
-      expect(Ref.isRef(tags[0])).toBe(true);
-      expect(tags[0].uri).toBe(tagEid);
+      // Read back: the string resolves to the tag it names.
+      expect(Obj.getMeta(obj).tags).toEqual([tag]);
 
       // And it remains queryable by the tag URI.
       const objects = await db.query(Query.select(Filter.tag(tagEid))).run();
@@ -4326,6 +4352,160 @@ describe('Query', () => {
       Obj.update(plain, (plain) => Annotation.set(plain, StatusAnnotation, 'done'));
       await db.flush({ indexes: true, updates: true });
       await waitForCondition({ condition: () => query.results.length === 2, timeout: 2000 });
+    });
+  });
+
+  describe('Lazy queries', () => {
+    const openReloaded = async (populate: (db: EchoDatabase) => { id: string }[] | Promise<{ id: string }[]>) => {
+      const reloadBuilder = new EchoTestBuilder();
+      onTestFinished(async () => {
+        await reloadBuilder.close();
+      });
+      const { peer, db: initialDb } = await reloadBuilder.createDatabase();
+      invariant(initialDb instanceof DatabaseImpl);
+      const ids = (await populate(initialDb)).map((object) => object.id);
+      await initialDb.flush({ secondaryIndexes: true });
+      const documentIds = new Map(
+        ids.map((id) => [id, initialDb.getObjectCoreById(id, { load: false })?.docHandle?.documentId]),
+      );
+      await peer.reload();
+      const db = await peer.openLastDatabase();
+      invariant(db instanceof DatabaseImpl);
+
+      const changeOnHost = async (id: string, change: (data: Record<string, any>) => void) => {
+        const documentId = documentIds.get(id);
+        invariant(documentId);
+        using lease = await peer.host.automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId);
+        invariant(lease);
+        lease.change((doc) => change(doc.objects![id].data));
+        await peer.host.automergeHost.flush(Context.default());
+        return A.getHeads(lease.doc());
+      };
+      return { db, ids, peer, documentIds, changeOnHost };
+    };
+
+    const hasDocument = (db: DatabaseImpl, id: string) =>
+      db.getObjectCoreById(id, { load: false })?.docHandle !== undefined;
+
+    test('query results are live, index-backed, and load no document', async () => {
+      const { db, ids } = await openReloaded((db) => {
+        const tagged = Obj.make(TestSchema.Expando, { value: 1, blob: new Uint8Array([1, 2, 3]) });
+        Obj.update(tagged, (tagged) => Obj.getMeta(tagged).keys.push({ id: 'key-1', source: 'test' }));
+        return [db.add(tagged), db.add(createTestObject({ value: 2 }))];
+      });
+
+      const results = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+      expect(results.map((object) => object.id).sort()).toEqual([...ids].sort());
+      expect(results.map((object) => object.value).sort()).toEqual([1, 2]);
+      for (const object of results) {
+        expect(Obj.isSnapshot(object)).toBe(false);
+        expect(hasDocument(db, object.id)).toBe(false);
+        expect(db.getObjectById(object.id)).toBe(object);
+        expect(Obj.version(object).automergeHeads?.length).toBeGreaterThan(0);
+        expect(Obj.getMeta(object).createdAt).toBeTypeOf('number');
+      }
+      const tagged = results.find((object) => object.value === 1);
+      invariant(tagged);
+      expect(Obj.getMeta(tagged).keys.map((key) => ({ ...key }))).toEqual([{ id: 'key-1', source: 'test' }]);
+      expect(tagged.blob).toEqual(new Uint8Array([1, 2, 3]));
+    });
+
+    test('a query over objects the tab holds reads none of their stored changes', async () => {
+      const { db, peer } = await builder.createDatabase();
+      db.add(createTestObject({ value: 1 }));
+      await db.flush({ indexes: true });
+      const reads = vi.spyOn(peer.host.automergeHost, 'readStoredChanges');
+
+      expect(await db.query(Query.select(Filter.type(TestSchema.Expando))).run()).toHaveLength(1);
+      expect(reads).not.toHaveBeenCalled();
+    });
+
+    test('a parent that follows its child in the results is backed by the index too', async () => {
+      const { db, ids } = await openReloaded((db) => {
+        const parent = db.add(createTestObject({ value: 2 }));
+        const child = db.add(createTestObject({ value: 1 }));
+        Obj.setParent(child, parent);
+        return [parent, child];
+      });
+
+      const results = await db
+        .query(Query.select(Filter.type(TestSchema.Expando)).orderBy(Order.property('value', 'asc')))
+        .run();
+      expect(results.map((object) => object.id)).toEqual([...ids].reverse());
+      for (const id of ids) {
+        expect(hasDocument(db, id)).toBe(false);
+      }
+    });
+
+    test('a write loads the document at once and reaches the host', async () => {
+      const { db, peer, ids, documentIds } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+      const shownAt = Obj.version(object).automergeHeads;
+
+      Obj.update(object, (object) => {
+        object.value = 2;
+      });
+      expect(hasDocument(db, object.id)).toBe(true);
+      expect(Obj.version(object).automergeHeads).not.toEqual(shownAt);
+
+      await db.flush();
+      const documentId = documentIds.get(ids[0]);
+      invariant(documentId);
+      using lease = await peer.host.automergeHost.loadDoc<DatabaseDirectory>(Context.default(), documentId);
+      invariant(lease);
+      await waitForCondition({ condition: () => lease.doc().objects![object.id].data.value === 2, timeout: 5_000 });
+    });
+
+    test('reading the document loads it from the stored changes', async () => {
+      const { db } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+
+      const shownAt = Obj.version(object).automergeHeads;
+
+      const doc = getObjectCore(object).getDocAccessor(['value']).handle.doc();
+      expect(hasDocument(db, object.id)).toBe(true);
+      expect(A.getHeads(doc)).toEqual(shownAt);
+      expect(object.value).toBe(1);
+    });
+
+    test('an index-backed object takes host changes through its passive subscription', async () => {
+      const { db, changeOnHost } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+      let ones: Entity.Any[] = [];
+      onTestFinished(
+        db.query(Query.select(Filter.type(TestSchema.Expando, { value: 1 }))).subscribe((query) => {
+          ones = query.results;
+        }),
+      );
+      await waitForCondition({ condition: () => ones.length === 1, timeout: 5_000 });
+
+      const hostHeads = await changeOnHost(object.id, (data) => {
+        data.value = 2;
+      });
+      await waitForCondition({ condition: () => object.value === 2, timeout: 5_000 });
+      await waitForCondition({ condition: () => ones.length === 0, timeout: 5_000 });
+      expect(hasDocument(db, object.id)).toBe(false);
+      expect(Obj.version(object).automergeHeads).toEqual(hostHeads);
+      Obj.update(object, (object) => {
+        object.value = object.value + 1;
+      });
+      expect(object.value).toBe(3);
+    });
+
+    test('a host change the JSON cannot show loads the document', async () => {
+      const { db, changeOnHost } = await openReloaded((db) => [db.add(createTestObject({ value: 1 }))]);
+      const [object] = await db.query(Query.select(Filter.type(TestSchema.Expando))).run();
+
+      await changeOnHost(object.id, (data) => {
+        data.body = 'x'.repeat(BACKED_OBJECT_LIMIT + 1);
+      });
+      await waitForCondition({ condition: () => object.body?.length === BACKED_OBJECT_LIMIT + 1, timeout: 5_000 });
+      expect(hasDocument(db, object.id)).toBe(true);
+    });
+
+    test('the schema query a database runs while it opens is backed by the index', async () => {
+      const { db, ids } = await openReloaded(async (db) => [await db.addType(TestSchema.Person)]);
+      expect(db.getObjectCoreById(ids[0], { load: false })?.snapshot).toBeDefined();
     });
   });
 

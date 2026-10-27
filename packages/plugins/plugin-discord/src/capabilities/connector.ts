@@ -172,6 +172,7 @@ export default Capability.makeModule(
         id: DISCORD_PROVIDER_ID,
         source: DISCORD_SOURCE,
         label: DISCORD_BOT_LABEL,
+        kind: 'custom',
         credentialForm,
         sync: {
           operation: DiscordOperation.SyncDiscordChannel,
@@ -185,6 +186,7 @@ export default Capability.makeModule(
         id: DISCORD_USER_PROVIDER_ID,
         source: DISCORD_SOURCE,
         label: DISCORD_USER_LABEL,
+        kind: 'user',
         oauth: {
           provider: OAuthProvider.DISCORD,
           scopes: ['identify', 'guilds'],

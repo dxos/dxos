@@ -1,0 +1,5 @@
+# Keep in sync with `rust` in /.prototools and tools/code-index-native, whose channel CI's setup action installs.
+[toolchain]
+channel = "1.93.0"
+profile = "minimal"
+targets = ["wasm32-wasip1"]

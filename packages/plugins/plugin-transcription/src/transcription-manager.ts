@@ -129,6 +129,14 @@ export class TranscriptionManagerImpl extends Resource implements TranscriptionC
     }
   }
 
+  async flush(): Promise<void> {
+    if (!this.isOpen || !this.getEnabled()) {
+      return;
+    }
+
+    await this._transcriber?.flush();
+  }
+
   @synchronized
   async setAudioTrack(track?: MediaStreamTrack): Promise<void> {
     if (this._audioStreamTrack === track) {

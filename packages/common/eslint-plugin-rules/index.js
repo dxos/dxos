@@ -11,12 +11,14 @@ import dxosSubpathEntrypoints from './rules/dxos-subpath-entrypoints.js';
 import dxosSubpathExports from './rules/dxos-subpath-exports.js';
 import dxosSubpathImports from './rules/dxos-subpath-imports.js';
 import effectSubpathImports from './rules/effect-subpath-imports.js';
+import folderBarrelImports from './rules/folder-barrel-imports.js';
 import header from './rules/header.js';
 import importAsNamespace from './rules/import-as-namespace.js';
 import noBareDotImports from './rules/no-bare-dot-imports.js';
 import noDeadTailwindLogical from './rules/no-dead-tailwind-logical.js';
 import noEffectRunPromise from './rules/no-effect-run-promise.js';
 import noEmptyPromiseCatch from './rules/no-empty-promise-catch.js';
+import noErrorClassName from './rules/no-error-class-name.js';
 import noSimilarSiblingFiles from './rules/no-similar-sibling-files.js';
 import operationKeyShape from './rules/operation-key-shape.js';
 import preferSizingUtilities from './rules/prefer-sizing-utilities.js';
@@ -38,6 +40,7 @@ const plugin = {
     'dxos-subpath-exports': dxosSubpathExports,
     'dxos-subpath-imports': dxosSubpathImports,
     'effect-subpath-imports': effectSubpathImports,
+    'folder-barrel-imports': folderBarrelImports,
     header,
     'import-as-namespace': importAsNamespace,
     'no-bare-dot-imports': noBareDotImports,
@@ -46,6 +49,7 @@ const plugin = {
     'operation-key-shape': operationKeyShape,
     'prefer-sizing-utilities': preferSizingUtilities,
     'no-empty-promise-catch': noEmptyPromiseCatch,
+    'no-error-class-name': noErrorClassName,
     'no-similar-sibling-files': noSimilarSiblingFiles,
     'translation-key-format': translationKeyFormat,
   },

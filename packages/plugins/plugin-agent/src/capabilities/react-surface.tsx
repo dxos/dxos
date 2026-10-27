@@ -9,11 +9,24 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Agent from '@dxos/assistant/Agent';
-import { Organization, Person } from '@dxos/types';
+import { Channel, Organization, Person } from '@dxos/types';
 import { Position } from '@dxos/util';
 
-import { AgentActivity, AgentKnowledge, AgentPrivateChat, BrainStore, ProfileProperties } from '#containers';
-import { AgentCompanion } from '#types';
+import {
+  AgentActivity,
+  AgentEmailSetup,
+  AgentKnowledge,
+  AgentPrivateChat,
+  AgentsPanel,
+  AgentsSettings,
+  BrainStore,
+  EmailChannelProperties,
+  ProfileProperties,
+} from '#containers';
+import { AgentCompanion, AgentEmail } from '#types';
+
+import { AGENTS_SECTION_TYPE } from '../constants.ts';
+import { AGENTS_PANEL_PATH } from './agents-panel.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
@@ -25,7 +38,7 @@ export default Capability.makeModule(() =>
         filter: AppSurface.object(AppSurface.Article, Agent.Agent),
         position: Position.first,
         component: AgentPrivateChat,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, agent: subject, attendableId }),
+        props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, agent: subject, attendableId, nodeId }),
       }),
       // What the agent knows: facts read from its conversations, the goals it watches and its graph.
       Surface.create({
@@ -47,6 +60,22 @@ export default Capability.makeModule(() =>
         component: AgentActivity,
         props: ({ role, data: { companionTo } }) => ({ role, agent: companionTo }),
       }),
+      // The agent's address: create it, then edit it and connect its mailbox.
+      Surface.create({
+        id: 'agentEmail',
+        filter: AppSurface.allOf(
+          AppSurface.literal(AppSurface.Article, AgentCompanion.EMAIL),
+          AppSurface.companion(AppSurface.Article, Agent.Agent),
+        ),
+        component: AgentEmailSetup,
+        props: ({ role, data: { companionTo } }) => ({ role, agent: companionTo }),
+      }),
+      // The space's agents, under space settings.
+      Surface.create({
+        id: 'agentsSettings',
+        filter: AppSurface.literal(AppSurface.Article, AGENTS_SECTION_TYPE),
+        component: AgentsSettings,
+      }),
       // A debug view of the brain store as held: raw facts, rules, their matching format and outboxes.
       Surface.create({
         id: 'agentBrainStore',
@@ -56,6 +85,22 @@ export default Capability.makeModule(() =>
         ),
         component: BrainStore,
         props: ({ role, data: { companionTo } }) => ({ role, agent: companionTo }),
+      }),
+      Surface.create({
+        id: 'accountAgents',
+        filter: AppSurface.literal(AppSurface.Article, AGENTS_PANEL_PATH),
+        component: AgentsPanel,
+      }),
+      // An email channel's address and sender allowlist, wherever its properties show (the agent's channel list too).
+      Surface.create({
+        id: 'emailChannelProperties',
+        filter: AppSurface.object(
+          AppSurface.ObjectProperties,
+          Channel.Channel,
+          (data) => data.subject.backend.kind === AgentEmail.BACKEND_KIND,
+        ),
+        component: EmailChannelProperties,
+        props: ({ data: { subject } }) => ({ subject }),
       }),
       // Appended to the Person/Organization properties panel; plugin-crm contributes no surface there.
       Surface.create({

@@ -10,15 +10,15 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 
 import { AgentState, type AgentStateChannel, type AgentStateCounts, type AgentStateSkill } from './AgentState.tsx';
-import { type Knowledge, SCENARIOS } from './testing.ts';
+import { type Scenario, SCENARIOS } from './testing.ts';
 
 const SKILLS: AgentStateSkill[] = [
   { key: 'org.dxos.skill.agentConversation', name: 'Agent conversation' },
   { key: 'org.dxos.skill.interview', name: 'Interview' },
 ];
 
-const countsOf = ({ people, organizations, goals, memories }: Knowledge): AgentStateCounts => ({
-  memories: { active: memories.length, expired: 0 },
+const countsOf = ({ people, organizations, goals, relations }: Scenario): AgentStateCounts => ({
+  facts: { count: relations.length, speakers: 1 },
   goals: {
     proposed: goals.filter((goal) => goal.status === 'proposed').length,
     confirmed: goals.filter((goal) => goal.status === 'confirmed').length,
@@ -87,7 +87,7 @@ export const Empty: Story = {
     skills: [],
     scenario: 'empty',
     counts: {
-      memories: { active: 0, expired: 0 },
+      facts: { count: 0, speakers: 0 },
       goals: { proposed: 0, confirmed: 0 },
       people: 0,
       organizations: 0,

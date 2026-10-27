@@ -5,6 +5,7 @@
 import React, { useMemo } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { useObject } from '@dxos/echo-react';
 import * as Card from '@dxos/react-ui/Card';
 
 import { VoxelEditor } from '#components';
@@ -14,8 +15,9 @@ export type VoxelCardProps = AppSurface.ObjectCardProps<Voxel.World>;
 
 /** Read-only card view of a voxel world. */
 export const VoxelCard = ({ subject: world }: VoxelCardProps) => {
-  const voxels = useMemo(() => Voxel.toVoxelArray(world.voxels), [world.voxels]);
-  const { gridX, gridY, blockSize } = Voxel.getGridDimensions(world);
+  const [snapshot] = useObject(world);
+  const voxels = useMemo(() => Voxel.toVoxelArray(snapshot.voxels), [snapshot.voxels]);
+  const { gridX, gridY, blockSize } = Voxel.getGridDimensions(snapshot);
 
   return (
     <Card.Body>

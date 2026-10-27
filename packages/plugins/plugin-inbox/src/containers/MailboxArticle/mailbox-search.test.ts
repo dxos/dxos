@@ -12,16 +12,15 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 
-import {
-  buildMailboxSelection,
-  buildSystemTagSelection,
-  buildThreadSemiJoin,
-  getSearchText,
-} from './mailbox-search.ts';
+import { type SearchSelectionOptions, buildSearchSelection, getSearchText } from '../../util/index.ts';
+import { buildSystemTagSelection, buildThreadSemiJoin } from './mailbox-search.ts';
+
+const buildMailboxSelection = (text: string, filter: Filter.Any | undefined, options?: SearchSelectionOptions) =>
+  buildSearchSelection(Filter.type(Message.Message), text, filter, options);
 
 const TAG_MAP = { 'tag:work': Tag.make({ label: 'work' }), 'tag:urgent': Tag.make({ label: 'urgent' }) };
 
-describe('buildMailboxSelection', () => {
+describe('buildSearchSelection', () => {
   const build = (text: string) => new QueryBuilder({}).build(text).filter;
 
   test('blank input selects all messages by type', () => {
@@ -147,8 +146,7 @@ describe('buildThreadSemiJoin', () => {
       const query = buildThreadSemiJoin(viewFilter, Scope.feed(Obj.getURI(feed, { prefer: 'absolute' })));
 
       // A union of the semi-join and the direct matches, so a threadless message still reaches the list.
-      expect(query.ast).toMatchObject({ type: 'union' });
-      expect((query.ast as any).queries).toHaveLength(2);
+      expect(query.ast).toMatchObject({ type: 'union', queries: [expect.anything(), expect.anything()] });
       expect(semiJoinArm(query)).toMatchObject({
         type: 'select',
         filter: {
@@ -157,7 +155,9 @@ describe('buildThreadSemiJoin', () => {
         },
       });
       // The second arm is the view filter itself, unscoped — the caller's own `.from` scopes it.
-      expect((query.ast as any).queries[1]).toMatchObject({ type: 'select', filter: viewFilter.ast });
+      expect(query.ast).toMatchObject({
+        queries: [expect.anything(), { type: 'select', filter: viewFilter.ast }],
+      });
       // The subquery carries the view filter over exactly the given matches scope.
       const subquery = semiJoinArm(query).filter.props.threadId.subquery;
       expect(subquery.query.filter).toEqual(viewFilter.ast);

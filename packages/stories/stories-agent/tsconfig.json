@@ -16,6 +16,9 @@
   ],
   "references": [
     {
+      "path": "../../common/async"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -25,7 +28,19 @@
       "path": "../../common/log"
     },
     {
+      "path": "../../core/compute/ai"
+    },
+    {
       "path": "../../core/compute/assistant"
+    },
+    {
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/compute-hyperformula"
+    },
+    {
+      "path": "../../core/compute/crawler"
     },
     {
       "path": "../../core/compute/link"
@@ -34,10 +49,22 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-doc"
+    },
+    {
+      "path": "../../core/echo/echo-react"
+    },
+    {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../plugins/plugin-agent"
     },
     {
       "path": "../../plugins/plugin-assistant"
+    },
+    {
+      "path": "../../plugins/plugin-canvas"
     },
     {
       "path": "../../plugins/plugin-client"
@@ -49,7 +76,34 @@
       "path": "../../plugins/plugin-discord"
     },
     {
+      "path": "../../plugins/plugin-illustrator"
+    },
+    {
+      "path": "../../plugins/plugin-markdown"
+    },
+    {
+      "path": "../../plugins/plugin-presenter"
+    },
+    {
+      "path": "../../plugins/plugin-preview"
+    },
+    {
+      "path": "../../plugins/plugin-review"
+    },
+    {
       "path": "../../plugins/plugin-routine"
+    },
+    {
+      "path": "../../plugins/plugin-sheet"
+    },
+    {
+      "path": "../../plugins/plugin-space"
+    },
+    {
+      "path": "../../plugins/plugin-tasks"
+    },
+    {
+      "path": "../../plugins/plugin-testing"
     },
     {
       "path": "../../plugins/plugin-thread"
@@ -61,7 +115,16 @@
       "path": "../../sdk/app-toolkit"
     },
     {
+      "path": "../../sdk/client"
+    },
+    {
+      "path": "../../sdk/config"
+    },
+    {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/schema"
     },
     {
       "path": "../../sdk/types"
@@ -70,10 +133,16 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-attention"
+    },
+    {
       "path": "../../ui/react-ui-debug"
     },
     {
       "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/ui-editor"
     },
     {
       "path": "../storybook-testing"

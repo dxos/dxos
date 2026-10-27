@@ -51,7 +51,7 @@ describe('ModuleUrlPlugin', () => {
     });
 
     const main = await readFile(join(outDir, 'main.js'), 'utf8');
-    expect(main).toMatch(/new URL\(.geometry\.js., import\.meta\.url\)/);
+    expect(main).toContain('"/geometry.js"');
 
     // Exercises the emitted chunk as a worker would: import it by URL and call the compiled class.
     const geometry = await import(pathToFileURL(join(outDir, 'geometry.js')).href);

@@ -7,8 +7,8 @@
 // view only feeds it the drag and the projection receives one `resize` intent.
 //
 
-import { type Handle } from '../model/atoms.ts';
-import { type Bounds, type Point, type Size } from '../model/types.ts';
+import { type Handle } from '../engine/index.ts';
+import { type Bounds, type Point, type Size } from '../model/index.ts';
 
 export type ResizeOptions = {
   minSize: Size;
@@ -75,3 +75,18 @@ const resizeAxis = (
 
 const clamp = (value: number, min: number, max: number | undefined): number =>
   Math.min(Math.max(value, min), max ?? Infinity);
+
+/** Where a handle sits on a frame: a corner, or the middle of an edge. */
+export const handlePoint = (bounds: Bounds, handle: Handle): Point => {
+  const x = handle.includes('w')
+    ? bounds.x
+    : handle.includes('e')
+      ? bounds.x + bounds.width
+      : bounds.x + bounds.width / 2;
+  const y = handle.includes('n')
+    ? bounds.y
+    : handle.includes('s')
+      ? bounds.y + bounds.height
+      : bounds.y + bounds.height / 2;
+  return { x, y };
+};

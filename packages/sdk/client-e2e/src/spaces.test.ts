@@ -99,7 +99,7 @@ describe('Spaces', () => {
     await expect(client.spaces.create()).rejects.toBe(error);
   });
 
-  test('a space whose database failed to open initializes again when it returns to ready', async () => {
+  const openSpaceWhoseDatabaseFailsOnce = async (error: Error) => {
     const testBuilder = new TestBuilder();
     onTestFinished(() => testBuilder.destroy());
     const host = testBuilder.createClientServicesHost();
@@ -114,13 +114,12 @@ describe('Spaces', () => {
     await creator.destroy();
     await creatorServer.close();
 
-    const error = new Error('Database open failed.');
     const open = DatabaseImpl.prototype.open;
-    let failures = 0;
+    let attempts = 0;
     const openSpy = vi
       .spyOn(DatabaseImpl.prototype, 'open')
       .mockImplementation(async function (this: DatabaseImpl, ctx) {
-        if (this.spaceId === spaceId && failures++ === 0) {
+        if (this.spaceId === spaceId && attempts++ === 0) {
           throw error;
         }
         return open.call(this, ctx);
@@ -133,10 +132,21 @@ describe('Spaces', () => {
     await client.initialize();
     onTestFinished(() => client.destroy());
 
-    await expect.poll(() => failures).toBe(1);
+    await expect.poll(() => attempts).toBeGreaterThan(0);
     const space = client.spaces.get().find((space) => space.id === spaceId);
     invariant(space);
     await expect(space.waitUntilReady()).rejects.toBe(error);
+    return space;
+  };
+
+  test('a space whose database failed to open initializes again while it stays ready', async () => {
+    const space = await openSpaceWhoseDatabaseFailsOnce(new Error('Database open failed.'));
+    await expect.poll(() => space.isOpen, { timeout: 10_000 }).toBe(true);
+    await space.waitUntilReady();
+  });
+
+  test('a space whose database failed to open initializes again when it returns to ready', async () => {
+    const space = await openSpaceWhoseDatabaseFailsOnce(new Error('Database open failed.'));
 
     // Closing and reopening returns the space to ready, which starts initialization over.
     await space.close();
@@ -729,6 +739,32 @@ describe('Spaces', () => {
     expect(feed.blocks.length).toBe(2);
   });
 
+  test('import space archive keeps feed messages', { timeout: 10_000 }, async ({ expect }) => {
+    const [client1, client2] = await createInitializedClients(2, { storage: true });
+    await Promise.all([client1, client2].map(registerTypes));
+
+    const space = await client1.spaces.create();
+    const feedObj = space.db.add(Feed.make({}));
+    await space.db.flush();
+    await space.db.appendToFeed(feedObj, [
+      Obj.make(TestSchema$.Expando, { name: 'queue-item-1' }),
+      Obj.make(TestSchema$.Expando, { name: 'queue-item-2' }),
+    ]);
+    const archive = await space.internal.export();
+
+    const importedSpace = await client2.spaces.import(archive);
+    const importedFeed = await importedSpace.db.query(Filter.id(feedObj.id)).first();
+    const feedUri = Feed.getFeedUri(importedFeed);
+    invariant(feedUri, 'feed URI missing');
+    await expect
+      .poll(async () =>
+        (await importedSpace.db.query(Query.select(Filter.everything()).from(Scope.feed(feedUri))).run())
+          .map((item) => item.name)
+          .sort(),
+      )
+      .toEqual(['queue-item-1', 'queue-item-2']);
+  });
+
   test('import space archive', { timeout: 3_000, retry: 1 }, async () => {
     const [client1, client2] = await createInitializedClients(2, {
       storage: true,
@@ -850,6 +886,68 @@ describe('Spaces', () => {
     const messages = await importedSpace.db.query(Query.type(TestSchema$.Expando).from(importedFeed)).run();
     expect(messages.length).toEqual(2);
     expect(messages.map((m: any) => m.name).sort()).toEqual(['msg-1', 'msg-2']);
+  });
+
+  test('a feed exported alone merges into an existing space, once', { timeout: 10_000 }, async () => {
+    const [client1, client2] = await createInitializedClients(2, { storage: true });
+    [client1, client2].forEach(registerTypes);
+
+    const source = await client1.spaces.create();
+    const document = source.db.add(createDocument());
+    const facts = source.db.add(Feed.make({ name: 'facts' }));
+    const other = source.db.add(Feed.make({ name: 'other' }));
+    await source.db.flush();
+    await source.db.appendToFeed(facts, [
+      Obj.make(TestSchema$.Expando, { name: 'fact-1' }),
+      Obj.make(TestSchema$.Expando, { name: 'fact-2' }),
+    ]);
+    await source.db.appendToFeed(other, [Obj.make(TestSchema$.Expando, { name: 'not-exported' })]);
+
+    // A listed id that names no feed does not pull its object in.
+    const archive = await source.internal.export({ feedIds: [facts.id, document.id] });
+    expect(archive.format).toBe(SpacesService.SpaceArchiveFormat.enums.JSON);
+    const parsed = JSON.parse(new TextDecoder().decode(archive.contents));
+    expect(parsed.objects.map((obj: { id: string }) => obj.id)).toEqual([facts.id]);
+
+    const target = await client2.spaces.create();
+    const imported = await client2.spaces.import(archive, { into: target.id });
+    expect(imported.id).toEqual(target.id);
+    // Importing the same archive again adds nothing.
+    await client2.spaces.import(archive, { into: target.id });
+
+    // The import writes on the host; the client sees it once the space's documents replicate.
+    await expect
+      .poll(async () => (await target.db.query(Filter.type(Feed.Feed)).run()).map((feed) => feed.name))
+      .toEqual(['facts']);
+    const feeds = await target.db.query(Filter.type(Feed.Feed)).run();
+    await expect
+      .poll(async () =>
+        (await target.db.query(Query.type(TestSchema$.Expando).from(feeds[0])).run())
+          .map((item: any) => item.name)
+          .sort(),
+      )
+      .toEqual(['fact-1', 'fact-2']);
+  });
+
+  test('merging a feed into the space that already holds it adds no duplicate', { timeout: 10_000 }, async () => {
+    const [client] = await createInitializedClients(1, { storage: true });
+    await registerTypes(client);
+
+    const space = await client.spaces.create();
+    const facts = space.db.add(Feed.make({ name: 'facts' }));
+    await space.db.flush();
+    await space.db.appendToFeed(facts, [Obj.make(TestSchema$.Expando, { name: 'fact-1' })]);
+
+    const archive = await space.internal.export({ feedIds: [facts.id] });
+    await client.spaces.import(archive, { into: space.id });
+    await space.db.flush();
+
+    // The space's own export lists every object structure it stores, so a second copy of the feed would show twice.
+    const stored = await space.internal.export({ format: SpacesService.SpaceArchiveFormat.enums.JSON });
+    const { objects } = JSON.parse(new TextDecoder().decode(stored.contents));
+    expect(objects.filter((obj: { id: string }) => obj.id === facts.id)).toHaveLength(1);
+    const items = await space.db.query(Query.type(TestSchema$.Expando).from(facts)).run();
+    expect(items.map((item: any) => item.name)).toEqual(['fact-1']);
   });
 
   test('import archive applies tags to the new space', { timeout: 5_000, retry: 1 }, async () => {

@@ -328,6 +328,8 @@ export enum OAuthProvider {
   GITHUB = 'github',
   GOOGLE = 'google',
   LINEAR = 'linear',
+  /** An arbitrary MCP server signed in to with MCP authorization; the request's `resource` names it. */
+  MCP = 'mcp',
   NOTION = 'notion',
   SLACK = 'slack',
   TRELLO = 'trello',
@@ -350,6 +352,12 @@ export const InitiateOAuthFlowRequestSchema = Schema.Struct({
   spaceId: Schema.String.pipe(Schema.refine(SpaceId.isValid)), // TODO(burdon): Use SpaceId.
   accessTokenId: Schema.String,
   scopes: Schema.mutable(Schema.Array(Schema.String)),
+  // Whose identity the grant acts as: the authorizing user (default) or DXOS's registered app. For
+  // GitHub an app grant is an App installation rather than an OAuth grant.
+  kind: Schema.optional(Schema.Literals(['user', 'app'])),
+  // The MCP server URL a `provider: 'mcp'` grant is for. EDGE discovers its authorization server
+  // from it, and the token is issued for that server alone (RFC 8707 resource indicator).
+  resource: Schema.optional(Schema.String),
   // Set to true if we don't want periodic token refreshes in background, for cases like account connect
   noRefresh: Schema.optional(Schema.Boolean),
   // Provider-specific (user handle or did for atproto) hint for auth server resolution
@@ -423,7 +431,68 @@ export enum EdgeWebsocketProtocol {
    * Enables message framing and muxing by service-id.
    */
   V1 = 'edge-ws-v1',
+  /**
+   * Adds per-channel credit-based flow control on top of V1 framing.
+   *
+   * Must be negotiated rather than sniffed: a V1 reader tests only `FrameFlag.SEGMENT_SEQ`, so it decodes
+   * a V2 credit frame as a message body and throws. See docs/design/flow-control/DESIGN.md in
+   * dxos/edge.
+   */
+  V2 = 'edge-ws-v2',
 }
+
+/**
+ * Per-channel credit window in payload bytes, by service.
+ *
+ * A window caps one channel at `window / RTT` however fast either end is, so 4 MiB still allows a replicator channel
+ * 20 MB/s at a 200 ms round trip, more than one replicator Durable Object absorbs. Swarm and signal traffic is
+ * low-volume and latency-sensitive, so a large window would only delay the backpressure signal. Receivers derive
+ * their grant threshold from the smallest window and their overdraft bound from the largest, so shrinking one is a
+ * protocol change.
+ */
+export const EDGE_FLOW_CONTROL_WINDOWS = {
+  replicator: 4 * 1024 * 1024,
+  swarm: 256 * 1024,
+  default: 1024 * 1024,
+} as const;
+
+/**
+ * Messages one channel may have sent but not yet seen consumed.
+ *
+ * The byte windows alone admit tens of thousands of small subduction frames, and the router dispatches every message
+ * downstream on its own (for a replicator, one RPC into its Durable Object), so request count, not bytes, is what
+ * overloads the object. Caps one channel at `64 / RTT` messages per second, ~320/s at 200 ms.
+ */
+export const EDGE_FLOW_CONTROL_MAX_MESSAGES = 64;
+
+/**
+ * Messages one connection may have sent but not yet seen consumed, across all its channels.
+ *
+ * Every message on a device's socket lands in that device's one router Durable Object, and a channel is a service, so
+ * one per space: the per-channel bound alone lets a device with 60 spaces hold 3,840 messages in flight there, while a
+ * reconnect's burst of ~1,200 feed `get-metadata` frames already overloads it. Feed replies are relayed back through
+ * the same object before the request settles, so this also bounds them.
+ */
+export const EDGE_FLOW_CONTROL_MAX_CONNECTION_MESSAGES = 128;
+
+/** Credit window for the channel carrying `serviceId`, per {@link EDGE_FLOW_CONTROL_WINDOWS}. */
+export const edgeFlowControlWindow = (serviceId?: string): number => {
+  if (!serviceId) {
+    return EDGE_FLOW_CONTROL_WINDOWS.default;
+  }
+  const [serviceName] = serviceId.split(':');
+  switch (serviceName) {
+    case EdgeService.SUBDUCTION_REPLICATOR:
+    case EdgeService.FEED_REPLICATOR:
+    case EdgeService.QUEUE_REPLICATOR:
+      return EDGE_FLOW_CONTROL_WINDOWS.replicator;
+    case EdgeService.SWARM:
+    case EdgeService.SIGNAL:
+      return EDGE_FLOW_CONTROL_WINDOWS.swarm;
+    default:
+      return EDGE_FLOW_CONTROL_WINDOWS.default;
+  }
+};
 
 /**
  * Prefix of the `Sec-WebSocket-Protocol` entry carrying the client's SDK version (e.g. `dxos-version.0.12.0`).
@@ -522,6 +591,19 @@ export const ErrorCodec = Object.freeze({
   },
 });
 
+const decodeHttpError = (response: Response, text: string): Error | undefined => {
+  if (response.headers.get('Content-Type') !== 'application/json') {
+    return new Error(text.slice(0, 256));
+  }
+
+  const body = JSON.parse(text);
+  if (!('error' in body)) {
+    return undefined;
+  }
+
+  return ErrorCodec.decode(body.error);
+};
+
 /**
  * Codec for serializing and deserializing Edge unhandled HTTP errors.
  */
@@ -534,19 +616,11 @@ export const EdgeHttpErrorCodec = Object.freeze({
       { status: 500 },
     ),
 
-  decode: async (response: Response): Promise<Error | undefined> => {
-    if (response.headers.get('Content-Type') !== 'application/json') {
-      const body = await response.clone().text();
-      return new Error(body.slice(0, 256));
-    }
+  /** Reads the response body. */
+  decode: async (response: Response): Promise<Error | undefined> => decodeHttpError(response, await response.text()),
 
-    const body = await response.clone().json();
-    if (!('error' in body)) {
-      return undefined;
-    }
-
-    return ErrorCodec.decode(body.error);
-  },
+  /** Decodes a body already read from `response`. */
+  decodeText: (response: Response, text: string): Error | undefined => decodeHttpError(response, text),
 });
 
 /** Authentication scheme naming a DXOS verifiable presentation. */

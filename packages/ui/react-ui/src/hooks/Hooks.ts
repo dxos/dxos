@@ -48,7 +48,7 @@ export {
 } from '@dxos/react-hooks';
 
 export { useTranslation } from '../providers/ThemeProvider/TranslationsContext.ts';
-export * from '../next/hooks.ts';
+export * from './theme.ts';
 export * from '../util/animation.ts';
 export * from '../util/usePx.ts';
 export * from './usePositioning.ts';

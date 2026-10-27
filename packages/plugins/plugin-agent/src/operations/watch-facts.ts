@@ -8,9 +8,10 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 import { type Space } from '@dxos/halo';
+import { EID } from '@dxos/keys';
 import { Organization, Person } from '@dxos/types';
 
-import { BrainService, Goal, Profile, Trigger, TriggerOperation } from '#types';
+import { AgentPresence, BrainService, Goal, Profile, Trigger, TriggerOperation } from '#types';
 
 import { compileGoal } from './compile-goal.ts';
 import { AgentOperationError } from './errors.ts';
@@ -30,8 +31,9 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
       ongoing,
     }) {
       const brain = yield* BrainService.BrainService;
+      const { db } = yield* Database.Service;
       const agent = yield* Database.load(agentRef);
-      if ((yield* brain.subscriptions(agent.id)).length >= BrainService.MAX_TRIGGERS) {
+      if ((yield* brain.subscriptions(AgentPresence.brainId(agent))).length >= BrainService.MAX_TRIGGERS) {
         return yield* Effect.fail(registryFull());
       }
       const requester = yield* Database.load(requesterRef);
@@ -90,8 +92,8 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
       });
       const rules = compiled?.rules ?? Trigger.toRules(resolved, { createdAt });
       const trigger: Trigger.Trigger = {
-        id: Trigger.makeId(agent.id),
-        agent: agent.id,
+        id: Trigger.makeId(AgentPresence.brainId(agent)),
+        agent: AgentPresence.brainId(agent),
         goal: Ref.make(goal),
         ...(request ? { request } : {}),
         when: resolved,
@@ -99,6 +101,8 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
         ...(ongoing ? { ongoing } : {}),
         rules,
         createdAt,
+        // The goal and recipient live in this space, so what the watch wakes is delivered here (`AgentPresence.delivers`).
+        origin: EID.make({ spaceId: db.spaceId, entityId: agent.id }),
       };
       if (!(yield* brain.subscribe(trigger))) {
         return yield* Effect.fail(registryFull());

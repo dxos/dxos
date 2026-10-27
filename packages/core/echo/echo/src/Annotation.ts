@@ -7,6 +7,8 @@
 export {
   type ArrayPresentation,
   ArrayPresentationAnnotation,
+  ContentVersionAnnotation,
+  type ContentVersionAnnotationValue,
   DEFAULT_LAYOUT_NAME,
   DescriptionAnnotation,
   FieldLookupAnnotationId,
@@ -24,6 +26,7 @@ export {
   IconAnnotation,
   IconFromRefAnnotation,
   LabelAnnotation,
+  RawStringAnnotation,
   ReferenceAnnotation,
   ReferenceAnnotationId,
   type ReferenceAnnotationValue,

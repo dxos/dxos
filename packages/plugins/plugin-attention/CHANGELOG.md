@@ -1,5 +1,33 @@
 # @dxos/plugin-attention
 
+## 0.16.0
+
+### Patch Changes
+
+- @dxos/app-framework@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/react-ui-attention@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/plugin-graph@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/react-focus@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [94ec06d]
+- Updated dependencies [b82150a]
+- Updated dependencies [d250ed2]
+- Updated dependencies [098a536]
+  - @dxos/compute@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/react-ui-attention@0.15.0
+  - @dxos/plugin-graph@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/react-focus@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

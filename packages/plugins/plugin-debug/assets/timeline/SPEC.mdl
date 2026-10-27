@@ -1,0 +1,132 @@
+---
+id: com.example.timeline
+name: Timeline
+version: 0.1.0
+---
+
+A chart of a sheet range with one event per row (date, category, title, description, image), drawn along a vertical
+spine, kept as its own object so documents can embed it as a section or a slide.
+
+## Extensions
+
+The following extension dialects are used in this document.
+Each extension is defined in the Appendix or resolved via its URI.
+
+| Term       | URI                         |
+| ---------- | --------------------------- |
+| `type`     | `org.dxos.mdl.type@1.0`     |
+| `feat`     | `org.dxos.mdl.feat@1.0`     |
+| `scenario` | `org.dxos.mdl.scenario@1.0` |
+| `decision` | `org.dxos.mdl.decision@1.0` |
+
+## Types
+
+```mdl
+type Chart
+  desc: A chart of a range of a sheet, owned by the sheet.
+  fields:
+    sheet: Ref<Sheet>          # the sheet whose range is drawn
+    name?: string
+    range: string              # A1 notation (e.g. "A1:E40")
+    type: string               # bar | pie | xy | scatter | heatmap | radar | map | timeline
+    header?: boolean           # the first row holds the column names
+    timeline?: TimelineSettings
+```
+
+```mdl
+type TimelineSettings
+  desc: How a timeline chart is drawn.
+  fields:
+    spine?: string             # left | center | right
+    scale?: string             # log | linear | compact; compact by default
+    start?: string             # year or date
+    end?: string               # year or date
+    dates?: boolean            # show each event's date beside its title
+    future?: boolean           # show events after today; off by default
+    hidden?: string[]          # categories not drawn
+    order?: string[]           # categories in layout order
+    colors?: Map<string, string>
+```
+
+## Features
+
+```mdl
+feat F-1: Chart objects
+  desc: Each chart is its own object, so a document can embed it.
+
+  req F-1.1: A sheet holds its charts as refs; each `type:Chart` refs its sheet back and is deleted with it.
+  req F-1.2: Sheets stored with inline charts are migrated to chart objects when their space opens.
+  req F-1.3: A chart renders as an article, a section in a document, and a slide.
+```
+
+```mdl
+feat F-2: Timeline chart
+  desc: Events from a sheet range along a vertical spine.
+
+  req F-2.1: Each row is one event: date, category, title, and an optional description and image URL.
+  req F-2.2: The spine sits left, center or right; spacing is log, linear or compact, animated when it changes.
+  req F-2.3: Categories nest by path (`Tech/AI`) and toggle from tags; ⌘-click shows only one.
+  req F-2.4: Clicking or the arrow keys select an event and show its card; Escape unselects.
+  req F-2.5: A text filter narrows the events and reports how many match.
+```
+
+```mdl
+feat F-3: Slide embeds
+  desc: A presented markdown deck shows an embedded object full-viewport.
+
+  req F-3.1: `![label](echo:…)` in a deck renders the object's slide surface over the whole viewport.
+  req F-3.2: While an embed shows, the deck acts on no key but Escape.
+```
+
+```mdl
+feat F-4: Presenter space
+  desc: A space template with an events sheet, its timeline chart, and a deck built from a markdown template.
+
+  req F-4.1: The deck's `{{timeline}}` placeholder is replaced with the created chart's EID.
+```
+
+F-5, the timeline research skill, is named on the project's feature map and is not written yet: it researches the
+events for a range of years and a set of categories and fills a sheet with them.
+
+## Phases
+
+- Phase 1: F-1 and F-2, checked against the test fixture (the Presenter space's events sheet).
+- Phase 2: F-3 and F-4.
+- Phase 3: F-5.
+
+## Acceptance
+
+```mdl
+scenario T-1: A timeline chart of the fixture
+  given: the events sheet and a timeline chart of its range
+  when: the chart opens
+  then:
+    - each row is drawn as an event in its category's lane
+    - future events are hidden until shown
+```
+
+```mdl
+scenario T-2: A chart in a slide
+  given: a deck whose second slide embeds the timeline chart
+  when: the deck is presented and moves to the second slide
+  then:
+    - the chart fills the viewport without its toolbars
+    - the arrow keys move the chart's selection, not the deck
+```
+
+## Changelog
+
+Every change to this spec adds a decision, newest last.
+
+```mdl
+decision D-1: The Timeline Project template files a spec for the timeline as a project artifact.
+  date: 2026-10-22
+  by: user:richburdon
+```
+
+```mdl
+decision D-2: The spec writes F-1 to F-4 from what is built, names F-5 and divides the work into three phases; the project's features cite its blocks. Fills in [D-1].
+  date: 2026-10-22
+  by: agent:claude-code
+  for: user:richburdon
+```

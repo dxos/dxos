@@ -78,6 +78,24 @@ describe('BrainMemory', () => {
     }),
   );
 
+  it.effect('reset forgets facts, cursors and queued events but keeps subscriptions', ({ expect }) =>
+    Effect.gen(function* () {
+      const { service: brain } = BrainMemory.make(agents, { now });
+      yield* brain.subscribe(subscription('dima', { speaker: TEST_MEMBERS.dima }, { ongoing: true }));
+      yield* brain.push(AGENT, [fact('f1')], { read: { source: 'dxn:chat', through: 'm1' } });
+      expect(yield* brain.take('dima')).toHaveLength(1);
+
+      yield* brain.reset(AGENT);
+      expect(yield* brain.query(AGENT, {})).toEqual([]);
+      expect(yield* brain.readThrough(AGENT, 'dxn:chat')).toBeUndefined();
+      expect(yield* brain.take('dima')).toEqual([]);
+      expect((yield* brain.subscriptions(AGENT)).map(({ id }) => id)).toEqual(['dima']);
+
+      // The same fact read again is new to a reset brain, so it queues again.
+      expect(yield* brain.push(AGENT, [fact('f1')])).toBe(1);
+    }),
+  );
+
   it.effect('events stay queued until acknowledged', ({ expect }) =>
     Effect.gen(function* () {
       const { service: brain } = BrainMemory.make(agents, { now });

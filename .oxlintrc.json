@@ -54,6 +54,8 @@
     "@dxos/eslint-plugin-rules/dxos-subpath-exports": "warn",
     "@dxos/eslint-plugin-rules/dxos-subpath-imports": "warn",
     "@dxos/eslint-plugin-rules/effect-subpath-imports": "warn",
+    // Off repo-wide; a package opts in from "overrides".
+    "@dxos/eslint-plugin-rules/folder-barrel-imports": "off",
     "@dxos/eslint-plugin-rules/header": "warn",
     "@dxos/eslint-plugin-rules/import-as-namespace": "warn",
     "@dxos/eslint-plugin-rules/no-bare-dot-imports": "error",
@@ -62,6 +64,7 @@
     "@dxos/eslint-plugin-rules/operation-key-shape": "error",
     "@dxos/eslint-plugin-rules/prefer-sizing-utilities": "warn",
     "@dxos/eslint-plugin-rules/no-empty-promise-catch": "error",
+    "@dxos/eslint-plugin-rules/no-error-class-name": "error",
     "@dxos/eslint-plugin-rules/no-similar-sibling-files": [
       "error",
       {
@@ -238,7 +241,15 @@
   },
   "overrides": [
     {
-      "files": ["packages/ui/react-ui/src/next/recipes.ts"],
+      // Every folder is private; react-ui-canvas imports across folders only through barrels. Its headless entry
+      // imports single files on purpose, to keep React out of its bundle.
+      "files": ["packages/ui/react-ui-canvas/src/**"],
+      "rules": {
+        "@dxos/eslint-plugin-rules/folder-barrel-imports": ["error", { "allow": ["src/headless.ts"] }]
+      }
+    },
+    {
+      "files": ["packages/ui/react-ui/src/recipes.ts"],
       "rules": {
         "perfectionist/sort-objects": [
           "error",

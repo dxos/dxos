@@ -103,6 +103,23 @@ export const makeSql = (sql: SqlClient.SqlClient): StateStore.Service => ({
       : sql`UPDATE crawl_target SET status = ${status}, last_error = ${error} WHERE id = ${targetId}`
     ).pipe(Effect.asVoid, Effect.mapError(fail('Failed to set status'))),
 
+  resetTargets: (targetIds) =>
+    targetIds?.length === 0
+      ? Effect.void
+      : (targetIds === undefined
+          ? sql`UPDATE crawl_target SET status = 'pending', cursor = NULL, last_run_at = NULL, last_error = NULL`
+          : sql`UPDATE crawl_target SET status = 'pending', cursor = NULL, last_run_at = NULL, last_error = NULL
+              WHERE id IN ${sql.in(targetIds)}`
+        ).pipe(Effect.asVoid, Effect.mapError(fail('Failed to reset targets'))),
+
+  removeTargets: (targetIds) =>
+    targetIds.length === 0
+      ? Effect.void
+      : sql`DELETE FROM crawl_target WHERE id IN ${sql.in(targetIds)}`.pipe(
+          Effect.asVoid,
+          Effect.mapError(fail('Failed to remove targets')),
+        ),
+
   listTargets: () =>
     sql<Row>`SELECT * FROM crawl_target ORDER BY position ASC`.pipe(
       Effect.map((rows) => rows.map(toTarget)),

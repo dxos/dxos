@@ -13,6 +13,7 @@ import React, {
 
 import * as Surface from '@dxos/app-framework/Surface';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AttentionSigil from '@dxos/app-toolkit/AttentionSigil';
 import { useComposedRefs } from '@dxos/react-hooks';
@@ -55,7 +56,10 @@ export type PlankProps = Util.ThemedClassName<{
   /** Grouped sigil menu actions; when present the sigil opens a menu, otherwise it is a plain button. */
   actions?: AttentionSigil.Action[][];
   onAction?: (action: AttentionSigil.Action) => void;
-  /** Navigation-history trail rendered before the title (flat mode); clicking one goes back to it. */
+  /**
+   * Navigation-history trail rendered before the title (flat mode); clicking one goes back to it. Present (even
+   * empty) means the title renders as the trail's current crumb, so it keeps its size and place as the trail grows.
+   */
   breadcrumbs?: { id: string; label: string }[];
   onSelectBreadcrumb?: (id: string) => void;
   /** Toolbar controls rendered after the title (e.g. close/solo/fullscreen). */
@@ -136,7 +140,15 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     const ActionRoot = popoverAnchorId === `${meta.profile.key}:${node.id}` ? Popover.Anchor : Fragment;
 
     return (
-      <Pane.Root {...landmark} ref={ref} classNames={classNames} {...attentionAttrs} data-testid='deck.plank'>
+      <Pane.Root
+        {...landmark}
+        ref={ref}
+        classNames={classNames}
+        {...attentionAttrs}
+        // Right-clicking anywhere in the plank (its heading or its content) lists its node's actions.
+        {...(node.data === undefined ? {} : AppNode.contextMenuProps(node.id, meta.profile.key))}
+        data-testid='deck.plank'
+      >
         {!headless && (
           <Pane.Toolbar>
             <ActionRoot>
@@ -162,14 +174,12 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                 </Pane.Sigil>
               )}
             </ActionRoot>
-            {breadcrumbs && breadcrumbs.length > 0 ? (
-              // Flat mode: the navigation history plus the current plank as one Breadcrumb. The trail
-              // scrolls horizontally when it overflows (see the theme); the current plank stays the
-              // attention-aware Pane.Title, sized to its content so it keeps a stable width.
-              // `ps-1`, matching `Pane.Title`'s own `px-1`: the two branches below render at the same
-              // origin, so the leading label must not shift as a trail appears or disappears.
-              <Breadcrumb.Root aria-label={t('breadcrumbs.label')} classNames='ps-1 grow'>
-                <Breadcrumb.List classNames='gap-1'>
+            {breadcrumbs ? (
+              // Flat mode: the navigation history plus the current plank as one Breadcrumb, at every depth, so the
+              // title does not change size or place as a trail appears. The md scope holds the crumbs to the title's
+              // text size rather than the header's lg. The trail scrolls horizontally when it overflows.
+              <Breadcrumb.Root aria-label={t('breadcrumbs.label')} classNames='dx-scope ps-0.5 grow' data-size='md'>
+                <Breadcrumb.List classNames='gap-0'>
                   {breadcrumbs.map((crumb) => (
                     <Fragment key={crumb.id}>
                       <Breadcrumb.Item>

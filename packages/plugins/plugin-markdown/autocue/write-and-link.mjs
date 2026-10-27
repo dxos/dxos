@@ -6,7 +6,7 @@
  * Create a markdown document, write in it with live formatting, comment on a phrase, and link a new page
  * from it with `@`.
  *
- * @mdl packages/plugins/plugin-markdown/PLUGIN.mdl test QA-4
+ * @mdl packages/plugins/plugin-markdown/autocue/AUTOCUE.mdl test QA-4
  * @app composer-app bundled dev build, served by `vite preview` on :4173
  *
  *   export DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true
@@ -158,7 +158,7 @@ export const steps = [
     run: async ({ demo, page }) => {
       await typeSlowly(page, 'Next: ');
       await page.keyboard.type('@');
-      await page.getByPlaceholder('Search or create…').waitFor({ state: 'visible', timeout: 10_000 });
+      await page.locator('li:has-text("Add object")').first().waitFor({ state: 'visible', timeout: 10_000 });
       await typeSlowly(page, LINKED);
       await page.waitForTimeout(BEAT / 2);
       await demo.click({ selector: 'li:has-text("Add object") >> nth=0', label: 'Add object' });

@@ -4,7 +4,6 @@
 
 import * as Context from 'effect/Context';
 import type * as Effect from 'effect/Effect';
-import * as Schema from 'effect/Schema';
 import type * as SqlClient from 'effect/sql/SqlClient';
 import type * as SqlError from 'effect/sql/SqlError';
 import type * as Statement from 'effect/sql/Statement';
@@ -230,11 +229,11 @@ export const planChunkPairs = <A, B>(
 /**
  * Merges the rows of a read issued as several statements: the first row per `recordId`, since
  * chunks of overlapping conditions can match a row twice; then ordered by `compare` and cut to
- * `limit`, which each statement could only apply to its own chunk.
+ * `limit` rows after `skip`, which each statement could only apply to its own chunk.
  */
 export const mergeChunkedRows = <T extends { readonly recordId: number }>(
   results: readonly (readonly T[])[],
-  { compare, limit }: { compare?: (left: T, right: T) => number; limit?: number } = {},
+  { compare, skip = 0, limit }: { compare?: (left: T, right: T) => number; skip?: number; limit?: number } = {},
 ): T[] => {
   const byRecordId = new Map<number, T>();
   for (const rows of results) {
@@ -248,45 +247,5 @@ export const mergeChunkedRows = <T extends { readonly recordId: number }>(
   if (compare) {
     merged.sort(compare);
   }
-  return limit === undefined ? merged : merged.slice(0, limit);
+  return merged.slice(skip, limit === undefined ? undefined : skip + limit);
 };
-
-/**
- * Escaped property path within an object.
- *
- * Escaping rules:
- *
- * - '.' -> '\.'
- * - '\' -> '\\'
- * - contact with .
- */
-export const EscapedPropPath: Schema.Codec<string, string> & {
-  escape: (path: EntityPropPath) => EscapedPropPath;
-  unescape: (path: EscapedPropPath) => EntityPropPath;
-} = class extends Schema.String.annotate({ title: 'EscapedPropPath' }) {
-  static escape(path: EntityPropPath): EscapedPropPath {
-    return path.map((p) => p.toString().replaceAll('\\', '\\\\').replaceAll('.', '\\.')).join('.');
-  }
-
-  static unescape(path: EscapedPropPath): EntityPropPath {
-    const parts: string[] = [];
-    let current = '';
-
-    for (let i = 0; i < path.length; i++) {
-      if (path[i] === '\\') {
-        invariant(i + 1 < path.length && (path[i + 1] === '.' || path[i + 1] === '\\'), 'Malformed escaping.');
-        current = current + path[i + 1];
-        i++;
-      } else if (path[i] === '.') {
-        parts.push(current);
-        current = '';
-      } else {
-        current += path[i];
-      }
-    }
-    parts.push(current);
-
-    return parts;
-  }
-};
-export type EscapedPropPath = Schema.Schema.Type<typeof EscapedPropPath>;

@@ -1,5 +1,55 @@
 # @dxos/plugin-uml
 
+## 0.16.0
+
+### Patch Changes
+
+- Updated dependencies [4be32be]
+- Updated dependencies [67f3f9f]
+- Updated dependencies [dc7785a]
+- Updated dependencies [2f76f26]
+  - @dxos/react-ui-canvas@0.16.0
+  - @dxos/plugin-canvas@0.16.0
+  - @dxos/react-ui@0.16.0
+  - @dxos/plugin-illustrator@0.16.0
+  - @dxos/app-framework@0.16.0
+  - @dxos/app-toolkit@0.16.0
+  - @dxos/compute@0.16.0
+  - @dxos/util@0.16.0
+  - @dxos/ui-theme@0.16.0
+
+## 0.15.0
+
+### Patch Changes
+
+- Updated dependencies [0a55936]
+- Updated dependencies [3d151fc]
+- Updated dependencies [311d611]
+- Updated dependencies [008b18c]
+- Updated dependencies [ab27b41]
+- Updated dependencies [94ec06d]
+- Updated dependencies [647b4bd]
+- Updated dependencies [b82150a]
+- Updated dependencies [0d81167]
+- Updated dependencies [71fc002]
+- Updated dependencies [1b33a84]
+- Updated dependencies [d250ed2]
+- Updated dependencies [55bdf55]
+- Updated dependencies [94fb343]
+- Updated dependencies [098a536]
+- Updated dependencies [25af912]
+- Updated dependencies [8190cc5]
+- Updated dependencies [60ef4ec]
+  - @dxos/react-ui-canvas@0.15.0
+  - @dxos/plugin-canvas@0.15.0
+  - @dxos/react-ui@0.15.0
+  - @dxos/compute@0.15.0
+  - @dxos/plugin-illustrator@0.15.0
+  - @dxos/app-framework@0.15.0
+  - @dxos/app-toolkit@0.15.0
+  - @dxos/util@0.15.0
+  - @dxos/ui-theme@0.15.0
+
 ## 0.14.0
 
 ### Patch Changes

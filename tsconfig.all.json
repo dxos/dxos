@@ -43,6 +43,9 @@
       "path": "packages/common/async/tsconfig.json"
     },
     {
+      "path": "tools/autocue/tsconfig.json"
+    },
+    {
       "path": "packages/common/av/tsconfig.json"
     },
     {
@@ -149,6 +152,15 @@
     },
     {
       "path": "packages/common/display-name/tsconfig.json"
+    },
+    {
+      "path": "packages/devtools/drawing/tsconfig.json"
+    },
+    {
+      "path": "packages/apps/drawing-app/tsconfig.json"
+    },
+    {
+      "path": "packages/devtools/drawing/site/tsconfig.json"
     },
     {
       "path": "tools/dx-tools/tsconfig.json"
@@ -268,9 +280,6 @@
       "path": "packages/common/i18n/tsconfig.json"
     },
     {
-      "path": "tools/ident/tsconfig.json"
-    },
-    {
       "path": "packages/core/echo/index-core/tsconfig.json"
     },
     {
@@ -352,6 +361,9 @@
       "path": "packages/e2e/perf-harness/tsconfig.json"
     },
     {
+      "path": "packages/common/permission/tsconfig.json"
+    },
+    {
       "path": "packages/common/phoenix/tsconfig.json"
     },
     {
@@ -421,10 +433,10 @@
       "path": "packages/plugins/plugin-code/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-commerce/tsconfig.json"
+      "path": "packages/plugins/plugin-code-graph/tsconfig.json"
     },
     {
-      "path": "packages/plugins/plugin-computer/tsconfig.json"
+      "path": "packages/plugins/plugin-commerce/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-conductor/tsconfig.json"
@@ -446,6 +458,9 @@
     },
     {
       "path": "packages/plugins/plugin-deepseek/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-dev-shell/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-devtools/tsconfig.json"
@@ -547,6 +562,9 @@
       "path": "packages/plugins/plugin-meeting/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-meeting-recorder/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-mermaid/tsconfig.json"
     },
     {
@@ -593,6 +611,9 @@
     },
     {
       "path": "packages/plugins/plugin-qa/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-recorder/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-registry/tsconfig.json"
@@ -647,6 +668,9 @@
     },
     {
       "path": "packages/plugins/plugin-status-bar/tsconfig.json"
+    },
+    {
+      "path": "packages/plugins/plugin-ste/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-stream-deck/tsconfig.json"
@@ -850,6 +874,9 @@
       "path": "packages/ui/react-ui-pickers/tsconfig.json"
     },
     {
+      "path": "packages/ui/react-ui-plot/tsconfig.json"
+    },
+    {
       "path": "packages/ui/react-ui-query/tsconfig.json"
     },
     {
@@ -902,6 +929,9 @@
     },
     {
       "path": "packages/ui/solid-ui-geo/tsconfig.json"
+    },
+    {
+      "path": "packages/core/compute/sparql-sqlite/tsconfig.json"
     },
     {
       "path": "packages/common/sql-sqlite/tsconfig.json"

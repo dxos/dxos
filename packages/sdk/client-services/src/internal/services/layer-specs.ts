@@ -102,6 +102,7 @@ import { valueEncoding } from '../pipeline/index.ts';
 import { SpaceManagerLayer, SpaceManagerService } from '../space/index.ts';
 import { DataSpaceManagerLayer, SigningContextProviderLayer, SpacesServiceLayer } from '../spaces/index.ts';
 import { SqlServiceLayer } from '../sql/index.ts';
+import { storageWatchdogLayer } from '../storage/index.ts';
 import { SystemServiceLayer } from '../system/index.ts';
 import { TransportFactoryService } from './client-platform.ts';
 import {
@@ -290,6 +291,11 @@ export const StorageMigrationSpec = LayerSpec.make(
   () => storageMigrationLayer,
 );
 
+export const StorageWatchdogSpec = LayerSpec.make(
+  { affinity: 'application', requires: [SqlClient.SqlClient, Hook.Controller], provides: [], eager: true },
+  () => storageWatchdogLayer(),
+);
+
 export const StorageLifecycleSpec = LayerSpec.make(
   {
     affinity: 'application',
@@ -421,7 +427,7 @@ export const EchoHostSpec = (options: ServiceStackServices) =>
   LayerSpec.make(
     {
       affinity: 'application',
-      requires: [IdentityContract.ManagerService, SpaceManagerService, SqlClient.SqlClient],
+      requires: [Hook.Controller, IdentityContract.ManagerService, SpaceManagerService, SqlClient.SqlClient],
       provides: [EchoHostService],
     },
     () =>
@@ -594,6 +600,7 @@ export const IdentityServiceSpec = LayerSpec.make(
       KeyringApiService,
       SpacesContract.ManagerService,
       SqlClient.SqlClient,
+      EchoHostService,
     ],
     provides: [IdentityService.Tag],
   },
@@ -855,6 +862,7 @@ export const clientServiceSpecs = (options: ServiceStackServices): LayerSpec.Lay
   HypercoreStoreSpec,
   StorageMigrationSpec,
   StorageLifecycleSpec,
+  StorageWatchdogSpec,
 
   StackReadinessSpec,
   SwarmNetworkManagerSpec(options),
