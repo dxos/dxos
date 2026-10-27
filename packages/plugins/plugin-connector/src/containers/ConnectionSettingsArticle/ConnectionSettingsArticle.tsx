@@ -98,7 +98,7 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
   );
 };
 
-/** One connection row; resolves the access-token ref reactively for its label. */
+/** One connection row; resolves the access-token ref reactively for its label and account. */
 const ConnectionRow = ({
   connection,
   onSelect,
@@ -107,15 +107,22 @@ const ConnectionRow = ({
   onSelect: (connection: Connection.Connection) => void;
 }) => {
   const [accessToken] = useObject(connection.accessToken);
-  const label =
-    connection.name ??
-    (accessToken
-      ? `${accessToken.source}${accessToken.account ? ` · ${accessToken.account}` : ''}`
-      : (connection.connectorId ?? connection.id));
+  const label = connection.name ?? accessToken?.source ?? connection.connectorId ?? connection.id;
+  const description = [accessToken?.account, accessToken?.source]
+    .filter((part): part is string => Boolean(part) && part !== label)
+    .join(' · ');
 
   return (
-    <Listbox.Item id={connection.id} classNames='cursor-pointer' onClick={() => onSelect(connection)}>
-      <span className='truncate'>{label}</span>
+    <Listbox.Item
+      id={connection.id}
+      highlightOnHover={false}
+      classNames='dx-hover cursor-pointer'
+      onClick={() => onSelect(connection)}
+      data-testid='connectorPlugin.connectionRow'
+    >
+      <Listbox.ItemIcon icon='ph--plugs-connected--regular' />
+      <Listbox.ItemText>{label}</Listbox.ItemText>
+      {description && <Listbox.ItemDescription>{description}</Listbox.ItemDescription>}
     </Listbox.Item>
   );
 };
