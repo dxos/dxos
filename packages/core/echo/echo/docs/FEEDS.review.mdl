@@ -20,13 +20,19 @@ These parts are missing:
 
 Merge and close are a follow-up [D-2].
 
-Of 25 items: 4 done, 0 untested, 7 partial, 1 diverged, 13 missing. These three findings are the most
+Of 27 items: 3 done, 0 untested, 7 partial, 3 diverged, 14 missing. These four findings are the most
 important:
+
+- **The code uses the earlier form of the branch.** It stores the branch and the fork point in foreign
+  keys, with the id of the first item as the branch id. The spec now uses `@meta.feed`, the block id of
+  the base block, and the predecessor of the block as the fork point ([D-27] to [D-39]).
 
 - **The host does not check the branch of an update.** The client refuses an update that moves an item
   to a different branch [F-1.3]. A block from another client or from sync is not checked.
+
 - **Rewind is still a separate mechanism.** [F-1.5] tells that a rewind is a branch and a removal. The
   code still uses `Feed.rewindFrom` and `PARENT_KEY`.
+
 - **A tombstone of a branch item has no branch.** On a feed that indexes only the main branch, the
   index keeps the tombstone of a removed branch item as a deleted row of the main branch. A default read
   does not show it, but a read with `deleted: 'include'` does.
@@ -47,14 +53,15 @@ verdict F-1.1: A Feed is an append log of ECHO objects.
 ```
 
 ```mdl
-verdict F-1.2: Each item states its branch, a first item flags its fork point, and Feed.readBranch reads a branch with its ancestors.
-  status: done
+verdict F-1.2: Branches work, but in the earlier form: foreign keys and item ids, not meta fields and block ids.
+  status: diverged
   evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#startBranch, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#readBranch, github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#append]
   tests: [github:dxos/dxos/packages/core/echo/echo/src/Feed.test.ts, github:dxos/dxos/packages/core/echo/echo-client-e2e/src/feed-branch.test.ts]
-  walkthrough:
-    - Feed.append with fork makes the first item the first item of a new branch and puts all the items in it. github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#append
-    - startBranch writes the branch key and the fork key on the first item. github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#startBranch
-    - readBranch gives the items of the ancestors up to each fork point, and then the items of the branch. github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#readBranch
+  note: |
+    The code stores the branch in the `org.dxos.key.feed-branch` key, with the id of the first item as
+    the branch id, and the fork point in the `org.dxos.key.feed-fork` key. The spec now puts both in
+    `@meta.feed` [D-29], uses the block id of the base block as the branch id [D-27], and takes the fork
+    point from the predecessor of the block [D-28].
 ```
 
 ```mdl
@@ -228,6 +235,19 @@ verdict Trajectory.Event: Not on main. #13782 is not merged.
 verdict threadOpen: Not on main. #13782 is not merged.
   status: missing
   note: This checkout has no `threadOpen`, `threadMerge`, `threadClose` or `threadWait` event.
+```
+
+```mdl
+verdict BranchId: The code has a BranchId, but it is the item id, not a branded block id.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/core/echo/echo/src/Feed.ts#BranchId]
+  note: '`Feed.BranchId` is an alias of `EntityId`, and its value is the id of the first item of the branch.'
+```
+
+```mdl
+verdict FeedItemMeta: The meta of an item has no feed section.
+  status: missing
+  note: The code stores the branch and the fork point in foreign keys of `@meta.keys`.
 ```
 
 ```mdl
