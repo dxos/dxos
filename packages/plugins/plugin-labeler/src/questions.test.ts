@@ -11,6 +11,7 @@ import {
   URGENCY_SCALE,
   URGENT_SCORE,
   labelQuestions,
+  toPriority,
   toVerdict,
 } from './questions.ts';
 
@@ -75,5 +76,16 @@ describe('labeler questions', () => {
     expect(toVerdict({ ...base, urgency: rating(URGENT_SCORE) }).urgent).toBe(true);
     // A top-of-scale rating the model is unsure of is not urgent.
     expect(toVerdict({ ...base, urgency: rating(2, 0.1) }).urgent).toBe(false);
+  });
+});
+
+describe('toPriority', () => {
+  test('puts every message in exactly one band', ({ expect }) => {
+    expect(toPriority(2, true, true)).toBe('urgent');
+    expect(toPriority(0.95, false, false)).toBe('high');
+    expect(toPriority(0.6, true, false)).toBe('high');
+    expect(toPriority(0.2, true, false)).toBe('normal');
+    expect(toPriority(0.6, false, false)).toBe('normal');
+    expect(toPriority(0.1, false, false)).toBe('low');
   });
 });

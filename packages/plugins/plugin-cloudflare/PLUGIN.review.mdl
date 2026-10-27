@@ -1,0 +1,62 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-cloudflare/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: CloudflarePlugin
+
+The connector is built as specified: one lazily loaded module contributes a `ConnectorEntry` on
+`ConnectorEvents.Start` with the `cloudflare.com` source, `OAuthProvider.CLOUDFLARE` and the scope list
+from `GET /oauth/scopes`; `onTokenCreated` labels the token from `/user` with an `/accounts` fallback and
+`testConnection` maps failures to `ConnectionTestError`. What is weak is testing: `cloudflare-api.test.ts`
+covers only the HTTP helpers (`fetchUser`, `fetchAccounts`, a 403 failing as an HTTP error), never the
+connector hooks themselves, so none of the three acceptance tests runs end to end.
+
+Of 4 items: 0 done, 1 untested, 2 partial, 0 diverged, 1 missing.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict CloudflareConnector: The connector entry, OAuth scopes, label hook and connection test are implemented; no test drives the hooks.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-cloudflare/src/capabilities/index.ts#Connector, github:dxos/dxos/packages/plugins/plugin-cloudflare/src/capabilities/connector.ts, github:dxos/dxos/packages/plugins/plugin-cloudflare/src/constants.ts#CLOUDFLARE_OAUTH_SCOPES, github:dxos/dxos/packages/plugins/plugin-cloudflare/src/services/cloudflare-api.ts#fetchUser, github:dxos/dxos/packages/plugins/plugin-cloudflare/src/services/cloudflare-api.ts#fetchAccounts]
+  walkthrough:
+    - The lazy module activates on ConnectorEvents.Start and provides the Connector capability. github:dxos/dxos/packages/plugins/plugin-cloudflare/src/capabilities/index.ts#Connector
+    - The module contributes the entry with OAuth provider, scopes, onTokenCreated (email, username, then first account name, under orDie) and testConnection (GET /accounts mapped to ConnectionTestError). github:dxos/dxos/packages/plugins/plugin-cloudflare/src/capabilities/connector.ts
+    - The scope ids are the GET /oauth/scopes names, without offline_access. github:dxos/dxos/packages/plugins/plugin-cloudflare/src/constants.ts#CLOUDFLARE_OAUTH_SCOPES
+    - The v4 helpers send the bearer token, unwrap the envelope and retry 429/5xx. github:dxos/dxos/packages/plugins/plugin-cloudflare/src/services/cloudflare-api.ts#fetchUser
+  note: |
+    Matches the spec, including the early return when `accessToken.account` is already set. The only test
+    (`cloudflare-api.test.ts`) exercises the HTTP helpers, not `onTokenCreated` or `testConnection`.
+```
+
+```mdl
+verdict T-1: A test checks fetchUser keeps the email, but none runs onTokenCreated and checks accessToken.account.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-cloudflare/src/capabilities/connector.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-cloudflare/src/services/cloudflare-api.test.ts]
+  note: '`fetchUser keeps the email` covers the /user decode step only; the write to `accessToken.account` is not exercised.'
+```
+
+```mdl
+verdict T-2: A test checks that /user answering 403 fails as an HTTP error; the fallback to the account name is not tested.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-cloudflare/src/capabilities/connector.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-cloudflare/src/services/cloudflare-api.test.ts]
+  note: The 403 test covers the precondition of the fallback; nothing runs `onTokenCreated` to check it then uses the first name from `/accounts`.
+```
+
+```mdl
+verdict T-3: No test runs testConnection against a 401.
+  status: missing
+  evidence: [github:dxos/dxos/packages/plugins/plugin-cloudflare/src/capabilities/connector.ts]
+  note: '`testConnection` maps errors to `ConnectionTestError`, but `cloudflare-api.test.ts` is the only test file and it never calls the connector hooks. QA-1 is a manual run.'
+```

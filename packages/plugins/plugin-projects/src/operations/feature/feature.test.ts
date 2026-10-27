@@ -20,6 +20,7 @@ import createShowcase from './create-showcase.ts';
 import create from './create.ts';
 import getFeatures from './get-features.ts';
 import importLinks from './import-links.ts';
+import importSpec from './import-spec.ts';
 import linkTask from './link-task.ts';
 import removeDependency from './remove-dependency.ts';
 import update from './update.ts';
@@ -56,22 +57,75 @@ describe('FeatureOperation.Create', () => {
 });
 
 describe('FeatureOperation.Update', () => {
-  it.effect('sets the fields given, replacing the subfeature list, and keeps the rest', () =>
+  it.effect('sets the fields given, replacing the requirement list, and keeps the rest', () =>
     Effect.gen(function* () {
       const sync = yield* Database.add(Feature.make({ name: 'Sync', status: 'planned', description: 'Kept.' }));
       yield* update.handler({
         feature: ref(sync),
         status: 'operational',
         specs: ['a.mdl#F-1'],
-        subfeatures: [{ name: 'Gmail', status: 'prototype' }],
+        requirements: [{ id: 'F-1.1', text: 'Mail arrives within a minute.' }],
       });
       expect(sync).toMatchObject({
         name: 'Sync',
         description: 'Kept.',
         status: 'operational',
         specs: ['a.mdl#F-1'],
-        subfeatures: [{ name: 'Gmail', status: 'prototype' }],
+        requirements: [{ id: 'F-1.1', text: 'Mail arrives within a minute.' }],
       });
+    }).pipe(Effect.provide(testLayer())),
+  );
+
+  it.effect('moves a feature under a parent, off its project, and refuses its own subfeature', () =>
+    Effect.gen(function* () {
+      const project = yield* Database.add(Project.make({ name: 'Inbox' }));
+      const sync = yield* Database.add(Feature.make({ name: 'Sync', status: 'planned', project: ref(project) }));
+      const gmail = yield* Database.add(Feature.make({ name: 'Gmail', status: 'planned', project: ref(project) }));
+      yield* update.handler({ feature: ref(gmail), parent: ref(sync) });
+      expect(gmail.parent?.target?.id).toBe(sync.id);
+      expect(gmail.project).toBeUndefined();
+
+      const exit = yield* Effect.exit(update.handler({ feature: ref(sync), parent: ref(gmail) }));
+      expect(Exit.isFailure(exit)).toBe(true);
+      expect(sync.parent).toBeUndefined();
+    }).pipe(Effect.provide(testLayer())),
+  );
+});
+
+describe('FeatureOperation.ImportSpec', () => {
+  const spec = (requirement: string) => `
+\`\`\`mdl
+feat F-1: Sync
+  Mail arrives without a refresh.
+  req F-1.1: ${requirement}
+\`\`\`
+`;
+
+  it.effect('creates a feature per feat block and updates its requirements on a second import', () =>
+    Effect.gen(function* () {
+      const project = yield* Database.add(Project.make({ name: 'Inbox' }));
+      const first = yield* importSpec.handler({
+        path: 'packages/a/PLUGIN.mdl',
+        text: spec('New mail shows within a minute.'),
+        project: ref(project),
+      });
+      expect(first.created).toHaveLength(1);
+      const [feature] = yield* Database.query(Filter.type(Feature.Feature)).run;
+      expect(feature).toMatchObject({
+        name: 'Sync',
+        description: 'Mail arrives without a refresh.',
+        status: 'planned',
+        specs: ['packages/a/PLUGIN.mdl#F-1'],
+        requirements: [{ id: 'F-1.1', text: 'New mail shows within a minute.' }],
+      });
+      expect(feature.project?.target?.id).toBe(project.id);
+
+      const second = yield* importSpec.handler({
+        path: 'packages/a/PLUGIN.mdl',
+        text: spec('New mail shows within ten seconds.'),
+      });
+      expect(second).toEqual({ created: [], updated: [feature.id] });
+      expect(feature.requirements).toEqual([{ id: 'F-1.1', text: 'New mail shows within ten seconds.' }]);
     }).pipe(Effect.provide(testLayer())),
   );
 });
@@ -115,7 +169,7 @@ describe('FeatureOperation.RemoveDependency', () => {
 describe('FeatureOperation.LinkTask', () => {
   it.effect('links a task once however often it is called', () =>
     Effect.gen(function* () {
-      const compose = yield* Database.add(Feature.make({ name: 'Compose', status: 'in-progress' }));
+      const compose = yield* Database.add(Feature.make({ name: 'Compose', status: 'planned' }));
       const task = yield* Database.add(Task.make({ title: 'Send through Gmail', status: 'started' }));
       yield* linkTask.handler({ task: ref(task), feature: ref(compose) });
       yield* linkTask.handler({ task: ref(task), feature: ref(compose) });
@@ -186,11 +240,12 @@ describe('FeatureOperation.GetFeatures', () => {
       const compose = yield* Database.add(
         Feature.make({
           name: 'Compose',
-          status: 'in-progress',
-          subfeatures: [{ name: 'Drafts', status: 'planned' }],
+          status: 'planned',
+          requirements: [{ text: 'Replies thread under the original.' }],
           project: ref(project),
         }),
       );
+      const drafts = yield* Database.add(Feature.make({ name: 'Drafts', status: 'planned', parent: ref(compose) }));
       const sync = yield* Database.add(Feature.make({ name: 'Sync', status: 'prototype', project: ref(project) }));
       yield* Database.add(Feature.make({ name: 'Elsewhere', status: 'planned' }));
       const task = yield* Database.add(Task.make({ title: 'Send through Gmail', status: 'started' }));
@@ -205,9 +260,11 @@ describe('FeatureOperation.GetFeatures', () => {
       yield* Database.flush();
 
       const result = yield* getFeatures.handler({ project: ref(project) });
-      expect(result.features.map(({ name }) => name)).toEqual(['Compose', 'Sync']);
+      expect(result.features.map(({ name }) => name)).toEqual(['Compose', 'Drafts', 'Sync']);
+      expect(result.features[1].parent).toBe(compose.id);
+      expect(drafts.parent?.target?.id).toBe(compose.id);
       expect(result.features[0]).toMatchObject({
-        subfeatures: [{ name: 'Drafts', status: 'planned' }],
+        requirements: [{ text: 'Replies thread under the original.' }],
         dependsOn: [sync.id],
         tasks: [{ id: task.id, title: 'Send through Gmail', status: 'started' }],
         showcases: [{ id: showcase.id, name: 'Sending a reply' }],

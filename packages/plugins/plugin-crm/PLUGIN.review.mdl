@@ -1,0 +1,446 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-crm/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: plugin-crm
+
+The deterministic core is solid and tested. `ProcessMailbox` sends each sender through
+`@dxos/extractor-lib`'s `buildContactFromActor`, using the space's identity index. It records
+provenance with `Mailbox.recordExtraction` and advances a tagged feed `Cursor`.
+`ResearchPerson` and `ResearchOrganization` render the section template, parent the document to the
+subject and upsert a `ProfileOf` relation. `process-mailbox.test.ts` and `research.test.ts` cover
+T-1 to T-3 end to end. The CRM nav group and its type nodes exist and open plugin-space's
+`TypeArticle`.
+
+The agentic half is thin. The skill instructions do not describe the Person, Organization and
+Message branches (F-1.2, F-1.3). They do not mention free-mail domains (F-3.5) or list registered
+research sources (F-7.3). The skill declares no dependency on the web-search, database or markdown
+skills. The skill tests are `it.effect.skip` with no assertions, so T-4 to T-6 have no automation.
+The biggest divergence is `attachImage`. It reads the image service URL from an input override or
+`DX_CRM_IMAGE_SERVICE_URL`, not from `@dxos/config`, so an agent call without the override fails. Every
+failure is one `AttachImageError`, not a `ConfigMissing`, `FetchFailed` or other tagged error, and no
+test runs the operation. `ContactExtract` does not exist; extraction moved to extractor-lib.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict ContactExtract: No ContactExtract type exists; extraction lives in extractor-lib.
+  status: missing
+  evidence: [github:dxos/dxos/packages/core/compute/extractor-lib/src/contact.ts#buildContactFromActor, github:dxos/dxos/packages/core/compute/extractor-lib/src/domain.ts#isFreeMailDomain]
+  note: Searched dxos for `ContactExtract`; nothing. `buildContactFromActor` builds a Person straight from the sender, and plugin-crm has no signature extractor (consistent with F-2.4).
+```
+
+```mdl
+verdict ProfileOf: The relation has the declared fields but a different typename, and lives in @dxos/types.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/ProfileOf.ts#ProfileOf]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/research.test.ts]
+  note: 'Typename is `org.dxos.relation.plugin-crm.profileOf`, not `...profile-of`. Source and target are `Obj.Unknown`, so the Document to Person|Organization constraint is not enforced by the schema.'
+```
+
+```mdl
+verdict ResearchSource: The interface has id and description, but contributes operations and tool ids, not ToolDefinitions.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/sources/research-source.ts#ResearchSource]
+  note: '`tools` is `ReadonlyArray<string>` (native tool ids) and an optional `operations` list replaces `ToolDefinition[]`. No test.'
+```
+
+```mdl
+verdict attachImage: The operation re-hosts an image and writes subject.image, but with one error type and no Config read.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/types/CrmOperation.ts#AttachImage, github:dxos/dxos/packages/plugins/plugin-crm/src/operations/attach-image.ts#attachImageToSubject, github:dxos/dxos/packages/plugins/plugin-crm/src/operations/attach-image.ts#AttachImageError]
+  walkthrough:
+    - The operation declares subject, url, an optional imageServiceUrl override and imageUrl out. github:dxos/dxos/packages/plugins/plugin-crm/src/types/CrmOperation.ts#AttachImage
+    - The shared path validates the URL, downloads with SSRF and size caps, checks the content type, uploads to /thumbnail and writes image. github:dxos/dxos/packages/plugins/plugin-crm/src/operations/attach-image.ts#attachImageToSubject
+  note: Content types match (SVG rejected). Every failure is an `AttachImageError` with a message, not the four tagged errors. The service URL comes from the input or `DX_CRM_IMAGE_SERVICE_URL`, not `Config`. No test runs it.
+```
+
+```mdl
+verdict processMailbox: Cursored extraction over the mailbox feed with optional profile scaffolding.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/types/CrmOperation.ts#ProcessMailbox, github:dxos/dxos/packages/plugins/plugin-crm/src/operations/process-mailbox.ts#handler, github:dxos/dxos/packages/plugins/plugin-crm/src/operations/process-mailbox.ts#findOrCreateCursor]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/process-mailbox.test.ts]
+  walkthrough:
+    - The operation declares mailbox, pageSize, research and the three counts. github:dxos/dxos/packages/plugins/plugin-crm/src/types/CrmOperation.ts#ProcessMailbox
+    - The handler finds or creates the tagged cursor. github:dxos/dxos/packages/plugins/plugin-crm/src/operations/process-mailbox.ts#findOrCreateCursor
+    - It builds contacts page by page, records extraction, optionally researches each new Person and advances the cursor. github:dxos/dxos/packages/plugins/plugin-crm/src/operations/process-mailbox.ts#handler
+```
+
+```mdl
+verdict researchPerson: Scaffolds or refreshes a Person's profile and its ProfileOf relation.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/types/CrmOperation.ts#ResearchPerson, github:dxos/dxos/packages/plugins/plugin-crm/src/operations/research-person.ts#handler, github:dxos/dxos/packages/plugins/plugin-crm/src/operations/research.ts#upsertProfile]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/research.test.ts]
+```
+
+```mdl
+verdict researchOrganization: Scaffolds or refreshes an Organization's profile, listing its known people.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/types/CrmOperation.ts#ResearchOrganization, github:dxos/dxos/packages/plugins/plugin-crm/src/operations/research-organization.ts#handler, github:dxos/dxos/packages/plugins/plugin-crm/src/operations/research.ts#organizationProfileContent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/research.test.ts]
+```
+
+```mdl
+verdict ImageService: The edge-client Image service posts the file to /thumbnail and returns a url.
+  status: done
+  evidence: [github:dxos/dxos/packages/core/mesh/edge-client/src/service/Image.ts#thumbnail]
+  tests: [github:dxos/dxos/packages/core/mesh/edge-client/src/service/edge-service.test.ts]
+```
+
+```mdl
+verdict AssistantToolkit: The toolkit skills exist, but the CRM skill declares no dependency on them.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/skills/crm/CrmSkill.ts#makeCrmSkill]
+  note: '`Skill.make` lists only the CRM operations and source tools; web-search, database and markdown are loaded only when a caller adds them (the skipped `skill.test.ts` does so by hand).'
+```
+
+```mdl
+verdict F-1.1: The instructions say a DXN subject loads with the database tools.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/skills/crm/CrmSkill.ts#makeCrmSkill]
+  note: The skill tests are skipped and assert nothing.
+```
+
+```mdl
+verdict F-1.2: The instructions do not describe Person, Organization and Message branches.
+  status: missing
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/skills/crm/CrmSkill.ts#makeCrmSkill]
+  note: They cover a DXN or a bare email only.
+```
+
+```mdl
+verdict F-1.3: Nothing tells the agent to extract a contact from a Message's signature.
+  status: missing
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/skills/crm/CrmSkill.ts#makeCrmSkill]
+  note: Deterministic extraction exists only for whole mailboxes (`ProcessMailbox`), from the sender, not the signature blocks.
+```
+
+```mdl
+verdict F-1.4: ResearchPerson seeds the profile from name, emails, job title and organization.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/research.ts#personProfileContent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/research.test.ts]
+```
+
+```mdl
+verdict F-1.5: ResearchOrganization seeds the profile from name and website.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/research.ts#organizationProfileContent]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/research.test.ts]
+```
+
+```mdl
+verdict F-2.1: ProcessMailbox calls buildContactFromActor with a run-scoped identity index.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/process-mailbox.ts#handler]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/process-mailbox.test.ts]
+```
+
+```mdl
+verdict F-2.2: A repeat sender never yields a second Person.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/process-mailbox.ts#handler, github:dxos/dxos/packages/core/compute/extractor-lib/src/contact.ts#buildContactFromActor]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/process-mailbox.test.ts]
+```
+
+```mdl
+verdict F-2.3: Provenance is recorded with Mailbox.recordExtraction.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/process-mailbox.ts#handler]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/process-mailbox.test.ts]
+```
+
+```mdl
+verdict F-2.4: plugin-crm has no extraction heuristics of its own.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/process-mailbox.ts#handler]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/process-mailbox.test.ts]
+```
+
+```mdl
+verdict F-3.1: The instructions tell the agent to match Persons by email before creating.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/skills/crm/CrmSkill.ts#makeCrmSkill]
+  note: No running test checks the agent queries first.
+```
+
+```mdl
+verdict F-3.2: The agent creates a Person when none matches, through the database tools.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/skills/crm/CrmSkill.ts#makeCrmSkill]
+  note: Implied by "query before creating"; no running test.
+```
+
+```mdl
+verdict F-3.3: The instructions forbid overwriting existing fields with blanks.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/skills/crm/CrmSkill.ts#makeCrmSkill]
+  note: No running test.
+```
+
+```mdl
+verdict F-3.4: Organizations are matched by website domain, not by name.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/skills/crm/CrmSkill.ts#makeCrmSkill]
+  note: The instructions mention website domain only; name matching is not described. No running test.
+```
+
+```mdl
+verdict F-3.5: Only the deterministic path skips free-mail domains; the skill says nothing.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/compute/extractor-lib/src/contact.ts#buildContactFromActor, github:dxos/dxos/packages/plugins/plugin-crm/src/skills/crm/CrmSkill.ts#makeCrmSkill]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/process-mailbox.test.ts]
+  note: '`buildContactFromActor` skips free-mail domains, and the ProcessMailbox test checks the freemail sender gets no Person. The skill instructions never mention free mail.'
+```
+
+```mdl
+verdict F-3.6: The deterministic path links Person.organization; the skill does not ask the agent to.
+  status: partial
+  evidence: [github:dxos/dxos/packages/core/compute/extractor-lib/src/contact.ts#buildContactFromActor]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/process-mailbox.test.ts]
+  note: The ProcessMailbox test checks each corporate Person has an organization; the instructions do not mention the link.
+```
+
+```mdl
+verdict F-4.1: The research operations render the section template, and the skill says to extend it.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/research.ts#renderProfile, github:dxos/dxos/packages/plugins/plugin-crm/src/skills/crm/CrmSkill.ts#makeCrmSkill]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/research.test.ts]
+```
+
+```mdl
+verdict F-4.2: A re-run refreshes lastResearchedAt and keeps the body.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/research.ts#upsertProfile]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/research.test.ts]
+```
+
+```mdl
+verdict F-4.3: The Notes section is an empty heading; nothing records disambiguation hints.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/research.ts#personProfileContent]
+  note: The scaffold leaves Notes empty, and the instructions do not ask for free-mail or ambiguous-name notes.
+```
+
+```mdl
+verdict F-4.4: The instructions ask the agent to list sources and mirror them; nothing does it deterministically.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/skills/crm/CrmSkill.ts#makeCrmSkill, github:dxos/dxos/packages/plugins/plugin-crm/src/operations/research.ts#upsertProfile]
+  note: The relation is created with `sources: []`; mirroring is left to the agent, and no running test checks it.
+```
+
+```mdl
+verdict F-5.1: The schema capability registers ProfileOf.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/capabilities/schema.ts]
+  note: No plugin test checks the registration.
+```
+
+```mdl
+verdict F-5.2: A Person's profile gets a ProfileOf with source Document and target Person.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/research.ts#upsertProfile]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/research.test.ts]
+```
+
+```mdl
+verdict F-5.3: Nothing adds a second ProfileOf for a Person profile that covers an Organization.
+  status: missing
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/research.ts#upsertProfile]
+  note: '`upsertProfile` links one subject only, and the instructions do not ask the agent to add the Organization relation.'
+```
+
+```mdl
+verdict F-5.4: The relation carries sources, lastResearchedAt and summary.
+  status: done
+  evidence: [github:dxos/dxos/packages/sdk/types/src/types/ProfileOf.ts#ProfileOf]
+  tests: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/research.test.ts]
+```
+
+```mdl
+verdict F-6.1: attachImage uploads to /thumbnail and writes subject.image.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/attach-image.ts#attachImageToSubject]
+  note: '`enrich-images.test.ts` covers only no-candidate paths; nothing runs a successful attach.'
+```
+
+```mdl
+verdict F-6.2: The service URL comes from the input or an env var, not @dxos/config.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/attach-image.ts#attachImageToSubject, github:dxos/dxos/packages/plugins/plugin-crm/src/capabilities/mailbox-action.ts]
+  note: The handler has no Config access; only the EnrichImages actions resolve the URL from client config and pass it in. An agent calling attachImage without the override fails unless `DX_CRM_IMAGE_SERVICE_URL` is set.
+```
+
+```mdl
+verdict F-6.3: A missing URL fails with a generic AttachImageError, not ConfigMissing.
+  status: partial
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/attach-image.ts#AttachImageError]
+  note: The failure is structured and non-fatal for the agent, but it carries no `ConfigMissing` tag. No test.
+```
+
+```mdl
+verdict F-6.4: Upload failures return an error before subject.image is written.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/attach-image.ts#attachImageToSubject]
+  note: The write is the last step, after every check. No test.
+```
+
+```mdl
+verdict F-6.5: attachImage does no candidate search of its own.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/attach-image.ts#attachImageToSubject]
+  note: Candidate derivation lives in the separate `EnrichImages` operation. No test of attachImage itself.
+```
+
+```mdl
+verdict F-7.1: ResearchSource is exported from src/sources.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/sources/research-source.ts#ResearchSource]
+  note: A type only; no test uses it.
+```
+
+```mdl
+verdict F-7.2: makeCrmSkill composes the tools of the sources it is given.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/skills/crm/CrmSkill.ts#makeCrmSkill]
+  note: Sources are a parameter defaulting to an empty list; there is no registry to pick them up from. No test passes one.
+```
+
+```mdl
+verdict F-7.3: The instructions do not list registered sources.
+  status: missing
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/skills/crm/CrmSkill.ts#makeCrmSkill]
+  note: The instruction template is static and never interpolates source ids or descriptions.
+```
+
+```mdl
+verdict F-7.4: No ResearchSource ships with the plugin.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/sources/research-source.ts#defaultResearchSources]
+  note: '`defaultResearchSources` is empty; a negative requirement with nothing to test.'
+```
+
+```mdl
+verdict F-8.1: There is no CrmSettings schema.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/capabilities/schema.ts]
+  note: The schema capability registers only `ProfileOf`, and `CrmSettings` appears nowhere. A negative requirement with nothing to test.
+```
+
+```mdl
+verdict F-8.2: attachImage does not read Config.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/attach-image.ts#attachImageToSubject]
+  note: See F-6.2; it reads an input override or an env var.
+```
+
+```mdl
+verdict F-8.3: No API keys are needed.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/image-candidates.ts]
+  note: Image candidates use Gravatar and public logo or favicon services; nothing reads a key. No test checks it.
+```
+
+```mdl
+verdict F-9.1: A CRM group node is contributed per space.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/capabilities/app-graph-builder.ts]
+  note: The group is always contributed; hiding it when empty is left to the nav tree. No test.
+```
+
+```mdl
+verdict F-9.2: Organizations and People nodes appear only when the space has objects of that type.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/capabilities/app-graph-builder.ts#createTypeNode]
+  note: No test.
+```
+
+```mdl
+verdict F-9.3: Type nodes open plugin-space's TypeArticle; plugin-crm has no article surface.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-crm/src/capabilities/app-graph-builder.ts#createTypeNode, github:dxos/dxos/packages/plugins/plugin-space/src/containers/TypeArticle/TypeArticle.tsx#TypeArticle]
+  note: The type node's data is the type, which plugin-space's `typeCollection` surface matches. No test.
+```
+
+```mdl
+verdict F-9.4: TypeArticle switches between masonry and table layouts.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-space/src/containers/TypeArticle/TypeArticle.tsx#TypeArticle]
+  note: It also has a duplicates layout. Only a story renders it.
+```
+
+```mdl
+verdict T-1: The ProcessMailbox test runs the gated extraction over the fixture mailbox.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/process-mailbox.test.ts]
+```
+
+```mdl
+verdict T-2: The ProcessMailbox test re-runs and then runs incrementally.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/process-mailbox.test.ts]
+```
+
+```mdl
+verdict T-3: The research chain test runs ProcessMailbox with research twice.
+  status: done
+  tests: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/process-mailbox.test.ts]
+```
+
+```mdl
+verdict T-4: The skill test for this fixture is skipped and asserts nothing.
+  status: missing
+  note: '`skill.test.ts` is `it.effect.skip` with no expectations; `crm-mailbox.eval.ts` grades a different email (SigNoz).'
+```
+
+```mdl
+verdict T-5: The free-mail skill test is skipped and asserts nothing.
+  status: missing
+  note: '`skill.test.ts` is `it.effect.skip`.'
+```
+
+```mdl
+verdict T-6: The rich-signature skill test is skipped and asserts nothing.
+  status: missing
+  note: '`skill.test.ts` is `it.effect.skip`.'
+```
+
+```mdl
+verdict T-7: No test runs attachImage against a mock image service.
+  status: missing
+  note: '`enrich-images.test.ts` covers only no-candidate paths.'
+```
+
+```mdl
+verdict T-8: No test runs attachImage without a configured URL.
+  status: missing
+  note: Nothing calls attachImage in tests.
+```
+
+```mdl
+verdict T-9: The assistant-e2e graduation suite does not exist.
+  status: missing
+  note: '`packages/core/assistant-e2e` does not exist; the scenario is tagged deferred.'
+```
+
+```mdl
+verdict QA-1: The research tests run create, research and re-run, but not the cleanup.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-crm/src/operations/research.test.ts]
+  note: '`research.test.ts` creates a Person, runs ResearchPerson and checks the idempotent re-run; it does not go through `space.addObject` or delete the objects.'
+```
+
+```mdl
+verdict QA-2: No automation attaches an image to a Person.
+  status: missing
+  note: Nothing runs attachImage.
+```

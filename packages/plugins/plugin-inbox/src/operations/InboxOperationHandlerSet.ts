@@ -38,6 +38,7 @@ export const handlers = OperationHandlerSet.lazy([
   ),
   InboxOperation.SummarizeMailbox.pipe(Operation.lazyHandler(() => import('./summarize/summarize-mailbox.ts'))),
   InboxOperation.ReadEmail.pipe(Operation.lazyHandler(() => import('./read-email.ts'))),
+  InboxOperation.SendReply.pipe(Operation.lazyHandler(() => import('./send-reply.ts'))),
   InboxOperation.RenameFilter.pipe(Operation.lazyHandler(() => import('./rename-filter.ts'))),
   InboxOperation.UnsubscribeSender.pipe(Operation.lazyHandler(() => import('./unsubscribe-sender.ts'))),
 ]);

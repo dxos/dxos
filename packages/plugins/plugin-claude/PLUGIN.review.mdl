@@ -1,0 +1,372 @@
+---
+spec: github:dxos/dxos/packages/plugins/plugin-claude/PLUGIN.mdl
+commit: 04d5fb15a8b5e81ebbabcfc78abdadb969765750
+date: 2026-10-27
+by: agent:claude-code
+---
+
+# Review: ClaudePlugin
+
+Both halves of the plugin are built. The managed-agent half has the two types, seven operations, the API client and
+the skill; its pure parts (config projection, transcript filtering, the retry predicate, `listEvents` ordering,
+foreign keys, credential-name validation) are unit-tested, but no test runs an operation handler, so create, deploy,
+session, vault and credential behaviour is untested. The Claude Code half (ACP agent, worktrees, Composer MCP, MCP
+proxying, the EDGE agent and its credential lending) is covered well by unit tests and by gated e2e suites.
+
+Two divergences matter. The spec's "Set" and "Revoke" credential operations are one `UpdateSessionCredentials`
+operation (with `refresh`), so the skill has seven tools, not eight (F-5.1). And `isRetryable` retries 403 on both
+GET and POST, which F-6.4 and F-6.5 forbid; the code comments justify it as the edge proxy's transient 403.
+
+Of 46 items: 14 done, 24 untested, 4 partial, 3 diverged, 1 missing. The QA tests are judged as automation: QA-1
+(blocked, manual) has none; QA-2 to QA-5 are partly exercised by the gated e2e suites, with the UI steps walked only by
+autocue flows.
+
+## Extensions
+
+| Term      | URI                        |
+| --------- | -------------------------- |
+| `verdict` | `org.dxos.mdl.verdict@1.0` |
+
+## Verdicts
+
+```mdl
+verdict ClaudeManagedAgent: The type has the spec's fields, keeps the agent id as an anthropic.com foreign key, and make applies the defaults.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/types/ClaudeManagedAgent.ts#ClaudeManagedAgent, github:dxos/dxos/packages/plugins/plugin-claude/src/types/ClaudeManagedAgent.ts#make, github:dxos/dxos/packages/plugins/plugin-claude/src/types/ClaudeManagedAgent.ts#getAgentId, github:dxos/dxos/packages/plugins/plugin-claude/src/types/ClaudeManagedAgent.ts#setAgentId]
+  tests: [github:dxos/dxos/packages/plugins/plugin-claude/src/types/keys.test.ts, github:dxos/dxos/packages/plugins/plugin-claude/src/api/mapping.test.ts]
+```
+
+```mdl
+verdict ClaudeAgentSession: The type has the spec's fields with the session id as a foreign key, plus a recorded credentials list.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/types/ClaudeAgentSession.ts#ClaudeAgentSession, github:dxos/dxos/packages/plugins/plugin-claude/src/types/ClaudeAgentSession.ts#make, github:dxos/dxos/packages/plugins/plugin-claude/src/types/ClaudeAgentSession.ts#getSessionId, github:dxos/dxos/packages/plugins/plugin-claude/src/types/ClaudeAgentSession.ts#SessionCredential]
+  tests: [github:dxos/dxos/packages/plugins/plugin-claude/src/types/keys.test.ts, github:dxos/dxos/packages/plugins/plugin-claude/src/types/ClaudeAgentSession.test.ts]
+  note: The type also holds `credentials` (the bound token refs), which the spec does not list; `refresh` uses it.
+```
+
+```mdl
+verdict F-1.1: The schema module contributes both types.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/capabilities/schema.ts]
+  note: No plugin activation test exists in the package.
+```
+
+```mdl
+verdict F-2.1: Create adds a draft agent with the default model and toolset and returns its id, without calling Anthropic.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/types/ClaudeAgentOperation.ts#CreateAgent, github:dxos/dxos/packages/plugins/plugin-claude/src/operations/create-agent.ts]
+  walkthrough:
+    - The operation declares the configuration input and the id output. github:dxos/dxos/packages/plugins/plugin-claude/src/types/ClaudeAgentOperation.ts#CreateAgent
+    - The handler adds ClaudeManagedAgent.make with the given fields to the database. github:dxos/dxos/packages/plugins/plugin-claude/src/operations/create-agent.ts
+  note: `keys.test.ts` builds agents with `make` but no test invokes the handler.
+```
+
+```mdl
+verdict F-2.2: List returns every agent's id, name, model, status, agentId and environmentId.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/types/ClaudeAgentOperation.ts#ListAgents, github:dxos/dxos/packages/plugins/plugin-claude/src/operations/list-agents.ts]
+  note: No test invokes the handler.
+```
+
+```mdl
+verdict F-3.1: Deploy of an undeployed agent POSTs /v1/agents, stamps the foreign key and stores version and status.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/operations/deploy-agent.ts, github:dxos/dxos/packages/plugins/plugin-claude/src/api/client.ts#createAgent, github:dxos/dxos/packages/plugins/plugin-claude/src/types/ClaudeManagedAgent.ts#setAgentId]
+  walkthrough:
+    - The handler projects the configuration and calls createAgent when no key exists. github:dxos/dxos/packages/plugins/plugin-claude/src/operations/deploy-agent.ts
+    - The client POSTs /v1/agents. github:dxos/dxos/packages/plugins/plugin-claude/src/api/client.ts#createAgent
+    - setAgentId stamps the returned id under anthropic.com. github:dxos/dxos/packages/plugins/plugin-claude/src/types/ClaudeManagedAgent.ts#setAgentId
+  note: `keys.test.ts` covers the key stamping; nothing runs the handler or the request.
+```
+
+```mdl
+verdict F-3.2: Redeploy POSTs /v1/agents/{id} with the stored version and replaces the key.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/operations/deploy-agent.ts, github:dxos/dxos/packages/plugins/plugin-claude/src/api/client.ts#updateAgent]
+  note: Key replacement is tested in `keys.test.ts`; the update request with `version` is not.
+```
+
+```mdl
+verdict F-3.3: toAgentConfig omits empty tools, skills and MCP servers.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/api/mapping.ts#toAgentConfig]
+  tests: [github:dxos/dxos/packages/plugins/plugin-claude/src/api/mapping.test.ts]
+```
+
+```mdl
+verdict F-4.1: Start fails with AgentNotDeployedError before any request when the agent has no key.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/operations/start-session.ts, github:dxos/dxos/packages/plugins/plugin-claude/src/errors.ts#AgentNotDeployedError]
+  note: No test invokes the handler.
+```
+
+```mdl
+verdict F-4.2: With no environment id, Start creates one, stores it on the agent and returns provisionedEnvironment true.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/operations/start-session.ts, github:dxos/dxos/packages/plugins/plugin-claude/src/api/client.ts#createEnvironment]
+  note: No test invokes the handler.
+```
+
+```mdl
+verdict F-4.3: Start POSTs /v1/sessions with the message as one user.message initial event and adds a keyed session.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/operations/start-session.ts, github:dxos/dxos/packages/plugins/plugin-claude/src/api/client.ts#createSession]
+  note: No test invokes the handler or `createSession`.
+```
+
+```mdl
+verdict F-4.4: Start always creates a vault, passes it as the only vault_ids entry and stores its id.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/operations/start-session.ts, github:dxos/dxos/packages/plugins/plugin-claude/src/api/client.ts#createVault]
+  note: No test invokes the handler.
+```
+
+```mdl
+verdict F-4.5: Send posts one user.message event and returns without waiting for a reply.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/operations/send-message.ts, github:dxos/dxos/packages/plugins/plugin-claude/src/api/client.ts#sendUserMessage]
+  note: No test invokes the handler.
+```
+
+```mdl
+verdict F-4.6: Get Transcript reads state and events, refreshes status and stopReason, and returns the text turns.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/operations/get-transcript.ts, github:dxos/dxos/packages/plugins/plugin-claude/src/api/mapping.ts#toTranscript]
+  note: `toTranscript` is tested; the handler's status refresh is not.
+```
+
+```mdl
+verdict F-4.7: listEvents reads the last events with order=desc and returns them chronologically; first reads order=asc.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/api/client.ts#listEvents]
+  tests: [github:dxos/dxos/packages/plugins/plugin-claude/src/api/client.test.ts]
+```
+
+```mdl
+verdict F-5.1: The skill is contributed with seven operations, because Set and Revoke are one UpdateSessionCredentials operation.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/skills/ClaudeSkill.ts#make, github:dxos/dxos/packages/plugins/plugin-claude/src/skills/ClaudeSkill.ts#operations, github:dxos/dxos/packages/plugins/plugin-claude/src/capabilities/skill-definition.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-claude/src/skills/ClaudeSkill.test.ts]
+  note: The spec says eight operations. The code has CreateAgent, ListAgents, DeployAgent, StartSession, SendMessage, UpdateSessionCredentials and GetTranscript.
+```
+
+```mdl
+verdict F-5.2: The skill instructions state the create, deploy, run order and that a session runs the deployed copy.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/skills/ClaudeSkill.ts#make]
+  note: `ClaudeSkill.test.ts` checks the tools, not the instructions.
+```
+
+```mdl
+verdict F-6.1: getApiKey reads the anthropic.com credential and the client sends it as x-api-key.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/credentials.ts#getApiKey, github:dxos/dxos/packages/plugins/plugin-claude/src/api/client.ts#request]
+  note: `client.test.ts` mocks the fetch but does not assert the header or the credential lookup.
+```
+
+```mdl
+verdict F-6.3: A missing credential fails with MissingCredentialError, and the skill tells the model to render the integration prompt.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/credentials.ts#getApiKey, github:dxos/dxos/packages/plugins/plugin-claude/src/errors.ts#MissingCredentialError, github:dxos/dxos/packages/plugins/plugin-claude/src/skills/ClaudeSkill.ts#make]
+  note: No test covers the missing-credential path.
+```
+
+```mdl
+verdict F-6.2: A non-2xx response fails with ClaudeAgentApiError carrying the status and body text.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/api/client.ts#request, github:dxos/dxos/packages/plugins/plugin-claude/src/errors.ts#ClaudeAgentApiError]
+  note: Tests construct the error directly; none drives a non-2xx response through `request`.
+```
+
+```mdl
+verdict F-6.4: GET retries three times on transport, 429 and 5xx with a fixed second, but also retries 403.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/api/client.ts#isRetryable, github:dxos/dxos/packages/plugins/plugin-claude/src/api/client.ts#request, github:dxos/dxos/packages/plugins/plugin-claude/src/constants.ts#REQUEST_RETRIES, github:dxos/dxos/packages/plugins/plugin-claude/src/constants.ts#REQUEST_RETRY_DELAY]
+  tests: [github:dxos/dxos/packages/plugins/plugin-claude/src/api/client.test.ts]
+  note: `isRetryable` returns true for 403 on any method (the edge proxy's intermittent 403), against "a 4xx other than 429 fails immediately". `client.test.ts` asserts the 403 retry.
+```
+
+```mdl
+verdict F-6.5: POST does not retry transport or 5xx, but retries 403 as well as 429.
+  status: diverged
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/api/client.ts#isRetryable]
+  tests: [github:dxos/dxos/packages/plugins/plugin-claude/src/api/client.test.ts]
+  note: The spec says only 429 is retried on a POST; the code also retries 403, judging that the proxy rejected it before the control plane acted.
+```
+
+```mdl
+verdict F-7.1: Start resolves each token into an environment_variable vault credential with unrestricted networking and returns only names.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/credentials.ts#toVaultCredentials, github:dxos/dxos/packages/plugins/plugin-claude/src/operations/start-session.ts, github:dxos/dxos/packages/plugins/plugin-claude/src/api/client.ts#createVaultCredential]
+  note: Name validation is tested in `ClaudeAgentSession.test.ts`; the binding is not.
+```
+
+```mdl
+verdict F-7.2: UpdateSessionCredentials rotates a bound name in place with updateVaultCredential.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/operations/update-session-credentials.ts, github:dxos/dxos/packages/plugins/plugin-claude/src/api/client.ts#updateVaultCredential]
+  note: The spec's Set operation is `UpdateSessionCredentials` with `credentials`; it also offers `refresh` to re-read recorded refs. No test.
+```
+
+```mdl
+verdict F-7.5: Repeated names keep their last entry and the vault listing is followed to its last page.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/credentials.ts#toVaultCredentials, github:dxos/dxos/packages/plugins/plugin-claude/src/api/client.ts#listVaultCredentials]
+  note: `types.test.ts` decodes a credential page; neither the dedupe nor the paging loop is tested.
+```
+
+```mdl
+verdict F-7.6: An empty resolved secret fails with CredentialResolutionError naming the variable.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/credentials.ts#toVaultCredentials, github:dxos/dxos/packages/plugins/plugin-claude/src/errors.ts#CredentialResolutionError]
+  note: No test.
+```
+
+```mdl
+verdict F-7.3: Updating a session with no vault id fails with SessionVaultMissingError.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/operations/update-session-credentials.ts, github:dxos/dxos/packages/plugins/plugin-claude/src/errors.ts#SessionVaultMissingError]
+  note: No test.
+```
+
+```mdl
+verdict F-7.4: Revoke archives each named credential and fails with CredentialNotBoundError for an unbound name.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/operations/update-session-credentials.ts, github:dxos/dxos/packages/plugins/plugin-claude/src/api/client.ts#archiveVaultCredential, github:dxos/dxos/packages/plugins/plugin-claude/src/errors.ts#CredentialNotBoundError]
+  note: Revoke is the `revoke` field of `UpdateSessionCredentials`, not its own operation. No test.
+```
+
+```mdl
+verdict F-8.1: Claude Code is a registered agent, and plugin-projects offers "Assign to Claude Code" for it.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/capabilities/claude-code-agent.ts, github:dxos/dxos/packages/plugins/plugin-claude/src/agents/CodeAgent.ts#make, github:dxos/dxos/packages/plugins/plugin-projects/src/capabilities/task-action.ts]
+  walkthrough:
+    - The module contributes the Claude Code agent built by CodeAgent.make. github:dxos/dxos/packages/plugins/plugin-claude/src/capabilities/claude-code-agent.ts
+    - CodeAgent.make probes the helper and sets the agent's availability. github:dxos/dxos/packages/plugins/plugin-claude/src/agents/CodeAgent.ts#make
+    - plugin-projects adds an "Assign to" task action per registered agent. github:dxos/dxos/packages/plugins/plugin-projects/src/capabilities/task-action.ts
+  note: `server.test.ts` checks the helper reports which agents can run; no test checks the registration or the menu entry.
+```
+
+```mdl
+verdict F-8.2: Outside the desktop app, or without claude, the agent is unavailable with a reason and the menu entry is disabled.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/agents/CodeAgent.ts#make, github:dxos/dxos/packages/plugins/plugin-projects/src/capabilities/task-action.ts]
+  note: The availability atom carries `NO_HOST` or the probe result, and the action's `unavailable` shows it; no test.
+```
+
+```mdl
+verdict F-8.3: Delegated work runs in a git worktree, streams into the chat, and permission requests wait on a chat card.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/agents/CodeAgent.ts#make, github:dxos/dxos/packages/plugins/plugin-claude/src/agent-helper/Worktrees.ts#ensure, github:dxos/dxos/packages/plugins/plugin-claude/src/agents/AcpAgent.ts#runTurn]
+  tests: [github:dxos/dxos/packages/plugins/plugin-claude/src/agent-helper/Worktrees.test.ts, github:dxos/dxos/packages/plugins/plugin-claude/src/agents/AcpAgent.test.ts, github:dxos/dxos/packages/plugins/plugin-claude/src/agents/Workspace.test.ts]
+  walkthrough:
+    - The agent resolves the chat's project folder and asks the helper for a worktree on a chat branch. github:dxos/dxos/packages/plugins/plugin-claude/src/agents/CodeAgent.ts#make
+    - The helper creates or reuses the worktree. github:dxos/dxos/packages/plugins/plugin-claude/src/agent-helper/Worktrees.ts#ensure
+    - The ACP turn streams the session into the chat and parks permission requests until answered. github:dxos/dxos/packages/plugins/plugin-claude/src/agents/AcpAgent.ts#runTurn
+```
+
+```mdl
+verdict F-8.4: Composer's operations are served as the composer MCP server in the chat's space, with read-only tools pre-allowed.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/agents/ComposerMcp.ts#handler, github:dxos/dxos/packages/plugins/plugin-claude/src/agents/ComposerMcp.ts#READ_ONLY_TOOLS, github:dxos/dxos/packages/plugins/plugin-claude/src/capabilities/claude-code-agent.ts]
+  tests: [github:dxos/dxos/packages/plugins/plugin-claude/src/agents/ComposerMcp.test.ts]
+```
+
+```mdl
+verdict F-8.5: The chat's MCP connections are offered through a proxy that keeps credentials out, and toggling reloads the session.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/agents/AcpAgent.ts#runTurn, github:dxos/dxos/packages/plugins/plugin-claude/src/agents/McpProxy.ts#handler]
+  tests: [github:dxos/dxos/packages/plugins/plugin-claude/src/agents/AcpAgent.test.ts, github:dxos/dxos/packages/plugins/plugin-claude/src/agents/McpProxy.test.ts]
+```
+
+```mdl
+verdict F-9.1: Claude Code (EDGE) is a registered agent that runs turns in an EDGE sandbox.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/capabilities/claude-code-edge-agent.ts, github:dxos/dxos/packages/plugins/plugin-claude/src/agents/EdgeAgent.ts#make, github:dxos/dxos/packages/plugins/plugin-claude/src/agents/EdgeAgent.ts#runTurn]
+  tests: [github:dxos/dxos/packages/plugins/plugin-claude/src/agents/EdgeAgent.test.ts]
+  note: The "(EDGE)" menu label comes from plugin-projects' `agentLabel`; it is not tested.
+```
+
+```mdl
+verdict F-9.2: The cloud agent lends the subscription OAuth token, never an API key, and the GitHub token as GITHUB_TOKEN and GH_TOKEN.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/capabilities/claude-code-edge-agent.ts#claudeCredentials, github:dxos/dxos/packages/plugins/plugin-claude/src/agents/EdgeAgent.ts#githubCredentials]
+  tests: [github:dxos/dxos/packages/plugins/plugin-claude/src/capabilities/claude-code-edge-agent.test.ts, github:dxos/dxos/packages/plugins/plugin-claude/src/agents/EdgeAgent.test.ts]
+```
+
+```mdl
+verdict F-9.3: The sandbox checks out the project's repositories before the first turn.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/agents/EdgeAgent.ts#checkoutsOf, github:dxos/dxos/packages/plugins/plugin-claude/src/agents/EdgeAgent.ts#runTurn]
+  tests: [github:dxos/dxos/packages/plugins/plugin-claude/src/agents/EdgeAgent.test.ts]
+```
+
+```mdl
+verdict F-9.4: The chat's agent picker can switch to Claude Code (cloud) before the first message.
+  status: untested
+  evidence: [github:dxos/dxos/packages/plugins/plugin-assistant/src/components/ChatPrompt/ChatAgentPicker.tsx#ChatAgentPicker]
+  note: The picker lives in plugin-assistant and locks once the chat has started; no test checks that the first message then runs on the cloud agent.
+```
+
+```mdl
+verdict T-1: mapping.test.ts checks the default model and toolset and the missing skills and mcp_servers keys.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/api/mapping.ts#toAgentConfig]
+  tests: [github:dxos/dxos/packages/plugins/plugin-claude/src/api/mapping.test.ts]
+```
+
+```mdl
+verdict T-2: mapping.test.ts checks effort is projected onto the model object.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/api/mapping.ts#toAgentConfig]
+  tests: [github:dxos/dxos/packages/plugins/plugin-claude/src/api/mapping.test.ts]
+```
+
+```mdl
+verdict T-3: mapping.test.ts keeps user and agent prose in order and drops an agent.message with no text.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/api/mapping.ts#toTranscript]
+  tests: [github:dxos/dxos/packages/plugins/plugin-claude/src/api/mapping.test.ts]
+```
+
+```mdl
+verdict T-4: client.test.ts checks every listed status, and also asserts the 403 retry the spec does not mention.
+  status: done
+  evidence: [github:dxos/dxos/packages/plugins/plugin-claude/src/api/client.ts#isRetryable]
+  tests: [github:dxos/dxos/packages/plugins/plugin-claude/src/api/client.test.ts]
+  note: The scenario's clauses all pass, but the same file asserts 403 is retried on both methods, which contradicts F-6.4 and F-6.5.
+```
+
+```mdl
+verdict QA-1: No automated test runs the create, deploy, session and transcript round trip.
+  status: missing
+  note: QA-1 is blocked on a live anthropic.com credential, and no test invokes any of the managed-agent operation handlers, even against a stubbed API.
+```
+
+```mdl
+verdict QA-2: The gated Claude Code e2e suite runs turns, workspace writes and MCP task management; the UI steps are only in the autocue flow.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-claude/src/e2e/ClaudeCode.e2e.test.ts, github:dxos/dxos/packages/plugins/plugin-claude/src/agents/claude-code.e2e.test.ts]
+  note: Enabling the plugin, choosing the code folder and the "Assign to Claude Code" menu are walked only by `autocue/claude-code-task.mjs`; the e2e suites are tagged manual and need a credential.
+```
+
+```mdl
+verdict QA-3: The e2e suite checks Claude asks before writing and stops when declined, but not with the default permission setting through the UI.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-claude/src/e2e/ClaudeCode.e2e.test.ts]
+  note: Covers "asks before writing" and "declines"; the setting change and the follow-up commit are only in the autocue flow.
+```
+
+```mdl
+verdict QA-4: The EDGE e2e suite clones with the space's GitHub token and opens a pull request, but not from a chat switched in the picker.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-claude/src/e2e/ClaudeCodeEdge.e2e.test.ts]
+  note: The picker switch and closing the PR are walked only by `autocue/claude-code-cloud-pr.mjs`; the suite skips without an EDGE URL and tokens.
+```
+
+```mdl
+verdict QA-5: The EDGE e2e suite works in a project's checked-out repositories and opens pull requests, but not from a task's menu.
+  status: partial
+  tests: [github:dxos/dxos/packages/plugins/plugin-claude/src/e2e/ClaudeCodeEdge.e2e.test.ts]
+  note: The task assignment is walked only by `autocue/claude-code-cloud-task.mjs`.
+```

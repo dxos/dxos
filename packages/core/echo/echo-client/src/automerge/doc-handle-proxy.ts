@@ -126,6 +126,8 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
   private _state: Exclude<DocHandleProxyState, 'passive'> = 'pending';
   /** Undefined once deleted. */
   #body: PassiveBody | LoadedBody<T> | undefined;
+  /** The last {@link _heldState} save of a loaded doc, reused while its heads are unchanged. */
+  #saved?: PassiveDocument;
   /** Open write scopes; see {@link batch}. */
   #depth = 0;
   /**
@@ -211,8 +213,39 @@ export class DocHandleProxy<T> extends EventEmitter<ClientDocHandleEvents<T>> im
     await this._ready.wait();
   }
 
+  /**
+   * Resolves once the doc can be read and written: at once for one loaded from stored changes the client
+   * held, which the host already has, otherwise once the host delivers it.
+   */
+  async whenUsable(): Promise<void> {
+    this.#loaded();
+    if (this.isLoaded()) {
+      return;
+    }
+    await this._ready.wait();
+  }
+
   isReady(): boolean {
     return this._ready.state === TriggerState.RESOLVED;
+  }
+
+  /**
+   * The stored changes and the heads the host holds them at, for persisting the doc outside the host;
+   * undefined while a change exists only here. A loaded doc is saved once per heads.
+   * @internal
+   */
+  _heldState(): PassiveDocument | undefined {
+    const body = this.#body;
+    if (body?.kind === 'passive') {
+      return { bytes: joinChunks(body), heads: body.heads };
+    }
+    if (body?.kind !== 'loaded' || body.hostHeads.length === 0 || !A.equals(A.getHeads(body.doc), body.hostHeads)) {
+      return undefined;
+    }
+    if (!this.#saved || !A.equals(this.#saved.heads, body.hostHeads)) {
+      this.#saved = { bytes: A.save(body.doc), heads: body.hostHeads };
+    }
+    return this.#saved;
   }
 
   /** Whether the document can be read and written now: ready, or loaded from bytes the client held. */

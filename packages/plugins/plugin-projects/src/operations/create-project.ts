@@ -10,10 +10,9 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, Obj, Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
-import { FeatureMapView, ProjectCapabilities, ProjectOperation } from '#types';
+import { ProjectCapabilities, ProjectOperation } from '#types';
 
 // Leaf import: the templates barrel pulls `inbox-research` (plugin-inbox/plugin-routine) into the
 // bundle, which a worker registering this handler cannot load.
@@ -41,11 +40,6 @@ const handler: Operation.WithHandler<typeof ProjectOperation.Create> = ProjectOp
 
       const result = yield* Operation.invoke(SpaceOperation.AddObject, { object: draft }, { spaceId: db.spaceId });
       invariant(Obj.instanceOf(Project.Project, result.object), 'Expected a Project.');
-      // View state is the UI's, so a host without it (a worker) skips the template's initial Features view.
-      const [viewState] = yield* Capability.getAll(AttentionCapabilities.ViewState);
-      if (template.featureView && viewState) {
-        viewState.set(FeatureMapView.aspect, result.object.id, { mode: template.featureView });
-      }
       const nodePath = GraphPath.getSpacePath(
         db.spaceId,
         GraphPath.GroupSegments.ai,
