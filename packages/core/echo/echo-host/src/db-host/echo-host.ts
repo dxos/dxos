@@ -808,7 +808,7 @@ export class EchoHost extends Resource {
     ctx: Context,
     spaceId: SpaceId,
     spaceRootUrl: AutomergeUrl,
-    { fetchFromNetwork = false }: { fetchFromNetwork?: boolean } = {},
+    { fetchFromNetwork = false, timeout }: { fetchFromNetwork?: boolean; timeout?: number } = {},
   ): Promise<SpaceRootRefs> {
     invariant(this._lifecycleState === LifecycleState.OPEN);
 
@@ -820,7 +820,7 @@ export class EchoHost extends Resource {
 
     // Local-only by default: a caller adopting a root it was merely told about must not block on the
     // network. A root edge minted exists nowhere else, so that caller opts in to fetching it.
-    using rootHandle = await this._automergeHost.loadDoc<SpaceRoot>(ctx, spaceRootUrl, { fetchFromNetwork });
+    using rootHandle = await this._automergeHost.loadDoc<SpaceRoot>(ctx, spaceRootUrl, { fetchFromNetwork, timeout });
     const root = rootHandle?.doc();
     invariant(root && isSpaceRoot(root), 'Space root document must load.');
     invariant(root.spaceId === spaceId, `Space root names another space: ${root.spaceId}`);

@@ -194,6 +194,12 @@ const ANCHOR_RETRY_MAX = 30_000;
 const SPACE_ROOT_REPORT_RETRY_INITIAL = 500;
 const SPACE_ROOT_REPORT_RETRY_MAX = 30_000;
 
+/**
+ * How long one adoption attempt waits for an edge-minted document to arrive; a miss fails the attempt so
+ * the anchor's backoff asks again, rather than holding the attempt open with nothing left to retry it.
+ */
+const EDGE_ROOT_FETCH_TIMEOUT = 5_000;
+
 /** Backoff bounds for asking edge to migrate a space it has not processed far enough to anchor yet. */
 const EDGE_MIGRATION_RETRY_INITIAL = 500;
 const EDGE_MIGRATION_RETRY_MAX = 8_000;
@@ -208,6 +214,10 @@ export class DataSpaceManager extends Resource {
   private readonly _legacyCreatedSpaces = new Set<SpaceId>();
   /** Roots named by an inviter, to adopt once they replicate; see {@link _anchorSpaceOnRootDocument}. */
   private readonly _pendingSpaceRootUrls = new Map<SpaceId, AutomergeUrl>();
+  /** Edge roots adopted whose credentials are not mirrored yet; a retry finishes them. */
+  private readonly _edgeRootsAwaitingMirror = new Map<SpaceId, AutomergeUrl>();
+  /** Spaces with an edge adoption in flight; a second concurrent one would subscribe the mirror twice. */
+  private readonly _adoptingEdgeRoots = new Set<SpaceId>();
 
   /**
    * Spaces whose close has begun. `DataSpace.isOpen` reads the inner space, which closes last, so it
@@ -523,6 +533,10 @@ export class DataSpaceManager extends Resource {
   private async _anchorSpaceOnRootDocument(ctx: Context, space: DataSpace, force = false): Promise<boolean> {
     // A root edge holds is how this member accepts a migration another member or edge started, so it
     // is adopted whatever the flag says, and before a local mint could fork the space onto a second root.
+    const awaitingMirror = this._edgeRootsAwaitingMirror.get(space.id);
+    if (awaitingMirror) {
+      return this._adoptEdgeSpaceRoot(ctx, space, awaitingMirror);
+    }
     if (!this._echoHost.getSpaceRootRefs(space.id)) {
       const edgeRoot = await this._readEdgeSpaceRoot(space);
       if (edgeRoot) {
@@ -644,13 +658,16 @@ export class DataSpaceManager extends Resource {
    * credentials backfills the existing chain and dual-writes new ones through one path, since the
    * control pipeline replays the whole feed on open.
    */
-  private async _mirrorCredentialsToDocument(space: DataSpace): Promise<boolean> {
+  private async _mirrorCredentialsToDocument(
+    space: DataSpace,
+    { timeout }: { timeout?: number } = {},
+  ): Promise<boolean> {
     {
       // The manager's own context, not the caller's: the invitation flow disposes its context as
       // soon as `acceptSpace` returns, and a store bound to it would be released before its first
       // write — the same reason `initializeDataPipelineAsync` is parented here.
       const ctx = this._ctx;
-      const store = await openCredentialsDocument(ctx, this._echoHost, space.id);
+      const store = await openCredentialsDocument(ctx, this._echoHost, space.id, { timeout });
       if (!this._isSpaceLive(space)) {
         return false;
       }
@@ -689,20 +706,33 @@ export class DataSpaceManager extends Resource {
    * @returns Whether the space is anchored; false means retry, since the root may not have replicated.
    */
   private async _adoptEdgeSpaceRoot(ctx: Context, space: DataSpace, spaceRootUrl: AutomergeUrl): Promise<boolean> {
+    if (this._adoptingEdgeRoots.has(space.id)) {
+      return false;
+    }
+    this._adoptingEdgeRoots.add(space.id);
     try {
-      const refs = await this._echoHost.adoptSpaceRoot(ctx, space.id, spaceRootUrl, { fetchFromNetwork: true });
+      const refs = await this._echoHost.adoptSpaceRoot(ctx, space.id, spaceRootUrl, {
+        fetchFromNetwork: true,
+        timeout: EDGE_ROOT_FETCH_TIMEOUT,
+      });
       log('adopted the space root held by edge', { spaceId: space.id, refs });
+      // Adoption is recorded before mirroring, so a later attempt must finish the mirror rather than
+      // see an anchored space and settle without it.
+      this._edgeRootsAwaitingMirror.set(space.id, spaceRootUrl);
+      this.updated.emit();
       if (!this._isSpaceLive(space)) {
         return false;
       }
-      if (!(await this._mirrorCredentialsToDocument(space))) {
+      if (!(await this._mirrorCredentialsToDocument(space, { timeout: EDGE_ROOT_FETCH_TIMEOUT }))) {
         return false;
       }
-      this.updated.emit();
+      this._edgeRootsAwaitingMirror.delete(space.id);
       return true;
     } catch (err) {
       log.warn('failed to adopt the space root held by edge', { spaceId: space.id, spaceRootUrl, err });
       return false;
+    } finally {
+      this._adoptingEdgeRoots.delete(space.id);
     }
   }
 
@@ -735,7 +765,7 @@ export class DataSpaceManager extends Resource {
     }
 
     const existing = this._echoHost.getSpaceRootRefs(space.id);
-    if (existing) {
+    if (existing && !this._edgeRootsAwaitingMirror.has(space.id)) {
       // Already anchored, and so already mirroring: adopting again would subscribe the mirror twice.
       invariant(
         existing.spaceRootDocUrl === spaceRootUrl,

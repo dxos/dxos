@@ -294,12 +294,14 @@ describe('DataSpaceManager', () => {
      */
     const setupLegacySpaceWithEdge = async () => {
       const builder = new TestBuilder();
-      const edge = { root: null as string | null, migrations: 0 };
+      // `pending` is how many migrate calls edge answers "not yet" before it can anchor the space.
+      const edge = { root: null as string | null, migrations: 0, pending: 0 };
       const edgeHttpClient = {
         getSpaceRoot: async () => ({ rootDocumentUrl: edge.root }),
         migrateSpaceRoot: async () => {
           edge.migrations++;
-          if (edge.root === null) {
+          if (edge.root === null || edge.pending > 0) {
+            edge.pending--;
             throw new Error('space root not available yet');
           }
           return { rootDocumentUrl: edge.root };
@@ -335,15 +337,16 @@ describe('DataSpaceManager', () => {
       return { edge, peer2, space2, minted };
     };
 
-    test('a member adopts the root edge holds when it reopens the space', async ({ expect }) => {
+    test('a member adopts the root edge holds when it reopens the space', { timeout: 45_000 }, async ({ expect }) => {
       const { edge, peer2, space2, minted } = await setupLegacySpaceWithEdge();
       edge.root = minted.spaceRootDocUrl;
 
       await space2.deactivate(new Context());
       await space2.activate(new Context());
 
+      // A fetch that misses times out and the anchor's backoff asks again, so this allows a few rounds.
       await expect
-        .poll(() => peer2.echoHost.getSpaceRootRefs(space2.id)?.spaceRootDocUrl, { timeout: 10_000 })
+        .poll(() => peer2.echoHost.getSpaceRootRefs(space2.id)?.spaceRootDocUrl, { timeout: 30_000 })
         .to.equal(minted.spaceRootDocUrl);
       expect(peer2.dataSpaceManager.getSpaceRootUrl(space2.key)).to.equal(minted.spaceRootDocUrl);
       expect(edge.migrations).to.equal(0);
@@ -351,14 +354,13 @@ describe('DataSpaceManager', () => {
 
     test('migrating on edge retries until edge can anchor, then adopts its root', async ({ expect }) => {
       const { edge, peer2, space2, minted } = await setupLegacySpaceWithEdge();
-      setTimeout(() => {
-        edge.root = minted.spaceRootDocUrl;
-      }, 200);
+      edge.root = minted.spaceRootDocUrl;
+      edge.pending = 2;
 
       const spaceRootUrl = await peer2.dataSpaceManager.migrateSpaceRootOnEdge(new Context(), space2.key);
       expect(spaceRootUrl).to.equal(minted.spaceRootDocUrl);
       expect(peer2.echoHost.getSpaceRootRefs(space2.id)?.spaceRootDocUrl).to.equal(minted.spaceRootDocUrl);
-      expect(edge.migrations).to.be.greaterThan(1);
+      expect(edge.migrations).to.equal(3);
 
       // Idempotent: asking again returns the same root and does not re-adopt.
       expect(await peer2.dataSpaceManager.migrateSpaceRootOnEdge(new Context(), space2.key)).to.equal(spaceRootUrl);

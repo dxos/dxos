@@ -19,6 +19,12 @@ client read FLIP, HALO replication, and the edge-initiated bulk pass (see "Edge-
 - [x] Composer button: Space settings → Space controls → "Credential storage".
 - [x] e2e (edge repo): alice migrates, bob (active, untouched) adopts on reopen, a post-migration
       admission lands in the EDGE-minted credentials document.
+- [x] EDGE side landed (dxos/edge#1403): read-only `GET /db/spaces/:id/root`, and `verifyCredential` no longer
+      mutates the credential it checks (it crashed the SpaceStateMachine on every document-sourced credential).
+      On preview EDGE; production EDGE needs a deploy before anyone migrates there. NOTE: Composer `preview`
+      talks to PRODUCTION EDGE (`.github/workflows/env/preview`); Composer `dev` talks to preview EDGE.
+- [ ] Two-client e2e (`edge/packages/services/edge/test/space-root-migration.node.test.ts`, in edge commit
+      `0c88e44`) returns with the dxos catalog bump that brings `migrateSpaceRoot`/`spaceRootUrl`.
 - [ ] A member that is open does not notice until it reopens the space — acceptable for the button, not
       for a bulk pass. Bulk pass needs a push (or a periodic GET) so open clients adopt.
 - [ ] Bulk pass: iterate the registry and call `ensureSpaceRoot` per space (admin route or alarm),
