@@ -20812,6 +20812,9 @@ importers:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect
+      '@dxos/fixtures':
+        specifier: workspace:*
+        version: link:../../../tools/fixtures
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
